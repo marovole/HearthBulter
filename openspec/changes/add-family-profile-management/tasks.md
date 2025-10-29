@@ -1,29 +1,29 @@
 # Implementation Tasks
 
 ## 1. Database Setup
-- [ ] 1.1 创建Prisma Schema（User, Family, FamilyMember, HealthGoal, Allergy模型）
-- [ ] 1.2 运行初始数据库迁移
-- [ ] 1.3 编写seed脚本创建测试数据
+- [x] 1.1 创建Prisma Schema（User, Family, FamilyMember, HealthGoal, Allergy模型）
+- [x] 1.2 运行初始数据库迁移
+- [x] 1.3 编写seed脚本创建测试数据
 
 ## 2. Authentication
-- [ ] 2.1 配置NextAuth.js（Credentials + Google Provider）
-- [ ] 2.2 实现用户注册API `/api/auth/register`
-- [ ] 2.3 实现登录/登出功能
-- [ ] 2.4 添加会话管理中间件
+- [x] 2.1 配置NextAuth.js（Credentials + Google Provider）
+- [x] 2.2 实现用户注册API `/api/auth/register`
+- [x] 2.3 实现登录/登出功能
+- [x] 2.4 添加会话管理中间件
 - [ ] 2.5 编写认证单元测试
 
 ## 3. Family Management
-- [ ] 3.1 实现家庭CRUD API (`/api/families`)
-- [ ] 3.2 实现家庭创建引导流程
+- [x] 3.1 实现家庭CRUD API (`/api/families`)
+- [x] 3.2 实现家庭创建引导流程
 - [ ] 3.3 实现邀请成员功能
-- [ ] 3.4 添加权限验证中间件
+- [x] 3.4 添加权限验证中间件
 - [ ] 3.5 编写家庭管理集成测试
 
 ## 4. Member Profile Management
-- [ ] 4.1 实现成员CRUD API (`/api/families/:id/members`)
-- [ ] 4.2 实现BMI/TDEE自动计算服务
+- [x] 4.1 实现成员CRUD API (`/api/families/:id/members`)
+- [x] 4.2 实现BMI/TDEE自动计算服务
 - [ ] 4.3 创建成员档案UI组件
-- [ ] 4.4 实现软删除逻辑
+- [x] 4.4 实现软删除逻辑
 - [ ] 4.5 编写成员管理单元测试
 
 ## 5. Health Goals & Allergies

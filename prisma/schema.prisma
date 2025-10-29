@@ -1,0 +1,282 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户账户表
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  password      String?   // 密码认证用户使用
+  role          UserRole  @default(USER)
+
+  // 关联关系
+  createdFamilies Family[] @relation("FamilyCreator")
+  familyMembers  FamilyMember[]
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@map("users")
+}
+
+// 用户角色枚举
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// 家庭表
+model Family {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  inviteCode  String?    @unique // 家庭邀请码
+
+  // 关联关系
+  creatorId  String
+  creator    User       @relation("FamilyCreator", fields: [creatorId], references: [id])
+  members    FamilyMember[]
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@map("families")
+}
+
+// 家庭成员表
+model FamilyMember {
+  id       String           @id @default(cuid())
+  name     String
+  gender   Gender
+  birthDate DateTime
+  height   Float?           // 身高(cm)
+  weight   Float?           // 体重(kg)
+  avatar   String?
+
+  // 健康计算字段
+  bmi        Float?         // BMI自动计算
+  ageGroup   AgeGroup?      // 年龄段自动计算
+
+  // 关联关系
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  userId   String? @unique // 可关联到系统用户账户
+  user     User?   @relation(fields: [userId], references: [id])
+
+  // 权限
+  role FamilyMemberRole @default(MEMBER)
+
+  // 健康目标和过敏史
+  healthGoals HealthGoal[]
+  allergies   Allergy[]
+  dietaryPreference DietaryPreference?
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@map("family_members")
+}
+
+// 性别枚举
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// 年龄段枚举
+enum AgeGroup {
+  CHILD      // <12岁
+  TEENAGER   // 12-18岁
+  ADULT      // 18-65岁
+  ELDERLY    // >65岁
+}
+
+// 家庭成员角色枚举
+enum FamilyMemberRole {
+  ADMIN      // 管理员
+  MEMBER     // 普通成员
+}
+
+// 健康目标表
+model HealthGoal {
+  id             String       @id @default(cuid())
+  memberId       String
+  member         FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 目标类型
+  goalType       GoalType
+
+  // 体重相关目标
+  targetWeight   Float?       // 目标体重(kg)
+  currentWeight  Float?       // 当前体重(kg)
+  startWeight    Float?       // 开始体重(kg)
+
+  // 时间设定
+  targetWeeks    Int?         // 目标周期(周)
+  startDate      DateTime     // 开始日期
+  targetDate     DateTime?    // 目标日期
+
+  // 计算参数
+  tdee           Int?         // 每日总能量消耗
+  bmr            Int?         // 基础代谢率
+  activityFactor Float?       // 活动系数
+
+  // 宏量营养素分配比例
+  carbRatio      Float?       @default(0.5)   // 碳水化合物比例
+  proteinRatio   Float?       @default(0.2)   // 蛋白质比例
+  fatRatio       Float?       @default(0.3)   // 脂肪比例
+
+  // 目标状态
+  status         GoalStatus   @default(ACTIVE)
+  progress       Float?       @default(0)     // 进度百分比
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@map("health_goals")
+}
+
+// 目标类型枚举
+enum GoalType {
+  LOSE_WEIGHT    // 减重
+  GAIN_MUSCLE    // 增肌
+  MAINTAIN       // 维持体重
+  IMPROVE_HEALTH // 改善健康指标
+}
+
+// 目标状态枚举
+enum GoalStatus {
+  ACTIVE     // 活跃中
+  COMPLETED  // 已完成
+  PAUSED     // 暂停
+  CANCELLED  // 取消
+}
+
+// 过敏史表
+model Allergy {
+  id           String           @id @default(cuid())
+  memberId     String
+  member       FamilyMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 过敏信息
+  allergenType AllergenType
+  allergenName String           // 具体过敏原名称
+  severity     AllergySeverity  // 严重程度
+  description  String?          // 描述
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@map("allergies")
+}
+
+// 过敏类型枚举
+enum AllergenType {
+  FOOD         // 食物过敏
+  ENVIRONMENTAL // 环境过敏
+  MEDICATION   // 药物过敏
+  OTHER        // 其他
+}
+
+// 过敏严重程度枚举
+enum AllergySeverity {
+  MILD      // 轻微
+  MODERATE  // 中等
+  SEVERE    // 严重
+  LIFE_THREATENING // 危及生命
+}
+
+// 饮食偏好表（扩展功能）
+model DietaryPreference {
+  id       String           @id @default(cuid())
+  memberId String           @unique
+  member   FamilyMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 饮食类型
+  dietType DietaryType
+
+  // 具体偏好设置
+  isVegetarian     Boolean @default(false)
+  isVegan          Boolean @default(false)
+  isKeto           Boolean @default(false)
+  isLowCarb        Boolean @default(false)
+  isLowFat         Boolean @default(false)
+  isHighProtein    Boolean @default(false)
+  isGlutenFree     Boolean @default(false)
+  isDairyFree      Boolean @default(false)
+  isLowSodium      Boolean @default(false)
+
+  // 自定义备注
+  notes String?
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@map("dietary_preferences")
+}
+
+// 饮食类型枚举
+enum DietaryType {
+  OMNIVORE        // 杂食
+  VEGETARIAN      // 素食
+  VEGAN           // 严格素食
+  PESCETARIAN     // 鱼素
+  KETO            // 生酮饮食
+  PALEO           // 原始饮食
+  MEDITERRANEAN   // 地中海饮食
+  LOW_FODMAP      // 低FODMAP饮食
+  CUSTOM          // 自定义
+}
+
+// 邀请记录表
+model FamilyInvitation {
+  id        String    @id @default(cuid())
+  familyId  String
+  email     String
+  inviteCode String  @unique
+  role      FamilyMemberRole @default(MEMBER)
+
+  // 邀请状态
+  status    InvitationStatus @default(PENDING)
+
+  // 时间限制
+  expiresAt DateTime
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("family_invitations")
+}
+
+// 邀请状态枚举
+enum InvitationStatus {
+  PENDING   // 待处理
+  ACCEPTED  // 已接受
+  REJECTED  // 已拒绝
+  EXPIRED   // 已过期
+}
