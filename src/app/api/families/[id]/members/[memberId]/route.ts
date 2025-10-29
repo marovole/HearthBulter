@@ -9,7 +9,7 @@ function calculateBMI(weight: number, height: number): number {
 }
 
 // 计算年龄段
-function calculateAgeGroup(birthDate: Date): string {
+function calculateAgeGroup(birthDate: Date): 'CHILD' | 'TEENAGER' | 'ADULT' | 'ELDERLY' {
   const today = new Date()
   const age = today.getFullYear() - birthDate.getFullYear()
 
@@ -38,9 +38,10 @@ const updateMemberSchema = z.object({
 // GET /api/families/:id/members/:memberId - 获取成员详情
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; memberId: string } }
+  { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
   try {
+    const { id, memberId } = await params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权访问' }, { status: 401 })
@@ -49,8 +50,8 @@ export async function GET(
     // 获取成员详情
     const member = await prisma.familyMember.findUnique({
       where: {
-        id: params.memberId,
-        familyId: params.id,
+        id: memberId,
+        familyId: id,
         deletedAt: null,
       },
       include: {
@@ -83,7 +84,7 @@ export async function GET(
     // 检查是否是家庭成员
     const familyMember = await prisma.familyMember.findFirst({
       where: {
-        familyId: params.id,
+        familyId: id,
         userId: session.user.id,
         deletedAt: null,
       },
@@ -109,9 +110,10 @@ export async function GET(
 // PATCH /api/families/:id/members/:memberId - 更新成员信息
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; memberId: string } }
+  { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
   try {
+    const { id, memberId } = await params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权访问' }, { status: 401 })
@@ -131,8 +133,8 @@ export async function PATCH(
     // 获取成员和家庭信息
     const member = await prisma.familyMember.findUnique({
       where: {
-        id: params.memberId,
-        familyId: params.id,
+        id: memberId,
+        familyId: id,
         deletedAt: null,
       },
       include: {
@@ -204,7 +206,7 @@ export async function PATCH(
 
     // 更新成员信息
     const updatedMember = await prisma.familyMember.update({
-      where: { id: params.memberId },
+      where: { id: memberId },
       data: updateData,
       include: {
         healthGoals: {
@@ -236,9 +238,10 @@ export async function PATCH(
 // DELETE /api/families/:id/members/:memberId - 删除成员（软删除）
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; memberId: string } }
+  { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
   try {
+    const { id, memberId } = await params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权访问' }, { status: 401 })
@@ -247,8 +250,8 @@ export async function DELETE(
     // 获取成员信息
     const member = await prisma.familyMember.findUnique({
       where: {
-        id: params.memberId,
-        familyId: params.id,
+        id: memberId,
+        familyId: id,
         deletedAt: null,
       },
       include: {
@@ -284,7 +287,7 @@ export async function DELETE(
 
     // 软删除成员
     await prisma.familyMember.update({
-      where: { id: params.memberId },
+      where: { id: memberId },
       data: { deletedAt: new Date() },
     })
 

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 // 计算年龄段
-function calculateAgeGroup(birthDate: Date): string {
+function calculateAgeGroup(birthDate: Date): 'CHILD' | 'TEENAGER' | 'ADULT' | 'ELDERLY' {
   const today = new Date()
   const age = today.getFullYear() - birthDate.getFullYear()
 
@@ -35,9 +35,10 @@ const createMemberSchema = z.object({
 // GET /api/families/:id/members - 获取家庭成员列表
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权访问' }, { status: 401 })
@@ -45,7 +46,7 @@ export async function GET(
 
     // 验证用户是否属于该家庭
     const family = await prisma.family.findUnique({
-      where: { id: params.id, deletedAt: null },
+      where: { id, deletedAt: null },
       include: {
         members: {
           where: { deletedAt: null },
@@ -91,9 +92,10 @@ export async function GET(
 // POST /api/families/:id/members - 添加家庭成员
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权访问' }, { status: 401 })
@@ -112,7 +114,7 @@ export async function POST(
 
     // 验证家庭是否存在以及用户权限
     const family = await prisma.family.findUnique({
-      where: { id: params.id, deletedAt: null },
+      where: { id, deletedAt: null },
       include: {
         members: {
           where: { userId: session.user.id, deletedAt: null },
@@ -155,7 +157,7 @@ export async function POST(
         avatar,
         bmi,
         ageGroup,
-        familyId: params.id,
+        familyId: id,
         role: role || 'MEMBER',
       },
       include: {

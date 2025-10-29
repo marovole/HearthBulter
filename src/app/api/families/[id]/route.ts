@@ -86,9 +86,10 @@ export async function GET(
 // PATCH /api/families/:id - 更新家庭信息
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权访问' }, { status: 401 })
@@ -107,7 +108,7 @@ export async function PATCH(
 
     // 检查家庭是否存在
     const family = await prisma.family.findUnique({
-      where: { id: params.id, deletedAt: null },
+      where: { id, deletedAt: null },
       include: {
         members: {
           where: { userId: session.user.id, deletedAt: null },
@@ -134,7 +135,7 @@ export async function PATCH(
 
     // 更新家庭信息
     const updatedFamily = await prisma.family.update({
-      where: { id: params.id },
+      where: { id },
       data: validation.data,
       include: {
         members: {
@@ -162,9 +163,10 @@ export async function PATCH(
 // DELETE /api/families/:id - 删除家庭（软删除）
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权访问' }, { status: 401 })
@@ -172,7 +174,7 @@ export async function DELETE(
 
     // 检查家庭是否存在
     const family = await prisma.family.findUnique({
-      where: { id: params.id, deletedAt: null },
+      where: { id, deletedAt: null },
     })
 
     if (!family) {
@@ -189,7 +191,7 @@ export async function DELETE(
 
     // 软删除家庭
     await prisma.family.update({
-      where: { id: params.id },
+      where: { id },
       data: { deletedAt: new Date() },
     })
 
