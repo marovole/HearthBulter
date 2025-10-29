@@ -27,8 +27,8 @@
 - [ ] 4.5 编写成员管理单元测试
 
 ## 5. Health Goals & Allergies
-- [ ] 5.1 实现健康目标API (`/api/members/:id/goals`)
-- [ ] 5.2 实现过敏史API (`/api/members/:id/allergies`)
+- [x] 5.1 实现健康目标API (`/api/members/:id/goals`)
+- [x] 5.2 实现过敏史API (`/api/members/:id/allergies`)
 - [ ] 5.3 创建目标设定UI
 - [ ] 5.4 创建过敏记录UI
 - [ ] 5.5 编写目标计算逻辑测试
