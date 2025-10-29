@@ -1,0 +1,64 @@
+# Wearable Device Integration - Change Spec
+
+## ADDED Requirements
+
+### Requirement: Device Connection
+系统必须（SHALL）支持主流可穿戴设备数据同步。
+
+#### Scenario: Connect Apple Watch
+- **GIVEN** 用户拥有Apple Watch
+- **WHEN** 授权HealthKit访问
+- **THEN** 系统自动同步步数、心率、卡路里消耗
+- **AND** 每小时增量同步新数据
+
+#### Scenario: Connect Huawei Band
+- **GIVEN** 用户使用华为手环
+- **WHEN** 通过华为Health SDK授权
+- **THEN** 同步睡眠质量和运动记录
+- **AND** 数据标注来源为"华为Health"
+
+#### Scenario: Disconnect device
+- **GIVEN** 用户更换设备
+- **WHEN** 取消授权
+- **THEN** 停止数据同步
+- **AND** 历史数据保留
+
+---
+
+### Requirement: Data Synchronization
+系统必须（SHALL）定期同步并去重设备数据。
+
+#### Scenario: Auto sync overnight
+- **GIVEN** 用户睡眠期间产生数据
+- **WHEN** 早上打开应用
+- **THEN** 自动拉取昨夜睡眠数据
+- **AND** 更新健康仪表盘
+
+#### Scenario: Deduplicate data
+- **GIVEN** 用户同时使用Apple Watch和手动录入
+- **WHEN** 系统检测到重复数据（同一时间段）
+- **THEN** 优先保留设备数据
+- **AND** 标注数据来源
+
+#### Scenario: Handle sync failure
+- **GIVEN** 网络中断导致同步失败
+- **WHEN** 网络恢复
+- **THEN** 自动重试同步
+- **AND** 显示最后成功同步时间
+
+---
+
+### Requirement: Permission Management
+系统必须（SHALL）正确处理设备授权和权限。
+
+#### Scenario: Request health data permission
+- **GIVEN** 用户首次连接Apple Watch
+- **WHEN** 系统请求HealthKit权限
+- **THEN** 显示iOS原生权限弹窗
+- **AND** 用户授权后开始同步
+
+#### Scenario: Handle denied permission
+- **GIVEN** 用户拒绝HealthKit权限
+- **WHEN** 系统尝试同步
+- **THEN** 显示提示"请在设置中允许访问健康数据"
+- **AND** 提供跳转到系统设置的按钮
