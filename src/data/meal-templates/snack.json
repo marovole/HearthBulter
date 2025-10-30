@@ -1,0 +1,45 @@
+[
+  {
+    "id": "snack-001",
+    "name": "苹果",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "苹果",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "高纤维"]
+  },
+  {
+    "id": "snack-002",
+    "name": "酸奶配坚果",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "酸奶",
+        "amount": 100
+      },
+      {
+        "foodName": "核桃",
+        "amount": 15
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "补钙"]
+  },
+  {
+    "id": "snack-003",
+    "name": "香蕉",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "香蕉",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高碳水", "快速补充"]
+  }
+]

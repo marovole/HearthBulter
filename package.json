@@ -48,6 +48,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.0",
+    "recharts": "^3.3.0",
     "tailwind-merge": "^2.5.0",
     "zod": "^3.23.8",
     "zustand": "^5.0.0"
@@ -90,5 +91,8 @@
   "prisma": {
     "schema": "prisma/schema.prisma",
     "seed": "tsx prisma/seed.ts"
+  },
+  "optionalDependencies": {
+    "ioredis": "^5.3.2"
   }
 }

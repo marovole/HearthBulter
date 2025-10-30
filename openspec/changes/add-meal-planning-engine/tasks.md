@@ -1,33 +1,33 @@
 # Implementation Tasks
 
 ## 1. Database Models
-- [ ] 1.1 创建MealPlan Prisma模型
-- [ ] 1.2 创建Meal模型（早中晚餐+加餐）
-- [ ] 1.3 创建MealIngredient模型（食材关联）
+- [x] 1.1 创建MealPlan Prisma模型
+- [x] 1.2 创建Meal模型（早中晚餐+加餐）
+- [x] 1.3 创建MealIngredient模型（食材关联）
 - [ ] 1.4 运行数据库迁移
-- [ ] 1.5 添加关系索引优化查询
+- [x] 1.5 添加关系索引优化查询
 
 ## 2. Macro Calculator Service
-- [ ] 2.1 创建macro-calculator.ts服务
-- [ ] 2.2 实现TDEE计算（基于BMR和活动系数）
-- [ ] 2.3 实现目标热量调整（减重-400, 增肌+300）
-- [ ] 2.4 实现宏量分配（碳水/蛋白/脂肪比例）
+- [x] 2.1 创建macro-calculator.ts服务
+- [x] 2.2 实现TDEE计算（基于BMR和活动系数）
+- [x] 2.3 实现目标热量调整（减重-400, 增肌+300）
+- [x] 2.4 实现宏量分配（碳水/蛋白/脂肪比例）
 - [ ] 2.5 编写计算逻辑单元测试
 
 ## 3. Meal Planning Engine
-- [ ] 3.1 创建meal-planner.ts核心引擎
-- [ ] 3.2 实现模板加载（早中晚餐模板库）
-- [ ] 3.3 实现过敏食材过滤
-- [ ] 3.4 实现营养平衡算法（匹配目标宏量）
-- [ ] 3.5 实现季节性食材优先
-- [ ] 3.6 添加随机性（避免重复菜单）
+- [x] 3.1 创建meal-planner.ts核心引擎
+- [x] 3.2 实现模板加载（早中晚餐模板库）
+- [x] 3.3 实现过敏食材过滤
+- [x] 3.4 实现营养平衡算法（匹配目标宏量）
+- [x] 3.5 实现季节性食材优先
+- [x] 3.6 添加随机性（避免重复菜单）
 
 ## 4. Meal Plan API
-- [ ] 4.1 实现POST /api/members/:id/meal-plans（生成食谱）
-- [ ] 4.2 实现GET /api/members/:id/meal-plans（查询历史食谱）
+- [x] 4.1 实现POST /api/members/:id/meal-plans（生成食谱）
+- [x] 4.2 实现GET /api/members/:id/meal-plans（查询历史食谱）
 - [ ] 4.3 实现PATCH /api/meal-plans/:id/meals/:mealId（替换单餐）
-- [ ] 4.4 实现DELETE /api/meal-plans/:id（删除食谱）
-- [ ] 4.5 实现GET /api/meal-plans/:id/nutrition（营养汇总）
+- [x] 4.4 实现DELETE /api/meal-plans/:id（删除食谱）
+- [x] 4.5 实现GET /api/meal-plans/:id/nutrition（营养汇总）
 
 ## 5. Meal Templates
 - [ ] 5.1 创建早餐模板库（15-20个模板）

@@ -87,6 +87,7 @@ model FamilyMember {
   dietaryPreference DietaryPreference?
   healthData        HealthData[]
   healthReminders   HealthReminder[]
+  mealPlans         MealPlan[]
 
   // 审计字段
   createdAt DateTime  @default(now())
@@ -316,6 +317,9 @@ model Food {
   updatedAt DateTime  @updatedAt
   cachedAt  DateTime? // USDA数据缓存时间
 
+  // 关联关系
+  mealIngredients MealIngredient[]
+
   @@index([category])
   @@index([source])
   @@index([nameEn])
@@ -413,4 +417,98 @@ enum ReminderType {
   BLOOD_PRESSURE // 血压记录提醒
   HEART_RATE     // 心率记录提醒
   GENERAL        // 通用健康数据记录提醒
+}
+
+// 食谱计划表
+model MealPlan {
+  id        String   @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 时间范围
+  startDate DateTime
+  endDate   DateTime
+
+  // 目标类型（参考HealthGoal的goalType）
+  goalType GoalType
+
+  // 营养目标（每日目标）
+  targetCalories Float
+  targetProtein  Float
+  targetCarbs    Float
+  targetFat      Float
+
+  // 计划状态
+  status PlanStatus @default(ACTIVE)
+
+  // 关联关系
+  meals Meal[]
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("meal_plans")
+  @@index([memberId])
+  @@index([startDate, endDate])
+}
+
+// 餐食表
+model Meal {
+  id       String   @id @default(cuid())
+  planId   String
+  plan     MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  // 餐食信息
+  date     DateTime
+  mealType MealType // BREAKFAST, LUNCH, DINNER, SNACK
+
+  // 营养成分（实际值，从食材计算得出）
+  calories Float
+  protein  Float
+  carbs    Float
+  fat      Float
+
+  // 关联关系
+  ingredients MealIngredient[]
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("meals")
+  @@index([planId])
+  @@index([planId, date, mealType])
+}
+
+// 餐食食材表
+model MealIngredient {
+  id     String @id @default(cuid())
+  mealId String
+  meal   Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  foodId String
+  food   Food   @relation(fields: [foodId], references: [id])
+
+  // 食材数量
+  amount Float // 重量（单位：g）
+
+  @@map("meal_ingredients")
+  @@index([mealId])
+  @@index([foodId])
+}
+
+// 餐食类型枚举
+enum MealType {
+  BREAKFAST // 早餐
+  LUNCH     // 午餐
+  DINNER    // 晚餐
+  SNACK     // 加餐
+}
+
+// 食谱计划状态枚举
+enum PlanStatus {
+  ACTIVE    // 进行中
+  COMPLETED // 已完成
+  CANCELLED // 已取消
 }

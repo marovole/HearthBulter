@@ -98,6 +98,29 @@ pnpm install
 cp .env.example .env
 # 编辑 .env 文件，填入数据库连接和API密钥
 
+# 必需的环境变量：
+# DATABASE_URL - PostgreSQL数据库连接字符串
+# NEXTAUTH_SECRET - NextAuth.js密钥（至少32个字符）
+# NEXTAUTH_URL - 应用URL（开发环境: http://localhost:3000）
+
+# 可选的环境变量：
+# USDA_API_KEY - USDA FoodData Central API密钥（用于营养数据查询）
+# REDIS_URL - Redis连接URL（用于缓存，可选）
+# GOOGLE_CLIENT_ID - Google OAuth客户端ID（可选）
+# GOOGLE_CLIENT_SECRET - Google OAuth客户端密钥（可选）
+
+## 获取USDA API Key
+
+1. 访问 [USDA FoodData Central API](https://fdc.nal.usda.gov/api-guide.html)
+2. 注册账号并登录
+3. 在API Key页面申请免费API密钥
+4. 将密钥添加到 `.env` 文件：
+   ```
+   USDA_API_KEY=your-usda-api-key-here
+   ```
+
+**注意**: USDA API免费额度为每小时1000次请求。如果未配置API Key，系统将仅使用本地数据库中的食物数据。
+
 # 4. 初始化数据库
 pnpm prisma migrate dev
 

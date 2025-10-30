@@ -13,6 +13,13 @@ interface CacheConfig {
   defaultTTL: number // 默认TTL（秒）
 }
 
+interface CacheStats {
+  hits: number // 缓存命中次数
+  misses: number // 缓存未命中次数
+  sets: number // 设置缓存次数
+  deletes: number // 删除缓存次数
+}
+
 // 内存缓存（当Redis不可用时使用）
 const memoryCache = new Map<string, { data: any; expiresAt: number }>()
 
@@ -22,6 +29,12 @@ const memoryCache = new Map<string, { data: any; expiresAt: number }>()
 export class CacheService {
   private config: CacheConfig
   private redisClient: any = null
+  private stats: CacheStats = {
+    hits: 0,
+    misses: 0,
+    sets: 0,
+    deletes: 0,
+  }
 
   constructor(config?: Partial<CacheConfig>) {
     this.config = {
@@ -82,8 +95,10 @@ export class CacheService {
       try {
         const value = await this.redisClient.get(key)
         if (value) {
+          this.stats.hits++
           return JSON.parse(value) as T
         }
+        this.stats.misses++
         return null
       } catch (error) {
         console.error('Redis get错误:', error)
@@ -103,6 +118,7 @@ export class CacheService {
     value: any,
     ttl?: number
   ): Promise<void> {
+    this.stats.sets++
     const ttlSeconds = ttl ?? this.config.defaultTTL
 
     if (this.config.useRedis && this.redisClient) {
@@ -126,6 +142,7 @@ export class CacheService {
    * 删除缓存
    */
   async delete(key: string): Promise<void> {
+    this.stats.deletes++
     if (this.config.useRedis && this.redisClient) {
       try {
         await this.redisClient.del(key)
@@ -144,15 +161,18 @@ export class CacheService {
   private getFromMemory<T>(key: string): T | null {
     const cached = memoryCache.get(key)
     if (!cached) {
+      this.stats.misses++
       return null
     }
 
     // 检查是否过期
     if (Date.now() > cached.expiresAt) {
       memoryCache.delete(key)
+      this.stats.misses++
       return null
     }
 
+    this.stats.hits++
     return cached.data as T
   }
 
@@ -178,6 +198,31 @@ export class CacheService {
       if (now > value.expiresAt) {
         memoryCache.delete(key)
       }
+    }
+  }
+
+  /**
+   * 获取缓存统计信息
+   */
+  getStats(): CacheStats & { hitRate: number } {
+    const total = this.stats.hits + this.stats.misses
+    const hitRate = total > 0 ? this.stats.hits / total : 0
+
+    return {
+      ...this.stats,
+      hitRate: Math.round(hitRate * 10000) / 100, // 保留2位小数，转换为百分比
+    }
+  }
+
+  /**
+   * 重置统计信息
+   */
+  resetStats(): void {
+    this.stats = {
+      hits: 0,
+      misses: 0,
+      sets: 0,
+      deletes: 0,
     }
   }
 
@@ -284,5 +329,5 @@ export class FoodCacheService {
 export const foodCacheService = new FoodCacheService()
 
 // 导出类型
-export type { CacheConfig }
+export type { CacheConfig, CacheStats }
 

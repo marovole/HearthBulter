@@ -1,0 +1,65 @@
+[
+  {
+    "id": "lunch-001",
+    "name": "鸡胸肉配西兰花和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡胸肉",
+        "amount": 150
+      },
+      {
+        "foodName": "西兰花",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "均衡"]
+  },
+  {
+    "id": "lunch-002",
+    "name": "牛肉配青菜和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "牛肉",
+        "amount": 120
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "增肌"]
+  },
+  {
+    "id": "lunch-003",
+    "name": "三文鱼配蔬菜沙拉",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "三文鱼",
+        "amount": 150
+      },
+      {
+        "foodName": "生菜",
+        "amount": 150
+      },
+      {
+        "foodName": "番茄",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["低卡", "高蛋白"]
+  }
+]

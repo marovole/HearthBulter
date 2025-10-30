@@ -162,6 +162,101 @@ describe('USDA Service', () => {
       expect(result[0].source).toBe('USDA')
       expect(result[0].usdaId).toBe('123456')
     })
+
+    it('should translate Chinese food names to English for USDA search', async () => {
+      const mockResponse = {
+        foods: [
+          {
+            fdcId: 789012,
+            description: 'broccoli',
+            foodNutrients: [
+              { nutrientId: 1008, nutrientName: 'Energy', value: 34 },
+              { nutrientId: 1003, nutrientName: 'Protein', value: 2.8 },
+              { nutrientId: 1005, nutrientName: 'Carbohydrate', value: 7 },
+              { nutrientId: 1004, nutrientName: 'Total lipid (fat)', value: 0.4 },
+            ],
+          },
+        ],
+        totalHits: 1,
+        currentPage: 1,
+        totalPages: 1,
+      }
+
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      // 测试中文搜索会被翻译为英文
+      const result = await service.searchFoods('西兰花')
+
+      expect(result.foods).toHaveLength(1)
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('broccoli'),
+        expect.any(Object)
+      )
+    })
+
+    it('should handle English food names correctly', async () => {
+      const mockResponse = {
+        foods: [
+          {
+            fdcId: 345678,
+            description: 'beef',
+            foodNutrients: [
+              { nutrientId: 1008, nutrientName: 'Energy', value: 250 },
+              { nutrientId: 1003, nutrientName: 'Protein', value: 26 },
+            ],
+          },
+        ],
+        totalHits: 1,
+        currentPage: 1,
+        totalPages: 1,
+      }
+
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      const result = await service.searchFoods('beef')
+
+      expect(result.foods).toHaveLength(1)
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('beef'),
+        expect.any(Object)
+      )
+    })
+
+    it('should map Chinese food names in search results', async () => {
+      const mockResponse = {
+        foods: [
+          {
+            fdcId: 456789,
+            description: 'tomato',
+            foodNutrients: [
+              { nutrientId: 1008, nutrientName: 'Energy', value: 18 },
+              { nutrientId: 1003, nutrientName: 'Protein', value: 0.9 },
+            ],
+          },
+        ],
+        totalHits: 1,
+        currentPage: 1,
+        totalPages: 1,
+      }
+
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      const result = await service.searchAndMapFoods('番茄', 10)
+
+      expect(result).toHaveLength(1)
+      // 验证映射后的数据包含中英文名称
+      expect(result[0].nameEn).toBe('tomato')
+      expect(result[0].name).toBeTruthy() // 应该有中文名
+    })
   })
 })
 

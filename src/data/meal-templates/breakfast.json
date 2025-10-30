@@ -1,0 +1,53 @@
+[
+  {
+    "id": "breakfast-001",
+    "name": "水煮蛋配全麦面包",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "全麦面包",
+        "amount": 60
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["高蛋白", "简单"]
+  },
+  {
+    "id": "breakfast-002",
+    "name": "燕麦粥配坚果",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "燕麦",
+        "amount": 50
+      },
+      {
+        "foodName": "核桃",
+        "amount": 20
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["高纤维", "健康"]
+  },
+  {
+    "id": "breakfast-003",
+    "name": "牛奶配全麦吐司",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "牛奶",
+        "amount": 250
+      },
+      {
+        "foodName": "全麦面包",
+        "amount": 60
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "补钙"]
+  }
+]
