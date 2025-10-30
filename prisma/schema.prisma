@@ -23,6 +23,8 @@ model User {
   // 关联关系
   createdFamilies Family[]       @relation("FamilyCreator")
   familyMembers   FamilyMember[]
+  platformAccounts PlatformAccount[] @relation("PlatformAccounts")
+  orders Order[] @relation("UserOrders")
 
   // 审计字段
   createdAt DateTime  @default(now())
@@ -106,6 +108,10 @@ model FamilyMember {
   // AI 关联
   aiAdvices       AIAdvice[]
   aiConversations AIConversation[]
+
+  // 预算优化关联
+  budgets               Budget[]
+  savingsRecommendations SavingsRecommendation[]
 
   // 审计字段
   createdAt DateTime  @default(now())
@@ -340,6 +346,8 @@ model Food {
   shoppingItems   ShoppingItem[]
   mealLogFoods    MealLogFood[]
   templateFoods   TemplateFood[]
+  priceHistories  PriceHistory[]
+  platformProducts PlatformProduct[] @relation("PlatformProducts")
 
   @@index([category])
   @@index([source])
@@ -1302,4 +1310,451 @@ model UserConsent {
   @@index([consentId])
   @@index([granted])
   @@index([expiresAt])
+}
+
+// ==================== 预算优化系统 ====================
+
+// 预算设定表
+model Budget {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 预算基本信息
+  name        String // 预算名称（如"2024年1月饮食预算"）
+  period      BudgetPeriod // 预算周期
+  startDate   DateTime // 预算开始日期
+  endDate     DateTime // 预算结束日期
+  totalAmount Float // 总预算金额（元）
+
+  // 分类预算（可选，为null表示使用总预算）
+  vegetableBudget Float? // 蔬菜预算
+  meatBudget      Float? // 肉类预算
+  fruitBudget     Float? // 水果预算
+  grainBudget     Float? // 谷物预算
+  dairyBudget     Float? // 乳制品预算
+  otherBudget     Float? // 其他预算
+
+  // 预算状态
+  status BudgetStatus @default(ACTIVE)
+  
+  // 预算使用统计
+  usedAmount    Float @default(0) // 已使用金额
+  remainingAmount Float? // 剩余金额（计算得出）
+  usagePercentage Float? // 使用百分比（计算得出）
+
+  // 预算设置
+  alertThreshold80 Boolean @default(true) // 80%预警
+  alertThreshold100 Boolean @default(true) // 100%预警
+  alertThreshold110 Boolean @default(true) // 110%超支预警
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // 关联关系
+  spendings Spending[]
+  alerts    BudgetAlert[]
+
+  @@index([memberId])
+  @@index([memberId, period])
+  @@index([startDate, endDate])
+  @@map("budgets")
+}
+
+// 预算周期枚举
+enum BudgetPeriod {
+  WEEKLY // 周预算
+  MONTHLY // 月预算
+  QUARTERLY // 季度预算
+  YEARLY // 年预算
+  CUSTOM // 自定义周期
+}
+
+// 预算状态枚举
+enum BudgetStatus {
+  ACTIVE // 活跃中
+  COMPLETED // 已完成
+  CANCELLED // 已取消
+  EXPIRED // 已过期
+}
+
+// 支出记录表
+model Spending {
+  id       String @id @default(cuid())
+  budgetId String
+  budget   Budget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  // 支出信息
+  amount       Float // 支出金额（元）
+  category     FoodCategory // 支出分类
+  description  String // 支出描述
+  transactionId String? // 外部交易ID（来自电商平台）
+
+  // 采购信息
+  platform     String? // 采购平台（山姆、盒马等）
+  items        Json? // 采购物品清单（JSON数组）
+  purchaseDate DateTime @default(now()) // 采购日期
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([budgetId])
+  @@index([budgetId, category])
+  @@index([purchaseDate])
+  @@map("spendings")
+}
+
+// 价格历史表
+model PriceHistory {
+  id     String @id @default(cuid())
+  foodId String
+  food   Food   @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  // 价格信息
+  price      Float // 价格（元）
+  unit       String // 单位（如"kg"、"斤"、"500g"）
+  unitPrice  Float // 单位价格（元/kg或元/斤）
+  platform   String // 平台名称
+
+  // 价格元数据
+  recordedAt DateTime @default(now()) // 记录时间
+  source     PriceSource @default(MANUAL) // 数据来源
+  isValid    Boolean @default(true) // 是否有效价格
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([foodId])
+  @@index([foodId, platform])
+  @@index([recordedAt])
+  @@map("price_histories")
+}
+
+// 价格来源枚举
+enum PriceSource {
+  MANUAL // 手动录入
+  CRAWLER // 爬虫抓取
+  API // API接口
+  USER_REPORT // 用户报告
+}
+
+// 节省建议表
+model SavingsRecommendation {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 建议信息
+  type        SavingsType // 建议类型
+  title       String // 建议标题
+  description String // 建议描述
+  savings     Float // 预计节省金额（元）
+
+  // 建议详情
+  originalPrice Float? // 原价
+  discountedPrice Float? // 折扣价
+  platform       String? // 推荐平台
+  foodItems       Json? // 相关食材（JSON数组）
+  validUntil      DateTime? // 建议有效期
+
+  // 用户交互
+  status   RecommendationStatus @default(PENDING)
+  viewed   Boolean @default(false)
+  acted    Boolean @default(false)
+  feedback String? // 用户反馈
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([memberId])
+  @@index([memberId, type])
+  @@index([status])
+  @@index([validUntil])
+  @@map("savings_recommendations")
+}
+
+// 节省建议类型枚举
+enum SavingsType {
+  PROMOTION // 促销商品
+  GROUP_BUY // 团购优惠
+  SEASONAL // 季节性替代
+  BULK_PURCHASE // 批量采购
+  PLATFORM_SWITCH // 平台切换
+  SUBSTITUTE // 食材替换
+}
+
+// 建议状态枚举
+enum RecommendationStatus {
+  PENDING // 待处理
+  VIEWED // 已查看
+  ACCEPTED // 已接受
+  REJECTED // 已拒绝
+  EXPIRED // 已过期
+}
+
+// 预算预警表
+model BudgetAlert {
+  id       String @id @default(cuid())
+  budgetId String
+  budget   Budget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  // 预警信息
+  type        AlertType // 预警类型
+  threshold   Float // 预警阈值（百分比）
+  currentValue Float // 当前值（百分比）
+  message     String // 预警消息
+
+  // 预警状态
+  status     AlertStatus @default(ACTIVE)
+  acknowledgedAt DateTime? // 确认时间
+  resolvedAt DateTime? // 解决时间
+
+  // 通知设置
+  notified   Boolean @default(false)
+  notifiedAt DateTime?
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([budgetId])
+  @@index([budgetId, type])
+  @@index([status])
+  @@map("budget_alerts")
+}
+
+// 预警类型枚举
+enum AlertType {
+  WARNING_80 // 80%预警
+  WARNING_100 // 100%预警
+  OVER_BUDGET_110 // 110%超支
+  CATEGORY_OVER // 分类超支
+  DAILY_EXCESS // 日均超标
+}
+
+// 预警状态枚举
+enum AlertStatus {
+  ACTIVE // 活跃
+  ACKNOWLEDGED // 已确认
+  RESOLVED // 已解决
+  DISMISSED // 已忽略
+}
+
+// ==================== 电商集成系统 ====================
+
+// 电商平台枚举
+enum EcommercePlatform {
+  SAMS_CLUB // 山姆会员商店
+  HEMA // 盒马鲜生
+  DINGDONG // 叮咚买菜
+}
+
+// 平台账号状态枚举
+enum PlatformAccountStatus {
+  ACTIVE // 活跃
+  INACTIVE // 非活跃
+  EXPIRED // 已过期
+  ERROR // 错误
+}
+
+// 订单状态枚举
+enum OrderStatus {
+  PENDING_PAYMENT // 待支付
+  PAID // 已支付
+  PROCESSING // 处理中
+  SHIPPED // 已发货
+  DELIVERED // 已送达
+  CANCELLED // 已取消
+  REFUNDED // 已退款
+}
+
+// 配送状态枚举
+enum DeliveryStatus {
+  PREPARING // 准备中
+  READY_FOR_PICKUP // 待取货
+  OUT_FOR_DELIVERY // 配送中
+  DELIVERED // 已送达
+  FAILED // 配送失败
+}
+
+// 平台账号表
+model PlatformAccount {
+  id       String            @id @default(cuid())
+  userId   String
+  user     User              @relation("PlatformAccounts", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 平台信息
+  platform EcommercePlatform // 电商平台
+  platformUserId String? // 平台用户ID
+  username String? // 平台用户名
+  
+  // OAuth认证信息
+  accessToken String? @db.Text // 访问令牌（加密存储）
+  refreshToken String? @db.Text // 刷新令牌（加密存储）
+  tokenType String? @default("Bearer") // 令牌类型
+  scope String? // 授权范围
+  expiresAt DateTime? // 令牌过期时间
+  
+  // 账号状态
+  status PlatformAccountStatus @default(ACTIVE)
+  isActive Boolean @default(true) // 是否启用
+  lastSyncAt DateTime? // 最后同步时间
+  syncError String? // 同步错误信息
+  
+  // 平台配置
+  defaultDeliveryAddress Json? // 默认配送地址
+  preferences Json? // 平台偏好设置
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // 关联关系
+  orders Order[]
+  
+  @@unique([userId, platform])
+  @@index([userId])
+  @@index([platform])
+  @@index([status])
+  @@map("platform_accounts")
+}
+
+// 订单表
+model Order {
+  id       String            @id @default(cuid())
+  userId   String
+  user     User              @relation("UserOrders", fields: [userId], references: [id], onDelete: Cascade)
+  accountId String
+  account  PlatformAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  // 订单基本信息
+  platformOrderId String @unique // 平台订单ID
+  platform EcommercePlatform // 电商平台
+  
+  // 订单金额
+  subtotal Float // 商品小计
+  shippingFee Float @default(0) // 运费
+  discount Float @default(0) // 优惠金额
+  totalAmount Float // 订单总金额
+  
+  // 订单状态
+  status OrderStatus @default(PENDING_PAYMENT)
+  paymentStatus String? // 支付状态
+  deliveryStatus DeliveryStatus? // 配送状态
+  
+  // 时间信息
+  orderDate DateTime @default(now()) // 下单时间
+  paymentDate DateTime? // 支付时间
+  shipmentDate DateTime? // 发货时间
+  deliveryDate DateTime? // 预计送达时间
+  actualDeliveryDate DateTime? // 实际送达时间
+  
+  // 配送信息
+  deliveryAddress Json // 配送地址
+  trackingNumber String? // 物流单号
+  deliveryNotes String? // 配送备注
+  
+  // 订单详情
+  items Json // 订单商品列表（JSON数组）
+  orderSummary Json? // 订单摘要
+  
+  // 平台返回信息
+  platformResponse Json? // 平台API响应
+  syncError String? // 同步错误信息
+  lastSyncAt DateTime? // 最后同步时间
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  @@index([userId])
+  @@index([accountId])
+  @@index([platform])
+  @@index([platformOrderId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("orders")
+}
+
+// 平台商品表
+model PlatformProduct {
+  id       String @id @default(cuid())
+  
+  // 平台信息
+  platform EcommercePlatform // 电商平台
+  platformProductId String // 平台商品ID
+  sku String? // SKU编码
+  
+  // 商品基本信息
+  name String // 商品名称
+  description String? // 商品描述
+  brand String? // 品牌
+  category String? // 商品分类
+  imageUrl String? // 商品图片
+  
+  // 规格信息
+  specification Json? // 规格参数（JSON对象）
+  weight Float? // 重量（g）
+  volume Float? // 体积（ml）
+  unit String? // 单位
+  
+  // 价格信息
+  price Float // 当前价格
+  originalPrice Float? // 原价
+  currency String @default("CNY") // 货币
+  priceUnit String? // 价格单位（如"kg"、"斤"、"件"）
+  
+  // 库存信息
+  stock Int @default(0) // 库存数量
+  isInStock Boolean @default(true) // 是否有库存
+  stockStatus String? // 库存状态
+  
+  // 销售信息
+  salesCount Int? // 销量
+  rating Float? // 评分
+  reviewCount Int? // 评价数
+  
+  // 配送信息
+  deliveryOptions Json? // 配送选项
+  deliveryTime Json? // 配送时间
+  shippingFee Float? // 运费
+  
+  // 匹配信息
+  matchedFoodId String? // 匹配的食材ID
+  matchConfidence Float? // 匹配置信度（0-1）
+  matchKeywords Json? // 匹配关键词
+  
+  // 缓存信息
+  cachedAt DateTime @default(now()) // 缓存时间
+  expiresAt DateTime // 过期时间
+  isValid Boolean @default(true) // 是否有效
+  
+  // 平台数据
+  platformData Json? // 平台原始数据
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  
+  // 关联关系
+  matchedFood Food? @relation("PlatformProducts", fields: [matchedFoodId], references: [id])
+  
+  @@unique([platform, platformProductId])
+  @@index([platform])
+  @@index([matchedFoodId])
+  @@index([matchConfidence])
+  @@index([cachedAt])
+  @@index([expiresAt])
+  @@map("platform_products")
 }

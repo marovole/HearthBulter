@@ -334,6 +334,418 @@ async function main() {
   }
 
   console.log(`✅ 创建${commonFoods.length}种常用食材完成`)
+
+  // 创建电商测试数据
+  console.log('🛒 开始创建电商测试数据...')
+
+  // 获取食材ID用于匹配
+  const chickenFood = await prisma.food.findFirst({ where: { name: '鸡胸肉' } })
+  const beefFood = await prisma.food.findFirst({ where: { name: '牛肉' } })
+  const broccoliFood = await prisma.food.findFirst({ where: { name: '西兰花' } })
+  const eggFood = await prisma.food.findFirst({ where: { name: '鸡蛋' } })
+  const riceFood = await prisma.food.findFirst({ where: { name: '米饭' } })
+
+  // 创建平台账号测试数据
+  const platformAccounts = [
+    {
+      userId: testUser.id,
+      platform: 'SAMS_CLUB' as const,
+      platformUserId: 'sams_user_001',
+      username: 'test_sams_user',
+      accessToken: 'encrypted_sams_access_token_demo',
+      refreshToken: 'encrypted_sams_refresh_token_demo',
+      tokenType: 'Bearer',
+      scope: 'read write',
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30天后过期
+      status: 'ACTIVE' as const,
+      isActive: true,
+      defaultDeliveryAddress: {
+        province: '上海市',
+        city: '上海市',
+        district: '浦东新区',
+        detail: '张江高科技园区',
+        postalCode: '201203',
+        contactName: '测试用户',
+        contactPhone: '13800138000'
+      },
+      preferences: {
+        defaultPayment: 'wechat_pay',
+        deliveryPreference: 'fastest'
+      }
+    },
+    {
+      userId: testUser.id,
+      platform: 'HEMA' as const,
+      platformUserId: 'hema_user_001',
+      username: 'test_hema_user',
+      accessToken: 'encrypted_hema_access_token_demo',
+      refreshToken: 'encrypted_hema_refresh_token_demo',
+      tokenType: 'Bearer',
+      scope: 'read write',
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      status: 'ACTIVE' as const,
+      isActive: true,
+      defaultDeliveryAddress: {
+        province: '上海市',
+        city: '上海市',
+        district: '黄浦区',
+        detail: '南京东路100号',
+        postalCode: '200001',
+        contactName: '测试用户',
+        contactPhone: '13800138000'
+      },
+      preferences: {
+        defaultPayment: 'alipay',
+        deliveryPreference: 'scheduled'
+      }
+    }
+  ]
+
+  for (const accountData of platformAccounts) {
+    await prisma.platformAccount.upsert({
+      where: {
+        userId_platform: {
+          userId: accountData.userId,
+          platform: accountData.platform
+        }
+      },
+      update: accountData,
+      create: accountData
+    })
+  }
+
+  console.log('✅ 创建平台账号完成')
+
+  // 创建平台商品测试数据（山姆会员商店）
+  const samsProducts = [
+    {
+      platform: 'SAMS_CLUB' as const,
+      platformProductId: 'SAMS_001',
+      sku: 'SAMS_CHICKEN_001',
+      name: '山姆会员牌 鸡胸肉 1kg',
+      description: '优质鸡胸肉，高蛋白低脂肪，适合健身人士',
+      brand: '山姆会员牌',
+      category: '肉类',
+      imageUrl: 'https://example.com/sams-chicken.jpg',
+      specification: {
+        weight: '1000g',
+        package: '真空包装',
+        storage: '冷藏'
+      },
+      weight: 1000,
+      unit: 'g',
+      price: 29.9,
+      originalPrice: 39.9,
+      currency: 'CNY',
+      priceUnit: 'kg',
+      stock: 100,
+      isInStock: true,
+      stockStatus: '充足',
+      salesCount: 1250,
+      rating: 4.8,
+      reviewCount: 326,
+      deliveryOptions: {
+        standard: { time: '次日达', fee: 6 },
+        express: { time: '当日达', fee: 12 }
+      },
+      matchedFoodId: chickenFood?.id,
+      matchConfidence: 0.95,
+      matchKeywords: ['鸡胸肉', '鸡肉', '胸肉'],
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24小时后过期
+      platformData: {
+        category_id: 'MEAT_001',
+        brand_id: 'SAMS_BRAND',
+        tags: ['高蛋白', '低脂', '健身']
+      }
+    },
+    {
+      platform: 'SAMS_CLUB' as const,
+      platformProductId: 'SAMS_002',
+      sku: 'SAMS_BEEF_001',
+      name: '澳洲进口 牛腩块 500g',
+      description: '澳洲进口优质牛腩，肉质鲜嫩',
+      brand: '山姆会员牌',
+      category: '肉类',
+      imageUrl: 'https://example.com/sams-beef.jpg',
+      specification: {
+        weight: '500g',
+        origin: '澳洲',
+        package: '真空包装'
+      },
+      weight: 500,
+      unit: 'g',
+      price: 45.8,
+      originalPrice: 55.8,
+      currency: 'CNY',
+      priceUnit: '500g',
+      stock: 50,
+      isInStock: true,
+      stockStatus: '充足',
+      salesCount: 890,
+      rating: 4.6,
+      reviewCount: 215,
+      deliveryOptions: {
+        standard: { time: '次日达', fee: 6 },
+        express: { time: '当日达', fee: 12 }
+      },
+      matchedFoodId: beefFood?.id,
+      matchConfidence: 0.88,
+      matchKeywords: ['牛肉', '牛腩'],
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      platformData: {
+        category_id: 'MEAT_002',
+        brand_id: 'SAMS_BRAND',
+        tags: ['进口', '优质']
+      }
+    },
+    {
+      platform: 'SAMS_CLUB' as const,
+      platformProductId: 'SAMS_003',
+      sku: 'SAMS_EGG_001',
+      name: '山姆会员牌 鲜鸡蛋 30枚装',
+      description: '农场直供新鲜鸡蛋，营养丰富',
+      brand: '山姆会员牌',
+      category: '蛋类',
+      imageUrl: 'https://example.com/sams-eggs.jpg',
+      specification: {
+        quantity: '30枚',
+        package: '纸盒装'
+      },
+      weight: 1500,
+      unit: 'g',
+      price: 18.9,
+      originalPrice: 22.9,
+      currency: 'CNY',
+      priceUnit: '30枚',
+      stock: 200,
+      isInStock: true,
+      stockStatus: '充足',
+      salesCount: 2100,
+      rating: 4.7,
+      reviewCount: 542,
+      deliveryOptions: {
+        standard: { time: '次日达', fee: 6 },
+        express: { time: '当日达', fee: 12 }
+      },
+      matchedFoodId: eggFood?.id,
+      matchConfidence: 0.92,
+      matchKeywords: ['鸡蛋', '鲜蛋'],
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      platformData: {
+        category_id: 'EGG_001',
+        brand_id: 'SAMS_BRAND',
+        tags: ['新鲜', '营养']
+      }
+    }
+  ]
+
+  // 创建平台商品测试数据（盒马鲜生）
+  const hemaProducts = [
+    {
+      platform: 'HEMA' as const,
+      platformProductId: 'HEMA_001',
+      sku: 'HEMA_CHICKEN_001',
+      name: '盒马鲜生 有机鸡胸肉 400g',
+      description: '有机养殖鸡胸肉，无激素添加',
+      brand: '盒马鲜生',
+      category: '肉类',
+      imageUrl: 'https://example.com/hema-chicken.jpg',
+      specification: {
+        weight: '400g',
+        organic: true,
+        package: '保鲜包装'
+      },
+      weight: 400,
+      unit: 'g',
+      price: 22.5,
+      originalPrice: 28.5,
+      currency: 'CNY',
+      priceUnit: '400g',
+      stock: 80,
+      isInStock: true,
+      stockStatus: '充足',
+      salesCount: 650,
+      rating: 4.9,
+      reviewCount: 178,
+      deliveryOptions: {
+        standard: { time: '30分钟达', fee: 0 },
+        scheduled: { time: '预约配送', fee: 0 }
+      },
+      matchedFoodId: chickenFood?.id,
+      matchConfidence: 0.90,
+      matchKeywords: ['鸡胸肉', '有机', '鸡肉'],
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      platformData: {
+        category_id: 'ORGANIC_MEAT_001',
+        brand_id: 'HEMA_BRAND',
+        tags: ['有机', '无激素']
+      }
+    },
+    {
+      platform: 'HEMA' as const,
+      platformProductId: 'HEMA_002',
+      sku: 'HEMA_BROCCOLI_001',
+      name: '有机西兰花 300g',
+      description: '新鲜有机西兰花，富含维生素C',
+      brand: '盒马鲜生',
+      category: '蔬菜',
+      imageUrl: 'https://example.com/hema-broccoli.jpg',
+      specification: {
+        weight: '300g',
+        organic: true,
+        origin: '云南'
+      },
+      weight: 300,
+      unit: 'g',
+      price: 12.8,
+      originalPrice: 15.8,
+      currency: 'CNY',
+      priceUnit: '300g',
+      stock: 120,
+      isInStock: true,
+      stockStatus: '充足',
+      salesCount: 980,
+      rating: 4.7,
+      reviewCount: 234,
+      deliveryOptions: {
+        standard: { time: '30分钟达', fee: 0 },
+        scheduled: { time: '预约配送', fee: 0 }
+      },
+      matchedFoodId: broccoliFood?.id,
+      matchConfidence: 0.93,
+      matchKeywords: ['西兰花', '青花菜', '有机'],
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      platformData: {
+        category_id: 'ORGANIC_VEG_001',
+        brand_id: 'HEMA_BRAND',
+        tags: ['有机', '新鲜', '高维生素C']
+      }
+    }
+  ]
+
+  // 创建平台商品测试数据（叮咚买菜）
+  const dingdongProducts = [
+    {
+      platform: 'DINGDONG' as const,
+      platformProductId: 'DD_001',
+      sku: 'DD_EGG_001',
+      name: '叮咚农场 鲜鸡蛋 20枚装',
+      description: '农场直供，当日新鲜鸡蛋',
+      brand: '叮咚农场',
+      category: '蛋类',
+      imageUrl: 'https://example.com/dd-eggs.jpg',
+      specification: {
+        quantity: '20枚',
+        package: '环保包装'
+      },
+      weight: 1000,
+      unit: 'g',
+      price: 15.9,
+      originalPrice: 18.9,
+      currency: 'CNY',
+      priceUnit: '20枚',
+      stock: 150,
+      isInStock: true,
+      stockStatus: '充足',
+      salesCount: 1580,
+      rating: 4.5,
+      reviewCount: 389,
+      deliveryOptions: {
+        standard: { time: '最快29分钟达', fee: 3 },
+        next_day: { time: '次日达', fee: 0 }
+      },
+      matchedFoodId: eggFood?.id,
+      matchConfidence: 0.85,
+      matchKeywords: ['鸡蛋', '鲜蛋', '农场'],
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      platformData: {
+        category_id: 'FRESH_EGG_001',
+        brand_id: 'DINGDONG_FARM',
+        tags: ['新鲜', '农场直供']
+      }
+    }
+  ]
+
+  // 插入所有平台商品
+  const allProducts = [...samsProducts, ...hemaProducts, ...dingdongProducts]
+  for (const productData of allProducts) {
+    await prisma.platformProduct.upsert({
+      where: {
+        platform_platformProductId: {
+          platform: productData.platform,
+          platformProductId: productData.platformProductId
+        }
+      },
+      update: productData,
+      create: productData
+    })
+  }
+
+  console.log(`✅ 创建${allProducts.length}个平台商品完成`)
+
+  // 创建测试订单
+  const samsAccount = await prisma.platformAccount.findFirst({
+    where: { userId: testUser.id, platform: 'SAMS_CLUB' }
+  })
+
+  if (samsAccount) {
+    const testOrder = await prisma.order.create({
+      data: {
+        userId: testUser.id,
+        accountId: samsAccount.id,
+        platformOrderId: 'SAMS_ORDER_001',
+        platform: 'SAMS_CLUB',
+        subtotal: 94.6,
+        shippingFee: 6,
+        discount: 10,
+        totalAmount: 90.6,
+        status: 'DELIVERED',
+        paymentStatus: 'PAID',
+        deliveryStatus: 'DELIVERED',
+        orderDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2天前
+        paymentDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+        shipmentDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        deliveryDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        actualDeliveryDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000),
+        deliveryAddress: {
+          province: '上海市',
+          city: '上海市',
+          district: '浦东新区',
+          detail: '张江高科技园区',
+          postalCode: '201203',
+          contactName: '测试用户',
+          contactPhone: '13800138000'
+        },
+        trackingNumber: 'SF1234567890',
+        deliveryNotes: '请放在门口',
+        items: [
+          {
+            platformProductId: 'SAMS_001',
+            name: '山姆会员牌 鸡胸肉 1kg',
+            quantity: 2,
+            price: 29.9,
+            subtotal: 59.8
+          },
+          {
+            platformProductId: 'SAMS_003',
+            name: '山姆会员牌 鲜鸡蛋 30枚装',
+            quantity: 1,
+            price: 18.9,
+            subtotal: 18.9
+          }
+        ],
+        orderSummary: {
+          totalItems: 2,
+          totalQuantity: 3,
+          estimatedDelivery: '次日达'
+        },
+        lastSyncAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      }
+    })
+
+    console.log('✅ 创建测试订单完成')
+  }
+
   console.log('🎉 数据库种子数据初始化完成！')
   console.log('')
   console.log('📋 测试账户信息：')
