@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import { NotificationManager } from '@/lib/services/notification';
+
+const prisma = new PrismaClient();
+const notificationManager = new NotificationManager(prisma);
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const notificationId = params.id;
+    const { searchParams } = new URL(request.url);
+    const memberId = searchParams.get('memberId');
+
+    if (!notificationId || !memberId) {
+      return NextResponse.json(
+        { error: 'Notification ID and Member ID are required' },
+        { status: 400 }
+      );
+    }
+
+    await notificationManager.deleteNotification(notificationId, memberId);
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Notification deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete notification' },
+      { status: 500 }
+    );
+  }
+}

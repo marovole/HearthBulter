@@ -51,6 +51,11 @@ model Family {
   creatorId String
   creator   User           @relation("FamilyCreator", fields: [creatorId], references: [id])
   members   FamilyMember[]
+  
+  // 协作功能关联
+  tasks      Task[]       @relation("FamilyTasks")
+  activities Activity[]   @relation("FamilyActivities")
+  goals      FamilyGoal[] @relation("FamilyGoals")
 
   // 审计字段
   createdAt DateTime  @default(now())
@@ -113,6 +118,36 @@ model FamilyMember {
   budgets               Budget[]
   savingsRecommendations SavingsRecommendation[]
 
+  // 智能食谱推荐关联
+  userPreferences UserPreference?
+  recipeRatings   RecipeRating[]
+  recipeFavorites RecipeFavorite[]
+  recipeViews     RecipeView[]
+
+  // 协作功能关联
+  assignedTasks     Task[]       @relation("AssignedTasks")
+  createdTasks      Task[]       @relation("CreatedTasks")
+  memberActivities Activity[]   @relation("MemberActivities")
+  memberComments    Comment[]    @relation("MemberComments")
+  createdGoals      FamilyGoal[] @relation("CreatedGoals")
+  participatedGoals FamilyGoal[] @relation("ParticipatedGoals")
+  
+  // 购物清单关联
+  assignedShoppingItems   ShoppingItem[] @relation("AssignedShoppingItems")
+  addedShoppingItems      ShoppingItem[] @relation("AddedShoppingItems")
+  purchasedShoppingItems  ShoppingItem[] @relation("PurchasedShoppingItems")
+
+  // 社交分享关联
+  sharedContents     SharedContent[]
+  achievements       Achievement[]
+  leaderboardEntries LeaderboardEntry[]
+  communityPosts     CommunityPost[]
+  communityComments  CommunityComment[]
+
+  // 通知系统关联
+  notifications      Notification[] @relation("MemberNotifications")
+  notificationPreference NotificationPreference? @relation("MemberNotificationPreferences")
+
   // 审计字段
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -140,6 +175,7 @@ enum AgeGroup {
 enum FamilyMemberRole {
   ADMIN // 管理员
   MEMBER // 普通成员
+  GUEST // 访客
 }
 
 // 健康目标表
@@ -348,6 +384,8 @@ model Food {
   templateFoods   TemplateFood[]
   priceHistories  PriceHistory[]
   platformProducts PlatformProduct[] @relation("PlatformProducts")
+  recipeIngredients RecipeIngredient[] @relation("RecipeIngredients")
+  substituteFoods IngredientSubstitution[] @relation("SubstituteFoods")
 
   @@index([category])
   @@index([source])
@@ -704,6 +742,15 @@ model ShoppingItem {
   purchased      Boolean @default(false)
   estimatedPrice Float? // 估算价格（元）
 
+  // 协作功能
+  assigneeId String? // 责任人ID
+  assignee   FamilyMember? @relation("AssignedShoppingItems", fields: [assigneeId], references: [id], onDelete: SetNull)
+  addedBy    String? // 添加者ID
+  addedByMember FamilyMember? @relation("AddedShoppingItems", fields: [addedBy], references: [id], onDelete: SetNull)
+  purchasedBy String? // 购买者ID
+  purchasedByMember FamilyMember? @relation("PurchasedShoppingItems", fields: [purchasedBy], references: [id], onDelete: SetNull)
+  purchasedAt DateTime? // 购买时间
+
   // 审计字段
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -711,6 +758,9 @@ model ShoppingItem {
   @@index([listId])
   @@index([foodId])
   @@index([category])
+  @@index([assigneeId])
+  @@index([addedBy])
+  @@index([purchasedBy])
   @@map("shopping_items")
 }
 
@@ -1067,6 +1117,30 @@ enum ScoreGrade {
   GOOD // 良好 (>=75)
   FAIR // 一般 (>=60)
   POOR // 较差 (<60)
+}
+
+// 口味等级枚举
+enum SpiceLevel {
+  NONE // 不辣
+  LOW // 微辣
+  MEDIUM // 中辣
+  HIGH // 重辣
+  EXTREME // 极辣
+}
+
+enum SweetnessLevel {
+  NONE // 不甜
+  LOW // 微甜
+  MEDIUM // 中等甜
+  HIGH // 甜
+  EXTREME // 极甜
+}
+
+enum SaltinessLevel {
+  LOW // 清淡
+  MEDIUM // 适中
+  HIGH // 咸
+  EXTREME // 很咸
 }
 
 // 趋势数据缓存表
@@ -1757,4 +1831,1099 @@ model PlatformProduct {
   @@index([cachedAt])
   @@index([expiresAt])
   @@map("platform_products")
+}
+
+// ==================== 智能食谱推荐系统 ====================
+
+// 食谱表
+model Recipe {
+  id          String   @id @default(cuid())
+  name        String   // 食谱名称
+  description String?  // 食谱描述
+  
+  // 食谱基本信息
+  cuisine     String?  // 菜系（如川菜、粤菜等）
+  difficulty  Difficulty @default(MEDIUM) // 难度等级
+  prepTime    Int      // 准备时间（分钟）
+  cookTime    Int      // 烹饪时间（分钟）
+  totalTime   Int      // 总时间（分钟）
+  servings    Int      // 份数
+  
+  // 营养成分（每份）
+  calories    Float
+  protein     Float
+  carbs       Float
+  fat         Float
+  fiber       Float?
+  sugar       Float?
+  sodium      Float?
+  
+  // 食谱图片和媒体
+  imageUrl    String?  // 主图片URL
+  images      String   @default("[]") // JSON数组存储所有图片URL
+  videoUrl    String?  // 视频教程URL
+  
+  // 食谱分类和标签
+  category    RecipeCategory // 食谱分类
+  tags        String   @default("[]") // JSON数组存储标签 ["辣", "素食", "快手菜"]
+  mealTypes   String   @default("[]") // JSON数组存储适用餐食 ["BREAKFAST", "LUNCH", "DINNER", "SNACK"]
+  
+  // 食谱评分和统计
+  averageRating Float @default(0) // 平均评分
+  ratingCount    Int @default(0) // 评分人数
+  favoriteCount  Int @default(0) // 收藏人数
+  viewCount      Int @default(0) // 浏览次数
+  
+  // 食谱状态
+  status     RecipeStatus @default(DRAFT)
+  isPublic   Boolean @default(true)
+  isVerified Boolean @default(false) // 是否经过营养师验证
+  
+  // 季节性信息
+  seasons    String @default("[]") // JSON数组存储适用季节 ["SPRING", "SUMMER", "AUTUMN", "WINTER"]
+  
+  // 价格信息
+  estimatedCost Float? // 预估成本（元）
+  costLevel      CostLevel @default(MEDIUM) // 成本等级
+  
+  // 关联关系
+  ingredients     RecipeIngredient[]
+  instructions    RecipeInstruction[]
+  ratings         RecipeRating[]
+  favorites       RecipeFavorite[]
+  views           RecipeView[]
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([category])
+  @@index([difficulty])
+  @@index([status])
+  @@index([averageRating])
+  @@index([viewCount])
+  @@index([createdAt])
+  @@map("recipes")
+}
+
+// 食谱难度枚举
+enum Difficulty {
+  EASY // 简单
+  MEDIUM // 中等
+  HARD // 困难
+}
+
+// 食谱分类枚举
+enum RecipeCategory {
+  MAIN_DISH // 主菜
+  SIDE_DISH // 配菜
+  SOUP // 汤品
+  SALAD // 沙拉
+  DESSERT // 甜点
+  SNACK // 小食
+  BREAKFAST // 早餐
+  BEVERAGE // 饮品
+  SAUCE // 酱料
+  OTHER // 其他
+}
+
+// 食谱状态枚举
+enum RecipeStatus {
+  DRAFT // 草稿
+  PUBLISHED // 已发布
+  ARCHIVED // 已归档
+  DELETED // 已删除
+}
+
+// 成本等级枚举
+enum CostLevel {
+  LOW // 低成本
+  MEDIUM // 中等成本
+  HIGH // 高成本
+}
+
+// 食谱食材表
+model RecipeIngredient {
+  id       String @id @default(cuid())
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  foodId   String
+  food     Food   @relation("RecipeIngredients", fields: [foodId], references: [id])
+
+  // 食材信息
+  amount   Float  // 用量
+  unit     String // 单位（如g、ml、个、片等）
+  notes    String? // 备注说明（如"去皮去骨"）
+  optional Boolean @default(false) // 是否可选
+  
+  // 替换信息
+  isSubstitutable Boolean @default(true) // 是否可替换
+  substitutions   IngredientSubstitution[] @relation("RecipeIngredientSubstitutions") // 可替换选项
+
+  @@index([recipeId])
+  @@index([foodId])
+  @@map("recipe_ingredients")
+}
+
+// 食谱制作步骤表
+model RecipeInstruction {
+  id       String @id @default(cuid())
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  // 步骤信息
+  stepNumber Int    // 步骤序号
+  title      String // 步骤标题
+  content    String @db.Text // 详细说明
+  imageUrl   String? // 步骤图片
+  videoUrl   String? // 步骤视频
+  timer      Int?    // 计时器（分钟）
+  temperature Int?   // 温度（摄氏度）
+
+  @@unique([recipeId, stepNumber])
+  @@index([recipeId])
+  @@map("recipe_instructions")
+}
+
+// 食谱评分表
+model RecipeRating {
+  id       String       @id @default(cuid())
+  recipeId String
+  recipe   Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 评分信息
+  rating   Int // 1-5星评分
+  comment  String? // 文字评价
+  tags     String @default("[]") // JSON数组存储快捷标签 ["好吃", "简单", "耗时", "太咸"]
+  
+  // 评分元数据
+  ratedAt DateTime @default(now()) // 评分时间
+  isPublic Boolean @default(true) // 是否公开显示
+
+  @@unique([recipeId, memberId]) // 每个用户对每个食谱只能评分一次
+  @@index([recipeId])
+  @@index([memberId])
+  @@index([rating])
+  @@index([ratedAt])
+  @@map("recipe_ratings")
+}
+
+// 食谱收藏表
+model RecipeFavorite {
+  id       String       @id @default(cuid())
+  recipeId String
+  recipe   Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 收藏信息
+  favoritedAt DateTime @default(now()) // 收藏时间
+  notes      String? // 收藏备注
+
+  @@unique([recipeId, memberId]) // 每个用户对每个食谱只能收藏一次
+  @@index([recipeId])
+  @@index([memberId])
+  @@index([favoritedAt])
+  @@map("recipe_favorites")
+}
+
+// 食谱浏览历史表
+model RecipeView {
+  id       String       @id @default(cuid())
+  recipeId String
+  recipe   Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 浏览信息
+  viewedAt    DateTime @default(now()) // 浏览时间
+  viewDuration Int? // 浏览时长（秒）
+  source      String? // 来源（如推荐、搜索、分享等）
+
+  @@index([recipeId])
+  @@index([memberId])
+  @@index([viewedAt])
+  @@map("recipe_views")
+}
+
+// 食材替换表
+model IngredientSubstitution {
+  id       String @id @default(cuid())
+  originalIngredientId String
+  originalIngredient   RecipeIngredient @relation("RecipeIngredientSubstitutions", fields: [originalIngredientId], references: [id], onDelete: Cascade)
+  substituteFoodId     String
+  substituteFood       Food @relation("SubstituteFoods", fields: [substituteFoodId], references: [id])
+
+  // 替换信息
+  substitutionType SubstitutionType // 替换类型
+  reason          String? // 替换原因
+  nutritionDelta  Json? // 营养成分变化 {"calories": -10, "protein": 2.5}
+  costDelta       Float? // 成本变化（元）
+  tasteSimilarity Float? // 口味相似度（0-1）
+  
+  // 替换条件
+  conditions      String @default("[]") // JSON数组存储替换条件 ["过敏", "缺货", "预算"]
+  isValid         Boolean @default(true) // 是否有效替换
+
+  @@index([originalIngredientId])
+  @@index([substituteFoodId])
+  @@index([substitutionType])
+  @@map("ingredient_substitutions")
+}
+
+// 替换类型枚举
+enum SubstitutionType {
+  ALLERGY // 过敏替换
+  STOCK_OUT // 缺货替换
+  BUDGET // 预算替换
+  PREFERENCE // 偏好替换
+  NUTRITION // 营养替换
+  SEASONAL // 季节替换
+}
+
+// 用户偏好表
+model UserPreference {
+  id       String       @id @default(cuid())
+  memberId String       @unique
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 口味偏好
+  spiceLevel  SpiceLevel @default(MEDIUM) // 辣度偏好
+  sweetness   SweetnessLevel @default(MEDIUM) // 甜度偏好
+  saltiness   SaltinessLevel @default(MEDIUM) // 咸度偏好
+  
+  // 饮食偏好
+  preferredCuisines   String @default("[]") // JSON数组存储偏好菜系 ["川菜", "粤菜", "意大利菜"]
+  avoidedIngredients  String @default("[]") // JSON数组存储避开的食材 ["香菜", "苦瓜"]
+  preferredIngredients String @default("[]") // JSON数组存储偏好的食材 ["鸡肉", "西兰花"]
+  
+  // 烹饪偏好
+  maxCookTime Int? // 最大烹饪时间（分钟）
+  minServings Int @default(1) // 最小份数
+  maxServings Int @default(10) // 最大份数
+  
+  // 成本偏好
+  costLevel CostLevel @default(MEDIUM) // 成本等级偏好
+  maxEstimatedCost Float? // 最大预估成本
+  
+  // 营养偏好
+  dietType DietaryType @default(OMNIVORE) // 饮食类型
+  isLowCarb  Boolean @default(false)
+  isLowFat   Boolean @default(false)
+  isHighProtein Boolean @default(false)
+  isVegetarian Boolean @default(false)
+  isVegan     Boolean @default(false)
+  isGlutenFree Boolean @default(false)
+  isDairyFree Boolean @default(false)
+  
+  // 推荐设置
+  enableRecommendations Boolean @default(true)
+  recommendationWeight  Json? // 推荐权重设置 {"inventory": 0.3, "price": 0.2, "nutrition": 0.3, "preference": 0.2}
+  
+  // 学习数据（AI分析得出）
+  learnedPreferences Json? @default("{}") // AI学习到的偏好
+  preferenceScore    Float @default(0) // 偏好明确度评分（0-1）
+  lastAnalyzedAt      DateTime? // 最后分析时间
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId])
+  @@index([dietType])
+  @@index([costLevel])
+  @@map("user_preferences")
+}
+
+// ==================== 家庭协作系统 ====================
+
+// 任务表
+model Task {
+  id       String @id @default(cuid())
+  familyId String
+  family   Family @relation("FamilyTasks", fields: [familyId], references: [id], onDelete: Cascade)
+
+  // 任务基本信息
+  title       String // 任务标题
+  description String? // 任务描述
+  category    TaskCategory // 任务分类
+
+  // 任务分配
+  assigneeId String?
+  assignee   FamilyMember? @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
+  creatorId  String
+  creator    FamilyMember @relation("CreatedTasks", fields: [creatorId], references: [id])
+
+  // 任务状态
+  status TaskStatus @default(TODO)
+
+  // 时间信息
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  dueDate      DateTime? // 截止时间
+  completedAt  DateTime? // 完成时间
+  startedAt    DateTime? // 开始时间
+
+  // 任务优先级
+  priority TaskPriority @default(MEDIUM)
+
+  // 关联关系
+  comments Comment[] @relation("TaskComments")
+
+  // 通知设置
+  reminderSent Boolean @default(false) // 是否已发送提醒
+  remindedAt   DateTime? // 提醒发送时间
+
+  @@index([familyId])
+  @@index([assigneeId])
+  @@index([creatorId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+// 任务分类枚举
+enum TaskCategory {
+  SHOPPING // 采购
+  COOKING  // 烹饪
+  CLEANING // 清洁
+  HEALTH   // 健康
+  EXERCISE // 运动
+  OTHER    // 其他
+}
+
+// 任务状态枚举
+enum TaskStatus {
+  TODO       // 待完成
+  IN_PROGRESS // 进行中
+  COMPLETED  // 已完成
+  CANCELLED  // 已取消
+}
+
+// 任务优先级枚举
+enum TaskPriority {
+  LOW    // 低优先级
+  MEDIUM // 中优先级
+  HIGH   // 高优先级
+  URGENT // 紧急
+}
+
+// 活动日志表
+model Activity {
+  id       String @id @default(cuid())
+  familyId String
+  family   Family @relation("FamilyActivities", fields: [familyId], references: [id], onDelete: Cascade)
+
+  // 活动信息
+  memberId String?
+  member   FamilyMember? @relation("MemberActivities", fields: [memberId], references: [id], onDelete: SetNull)
+  
+  activityType ActivityType // 活动类型
+  title       String        // 活动标题
+  description String?       // 活动描述
+  metadata    Json?         // 活动元数据（如食谱ID、任务ID等）
+
+  // 关联关系
+  comments Comment[] @relation("ActivityComments")
+
+  // 时间信息
+  createdAt DateTime @default(now())
+
+  // 活动状态
+  isPublic Boolean @default(true) // 是否公开显示
+
+  @@index([familyId])
+  @@index([memberId])
+  @@index([activityType])
+  @@index([createdAt])
+  @@map("activities")
+}
+
+// 活动类型枚举
+enum ActivityType {
+  MEAL_LOG_ADDED    // 添加餐饮记录
+  RECIPE_ADDED      // 添加食谱
+  TASK_CREATED      // 创建任务
+  TASK_COMPLETED    // 完成任务
+  SHOPPING_UPDATED  // 更新购物清单
+  GOAL_ACHIEVED     // 达成目标
+  CHECK_IN          // 打卡
+  HEALTH_DATA       // 健康数据
+  OTHER             // 其他
+}
+
+// 评论表
+model Comment {
+  id       String @id @default(cuid())
+  
+  // 评论对象（多态关联）
+  targetType CommentTarget // 评论目标类型
+  targetId   String        // 目标ID
+  
+  // 评论信息
+  authorId String
+  author   FamilyMember @relation("MemberComments", fields: [authorId], references: [id], onDelete: Cascade)
+  content  String        // 评论内容
+  
+  // 评论状态
+  isDeleted Boolean @default(false)
+
+  // 时间信息
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // 关联关系（反向引用）
+  task     Task?     @relation("TaskComments", fields: [targetId], references: [id], onDelete: Cascade, map: "comments_task_fkey")
+  activity Activity? @relation("ActivityComments", fields: [targetId], references: [id], onDelete: Cascade, map: "comments_activity_fkey")
+
+  @@index([targetType, targetId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+// 评论目标类型枚举
+enum CommentTarget {
+  TASK     // 任务评论
+  ACTIVITY // 活动评论
+}
+
+// 家庭目标表
+model FamilyGoal {
+  id       String @id @default(cuid())
+  familyId String
+  family   Family @relation("FamilyGoals", fields: [familyId], references: [id], onDelete: Cascade)
+
+  // 目标信息
+  title       String // 目标标题
+  description String? // 目标描述
+  category    GoalCategory // 目标分类
+
+  // 目标数值
+  targetValue Float // 目标值
+  currentValue Float @default(0) // 当前值
+  unit        String? // 单位（如kg、次、天等）
+
+  // 目标状态
+  status GoalStatus @default(ACTIVE)
+
+  // 时间信息
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  startDate DateTime // 开始日期
+  targetDate DateTime? // 目标完成日期
+  completedAt DateTime? // 实际完成日期
+
+  // 目标创建者
+  creatorId String
+  creator   FamilyMember @relation("CreatedGoals", fields: [creatorId], references: [id])
+
+  // 参与成员
+  participants FamilyMember[] @relation("ParticipatedGoals")
+
+  // 目标进度（计算得出）
+  progress Float @default(0) // 进度百分比
+
+  // 目标奖励
+  rewardDescription String? // 完成奖励描述
+  rewardAchieved    Boolean @default(false) // 是否已获得奖励
+
+  @@index([familyId])
+  @@index([creatorId])
+  @@index([status])
+  @@index([targetDate])
+  @@map("family_goals")
+}
+
+// 家庭目标分类枚举
+enum GoalCategory {
+  WEIGHT_LOSS    // 减重目标
+  EXERCISE       // 运动目标
+  NUTRITION      // 营养目标
+  SAVINGS        // 节省目标
+  CHECK_IN_STREAK // 连续打卡目标
+  OTHER          // 其他目标
+}
+
+// ==================== 社交分享系统 ====================
+
+// 分享内容类型枚举
+enum ShareContentType {
+  HEALTH_REPORT    // 健康报告
+  GOAL_ACHIEVEMENT // 目标达成
+  MEAL_LOG        // 餐饮打卡
+  RECIPE          // 食谱
+  ACHIEVEMENT     // 成就徽章
+  CHECK_IN_STREAK // 连续打卡
+  WEIGHT_MILESTONE // 体重里程碑
+}
+
+// 分享平台枚举
+enum SharePlatform {
+  WECHAT        // 微信好友
+  WECHAT_MOMENTS // 微信朋友圈
+  WEIBO         // 微博
+  LINK          // 通用链接
+  COMMUNITY     // 社区
+}
+
+// 分享状态枚举
+enum ShareStatus {
+  ACTIVE    // 活跃
+  EXPIRED   // 已过期
+  REVOKED   // 已撤回
+  DELETED   // 已删除
+}
+
+// 成就类型枚举
+enum AchievementType {
+  CHECK_IN_STREAK   // 连续打卡
+  WEIGHT_LOSS       // 减重成就
+  NUTRITION_GOAL    // 营养目标
+  EXERCISE_TARGET   // 运动目标
+  HEALTH_MILESTONE  // 健康里程碑
+  COMMUNITY_CONTRIBUTION // 社区贡献
+}
+
+// 成就稀有度枚举
+enum AchievementRarity {
+  BRONZE // 铜牌
+  SILVER // 银牌
+  GOLD   // 金牌
+  PLATINUM // 白金
+  DIAMOND // 钻石
+}
+
+// 排行榜类型枚举
+enum LeaderboardType {
+  HEALTH_SCORE    // 健康评分
+  CHECK_IN_STREAK // 连续打卡
+  WEIGHT_LOSS     // 减重进度
+  EXERCISE_MINUTES // 运动时长
+  NUTRITION_SCORE // 营养评分
+}
+
+// 排行榜时间范围枚举
+enum LeaderboardPeriod {
+  DAILY   // 日榜
+  WEEKLY  // 周榜
+  MONTHLY // 月榜
+  YEARLY  // 年榜
+  ALL_TIME // 总榜
+}
+
+// 社区帖子状态枚举
+enum CommunityPostStatus {
+  DRAFT     // 草稿
+  PUBLISHED // 已发布
+  HIDDEN    // 已隐藏
+  DELETED   // 已删除
+}
+
+// 社区帖子类型枚举
+enum CommunityPostType {
+  EXPERIENCE  // 经验分享
+  RECIPE_SHOW // 食谱展示
+  ACHIEVEMENT // 成就炫耀
+  QUESTION    // 求助提问
+  DISCUSSION  // 讨论交流
+}
+
+// 分享内容表
+model SharedContent {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 分享内容信息
+  contentType ShareContentType // 分享内容类型
+  title       String          // 分享标题
+  description String?         // 分享描述
+  imageUrl    String?         // 分享图片URL
+  
+  // 分享链接信息
+  shareToken     String   @unique // 分享链接token
+  shareUrl       String?          // 完整分享URL
+  inviteCode     String?          // 邀请码
+  
+  // 分享平台记录
+  sharedPlatforms String @default("[]") // JSON数组记录分享平台 ["WECHAT", "WEIBO"]
+  
+  // 分享设置
+  privacyLevel SharePrivacyLevel @default(PUBLIC) // 隐私级别
+  allowComment Boolean @default(true)            // 允许评论
+  allowLike    Boolean @default(true)            // 允许点赞
+  
+  // 分享统计
+  viewCount    Int @default(0) // 浏览次数
+  likeCount    Int @default(0) // 点赞次数
+  commentCount Int @default(0) // 评论次数
+  shareCount   Int @default(0) // 分享次数
+  clickCount   Int @default(0) // 链接点击次数
+  
+  // 转化统计
+  conversionCount Int @default(0) // 通过分享注册的用户数
+  
+  // 分享状态
+  status ShareStatus @default(ACTIVE)
+  
+  // 时间信息
+  expiresAt DateTime? // 分享链接过期时间
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // 关联关系
+  achievements Achievement[] @relation("AchievementShares")
+  communityPost CommunityPost? @relation("SharedContentPost")
+  communityPostId String? @unique // 如果分享到社区，关联的社区帖子ID
+
+  @@index([memberId])
+  @@index([contentType])
+  @@index([shareToken])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("shared_contents")
+}
+
+// 分享隐私级别枚举
+enum SharePrivacyLevel {
+  PUBLIC  // 公开
+  FRIENDS // 好友可见
+  PRIVATE // 私密
+}
+
+// 成就表
+model Achievement {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 成就信息
+  type        AchievementType  // 成就类型
+  title       String           // 成就标题
+  description String           // 成就描述
+  iconUrl     String?          // 成就图标URL
+  imageUrl    String?          // 成就图片URL
+  
+  // 成就等级
+  rarity     AchievementRarity // 稀有度
+  level      Int              @default(1) // 成就等级
+  points     Int              @default(0) // 成就积分
+  
+  // 成就条件
+  targetValue   Float? // 目标值
+  currentValue  Float? // 当前值
+  progress      Float  @default(0) // 进度百分比
+  
+  // 成就状态
+  isUnlocked    Boolean @default(false) // 是否已解锁
+  unlockedAt    DateTime? // 解锁时间
+  isShared      Boolean @default(false) // 是否已分享
+  sharedAt      DateTime? // 分享时间
+  
+  // 成就奖励
+  rewardType    String? // 奖励类型
+  rewardValue   String? // 奖励值
+  rewardClaimed Boolean @default(false) // 是否已领取奖励
+  
+  // 成就元数据
+  metadata Json? // 成就相关数据（JSON对象）
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  sharedContents SharedContent[] @relation("AchievementShares")
+
+  @@unique([memberId, type, level]) // 每个用户每种类型每个等级只能有一个成就
+  @@index([memberId])
+  @@index([type])
+  @@index([rarity])
+  @@index([isUnlocked])
+  @@index([unlockedAt])
+  @@index([points])
+  @@map("achievements")
+}
+
+// 排行榜条目表
+model LeaderboardEntry {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 排行榜信息
+  leaderboardType LeaderboardType  // 排行榜类型
+  period         LeaderboardPeriod // 时间范围
+  periodStart    DateTime          // 周期开始时间
+  periodEnd      DateTime          // 周期结束时间
+  
+  // 排名数据
+  score      Float   // 排名分数
+  rank       Int     // 当前排名
+  previousRank Int?  // 上次排名
+  rankChange Int?    // 排名变化（正数表示上升）
+  
+  // 统计数据
+  totalParticipants Int @default(0) // 总参与人数
+  percentile       Float? // 百分位排名
+  
+  // 隐私设置
+  isAnonymous Boolean @default(false) // 是否匿名显示
+  showRank     Boolean @default(true)  // 是否显示排名
+  
+  // 排行榜元数据
+  metadata Json? // 排行榜相关数据（JSON对象）
+  
+  // 时间信息
+  calculatedAt DateTime @default(now()) // 计算时间
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([memberId, leaderboardType, period, periodStart, periodEnd])
+  @@index([leaderboardType])
+  @@index([period])
+  @@index([rank])
+  @@index([score])
+  @@index([calculatedAt])
+  @@map("leaderboard_entries")
+}
+
+// 社区帖子表
+model CommunityPost {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 帖子信息
+  type        CommunityPostType // 帖子类型
+  title       String           // 帖子标题
+  content     String @db.Text  // 帖子内容
+  images      String @default("[]") // JSON数组存储图片URL
+  tags        String @default("[]") // JSON数组存储标签
+  
+  // 关联内容
+  relatedContentType ShareContentType? // 关联的分享内容类型
+  relatedContentId   String?          // 关联的分享内容ID
+  
+  // 帖子状态
+  status CommunityPostStatus @default(DRAFT)
+  isPinned Boolean @default(false) // 是否置顶
+  isFeatured Boolean @default(false) // 是否精选
+  
+  // 互动统计
+  viewCount    Int @default(0) // 浏览次数
+  likeCount    Int @default(0) // 点赞次数
+  commentCount Int @default(0) // 评论次数
+  shareCount   Int @default(0) // 分享次数
+  
+  // 内容审核
+  isModerated Boolean @default(false) // 是否已审核
+  moderatedAt DateTime? // 审核时间
+  moderatorId String? // 审核员ID
+  moderationResult Json? // 审核结果
+  
+  // 举报信息
+  reportCount Int @default(0) // 举报次数
+  isHidden    Boolean @default(false) // 是否被隐藏
+  
+  // 时间信息
+  publishedAt DateTime? // 发布时间
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // 关联关系
+  sharedContent SharedContent? @relation("SharedContentPost", fields: [id], references: [communityPostId])
+  comments     CommunityComment[]
+
+  @@index([memberId])
+  @@index([type])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([isPinned])
+  @@index([isFeatured])
+  @@index([likeCount])
+  @@index([createdAt])
+  @@map("community_posts")
+}
+
+// 社区评论表
+model CommunityComment {
+  id       String       @id @default(cuid())
+  postId   String
+  post     CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 评论信息
+  content String @db.Text // 评论内容
+  parentId String? // 父评论ID（用于回复）
+  
+  // 评论状态
+  isDeleted Boolean @default(false)
+  isHidden  Boolean @default(false)
+  
+  // 举报信息
+  reportCount Int @default(0)
+  
+  // 审核信息
+  isModerated Boolean @default(false)
+  moderatedAt DateTime?
+  
+  // 时间信息
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // 关联关系
+  replies CommunityComment[] @relation("CommentReplies")
+  parent  CommunityComment? @relation("CommentReplies", fields: [parentId], references: [id])
+
+  @@index([postId])
+  @@index([memberId])
+  @@index([parentId])
+  @@index([createdAt])
+  @@map("community_comments")
+}
+
+// ==================== 通知系统 ====================
+
+// 通知类型枚举
+enum NotificationType {
+  CHECK_IN_REMINDER    // 打卡提醒
+  TASK_NOTIFICATION    // 任务通知
+  EXPIRY_ALERT        // 过期提醒
+  BUDGET_WARNING      // 预算预警
+  HEALTH_ALERT        // 健康异常提醒
+  GOAL_ACHIEVEMENT    // 目标达成
+  FAMILY_ACTIVITY     // 家庭活动通知
+  SYSTEM_ANNOUNCEMENT // 系统公告
+  MARKETING           // 营销通知
+  OTHER               // 其他
+}
+
+// 通知渠道枚举
+enum NotificationChannel {
+  IN_APP   // 应用内
+  EMAIL    // 邮件
+  SMS      // 短信
+  WECHAT   // 微信
+  PUSH     // 推送通知
+}
+
+// 通知优先级枚举
+enum NotificationPriority {
+  LOW      // 低优先级
+  MEDIUM   // 中优先级
+  HIGH     // 高优先级
+  URGENT   // 紧急
+}
+
+// 通知状态枚举
+enum NotificationStatus {
+  PENDING   // 待发送
+  SENDING   // 发送中
+  SENT      // 已发送
+  FAILED    // 发送失败
+  CANCELLED // 已取消
+}
+
+// 通知记录表
+model Notification {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation("MemberNotifications", fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 通知基本信息
+  type        NotificationType  // 通知类型
+  title       String           // 通知标题
+  content     String @db.Text  // 通知内容
+  priority    NotificationPriority @default(MEDIUM) // 优先级
+  
+  // 通知渠道设置
+  channels    String @default("[\"IN_APP\"]") // JSON数组存储发送渠道 ["IN_APP", "EMAIL", "SMS"]
+  
+  // 通知状态
+  status      NotificationStatus @default(PENDING)
+  sentAt      DateTime? // 发送时间
+  readAt      DateTime? // 阅读时间
+  
+  // 通知元数据
+  metadata    Json?   // 通知相关数据（如任务ID、目标ID等）
+  actionUrl   String? // 点击跳转链接
+  actionText  String? // 按钮文字
+  
+  // 发送结果追踪
+  deliveryResults String? @default("{}") // JSON对象存储各渠道发送结果 {"IN_APP": "success", "EMAIL": "failed"}
+  
+  // 重试机制
+  retryCount  Int @default(0) // 重试次数
+  maxRetries  Int @default(3) // 最大重试次数
+  nextRetryAt DateTime? // 下次重试时间
+  
+  // 频率控制
+  isDeduped   Boolean @default(false) // 是否被去重合并
+  dedupKey    String? // 去重标识符
+  batchId     String? // 批量通知ID
+  
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // 关联关系
+  logs NotificationLog[]
+
+  @@index([memberId])
+  @@index([type])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([readAt])
+  @@index([dedupKey])
+  @@index([batchId])
+  @@map("notifications")
+}
+
+// 通知偏好设置表
+model NotificationPreference {
+  id       String       @id @default(cuid())
+  memberId String       @unique
+  member   FamilyMember @relation("MemberNotificationPreferences", fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 全局设置
+  enableNotifications    Boolean @default(true) // 是否启用通知
+  globalQuietHoursStart  Int?    // 勿扰开始时间（小时 0-23）
+  globalQuietHoursEnd    Int?    // 勿扰结束时间（小时 0-23）
+  
+  // 每日限额设置
+  dailyMaxNotifications   Int @default(50) // 每日最大通知数
+  dailyMaxSMS            Int @default(5)  // 每日最大短信数
+  dailyMaxEmail          Int @default(20) // 每日最大邮件数
+  
+  // 渠道偏好（JSON对象存储各类型通知的渠道设置）
+  channelPreferences String @default("{}") // {"CHECK_IN_REMINDER": ["IN_APP", "EMAIL"], "URGENT": ["IN_APP", "EMAIL", "SMS"]}
+  
+  // 通知类型开关（JSON对象）
+  typeSettings String @default("{}") // {"CHECK_IN_REMINDER": true, "MARKETING": false}
+  
+  // 微信设置
+  wechatOpenId    String? // 微信OpenID
+  wechatSubscribed Boolean @default(false) // 是否订阅微信通知
+  
+  // 推送设置
+  pushToken       String? // 推送设备Token
+  pushEnabled     Boolean @default(false) // 是否启用推送
+  
+  // 邮件设置
+  emailEnabled    Boolean @default(true) // 是否启用邮件通知
+  emailUnsubscribedAt DateTime? // 邮件退订时间
+  
+  // 短信设置
+  phoneEnabled    Boolean @default(true) // 是否启用短信通知
+  phoneNumber     String? // 手机号码
+  
+  // 智能设置
+  enableSmartScheduling Boolean @default(true) // 是否启用智能发送时机
+  enableDeduplication    Boolean @default(true) // 是否启用去重
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId])
+  @@map("notification_preferences")
+}
+
+// 通知模板表
+model NotificationTemplate {
+  id   String @id @default(cuid())
+  type NotificationType @unique // 通知类型
+  
+  // 模板内容
+  titleTemplate    String   // 标题模板（支持变量替换）
+  contentTemplate  String @db.Text // 内容模板
+  
+  // 渠道模板（JSON对象存储不同渠道的模板）
+  channelTemplates String @default("{}") // {"EMAIL": {"title": "...", "content": "..."}, "SMS": {"content": "..."}}
+  
+  // 模板变量定义（JSON数组）
+  variables String @default("[]") // [{"name": "userName", "type": "string", "description": "用户姓名"}]
+  
+  // 模板设置
+  isActive     Boolean @default(true) // 是否启用
+  version      String  @default("1.0") // 模板版本
+  defaultChannels String @default("[\"IN_APP\"]") // 默认发送渠道
+  defaultPriority NotificationPriority @default(MEDIUM) // 默认优先级
+  
+  // 多语言支持（JSON对象）
+  translations String @default("{}") // {"zh-CN": {"title": "...", "content": "..."}, "en-US": {...}}
+  
+  // 模板元数据
+  description String? // 模板描述
+  category    String? // 模板分类
+  
+  // 使用统计
+  usageCount  Int @default(0) // 使用次数
+  lastUsed    DateTime? // 最后使用时间
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+  @@index([category])
+  @@map("notification_templates")
+}
+
+// 通知发送日志表
+model NotificationLog {
+  id             String       @id @default(cuid())
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  // 发送信息
+  channel        NotificationChannel // 发送渠道
+  status         NotificationStatus  // 发送状态
+  
+  // 发送结果
+  sentAt         DateTime?           // 发送时间
+  deliveredAt    DateTime?           // 送达时间
+  readAt         DateTime?           // 阅读时间
+  
+  // 错误信息
+  errorCode      String?             // 错误代码
+  errorMessage   String?             // 错误信息
+  errorDetails   Json?               // 错误详情
+  
+  // 外部追踪信息
+  externalId     String?             // 外部服务ID（如邮件ID、短信ID）
+  trackingData   Json?               // 追踪数据
+  
+  // 成本统计
+  cost           Float?              // 发送成本
+  currency       String?             // 货币单位
+  
+  // 性能统计
+  processingTime Int?                // 处理时间（毫秒）
+  retryCount     Int @default(0)     // 重试次数
+  
+  // 审计字段
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([notificationId])
+  @@index([channel])
+  @@index([status])
+  @@index([sentAt])
+  @@index([externalId])
+  @@map("notification_logs")
 }
