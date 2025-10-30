@@ -88,6 +88,7 @@ model FamilyMember {
   healthData        HealthData[]
   healthReminders   HealthReminder[]
   mealPlans         MealPlan[]
+  medicalReports    MedicalReport[]
 
   // 审计字段
   createdAt DateTime  @default(now())
@@ -319,6 +320,7 @@ model Food {
 
   // 关联关系
   mealIngredients MealIngredient[]
+  shoppingItems   ShoppingItem[]
 
   @@index([category])
   @@index([source])
@@ -383,45 +385,45 @@ enum HealthDataSource {
 
 // 健康数据提醒配置表
 model HealthReminder {
-  id        String   @id @default(cuid())
-  memberId  String
-  member    FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   // 提醒类型
   reminderType ReminderType
-  enabled      Boolean  @default(true)
-  
+  enabled      Boolean      @default(true)
+
   // 提醒时间设置
-  hour         Int      // 小时 (0-23)
-  minute       Int      @default(0) // 分钟 (0-59)
-  daysOfWeek   String   @default("[]") // JSON数组，例如 [1,2,3,4,5] 表示周一到周五
+  hour       Int // 小时 (0-23)
+  minute     Int    @default(0) // 分钟 (0-59)
+  daysOfWeek String @default("[]") // JSON数组，例如 [1,2,3,4,5] 表示周一到周五
 
   // 提醒内容
-  message      String?  // 自定义提醒消息
+  message String? // 自定义提醒消息
 
   // 统计信息
   lastTriggeredAt DateTime? // 上次触发时间
-  streakDays     Int      @default(0) // 连续打卡天数
+  streakDays      Int       @default(0) // 连续打卡天数
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("health_reminders")
-  @@index([memberId])
   @@unique([memberId, reminderType])
+  @@index([memberId])
+  @@map("health_reminders")
 }
 
 // 提醒类型枚举
 enum ReminderType {
-  WEIGHT        // 体重记录提醒
+  WEIGHT // 体重记录提醒
   BLOOD_PRESSURE // 血压记录提醒
-  HEART_RATE     // 心率记录提醒
-  GENERAL        // 通用健康数据记录提醒
+  HEART_RATE // 心率记录提醒
+  GENERAL // 通用健康数据记录提醒
 }
 
 // 食谱计划表
 model MealPlan {
-  id        String   @id @default(cuid())
+  id       String       @id @default(cuid())
   memberId String
   member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
@@ -442,23 +444,24 @@ model MealPlan {
   status PlanStatus @default(ACTIVE)
 
   // 关联关系
-  meals Meal[]
+  meals         Meal[]
+  shoppingLists ShoppingList[]
 
   // 审计字段
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@map("meal_plans")
   @@index([memberId])
   @@index([startDate, endDate])
+  @@map("meal_plans")
 }
 
 // 餐食表
 model Meal {
-  id       String   @id @default(cuid())
-  planId   String
-  plan     MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  id     String   @id @default(cuid())
+  planId String
+  plan   MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   // 餐食信息
   date     DateTime
@@ -477,9 +480,9 @@ model Meal {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("meals")
   @@index([planId])
   @@index([planId, date, mealType])
+  @@map("meals")
 }
 
 // 餐食食材表
@@ -493,22 +496,200 @@ model MealIngredient {
   // 食材数量
   amount Float // 重量（单位：g）
 
-  @@map("meal_ingredients")
   @@index([mealId])
   @@index([foodId])
+  @@map("meal_ingredients")
 }
 
 // 餐食类型枚举
 enum MealType {
   BREAKFAST // 早餐
-  LUNCH     // 午餐
-  DINNER    // 晚餐
-  SNACK     // 加餐
+  LUNCH // 午餐
+  DINNER // 晚餐
+  SNACK // 加餐
 }
 
 // 食谱计划状态枚举
 enum PlanStatus {
-  ACTIVE    // 进行中
+  ACTIVE // 进行中
   COMPLETED // 已完成
   CANCELLED // 已取消
+}
+
+// 体检报告表
+model MedicalReport {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 文件信息
+  fileUrl  String // 文件存储URL（Vercel Blob或S3）
+  fileName String // 原始文件名
+  fileSize Int // 文件大小（字节）
+  mimeType String // 文件MIME类型（application/pdf, image/jpeg等）
+
+  // OCR处理状态
+  ocrStatus OcrStatus @default(PENDING)
+  ocrText   String? // OCR识别的原始文本
+  ocrError  String? // OCR处理错误信息
+
+  // 报告元数据
+  reportDate  DateTime? // 报告日期（从报告内容提取）
+  institution String? // 医疗机构名称
+  reportType  String? // 报告类型（如"体检报告"、"血常规"等）
+
+  // 是否已修正
+  isCorrected Boolean   @default(false)
+  correctedAt DateTime?
+
+  // 关联关系
+  indicators MedicalIndicator[]
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([memberId])
+  @@index([memberId, reportDate])
+  @@index([ocrStatus])
+  @@map("medical_reports")
+}
+
+// OCR处理状态枚举
+enum OcrStatus {
+  PENDING // 待处理
+  PROCESSING // 处理中
+  COMPLETED // 已完成
+  FAILED // 处理失败
+}
+
+// 体检指标表
+model MedicalIndicator {
+  id       String        @id @default(cuid())
+  reportId String
+  report   MedicalReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  // 指标信息
+  indicatorType  IndicatorType // 指标类型
+  name           String // 指标名称（如"总胆固醇"、"血糖"）
+  value          Float // 指标数值
+  unit           String // 单位（如"mmol/L"、"U/L"等）
+  referenceRange String? // 参考范围（如"<5.2"）
+
+  // 状态判断
+  isAbnormal Boolean         @default(false) // 是否异常
+  status     IndicatorStatus @default(NORMAL) // 指标状态
+
+  // 是否手动修正
+  isCorrected   Boolean @default(false)
+  originalValue Float? // 原始OCR识别的值（修正前）
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reportId])
+  @@index([reportId, indicatorType])
+  @@map("medical_indicators")
+}
+
+// 指标类型枚举
+enum IndicatorType {
+  // 血脂相关
+  TOTAL_CHOLESTEROL // 总胆固醇
+  LDL_CHOLESTEROL // 低密度脂蛋白胆固醇
+  HDL_CHOLESTEROL // 高密度脂蛋白胆固醇
+  TRIGLYCERIDES // 甘油三酯
+
+  // 血糖相关
+  FASTING_GLUCOSE // 空腹血糖
+  POSTPRANDIAL_GLUCOSE // 餐后血糖
+  GLYCATED_HEMOGLOBIN // 糖化血红蛋白
+
+  // 肝功能相关
+  ALT // 丙氨酸氨基转移酶
+  AST // 天门冬氨酸氨基转移酶
+  TOTAL_BILIRUBIN // 总胆红素
+  DIRECT_BILIRUBIN // 直接胆红素
+  ALP // 碱性磷酸酶
+
+  // 肾功能相关
+  CREATININE // 肌酐
+  UREA_NITROGEN // 尿素氮
+  URIC_ACID // 尿酸
+
+  // 其他
+  WHITE_BLOOD_CELL // 白细胞
+  RED_BLOOD_CELL // 红细胞
+  HEMOGLOBIN // 血红蛋白
+  PLATELET // 血小板
+  OTHER // 其他指标
+}
+
+// 指标状态枚举
+enum IndicatorStatus {
+  NORMAL // 正常
+  LOW // 偏低
+  HIGH // 偏高
+  CRITICAL // 严重异常
+}
+
+// 购物清单表
+model ShoppingList {
+  id     String   @id @default(cuid())
+  planId String
+  plan   MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  // 预算信息
+  budget        Float? // 预算（元）
+  estimatedCost Float? // 估算成本
+  actualCost    Float? // 实际花费
+
+  // 清单状态
+  status ListStatus @default(PENDING)
+
+  // 关联关系
+  items ShoppingItem[]
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planId])
+  @@index([status])
+  @@map("shopping_lists")
+}
+
+// 购物清单项表
+model ShoppingItem {
+  id     String       @id @default(cuid())
+  listId String
+  list   ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  foodId String
+  food   Food         @relation(fields: [foodId], references: [id])
+
+  // 食材信息
+  amount   Float // 重量（单位：g）
+  category FoodCategory // 食材分类（冗余字段，便于查询）
+
+  // 采购状态
+  purchased      Boolean @default(false)
+  estimatedPrice Float? // 估算价格（元）
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([listId])
+  @@index([foodId])
+  @@index([category])
+  @@map("shopping_items")
+}
+
+// 购物清单状态枚举
+enum ListStatus {
+  PENDING // 待采购
+  IN_PROGRESS // 采购中
+  COMPLETED // 已完成
 }

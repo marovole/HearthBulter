@@ -45,6 +45,17 @@ export default async function MemberDetailPage({
         where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
       },
+      medicalReports: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        take: 1, // 只取最近一次报告
+        include: {
+          indicators: {
+            where: { isAbnormal: true },
+            take: 3, // 只取前3个异常指标用于显示
+          },
+        },
+      },
     },
   })
 
@@ -340,6 +351,189 @@ export default async function MemberDetailPage({
                 ))}
               </div>
             )}
+          </div>
+
+          {/* 食谱规划卡片 */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">食谱规划</h2>
+              {(isAdmin || isSelf) && (
+                <Link
+                  href={`/dashboard/families/${id}/members/${memberId}/meal-plans/new`}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+                >
+                  + 新建食谱计划
+                </Link>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <Link
+                href={`/dashboard/families/${id}/members/${memberId}/meal-plans`}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                查看所有食谱计划 →
+              </Link>
+            </div>
+
+            <p className="text-gray-500 text-sm">
+              根据成员的健康目标和营养需求，自动生成个性化食谱计划
+            </p>
+          </div>
+
+          {/* 体检报告卡片 */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">体检报告</h2>
+              {(isAdmin || isSelf) && (
+                <Link
+                  href={`/dashboard/families/${id}/members/${memberId}/reports/new`}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+                >
+                  + 上传新报告
+                </Link>
+              )}
+            </div>
+
+            {member.medicalReports.length === 0 ? (
+              <div className="mb-4">
+                <p className="text-gray-500 text-sm mb-4">
+                  还没有上传任何体检报告
+                </p>
+                <Link
+                  href={`/dashboard/families/${id}/members/${memberId}/reports`}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  查看所有报告 →
+                </Link>
+              </div>
+            ) : (
+              <>
+                {member.medicalReports[0] && (
+                  <div className="mb-4">
+                    <div className="border border-gray-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          最近一次报告
+                        </h3>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded ${
+                            member.medicalReports[0].ocrStatus === 'COMPLETED'
+                              ? 'bg-green-100 text-green-800'
+                              : member.medicalReports[0].ocrStatus === 'PROCESSING'
+                              ? 'bg-blue-100 text-blue-800'
+                              : member.medicalReports[0].ocrStatus === 'FAILED'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {member.medicalReports[0].ocrStatus === 'COMPLETED'
+                            ? '已完成'
+                            : member.medicalReports[0].ocrStatus === 'PROCESSING'
+                            ? '处理中'
+                            : member.medicalReports[0].ocrStatus === 'FAILED'
+                            ? '失败'
+                            : '待处理'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                        {member.medicalReports[0].reportDate && (
+                          <div>
+                            <span className="text-gray-500">报告日期：</span>
+                            <span className="font-medium">
+                              {new Date(
+                                member.medicalReports[0].reportDate
+                              ).toLocaleDateString('zh-CN')}
+                            </span>
+                          </div>
+                        )}
+                        {member.medicalReports[0].institution && (
+                          <div>
+                            <span className="text-gray-500">医疗机构：</span>
+                            <span className="font-medium">
+                              {member.medicalReports[0].institution}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {member.medicalReports[0].ocrStatus === 'COMPLETED' &&
+                        member.medicalReports[0].indicators.length > 0 && (
+                          <div className="mt-3">
+                            {member.medicalReports[0].indicators.filter(
+                              (ind) => ind.isAbnormal
+                            ).length > 0 ? (
+                              <div className="bg-red-50 border border-red-200 rounded p-3">
+                                <p className="text-sm font-medium text-red-900 mb-2">
+                                  发现{' '}
+                                  {
+                                    member.medicalReports[0].indicators.filter(
+                                      (ind) => ind.isAbnormal
+                                    ).length
+                                  }{' '}
+                                  项异常指标
+                                </p>
+                                <div className="space-y-1">
+                                  {member.medicalReports[0].indicators
+                                    .filter((ind) => ind.isAbnormal)
+                                    .slice(0, 3)
+                                    .map((indicator) => (
+                                      <div
+                                        key={indicator.id}
+                                        className="text-sm text-red-800"
+                                      >
+                                        • {indicator.name}: {indicator.value}{' '}
+                                        {indicator.unit}
+                                      </div>
+                                    ))}
+                                  {member.medicalReports[0].indicators.filter(
+                                    (ind) => ind.isAbnormal
+                                  ).length > 3 && (
+                                    <div className="text-xs text-red-600">
+                                      还有{' '}
+                                      {member.medicalReports[0].indicators.filter(
+                                        (ind) => ind.isAbnormal
+                                      ).length - 3}{' '}
+                                      项异常指标...
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-green-50 border border-green-200 rounded p-3">
+                                <p className="text-sm font-medium text-green-900">
+                                  所有指标均正常
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                      <div className="mt-4 flex gap-2">
+                        <Link
+                          href={`/dashboard/families/${id}/members/${memberId}/reports/${member.medicalReports[0].id}`}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          查看详情 →
+                        </Link>
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/dashboard/families/${id}/members/${memberId}/reports`}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      查看所有报告 →
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+
+            <p className="text-gray-500 text-sm">
+              上传体检报告，自动识别健康指标并追踪变化趋势
+            </p>
           </div>
 
           {/* 过敏史卡片 */}
