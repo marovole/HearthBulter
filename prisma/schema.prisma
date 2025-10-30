@@ -89,6 +89,13 @@ model FamilyMember {
   healthReminders   HealthReminder[]
   mealPlans         MealPlan[]
   medicalReports    MedicalReport[]
+  
+  // 营养打卡关联
+  mealLogs              MealLog[]
+  trackingStreak        TrackingStreak?
+  quickTemplates        QuickTemplate[]
+  dailyNutritionTargets DailyNutritionTarget[]
+  auxiliaryTrackings    AuxiliaryTracking[]
 
   // 审计字段
   createdAt DateTime  @default(now())
@@ -321,6 +328,8 @@ model Food {
   // 关联关系
   mealIngredients MealIngredient[]
   shoppingItems   ShoppingItem[]
+  mealLogFoods    MealLogFood[]
+  templateFoods   TemplateFood[]
 
   @@index([category])
   @@index([source])
@@ -692,4 +701,247 @@ enum ListStatus {
   PENDING // 待采购
   IN_PROGRESS // 采购中
   COMPLETED // 已完成
+}
+
+// ==================== 营养摄入打卡系统 ====================
+
+// 餐饮记录表（打卡记录）
+model MealLog {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 餐食信息
+  date     DateTime // 打卡日期
+  mealType MealType // BREAKFAST, LUNCH, DINNER, SNACK
+  
+  // 营养成分（计算得出）
+  calories Float
+  protein  Float
+  carbs    Float
+  fat      Float
+  fiber    Float? @default(0)
+  sugar    Float? @default(0)
+  sodium   Float? @default(0)
+
+  // 关联关系
+  foods  MealLogFood[] // 记录的食物
+  photos FoodPhoto[] // 食物照片
+
+  // 打卡元数据
+  notes      String? // 备注
+  checkedAt  DateTime @default(now()) // 打卡时间
+  isTemplate Boolean  @default(false) // 是否来自模板
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([memberId, date])
+  @@index([memberId, mealType])
+  @@map("meal_logs")
+}
+
+// 餐饮记录食物关联表
+model MealLogFood {
+  id        String  @id @default(cuid())
+  mealLogId String
+  mealLog   MealLog @relation(fields: [mealLogId], references: [id], onDelete: Cascade)
+  foodId    String
+  food      Food    @relation(fields: [foodId], references: [id])
+
+  // 食物数量
+  amount Float // 重量（单位：g）
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([mealLogId])
+  @@index([foodId])
+  @@map("meal_log_foods")
+}
+
+// 食物照片表
+model FoodPhoto {
+  id        String  @id @default(cuid())
+  mealLogId String
+  mealLog   MealLog @relation(fields: [mealLogId], references: [id], onDelete: Cascade)
+
+  // 文件信息
+  fileUrl  String // 文件存储URL（Vercel Blob）
+  fileName String // 原始文件名
+  fileSize Int // 文件大小（字节）
+
+  // AI识别信息
+  recognitionStatus RecognitionStatus @default(PENDING)
+  recognitionResult String? // JSON格式的识别结果
+  confidence        Float? // 识别置信度（0-1）
+  recognitionError  String? // 识别错误信息
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([mealLogId])
+  @@index([recognitionStatus])
+  @@map("food_photos")
+}
+
+// 食物识别状态枚举
+enum RecognitionStatus {
+  PENDING // 待识别
+  PROCESSING // 识别中
+  COMPLETED // 已完成
+  FAILED // 识别失败
+}
+
+// 连续打卡记录表
+model TrackingStreak {
+  id       String       @id @default(cuid())
+  memberId String       @unique
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 连续打卡统计
+  currentStreak Int      @default(0) // 当前连续天数
+  longestStreak Int      @default(0) // 最长连续天数
+  totalDays     Int      @default(0) // 总打卡天数
+  lastCheckIn   DateTime? // 最后打卡日期
+
+  // 徽章记录（JSON数组）
+  badges String @default("[]") // ["7-days", "30-days", "100-days"]
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tracking_streaks")
+}
+
+// 快速模板表
+model QuickTemplate {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 模板信息
+  name        String // 模板名称（如"工作日标准早餐"）
+  description String? // 描述
+  mealType    MealType // 适用餐食类型
+  
+  // 营养成分（预计算）
+  calories Float
+  protein  Float
+  carbs    Float
+  fat      Float
+
+  // 关联关系
+  foods TemplateFood[] // 模板食物
+
+  // 使用统计
+  useCount  Int       @default(0) // 使用次数
+  lastUsed  DateTime? // 最后使用时间
+  
+  // 智能推荐权重（基于使用频率和时间）
+  score     Float @default(0) // 推荐分数
+
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([memberId, mealType])
+  @@index([memberId, score])
+  @@map("quick_templates")
+}
+
+// 模板食物关联表
+model TemplateFood {
+  id         String        @id @default(cuid())
+  templateId String
+  template   QuickTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  foodId     String
+  food       Food          @relation(fields: [foodId], references: [id])
+
+  // 食物数量
+  amount Float // 重量（单位：g）
+
+  @@index([templateId])
+  @@index([foodId])
+  @@map("template_foods")
+}
+
+// 营养目标打卡记录表（每日营养目标追踪）
+model DailyNutritionTarget {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 日期
+  date DateTime @db.Date
+
+  // 每日目标（从HealthGoal计算得出）
+  targetCalories Float
+  targetProtein  Float
+  targetCarbs    Float
+  targetFat      Float
+
+  // 实际摄入（从MealLog聚合计算）
+  actualCalories Float @default(0)
+  actualProtein  Float @default(0)
+  actualCarbs    Float @default(0)
+  actualFat      Float @default(0)
+
+  // 偏差分析
+  caloriesDeviation Float @default(0) // 百分比
+  proteinDeviation  Float @default(0)
+  carbsDeviation    Float @default(0)
+  fatDeviation      Float @default(0)
+
+  // 完成状态
+  isCompleted Boolean @default(false) // 是否完成打卡
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, date])
+  @@index([memberId, date])
+  @@map("daily_nutrition_targets")
+}
+
+// 辅助打卡表（饮水、运动、睡眠、体重）
+model AuxiliaryTracking {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 日期
+  date DateTime @db.Date
+
+  // 饮水打卡（ml）
+  waterIntake Int? @default(0)
+  waterTarget Int? @default(2000) // 默认2000ml
+
+  // 运动打卡
+  exerciseMinutes   Int? @default(0) // 运动时长（分钟）
+  caloriesBurned    Int? @default(0) // 消耗卡路里
+  exerciseType      String? // 运动类型（JSON数组）
+
+  // 睡眠打卡
+  sleepHours   Float? // 睡眠时长（小时）
+  sleepQuality String? // 睡眠质量（EXCELLENT, GOOD, FAIR, POOR）
+
+  // 体重打卡
+  weight    Float? // 体重（kg）
+  bodyFat   Float? // 体脂率（%）
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, date])
+  @@index([memberId, date])
+  @@map("auxiliary_trackings")
 }
