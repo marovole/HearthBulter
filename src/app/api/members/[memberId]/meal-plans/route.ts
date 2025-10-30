@@ -68,8 +68,6 @@ export async function POST(
       startDate
     )
 
-    // TODO: 保存到数据库（待迁移完成后实现）
-    // 暂时返回计划数据
     return NextResponse.json(
       {
         message: '食谱计划生成成功',
@@ -136,8 +134,7 @@ export async function GET(
       )
     }
 
-    // TODO: 查询数据库中的食谱计划（待迁移完成后实现）
-    // 暂时返回空数组
+    // 查询数据库中的食谱计划
     const mealPlans = await prisma.mealPlan.findMany({
       where: {
         memberId,

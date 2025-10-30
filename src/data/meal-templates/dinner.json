@@ -61,5 +61,548 @@
     ],
     "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
     "tags": ["高碳水", "增肌"]
+  },
+  {
+    "id": "dinner-004",
+    "name": "白切鸡配青菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡肉",
+        "amount": 120
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "dinner-005",
+    "name": "蒸蛋配冬瓜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 150
+      },
+      {
+        "foodName": "冬瓜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "清淡"]
+  },
+  {
+    "id": "dinner-006",
+    "name": "番茄鸡蛋汤配米饭",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "番茄",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["低脂", "清淡"]
+  },
+  {
+    "id": "dinner-007",
+    "name": "烤鸡胸肉配西兰花",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡胸肉",
+        "amount": 150
+      },
+      {
+        "foodName": "西兰花",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 80
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "dinner-008",
+    "name": "清炒虾仁配青菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "虾",
+        "amount": 120
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "dinner-009",
+    "name": "豆腐配青菜和米饭",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "豆腐",
+        "amount": 200
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "素食"]
+  },
+  {
+    "id": "dinner-010",
+    "name": "清蒸排骨配青菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 100
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["高蛋白", "传统"]
+  },
+  {
+    "id": "dinner-011",
+    "name": "水煮鸡胸肉配蔬菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡胸肉",
+        "amount": 150
+      },
+      {
+        "foodName": "生菜",
+        "amount": 150
+      },
+      {
+        "foodName": "黄瓜",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["低卡", "高蛋白"]
+  },
+  {
+    "id": "dinner-012",
+    "name": "蒸蛋配紫菜汤和米饭",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "紫菜",
+        "amount": 10
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["清淡", "低脂"]
+  },
+  {
+    "id": "dinner-013",
+    "name": "红烧鸡块配土豆",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡肉",
+        "amount": 120
+      },
+      {
+        "foodName": "土豆",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高碳水", "增肌"]
+  },
+  {
+    "id": "dinner-014",
+    "name": "清蒸带鱼配青菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鱼肉",
+        "amount": 150
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "dinner-015",
+    "name": "冬瓜排骨汤配米饭",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 100
+      },
+      {
+        "foodName": "冬瓜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["清淡", "传统"]
+  },
+  {
+    "id": "dinner-016",
+    "name": "糖醋排骨配青菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 120
+      },
+      {
+        "foodName": "青菜",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高碳水", "增肌"]
+  },
+  {
+    "id": "dinner-017",
+    "name": "蒸蛋配豆腐和青菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "豆腐",
+        "amount": 150
+      },
+      {
+        "foodName": "青菜",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "高蛋白"]
+  },
+  {
+    "id": "dinner-018",
+    "name": "清炒时蔬配蒸蛋",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "胡萝卜",
+        "amount": 100
+      },
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "清淡"]
+  },
+  {
+    "id": "dinner-019",
+    "name": "红烧肉配青菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 100
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高热量", "增肌"]
+  },
+  {
+    "id": "dinner-020",
+    "name": "清蒸蛋配白粥",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["清淡", "易消化"]
+  },
+  {
+    "id": "dinner-021",
+    "name": "蒜蓉西兰花配鸡胸肉",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡胸肉",
+        "amount": 150
+      },
+      {
+        "foodName": "西兰花",
+        "amount": 200
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "dinner-022",
+    "name": "蒸蛋配紫薯",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "紫薯",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["低卡", "高纤维"]
+  },
+  {
+    "id": "dinner-023",
+    "name": "清炒虾仁配黄瓜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "虾",
+        "amount": 120
+      },
+      {
+        "foodName": "黄瓜",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["低卡", "高蛋白"]
+  },
+  {
+    "id": "dinner-024",
+    "name": "蒸蛋配蒸蛋和青菜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 150
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "dinner-025",
+    "name": "红烧鸡配土豆",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡肉",
+        "amount": 120
+      },
+      {
+        "foodName": "土豆",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高碳水", "增肌"]
+  },
+  {
+    "id": "dinner-026",
+    "name": "清炒时蔬配豆腐",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "豆腐",
+        "amount": 200
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "素食"]
+  },
+  {
+    "id": "dinner-027",
+    "name": "蒸蛋配蒸蛋和米饭",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["清淡", "高蛋白"]
+  },
+  {
+    "id": "dinner-028",
+    "name": "白切鸡配黄瓜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡肉",
+        "amount": 120
+      },
+      {
+        "foodName": "黄瓜",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "dinner-029",
+    "name": "清蒸鱼配冬瓜",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鱼肉",
+        "amount": 150
+      },
+      {
+        "foodName": "冬瓜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低脂", "清淡"]
+  },
+  {
+    "id": "dinner-030",
+    "name": "蒸蛋配青菜和米饭",
+    "mealType": "DINNER",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
   }
 ]

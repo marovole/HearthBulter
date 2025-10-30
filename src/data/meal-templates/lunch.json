@@ -61,5 +61,538 @@
     ],
     "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
     "tags": ["低卡", "高蛋白"]
+  },
+  {
+    "id": "lunch-004",
+    "name": "番茄鸡蛋面",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "番茄",
+        "amount": 150
+      },
+      {
+        "foodName": "面条",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["传统", "高碳水"]
+  },
+  {
+    "id": "lunch-005",
+    "name": "红烧肉配土豆和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 100
+      },
+      {
+        "foodName": "土豆",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高热量", "增肌"]
+  },
+  {
+    "id": "lunch-006",
+    "name": "蒸蛋配青菜和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 150
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "lunch-007",
+    "name": "清蒸鱼配豆腐和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鱼肉",
+        "amount": 150
+      },
+      {
+        "foodName": "豆腐",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "lunch-008",
+    "name": "鸡腿配胡萝卜和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡腿",
+        "amount": 150
+      },
+      {
+        "foodName": "胡萝卜",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "增肌"]
+  },
+  {
+    "id": "lunch-009",
+    "name": "麻婆豆腐配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "豆腐",
+        "amount": 200
+      },
+      {
+        "foodName": "猪肉",
+        "amount": 50
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["高蛋白", "传统"]
+  },
+  {
+    "id": "lunch-010",
+    "name": "糖醋里脊配青菜和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 120
+      },
+      {
+        "foodName": "青菜",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高碳水", "增肌"]
+  },
+  {
+    "id": "lunch-011",
+    "name": "白切鸡配黄瓜和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡肉",
+        "amount": 150
+      },
+      {
+        "foodName": "黄瓜",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "lunch-012",
+    "name": "鱼香肉丝配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 100
+      },
+      {
+        "foodName": "胡萝卜",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["传统", "均衡"]
+  },
+  {
+    "id": "lunch-013",
+    "name": "宫保鸡丁配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡肉",
+        "amount": 120
+      },
+      {
+        "foodName": "花生",
+        "amount": 30
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "增肌"]
+  },
+  {
+    "id": "lunch-014",
+    "name": "青椒肉丝配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 100
+      },
+      {
+        "foodName": "青椒",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["均衡", "传统"]
+  },
+  {
+    "id": "lunch-015",
+    "name": "红烧茄子配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "茄子",
+        "amount": 200
+      },
+      {
+        "foodName": "猪肉",
+        "amount": 50
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "LOSE_WEIGHT"],
+    "tags": ["低卡", "素食"]
+  },
+  {
+    "id": "lunch-016",
+    "name": "虾仁炒蛋配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "虾",
+        "amount": 100
+      },
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "增肌"]
+  },
+  {
+    "id": "lunch-017",
+    "name": "清炒时蔬配蒸蛋和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "清淡"]
+  },
+  {
+    "id": "lunch-018",
+    "name": "回锅肉配青菜和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 100
+      },
+      {
+        "foodName": "青菜",
+        "amount": 150
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高热量", "增肌"]
+  },
+  {
+    "id": "lunch-019",
+    "name": "水煮肉片配青菜和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 120
+      },
+      {
+        "foodName": "青菜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "增肌"]
+  },
+  {
+    "id": "lunch-020",
+    "name": "地三鲜配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "茄子",
+        "amount": 150
+      },
+      {
+        "foodName": "土豆",
+        "amount": 150
+      },
+      {
+        "foodName": "青椒",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN"],
+    "tags": ["素食", "传统"]
+  },
+  {
+    "id": "lunch-021",
+    "name": "蒜蓉西兰花配鸡胸肉和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡胸肉",
+        "amount": 150
+      },
+      {
+        "foodName": "西兰花",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "lunch-022",
+    "name": "酸菜鱼配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鱼肉",
+        "amount": 150
+      },
+      {
+        "foodName": "酸菜",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["高蛋白", "传统"]
+  },
+  {
+    "id": "lunch-023",
+    "name": "西红柿鸡蛋配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 150
+      },
+      {
+        "foodName": "番茄",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["高蛋白", "低脂"]
+  },
+  {
+    "id": "lunch-024",
+    "name": "红烧牛肉面",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "牛肉",
+        "amount": 120
+      },
+      {
+        "foodName": "面条",
+        "amount": 200
+      },
+      {
+        "foodName": "青菜",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高碳水", "增肌"]
+  },
+  {
+    "id": "lunch-025",
+    "name": "烤鸡胸肉配蔬菜沙拉",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡胸肉",
+        "amount": 150
+      },
+      {
+        "foodName": "生菜",
+        "amount": 150
+      },
+      {
+        "foodName": "番茄",
+        "amount": 100
+      },
+      {
+        "foodName": "黄瓜",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["低卡", "高蛋白"]
+  },
+  {
+    "id": "lunch-026",
+    "name": "猪肉炖粉条配米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "猪肉",
+        "amount": 100
+      },
+      {
+        "foodName": "粉条",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["传统", "高碳水"]
+  },
+  {
+    "id": "lunch-027",
+    "name": "土豆丝配青椒和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "土豆",
+        "amount": 200
+      },
+      {
+        "foodName": "青椒",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN"],
+    "tags": ["素食", "高碳水"]
+  },
+  {
+    "id": "lunch-028",
+    "name": "清蒸鸡配冬瓜和米饭",
+    "mealType": "LUNCH",
+    "ingredients": [
+      {
+        "foodName": "鸡肉",
+        "amount": 150
+      },
+      {
+        "foodName": "冬瓜",
+        "amount": 200
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["低脂", "清淡"]
   }
 ]

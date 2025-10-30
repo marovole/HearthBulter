@@ -49,5 +49,292 @@
     ],
     "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
     "tags": ["高蛋白", "补钙"]
+  },
+  {
+    "id": "breakfast-004",
+    "name": "鸡蛋三明治",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "全麦面包",
+        "amount": 80
+      },
+      {
+        "foodName": "生菜",
+        "amount": 30
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["高蛋白", "均衡"]
+  },
+  {
+    "id": "breakfast-005",
+    "name": "酸奶配蓝莓和燕麦",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "酸奶",
+        "amount": 150
+      },
+      {
+        "foodName": "蓝莓",
+        "amount": 50
+      },
+      {
+        "foodName": "燕麦",
+        "amount": 40
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["高蛋白", "抗氧化"]
+  },
+  {
+    "id": "breakfast-006",
+    "name": "小米粥配咸菜",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "小米",
+        "amount": 80
+      },
+      {
+        "foodName": "咸菜",
+        "amount": 30
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["清淡", "养胃"]
+  },
+  {
+    "id": "breakfast-007",
+    "name": "蒸蛋配白粥",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["清淡", "易消化"]
+  },
+  {
+    "id": "breakfast-008",
+    "name": "全麦吐司配牛油果",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "全麦面包",
+        "amount": 60
+      },
+      {
+        "foodName": "牛油果",
+        "amount": 50
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["健康脂肪", "高纤维"]
+  },
+  {
+    "id": "breakfast-009",
+    "name": "蛋白质松饼",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 150
+      },
+      {
+        "foodName": "全麦面粉",
+        "amount": 50
+      },
+      {
+        "foodName": "牛奶",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "增肌"]
+  },
+  {
+    "id": "breakfast-010",
+    "name": "紫薯配鸡蛋",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "紫薯",
+        "amount": 150
+      },
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN"],
+    "tags": ["低卡", "高纤维"]
+  },
+  {
+    "id": "breakfast-011",
+    "name": "豆浆配包子",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "豆浆",
+        "amount": 250
+      },
+      {
+        "foodName": "包子",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["传统", "高碳水"]
+  },
+  {
+    "id": "breakfast-012",
+    "name": "香蕉燕麦片",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "香蕉",
+        "amount": 100
+      },
+      {
+        "foodName": "燕麦",
+        "amount": 50
+      },
+      {
+        "foodName": "牛奶",
+        "amount": 200
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高碳水", "快速补充"]
+  },
+  {
+    "id": "breakfast-013",
+    "name": "蔬菜鸡蛋饼",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 120
+      },
+      {
+        "foodName": "胡萝卜",
+        "amount": 50
+      },
+      {
+        "foodName": "青菜",
+        "amount": 50
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["高蛋白", "营养均衡"]
+  },
+  {
+    "id": "breakfast-014",
+    "name": "花生酱全麦吐司",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "全麦面包",
+        "amount": 60
+      },
+      {
+        "foodName": "花生酱",
+        "amount": 20
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高热量", "高蛋白"]
+  },
+  {
+    "id": "breakfast-015",
+    "name": "鸡蛋燕麦粥",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "燕麦",
+        "amount": 60
+      },
+      {
+        "foodName": "牛奶",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["高蛋白", "高纤维"]
+  },
+  {
+    "id": "breakfast-016",
+    "name": "豆腐脑配油条",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "豆腐",
+        "amount": 200
+      },
+      {
+        "foodName": "油条",
+        "amount": 50
+      }
+    ],
+    "suitableGoals": ["MAINTAIN"],
+    "tags": ["传统", "高碳水"]
+  },
+  {
+    "id": "breakfast-017",
+    "name": "芝士鸡蛋三明治",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "全麦面包",
+        "amount": 80
+      },
+      {
+        "foodName": "芝士",
+        "amount": 30
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "高钙"]
+  },
+  {
+    "id": "breakfast-018",
+    "name": "蒸蛋配白粥和咸菜",
+    "mealType": "BREAKFAST",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 100
+      },
+      {
+        "foodName": "米饭",
+        "amount": 120
+      },
+      {
+        "foodName": "咸菜",
+        "amount": 20
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["清淡", "传统"]
   }
 ]

@@ -25,16 +25,16 @@
 ## 4. Meal Plan API
 - [x] 4.1 实现POST /api/members/:id/meal-plans（生成食谱）
 - [x] 4.2 实现GET /api/members/:id/meal-plans（查询历史食谱）
-- [ ] 4.3 实现PATCH /api/meal-plans/:id/meals/:mealId（替换单餐）
+- [x] 4.3 实现PATCH /api/meal-plans/:id/meals/:mealId（替换单餐）
 - [x] 4.4 实现DELETE /api/meal-plans/:id（删除食谱）
 - [x] 4.5 实现GET /api/meal-plans/:id/nutrition（营养汇总）
 
 ## 5. Meal Templates
-- [ ] 5.1 创建早餐模板库（15-20个模板）
-- [ ] 5.2 创建午餐模板库（20-30个模板）
-- [ ] 5.3 创建晚餐模板库（20-30个模板）
-- [ ] 5.4 创建加餐模板库（10-15个模板）
-- [ ] 5.5 标注模板适用目标（减重/增肌/维持）
+- [x] 5.1 创建早餐模板库（15-20个模板，实际18个）
+- [x] 5.2 创建午餐模板库（20-30个模板，实际28个）
+- [x] 5.3 创建晚餐模板库（20-30个模板，实际30个）
+- [x] 5.4 创建加餐模板库（10-15个模板，实际15个）
+- [x] 5.5 标注模板适用目标（减重/增肌/维持）
 
 ## 6. UI Components
 - [ ] 6.1 创建食谱生成页（MealPlanGenerator.tsx）

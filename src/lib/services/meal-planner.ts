@@ -438,23 +438,204 @@ export class MealPlanner {
       allMeals.push(...dailyMeals)
     }
 
-    // 创建食谱计划（暂时不保存到数据库，等迁移完成后再实现）
-    // TODO: 保存到数据库
+    // 保存到数据库
+    const mealPlan = await prisma.mealPlan.create({
+      data: {
+        memberId,
+        startDate: planStartDate,
+        endDate: planEndDate,
+        goalType: activeGoal.goalType,
+        targetCalories: macroTargets.targetCalories,
+        targetProtein: macroTargets.dailyTargets.protein,
+        targetCarbs: macroTargets.dailyTargets.carbs,
+        targetFat: macroTargets.dailyTargets.fat,
+        status: 'ACTIVE',
+        meals: {
+          create: allMeals.map((meal) => ({
+            date: meal.date,
+            mealType: meal.mealType,
+            calories: meal.nutrition.calories,
+            protein: meal.nutrition.protein,
+            carbs: meal.nutrition.carbs,
+            fat: meal.nutrition.fat,
+            ingredients: {
+              create: meal.ingredients.map((ing) => ({
+                foodId: ing.foodId,
+                amount: ing.amount,
+              })),
+            },
+          })),
+        },
+      },
+      include: {
+        meals: {
+          include: {
+            ingredients: {
+              include: {
+                food: true,
+              },
+            },
+          },
+        },
+      },
+    })
 
     return {
-      planId: 'temp-plan-id', // 临时ID，数据库保存后替换
-      memberId,
-      startDate: planStartDate,
-      endDate: planEndDate,
-      goalType: activeGoal.goalType,
-      targetCalories: macroTargets.targetCalories,
-      targetProtein: macroTargets.dailyTargets.protein,
-      targetCarbs: macroTargets.dailyTargets.carbs,
-      targetFat: macroTargets.dailyTargets.fat,
-      meals: allMeals.map((meal, index) => ({
-        id: `temp-meal-${index}`,
-        ...meal,
+      planId: mealPlan.id,
+      memberId: mealPlan.memberId,
+      startDate: mealPlan.startDate,
+      endDate: mealPlan.endDate,
+      goalType: mealPlan.goalType,
+      targetCalories: mealPlan.targetCalories,
+      targetProtein: mealPlan.targetProtein,
+      targetCarbs: mealPlan.targetCarbs,
+      targetFat: mealPlan.targetFat,
+      meals: mealPlan.meals.map((meal) => ({
+        id: meal.id,
+        date: meal.date,
+        mealType: meal.mealType,
+        ingredients: meal.ingredients.map((ing) => ({
+          foodId: ing.foodId,
+          amount: ing.amount,
+        })),
+        nutrition: {
+          calories: meal.calories,
+          protein: meal.protein,
+          carbs: meal.carbs,
+          fat: meal.fat,
+        },
       })),
+    }
+  }
+
+  /**
+   * 替换单餐
+   * 生成营养相近的替代餐，保持当日总营养不变
+   */
+  async replaceMeal(
+    mealId: string,
+    memberId: string
+  ): Promise<{
+    id: string
+    date: Date
+    mealType: MealType
+    ingredients: Array<{ foodId: string; amount: number }>
+    nutrition: {
+      calories: number
+      protein: number
+      carbs: number
+      fat: number
+    }
+  }> {
+    // 获取当前餐食信息
+    const currentMeal = await prisma.meal.findUnique({
+      where: { id: mealId },
+      include: {
+        plan: {
+          include: {
+            member: {
+              include: {
+                healthGoals: {
+                  where: { status: 'ACTIVE' },
+                  orderBy: { createdAt: 'desc' },
+                  take: 1,
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!currentMeal) {
+      throw new Error('餐食不存在')
+    }
+
+    if (currentMeal.plan.memberId !== memberId) {
+      throw new Error('无权限替换此餐食')
+    }
+
+    const activeGoal = currentMeal.plan.member.healthGoals[0]
+    if (!activeGoal) {
+      throw new Error('成员没有活跃的健康目标')
+    }
+
+    // 获取目标营养值（使用当前餐食的营养值作为目标）
+    const targetNutrition = {
+      calories: currentMeal.calories,
+      protein: currentMeal.protein,
+      carbs: currentMeal.carbs,
+      fat: currentMeal.fat,
+    }
+
+    // 获取过敏信息
+    const allergies = await this.getMemberAllergies(memberId)
+    const season = getCurrentSeason()
+
+    // 加载对应类型的模板
+    const templates = await this.loadTemplates(currentMeal.mealType)
+    const suitableTemplates = templates.filter((t) =>
+      t.suitableGoals.includes(activeGoal.goalType)
+    )
+
+    // 选择营养相近的替代模板（不使用已使用的模板ID限制，允许替换）
+    const replacementTemplate = this.selectBestTemplate(
+      suitableTemplates,
+      targetNutrition,
+      allergies,
+      season,
+      new Set() // 不使用已使用限制，允许选择任何模板
+    )
+
+    if (!replacementTemplate) {
+      throw new Error('未找到合适的替代餐食')
+    }
+
+    // 删除旧食材并创建新食材
+    await prisma.mealIngredient.deleteMany({
+      where: { mealId },
+    })
+
+    await prisma.mealIngredient.createMany({
+      data: replacementTemplate.ingredients.map((ing) => ({
+        mealId,
+        foodId: ing.foodId,
+        amount: ing.amount,
+      })),
+    })
+
+    // 更新餐食营养信息
+    const updatedMeal = await prisma.meal.update({
+      where: { id: mealId },
+      data: {
+        calories: replacementTemplate.nutrition.calories,
+        protein: replacementTemplate.nutrition.protein,
+        carbs: replacementTemplate.nutrition.carbs,
+        fat: replacementTemplate.nutrition.fat,
+      },
+      include: {
+        ingredients: {
+          include: {
+            food: true,
+          },
+        },
+      },
+    })
+
+    return {
+      id: updatedMeal.id,
+      date: updatedMeal.date,
+      mealType: updatedMeal.mealType,
+      ingredients: updatedMeal.ingredients.map((ing) => ({
+        foodId: ing.foodId,
+        amount: ing.amount,
+      })),
+      nutrition: {
+        calories: updatedMeal.calories,
+        protein: updatedMeal.protein,
+        carbs: updatedMeal.carbs,
+        fat: updatedMeal.fat,
+      },
     }
   }
 

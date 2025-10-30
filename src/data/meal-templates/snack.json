@@ -41,5 +41,177 @@
     ],
     "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
     "tags": ["高碳水", "快速补充"]
+  },
+  {
+    "id": "snack-004",
+    "name": "橙子",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "橙子",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "高维C"]
+  },
+  {
+    "id": "snack-005",
+    "name": "坚果混合",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "核桃",
+        "amount": 20
+      },
+      {
+        "foodName": "杏仁",
+        "amount": 15
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "健康脂肪"]
+  },
+  {
+    "id": "snack-006",
+    "name": "酸奶",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "酸奶",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["高蛋白", "补钙"]
+  },
+  {
+    "id": "snack-007",
+    "name": "葡萄",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "葡萄",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["MAINTAIN", "GAIN_MUSCLE"],
+    "tags": ["高碳水", "抗氧化"]
+  },
+  {
+    "id": "snack-008",
+    "name": "水煮蛋",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "鸡蛋",
+        "amount": 50
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "低卡"]
+  },
+  {
+    "id": "snack-009",
+    "name": "蓝莓配酸奶",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "蓝莓",
+        "amount": 50
+      },
+      {
+        "foodName": "酸奶",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["高蛋白", "抗氧化"]
+  },
+  {
+    "id": "snack-010",
+    "name": "草莓",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "草莓",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "高维C"]
+  },
+  {
+    "id": "snack-011",
+    "name": "全麦饼干配牛奶",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "全麦面包",
+        "amount": 30
+      },
+      {
+        "foodName": "牛奶",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高碳水", "高蛋白"]
+  },
+  {
+    "id": "snack-012",
+    "name": "梨",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "梨",
+        "amount": 150
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "高纤维"]
+  },
+  {
+    "id": "snack-013",
+    "name": "花生",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "花生",
+        "amount": 20
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "健康脂肪"]
+  },
+  {
+    "id": "snack-014",
+    "name": "猕猴桃",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "猕猴桃",
+        "amount": 100
+      }
+    ],
+    "suitableGoals": ["LOSE_WEIGHT", "MAINTAIN", "IMPROVE_HEALTH"],
+    "tags": ["低卡", "高维C"]
+  },
+  {
+    "id": "snack-015",
+    "name": "芝士配全麦饼干",
+    "mealType": "SNACK",
+    "ingredients": [
+      {
+        "foodName": "芝士",
+        "amount": 30
+      },
+      {
+        "foodName": "全麦面包",
+        "amount": 30
+      }
+    ],
+    "suitableGoals": ["GAIN_MUSCLE", "MAINTAIN"],
+    "tags": ["高蛋白", "高钙"]
   }
 ]
