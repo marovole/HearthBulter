@@ -103,6 +103,10 @@ model FamilyMember {
   trendData     TrendData[]
   healthAnomalies HealthAnomaly[]
 
+  // AI 关联
+  aiAdvices       AIAdvice[]
+  aiConversations AIConversation[]
+
   // 审计字段
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -1182,4 +1186,120 @@ enum AnomalyStatus {
   ACKNOWLEDGED // 已确认
   RESOLVED // 已解决
   IGNORED // 已忽略
+}
+
+// AI Nutrition Advisor Models
+
+enum AIAdviceType {
+  HEALTH_ANALYSIS
+  RECIPE_OPTIMIZATION
+  CONSULTATION
+  REPORT_GENERATION
+}
+
+model AIAdvice {
+  id          String         @id @default(cuid())
+  memberId    String
+  member      FamilyMember   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  type        AIAdviceType
+  content     Json           // Structured AI response
+  prompt      String?        // The prompt sent to AI
+  tokens      Int            // Tokens used for cost tracking
+  feedback    Json?          // User feedback { rating: number, comment: string }
+  generatedAt DateTime       @default(now())
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  @@map("ai_advice")
+  @@index([memberId])
+  @@index([type])
+  @@index([generatedAt])
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model AIConversation {
+  id            String            @id @default(cuid())
+  memberId      String
+  member        FamilyMember      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  title         String?
+  messages      Json              // Array of { role: 'user'|'assistant', content: string }
+  status        ConversationStatus @default(ACTIVE)
+  tokens        Int               // Total tokens for the conversation
+  lastMessageAt DateTime          @updatedAt
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  deletedAt     DateTime?
+
+  @@map("ai_conversations")
+  @@index([memberId])
+  @@index([status])
+  @@index([lastMessageAt])
+}
+
+enum PromptType {
+  HEALTH_ANALYSIS
+  RECIPE_OPTIMIZATION
+  CONSULTATION
+  REPORT_GENERATION
+}
+
+model PromptTemplate {
+  id          String     @id @default(cuid())
+  name        String
+  type        PromptType
+  template    String     @db.Text
+  version     String     @default("1.0")
+  parameters  Json?      // Placeholder parameters e.g. { "user_age": 30 }
+  isActive    Boolean    @default(true)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([type, version])
+  @@map("prompt_templates")
+  @@index([type])
+  @@index([isActive])
+}
+
+// 用户同意类型枚举
+enum ConsentType {
+  AI_HEALTH_ANALYSIS
+  MEDICAL_DATA_PROCESSING
+  HEALTH_DATA_SHARING
+  HEALTH_RESEARCH_PARTICIPATION
+}
+
+// 用户同意记录模型
+model UserConsent {
+  id        String      @id @default(cuid())
+  userId    String
+  consentId String      // 对应同意类型的ID
+  granted   Boolean     @default(false)
+
+  // 同意详情
+  context   Json?       // 同意时的上下文信息
+  ipAddress String?
+  userAgent String?
+
+  // 时间管理
+  grantedAt DateTime   @default(now())
+  expiresAt DateTime?  // 过期时间，null表示永不过期
+
+  // 审计字段
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([userId, consentId])
+  @@map("user_consents")
+  @@index([userId])
+  @@index([consentId])
+  @@index([granted])
+  @@index([expiresAt])
 }

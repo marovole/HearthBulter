@@ -84,3 +84,4 @@ CREATE INDEX "medical_indicators_reportId_indicatorType_idx" ON "medical_indicat
 ALTER TABLE "medical_reports" ADD CONSTRAINT "medical_reports_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "family_members"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "medical_indicators" ADD CONSTRAINT "medical_indicators_reportId_fkey" FOREIGN KEY ("reportId") REFERENCES "medical_reports"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+

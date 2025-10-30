@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Health Data Analysis
-系统应当使用AI分析用户体检数据并生成个性化健康报告。
+系统SHALL使用AI分析用户体检数据并生成个性化健康报告。
 
 #### Scenario: 体检数据分析成功
 - **WHEN** 用户上传新的体检报告
@@ -18,7 +18,7 @@
 - **THEN** AI推荐个性化宏量营养比例和每日热量目标
 
 ### Requirement: Smart Recipe Optimization
-系统应当使用AI优化食谱以更好匹配健康目标。
+系统SHALL使用AI优化食谱以更好匹配健康目标。
 
 #### Scenario: 食谱营养优化
 - **WHEN** 用户食谱碳水化合物偏高（目标减重）
@@ -33,7 +33,7 @@
 - **THEN** AI优先推荐当季食材（更新鲜、性价比高）
 
 ### Requirement: Conversational Nutrition Consultation
-系统应当提供对话式AI营养咨询功能。
+系统SHALL提供对话式AI营养咨询功能。
 
 #### Scenario: 用户提问
 - **WHEN** 用户询问「为什么我的体重一直降不下来？」
@@ -52,7 +52,7 @@
 - **THEN** AI能够回忆之前的对话内容
 
 ### Requirement: Periodic Health Reports
-系统应当自动生成周期性健康报告。
+系统SHALL自动生成周期性健康报告。
 
 #### Scenario: 生成周报
 - **WHEN** 每周日晚上8点
@@ -67,7 +67,7 @@
 - **THEN** 生成PDF或HTML格式的完整报告
 
 ### Requirement: Advice Feedback Loop
-系统应当收集用户对AI建议的反馈以持续改进。
+系统SHALL收集用户对AI建议的反馈以持续改进。
 
 #### Scenario: 用户点赞建议
 - **WHEN** 用户点击「有帮助」
@@ -82,7 +82,7 @@
 - **THEN** 保存反馈内容供后续Prompt优化参考
 
 ### Requirement: Cost and Usage Control
-系统应当监控AI API使用成本并实施限制。
+系统SHALL监控AI API使用成本并实施限制。
 
 #### Scenario: Token使用统计
 - **WHEN** 每次AI调用完成
@@ -101,7 +101,7 @@
 - **THEN** 直接返回缓存结果，不调用AI API
 
 ### Requirement: Medical Disclaimer
-系统应当明确告知AI建议不能替代专业医疗诊断。
+系统SHALL明确告知AI建议不能替代专业医疗诊断。
 
 #### Scenario: 首次使用提示
 - **WHEN** 用户首次访问AI营养咨询

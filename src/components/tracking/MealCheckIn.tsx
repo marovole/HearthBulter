@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MealType } from '@prisma/client';
+import { FoodSearchDialog } from './FoodSearchDialog';
 
 interface Food {
   id: string;
@@ -227,30 +228,13 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
         {isSubmitting ? '提交中...' : '完成打卡'}
       </button>
 
-      {/* 食物搜索对话框（简化版） */}
-      {showFoodSearch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">搜索食物</h3>
-              <button
-                onClick={() => setShowFoodSearch(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-            <input
-              type="text"
-              placeholder="搜索食物名称..."
-              className="w-full px-3 py-2 border rounded-lg mb-4"
-            />
-            <div className="text-center text-gray-400 py-8">
-              搜索功能待实现...
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 食物搜索对话框 */}
+      <FoodSearchDialog
+        isOpen={showFoodSearch}
+        onClose={() => setShowFoodSearch(false)}
+        onSelectFood={handleAddFood}
+        memberId={memberId}
+      />
     </div>
   );
 }
