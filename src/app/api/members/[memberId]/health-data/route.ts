@@ -6,6 +6,13 @@ import {
   type HealthDataInput,
 } from '@/lib/services/health-data-validator'
 import { updateStreakDays } from '../health-reminders/route'
+import {
+  validateRequestBody,
+  handleApiError,
+  healthDataSchemas,
+  commonSchemas,
+  formatApiCreated,
+} from '@/lib/validation'
 
 /**
  * 验证用户是否有权限访问成员的健康数据
@@ -152,28 +159,36 @@ export async function POST(
       )
     }
 
-    const body = await request.json()
-    const healthDataInput: HealthDataInput = {
-      weight: body.weight ?? null,
-      bodyFat: body.bodyFat ?? null,
-      muscleMass: body.muscleMass ?? null,
-      bloodPressureSystolic: body.bloodPressureSystolic ?? null,
-      bloodPressureDiastolic: body.bloodPressureDiastolic ?? null,
-      heartRate: body.heartRate ?? null,
-      measuredAt: body.measuredAt ? new Date(body.measuredAt) : new Date(),
-      source: body.source || 'MANUAL',
-      notes: body.notes ?? null,
+    // 验证请求体
+    const validation = await validateRequestBody(request, healthDataSchemas.create)
+    if (!validation.success) {
+      return validation.response
     }
 
-    // 验证数据
-    const validation = await validateAndDetectAnomaly(memberId, healthDataInput)
+    const data = validation.data
 
-    if (!validation.valid) {
+    // 构建健康数据输入
+    const healthDataInput: HealthDataInput = {
+      weight: data.weight ?? null,
+      bodyFat: data.bodyFat ?? null,
+      muscleMass: data.muscleMass ?? null,
+      bloodPressureSystolic: data.bloodPressureSystolic ?? null,
+      bloodPressureDiastolic: data.bloodPressureDiastolic ?? null,
+      heartRate: data.heartRate ?? null,
+      measuredAt: data.measuredAt ?? new Date(),
+      source: 'MANUAL', // 目前只支持手动录入
+      notes: data.notes ?? null,
+    }
+
+    // 验证数据（业务逻辑验证）
+    const businessValidation = await validateAndDetectAnomaly(memberId, healthDataInput)
+
+    if (!businessValidation.valid) {
       return NextResponse.json(
         {
           error: '数据验证失败',
-          details: validation.errors,
-          warnings: validation.warnings,
+          details: businessValidation.errors,
+          warnings: businessValidation.warnings,
         },
         { status: 400 }
       )
@@ -200,22 +215,18 @@ export async function POST(
       console.error('更新连续打卡天数失败:', error)
     })
 
-    // 如果有警告（异常检测），在响应中包含警告信息
-    const response: any = {
-      message: '健康数据录入成功',
+    // 构建响应数据
+    const responseData: any = {
       data: healthData,
     }
 
-    if (validation.warnings && validation.warnings.length > 0) {
-      response.warnings = validation.warnings
+    // 如果有警告（异常检测），在响应中包含警告信息
+    if (businessValidation.warnings && businessValidation.warnings.length > 0) {
+      responseData.warnings = businessValidation.warnings
     }
 
-    return NextResponse.json(response, { status: 201 })
+    return formatApiCreated(responseData, '健康数据录入成功')
   } catch (error) {
-    console.error('录入健康数据失败:', error)
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    )
+    return handleApiError(error, '录入健康数据')
   }
 }
