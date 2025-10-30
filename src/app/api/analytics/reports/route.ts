@@ -1,0 +1,123 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { PrismaClient, ReportType } from '@prisma/client';
+import { createReport } from '@/lib/services/analytics/report-generator';
+
+const prisma = new PrismaClient();
+
+/**
+ * GET /api/analytics/reports
+ * 获取报告列表
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+    const memberId = searchParams.get('memberId');
+    const reportType = searchParams.get('reportType') as ReportType | null;
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '10');
+
+    if (!memberId) {
+      return NextResponse.json(
+        { error: '缺少必要参数：memberId' },
+        { status: 400 }
+      );
+    }
+
+    const where: any = {
+      memberId,
+      deletedAt: null,
+    };
+
+    if (reportType) {
+      where.reportType = reportType;
+    }
+
+    const [reports, total] = await Promise.all([
+      prisma.healthReport.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: {
+          id: true,
+          reportType: true,
+          startDate: true,
+          endDate: true,
+          title: true,
+          summary: true,
+          overallScore: true,
+          status: true,
+          createdAt: true,
+        },
+      }),
+      prisma.healthReport.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        reports,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Failed to get reports:', error);
+    return NextResponse.json(
+      { error: '获取报告列表失败' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/analytics/reports
+ * 生成新报告
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { memberId, reportType, startDate, endDate } = body;
+
+    if (!memberId || !reportType) {
+      return NextResponse.json(
+        { error: '缺少必要参数：memberId, reportType' },
+        { status: 400 }
+      );
+    }
+
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+
+    const report = await createReport(memberId, reportType as ReportType, start, end);
+
+    return NextResponse.json({
+      success: true,
+      data: report,
+      message: '报告生成成功',
+    });
+  } catch (error) {
+    console.error('Failed to generate report:', error);
+    return NextResponse.json(
+      { error: '生成报告失败' },
+      { status: 500 }
+    );
+  }
+}
+

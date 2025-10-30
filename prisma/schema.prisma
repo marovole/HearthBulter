@@ -96,6 +96,12 @@ model FamilyMember {
   quickTemplates        QuickTemplate[]
   dailyNutritionTargets DailyNutritionTarget[]
   auxiliaryTrackings    AuxiliaryTracking[]
+  
+  // 健康分析关联
+  healthReports HealthReport[]
+  healthScores  HealthScore[]
+  trendData     TrendData[]
+  healthAnomalies HealthAnomaly[]
 
   // 审计字段
   createdAt DateTime  @default(now())
@@ -944,4 +950,236 @@ model AuxiliaryTracking {
   @@unique([memberId, date])
   @@index([memberId, date])
   @@map("auxiliary_trackings")
+}
+
+// ==================== 健康分析与报告系统 ====================
+
+// 健康报告表
+model HealthReport {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 报告类型
+  reportType ReportType // WEEKLY, MONTHLY, QUARTERLY
+  
+  // 报告时间范围
+  startDate DateTime
+  endDate   DateTime
+  
+  // 报告标题和内容
+  title   String
+  summary String? // 概要
+  
+  // 报告数据（JSON格式）
+  dataSnapshot String // JSON字符串，包含所有统计数据
+  insights     String? // AI生成的洞察（JSON数组）
+  
+  // 健康评分
+  overallScore Float? // 综合健康评分（0-100）
+  
+  // 报告文件
+  htmlContent String? @db.Text // HTML格式报告
+  pdfUrl      String? // PDF文件URL
+  
+  // 分享信息
+  shareToken String?   @unique // 分享链接token
+  shareExpiresAt DateTime? // 分享链接过期时间
+  
+  // 生成状态
+  status ReportStatus @default(GENERATING)
+  
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([memberId, reportType])
+  @@index([memberId, startDate])
+  @@index([shareToken])
+  @@map("health_reports")
+}
+
+// 报告类型枚举
+enum ReportType {
+  WEEKLY // 周报
+  MONTHLY // 月报
+  QUARTERLY // 季报
+  CUSTOM // 自定义
+}
+
+// 报告状态枚举
+enum ReportStatus {
+  GENERATING // 生成中
+  COMPLETED // 已完成
+  FAILED // 生成失败
+}
+
+// 健康评分历史表
+model HealthScore {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 评分日期
+  date DateTime @db.Date
+  
+  // 综合评分
+  overallScore Float // 0-100分
+  
+  // 分项评分（按权重计算）
+  nutritionScore Float? // 营养评分（权重40%）
+  exerciseScore  Float? // 运动评分（权重30%）
+  sleepScore     Float? // 睡眠评分（权重20%）
+  medicalScore   Float? // 体检评分（权重10%）
+  
+  // 评分等级
+  grade ScoreGrade // EXCELLENT, GOOD, FAIR, POOR
+  
+  // 数据完整度（用于评分可信度）
+  dataCompleteness Float @default(0) // 0-1
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, date])
+  @@index([memberId, date])
+  @@index([memberId, overallScore])
+  @@map("health_scores")
+}
+
+// 评分等级枚举
+enum ScoreGrade {
+  EXCELLENT // 优秀 (>=90)
+  GOOD // 良好 (>=75)
+  FAIR // 一般 (>=60)
+  POOR // 较差 (<60)
+}
+
+// 趋势数据缓存表
+model TrendData {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 数据类型
+  dataType TrendDataType
+  
+  // 时间范围
+  startDate DateTime
+  endDate   DateTime
+  
+  // 聚合数据（JSON格式）
+  aggregatedData String @db.Text // JSON字符串，包含时序数据点
+  
+  // 统计数据
+  mean     Float? // 平均值
+  median   Float? // 中位数
+  min      Float? // 最小值
+  max      Float? // 最大值
+  stdDev   Float? // 标准差
+  
+  // 趋势分析
+  trendDirection String? // UP, DOWN, STABLE
+  slope          Float? // 线性回归斜率
+  rSquared       Float? // R²值（拟合度）
+  
+  // 预测数据（JSON格式）
+  predictions String? // 未来7天预测值
+  
+  // 缓存元数据
+  expiresAt DateTime // 缓存过期时间
+  hitCount  Int      @default(0) // 缓存命中次数
+  
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, dataType, startDate, endDate])
+  @@index([memberId, dataType])
+  @@index([expiresAt])
+  @@map("trend_data")
+}
+
+// 趋势数据类型枚举
+enum TrendDataType {
+  WEIGHT // 体重
+  BODY_FAT // 体脂率
+  MUSCLE_MASS // 肌肉量
+  BLOOD_PRESSURE // 血压
+  HEART_RATE // 心率
+  CALORIES // 卡路里摄入
+  PROTEIN // 蛋白质摄入
+  CARBS // 碳水化合物摄入
+  FAT // 脂肪摄入
+  EXERCISE // 运动时长
+  SLEEP // 睡眠时长
+  WATER // 饮水量
+  HEALTH_SCORE // 健康评分
+}
+
+// 异常检测记录表
+model HealthAnomaly {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 异常信息
+  anomalyType  AnomalyType
+  severity     AnomalySeverity
+  title        String // 异常标题
+  description  String // 异常描述
+  
+  // 检测数据
+  detectedAt   DateTime @default(now())
+  dataType     TrendDataType
+  value        Float // 异常值
+  expectedMin  Float? // 预期最小值
+  expectedMax  Float? // 预期最大值
+  deviation    Float? // 偏差程度（标准差倍数）
+  
+  // 处理状态
+  status     AnomalyStatus @default(PENDING)
+  resolvedAt DateTime?
+  resolution String? // 处理说明
+  
+  // 是否已通知
+  notified   Boolean @default(false)
+  notifiedAt DateTime?
+  
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([memberId, anomalyType])
+  @@index([memberId, status])
+  @@index([detectedAt])
+  @@map("health_anomalies")
+}
+
+// 异常类型枚举
+enum AnomalyType {
+  SUDDEN_CHANGE // 突然变化
+  NUTRITION_IMBALANCE // 营养失衡
+  GOAL_DEVIATION // 目标偏离
+  THRESHOLD_EXCEEDED // 超出阈值
+  MISSING_DATA // 数据缺失
+}
+
+// 异常严重程度枚举
+enum AnomalySeverity {
+  LOW // 轻微
+  MEDIUM // 中等
+  HIGH // 严重
+  CRITICAL // 危急
+}
+
+// 异常状态枚举
+enum AnomalyStatus {
+  PENDING // 待处理
+  ACKNOWLEDGED // 已确认
+  RESOLVED // 已解决
+  IGNORED // 已忽略
 }
