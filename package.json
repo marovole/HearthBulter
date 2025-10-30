@@ -28,6 +28,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:test": "tsx scripts/test-db-connection.ts",
     "prepare": "husky install",
     "openspec:list": "openspec list",
     "openspec:validate": "openspec validate --strict"

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql" // 支持 Supabase PostgreSQL
   url      = env("DATABASE_URL")
 }
 
@@ -17,16 +17,16 @@ model User {
   emailVerified DateTime?
   name          String?
   image         String?
-  password      String?   // 密码认证用户使用
+  password      String? // 密码认证用户使用
   role          UserRole  @default(USER)
 
   // 关联关系
-  createdFamilies Family[] @relation("FamilyCreator")
-  familyMembers  FamilyMember[]
+  createdFamilies Family[]       @relation("FamilyCreator")
+  familyMembers   FamilyMember[]
 
   // 审计字段
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@map("users")
@@ -40,19 +40,19 @@ enum UserRole {
 
 // 家庭表
 model Family {
-  id          String     @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
   description String?
-  inviteCode  String?    @unique // 家庭邀请码
+  inviteCode  String? @unique // 家庭邀请码
 
   // 关联关系
-  creatorId  String
-  creator    User       @relation("FamilyCreator", fields: [creatorId], references: [id])
-  members    FamilyMember[]
+  creatorId String
+  creator   User           @relation("FamilyCreator", fields: [creatorId], references: [id])
+  members   FamilyMember[]
 
   // 审计字段
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@map("families")
@@ -60,21 +60,21 @@ model Family {
 
 // 家庭成员表
 model FamilyMember {
-  id       String           @id @default(cuid())
-  name     String
-  gender   Gender
+  id        String   @id @default(cuid())
+  name      String
+  gender    Gender
   birthDate DateTime
-  height   Float?           // 身高(cm)
-  weight   Float?           // 体重(kg)
-  avatar   String?
+  height    Float? // 身高(cm)
+  weight    Float? // 体重(kg)
+  avatar    String?
 
   // 健康计算字段
-  bmi        Float?         // BMI自动计算
-  ageGroup   AgeGroup?      // 年龄段自动计算
+  bmi      Float? // BMI自动计算
+  ageGroup AgeGroup? // 年龄段自动计算
 
   // 关联关系
   familyId String
-  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  family   Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
   userId   String? @unique // 可关联到系统用户账户
   user     User?   @relation(fields: [userId], references: [id])
 
@@ -82,13 +82,15 @@ model FamilyMember {
   role FamilyMemberRole @default(MEMBER)
 
   // 健康目标和过敏史
-  healthGoals HealthGoal[]
-  allergies   Allergy[]
+  healthGoals       HealthGoal[]
+  allergies         Allergy[]
   dietaryPreference DietaryPreference?
+  healthData        HealthData[]
+  healthReminders   HealthReminder[]
 
   // 审计字段
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@map("family_members")
@@ -103,54 +105,54 @@ enum Gender {
 
 // 年龄段枚举
 enum AgeGroup {
-  CHILD      // <12岁
-  TEENAGER   // 12-18岁
-  ADULT      // 18-65岁
-  ELDERLY    // >65岁
+  CHILD // <12岁
+  TEENAGER // 12-18岁
+  ADULT // 18-65岁
+  ELDERLY // >65岁
 }
 
 // 家庭成员角色枚举
 enum FamilyMemberRole {
-  ADMIN      // 管理员
-  MEMBER     // 普通成员
+  ADMIN // 管理员
+  MEMBER // 普通成员
 }
 
 // 健康目标表
 model HealthGoal {
-  id             String       @id @default(cuid())
-  memberId       String
-  member         FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   // 目标类型
-  goalType       GoalType
+  goalType GoalType
 
   // 体重相关目标
-  targetWeight   Float?       // 目标体重(kg)
-  currentWeight  Float?       // 当前体重(kg)
-  startWeight    Float?       // 开始体重(kg)
+  targetWeight  Float? // 目标体重(kg)
+  currentWeight Float? // 当前体重(kg)
+  startWeight   Float? // 开始体重(kg)
 
   // 时间设定
-  targetWeeks    Int?         // 目标周期(周)
-  startDate      DateTime     // 开始日期
-  targetDate     DateTime?    // 目标日期
+  targetWeeks Int? // 目标周期(周)
+  startDate   DateTime // 开始日期
+  targetDate  DateTime? // 目标日期
 
   // 计算参数
-  tdee           Int?         // 每日总能量消耗
-  bmr            Int?         // 基础代谢率
-  activityFactor Float?       // 活动系数
+  tdee           Int? // 每日总能量消耗
+  bmr            Int? // 基础代谢率
+  activityFactor Float? // 活动系数
 
   // 宏量营养素分配比例
-  carbRatio      Float?       @default(0.5)   // 碳水化合物比例
-  proteinRatio   Float?       @default(0.2)   // 蛋白质比例
-  fatRatio       Float?       @default(0.3)   // 脂肪比例
+  carbRatio    Float? @default(0.5) // 碳水化合物比例
+  proteinRatio Float? @default(0.2) // 蛋白质比例
+  fatRatio     Float? @default(0.3) // 脂肪比例
 
   // 目标状态
-  status         GoalStatus   @default(ACTIVE)
-  progress       Float?       @default(0)     // 进度百分比
+  status   GoalStatus @default(ACTIVE)
+  progress Float?     @default(0) // 进度百分比
 
   // 审计字段
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@map("health_goals")
@@ -158,35 +160,35 @@ model HealthGoal {
 
 // 目标类型枚举
 enum GoalType {
-  LOSE_WEIGHT    // 减重
-  GAIN_MUSCLE    // 增肌
-  MAINTAIN       // 维持体重
+  LOSE_WEIGHT // 减重
+  GAIN_MUSCLE // 增肌
+  MAINTAIN // 维持体重
   IMPROVE_HEALTH // 改善健康指标
 }
 
 // 目标状态枚举
 enum GoalStatus {
-  ACTIVE     // 活跃中
-  COMPLETED  // 已完成
-  PAUSED     // 暂停
-  CANCELLED  // 取消
+  ACTIVE // 活跃中
+  COMPLETED // 已完成
+  PAUSED // 暂停
+  CANCELLED // 取消
 }
 
 // 过敏史表
 model Allergy {
-  id           String           @id @default(cuid())
-  memberId     String
-  member       FamilyMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   // 过敏信息
   allergenType AllergenType
-  allergenName String           // 具体过敏原名称
-  severity     AllergySeverity  // 严重程度
-  description  String?          // 描述
+  allergenName String // 具体过敏原名称
+  severity     AllergySeverity // 严重程度
+  description  String? // 描述
 
   // 审计字段
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@map("allergies")
@@ -194,46 +196,46 @@ model Allergy {
 
 // 过敏类型枚举
 enum AllergenType {
-  FOOD         // 食物过敏
+  FOOD // 食物过敏
   ENVIRONMENTAL // 环境过敏
-  MEDICATION   // 药物过敏
-  OTHER        // 其他
+  MEDICATION // 药物过敏
+  OTHER // 其他
 }
 
 // 过敏严重程度枚举
 enum AllergySeverity {
-  MILD      // 轻微
-  MODERATE  // 中等
-  SEVERE    // 严重
+  MILD // 轻微
+  MODERATE // 中等
+  SEVERE // 严重
   LIFE_THREATENING // 危及生命
 }
 
 // 饮食偏好表（扩展功能）
 model DietaryPreference {
-  id       String           @id @default(cuid())
-  memberId String           @unique
-  member   FamilyMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id       String       @id @default(cuid())
+  memberId String       @unique
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   // 饮食类型
   dietType DietaryType
 
   // 具体偏好设置
-  isVegetarian     Boolean @default(false)
-  isVegan          Boolean @default(false)
-  isKeto           Boolean @default(false)
-  isLowCarb        Boolean @default(false)
-  isLowFat         Boolean @default(false)
-  isHighProtein    Boolean @default(false)
-  isGlutenFree     Boolean @default(false)
-  isDairyFree      Boolean @default(false)
-  isLowSodium      Boolean @default(false)
+  isVegetarian  Boolean @default(false)
+  isVegan       Boolean @default(false)
+  isKeto        Boolean @default(false)
+  isLowCarb     Boolean @default(false)
+  isLowFat      Boolean @default(false)
+  isHighProtein Boolean @default(false)
+  isGlutenFree  Boolean @default(false)
+  isDairyFree   Boolean @default(false)
+  isLowSodium   Boolean @default(false)
 
   // 自定义备注
   notes String?
 
   // 审计字段
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@map("dietary_preferences")
@@ -241,27 +243,27 @@ model DietaryPreference {
 
 // 饮食类型枚举
 enum DietaryType {
-  OMNIVORE        // 杂食
-  VEGETARIAN      // 素食
-  VEGAN           // 严格素食
-  PESCETARIAN     // 鱼素
-  KETO            // 生酮饮食
-  PALEO           // 原始饮食
-  MEDITERRANEAN   // 地中海饮食
-  LOW_FODMAP      // 低FODMAP饮食
-  CUSTOM          // 自定义
+  OMNIVORE // 杂食
+  VEGETARIAN // 素食
+  VEGAN // 严格素食
+  PESCETARIAN // 鱼素
+  KETO // 生酮饮食
+  PALEO // 原始饮食
+  MEDITERRANEAN // 地中海饮食
+  LOW_FODMAP // 低FODMAP饮食
+  CUSTOM // 自定义
 }
 
 // 邀请记录表
 model FamilyInvitation {
-  id        String    @id @default(cuid())
-  familyId  String
-  email     String
-  inviteCode String  @unique
-  role      FamilyMemberRole @default(MEMBER)
+  id         String           @id @default(cuid())
+  familyId   String
+  email      String
+  inviteCode String           @unique
+  role       FamilyMemberRole @default(MEMBER)
 
   // 邀请状态
-  status    InvitationStatus @default(PENDING)
+  status InvitationStatus @default(PENDING)
 
   // 时间限制
   expiresAt DateTime
@@ -275,8 +277,140 @@ model FamilyInvitation {
 
 // 邀请状态枚举
 enum InvitationStatus {
-  PENDING   // 待处理
-  ACCEPTED  // 已接受
-  REJECTED  // 已拒绝
-  EXPIRED   // 已过期
+  PENDING // 待处理
+  ACCEPTED // 已接受
+  REJECTED // 已拒绝
+  EXPIRED // 已过期
+}
+
+// 食物表
+model Food {
+  id      String  @id @default(cuid())
+  name    String // 中文名
+  nameEn  String? // 英文名（用于USDA查询）
+  aliases String  @default("[]") // JSON字符串存储别名数组 ["西红柿", "蕃茄"]
+
+  // 营养成分（per 100g）
+  calories Float // kcal
+  protein  Float // g
+  carbs    Float // g
+  fat      Float // g
+  fiber    Float? // g
+  sugar    Float? // g
+  sodium   Float? // mg
+
+  // 微量营养素（可选）
+  vitaminA Float? // μg
+  vitaminC Float? // mg
+  calcium  Float? // mg
+  iron     Float? // mg
+
+  // 元数据
+  category FoodCategory
+  tags     String       @default("[]") // JSON字符串存储标签数组 ["高蛋白", "低碳水"]
+  source   DataSource   @default(LOCAL)
+  usdaId   String? // USDA FDC ID
+  verified Boolean      @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  cachedAt  DateTime? // USDA数据缓存时间
+
+  @@index([category])
+  @@index([source])
+  @@index([nameEn])
+  @@map("foods")
+}
+
+// 食物分类枚举
+enum FoodCategory {
+  VEGETABLES // 蔬菜
+  FRUITS // 水果
+  GRAINS // 谷物
+  PROTEIN // 肉蛋奶
+  SEAFOOD // 海鲜
+  DAIRY // 乳制品
+  OILS // 油脂
+  SNACKS // 零食
+  BEVERAGES // 饮料
+  OTHER // 其他
+}
+
+// 数据来源枚举
+enum DataSource {
+  USDA // USDA FoodData Central
+  LOCAL // 本地自定义
+  USER_SUBMITTED // 用户提交（待审核）
+}
+
+// 健康数据表
+model HealthData {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 健康指标
+  weight                 Float? // kg
+  bodyFat                Float? // %
+  muscleMass             Float? // kg
+  bloodPressureSystolic  Int? // 收缩压 mmHg
+  bloodPressureDiastolic Int? // 舒张压 mmHg
+  heartRate              Int? // bpm
+
+  // 元数据
+  measuredAt DateTime         @default(now())
+  source     HealthDataSource @default(MANUAL)
+  notes      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId, measuredAt])
+  @@index([memberId])
+  @@map("health_data")
+}
+
+// 健康数据来源枚举
+enum HealthDataSource {
+  MANUAL // 手动录入
+  WEARABLE // 可穿戴设备
+  MEDICAL_REPORT // 体检报告
+}
+
+// 健康数据提醒配置表
+model HealthReminder {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 提醒类型
+  reminderType ReminderType
+  enabled      Boolean  @default(true)
+  
+  // 提醒时间设置
+  hour         Int      // 小时 (0-23)
+  minute       Int      @default(0) // 分钟 (0-59)
+  daysOfWeek   String   @default("[]") // JSON数组，例如 [1,2,3,4,5] 表示周一到周五
+
+  // 提醒内容
+  message      String?  // 自定义提醒消息
+
+  // 统计信息
+  lastTriggeredAt DateTime? // 上次触发时间
+  streakDays     Int      @default(0) // 连续打卡天数
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("health_reminders")
+  @@index([memberId])
+  @@unique([memberId, reminderType])
+}
+
+// 提醒类型枚举
+enum ReminderType {
+  WEIGHT        // 体重记录提醒
+  BLOOD_PRESSURE // 血压记录提醒
+  HEART_RATE     // 心率记录提醒
+  GENERAL        // 通用健康数据记录提醒
 }
