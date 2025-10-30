@@ -37,11 +37,11 @@
 - [x] 5.5 标注模板适用目标（减重/增肌/维持）
 
 ## 6. UI Components
-- [ ] 6.1 创建食谱生成页（MealPlanGenerator.tsx）
-- [ ] 6.2 创建7天食谱展示（WeeklyPlan.tsx）
-- [ ] 6.3 创建单餐详情卡片（MealCard.tsx）
-- [ ] 6.4 创建食材替换弹窗（SwapIngredient.tsx）
-- [ ] 6.5 创建营养统计面板（NutritionSummary.tsx）
+- [x] 6.1 创建食谱生成页（MealPlanGenerator.tsx）
+- [x] 6.2 创建7天食谱展示（WeeklyPlan.tsx）
+- [x] 6.3 创建单餐详情卡片（MealCard.tsx）
+- [x] 6.4 创建食材替换弹窗（SwapIngredient.tsx）
+- [x] 6.5 创建营养统计面板（NutritionSummary.tsx）
 
 ## 7. Testing
 - [ ] 7.1 测试不同目标下的食谱生成（减重/增肌/维持）
