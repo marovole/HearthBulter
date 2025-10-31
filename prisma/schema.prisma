@@ -2452,7 +2452,8 @@ model SharedContent {
   title       String          // 分享标题
   description String?         // 分享描述
   imageUrl    String?         // 分享图片URL
-  
+  metadata    Json?           // 分享元数据
+
   // 分享链接信息
   shareToken     String   @unique // 分享链接token
   shareUrl       String?          // 完整分享URL
@@ -2472,7 +2473,8 @@ model SharedContent {
   commentCount Int @default(0) // 评论次数
   shareCount   Int @default(0) // 分享次数
   clickCount   Int @default(0) // 链接点击次数
-  
+  downloadCount Int @default(0) // 图片下载次数
+
   // 转化统计
   conversionCount Int @default(0) // 通过分享注册的用户数
   
@@ -2489,6 +2491,7 @@ model SharedContent {
   achievements Achievement[] @relation("AchievementShares")
   communityPost CommunityPost? @relation("SharedContentPost")
   communityPostId String? @unique // 如果分享到社区，关联的社区帖子ID
+  shareTracking ShareTracking[]
 
   @@index([memberId])
   @@index([contentType])
@@ -2499,11 +2502,38 @@ model SharedContent {
   @@map("shared_contents")
 }
 
-// 分享隐私级别枚举
+model ShareTracking {
+  id          String          @id @default(cuid())
+  shareToken  String
+  sharedContent SharedContent @relation(fields: [shareToken], references: [shareToken], onDelete: Cascade)
+
+  eventType ShareTrackingEventType // 事件类型，例如 view、click、share 等
+  platform  String?                // 分享平台，如微信、微博
+  userAgent String?                // 用户代理
+  ipAddress String?                // IP地址
+  referrer  String?                // 来源页面
+  metadata  Json?                  // 额外元数据
+
+  occurredAt DateTime @default(now())
+
+  @@index([shareToken])
+  @@index([eventType])
+  @@index([occurredAt])
+  @@map("share_tracking")
+}
+
 enum SharePrivacyLevel {
   PUBLIC  // 公开
   FRIENDS // 好友可见
   PRIVATE // 私密
+}
+
+enum ShareTrackingEventType {
+  VIEW
+  CLICK
+  SHARE
+  CONVERSION
+  DOWNLOAD
 }
 
 // 成就表
