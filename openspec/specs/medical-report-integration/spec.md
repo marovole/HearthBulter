@@ -5,9 +5,7 @@
 体检报告接入通过OCR技术自动识别并结构化存储体检数据，为健康管理提供专业医疗数据支撑。
 
 ---
-
 ## Requirements
-
 ### Requirement: OCR Report Scanning
 系统必须（SHALL）支持上传并识别体检报告PDF/图片。
 

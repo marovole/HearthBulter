@@ -17,7 +17,7 @@
 ## 3. Database Models
 - [x] 3.1 创建MedicalReport Prisma模型
 - [x] 3.2 创建MedicalIndicator模型（存储具体指标）
-- [ ] 3.3 运行数据库迁移
+- [x] 3.3 运行数据库迁移
 - [x] 3.4 添加文件存储配置（AWS S3 / Vercel Blob）
 
 ## 4. Report Management API

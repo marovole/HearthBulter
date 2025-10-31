@@ -1,6 +1,6 @@
 # Medical Report Integration - Change Spec
 
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: OCR Report Scanning
 系统必须（SHALL）支持上传并识别体检报告PDF/图片。
@@ -47,17 +47,10 @@
 
 ---
 
-### Requirement: File Management
-系统必须（SHALL）安全存储和管理体检报告文件。
+## Performance Requirements
 
-#### Scenario: Store report securely
-- **GIVEN** 用户上传体检报告PDF
-- **WHEN** 系统接收文件
-- **THEN** 加密存储到云端（AWS S3 / Vercel Blob）
-- **AND** 生成唯一访问链接
-
-#### Scenario: Delete old reports
-- **GIVEN** 用户删除某次体检报告
-- **WHEN** 确认删除操作
-- **THEN** 从云存储删除文件
-- **AND** 清除关联的健康数据
+#### Scenario: OCR processing time
+- **GIVEN** 上传单页体检报告
+- **WHEN** 系统处理
+- **THEN** OCR识别在10秒内完成
+- **AND** 显示进度条
