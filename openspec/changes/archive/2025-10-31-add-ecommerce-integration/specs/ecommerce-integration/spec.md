@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Platform Account Management
-系统应当允许用户绑定和管理多个电商平台账号。
+系统 SHALL 允许用户绑定和管理多个电商平台账号。
 
 #### Scenario: 绑定平台账号成功
 - **WHEN** 用户点击「绑定山姆账号」并完成OAuth授权
@@ -18,7 +18,7 @@
 - **THEN** 系统删除访问令牌并清除相关缓存数据
 
 ### Requirement: Real-time Inventory Query
-系统应当支持实时查询各平台商品库存和价格信息。
+系统 SHALL 支持实时查询各平台商品库存和价格信息。
 
 #### Scenario: 查询商品库存成功
 - **WHEN** 购物清单包含「鸡胸肉500g」
@@ -33,7 +33,7 @@
 - **THEN** 跳过该平台并记录错误日志
 
 ### Requirement: SKU Smart Matching
-系统应当将购物清单中的抽象食材智能匹配到具体平台SKU。
+系统 SHALL 将购物清单中的抽象食材智能匹配到具体平台SKU。
 
 #### Scenario: 精确匹配
 - **WHEN** 购物清单包含「山姆会员牌鸡胸肉1kg」
@@ -52,7 +52,7 @@
 - **THEN** 系统记录该映射关系并在后续自动应用
 
 ### Requirement: Price Comparison Engine
-系统应当对比各平台相同商品的价格并推荐最优选择。
+系统 SHALL 对比各平台相同商品的价格并推荐最优选择。
 
 #### Scenario: 跨平台价格对比
 - **WHEN** 用户查看「鸡胸肉」的购买选项
@@ -67,7 +67,7 @@
 - **THEN** 系统计算综合成本最低的平台组合
 
 ### Requirement: One-Click Ordering
-系统应当支持一键下单到已绑定的电商平台。
+系统 SHALL 支持一键下单到已绑定的电商平台。
 
 #### Scenario: 单平台下单
 - **WHEN** 用户选择全部商品从「山姆」购买并点击「下单」
@@ -82,7 +82,7 @@
 - **THEN** 回滚本地订单记录并提示用户重试或更换平台
 
 ### Requirement: Order Tracking
-系统应当记录订单历史并追踪配送状态。
+系统 SHALL 记录订单历史并追踪配送状态。
 
 #### Scenario: 查看订单历史
 - **WHEN** 用户访问「我的订单」页面
@@ -97,7 +97,7 @@
 - **THEN** 系统定期轮询或通过Webhook更新本地状态
 
 ### Requirement: Platform Credentials Security
-系统应当安全存储平台访问凭证。
+系统 SHALL 安全存储平台访问凭证。
 
 #### Scenario: 加密存储Token
 - **WHEN** 保存平台OAuth Token

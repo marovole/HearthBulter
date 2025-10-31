@@ -426,14 +426,14 @@ function extractReportDate(text: string): Date | undefined {
 function extractInstitution(text: string): string | undefined {
   // 匹配常见的医疗机构关键词
   const patterns = [
-    /([\u4e00-\u9fa5]+医院)/g,
-    /([\u4e00-\u9fa5]+体检中心)/g,
-    /([\u4e00-\u9fa5]+医疗)/g,
+    /([\u4e00-\u9fa5]+医院)/,
+    /([\u4e00-\u9fa5]+体检中心)/,
+    /([\u4e00-\u9fa5]+医疗)/,
   ]
 
   for (const pattern of patterns) {
     const match = text.match(pattern)
-    if (match && match[1].length >= 2) {
+    if (match && match[1] && match[1].length >= 2) {
       return match[1]
     }
   }

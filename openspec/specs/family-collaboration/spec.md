@@ -1,9 +1,10 @@
-# Specification: Family Collaboration Features
+# family-collaboration Specification
 
-## ADDED Requirements
-
+## Purpose
+TBD - created by archiving change add-family-collaboration. Update Purpose after archive.
+## Requirements
 ### Requirement: Role-Based Permissions
-系统应当支持基于角色的权限管理。
+系统 SHALL 支持基于角色的权限管理。
 
 #### Scenario: 定义角色
 - **WHEN** 创建家庭时
@@ -22,7 +23,7 @@
 - **THEN** 该成员获得完整管理权限
 
 ### Requirement: Shared Shopping List
-系统应当支持家庭成员共享购物清单。
+系统 SHALL 支持家庭成员共享购物清单。
 
 #### Scenario: 查看共享清单
 - **WHEN** 任何家庭成员访问购物清单
@@ -45,7 +46,7 @@
 - **THEN** 显示「张三添加，李四已购买」
 
 ### Requirement: Task Assignment
-系统应当支持家庭任务分配和管理。
+系统 SHALL 支持家庭任务分配和管理。
 
 #### Scenario: 创建任务
 - **WHEN** 管理员创建「周日采购」任务
@@ -68,7 +69,7 @@
 - **THEN** 推送提醒给责任人
 
 ### Requirement: Family Health Dashboard
-系统应当提供家庭整体健康概览。
+系统 SHALL 提供家庭整体健康概览。
 
 #### Scenario: 查看家庭总览
 - **WHEN** 访问家庭看板
@@ -87,7 +88,7 @@
 - **THEN** 在看板突出显示并提示关注
 
 ### Requirement: Check-in Interaction
-系统应当支持家庭成员间的打卡互动。
+系统 SHALL 支持家庭成员间的打卡互动。
 
 #### Scenario: 查看成员打卡
 - **WHEN** 张三完成今日打卡
@@ -106,7 +107,7 @@
 - **THEN** 解锁「家庭团结」徽章
 
 ### Requirement: Activity Feed
-系统应当记录并展示家庭活动日志。
+系统 SHALL 记录并展示家庭活动日志。
 
 #### Scenario: 记录活动
 - **WHEN** 张三添加食谱
@@ -125,7 +126,7 @@
 - **THEN** 评论显示在活动下方
 
 ### Requirement: Family Goals
-系统应当支持设定和追踪家庭共同目标。
+系统 SHALL 支持设定和追踪家庭共同目标。
 
 #### Scenario: 设定家庭目标
 - **WHEN** 管理员创建「全家减重10kg」目标
@@ -144,7 +145,7 @@
 - **THEN** 弹出庆祝动画并生成成就报告
 
 ### Requirement: Notification System
-系统应当向家庭成员推送协作相关通知。
+系统 SHALL 向家庭成员推送协作相关通知。
 
 #### Scenario: 任务通知
 - **WHEN** 被分配新任务
@@ -163,7 +164,7 @@
 - **THEN** 可选择接收哪些类型通知及推送方式
 
 ### Requirement: Real-time Sync
-系统应当支持多人实时协作（可选功能）。
+系统 SHALL 支持多人实时协作（可选功能）。
 
 #### Scenario: 实时更新
 - **WHEN** 成员A编辑购物清单
@@ -182,7 +183,7 @@
 - **THEN** 显示冲突提示并提供合并选项
 
 ### Requirement: Collaboration History
-系统应当记录协作历史以便追溯。
+系统 SHALL 记录协作历史以便追溯。
 
 #### Scenario: 操作历史
 - **WHEN** 查看购物清单历史

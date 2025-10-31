@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Budget Setting and Tracking
-系统应当允许用户设定并追踪饮食预算。
+系统 SHALL 允许用户设定并追踪饮食预算。
 
 #### Scenario: 设定周预算
 - **WHEN** 用户设定周预算为500元
@@ -22,7 +22,7 @@
 - **THEN** 自动记录支出并更新预算余额
 
 ### Requirement: Cost Optimization
-系统应当在满足营养目标的前提下优化采购成本。
+系统 SHALL 在满足营养目标的前提下优化采购成本。
 
 #### Scenario: 最小化总成本
 - **WHEN** 生成购物清单
@@ -41,7 +41,7 @@
 - **THEN** 推荐营养相似的平价替代品
 
 ### Requirement: Cross-Platform Price Comparison
-系统应当比较各平台价格并推荐最优选择。
+系统 SHALL 比较各平台价格并推荐最优选择。
 
 #### Scenario: 单品价格对比
 - **WHEN** 查看「鸡胸肉」
@@ -60,7 +60,7 @@
 - **THEN** 推荐分平台购买方案并显示节省金额
 
 ### Requirement: Price History and Trends
-系统应当追踪食材价格历史并预测趋势。
+系统 SHALL 追踪食材价格历史并预测趋势。
 
 #### Scenario: 查看价格历史
 - **WHEN** 用户查看「鸡胸肉」价格
@@ -79,7 +79,7 @@
 - **THEN** 提示「当前价格较低，建议购买」
 
 ### Requirement: Savings Recommendations
-系统应当主动推荐节省方案。
+系统 SHALL 主动推荐节省方案。
 
 #### Scenario: 促销商品推荐
 - **WHEN** 检测到平台促销
@@ -98,7 +98,7 @@
 - **THEN** 建议批量采购并计算节省金额
 
 ### Requirement: Spending Analysis
-系统应当分析用户饮食支出并生成报告。
+系统 SHALL 分析用户饮食支出并生成报告。
 
 #### Scenario: 月度支出统计
 - **WHEN** 用户查看支出分析
@@ -117,7 +117,7 @@
 - **THEN** 计算并显示人均饮食成本
 
 ### Requirement: Budget Alerts
-系统应当在预算即将或已经超支时预警。
+系统 SHALL 在预算即将或已经超支时预警。
 
 #### Scenario: 预算预警
 - **WHEN** 预算使用达到80%
@@ -136,7 +136,7 @@
 - **THEN** 提示「当前消费速度过快，建议调整」
 
 ### Requirement: Economy Mode
-系统应当提供「经济模式」以最小化支出。
+系统 SHALL 提供「经济模式」以最小化支出。
 
 #### Scenario: 启用经济模式
 - **WHEN** 用户打开「经济模式」
@@ -155,7 +155,7 @@
 - **THEN** 仍确保满足最低营养目标
 
 ### Requirement: Integration with Meal Planning
-预算约束应当集成到食谱生成流程。
+预算约束 SHALL 集成到食谱生成流程。
 
 #### Scenario: 预算约束食谱生成
 - **WHEN** 生成7天食谱
