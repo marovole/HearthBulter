@@ -1,9 +1,10 @@
-# Specification: Multi-Platform Notification System
+# notification-system Specification
 
-## ADDED Requirements
-
+## Purpose
+TBD - created by archiving change add-notification-system. Update Purpose after archive.
+## Requirements
 ### Requirement: Unified Notification Management
-系统应当提供统一的通知管理接口。
+The system SHALL provide a unified notification management interface.
 
 #### Scenario: 创建通知
 - **WHEN** 系统需要发送通知
@@ -22,7 +23,7 @@
 - **THEN** 自动重试最多3次，记录失败原因
 
 ### Requirement: In-App Notifications
-系统应当支持应用内通知（站内信）。
+The system SHALL support in-app notifications (internal messages).
 
 #### Scenario: 接收站内信
 - **WHEN** 系统发送站内通知
@@ -41,7 +42,7 @@
 - **THEN** 清空所有未读状态
 
 ### Requirement: Email Notifications
-系统应当支持邮件通知。
+The system SHALL support email notifications.
 
 #### Scenario: 发送邮件通知
 - **WHEN** 触发重要事件（如目标达成）
@@ -60,7 +61,7 @@
 - **THEN** 停止向该用户发送营销类邮件
 
 ### Requirement: SMS Notifications
-系统应当支持短信通知（重要事件）。
+The system SHALL support SMS notifications for important events.
 
 #### Scenario: 发送短信通知
 - **WHEN** 触发紧急预警（如严重异常）
@@ -79,7 +80,7 @@
 - **THEN** 切换为邮件或站内信渠道
 
 ### Requirement: WeChat Notifications
-系统应当支持微信服务号通知（可选）。
+The system SHALL support WeChat service account notifications (optional).
 
 #### Scenario: 绑定微信
 - **WHEN** 用户关注服务号
@@ -98,7 +99,7 @@
 - **THEN** 跳转到应用内对应页面
 
 ### Requirement: Notification Templates
-系统应当支持通知模板管理。
+The system SHALL support notification template management.
 
 #### Scenario: 使用模板
 - **WHEN** 发送打卡提醒
@@ -117,7 +118,7 @@
 - **THEN** 分别定义站内信、邮件、短信模板
 
 ### Requirement: Notification Preferences
-系统应当允许用户设置通知偏好。
+The system SHALL allow users to set notification preferences.
 
 #### Scenario: 开关通知类型
 - **WHEN** 用户关闭「打卡提醒」
@@ -136,7 +137,7 @@
 - **THEN** 超过限制的通知被抑制
 
 ### Requirement: Notification Priority
-系统应当支持通知优先级。
+The system SHALL support notification priority levels.
 
 #### Scenario: 优先级路由
 - **WHEN** 紧急通知（异常预警）
@@ -155,7 +156,7 @@
 - **THEN** 仍然发送（紧急优先）
 
 ### Requirement: Frequency Control
-系统应当控制通知频率避免打扰。
+The system SHALL control notification frequency to avoid disturbance.
 
 #### Scenario: 去重
 - **WHEN** 5分钟内有相同类型通知
@@ -174,7 +175,7 @@
 - **THEN** 避开勿扰时间，选择用户活跃时段
 
 ### Requirement: Notification History
-系统应当记录通知历史。
+The system SHALL maintain notification history.
 
 #### Scenario: 查看历史
 - **WHEN** 用户访问通知历史
@@ -193,7 +194,7 @@
 - **THEN** 重新推送该通知
 
 ### Requirement: Notification Analytics
-系统应当分析通知效果。
+The system SHALL analyze notification effectiveness.
 
 #### Scenario: 发送量统计
 - **WHEN** 查看通知分析
@@ -212,7 +213,7 @@
 - **THEN** 分析最有效和最无效的通知类型
 
 ### Requirement: Real-time Push
-系统应当支持实时推送（可选）。
+The system SHALL support real-time push notifications (optional).
 
 #### Scenario: WebSocket推送
 - **WHEN** 用户在线
