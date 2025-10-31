@@ -1,6 +1,6 @@
 ## ADDED Requirements
 ### Requirement: Recommendation Schema Synchronization
-系统必须确保推荐引擎所需的数据模型在数据库中完成迁移与验证。
+The system SHALL ensure that data models required by the recommendation engine are migrated and validated in the database.
 
 #### Scenario: 迁移执行
 - **WHEN** 部署或更新推荐引擎
