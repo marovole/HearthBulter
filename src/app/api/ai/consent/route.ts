@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
           category: type.category,
           hasConsent: await consentManager.checkConsent(session.user.id, type.id),
         }))
-      ));
+      );
 
       return NextResponse.json({
         consents: consentResults,

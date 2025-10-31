@@ -34,6 +34,41 @@ export interface UpdateInventoryItemInput {
   packageInfo?: string
 }
 
+export interface InventoryFilters {
+  status?: InventoryStatus
+  storageLocation?: StorageLocation
+  category?: string
+  isExpiring?: boolean
+  isExpired?: boolean
+  isLowStock?: boolean
+}
+
+export interface InventoryWhereClause {
+  memberId: string
+  status?: InventoryStatus
+  storageLocation?: StorageLocation
+  food?: {
+    category?: string
+  }
+  expiryDate?: {
+    lt?: Date
+    gt?: Date
+  }
+  quantity?: {
+    lt?: number
+  }
+}
+
+export interface WasteRecord {
+  id: string
+  inventoryItemId: string
+  quantity: number
+  reason: string
+  wasteDate: Date
+  notes?: string
+  createdAt: Date
+}
+
 export interface InventoryItemWithRelations extends InventoryItem {
   food: {
     id: string
@@ -46,7 +81,7 @@ export interface InventoryItemWithRelations extends InventoryItem {
     fat: number
   }
   usageRecords: InventoryUsage[]
-  wasteRecords: any[]
+  wasteRecords: WasteRecord[]
 }
 
 export class InventoryTracker {
@@ -98,7 +133,7 @@ export class InventoryTracker {
       throw new Error('库存条目不存在')
     }
 
-    const updateData: any = { ...input }
+    const updateData: Partial<UpdateInventoryItemInput> = { ...input }
 
     // 如果更新了数量或阈值，重新计算状态
     if (input.quantity !== undefined || input.minStockThreshold !== undefined) {
@@ -165,7 +200,7 @@ export class InventoryTracker {
       isLowStock?: boolean
     }
   ): Promise<InventoryItemWithRelations[]> {
-    const where: any = { memberId }
+    const where: InventoryWhereClause = { memberId }
 
     if (filters) {
       if (filters.status) where.status = filters.status

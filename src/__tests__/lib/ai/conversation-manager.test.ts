@@ -531,7 +531,7 @@ describe('Conversation Manager', () => {
       expect(stats.messageCount).toBe(4);
       expect(stats.userMessageCount).toBe(2);
       expect(stats.assistantMessageCount).toBe(2);
-      expect.stats.totalTokens).toBeGreaterThan(0);
+      expect(stats.totalTokens).toBeGreaterThan(0);
       expect(stats.duration).toBeGreaterThan(0);
       expect(stats.topics).toContain('diet');
     });

@@ -26,6 +26,15 @@ export interface PriceAnalysis {
   inStockRate: number
 }
 
+export interface ProductWithDiscount extends PlatformProductInfo {
+  discountAmount?: number
+  discountPercentage?: string
+  shippingFee?: number
+  unitPrice?: number
+  valueScore?: number
+  totalPrice?: number
+}
+
 export class PriceComparator {
   private prisma: PrismaClient
   private skuMatcher: SKUMatcher
@@ -141,28 +150,29 @@ export class PriceComparator {
 
     // 考虑折扣
     if (config.considerDiscounts && product.originalPrice && product.originalPrice > product.price) {
-      (product as any).discountAmount = product.originalPrice - product.price
-      (product as any).discountPercentage = ((product.originalPrice - product.price) / product.originalPrice * 100).toFixed(1)
+      (product as ProductWithDiscount).discountAmount = product.originalPrice - product.price
+      const discountPercent = ((product.originalPrice - product.price) / product.originalPrice * 100).toFixed(1)
+      ;(product as ProductWithDiscount).discountPercentage = discountPercent
     }
 
     // 添加配送费
     if (config.includeShipping) {
       const shippingFee = this.calculateShippingFee(product)
       totalPrice += shippingFee
-      (product as any).shippingFee = shippingFee
+      (product as ProductWithDiscount).shippingFee = shippingFee
     }
 
     // 计算单位价格
     const unitPrice = this.calculateUnitPrice(product)
     if (unitPrice) {
-      (product as any).unitPrice = unitPrice
+      (product as ProductWithDiscount).unitPrice = unitPrice
     }
 
     // 计算性价比评分
     const valueScore = this.calculateValueScore(product, match.confidence)
-    (product as any).valueScore = valueScore
+    (product as ProductWithDiscount).valueScore = valueScore
 
-    (product as any).totalPrice = totalPrice
+    (product as ProductWithDiscount).totalPrice = totalPrice
 
     return {
       ...match,

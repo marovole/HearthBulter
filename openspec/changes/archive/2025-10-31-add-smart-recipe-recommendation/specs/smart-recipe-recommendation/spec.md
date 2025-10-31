@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Multi-Factor Recommendation Engine
-系统应当综合考虑多种因素推荐最适合的食谱。
+The system SHALL provide a recommendation engine that considers multiple factors including inventory availability, price constraints, seasonal ingredients, user preferences, and nutritional requirements.
 
 #### Scenario: 基于库存推荐
 - **WHEN** 用户查看推荐食谱
@@ -26,7 +26,7 @@
 - **THEN** 综合库存(30%)、价格(20%)、营养(30%)、用户偏好(20%)加权排序
 
 ### Requirement: Collaborative Filtering
-系统应当基于相似用户的行为推荐食谱。
+The system SHALL implement collaborative filtering algorithms to recommend recipes based on similar users' preferences and behaviors.
 
 #### Scenario: 相似用户发现
 - **WHEN** 用户A和用户B都喜欢「番茄炒蛋」和「宫保鸡丁」
@@ -41,7 +41,7 @@
 - **THEN** 推荐热门食谱和默认偏好食谱
 
 ### Requirement: Content-Based Filtering
-系统应当基于食谱内容特征推荐。
+The system SHALL provide content-based filtering that recommends recipes with similar ingredients, cooking methods, and nutritional profiles.
 
 #### Scenario: 食材偏好匹配
 - **WHEN** 用户经常收藏含「鸡胸肉」的食谱
@@ -56,7 +56,7 @@
 - **THEN** 推荐更多川菜风味食谱
 
 ### Requirement: Ingredient Substitution
-系统应当智能推荐食材替换方案。
+The system SHALL support intelligent ingredient substitutions based on allergies, budget constraints, taste preferences, and availability.
 
 #### Scenario: 过敏原替换
 - **WHEN** 用户对虾过敏，食谱包含虾
@@ -75,7 +75,7 @@
 - **THEN** 确保宏量营养素偏差<10%
 
 ### Requirement: Recipe Rating and Feedback
-系统应当允许用户评分和反馈食谱。
+The system SHALL allow users to rate recipes and provide feedback to improve future recommendations.
 
 #### Scenario: 评分食谱
 - **WHEN** 用户完成某食谱
@@ -94,7 +94,7 @@
 - **THEN** 降低该食谱及相似食谱的推荐权重
 
 ### Requirement: Recipe Collection and History
-系统应当记录用户的收藏和浏览历史。
+The system SHALL enable users to collect favorite recipes and maintain a history of viewed and cooked recipes.
 
 #### Scenario: 收藏食谱
 - **WHEN** 用户点击「收藏」
@@ -113,7 +113,7 @@
 - **THEN** 显示最近查看的30条食谱记录
 
 ### Requirement: Refresh Recommendations
-系统应当支持刷新推荐结果。
+The system SHALL provide a "refresh" feature to generate new recommendations while maintaining the user's constraints and preferences.
 
 #### Scenario: 换一批
 - **WHEN** 用户点击「换一批」
@@ -128,7 +128,7 @@
 - **THEN** 新推荐的食谱评分>4.0分
 
 ### Requirement: Recommendation Explanation
-系统应当解释为什么推荐某个食谱。
+The system SHALL provide clear explanations for why each recipe was recommended to increase user trust and understanding.
 
 #### Scenario: 显示推荐理由
 - **WHEN** 查看推荐食谱
@@ -143,7 +143,7 @@
 - **THEN** 按重要性显示前3个理由
 
 ### Requirement: User Preference Learning
-系统应当自动学习用户偏好。
+The system SHALL continuously learn from user interactions to improve recommendation accuracy over time.
 
 #### Scenario: 口味偏好提取
 - **WHEN** 用户连续收藏3个川菜食谱

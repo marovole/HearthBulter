@@ -1,0 +1,121 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
+
+const recommendationEngine = new RecommendationEngine(prisma);
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+    const recipeId = searchParams.get('recipeId');
+    const limitParam = searchParams.get('limit');
+    
+    if (!recipeId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'recipeId is required',
+          details: 'Please provide a recipeId parameter'
+        },
+        { status: 400 }
+      );
+    }
+
+    const limit = Math.max(1, Math.min(parseInt(limitParam || '5'), 20));
+
+    // 验证食谱是否存在
+    const recipe = await prisma.recipe.findUnique({
+      where: { id: recipeId },
+      select: { id: true, status: true, isPublic: true, deletedAt: true }
+    });
+
+    if (!recipe) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Recipe not found',
+          details: 'The specified recipe does not exist'
+        },
+        { status: 404 }
+      );
+    }
+
+    if (recipe.status !== 'PUBLISHED' || !recipe.isPublic || recipe.deletedAt) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Recipe not available',
+          details: 'The recipe is not published or has been deleted'
+        },
+        { status: 404 }
+      );
+    }
+
+    // 获取相似食谱推荐
+    const recommendations = await recommendationEngine.getSimilarRecipes(recipeId, limit);
+    
+    if (recommendations.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          recommendations: [],
+          recipeId,
+          total: 0,
+        },
+      });
+    }
+
+    // 获取推荐的食谱详细信息
+    const recipeIds = recommendations.map(rec => rec.recipeId);
+    const recipes = await prisma.recipe.findMany({
+      where: {
+        id: { in: recipeIds },
+        status: 'PUBLISHED',
+        isPublic: true,
+        deletedAt: null,
+      },
+      include: {
+        ingredients: {
+          include: { food: true },
+        },
+        instructions: true,
+        nutrition: true,
+      },
+    });
+
+    type RecipeWithRelations = Awaited<ReturnType<typeof prisma.recipe.findMany>>[number];
+    const recipeMap = new Map<string, RecipeWithRelations>();
+    for (const recipe of recipes) {
+      recipeMap.set(recipe.id, recipe);
+    }
+
+    const enriched = recommendations.reduce<
+      Array<(typeof recommendations)[number] & { recipe: RecipeWithRelations }>
+    >((acc, rec) => {
+      const recipe = recipeMap.get(rec.recipeId);
+      if (recipe) {
+        acc.push({ ...rec, recipe });
+      }
+      return acc;
+    }, []);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        recommendations: enriched,
+        recipeId,
+        total: enriched.length,
+      },
+    });
+  } catch (error) {
+    console.error('GET /api/recommendations/similar error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to get similar recipes',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}

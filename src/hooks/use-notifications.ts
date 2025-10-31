@@ -20,6 +20,40 @@ interface Notification {
   formattedContent?: string;
 }
 
+interface NotificationMetadata {
+  [key: string]: unknown;
+}
+
+interface NotificationTemplateData {
+  [key: string]: string | number | boolean;
+}
+
+interface BulkNotificationRequest {
+  memberId: string;
+  type: string;
+  title?: string;
+  content?: string;
+  priority?: string;
+  channels?: string[];
+  metadata?: NotificationMetadata;
+  actionUrl?: string;
+  actionText?: string;
+  templateData?: NotificationTemplateData;
+  dedupKey?: string;
+  batchId?: string;
+}
+
+interface NotificationFilters {
+  type?: string;
+  priority?: string;
+  status?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  search?: string;
+}
+
 interface NotificationStats {
   summary: {
     total: number;
@@ -143,10 +177,10 @@ export function useNotifications(options: UseNotificationsOptions) {
     content?: string;
     priority?: string;
     channels?: string[];
-    metadata?: any;
+    metadata?: NotificationMetadata;
     actionUrl?: string;
     actionText?: string;
-    templateData?: any;
+    templateData?: NotificationTemplateData;
     dedupKey?: string;
     batchId?: string;
   }) => {
@@ -317,7 +351,7 @@ export function useNotifications(options: UseNotificationsOptions) {
   }, []);
 
   // 批量创建通知
-  const createBulkNotifications = useCallback(async (notifications: any[]) => {
+  const createBulkNotifications = useCallback(async (notifications: BulkNotificationRequest[]) => {
     try {
       setError(null);
       
@@ -382,7 +416,7 @@ export function useNotifications(options: UseNotificationsOptions) {
   }, []);
 
   // 更新过滤器
-  const updateFilters = useCallback((newFilters: any) => {
+  const updateFilters = useCallback((newFilters: NotificationFilters) => {
     setFilters(newFilters);
     setCurrentPage(0);
     setNotifications([]);

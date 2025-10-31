@@ -11,6 +11,17 @@ export interface OrderItem {
   category?: string
 }
 
+export interface ParsedOrderItem {
+  name?: string
+  productName?: string
+  quantity?: number
+  amount?: number
+  unit?: string
+  price?: number
+  unitPrice?: number
+  category?: string
+}
+
 export interface SyncResult {
   success: boolean
   processedItems: number
@@ -344,7 +355,7 @@ export class InventorySync {
       // 假设订单商品信息存储在items字段中，格式为JSON
       const items = JSON.parse(order.items as string)
       
-      return items.map((item: any) => ({
+      return items.map((item: ParsedOrderItem) => ({
         name: item.name || item.productName,
         quantity: item.quantity || item.amount || 1,
         unit: item.unit || '个',
@@ -390,7 +401,7 @@ export class InventorySync {
           protein: 10,
           carbs: 20,
           fat: 5,
-          category: orderItem.category as any || 'OTHER',
+          category: (orderItem.category as string) || 'OTHER',
           source: 'USER_SUBMITTED',
           verified: false
         }

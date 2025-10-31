@@ -109,7 +109,7 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
 
   // 验证token格式
   protected validateTokenFormat(token: string): boolean {
-    if (!token || typeof token !== 'string) {
+    if (!token || typeof token !== 'string') {
       return false
     }
     
