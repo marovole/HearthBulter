@@ -162,7 +162,7 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
   {
     type: 'ALT',
     patterns: [
-      /丙氨酸氨基转移酶[：:]\s*(\d+)\s*U\/L/gi,
+      /丙氨酸氨基转移酶[（(]ALT[）)][:：]\s*(\d+)\s*U\/L/gi,
       /ALT[：:]\s*(\d+)\s*U\/L/gi,
       /谷丙转氨酶[：:]\s*(\d+)\s*U\/L/gi,
     ],
@@ -177,7 +177,7 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
   {
     type: 'AST',
     patterns: [
-      /天门冬氨酸氨基转移酶[：:]\s*(\d+)\s*U\/L/gi,
+      /天门冬氨酸氨基转移酶[（(]AST[）)][:：]\s*(\d+)\s*U\/L/gi,
       /AST[：:]\s*(\d+)\s*U\/L/gi,
       /谷草转氨酶[：:]\s*(\d+)\s*U\/L/gi,
     ],
@@ -239,6 +239,7 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     type: 'CREATININE',
     patterns: [
       /肌酐[：:]\s*(\d+\.?\d*)\s*μmol\/L/gi,
+      /CREATININE[：:]\s*(\d+\.?\d*)\s*μmol\/L/gi,
       /CREA[：:]\s*(\d+\.?\d*)\s*μmol\/L/gi,
       /Cr[：:]\s*(\d+\.?\d*)\s*μmol\/L/gi,
     ],

@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: Inventory Management
-系统应当允许用户管理家中食材库存。
+系统 SHALL 允许用户管理家中食材库存。
 
 #### Scenario: 手动添加库存
 - **WHEN** 用户购买食材后手动添加
@@ -26,7 +26,7 @@
 - **THEN** 从库存中移除并可选记录浪费原因
 
 ### Requirement: Auto Sync from Orders
-系统应当从订单自动同步库存。
+系统 SHALL 从订单自动同步库存。
 
 #### Scenario: 订单完成触发
 - **WHEN** 电商平台订单标记为已送达
@@ -45,7 +45,7 @@
 - **THEN** 累加数量而非创建新条目
 
 ### Requirement: Expiry Tracking
-系统应当追踪食材保质期并提醒用户。
+系统 SHALL 追踪食材保质期并提醒用户。
 
 #### Scenario: 临期警告
 - **WHEN** 食材剩余保质期≤3天
@@ -64,7 +64,7 @@
 - **THEN** 显示所有剩余保质期≤7天的食材
 
 ### Requirement: Usage Recording
-系统应当记录食材使用情况。
+系统 SHALL 记录食材使用情况。
 
 #### Scenario: 自动扣减（联动打卡）
 - **WHEN** 用户打卡记录吃了「番茄炒蛋」
@@ -83,7 +83,7 @@
 - **THEN** 显示使用记录（时间、数量、用途）
 
 ### Requirement: Low Stock Alerts
-系统应当检测库存不足并提醒。
+系统 SHALL 检测库存不足并提醒。
 
 #### Scenario: 定义阈值
 - **WHEN** 用户设置鸡蛋最低库存为5个
@@ -102,7 +102,7 @@
 - **THEN** 一键添加到购物清单
 
 ### Requirement: Smart Shopping Suggestions
-系统应当基于库存和食谱智能生成采购建议。
+系统 SHALL 基于库存和食谱智能生成采购建议。
 
 #### Scenario: 对比库存和食谱
 - **WHEN** 生成下周食谱
@@ -121,7 +121,7 @@
 - **THEN** 显示「需购买：鸡胸肉500g、西兰花300g」
 
 ### Requirement: Waste Analysis
-系统应当分析食材浪费并提供改进建议。
+系统 SHALL 分析食材浪费并提供改进建议。
 
 #### Scenario: 记录浪费
 - **WHEN** 用户丢弃过期食材
@@ -140,7 +140,7 @@
 - **THEN** 建议「减少番茄采购量」或「更频繁购买小份量」
 
 ### Requirement: Storage Location Management
-系统应当按存储位置管理食材。
+系统 SHALL 按存储位置管理食材。
 
 #### Scenario: 分类显示
 - **WHEN** 用户查看库存
@@ -159,7 +159,7 @@
 - **THEN** 显示实时温度并预警温度异常
 
 ### Requirement: Barcode Scanning
-系统应当支持条形码快速添加库存（可选功能）。
+系统 SHALL 支持条形码快速添加库存（可选功能）。
 
 #### Scenario: 扫描条码
 - **WHEN** 用户扫描食材包装条码
@@ -174,7 +174,7 @@
 - **THEN** 提示手动输入食材信息
 
 ### Requirement: Inventory Statistics
-系统应当提供库存统计和分析。
+系统 SHALL 提供库存统计和分析。
 
 #### Scenario: 库存总览
 - **WHEN** 用户查看统计

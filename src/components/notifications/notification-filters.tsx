@@ -7,8 +7,10 @@ import { cn } from '@/lib/utils';
 interface NotificationFiltersProps {
   filters: {
     type: string;
+    priority: string;
     status: string;
-    includeRead: boolean;
+    dateRange: string;
+    search: string;
   };
   onFiltersChange: (filters: NotificationFiltersProps['filters']) => void;
 }
@@ -36,6 +38,22 @@ const NOTIFICATION_STATUSES = [
   { value: 'CANCELLED', label: '已取消' },
 ];
 
+const NOTIFICATION_PRIORITIES = [
+  { value: '', label: '全部优先级' },
+  { value: 'LOW', label: '低优先级' },
+  { value: 'MEDIUM', label: '中优先级' },
+  { value: 'HIGH', label: '高优先级' },
+  { value: 'URGENT', label: '紧急' },
+];
+
+const DATE_RANGES = [
+  { value: '', label: '全部时间' },
+  { value: '1', label: '今天' },
+  { value: '7', label: '最近7天' },
+  { value: '30', label: '最近30天' },
+  { value: '90', label: '最近3个月' },
+];
+
 export function NotificationFilters({
   filters,
   onFiltersChange,
@@ -50,12 +68,15 @@ export function NotificationFilters({
   const clearFilters = () => {
     onFiltersChange({
       type: '',
+      priority: '',
       status: '',
-      includeRead: true,
+      dateRange: '',
+      search: '',
     });
   };
 
-  const hasActiveFilters = filters.type || filters.status || !filters.includeRead;
+  const hasActiveFilters = filters.type || filters.priority || filters.status || 
+                          filters.dateRange || filters.search;
 
   return (
     <div className="space-y-4">
@@ -73,7 +94,26 @@ export function NotificationFilters({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* 搜索框 */}
+        <div className="lg:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            搜索通知
+          </label>
+          <input
+            type="text"
+            placeholder="搜索标题或内容..."
+            value={filters.search}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
+            className={cn(
+              'w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+              filters.search
+                ? 'border-blue-300 bg-blue-50'
+                : 'border-gray-300 bg-white'
+            )}
+          />
+        </div>
+
         {/* 通知类型 */}
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -92,6 +132,29 @@ export function NotificationFilters({
             {NOTIFICATION_TYPES.map((type) => (
               <option key={type.value} value={type.value}>
                 {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* 优先级 */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            优先级
+          </label>
+          <select
+            value={filters.priority}
+            onChange={(e) => handleFilterChange('priority', e.target.value)}
+            className={cn(
+              'w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+              filters.priority
+                ? 'border-blue-300 bg-blue-50'
+                : 'border-gray-300 bg-white'
+            )}
+          >
+            {NOTIFICATION_PRIORITIES.map((priority) => (
+              <option key={priority.value} value={priority.value}>
+                {priority.label}
               </option>
             ))}
           </select>
@@ -119,42 +182,46 @@ export function NotificationFilters({
             ))}
           </select>
         </div>
+      </div>
 
-        {/* 包含已读 */}
+      {/* 第二行过滤器 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 日期范围 */}
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">
-            显示选项
+            时间范围
           </label>
-          <div className="flex items-center space-x-2 h-9">
-            <input
-              type="checkbox"
-              id="includeRead"
-              checked={filters.includeRead}
-              onChange={(e) => handleFilterChange('includeRead', e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label
-              htmlFor="includeRead"
-              className="text-sm text-gray-700 cursor-pointer"
-            >
-              包含已读通知
-            </label>
-          </div>
+          <select
+            value={filters.dateRange}
+            onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+            className={cn(
+              'w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+              filters.dateRange
+                ? 'border-blue-300 bg-blue-50'
+                : 'border-gray-300 bg-white'
+            )}
+          >
+            {DATE_RANGES.map((range) => (
+              <option key={range.value} value={range.value}>
+                {range.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* 快速过滤按钮 */}
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={() => handleFilterChange('type', 'CHECK_IN_REMINDER')}
+          onClick={() => handleFilterChange('priority', 'URGENT')}
           className={cn(
             'px-3 py-1 text-xs rounded-full transition-colors',
-            filters.type === 'CHECK_IN_REMINDER'
-              ? 'bg-blue-100 text-blue-700 border border-blue-200'
+            filters.priority === 'URGENT'
+              ? 'bg-red-100 text-red-700 border border-red-200'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
           )}
         >
-          打卡提醒
+          紧急通知
         </button>
         
         <button
@@ -194,25 +261,45 @@ export function NotificationFilters({
         </button>
         
         <button
-          onClick={() => handleFilterChange('includeRead', false)}
+          onClick={() => handleFilterChange('dateRange', '1')}
           className={cn(
             'px-3 py-1 text-xs rounded-full transition-colors',
-            !filters.includeRead
+            filters.dateRange === '1'
               ? 'bg-blue-100 text-blue-700 border border-blue-200'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
           )}
         >
-          仅未读
+          今天
+        </button>
+        
+        <button
+          onClick={() => handleFilterChange('dateRange', '7')}
+          className={cn(
+            'px-3 py-1 text-xs rounded-full transition-colors',
+            filters.dateRange === '7'
+              ? 'bg-blue-100 text-blue-700 border border-blue-200'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
+          )}
+        >
+          最近7天
         </button>
       </div>
 
       {/* 过滤结果提示 */}
       {hasActiveFilters && (
         <div className="text-xs text-gray-500 bg-blue-50 px-3 py-2 rounded">
-          <span>已应用过滤条件</span>
+          <span>已应用过滤条件:</span>
+          {filters.search && (
+            <span className="ml-2">搜索: "{filters.search}"</span>
+          )}
           {filters.type && (
             <span className="ml-2">
               类型: {NOTIFICATION_TYPES.find(t => t.value === filters.type)?.label}
+            </span>
+          )}
+          {filters.priority && (
+            <span className="ml-2">
+              优先级: {NOTIFICATION_PRIORITIES.find(p => p.value === filters.priority)?.label}
             </span>
           )}
           {filters.status && (
@@ -220,8 +307,10 @@ export function NotificationFilters({
               状态: {NOTIFICATION_STATUSES.find(s => s.value === filters.status)?.label}
             </span>
           )}
-          {!filters.includeRead && (
-            <span className="ml-2">仅显示未读</span>
+          {filters.dateRange && (
+            <span className="ml-2">
+              时间: {DATE_RANGES.find(d => d.value === filters.dateRange)?.label}
+            </span>
           )}
         </div>
       )}

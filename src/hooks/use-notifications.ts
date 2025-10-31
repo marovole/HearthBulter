@@ -48,6 +48,14 @@ interface UseNotificationsOptions {
   memberId: string;
   autoRefresh?: boolean;
   refreshInterval?: number;
+  pageSize?: number;
+  initialFilters?: {
+    type?: string;
+    priority?: string;
+    status?: string;
+    dateRange?: string;
+    search?: string;
+  };
 }
 
 export function useNotifications(options: UseNotificationsOptions) {
@@ -56,8 +64,17 @@ export function useNotifications(options: UseNotificationsOptions) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [filters, setFilters] = useState(options.initialFilters || {});
 
-  const { memberId, autoRefresh = false, refreshInterval = 30000 } = options;
+  const { 
+    memberId, 
+    autoRefresh = false, 
+    refreshInterval = 30000,
+    pageSize = 20 
+  } = options;
 
   // 获取通知列表
   const fetchNotifications = useCallback(async (
@@ -65,6 +82,9 @@ export function useNotifications(options: UseNotificationsOptions) {
     options: {
       type?: string;
       status?: string;
+      priority?: string;
+      search?: string;
+      dateRange?: string;
       limit?: number;
       offset?: number;
       includeRead?: boolean;
@@ -76,7 +96,7 @@ export function useNotifications(options: UseNotificationsOptions) {
       const params = new URLSearchParams({
         memberId,
         ...Object.fromEntries(
-          Object.entries(options).filter(([_, value]) => value !== undefined)
+          Object.entries(options).filter(([_, value]) => value !== undefined && value !== '')
         ),
       });
 
@@ -330,6 +350,72 @@ export function useNotifications(options: UseNotificationsOptions) {
     }
   }, []);
 
+  // 清空所有通知
+  const deleteAll = useCallback(async (memberId: string) => {
+    try {
+      setError(null);
+      
+      const response = await fetch('/api/notifications/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: 'delete',
+          data: {
+            memberId,
+            deleteAll: true,
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete all notifications');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete all notifications';
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
+
+  // 更新过滤器
+  const updateFilters = useCallback((newFilters: any) => {
+    setFilters(newFilters);
+    setCurrentPage(0);
+    setNotifications([]);
+  }, []);
+
+  // 加载更多
+  const loadMore = useCallback(async () => {
+    if (!memberId || loading || !hasMore) return;
+
+    try {
+      setLoading(true);
+      const nextPage = currentPage + 1;
+      const offset = nextPage * pageSize;
+      
+      const result = await fetchNotifications(memberId, {
+        ...filters,
+        limit: pageSize,
+        offset,
+        includeRead: true,
+      });
+      
+      if (result.notifications) {
+        setNotifications(prev => [...prev, ...result.notifications]);
+        setCurrentPage(nextPage);
+        setHasMore(result.notifications.length === pageSize);
+      }
+    } catch (err) {
+      console.error('Failed to load more notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [memberId, currentPage, filters, pageSize, hasMore, loading, fetchNotifications]);
+
   // 加载通知列表
   const loadNotifications = useCallback(async () => {
     if (!memberId) return;
@@ -339,11 +425,16 @@ export function useNotifications(options: UseNotificationsOptions) {
       setError(null);
       
       const result = await fetchNotifications(memberId, {
+        ...filters,
         includeRead: true,
-        limit: 50,
+        limit: pageSize,
+        offset: 0,
       });
       
-      setNotifications(result.notifications);
+      setNotifications(result.notifications || []);
+      setTotalCount(result.total || 0);
+      setHasMore((result.notifications || []).length === pageSize);
+      setCurrentPage(0);
       
       // 获取未读数量
       const statsData = await fetchStats(memberId, 7);
@@ -353,7 +444,7 @@ export function useNotifications(options: UseNotificationsOptions) {
     } finally {
       setLoading(false);
     }
-  }, [memberId, fetchNotifications, fetchStats]);
+  }, [memberId, filters, pageSize, fetchNotifications, fetchStats]);
 
   // 加载统计数据
   const loadStats = useCallback(async () => {
@@ -403,8 +494,11 @@ export function useNotifications(options: UseNotificationsOptions) {
     notifications,
     stats,
     unreadCount,
+    totalCount,
     loading,
     error,
+    hasMore,
+    filters,
     
     // 方法
     fetchNotifications,
@@ -416,9 +510,12 @@ export function useNotifications(options: UseNotificationsOptions) {
     batchMarkRead,
     batchDelete,
     createBulkNotifications,
+    deleteAll,
     loadNotifications,
     loadStats,
     refresh,
+    updateFilters,
+    loadMore,
     
     // 工具方法
     clearError: () => setError(null),

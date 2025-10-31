@@ -5,6 +5,7 @@ export { EmailService } from './email-service';
 export { SMSService } from './sms-service';
 export { WeChatService } from './wechat-service';
 export { TemplateEngine } from './template-engine';
+export { NotificationUtils } from './notification-utils';
 
 // 类型导出
 export type {

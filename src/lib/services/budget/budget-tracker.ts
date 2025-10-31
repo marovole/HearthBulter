@@ -6,8 +6,10 @@ import {
   Spending,
   FoodCategory 
 } from '@prisma/client'
+import { BudgetNotificationService } from './budget-notification-service'
 
 const prisma = new PrismaClient()
+const budgetNotificationService = new BudgetNotificationService(prisma)
 
 export interface BudgetCreateInput {
   memberId: string
@@ -257,6 +259,15 @@ export class BudgetTracker {
         currentValue: budget.usagePercentage,
         message: `预算使用已达到${budget.usagePercentage!.toFixed(1)}%，请注意控制支出`
       })
+
+      // 发送80%预算预警通知
+      await budgetNotificationService.sendBudgetAlert(budget.memberId, {
+        budgetName: budget.name,
+        usagePercentage: budget.usagePercentage!,
+        threshold: 80,
+        remainingBudget: budget.remainingAmount,
+        totalBudget: budget.totalAmount,
+      })
     }
 
     // 检查100%预警
@@ -267,6 +278,15 @@ export class BudgetTracker {
         currentValue: budget.usagePercentage,
         message: `预算已用完！当前使用${budget.usagePercentage!.toFixed(1)}%`
       })
+
+      // 发送100%预算预警通知
+      await budgetNotificationService.sendBudgetAlert(budget.memberId, {
+        budgetName: budget.name,
+        usagePercentage: budget.usagePercentage!,
+        threshold: 100,
+        remainingBudget: budget.remainingAmount,
+        totalBudget: budget.totalAmount,
+      })
     }
 
     // 检查110%超支预警
@@ -276,6 +296,14 @@ export class BudgetTracker {
         threshold: 110,
         currentValue: budget.usagePercentage,
         message: `预算严重超支！当前使用${budget.usagePercentage!.toFixed(1)}%`
+      })
+
+      // 发送预算超支通知
+      await budgetNotificationService.sendBudgetOverspend(budget.memberId, {
+        budgetName: budget.name,
+        overspendAmount: budget.usedAmount! - budget.totalAmount,
+        totalSpent: budget.usedAmount!,
+        budgetLimit: budget.totalAmount,
       })
     }
 
@@ -310,15 +338,15 @@ export class BudgetTracker {
     if (!budget) return
 
     const categories = [
-      { field: 'vegetableBudget', category: FoodCategory.VEGETABLES },
-      { field: 'meatBudget', category: FoodCategory.PROTEIN },
-      { field: 'fruitBudget', category: FoodCategory.FRUITS },
-      { field: 'grainBudget', category: FoodCategory.GRAINS },
-      { field: 'dairyBudget', category: FoodCategory.DAIRY },
-      { field: 'otherBudget', category: FoodCategory.OTHER }
+      { field: 'vegetableBudget', category: FoodCategory.VEGETABLES, categoryName: '蔬菜' },
+      { field: 'meatBudget', category: FoodCategory.PROTEIN, categoryName: '肉类' },
+      { field: 'fruitBudget', category: FoodCategory.FRUITS, categoryName: '水果' },
+      { field: 'grainBudget', category: FoodCategory.GRAINS, categoryName: '谷物' },
+      { field: 'dairyBudget', category: FoodCategory.DAIRY, categoryName: '乳制品' },
+      { field: 'otherBudget', category: FoodCategory.OTHER, categoryName: '其他' }
     ]
 
-    for (const { field, category } of categories) {
+    for (const { field, category, categoryName } of categories) {
       const categoryBudget = (budget as any)[field]
       if (!categoryBudget) continue
 
@@ -342,8 +370,17 @@ export class BudgetTracker {
             type: 'CATEGORY_OVER',
             threshold: 100,
             currentValue: usagePercentage,
-            message: `${category}分类预算已超支！当前使用${usagePercentage.toFixed(1)}%`
+            message: `${categoryName}分类预算已超支！当前使用${usagePercentage.toFixed(1)}%`
           }
+        })
+
+        // 发送分类预算预警通知
+        await budgetNotificationService.sendCategoryBudgetAlert(budget.memberId, {
+          budgetName: budget.name,
+          category: categoryName,
+          spent: usedAmount,
+          budget: categoryBudget,
+          percentage: usagePercentage,
         })
       }
     }

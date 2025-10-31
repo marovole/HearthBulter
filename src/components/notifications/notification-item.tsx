@@ -26,6 +26,7 @@ interface NotificationItemProps {
   onSelect?: () => void;
   onMarkAsRead?: () => void;
   onDelete?: () => void;
+  showActions?: boolean;
 }
 
 export function NotificationItem({
@@ -34,6 +35,7 @@ export function NotificationItem({
   onSelect,
   onMarkAsRead,
   onDelete,
+  showActions = true,
 }: NotificationItemProps) {
   const isUnread = !notification.readAt;
   const isFailed = notification.status === 'FAILED';
@@ -168,37 +170,39 @@ export function NotificationItem({
             </div>
 
             {/* 操作按钮 */}
-            <div className="flex items-center space-x-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              {isUnread && onMarkAsRead && (
-                <button
-                  onClick={handleMarkAsRead}
-                  className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                  title="标记已读"
-                >
-                  <Check className="h-4 w-4" />
-                </button>
-              )}
-              
-              {notification.actionUrl && (
-                <button
-                  onClick={handleActionClick}
-                  className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
-                  title="查看详情"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </button>
-              )}
-              
-              {onDelete && (
-                <button
-                  onClick={handleDelete}
-                  className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                  title="删除"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+            {showActions && (
+              <div className="flex items-center space-x-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                {isUnread && onMarkAsRead && (
+                  <button
+                    onClick={handleMarkAsRead}
+                    className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                    title="标记已读"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                )}
+                
+                {notification.actionUrl && (
+                  <button
+                    onClick={handleActionClick}
+                    className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+                    title="查看详情"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </button>
+                )}
+                
+                {onDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                    title="删除"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* 操作按钮 */}

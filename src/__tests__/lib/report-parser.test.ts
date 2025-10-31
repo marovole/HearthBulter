@@ -2,13 +2,13 @@
  * 报告解析器单元测试
  */
 
-import { reportParser } from '@/lib/services/report-parser'
+import { ReportParser } from '@/lib/services/report-parser'
 
 describe('ReportParser', () => {
   describe('parse', () => {
     it('应该正确提取总胆固醇指标', () => {
       const text = '总胆固醇：5.8 mmol/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const cholesterol = result.indicators.find(
         (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL'
@@ -23,7 +23,7 @@ describe('ReportParser', () => {
 
     it('应该正确提取LDL胆固醇指标', () => {
       const text = 'LDL-C：4.5 mmol/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const ldl = result.indicators.find(
         (ind) => ind.indicatorType === 'LDL_CHOLESTEROL'
@@ -36,7 +36,7 @@ describe('ReportParser', () => {
 
     it('应该正确提取HDL胆固醇指标', () => {
       const text = 'HDL：0.8 mmol/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const hdl = result.indicators.find(
         (ind) => ind.indicatorType === 'HDL_CHOLESTEROL'
@@ -49,7 +49,7 @@ describe('ReportParser', () => {
 
     it('应该正确提取空腹血糖指标', () => {
       const text = '空腹血糖：7.5 mmol/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const glucose = result.indicators.find(
         (ind) => ind.indicatorType === 'FASTING_GLUCOSE'
@@ -62,7 +62,7 @@ describe('ReportParser', () => {
 
     it('应该正确提取正常范围内的血糖', () => {
       const text = '空腹血糖：5.5 mmol/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const glucose = result.indicators.find(
         (ind) => ind.indicatorType === 'FASTING_GLUCOSE'
@@ -76,7 +76,7 @@ describe('ReportParser', () => {
 
     it('应该正确提取ALT指标', () => {
       const text = 'ALT：150 U/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const alt = result.indicators.find(
         (ind) => ind.indicatorType === 'ALT'
@@ -89,7 +89,7 @@ describe('ReportParser', () => {
 
     it('应该正确提取AST指标', () => {
       const text = 'AST：80 U/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const ast = result.indicators.find(
         (ind) => ind.indicatorType === 'AST'
@@ -102,7 +102,7 @@ describe('ReportParser', () => {
 
     it('应该正确提取肌酐指标', () => {
       const text = 'CREATININE：120 μmol/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const creatinine = result.indicators.find(
         (ind) => ind.indicatorType === 'CREATININE'
@@ -118,7 +118,7 @@ describe('ReportParser', () => {
         空腹血糖：6.2 mmol/L
         ALT：45 U/L
       `
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       expect(result.indicators.length).toBeGreaterThanOrEqual(3)
       expect(
@@ -138,7 +138,7 @@ describe('ReportParser', () => {
         空腹血糖：8.0 mmol/L (异常)
         ALT：50 U/L (偏高)
       `
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const cholesterol = result.indicators.find(
         (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL'
@@ -163,7 +163,7 @@ describe('ReportParser', () => {
         报告日期：2024年1月15日
         总胆固醇：5.2 mmol/L
       `
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       expect(result.reportDate).toBeDefined()
       expect(result.reportDate?.getFullYear()).toBe(2024)
@@ -176,13 +176,13 @@ describe('ReportParser', () => {
         医疗机构：北京协和医院
         总胆固醇：5.2 mmol/L
       `
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       expect(result.institution).toBe('北京协和医院')
     })
 
     it('应该处理空文本', () => {
-      const result = reportParser.parse('')
+      const result = ReportParser.parse('')
 
       expect(result.indicators).toHaveLength(0)
       expect(result.reportDate).toBeUndefined()
@@ -191,14 +191,14 @@ describe('ReportParser', () => {
 
     it('应该处理不包含指标的报告', () => {
       const text = '这是一份不包含任何指标的文本'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       expect(result.indicators).toHaveLength(0)
     })
 
     it('应该处理小数值', () => {
       const text = '总胆固醇：5.85 mmol/L'
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const cholesterol = result.indicators.find(
         (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL'
@@ -212,7 +212,7 @@ describe('ReportParser', () => {
         总胆固醇：5.2 mmol/L
         总胆固醇：6.0 mmol/L
       `
-      const result = reportParser.parse(text)
+      const result = ReportParser.parse(text)
 
       const cholesterolIndicators = result.indicators.filter(
         (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL'
