@@ -148,6 +148,11 @@ model FamilyMember {
   notifications      Notification[] @relation("MemberNotifications")
   notificationPreference NotificationPreference? @relation("MemberNotificationPreferences")
 
+  // 库存管理关联
+  inventoryItems     InventoryItem[] @relation("MemberInventoryItems")
+  inventoryUsages    InventoryUsage[] @relation("MemberInventoryUsages")
+  wasteLogs          WasteLog[] @relation("MemberWasteLogs")
+
   // 审计字段
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -386,6 +391,9 @@ model Food {
   platformProducts PlatformProduct[] @relation("PlatformProducts")
   recipeIngredients RecipeIngredient[] @relation("RecipeIngredients")
   substituteFoods IngredientSubstitution[] @relation("SubstituteFoods")
+  
+  // 库存管理关联
+  inventoryItems InventoryItem[] @relation("InventoryItems")
 
   @@index([category])
   @@index([source])
@@ -2926,4 +2934,155 @@ model NotificationLog {
   @@index([sentAt])
   @@index([externalId])
   @@map("notification_logs")
+}
+
+// ==================== 食材库存管理系统 ====================
+
+// 存储位置枚举
+enum StorageLocation {
+  REFRIGERATOR // 冷藏
+  FREEZER      // 冷冻
+  PANTRY       // 常温储藏室
+  COUNTER      // 台面
+  CABINET      // 橱柜
+  OTHER        // 其他
+}
+
+// 库存状态枚举
+enum InventoryStatus {
+  FRESH      // 新鲜
+  EXPIRING   // 临期
+  EXPIRED    // 已过期
+  LOW_STOCK  // 库存不足
+  OUT_OF_STOCK // 缺货
+}
+
+// 浪费原因枚举
+enum WasteReason {
+  EXPIRED    // 过期
+  SPOILED    // 变质
+  OVERSTOCK  // 采购过量
+  PREFERENCE // 口味偏好变化
+  OTHER      // 其他
+}
+
+// 库存条目表
+model InventoryItem {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation("MemberInventoryItems", fields: [memberId], references: [id], onDelete: Cascade)
+  foodId   String
+  food     Food         @relation("InventoryItems", fields: [foodId], references: [id])
+
+  // 库存基本信息
+  quantity       Float // 当前数量
+  unit           String // 单位（如g、ml、个、斤等）
+  originalQuantity Float // 原始数量（用于计算使用率）
+  
+  // 购买信息
+  purchaseDate   DateTime @default(now()) // 购买日期
+  purchasePrice  Float? // 购买价格
+  purchaseSource String? // 购买来源（山姆、盒马等）
+  
+  // 保质期信息
+  expiryDate     DateTime? // 保质期
+  productionDate DateTime? // 生产日期
+  daysToExpiry   Int? // 剩余保质期天数（计算得出）
+  
+  // 存储信息
+  storageLocation StorageLocation @default(PANTRY) // 存储位置
+  storageNotes    String? // 存储备注
+  
+  // 库存状态
+  status InventoryStatus @default(FRESH) // 库存状态
+  
+  // 阈值设置
+  minStockThreshold Float? // 最低库存阈值
+  isLowStock        Boolean @default(false) // 是否库存不足
+  
+  // 条码信息（可选）
+  barcode  String? // 条形码
+  brand    String? // 品牌
+  packageInfo String? // 包装信息
+  
+  // 审计字段
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // 关联关系
+  usageRecords InventoryUsage[]
+  wasteRecords WasteLog[]
+
+  @@index([memberId])
+  @@index([foodId])
+  @@index([memberId, status])
+  @@index([expiryDate])
+  @@index([storageLocation])
+  @@index([barcode])
+  @@map("inventory_items")
+}
+
+// 库存使用记录表
+model InventoryUsage {
+  id           String        @id @default(cuid())
+  inventoryItemId String
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  memberId     String
+  member       FamilyMember  @relation("MemberInventoryUsages", fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 使用信息
+  usedQuantity Float // 使用数量
+  usedAt       DateTime @default(now()) // 使用时间
+  
+  // 使用场景
+  usageType    String // 使用类型（MEAL_LOG、MANUAL、COOKING等）
+  relatedId    String? // 关联ID（如餐食记录ID）
+  relatedType  String? // 关联类型
+  
+  // 使用备注
+  notes        String? // 使用备注
+  recipeName   String? // 相关食谱名称
+
+  // 审计字段
+  createdAt DateTime @default(now())
+
+  @@index([inventoryItemId])
+  @@index([memberId])
+  @@index([usedAt])
+  @@index([usageType])
+  @@map("inventory_usages")
+}
+
+// 浪费记录表
+model WasteLog {
+  id           String        @id @default(cuid())
+  inventoryItemId String
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  memberId     String
+  member       FamilyMember  @relation("MemberWasteLogs", fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 浪费信息
+  wastedQuantity Float // 浪费数量
+  wasteReason    WasteReason // 浪费原因
+  wastedAt       DateTime @default(now()) // 浪费时间
+  
+  // 浪费成本
+  estimatedCost  Float? // 估算浪费成本
+  
+  // 浪费备注
+  notes          String? // 浪费备注
+  
+  // 预防信息
+  preventable    Boolean @default(true) // 是否可预防
+  preventionTip  String? // 预防建议
+
+  // 审计字段
+  createdAt DateTime @default(now())
+
+  @@index([inventoryItemId])
+  @@index([memberId])
+  @@index([wasteReason])
+  @@index([wastedAt])
+  @@map("waste_logs")
 }

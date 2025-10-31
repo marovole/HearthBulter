@@ -1,0 +1,107 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { inventoryTracker } from '@/services/inventory-tracker'
+import { getCurrentUser } from '@/lib/auth'
+import { StorageLocation } from '@prisma/client'
+
+// GET - 获取单个库存条目
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: '未授权' }, { status: 401 })
+    }
+
+    const item = await inventoryTracker.getInventoryItemById(params.id)
+    
+    if (!item) {
+      return NextResponse.json({ error: '库存条目不存在' }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: item
+    })
+
+  } catch (error) {
+    console.error('获取库存条目失败:', error)
+    return NextResponse.json(
+      { error: '获取库存条目失败', details: error },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - 更新库存条目
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: '未授权' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    
+    const updateData: any = {}
+    
+    if (body.quantity !== undefined) updateData.quantity = parseFloat(body.quantity)
+    if (body.unit !== undefined) updateData.unit = body.unit
+    if (body.purchasePrice !== undefined) updateData.purchasePrice = parseFloat(body.purchasePrice)
+    if (body.purchaseSource !== undefined) updateData.purchaseSource = body.purchaseSource
+    if (body.expiryDate !== undefined) updateData.expiryDate = new Date(body.expiryDate)
+    if (body.productionDate !== undefined) updateData.productionDate = new Date(body.productionDate)
+    if (body.storageLocation !== undefined) updateData.storageLocation = body.storageLocation as StorageLocation
+    if (body.storageNotes !== undefined) updateData.storageNotes = body.storageNotes
+    if (body.minStockThreshold !== undefined) updateData.minStockThreshold = parseFloat(body.minStockThreshold)
+    if (body.barcode !== undefined) updateData.barcode = body.barcode
+    if (body.brand !== undefined) updateData.brand = body.brand
+    if (body.packageInfo !== undefined) updateData.packageInfo = body.packageInfo
+
+    const item = await inventoryTracker.updateInventoryItem(params.id, updateData)
+
+    return NextResponse.json({
+      success: true,
+      data: item,
+      message: '库存条目更新成功'
+    })
+
+  } catch (error) {
+    console.error('更新库存条目失败:', error)
+    return NextResponse.json(
+      { error: '更新库存条目失败', details: error },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - 删除库存条目
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: '未授权' }, { status: 401 })
+    }
+
+    await inventoryTracker.deleteInventoryItem(params.id)
+
+    return NextResponse.json({
+      success: true,
+      message: '库存条目删除成功'
+    })
+
+  } catch (error) {
+    console.error('删除库存条目失败:', error)
+    return NextResponse.json(
+      { error: '删除库存条目失败', details: error },
+      { status: 500 }
+    )
+  }
+}
