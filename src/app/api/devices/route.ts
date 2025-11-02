@@ -11,7 +11,7 @@ import { optimizedQuery } from '@/lib/middleware/query-optimization'
 import { validationMiddleware, commonSchemas, withValidation } from '@/lib/middleware/validation-middleware'
 import { APIError, createErrorResponse } from '@/lib/errors/api-error'
 import { withPermissions, requirePermissions } from '@/lib/middleware/permission-middleware'
-import { withSecurity, defaultSecurityOptions } from '@/lib/middleware/security-middleware'
+import { withSecurity, defaultSecurityOptions } from '@/lib/security/security-middleware'
 import { withPerformanceMonitoring } from '@/lib/monitoring/performance-monitor'
 import { Permission } from '@/lib/permissions'
 

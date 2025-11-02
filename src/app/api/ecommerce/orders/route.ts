@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db'
 import { CartAggregator } from '@/lib/services/cart-aggregator'
 import { platformAdapterFactory } from '@/lib/services/ecommerce'
 import { EcommercePlatform, OrderStatus } from '@prisma/client'

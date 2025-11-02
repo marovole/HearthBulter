@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { inventoryTracker, inventoryAnalyzer, expiryMonitor } from '@/services'
+import { inventoryTracker } from '@/services/inventory-tracker'
+import { inventoryAnalyzer } from '@/services/inventory-analyzer'
+import { expiryMonitor } from '@/services/expiry-monitor'
 import { getCurrentUser } from '@/lib/auth'
 
 // GET - 获取库存统计信息

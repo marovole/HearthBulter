@@ -366,7 +366,7 @@ function getClientIP(request: NextRequest): string | undefined {
 /**
  * 处理点赞事件
  */
-async handleLikeEvent(shareToken: string): Promise<void> {
+async function handleLikeEvent(shareToken: string): Promise<void> {
   await prisma.sharedContent.update({
     where: { shareToken },
     data: {
@@ -380,7 +380,7 @@ async handleLikeEvent(shareToken: string): Promise<void> {
 /**
  * 处理评论事件
  */
-async handleCommentEvent(shareToken: string, metadata?: any): Promise<void> {
+async function handleCommentEvent(shareToken: string, metadata?: any): Promise<void> {
   await prisma.sharedContent.update({
     where: { shareToken },
     data: {
@@ -399,7 +399,7 @@ async handleCommentEvent(shareToken: string, metadata?: any): Promise<void> {
 /**
  * 处理下载事件
  */
-async handleDownloadEvent(shareToken: string): Promise<void> {
+async function handleDownloadEvent(shareToken: string): Promise<void> {
   await prisma.sharedContent.update({
     where: { shareToken },
     data: {

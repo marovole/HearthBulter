@@ -108,9 +108,9 @@ export async function GET(request: NextRequest) {
     let additionalStats = {}
 
     if (analysisType === 'user' && memberId) {
-      additionalStats = await this.getUserAdditionalStats(memberId, period)
+      additionalStats = await getUserAdditionalStats(memberId, period)
     } else if (analysisType === 'global') {
-      additionalStats = await this.getGlobalAdditionalStats(period)
+      additionalStats = await getGlobalAdditionalStats(period)
     }
 
     return NextResponse.json({
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
 
     // 验证管理员权限（如果需要）
     if (adminCode) {
-      const isAdmin = await this.checkAdminPermission(session.user.id, adminCode)
+      const isAdmin = await checkAdminPermission(session.user.id, adminCode)
       if (!isAdmin) {
         return NextResponse.json(
           { error: '无管理员权限' },
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
         data: report
       })
     } else if (format === 'csv') {
-      const csvData = this.convertToCSV(report)
+      const csvData = convertToCSV(report)
       
       return new NextResponse(csvData, {
         status: 200,
@@ -226,8 +226,8 @@ export async function POST(request: NextRequest) {
 /**
  * 获取用户额外统计信息
  */
-private async getUserAdditionalStats(memberId: string, period?: string) {
-  const { startDate, endDate } = this.getPeriodDates(period)
+async function getUserAdditionalStats(memberId: string, period?: string) {
+  const { startDate, endDate } = getPeriodDates(period)
 
   const [
     totalShares,
@@ -308,8 +308,8 @@ private async getUserAdditionalStats(memberId: string, period?: string) {
 /**
  * 获取全局额外统计信息
  */
-private async getGlobalAdditionalStats(period?: string) {
-  const { startDate, endDate } = this.getPeriodDates(period)
+async function getGlobalAdditionalStats(period?: string) {
+  const { startDate, endDate } = getPeriodDates(period)
 
   const [
     totalUsers,
@@ -381,7 +381,7 @@ private async getGlobalAdditionalStats(period?: string) {
 /**
  * 获取时间范围
  */
-private getPeriodDates(period?: string): { startDate: Date; endDate: Date } {
+function getPeriodDates(period?: string): { startDate: Date; endDate: Date } {
   const endDate = new Date()
   let startDate: Date
 
@@ -406,7 +406,7 @@ private getPeriodDates(period?: string): { startDate: Date; endDate: Date } {
 /**
  * 转换为CSV格式
  */
-private convertToCSV(report: any): string {
+function convertToCSV(report: any): string {
   const headers = [
     '指标',
     '数值',
@@ -439,7 +439,7 @@ private convertToCSV(report: any): string {
 /**
  * 检查管理员权限
  */
-private async function checkAdminPermission(userId: string, adminCode?: string): Promise<boolean> {
+async function function checkAdminPermission(userId: string, adminCode?: string): Promise<boolean> {
   if (!adminCode) {
     return false
   }
