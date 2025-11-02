@@ -26,6 +26,9 @@
     "audit": "npm audit",
     "audit:fix": "npm audit fix",
     "security:check": "npm audit && npm outdated",
+    "review": "node scripts/pre-commit-code-review.js",
+    "review:report": "node scripts/generate-review-report.js",
+    "review:report:html": "node scripts/generate-review-report.js --html",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -66,7 +69,12 @@
     "tailwind-merge": "^2.5.0",
     "tesseract.js": "^6.0.1",
     "zod": "^3.23.8",
-    "zustand": "^5.0.0"
+    "zustand": "^5.0.0",
+    "react-native-health": "^12.7.0",
+    "@hmscore/react-native-hms-health": "^6.10.0",
+    "puppeteer": "^21.0.0",
+    "html2canvas": "^1.4.1",
+    "qrcode": "^1.5.3"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^15.0.0",

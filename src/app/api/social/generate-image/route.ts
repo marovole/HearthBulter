@@ -1,284 +1,416 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { ShareContentType } from '@prisma/client';
-import { 
-  generateHealthReportCard,
-  generateAchievementCard,
-  generateMealLogCard,
-  generateGoalAchievementCard,
-  generateRecipeCard,
-  generateCheckInStreakCard,
-  generateWeightMilestoneCard
-} from '@/lib/services/social/image-generator';
-
 /**
- * POST /api/social/generate-image
- * 生成分享图片
+ * 社交分享API - 生成分享图片
  */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { shareImageGenerator } from '@/lib/services/social/image-generator'
+import { ShareTemplate } from '@/types/social-sharing'
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: '未授权访问' },
+        { status: 401 }
+      )
     }
 
-    const body = await request.json();
-    const {
-      contentType,
-      contentId,
-      customMessage,
-      options = {}
-    } = body;
+    const body = await request.json()
+    const { template, data, config } = body
 
-    // 验证必要参数
-    if (!contentType || !contentId) {
+    // 验证模板类型
+    if (!template || !Object.values(ShareTemplate).includes(template)) {
       return NextResponse.json(
-        { error: '缺少必要参数：contentType 和 contentId' },
+        { error: '无效的模板类型' },
         { status: 400 }
-      );
+      )
     }
 
-    // 验证内容类型
-    if (!Object.values(ShareContentType).includes(contentType)) {
+    if (!data) {
       return NextResponse.json(
-        { error: '不支持的内容类型' },
+        { error: '缺少数据参数' },
         { status: 400 }
-      );
+      )
     }
 
-    const memberId = session.user?.id;
-    if (!memberId) {
-      return NextResponse.json({ error: '用户ID不存在' }, { status: 400 });
-    }
-
-    // 获取内容数据
-    const contentData = await getContentData(memberId, contentType, contentId);
-    if (!contentData) {
+    // 验证数据格式（根据模板类型）
+    const validationResult = validateTemplateData(template, data)
+    if (!validationResult.isValid) {
       return NextResponse.json(
-        { error: '内容不存在或无权访问' },
-        { status: 404 }
-      );
+        { error: `数据验证失败: ${validationResult.error}` },
+        { status: 400 }
+      )
     }
 
     // 生成图片
-    let imageUrl: string;
-    
-    try {
-      switch (contentType) {
-        case 'HEALTH_REPORT':
-          imageUrl = await generateHealthReportCard({
-            ...contentData,
-            customMessage
-          });
-          break;
-        
-        case 'ACHIEVEMENT':
-          imageUrl = await generateAchievementCard({
-            ...contentData,
-            customMessage
-          });
-          break;
-        
-        case 'MEAL_LOG':
-          imageUrl = await generateMealLogCard({
-            ...contentData,
-            customMessage
-          });
-          break;
-        
-        case 'GOAL_ACHIEVEMENT':
-          imageUrl = await generateGoalAchievementCard({
-            ...contentData,
-            customMessage
-          });
-          break;
-        
-        case 'RECIPE':
-          imageUrl = await generateRecipeCard({
-            ...contentData,
-            customMessage
-          });
-          break;
-        
-        case 'CHECK_IN_STREAK':
-          imageUrl = await generateCheckInStreakCard({
-            ...contentData,
-            customMessage
-          });
-          break;
-        
-        case 'WEIGHT_MILESTONE':
-          imageUrl = await generateWeightMilestoneCard({
-            ...contentData,
-            customMessage
-          });
-          break;
-        
-        default:
-          throw new Error(`不支持的图片生成类型: ${contentType}`);
-      }
-    } catch (imageError) {
-      console.error('图片生成失败:', imageError);
-      return NextResponse.json(
-        { error: '图片生成失败，请稍后重试' },
-        { status: 500 }
-      );
-    }
+    const imageUrl = await shareImageGenerator.generateShareImage(template, data, config)
 
     return NextResponse.json({
       success: true,
       data: {
         imageUrl,
-        contentType,
-        contentId
+        template,
+        generatedAt: new Date().toISOString()
       },
       message: '图片生成成功'
-    });
+    })
+
   } catch (error) {
-    console.error('生成分享图片失败:', error);
+    console.error('生成分享图片失败:', error)
     return NextResponse.json(
-      { error: '生成分享图片失败' },
+      { error: error instanceof Error ? error.message : '服务器内部错误' },
       { status: 500 }
-    );
+    )
   }
 }
 
 /**
- * 获取内容数据
+ * 验证模板数据
  */
-async function getContentData(memberId: string, contentType: ShareContentType, contentId: string) {
-  const { PrismaClient } = require('@prisma/client');
-  const prisma = new PrismaClient();
-
+function validateTemplateData(template: ShareTemplate, data: any): { isValid: boolean; error?: string } {
   try {
-    switch (contentType) {
-      case 'HEALTH_REPORT':
-        const report = await prisma.healthReport.findFirst({
-          where: { id: contentId, memberId },
-          include: { member: true }
-        });
-        
-        if (!report) return null;
-        
-        return {
-          memberName: report.member?.name || '健康达人',
-          reportType: report.reportType,
-          period: `${report.startDate.toLocaleDateString()} - ${report.endDate.toLocaleDateString()}`,
-          overallScore: report.overallScore || 0,
-          summary: report.summary || ''
-        };
-      
-      case 'ACHIEVEMENT':
-        const achievement = await prisma.achievement.findFirst({
-          where: { id: contentId, memberId },
-          include: { member: true }
-        });
-        
-        if (!achievement) return null;
-        
-        return {
-          memberName: achievement.member?.name || '成就达人',
-          achievementTitle: achievement.title,
-          achievementDescription: achievement.description,
-          rarity: achievement.rarity,
-          points: achievement.points,
-          unlockedAt: achievement.unlockedAt
-        };
-      
-      case 'MEAL_LOG':
-        const mealLog = await prisma.mealLog.findFirst({
-          where: { id: contentId, memberId },
-          include: {
-            member: true,
-            foods: { include: { food: true } }
-          }
-        });
-        
-        if (!mealLog) return null;
-        
-        return {
-          memberName: mealLog.member?.name || '美食家',
-          mealType: mealLog.mealType,
-          date: mealLog.date,
-          foods: mealLog.foods.map(f => ({
-            name: f.food.name,
-            amount: f.amount
-          })),
-          calories: mealLog.calories,
-          protein: mealLog.protein,
-          carbs: mealLog.carbs,
-          fat: mealLog.fat
-        };
-      
-      case 'GOAL_ACHIEVEMENT':
-        const goal = await prisma.healthGoal.findFirst({
-          where: { id: contentId, memberId },
-          include: { member: true }
-        });
-        
-        if (!goal) return null;
-        
-        return {
-          memberName: goal.member?.name || '健康达人',
-          goalType: goal.goalType,
-          targetWeight: goal.targetWeight,
-          currentWeight: goal.currentWeight,
-          progress: goal.progress || 0,
-          startDate: goal.startDate,
-          targetDate: goal.targetDate
-        };
-      
-      case 'CHECK_IN_STREAK':
-        const streak = await prisma.trackingStreak.findUnique({
-          where: { memberId },
-          include: { member: true }
-        });
-        
-        if (!streak) return null;
-        
-        return {
-          memberName: streak.member?.name || '打卡达人',
-          currentStreak: streak.currentStreak,
-          longestStreak: streak.longestStreak,
-          totalDays: streak.totalDays,
-          lastCheckIn: streak.lastCheckIn
-        };
-      
-      case 'WEIGHT_MILESTONE':
-        const weightData = await prisma.healthData.findFirst({
-          where: { id: contentId, memberId },
-          include: { member: true }
-        });
-        
-        if (!weightData || !weightData.weight) return null;
-        
-        return {
-          memberName: weightData.member?.name || '减重达人',
-          currentWeight: weightData.weight,
-          measuredAt: weightData.measuredAt
-        };
-      
-      case 'RECIPE':
-        // 这里需要根据实际的食谱模型来实现
-        // 暂时返回模拟数据
-        return {
-          memberName: '美食家',
-          recipeName: '健康营养餐',
-          description: '营养均衡，美味可口',
-          calories: 450,
-          protein: 25,
-          carbs: 50,
-          fat: 15
-        };
-      
+    switch (template) {
+      case ShareTemplate.HEALTH_REPORT:
+        return validateHealthReportData(data)
+
+      case ShareTemplate.GOAL_ACHIEVED:
+        return validateGoalAchievedData(data)
+
+      case ShareTemplate.ACHIEVEMENT_UNLOCKED:
+        return validateAchievementUnlockedData(data)
+
+      case ShareTemplate.WEIGHT_LOSS:
+        return validateWeightLossData(data)
+
+      case ShareTemplate.STREAK_CELEBRATION:
+        return validateStreakCelebrationData(data)
+
+      case ShareTemplate.RECIPE_CARD:
+        return validateRecipeCardData(data)
+
+      case ShareTemplate.PERSONAL_RECORD:
+        return validatePersonalRecordData(data)
+
+      case ShareTemplate.COMMUNITY_POST:
+        return validateCommunityPostData(data)
+
       default:
-        return null;
+        return { isValid: false, error: '不支持的模板类型' }
     }
   } catch (error) {
-    console.error('获取内容数据失败:', error);
-    return null;
-  } finally {
-    await prisma.$disconnect();
+    return { isValid: false, error: error instanceof Error ? error.message : '验证失败' }
   }
+}
+
+/**
+ * 验证健康报告数据
+ */
+function validateHealthReportData(data: any): { isValid: boolean; error?: string } {
+  const requiredFields = ['memberName', 'healthScore']
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      return { isValid: false, error: `缺少必需字段: ${field}` }
+    }
+  }
+
+  if (typeof data.healthScore !== 'number' || data.healthScore < 0 || data.healthScore > 100) {
+    return { isValid: false, error: 'healthScore必须是0-100之间的数字' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * 验证目标达成数据
+ */
+function validateGoalAchievedData(data: any): { isValid: boolean; error?: string } {
+  const requiredFields = ['memberName', 'goalTitle', 'progress']
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      return { isValid: false, error: `缺少必需字段: ${field}` }
+    }
+  }
+
+  if (typeof data.progress !== 'number' || data.progress < 0 || data.progress > 100) {
+    return { isValid: false, error: 'progress必须是0-100之间的数字' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * 验证成就解锁数据
+ */
+function validateAchievementUnlockedData(data: any): { isValid: boolean; error?: string } {
+  const requiredFields = ['memberName', 'achievementType', 'achievementTitle', 'points']
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      return { isValid: false, error: `缺少必需字段: ${field}` }
+    }
+  }
+
+  if (typeof data.points !== 'number' || data.points < 0) {
+    return { isValid: false, error: 'points必须是大于等于0的数字' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * 验证减重数据
+ */
+function validateWeightLossData(data: any): { isValid: boolean; error?: string } {
+  const requiredFields = ['memberName', 'initialWeight', 'currentWeight']
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      return { isValid: false, error: `缺少必需字段: ${field}` }
+    }
+  }
+
+  if (typeof data.initialWeight !== 'number' || data.initialWeight <= 0 || data.initialWeight > 300) {
+    return { isValid: false, error: 'initialWeight必须是有效的体重值' }
+  }
+
+  if (typeof data.currentWeight !== 'number' || data.currentWeight <= 0 || data.currentWeight > 300) {
+    return { isValid: false, error: 'currentWeight必须是有效的体重值' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * 验证连续打卡数据
+ */
+function validateStreakCelebrationData(data: any): { isValid: boolean; error?: string } {
+  const requiredFields = ['memberName', 'streakDays']
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      return { isValid: false, error: `缺少必需字段: ${field}` }
+    }
+  }
+
+  if (typeof data.streakDays !== 'number' || data.streakDays < 1 || data.streakDays > 365) {
+    return { isValid: false, error: 'streakDays必须是1-365之间的整数' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * 验证食谱卡片数据
+ */
+function validateRecipeCardData(data: any): { isValid: boolean; error?: string } {
+  const requiredFields = ['memberName', 'recipeName']
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      return { isValid: false, error: `缺少必需字段: ${field}` }
+    }
+  }
+
+  if (data.calories && (typeof data.calories !== 'number' || data.calories < 0)) {
+    return { isValid: false, error: 'calories必须是大于等于0的数字' }
+  }
+
+  if (data.ingredients && !Array.isArray(data.ingredients)) {
+    return { isValid: false, error: 'ingredients必须是数组' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * 验证个人记录数据
+ */
+function validatePersonalRecordData(data: any): { isValid: boolean; error?: string } {
+  const requiredFields = ['memberName', 'title', 'description']
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      return { isValid: false, error: `缺少必需字段: ${field}` }
+    }
+  }
+
+  if (typeof data.description !== 'string' || data.description.length > 500) {
+    return { isValid: false, error: 'description必须是500字符以内的字符串' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * 验证社区帖子数据
+ */
+function validateCommunityPostData(data: any): { isValid: boolean; error?: string } {
+  const requiredFields = ['title', 'content']
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      return { isValid: false, error: `缺少必需字段: ${field}` }
+    }
+  }
+
+  if (typeof data.content !== 'string' || data.content.length > 2000) {
+    return { isValid: false, error: 'content必须是2000字符以内的字符串' }
+  }
+
+  if (data.tags && !Array.isArray(data.tags)) {
+    return { isValid: false, error: 'tags必须是数组' }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * GET: 获取可用的模板列表
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: '未授权访问' },
+        { status: 401 }
+      )
+    }
+
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get('category')
+
+    let templates = Object.values(ShareTemplate)
+
+    if (category) {
+      // 根据分类过滤模板
+      const healthTemplates = [
+        ShareTemplate.HEALTH_REPORT,
+        ShareTemplate.WEIGHT_LOSS,
+        ShareTemplate.STREAK_CELEBRATION,
+        ShareTemplate.PERSONAL_RECORD
+      ]
+
+      const achievementTemplates = [
+        ShareTemplate.GOAL_ACHIEVED,
+        ShareTemplate.ACHIEVEMENT_UNLOCKED
+      ]
+
+      const socialTemplates = [
+        ShareTemplate.RECIPE_CARD,
+        ShareTemplate.COMMUNITY_POST
+      ]
+
+      switch (category) {
+        case 'health':
+          templates = healthTemplates
+          break
+        case 'achievement':
+          templates = achievementTemplates
+          break
+        case 'social':
+          templates = socialTemplates
+          break
+        default:
+          templates = []
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        templates: templates.map(template => ({
+          id: template,
+          name: getTemplateName(template),
+          description: getTemplateDescription(template),
+          category: getTemplateCategory(template),
+          requiredFields: getTemplateRequiredFields(template)
+        }))
+      }
+    })
+
+  } catch (error) {
+    console.error('获取模板列表失败:', error)
+    return NextResponse.json(
+      { error: '服务器内部错误' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * 获取模板名称
+ */
+function getTemplateName(template: ShareTemplate): string {
+  const names: Record<ShareTemplate, string> = {
+    [ShareTemplate.HEALTH_REPORT]: '健康报告',
+    [ShareTemplate.GOAL_ACHIEVED]: '目标达成',
+    [ShareTemplate.ACHIEVEMENT_UNLOCKED]: '成就解锁',
+    [ShareTemplate.WEIGHT_LOSS]: '减重里程碑',
+    [ShareTemplate.STREAK_CELEBRATION]: '连续打卡庆祝',
+    [ShareTemplate.RECIPE_CARD]: '食谱卡片',
+    [ShareTemplate.PERSONAL_RECORD]: '个人记录',
+    [ShareTemplate.COMMUNITY_POST]: '社区帖子'
+  }
+
+  return names[template] || template
+}
+
+/**
+ * 获取模板描述
+ */
+function getTemplateDescription(template: ShareTemplate): string {
+  const descriptions: Record<ShareTemplate, string> = {
+    [ShareTemplate.HEALTH_REPORT]: '展示个人健康评分和指标',
+    [ShareTemplate.GOAL_ACHIEVED]: '庆祝健康目标达成',
+    [ShareTemplate.ACHIEVEMENT_UNLOCKED]: '展示解锁的成就徽章',
+    [ShareTemplate.WEIGHT_LOSS]: '记录减重里程碑',
+    [ShareTemplate.STREAK_CELEBRATION]: '庆祝连续打卡成就',
+    [ShareTemplate.RECIPE_CARD]: '分享健康食谱',
+    [ShareTemplate.PERSONAL_RECORD]: '展示个人最佳记录',
+    [ShareTemplate.COMMUNITY_POST]: '分享社区帖子内容'
+  }
+
+  return descriptions[template] || ''
+}
+
+/**
+ * 获取模板分类
+ */
+function getTemplateCategory(template: ShareTemplate): string {
+  const categories: Record<ShareTemplate, string> = {
+    [ShareTemplate.HEALTH_REPORT]: 'health',
+    [ShareTemplate.GOAL_ACHIEVED]: 'achievement',
+    [ShareTemplate.ACHIEVEMENT_UNLOCKED]: 'achievement',
+    [ShareTemplate.WEIGHT_LOSS]: 'health',
+    [ShareTemplate.STREAK_CELEBRATION]: 'achievement',
+    [ShareTemplate.RECIPE_CARD]: 'social',
+    [ShareTemplate.PERSONAL_RECORD]: 'health',
+    [ShareTemplate.COMMUNITY_POST]: 'social'
+  }
+
+  return categories[template] || 'other'
+}
+
+/**
+ * 获取模板必需字段
+ */
+function getTemplateRequiredFields(template: ShareTemplate): string[] {
+  const fields: Record<ShareTemplate, string[]> = {
+    [ShareTemplate.HEALTH_REPORT]: ['memberName', 'healthScore'],
+    [ShareTemplate.GOAL_ACHIEVED]: ['memberName', 'goalTitle', 'progress'],
+    [ShareTemplate.ACHIEVEMENT_UNLOCKED]: ['memberName', 'achievementType', 'achievementTitle', 'points'],
+    [ShareTemplate.WEIGHT_LOSS]: ['memberName', 'initialWeight', 'currentWeight'],
+    [ShareTemplate.STREAK_CELEBRATION]: ['memberName', 'streakDays'],
+    [ShareTemplate.RECIPE_CARD]: ['memberName', 'recipeName'],
+    [ShareTemplate.PERSONAL_RECORD]: ['memberName', 'title', 'description'],
+    [ShareTemplate.COMMUNITY_POST]: ['title', 'content']
+  }
+
+  return fields[template] || []
 }

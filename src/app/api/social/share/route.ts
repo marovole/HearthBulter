@@ -1,155 +1,230 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { PrismaClient, ShareContentType, SharePrivacyLevel } from '@prisma/client';
-import { generateShareContent } from '@/lib/services/social/share-generator';
-import { generateShareToken } from '@/lib/services/social/share-link';
-
-const prisma = new PrismaClient();
-
 /**
- * POST /api/social/share
- * 创建分享内容
+ * 社交分享API - 创建分享
  */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/db'
+import { shareContentGenerator } from '@/lib/services/social/share-generator'
+import { shareImageGenerator } from '@/lib/services/social/image-generator'
+import { shareTrackingService } from '@/lib/services/social/share-tracking'
+import { achievementSystem } from '@/lib/services/social/achievement-system'
+import type { ShareContentInput, ShareContentType, SocialPlatform } from '@/types/social-sharing'
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const {
-      contentType,
-      contentId,
-      title,
-      description,
-      customMessage,
-      privacyLevel = 'PUBLIC',
-      allowComment = true,
-      allowLike = true,
-      expiresAt
-    } = body;
-
-    // 验证必要参数
-    if (!contentType || !contentId) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
       return NextResponse.json(
-        { error: '缺少必要参数：contentType 和 contentId' },
-        { status: 400 }
-      );
+        { error: '未授权访问' },
+        { status: 401 }
+      )
     }
 
-    // 验证内容类型
-    if (!Object.values(ShareContentType).includes(contentType)) {
+    const body = await request.json()
+    const validatedData = this.validateShareInput(body)
+
+    // 检查用户权限
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        id: validatedData.memberId,
+        user: {
+          families: {
+            some: {
+              members: {
+                some: {
+                  userId: session.user.id
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+
+    if (!member) {
       return NextResponse.json(
-        { error: '不支持的内容类型' },
-        { status: 400 }
-      );
-    }
-
-    // 获取用户ID（这里需要根据实际的session结构来获取）
-    const memberId = session.user?.id;
-    if (!memberId) {
-      return NextResponse.json({ error: '用户ID不存在' }, { status: 400 });
-    }
-
-    // 验证内容是否存在且属于该用户
-    const hasAccess = await validateContentAccess(memberId, contentType, contentId);
-    if (!hasAccess) {
-      return NextResponse.json({ error: '无权访问该内容' }, { status: 403 });
+        { error: '无权限访问该家庭成员' },
+        { status: 403 }
+      )
     }
 
     // 生成分享内容
-    const shareContent = await generateShareContent({
-      memberId,
-      contentType,
-      contentId,
-      title,
-      description,
-      customMessage,
-      privacyLevel,
-      allowComment,
-      allowLike,
-      expiresAt: expiresAt ? new Date(expiresAt) : undefined
-    });
+    const shareResult = await shareContentGenerator.generateShareContent(validatedData)
 
-    // 生成分享token
-    const shareToken = await generateShareToken();
-
-    // 创建分享记录
-    const sharedContent = await prisma.sharedContent.create({
+    // 保存到数据库
+    const savedContent = await prisma.sharedContent.create({
       data: {
-        memberId,
-        contentType,
-        title: shareContent.title,
-        description: shareContent.description,
-        imageUrl: shareContent.imageUrl,
-        shareToken,
-        shareUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/share/${shareToken}`,
-        privacyLevel,
-        allowComment,
-        allowLike,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
-        metadata: shareContent.metadata
+        memberId: validatedData.memberId,
+        contentType: validatedData.type,
+        title: shareResult.content.title,
+        description: shareResult.content.description,
+        imageUrl: shareResult.imageUrl,
+        targetId: validatedData.targetId,
+        privacyLevel: validatedData.privacyLevel,
+        shareToken: shareResult.shareUrl.split('/').pop()!,
+        shareUrl: shareResult.shareUrl,
+        sharedPlatforms: JSON.stringify(validatedData.platforms),
+        metadata: shareResult.content.metadata
       }
-    });
+    })
+
+    // 检查是否有成就解锁
+    await this.checkForShareAchievements(validatedData.memberId, validatedData.platforms.length)
+
+    // 记录分享事件
+    for (const platform of validatedData.platforms) {
+      await shareTrackingService.trackShareEvent({
+        shareToken: savedContent.shareToken,
+        eventType: 'SHARE',
+        platform
+      })
+    }
 
     return NextResponse.json({
       success: true,
       data: {
-        id: sharedContent.id,
-        shareToken: sharedContent.shareToken,
-        shareUrl: sharedContent.shareUrl,
-        title: sharedContent.title,
-        description: sharedContent.description,
-        imageUrl: sharedContent.imageUrl,
-        expiresAt: sharedContent.expiresAt
+        shareContent: savedContent,
+        shareUrl: shareResult.shareUrl,
+        imageUrl: shareResult.imageUrl,
+        platforms: validatedData.platforms
       },
       message: '分享创建成功'
-    });
+    })
+
   } catch (error) {
-    console.error('创建分享失败:', error);
+    console.error('创建分享失败:', error)
     return NextResponse.json(
-      { error: '创建分享失败' },
+      { error: error instanceof Error ? error.message : '服务器内部错误' },
       { status: 500 }
-    );
+    )
+  }
+
+  /**
+   * 验证分享输入数据
+   */
+  private validateShareInput(data: any): ShareContentInput {
+    const { memberId, type, title, description, imageUrl, targetId, privacyLevel, platforms, customMessage } = data
+
+    if (!memberId || !type || !privacyLevel || !platforms || !Array.isArray(platforms)) {
+      throw new Error('缺少必要参数')
+    }
+
+    const validTypes = Object.values(ShareContentType)
+    if (!validTypes.includes(type)) {
+      throw new Error('无效的分享类型')
+    }
+
+    const validPlatforms = Object.values(SocialPlatform)
+    const invalidPlatforms = platforms.filter(p => !validPlatforms.includes(p))
+    if (invalidPlatforms.length > 0) {
+      throw new Error(`不支持的平台: ${invalidPlatforms.join(', ')}`)
+    }
+
+    return {
+      memberId,
+      type,
+      title: title || '',
+      description,
+      imageUrl,
+      targetId,
+      privacyLevel,
+      platforms,
+      customMessage
+    }
+  }
+
+  /**
+   * 检查分享相关成就
+   */
+  private async checkForShareAchievements(memberId: string, shareCount: number): Promise<void> {
+    try {
+      // 检查社交达人成就
+      const totalShares = await prisma.sharedContent.count({
+        where: { memberId }
+      })
+
+      if (totalShares >= 20) {
+        await achievementSystem.checkAchievements(memberId, 'SHARE_CREATED', {
+          shareCount: totalShares
+        })
+      }
+    } catch (error) {
+      console.error('检查分享成就失败:', error)
+    }
   }
 }
 
 /**
- * GET /api/social/share
- * 获取用户的分享列表
+ * 获取分享列表
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: '未授权访问' },
+        { status: 401 }
+      )
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const contentType = searchParams.get('contentType') as ShareContentType;
-    const status = searchParams.get('status');
-
-    const memberId = session.user?.id;
-    if (!memberId) {
-      return NextResponse.json({ error: '用户ID不存在' }, { status: 400 });
-    }
+    const { searchParams } = new URL(request.url)
+    const memberId = searchParams.get('memberId')
+    const type = searchParams.get('type')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
     // 构建查询条件
-    const where: any = { memberId };
-    if (contentType) where.contentType = contentType;
-    if (status) where.status = status.toUpperCase();
+    let where: any = {
+      member: {
+        family: {
+          members: {
+            some: {
+              userId: session.user.id
+            }
+          }
+        }
+      },
+      status: 'ACTIVE'
+    }
 
-    // 获取分享列表
-    const [shares, total] = await Promise.all([
+    if (memberId) {
+      // 验证用户权限
+      const member = await prisma.familyMember.findFirst({
+        where: {
+          id: memberId,
+          user: {
+            families: {
+              some: {
+                members: {
+                  some: {
+                    userId: session.user.id
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+
+      if (!member) {
+        return NextResponse.json(
+          { error: '无权限访问该家庭成员' },
+          { status: 403 }
+        )
+      }
+
+      where.memberId = memberId
+    }
+
+    if (type) {
+      where.contentType = type
+    }
+
+    const [contents, total] = await Promise.all([
       prisma.sharedContent.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
         include: {
           member: {
             select: {
@@ -158,107 +233,34 @@ export async function GET(request: NextRequest) {
               avatar: true
             }
           }
-        }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit
       }),
       prisma.sharedContent.count({ where })
-    ]);
+    ])
 
     return NextResponse.json({
       success: true,
       data: {
-        shares: shares.map(share => ({
-          id: share.id,
-          contentType: share.contentType,
-          title: share.title,
-          description: share.description,
-          imageUrl: share.imageUrl,
-          shareUrl: share.shareUrl,
-          shareToken: share.shareToken,
-          privacyLevel: share.privacyLevel,
-          status: share.status,
-          viewCount: share.viewCount,
-          likeCount: share.likeCount,
-          commentCount: share.commentCount,
-          shareCount: share.shareCount,
-          clickCount: share.clickCount,
-          conversionCount: share.conversionCount,
-          expiresAt: share.expiresAt,
-          createdAt: share.createdAt,
-          updatedAt: share.updatedAt
-        })),
+        contents,
         pagination: {
           page,
           limit,
           total,
-          totalPages: Math.ceil(total / limit)
+          totalPages: Math.ceil(total / limit),
+          hasNext: page * limit < total,
+          hasPrev: page > 1
         }
       }
-    });
-  } catch (error) {
-    console.error('获取分享列表失败:', error);
-    return NextResponse.json(
-      { error: '获取分享列表失败' },
-      { status: 500 }
-    );
-  }
-}
+    })
 
-/**
- * 验证用户是否有权访问内容
- */
-async function validateContentAccess(
-  memberId: string,
-  contentType: ShareContentType,
-  contentId: string
-): Promise<boolean> {
-  try {
-    switch (contentType) {
-      case 'HEALTH_REPORT':
-        const report = await prisma.healthReport.findFirst({
-          where: { id: contentId, memberId }
-        });
-        return !!report;
-      
-      case 'GOAL_ACHIEVEMENT':
-        const goal = await prisma.healthGoal.findFirst({
-          where: { id: contentId, memberId }
-        });
-        return !!goal;
-      
-      case 'MEAL_LOG':
-        const mealLog = await prisma.mealLog.findFirst({
-          where: { id: contentId, memberId }
-        });
-        return !!mealLog;
-      
-      case 'ACHIEVEMENT':
-        const achievement = await prisma.achievement.findFirst({
-          where: { id: contentId, memberId }
-        });
-        return !!achievement;
-      
-      case 'CHECK_IN_STREAK':
-        const streak = await prisma.trackingStreak.findUnique({
-          where: { memberId }
-        });
-        return !!streak;
-      
-      case 'WEIGHT_MILESTONE':
-        const weightData = await prisma.healthData.findFirst({
-          where: { id: contentId, memberId }
-        });
-        return !!weightData;
-      
-      case 'RECIPE':
-        // 这里需要根据实际的食谱模型来实现
-        // 暂时返回true
-        return true;
-      
-      default:
-        return false;
-    }
   } catch (error) {
-    console.error('验证内容访问权限失败:', error);
-    return false;
+    console.error('获取分享列表失败:', error)
+    return NextResponse.json(
+      { error: '服务器内部错误' },
+      { status: 500 }
+    )
   }
 }

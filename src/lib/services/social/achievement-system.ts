@@ -1,460 +1,505 @@
 /**
  * 成就系统服务
- * 负责成就的触发检测、解锁、奖励发放等
+ * 管理成就触发、解锁和奖励发放
  */
 
-import { PrismaClient, AchievementType, AchievementRarity, FamilyMember } from '@prisma/client';
+import { addDays, isAfter, startOfDay, differenceInDays } from 'date-fns'
+import type { 
+  Achievement, 
+  AchievementType, 
+  AchievementRarity, 
+  FamilyMember,
+  AchievementReward,
+  AchievementCondition
+} from '@prisma/client'
+import { ACHIEVEMENT_TYPE_CONFIGS } from '@/types/social-sharing'
+import { prisma } from '@/lib/db'
 
-const prisma = new PrismaClient();
-
-export interface AchievementRule {
-  type: AchievementType;
-  title: string;
-  description: string;
-  rarity: AchievementRarity;
-  points: number;
-  targetValue: number;
-  checkCondition: (member: FamilyMember, data: any) => boolean;
-}
-
-export interface AchievementProgress {
-  achievementId: string;
-  currentValue: number;
-  targetValue: number;
-  progress: number;
-  isUnlocked: boolean;
+/**
+ * 成就触发器
+ */
+export interface AchievementTrigger {
+  type: AchievementType
+  name: string
+  description: string
+  icon: string
+  color: string
+  rarity: AchievementRarity
+  points: number
+  conditions: AchievementCondition[]
+  checkFunction: (memberId: string, data?: any) => Promise<boolean>
 }
 
 /**
- * 成就规则定义
+ * 成就系统类
  */
-const ACHIEVEMENT_RULES: AchievementRule[] = [
-  // 连续打卡成就
-  {
-    type: 'CHECK_IN_STREAK',
-    title: '初学者',
-    description: '连续打卡3天',
-    rarity: 'BRONZE',
-    points: 10,
-    targetValue: 3,
-    checkCondition: (member, data) => data.currentStreak >= 3
-  },
-  {
-    type: 'CHECK_IN_STREAK',
-    title: '坚持者',
-    description: '连续打卡7天',
-    rarity: 'BRONZE',
-    points: 25,
-    targetValue: 7,
-    checkCondition: (member, data) => data.currentStreak >= 7
-  },
-  {
-    type: 'CHECK_IN_STREAK',
-    title: '打卡达人',
-    description: '连续打卡30天',
-    rarity: 'SILVER',
-    points: 100,
-    targetValue: 30,
-    checkCondition: (member, data) => data.currentStreak >= 30
-  },
-  {
-    type: 'CHECK_IN_STREAK',
-    title: '打卡大师',
-    description: '连续打卡100天',
-    rarity: 'GOLD',
-    points: 500,
-    targetValue: 100,
-    checkCondition: (member, data) => data.currentStreak >= 100
-  },
-  
-  // 减重成就
-  {
-    type: 'WEIGHT_LOSS',
-    title: '减重新手',
-    description: '减重1kg',
-    rarity: 'BRONZE',
-    points: 15,
-    targetValue: 1,
-    checkCondition: (member, data) => data.weightLoss >= 1
-  },
-  {
-    type: 'WEIGHT_LOSS',
-    title: '减重达人',
-    description: '减重5kg',
-    rarity: 'SILVER',
-    points: 75,
-    targetValue: 5,
-    checkCondition: (member, data) => data.weightLoss >= 5
-  },
-  {
-    type: 'WEIGHT_LOSS',
-    title: '减重大师',
-    description: '减重10kg',
-    rarity: 'GOLD',
-    points: 200,
-    targetValue: 10,
-    checkCondition: (member, data) => data.weightLoss >= 10
-  },
-  
-  // 营养目标成就
-  {
-    type: 'NUTRITION_GOAL',
-    title: '营养新手',
-    description: '连续7天达成营养目标',
-    rarity: 'BRONZE',
-    points: 30,
-    targetValue: 7,
-    checkCondition: (member, data) => data.consecutiveDays >= 7
-  },
-  {
-    type: 'NUTRITION_GOAL',
-    title: '营养专家',
-    description: '连续30天达成营养目标',
-    rarity: 'SILVER',
-    points: 150,
-    targetValue: 30,
-    checkCondition: (member, data) => data.consecutiveDays >= 30
-  },
-  
-  // 运动目标成就
-  {
-    type: 'EXERCISE_TARGET',
-    title: '运动新手',
-    description: '单周运动超过150分钟',
-    rarity: 'BRONZE',
-    points: 20,
-    targetValue: 150,
-    checkCondition: (member, data) => data.weeklyMinutes >= 150
-  },
-  {
-    type: 'EXERCISE_TARGET',
-    title: '运动达人',
-    description: '单周运动超过300分钟',
-    rarity: 'SILVER',
-    points: 60,
-    targetValue: 300,
-    checkCondition: (member, data) => data.weeklyMinutes >= 300
-  },
-  
-  // 健康里程碑成就
-  {
-    type: 'HEALTH_MILESTONE',
-    title: '健康先锋',
-    description: '健康评分达到80分',
-    rarity: 'SILVER',
-    points: 80,
-    targetValue: 80,
-    checkCondition: (member, data) => data.healthScore >= 80
-  },
-  {
-    type: 'HEALTH_MILESTONE',
-    title: '健康大师',
-    description: '健康评分达到90分',
-    rarity: 'GOLD',
-    points: 200,
-    targetValue: 90,
-    checkCondition: (member, data) => data.healthScore >= 90
-  },
-  {
-    type: 'HEALTH_MILESTONE',
-    title: '健康传奇',
-    description: '健康评分达到95分',
-    rarity: 'PLATINUM',
-    points: 500,
-    targetValue: 95,
-    checkCondition: (member, data) => data.healthScore >= 95
-  },
-  
-  // 社区贡献成就
-  {
-    type: 'COMMUNITY_CONTRIBUTION',
-    title: '社区新人',
-    description: '发布第一篇社区帖子',
-    rarity: 'BRONZE',
-    points: 10,
-    targetValue: 1,
-    checkCondition: (member, data) => data.postCount >= 1
-  },
-  {
-    type: 'COMMUNITY_CONTRIBUTION',
-    title: '社区活跃者',
-    description: '发布10篇社区帖子',
-    rarity: 'SILVER',
-    points: 50,
-    targetValue: 10,
-    checkCondition: (member, data) => data.postCount >= 10
-  },
-  {
-    type: 'COMMUNITY_CONTRIBUTION',
-    title: '社区领袖',
-    description: '发布50篇社区帖子',
-    rarity: 'GOLD',
-    points: 200,
-    targetValue: 50,
-    checkCondition: (member, data) => data.postCount >= 50
-  }
-];
+export class AchievementSystem {
+  private static instance: AchievementSystem
+  private achievementTriggers: Map<AchievementType, AchievementTrigger> = new Map()
 
-/**
- * 检查并解锁成就
- */
-export async function checkAndUnlockAchievements(
-  memberId: string,
-  triggerType: AchievementType,
-  triggerData: any
-): Promise<Achievement[]> {
-  const unlockedAchievements: Achievement[] = [];
-  
-  // 获取成员信息
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId }
-  });
-  
-  if (!member) {
-    throw new Error('成员不存在');
-  }
-  
-  // 获取该成员当前的所有成就
-  const existingAchievements = await prisma.achievement.findMany({
-    where: { memberId }
-  });
-  
-  // 筛选出相关类型的规则
-  const relevantRules = ACHIEVEMENT_RULES.filter(rule => rule.type === triggerType);
-  
-  for (const rule of relevantRules) {
-    // 检查是否已经有这个成就
-    const existingAchievement = existingAchievements.find(
-      ach => ach.type === rule.type && ach.title === rule.title
-    );
-    
-    if (existingAchievement && existingAchievement.isUnlocked) {
-      continue; // 已经解锁，跳过
+  static getInstance(): AchievementSystem {
+    if (!AchievementSystem.instance) {
+      AchievementSystem.instance = new AchievementSystem()
+      AchievementSystem.instance.initializeTriggers()
     }
-    
-    // 检查触发条件
-    if (rule.checkCondition(member, triggerData)) {
-      // 解锁成就
-      const achievement = await unlockAchievement(memberId, rule);
-      if (achievement) {
-        unlockedAchievements.push(achievement);
+    return AchievementSystem.instance
+  }
+
+  /**
+   * 初始化成就触发器
+   */
+  private initializeTriggers(): void {
+    const triggers: AchievementTrigger[] = [
+      // 首次登录
+      {
+        type: AchievementType.FIRST_LOGIN,
+        name: '初次体验',
+        description: '完成首次登录，开启健康之旅',
+        icon: '🎯',
+        color: '#3b82f6',
+        rarity: 'COMMON',
+        points: 10,
+        conditions: [
+          { metric: 'loginCount', operator: 'gte', value: 1 }
+        ],
+        checkFunction: this.checkFirstLogin.bind(this)
+      },
+      
+      // 连续打卡7天
+      {
+        type: AchievementType.SEVEN_DAY_STREAK,
+        name: '坚持一周',
+        description: '连续7天记录健康数据',
+        icon: '🔥',
+        color: '#ef4444',
+        rarity: 'UNCOMMON',
+        points: 50,
+        conditions: [
+          { metric: 'checkinStreak', operator: 'gte', value: 7 }
+        ],
+        checkFunction: this.checkSevenDayStreak.bind(this)
+      },
+      
+      // 月度健康达人
+      {
+        type: AchievementType.MONTHLY_CHAMPION,
+        name: '月度健康达人',
+        description: '一个月内健康评分达到90分以上',
+        icon: '👑',
+        color: '#f59e0b',
+        rarity: 'RARE',
+        points: 200,
+        conditions: [
+          { metric: 'monthlyHealthScore', operator: 'gte', value: 90 }
+        ],
+        checkFunction: this.checkMonthlyChampion.bind(this)
+      },
+      
+      // 减重目标达成
+      {
+        type: AchievementType.WEIGHT_GOAL_ACHIEVED,
+        name: '减重成功',
+        description: '成功达到设定的减重目标',
+        icon: '🎯',
+        color: '#10b981',
+        rarity: 'UNCOMMON',
+        points: 100,
+        conditions: [
+          { metric: 'weightGoalAchieved', operator: 'eq', value: 1 }
+        ],
+        checkFunction: this.checkWeightGoalAchieved.bind(this)
+      },
+      
+      // 食谱达人
+      {
+        type: AchievementType.RECIPE_MASTER,
+        name: '美食大师',
+        description: '创建10个以上健康食谱',
+        icon: '👨‍🍳',
+        color: '#8b5cf6',
+        rarity: 'RARE',
+        points: 150,
+        conditions: [
+          { metric: 'recipeCount', operator: 'gte', value: 10 }
+        ],
+        checkFunction: this.checkRecipeMaster.bind(this)
+      },
+      
+      // 社交达人
+      {
+        type: AchievementType.SOCIAL_BUTTERFLY,
+        name: '社交达人',
+        description: '分享健康内容超过20次',
+        icon: '🦋',
+        color: '#ec4899',
+        rarity: 'EPIC',
+        points: 300,
+        conditions: [
+          { metric: 'shareCount', operator: 'gte', value: 20 }
+        ],
+        checkFunction: this.checkSocialButterfly.bind(this)
+      },
+      
+      // 完美一周
+      {
+        type: AchievementType.PERFECT_WEEK,
+        name: '完美一周',
+        description: '一周内所有健康指标达标',
+        icon: '⭐',
+        color: '#22c55e',
+        rarity: 'RARE',
+        points: 180,
+        conditions: [
+          { metric: 'weekPerfectScore', operator: 'eq', value: 1 }
+        ],
+        checkFunction: this.checkPerfectWeek.bind(this)
+      },
+      
+      // 早起达人
+      {
+        type: AchievementType.EARLY_BIRD,
+        name: '早起达人',
+        description: '连续30天早上7点前记录早餐',
+        icon: '🐦',
+        color: '#06b6d4',
+        rarity: 'UNCOMMON',
+        points: 80,
+        conditions: [
+          { metric: 'earlyBreakfastStreak', operator: 'gte', value: 30 }
+        ],
+        checkFunction: this.checkEarlyBird.bind(this)
+      },
+      
+      // 卡路里管理大师
+      {
+        type: AchievementType.CALORIE_CHAMPION,
+        name: '卡路里管理大师',
+        description: '连续30天每日卡路里摄入在目标范围内',
+        icon: '🏃',
+        color: '#84cc16',
+        rarity: 'EPIC',
+        points: 250,
+        conditions: [
+          { metric: 'calorieAccuracyDays', operator: 'gte', value: 30 }
+        ],
+        checkFunction: this.checkCalorieChampion.bind(this)
+      },
+      
+      // 邀请达人
+      {
+        type: AchievementType.INVITE_MASTER,
+        name: '邀请达人',
+        description: '成功邀请5位好友注册',
+        icon: '👥',
+        color: '#f97316',
+        rarity: 'RARE',
+        points: 200,
+        conditions: [
+          { metric: 'inviteCount', operator: 'gte', value: 5 }
+        ],
+        checkFunction: this.checkInviteMaster.bind(this)
       }
-    } else {
-      // 更新进度
-      await updateAchievementProgress(memberId, rule, triggerData);
-    }
-  }
-  
-  return unlockedAchievements;
-}
-
-/**
- * 解锁成就
- */
-async function unlockAchievement(memberId: string, rule: AchievementRule): Promise<Achievement | null> {
-  try {
-    // 查找或创建成就记录
-    const achievement = await prisma.achievement.upsert({
-      where: {
-        memberId_type_level: {
-          memberId,
-          type: rule.type,
-          level: 1 // 简化处理，所有成就都是1级
-        }
-      },
-      update: {
-        title: rule.title,
-        description: rule.description,
-        rarity: rule.rarity,
-        points: rule.points,
-        targetValue: rule.targetValue,
-        currentValue: rule.targetValue,
-        progress: 100,
-        isUnlocked: true,
-        unlockedAt: new Date()
-      },
-      create: {
-        memberId,
-        type: rule.type,
-        title: rule.title,
-        description: rule.description,
-        rarity: rule.rarity,
-        level: 1,
-        points: rule.points,
-        targetValue: rule.targetValue,
-        currentValue: rule.targetValue,
-        progress: 100,
-        isUnlocked: true,
-        unlockedAt: new Date()
-      }
-    });
-    
-    // 发放奖励
-    await grantAchievementReward(memberId, achievement);
-    
-    return achievement;
-  } catch (error) {
-    console.error('解锁成就失败:', error);
-    return null;
-  }
-}
-
-/**
- * 更新成就进度
- */
-async function updateAchievementProgress(memberId: string, rule: AchievementRule, triggerData: any): Promise<void> {
-  try {
-    // 计算当前进度
-    const currentValue = calculateProgressValue(rule.type, triggerData);
-    const progress = Math.min((currentValue / rule.targetValue) * 100, 99.9);
-    
-    // 查找或创建成就记录
-    await prisma.achievement.upsert({
-      where: {
-        memberId_type_level: {
-          memberId,
-          type: rule.type,
-          level: 1
-        }
-      },
-      update: {
-        title: rule.title,
-        description: rule.description,
-        rarity: rule.rarity,
-        points: rule.points,
-        targetValue: rule.targetValue,
-        currentValue,
-        progress
-      },
-      create: {
-        memberId,
-        type: rule.type,
-        title: rule.title,
-        description: rule.description,
-        rarity: rule.rarity,
-        level: 1,
-        points: rule.points,
-        targetValue: rule.targetValue,
-        currentValue,
-        progress,
-        isUnlocked: false
-      }
-    });
-  } catch (error) {
-    console.error('更新成就进度失败:', error);
-  }
-}
-
-/**
- * 计算进度值
- */
-function calculateProgressValue(type: AchievementType, data: any): number {
-  switch (type) {
-    case 'CHECK_IN_STREAK':
-      return data.currentStreak || 0;
-    case 'WEIGHT_LOSS':
-      return data.weightLoss || 0;
-    case 'NUTRITION_GOAL':
-      return data.consecutiveDays || 0;
-    case 'EXERCISE_TARGET':
-      return data.weeklyMinutes || 0;
-    case 'HEALTH_MILESTONE':
-      return data.healthScore || 0;
-    case 'COMMUNITY_CONTRIBUTION':
-      return data.postCount || 0;
-    default:
-      return 0;
-  }
-}
-
-/**
- * 发放成就奖励
- */
-async function grantAchievementReward(memberId: string, achievement: Achievement): Promise<void> {
-  // 这里可以实现各种奖励机制
-  // 例如：增加积分、发放优惠券、延长VIP等
-  
-  console.log(`发放成就奖励: 成就ID ${achievement.id}, 积分 ${achievement.points}`);
-  
-  // 示例：可以在这里调用积分系统
-  // await addPointsToMember(memberId, achievement.points);
-}
-
-/**
- * 获取成员的所有成就
- */
-export async function getMemberAchievements(memberId: string): Promise<Achievement[]> {
-  return prisma.achievement.findMany({
-    where: { memberId },
-    orderBy: [
-      { isUnlocked: 'desc' },
-      { unlockedAt: 'desc' },
-      { createdAt: 'desc' }
     ]
-  });
-}
 
-/**
- * 获取成就进度
- */
-export async function getAchievementProgress(memberId: string): Promise<AchievementProgress[]> {
-  const achievements = await prisma.achievement.findMany({
-    where: { memberId, isUnlocked: false }
-  });
-  
-  return achievements.map(ach => ({
-    achievementId: ach.id,
-    currentValue: ach.currentValue || 0,
-    targetValue: ach.targetValue || 0,
-    progress: ach.progress,
-    isUnlocked: ach.isUnlocked
-  }));
-}
+    triggers.forEach(trigger => {
+      this.achievementTriggers.set(trigger.type, trigger)
+    })
+  }
 
-/**
- * 分享成就
- */
-export async function shareAchievement(achievementId: string): Promise<boolean> {
-  try {
-    await prisma.achievement.update({
-      where: { id: achievementId },
-      data: {
-        isShared: true,
-        sharedAt: new Date()
+  /**
+   * 检查用户成就
+   */
+  async checkAchievements(memberId: string, eventType: string, data?: any): Promise<Achievement[]> {
+    const unlockedAchievements: Achievement[] = []
+
+    // 获取用户已解锁的成就
+    const existingAchievements = await prisma.achievement.findMany({
+      where: { memberId },
+      select: { type: true }
+    })
+    const unlockedTypes = new Set(existingAchievements.map(a => a.type))
+
+    // 检查所有成就触发器
+    for (const [achievementType, trigger] of this.achievementTriggers.entries()) {
+      // 跳过已解锁的成就
+      if (unlockedTypes.has(achievementType)) {
+        continue
       }
-    });
-    return true;
-  } catch (error) {
-    console.error('分享成就失败:', error);
-    return false;
+
+      try {
+        const isUnlocked = await trigger.checkFunction(memberId, data)
+        if (isUnlocked) {
+          const achievement = await this.unlockAchievement(memberId, trigger, eventType, data)
+          unlockedAchievements.push(achievement)
+        }
+      } catch (error) {
+        console.error(`检查成就 ${achievementType} 时出错:`, error)
+      }
+    }
+
+    return unlockedAchievements
+  }
+
+  /**
+   * 解锁成就
+   */
+  async unlockAchievement(
+    memberId: string, 
+    trigger: AchievementTrigger, 
+    eventType: string, 
+    data?: any
+  ): Promise<Achievement> {
+    const member = await prisma.familyMember.findUnique({
+      where: { id: memberId },
+      select: { name: true }
+    })
+
+    if (!member) {
+      throw new Error('用户未找到')
+    }
+
+    // 创建成就记录
+    const achievement = await prisma.achievement.create({
+      data: {
+        memberId,
+        type: trigger.type,
+        name: trigger.name,
+        description: trigger.description,
+        icon: trigger.icon,
+        color: trigger.color,
+        rarity: trigger.rarity,
+        points: trigger.points,
+        unlockedAt: new Date(),
+        unlockedVia: eventType as any
+      }
+    })
+
+    // 发放奖励
+    await this.grantReward(memberId, {
+      type: 'points',
+      value: trigger.points,
+      description: `成就"${trigger.name}"奖励`
+    })
+
+    // 发送通知
+    await this.sendAchievementNotification(memberId, achievement, member.name)
+
+    return achievement
+  }
+
+  /**
+   * 发放成就奖励
+   */
+  private async grantReward(memberId: string, reward: AchievementReward): Promise<void> {
+    switch (reward.type) {
+      case 'points':
+        // 这里可以集成到积分系统
+        console.log(`用户${memberId}获得${reward.value}积分`)
+        break
+      
+      case 'vip_days':
+        // 这里可以集成到VIP系统
+        console.log(`用户${memberId}获得${reward.value}天VIP`)
+        break
+      
+      case 'title':
+        // 这里可以集成到称号系统
+        console.log(`用户${memberId}获得称号"${reward.value}"`)
+        break
+      
+      default:
+        console.log(`未知奖励类型: ${reward.type}`)
+    }
+  }
+
+  /**
+   * 发送成就通知
+   */
+  private async sendAchievementNotification(memberId: string, achievement: Achievement, memberName: string): Promise<void> {
+    // 这里可以集成到通知系统
+    console.log(`用户${memberName}(${memberId})解锁成就: ${achievement.name}`)
+    
+    // 可以发送邮件、推送等
+    // await notificationService.send({
+    //   userId: memberId,
+    //   type: 'ACHIEVEMENT_UNLOCKED',
+    //   title: '🎉 成就解锁！',
+    //   content: `恭喜您解锁了"${achievement.name}"成就，获得${achievement.points}积分！`,
+    //   data: { achievement }
+    // })
+  }
+
+  /**
+   * 获取用户成就列表
+   */
+  async getMemberAchievements(memberId: string): Promise<Achievement[]> {
+    return await prisma.achievement.findMany({
+      where: { memberId },
+      orderBy: [
+        { rarity: 'desc' },
+        { unlockedAt: 'desc' }
+      ]
+    })
+  }
+
+  /**
+   * 获取成就统计
+   */
+  async getAchievementStats(memberId: string): Promise<any> {
+    const achievements = await prisma.achievement.findMany({
+      where: { memberId }
+    })
+
+    const stats = {
+      total: achievements.length,
+      totalPoints: achievements.reduce((sum, a) => sum + a.points, 0),
+      byRarity: {
+        COMMON: 0,
+        UNCOMMON: 0,
+        RARE: 0,
+        EPIC: 0,
+        LEGENDARY: 0
+      },
+      byType: {} as Record<AchievementType, number>
+    }
+
+    achievements.forEach(achievement => {
+      stats.byRarity[achievement.rarity]++
+      stats.byType[achievement.type] = (stats.byType[achievement.type] || 0) + 1
+    })
+
+    return stats
+  }
+
+  // 成就检查函数
+  private async checkFirstLogin(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.loginCount) return false
+    return data.loginCount === 1
+  }
+
+  private async checkSevenDayStreak(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.checkinStreak) return false
+    return data.checkinStreak >= 7
+  }
+
+  private async checkMonthlyChampion(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.monthlyHealthScore) return false
+    return data.monthlyHealthScore >= 90
+  }
+
+  private async checkWeightGoalAchieved(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.weightGoalAchieved) return false
+    return data.weightGoalAchieved === true
+  }
+
+  private async checkRecipeMaster(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.recipeCount) return false
+    return data.recipeCount >= 10
+  }
+
+  private async checkSocialButterfly(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.shareCount) return false
+    return data.shareCount >= 20
+  }
+
+  private async checkPerfectWeek(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.weekPerfectScore) return false
+    return data.weekPerfectScore === true
+  }
+
+  private async checkEarlyBird(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.earlyBreakfastStreak) return false
+    return data.earlyBreakfastStreak >= 30
+  }
+
+  private async checkCalorieChampion(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.calorieAccuracyDays) return false
+    return data.calorieAccuracyDays >= 30
+  }
+
+  private async checkInviteMaster(memberId: string, data?: any): Promise<boolean> {
+    if (!data?.inviteCount) return false
+    return data.inviteCount >= 5
+  }
+
+  /**
+   * 计算连续打卡天数
+   */
+  async calculateCheckinStreak(memberId: string): Promise<number> {
+    const today = startOfDay(new Date())
+    const healthData = await prisma.healthData.findMany({
+      where: { 
+        memberId,
+        measuredAt: {
+          gte: subDays(today, 100) // 查询最近100天的数据
+        }
+      },
+      orderBy: { measuredAt: 'desc' }
+    })
+
+    if (healthData.length === 0) return 0
+
+    const dates = new Set(
+      healthData.map(d => startOfDay(new Date(d.measuredAt)).toISOString())
+    )
+
+    let streak = 0
+    let currentDate = today
+
+    while (dates.has(currentDate.toISOString())) {
+      streak++
+      currentDate = subDays(currentDate, 1)
+    }
+
+    return streak
+  }
+
+  /**
+   * 触发事件检查
+   */
+  async triggerEvent(memberId: string, eventType: string, data?: any): Promise<Achievement[]> {
+    return this.checkAchievements(memberId, eventType, data)
+  }
+
+  /**
+   * 获取可用成就列表
+   */
+  getAvailableAchievements(): AchievementTrigger[] {
+    return Array.from(this.achievementTriggers.values())
+  }
+
+  /**
+   * 获取成就配置
+   */
+  getAchievementConfig(type: AchievementType): AchievementTrigger | undefined {
+    return this.achievementTriggers.get(type)
   }
 }
 
-/**
- * 获取成就统计
- */
-export async function getAchievementStats(memberId: string): Promise<{
-  totalAchievements: number;
-  unlockedAchievements: number;
-  totalPoints: number;
-  rarityDistribution: Record<AchievementRarity, number>;
-}> {
-  const achievements = await prisma.achievement.findMany({
-    where: { memberId }
-  });
-  
-  const unlocked = achievements.filter(ach => ach.isUnlocked);
-  const totalPoints = unlocked.reduce((sum, ach) => sum + ach.points, 0);
-  
-  const rarityDistribution = unlocked.reduce((acc, ach) => {
-    acc[ach.rarity] = (acc[ach.rarity] || 0) + 1;
-    return acc;
-  }, {} as Record<AchievementRarity, number>);
-  
-  return {
-    totalAchievements: achievements.length,
-    unlockedAchievements: unlocked.length,
-    totalPoints,
-    rarityDistribution
-  };
+// 导出单例实例
+export const achievementSystem = AchievementSystem.getInstance()
+
+// 导出工具函数
+export async function checkMemberAchievements(memberId: string, eventType: string, data?: any): Promise<Achievement[]> {
+  const system = AchievementSystem.getInstance()
+  return system.checkAchievements(memberId, eventType, data)
+}
+
+export async function unlockMemberAchievement(memberId: string, type: AchievementType, eventType: string): Promise<Achievement> {
+  const system = AchievementSystem.getInstance()
+  const trigger = system.getAchievementConfig(type)
+  if (!trigger) {
+    throw new Error(`成就类型 ${type} 未配置`)
+  }
+  return system.unlockAchievement(memberId, trigger, eventType)
+}
+
+export async function getMemberAchievementList(memberId: string): Promise<Achievement[]> {
+  const system = AchievementSystem.getInstance()
+  return system.getMemberAchievements(memberId)
+}
+
+export async function getMemberAchievementStats(memberId: string): Promise<any> {
+  const system = AchievementSystem.getInstance()
+  return system.getAchievementStats(memberId)
 }

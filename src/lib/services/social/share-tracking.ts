@@ -1,515 +1,703 @@
 /**
  * 分享追踪服务
- * 负责追踪分享链接的点击、浏览、转化等行为
+ * 记录分享链接的点击、转化等数据
  */
 
-import { ShareTrackingEventType, Prisma } from '@prisma/client';
-import { prisma } from '@/lib/db';
+import { format } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
+import type {
+  SharedContent,
+  ShareTracking,
+  ShareTrackingEventType,
+  FamilyMember
+} from '@prisma/client'
+import { prisma } from '@/lib/db'
 
+/**
+ * 追踪事件接口
+ */
 export interface ShareTrackingEvent {
-  id: string;
-  shareToken: string;
-  eventType: ShareTrackingEventType;
-  platform?: string;
-  userAgent?: string;
-  ipAddress?: string;
-  referrer?: string;
-  occurredAt: Date;
-  metadata?: Record<string, any>;
-}
-
-export interface ShareAnalytics {
-  shareToken: string;
-  totalViews: number;
-  totalClicks: number;
-  totalShares: number;
-  totalConversions: number;
-  totalDownloads: number;
-  uniqueViewers: number;
-  conversionRate: number;
-  topPlatforms: Array<{
-    platform: string;
-    count: number;
-    percentage: number;
-  }>;
-  hourlyStats: Array<{
-    hour: number;
-    views: number;
-    clicks: number;
-  }>;
-  dailyStats: Array<{
-    date: string;
-    views: number;
-    clicks: number;
-    shares: number;
-  }>;
+  shareToken: string
+  eventType: ShareTrackingEventType
+  platform?: string
+  userAgent?: string
+  ipAddress?: string
+  referrer?: string
+  metadata?: Record<string, any>
 }
 
 /**
- * 记录分享追踪事件
+ * 分享统计接口
  */
-export async function trackShareEvent(
-  shareToken: string,
-  eventType: ShareTrackingEventType,
-  data: {
-    platform?: string;
-    userAgent?: string;
-    ipAddress?: string;
-    referrer?: string;
-    metadata?: Record<string, any>;
-  } = {}
-): Promise<boolean> {
-  try {
-    // 验证分享是否存在
-    const share = await prisma.sharedContent.findUnique({
-      where: { shareToken }
-    });
+export interface ShareStatistics {
+  shareToken: string
+  totalShares: number
+  totalViews: number
+  totalClicks: number
+  totalLikes: number
+  totalComments: number
+  totalDownloads: number
+  totalConversions: number
+  conversionRate: number
+  events: ShareTrackingEvent[]
+  lastUpdated: Date
+}
 
-    if (!share) {
-      console.warn('分享不存在:', shareToken);
-      return false;
+/**
+ * 追踪分析接口
+ */
+export interface ShareAnalytics {
+  period: string
+  totalShares: number
+  totalViews: number
+  totalClicks: number
+  totalConversions: number
+  conversionRate: number
+  topPerformingContent: Array<{
+    shareToken: string
+    title: string
+    views: number
+    clicks: number
+    conversions: number
+    conversionRate: number
+  }>
+  platformBreakdown: Record<string, {
+    shares: number
+    clicks: number
+    conversions: number
+  }>
+  dailyTrends: Array<{
+    date: string
+    shares: number
+    views: number
+    clicks: number
+    conversions: number
+  }>
+}
+
+/**
+ * 分享追踪服务类
+ */
+export class ShareTrackingService {
+  private static instance: ShareTrackingService
+
+  static getInstance(): ShareTrackingService {
+    if (!ShareTrackingService.instance) {
+      ShareTrackingService.instance = new ShareTrackingService()
+    }
+    return ShareTrackingService.instance
+  }
+
+  /**
+   * 记录分享事件
+   */
+  async trackShareEvent(event: ShareTrackingEvent): Promise<ShareTracking> {
+    // 检查分享内容是否存在
+    const shareContent = await prisma.sharedContent.findUnique({
+      where: { shareToken: event.shareToken }
+    })
+
+    if (!shareContent) {
+      throw new Error('分享内容不存在')
     }
 
-    // 记录追踪事件
-    await prisma.shareTracking.create({
+    // 检查是否过期
+    if (shareContent.expiresAt && shareContent.expiresAt < new Date()) {
+      throw new Error('分享链接已过期')
+    }
+
+    // 创建追踪记录
+    const tracking = await prisma.shareTracking.create({
       data: {
-        shareToken,
-        eventType,
-        platform: data.platform,
-        userAgent: data.userAgent,
-        ipAddress: data.ipAddress,
-        referrer: data.referrer,
-        metadata: data.metadata || {}
+        shareToken: event.shareToken,
+        eventType: event.eventType,
+        platform: event.platform,
+        userAgent: event.userAgent,
+        ipAddress: event.ipAddress,
+        referrer: event.referrer,
+        metadata: event.metadata || {},
+        createdAt: new Date()
       }
-    });
+    })
 
-    // 更新分享统计
-    await updateShareStats(shareToken, eventType);
+    // 更新分享内容统计
+    await this.updateShareStatistics(event.shareToken, event.eventType)
 
-    return true;
-  } catch (error) {
-    console.error('记录分享追踪事件失败:', error);
-    return false;
+    return tracking
   }
-}
 
-/**
- * 更新分享统计
- */
-async function updateShareStats(shareToken: string, eventType: ShareTrackingEventType): Promise<void> {
-  try {
-    const updateData: any = {};
+  /**
+   * 批量记录分享事件
+   */
+  async trackShareEvents(events: ShareTrackingEvent[]): Promise<ShareTracking[]> {
+    const results: ShareTracking[] = []
+
+    for (const event of events) {
+      try {
+        const tracking = await this.trackShareEvent(event)
+        results.push(tracking)
+      } catch (error) {
+        console.error(`记录分享事件失败:`, error)
+        // 继续处理其他事件
+      }
+    }
+
+    return results
+  }
+
+  /**
+   * 获取分享统计
+   */
+  async getShareStatistics(shareToken: string): Promise<ShareStatistics> {
+    const shareContent = await prisma.sharedContent.findUnique({
+      where: { shareToken },
+      select: {
+        title: true,
+        viewCount: true,
+        likeCount: true,
+        commentCount: true,
+        shareCount: true,
+        clickCount: true,
+        downloadCount: true,
+        conversionCount: true,
+        updatedAt: true
+      }
+    })
+
+    if (!shareContent) {
+      throw new Error('分享内容不存在')
+    }
+
+    const events = await prisma.shareTracking.findMany({
+      where: { shareToken },
+      orderBy: { createdAt: 'desc' },
+      take: 1000 // 最近1000条事件
+    })
+
+    const conversionRate = shareContent.clickCount > 0 
+      ? (shareContent.conversionCount / shareContent.clickCount) * 100 
+      : 0
+
+    return {
+      shareToken,
+      totalShares: shareContent.shareCount,
+      totalViews: shareContent.viewCount,
+      totalClicks: shareContent.clickCount,
+      totalLikes: shareContent.likeCount,
+      totalComments: shareContent.commentCount,
+      totalDownloads: shareContent.downloadCount,
+      totalConversions: shareContent.conversionCount,
+      conversionRate: Math.round(conversionRate * 100) / 100, // 保留两位小数
+      events: events.map(event => ({
+        shareToken: event.shareToken,
+        eventType: event.eventType,
+        platform: event.platform || undefined,
+        userAgent: event.userAgent || undefined,
+        ipAddress: event.ipAddress || undefined,
+        referrer: event.referrer || undefined,
+        metadata: event.metadata as Record<string, any>
+      })),
+      lastUpdated: shareContent.updatedAt
+    }
+  }
+
+  /**
+   * 获取用户分享分析
+   */
+  async getUserShareAnalytics(
+    memberId: string,
+    period: '7d' | '30d' | '90d' | '1y' = '30d'
+  ): Promise<ShareAnalytics> {
+    const { startDate, periodLabel } = this.getPeriodDates(period)
+    const endDate = new Date()
+
+    // 获取用户的分享内容
+    const sharedContents = await prisma.sharedContent.findMany({
+      where: {
+        memberId,
+        createdAt: {
+          gte: startDate
+        }
+      },
+      select: {
+        shareToken: true,
+        title: true,
+        viewCount: true,
+        clickCount: true,
+        conversionCount: true,
+        shareCount: true,
+        createdAt: true
+      }
+    })
+
+    const shareTokens = sharedContents.map(content => content.shareToken)
+
+    // 获取分享事件
+    const events = await prisma.shareTracking.findMany({
+      where: {
+        shareToken: {
+          in: shareTokens
+        },
+        createdAt: {
+          gte: startDate
+        }
+      }
+    })
+
+    // 计算总体统计
+    const totalShares = sharedContents.reduce((sum, content) => sum + content.shareCount, 0)
+    const totalViews = sharedContents.reduce((sum, content) => sum + content.viewCount, 0)
+    const totalClicks = sharedContents.reduce((sum, content) => sum + content.clickCount, 0)
+    const totalConversions = sharedContents.reduce((sum, content) => sum + content.conversionCount, 0)
+    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0
+
+    // 计算最佳表现内容
+    const topPerformingContent = sharedContents
+      .map(content => ({
+        shareToken: content.shareToken,
+        title: content.title,
+        views: content.viewCount,
+        clicks: content.clickCount,
+        conversions: content.conversionCount,
+        conversionRate: content.clicks > 0 ? (content.conversionsCount / content.clicks) * 100 : 0
+      }))
+      .sort((a, b) => b.conversions - a.conversions)
+      .slice(0, 10)
+
+    // 平台分析
+    const platformBreakdown: Record<string, { shares: number; clicks: number; conversions: number }> = {}
+    events.forEach(event => {
+      const platform = event.platform || 'unknown'
+      if (!platformBreakdown[platform]) {
+        platformBreakdown[platform] = { shares: 0, clicks: 0, conversions: 0 }
+      }
+
+      if (event.eventType === 'SHARE') {
+        platformBreakdown[platform].shares++
+      } else if (event.eventType === 'CLICK') {
+        platformBreakdown[platform].clicks++
+      } else if (event.eventType === 'CONVERSION') {
+        platformBreakdown[platform].conversions++
+      }
+    })
+
+    // 每日趋势
+    const dailyTrends = await this.calculateDailyTrends(shareTokens, startDate, endDate)
+
+    return {
+      period: periodLabel,
+      totalShares,
+      totalViews,
+      totalClicks,
+      totalConversions,
+      conversionRate: Math.round(conversionRate * 100) / 100,
+      topPerformingContent,
+      platformBreakdown,
+      dailyTrends
+    }
+  }
+
+  /**
+   * 记录分享转化（新用户注册）
+   */
+  async trackShareConversion(
+    shareToken: string,
+    convertedUserId: string,
+    conversionType: string = 'REGISTER'
+  ): Promise<void> {
+    // 检查分享内容
+    const shareContent = await prisma.sharedContent.findUnique({
+      where: { shareToken },
+      include: {
+        member: {
+          select: { id: true, name: true }
+        }
+      }
+    })
+
+    if (!shareContent) {
+      throw new Error('分享内容不存在')
+    }
+
+    // 记录转化事件
+    await this.trackShareEvent({
+      shareToken,
+      eventType: 'CONVERSION',
+      metadata: {
+        convertedUserId,
+        conversionType,
+        convertedAt: new Date().toISOString(),
+        inviterId: shareContent.memberId,
+        inviterName: shareContent.member.name
+      }
+    })
+
+    // 更新转化计数
+    await prisma.sharedContent.update({
+      where: { shareToken },
+      data: {
+        conversionCount: {
+          increment: 1
+        }
+      }
+    })
+
+    // 可以在这里添加邀请奖励逻辑
+    await this.grantInvitationReward(shareContent.memberId, convertedUserId, conversionType)
+  }
+
+  /**
+   * 更新分享统计
+   */
+  private async updateShareStatistics(shareToken: string, eventType: ShareTrackingEventType): Promise<void> {
+    const updateData: any = {}
 
     switch (eventType) {
-      case ShareTrackingEventType.VIEW:
-        updateData.viewCount = { increment: 1 };
-        break;
-      case ShareTrackingEventType.CLICK:
-        updateData.clickCount = { increment: 1 };
-        break;
-      case ShareTrackingEventType.SHARE:
-        updateData.shareCount = { increment: 1 };
-        break;
-      case ShareTrackingEventType.CONVERSION:
-        updateData.conversionCount = { increment: 1 };
-        break;
-      case ShareTrackingEventType.DOWNLOAD:
-        updateData.downloadCount = { increment: 1 };
-        break;
+      case 'VIEW':
+        updateData.viewCount = { increment: 1 }
+        break
+      case 'CLICK':
+        updateData.clickCount = { increment: 1 }
+        break
+      case 'LIKE':
+        updateData.likeCount = { increment: 1 }
+        break
+      case 'COMMENT':
+        updateData.commentCount = { increment: 1 }
+        break
+      case 'SHARE':
+        updateData.shareCount = { increment: 1 }
+        break
+      case 'DOWNLOAD':
+        updateData.downloadCount = { increment: 1 }
+        break
+      case 'CONVERSION':
+        updateData.conversionCount = { increment: 1 }
+        break
     }
 
     if (Object.keys(updateData).length > 0) {
       await prisma.sharedContent.update({
         where: { shareToken },
         data: updateData
-      });
+      })
     }
-  } catch (error) {
-    console.error('更新分享统计失败:', error);
   }
-}
 
-/**
- * 获取分享分析数据
- */
-export async function getShareAnalytics(
-  shareToken: string,
-  dateRange?: {
-    startDate: Date;
-    endDate: Date;
+  /**
+   * 获取时间范围
+   */
+  private getPeriodDates(period: string): { startDate: Date; periodLabel: string } {
+    const endDate = new Date()
+    let startDate: Date
+    let periodLabel: string
+
+    switch (period) {
+      case '7d':
+        startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+        periodLabel = '最近7天'
+        break
+      case '30d':
+        startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000)
+        periodLabel = '最近30天'
+        break
+      case '90d':
+        startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000)
+        periodLabel = '最近90天'
+        break
+      case '1y':
+        startDate = new Date(endDate.getTime() - 365 * 24 * 60 * 60 * 1000)
+        periodLabel = '最近1年'
+        break
+      default:
+        startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000)
+        periodLabel = '最近30天'
+    }
+
+    return { startDate, periodLabel }
   }
-): Promise<ShareAnalytics | null> {
-  try {
-    // 获取基本信息
-    const share = await prisma.sharedContent.findUnique({
-      where: { shareToken }
-    });
 
-    if (!share) {
-      return null;
-    }
-
-    // 构建查询条件
-    const whereCondition: Prisma.ShareTrackingWhereInput = { shareToken };
-    if (dateRange) {
-      whereCondition.occurredAt = {
-        gte: dateRange.startDate,
-        lte: dateRange.endDate
-      };
-    }
-
-    // 获取事件统计
+  /**
+   * 计算每日趋势
+   */
+  private async calculateDailyTrends(
+    shareTokens: string[],
+    startDate: Date,
+    endDate: Date
+  ): Promise<Array<{ date: string; shares: number; views: number; clicks: number; conversions: number }>> {
+    // 获取该时间范围内的所有事件
     const events = await prisma.shareTracking.findMany({
-      where: whereCondition,
-      orderBy: { occurredAt: 'desc' }
-    });
-
-    // 计算基础统计
-    const stats = events.reduce(
-      (acc, event) => {
-        switch (event.eventType) {
-          case ShareTrackingEventType.VIEW:
-            acc.totalViews++;
-            break;
-          case ShareTrackingEventType.CLICK:
-            acc.totalClicks++;
-            break;
-          case ShareTrackingEventType.SHARE:
-            acc.totalShares++;
-            break;
-          case ShareTrackingEventType.CONVERSION:
-            acc.totalConversions++;
-            break;
-          case ShareTrackingEventType.DOWNLOAD:
-            acc.totalDownloads++;
-            break;
+      where: {
+        shareToken: {
+          in: shareTokens
+        },
+        createdAt: {
+          gte: startDate,
+          lte: endDate
         }
-        return acc;
-      },
-      {
-        totalViews: 0,
-        totalClicks: 0,
-        totalShares: 0,
-        totalConversions: 0,
-        totalDownloads: 0
       }
-    );
+    })
 
-    // 计算独立访客数
-    const uniqueIPs = new Set(
-      events
-        .filter(e => e.eventType === ShareTrackingEventType.VIEW)
-        .map(e => e.ipAddress)
-        .filter(Boolean)
-    );
-    const uniqueViewers = uniqueIPs.size;
+    // 按日期分组统计
+    const dailyStats = new Map<string, { shares: number; views: number; clicks: number; conversions: number }>()
 
-    // 计算转化率
-    const conversionRate = stats.totalViews > 0 
-      ? (stats.totalConversions / stats.totalViews) * 100 
-      : 0;
+    // 初始化日期范围
+    const currentDate = new Date(startDate)
+    while (currentDate <= endDate) {
+      const dateKey = format(currentDate, 'yyyy-MM-dd')
+      dailyStats.set(dateKey, { shares: 0, views: 0, clicks: 0, conversions: 0 })
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
 
-    // 统计平台分布
-    const platformCounts = events.reduce<Record<string, number>>((acc, event) => {
-      if (event.platform) {
-        acc[event.platform] = (acc[event.platform] || 0) + 1;
-      }
-      return acc;
-    }, {});
-
-    const topPlatforms = Object.entries(platformCounts)
-      .map(([platform, count]) => ({
-        platform,
-        count,
-        percentage: events.length > 0 ? (count / events.length) * 100 : 0
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-
-    // 按小时统计
-    const hourlyStats = Array.from({ length: 24 }, (_, hour) => {
-      const hourEvents = events.filter(event => new Date(event.occurredAt).getHours() === hour);
-
-      return {
-        hour,
-        views: hourEvents.filter(event => event.eventType === ShareTrackingEventType.VIEW).length,
-        clicks: hourEvents.filter(event => event.eventType === ShareTrackingEventType.CLICK).length
-      };
-    });
-
-    // 按天统计
-    const dailyStatsMap = events.reduce<Record<string, { date: string; views: number; clicks: number; shares: number }>>(
-      (acc, event) => {
-        const date = new Date(event.occurredAt).toISOString().split('T')[0];
-
-        if (!acc[date]) {
-          acc[date] = { date, views: 0, clicks: 0, shares: 0 };
-        }
-
+    // 统计事件
+    events.forEach(event => {
+      const dateKey = format(event.createdAt, 'yyyy-MM-dd')
+      const stats = dailyStats.get(dateKey)
+      
+      if (stats) {
         switch (event.eventType) {
-          case ShareTrackingEventType.VIEW:
-            acc[date].views++;
-            break;
-          case ShareTrackingEventType.CLICK:
-            acc[date].clicks++;
-            break;
-          case ShareTrackingEventType.SHARE:
-            acc[date].shares++;
-            break;
+          case 'VIEW':
+            stats.views++
+            break
+          case 'CLICK':
+            stats.clicks++
+            break
+          case 'SHARE':
+            stats.shares++
+            break
+          case 'CONVERSION':
+            stats.conversions++
+            break
         }
+      }
+    })
 
-        return acc;
-      },
-      {}
-    );
-
-    return {
-      shareToken,
-      totalViews: stats.totalViews,
-      totalClicks: stats.totalClicks,
-      totalShares: stats.totalShares,
-      totalConversions: stats.totalConversions,
-      totalDownloads: stats.totalDownloads,
-      uniqueViewers,
-      conversionRate: Math.round(conversionRate * 100) / 100,
-      topPlatforms,
-      hourlyStats,
-      dailyStats: Object.values(dailyStatsMap).sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      )
-    };
-  } catch (error) {
-    console.error('获取分享分析数据失败:', error);
-    return null;
+    // 转换为数组格式
+    return Array.from(dailyStats.entries()).map(([date, stats]) => ({
+      date,
+      ...stats
+    }))
   }
-}
 
-/**
- * 获取用户的分享追踪概览
- */
-export async function getUserShareTrackingOverview(
-  memberId: string,
-  limit: number = 10
-): Promise<Array<{
-  shareToken: string;
-  title: string;
-  totalViews: number;
-  totalClicks: number;
-  totalShares: number;
-  conversionRate: number;
-  createdAt: Date;
-}>> {
-  try {
-    const shares = await prisma.sharedContent.findMany({
-      where: { memberId },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
+  /**
+   * 发放邀请奖励
+   */
+  private async grantInvitationReward(
+    inviterId: string,
+    convertedUserId: string,
+    conversionType: string
+  ): Promise<void> {
+    // 检查是否已经发放过奖励
+    const existingReward = await prisma.invitationReward.findFirst({
+      where: {
+        inviterId,
+        invitedUserId: convertedUserId
+      }
+    })
+
+    if (existingReward) {
+      return // 已经发放过奖励
+    }
+
+    // 创建奖励记录
+    const vipDays = 7 // 邀请奖励7天VIP
+    const points = 100 // 邀请奖励100积分
+
+    await prisma.invitationReward.create({
+      data: {
+        inviterId,
+        invitedUserId,
+        rewardType: 'VIP_DAYS',
+        rewardValue: vipDays,
+        status: 'GRANTED',
+        grantedAt: new Date()
+      }
+    })
+
+    await prisma.invitationReward.create({
+      data: {
+        inviterId,
+        invitedUserId,
+        rewardType: 'POINTS',
+        rewardValue: points,
+        status: 'GRANTED',
+        grantedAt: new Date()
+      }
+    })
+
+    // 可以在这里集成到积分系统和VIP系统
+    console.log(`用户 ${inviterId} 邀请奖励发放: ${vipDays}天VIP + ${points}积分`)
+  }
+
+  /**
+   * 获取全局分享统计
+   */
+  async getGlobalShareAnalytics(period: '7d' | '30d' | '90d' | '1y' = '30d'): Promise<ShareAnalytics> {
+    const { startDate, periodLabel } = this.getPeriodDates(period)
+    const endDate = new Date()
+
+    // 获取所有分享内容
+    const sharedContents = await prisma.sharedContent.findMany({
+      where: {
+        createdAt: {
+          gte: startDate
+        }
+      },
       select: {
         shareToken: true,
         title: true,
         viewCount: true,
         clickCount: true,
-        shareCount: true,
         conversionCount: true,
+        shareCount: true,
         createdAt: true
       }
-    });
+    })
 
-    return shares.map(share => ({
-      shareToken: share.shareToken,
-      title: share.title,
-      totalViews: share.viewCount,
-      totalClicks: share.clickCount,
-      totalShares: share.shareCount,
-      conversionRate: share.viewCount > 0 
-        ? Math.round((share.conversionCount / share.viewCount) * 10000) / 100 
-        : 0,
-      createdAt: share.createdAt
-    }));
-  } catch (error) {
-    console.error('获取用户分享追踪概览失败:', error);
-    return [];
-  }
-}
+    const shareTokens = sharedContents.map(content => content.shareToken)
 
-/**
- * 获取热门分享排行
- */
-export async function getPopularShares(
-  period: 'daily' | 'weekly' | 'monthly' = 'weekly',
-  limit: number = 20
-): Promise<Array<{
-  shareToken: string;
-  title: string;
-  memberName: string;
-  totalViews: number;
-  totalShares: number;
-  score: number;
-}>> {
-  try {
-    // 计算时间范围
-    const now = new Date();
-    let startDate: Date;
+    // 计算总体统计
+    const totalShares = sharedContents.reduce((sum, content) => sum + content.shareCount, 0)
+    const totalViews = sharedContents.reduce((sum, content) => sum + content.viewCount, 0)
+    const totalClicks = sharedContents.reduce((sum, content) => sum + content.clickCount, 0)
+    const totalConversions = sharedContents.reduce((sum, content) => sum + content.conversionCount, 0)
+    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0
 
-    switch (period) {
-      case 'daily':
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
-      case 'weekly':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'monthly':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-    }
+    // 计算最佳表现内容
+    const topPerformingContent = sharedContents
+      .map(content => ({
+        shareToken: content.shareToken,
+        title: content.title,
+        views: content.viewCount,
+        clicks: content.clickCount,
+        conversions: content.conversionCount,
+        conversionRate: content.clicks > 0 ? (content.conversionCount / content.clickCount) * 100 : 0
+      }))
+      .sort((a, b) => b.conversions - a.conversions)
+      .slice(0, 10)
 
-    // 获取热门分享
-    const shares = await prisma.sharedContent.findMany({
+    // 平台分析和每日趋势
+    const events = await prisma.shareTracking.findMany({
       where: {
-        createdAt: { gte: startDate },
-        status: 'ACTIVE'
-      },
-      include: {
-        member: {
-          select: { name: true }
+        createdAt: {
+          gte: startDate
         }
-      },
-      orderBy: [
-        { viewCount: 'desc' },
-        { shareCount: 'desc' }
-      ],
-      take: limit
-    });
+      }
+    })
 
-    // 计算热度分数
-    return shares.map(share => ({
-      shareToken: share.shareToken,
-      title: share.title,
-      memberName: share.member.name,
-      totalViews: share.viewCount,
-      totalShares: share.shareCount,
-      score: calculateShareScore(share)
-    }));
-  } catch (error) {
-    console.error('获取热门分享失败:', error);
-    return [];
+    const platformBreakdown: Record<string, { shares: number; clicks: number; conversions: number }> = {}
+    events.forEach(event => {
+      const platform = event.platform || 'unknown'
+      if (!platformBreakdown[platform]) {
+        platformBreakdown[platform] = { shares: 0, clicks: 0, conversions: 0 }
+      }
+
+      if (event.eventType === 'SHARE') {
+        platformBreakdown[platform].shares++
+      } else if (event.eventType === 'CLICK') {
+        platformBreakdown[platform].clicks++
+      } else if (event.eventType === 'CONVERSION') {
+        platformBreakdown[platform].conversions++
+      }
+    })
+
+    const dailyTrends = await this.calculateDailyTrends(shareTokens, startDate, endDate)
+
+    return {
+      period: periodLabel,
+      totalShares,
+      totalViews,
+      totalClicks,
+      totalConversions,
+      conversionRate: Math.round(conversionRate * 100) / 100,
+      topPerformingContent,
+      platformBreakdown,
+      dailyTrends
+    }
   }
-}
 
-/**
- * 计算分享热度分数
- */
-function calculateShareScore(share: {
-  viewCount: number;
-  clickCount: number;
-  shareCount: number;
-  conversionCount: number;
-  createdAt: Date;
-}): number {
-  const now = new Date();
-  const daysSinceCreation = (now.getTime() - share.createdAt.getTime()) / (1000 * 60 * 60 * 24);
-  
-  // 基础分数
-  let score = 0;
-  
-  // 浏览量权重
-  score += share.viewCount * 1;
-  
-  // 点击量权重（更高）
-  score += share.clickCount * 3;
-  
-  // 分享次数权重（最高）
-  score += share.shareCount * 5;
-  
-  // 转化权重（最高）
-  score += share.conversionCount * 10;
-  
-  // 时间衰减（越新的内容分数越高）
-  const timeDecay = Math.exp(-daysSinceCreation / 7); // 7天半衰期
-  score *= timeDecay;
-  
-  return Math.round(score);
-}
-
-/**
- * 批量清理旧的追踪数据
- */
-export async function cleanupOldTrackingData(daysToKeep: number = 90): Promise<number> {
-  try {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+  /**
+   * 清理过期的追踪数据
+   */
+  async cleanupExpiredTrackingData(daysToKeep: number = 90): Promise<number> {
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep)
 
     const result = await prisma.shareTracking.deleteMany({
       where: {
-        occurredAt: {
+        createdAt: {
           lt: cutoffDate
         }
       }
-    });
+    })
 
-    return result.count;
-  } catch (error) {
-    console.error('清理旧追踪数据失败:', error);
-    return 0;
+    console.log(`清理了 ${result.count} 条过期的分享追踪数据`)
+    return result.count
+  }
+
+  /**
+   * 生成分享追踪报告
+   */
+  async generateShareTrackingReport(
+    memberId?: string,
+    period: '7d' | '30d' | '90d' | '1y' = '30d'
+  ): Promise<any> {
+    const analytics = memberId
+      ? await this.getUserShareAnalytics(memberId, period)
+      : await this.getGlobalShareAnalytics(period)
+
+    return {
+      reportTitle: memberId ? '个人分享数据报告' : '全局分享数据报告',
+      period: analytics.period,
+      generatedAt: new Date().toISOString(),
+      summary: {
+        totalShares: analytics.totalShares,
+        totalViews: analytics.totalViews,
+        totalClicks: analytics.totalClicks,
+        totalConversions: analytics.totalConversions,
+        conversionRate: `${analytics.conversionRate}%`
+      },
+      topContent: analytics.topPerformingContent.slice(0, 5),
+      platformAnalysis: analytics.platformBreakdown,
+      trends: analytics.dailyTrends.slice(-7) // 最近7天的趋势
+    }
   }
 }
 
-/**
- * 导出分享追踪数据
- */
-export async function exportShareTrackingData(
+// 导出单例实例
+export const shareTrackingService = ShareTrackingService.getInstance()
+
+// 导出工具函数
+export async function trackShareEvent(event: ShareTrackingEvent): Promise<ShareTracking> {
+  const service = ShareTrackingService.getInstance()
+  return service.trackShareEvent(event)
+}
+
+export async function trackShareConversion(
   shareToken: string,
-  format: 'json' | 'csv' = 'json'
-): Promise<string | null> {
-  try {
-    const analytics = await getShareAnalytics(shareToken);
-    if (!analytics) {
-      return null;
-    }
-
-    if (format === 'json') {
-      return JSON.stringify(analytics, null, 2);
-    }
-
-    if (format === 'csv') {
-      // 生成CSV格式
-      const headers = ['Date', 'Views', 'Clicks', 'Shares', 'Conversions'];
-      const rows = analytics.dailyStats.map(day => [
-        day.date,
-        day.views.toString(),
-        day.clicks.toString(),
-        day.shares.toString(),
-        analytics.totalConversions.toString()
-      ]);
-      
-      return [headers, ...rows].map(row => row.join(',')).join('\n');
-    }
-
-    return null;
-  } catch (error) {
-    console.error('导出分享追踪数据失败:', error);
-    return null;
-  }
+  convertedUserId: string,
+  conversionType?: string
+): Promise<void> {
+  const service = ShareTrackingService.getInstance()
+  return service.trackShareConversion(shareToken, convertedUserId, conversionType)
 }
 
-/**
- * 实时追踪中间件
- */
-export function createTrackingMiddleware() {
-  return async (req: any, res: any, next: any) => {
-    const { shareToken } = req.params;
-    
-    if (shareToken) {
-      // 异步记录浏览事件
-      trackShareEvent(shareToken, ShareTrackingEventType.VIEW, {
-        userAgent: req.headers['user-agent'],
-        ipAddress: req.ip,
-        referrer: req.headers.referer
-      }).catch(error => {
-        console.error('记录浏览事件失败:', error);
-      });
-    }
-    
-    next();
-  };
+export async function getShareStatistics(shareToken: string): Promise<ShareStatistics> {
+  const service = ShareTrackingService.getInstance()
+  return service.getShareStatistics(shareToken)
+}
+
+export async function getUserShareAnalytics(
+  memberId: string,
+  period?: '7d' | '30d' | '90d' | '1y'
+): Promise<ShareAnalytics> {
+  const service = ShareTrackingService.getInstance()
+  return service.getUserShareAnalytics(memberId, period)
+}
+
+export async function getGlobalShareAnalytics(
+  period?: '7d' | '30d' | '90d' | '1y'
+): Promise<ShareAnalytics> {
+  const service = ShareTrackingService.getInstance()
+  return service.getGlobalShareAnalytics(period)
 }

@@ -1,577 +1,956 @@
 /**
- * 社交分享图片生成服务
- * 使用 HTML Canvas 或 Puppeteer 生成分享卡片图片
+ * 分享图片生成服务
+ * 使用html2canvas生成分享卡片图片
  */
 
-import { Browser, Page } from 'puppeteer';
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { imageCache } from './image-cache';
-
-// 使用 stealth 插件避免被检测
-puppeteer.use(StealthPlugin());
-
-export interface ImageGenerationOptions {
-  width?: number;
-  height?: number;
-  quality?: number;
-  format?: 'png' | 'jpeg' | 'webp';
-  backgroundColor?: string;
-  brandColor?: string;
-}
-
-export interface ShareCardData {
-  memberName: string;
-  title?: string;
-  description?: string;
-  customMessage?: string;
-  date?: Date;
-  avatar?: string;
-  inviteCode?: string;
-  qrCode?: string;
-}
-
-const DEFAULT_OPTIONS: ImageGenerationOptions = {
-  width: 800,
-  height: 600,
-  quality: 90,
-  format: 'png',
-  backgroundColor: '#ffffff',
-  brandColor: '#10b981'
-};
+import { format } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
+import QRCode from 'qrcode'
+import { 
+  ShareTemplate, 
+  ImageGenerationConfig,
+  SHARE_TEMPLATE_CONFIGS 
+} from '@/types/social-sharing'
 
 /**
- * 生成分享卡片图片
+ * 图片生成器类
  */
-export async function generateShareCard(
-  template: string,
-  data: ShareCardData,
-  options: ImageGenerationOptions = {}
-): Promise<string> {
-  const opts = { ...DEFAULT_OPTIONS, ...options };
-  
-  // 先检查缓存
-  const cachedUrl = imageCache.get(template, { ...data, ...opts });
-  if (cachedUrl) {
-    console.log('使用缓存的分享图片');
-    return cachedUrl;
-  }
-  
-  let browser: Browser | null = null;
-  
-  try {
-    // 启动浏览器
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ]
-    });
+export class ShareImageGenerator {
+  private static instance: ShareImageGenerator
 
-    const page = await browser.newPage();
-    
-    // 设置视口
-    await page.setViewport({
-      width: opts.width!,
-      height: opts.height!,
-      deviceScaleFactor: 2
-    });
-
-    // 生成 HTML 模板
-    const html = generateCardHTML(template, data, opts);
-    
-    // 设置页面内容
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    
-    // 等待图片加载
-    await page.waitForTimeout(1000);
-    
-    // 截图
-    const screenshot = await page.screenshot({
-      type: opts.format,
-      quality: opts.format === 'jpeg' ? opts.quality : undefined,
-      fullPage: false
-    });
-    
-    if (!screenshot) {
-      throw new Error('生成图片失败');
+  static getInstance(): ShareImageGenerator {
+    if (!ShareImageGenerator.instance) {
+      ShareImageGenerator.instance = new ShareImageGenerator()
     }
+    return ShareImageGenerator.instance
+  }
+
+  /**
+   * 生成分享图片
+   */
+  async generateShareImage(template: ShareTemplate, data: any, config?: Partial<ImageGenerationConfig>): Promise<string> {
+    const finalConfig = { ...SHARE_TEMPLATE_CONFIGS[template], ...config }
     
-    // 这里应该上传到 CDN 或存储服务
-    // 暂时返回 base64 数据URL
-    const base64 = screenshot.toString('base64');
-    const imageUrl = `data:image/${opts.format};base64,${base64}`;
-    
-    // 缓存生成的图片
-    imageCache.set(template, { ...data, ...opts }, imageUrl);
-    
-    return imageUrl;
-    
-  } catch (error) {
-    console.error('图片生成失败:', error);
-    throw error;
-  } finally {
-    if (browser) {
-      await browser.close();
+    switch (template) {
+      case ShareTemplate.HEALTH_REPORT:
+        return this.generateHealthReportImage(data, finalConfig)
+      case ShareTemplate.GOAL_ACHIEVED:
+        return this.generateGoalAchievedImage(data, finalConfig)
+      case ShareTemplate.ACHIEVEMENT_UNLOCKED:
+        return this.generateAchievementUnlockedImage(data, finalConfig)
+      case ShareTemplate.WEIGHT_LOSS:
+        return this.generateWeightLossImage(data, finalConfig)
+      case ShareTemplate.STREAK_CELEBRATION:
+        return this.generateStreakCelebrationImage(data, finalConfig)
+      case ShareTemplate.RECIPE_CARD:
+        return this.generateRecipeCardImage(data, finalConfig)
+      case ShareTemplate.PERSONAL_RECORD:
+        return this.generatePersonalRecordImage(data, finalConfig)
+      case ShareTemplate.COMMUNITY_POST:
+        return this.generateCommunityPostImage(data, finalConfig)
+      default:
+        throw new Error(`不支持的分享模板: ${template}`)
     }
   }
-}
 
-/**
- * 生成卡片 HTML
- */
-function generateCardHTML(
-  template: string,
-  data: ShareCardData,
-  options: ImageGenerationOptions
-): string {
-  const { width, height, backgroundColor, brandColor } = options;
-  
-  return `
-    <!DOCTYPE html>
-    <html lang="zh-CN">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>分享卡片</title>
-      <style>
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
+  /**
+   * 生成健康报告图片
+   */
+  private async generateHealthReportImage(data: any, config: ImageGenerationConfig): Promise<string> {
+    const html = this.createHealthReportHTML(data, config)
+    return this.generateImageFromHTML(html, config)
+  }
+
+  /**
+   * 生成目标达成图片
+   */
+  private async generateGoalAchievedImage(data: any, config: ImageGenerationConfig): Promise<string> {
+    const html = this.createGoalAchievedHTML(data, config)
+    return this.generateImageFromHTML(html, config)
+  }
+
+  /**
+   * 生成成就解锁图片
+   */
+  private async generateAchievementUnlockedImage(data: any, config: ImageGenerationConfig): Promise<string> {
+    const html = this.createAchievementUnlockedHTML(data, config)
+    return this.generateImageFromHTML(html, config)
+  }
+
+  /**
+   * 生成减重图片
+   */
+  private async generateWeightLossImage(data: any, config: ImageGenerationConfig): Promise<string> {
+    const html = this.createWeightLossHTML(data, config)
+    return this.generateImageFromHTML(html, config)
+  }
+
+  /**
+   * 生成连续打卡庆祝图片
+   */
+  private async generateStreakCelebrationImage(data: any, config: ImageGenerationConfig): Promise<string> {
+    const html = this.createStreakCelebrationHTML(data, config)
+    return this.generateImageFromHTML(html, config)
+  }
+
+  /**
+   * 生成食谱卡片图片
+   */
+  private async generateRecipeCardImage(data: any, config: ImageGenerationConfig): Promise<string> {
+    const html = this.createRecipeCardHTML(data, config)
+    return this.generateImageFromHTML(html, config)
+  }
+
+  /**
+   * 生成个人记录图片
+   */
+  private async generatePersonalRecordImage(data: any, config: ImageGenerationConfig): Promise<string> {
+    const html = this.createPersonalRecordHTML(data, config)
+    return this.generateImageFromHTML(html, config)
+  }
+
+  /**
+   * 生成社区帖子图片
+   */
+  private async generateCommunityPostImage(data: any, config: ImageGenerationConfig): Promise<string> {
+    const html = this.createCommunityPostHTML(data, config)
+    return this.generateImageFromHTML(html, config)
+  }
+
+  /**
+   * 从HTML生成图片
+   */
+  private async generateImageFromHTML(html: string, config: ImageGenerationConfig): Promise<string> {
+    // 在浏览器环境中使用html2canvas
+    if (typeof window !== 'undefined') {
+      try {
+        const { default: html2canvas } = await import('html2canvas')
         
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          background: ${backgroundColor};
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          min-height: 100vh;
+        // 创建临时DOM元素
+        const tempDiv = document.createElement('div')
+        tempDiv.innerHTML = html
+        tempDiv.style.position = 'absolute'
+        tempDiv.style.left = '-9999px'
+        tempDiv.style.top = '-9999px'
+        tempDiv.style.width = `${config.width}px`
+        tempDiv.style.fontFamily = config.fontFamily
+        document.body.appendChild(tempDiv)
+
+        // 生成图片
+        const canvas = await html2canvas(tempDiv, {
+          width: config.width,
+          height: config.height,
+          backgroundColor: config.backgroundColor,
+          scale: 2 // 高清显示
+        })
+
+        // 清理临时元素
+        document.body.removeChild(tempDiv)
+
+        // 转换为blob并获取URL
+        return new Promise((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob)
+              resolve(url)
+            } else {
+              reject(new Error('图片生成失败'))
+            }
+          }, `image/${config.format}`, config.quality / 100)
+        })
+      } catch (error) {
+        console.error('HTML转图片失败:', error)
+        throw new Error('图片生成失败')
+      }
+    } else {
+      // 服务端环境，使用Puppeteer
+      return this.generateImageWithPuppeteer(html, config)
+    }
+  }
+
+  /**
+   * 使用Puppeteer生成图片（服务端）
+   */
+  private async generateImageWithPuppeteer(html: string, config: ImageGenerationConfig): Promise<string> {
+    try {
+      const puppeteer = await import('puppeteer')
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      })
+      
+      const page = await browser.newPage()
+      await page.setContent(html, { waitUntil: 'networkidle0' })
+      
+      // 设置视口大小
+      await page.setViewport({
+        width: config.width,
+        height: config.height,
+        deviceScaleFactor: 2
+      })
+
+      // 生成截图
+      const screenshot = await page.screenshot({
+        type: config.format as any,
+        quality: config.format === 'jpeg' ? config.quality : undefined
+      })
+
+      await browser.close()
+
+      // 转换为base64
+      const base64 = screenshot.toString('base64')
+      return `data:image/${config.format};base64,${base64}`
+    } catch (error) {
+      console.error('Puppeteer图片生成失败:', error)
+      throw new Error('服务端图片生成失败')
+    }
+  }
+
+  /**
+   * 生成二维码
+   */
+  private async generateQRCode(url: string): Promise<string> {
+    try {
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
         }
+      })
+      return qrDataUrl
+    } catch (error) {
+      console.error('二维码生成失败:', error)
+      throw new Error('二维码生成失败')
+    }
+  }
+
+  /**
+   * 健康报告HTML模板
+   */
+  private createHealthReportHTML(data: any, config: ImageGenerationConfig): string {
+    const { memberName, healthScore, weightChange, dataPoints, period, latestData } = data
+    const currentDate = format(new Date(), 'yyyy年MM月dd日', { locale: zhCN })
+
+    return `
+      <div style="
+        width: ${config.width}px;
+        height: ${config.height}px;
+        background: linear-gradient(135deg, ${config.backgroundColor} 0%, #f0f9ff 100%);
+        font-family: ${config.fontFamily};
+        color: #1f2937;
+        padding: 40px;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      ">
+        ${config.branding ? `
+          <div style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #6b7280;
+            opacity: 0.7;
+          ">Health Butler</div>
+        ` : ''}
         
-        .card {
-          width: ${width}px;
-          height: ${height}px;
-          background: linear-gradient(135deg, ${brandColor}22 0%, ${brandColor}44 100%);
-          border-radius: 20px;
-          padding: 40px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          position: relative;
-          overflow: hidden;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          right: -50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle, ${brandColor}11 0%, transparent 70%);
-          animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) rotate(0deg); }
-          50% { transform: translate(-30px, -30px) rotate(180deg); }
-        }
-        
-        .header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 20px;
-          z-index: 1;
-        }
-        
-        .avatar {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, ${brandColor}, ${brandColor}dd);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 24px;
-          font-weight: bold;
-          margin-right: 16px;
-        }
-        
-        .user-info h1 {
-          font-size: 24px;
-          color: #1f2937;
-          margin-bottom: 4px;
-        }
-        
-        .user-info .date {
-          font-size: 14px;
-          color: #6b7280;
-        }
-        
-        .content {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          z-index: 1;
-        }
-        
-        .title {
-          font-size: 32px;
-          font-weight: bold;
-          color: #1f2937;
-          margin-bottom: 16px;
-          line-height: 1.2;
-        }
-        
-        .description {
-          font-size: 18px;
-          color: #4b5563;
-          line-height: 1.5;
-          margin-bottom: 20px;
-        }
-        
-        .stats {
-          display: flex;
+        <div style="margin-bottom: 30px;">
+          <h1 style="font-size: 32px; font-weight: bold; margin: 0; color: #059669;">
+            ${memberName}的健康报告
+          </h1>
+          <p style="font-size: 16px; color: #6b7280; margin: 8px 0 0 0;">
+            ${currentDate} • ${period}
+          </p>
+        </div>
+
+        <div style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
           gap: 20px;
-          margin-bottom: 20px;
-        }
-        
-        .stat {
-          background: rgba(255, 255, 255, 0.9);
-          padding: 12px 20px;
-          border-radius: 12px;
-          text-align: center;
-          flex: 1;
-        }
-        
-        .stat-value {
-          font-size: 24px;
-          font-weight: bold;
-          color: ${brandColor};
-        }
-        
-        .stat-label {
-          font-size: 12px;
-          color: #6b7280;
-          margin-top: 4px;
-        }
-        
-        .footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          z-index: 1;
-        }
-        
-        .brand {
-          display: flex;
-          align-items: center;
-          color: ${brandColor};
-          font-weight: bold;
-          font-size: 16px;
-        }
-        
-        .brand-icon {
-          width: 24px;
-          height: 24px;
-          margin-right: 8px;
-          background: ${brandColor};
-          border-radius: 50%;
-        }
-        
-        .qr-placeholder {
-          width: 80px;
-          height: 80px;
-          background: #f3f4f6;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 10px;
-          color: #6b7280;
-          text-align: center;
-          position: relative;
-        }
-        
-        .invite-code {
+          margin-bottom: 30px;
+        ">
+          <div style="
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          ">
+            <div style="font-size: 48px; font-weight: bold; color: #059669; line-height: 1;">
+              ${healthScore}分
+            </div>
+            <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">
+              健康评分
+            </div>
+          </div>
+
+          <div style="
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          ">
+            <div style="font-size: 48px; font-weight: bold; color: #2563eb; line-height: 1;">
+              ${dataPoints}次
+            </div>
+            <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">
+              数据记录
+            </div>
+          </div>
+        </div>
+
+        ${weightChange.lost > 0 ? `
+          <div style="
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+          ">
+            <span style="font-size: 16px; font-weight: 600; color: #16a34a;">
+              🎉 ${weightChange.period}减重${weightChange.lost.toFixed(1)}kg！
+            </span>
+          </div>
+        ` : ''}
+      </div>
+    `
+  }
+
+  /**
+   * 目标达成HTML模板
+   */
+  private createGoalAchievedHTML(data: any, config: ImageGenerationConfig): string {
+    const { memberName, goalTitle, progress, achievedDate, metric } = data
+    const dateStr = format(new Date(achievedDate), 'yyyy年MM月dd日', { locale: zhCN })
+
+    return `
+      <div style="
+        width: ${config.width}px;
+        height: ${config.height}px;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        font-family: ${config.fontFamily};
+        color: #1f2937;
+        padding: 40px;
+        box-sizing: border-box;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      ">
+        ${config.branding ? `
+          <div style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #92400e;
+            opacity: 0.7;
+          ">Health Butler</div>
+        ` : ''}
+
+        <div style="margin-bottom: 40px;">
+          <div style="font-size: 96px; margin-bottom: 20px;">🎯</div>
+          <h1 style="font-size: 28px; font-weight: bold; margin: 0; color: #92400e;">
+            目标达成！
+          </h1>
+        </div>
+
+        <div style="
+          background: white;
+          padding: 30px;
+          border-radius: 16px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+          margin-bottom: 30px;
+        ">
+          <h2 style="font-size: 24px; font-weight: 600; margin: 0 0 12px 0; color: #1f2937;">
+            ${goalTitle}
+          </h2>
+          <div style="font-size: 18px; color: #6b7280; margin: 0 0 16px 0;">
+            ${memberName}
+          </div>
+          <div style="
+            background: #fbbf24;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            position: relative;
+            margin-bottom: 12px;
+          ">
+            <div style="
+              background: #10b981;
+              width: ${progress}%;
+              height: 100%;
+              border-radius: 4px;
+            "></div>
+          </div>
+          <div style="font-size: 14px; color: #6b7280; font-weight: 600;">
+            100% 完成 • ${dateStr}
+          </div>
+        </div>
+
+        <div style="font-size: 16px; color: #92400e; font-weight: 600;">
+          为${memberName}的坚持喝彩！🎉
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * 成就解锁HTML模板
+   */
+  private createAchievementUnlockedHTML(data: any, config: ImageGenerationConfig): string {
+    const { memberName, achievementTitle, achievementDescription, points, icon, color, unlockedAt } = data
+    const dateStr = format(new Date(unlockedAt), 'yyyy年MM月dd日', { locale: zhCN })
+
+    return `
+      <div style="
+        width: ${config.width}px;
+        height: ${config.height}px;
+        background: linear-gradient(135deg, ${config.backgroundColor} 0%, #e0f2fe 100%);
+        font-family: ${config.fontFamily};
+        color: #1f2937;
+        padding: 40px;
+        box-sizing: border-box;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      ">
+        <div style="
           position: absolute;
-          bottom: -20px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: ${brandColor};
-          color: white;
-          padding: 2px 8px;
-          border-radius: 10px;
-          font-size: 10px;
-          font-weight: bold;
-        }
-        
-        ${getTemplateStyles(template)}
-      </style>
-    </head>
-    <body>
-      <div class="card">
-        <div class="header">
-          <div class="avatar">${data.memberName.charAt(0)}</div>
-          <div class="user-info">
-            <h1>${data.memberName}</h1>
-            <div class="date">${data.date ? data.date.toLocaleDateString('zh-CN') : new Date().toLocaleDateString('zh-CN')}</div>
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: ${color}22;
+          opacity: 0.1;
+        "></div>
+
+        ${config.branding ? `
+          <div style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #0369a1;
+            opacity: 0.7;
+            z-index: 10;
+          ">Health Butler</div>
+        ` : ''}
+
+        <div style="margin-bottom: 30px; position: relative; z-index: 5;">
+          <div style="
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 60px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border: 4px solid ${color};
+          ">
+            ${icon}
           </div>
         </div>
-        
-        <div class="content">
-          ${getTemplateContent(template, data)}
-        </div>
-        
-        <div class="footer">
-          <div class="brand">
-            <div class="brand-icon"></div>
-            健康管家
+
+        <div style="
+          background: white;
+          padding: 24px;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          margin-bottom: 20px;
+          position: relative;
+          z-index: 5;
+        ">
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 8px 0; color: ${color};">
+            解锁成就
+          </h1>
+          <h2 style="font-size: 20px; margin: 0 0 8px 0; color: #1f2937;">
+            ${achievementTitle}
+          </h2>
+          <p style="font-size: 14px; color: #6b7280; margin: 0 0 12px 0; line-height: 1.5;">
+            ${achievementDescription}
+          </p>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 16px; font-weight: 600; color: #0369a1;">
+              +${points} 积分
+            </span>
+            <span style="font-size: 12px; color: #6b7280;">
+              ${dateStr}
+            </span>
           </div>
-          <div class="qr-placeholder">
-            扫码查看<br>详情
-            ${data.inviteCode ? `<div class="invite-code">${data.inviteCode}</div>` : ''}
+        </div>
+
+        <div style="font-size: 14px; color: #0369a1; font-weight: 600; position: relative; z-index: 5;">
+          ${memberName}的成就收藏 • 继续加油！
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * 减重HTML模板
+   */
+  private createWeightLossHTML(data: any, config: ImageGenerationConfig): string {
+    const { memberName, initialWeight, currentWeight, weightLoss, weightLossPercent, period, icon } = data
+
+    return `
+      <div style="
+        width: ${config.width}px;
+        height: ${config.height}px;
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        font-family: ${config.fontFamily};
+        color: #1f2937;
+        padding: 40px;
+        box-sizing: border-box;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      ">
+        ${config.branding ? `
+          <div style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #15803d;
+            opacity: 0.7;
+          ">Health Butler</div>
+        ` : ''}
+
+        <div style="margin-bottom: 30px;">
+          <div style="font-size: 64px; margin-bottom: 16px;">${icon}</div>
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0; color: #15803d;">
+            ${memberName}的减重里程碑
+          </h1>
+        </div>
+
+        <div style="
+          background: white;
+          padding: 30px;
+          border-radius: 16px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+          margin-bottom: 30px;
+        ">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+              <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">初始体重</div>
+              <div style="font-size: 28px; font-weight: bold; color: #1f2937;">
+                ${initialWeight.toFixed(1)}kg
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">当前体重</div>
+              <div style="font-size: 28px; font-weight: bold; color: #16a34a;">
+                ${currentWeight.toFixed(1)}kg
+              </div>
+            </div>
+          </div>
+
+          <div style="
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+          ">
+            <div style="font-size: 20px; font-weight: bold; color: white; margin: 0;">
+              🎉 ${period}减重 ${weightLoss.toFixed(1)}kg
+            </div>
+            <div style="font-size: 14px; color: #d1fae5; margin-top: 4px;">
+              减重幅度 ${weightLossPercent.toFixed(1)}%
+            </div>
+          </div>
+
+          <div style="
+            background: #f0fdf4;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #16a34a;
+          ">
+            <div style="font-size: 12px; color: #15803d; font-weight: 600; margin: 0;">
+              健康管理，贵在坚持！
+            </div>
           </div>
         </div>
       </div>
-    </body>
-    </html>
-  `;
-}
-
-/**
- * 获取模板特定样式
- */
-function getTemplateStyles(template: string): string {
-  switch (template) {
-    case 'health-report':
-      return `
-        .health-score {
-          font-size: 64px;
-          font-weight: bold;
-          color: #10b981;
-          text-align: center;
-          margin: 20px 0;
-        }
-        .health-grade {
-          text-align: center;
-          font-size: 18px;
-          color: #6b7280;
-        }
-      `;
-    case 'achievement':
-      return `
-        .achievement-icon {
-          font-size: 64px;
-          text-align: center;
-          margin: 20px 0;
-        }
-        .achievement-rarity {
-          display: inline-block;
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: bold;
-          margin-bottom: 16px;
-        }
-        .rarity-bronze { background: #cd7f32; color: white; }
-        .rarity-silver { background: #c0c0c0; color: white; }
-        .rarity-gold { background: #ffd700; color: #333; }
-        .rarity-platinum { background: #e5e4e2; color: #333; }
-        .rarity-diamond { background: #b9f2ff; color: #333; }
-      `;
-    case 'meal-log':
-      return `
-        .meal-icon {
-          font-size: 48px;
-          text-align: center;
-          margin: 16px 0;
-        }
-        .nutrition-info {
-          background: rgba(255, 255, 255, 0.9);
-          padding: 16px;
-          border-radius: 12px;
-          margin-top: 16px;
-        }
-        .nutrition-row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 8px;
-        }
-        .nutrition-label {
-          color: #6b7280;
-        }
-        .nutrition-value {
-          font-weight: bold;
-          color: #1f2937;
-        }
-      `;
-    default:
-      return '';
+    `
   }
-}
 
-/**
- * 获取模板特定内容
- */
-function getTemplateContent(template: string, data: ShareCardData): string {
-  switch (template) {
-    case 'health-report':
-      return `
-        <div class="title">${data.title || '健康报告'}</div>
-        <div class="description">${data.description || '健康状况良好，继续保持'}</div>
-        <div class="health-score">85<span style="font-size: 24px;">分</span></div>
-        <div class="health-grade">健康状况：优秀</div>
-        ${data.customMessage ? `<div class="description" style="font-style: italic;">"${data.customMessage}"</div>` : ''}
-      `;
-    case 'achievement':
-      return `
-        <div class="achievement-icon">🏆</div>
-        <div class="title">${data.title || '新成就解锁'}</div>
-        <div class="achievement-rarity rarity-gold">黄金成就</div>
-        <div class="description">${data.description || '恭喜获得新成就'}</div>
-        ${data.customMessage ? `<div class="description" style="font-style: italic;">"${data.customMessage}"</div>` : ''}
-      `;
-    case 'meal-log':
-      return `
-        <div class="meal-icon">🍽️</div>
-        <div class="title">${data.title || '营养早餐'}</div>
-        <div class="description">${data.description || '营养均衡，健康美味'}</div>
-        <div class="nutrition-info">
-          <div class="nutrition-row">
-            <span class="nutrition-label">热量</span>
-            <span class="nutrition-value">450 千卡</span>
+  /**
+   * 连续打卡庆祝HTML模板
+   */
+  private createStreakCelebrationHTML(data: any, config: ImageGenerationConfig): string {
+    const { memberName, streakDays, currentStreak, bestStreak, period, icon } = data
+
+    return `
+      <div style="
+        width: ${config.width}px;
+        height: ${config.height}px;
+        background: linear-gradient(135deg, #fce7f3 0%, #fda4af 100%);
+        font-family: ${config.fontFamily};
+        color: #1f2937;
+        padding: 40px;
+        box-sizing: border-box;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      ">
+        ${config.branding ? `
+          <div style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #dc2626;
+            opacity: 0.7;
+          ">Health Butler</div>
+        ` : ''}
+
+        <div style="margin-bottom: 30px;">
+          <div style="
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 50px;
+            box-shadow: 0 8px 20px rgba(220,38,38,0.2);
+            animation: pulse 2s infinite;
+          ">${icon}</div>
+          
+          <h1 style="font-size: 28px; font-weight: bold; margin: 0; color: #dc2626;">
+            连续打卡${streakDays}天！
+          </h1>
+          <p style="font-size: 16px; color: #7f1d1d; margin: 8px 0 0 0;">
+            ${period}坚持
+          </p>
+        </div>
+
+        <div style="
+          background: white;
+          padding: 24px;
+          border-radius: 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        ">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="text-align: center;">
+              <div style="font-size: 32px; font-weight: bold; color: #dc2626;">
+                🔥 ${currentStreak}
+              </div>
+              <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">
+                当前连续
+              </div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 32px; font-weight: bold; color: #ea580c;">
+                🏆 ${bestStreak}
+              </div>
+              <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">
+                最佳记录
+              </div>
+            </div>
           </div>
-          <div class="nutrition-row">
-            <span class="nutrition-label">蛋白质</span>
-            <span class="nutrition-value">25g</span>
-          </div>
-          <div class="nutrition-row">
-            <span class="nutrition-label">碳水</span>
-            <span class="nutrition-value">50g</span>
-          </div>
-          <div class="nutrition-row">
-            <span class="nutrition-label">脂肪</span>
-            <span class="nutrition-value">15g</span>
+
+          <div style="
+            background: #fef2f2;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+          ">
+            <div style="font-size: 16px; font-weight: 600; color: #dc2626; margin: 0;">
+              ${memberName}的坚持令人敬佩！
+            </div>
+            <div style="font-size: 14px; color: #7f1d1d; margin-top: 8px;">
+              继续保持，向着更健康的生活前进！
+            </div>
           </div>
         </div>
-        ${data.customMessage ? `<div class="description" style="font-style: italic;">"${data.customMessage}"</div>` : ''}
-      `;
-    default:
-      return `
-        <div class="title">${data.title || '健康生活'}</div>
-        <div class="description">${data.description || '分享健康，分享快乐'}</div>
-        ${data.customMessage ? `<div class="description" style="font-style: italic;">"${data.customMessage}"</div>` : ''}
-      `;
+      </div>
+
+      <style>
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
+      </style>
+    `
+  }
+
+  /**
+   * 食谱卡片HTML模板
+   */
+  private createRecipeCardHTML(data: any, config: ImageGenerationConfig): string {
+    const { recipeName, memberName, calories, protein, ingredients, createdAt } = data
+    const dateStr = format(new Date(createdAt), 'MM月dd日', { locale: zhCN })
+
+    return `
+      <div style="
+        width: ${config.width}px;
+        height: ${config.height}px;
+        background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+        font-family: ${config.fontFamily};
+        color: #1f2937;
+        padding: 40px;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      ">
+        ${config.branding ? `
+          <div style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #c2410c;
+            opacity: 0.7;
+          ">Health Butler</div>
+        ` : ''}
+
+        <div style="margin-bottom: 20px;">
+          <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0; color: #c2410c;">
+            🍽️ ${recipeName}
+          </h1>
+          <p style="font-size: 14px; color: #7c2d12; margin: 0;">
+            由${memberName}创建 • ${dateStr}
+          </p>
+        </div>
+
+        <div style="
+          background: white;
+          padding: 20px;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          margin-bottom: 20px;
+        ">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div style="text-align: center;">
+              <div style="font-size: 24px; font-weight: bold; color: #ea580c;">
+                ${Math.round(calories || 0)}
+              </div>
+              <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">
+                卡路里
+              </div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 24px; font-weight: bold; color: #c2410c;">
+                ${Math.round(protein || 0)}g
+              </div>
+              <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">
+                蛋白质
+              </div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 24px; font-weight: bold; color: #16a34a;">
+                ${ingredients.length}
+              </div>
+              <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">
+                食材
+              </div>
+            </div>
+          </div>
+
+          <div style="background: #fef3c7; padding: 12px; border-radius: 6px;">
+            <div style="font-size: 12px; color: #78350f; font-weight: 600; margin: 0;">
+              主要食材：${ingredients.slice(0, 4).join('、')}${ingredients.length > 4 ? '...' : ''}
+            </div>
+          </div>
+        </div>
+
+        <div style="
+          background: #f0f9ff;
+          padding: 12px;
+          border-radius: 6px;
+          text-align: center;
+          border-left: 4px solid #0369a1;
+        ">
+          <div style="font-size: 14px; color: #0369a1; font-weight: 600; margin: 0;">
+            营养美味，健康生活！
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * 个人记录HTML模板
+   */
+  private createPersonalRecordHTML(data: any, config: ImageGenerationConfig): string {
+    const { memberName, title, description, recordDate, icon } = data
+    const dateStr = format(new Date(recordDate), 'yyyy年MM月dd日 HH:mm', { locale: zhCN })
+
+    return `
+      <div style="
+        width: ${config.width}px;
+        height: ${config.height}px;
+        background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+        font-family: ${config.fontFamily};
+        color: #1f2937;
+        padding: 40px;
+        box-sizing: border-box;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      ">
+        ${config.branding ? `
+          <div style="
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #7c3aed;
+            opacity: 0.7;
+          ">Health Butler</div>
+        ` : ''}
+
+        <div style="margin-bottom: 30px;">
+          <div style="
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 50px;
+            box-shadow: 0 8px 20px rgba(124,58,237,0.2);
+          ">${icon}</div>
+        </div>
+
+        <div style="
+          background: white;
+          padding: 30px;
+          border-radius: 16px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        ">
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 12px 0; color: #7c3aed;">
+            ${title}
+          </h1>
+          <p style="font-size: 16px; color: #6b7280; margin: 0 0 16px 0; line-height: 1.5;">
+            ${description}
+          </p>
+          <div style="font-size: 14px; color: #6b7280; margin: 0;">
+            <span style="font-weight: 600;">时间：</span>${dateStr}
+          </div>
+        </div>
+
+        <div style="font-size: 16px; color: #7c3aed; font-weight: 600; margin-top: 20px;">
+          恭喜${memberName}创造新纪录！
+        </div>
+      </div>
+    `
+  }
+
+  /**
+   * 社区帖子HTML模板
+   */
+  private createCommunityPostHTML(data: any, config: ImageGenerationConfig): string {
+    const { title, content, imageUrl, authorName, createdAt } = data
+    const dateStr = format(new Date(createdAt), 'yyyy年MM月dd日', { locale: zhCN })
+
+    return `
+      <div style="
+        width: ${config.width}px;
+        height: ${config.height}px;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        font-family: ${config.fontFamily};
+        color: #1f2937;
+        padding: 40px;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      ">
+        ${imageUrl ? `
+          <div style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: url('${imageUrl}') center/cover;
+            border-radius: 16px 16px 0 0;
+          "></div>
+          <div style="height: 200px;"></div>
+        ` : ''}
+
+        <div style="${imageUrl ? 'margin-top: 30px;' : ''}">
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 12px 0; color: #15803d;">
+            ${title || '社区分享'}
+          </h1>
+          <div style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">
+            ${authorName} • ${dateStr}
+          </div>
+
+          <div style="
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+          ">
+            <p style="font-size: 16px; color: #1f2937; margin: 0; line-height: 1.6;">
+              ${content}
+            </p>
+          </div>
+
+          <div style="
+            background: #ecfdf5;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            border-left: 4px solid #16a34a;
+          ">
+            <div style="font-size: 14px; color: #15803d; font-weight: 600; margin: 0;">
+              来自Health Butler社区 • 分享健康生活
+            </div>
+          </div>
+        </div>
+      </div>
+    `
   }
 }
 
-/**
- * 生成健康报告卡片
- */
-export async function generateHealthReportCard(data: any): Promise<string> {
-  return generateShareCard('health-report', {
-    memberName: data.memberName,
-    title: `${data.reportType}健康报告`,
-    description: data.summary || '健康状况良好',
-    date: new Date(),
-    customMessage: data.customMessage,
-    inviteCode: data.inviteCode
-  });
+// 导出单例实例
+export const shareImageGenerator = ShareImageGenerator.getInstance()
+
+// 导出工具函数
+export async function generateShareImage(template: ShareTemplate, data: any, config?: Partial<any>): Promise<string> {
+  const generator = ShareImageGenerator.getInstance()
+  return generator.generateShareImage(template, data, config)
 }
 
-/**
- * 生成成就卡片
- */
-export async function generateAchievementCard(data: any): Promise<string> {
-  return generateShareCard('achievement', {
-    memberName: data.memberName,
-    title: data.achievementTitle,
-    description: data.achievementDescription,
-    date: data.unlockedAt || new Date(),
-    customMessage: data.customMessage,
-    inviteCode: data.inviteCode
-  });
-}
-
-/**
- * 生成餐饮打卡卡片
- */
-export async function generateMealLogCard(data: any): Promise<string> {
-  return generateShareCard('meal-log', {
-    memberName: data.memberName,
-    title: `${data.mealType}打卡`,
-    description: `营养均衡 ${data.calories}千卡`,
-    date: data.date,
-    customMessage: data.customMessage,
-    inviteCode: data.inviteCode
-  });
-}
-
-/**
- * 生成目标达成卡片
- */
-export async function generateGoalAchievementCard(data: any): Promise<string> {
-  return generateShareCard('achievement', {
-    memberName: data.memberName,
-    title: '🎉 目标达成',
-    description: `完成了${data.goalType}，进度${data.progress}%`,
-    date: new Date(),
-    customMessage: data.customMessage,
-    inviteCode: data.inviteCode
-  });
-}
-
-/**
- * 生成食谱卡片
- */
-export async function generateRecipeCard(data: any): Promise<string> {
-  return generateShareCard('meal-log', {
-    memberName: data.memberName,
-    title: data.recipeName,
-    description: data.description,
-    date: new Date(),
-    customMessage: data.customMessage,
-    inviteCode: data.inviteCode
-  });
-}
-
-/**
- * 生成连续打卡卡片
- */
-export async function generateCheckInStreakCard(data: any): Promise<string> {
-  return generateShareCard('achievement', {
-    memberName: data.memberName,
-    title: '🔥 连续打卡',
-    description: `已连续打卡${data.currentStreak}天，总计${data.totalDays}天`,
-    date: data.lastCheckIn || new Date(),
-    customMessage: data.customMessage,
-    inviteCode: data.inviteCode
-  });
-}
-
-/**
- * 生成体重里程碑卡片
- */
-export async function generateWeightMilestoneCard(data: any): Promise<string> {
-  return generateShareCard('health-report', {
-    memberName: data.memberName,
-    title: '⚖️ 体重里程碑',
-    description: `当前体重：${data.currentWeight}kg`,
-    date: data.measuredAt,
-    customMessage: data.customMessage,
-    inviteCode: data.inviteCode
-  });
+export async function generateSharePreview(template: ShareTemplate, data: any): Promise<string> {
+  const generator = ShareImageGenerator.getInstance()
+  const config = SHARE_TEMPLATE_CONFIGS[template]
+  return generator.generateShareImage(template, data, {
+    ...config,
+    quality: 70, // 预览质量稍低
+    width: 600, // 预览尺寸较小
+    height: 315
+  })
 }

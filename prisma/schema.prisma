@@ -440,12 +440,17 @@ model HealthData {
   measuredAt DateTime         @default(now())
   source     HealthDataSource @default(MANUAL)
   notes      String?
+  deviceConnectionId String? // 设备连接ID（如果是设备数据）
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // 关联关系
+  deviceConnection DeviceConnection? @relation("DeviceHealthData", fields: [deviceConnectionId], references: [id], onDelete: SetNull)
+
   @@index([memberId, measuredAt])
   @@index([memberId])
+  @@index([deviceConnectionId])
   @@map("health_data")
 }
 
@@ -454,6 +459,13 @@ enum HealthDataSource {
   MANUAL // 手动录入
   WEARABLE // 可穿戴设备
   MEDICAL_REPORT // 体检报告
+  APPLE_HEALTHKIT // Apple HealthKit
+  HUAWEI_HEALTH // 华为Health
+  GOOGLE_FIT // Google Fit
+  XIAOMI_HEALTH // 小米运动健康
+  SAMSUNG_HEALTH // Samsung Health
+  GARMIN_CONNECT // Garmin Connect
+  FITBIT // Fitbit
 }
 
 // 健康数据提醒配置表
@@ -2368,6 +2380,8 @@ enum ShareContentType {
   ACHIEVEMENT     // 成就徽章
   CHECK_IN_STREAK // 连续打卡
   WEIGHT_MILESTONE // 体重里程碑
+  WEEKLY_SUMMARY  // 周报总结
+  MONTHLY_REPORT  // 月报
 }
 
 // 分享平台枚举
@@ -3115,4 +3129,136 @@ model WasteLog {
   @@index([wasteReason])
   @@index([wastedAt])
   @@map("waste_logs")
+}
+
+// 设备连接表
+model DeviceConnection {
+  id       String       @id @default(cuid())
+  memberId String
+  member   FamilyMember @relation("MemberDevices", fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 设备信息
+  deviceId      String     @unique // 设备唯一标识
+  deviceType    DeviceType // 设备类型
+  deviceName    String     // 设备名称
+  manufacturer  String     // 设备制造商
+  model         String?    // 设备型号
+  firmwareVersion String?   // 固件版本
+
+  // 连接信息
+  platform        PlatformType // 平台类型
+  accessToken     String?     // 访问令牌
+  refreshToken    String?     // 刷新令牌
+  lastSyncAt      DateTime?    // 最后同步时间
+  syncStatus      SyncStatus   @default(PENDING) // 同步状态
+  syncInterval    Int          @default(1800) // 同步间隔（秒），默认30分钟
+
+  // 数据范围权限
+  permissions    DevicePermission[] // 用户授权的数据类型
+  dataTypes      HealthDataType[] // 同步的数据类型
+
+  // 连接状态
+  isActive       Boolean @default(true) // 是否激活
+  isAutoSync     Boolean @default(true) // 是否自动同步
+  connectionDate DateTime @default(now()) // 连接时间
+  disconnectionDate DateTime? // 断开连接时间
+
+  // 错误处理
+  lastError     String?  // 最后一次错误信息
+  errorCount    Int      @default(0) // 错误次数
+  retryCount    Int      @default(0) // 重试次数
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  healthData HealthData[] @relation("DeviceHealthData")
+
+  @@unique([memberId, deviceId])
+  @@index([memberId])
+  @@index([deviceType])
+  @@index([platform])
+  @@index([isActive])
+  @@index([lastSyncAt])
+  @@map("device_connections")
+}
+
+// 设备类型枚举
+enum DeviceType {
+  SMARTWATCH     // 智能手表
+  FITNESS_BAND   // 健身手环
+  SMART_SCALE    // 智能体重秤
+  BLOOD_PRESSURE_MONITOR // 血压计
+  GLUCOSE_METER  // 血糖仪
+  SMART_RING     // 智能戒指
+  OTHER          // 其他设备
+}
+
+// 平台类型枚举
+enum PlatformType {
+  APPLE_HEALTHKIT  // Apple HealthKit
+  HUAWEI_HEALTH   // 华为Health
+  GOOGLE_FIT      // Google Fit
+  XIAOMI_HEALTH   // 小米运动健康
+  SAMSUNG_HEALTH  // Samsung Health
+  GARMIN_CONNECT  // Garmin Connect
+  FITBIT         // Fitbit
+  OTHER_PLATFORM   // 其他平台
+}
+
+// 同步状态枚举
+enum SyncStatus {
+  PENDING    // 等待同步
+  SYNCING    // 同步中
+  SUCCESS    // 同步成功
+  FAILED     // 同步失败
+  DISABLED   // 已禁用
+}
+
+// 设备权限枚举
+enum DevicePermission {
+  READ_STEPS          // 读取步数
+  READ_HEART_RATE     // 读取心率
+  READ_CALORIES       // 读取卡路里
+  READ_SLEEP          // 读取睡眠数据
+  READ_WEIGHT         // 读取体重
+  READ_BLOOD_PRESSURE // 读取血压
+  READ_DISTANCE       // 读取距离
+  READ_ACTIVE_MINUTES  // 读取活动时间
+  READ_EXERCISE      // 读取运动记录
+}
+
+// 健康数据类型枚举
+enum HealthDataType {
+  STEPS             // 步数
+  HEART_RATE         // 心率
+  CALORIES_BURNED    // 消耗卡路里
+  SLEEP_DURATION     // 睡眠时长
+  SLEEP_QUALITY      // 睡眠质量
+  WEIGHT            // 体重
+  BODY_FAT          // 体脂率
+  MUSCLE_MASS       // 肌肉量
+  BLOOD_PRESSURE     // 血压
+  DISTANCE          // 距离
+  ACTIVE_MINUTES     // 活动时间
+  EXERCISE_TYPE     // 运动类型
+  EXERCISE_DURATION // 运动时长
+  RESTING_HEART_RATE // 静息心率
+  FLOORS_CLIMBED    // 爬楼层数
+  STANDING_HOURS    // 站立时间
+}
+
+// 扩展FamilyMember模型
+model FamilyMember {
+  // ... 现有字段保持不变 ...
+
+  // 关联关系
+  createdFamilies Family[]       @relation("FamilyCreator")
+  familyMembers   FamilyMember[]
+  platformAccounts PlatformAccount[] @relation("PlatformAccounts")
+  orders Order[] @relation("UserOrders")
+  devices DeviceConnection[] @relation("MemberDevices") // 新增设备关联
+
+  // ... 现有关联关系保持不变 ...
 }

@@ -1,414 +1,731 @@
 /**
- * 社交分享内容生成服务
- * 负责生成各种类型的分享内容，包括健康报告、目标达成、食谱等
+ * 分享内容生成服务
+ * 生成各种类型的分享内容和描述
  */
 
-import { PrismaClient, ShareContentType, FamilyMember, HealthReport, Achievement, MealLog } from '@prisma/client';
-import { generateHealthReportCard } from './templates/health-report-template';
-import { generateAchievementCard } from './templates/achievement-template';
-import { generateMealLogCard } from './templates/meal-log-template';
-import { generateGoalAchievementCard } from './templates/goal-achievement-template';
-import { generateRecipeCard } from './templates/recipe-template';
-import { generateCheckInStreakCard } from './templates/check-in-streak-template';
-import { generateWeightMilestoneCard } from './templates/weight-milestone-template';
-import { generateInviteCode } from './share-link';
-
-const prisma = new PrismaClient();
-
-export interface ShareContentData {
-  memberId: string;
-  contentType: ShareContentType;
-  contentId: string;
-  title?: string;
-  description?: string;
-  customMessage?: string;
-  privacyLevel?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
-  allowComment?: boolean;
-  allowLike?: boolean;
-  expiresAt?: Date;
-}
-
-export interface GeneratedShareContent {
-  title: string;
-  description: string;
-  imageUrl?: string;
-  metadata: Record<string, any>;
-}
+import { format } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
+import type { 
+  ShareContentType, 
+  ShareContentInput, 
+  ShareContentResult,
+  ShareMetadata,
+  OpenGraphMetadata,
+  TwitterCardMetadata
+} from '@/types/social-sharing'
+import { 
+  SHARE_CONTENT_TYPE_LABELS,
+  SHARE_TEMPLATE_CONFIGS,
+  ShareTemplate 
+} from '@/types/social-sharing'
+import { prisma } from '@/lib/db'
 
 /**
- * 生成分享内容
+ * 分享内容生成器类
  */
-export async function generateShareContent(data: ShareContentData): Promise<GeneratedShareContent> {
-  const { memberId, contentType, contentId, title, description, customMessage } = data;
+export class ShareContentGenerator {
+  private static instance: ShareContentGenerator
 
-  // 获取成员信息
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId },
-    include: { family: true }
-  });
-
-  if (!member) {
-    throw new Error('成员不存在');
+  static getInstance(): ShareContentGenerator {
+    if (!ShareContentGenerator.instance) {
+      ShareContentGenerator.instance = new ShareContentGenerator()
+    }
+    return ShareContentGenerator.instance
   }
 
-  // 生成邀请码
-  const inviteCode = await generateInviteCode();
+  /**
+   * 生成分享内容
+   */
+  async generateShareContent(input: ShareContentInput): Promise<ShareContentResult> {
+    const shareToken = this.generateShareToken()
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://health-butler.com'
+    const shareUrl = `${baseUrl}/share/${shareToken}`
 
-  let contentData: GeneratedShareContent;
+    // 根据类型生成内容
+    const content = await this.generateContentByType(input, shareUrl)
+    
+    // 生成元数据
+    const metadata = this.generateMetadata(input, shareUrl)
 
-  switch (contentType) {
-    case 'HEALTH_REPORT':
-      contentData = await generateHealthReportContent(memberId, contentId, customMessage, inviteCode);
-      break;
-    case 'GOAL_ACHIEVEMENT':
-      contentData = await generateGoalAchievementContent(memberId, contentId, customMessage, inviteCode);
-      break;
-    case 'MEAL_LOG':
-      contentData = await generateMealLogContent(memberId, contentId, customMessage, inviteCode);
-      break;
-    case 'RECIPE':
-      contentData = await generateRecipeContent(memberId, contentId, customMessage, inviteCode);
-      break;
-    case 'ACHIEVEMENT':
-      contentData = await generateAchievementContent(memberId, contentId, customMessage, inviteCode);
-      break;
-    case 'CHECK_IN_STREAK':
-      contentData = await generateCheckInStreakContent(memberId, contentId, customMessage, inviteCode);
-      break;
-    case 'WEIGHT_MILESTONE':
-      contentData = await generateWeightMilestoneContent(memberId, contentId, customMessage, inviteCode);
-      break;
-    default:
-      throw new Error(`不支持的分享内容类型: ${contentType}`);
+    return {
+      content: content.content,
+      imageUrl: content.imageUrl,
+      shareUrl,
+      platforms: input.platforms,
+      metadata
+    }
   }
 
-  // 应用自定义标题和描述
-  if (title) contentData.title = title;
-  if (description) contentData.description = description;
-
-  // 添加邀请码到元数据
-  contentData.metadata.inviteCode = inviteCode;
-
-  return contentData;
-}
-
-/**
- * 生成健康报告分享内容
- */
-async function generateHealthReportContent(memberId: string, reportId: string, customMessage?: string, inviteCode?: string): Promise<GeneratedShareContent> {
-  const report = await prisma.healthReport.findFirst({
-    where: {
-      id: reportId,
-      memberId
+  /**
+   * 根据类型生成内容
+   */
+  private async generateContentByType(input: ShareContentInput, shareUrl: string) {
+    switch (input.type) {
+      case ShareContentType.HEALTH_REPORT:
+        return this.generateHealthReportContent(input, shareUrl)
+      case ShareContentType.GOAL_ACHIEVED:
+        return this.generateGoalAchievedContent(input, shareUrl)
+      case ShareContentType.RECIPE_CREATED:
+        return this.generateRecipeCreatedContent(input, shareUrl)
+      case ShareContentType.ACHIEVEMENT_UNLOCKED:
+        return this.generateAchievementUnlockedContent(input, shareUrl)
+      case ShareContentType.CHECKIN_STREAK:
+        return this.generateCheckinStreakContent(input, shareUrl)
+      case ShareContentType.WEIGHT_MILESTONE:
+        return this.generateWeightMilestoneContent(input, shareUrl)
+      case ShareContentType.PERSONAL_RECORD:
+        return this.generatePersonalRecordContent(input, shareUrl)
+      case ShareContentType.COMMUNITY_POST:
+        return this.generateCommunityPostContent(input, shareUrl)
+      default:
+        return this.generateDefaultContent(input, shareUrl)
     }
-  });
-
-  if (!report) {
-    throw new Error('健康报告不存在');
   }
 
-  const imageUrl = await generateHealthReportCard({
-    memberName: report.member?.name || '健康达人',
-    reportType: report.reportType,
-    period: `${report.startDate.toLocaleDateString()} - ${report.endDate.toLocaleDateString()}`,
-    overallScore: report.overallScore || 0,
-    summary: report.summary || '',
-    customMessage,
-    inviteCode
-  });
-
-  return {
-    title: `${report.member?.name || '我'}的${getReportTypeLabel(report.reportType)}健康报告`,
-    description: `${report.summary || '健康生活，从记录开始'}📊 综合健康评分: ${report.overallScore || 0}分`,
-    imageUrl,
-    metadata: {
-      reportId: report.id,
-      reportType: report.reportType,
-      period: {
-        start: report.startDate,
-        end: report.endDate
-      },
-      score: report.overallScore
-    }
-  };
-}
-
-/**
- * 生成目标达成分享内容
- */
-async function generateGoalAchievementContent(memberId: string, goalId: string, customMessage?: string, inviteCode?: string): Promise<GeneratedShareContent> {
-  const goal = await prisma.healthGoal.findFirst({
-    where: {
-      id: goalId,
-      memberId,
-      status: 'COMPLETED'
-    }
-  });
-
-  if (!goal) {
-    throw new Error('目标不存在或未完成');
-  }
-
-  const imageUrl = await generateGoalAchievementCard({
-    memberName: goal.member?.name || '健康达人',
-    goalType: goal.goalType,
-    targetWeight: goal.targetWeight,
-    currentWeight: goal.currentWeight,
-    progress: goal.progress || 0,
-    startDate: goal.startDate,
-    targetDate: goal.targetDate,
-    customMessage,
-    inviteCode
-  });
-
-  return {
-    title: `🎉 目标达成！${goal.member?.name || '我'}完成了${getGoalTypeLabel(goal.goalType)}`,
-    description: `坚持就是胜利！${goal.progress || 0}%的进度达成${customMessage || '，继续加油！'}`,
-    imageUrl,
-    metadata: {
-      goalId: goal.id,
-      goalType: goal.goalType,
-      progress: goal.progress,
-      targetWeight: goal.targetWeight,
-      currentWeight: goal.currentWeight
-    }
-  };
-}
-
-/**
- * 生成餐饮打卡分享内容
- */
-async function generateMealLogContent(memberId: string, mealLogId: string, customMessage?: string, inviteCode?: string): Promise<GeneratedShareContent> {
-  const mealLog = await prisma.mealLog.findFirst({
-    where: {
-      id: mealLogId,
-      memberId
-    },
-    include: {
-      foods: {
-        include: {
-          food: true
+  /**
+   * 生成健康报告分享内容
+   */
+  private async generateHealthReportContent(input: ShareContentInput, shareUrl: string) {
+    // 获取用户健康数据
+    const member = await prisma.familyMember.findUnique({
+      where: { id: input.memberId },
+      include: {
+        healthData: {
+          orderBy: { measuredAt: 'desc' },
+          take: 30
+        },
+        healthGoals: {
+          where: { status: 'ACTIVE' },
+          take: 1
         }
       }
-    }
-  });
+    })
 
-  if (!mealLog) {
-    throw new Error('餐饮记录不存在');
+    if (!member) {
+      throw new Error('用户未找到')
+    }
+
+    // 计算健康指标
+    const latestData = member.healthData[0]
+    const healthScore = this.calculateHealthScore(member.healthData)
+    const weightChange = this.calculateWeightChange(member.healthData)
+
+    const title = '我的健康报告'
+    const description = this.generateHealthDescription(healthScore, weightChange, member.healthData.length)
+    const imageUrl = await this.generateHealthReportImage({
+      memberName: member.name,
+      healthScore,
+      weightChange,
+      dataPoints: member.healthData.length,
+      latestData,
+      period: '最近30天'
+    })
+
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        targetId: input.targetId,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
+    }
   }
 
-  const foodNames = mealLog.foods.map(f => f.food.name).join('、');
-  const imageUrl = await generateMealLogCard({
-    memberName: mealLog.member?.name || '美食家',
-    mealType: mealLog.mealType,
-    date: mealLog.date,
-    foods: mealLog.foods.map(f => ({
-      name: f.food.name,
-      amount: f.amount
-    })),
-    calories: mealLog.calories,
-    protein: mealLog.protein,
-    carbs: mealLog.carbs,
-    fat: mealLog.fat,
-    customMessage,
-    inviteCode
-  });
-
-  return {
-    title: `${mealLog.member?.name || '我'}的${getMealTypeLabel(mealLog.mealType)}打卡`,
-    description: `今日${getMealTypeLabel(mealLog.mealType)}：${foodNames} 🍽️ 营养均衡${mealLog.calories}千卡`,
-    imageUrl,
-    metadata: {
-      mealLogId: mealLog.id,
-      mealType: mealLog.mealType,
-      date: mealLog.date,
-      calories: mealLog.calories,
-      protein: mealLog.protein,
-      carbs: mealLog.carbs,
-      fat: mealLog.fat
+  /**
+   * 生成目标达成分享内容
+   */
+  private async generateGoalAchievedContent(input: ShareContentInput, shareUrl: string) {
+    if (!input.targetId) {
+      throw new Error('目标ID不能为空')
     }
-  };
-}
 
-/**
- * 生成食谱分享内容
- */
-async function generateRecipeContent(memberId: string, recipeId: string, customMessage?: string, inviteCode?: string): Promise<GeneratedShareContent> {
-  // 这里需要根据实际的食谱模型来实现
-  // 暂时返回模拟数据
-  const imageUrl = await generateRecipeCard({
-    memberName: '美食家',
-    recipeName: '健康营养餐',
-    description: '营养均衡，美味可口',
-    calories: 450,
-    protein: 25,
-    carbs: 50,
-    fat: 15,
-    customMessage,
-    inviteCode
-  });
+    const healthGoal = await prisma.healthGoal.findUnique({
+      where: { id: input.targetId },
+      include: {
+        member: {
+          select: { name: true }
+        }
+      }
+    })
 
-  return {
-    title: '分享一道健康食谱：营养均衡餐',
-    description: '美味又健康，营养搭配合理 🥗 蛋白质丰富，维生素充足',
-    imageUrl,
-    metadata: {
-      recipeId,
-      calories: 450,
-      protein: 25,
-      carbs: 50,
-      fat: 15
+    if (!healthGoal) {
+      throw new Error('健康目标未找到')
     }
-  };
-}
 
-/**
- * 生成成就徽章分享内容
- */
-async function generateAchievementContent(memberId: string, achievementId: string, customMessage?: string, inviteCode?: string): Promise<GeneratedShareContent> {
-  const achievement = await prisma.achievement.findFirst({
-    where: {
-      id: achievementId,
-      memberId,
-      isUnlocked: true
+    const title = `🎯 ${healthGoal.title} 目标达成！`
+    const description = this.generateGoalAchievementDescription(healthGoal)
+    const imageUrl = await this.generateGoalAchievedImage({
+      memberName: healthGoal.member.name,
+      goalTitle: healthGoal.title,
+      progress: 100,
+      achievedDate: healthGoal.endDate || new Date(),
+      metric: healthGoal.goalType
+    })
+
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        targetId: input.targetId,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
     }
-  });
-
-  if (!achievement) {
-    throw new Error('成就不存在或未解锁');
   }
 
-  const imageUrl = await generateAchievementCard({
-    memberName: achievement.member?.name || '成就达人',
-    achievementTitle: achievement.title,
-    achievementDescription: achievement.description,
-    rarity: achievement.rarity,
-    points: achievement.points,
-    unlockedAt: achievement.unlockedAt,
-    customMessage,
-    inviteCode
-  });
+  /**
+   * 生成食谱分享内容
+   */
+  private async generateRecipeCreatedContent(input: ShareContentInput, shareUrl: string) {
+    if (!input.targetId) {
+      throw new Error('食谱ID不能为空')
+    }
 
-  return {
-    title: `🏆 ${achievement.member?.name || '我'}解锁了${achievement.title}！`,
-    description: `${achievement.description} ${getRarityLabel(achievement.rarity)}成就 +${achievement.points}积分`,
-    imageUrl,
-    metadata: {
-      achievementId: achievement.id,
-      type: achievement.type,
-      rarity: achievement.rarity,
+    const recipe = await prisma.recipe.findUnique({
+      where: { id: input.targetId },
+      include: {
+        member: {
+          select: { name: true }
+        },
+        ingredients: {
+          include: {
+            food: {
+              select: { name: true, imageUrl: true }
+            }
+          }
+        }
+      }
+    })
+
+    if (!recipe) {
+      throw new Error('食谱未找到')
+    }
+
+    const title = `🍽️ 我创建的健康食谱：${recipe.name}`
+    const description = this.generateRecipeDescription(recipe)
+    const imageUrl = await this.generateRecipeImage({
+      recipeName: recipe.name,
+      memberName: recipe.member.name,
+      calories: recipe.calories,
+      protein: recipe.protein,
+      ingredients: recipe.ingredients.map(i => i.food.name),
+      createdAt: recipe.createdAt
+    })
+
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        targetId: input.targetId,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
+    }
+  }
+
+  /**
+   * 生成成就解锁分享内容
+   */
+  private async generateAchievementUnlockedContent(input: ShareContentInput, shareUrl: string) {
+    if (!input.targetId) {
+      throw new Error('成就ID不能为空')
+    }
+
+    const achievement = await prisma.achievement.findUnique({
+      where: { id: input.targetId },
+      include: {
+        member: {
+          select: { name: true }
+        }
+      }
+    })
+
+    if (!achievement) {
+      throw new Error('成就未找到')
+    }
+
+    const { ACHIEVEMENT_TYPE_CONFIGS } = await import('@/types/social-sharing')
+    const config = ACHIEVEMENT_TYPE_CONFIGS[achievement.type]
+    
+    const title = `🏆 解锁成就：${config.label}`
+    const description = `${config.description} - ${achievement.points}积分`
+    const imageUrl = await this.generateAchievementImage({
+      memberName: achievement.member.name,
+      achievementType: achievement.type,
+      achievementTitle: config.label,
+      achievementDescription: config.description,
       points: achievement.points,
-      unlockedAt: achievement.unlockedAt
+      rarity: achievement.rarity,
+      unlockedAt: achievement.unlockedAt || new Date(),
+      icon: config.icon,
+      color: config.color
+    })
+
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        targetId: input.targetId,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
     }
-  };
-}
-
-/**
- * 生成连续打卡分享内容
- */
-async function generateCheckInStreakContent(memberId: string, streakId: string, customMessage?: string, inviteCode?: string): Promise<GeneratedShareContent> {
-  const streak = await prisma.trackingStreak.findUnique({
-    where: { memberId }
-  });
-
-  if (!streak || streak.currentStreak === 0) {
-    throw new Error('暂无打卡记录');
   }
 
-  const imageUrl = await generateCheckInStreakCard({
-    memberName: streak.member?.name || '打卡达人',
-    currentStreak: streak.currentStreak,
-    longestStreak: streak.longestStreak,
-    totalDays: streak.totalDays,
-    lastCheckIn: streak.lastCheckIn,
-    customMessage,
-    inviteCode
-  });
+  /**
+   * 生成连续打卡分享内容
+   */
+  private async generateCheckinStreakContent(input: ShareContentInput, shareUrl: string) {
+    const member = await prisma.familyMember.findUnique({
+      where: { id: input.memberId },
+      include: {
+        healthData: {
+          where: {
+            measuredAt: {
+              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 最近30天
+            }
+          },
+          orderBy: { measuredAt: 'desc' }
+        }
+      }
+    })
 
-  return {
-    title: `🔥 ${streak.member?.name || '我'}已连续打卡${streak.currentStreak}天！`,
-    description: `坚持就是胜利！连续${streak.currentStreak}天健康打卡，总计${streak.totalDays}天${customMessage || '，继续保持！'}`,
-    imageUrl,
-    metadata: {
-      currentStreak: streak.currentStreak,
-      longestStreak: streak.longestStreak,
-      totalDays: streak.totalDays,
-      lastCheckIn: streak.lastCheckIn
+    if (!member) {
+      throw new Error('用户未找到')
     }
-  };
-}
 
-/**
- * 生成体重里程碑分享内容
- */
-async function generateWeightMilestoneContent(memberId: string, milestoneId: string, customMessage?: string, inviteCode?: string): Promise<GeneratedShareContent> {
-  // 获取最新的体重数据
-  const latestWeight = await prisma.healthData.findFirst({
-    where: { memberId },
-    orderBy: { measuredAt: 'desc' }
-  });
+    const streakDays = this.calculateStreakDays(member.healthData)
+    const title = `🔥 连续打卡${streakDays}天！`
+    const description = `坚持记录健康数据${streakDays}天，继续保持！`
+    const imageUrl = await this.generateStreakImage({
+      memberName: member.name,
+      streakDays,
+      currentStreak: streakDays,
+      bestStreak: streakDays,
+      period: '当前',
+      icon: '🔥'
+    })
 
-  if (!latestWeight || !latestWeight.weight) {
-    throw new Error('暂无体重数据');
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
+    }
   }
 
-  const imageUrl = await generateWeightMilestoneCard({
-    memberName: latestWeight.member?.name || '减重达人',
-    currentWeight: latestWeight.weight,
-    measuredAt: latestWeight.measuredAt,
-    customMessage,
-    inviteCode
-  });
+  /**
+   * 生成体重里程碑分享内容
+   */
+  private async generateWeightMilestoneContent(input: ShareContentInput, shareUrl: string) {
+    const member = await prisma.familyMember.findUnique({
+      where: { id: input.memberId },
+      include: {
+        healthData: {
+          where: { weight: { not: null } },
+          orderBy: { measuredAt: 'desc' },
+          take: 100
+        }
+      }
+    })
 
-  return {
-    title: `⚖️ ${latestWeight.member?.name || '我'}的体重里程碑：${latestWeight.weight}kg`,
-    description: `健康体重管理新纪录！${latestWeight.measuredAt.toLocaleDateString()}测量${customMessage || '，继续努力！'}`,
-    imageUrl,
-    metadata: {
-      weight: latestWeight.weight,
-      measuredAt: latestWeight.measuredAt
+    if (!member) {
+      throw new Error('用户未找到')
     }
-  };
+
+    const weightData = member.healthData.filter(d => d.weight !== null)
+    if (weightData.length < 2) {
+      throw new Error('体重数据不足')
+    }
+
+    const currentWeight = weightData[0].weight!
+    const initialWeight = weightData[weightData.length - 1].weight!
+    const weightLoss = initialWeight - currentWeight
+    const weightLossPercent = (weightLoss / initialWeight) * 100
+
+    const title = `🎯 减重${weightLoss.toFixed(1)}kg里程碑达成！`
+    const description = `从${initialWeight.toFixed(1)}kg减到${currentWeight.toFixed(1)}kg，减重${weightLossPercent.toFixed(1)}%`
+    const imageUrl = await this.generateWeightMilestoneImage({
+      memberName: member.name,
+      initialWeight,
+      currentWeight,
+      weightLoss,
+      weightLossPercent,
+      period: '累计',
+      icon: '📉'
+    })
+
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
+    }
+  }
+
+  /**
+   * 生成个人记录分享内容
+   */
+  private async generatePersonalRecordContent(input: ShareContentInput, shareUrl: string) {
+    // 这里可以根据具体的记录类型生成不同内容
+    // 暂时生成通用的个人记录内容
+    const member = await prisma.familyMember.findUnique({
+      where: { id: input.memberId },
+      select: { name: true }
+    })
+
+    if (!member) {
+      throw new Error('用户未找到')
+    }
+
+    const title = '⭐ 创造个人新纪录！'
+    const description = input.customMessage || '在健康管理的道路上又迈出了重要一步'
+    const imageUrl = await this.generatePersonalRecordImage({
+      memberName: member.name,
+      title,
+      description,
+      recordDate: new Date(),
+      icon: '⭐'
+    })
+
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
+    }
+  }
+
+  /**
+   * 生成社区帖子分享内容
+   */
+  private async generateCommunityPostContent(input: ShareContentInput, shareUrl: string) {
+    // 社区帖子通常已经有完整内容，这里主要是生成分享卡片
+    const title = input.title || '分享到社区'
+    const description = input.customMessage || '分享我的健康生活'
+    const imageUrl = input.imageUrl || '/images/default-community-share.jpg'
+
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        targetId: input.targetId,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
+    }
+  }
+
+  /**
+   * 生成默认分享内容
+   */
+  private async generateDefaultContent(input: ShareContentInput, shareUrl: string) {
+    const title = input.title || '健康生活分享'
+    const description = input.customMessage || '分享我的健康数据'
+    const imageUrl = input.imageUrl || '/images/default-share.jpg'
+
+    return {
+      content: {
+        id: '', // 会在API中生成
+        memberId: input.memberId,
+        type: input.type,
+        title,
+        description,
+        imageUrl,
+        targetId: input.targetId,
+        privacyLevel: input.privacyLevel,
+        createdAt: new Date()
+      },
+      imageUrl
+    }
+  }
+
+  /**
+   * 生成分享元数据
+   */
+  private generateMetadata(input: ShareContentInput, shareUrl: string): ShareMetadata {
+    const openGraph = this.generateOpenGraphMetadata(input, shareUrl)
+    const twitterCard = this.generateTwitterCardMetadata(input, shareUrl)
+
+    return {
+      openGraph,
+      twitterCard,
+      customParams: {
+        platforms: input.platforms,
+        privacyLevel: input.privacyLevel,
+        customMessage: input.customMessage
+      }
+    }
+  }
+
+  /**
+   * 生成Open Graph元数据
+   */
+  private generateOpenGraphMetadata(input: ShareContentInput, shareUrl: string): OpenGraphMetadata {
+    return {
+      title: input.title,
+      description: input.description || `Health Butler - ${SHARE_CONTENT_TYPE_LABELS[input.type]}`,
+      image: input.imageUrl || '/images/og-default.jpg',
+      url: shareUrl,
+      type: 'website',
+      siteName: 'Health Butler'
+    }
+  }
+
+  /**
+   * 生成Twitter Card元数据
+   */
+  private generateTwitterCardMetadata(input: ShareContentInput, shareUrl: string): TwitterCardMetadata {
+    return {
+      card: 'summary_large_image',
+      title: input.title,
+      description: input.description || `Health Butler - ${SHARE_CONTENT_TYPE_LABELS[input.type]}`,
+      image: input.imageUrl || '/images/og-default.jpg',
+      site: '@healthbutler'
+    }
+  }
+
+  /**
+   * 生成分享令牌
+   */
+  private generateShareToken(): string {
+    const timestamp = Date.now()
+    const random = Math.random().toString(36).substring(2, 15)
+    return `${timestamp}_${random}`
+  }
+
+  /**
+   * 计算健康评分
+   */
+  private calculateHealthScore(healthData: any[]): number {
+    if (healthData.length === 0) return 50
+    
+    // 简化的健康评分算法
+    const latestData = healthData[0]
+    let score = 50
+
+    // 体重指标
+    if (latestData.weight && latestData.weight > 40 && latestData.weight < 100) {
+      score += 10
+    }
+
+    // 心率指标
+    if (latestData.heartRate && latestData.heartRate > 60 && latestData.heartRate < 100) {
+      score += 10
+    }
+
+    // 血压指标
+    if (latestData.bloodPressureSystolic && latestData.bloodPressureDiastolic) {
+      const systolic = latestData.bloodPressureSystolic
+      const diastolic = latestData.bloodPressureDiastolic
+      if (systolic >= 90 && systolic <= 120 && diastolic >= 60 && diastolic <= 80) {
+        score += 15
+      }
+    }
+
+    // 数据连续性
+    if (healthData.length >= 7) {
+      score += 15
+    }
+
+    return Math.min(score, 100)
+  }
+
+  /**
+   * 计算体重变化
+   */
+  private calculateWeightChange(healthData: any[]): { lost: number; period: string } {
+    const weightData = healthData.filter(d => d.weight !== null)
+    if (weightData.length < 2) return { lost: 0, period: '暂无数据' }
+
+    const currentWeight = weightData[0].weight
+    const initialWeight = weightData[weightData.length - 1].weight
+    const weightLoss = initialWeight - currentWeight
+
+    const daysDiff = Math.floor(
+      (new Date(weightData[0].measuredAt).getTime() - 
+       new Date(weightData[weightData.length - 1].measuredAt).getTime()) / 
+       (1000 * 60 * 60 * 24)
+    )
+
+    return {
+      lost: weightLoss || 0,
+      period: `${daysDiff}天`
+    }
+  }
+
+  /**
+   * 生成健康描述
+   */
+  private generateHealthDescription(healthScore: number, weightChange: any, dataPoints: number): string {
+    const descriptions = []
+
+    descriptions.push(`健康评分${healthScore}分`)
+    
+    if (weightChange.lost > 0) {
+      descriptions.push(`${weightChange.period}减重${weightChange.lost.toFixed(1)}kg`)
+    }
+
+    descriptions.push(`记录健康数据${dataPoints}次`)
+
+    return descriptions.join('，') + '。'
+  }
+
+  /**
+   * 生成目标达成描述
+   */
+  private generateGoalAchievementDescription(goal: any): string {
+    const achievedDate = goal.endDate || new Date()
+    const dateStr = format(achievedDate, 'yyyy年MM月dd日', { locale: zhCN })
+    
+    return `在${dateStr}成功达成了"${goal.title}"目标，为我的健康管理增添了动力！`
+  }
+
+  /**
+   * 生成食谱描述
+   */
+  private generateRecipeDescription(recipe: any): string {
+    const nutrition = []
+    
+    if (recipe.calories) nutrition.push(`${Math.round(recipe.calories)}卡路里`)
+    if (recipe.protein) nutrition.push(`${Math.round(recipe.protein)}g蛋白质`)
+    if (recipe.carbs) nutrition.push(`${Math.round(recipe.carbs)}g碳水`)
+    if (recipe.fat) nutrition.push(`${Math.round(recipe.fat)}g脂肪`)
+
+    const nutritionText = nutrition.join('，')
+    const ingredientsCount = recipe.ingredients.length
+    
+    return `营养丰富的${recipe.name}，${ingredientsCount}种食材，${nutritionText}。快来试试这道健康美食吧！`
+  }
+
+  /**
+   * 计算连续打卡天数
+   */
+  private calculateStreakDays(healthData: any[]): number {
+    if (healthData.length === 0) return 0
+
+    const sortedData = healthData.sort((a, b) => 
+      new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime()
+    )
+
+    let streak = 0
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    for (let i = 0; i < sortedData.length; i++) {
+      const dataDate = new Date(sortedData[i].measuredAt)
+      dataDate.setHours(0, 0, 0, 0)
+
+      const daysDiff = Math.floor((today.getTime() - dataDate.getTime()) / (1000 * 60 * 60 * 24))
+      
+      if (daysDiff === streak) {
+        streak++
+      } else {
+        break
+      }
+    }
+
+    return streak
+  }
+
+  // 图片生成方法（简化版本，实际实现中会调用图片生成服务）
+  private async generateHealthReportImage(data: any): Promise<string> {
+    // 临时返回默认图片URL，实际会生成个性化图片
+    return '/images/share/health-report.jpg'
+  }
+
+  private async generateGoalAchievedImage(data: any): Promise<string> {
+    return '/images/share/goal-achieved.jpg'
+  }
+
+  private async generateRecipeImage(data: any): Promise<string> {
+    return '/images/share/recipe-card.jpg'
+  }
+
+  private async generateAchievementImage(data: any): Promise<string> {
+    return '/images/share/achievement-unlocked.jpg'
+  }
+
+  private async generateStreakImage(data: any): Promise<string> {
+    return '/images/share/checkin-streak.jpg'
+  }
+
+  private async generateWeightMilestoneImage(data: any): Promise<string> {
+    return '/images/share/weight-milestone.jpg'
+  }
+
+  private async generatePersonalRecordImage(data: any): Promise<string> {
+    return '/images/share/personal-record.jpg'
+  }
 }
 
-// 辅助函数：获取标签文本
-function getReportTypeLabel(type: string): string {
-  const labels = {
-    'WEEKLY': '周',
-    'MONTHLY': '月',
-    'QUARTERLY': '季度',
-    'CUSTOM': '自定义'
-  };
-  return labels[type as keyof typeof labels] || '';
+// 导出单例实例
+export const shareContentGenerator = ShareContentGenerator.getInstance()
+
+// 导出工具函数
+export async function createShareContent(input: ShareContentInput): Promise<ShareContentResult> {
+  const generator = ShareContentGenerator.getInstance()
+  return generator.generateShareContent(input)
 }
 
-function getGoalTypeLabel(type: string): string {
-  const labels = {
-    'LOSE_WEIGHT': '减重目标',
-    'GAIN_MUSCLE': '增肌目标',
-    'MAINTAIN': '体重维持',
-    'IMPROVE_HEALTH': '健康改善'
-  };
-  return labels[type as keyof typeof labels] || '';
-}
+export async function generateSharePreview(input: Partial<ShareContentInput>): Promise<any> {
+  const generator = ShareContentGenerator.getInstance()
+  const fullInput: ShareContentInput = {
+    memberId: input.memberId || 'preview',
+    type: input.type || ShareContentType.HEALTH_REPORT,
+    title: input.title || '预览标题',
+    description: input.description,
+    privacyLevel: input.privacyLevel || 'PUBLIC',
+    platforms: input.platforms || ['COPY_LINK'],
+    ...input
+  }
 
-function getMealTypeLabel(type: string): string {
-  const labels = {
-    'BREAKFAST': '早餐',
-    'LUNCH': '午餐',
-    'DINNER': '晚餐',
-    'SNACK': '加餐'
-  };
-  return labels[type as keyof typeof labels] || '';
-}
-
-function getRarityLabel(rarity: string): string {
-  const labels = {
-    'BRONZE': '青铜',
-    'SILVER': '白银',
-    'GOLD': '黄金',
-    'PLATINUM': '白金',
-    'DIAMOND': '钻石'
-  };
-  return labels[rarity as keyof typeof labels] || '';
+  return generator.generateShareContent(fullInput)
 }
