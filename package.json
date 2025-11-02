@@ -29,6 +29,8 @@
     "review": "node scripts/pre-commit-code-review.js",
     "review:report": "node scripts/generate-review-report.js",
     "review:report:html": "node scripts/generate-review-report.js --html",
+    "quality:scan": "node scripts/code-quality-improvements.js",
+    "quality:fix": "node scripts/fix-common-issues.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",

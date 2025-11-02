@@ -2771,6 +2771,102 @@ model CommunityComment {
   @@map("community_comments")
 }
 
+// 数据库索引优化
+// 用户相关索引
+@@index([User.email])
+@@index([User.createdAt])
+
+// 家庭相关索引
+@@index([Family.creatorId])
+@@index([Family.deletedAt, Family.createdAt])
+
+// 家庭成员相关索引
+@@index([FamilyMember.familyId])
+@@index([FamilyMember.userId])
+@@index([FamilyMember.deletedAt])
+@@index([FamilyMember.familyId, FamilyMember.deletedAt])
+@@index([FamilyMember.userId, FamilyMember.familyId])
+
+// 健康数据相关索引
+@@index([HealthData.memberId, HealthData.measuredAt])
+@@index([HealthData.measuredAt])
+@@index([HealthData.source])
+
+// 设备连接相关索引
+@@index([DeviceConnection.memberId])
+@@index([DeviceConnection.deviceId])
+@@index([DeviceConnection.platform])
+@@index([DeviceConnection.isActive])
+@@index([DeviceConnection.lastSyncAt])
+
+// 食谱相关索引
+@@index([Recipe.name])
+@@index([Recipe.categoryId])
+@@index([Recipe.difficulty])
+@@index([Recipe.prepTime])
+@@index([Recipe.cookTime])
+
+// 购物清单相关索引
+@@index([ShoppingItem.shoppingListId])
+@@index([ShoppingItem.foodId])
+@@index([ShoppingItem.status])
+@@index([ShoppingItem.purchasedAt])
+
+// 食谱规划相关索引
+@@index([MealPlan.memberId])
+@@index([MealPlan.startDate])
+@@index([MealPlan.endDate])
+@@index([MealPlan.status])
+
+// 预算相关索引
+@@index([Budget.familyId])
+@@index([Budget.memberId])
+@@index([Budget.startDate])
+@@index([Budget.endDate])
+
+// 库存相关索引
+@@index([InventoryItem.familyId])
+@@index([InventoryItem.foodId])
+@@index([InventoryItem.quantity])
+@@index([InventoryItem.expiryDate])
+
+// 通知相关索引
+@@index([Notification.memberId])
+@@index([Notification.isRead])
+@@index([Notification.createdAt])
+
+// 任务相关索引
+@@index([Task.familyId])
+@@index([Task.assignedToId])
+@@index([Task.createdById])
+@@index([Task.status])
+@@index([Task.dueDate])
+
+// 社交分享相关索引
+@@index([SharedContent.memberId])
+@@index([SharedContent.contentType])
+@@index([SharedContent.sharedAt])
+@@index([SharedContent.shareToken])
+
+// 成就相关索引
+@@index([Achievement.memberId])
+@@index([Achievement.type])
+@@index([Achievement.earnedAt])
+
+// 排行榜相关索引
+@@index([LeaderboardEntry.familyId])
+@@index([LeaderboardEntry.memberId])
+@@index([LeaderboardEntry.category])
+@@index([LeaderboardEntry.score])
+@@index([LeaderboardEntry.week])
+
+// 社区相关索引
+@@index([CommunityPost.authorId])
+@@index([CommunityPost.category])
+@@index([CommunityPost.createdAt])
+@@index([CommunityComment.postId])
+@@index([CommunityComment.authorId])
+
 // ==================== 通知系统 ====================
 
 // 通知类型枚举

@@ -10,6 +10,7 @@ import { FAQAccordion, defaultFAQData, defaultCategories } from '@/components/on
 import { FeedbackForm } from '@/components/onboarding/FeedbackForm'
 import { VideoTutorial } from '@/components/onboarding/VideoPlayer'
 import { HelpTooltip, useContextualHelp } from '@/components/onboarding/HelpTooltip'
+import { logger } from '@/lib/logger'
 import { 
   Search, 
   BookOpen, 
@@ -38,7 +39,7 @@ export default function HelpCenterPage() {
   }
 
   const handleFeedbackSubmit = (feedback: any) => {
-    console.log('Feedback submitted:', feedback)
+    logger.info('Feedback submitted', { feedback })
     setShowFeedbackForm(false)
     // Show success message
   }

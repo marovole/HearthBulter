@@ -2,11 +2,12 @@
  * 设备管理API - 断开设备连接
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { APIError, handleAPIError, createErrorResponse, createAPIResponse } from '@/lib/errors/api-error'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -23,10 +24,7 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      )
+      return createErrorResponse(APIError.unauthorized())
     }
 
     const { id } = await params

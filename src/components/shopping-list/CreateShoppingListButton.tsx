@@ -2,6 +2,16 @@
 
 import { useState } from 'react'
 
+interface ShoppingListItem {
+  id: string
+  name: string
+  amount: number
+  unit: string
+  checked: boolean
+  price?: number
+  productId?: string
+}
+
 interface ShoppingList {
   id: string
   planId: string
@@ -9,7 +19,7 @@ interface ShoppingList {
   estimatedCost: number | null
   actualCost: number | null
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
-  items: any[]
+  items: ShoppingListItem[]
   createdAt: string
   plan: {
     id: string
@@ -20,6 +30,17 @@ interface ShoppingList {
   }
 }
 
+interface MealPlan {
+  id: string
+  name: string
+  member: {
+    id: string
+    name: string
+  }
+  startDate: string
+  endDate: string
+}
+
 interface CreateShoppingListButtonProps {
   onListCreated: (newList: ShoppingList) => void
 }
@@ -27,7 +48,7 @@ interface CreateShoppingListButtonProps {
 export function CreateShoppingListButton({ onListCreated }: CreateShoppingListButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [mealPlans, setMealPlans] = useState<any[]>([])
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
   const [selectedPlanId, setSelectedPlanId] = useState('')
   const [listName, setListName] = useState('')
   const [budget, setBudget] = useState('')

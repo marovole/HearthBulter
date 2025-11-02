@@ -7,27 +7,30 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { optimizedQuery } from '@/lib/middleware/query-optimization'
+import { validationMiddleware, commonSchemas, withValidation } from '@/lib/middleware/validation-middleware'
+import { APIError, createErrorResponse } from '@/lib/errors/api-error'
+import { withPermissions, requirePermissions } from '@/lib/middleware/permission-middleware'
+import { withSecurity, defaultSecurityOptions } from '@/lib/middleware/security-middleware'
+import { withPerformanceMonitoring } from '@/lib/monitoring/performance-monitor'
+import { Permission } from '@/lib/permissions'
 
 const GETQuerySchema = z.object({
   memberId: z.string().optional(),
   platform: z.string().optional(),
-  isActive: z.coerce.boolean().optional()
+  isActive: z.coerce.boolean().optional(),
+  ...commonSchemas.pagination.shape
 })
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      )
-    }
-
-    const { searchParams } = new URL(request.url)
-    const query = Object.fromEntries(searchParams)
-    
-    const validatedQuery = GETQuerySchema.parse(query)
+export const GET = withPermissions(
+  requirePermissions([Permission.READ_DEVICE]),
+  withSecurity(
+    defaultSecurityOptions,
+    withPerformanceMonitoring(
+      async (request, context) => {
+        const session = await getServerSession(authOptions)
+        
+        const validatedQuery = context.data?.query || GETQuerySchema.parse({})
 
     // 构建查询条件
     const where: any = {
@@ -55,43 +58,43 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取设备列表
-    const devices = await prisma.deviceConnection.findMany({
-      where,
-      include: {
-        member: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      },
-      orderBy: {
-        lastSyncAt: 'desc'
-      }
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: devices,
-      total: devices.length
-    })
-
-  } catch (error) {
-    console.error('获取设备列表失败:', error)
+    const skip = (validatedQuery.page - 1) * validatedQuery.limit
+    const cacheKey = `devices_list_${session.user.id}_${JSON.stringify(validatedQuery)}`
     
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: '参数错误', details: error.errors },
-        { status: 400 }
-      )
-    }
+    const [devices, total] = await Promise.all([
+      optimizedQuery.findMany('deviceConnection', {
+        where,
+        include: {
+          member: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        },
+        orderBy: {
+          lastSyncAt: 'desc'
+        },
+        skip,
+        take: validatedQuery.limit,
+        useCache: true,
+        cacheKey
+      }),
+      optimizedQuery.count('deviceConnection', where, { useCache: true, cacheKey: `${cacheKey}_count` })
+    ])
 
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
+        return NextResponse.json({
+          success: true,
+          data: devices,
+          total,
+          page: validatedQuery.page,
+          limit: validatedQuery.limit,
+          totalPages: Math.ceil(total / validatedQuery.limit)
+        })
+      }
     )
-  }
-}
+  )
+)
 
 export async function POST(request: NextRequest) {
   try {
