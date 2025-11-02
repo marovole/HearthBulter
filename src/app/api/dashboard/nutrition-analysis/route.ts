@@ -78,13 +78,54 @@ export async function GET(request: NextRequest) {
       period
     )
 
-    return NextResponse.json({ data: nutritionSummary }, { status: 200 })
+    // 生成实际营养数据（用于演示）
+    const mockActualData = generateMockNutritionData(nutritionSummary)
+
+    return NextResponse.json({ data: mockActualData }, { status: 200 })
   } catch (error) {
     console.error('获取营养分析失败:', error)
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
     )
+  }
+}
+
+/**
+ * 生成模拟营养数据（用于演示）
+ * 在实际应用中，这些数据应该来自meal-planning模块的实际摄入记录
+ */
+function generateMockNutritionData(summary: any) {
+  // 基于目标生成一些合理的实际数据
+  const variance = 0.8 + Math.random() * 0.4 // 80%-120%的波动
+  
+  const actual = {
+    carbs: summary.targetCarbs ? Math.round(summary.targetCarbs * variance) : 0,
+    protein: summary.targetProtein ? Math.round(summary.targetProtein * variance) : 0,
+    fat: summary.targetFat ? Math.round(summary.targetFat * variance) : 0,
+    calories: summary.targetCalories ? Math.round(summary.targetCalories * variance) : 0,
+  }
+
+  // 计算达标率
+  const adherenceRates = []
+  if (summary.targetCarbs) {
+    adherenceRates.push(Math.min(100, (actual.carbs / summary.targetCarbs) * 100))
+  }
+  if (summary.targetProtein) {
+    adherenceRates.push(Math.min(100, (actual.protein / summary.targetProtein) * 100))
+  }
+  if (summary.targetFat) {
+    adherenceRates.push(Math.min(100, (actual.fat / summary.targetFat) * 100))
+  }
+  
+  const adherenceRate = adherenceRates.length > 0 
+    ? adherenceRates.reduce((a, b) => a + b, 0) / adherenceRates.length 
+    : 0
+
+  return {
+    ...summary,
+    actual,
+    adherenceRate: Math.round(adherenceRate * 10) / 10,
   }
 }
 

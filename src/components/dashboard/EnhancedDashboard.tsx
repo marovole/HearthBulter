@@ -10,6 +10,9 @@ import { FamilyMembersCard } from './FamilyMembersCard'
 import { NutritionTrendChart } from './NutritionTrendChart'
 import { HealthScoreDisplay } from './HealthScoreDisplay'
 import { QuickActionsPanel } from './QuickActionsPanel'
+import { WeightTrendChart } from './WeightTrendChart'
+import { NutritionAnalysisChart } from './NutritionAnalysisChart'
+import { HealthScoreCard } from './HealthScoreCard'
 
 interface EnhancedDashboardProps {
   userId: string
@@ -113,9 +116,13 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         return (
           <div className="space-y-6">
             <OverviewCards memberId={selectedMemberId} />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <WeightTrendChart memberId={selectedMemberId} />
+              <HealthScoreCard memberId={selectedMemberId} />
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <NutritionAnalysisChart memberId={selectedMemberId} />
               <TrendsSection memberId={selectedMemberId} />
-              <HealthScoreDisplay memberId={selectedMemberId} />
             </div>
             <QuickActionsPanel memberId={selectedMemberId} />
           </div>
@@ -124,23 +131,23 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
       case 'health':
         return (
           <div className="space-y-6">
-            <HealthMetricsChart memberId={selectedMemberId} />
-            <TrendsSection memberId={selectedMemberId} />
+            <WeightTrendChart memberId={selectedMemberId} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <HealthMetricsChart memberId={selectedMemberId} />
+              <TrendsSection memberId={selectedMemberId} />
+            </div>
           </div>
         )
       
       case 'nutrition':
         return (
           <div className="space-y-6">
-            <NutritionTrendChart memberId={selectedMemberId} />
+            <NutritionAnalysisChart memberId={selectedMemberId} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <NutritionTrendChart memberId={selectedMemberId} />
               <div className="bg-white p-6 rounded-lg shadow">
                 <h3 className="text-lg font-semibold mb-4">营养建议</h3>
                 <p className="text-gray-600">基于您的健康数据，我们建议...</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">目标达成度</h3>
-                <p className="text-gray-600">您本周的营养目标完成情况...</p>
               </div>
             </div>
           </div>
@@ -160,10 +167,13 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
       case 'score':
         return (
           <div className="space-y-6">
-            <HealthScoreDisplay memberId={selectedMemberId} />
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">健康评分趋势</h3>
-              <p className="text-gray-600">评分变化图表将在这里显示</p>
+            <HealthScoreCard memberId={selectedMemberId} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <HealthScoreDisplay memberId={selectedMemberId} />
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4">健康评分趋势</h3>
+                <p className="text-gray-600">评分变化图表将在这里显示</p>
+              </div>
             </div>
           </div>
         )
