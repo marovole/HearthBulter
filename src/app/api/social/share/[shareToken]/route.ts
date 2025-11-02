@@ -47,7 +47,7 @@ export async function GET(
 
     // 获取请求信息用于追踪
     const userAgent = request.headers.get('user-agent') || undefined
-    const ipAddress = this.getClientIP(request)
+    const ipAddress = getClientIP(request)
     const referrer = request.headers.get('referer') || undefined
 
     // 记录浏览事件
@@ -68,7 +68,7 @@ export async function GET(
     }
 
     // 返回分享内容（根据隐私级别过滤）
-    const publicContent = this.filterPublicContent(shareContent)
+    const publicContent = filterPublicContent(shareContent)
 
     return NextResponse.json({
       success: true,
@@ -116,7 +116,7 @@ export async function POST(
 
     // 获取请求信息
     const userAgent = request.headers.get('user-agent') || undefined
-    const ipAddress = this.getClientIP(request)
+    const ipAddress = getClientIP(request)
     const referrer = request.headers.get('referer') || undefined
 
     // 记录追踪事件
@@ -135,11 +135,11 @@ export async function POST(
 
     // 根据事件类型执行特定操作
     if (eventType === 'LIKE') {
-      await this.handleLikeEvent(shareToken)
+      await handleLikeEvent(shareToken)
     } else if (eventType === 'COMMENT') {
-      await this.handleCommentEvent(shareToken, metadata)
+      await handleCommentEvent(shareToken, metadata)
     } else if (eventType === 'DOWNLOAD') {
-      await this.handleDownloadEvent(shareToken)
+      await handleDownloadEvent(shareToken)
     }
 
     return NextResponse.json({
@@ -313,7 +313,7 @@ export async function DELETE(
 /**
  * 过滤公开内容
  */
-private filterPublicContent(shareContent: any): any {
+function filterPublicContent(shareContent: any): any {
   const filtered = {
     ...shareContent
   }
@@ -348,7 +348,7 @@ private filterPublicContent(shareContent: any): any {
 /**
  * 获取客户端IP
  */
-private getClientIP(request: NextRequest): string | undefined {
+function getClientIP(request: NextRequest): string | undefined {
   const forwarded = request.headers.get('x-forwarded-for')
   const real = request.headers.get('x-real-ip')
   
@@ -366,7 +366,7 @@ private getClientIP(request: NextRequest): string | undefined {
 /**
  * 处理点赞事件
  */
-private async handleLikeEvent(shareToken: string): Promise<void> {
+async handleLikeEvent(shareToken: string): Promise<void> {
   await prisma.sharedContent.update({
     where: { shareToken },
     data: {
@@ -380,7 +380,7 @@ private async handleLikeEvent(shareToken: string): Promise<void> {
 /**
  * 处理评论事件
  */
-private async handleCommentEvent(shareToken: string, metadata?: any): Promise<void> {
+async handleCommentEvent(shareToken: string, metadata?: any): Promise<void> {
   await prisma.sharedContent.update({
     where: { shareToken },
     data: {
@@ -399,7 +399,7 @@ private async handleCommentEvent(shareToken: string, metadata?: any): Promise<vo
 /**
  * 处理下载事件
  */
-private async handleDownloadEvent(shareToken: string): Promise<void> {
+async handleDownloadEvent(shareToken: string): Promise<void> {
   await prisma.sharedContent.update({
     where: { shareToken },
     data: {
@@ -410,6 +410,3 @@ private async handleDownloadEvent(shareToken: string): Promise<void> {
   })
 }
 
-// 导入authOptions
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'

@@ -141,6 +141,4 @@ function NutritionChart({
   )
 }
 
-// 添加 useEffect import
-import { useEffect } from 'react'
 

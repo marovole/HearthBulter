@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = this.validateShareInput(body)
+    const validatedData = validateShareInput(body)
 
     // 检查用户权限
     const member = await prisma.familyMember.findFirst({
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     })
 
     // 检查是否有成就解锁
-    await this.checkForShareAchievements(validatedData.memberId, validatedData.platforms.length)
+    await checkForShareAchievements(validatedData.memberId, validatedData.platforms.length)
 
     // 记录分享事件
     for (const platform of validatedData.platforms) {
@@ -100,59 +100,59 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
 
-  /**
-   * 验证分享输入数据
-   */
-  private validateShareInput(data: any): ShareContentInput {
-    const { memberId, type, title, description, imageUrl, targetId, privacyLevel, platforms, customMessage } = data
+/**
+ * 验证分享输入数据
+ */
+function validateShareInput(data: any): ShareContentInput {
+  const { memberId, type, title, description, imageUrl, targetId, privacyLevel, platforms, customMessage } = data
 
-    if (!memberId || !type || !privacyLevel || !platforms || !Array.isArray(platforms)) {
-      throw new Error('缺少必要参数')
-    }
-
-    const validTypes = Object.values(ShareContentType)
-    if (!validTypes.includes(type)) {
-      throw new Error('无效的分享类型')
-    }
-
-    const validPlatforms = Object.values(SocialPlatform)
-    const invalidPlatforms = platforms.filter(p => !validPlatforms.includes(p))
-    if (invalidPlatforms.length > 0) {
-      throw new Error(`不支持的平台: ${invalidPlatforms.join(', ')}`)
-    }
-
-    return {
-      memberId,
-      type,
-      title: title || '',
-      description,
-      imageUrl,
-      targetId,
-      privacyLevel,
-      platforms,
-      customMessage
-    }
+  if (!memberId || !type || !privacyLevel || !platforms || !Array.isArray(platforms)) {
+    throw new Error('缺少必要参数')
   }
 
-  /**
-   * 检查分享相关成就
-   */
-  private async checkForShareAchievements(memberId: string, shareCount: number): Promise<void> {
-    try {
-      // 检查社交达人成就
-      const totalShares = await prisma.sharedContent.count({
-        where: { memberId }
-      })
+  const validTypes = Object.values(ShareContentType)
+  if (!validTypes.includes(type)) {
+    throw new Error('无效的分享类型')
+  }
 
-      if (totalShares >= 20) {
-        await achievementSystem.checkAchievements(memberId, 'SHARE_CREATED', {
-          shareCount: totalShares
-        })
-      }
-    } catch (error) {
-      console.error('检查分享成就失败:', error)
+  const validPlatforms = Object.values(SocialPlatform)
+  const invalidPlatforms = platforms.filter(p => !validPlatforms.includes(p))
+  if (invalidPlatforms.length > 0) {
+    throw new Error(`不支持的平台: ${invalidPlatforms.join(', ')}`)
+  }
+
+  return {
+    memberId,
+    type,
+    title: title || '',
+    description,
+    imageUrl,
+    targetId,
+    privacyLevel,
+    platforms,
+    customMessage
+  }
+}
+
+/**
+ * 检查分享相关成就
+ */
+async function checkForShareAchievements(memberId: string, shareCount: number): Promise<void> {
+  try {
+    // 检查社交达人成就
+    const totalShares = await prisma.sharedContent.count({
+      where: { memberId }
+    })
+
+    if (totalShares >= 20) {
+      await achievementSystem.checkAchievements(memberId, 'SHARE_CREATED', {
+        shareCount: totalShares
+      })
     }
+  } catch (error) {
+    console.error('检查分享成就失败:', error)
   }
 }
 

@@ -28,7 +28,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: '*',
+            value: process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || (process.env.NODE_ENV === 'production' ? process.env.NEXTAUTH_URL || 'https://yourdomain.com' : 'http://localhost:3000'),
           },
           {
             key: 'Access-Control-Allow-Methods',
