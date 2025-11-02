@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { CheckboxItem } from './CheckboxItem'
-import type { FoodCategory } from '@prisma/client'
+import { CheckboxItem } from './CheckboxItem';
+import type { FoodCategory } from '@prisma/client';
 
 interface ShoppingItem {
   id: string
@@ -33,21 +33,21 @@ const CATEGORY_LABELS: Record<string, string> = {
   SNACKS: '零食',
   BEVERAGES: '饮料',
   OTHER: '其他',
-}
+};
 
 export function CategoryList({ items, onItemToggle }: CategoryListProps) {
   // 按分类分组
   const groupedItems = items.reduce(
     (acc, item) => {
-      const category = item.category
+      const category = item.category;
       if (!acc[category]) {
-        acc[category] = []
+        acc[category] = [];
       }
-      acc[category].push(item)
-      return acc
+      acc[category].push(item);
+      return acc;
     },
     {} as Record<string, ShoppingItem[]>
-  )
+  );
 
   // 获取分类顺序（优先显示易腐食材）
   const categoryOrder = [
@@ -61,20 +61,20 @@ export function CategoryList({ items, onItemToggle }: CategoryListProps) {
     'SNACKS',
     'BEVERAGES',
     'OTHER',
-  ]
+  ];
 
   return (
     <div className="space-y-6">
       {categoryOrder.map((category) => {
-        const categoryItems = groupedItems[category] || []
+        const categoryItems = groupedItems[category] || [];
 
         if (categoryItems.length === 0) {
-          return null
+          return null;
         }
 
         const purchasedCount = categoryItems.filter((item) => item.purchased)
-          .length
-        const totalCount = categoryItems.length
+          .length;
+        const totalCount = categoryItems.length;
 
         return (
           <div key={category} className="border border-gray-200 rounded-lg">
@@ -103,9 +103,9 @@ export function CategoryList({ items, onItemToggle }: CategoryListProps) {
               ))}
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 

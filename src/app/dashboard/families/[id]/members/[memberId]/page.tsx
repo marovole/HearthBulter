@@ -1,19 +1,19 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/db';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 export default async function MemberDetailPage({
   params,
 }: {
   params: Promise<{ id: string; memberId: string }>
 }) {
-  const { id, memberId } = await params
-  const session = await auth()
+  const { id, memberId } = await params;
+  const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin')
+    redirect('/auth/signin');
   }
 
   // 获取成员详细信息
@@ -57,25 +57,25 @@ export default async function MemberDetailPage({
         },
       },
     },
-  })
+  });
 
   if (!member || member.family.id !== id) {
-    notFound()
+    notFound();
   }
 
   // 验证权限
-  const isCreator = member.family.creatorId === session.user.id
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator
-  const isSelf = member.userId === session.user.id
+  const isCreator = member.family.creatorId === session.user.id;
+  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isSelf = member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
-    redirect('/dashboard')
+    redirect('/dashboard');
   }
 
   // 计算年龄
-  const birthDate = new Date(member.birthDate)
-  const today = new Date()
-  const age = today.getFullYear() - birthDate.getFullYear()
+  const birthDate = new Date(member.birthDate);
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -154,10 +154,10 @@ export default async function MemberDetailPage({
                   {member.ageGroup === 'CHILD'
                     ? '儿童'
                     : member.ageGroup === 'TEENAGER'
-                    ? '青少年'
-                    : member.ageGroup === 'ADULT'
-                    ? '成年人'
-                    : '老年人'}
+                      ? '青少年'
+                      : member.ageGroup === 'ADULT'
+                        ? '成年人'
+                        : '老年人'}
                 </p>
               </div>
 
@@ -256,29 +256,29 @@ export default async function MemberDetailPage({
                           {goal.goalType === 'LOSE_WEIGHT'
                             ? '减重计划'
                             : goal.goalType === 'GAIN_MUSCLE'
-                            ? '增肌计划'
-                            : goal.goalType === 'MAINTAIN'
-                            ? '维持体重'
-                            : '改善健康'}
+                              ? '增肌计划'
+                              : goal.goalType === 'MAINTAIN'
+                                ? '维持体重'
+                                : '改善健康'}
                         </h3>
                         <span
                           className={`inline-block mt-1 px-2 py-1 text-xs font-medium rounded ${
                             goal.status === 'ACTIVE'
                               ? 'bg-green-100 text-green-800'
                               : goal.status === 'COMPLETED'
-                              ? 'bg-blue-100 text-blue-800'
-                              : goal.status === 'PAUSED'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-gray-100 text-gray-800'
+                                ? 'bg-blue-100 text-blue-800'
+                                : goal.status === 'PAUSED'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-gray-100 text-gray-800'
                           }`}
                         >
                           {goal.status === 'ACTIVE'
                             ? '进行中'
                             : goal.status === 'COMPLETED'
-                            ? '已完成'
-                            : goal.status === 'PAUSED'
-                            ? '已暂停'
-                            : '已取消'}
+                              ? '已完成'
+                              : goal.status === 'PAUSED'
+                                ? '已暂停'
+                                : '已取消'}
                         </span>
                       </div>
                       <Link
@@ -421,19 +421,19 @@ export default async function MemberDetailPage({
                             member.medicalReports[0].ocrStatus === 'COMPLETED'
                               ? 'bg-green-100 text-green-800'
                               : member.medicalReports[0].ocrStatus === 'PROCESSING'
-                              ? 'bg-blue-100 text-blue-800'
-                              : member.medicalReports[0].ocrStatus === 'FAILED'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
+                                ? 'bg-blue-100 text-blue-800'
+                                : member.medicalReports[0].ocrStatus === 'FAILED'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
                           }`}
                         >
                           {member.medicalReports[0].ocrStatus === 'COMPLETED'
                             ? '已完成'
                             : member.medicalReports[0].ocrStatus === 'PROCESSING'
-                            ? '处理中'
-                            : member.medicalReports[0].ocrStatus === 'FAILED'
-                            ? '失败'
-                            : '待处理'}
+                              ? '处理中'
+                              : member.medicalReports[0].ocrStatus === 'FAILED'
+                                ? '失败'
+                                : '待处理'}
                         </span>
                       </div>
 
@@ -460,10 +460,10 @@ export default async function MemberDetailPage({
 
                       {member.medicalReports[0].ocrStatus === 'COMPLETED' &&
                         member.medicalReports[0].indicators.length > 0 && (
-                          <div className="mt-3">
-                            {member.medicalReports[0].indicators.filter(
-                              (ind) => ind.isAbnormal
-                            ).length > 0 ? (
+                        <div className="mt-3">
+                          {member.medicalReports[0].indicators.filter(
+                            (ind) => ind.isAbnormal
+                          ).length > 0 ? (
                               <div className="bg-red-50 border border-red-200 rounded p-3">
                                 <p className="text-sm font-medium text-red-900 mb-2">
                                   发现{' '}
@@ -507,8 +507,8 @@ export default async function MemberDetailPage({
                                 </p>
                               </div>
                             )}
-                          </div>
-                        )}
+                        </div>
+                      )}
 
                       <div className="mt-4 flex gap-2">
                         <Link
@@ -572,28 +572,28 @@ export default async function MemberDetailPage({
                               allergy.severity === 'LIFE_THREATENING'
                                 ? 'bg-red-100 text-red-800'
                                 : allergy.severity === 'SEVERE'
-                                ? 'bg-orange-100 text-orange-800'
-                                : allergy.severity === 'MODERATE'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-green-100 text-green-800'
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : allergy.severity === 'MODERATE'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-green-100 text-green-800'
                             }`}
                           >
                             {allergy.severity === 'LIFE_THREATENING'
                               ? '危及生命'
                               : allergy.severity === 'SEVERE'
-                              ? '严重'
-                              : allergy.severity === 'MODERATE'
-                              ? '中度'
-                              : '轻度'}
+                                ? '严重'
+                                : allergy.severity === 'MODERATE'
+                                  ? '中度'
+                                  : '轻度'}
                           </span>
                           <span className="text-sm text-gray-500">
                             {allergy.allergenType === 'FOOD'
                               ? '食物'
                               : allergy.allergenType === 'ENVIRONMENTAL'
-                              ? '环境'
-                              : allergy.allergenType === 'MEDICATION'
-                              ? '药物'
-                              : '其他'}
+                                ? '环境'
+                                : allergy.allergenType === 'MEDICATION'
+                                  ? '药物'
+                                  : '其他'}
                           </span>
                         </div>
 
@@ -618,5 +618,5 @@ export default async function MemberDetailPage({
         </div>
       </main>
     </div>
-  )
+  );
 }

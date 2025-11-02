@@ -29,15 +29,15 @@ export async function POST(request: NextRequest) {
         {
           error: 'Rate limit exceeded',
           retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime
+          resetTime: rateLimitResult.resetTime,
         },
         {
           status: 429,
           headers: {
             'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
             'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600'
-          }
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
+          },
         }
       );
     }
@@ -88,12 +88,12 @@ export async function POST(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         healthGoals: true,
@@ -101,16 +101,16 @@ export async function POST(request: NextRequest) {
         dietaryPreference: true,
         healthData: {
           orderBy: { measuredAt: 'desc' },
-          take: 10
+          take: 10,
         },
         medicalReports: {
           orderBy: { createdAt: 'desc' },
           take: 5,
           include: {
-            indicators: true
-          }
-        }
-      }
+            indicators: true,
+          },
+        },
+      },
     });
 
     if (!member) {
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
         },
         prompt: 'Comprehensive health analysis with personalized recommendations',
         tokens: 0,
-      }
+      },
     });
 
     const result = {
@@ -268,13 +268,13 @@ export async function GET(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
-      }
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
+      },
     });
 
     if (!member) {
@@ -288,7 +288,7 @@ export async function GET(request: NextRequest) {
     const history = await prisma.aIAdvice.findMany({
       where: {
         memberId,
-        type: 'HEALTH_ANALYSIS'
+        type: 'HEALTH_ANALYSIS',
       },
       orderBy: { generatedAt: 'desc' },
       take: limit,
@@ -297,7 +297,7 @@ export async function GET(request: NextRequest) {
         generatedAt: true,
         content: true,
         feedback: true,
-      }
+      },
     });
 
     return NextResponse.json({ history });

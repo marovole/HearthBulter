@@ -70,7 +70,7 @@ export class WeChatService {
       const message: WeChatTemplateMessage = {
         touser: openId,
         template_id: templateId,
-        url: url || `https://healthbutler.com/notifications`,
+        url: url || 'https://healthbutler.com/notifications',
         data: this.formatTemplateData(title, content),
       };
 
@@ -111,15 +111,15 @@ export class WeChatService {
       };
 
       switch (type) {
-        case 'text':
-          message.text = { content };
-          break;
-        case 'image':
-          message.image = { media_id: content };
-          break;
-        case 'news':
-          message.news = { articles: content };
-          break;
+      case 'text':
+        message.text = { content };
+        break;
+      case 'image':
+        message.image = { media_id: content };
+        break;
+      case 'news':
+        message.news = { articles: content };
+        break;
       }
 
       const response = await axios.post(

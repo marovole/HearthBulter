@@ -15,9 +15,9 @@ import {
   OrderItem,
   PlatformError,
   PlatformErrorType,
-  PlatformProductInfo
-} from './types'
-import { EcommercePlatform } from '@prisma/client'
+  PlatformProductInfo,
+} from './types';
+import { EcommercePlatform } from '@prisma/client';
 
 export abstract class BasePlatformAdapter implements IPlatformAdapter {
   abstract readonly platform: EcommercePlatform
@@ -30,104 +30,104 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
     options: RequestInit = {},
     token?: string
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`
+    const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'User-Agent': 'HealthButler-Ecommerce-Integration/1.0',
-      ...options.headers as Record<string, string>
-    }
+      ...options.headers as Record<string, string>,
+    };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     try {
       const response = await fetch(url, {
         ...options,
         headers,
-        timeout: 10000 // 10秒超时
-      })
+        timeout: 10000, // 10秒超时
+      });
 
       if (!response.ok) {
-        await this.handleHttpError(response)
+        await this.handleHttpError(response);
       }
 
-      return await response.json()
+      return await response.json();
     } catch (error) {
       if (error instanceof PlatformError) {
-        throw error
+        throw error;
       }
       throw new PlatformError({
         type: PlatformErrorType.NETWORK_ERROR,
         message: `Network error when calling ${endpoint}: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
   // 处理HTTP错误
   protected async handleHttpError(response: Response): Promise<never> {
-    let errorDetails: any = {}
+    let errorDetails: any = {};
     
     try {
-      errorDetails = await response.json()
+      errorDetails = await response.json();
     } catch {
       // 如果无法解析错误响应，使用状态码
-      errorDetails = { status: response.status, statusText: response.statusText }
+      errorDetails = { status: response.status, statusText: response.statusText };
     }
 
-    const errorType = this.mapHttpStatusToErrorType(response.status)
+    const errorType = this.mapHttpStatusToErrorType(response.status);
     throw new PlatformError({
       type: errorType,
       message: errorDetails.message || `HTTP ${response.status}: ${response.statusText}`,
       code: response.status.toString(),
-      details: errorDetails
-    })
+      details: errorDetails,
+    });
   }
 
   // 映射HTTP状态码到平台错误类型
   protected mapHttpStatusToErrorType(status: number): PlatformErrorType {
     switch (status) {
-      case 401:
-        return PlatformErrorType.INVALID_TOKEN
-      case 403:
-        return PlatformErrorType.INSUFFICIENT_PERMISSION
-      case 404:
-        return PlatformErrorType.PRODUCT_NOT_FOUND
-      case 422:
-        return PlatformErrorType.INVALID_REQUEST
-      case 429:
-        return PlatformErrorType.RATE_LIMITED
-      case 500:
-      case 502:
-      case 503:
-        return PlatformErrorType.PLATFORM_ERROR
-      default:
-        return PlatformErrorType.NETWORK_ERROR
+    case 401:
+      return PlatformErrorType.INVALID_TOKEN;
+    case 403:
+      return PlatformErrorType.INSUFFICIENT_PERMISSION;
+    case 404:
+      return PlatformErrorType.PRODUCT_NOT_FOUND;
+    case 422:
+      return PlatformErrorType.INVALID_REQUEST;
+    case 429:
+      return PlatformErrorType.RATE_LIMITED;
+    case 500:
+    case 502:
+    case 503:
+      return PlatformErrorType.PLATFORM_ERROR;
+    default:
+      return PlatformErrorType.NETWORK_ERROR;
     }
   }
 
   // 验证token格式
   protected validateTokenFormat(token: string): boolean {
     if (!token || typeof token !== 'string') {
-      return false
+      return false;
     }
     
     // 基本的token格式检查
-    return token.length > 10 && !token.includes(' ')
+    return token.length > 10 && !token.includes(' ');
   }
 
   // 解析token过期时间
   protected parseTokenExpiry(expiresIn?: number, expiresAt?: string): Date | undefined {
     if (expiresAt) {
-      return new Date(expiresAt)
+      return new Date(expiresAt);
     }
     
     if (expiresIn) {
-      return new Date(Date.now() + expiresIn * 1000)
+      return new Date(Date.now() + expiresIn * 1000);
     }
     
-    return undefined
+    return undefined;
   }
 
   // 标准化商品信息
@@ -157,8 +157,8 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
       deliveryOptions: rawProduct.deliveryOptions,
       deliveryTime: rawProduct.deliveryTime,
       shippingFee: rawProduct.shippingFee ? parseFloat(rawProduct.shippingFee) : undefined,
-      platformData: rawProduct
-    }
+      platformData: rawProduct,
+    };
   }
 
   // 标准化配送地址
@@ -171,8 +171,8 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
       postalCode: address.postalCode,
       contactName: address.contactName,
       contactPhone: address.contactPhone,
-      fullAddress: `${address.province}${address.city}${address.district}${address.detail}`
-    }
+      fullAddress: `${address.province}${address.city}${address.district}${address.detail}`,
+    };
   }
 
   // 计算配送费
@@ -183,10 +183,10 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
   ): number {
     // 默认配送费计算逻辑，子类可以重写
     if (platformRules?.freeShippingThreshold && subtotal >= platformRules.freeShippingThreshold) {
-      return 0
+      return 0;
     }
     
-    return platformRules?.defaultShippingFee || 6
+    return platformRules?.defaultShippingFee || 6;
   }
 
   // 抽象方法，子类必须实现
@@ -207,35 +207,35 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
   async validateToken(token: string): Promise<boolean> {
     try {
       if (!this.validateTokenFormat(token)) {
-        return false
+        return false;
       }
 
       // 调用平台特定的token验证接口
-      return await this.validateTokenInternal(token)
+      return await this.validateTokenInternal(token);
     } catch (error) {
-      console.error(`Token validation failed for ${this.platformName}:`, error)
-      return false
+      console.error(`Token validation failed for ${this.platformName}:`, error);
+      return false;
     }
   }
 
   async refreshTokenIfNeeded(token: string): Promise<string> {
     try {
       // 检查token是否即将过期（提前1小时刷新）
-      const needsRefresh = await this.shouldRefreshToken(token)
+      const needsRefresh = await this.shouldRefreshToken(token);
       
       if (needsRefresh) {
-        const newToken = await this.refreshTokenInternal(token)
-        return newToken
+        const newToken = await this.refreshTokenInternal(token);
+        return newToken;
       }
       
-      return token
+      return token;
     } catch (error) {
-      console.error(`Token refresh failed for ${this.platformName}:`, error)
+      console.error(`Token refresh failed for ${this.platformName}:`, error);
       throw new PlatformError({
         type: PlatformErrorType.TOKEN_EXPIRED,
         message: `Failed to refresh token: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -243,20 +243,20 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
   protected async validateTokenInternal(token: string): Promise<boolean> {
     // 默认实现：尝试获取用户信息来验证token
     try {
-      await this.makeRequest('/user/profile', {}, token)
-      return true
+      await this.makeRequest('/user/profile', {}, token);
+      return true;
     } catch (error) {
-      return false
+      return false;
     }
   }
 
   protected async shouldRefreshToken(token: string): Promise<boolean> {
     // 默认实现：总是尝试刷新（由子类优化）
-    return false
+    return false;
   }
 
   protected async refreshTokenInternal(token: string): Promise<string> {
     // 默认实现：抛出错误，要求子类实现
-    throw new Error('Token refresh not implemented')
+    throw new Error('Token refresh not implemented');
   }
 }

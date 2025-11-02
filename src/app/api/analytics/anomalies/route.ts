@@ -79,26 +79,26 @@ export async function PATCH(request: NextRequest) {
     }
 
     switch (action) {
-      case 'acknowledge':
-        await acknowledgeAnomaly(anomalyId);
-        break;
-      case 'resolve':
-        if (!resolution) {
-          return NextResponse.json(
-            { error: '解决异常需要提供resolution参数' },
-            { status: 400 }
-          );
-        }
-        await resolveAnomaly(anomalyId, resolution);
-        break;
-      case 'ignore':
-        await ignoreAnomaly(anomalyId);
-        break;
-      default:
+    case 'acknowledge':
+      await acknowledgeAnomaly(anomalyId);
+      break;
+    case 'resolve':
+      if (!resolution) {
         return NextResponse.json(
-          { error: '无效的action值' },
+          { error: '解决异常需要提供resolution参数' },
           { status: 400 }
         );
+      }
+      await resolveAnomaly(anomalyId, resolution);
+      break;
+    case 'ignore':
+      await ignoreAnomaly(anomalyId);
+      break;
+    default:
+      return NextResponse.json(
+        { error: '无效的action值' },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({

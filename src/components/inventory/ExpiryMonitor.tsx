@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Progress } from '@/components/ui/progress'
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { 
   AlertTriangle, 
   Clock, 
@@ -14,10 +14,10 @@ import {
   TrendingDown,
   Trash2,
   RefreshCw,
-  Info
-} from 'lucide-react'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+  Info,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 interface ExpiryAlert {
   id: string
@@ -46,83 +46,83 @@ interface ExpiryMonitorProps {
 }
 
 export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
-  const [summary, setSummary] = useState<ExpirySummary | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [processing, setProcessing] = useState(false)
+  const [summary, setSummary] = useState<ExpirySummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    fetchExpiryAlerts()
-  }, [memberId])
+    fetchExpiryAlerts();
+  }, [memberId]);
 
   const fetchExpiryAlerts = async () => {
     try {
-      setLoading(true)
-      const response = await fetch(`/api/inventory/expiry?memberId=${memberId}`)
-      const result = await response.json()
+      setLoading(true);
+      const response = await fetch(`/api/inventory/expiry?memberId=${memberId}`);
+      const result = await response.json();
 
       if (result.success) {
-        setSummary(result.data)
+        setSummary(result.data);
       }
     } catch (error) {
-      console.error('获取保质期提醒失败:', error)
+      console.error('获取保质期提醒失败:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleRefresh = () => {
-    fetchExpiryAlerts()
-    onRefresh?.()
-  }
+    fetchExpiryAlerts();
+    onRefresh?.();
+  };
 
   const handleProcessExpired = async (itemIds: string[]) => {
     if (!confirm(`确定要处理这 ${itemIds.length} 件过期物品吗？这将在库存中移除它们并创建浪费记录。`)) {
-      return
+      return;
     }
 
-    setProcessing(true)
+    setProcessing(true);
     try {
       const response = await fetch('/api/inventory/expiry', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           memberId,
           itemIds,
-          wasteReason: 'EXPIRED'
-        })
-      })
+          wasteReason: 'EXPIRED',
+        }),
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success) {
-        fetchExpiryAlerts()
-        onRefresh?.()
+        fetchExpiryAlerts();
+        onRefresh?.();
       } else {
-        alert(result.error || '处理失败')
+        alert(result.error || '处理失败');
       }
     } catch (error) {
-      console.error('处理过期物品失败:', error)
-      alert('处理失败，请重试')
+      console.error('处理过期物品失败:', error);
+      alert('处理失败，请重试');
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
   const getExpiryProgress = (daysToExpiry: number) => {
-    if (daysToExpiry < 0) return 100
-    if (daysToExpiry > 30) return 0
-    return Math.max(0, Math.min(100, ((30 - daysToExpiry) / 30) * 100))
-  }
+    if (daysToExpiry < 0) return 100;
+    if (daysToExpiry > 30) return 0;
+    return Math.max(0, Math.min(100, ((30 - daysToExpiry) / 30) * 100));
+  };
 
   const getExpiryColor = (daysToExpiry: number) => {
-    if (daysToExpiry < 0) return 'text-red-600'
-    if (daysToExpiry <= 3) return 'text-red-500'
-    if (daysToExpiry <= 7) return 'text-yellow-600'
-    if (daysToExpiry <= 14) return 'text-orange-500'
-    return 'text-green-600'
-  }
+    if (daysToExpiry < 0) return 'text-red-600';
+    if (daysToExpiry <= 3) return 'text-red-500';
+    if (daysToExpiry <= 7) return 'text-yellow-600';
+    if (daysToExpiry <= 14) return 'text-orange-500';
+    return 'text-green-600';
+  };
 
   const getStorageLocationLabel = (location: string) => {
     const labels: { [key: string]: string } = {
@@ -131,17 +131,17 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
       PANTRY: '常温',
       COUNTER: '台面',
       CABINET: '橱柜',
-      OTHER: '其他'
-    }
-    return labels[location] || location
-  }
+      OTHER: '其他',
+    };
+    return labels[location] || location;
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (!summary) {
@@ -150,10 +150,10 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
         <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
         <p>无法获取保质期信息</p>
       </div>
-    )
+    );
   }
 
-  const hasAlerts = summary.expiredItems.length > 0 || summary.expiringItems.length > 0
+  const hasAlerts = summary.expiredItems.length > 0 || summary.expiringItems.length > 0;
 
   return (
     <div className="space-y-6">
@@ -383,5 +383,5 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

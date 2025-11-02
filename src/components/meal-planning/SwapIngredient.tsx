@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { MealCard } from './MealCard'
-import type { MealType } from '@prisma/client'
+import { useState } from 'react';
+import { MealCard } from './MealCard';
+import type { MealType } from '@prisma/client';
 
 interface MealIngredient {
   id: string
@@ -37,7 +37,7 @@ const MEAL_TYPE_LABELS: Record<MealType, string> = {
   LUNCH: '午餐',
   DINNER: '晚餐',
   SNACK: '加餐',
-}
+};
 
 export function SwapIngredient({
   planId,
@@ -46,16 +46,16 @@ export function SwapIngredient({
   onClose,
   onSuccess,
 }: SwapIngredientProps) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [replaceCount, setReplaceCount] = useState(0)
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [replaceCount, setReplaceCount] = useState(0);
 
   const handleReplace = async (keepOpen = false) => {
     try {
-      setLoading(true)
-      setError(null)
-      setSuccessMessage(null)
+      setLoading(true);
+      setError(null);
+      setSuccessMessage(null);
 
       const response = await fetch(
         `/api/meal-plans/${planId}/meals/${meal.id}`,
@@ -65,77 +65,77 @@ export function SwapIngredient({
             'Content-Type': 'application/json',
           },
         }
-      )
+      );
 
       if (!response.ok) {
-        const data = await response.json()
-        let errorMessage = '替换餐食失败'
+        const data = await response.json();
+        let errorMessage = '替换餐食失败';
         if (data.error) {
           if (data.error.includes('未找到')) {
-            errorMessage = '未找到合适的替代餐食，请稍后再试'
+            errorMessage = '未找到合适的替代餐食，请稍后再试';
           } else if (data.error.includes('不存在')) {
-            errorMessage = '餐食不存在，请刷新页面'
+            errorMessage = '餐食不存在，请刷新页面';
           } else if (data.error.includes('无权限')) {
-            errorMessage = '您没有权限执行此操作'
+            errorMessage = '您没有权限执行此操作';
           } else {
-            errorMessage = data.error
+            errorMessage = data.error;
           }
         }
-        throw new Error(errorMessage)
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json()
-      setReplaceCount(replaceCount + 1)
-      setSuccessMessage('✅ 替换成功！')
+      const data = await response.json();
+      setReplaceCount(replaceCount + 1);
+      setSuccessMessage('✅ 替换成功！');
       
       // 成功后的回调
       if (onSuccess) {
-        onSuccess()
+        onSuccess();
       }
 
       // 如果不保持打开，则延迟关闭以显示成功消息
       if (!keepOpen) {
         setTimeout(() => {
-          onClose()
-          setSuccessMessage(null)
-          setReplaceCount(0)
-        }, 1500)
+          onClose();
+          setSuccessMessage(null);
+          setReplaceCount(0);
+        }, 1500);
       } else {
         // 如果要继续替换，清除成功消息
         setTimeout(() => {
-          setSuccessMessage(null)
-        }, 2000)
+          setSuccessMessage(null);
+        }, 2000);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '替换失败，请稍后重试')
+      setError(err instanceof Error ? err.message : '替换失败，请稍后重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleReplaceAndContinue = () => {
-    handleReplace(true)
-  }
+    handleReplace(true);
+  };
 
   const handleReplaceAndClose = () => {
-    handleReplace(false)
-  }
+    handleReplace(false);
+  };
 
   const handleClose = () => {
-    setError(null)
-    setSuccessMessage(null)
-    setReplaceCount(0)
-    onClose()
-  }
+    setError(null);
+    setSuccessMessage(null);
+    setReplaceCount(0);
+    onClose();
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget && !loading) {
-          handleClose()
+          handleClose();
         }
       }}
     >
@@ -274,6 +274,6 @@ export function SwapIngredient({
         </div>
       </div>
     </div>
-  )
+  );
 }
 

@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { format, startOfWeek, addDays, addWeeks, subWeeks } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { MealCalendarView } from '@/components/meal-planning/MealCalendarView'
-import { MealListView } from '@/components/meal-planning/MealListView'
-import { NutritionSummary } from '@/components/meal-planning/NutritionSummary'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { format, startOfWeek, addDays, addWeeks, subWeeks } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { MealCalendarView } from '@/components/meal-planning/MealCalendarView';
+import { MealListView } from '@/components/meal-planning/MealListView';
+import { NutritionSummary } from '@/components/meal-planning/NutritionSummary';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { 
   Calendar, 
   List, 
@@ -22,9 +22,9 @@ import {
   AlertTriangle,
   Plus,
   Settings,
-  Download
-} from 'lucide-react'
-import { toast } from '@/lib/toast'
+  Download,
+} from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 type ViewMode = 'day' | 'week' | 'month' | 'list'
 
@@ -49,40 +49,40 @@ interface MealPlanData {
 }
 
 export default function MealPlanningPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [viewMode, setViewMode] = useState<ViewMode>('week')
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [mealPlan, setMealPlan] = useState<MealPlanData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('plan')
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [mealPlan, setMealPlan] = useState<MealPlanData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('plan');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin')
+      router.push('/auth/signin');
     }
-  }, [status, router])
+  }, [status, router]);
 
   useEffect(() => {
     if (session?.user) {
-      fetchMealPlan()
+      fetchMealPlan();
     }
-  }, [session, currentDate, viewMode])
+  }, [session, currentDate, viewMode]);
 
   const fetchMealPlan = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const startDate = viewMode === 'day' 
         ? currentDate
         : viewMode === 'week'
-        ? startOfWeek(currentDate, { weekStartsOn: 1 })
-        : new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+          ? startOfWeek(currentDate, { weekStartsOn: 1 })
+          : new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
       const endDate = viewMode === 'day'
         ? currentDate
         : viewMode === 'week'
-        ? addDays(startDate, 6)
-        : new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+          ? addDays(startDate, 6)
+          : new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
       const response = await fetch(
         `/api/meal-plans?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
@@ -91,41 +91,41 @@ export default function MealPlanningPage() {
             'Content-Type': 'application/json',
           },
         }
-      )
+      );
 
       if (!response.ok) {
-        throw new Error('获取食谱计划失败')
+        throw new Error('获取食谱计划失败');
       }
 
-      const data = await response.json()
-      setMealPlan(data)
+      const data = await response.json();
+      setMealPlan(data);
     } catch (error) {
-      console.error('获取食谱计划失败:', error)
-      toast.error('获取食谱计划失败，请重试')
+      console.error('获取食谱计划失败:', error);
+      toast.error('获取食谱计划失败，请重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleNavigateDate = (direction: 'prev' | 'next') => {
     const newDate = direction === 'prev' 
       ? viewMode === 'week' 
         ? subWeeks(currentDate, 1)
         : viewMode === 'month'
-        ? new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-        : addDays(currentDate, -1)
+          ? new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+          : addDays(currentDate, -1)
       : viewMode === 'week'
-      ? addWeeks(currentDate, 1)
-      : viewMode === 'month'
-      ? new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-      : addDays(currentDate, 1)
+        ? addWeeks(currentDate, 1)
+        : viewMode === 'month'
+          ? new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+          : addDays(currentDate, 1);
 
-    setCurrentDate(newDate)
-  }
+    setCurrentDate(newDate);
+  };
 
   const handleGenerateNewPlan = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch('/api/meal-plans/generate', {
         method: 'POST',
         headers: {
@@ -135,48 +135,48 @@ export default function MealPlanningPage() {
           startDate: currentDate.toISOString(),
           days: viewMode === 'day' ? 1 : viewMode === 'week' ? 7 : 30,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('生成食谱计划失败')
+        throw new Error('生成食谱计划失败');
       }
 
-      const data = await response.json()
-      setMealPlan(data)
-      toast.success('食谱计划生成成功！')
+      const data = await response.json();
+      setMealPlan(data);
+      toast.success('食谱计划生成成功！');
     } catch (error) {
-      console.error('生成食谱计划失败:', error)
-      toast.error('生成食谱计划失败，请重试')
+      console.error('生成食谱计划失败:', error);
+      toast.error('生成食谱计划失败，请重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleExportPlan = () => {
-    if (!mealPlan) return
+    if (!mealPlan) return;
     
     // 导出功能实现
     const exportData = {
       plan: mealPlan,
       exportDate: new Date().toISOString(),
       viewMode,
-    }
+    };
     
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
       type: 'application/json',
-    })
+    });
     
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `meal-plan-${format(currentDate, 'yyyy-MM-dd')}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `meal-plan-${format(currentDate, 'yyyy-MM-dd')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
     
-    toast.success('食谱计划已导出')
-  }
+    toast.success('食谱计划已导出');
+  };
 
   if (status === 'loading' || loading) {
     return (
@@ -186,11 +186,11 @@ export default function MealPlanningPage() {
           <p className="text-gray-600">加载食谱计划中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!session) {
-    return null
+    return null;
   }
 
   return (
@@ -394,5 +394,5 @@ export default function MealPlanningPage() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

@@ -2,35 +2,35 @@
  * 社交成就API - 成就列表和统计
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { achievementSystem } from '@/lib/services/social/achievement-system'
-import { prisma } from '@/lib/db'
-import type { AchievementType } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { achievementSystem } from '@/lib/services/social/achievement-system';
+import { prisma } from '@/lib/db';
+import type { AchievementType } from '@prisma/client';
 
 /**
  * 获取成就列表
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },
         { status: 401 }
-      )
+      );
     }
 
-    const { searchParams } = new URL(request.url)
-    const memberId = searchParams.get('memberId')
-    const type = searchParams.get('type')
-    const rarity = searchParams.get('rarity')
-    const all = searchParams.get('all') === 'true'
+    const { searchParams } = new URL(request.url);
+    const memberId = searchParams.get('memberId');
+    const type = searchParams.get('type');
+    const rarity = searchParams.get('rarity');
+    const all = searchParams.get('all') === 'true';
 
     // 如果请求所有可用的成就
     if (all) {
-      const availableAchievements = achievementSystem.getAvailableAchievements()
+      const availableAchievements = achievementSystem.getAvailableAchievements();
       
       return NextResponse.json({
         success: true,
@@ -44,10 +44,10 @@ export async function GET(request: NextRequest) {
             rarity: trigger.rarity,
             points: trigger.points,
             conditions: trigger.conditions,
-            isUnlocked: false
-          }))
-        }
-      })
+            isUnlocked: false,
+          })),
+        },
+      });
     }
 
     // 验证用户权限
@@ -60,46 +60,46 @@ export async function GET(request: NextRequest) {
               some: {
                 members: {
                   some: {
-                    userId: session.user.id
-                  }
-                }
-              }
-            }
-          }
-        }
-      })
+                    userId: session.user.id,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
 
       if (!member) {
         return NextResponse.json(
           { error: '无权限访问该家庭成员' },
           { status: 403 }
-        )
+        );
       }
     }
 
     // 构建查询条件
-    let where: any = {}
+    const where: any = {};
     
     if (memberId) {
-      where.memberId = memberId
+      where.memberId = memberId;
     } else {
       where.member = {
         family: {
           members: {
             some: {
-              userId: session.user.id
-            }
-          }
-        }
-      }
+              userId: session.user.id,
+            },
+          },
+        },
+      };
     }
 
     if (type) {
-      where.type = type
+      where.type = type;
     }
 
     if (rarity) {
-      where.rarity = rarity
+      where.rarity = rarity;
     }
 
     // 获取用户成就
@@ -110,18 +110,18 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            avatar: true
-          }
-        }
+            avatar: true,
+          },
+        },
       },
       orderBy: [
         { rarity: 'desc' },
-        { unlockedAt: 'desc' }
-      ]
-    })
+        { unlockedAt: 'desc' },
+      ],
+    });
 
     // 获取成就统计
-    const stats = await getAchievementStats(memberId || undefined, session.user.id)
+    const stats = await getAchievementStats(memberId || undefined, session.user.id);
 
     return NextResponse.json({
       success: true,
@@ -131,17 +131,17 @@ export async function GET(request: NextRequest) {
         filters: {
           type,
           rarity,
-          memberId
-        }
-      }
-    })
+          memberId,
+        },
+      },
+    });
 
   } catch (error) {
-    console.error('获取成就列表失败:', error)
+    console.error('获取成就列表失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -150,24 +150,24 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },
         { status: 401 }
-      )
+      );
     }
 
-    const body = await request.json()
-    const { memberId, type, reason, adminCode } = body
+    const body = await request.json();
+    const { memberId, type, reason, adminCode } = body;
 
     // 验证管理员权限
-    const isAdmin = await checkAdminPermission(session.user.id, adminCode)
+    const isAdmin = await checkAdminPermission(session.user.id, adminCode);
     if (!isAdmin) {
       return NextResponse.json(
         { error: '无管理员权限' },
         { status: 403 }
-      )
+      );
     }
 
     // 验证用户权限
@@ -179,35 +179,35 @@ export async function POST(request: NextRequest) {
             some: {
               members: {
                 some: {
-                  userId: session.user.id
-                }
-              }
-            }
-          }
-        }
-      }
-    })
+                  userId: session.user.id,
+                },
+              },
+            },
+          },
+        },
+      },
+    });
 
     if (!member) {
       return NextResponse.json(
         { error: '无权限访问该家庭成员' },
         { status: 403 }
-      )
+      );
     }
 
     // 检查是否已解锁
     const existingAchievement = await prisma.achievement.findFirst({
       where: {
         memberId,
-        type: type as AchievementType
-      }
-    })
+        type: type as AchievementType,
+      },
+    });
 
     if (existingAchievement) {
       return NextResponse.json(
         { error: '该成就已经解锁' },
         { status: 409 }
-      )
+      );
     }
 
     // 手动解锁成就
@@ -222,26 +222,26 @@ export async function POST(request: NextRequest) {
         rarity: 'RARE',
         points: 100,
         conditions: [],
-        checkFunction: async () => true
+        checkFunction: async () => true,
       },
       'MANUAL_UNLOCK',
       { reason, adminId: session.user.id }
-    )
+    );
 
     return NextResponse.json({
       success: true,
       data: {
         achievement,
-        message: '成就解锁成功'
-      }
-    })
+        message: '成就解锁成功',
+      },
+    });
 
   } catch (error) {
-    console.error('手动解锁成就失败:', error)
+    console.error('手动解锁成就失败:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -253,21 +253,21 @@ async function getAchievementStats(memberId?: string, userId?: string): Promise<
     ? { memberId }
     : userId
       ? {
-          member: {
-            family: {
-              members: {
-                some: {
-                  userId
-                }
-              }
-            }
-          }
-        }
-      : {}
+        member: {
+          family: {
+            members: {
+              some: {
+                userId,
+              },
+            },
+          },
+        },
+      }
+      : {};
 
   const achievements = await prisma.achievement.findMany({
-    where: whereClause
-  })
+    where: whereClause,
+  });
 
   const stats = {
     total: achievements.length,
@@ -282,28 +282,28 @@ async function getAchievementStats(memberId?: string, userId?: string): Promise<
       UNCOMMON: 0,
       RARE: 0,
       EPIC: 0,
-      LEGENDARY: 0
+      LEGENDARY: 0,
     },
     byType: {} as Record<AchievementType, number>,
     recentUnlocks: achievements
       .sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())
-      .slice(0, 5)
-  }
+      .slice(0, 5),
+  };
 
   // 统计稀有度
   achievements.forEach(achievement => {
     if (stats.byRarity[achievement.rarity] !== undefined) {
-      stats.byRarity[achievement.rarity]++
+      stats.byRarity[achievement.rarity]++;
     }
 
     if (stats.byType[achievement.type] !== undefined) {
-      stats.byType[achievement.type] = (stats.byType[achievement.type] || 0) + 1
+      stats.byType[achievement.type] = (stats.byType[achievement.type] || 0) + 1;
     } else {
-      stats.byType[achievement.type] = 1
+      stats.byType[achievement.type] = 1;
     }
-  })
+  });
 
-  return stats
+  return stats;
 }
 
 /**
@@ -314,10 +314,10 @@ async function checkAdminPermission(userId: string, adminCode?: string): Promise
   // 可以检查用户角色、验证管理员码等
 
   if (!adminCode) {
-    return false
+    return false;
   }
 
   // 验证管理员码
-  const validAdminCodes = process.env.ADMIN_CODES?.split(',') || []
-  return validAdminCodes.includes(adminCode)
+  const validAdminCodes = process.env.ADMIN_CODES?.split(',') || [];
+  return validAdminCodes.includes(adminCode);
 }

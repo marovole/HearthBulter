@@ -536,14 +536,14 @@ export class HealthReportGenerator {
     const dateRange = `${reportData.startDate.toLocaleDateString('zh-CN')} - ${reportData.endDate.toLocaleDateString('zh-CN')}`;
 
     switch (reportData.reportType) {
-      case ReportType.WEEKLY:
-        return `健康周报 (${dateRange})`;
-      case ReportType.MONTHLY:
-        return `健康月报 (${dateRange})`;
-      case ReportType.QUARTERLY:
-        return `健康季报 (${dateRange})`;
-      default:
-        return `健康报告 (${dateRange})`;
+    case ReportType.WEEKLY:
+      return `健康周报 (${dateRange})`;
+    case ReportType.MONTHLY:
+      return `健康月报 (${dateRange})`;
+    case ReportType.QUARTERLY:
+      return `健康季报 (${dateRange})`;
+    default:
+      return `健康报告 (${dateRange})`;
     }
   }
 
@@ -555,14 +555,14 @@ export class HealthReportGenerator {
     }
 
     switch (trendAnalysis.direction) {
-      case 'improving':
-        summary += '整体健康状况呈上升趋势，请继续保持。';
-        break;
-      case 'declining':
-        summary += '整体健康状况有所下降，建议调整健康管理策略。';
-        break;
-      default:
-        summary += '整体健康状况保持稳定。';
+    case 'improving':
+      summary += '整体健康状况呈上升趋势，请继续保持。';
+      break;
+    case 'declining':
+      summary += '整体健康状况有所下降，建议调整健康管理策略。';
+      break;
+    default:
+      summary += '整体健康状况保持稳定。';
     }
 
     return summary;

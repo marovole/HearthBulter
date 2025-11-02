@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { WeightTrendChart } from './WeightTrendChart'
-import { MacroPieChart } from './MacroPieChart'
+import { useState, useEffect } from 'react';
+import { WeightTrendChart } from './WeightTrendChart';
+import { MacroPieChart } from './MacroPieChart';
 
 interface TrendsSectionProps {
   memberId: string
 }
 
 export function TrendsSection({ memberId }: TrendsSectionProps) {
-  const [days, setDays] = useState(30)
-  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily')
+  const [days, setDays] = useState(30);
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
   return (
     <div className="space-y-6">
@@ -63,7 +63,7 @@ export function TrendsSection({ memberId }: TrendsSectionProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function NutritionChart({
@@ -73,30 +73,30 @@ function NutritionChart({
   memberId: string
   period: 'daily' | 'weekly' | 'monthly'
 }) {
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData()
-  }, [memberId, period])
+    loadData();
+  }, [memberId, period]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch(
         `/api/dashboard/nutrition-analysis?memberId=${memberId}&period=${period}`
-      )
+      );
       if (!response.ok) {
-        throw new Error('加载营养数据失败')
+        throw new Error('加载营养数据失败');
       }
-      const result = await response.json()
-      setData(result.data)
+      const result = await response.json();
+      setData(result.data);
     } catch (err) {
-      console.error('加载营养数据失败:', err)
+      console.error('加载营养数据失败:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -106,7 +106,7 @@ function NutritionChart({
           <p className="mt-2 text-sm text-gray-500">加载中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!data) {
@@ -114,7 +114,7 @@ function NutritionChart({
       <div className="flex items-center justify-center h-64 text-gray-500">
         <p>暂无营养数据</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -122,23 +122,22 @@ function NutritionChart({
       target={
         data.targetCarbs && data.targetProtein && data.targetFat
           ? {
-              carbs: data.targetCarbs,
-              protein: data.targetProtein,
-              fat: data.targetFat,
-            }
+            carbs: data.targetCarbs,
+            protein: data.targetProtein,
+            fat: data.targetFat,
+          }
           : undefined
       }
       actual={
         data.actualCarbs && data.actualProtein && data.actualFat
           ? {
-              carbs: data.actualCarbs,
-              protein: data.actualProtein,
-              fat: data.actualFat,
-            }
+            carbs: data.actualCarbs,
+            protein: data.actualProtein,
+            fat: data.actualFat,
+          }
           : undefined
       }
     />
-  )
+  );
 }
-
 

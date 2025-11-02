@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface ShoppingList {
   id: string
@@ -15,58 +15,58 @@ interface EditShoppingListButtonProps {
 
 export function EditShoppingListButton({ 
   shoppingList, 
-  onListUpdated 
+  onListUpdated, 
 }: EditShoppingListButtonProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [name, setName] = useState(shoppingList.name)
-  const [budget, setBudget] = useState(shoppingList.budget?.toString() || '')
-  const [error, setError] = useState('')
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState(shoppingList.name);
+  const [budget, setBudget] = useState(shoppingList.budget?.toString() || '');
+  const [error, setError] = useState('');
 
   const handleOpen = () => {
-    setIsOpen(true)
-    setError('')
-    setName(shoppingList.name)
-    setBudget(shoppingList.budget?.toString() || '')
-  }
+    setIsOpen(true);
+    setError('');
+    setName(shoppingList.name);
+    setBudget(shoppingList.budget?.toString() || '');
+  };
 
   const handleClose = () => {
-    setIsOpen(false)
-    setError('')
-  }
+    setIsOpen(false);
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
     try {
-      setIsLoading(true)
-      setError('')
+      setIsLoading(true);
+      setError('');
 
-      const requestBody: any = {}
+      const requestBody: any = {};
       
       // 只有当名称发生变化时才更新
       if (name.trim() !== shoppingList.name) {
-        requestBody.name = name.trim() || ''
+        requestBody.name = name.trim() || '';
       }
       
       // 处理预算更新
       if (budget !== shoppingList.budget?.toString()) {
         if (budget.trim() === '') {
-          requestBody.budget = null
+          requestBody.budget = null;
         } else {
-          const budgetValue = parseFloat(budget)
+          const budgetValue = parseFloat(budget);
           if (isNaN(budgetValue) || budgetValue < 0) {
-            setError('请输入有效的预算金额')
-            return
+            setError('请输入有效的预算金额');
+            return;
           }
-          requestBody.budget = budgetValue
+          requestBody.budget = budgetValue;
         }
       }
 
       // 如果没有任何变化，直接关闭
       if (Object.keys(requestBody).length === 0) {
-        handleClose()
-        return
+        handleClose();
+        return;
       }
 
       const response = await fetch(`/api/shopping-lists/${shoppingList.id}`, {
@@ -75,22 +75,22 @@ export function EditShoppingListButton({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || '更新购物清单失败')
+        const errorData = await response.json();
+        throw new Error(errorData.error || '更新购物清单失败');
       }
 
-      const data = await response.json()
-      onListUpdated(data.shoppingList)
-      handleClose()
+      const data = await response.json();
+      onListUpdated(data.shoppingList);
+      handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '更新购物清单失败')
+      setError(err instanceof Error ? err.message : '更新购物清单失败');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (!isOpen) {
     return (
@@ -100,7 +100,7 @@ export function EditShoppingListButton({
       >
         编辑
       </button>
-    )
+    );
   }
 
   return (
@@ -174,5 +174,5 @@ export function EditShoppingListButton({
         </form>
       </div>
     </div>
-  )
+  );
 }

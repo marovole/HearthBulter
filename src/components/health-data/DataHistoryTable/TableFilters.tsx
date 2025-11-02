@@ -1,4 +1,4 @@
-import type { TableFilters as Filters } from './types'
+import type { TableFilters as Filters } from './types';
 
 interface TableFiltersProps {
   filters: Filters
@@ -7,7 +7,7 @@ interface TableFiltersProps {
 }
 
 export function TableFilters({ filters, show, onFilterChange }: TableFiltersProps) {
-  if (!show) return null
+  if (!show) return null;
 
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -60,5 +60,5 @@ export function TableFilters({ filters, show, onFilterChange }: TableFiltersProp
         </div>
       </div>
     </div>
-  )
+  );
 }

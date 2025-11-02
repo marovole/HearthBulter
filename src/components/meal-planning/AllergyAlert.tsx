@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   AlertTriangle, 
   X, 
   Info, 
   Shield, 
   Eye,
-  EyeOff
-} from 'lucide-react'
+  EyeOff,
+} from 'lucide-react';
 
 interface AllergyAlertProps {
   allergens: string[]
@@ -24,44 +24,44 @@ const ALLERGEN_INFO = {
   '花生': {
     severity: 'severe' as const,
     description: '严重过敏原，可能引起过敏性休克',
-    alternatives: ['杏仁酱', '葵花籽酱', '芝麻酱']
+    alternatives: ['杏仁酱', '葵花籽酱', '芝麻酱'],
   },
   '坚果': {
     severity: 'severe' as const,
     description: '包括核桃、杏仁、腰果等，严重过敏原',
-    alternatives: ['南瓜籽', '葵花籽', '亚麻籽']
+    alternatives: ['南瓜籽', '葵花籽', '亚麻籽'],
   },
   '海鲜': {
     severity: 'severe' as const,
     description: '包括鱼、虾、蟹、贝类等，严重过敏原',
-    alternatives: ['鸡肉', '豆腐', '蛋白粉']
+    alternatives: ['鸡肉', '豆腐', '蛋白粉'],
   },
   '大豆': {
     severity: 'moderate' as const,
     description: '常见于豆制品、酱油等，中等过敏风险',
-    alternatives: ['鹰嘴豆', '扁豆', '肉类蛋白']
+    alternatives: ['鹰嘴豆', '扁豆', '肉类蛋白'],
   },
   '牛奶': {
     severity: 'moderate' as const,
     description: '乳制品过敏，常见于儿童和成人',
-    alternatives: ['豆浆', '杏仁奶', '燕麦奶']
+    alternatives: ['豆浆', '杏仁奶', '燕麦奶'],
   },
   '鸡蛋': {
     severity: 'moderate' as const,
     description: '常见过敏原，存在于多种食品中',
-    alternatives: ['亚麻籽蛋', '香蕉', '蛋白粉']
+    alternatives: ['亚麻籽蛋', '香蕉', '蛋白粉'],
   },
   '小麦': {
     severity: 'mild' as const,
     description: '麸质过敏，可能引起消化不适',
-    alternatives: ['糙米', '藜麦', '燕麦']
+    alternatives: ['糙米', '藜麦', '燕麦'],
   },
   '芝麻': {
     severity: 'moderate' as const,
     description: '越来越常见的过敏原',
-    alternatives: ['葵花籽', '南瓜籽', '亚麻籽']
-  }
-}
+    alternatives: ['葵花籽', '南瓜籽', '亚麻籽'],
+  },
+};
 
 const SEVERITY_CONFIGS = {
   mild: {
@@ -69,64 +69,64 @@ const SEVERITY_CONFIGS = {
     borderColor: 'border-yellow-200',
     textColor: 'text-yellow-800',
     iconColor: 'text-yellow-600',
-    title: '轻度过敏风险'
+    title: '轻度过敏风险',
   },
   moderate: {
     bgColor: 'bg-orange-50',
     borderColor: 'border-orange-200',
     textColor: 'text-orange-800',
     iconColor: 'text-orange-600',
-    title: '中度过敏风险'
+    title: '中度过敏风险',
   },
   severe: {
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
     textColor: 'text-red-800',
     iconColor: 'text-red-600',
-    title: '严重过敏风险'
-  }
-}
+    title: '严重过敏风险',
+  },
+};
 
 export function AllergyAlert({ 
   allergens, 
   severity = 'moderate',
   showDismiss = true,
-  onDismiss 
+  onDismiss, 
 }: AllergyAlertProps) {
-  const [showDetails, setShowDetails] = useState(false)
-  const [dismissed, setDismissed] = useState(false)
+  const [showDetails, setShowDetails] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   
-  const config = SEVERITY_CONFIGS[severity]
+  const config = SEVERITY_CONFIGS[severity];
   
   // 计算最高严重程度
   const maxSeverity = allergens.reduce((max, allergen) => {
-    const allergenInfo = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO]
-    if (!allergenInfo) return max
+    const allergenInfo = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
+    if (!allergenInfo) return max;
     
-    const severityLevels = { mild: 1, moderate: 2, severe: 3 }
-    const currentLevel = severityLevels[allergenInfo.severity]
-    const maxLevel = severityLevels[max as keyof typeof severityLevels] || 0
+    const severityLevels = { mild: 1, moderate: 2, severe: 3 };
+    const currentLevel = severityLevels[allergenInfo.severity];
+    const maxLevel = severityLevels[max as keyof typeof severityLevels] || 0;
     
-    return currentLevel > maxLevel ? allergenInfo.severity : max
-  }, severity as 'mild' | 'moderate' | 'severe')
+    return currentLevel > maxLevel ? allergenInfo.severity : max;
+  }, severity as 'mild' | 'moderate' | 'severe');
   
-  const finalConfig = SEVERITY_CONFIGS[maxSeverity]
+  const finalConfig = SEVERITY_CONFIGS[maxSeverity];
   
   const handleDismiss = () => {
-    setDismissed(true)
-    onDismiss?.()
-  }
+    setDismissed(true);
+    onDismiss?.();
+  };
 
   const handleShowAlternatives = (allergen: string) => {
-    const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO]
+    const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
     if (info?.alternatives) {
       // 这里可以显示替代食材的详细信息
-      console.log(`替代 ${allergen} 的建议:`, info.alternatives)
+      console.log(`替代 ${allergen} 的建议:`, info.alternatives);
     }
-  }
+  };
 
   if (dismissed) {
-    return null
+    return null;
   }
 
   return (
@@ -154,9 +154,9 @@ export function AllergyAlert({
           <span className="font-medium">检测到过敏原：</span>
           <div className="flex flex-wrap gap-2 mt-2">
             {allergens.map((allergen, index) => {
-              const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO]
-              const allergenSeverity = info?.severity || 'moderate'
-              const allergenConfig = SEVERITY_CONFIGS[allergenSeverity]
+              const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
+              const allergenSeverity = info?.severity || 'moderate';
+              const allergenConfig = SEVERITY_CONFIGS[allergenSeverity];
               
               return (
                 <Badge 
@@ -166,7 +166,7 @@ export function AllergyAlert({
                 >
                   {allergen}
                 </Badge>
-              )
+              );
             })}
           </div>
         </div>
@@ -203,8 +203,8 @@ export function AllergyAlert({
         {showDetails && (
           <div className="space-y-3 mt-4 pt-3 border-t border-current border-opacity-20">
             {allergens.map((allergen, index) => {
-              const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO]
-              if (!info) return null
+              const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
+              if (!info) return null;
               
               return (
                 <div key={index} className="bg-white bg-opacity-50 p-3 rounded-lg">
@@ -215,7 +215,7 @@ export function AllergyAlert({
                     </h4>
                     <Badge 
                       variant="outline"
-                      className={SEVERITY_CONFIGS[info.severity].bgColor + ' ' + SEVERITY_CONFIGS[info.severity].borderColor + ' ' + SEVERITY_CONFIGS[info.severity].textColor}
+                      className={`${SEVERITY_CONFIGS[info.severity].bgColor} ${SEVERITY_CONFIGS[info.severity].borderColor} ${SEVERITY_CONFIGS[info.severity].textColor}`}
                     >
                       {info.severity === 'severe' && '严重'}
                       {info.severity === 'moderate' && '中等'}
@@ -247,7 +247,7 @@ export function AllergyAlert({
                     </div>
                   )}
                 </div>
-              )
+              );
             })}
             
             {/* 安全提示 */}
@@ -267,25 +267,25 @@ export function AllergyAlert({
         )}
       </AlertDescription>
     </Alert>
-  )
+  );
 }
 
 // 简化版本的过敏警告，用于卡片内显示
 export function AllergyBadge({ allergens }: { allergens: string[] }) {
-  if (!allergens || allergens.length === 0) return null
+  if (!allergens || allergens.length === 0) return null;
   
   const maxSeverity = allergens.reduce((max, allergen) => {
-    const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO]
-    if (!info) return max
+    const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
+    if (!info) return max;
     
-    const severityLevels = { mild: 1, moderate: 2, severe: 3 }
-    const currentLevel = severityLevels[info.severity]
-    const maxLevel = severityLevels[max as keyof typeof severityLevels] || 0
+    const severityLevels = { mild: 1, moderate: 2, severe: 3 };
+    const currentLevel = severityLevels[info.severity];
+    const maxLevel = severityLevels[max as keyof typeof severityLevels] || 0;
     
-    return currentLevel > maxLevel ? info.severity : max
-  }, 'mild' as 'mild' | 'moderate' | 'severe')
+    return currentLevel > maxLevel ? info.severity : max;
+  }, 'mild' as 'mild' | 'moderate' | 'severe');
   
-  const config = SEVERITY_CONFIGS[maxSeverity]
+  const config = SEVERITY_CONFIGS[maxSeverity];
   
   return (
     <Badge 
@@ -295,5 +295,5 @@ export function AllergyBadge({ allergens }: { allergens: string[] }) {
       <AlertTriangle className="h-3 w-3 mr-1" />
       {allergens.length}个过敏原
     </Badge>
-  )
+  );
 }

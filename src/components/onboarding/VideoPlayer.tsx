@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useState, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   Play, 
   Pause, 
@@ -14,8 +14,8 @@ import {
   SkipBack, 
   SkipForward,
   Settings,
-  Download
-} from 'lucide-react'
+  Download,
+} from 'lucide-react';
 
 interface VideoPlayerProps {
   src: string
@@ -36,124 +36,124 @@ export function VideoPlayer({
   autoPlay = false,
   showControls = true,
   onProgress,
-  onComplete
+  onComplete,
 }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [volume, setVolume] = useState(1)
-  const [isMuted, setIsMuted] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
 
     const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime)
-      const progress = (video.currentTime / video.duration) * 100
-      onProgress?.(progress)
-    }
+      setCurrentTime(video.currentTime);
+      const progress = (video.currentTime / video.duration) * 100;
+      onProgress?.(progress);
+    };
 
     const handleEnded = () => {
-      setIsPlaying(false)
-      onComplete?.()
-    }
+      setIsPlaying(false);
+      onComplete?.();
+    };
 
     const handleLoadedMetadata = () => {
       if (autoPlay) {
-        video.play()
-        setIsPlaying(true)
+        video.play();
+        setIsPlaying(true);
       }
-    }
+    };
 
-    video.addEventListener('timeupdate', handleTimeUpdate)
-    video.addEventListener('ended', handleEnded)
-    video.addEventListener('loadedmetadata', handleLoadedMetadata)
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('ended', handleEnded);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate)
-      video.removeEventListener('ended', handleEnded)
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata)
-    }
-  }, [autoPlay, onProgress, onComplete])
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [autoPlay, onProgress, onComplete]);
 
   const togglePlay = () => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
 
     if (isPlaying) {
-      video.pause()
+      video.pause();
     } else {
-      video.play()
+      video.play();
     }
-    setIsPlaying(!isPlaying)
-  }
+    setIsPlaying(!isPlaying);
+  };
 
   const handleSeek = (time: number) => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
     
-    video.currentTime = time
-    setCurrentTime(time)
-  }
+    video.currentTime = time;
+    setCurrentTime(time);
+  };
 
   const toggleMute = () => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
 
-    video.muted = !isMuted
-    setIsMuted(!isMuted)
-  }
+    video.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
 
   const handleVolumeChange = (newVolume: number) => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
 
-    video.volume = newVolume
-    setVolume(newVolume)
-    setIsMuted(newVolume === 0)
-  }
+    video.volume = newVolume;
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
 
   const toggleFullscreen = () => {
-    const container = containerRef.current
-    if (!container) return
+    const container = containerRef.current;
+    if (!container) return;
 
     if (!isFullscreen) {
-      container.requestFullscreen?.()
+      container.requestFullscreen?.();
     } else {
-      document.exitFullscreen?.()
+      document.exitFullscreen?.();
     }
-    setIsFullscreen(!isFullscreen)
-  }
+    setIsFullscreen(!isFullscreen);
+  };
 
   const skip = (seconds: number) => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
 
-    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds))
-  }
+    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+  };
 
   const changePlaybackSpeed = (speed: number) => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
 
-    video.playbackRate = speed
-    setPlaybackSpeed(speed)
-    setShowSettings(false)
-  }
+    video.playbackRate = speed;
+    setPlaybackSpeed(speed);
+    setShowSettings(false);
+  };
 
   const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
-  const progress = duration ? (currentTime / duration) * 100 : 0
+  const progress = duration ? (currentTime / duration) * 100 : 0;
 
   return (
     <div ref={containerRef} className="relative bg-black rounded-lg overflow-hidden">
@@ -301,7 +301,7 @@ export function VideoPlayer({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // Video Tutorial Component
@@ -317,16 +317,16 @@ interface VideoTutorialProps {
 }
 
 export function VideoTutorial({ video, onComplete }: VideoTutorialProps) {
-  const [isCompleted, setIsCompleted] = useState(false)
-  const [progress, setProgress] = useState(0)
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleProgress = (currentProgress: number) => {
-    setProgress(currentProgress)
+    setProgress(currentProgress);
     if (currentProgress >= 90 && !isCompleted) {
-      setIsCompleted(true)
-      onComplete?.()
+      setIsCompleted(true);
+      onComplete?.();
     }
-  }
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -362,5 +362,5 @@ export function VideoTutorial({ video, onComplete }: VideoTutorialProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

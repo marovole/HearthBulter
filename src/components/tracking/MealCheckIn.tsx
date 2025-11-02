@@ -110,10 +110,10 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
               className={`
                 p-3 rounded-lg border-2 transition-all
                 ${
-                  mealType === type.value
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300'
-                }
+            mealType === type.value
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-200 hover:border-blue-300'
+            }
               `}
             >
               <div className="text-2xl mb-1">{type.icon}</div>

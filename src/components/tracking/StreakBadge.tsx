@@ -114,8 +114,8 @@ export function StreakBadge({
             {currentStreak >= 100
               ? '🎉 太棒了！你已经坚持了100天以上！'
               : currentStreak >= 30
-              ? '💪 坚持了一个月，你真厉害！'
-              : '🌟 一周连续打卡，保持下去！'}
+                ? '💪 坚持了一个月，你真厉害！'
+                : '🌟 一周连续打卡，保持下去！'}
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TablePaginationProps {
   currentPage: number
@@ -13,9 +13,9 @@ export function TablePagination({
   totalPages,
   itemsPerPage,
   totalItems,
-  onPageChange
+  onPageChange,
 }: TablePaginationProps) {
-  if (totalPages <= 1) return null
+  if (totalPages <= 1) return null;
 
   return (
     <div className="flex items-center justify-between">
@@ -35,7 +35,7 @@ export function TablePagination({
         
         <div className="flex items-center space-x-1">
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const page = i + 1
+            const page = i + 1;
             return (
               <button
                 key={page}
@@ -48,7 +48,7 @@ export function TablePagination({
               >
                 {page}
               </button>
-            )
+            );
           })}
         </div>
         
@@ -62,5 +62,5 @@ export function TablePagination({
         </button>
       </div>
     </div>
-  )
+  );
 }

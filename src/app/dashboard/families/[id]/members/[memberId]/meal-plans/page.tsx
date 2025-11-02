@@ -1,21 +1,21 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/db';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 export default async function MealPlansPage({
   params,
 }: {
   params: Promise<{ id: string; memberId: string }>
 }) {
-  const { id, memberId } = await params
-  const session = await auth()
+  const { id, memberId } = await params;
+  const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin')
+    redirect('/auth/signin');
   }
 
   // 获取成员信息
@@ -43,19 +43,19 @@ export default async function MealPlansPage({
         orderBy: { createdAt: 'desc' },
       },
     },
-  })
+  });
 
   if (!member) {
-    notFound()
+    notFound();
   }
 
   // 验证权限
-  const isCreator = member.family.creatorId === session.user.id
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator
-  const isSelf = member.userId === session.user.id
+  const isCreator = member.family.creatorId === session.user.id;
+  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isSelf = member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
-    redirect(`/dashboard/families/${id}/members/${memberId}`)
+    redirect(`/dashboard/families/${id}/members/${memberId}`);
   }
 
   const GOAL_TYPE_LABELS: Record<string, string> = {
@@ -63,19 +63,19 @@ export default async function MealPlansPage({
     WEIGHT_GAIN: '增肌',
     MAINTENANCE: '维持',
     HEALTH_MANAGEMENT: '健康管理',
-  }
+  };
 
   const STATUS_LABELS: Record<string, string> = {
     ACTIVE: '进行中',
     COMPLETED: '已完成',
     CANCELLED: '已取消',
-  }
+  };
 
   const STATUS_COLORS: Record<string, string> = {
     ACTIVE: 'bg-blue-100 text-blue-800',
     COMPLETED: 'bg-green-100 text-green-800',
     CANCELLED: 'bg-gray-100 text-gray-800',
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -130,7 +130,7 @@ export default async function MealPlansPage({
                 const days = Math.ceil(
                   (plan.endDate.getTime() - plan.startDate.getTime()) /
                     (1000 * 60 * 60 * 24)
-                ) + 1
+                ) + 1;
 
                 return (
                   <Link
@@ -174,13 +174,13 @@ export default async function MealPlansPage({
                       <div className="text-gray-400">→</div>
                     </div>
                   </Link>
-                )
+                );
               })}
             </div>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }
 

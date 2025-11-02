@@ -25,7 +25,7 @@ describe('Rate Limiter', () => {
       // 设置：每分钟5个请求
       const result1 = await rateLimiter.checkLimit(userId, endpoint, {
         windowMs: 60000,
-        maxRequests: 5
+        maxRequests: 5,
       });
 
       expect(result1.allowed).toBe(true);
@@ -336,13 +336,13 @@ describe('Rate Limiter', () => {
       // 负数限制
       await expect(rateLimiter.checkLimit(userId, 'ai_chat', {
         windowMs: -1,
-        maxRequests: -1
+        maxRequests: -1,
       })).rejects.toThrow();
 
       // 零限制
       const result = await rateLimiter.checkLimit(userId, 'ai_chat', {
         windowMs: 60000,
-        maxRequests: 0
+        maxRequests: 0,
       });
       expect(result.allowed).toBe(false);
     });
@@ -354,7 +354,7 @@ describe('Rate Limiter', () => {
 
       await expect(rateLimiter.checkLimit('user-123', 'ai_chat', {
         windowMs: 60000,
-        maxRequests: 10
+        maxRequests: 10,
       })).rejects.toThrow('Out of memory');
     });
 

@@ -5,8 +5,8 @@
  * 从食谱计划自动提取食材、聚合去重、分类展示，并支持保质期标注
  */
 
-import { prisma } from '@/lib/db'
-import type { FoodCategory, ListStatus } from '@prisma/client'
+import { prisma } from '@/lib/db';
+import type { FoodCategory, ListStatus } from '@prisma/client';
 
 /**
  * 食材聚合结果
@@ -43,7 +43,7 @@ const PERISHABLE_DAYS: Partial<Record<FoodCategory, number>> = {
   OILS: 180, // 油脂类180天
   SNACKS: 90, // 零食类90天
   BEVERAGES: 365, // 饮料类365天
-}
+};
 
 /**
  * 购物清单生成器类
@@ -69,24 +69,24 @@ export class ListGenerator {
           },
         },
       },
-    })
+    });
 
     if (!plan) {
-      throw new Error(`食谱计划不存在: ${planId}`)
+      throw new Error(`食谱计划不存在: ${planId}`);
     }
 
     // 2. 聚合相同食材
-    const aggregated = this.aggregateIngredients(plan.meals)
+    const aggregated = this.aggregateIngredients(plan.meals);
 
     // 3. 按分类分组
-    const categories = this.groupByCategory(aggregated)
+    const categories = this.groupByCategory(aggregated);
 
     return {
       planId,
       items: aggregated,
       totalItems: aggregated.length,
       categories,
-    }
+    };
   }
 
   /**
@@ -108,16 +108,16 @@ export class ListGenerator {
     }>
   ): AggregatedIngredient[] {
     // 使用 Map 按 foodId 聚合
-    const ingredientMap = new Map<string, AggregatedIngredient>()
-    const alternativeGroups = new Map<string, AggregatedIngredient[]>()
+    const ingredientMap = new Map<string, AggregatedIngredient>();
+    const alternativeGroups = new Map<string, AggregatedIngredient[]>();
 
     meals.forEach((meal) => {
       meal.ingredients.forEach((ingredient) => {
-        const existing = ingredientMap.get(ingredient.foodId)
+        const existing = ingredientMap.get(ingredient.foodId);
 
         if (existing) {
           // 累加重量
-          existing.totalAmount += ingredient.amount
+          existing.totalAmount += ingredient.amount;
         } else {
           // 创建新项
           ingredientMap.set(ingredient.foodId, {
@@ -126,38 +126,38 @@ export class ListGenerator {
             category: ingredient.food.category,
             totalAmount: ingredient.amount,
             perishableDays: PERISHABLE_DAYS[ingredient.food.category],
-          })
+          });
         }
-      })
-    })
+      });
+    });
 
     // 智能分组：为相似食材创建分组建议
-    const ingredients = Array.from(ingredientMap.values())
-    this.createAlternativeGroups(ingredients, alternativeGroups)
+    const ingredients = Array.from(ingredientMap.values());
+    this.createAlternativeGroups(ingredients, alternativeGroups);
 
     // 过滤掉数量过小的食材（小于10g）
     const filteredIngredients = ingredients.filter(
       ingredient => ingredient.totalAmount >= 10
-    )
+    );
 
     // 转换为数组并按分类和优先级排序
     return filteredIngredients.sort((a, b) => {
       // 优先按易腐性排序（易腐食材优先）
-      const aPerishable = a.perishableDays !== undefined && a.perishableDays <= 7
-      const bPerishable = b.perishableDays !== undefined && b.perishableDays <= 7
+      const aPerishable = a.perishableDays !== undefined && a.perishableDays <= 7;
+      const bPerishable = b.perishableDays !== undefined && b.perishableDays <= 7;
       
-      if (aPerishable && !bPerishable) return -1
-      if (!aPerishable && bPerishable) return 1
+      if (aPerishable && !bPerishable) return -1;
+      if (!aPerishable && bPerishable) return 1;
       
       // 然后按分类排序（使用分类枚举顺序）
-      const categoryOrder = Object.values(FoodCategory)
+      const categoryOrder = Object.values(FoodCategory);
       const categoryDiff =
-        categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
-      if (categoryDiff !== 0) return categoryDiff
+        categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+      if (categoryDiff !== 0) return categoryDiff;
 
       // 最后按数量降序排列（大数量优先）
-      return b.totalAmount - a.totalAmount
-    })
+      return b.totalAmount - a.totalAmount;
+    });
   }
 
   /**
@@ -179,19 +179,19 @@ export class ListGenerator {
       { keywords: ['鸡肉', '鸡胸', '鸡腿', '鸡翅'], category: 'PROTEIN' },
       { keywords: ['猪肉', '五花肉', '里脊', '排骨'], category: 'PROTEIN' },
       { keywords: ['牛肉', '牛腩', '牛排', '牛肉块'], category: 'PROTEIN' },
-    ]
+    ];
 
     similarityGroups.forEach(group => {
       const similarIngredients = ingredients.filter(ingredient => 
         group.category === ingredient.category &&
         group.keywords.some(keyword => ingredient.foodName.includes(keyword))
-      )
+      );
       
       if (similarIngredients.length > 1) {
-        const groupKey = group.keywords[0]
-        groups.set(groupKey, similarIngredients)
+        const groupKey = group.keywords[0];
+        groups.set(groupKey, similarIngredients);
       }
-    })
+    });
   }
 
   /**
@@ -202,22 +202,22 @@ export class ListGenerator {
   private groupByCategory(
     items: AggregatedIngredient[]
   ): Record<FoodCategory, AggregatedIngredient[]> {
-    const categories: Partial<Record<FoodCategory, AggregatedIngredient[]>> = {}
+    const categories: Partial<Record<FoodCategory, AggregatedIngredient[]>> = {};
 
     items.forEach((item) => {
       if (!categories[item.category]) {
-        categories[item.category] = []
+        categories[item.category] = [];
       }
-      categories[item.category]!.push(item)
-    })
+      categories[item.category]!.push(item);
+    });
 
     // 确保所有分类都存在（即使为空数组）
-    const result: Record<FoodCategory, AggregatedIngredient[]> = {} as any
+    const result: Record<FoodCategory, AggregatedIngredient[]> = {} as any;
     Object.values(FoodCategory).forEach((category) => {
-      result[category] = categories[category] || []
-    })
+      result[category] = categories[category] || [];
+    });
 
-    return result
+    return result;
   }
 
   /**
@@ -228,7 +228,7 @@ export class ListGenerator {
   getPerishableItems(items: AggregatedIngredient[]): AggregatedIngredient[] {
     return items.filter(
       (item) => item.perishableDays !== undefined && item.perishableDays <= 7
-    )
+    );
   }
 
   /**
@@ -238,24 +238,24 @@ export class ListGenerator {
    * @returns 采购建议文本
    */
   getCategoryAdvice(category: FoodCategory): string {
-    const perishableDays = PERISHABLE_DAYS[category]
+    const perishableDays = PERISHABLE_DAYS[category];
 
     if (!perishableDays) {
-      return '建议尽快采购'
+      return '建议尽快采购';
     }
 
     if (perishableDays <= 3) {
-      return '建议3天内购买'
+      return '建议3天内购买';
     } else if (perishableDays <= 7) {
-      return '建议7天内购买'
+      return '建议7天内购买';
     } else if (perishableDays <= 30) {
-      return '建议30天内购买'
+      return '建议30天内购买';
     } else {
-      return '可长期保存'
+      return '可长期保存';
     }
   }
 }
 
 // 导出单例实例
-export const listGenerator = new ListGenerator()
+export const listGenerator = new ListGenerator();
 

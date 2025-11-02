@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 
 interface FamilyInfo {
   id: string
@@ -12,53 +12,53 @@ interface FamilyInfo {
 }
 
 export default function AcceptInvitePage() {
-  const router = useRouter()
-  const params = useParams()
-  const code = params.code as string
+  const router = useRouter();
+  const params = useParams();
+  const code = params.code as string;
 
-  const [family, setFamily] = useState<FamilyInfo | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [joining, setJoining] = useState(false)
-  const [memberName, setMemberName] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [family, setFamily] = useState<FamilyInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [joining, setJoining] = useState(false);
+  const [memberName, setMemberName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // 获取邀请信息
   const fetchInviteInfo = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const response = await fetch(`/api/invite/${code}`)
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/invite/${code}`);
 
       if (response.ok) {
-        const data = await response.json()
-        setFamily(data.family)
+        const data = await response.json();
+        setFamily(data.family);
       } else if (response.status === 404) {
-        setError('邀请码无效或已过期')
+        setError('邀请码无效或已过期');
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || '获取邀请信息失败')
+        const errorData = await response.json();
+        setError(errorData.error || '获取邀请信息失败');
       }
     } catch (err) {
-      console.error('获取邀请信息失败:', err)
-      setError('网络错误，请稍后重试')
+      console.error('获取邀请信息失败:', err);
+      setError('网络错误，请稍后重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // 接受邀请
   const handleAcceptInvite = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!memberName.trim()) {
-      setError('请输入您的名称')
-      return
+      setError('请输入您的名称');
+      return;
     }
 
     try {
-      setJoining(true)
-      setError(null)
+      setJoining(true);
+      setError(null);
 
       const response = await fetch(`/api/invite/${code}`, {
         method: 'POST',
@@ -66,39 +66,39 @@ export default function AcceptInvitePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ memberName: memberName.trim() }),
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setSuccess(true)
+        const data = await response.json();
+        setSuccess(true);
         // 3秒后跳转到家庭页面
         setTimeout(() => {
-          router.push(`/dashboard/families/${data.family.id}`)
-        }, 3000)
+          router.push(`/dashboard/families/${data.family.id}`);
+        }, 3000);
       } else if (response.status === 401) {
         // 未登录，引导用户登录
-        setError('请先登录后再接受邀请')
+        setError('请先登录后再接受邀请');
         setTimeout(() => {
-          router.push(`/auth/signin?callbackUrl=/invite/${code}`)
-        }, 2000)
+          router.push(`/auth/signin?callbackUrl=/invite/${code}`);
+        }, 2000);
       } else if (response.status === 400) {
-        const errorData = await response.json()
-        setError(errorData.error || '加入家庭失败')
+        const errorData = await response.json();
+        setError(errorData.error || '加入家庭失败');
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || '加入家庭失败')
+        const errorData = await response.json();
+        setError(errorData.error || '加入家庭失败');
       }
     } catch (err) {
-      console.error('接受邀请失败:', err)
-      setError('网络错误，请稍后重试')
+      console.error('接受邀请失败:', err);
+      setError('网络错误，请稍后重试');
     } finally {
-      setJoining(false)
+      setJoining(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchInviteInfo()
-  }, [code])
+    fetchInviteInfo();
+  }, [code]);
 
   // 成功页面
   if (success) {
@@ -133,7 +133,7 @@ export default function AcceptInvitePage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // 加载中
@@ -142,7 +142,7 @@ export default function AcceptInvitePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-gray-600">加载中...</div>
       </div>
-    )
+    );
   }
 
   // 错误页面
@@ -179,7 +179,7 @@ export default function AcceptInvitePage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   // 邀请信息展示和接受表单
@@ -282,5 +282,5 @@ export default function AcceptInvitePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

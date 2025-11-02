@@ -22,14 +22,14 @@ interface RecipeRatingWidgetProps {
 
 const QUICK_TAGS = [
   '好吃', '简单', '耗时', '难做', '太咸', '太淡', '太辣', '营养丰富',
-  '适合减肥', '适合增肌', '适合老年人', '适合小孩', '创意十足', '传统经典'
+  '适合减肥', '适合增肌', '适合老年人', '适合小孩', '创意十足', '传统经典',
 ];
 
 export function RecipeRatingWidget({
   recipeId,
   memberId,
   currentRating,
-  ratingCount
+  ratingCount,
 }: RecipeRatingWidgetProps) {
   const [userRating, setUserRating] = useState<RecipeRating | null>(null);
   const [loading, setLoading] = useState(false);
@@ -71,8 +71,8 @@ export function RecipeRatingWidget({
           memberId,
           rating: newRating,
           comment,
-          tags: selectedTags
-        })
+          tags: selectedTags,
+        }),
       });
 
       const data = await response.json();
@@ -85,7 +85,7 @@ export function RecipeRatingWidget({
       setRating(newRating);
       toast({
         title: '评分成功',
-        description: '感谢您的评价！'
+        description: '感谢您的评价！',
       });
 
       if (!showForm) {
@@ -95,7 +95,7 @@ export function RecipeRatingWidget({
       toast({
         title: '评分失败',
         description: error instanceof Error ? error.message : '未知错误',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -106,7 +106,7 @@ export function RecipeRatingWidget({
     if (rating === 0) {
       toast({
         title: '请先选择评分',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -174,7 +174,7 @@ export function RecipeRatingWidget({
               {QUICK_TAGS.map((tag) => (
                 <Badge
                   key={tag}
-                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                  variant={selectedTags.includes(tag) ? 'default' : 'outline'}
                   className="cursor-pointer text-xs"
                   onClick={() => toggleTag(tag)}
                 >

@@ -86,15 +86,15 @@ export class ColdStartHandler {
     const [member, userPreference, healthGoal] = await Promise.all([
       this.prisma.familyMember.findUnique({
         where: { id: memberId },
-        include: { user: true }
+        include: { user: true },
       }),
       this.prisma.userPreference.findUnique({
-        where: { memberId }
+        where: { memberId },
       }),
       this.prisma.healthGoal.findFirst({
         where: { memberId, status: 'ACTIVE' },
-        orderBy: { createdAt: 'desc' }
-      })
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
 
     const profile: UserProfile = {};
@@ -104,7 +104,7 @@ export class ColdStartHandler {
       profile.demographicInfo = {
         age: member.age,
         gender: member.gender,
-        location: member.user?.region
+        location: member.user?.region,
       };
     }
 
@@ -113,7 +113,7 @@ export class ColdStartHandler {
       profile.dietaryPreferences = {
         dietType: userPreference.dietType,
         allergies: [], // 需要从其他地方获取
-        restrictions: []
+        restrictions: [],
       };
 
       if (userPreference.isVegetarian || userPreference.isVegan) {
@@ -129,7 +129,7 @@ export class ColdStartHandler {
       profile.cookingPreferences = {
         skillLevel: this.mapDifficultyToSkillLevel(userPreference.spiceLevel),
         timePreference: userPreference.maxCookTime ? `${userPreference.maxCookTime}min` : undefined,
-        cuisinePreference: userPreference.preferredCuisines ? JSON.parse(userPreference.preferredCuisines) : []
+        cuisinePreference: userPreference.preferredCuisines ? JSON.parse(userPreference.preferredCuisines) : [],
       };
     }
 
@@ -138,7 +138,7 @@ export class ColdStartHandler {
       profile.healthGoals = {
         goalType: healthGoal.goalType,
         targetWeight: healthGoal.targetWeight,
-        activityLevel: healthGoal.activityLevel
+        activityLevel: healthGoal.activityLevel,
       };
     }
 
@@ -157,7 +157,7 @@ export class ColdStartHandler {
       applicable: (user) => !!user.demographicInfo,
       generateRecommendations: async (user, context) => {
         return this.generateDemographicRecommendations(user, context);
-      }
+      },
     });
 
     // 策略2：基于饮食偏好的推荐
@@ -168,7 +168,7 @@ export class ColdStartHandler {
       applicable: (user) => !!user.dietaryPreferences,
       generateRecommendations: async (user, context) => {
         return this.generateDietaryRecommendations(user, context);
-      }
+      },
     });
 
     // 策略3：基于烹饪偏好的推荐
@@ -179,7 +179,7 @@ export class ColdStartHandler {
       applicable: (user) => !!user.cookingPreferences,
       generateRecommendations: async (user, context) => {
         return this.generateCookingRecommendations(user, context);
-      }
+      },
     });
 
     // 策略4：基于健康目标的推荐
@@ -190,7 +190,7 @@ export class ColdStartHandler {
       applicable: (user) => !!user.healthGoals,
       generateRecommendations: async (user, context) => {
         return this.generateHealthRecommendations(user, context);
-      }
+      },
     });
 
     // 策略5：基于热门度的推荐
@@ -201,7 +201,7 @@ export class ColdStartHandler {
       applicable: () => true, // 总是适用
       generateRecommendations: async (user, context) => {
         return this.generatePopularityRecommendations(context);
-      }
+      },
     });
   }
 
@@ -214,7 +214,7 @@ export class ColdStartHandler {
   ): Promise<RecipeRecommendation[]> {
     const whereClause: any = {
       status: 'PUBLISHED',
-      isPublic: true
+      isPublic: true,
     };
 
     // 基于年龄调整
@@ -233,7 +233,7 @@ export class ColdStartHandler {
     const recipes = await this.prisma.recipe.findMany({
       where: whereClause,
       orderBy: { viewCount: 'desc' },
-      take: 20
+      take: 20,
     });
 
     return recipes.map(recipe => ({
@@ -246,8 +246,8 @@ export class ColdStartHandler {
         priceMatch: 0,
         nutritionMatch: 0.7,
         preferenceMatch: 0.6,
-        seasonalMatch: 0
-      }
+        seasonalMatch: 0,
+      },
     }));
   }
 
@@ -260,25 +260,25 @@ export class ColdStartHandler {
   ): Promise<RecipeRecommendation[]> {
     const whereClause: any = {
       status: 'PUBLISHED',
-      isPublic: true
+      isPublic: true,
     };
 
     // 饮食类型过滤
     if (user.dietaryPreferences?.dietType) {
       switch (user.dietaryPreferences.dietType) {
-        case 'VEGETARIAN':
-        case 'VEGAN':
-          // 需要检查食谱是否包含肉类
-          whereClause.ingredients = {
-            none: {
-              food: {
-                category: {
-                  in: ['肉类', '禽肉', '海鲜']
-                }
-              }
-            }
-          };
-          break;
+      case 'VEGETARIAN':
+      case 'VEGAN':
+        // 需要检查食谱是否包含肉类
+        whereClause.ingredients = {
+          none: {
+            food: {
+              category: {
+                in: ['肉类', '禽肉', '海鲜'],
+              },
+            },
+          },
+        };
+        break;
       }
     }
 
@@ -290,7 +290,7 @@ export class ColdStartHandler {
     const recipes = await this.prisma.recipe.findMany({
       where: whereClause,
       orderBy: { averageRating: 'desc' },
-      take: 20
+      take: 20,
     });
 
     return recipes.map(recipe => ({
@@ -303,8 +303,8 @@ export class ColdStartHandler {
         priceMatch: 0,
         nutritionMatch: 0.8,
         preferenceMatch: 0.9,
-        seasonalMatch: 0
-      }
+        seasonalMatch: 0,
+      },
     }));
   }
 
@@ -317,7 +317,7 @@ export class ColdStartHandler {
   ): Promise<RecipeRecommendation[]> {
     const whereClause: any = {
       status: 'PUBLISHED',
-      isPublic: true
+      isPublic: true,
     };
 
     // 技能水平
@@ -341,7 +341,7 @@ export class ColdStartHandler {
     const recipes = await this.prisma.recipe.findMany({
       where: whereClause,
       orderBy: { averageRating: 'desc' },
-      take: 20
+      take: 20,
     });
 
     return recipes.map(recipe => ({
@@ -354,8 +354,8 @@ export class ColdStartHandler {
         priceMatch: 0,
         nutritionMatch: 0.6,
         preferenceMatch: 0.8,
-        seasonalMatch: 0
-      }
+        seasonalMatch: 0,
+      },
     }));
   }
 
@@ -368,31 +368,31 @@ export class ColdStartHandler {
   ): Promise<RecipeRecommendation[]> {
     const whereClause: any = {
       status: 'PUBLISHED',
-      isPublic: true
+      isPublic: true,
     };
 
     // 根据健康目标调整营养要求
     if (user.healthGoals?.goalType) {
       switch (user.healthGoals.goalType) {
-        case 'LOSE_WEIGHT':
-          whereClause.calories = { lte: 400 };
-          whereClause.carbs = { lte: 30 };
-          break;
-        case 'GAIN_MUSCLE':
-          whereClause.protein = { gte: 25 };
-          whereClause.calories = { gte: 500 };
-          break;
-        case 'IMPROVE_HEALTH':
-          whereClause.fiber = { gte: 5 };
-          whereClause.sodium = { lte: 600 };
-          break;
+      case 'LOSE_WEIGHT':
+        whereClause.calories = { lte: 400 };
+        whereClause.carbs = { lte: 30 };
+        break;
+      case 'GAIN_MUSCLE':
+        whereClause.protein = { gte: 25 };
+        whereClause.calories = { gte: 500 };
+        break;
+      case 'IMPROVE_HEALTH':
+        whereClause.fiber = { gte: 5 };
+        whereClause.sodium = { lte: 600 };
+        break;
       }
     }
 
     const recipes = await this.prisma.recipe.findMany({
       where: whereClause,
       orderBy: { averageRating: 'desc' },
-      take: 20
+      take: 20,
     });
 
     return recipes.map(recipe => ({
@@ -405,8 +405,8 @@ export class ColdStartHandler {
         priceMatch: 0,
         nutritionMatch: 0.9,
         preferenceMatch: 0.7,
-        seasonalMatch: 0
-      }
+        seasonalMatch: 0,
+      },
     }));
   }
 
@@ -419,13 +419,13 @@ export class ColdStartHandler {
     const whereClause: any = {
       status: 'PUBLISHED',
       isPublic: true,
-      averageRating: { gte: 4.0 }
+      averageRating: { gte: 4.0 },
     };
 
     if (context.mealType) {
       whereClause.mealTypes = {
         path: [],
-        string_contains: context.mealType
+        string_contains: context.mealType,
       };
     }
 
@@ -434,9 +434,9 @@ export class ColdStartHandler {
       orderBy: [
         { ratingCount: 'desc' },
         { averageRating: 'desc' },
-        { viewCount: 'desc' }
+        { viewCount: 'desc' },
       ],
-      take: 20
+      take: 20,
     });
 
     return recipes.map(recipe => ({
@@ -449,8 +449,8 @@ export class ColdStartHandler {
         priceMatch: 0,
         nutritionMatch: 0.5,
         preferenceMatch: 0.4,
-        seasonalMatch: 0
-      }
+        seasonalMatch: 0,
+      },
     }));
   }
 
@@ -498,7 +498,7 @@ export class ColdStartHandler {
       'LOW': 'beginner',
       'MEDIUM': 'intermediate',
       'HIGH': 'advanced',
-      'EXTREME': 'expert'
+      'EXTREME': 'expert',
     };
     return mapping[difficulty || 'MEDIUM'] || 'intermediate';
   }
@@ -511,7 +511,7 @@ export class ColdStartHandler {
       'beginner': 'EASY',
       'intermediate': 'MEDIUM',
       'advanced': 'HARD',
-      'expert': 'HARD'
+      'expert': 'HARD',
     };
     return mapping[skillLevel || 'intermediate'] || 'MEDIUM';
   }
@@ -523,14 +523,14 @@ export class ColdStartHandler {
     const [ratingCount, favoriteCount, viewCount] = await Promise.all([
       this.prisma.recipeRating.count({ where: { memberId } }),
       this.prisma.recipeFavorite.count({ where: { memberId } }),
-      this.prisma.recipeView.count({ where: { memberId } })
+      this.prisma.recipeView.count({ where: { memberId } }),
     ]);
 
     // 定义冷启动阈值
     const COLD_START_THRESHOLD = {
       minRatings: 3,
       minFavorites: 2,
-      minViews: 10
+      minViews: 10,
     };
 
     return ratingCount < COLD_START_THRESHOLD.minRatings &&

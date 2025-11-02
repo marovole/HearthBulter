@@ -14,7 +14,7 @@ import {
   Trophy,
   Target,
   Utensils,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 import { ShareContentType, SharePrivacyLevel } from '@prisma/client';
 
@@ -56,25 +56,25 @@ export function ShareCard({
   onView,
   onLike,
   onComment,
-  onShare
+  onShare,
 }: ShareCardProps) {
   // 获取内容类型图标
   const getContentIcon = (type: ShareContentType) => {
     switch (type) {
-      case 'HEALTH_REPORT':
-        return <TrendingUp className="h-4 w-4" />;
-      case 'GOAL_ACHIEVEMENT':
-        return <Target className="h-4 w-4" />;
-      case 'MEAL_LOG':
-        return <Utensils className="h-4 w-4" />;
-      case 'ACHIEVEMENT':
-        return <Trophy className="h-4 w-4" />;
-      case 'CHECK_IN_STREAK':
-        return <Calendar className="h-4 w-4" />;
-      case 'WEIGHT_MILESTONE':
-        return <TrendingUp className="h-4 w-4" />;
-      default:
-        return <Share2 className="h-4 w-4" />;
+    case 'HEALTH_REPORT':
+      return <TrendingUp className="h-4 w-4" />;
+    case 'GOAL_ACHIEVEMENT':
+      return <Target className="h-4 w-4" />;
+    case 'MEAL_LOG':
+      return <Utensils className="h-4 w-4" />;
+    case 'ACHIEVEMENT':
+      return <Trophy className="h-4 w-4" />;
+    case 'CHECK_IN_STREAK':
+      return <Calendar className="h-4 w-4" />;
+    case 'WEIGHT_MILESTONE':
+      return <TrendingUp className="h-4 w-4" />;
+    default:
+      return <Share2 className="h-4 w-4" />;
     }
   };
 
@@ -87,7 +87,7 @@ export function ShareCard({
       'ACHIEVEMENT': '成就徽章',
       'CHECK_IN_STREAK': '连续打卡',
       'WEIGHT_MILESTONE': '体重里程碑',
-      'RECIPE': '食谱分享'
+      'RECIPE': '食谱分享',
     };
     return labels[type] || '分享';
   };
@@ -97,7 +97,7 @@ export function ShareCard({
     const labels = {
       'PUBLIC': '公开',
       'FRIENDS': '好友可见',
-      'PRIVATE': '私密'
+      'PRIVATE': '私密',
     };
     return labels[level] || '公开';
   };
@@ -107,7 +107,7 @@ export function ShareCard({
     const colors = {
       'PUBLIC': 'default',
       'FRIENDS': 'secondary',
-      'PRIVATE': 'destructive'
+      'PRIVATE': 'destructive',
     };
     return colors[level] || 'default';
   };

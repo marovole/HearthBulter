@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client'
-import { Food, FoodCategory, PriceHistory } from '@prisma/client'
-import { costOptimizer, OptimizationConstraints, OptimizationResult } from './cost-optimizer'
-import { savingsRecommender } from './savings-recommender'
+import { PrismaClient } from '@prisma/client';
+import { Food, FoodCategory, PriceHistory } from '@prisma/client';
+import { costOptimizer, OptimizationConstraints, OptimizationResult } from './cost-optimizer';
+import { savingsRecommender } from './savings-recommender';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 export interface EconomicModeConfig {
   enabled: boolean
@@ -100,13 +100,13 @@ export class EconomicMode {
     config: EconomicModeConfig,
     days: number = 7
   ): Promise<EconomicMealPlan[]> {
-    const mealPlans: EconomicMealPlan[] = []
+    const mealPlans: EconomicMealPlan[] = [];
 
     // 获取用户营养需求
-    const nutritionTargets = await this.getUserNutritionTargets(memberId)
+    const nutritionTargets = await this.getUserNutritionTargets(memberId);
     
     // 获取平价食材池
-    const affordableFoods = await this.getAffordableFoodPool(config)
+    const affordableFoods = await this.getAffordableFoodPool(config);
     
     for (let day = 0; day < days; day++) {
       const dailyPlan = await this.generateDailyMealPlan(
@@ -114,12 +114,12 @@ export class EconomicMode {
         affordableFoods,
         config,
         config.dailyBudgetLimit || 50
-      )
+      );
       
-      mealPlans.push(dailyPlan)
+      mealPlans.push(dailyPlan);
     }
 
-    return mealPlans
+    return mealPlans;
   }
 
   /**
@@ -131,31 +131,31 @@ export class EconomicMode {
     config: EconomicModeConfig
   ): Promise<EconomicShoppingList> {
     // 获取食谱所需的食材
-    const requiredIngredients = await this.getMealPlanIngredients(mealPlanIds)
+    const requiredIngredients = await this.getMealPlanIngredients(mealPlanIds);
     
     // 优化食材选择
     const optimizedIngredients = await this.optimizeIngredientSelection(
       requiredIngredients,
       config
-    )
+    );
     
     // 平台优化
     const platformOptimizations = await this.optimizePlatformSelection(
       optimizedIngredients
-    )
+    );
 
     // 计算总成本和节省
-    const totalCost = optimizedIngredients.reduce((sum, item) => sum + item.totalPrice, 0)
-    const originalCost = await this.calculateOriginalCost(requiredIngredients)
-    const totalSavings = originalCost - totalCost
-    const savingsPercentage = originalCost > 0 ? (totalSavings / originalCost) * 100 : 0
+    const totalCost = optimizedIngredients.reduce((sum, item) => sum + item.totalPrice, 0);
+    const originalCost = await this.calculateOriginalCost(requiredIngredients);
+    const totalSavings = originalCost - totalCost;
+    const savingsPercentage = originalCost > 0 ? (totalSavings / originalCost) * 100 : 0;
 
     // 预算合规性检查
     const budgetCompliance = await this.checkBudgetCompliance(
       totalCost,
       config,
       memberId
-    )
+    );
 
     return {
       items: optimizedIngredients,
@@ -164,8 +164,8 @@ export class EconomicMode {
       totalSavings,
       savingsPercentage,
       platformOptimizations,
-      budgetCompliance
-    }
+      budgetCompliance,
+    };
   }
 
   /**
@@ -192,45 +192,45 @@ export class EconomicMode {
     totalSavings: number
     appliedStrategies: string[]
   }> {
-    const optimizedCart = []
-    let totalSavings = 0
-    const appliedStrategies = []
+    const optimizedCart = [];
+    let totalSavings = 0;
+    const appliedStrategies = [];
 
     // 策略1: 季节性替换
-    const seasonalSubstitutions = await this.applySeasonalSubstitutions(currentCart)
+    const seasonalSubstitutions = await this.applySeasonalSubstitutions(currentCart);
     if (seasonalSubstitutions.length > 0) {
-      appliedStrategies.push('季节性食材替换')
-      optimizedCart.push(...seasonalSubstitutions)
+      appliedStrategies.push('季节性食材替换');
+      optimizedCart.push(...seasonalSubstitutions);
     }
 
     // 策略2: 批量采购优化
-    const bulkOptimizations = await this.applyBulkPurchaseOptimization(currentCart)
+    const bulkOptimizations = await this.applyBulkPurchaseOptimization(currentCart);
     if (bulkOptimizations.length > 0) {
-      appliedStrategies.push('批量采购优化')
-      optimizedCart.push(...bulkOptimizations)
+      appliedStrategies.push('批量采购优化');
+      optimizedCart.push(...bulkOptimizations);
     }
 
     // 策略3: 平台切换建议
-    const platformSwitches = await this.applyPlatformSwitchOptimization(currentCart)
+    const platformSwitches = await this.applyPlatformSwitchOptimization(currentCart);
     if (platformSwitches.length > 0) {
-      appliedStrategies.push('平台切换建议')
-      optimizedCart.push(...platformSwitches)
+      appliedStrategies.push('平台切换建议');
+      optimizedCart.push(...platformSwitches);
     }
 
     // 策略4: 优惠券匹配
-    const couponMatches = await this.applyCouponOptimization(currentCart)
+    const couponMatches = await this.applyCouponOptimization(currentCart);
     if (couponMatches.length > 0) {
-      appliedStrategies.push('优惠券应用')
-      optimizedCart.push(...couponMatches)
+      appliedStrategies.push('优惠券应用');
+      optimizedCart.push(...couponMatches);
     }
 
-    totalSavings = optimizedCart.reduce((sum, item) => sum + item.savings, 0)
+    totalSavings = optimizedCart.reduce((sum, item) => sum + item.savings, 0);
 
     return {
       optimizedCart,
       totalSavings,
-      appliedStrategies
-    }
+      appliedStrategies,
+    };
   }
 
   /**
@@ -262,30 +262,30 @@ export class EconomicMode {
       projectedSavings: number
     }
   }> {
-    const periodData = this.getPeriodData(period)
+    const periodData = this.getPeriodData(period);
     
     // 获取支出数据
-    const spendings = await this.getPeriodSpendings(memberId, periodData.start, periodData.end)
-    const totalSpending = spendings.reduce((sum, s) => sum + s.amount, 0)
+    const spendings = await this.getPeriodSpendings(memberId, periodData.start, periodData.end);
+    const totalSpending = spendings.reduce((sum, s) => sum + s.amount, 0);
 
     // 获取预算限制
-    const budgetLimit = await this.getBudgetLimit(memberId, period)
+    const budgetLimit = await this.getBudgetLimit(memberId, period);
     
     // 计算节省
-    const originalEstimatedCost = await this.estimateOriginalCost(spendings)
-    const savings = originalEstimatedCost - totalSpending
-    const savingsPercentage = originalEstimatedCost > 0 ? (savings / originalEstimatedCost) * 100 : 0
+    const originalEstimatedCost = await this.estimateOriginalCost(spendings);
+    const savings = originalEstimatedCost - totalSpending;
+    const savingsPercentage = originalEstimatedCost > 0 ? (savings / originalEstimatedCost) * 100 : 0;
 
     // 预算合规天数
-    const dailyBudget = budgetLimit / periodData.days
-    const dailySpending = await this.getDailySpending(memberId, periodData.start, periodData.end)
-    const daysWithinBudget = dailySpending.filter(day => day.total <= dailyBudget).length
+    const dailyBudget = budgetLimit / periodData.days;
+    const dailySpending = await this.getDailySpending(memberId, periodData.start, periodData.end);
+    const daysWithinBudget = dailySpending.filter(day => day.total <= dailyBudget).length;
 
     // 分类分析
-    const categoryBreakdown = await this.getCategoryBreakdown(spendings, budgetLimit)
+    const categoryBreakdown = await this.getCategoryBreakdown(spendings, budgetLimit);
 
     // 趋势分析
-    const trendAnalysis = await this.analyzeSpendingTrend(memberId, period)
+    const trendAnalysis = await this.analyzeSpendingTrend(memberId, period);
 
     // 生成建议
     const recommendations = await this.generateEconomicRecommendations(
@@ -293,7 +293,7 @@ export class EconomicMode {
       budgetLimit,
       categoryBreakdown,
       trendAnalysis
-    )
+    );
 
     return {
       summary: {
@@ -302,12 +302,12 @@ export class EconomicMode {
         savings,
         savingsPercentage,
         daysWithinBudget,
-        totalDays: periodData.days
+        totalDays: periodData.days,
       },
       categoryBreakdown,
       recommendations,
-      trendAnalysis
-    }
+      trendAnalysis,
+    };
   }
 
   /**
@@ -319,9 +319,9 @@ export class EconomicMode {
     config: EconomicModeConfig,
     budgetLimit: number
   ): Promise<EconomicMealPlan> {
-    const meals = []
-    const recommendations = []
-    const alternativeOptions = []
+    const meals = [];
+    const recommendations = [];
+    const alternativeOptions = [];
 
     // 早餐 (预算的30%)
     const breakfast = await this.generateMeal(
@@ -330,8 +330,8 @@ export class EconomicMode {
       affordableFoods.filter(f => ['GRAINS', 'DAIRY', 'FRUITS'].includes(f.category)),
       budgetLimit * 0.3,
       config
-    )
-    meals.push(breakfast)
+    );
+    meals.push(breakfast);
 
     // 午餐 (预算的40%)
     const lunch = await this.generateMeal(
@@ -340,8 +340,8 @@ export class EconomicMode {
       affordableFoods.filter(f => ['PROTEIN', 'VEGETABLES', 'GRAINS'].includes(f.category)),
       budgetLimit * 0.4,
       config
-    )
-    meals.push(lunch)
+    );
+    meals.push(lunch);
 
     // 晚餐 (预算的30%)
     const dinner = await this.generateMeal(
@@ -350,8 +350,8 @@ export class EconomicMode {
       affordableFoods.filter(f => ['PROTEIN', 'VEGETABLES'].includes(f.category)),
       budgetLimit * 0.3,
       config
-    )
-    meals.push(dinner)
+    );
+    meals.push(dinner);
 
     // 计算日总计
     const dailyTotal = {
@@ -360,25 +360,25 @@ export class EconomicMode {
         calories: sum.calories + meal.nutrition.calories,
         protein: sum.protein + meal.nutrition.protein,
         carbs: sum.carbs + meal.nutrition.carbs,
-        fat: sum.fat + meal.nutrition.fat
+        fat: sum.fat + meal.nutrition.fat,
       }), { calories: 0, protein: 0, carbs: 0, fat: 0 }),
       savings: meals.reduce((sum, meal) => sum + meal.savings, 0),
-      budgetUtilization: (meals.reduce((sum, meal) => sum + meal.totalCost, 0) / budgetLimit) * 100
-    }
+      budgetUtilization: (meals.reduce((sum, meal) => sum + meal.totalCost, 0) / budgetLimit) * 100,
+    };
 
     // 生成建议
     if (dailyTotal.budgetUtilization > 90) {
-      recommendations.push('接近预算上限，考虑减少分量或选择更便宜的替代品')
+      recommendations.push('接近预算上限，考虑减少分量或选择更便宜的替代品');
     } else if (dailyTotal.budgetUtilization < 70) {
-      recommendations.push('预算使用率较低，可以增加营养丰富的食材')
+      recommendations.push('预算使用率较低，可以增加营养丰富的食材');
     }
 
     return {
       meals,
       dailyTotal,
       recommendations,
-      alternativeOptions
-    }
+      alternativeOptions,
+    };
   }
 
   private async generateMeal(
@@ -395,11 +395,11 @@ export class EconomicMode {
       economyMode: true,
       allowedCategories: config.preferredCategories,
       excludedFoodIds: config.excludedFoodIds,
-      preferSeasonal: config.prioritizeSeasonal
-    }
+      preferSeasonal: config.prioritizeSeasonal,
+    };
 
-    const foodIds = availableFoods.map(f => f.id)
-    const optimizationResult = await costOptimizer.optimizeShoppingList(foodIds, constraints)
+    const foodIds = availableFoods.map(f => f.id);
+    const optimizationResult = await costOptimizer.optimizeShoppingList(foodIds, constraints);
 
     return {
       type: mealType,
@@ -409,12 +409,12 @@ export class EconomicMode {
         foodName: food.food.name,
         amount: food.amount,
         cost: food.cost,
-        nutrition: food.nutrition
+        nutrition: food.nutrition,
       })),
       totalCost: optimizationResult.optimizedCost,
       nutrition: optimizationResult.nutritionComparison.optimized,
-      savings: optimizationResult.savings
-    }
+      savings: optimizationResult.savings,
+    };
   }
 
   private async getAffordableFoodPool(config: EconomicModeConfig): Promise<any[]> {
@@ -423,15 +423,15 @@ export class EconomicMode {
       where: {
         isValid: true,
         unitPrice: {
-          lte: 30 // 单价不超过30元/kg
-        }
+          lte: 30, // 单价不超过30元/kg
+        },
       },
       include: {
-        food: true
+        food: true,
       },
       orderBy: { unitPrice: 'asc' },
-      take: 100
-    })
+      take: 100,
+    });
 
     let foods = priceHistories.map(ph => ({
       id: ph.food.id,
@@ -443,20 +443,20 @@ export class EconomicMode {
         calories: ph.food.calories,
         protein: ph.food.protein,
         carbs: ph.food.carbs,
-        fat: ph.food.fat
-      }
-    }))
+        fat: ph.food.fat,
+      },
+    }));
 
     // 应用过滤条件
     if (config.preferredCategories && config.preferredCategories.length > 0) {
-      foods = foods.filter(f => config.preferredCategories!.includes(f.category))
+      foods = foods.filter(f => config.preferredCategories!.includes(f.category));
     }
 
     if (config.excludedFoodIds && config.excludedFoodIds.length > 0) {
-      foods = foods.filter(f => !config.excludedFoodIds!.includes(f.id))
+      foods = foods.filter(f => !config.excludedFoodIds!.includes(f.id));
     }
 
-    return foods
+    return foods;
   }
 
   private async getUserNutritionTargets(memberId: string): Promise<any> {
@@ -466,41 +466,41 @@ export class EconomicMode {
         calories: 400,
         protein: 15,
         carbs: 50,
-        fat: 15
+        fat: 15,
       },
       lunch: {
         calories: 600,
         protein: 25,
         carbs: 70,
-        fat: 20
+        fat: 20,
       },
       dinner: {
         calories: 500,
         protein: 20,
         carbs: 60,
-        fat: 18
-      }
-    }
+        fat: 18,
+      },
+    };
   }
 
   private async getMealPlanIngredients(mealPlanIds: string[]): Promise<any[]> {
     // 获取食谱食材（简化实现）
-    return []
+    return [];
   }
 
   private async optimizeIngredientSelection(ingredients: any[], config: EconomicModeConfig): Promise<any[]> {
     // 优化食材选择
-    return []
+    return [];
   }
 
   private async optimizePlatformSelection(ingredients: any[]): Promise<any[]> {
     // 平台选择优化
-    return []
+    return [];
   }
 
   private async calculateOriginalCost(ingredients: any[]): Promise<number> {
     // 计算原始成本
-    return 0
+    return 0;
   }
 
   private async checkBudgetCompliance(totalCost: number, config: EconomicModeConfig, memberId: string): Promise<any> {
@@ -508,64 +508,64 @@ export class EconomicMode {
     return {
       withinBudget: true,
       overBudget: 0,
-      recommendations: []
-    }
+      recommendations: [],
+    };
   }
 
   private async applySeasonalSubstitutions(cart: any[]): Promise<any[]> {
     // 季节性替换
-    return []
+    return [];
   }
 
   private async applyBulkPurchaseOptimization(cart: any[]): Promise<any[]> {
     // 批量采购优化
-    return []
+    return [];
   }
 
   private async applyPlatformSwitchOptimization(cart: any[]): Promise<any[]> {
     // 平台切换优化
-    return []
+    return [];
   }
 
   private async applyCouponOptimization(cart: any[]): Promise<any[]> {
     // 优惠券优化
-    return []
+    return [];
   }
 
   private getPeriodData(period: string): any {
-    const now = new Date()
-    let start: Date
-    let days: number
+    const now = new Date();
+    let start: Date;
+    let days: number;
 
     switch (period) {
-      case 'WEEKLY':
-        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        days = 7
-        break
-      case 'MONTHLY':
-        start = new Date(now.getFullYear(), now.getMonth(), 1)
-        days = 30
-        break
-      default:
-        start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-        days = 30
+    case 'WEEKLY':
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      days = 7;
+      break;
+    case 'MONTHLY':
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      days = 30;
+      break;
+    default:
+      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      days = 30;
     }
 
-    return { start, end: now, days }
+    return { start, end: now, days };
   }
 
   private async getPeriodSpendings(memberId: string, start: Date, end: Date) {
     return await prisma.spending.findMany({
       where: {
         budget: {
-          memberId
+          memberId,
         },
         purchaseDate: {
           gte: start,
-          lte: end
-        }
-      }
-    })
+          lte: end,
+        },
+      },
+    });
   }
 
   private async getBudgetLimit(memberId: string, period: string): Promise<number> {
@@ -573,25 +573,25 @@ export class EconomicMode {
     const budget = await prisma.budget.findFirst({
       where: {
         memberId,
-        status: 'ACTIVE'
-      }
-    })
-    return budget?.totalAmount || 1500 // 默认月预算
+        status: 'ACTIVE',
+      },
+    });
+    return budget?.totalAmount || 1500; // 默认月预算
   }
 
   private async estimateOriginalCost(spendings: any[]): Promise<number> {
     // 估算原始成本（未优化前的成本）
-    return spendings.reduce((sum, s) => sum + s.amount * 1.2, 0) // 假设优化后节省20%
+    return spendings.reduce((sum, s) => sum + s.amount * 1.2, 0); // 假设优化后节省20%
   }
 
   private async getDailySpending(memberId: string, start: Date, end: Date): Promise<any[]> {
     // 获取每日支出
-    return []
+    return [];
   }
 
   private async getCategoryBreakdown(spendings: any[], totalBudget: number): Promise<any[]> {
     // 分类支出分析
-    return []
+    return [];
   }
 
   private async analyzeSpendingTrend(memberId: string, period: string): Promise<any> {
@@ -599,8 +599,8 @@ export class EconomicMode {
     return {
       direction: 'STABLE' as const,
       monthlyChange: 0,
-      projectedSavings: 0
-    }
+      projectedSavings: 0,
+    };
   }
 
   private async generateEconomicRecommendations(
@@ -609,27 +609,27 @@ export class EconomicMode {
     categoryBreakdown: any[],
     trendAnalysis: any
   ): Promise<string[]> {
-    const recommendations: string[] = []
+    const recommendations: string[] = [];
 
     if (totalSpending > budgetLimit) {
-      recommendations.push('支出超过预算，建议启用经济模式')
+      recommendations.push('支出超过预算，建议启用经济模式');
     }
 
     if (trendAnalysis.direction === 'DECLINING') {
-      recommendations.push('支出趋势上升，需要加强成本控制')
+      recommendations.push('支出趋势上升，需要加强成本控制');
     }
 
-    return recommendations
+    return recommendations;
   }
 
   private getMealTypeName(mealType: string): string {
     const names: { [key: string]: string } = {
       'BREAKFAST': '早餐',
       'LUNCH': '午餐',
-      'DINNER': '晚餐'
-    }
-    return names[mealType] || mealType
+      'DINNER': '晚餐',
+    };
+    return names[mealType] || mealType;
   }
 }
 
-export const economicMode = new EconomicMode()
+export const economicMode = new EconomicMode();

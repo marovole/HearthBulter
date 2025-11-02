@@ -1,20 +1,20 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { ReportList } from '@/components/reports/ReportList'
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/db';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ReportList } from '@/components/reports/ReportList';
 
 export default async function ReportsPage({
   params,
 }: {
   params: Promise<{ id: string; memberId: string }>
 }) {
-  const { id, memberId } = await params
-  const session = await auth()
+  const { id, memberId } = await params;
+  const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin')
+    redirect('/auth/signin');
   }
 
   // 获取成员信息
@@ -33,19 +33,19 @@ export default async function ReportsPage({
         },
       },
     },
-  })
+  });
 
   if (!member || member.family.id !== id) {
-    notFound()
+    notFound();
   }
 
   // 验证权限
-  const isCreator = member.family.creatorId === session.user.id
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator
-  const isSelf = member.userId === session.user.id
+  const isCreator = member.family.creatorId === session.user.id;
+  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isSelf = member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
-    redirect(`/dashboard/families/${id}/members/${memberId}`)
+    redirect(`/dashboard/families/${id}/members/${memberId}`);
   }
 
   return (
@@ -92,6 +92,6 @@ export default async function ReportsPage({
         </div>
       </div>
     </div>
-  )
+  );
 }
 

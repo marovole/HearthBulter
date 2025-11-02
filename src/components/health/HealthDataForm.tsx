@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface HealthDataFormProps {
   memberId: string
@@ -14,10 +14,10 @@ export function HealthDataForm({
   onSuccess,
   onCancel,
 }: HealthDataFormProps) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<string[]>([])
-  const [warnings, setWarnings] = useState<string[]>([])
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     weight: '',
     bodyFat: '',
@@ -31,37 +31,37 @@ export function HealthDataForm({
     steps: '',
     measuredAt: new Date().toISOString().split('T')[0],
     notes: '',
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setErrors([])
-    setWarnings([])
+    e.preventDefault();
+    setLoading(true);
+    setErrors([]);
+    setWarnings([]);
 
     try {
       const payload: any = {
         measuredAt: formData.measuredAt,
         source: 'MANUAL',
-      }
+      };
 
       // 只添加有值的字段
-      if (formData.weight) payload.weight = parseFloat(formData.weight)
-      if (formData.bodyFat) payload.bodyFat = parseFloat(formData.bodyFat)
+      if (formData.weight) payload.weight = parseFloat(formData.weight);
+      if (formData.bodyFat) payload.bodyFat = parseFloat(formData.bodyFat);
       if (formData.muscleMass)
-        payload.muscleMass = parseFloat(formData.muscleMass)
+        payload.muscleMass = parseFloat(formData.muscleMass);
       if (formData.bloodPressureSystolic)
-        payload.bloodPressureSystolic = parseInt(formData.bloodPressureSystolic)
+        payload.bloodPressureSystolic = parseInt(formData.bloodPressureSystolic);
       if (formData.bloodPressureDiastolic)
         payload.bloodPressureDiastolic = parseInt(
           formData.bloodPressureDiastolic
-        )
-      if (formData.heartRate) payload.heartRate = parseInt(formData.heartRate)
-      if (formData.bloodSugar) payload.bloodSugar = parseFloat(formData.bloodSugar)
-      if (formData.sleep) payload.sleep = parseFloat(formData.sleep)
-      if (formData.exercise) payload.exercise = parseFloat(formData.exercise)
-      if (formData.steps) payload.steps = parseInt(formData.steps)
-      if (formData.notes) payload.notes = formData.notes
+        );
+      if (formData.heartRate) payload.heartRate = parseInt(formData.heartRate);
+      if (formData.bloodSugar) payload.bloodSugar = parseFloat(formData.bloodSugar);
+      if (formData.sleep) payload.sleep = parseFloat(formData.sleep);
+      if (formData.exercise) payload.exercise = parseFloat(formData.exercise);
+      if (formData.steps) payload.steps = parseInt(formData.steps);
+      if (formData.notes) payload.notes = formData.notes;
 
       const response = await fetch(`/api/members/${memberId}/health-data`, {
         method: 'POST',
@@ -69,22 +69,22 @@ export function HealthDataForm({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        setErrors(data.details || [data.error || '录入失败'])
+        setErrors(data.details || [data.error || '录入失败']);
         if (data.warnings) {
-          setWarnings(data.warnings)
+          setWarnings(data.warnings);
         }
-        setLoading(false)
-        return
+        setLoading(false);
+        return;
       }
 
       // 成功
       if (data.warnings && data.warnings.length > 0) {
-        setWarnings(data.warnings)
+        setWarnings(data.warnings);
         // 即使有警告也继续，只是提示用户
       }
 
@@ -102,20 +102,20 @@ export function HealthDataForm({
         steps: '',
         measuredAt: new Date().toISOString().split('T')[0],
         notes: '',
-      })
+      });
 
       if (onSuccess) {
-        onSuccess()
+        onSuccess();
       } else {
-        router.refresh()
+        router.refresh();
       }
     } catch (error) {
-      console.error('录入健康数据失败:', error)
-      setErrors(['网络错误，请稍后重试'])
+      console.error('录入健康数据失败:', error);
+      setErrors(['网络错误，请稍后重试']);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -473,5 +473,5 @@ export function HealthDataForm({
         </button>
       </div>
     </form>
-  )
+  );
 }

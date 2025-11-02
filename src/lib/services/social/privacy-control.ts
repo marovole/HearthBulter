@@ -38,7 +38,7 @@ export interface SharePrivacyRule {
 export async function getUserPrivacySettings(memberId: string): Promise<PrivacySettings | null> {
   try {
     const settings = await prisma.privacySetting.findUnique({
-      where: { memberId }
+      where: { memberId },
     });
 
     if (!settings) {
@@ -52,7 +52,7 @@ export async function getUserPrivacySettings(memberId: string): Promise<PrivacyS
         blockedUsers: [],
         trustedFriends: [],
         autoExpireDays: 30,
-        requireApproval: false
+        requireApproval: false,
       };
     }
 
@@ -65,7 +65,7 @@ export async function getUserPrivacySettings(memberId: string): Promise<PrivacyS
       blockedUsers: JSON.parse(settings.blockedUsers || '[]'),
       trustedFriends: JSON.parse(settings.trustedFriends || '[]'),
       autoExpireDays: settings.autoExpireDays,
-      requireApproval: settings.requireApproval
+      requireApproval: settings.requireApproval,
     };
   } catch (error) {
     console.error('获取隐私设置失败:', error);
@@ -98,7 +98,7 @@ export async function updateUserPrivacySettings(
         blockedUsers: JSON.stringify(updatedSettings.blockedUsers),
         trustedFriends: JSON.stringify(updatedSettings.trustedFriends),
         autoExpireDays: updatedSettings.autoExpireDays,
-        requireApproval: updatedSettings.requireApproval
+        requireApproval: updatedSettings.requireApproval,
       },
       create: {
         memberId,
@@ -109,8 +109,8 @@ export async function updateUserPrivacySettings(
         blockedUsers: JSON.stringify(updatedSettings.blockedUsers),
         trustedFriends: JSON.stringify(updatedSettings.trustedFriends),
         autoExpireDays: updatedSettings.autoExpireDays,
-        requireApproval: updatedSettings.requireApproval
-      }
+        requireApproval: updatedSettings.requireApproval,
+      },
     });
 
     return true;
@@ -136,8 +136,8 @@ export async function checkShareAccess(
     const share = await prisma.sharedContent.findUnique({
       where: { shareToken },
       include: {
-        member: true
-      }
+        member: true,
+      },
     });
 
     if (!share) {
@@ -167,43 +167,43 @@ export async function checkShareAccess(
 
     // 根据隐私级别检查访问权限
     switch (share.privacyLevel) {
-      case 'PUBLIC':
-        // 公开分享，所有人可访问
-        if (!privacySettings.allowStrangerView && !viewerId) {
-          return { hasAccess: false, reason: '不允许陌生人访问' };
-        }
-        break;
+    case 'PUBLIC':
+      // 公开分享，所有人可访问
+      if (!privacySettings.allowStrangerView && !viewerId) {
+        return { hasAccess: false, reason: '不允许陌生人访问' };
+      }
+      break;
 
-      case 'FRIENDS':
-        // 好友可见
-        if (!viewerId) {
-          return { hasAccess: false, reason: '需要登录才能查看' };
-        }
+    case 'FRIENDS':
+      // 好友可见
+      if (!viewerId) {
+        return { hasAccess: false, reason: '需要登录才能查看' };
+      }
         
-        // 检查是否为好友（这里需要根据实际的好友关系来判断）
-        const isFriend = await checkFriendship(share.memberId, viewerId);
-        if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
-          return { hasAccess: false, reason: '仅好友可见' };
-        }
-        break;
+      // 检查是否为好友（这里需要根据实际的好友关系来判断）
+      const isFriend = await checkFriendship(share.memberId, viewerId);
+      if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
+        return { hasAccess: false, reason: '仅好友可见' };
+      }
+      break;
 
-      case 'PRIVATE':
-        // 私密分享，只有特定用户可访问
-        if (!viewerId) {
-          return { hasAccess: false, reason: '需要授权才能查看' };
-        }
+    case 'PRIVATE':
+      // 私密分享，只有特定用户可访问
+      if (!viewerId) {
+        return { hasAccess: false, reason: '需要授权才能查看' };
+      }
         
-        // 检查是否在允许列表中
-        const privacyRule = await getSharePrivacyRule(share.id);
-        if (privacyRule && !privacyRule.allowedUsers.includes(viewerId)) {
-          return { hasAccess: false, reason: '无权访问此分享' };
-        }
-        break;
+      // 检查是否在允许列表中
+      const privacyRule = await getSharePrivacyRule(share.id);
+      if (privacyRule && !privacyRule.allowedUsers.includes(viewerId)) {
+        return { hasAccess: false, reason: '无权访问此分享' };
+      }
+      break;
     }
 
     return { 
       hasAccess: true, 
-      privacyLevel: share.privacyLevel 
+      privacyLevel: share.privacyLevel, 
     };
   } catch (error) {
     console.error('检查分享访问权限失败:', error);
@@ -231,7 +231,7 @@ async function checkFriendship(memberId1: string, memberId2: string): Promise<bo
 async function getSharePrivacyRule(shareId: string): Promise<SharePrivacyRule | null> {
   try {
     const rule = await prisma.sharePrivacyRule.findUnique({
-      where: { shareId }
+      where: { shareId },
     });
 
     if (!rule) {
@@ -248,7 +248,7 @@ async function getSharePrivacyRule(shareId: string): Promise<SharePrivacyRule | 
       allowShare: rule.allowShare,
       expiresAfterDays: rule.expiresAfterDays || undefined,
       allowedUsers: JSON.parse(rule.allowedUsers || '[]'),
-      blockedUsers: JSON.parse(rule.blockedUsers || '[]')
+      blockedUsers: JSON.parse(rule.blockedUsers || '[]'),
     };
   } catch (error) {
     console.error('获取分享隐私规则失败:', error);
@@ -266,7 +266,7 @@ export async function setSharePrivacyRule(
   try {
     // 获取分享信息
     const share = await prisma.sharedContent.findUnique({
-      where: { id: shareId }
+      where: { id: shareId },
     });
 
     if (!share) {
@@ -282,7 +282,7 @@ export async function setSharePrivacyRule(
         allowShare: rule.allowShare,
         expiresAfterDays: rule.expiresAfterDays,
         allowedUsers: JSON.stringify(rule.allowedUsers),
-        blockedUsers: JSON.stringify(rule.blockedUsers)
+        blockedUsers: JSON.stringify(rule.blockedUsers),
       },
       create: {
         shareId,
@@ -294,8 +294,8 @@ export async function setSharePrivacyRule(
         allowShare: rule.allowShare,
         expiresAfterDays: rule.expiresAfterDays,
         allowedUsers: JSON.stringify(rule.allowedUsers),
-        blockedUsers: JSON.stringify(rule.blockedUsers)
-      }
+        blockedUsers: JSON.stringify(rule.blockedUsers),
+      },
     });
 
     // 更新分享内容的隐私级别
@@ -304,8 +304,8 @@ export async function setSharePrivacyRule(
       data: {
         privacyLevel: rule.privacyLevel,
         allowComment: rule.allowComment,
-        allowLike: rule.allowLike
-      }
+        allowLike: rule.allowLike,
+      },
     });
 
     return true;
@@ -328,7 +328,7 @@ export async function blockUser(memberId: string, blockedUserId: string): Promis
     if (!settings.blockedUsers.includes(blockedUserId)) {
       settings.blockedUsers.push(blockedUserId);
       return await updateUserPrivacySettings(memberId, {
-        blockedUsers: settings.blockedUsers
+        blockedUsers: settings.blockedUsers,
       });
     }
 
@@ -353,7 +353,7 @@ export async function unblockUser(memberId: string, blockedUserId: string): Prom
     if (index > -1) {
       settings.blockedUsers.splice(index, 1);
       return await updateUserPrivacySettings(memberId, {
-        blockedUsers: settings.blockedUsers
+        blockedUsers: settings.blockedUsers,
       });
     }
 
@@ -377,7 +377,7 @@ export async function addTrustedFriend(memberId: string, friendId: string): Prom
     if (!settings.trustedFriends.includes(friendId)) {
       settings.trustedFriends.push(friendId);
       return await updateUserPrivacySettings(memberId, {
-        trustedFriends: settings.trustedFriends
+        trustedFriends: settings.trustedFriends,
       });
     }
 
@@ -402,7 +402,7 @@ export async function removeTrustedFriend(memberId: string, friendId: string): P
     if (index > -1) {
       settings.trustedFriends.splice(index, 1);
       return await updateUserPrivacySettings(memberId, {
-        trustedFriends: settings.trustedFriends
+        trustedFriends: settings.trustedFriends,
       });
     }
 
@@ -423,7 +423,7 @@ export async function setShareExpiration(
   try {
     // 更新用户设置
     const updated = await updateUserPrivacySettings(memberId, {
-      autoExpireDays: days
+      autoExpireDays: days,
     });
 
     if (!updated) {
@@ -438,11 +438,11 @@ export async function setShareExpiration(
       where: {
         memberId,
         privacyLevel: 'PUBLIC',
-        expiresAt: null
+        expiresAt: null,
       },
       data: {
-        expiresAt: expireDate
-      }
+        expiresAt: expireDate,
+      },
     });
 
     return true;
@@ -460,13 +460,13 @@ export async function cleanupExpiredShares(): Promise<number> {
     const result = await prisma.sharedContent.updateMany({
       where: {
         expiresAt: {
-          lt: new Date()
+          lt: new Date(),
         },
-        status: 'ACTIVE'
+        status: 'ACTIVE',
       },
       data: {
-        status: 'EXPIRED'
-      }
+        status: 'EXPIRED',
+      },
     });
 
     return result.count;
@@ -490,7 +490,7 @@ export async function getSharePrivacyStats(memberId: string): Promise<{
     const stats = await prisma.sharedContent.groupBy({
       by: ['privacyLevel', 'status'],
       where: { memberId },
-      _count: true
+      _count: true,
     });
 
     const result = {
@@ -498,7 +498,7 @@ export async function getSharePrivacyStats(memberId: string): Promise<{
       publicShares: 0,
       friendsShares: 0,
       privateShares: 0,
-      expiredShares: 0
+      expiredShares: 0,
     };
 
     stats.forEach(stat => {
@@ -519,7 +519,7 @@ export async function getSharePrivacyStats(memberId: string): Promise<{
       publicShares: 0,
       friendsShares: 0,
       privateShares: 0,
-      expiredShares: 0
+      expiredShares: 0,
     };
   }
 }

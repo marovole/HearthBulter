@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
-import { HealthDataList } from '@/components/health/HealthDataList'
-import { DataHistoryTable } from './DataHistoryTable'
-import { DataImportExport } from './DataImportExport'
-import { Download, Filter, Search, Calendar } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { HealthDataList } from '@/components/health/HealthDataList';
+import { DataHistoryTable } from './DataHistoryTable';
+import { DataImportExport } from './DataImportExport';
+import { Download, Filter, Search, Calendar } from 'lucide-react';
 
 interface HealthDataHistoryPageProps {
   userId: string
@@ -22,12 +22,12 @@ interface FamilyMember {
 }
 
 export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null)
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year' | 'all'>('month')
-  const [showExport, setShowExport] = useState(false)
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year' | 'all'>('month');
+  const [showExport, setShowExport] = useState(false);
 
   // 获取家庭成员数据
   useEffect(() => {
@@ -41,7 +41,7 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
             role: 'admin',
             email: 'zhangsan@example.com',
             healthScore: 85,
-            lastActive: new Date()
+            lastActive: new Date(),
           },
           {
             id: '2',
@@ -49,32 +49,32 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
             role: 'member',
             email: 'lisi@example.com',
             healthScore: 78,
-            lastActive: new Date()
-          }
-        ]
+            lastActive: new Date(),
+          },
+        ];
         
-        setFamilyMembers(mockMembers)
+        setFamilyMembers(mockMembers);
         if (mockMembers.length > 0) {
-          setSelectedMemberId(mockMembers[0].id)
+          setSelectedMemberId(mockMembers[0].id);
         }
       } catch (error) {
-        console.error('获取家庭成员失败:', error)
+        console.error('获取家庭成员失败:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchFamilyMembers()
-  }, [])
+    fetchFamilyMembers();
+  }, []);
 
   const handleMemberChange = (memberId: string) => {
-    setSelectedMemberId(memberId)
-  }
+    setSelectedMemberId(memberId);
+  };
 
   const handleDataDeleted = (id: string) => {
-    console.log('删除数据:', id)
+    console.log('删除数据:', id);
     // 这里可以添加刷新逻辑
-  }
+  };
 
   if (loading) {
     return (
@@ -83,7 +83,7 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
@@ -180,5 +180,5 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
         )}
       </div>
     </DashboardLayout>
-  )
+  );
 }

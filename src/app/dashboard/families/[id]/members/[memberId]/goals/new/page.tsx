@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
+import { useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function NewGoalPage() {
-  const params = useParams<{ id: string; memberId: string }>()
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const params = useParams<{ id: string; memberId: string }>();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     goalType: 'LOSE_WEIGHT',
@@ -18,12 +18,12 @@ export default function NewGoalPage() {
     carbRatio: 0.5,
     proteinRatio: 0.2,
     fatRatio: 0.3,
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
     try {
       const response = await fetch(
@@ -47,24 +47,24 @@ export default function NewGoalPage() {
             fatRatio: formData.fatRatio,
           }),
         }
-      )
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         router.push(
           `/dashboard/families/${params.id}/members/${params.memberId}`
-        )
-        router.refresh()
+        );
+        router.refresh();
       } else {
-        setError(data.error || '创建健康目标失败')
+        setError(data.error || '创建健康目标失败');
       }
     } catch (error) {
-      setError('网络错误，请重试')
+      setError('网络错误，请重试');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -339,5 +339,5 @@ export default function NewGoalPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -275,9 +275,9 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
                     <div className="text-sm font-medium">{question.question}</div>
                     <Badge className={`text-xs mt-1 ${getCategoryColor(question.category)}`}>
                       {question.category === 'general' ? '通用' :
-                       question.category === 'nutrition' ? '营养' :
-                       question.category === 'health' ? '健康' :
-                       question.category === 'meal_planning' ? '饮食规划' : '体重管理'}
+                        question.category === 'nutrition' ? '营养' :
+                          question.category === 'health' ? '健康' :
+                            question.category === 'meal_planning' ? '饮食规划' : '体重管理'}
                     </Badge>
                   </div>
                 </Button>

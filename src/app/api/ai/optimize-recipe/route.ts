@@ -26,15 +26,15 @@ export async function POST(request: NextRequest) {
         {
           error: 'Rate limit exceeded',
           retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime
+          resetTime: rateLimitResult.resetTime,
         },
         {
           status: 429,
           headers: {
             'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
             'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600'
-          }
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
+          },
         }
       );
     }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       targetNutrition,
       preferences,
       season,
-      optimizationLevel = 'moderate'
+      optimizationLevel = 'moderate',
     } = body;
 
     if (!recipeId || !memberId) {
@@ -67,17 +67,17 @@ export async function POST(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         dietaryPreference: true,
         allergies: true,
-      }
+      },
     });
 
     if (!member) {
@@ -92,16 +92,16 @@ export async function POST(request: NextRequest) {
       where: {
         id: recipeId,
         plan: {
-          memberId
-        }
+          memberId,
+        },
       },
       include: {
         ingredients: {
           include: {
-            food: true
-          }
-        }
-      }
+            food: true,
+          },
+        },
+      },
     });
 
     if (!recipe) {
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
         protein: recipe.protein,
         carbs: recipe.carbs,
         fat: recipe.fat,
-      }
+      },
     };
 
     // 构建用户偏好
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
         },
         prompt: `Recipe optimization for ${optimizationLevel} level with seasonal considerations`,
         tokens: 0,
-      }
+      },
     });
 
     return NextResponse.json({
@@ -230,17 +230,17 @@ export async function GET(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         dietaryPreference: true,
         allergies: true,
-      }
+      },
     });
 
     if (!member) {

@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import type { MedicalIndicator, IndicatorStatus } from '@prisma/client'
+import { useState, useEffect } from 'react';
+import type { MedicalIndicator, IndicatorStatus } from '@prisma/client';
 
 interface CorrectionFormProps {
   reportId: string
@@ -16,7 +16,7 @@ const STATUS_OPTIONS: Array<{ value: IndicatorStatus; label: string }> = [
   { value: 'LOW', label: '偏低' },
   { value: 'HIGH', label: '偏高' },
   { value: 'CRITICAL', label: '严重异常' },
-]
+];
 
 export function CorrectionForm({
   reportId,
@@ -35,28 +35,28 @@ export function CorrectionForm({
         status: IndicatorStatus
       }
     >
-  >({})
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  >({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // 初始化表单数据
-    const initialData: typeof formData = {}
+    const initialData: typeof formData = {};
     indicators.forEach((ind) => {
       initialData[ind.id] = {
         value: ind.value,
         unit: ind.unit,
         referenceRange: ind.referenceRange || undefined,
         status: ind.status,
-      }
-    })
-    setFormData(initialData)
-  }, [indicators])
+      };
+    });
+    setFormData(initialData);
+  }, [indicators]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
       // 构建更新数据
@@ -66,7 +66,7 @@ export function CorrectionForm({
         unit: data.unit,
         referenceRange: data.referenceRange,
         status: data.status,
-      }))
+      }));
 
       const response = await fetch(
         `/api/members/${memberId}/reports/${reportId}`,
@@ -79,28 +79,28 @@ export function CorrectionForm({
             indicators: indicatorsUpdate,
           }),
         }
-      )
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || '保存失败')
-        setLoading(false)
-        return
+        setError(data.error || '保存失败');
+        setLoading(false);
+        return;
       }
 
       // 成功
       if (onSuccess) {
-        onSuccess()
+        onSuccess();
       } else {
         // 重新加载页面
-        window.location.reload()
+        window.location.reload();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '保存失败')
-      setLoading(false)
+      setError(err instanceof Error ? err.message : '保存失败');
+      setLoading(false);
     }
-  }
+  };
 
   const updateIndicator = (
     id: string,
@@ -113,15 +113,15 @@ export function CorrectionForm({
         ...prev[id],
         [field]: value,
       },
-    }))
-  }
+    }));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="bg-white border rounded-lg divide-y">
         {indicators.map((indicator) => {
-          const formValue = formData[indicator.id]
-          if (!formValue) return null
+          const formValue = formData[indicator.id];
+          if (!formValue) return null;
 
           return (
             <div key={indicator.id} className="p-4">
@@ -214,7 +214,7 @@ export function CorrectionForm({
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -243,6 +243,6 @@ export function CorrectionForm({
         </button>
       </div>
     </form>
-  )
+  );
 }
 

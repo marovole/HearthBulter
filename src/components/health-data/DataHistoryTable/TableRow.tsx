@@ -1,6 +1,6 @@
-import { Eye, Edit, Trash2 } from 'lucide-react'
-import type { HealthData } from './types'
-import { formatDate, getSourceLabel, getSourceBadgeClass } from './utils'
+import { Eye, Edit, Trash2 } from 'lucide-react';
+import type { HealthData } from './types';
+import { formatDate, getSourceLabel, getSourceBadgeClass } from './utils';
 
 interface TableRowProps {
   item: HealthData
@@ -91,5 +91,5 @@ export function TableRow({ item, isSelected, onSelect, onDelete }: TableRowProps
         </div>
       </td>
     </tr>
-  )
+  );
 }

@@ -461,7 +461,7 @@ export class EmailService {
   getStatus(): {
     isConfigured: boolean;
     isConnected: boolean;
-  } {
+    } {
     return {
       isConfigured: this.isConfigured,
       isConnected: this.isConfigured, // 简化实现，实际应该检查连接状态

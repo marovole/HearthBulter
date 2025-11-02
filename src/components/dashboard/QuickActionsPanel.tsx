@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { 
   Plus, 
   Utensils, 
@@ -18,8 +18,8 @@ import {
   Apple,
   TrendingUp,
   Clock,
-  AlertCircle
-} from 'lucide-react'
+  AlertCircle,
+} from 'lucide-react';
 
 interface QuickAction {
   id: string
@@ -38,7 +38,7 @@ interface QuickActionsPanelProps {
 }
 
 export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const quickActions: QuickAction[] = [
     // 数据录入类
@@ -49,7 +49,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: Scale,
       color: 'bg-blue-500',
       category: 'data',
-      onClick: () => console.log('记录体重')
+      onClick: () => console.log('记录体重'),
     },
     {
       id: 'blood-pressure',
@@ -58,7 +58,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: Heart,
       color: 'bg-red-500',
       category: 'data',
-      onClick: () => console.log('测量血压')
+      onClick: () => console.log('测量血压'),
     },
     {
       id: 'exercise',
@@ -67,7 +67,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: Dumbbell,
       color: 'bg-green-500',
       category: 'data',
-      onClick: () => console.log('运动记录')
+      onClick: () => console.log('运动记录'),
     },
     {
       id: 'sleep',
@@ -76,7 +76,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: Moon,
       color: 'bg-purple-500',
       category: 'data',
-      onClick: () => console.log('睡眠记录')
+      onClick: () => console.log('睡眠记录'),
     },
     // 营养类
     {
@@ -86,7 +86,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: Utensils,
       color: 'bg-orange-500',
       category: 'nutrition',
-      onClick: () => console.log('饮食记录')
+      onClick: () => console.log('饮食记录'),
     },
     {
       id: 'meal-photo',
@@ -95,7 +95,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: Camera,
       color: 'bg-pink-500',
       category: 'nutrition',
-      onClick: () => console.log('拍照识别')
+      onClick: () => console.log('拍照识别'),
     },
     {
       id: 'recipe-suggest',
@@ -104,7 +104,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: Apple,
       color: 'bg-green-600',
       category: 'nutrition',
-      onClick: () => console.log('食谱推荐')
+      onClick: () => console.log('食谱推荐'),
     },
     {
       id: 'shopping-list',
@@ -113,7 +113,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: ShoppingCart,
       color: 'bg-yellow-500',
       category: 'nutrition',
-      onClick: () => console.log('购物清单')
+      onClick: () => console.log('购物清单'),
     },
     // 健康管理类
     {
@@ -123,7 +123,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: FileText,
       color: 'bg-indigo-500',
       category: 'health',
-      onClick: () => console.log('健康报告')
+      onClick: () => console.log('健康报告'),
     },
     {
       id: 'trend-analysis',
@@ -132,7 +132,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: TrendingUp,
       color: 'bg-cyan-500',
       category: 'health',
-      onClick: () => console.log('趋势分析')
+      onClick: () => console.log('趋势分析'),
     },
     {
       id: 'appointment',
@@ -141,7 +141,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       icon: Calendar,
       color: 'bg-blue-600',
       category: 'health',
-      onClick: () => console.log('预约体检')
+      onClick: () => console.log('预约体检'),
     },
     // 设备同步类
     {
@@ -152,7 +152,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       color: 'bg-gray-600',
       category: 'device',
       onClick: () => console.log('设备同步'),
-      badge: 2
+      badge: 2,
     },
     // 通知类
     {
@@ -163,9 +163,9 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       color: 'bg-red-600',
       category: 'notification',
       onClick: () => console.log('消息中心'),
-      badge: 5
-    }
-  ]
+      badge: 5,
+    },
+  ];
 
   const categories = [
     { id: 'all', name: '全部', icon: Plus, color: 'bg-gray-500' },
@@ -173,24 +173,24 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
     { id: 'nutrition', name: '营养饮食', icon: Utensils, color: 'bg-orange-500' },
     { id: 'health', name: '健康管理', icon: Heart, color: 'bg-red-500' },
     { id: 'device', name: '设备同步', icon: Smartphone, color: 'bg-gray-600' },
-    { id: 'notification', name: '通知提醒', icon: Bell, color: 'bg-red-600' }
-  ]
+    { id: 'notification', name: '通知提醒', icon: Bell, color: 'bg-red-600' },
+  ];
 
   const filteredActions = selectedCategory === 'all' 
     ? quickActions 
-    : quickActions.filter(action => action.category === selectedCategory)
+    : quickActions.filter(action => action.category === selectedCategory);
 
   const recentActions = [
     { id: 'weight-1', title: '记录体重', time: '10分钟前', icon: Scale },
     { id: 'meal-1', title: '记录午餐', time: '2小时前', icon: Utensils },
     { id: 'exercise-1', title: '完成晨跑', time: '今天早上', icon: Dumbbell },
-  ]
+  ];
 
   const upcomingReminders = [
     { id: 'reminder-1', title: '测量血压', time: '14:00', icon: Heart },
     { id: 'reminder-2', title: '记录晚餐', time: '18:30', icon: Utensils },
     { id: 'reminder-3', title: '睡前记录', time: '22:00', icon: Moon },
-  ]
+  ];
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -211,7 +211,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       {/* 分类选择器 */}
       <div className="flex flex-wrap gap-2 mb-6">
         {categories.map((category) => {
-          const Icon = category.icon
+          const Icon = category.icon;
           return (
             <button
               key={category.id}
@@ -225,14 +225,14 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
               <Icon className="h-4 w-4" />
               <span>{category.name}</span>
             </button>
-          )
+          );
         })}
       </div>
 
       {/* 快速操作网格 */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         {filteredActions.slice(0, 8).map((action) => {
-          const Icon = action.icon
+          const Icon = action.icon;
           return (
             <button
               key={action.id}
@@ -250,7 +250,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
               <h4 className="font-medium text-gray-900 text-sm mb-1">{action.title}</h4>
               <p className="text-xs text-gray-500 line-clamp-2">{action.description}</p>
             </button>
-          )
+          );
         })}
       </div>
 
@@ -264,7 +264,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
           </h4>
           <div className="space-y-2">
             {recentActions.map((action) => {
-              const Icon = action.icon
+              const Icon = action.icon;
               return (
                 <div key={action.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
                   <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -275,7 +275,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
                     <p className="text-xs text-gray-500">{action.time}</p>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -288,7 +288,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
           </h4>
           <div className="space-y-2">
             {upcomingReminders.map((reminder) => {
-              const Icon = reminder.icon
+              const Icon = reminder.icon;
               return (
                 <div key={reminder.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -299,7 +299,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
                     <p className="text-xs text-gray-500">{reminder.time}</p>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -319,5 +319,5 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

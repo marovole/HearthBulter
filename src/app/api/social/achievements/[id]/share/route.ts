@@ -36,8 +36,8 @@ export async function POST(
       where: {
         id: achievementId,
         memberId,
-        isUnlocked: true
-      }
+        isUnlocked: true,
+      },
     });
 
     if (!achievement) {
@@ -53,7 +53,7 @@ export async function POST(
       contentType: 'ACHIEVEMENT',
       contentId: achievementId,
       customMessage,
-      privacyLevel
+      privacyLevel,
     });
 
     // 生成分享token
@@ -70,8 +70,8 @@ export async function POST(
         shareToken,
         shareUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/share/${shareToken}`,
         privacyLevel,
-        metadata: shareContent.metadata
-      }
+        metadata: shareContent.metadata,
+      },
     });
 
     // 标记成就已分享
@@ -92,10 +92,10 @@ export async function POST(
           description: achievement.description,
           rarity: achievement.rarity,
           points: achievement.points,
-          unlockedAt: achievement.unlockedAt
-        }
+          unlockedAt: achievement.unlockedAt,
+        },
       },
-      message: '成就分享成功'
+      message: '成就分享成功',
     });
   } catch (error) {
     console.error('分享成就失败:', error);

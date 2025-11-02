@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 interface MemberInfo {
   id: string
@@ -28,7 +28,7 @@ const GOAL_TYPE_LABELS: Record<string, string> = {
   WEIGHT_GAIN: '增肌',
   MAINTENANCE: '维持',
   HEALTH_MANAGEMENT: '健康管理',
-}
+};
 
 export function MealPlanGenerator({
   memberId,
@@ -36,51 +36,51 @@ export function MealPlanGenerator({
   onSuccess,
   onCancel,
 }: MealPlanGeneratorProps) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [memberInfo, setMemberInfo] = useState<MemberInfo | undefined>(
     initialMemberInfo
-  )
+  );
 
   const [formData, setFormData] = useState({
     days: 7,
     startDate: format(new Date(), 'yyyy-MM-dd'),
-  })
+  });
 
   // 如果没有传入成员信息，则获取
   useEffect(() => {
     if (!memberInfo) {
-      fetchMemberInfo()
+      fetchMemberInfo();
     }
-  }, [memberId])
+  }, [memberId]);
 
   const fetchMemberInfo = async () => {
     try {
       // 这里可以调用API获取成员信息，如果需要的話
       // 目前先使用传入的memberInfo
     } catch (err) {
-      console.error('获取成员信息失败:', err)
+      console.error('获取成员信息失败:', err);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
     // 前端表单验证
     if (formData.startDate) {
-      const selectedDate = new Date(formData.startDate)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
+      const selectedDate = new Date(formData.startDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       
       if (selectedDate < today) {
-        setError('开始日期不能早于今天')
-        return
+        setError('开始日期不能早于今天');
+        return;
       }
     }
     
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const payload: {
@@ -88,11 +88,11 @@ export function MealPlanGenerator({
         startDate?: string
       } = {
         days: formData.days,
-      }
+      };
 
       // 如果指定了开始日期，则添加
       if (formData.startDate) {
-        payload.startDate = new Date(formData.startDate).toISOString()
+        payload.startDate = new Date(formData.startDate).toISOString();
       }
 
       const response = await fetch(
@@ -104,46 +104,46 @@ export function MealPlanGenerator({
           },
           body: JSON.stringify(payload),
         }
-      )
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
         // 提供更友好的错误信息
-        let errorMessage = '生成食谱失败'
+        let errorMessage = '生成食谱失败';
         if (data.error) {
           if (data.error.includes('未授权')) {
-            errorMessage = '您没有权限执行此操作，请重新登录'
+            errorMessage = '您没有权限执行此操作，请重新登录';
           } else if (data.error.includes('不存在')) {
-            errorMessage = '成员信息不存在，请刷新页面重试'
+            errorMessage = '成员信息不存在，请刷新页面重试';
           } else if (data.error.includes('无权限')) {
-            errorMessage = '您没有权限为该成员生成食谱'
+            errorMessage = '您没有权限为该成员生成食谱';
           } else {
-            errorMessage = data.error
+            errorMessage = data.error;
           }
         }
-        throw new Error(errorMessage)
+        throw new Error(errorMessage);
       }
 
       // 成功 - 显示成功提示
-      const planId = data.plan.id
+      const planId = data.plan.id;
 
       if (onSuccess) {
-        onSuccess(planId)
+        onSuccess(planId);
       } else {
         // 刷新页面，由调用方处理导航
-        router.refresh()
+        router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '生成食谱失败，请稍后重试')
+      setError(err instanceof Error ? err.message : '生成食谱失败，请稍后重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const activeGoal = memberInfo?.goals?.find(
     (goal) => goal.goalType !== 'HEALTH_MANAGEMENT'
-  )
+  );
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -295,6 +295,6 @@ export function MealPlanGenerator({
         </div>
       </form>
     </div>
-  )
+  );
 }
 

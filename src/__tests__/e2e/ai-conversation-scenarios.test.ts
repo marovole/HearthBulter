@@ -11,33 +11,33 @@ jest.mock('@/lib/services/ai/openai-client', () => ({
   openaiClient: {
     chat: {
       completions: {
-        create: jest.fn()
-      }
-    }
-  }
+        create: jest.fn(),
+      },
+    },
+  },
 }));
 
 jest.mock('@/lib/db', () => ({
   prisma: {
     userConsent: {
       findUnique: jest.fn(),
-      upsert: jest.fn()
+      upsert: jest.fn(),
     },
     aIConversation: {
       create: jest.fn(),
       findMany: jest.fn(),
-      update: jest.fn()
+      update: jest.fn(),
     },
     aIAdvice: {
-      create: jest.fn()
-    }
-  }
+      create: jest.fn(),
+    },
+  },
 }));
 
 jest.mock('@/lib/services/ai-review-service', () => ({
   aiReviewService: {
-    reviewContent: jest.fn()
-  }
+    reviewContent: jest.fn(),
+  },
 }));
 
 import { openaiClient } from '@/lib/services/ai/openai-client';
@@ -55,20 +55,20 @@ describe('AI Conversation E2E Tests', () => {
     (prisma.userConsent.findUnique as jest.Mock).mockResolvedValue({
       userId: mockUserId,
       hasConsented: true,
-      consentedAt: new Date()
+      consentedAt: new Date(),
     });
 
     (openaiClient.chat.completions.create as jest.Mock).mockResolvedValue({
       choices: [{
         message: {
-          content: '根据您的体检数据，我建议您增加蛋白质摄入，减少精制碳水化合物。'
-        }
+          content: '根据您的体检数据，我建议您增加蛋白质摄入，减少精制碳水化合物。',
+        },
       }],
       usage: {
         prompt_tokens: 150,
         completion_tokens: 80,
-        total_tokens: 230
-      }
+        total_tokens: 230,
+      },
     });
 
     (aiReviewService.reviewContent as jest.Mock).mockResolvedValue({
@@ -80,8 +80,8 @@ describe('AI Conversation E2E Tests', () => {
       metadata: {
         reviewTimestamp: new Date(),
         processingTime: 50,
-        reviewerVersion: '1.0.0'
-      }
+        reviewerVersion: '1.0.0',
+      },
     });
   });
 
@@ -95,17 +95,17 @@ describe('AI Conversation E2E Tests', () => {
           healthData: {
             cholesterol: 6.5,
             age: 35,
-            gender: 'male'
-          }
-        }
+            gender: 'male',
+          },
+        },
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -121,8 +121,8 @@ describe('AI Conversation E2E Tests', () => {
         data: expect.objectContaining({
           userId: mockUserId,
           sessionId: mockSessionId,
-          messages: expect.any(Array)
-        })
+          messages: expect.any(Array),
+        }),
       });
 
       // Verify AI was called
@@ -142,28 +142,28 @@ describe('AI Conversation E2E Tests', () => {
           {
             role: 'user',
             content: '我的胆固醇偏高',
-            timestamp: new Date()
+            timestamp: new Date(),
           },
           {
             role: 'assistant', 
             content: '建议您减少饱和脂肪摄入',
-            timestamp: new Date()
-          }
-        ]
+            timestamp: new Date(),
+          },
+        ],
       }]);
 
       const followUpRequest = {
         message: '那具体应该吃什么？',
         userId: mockUserId,
-        sessionId: mockSessionId
+        sessionId: mockSessionId,
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(followUpRequest),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -181,15 +181,15 @@ describe('AI Conversation E2E Tests', () => {
       const presetRequest = {
         presetQuestion: 'how_to_lower_cholesterol',
         userId: mockUserId,
-        sessionId: mockSessionId
+        sessionId: mockSessionId,
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(presetRequest),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -211,15 +211,15 @@ describe('AI Conversation E2E Tests', () => {
 
       const requestData = {
         message: '我需要营养建议',
-        userId: mockUserId
+        userId: mockUserId,
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -238,15 +238,15 @@ describe('AI Conversation E2E Tests', () => {
       const requestData = {
         message: '我需要营养建议',
         userId: mockUserId,
-        sessionId: mockSessionId
+        sessionId: mockSessionId,
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -265,29 +265,29 @@ describe('AI Conversation E2E Tests', () => {
           type: 'medical_claim' as const,
           severity: 'high' as const,
           description: '包含医疗声明',
-          recommendation: '修改建议内容'
+          recommendation: '修改建议内容',
         }],
         warnings: [],
         suggestions: [],
         metadata: {
           reviewTimestamp: new Date(),
           processingTime: 100,
-          reviewerVersion: '1.0.0'
-        }
+          reviewerVersion: '1.0.0',
+        },
       });
 
       const requestData = {
         message: '我的血糖很高，有危险吗？',
         userId: mockUserId,
-        sessionId: mockSessionId
+        sessionId: mockSessionId,
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -309,24 +309,24 @@ describe('AI Conversation E2E Tests', () => {
         await new Promise(resolve => setTimeout(resolve, 100));
         return {
           choices: [{
-            message: { content: '快速响应' }
+            message: { content: '快速响应' },
           }],
-          usage: { prompt_tokens: 50, completion_tokens: 30, total_tokens: 80 }
+          usage: { prompt_tokens: 50, completion_tokens: 30, total_tokens: 80 },
         };
       });
 
       const requestData = {
         message: '简单问题',
         userId: mockUserId,
-        sessionId: mockSessionId
+        sessionId: mockSessionId,
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -340,15 +340,15 @@ describe('AI Conversation E2E Tests', () => {
       const sensitiveRequest = {
         message: '我的身份证号是123456789012345678，请给我营养建议',
         userId: mockUserId,
-        sessionId: mockSessionId
+        sessionId: mockSessionId,
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(sensitiveRequest),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -369,15 +369,15 @@ describe('AI Conversation E2E Tests', () => {
       const requestData = {
         message: '测试消息',
         userId: mockUserId,
-        sessionId: mockSessionId
+        sessionId: mockSessionId,
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       await POST(request);
@@ -389,14 +389,14 @@ describe('AI Conversation E2E Tests', () => {
           messages: expect.arrayContaining([
             expect.objectContaining({
               role: 'user',
-              content: '测试消息'
+              content: '测试消息',
             }),
             expect.objectContaining({
               role: 'assistant',
-              content: expect.any(String)
-            })
-          ])
-        })
+              content: expect.any(String),
+            }),
+          ]),
+        }),
       });
     });
 
@@ -406,14 +406,14 @@ describe('AI Conversation E2E Tests', () => {
         sessionId: mockSessionId,
         messages: [
           { role: 'user', content: '之前的问题', timestamp: new Date() },
-          { role: 'assistant', content: '之前的回答', timestamp: new Date() }
-        ]
+          { role: 'assistant', content: '之前的回答', timestamp: new Date() },
+        ],
       }];
 
       (prisma.aIConversation.findMany as jest.Mock).mockResolvedValue(mockHistory);
 
       const request = new NextRequest(`http://localhost/api/ai/chat?userId=${mockUserId}&sessionId=${mockSessionId}`, {
-        method: 'GET'
+        method: 'GET',
       });
 
       const response = await GET(request);

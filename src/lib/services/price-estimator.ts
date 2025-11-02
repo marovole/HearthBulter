@@ -5,8 +5,8 @@
  * 提供成本估算、预算检查和实际花费记录功能
  */
 
-import { prisma } from '@/lib/db'
-import type { FoodCategory } from '@prisma/client'
+import { prisma } from '@/lib/db';
+import type { FoodCategory } from '@prisma/client';
 
 /**
  * 价格估算结果
@@ -45,7 +45,7 @@ const DEFAULT_PRICES: Partial<Record<FoodCategory, number>> = {
   SNACKS: 5.0, // 零食类平均5元/100g
   BEVERAGES: 2.0, // 饮料类平均2元/100g
   OTHER: 5.0, // 其他类平均5元/100g
-}
+};
 
 /**
  * 价格估算器类
@@ -64,17 +64,17 @@ export class PriceEstimator {
     // 查询食物信息
     const food = await prisma.food.findUnique({
       where: { id: foodId },
-    })
+    });
 
     if (!food) {
-      throw new Error(`食物不存在: ${foodId}`)
+      throw new Error(`食物不存在: ${foodId}`);
     }
 
     // 获取单价（优先使用历史价格，否则使用默认价格）
-    const unitPrice = await this.getUnitPrice(food.category)
+    const unitPrice = await this.getUnitPrice(food.category);
 
     // 计算总价（转换为元）
-    const estimatedPrice = (unitPrice * amount) / 100
+    const estimatedPrice = (unitPrice * amount) / 100;
 
     return {
       foodId,
@@ -82,7 +82,7 @@ export class PriceEstimator {
       amount,
       estimatedPrice: Math.round(estimatedPrice * 100) / 100, // 保留两位小数
       unitPrice,
-    }
+    };
   }
 
   /**
@@ -95,9 +95,9 @@ export class PriceEstimator {
   ): Promise<PriceEstimate[]> {
     const estimates = await Promise.all(
       items.map((item) => this.estimatePrice(item.foodId, item.amount))
-    )
+    );
 
-    return estimates
+    return estimates;
   }
 
   /**
@@ -109,7 +109,7 @@ export class PriceEstimator {
   private async getUnitPrice(category: FoodCategory): Promise<number> {
     // TODO: 未来可以从历史采购记录中获取平均价格
     // 目前使用默认价格
-    return DEFAULT_PRICES[category] || DEFAULT_PRICES.OTHER || 5.0
+    return DEFAULT_PRICES[category] || DEFAULT_PRICES.OTHER || 5.0;
   }
 
   /**
@@ -128,15 +128,15 @@ export class PriceEstimator {
         budget: null,
         isOverBudget: false,
         overBudgetAmount: 0,
-      }
+      };
     }
 
-    const isOverBudget = estimatedCost > budget
-    const overBudgetAmount = isOverBudget ? estimatedCost - budget : 0
+    const isOverBudget = estimatedCost > budget;
+    const overBudgetAmount = isOverBudget ? estimatedCost - budget : 0;
 
-    let recommendation: string | undefined
+    let recommendation: string | undefined;
     if (isOverBudget) {
-      recommendation = `超预算 ${overBudgetAmount.toFixed(2)} 元，建议：\n1. 选择更经济的替代食材\n2. 减少高价值食材的用量\n3. 调整预算金额`
+      recommendation = `超预算 ${overBudgetAmount.toFixed(2)} 元，建议：\n1. 选择更经济的替代食材\n2. 减少高价值食材的用量\n3. 调整预算金额`;
     }
 
     return {
@@ -145,7 +145,7 @@ export class PriceEstimator {
       isOverBudget,
       overBudgetAmount: Math.round(overBudgetAmount * 100) / 100,
       recommendation,
-    }
+    };
   }
 
   /**
@@ -157,7 +157,7 @@ export class PriceEstimator {
     return estimates.reduce(
       (total, estimate) => total + estimate.estimatedPrice,
       0
-    )
+    );
   }
 
   /**
@@ -172,7 +172,7 @@ export class PriceEstimator {
     await prisma.shoppingList.update({
       where: { id: shoppingListId },
       data: { actualCost },
-    })
+    });
   }
 
   /**
@@ -186,19 +186,19 @@ export class PriceEstimator {
     estimatedCost: number,
     actualCost: number
   ): string {
-    const diff = actualCost - estimatedCost
-    const diffPercent = (diff / estimatedCost) * 100
+    const diff = actualCost - estimatedCost;
+    const diffPercent = (diff / estimatedCost) * 100;
 
     if (Math.abs(diffPercent) < 5) {
-      return '价格估算准确，与实际采购成本接近'
+      return '价格估算准确，与实际采购成本接近';
     } else if (diffPercent > 0) {
-      return `实际采购成本比估算高 ${diffPercent.toFixed(1)}%，建议关注市场价格波动`
+      return `实际采购成本比估算高 ${diffPercent.toFixed(1)}%，建议关注市场价格波动`;
     } else {
-      return `实际采购成本比估算低 ${Math.abs(diffPercent).toFixed(1)}%，市场可能处于促销期`
+      return `实际采购成本比估算低 ${Math.abs(diffPercent).toFixed(1)}%，市场可能处于促销期`;
     }
   }
 }
 
 // 导出单例实例
-export const priceEstimator = new PriceEstimator()
+export const priceEstimator = new PriceEstimator();
 

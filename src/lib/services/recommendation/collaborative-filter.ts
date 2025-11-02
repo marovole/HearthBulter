@@ -38,7 +38,7 @@ export class CollaborativeFilter {
     // 并行计算基于用户和基于物品的推荐
     const [userBasedRecs, itemBasedRecs] = await Promise.all([
       this.getUserBasedRecommendations(memberId, userBehavior, limit),
-      this.getItemBasedRecommendations(memberId, userBehavior, limit)
+      this.getItemBasedRecommendations(memberId, userBehavior, limit),
     ]);
 
     // 混合两种推荐结果
@@ -77,14 +77,14 @@ export class CollaborativeFilter {
         recipeId: recipe.id,
         score,
         reasons: ['相似用户喜欢'],
-        explanation: `与您口味相似的用户也喜欢这道菜。`,
+        explanation: '与您口味相似的用户也喜欢这道菜。',
         metadata: {
           inventoryMatch: 0,
           priceMatch: 0,
           nutritionMatch: 0,
           preferenceMatch: score / 100,
-          seasonalMatch: 0
-        }
+          seasonalMatch: 0,
+        },
       };
     });
 
@@ -102,7 +102,7 @@ export class CollaborativeFilter {
     // 获取用户喜欢的食谱
     const likedRecipes = [
       ...userBehavior.ratings.filter((r: any) => r.rating >= 4).map((r: any) => r.recipeId),
-      ...userBehavior.favorites.map((f: any) => f.recipeId)
+      ...userBehavior.favorites.map((f: any) => f.recipeId),
     ];
 
     if (likedRecipes.length === 0) {
@@ -132,14 +132,14 @@ export class CollaborativeFilter {
         recipeId: recipe.id,
         score,
         reasons: ['相似食谱推荐'],
-        explanation: `基于您喜欢的相似食谱推荐。`,
+        explanation: '基于您喜欢的相似食谱推荐。',
         metadata: {
           inventoryMatch: 0,
           priceMatch: 0,
           nutritionMatch: 0,
           preferenceMatch: score / 100,
-          seasonalMatch: 0
-        }
+          seasonalMatch: 0,
+        },
       };
     });
 
@@ -164,7 +164,7 @@ export class CollaborativeFilter {
       if (similarity > 0.1) { // 只保留有一定相似度的用户
         similarities.push({
           userId: otherUser.memberId,
-          similarity
+          similarity,
         });
       }
     }
@@ -256,7 +256,7 @@ export class CollaborativeFilter {
     const similarities: ItemSimilarity[] = Array.from(cooccurrence.entries())
       .map(([itemId, count]) => ({
         itemId,
-        similarity: count / 100 // 简化的相似度计算
+        similarity: count / 100, // 简化的相似度计算
       }))
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, limit);
@@ -332,12 +332,12 @@ export class CollaborativeFilter {
     const [ratings, favorites] = await Promise.all([
       this.prisma.recipeRating.findMany({
         where: { memberId },
-        select: { recipeId: true, rating: true }
+        select: { recipeId: true, rating: true },
       }),
       this.prisma.recipeFavorite.findMany({
         where: { memberId },
-        select: { recipeId: true }
-      })
+        select: { recipeId: true },
+      }),
     ]);
 
     return { ratings, favorites };
@@ -370,12 +370,12 @@ export class CollaborativeFilter {
         const [ratings, favorites] = await Promise.all([
           this.prisma.recipeRating.findMany({
             where: { memberId: userId },
-            select: { recipeId: true, rating: true }
+            select: { recipeId: true, rating: true },
           }),
           this.prisma.recipeFavorite.findMany({
             where: { memberId: userId },
-            select: { recipeId: true }
-          })
+            select: { recipeId: true },
+          }),
         ]);
 
         return { memberId: userId, ratings, favorites };
@@ -400,10 +400,10 @@ export class CollaborativeFilter {
         status: 'PUBLISHED',
         isPublic: true,
         id: {
-          notIn: await this.getUserKnownRecipes(memberId)
-        }
+          notIn: await this.getUserKnownRecipes(memberId),
+        },
       },
-      take: limit
+      take: limit,
     });
   }
 
@@ -414,22 +414,22 @@ export class CollaborativeFilter {
     const [rated, favorited, viewed] = await Promise.all([
       this.prisma.recipeRating.findMany({
         where: { memberId },
-        select: { recipeId: true }
+        select: { recipeId: true },
       }),
       this.prisma.recipeFavorite.findMany({
         where: { memberId },
-        select: { recipeId: true }
+        select: { recipeId: true },
       }),
       this.prisma.recipeView.findMany({
         where: { memberId },
-        select: { recipeId: true }
-      })
+        select: { recipeId: true },
+      }),
     ]);
 
     return [
       ...rated.map(r => r.recipeId),
       ...favorited.map(f => f.recipeId),
-      ...viewed.map(v => v.recipeId)
+      ...viewed.map(v => v.recipeId),
     ];
   }
 
@@ -504,7 +504,7 @@ export class CollaborativeFilter {
       combined.set(rec.recipeId, {
         ...rec,
         score: rec.score * 0.6,
-        reasons: [...rec.reasons, '用户协同过滤']
+        reasons: [...rec.reasons, '用户协同过滤'],
       });
     });
 
@@ -518,7 +518,7 @@ export class CollaborativeFilter {
         combined.set(rec.recipeId, {
           ...rec,
           score: rec.score * 0.4,
-          reasons: [...rec.reasons, '物品协同过滤']
+          reasons: [...rec.reasons, '物品协同过滤'],
         });
       }
     });
@@ -535,13 +535,13 @@ export class CollaborativeFilter {
       where: {
         status: 'PUBLISHED',
         isPublic: true,
-        averageRating: { gte: 4.0 }
+        averageRating: { gte: 4.0 },
       },
       orderBy: [
         { ratingCount: 'desc' },
-        { averageRating: 'desc' }
+        { averageRating: 'desc' },
       ],
-      take: limit
+      take: limit,
     });
 
     return popularRecipes.map(recipe => ({
@@ -554,8 +554,8 @@ export class CollaborativeFilter {
         priceMatch: 0,
         nutritionMatch: 0,
         preferenceMatch: 0.5,
-        seasonalMatch: 0
-      }
+        seasonalMatch: 0,
+      },
     }));
   }
 }

@@ -1,18 +1,18 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+import { useState } from 'react';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle,
-  DialogFooter 
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+  DialogFooter, 
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { 
   Clock, 
   Users, 
@@ -23,19 +23,19 @@ import {
   Printer,
   Edit,
   ArrowLeftRight,
-  X
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { NutritionChart } from './NutritionChart'
-import { MacroNutrientChart } from './MacroNutrientChart'
-import { IngredientSubstitutes } from './IngredientSubstitutes'
-import { EnhancedIngredientSubstitutes } from './EnhancedIngredientSubstitutes'
-import { AllergyAlert } from './AllergyAlert'
-import { AllergenIdentifier } from './AllergenIdentifier'
-import { UserAllergyWarning } from './UserAllergyWarning'
-import { CookingSteps } from './CookingSteps'
-import { MealAcceptance } from './MealAcceptance'
-import { toast } from '@/lib/toast'
+  X,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { NutritionChart } from './NutritionChart';
+import { MacroNutrientChart } from './MacroNutrientChart';
+import { IngredientSubstitutes } from './IngredientSubstitutes';
+import { EnhancedIngredientSubstitutes } from './EnhancedIngredientSubstitutes';
+import { AllergyAlert } from './AllergyAlert';
+import { AllergenIdentifier } from './AllergenIdentifier';
+import { UserAllergyWarning } from './UserAllergyWarning';
+import { CookingSteps } from './CookingSteps';
+import { MealAcceptance } from './MealAcceptance';
+import { toast } from '@/lib/toast';
 
 interface MealIngredient {
   id: string
@@ -91,34 +91,34 @@ const MEAL_TYPE_LABELS = {
   LUNCH: '午餐',
   DINNER: '晚餐',
   SNACK: '加餐',
-}
+};
 
 const DIFFICULTY_LABELS = {
   EASY: '简单',
   MEDIUM: '中等',
   HARD: '困难',
-}
+};
 
 const DIFFICULTY_COLORS = {
   EASY: 'bg-green-100 text-green-800',
   MEDIUM: 'bg-yellow-100 text-yellow-800',
   HARD: 'bg-red-100 text-red-800',
-}
+};
 
 function formatAmount(amount: number, unit?: string): string {
   if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(1)}${unit || 'kg'}`
+    return `${(amount / 1000).toFixed(1)}${unit || 'kg'}`;
   }
-  return `${amount.toFixed(0)}${unit || 'g'}`
+  return `${amount.toFixed(0)}${unit || 'g'}`;
 }
 
 function formatCookingTime(minutes: number): string {
   if (minutes < 60) {
-    return `${minutes}分钟`
+    return `${minutes}分钟`;
   }
-  const hours = Math.floor(minutes / 60)
-  const mins = minutes % 60
-  return mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`;
 }
 
 export function RecipeDetailModal({ 
@@ -126,93 +126,93 @@ export function RecipeDetailModal({
   isOpen, 
   onClose, 
   onReplace, 
-  onToggleFavorite 
+  onToggleFavorite, 
 }: RecipeDetailModalProps) {
-  const [isPrinting, setIsPrinting] = useState(false)
-  const [selectedIngredient, setSelectedIngredient] = useState<MealIngredient | null>(null)
-  const [showSubstitutes, setShowSubstitutes] = useState(false)
-  const [isFavorite, setIsFavorite] = useState(meal.isFavorite || false)
-  const [favoriteLoading, setFavoriteLoading] = useState(false)
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [selectedIngredient, setSelectedIngredient] = useState<MealIngredient | null>(null);
+  const [showSubstitutes, setShowSubstitutes] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(meal.isFavorite || false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && meal.id) {
-      loadFavoriteStatus()
+      loadFavoriteStatus();
     }
-  }, [isOpen, meal.id])
+  }, [isOpen, meal.id]);
 
   const loadFavoriteStatus = async () => {
     try {
-      const response = await fetch(`/api/meal-plans/meals/${meal.id}/favorite`)
+      const response = await fetch(`/api/meal-plans/meals/${meal.id}/favorite`);
       if (response.ok) {
-        const data = await response.json()
-        setIsFavorite(data.isFavorite)
+        const data = await response.json();
+        setIsFavorite(data.isFavorite);
       }
     } catch (error) {
-      console.error('获取收藏状态失败:', error)
+      console.error('获取收藏状态失败:', error);
     }
-  }
+  };
 
   const handleToggleFavorite = async () => {
-    if (favoriteLoading) return
+    if (favoriteLoading) return;
     
-    setFavoriteLoading(true)
+    setFavoriteLoading(true);
     try {
       const response = await fetch(`/api/meal-plans/meals/${meal.id}/favorite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isFavorite: !isFavorite })
-      })
+        body: JSON.stringify({ isFavorite: !isFavorite }),
+      });
 
       if (!response.ok) {
-        throw new Error('操作失败')
+        throw new Error('操作失败');
       }
 
-      const data = await response.json()
-      setIsFavorite(data.isFavorite)
-      onToggleFavorite?.()
-      toast.success(data.message)
+      const data = await response.json();
+      setIsFavorite(data.isFavorite);
+      onToggleFavorite?.();
+      toast.success(data.message);
     } catch (error) {
-      toast.error('操作失败，请重试')
+      toast.error('操作失败，请重试');
     } finally {
-      setFavoriteLoading(false)
+      setFavoriteLoading(false);
     }
-  }
+  };
 
   const handleShare = async () => {
     try {
       const shareData = {
         title: `${MEAL_TYPE_LABELS[meal.mealType]} - ${format(new Date(meal.date), 'M月d日', { locale: zhCN })}`,
         text: `热量: ${meal.calories.toFixed(0)}kcal | 蛋白质: ${meal.protein.toFixed(1)}g`,
-        url: window.location.href
-      }
+        url: window.location.href,
+      };
 
       if (navigator.share) {
-        await navigator.share(shareData)
+        await navigator.share(shareData);
       } else {
         // 降级到复制链接
-        await navigator.clipboard.writeText(window.location.href)
-        toast.success('链接已复制到剪贴板')
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('链接已复制到剪贴板');
       }
     } catch (error) {
-      console.error('分享失败:', error)
-      toast.error('分享失败')
+      console.error('分享失败:', error);
+      toast.error('分享失败');
     }
-  }
+  };
 
   const handlePrint = () => {
-    setIsPrinting(true)
+    setIsPrinting(true);
     setTimeout(() => {
-      window.print()
-      setIsPrinting(false)
-    }, 100)
-  }
+      window.print();
+      setIsPrinting(false);
+    }, 100);
+  };
 
   const handleIngredientClick = (ingredient: MealIngredient) => {
-    setSelectedIngredient(ingredient)
-    setShowSubstitutes(true)
-  }
+    setSelectedIngredient(ingredient);
+    setShowSubstitutes(true);
+  };
 
-  const totalWeight = meal.ingredients.reduce((sum, ing) => sum + ing.amount, 0)
+  const totalWeight = meal.ingredients.reduce((sum, ing) => sum + ing.amount, 0);
 
   return (
     <>
@@ -301,7 +301,7 @@ export function RecipeDetailModal({
               userAllergens={[]} // 这里可以从用户设置中获取过敏原
               showDetails={false}
               onAllergenClick={(allergen) => {
-                toast.info(`查看含有 ${allergen} 的食材`)
+                toast.info(`查看含有 ${allergen} 的食材`);
               }}
             />
 
@@ -397,20 +397,20 @@ export function RecipeDetailModal({
                 calories: meal.calories,
                 protein: meal.protein,
                 carbs: meal.carbs,
-                fat: meal.fat
+                fat: meal.fat,
               }}
               onAccept={(customizations) => {
-                toast.success('食谱已接受')
-                onToggleFavorite?.()
+                toast.success('食谱已接受');
+                onToggleFavorite?.();
               }}
               onReject={(reason) => {
-                toast.success(`已拒绝食谱: ${reason}`)
+                toast.success(`已拒绝食谱: ${reason}`);
               }}
               onCustomize={(customizations) => {
-                toast.info('已添加自定义修改')
+                toast.info('已添加自定义修改');
               }}
               onPortionAdjust={(servings, ingredients, nutrition) => {
-                toast.info(`份量已调整为 ${servings} 人份`)
+                toast.info(`份量已调整为 ${servings} 人份`);
                 // 这里可以更新meal数据或调用API
               }}
             />
@@ -466,10 +466,10 @@ export function RecipeDetailModal({
                 difficulty={meal.difficulty}
                 servings={meal.servings}
                 onStepComplete={(stepId) => {
-                  toast.success(`步骤完成`)
+                  toast.success('步骤完成');
                 }}
                 onReset={() => {
-                  toast.info('已重置烹饪进度')
+                  toast.info('已重置烹饪进度');
                 }}
               />
             )}
@@ -505,10 +505,10 @@ export function RecipeDetailModal({
             </Button>
             
             <Button
-              variant={isFavorite ? "default" : "outline"}
+              variant={isFavorite ? 'default' : 'outline'}
               onClick={handleToggleFavorite}
               disabled={favoriteLoading}
-              className={isFavorite ? "text-white bg-red-500 hover:bg-red-600" : ""}
+              className={isFavorite ? 'text-white bg-red-500 hover:bg-red-600' : ''}
             >
               <Heart className={`h-4 w-4 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
               {favoriteLoading ? '处理中...' : (isFavorite ? '已收藏' : '收藏')}
@@ -536,19 +536,19 @@ export function RecipeDetailModal({
           mealId={meal.id}
           isOpen={showSubstitutes}
           onClose={() => {
-            setShowSubstitutes(false)
-            setSelectedIngredient(null)
+            setShowSubstitutes(false);
+            setSelectedIngredient(null);
           }}
           onReplace={(newIngredient) => {
             // 处理食材替换逻辑
-            toast.success(`已将 ${selectedIngredient.food.name} 替换为 ${newIngredient.food.name}`)
-            setShowSubstitutes(false)
-            setSelectedIngredient(null)
+            toast.success(`已将 ${selectedIngredient.food.name} 替换为 ${newIngredient.food.name}`);
+            setShowSubstitutes(false);
+            setSelectedIngredient(null);
             // 这里可以刷新餐食数据或调用回调
-            onReplace?.()
+            onReplace?.();
           }}
         />
       )}
     </>
-  )
+  );
 }

@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
-import { listGenerator } from '@/lib/services/list-generator'
-import { priceEstimator } from '@/lib/services/price-estimator'
-import { z } from 'zod'
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
+import { listGenerator } from '@/lib/services/list-generator';
+import { priceEstimator } from '@/lib/services/price-estimator';
+import { z } from 'zod';
 
 // 生成购物清单的验证 schema
 const createShoppingListSchema = z.object({
   name: z.string().optional(), // 自定义清单名称
   budget: z.number().min(0).optional(), // 预算（元）
-})
+});
 
 // POST /api/meal-plans/:id/shopping-list - 生成购物清单
 export async function POST(
@@ -17,10 +17,10 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: planId } = await params
-    const session = await auth()
+    const { id: planId } = await params;
+    const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 })
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     // 查询食谱计划并验证权限
@@ -41,43 +41,43 @@ export async function POST(
           },
         },
       },
-    })
+    });
 
     if (!plan) {
-      return NextResponse.json({ error: '食谱计划不存在' }, { status: 404 })
+      return NextResponse.json({ error: '食谱计划不存在' }, { status: 404 });
     }
 
     // 验证权限
-    const isCreator = plan.member.family.creatorId === session.user.id
+    const isCreator = plan.member.family.creatorId === session.user.id;
     const isAdmin =
-      plan.member.family.members[0]?.role === 'ADMIN' || isCreator
-    const isSelf = plan.member.userId === session.user.id
+      plan.member.family.members[0]?.role === 'ADMIN' || isCreator;
+    const isSelf = plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限为该食谱生成购物清单' },
         { status: 403 }
-      )
+      );
     }
 
     // 检查是否已存在购物清单
     const existingList = await prisma.shoppingList.findFirst({
       where: { planId },
-    })
+    });
 
     if (existingList) {
       return NextResponse.json(
         { error: '该食谱计划已有购物清单', shoppingListId: existingList.id },
         { status: 409 }
-      )
+      );
     }
 
     // 解析请求体（预算和名称）
-    const body = await request.json().catch(() => ({}))
-    const validatedData = createShoppingListSchema.parse(body)
+    const body = await request.json().catch(() => ({}));
+    const validatedData = createShoppingListSchema.parse(body);
 
     // 生成购物清单数据
-    const generatedList = await listGenerator.generateShoppingList(planId)
+    const generatedList = await listGenerator.generateShoppingList(planId);
 
     // 估算价格
     const priceEstimates = await priceEstimator.estimatePrices(
@@ -85,19 +85,19 @@ export async function POST(
         foodId: item.foodId,
         amount: item.totalAmount,
       }))
-    )
+    );
 
     // 计算总估算成本
-    const totalEstimatedCost = priceEstimator.calculateTotalCost(priceEstimates)
+    const totalEstimatedCost = priceEstimator.calculateTotalCost(priceEstimates);
 
     // 检查预算
     const budgetCheck = priceEstimator.checkBudget(
       totalEstimatedCost,
       validatedData.budget || null
-    )
+    );
 
     // 生成清单名称
-    const listName = validatedData.name || `${plan.member.name}的购物清单`
+    const listName = validatedData.name || `${plan.member.name}的购物清单`;
 
     // 创建购物清单
     const shoppingList = await prisma.shoppingList.create({
@@ -109,13 +109,13 @@ export async function POST(
         status: 'PENDING',
         items: {
           create: generatedList.items.map((item) => {
-            const estimate = priceEstimates.find((e) => e.foodId === item.foodId)
+            const estimate = priceEstimates.find((e) => e.foodId === item.foodId);
             return {
               foodId: item.foodId,
               amount: item.totalAmount,
               category: item.category,
               estimatedPrice: estimate?.estimatedPrice || null,
-            }
+            };
           }),
         },
       },
@@ -126,7 +126,7 @@ export async function POST(
           },
         },
       },
-    })
+    });
 
     return NextResponse.json(
       {
@@ -135,20 +135,20 @@ export async function POST(
         budgetCheck,
       },
       { status: 201 }
-    )
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '请求参数验证失败', details: error.errors },
         { status: 400 }
-      )
+      );
     }
 
-    console.error('生成购物清单失败:', error)
+    console.error('生成购物清单失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 

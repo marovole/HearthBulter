@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         {
           success: false,
           error: 'recipeId is required',
-          details: 'Please provide a recipeId parameter'
+          details: 'Please provide a recipeId parameter',
         },
         { status: 400 }
       );
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // 验证食谱是否存在
     const recipe = await prisma.recipe.findUnique({
       where: { id: recipeId },
-      select: { id: true, status: true, isPublic: true, deletedAt: true }
+      select: { id: true, status: true, isPublic: true, deletedAt: true },
     });
 
     if (!recipe) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         {
           success: false,
           error: 'Recipe not found',
-          details: 'The specified recipe does not exist'
+          details: 'The specified recipe does not exist',
         },
         { status: 404 }
       );
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         {
           success: false,
           error: 'Recipe not available',
-          details: 'The recipe is not published or has been deleted'
+          details: 'The recipe is not published or has been deleted',
         },
         { status: 404 }
       );
@@ -91,13 +91,13 @@ export async function GET(request: NextRequest) {
 
     const enriched = recommendations.reduce<
       Array<(typeof recommendations)[number] & { recipe: RecipeWithRelations }>
-    >((acc, rec) => {
-      const recipe = recipeMap.get(rec.recipeId);
-      if (recipe) {
-        acc.push({ ...rec, recipe });
-      }
-      return acc;
-    }, []);
+        >((acc, rec) => {
+          const recipe = recipeMap.get(rec.recipeId);
+          if (recipe) {
+            acc.push({ ...rec, recipe });
+          }
+          return acc;
+        }, []);
 
     return NextResponse.json({
       success: true,

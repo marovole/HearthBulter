@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface ListShareProps {
   shoppingListId: string
@@ -23,38 +23,38 @@ export function ListShare({
   items,
   onClose,
 }: ListShareProps) {
-  const [shareMethod, setShareMethod] = useState<'link' | 'text' | 'email'>('link')
-  const [emailAddress, setEmailAddress] = useState('')
-  const [isSharing, setIsSharing] = useState(false)
-  const [shareLink, setShareLink] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [shareMethod, setShareMethod] = useState<'link' | 'text' | 'email'>('link');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const generateShareLink = async () => {
     try {
-      setIsSharing(true)
-      setError(null)
+      setIsSharing(true);
+      setError(null);
 
       const response = await fetch(`/api/shopping-lists/${shoppingListId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('生成分享链接失败')
+        throw new Error('生成分享链接失败');
       }
 
-      const data = await response.json()
-      setShareLink(data.shareUrl)
-      setSuccess('分享链接已生成')
+      const data = await response.json();
+      setShareLink(data.shareUrl);
+      setSuccess('分享链接已生成');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '生成分享链接失败')
+      setError(err instanceof Error ? err.message : '生成分享链接失败');
     } finally {
-      setIsSharing(false)
+      setIsSharing(false);
     }
-  }
+  };
 
   const generateTextList = () => {
     const CATEGORY_LABELS: Record<string, string> = {
@@ -68,20 +68,20 @@ export function ListShare({
       SNACKS: '零食',
       BEVERAGES: '饮料',
       OTHER: '其他',
-    }
+    };
 
-    let text = `📋 ${listName}\n`
-    text += `生成时间: ${new Date().toLocaleString('zh-CN')}\n\n`
+    let text = `📋 ${listName}\n`;
+    text += `生成时间: ${new Date().toLocaleString('zh-CN')}\n\n`;
 
     // 按分类分组
     const groupedItems = items.reduce((acc, item) => {
-      const category = item.food.category
+      const category = item.food.category;
       if (!acc[category]) {
-        acc[category] = []
+        acc[category] = [];
       }
-      acc[category].push(item)
-      return acc
-    }, {} as Record<string, typeof items>)
+      acc[category].push(item);
+      return acc;
+    }, {} as Record<string, typeof items>);
 
     const categoryOrder = [
       'VEGETABLES',
@@ -94,74 +94,74 @@ export function ListShare({
       'SNACKS',
       'BEVERAGES',
       'OTHER',
-    ]
+    ];
 
     categoryOrder.forEach((category) => {
-      const categoryItems = groupedItems[category]
+      const categoryItems = groupedItems[category];
       if (categoryItems && categoryItems.length > 0) {
-        text += `【${CATEGORY_LABELS[category] || category}】\n`
+        text += `【${CATEGORY_LABELS[category] || category}】\n`;
         categoryItems.forEach((item) => {
-          const checkbox = item.purchased ? '☑' : '☐'
+          const checkbox = item.purchased ? '☑' : '☐';
           const amount = item.amount >= 1000 
             ? `${(item.amount / 1000).toFixed(1)}kg` 
-            : `${item.amount.toFixed(0)}g`
-          text += `  ${checkbox} ${item.food.name} - ${amount}\n`
-        })
-        text += '\n'
+            : `${item.amount.toFixed(0)}g`;
+          text += `  ${checkbox} ${item.food.name} - ${amount}\n`;
+        });
+        text += '\n';
       }
-    })
+    });
 
-    const purchasedCount = items.filter(item => item.purchased).length
-    text += `进度: ${purchasedCount}/${items.length} 已完成\n`
+    const purchasedCount = items.filter(item => item.purchased).length;
+    text += `进度: ${purchasedCount}/${items.length} 已完成\n`;
     
-    return text
-  }
+    return text;
+  };
 
   const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text)
-      setSuccess('已复制到剪贴板')
-      setTimeout(() => setSuccess(null), 3000)
+      await navigator.clipboard.writeText(text);
+      setSuccess('已复制到剪贴板');
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError('复制失败，请手动复制')
+      setError('复制失败，请手动复制');
     }
-  }
+  };
 
   const shareViaWebShare = async () => {
-    const text = generateTextList()
+    const text = generateTextList();
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: listName,
           text: text,
-        })
-        setSuccess('分享成功')
+        });
+        setSuccess('分享成功');
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           // 用户取消分享，降级到复制功能
-          copyToClipboard(text)
+          copyToClipboard(text);
         }
       }
     } else {
-      copyToClipboard(text)
+      copyToClipboard(text);
     }
-  }
+  };
 
   const sendEmail = async () => {
     if (!emailAddress.trim()) {
-      setError('请输入邮箱地址')
-      return
+      setError('请输入邮箱地址');
+      return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress)) {
-      setError('请输入正确的邮箱地址')
-      return
+      setError('请输入正确的邮箱地址');
+      return;
     }
 
     try {
-      setIsSharing(true)
-      setError(null)
+      setIsSharing(true);
+      setError(null);
 
       const response = await fetch(`/api/shopping-lists/${shoppingListId}/share/email`, {
         method: 'POST',
@@ -173,20 +173,20 @@ export function ListShare({
           listName,
           textContent: generateTextList(),
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('发送邮件失败')
+        throw new Error('发送邮件失败');
       }
 
-      setSuccess('邮件发送成功')
-      setEmailAddress('')
+      setSuccess('邮件发送成功');
+      setEmailAddress('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '发送邮件失败')
+      setError(err instanceof Error ? err.message : '发送邮件失败');
     } finally {
-      setIsSharing(false)
+      setIsSharing(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -338,5 +338,5 @@ export function ListShare({
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -76,19 +76,19 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
 
   const getRiskBadgeVariant = (level: string) => {
     switch (level) {
-      case 'low': return 'default';
-      case 'medium': return 'secondary';
-      case 'high': return 'destructive';
-      default: return 'outline';
+    case 'low': return 'default';
+    case 'medium': return 'secondary';
+    case 'high': return 'destructive';
+    default: return 'outline';
     }
   };
 
   const getRiskIcon = (level: string) => {
     switch (level) {
-      case 'low': return <TrendingDown className="w-4 h-4" />;
-      case 'medium': return <Minus className="w-4 h-4" />;
-      case 'high': return <TrendingUp className="w-4 h-4" />;
-      default: return <AlertCircle className="w-4 h-4" />;
+    case 'low': return <TrendingDown className="w-4 h-4" />;
+    case 'medium': return <Minus className="w-4 h-4" />;
+    case 'high': return <TrendingUp className="w-4 h-4" />;
+    default: return <AlertCircle className="w-4 h-4" />;
     }
   };
 
@@ -182,7 +182,7 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
             <Badge variant={getRiskBadgeVariant(analysisResult.risk_level)}>
               {getRiskIcon(analysisResult.risk_level)}
               {analysisResult.risk_level === 'low' ? '低风险' :
-               analysisResult.risk_level === 'medium' ? '中等风险' : '高风险'}
+                analysisResult.risk_level === 'medium' ? '中等风险' : '高风险'}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -194,7 +194,7 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
             <Progress value={analysisResult.overall_score} className="mb-2" />
             <p className="text-sm text-muted-foreground">
               满分100分，{analysisResult.overall_score >= 80 ? '健康状况良好' :
-                           analysisResult.overall_score >= 60 ? '健康状况一般' : '需要关注健康状况'}
+                analysisResult.overall_score >= 60 ? '健康状况一般' : '需要关注健康状况'}
             </p>
           </div>
         </CardContent>

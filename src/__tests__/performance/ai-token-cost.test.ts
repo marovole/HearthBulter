@@ -13,43 +13,43 @@ jest.mock('@/lib/services/ai/openai-client', () => ({
   openaiClient: {
     chat: {
       completions: {
-        create: jest.fn()
-      }
-    }
-  }
+        create: jest.fn(),
+      },
+    },
+  },
 }));
 
 jest.mock('@/lib/db', () => ({
   prisma: {
     userConsent: {
       findUnique: jest.fn(),
-      upsert: jest.fn()
+      upsert: jest.fn(),
     },
     aIConversation: {
       create: jest.fn(),
-      findMany: jest.fn()
+      findMany: jest.fn(),
     },
     aIAdvice: {
-      create: jest.fn()
+      create: jest.fn(),
     },
     tokenUsage: {
       create: jest.fn(),
       findMany: jest.fn(),
-      aggregate: jest.fn()
-    }
-  }
+      aggregate: jest.fn(),
+    },
+  },
 }));
 
 jest.mock('@/lib/services/ai-review-service', () => ({
   aiReviewService: {
-    reviewContent: jest.fn()
-  }
+    reviewContent: jest.fn(),
+  },
 }));
 
 jest.mock('@/lib/services/ai/rate-limiter', () => ({
   rateLimiter: {
-    checkLimit: jest.fn()
-  }
+    checkLimit: jest.fn(),
+  },
 }));
 
 import { openaiClient } from '@/lib/services/ai/openai-client';
@@ -60,16 +60,16 @@ import { aiReviewService } from '@/lib/services/ai-review-service';
 const TOKEN_PRICING = {
   'gpt-4': {
     input: 0.03,  // $0.03 per 1K tokens
-    output: 0.06  // $0.06 per 1K tokens
+    output: 0.06,  // $0.06 per 1K tokens
   },
   'gpt-4-turbo': {
     input: 0.01,
-    output: 0.03
+    output: 0.03,
   },
   'gpt-3.5-turbo': {
     input: 0.0015,
-    output: 0.002
-  }
+    output: 0.002,
+  },
 };
 
 describe('AI Token Cost Tests', () => {
@@ -89,14 +89,14 @@ describe('AI Token Cost Tests', () => {
     (prisma.userConsent.findUnique as jest.Mock).mockResolvedValue({
       userId: 'test-user',
       hasConsented: true,
-      consentedAt: new Date()
+      consentedAt: new Date(),
     });
 
     (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async (params) => {
       const mockUsage = {
         prompt_tokens: params.messages.reduce((sum: number, msg: any) => sum + msg.content.split(' ').length, 0),
         completion_tokens: Math.floor(Math.random() * 200) + 50,
-        total_tokens: 0
+        total_tokens: 0,
       };
       mockUsage.total_tokens = mockUsage.prompt_tokens + mockUsage.completion_tokens;
 
@@ -105,16 +105,16 @@ describe('AI Token Cost Tests', () => {
         promptTokens: mockUsage.prompt_tokens,
         completionTokens: mockUsage.completion_tokens,
         totalTokens: mockUsage.total_tokens,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       return {
         choices: [{
           message: {
-            content: 'AI生成的响应内容，用于测试Token消耗统计。'
-          }
+            content: 'AI生成的响应内容，用于测试Token消耗统计。',
+          },
         }],
-        usage: mockUsage
+        usage: mockUsage,
       };
     });
 
@@ -127,13 +127,13 @@ describe('AI Token Cost Tests', () => {
       metadata: {
         reviewTimestamp: new Date(),
         processingTime: 50,
-        reviewerVersion: '1.0.0'
-      }
+        reviewerVersion: '1.0.0',
+      },
     });
 
     (rateLimiter.checkLimit as jest.Mock).mockResolvedValue({
       allowed: true,
-      remaining: 100
+      remaining: 100,
     });
 
     // Mock token usage tracking
@@ -145,9 +145,9 @@ describe('AI Token Cost Tests', () => {
       _sum: {
         promptTokens: 1000,
         completionTokens: 500,
-        totalTokens: 1500
+        totalTokens: 1500,
       },
-      _count: { id: 10 }
+      _count: { id: 10 },
     });
   });
 
@@ -156,15 +156,15 @@ describe('AI Token Cost Tests', () => {
       const requestData = {
         message: '请分析我的胆固醇水平并给出饮食建议，我的总胆固醇是6.2mmol/L，低密度脂蛋白是4.1mmol/L，高密度脂蛋白是1.2mmol/L，甘油三酯是1.8mmol/L。我今年35岁，男性，有轻度脂肪肝，平时运动较少，饮食偏油腻。请根据这些数据给我具体的饮食调整建议。',
         userId: 'test-user',
-        sessionId: 'test-session'
+        sessionId: 'test-session',
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -185,8 +185,8 @@ describe('AI Token Cost Tests', () => {
           promptTokens: expect.any(Number),
           completionTokens: expect.any(Number),
           totalTokens: expect.any(Number),
-          estimatedCost: expect.any(Number)
-        })
+          estimatedCost: expect.any(Number),
+        }),
       });
     });
 
@@ -197,9 +197,9 @@ describe('AI Token Cost Tests', () => {
         body: JSON.stringify({
           message: '营养咨询问题',
           userId: 'test-user',
-          sessionId: 'test-session'
+          sessionId: 'test-session',
         }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       // Health analysis API request
@@ -210,11 +210,11 @@ describe('AI Token Cost Tests', () => {
             cholesterol: 6.2,
             bloodSugar: 5.5,
             age: 35,
-            gender: 'male'
+            gender: 'male',
           },
-          userId: 'test-user'
+          userId: 'test-user',
         }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       // Recipe optimization API request
@@ -225,15 +225,15 @@ describe('AI Token Cost Tests', () => {
             name: '测试食谱',
             ingredients: [
               { name: '米饭', amount: 100 },
-              { name: '鸡肉', amount: 50 }
-            ]
+              { name: '鸡肉', amount: 50 },
+            ],
           },
           healthGoals: {
-            targetCalories: 2000
+            targetCalories: 2000,
           },
-          userId: 'test-user'
+          userId: 'test-user',
         }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       await POST(chatRequest);
@@ -257,15 +257,15 @@ describe('AI Token Cost Tests', () => {
       const requestData = {
         message: '请给我详细的营养建议',
         userId: 'test-user',
-        sessionId: 'test-session'
+        sessionId: 'test-session',
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -291,13 +291,13 @@ describe('AI Token Cost Tests', () => {
           const mockUsage = {
             prompt_tokens: 100,
             completion_tokens: 50,
-            total_tokens: 150
+            total_tokens: 150,
           };
 
           return {
             choices: [{ message: { content: 'Response' } }],
             usage: mockUsage,
-            model: model
+            model: model,
           };
         });
 
@@ -305,13 +305,13 @@ describe('AI Token Cost Tests', () => {
           message: '测试不同模型的成本',
           userId: 'test-user',
           sessionId: 'test-session',
-          model: model
+          model: model,
         };
 
         const request = new NextRequest('http://localhost/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify(requestData),
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
 
         const response = await POST(request);
@@ -333,23 +333,23 @@ describe('AI Token Cost Tests', () => {
         _sum: {
           promptTokens: 5000,
           completionTokens: 2500,
-          totalTokens: 7500
+          totalTokens: 7500,
         },
-        _count: { id: 25 }
+        _count: { id: 25 },
       });
 
       const requestData = {
         message: '查询我的使用量统计',
         userId: 'test-user',
-        sessionId: 'test-session'
+        sessionId: 'test-session',
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -369,9 +369,9 @@ describe('AI Token Cost Tests', () => {
           promptTokens: 50000,
           completionTokens: 25000,
           totalTokens: 75000,
-          estimatedCost: 1500.00
+          estimatedCost: 1500.00,
         },
-        _count: { id: 500 }
+        _count: { id: 500 },
       });
 
       // This would typically be called by an admin endpoint
@@ -380,7 +380,7 @@ describe('AI Token Cost Tests', () => {
         totalCost: 1500.00,
         totalRequests: 500,
         averageTokensPerRequest: 150,
-        averageCostPerRequest: 3.00
+        averageCostPerRequest: 3.00,
       };
 
       expect(globalStats.totalTokens).toBe(75000);
@@ -394,23 +394,23 @@ describe('AI Token Cost Tests', () => {
       // Mock user has exceeded daily budget
       (prisma.tokenUsage.aggregate as jest.Mock).mockResolvedValue({
         _sum: {
-          estimatedCost: 10.00 // $10 daily budget exceeded
+          estimatedCost: 10.00, // $10 daily budget exceeded
         },
-        _count: { id: 50 }
+        _count: { id: 50 },
       });
 
       const requestData = {
         message: '我已经超预算了还能用吗？',
         userId: 'budget-exceeded-user',
-        sessionId: 'test-session'
+        sessionId: 'test-session',
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -429,15 +429,15 @@ describe('AI Token Cost Tests', () => {
       const longContextRequest = {
         message: 'A'.repeat(10000), // Very long message
         userId: 'test-user',
-        sessionId: 'test-session'
+        sessionId: 'test-session',
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(longContextRequest),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -459,21 +459,21 @@ describe('AI Token Cost Tests', () => {
       tokenUsageLog = [
         { model: 'gpt-4', promptTokens: 2000, completionTokens: 1000, totalTokens: 3000, timestamp: new Date() },
         { model: 'gpt-4', promptTokens: 1800, completionTokens: 900, totalTokens: 2700, timestamp: new Date() },
-        { model: 'gpt-4', promptTokens: 2200, completionTokens: 1100, totalTokens: 3300, timestamp: new Date() }
+        { model: 'gpt-4', promptTokens: 2200, completionTokens: 1100, totalTokens: 3300, timestamp: new Date() },
       ];
 
       const requestData = {
         message: '分析我的Token使用效率',
         userId: 'test-user',
-        sessionId: 'test-session'
+        sessionId: 'test-session',
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(requestData),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -494,17 +494,17 @@ describe('AI Token Cost Tests', () => {
     it('应该识别高成本使用模式', async () => {
       // Mock expensive usage pattern
       const expensiveRequest = {
-        message: '请详细分析' + '详细'.repeat(1000) + '我的健康状况',
+        message: `请详细分析${'详细'.repeat(1000)}我的健康状况`,
         userId: 'expensive-user',
-        sessionId: 'test-session'
+        sessionId: 'test-session',
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
         method: 'POST',
         body: JSON.stringify(expensiveRequest),
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const response = await POST(request);
@@ -527,7 +527,7 @@ describe('AI Token Cost Tests', () => {
       const cachedRequest = {
         message: '常见问题：如何降低胆固醇？',
         userId: 'test-user',
-        sessionId: 'test-session'
+        sessionId: 'test-session',
       };
 
       const request = new NextRequest('http://localhost/api/ai/chat', {
@@ -535,8 +535,8 @@ describe('AI Token Cost Tests', () => {
         body: JSON.stringify(cachedRequest),
         headers: {
           'Content-Type': 'application/json',
-          'X-Cache-Status': 'HIT'
-        }
+          'X-Cache-Status': 'HIT',
+        },
       });
 
       const response = await POST(request);
@@ -561,7 +561,7 @@ describe('AI Token Cost Tests', () => {
           completionTokens: 500,
           totalTokens: 1500,
           estimatedCost: 0.75,
-          createdAt: new Date('2024-01-01')
+          createdAt: new Date('2024-01-01'),
         },
         {
           id: '2',
@@ -571,8 +571,8 @@ describe('AI Token Cost Tests', () => {
           completionTokens: 400,
           totalTokens: 1200,
           estimatedCost: 0.60,
-          createdAt: new Date('2024-01-02')
-        }
+          createdAt: new Date('2024-01-02'),
+        },
       ]);
 
       const reportData = {
@@ -586,12 +586,12 @@ describe('AI Token Cost Tests', () => {
         topEndpoints: [
           { endpoint: '/api/ai/chat', usage: 60, cost: 30.15 },
           { endpoint: '/api/ai/analyze-health', usage: 45, cost: 15.10 },
-          { endpoint: '/api/ai/optimize-recipe', usage: 45, cost: 5.00 }
+          { endpoint: '/api/ai/optimize-recipe', usage: 45, cost: 5.00 },
         ],
         topUsers: [
           { userId: 'user1', usage: 50, cost: 25.00 },
-          { userId: 'user2', usage: 30, cost: 15.00 }
-        ]
+          { userId: 'user2', usage: 30, cost: 15.00 },
+        ],
       };
 
       expect(reportData.totalCost).toBe(50.25);

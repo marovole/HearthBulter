@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Clock, 
   ChefHat, 
@@ -14,8 +14,8 @@ import {
   Pause,
   RotateCcw,
   CheckCircle,
-  Circle
-} from 'lucide-react'
+  Circle,
+} from 'lucide-react';
 
 interface CookingStep {
   id: string
@@ -43,21 +43,21 @@ const DIFFICULTY_CONFIG = {
     label: '简单',
     color: 'bg-green-100 text-green-800 border-green-200',
     icon: '👨‍🍳',
-    description: '适合新手，操作简单'
+    description: '适合新手，操作简单',
   },
   MEDIUM: {
     label: '中等',
     color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     icon: '🧑‍🍳',
-    description: '需要一定烹饪经验'
+    description: '需要一定烹饪经验',
   },
   HARD: {
     label: '困难',
     color: 'bg-red-100 text-red-800 border-red-200',
     icon: '👨‍🏼‍🍳',
-    description: '需要丰富烹饪经验'
-  }
-}
+    description: '需要丰富烹饪经验',
+  },
+};
 
 export function CookingSteps({ 
   steps, 
@@ -65,44 +65,44 @@ export function CookingSteps({
   difficulty, 
   servings,
   onStepComplete,
-  onReset 
+  onReset, 
 }: CookingStepsProps) {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set())
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleStepComplete = (stepId: string) => {
-    setCompletedSteps(prev => new Set(prev).add(stepId))
-    onStepComplete?.(stepId)
+    setCompletedSteps(prev => new Set(prev).add(stepId));
+    onStepComplete?.(stepId);
     
     // 自动进入下一步
     if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1)
+      setCurrentStep(prev => prev + 1);
     }
-  }
+  };
 
   const handleReset = () => {
-    setCurrentStep(0)
-    setCompletedSteps(new Set())
-    setIsPlaying(false)
-    onReset?.()
-  }
+    setCurrentStep(0);
+    setCompletedSteps(new Set());
+    setIsPlaying(false);
+    onReset?.();
+  };
 
   const togglePlayPause = () => {
-    setIsPlaying(!isPlaying)
-  }
+    setIsPlaying(!isPlaying);
+  };
 
   const formatDuration = (minutes: number) => {
     if (minutes < 60) {
-      return `${minutes}分钟`
+      return `${minutes}分钟`;
     }
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`
-  }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`;
+  };
 
-  const totalTime = steps.reduce((sum, step) => sum + (step.duration || 0), 0)
-  const progress = (completedSteps.size / steps.length) * 100
+  const totalTime = steps.reduce((sum, step) => sum + (step.duration || 0), 0);
+  const progress = (completedSteps.size / steps.length) * 100;
 
   return (
     <div className="space-y-6">
@@ -218,8 +218,8 @@ export function CookingSteps({
       {/* 步骤列表 */}
       <div className="space-y-4">
         {steps.map((step, index) => {
-          const isCurrent = index === currentStep
-          const isCompleted = completedSteps.has(step.id)
+          const isCurrent = index === currentStep;
+          const isCompleted = completedSteps.has(step.id);
           
           return (
             <Card 
@@ -318,7 +318,7 @@ export function CookingSteps({
                     {/* 完成按钮 */}
                     <div className="flex justify-end">
                       <Button
-                        variant={isCompleted ? "secondary" : "default"}
+                        variant={isCompleted ? 'secondary' : 'default'}
                         size="sm"
                         onClick={() => handleStepComplete(step.id)}
                         disabled={isCompleted}
@@ -340,7 +340,7 @@ export function CookingSteps({
                 </div>
               </CardContent>
             </Card>
-          )
+          );
         })}
       </div>
 
@@ -359,5 +359,5 @@ export function CookingSteps({
         </Card>
       )}
     </div>
-  )
+  );
 }

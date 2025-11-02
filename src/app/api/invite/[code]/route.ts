@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
 
 // GET /api/invite/:code - 获取邀请信息
 export async function GET(
@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ code: string }> }
 ) {
   try {
-    const { code } = await params
+    const { code } = await params;
 
     // 查找邀请记录
     const invitation = await prisma.familyInvitation.findFirst({
@@ -31,13 +31,13 @@ export async function GET(
           },
         },
       },
-    })
+    });
 
     if (!invitation) {
       return NextResponse.json(
         { error: '邀请码无效' },
         { status: 404 }
-      )
+      );
     }
 
     // 检查邀请是否过期
@@ -46,12 +46,12 @@ export async function GET(
       await prisma.familyInvitation.update({
         where: { id: invitation.id },
         data: { status: 'EXPIRED' },
-      })
+      });
 
       return NextResponse.json(
         { error: '邀请已过期' },
         { status: 410 }
-      )
+      );
     }
 
     // 检查邀请状态
@@ -59,14 +59,14 @@ export async function GET(
       return NextResponse.json(
         { error: '该邀请已被接受' },
         { status: 410 }
-      )
+      );
     }
 
     if (invitation.status === 'REJECTED') {
       return NextResponse.json(
         { error: '该邀请已被拒绝' },
         { status: 410 }
-      )
+      );
     }
 
     return NextResponse.json(
@@ -85,13 +85,13 @@ export async function GET(
         },
       },
       { status: 200 }
-    )
+    );
   } catch (error) {
-    console.error('获取邀请信息失败:', error)
+    console.error('获取邀请信息失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -101,24 +101,24 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> }
 ) {
   try {
-    const { code } = await params
-    const session = await auth()
+    const { code } = await params;
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: '请先登录后再接受邀请' },
         { status: 401 }
-      )
+      );
     }
 
-    const body = await request.json()
-    const { memberName } = body
+    const body = await request.json();
+    const { memberName } = body;
 
     if (!memberName || typeof memberName !== 'string' || memberName.trim() === '') {
       return NextResponse.json(
         { error: '请提供成员名称' },
         { status: 400 }
-      )
+      );
     }
 
     // 查找邀请记录
@@ -135,13 +135,13 @@ export async function POST(
           },
         },
       },
-    })
+    });
 
     if (!invitation) {
       return NextResponse.json(
         { error: '邀请码无效' },
         { status: 404 }
-      )
+      );
     }
 
     // 检查邀请是否过期
@@ -150,12 +150,12 @@ export async function POST(
       await prisma.familyInvitation.update({
         where: { id: invitation.id },
         data: { status: 'EXPIRED' },
-      })
+      });
 
       return NextResponse.json(
         { error: '邀请已过期' },
         { status: 410 }
-      )
+      );
     }
 
     // 检查邀请状态
@@ -163,7 +163,7 @@ export async function POST(
       return NextResponse.json(
         { error: '该邀请不可用' },
         { status: 410 }
-      )
+      );
     }
 
     // 验证邮箱匹配（可选：根据业务需求决定是否强制匹配）
@@ -171,19 +171,19 @@ export async function POST(
       return NextResponse.json(
         { error: '邀请邮箱与登录邮箱不匹配' },
         { status: 403 }
-      )
+      );
     }
 
     // 检查用户是否已经是该家庭的成员
     const existingMember = invitation.family.members.find(
       (member) => member.userId === session.user.id
-    )
+    );
 
     if (existingMember) {
       return NextResponse.json(
         { error: '您已经是该家庭的成员' },
         { status: 400 }
-      )
+      );
     }
 
     // 检查用户是否已经属于其他家庭
@@ -195,13 +195,13 @@ export async function POST(
           not: invitation.family.id,
         },
       },
-    })
+    });
 
     if (userInOtherFamily) {
       return NextResponse.json(
         { error: '您已经属于另一个家庭，请先退出后再加入新家庭' },
         { status: 400 }
-      )
+      );
     }
 
     // 使用事务确保数据一致性
@@ -217,16 +217,16 @@ export async function POST(
           birthDate: new Date('2000-01-01'), // 默认出生日期，需要用户后续设置
           role: invitation.role, // 使用邀请中指定的角色
         },
-      })
+      });
 
       // 更新邀请状态为已接受
       await tx.familyInvitation.update({
         where: { id: invitation.id },
         data: { status: 'ACCEPTED' },
-      })
+      });
 
-      return newMember
-    })
+      return newMember;
+    });
 
     return NextResponse.json(
       {
@@ -242,12 +242,12 @@ export async function POST(
         },
       },
       { status: 201 }
-    )
+    );
   } catch (error) {
-    console.error('加入家庭失败:', error)
+    console.error('加入家庭失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }

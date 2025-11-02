@@ -1,26 +1,26 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
+import { useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function NewAllergyPage() {
-  const params = useParams<{ id: string; memberId: string }>()
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const params = useParams<{ id: string; memberId: string }>();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     allergenType: 'FOOD',
     allergenName: '',
     severity: 'MODERATE',
     description: '',
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
     try {
       const response = await fetch(
@@ -32,24 +32,24 @@ export default function NewAllergyPage() {
           },
           body: JSON.stringify(formData),
         }
-      )
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         router.push(
           `/dashboard/families/${params.id}/members/${params.memberId}`
-        )
-        router.refresh()
+        );
+        router.refresh();
       } else {
-        setError(data.error || '添加过敏记录失败')
+        setError(data.error || '添加过敏记录失败');
       }
     } catch (error) {
-      setError('网络错误，请重试')
+      setError('网络错误，请重试');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -247,5 +247,5 @@ export default function NewAllergyPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { cn } from '@/lib/utils'
+import React, { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface DashboardGridProps {
   children: React.ReactNode
@@ -51,30 +51,30 @@ export function DashboardGrid({
   autoFit = false,
   minItemWidth = '280px',
 }: DashboardGridProps) {
-  const [screenSize, setScreenSize] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'>('lg')
+  const [screenSize, setScreenSize] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'>('lg');
 
   useEffect(() => {
     const updateScreenSize = () => {
-      const width = window.innerWidth
-      if (width < 640) setScreenSize('xs')
-      else if (width < 768) setScreenSize('sm')
-      else if (width < 1024) setScreenSize('md')
-      else if (width < 1280) setScreenSize('lg')
-      else if (width < 1536) setScreenSize('xl')
-      else setScreenSize('2xl')
-    }
+      const width = window.innerWidth;
+      if (width < 640) setScreenSize('xs');
+      else if (width < 768) setScreenSize('sm');
+      else if (width < 1024) setScreenSize('md');
+      else if (width < 1280) setScreenSize('lg');
+      else if (width < 1536) setScreenSize('xl');
+      else setScreenSize('2xl');
+    };
 
-    updateScreenSize()
-    window.addEventListener('resize', updateScreenSize)
-    return () => window.removeEventListener('resize', updateScreenSize)
-  }, [])
+    updateScreenSize();
+    window.addEventListener('resize', updateScreenSize);
+    return () => window.removeEventListener('resize', updateScreenSize);
+  }, []);
 
   const getGridCols = () => {
     if (autoFit) {
-      return `grid-cols-[repeat(auto-fit,minmax(${minItemWidth},1fr))]`
+      return `grid-cols-[repeat(auto-fit,minmax(${minItemWidth},1fr))]`;
     }
-    return `grid-cols-${cols[screenSize] || 1}`
-  }
+    return `grid-cols-${cols[screenSize] || 1}`;
+  };
 
   const getGapClass = () => {
     const gapMap: Record<number, string> = {
@@ -88,9 +88,9 @@ export function DashboardGrid({
       8: 'gap-8',
       10: 'gap-10',
       12: 'gap-12',
-    }
-    return gapMap[gap] || 'gap-6'
-  }
+    };
+    return gapMap[gap] || 'gap-6';
+  };
 
   return (
     <div
@@ -104,7 +104,7 @@ export function DashboardGrid({
     >
       {children}
     </div>
-  )
+  );
 }
 
 /**
@@ -116,32 +116,32 @@ export function DashboardGridItem({
   span = { xs: 1, sm: 1, md: 1, lg: 1, xl: 1, '2xl': 1 },
   order,
 }: GridItemProps) {
-  const [screenSize, setScreenSize] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'>('lg')
+  const [screenSize, setScreenSize] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'>('lg');
 
   useEffect(() => {
     const updateScreenSize = () => {
-      const width = window.innerWidth
-      if (width < 640) setScreenSize('xs')
-      else if (width < 768) setScreenSize('sm')
-      else if (width < 1024) setScreenSize('md')
-      else if (width < 1280) setScreenSize('lg')
-      else if (width < 1536) setScreenSize('xl')
-      else setScreenSize('2xl')
-    }
+      const width = window.innerWidth;
+      if (width < 640) setScreenSize('xs');
+      else if (width < 768) setScreenSize('sm');
+      else if (width < 1024) setScreenSize('md');
+      else if (width < 1280) setScreenSize('lg');
+      else if (width < 1536) setScreenSize('xl');
+      else setScreenSize('2xl');
+    };
 
-    updateScreenSize()
-    window.addEventListener('resize', updateScreenSize)
-    return () => window.removeEventListener('resize', updateScreenSize)
-  }, [])
+    updateScreenSize();
+    window.addEventListener('resize', updateScreenSize);
+    return () => window.removeEventListener('resize', updateScreenSize);
+  }, []);
 
   const getSpanClass = () => {
-    return `col-span-${span[screenSize] || 1}`
-  }
+    return `col-span-${span[screenSize] || 1}`;
+  };
 
   const getOrderClass = () => {
-    if (!order) return ''
-    return `order-${order[screenSize] || 1}`
-  }
+    if (!order) return '';
+    return `order-${order[screenSize] || 1}`;
+  };
 
   return (
     <div
@@ -154,7 +154,7 @@ export function DashboardGridItem({
     >
       {children}
     </div>
-  )
+  );
 }
 
 /**
@@ -200,7 +200,7 @@ export const DashboardLayouts = {
   // 混合布局：主内容区域 + 侧边栏
   mixed: {
     component: ({ children }: { children: React.ReactNode }) => {
-      const childrenArray = React.Children.toArray(children)
+      const childrenArray = React.Children.toArray(children);
       
       return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -216,10 +216,10 @@ export const DashboardLayouts = {
             {childrenArray[childrenArray.length - 1]}
           </div>
         </div>
-      )
+      );
     },
   },
-}
+};
 
 /**
  * 仪表盘容器组件
@@ -241,7 +241,7 @@ export function DashboardContainer({
   error,
   onRetry,
 }: DashboardContainerProps) {
-  const LayoutComponent = DashboardLayouts[layout].component
+  const LayoutComponent = DashboardLayouts[layout].component;
 
   if (loading) {
     return (
@@ -251,7 +251,7 @@ export function DashboardContainer({
           <p className="mt-2 text-sm text-gray-500">加载中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -275,12 +275,12 @@ export function DashboardContainer({
           )}
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className={cn('w-full', className)}>
       <LayoutComponent>{children}</LayoutComponent>
     </div>
-  )
+  );
 }

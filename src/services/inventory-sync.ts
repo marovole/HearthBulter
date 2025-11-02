@@ -1,7 +1,7 @@
-import { PrismaClient, Order, OrderStatus, MealLog, StorageLocation } from '@prisma/client'
-import { inventoryTracker } from './inventory-tracker'
+import { PrismaClient, Order, OrderStatus, MealLog, StorageLocation } from '@prisma/client';
+import { inventoryTracker } from './inventory-tracker';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 export interface OrderItem {
   name: string
@@ -48,43 +48,43 @@ export class InventorySync {
       addedItems: 0,
       updatedItems: 0,
       errors: [],
-      warnings: []
-    }
+      warnings: [],
+    };
 
     try {
       // 获取订单信息
       const order = await prisma.order.findUnique({
         where: { id: orderId },
         include: {
-          account: true
-        }
-      })
+          account: true,
+        },
+      });
 
       if (!order) {
-        result.success = false
-        result.errors.push('订单不存在')
-        return result
+        result.success = false;
+        result.errors.push('订单不存在');
+        return result;
       }
 
       if (order.status !== OrderStatus.DELIVERED) {
-        result.success = false
-        result.errors.push('订单未完成配送，无法同步库存')
-        return result
+        result.success = false;
+        result.errors.push('订单未完成配送，无法同步库存');
+        return result;
       }
 
       // 解析订单商品
-      const orderItems = this.parseOrderItems(order)
+      const orderItems = this.parseOrderItems(order);
       
       for (const orderItem of orderItems) {
         try {
-          result.processedItems++
+          result.processedItems++;
           
           // 查找匹配的食物
-          const food = await this.findMatchingFood(orderItem)
+          const food = await this.findMatchingFood(orderItem);
           
           if (!food) {
-            result.warnings.push(`未找到匹配的食物：${orderItem.name}`)
-            continue
+            result.warnings.push(`未找到匹配的食物：${orderItem.name}`);
+            continue;
           }
 
           // 检查是否已存在相同食材的库存
@@ -92,18 +92,18 @@ export class InventorySync {
             where: {
               memberId,
               foodId: food.id,
-              deletedAt: null
+              deletedAt: null,
             },
-            orderBy: { createdAt: 'desc' }
-          })
+            orderBy: { createdAt: 'desc' },
+          });
 
           if (existingItem) {
             // 更新现有库存数量
-            const newQuantity = existingItem.quantity + orderItem.quantity
+            const newQuantity = existingItem.quantity + orderItem.quantity;
             await inventoryTracker.updateInventoryItem(existingItem.id, {
-              quantity: newQuantity
-            })
-            result.updatedItems++
+              quantity: newQuantity,
+            });
+            result.updatedItems++;
           } else {
             // 创建新的库存条目
             await inventoryTracker.createInventoryItem({
@@ -114,13 +114,13 @@ export class InventorySync {
               purchasePrice: orderItem.price,
               purchaseSource: `${order.account.platform} - 订单${order.platformOrderId}`,
               expiryDate: this.estimateExpiryDate(food.category, orderItem.name),
-              storageLocation: this.getDefaultStorageLocation(food.category)
-            })
-            result.addedItems++
+              storageLocation: this.getDefaultStorageLocation(food.category),
+            });
+            result.addedItems++;
           }
 
         } catch (error) {
-          result.errors.push(`处理商品 ${orderItem.name} 时出错：${error}`)
+          result.errors.push(`处理商品 ${orderItem.name} 时出错：${error}`);
         }
       }
 
@@ -128,16 +128,16 @@ export class InventorySync {
       await prisma.order.update({
         where: { id: orderId },
         data: {
-          lastSyncAt: new Date()
-        }
-      })
+          lastSyncAt: new Date(),
+        },
+      });
 
     } catch (error) {
-      result.success = false
-      result.errors.push(`同步失败：${error}`)
+      result.success = false;
+      result.errors.push(`同步失败：${error}`);
     }
 
-    return result
+    return result;
   }
 
   /**
@@ -147,8 +147,8 @@ export class InventorySync {
     const result: MealSyncResult = {
       success: true,
       usedItems: 0,
-      errors: []
-    }
+      errors: [],
+    };
 
     try {
       // 获取餐食记录
@@ -157,16 +157,16 @@ export class InventorySync {
         include: {
           mealLogFoods: {
             include: {
-              food: true
-            }
-          }
-        }
-      })
+              food: true,
+            },
+          },
+        },
+      });
 
       if (!mealLog) {
-        result.success = false
-        result.errors.push('餐食记录不存在')
-        return result
+        result.success = false;
+        result.errors.push('餐食记录不存在');
+        return result;
       }
 
       // 检查是否已经同步过
@@ -174,13 +174,13 @@ export class InventorySync {
         where: {
           memberId,
           relatedId: mealLogId,
-          relatedType: 'MEAL_LOG'
-        }
-      })
+          relatedType: 'MEAL_LOG',
+        },
+      });
 
       if (existingUsage) {
-        result.errors.push('该餐食记录已同步过库存使用量')
-        return result
+        result.errors.push('该餐食记录已同步过库存使用量');
+        return result;
       }
 
       // 处理每个食材的使用
@@ -192,16 +192,16 @@ export class InventorySync {
               memberId,
               foodId: mealFood.foodId,
               quantity: { gte: mealFood.amount },
-              deletedAt: null
+              deletedAt: null,
             },
             include: {
-              food: true
+              food: true,
             },
             orderBy: [
               { expiryDate: 'asc' },
-              { createdAt: 'asc' }
-            ]
-          })
+              { createdAt: 'asc' },
+            ],
+          });
 
           if (inventoryItem) {
             await inventoryTracker.useInventory(
@@ -212,38 +212,38 @@ export class InventorySync {
               {
                 relatedId: mealLogId,
                 relatedType: 'MEAL_LOG',
-                notes: `${mealLog.mealType} - ${mealLog.date.toISOString().split('T')[0]}`
+                notes: `${mealLog.mealType} - ${mealLog.date.toISOString().split('T')[0]}`,
               }
-            )
-            result.usedItems++
+            );
+            result.usedItems++;
           } else {
-            result.errors.push(`库存中没有足够的 ${mealFood.food.name}`)
+            result.errors.push(`库存中没有足够的 ${mealFood.food.name}`);
           }
         } catch (error) {
-          result.errors.push(`处理食材 ${mealFood.food.name} 时出错：${error}`)
+          result.errors.push(`处理食材 ${mealFood.food.name} 时出错：${error}`);
         }
       }
 
     } catch (error) {
-      result.success = false
-      result.errors.push(`同步失败：${error}`)
+      result.success = false;
+      result.errors.push(`同步失败：${error}`);
     }
 
-    return result
+    return result;
   }
 
   /**
    * 批量同步多个订单
    */
   async syncMultipleOrders(orderIds: string[], memberId: string): Promise<SyncResult[]> {
-    const results: SyncResult[] = []
+    const results: SyncResult[] = [];
 
     for (const orderId of orderIds) {
-      const result = await this.syncFromOrder(orderId, memberId)
-      results.push(result)
+      const result = await this.syncFromOrder(orderId, memberId);
+      results.push(result);
     }
 
-    return results
+    return results;
   }
 
   /**
@@ -255,11 +255,11 @@ export class InventorySync {
       where: {
         userId: memberId,
         status: 'ACTIVE',
-        isActive: true
-      }
-    })
+        isActive: true,
+      },
+    });
 
-    const results: SyncResult[] = []
+    const results: SyncResult[] = [];
 
     for (const account of platformAccounts) {
       // 获取已配送但未同步的订单
@@ -271,30 +271,30 @@ export class InventorySync {
             { lastSyncAt: null },
             { 
               lastSyncAt: { 
-                lt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 24小时前同步过
-              }
-            }
-          ]
+                lt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24小时前同步过
+              },
+            },
+          ],
         },
         orderBy: { deliveryDate: 'desc' },
-        take: 10 // 最多处理10个订单
-      })
+        take: 10, // 最多处理10个订单
+      });
 
       for (const order of pendingOrders) {
-        const result = await this.syncFromOrder(order.id, memberId)
-        results.push(result)
+        const result = await this.syncFromOrder(order.id, memberId);
+        results.push(result);
       }
     }
 
-    return results
+    return results;
   }
 
   /**
    * 智能推荐保质期
    */
   private estimateExpiryDate(category: string, foodName: string): Date {
-    const now = new Date()
-    let daysToAdd = 7 // 默认7天
+    const now = new Date();
+    let daysToAdd = 7; // 默认7天
 
     // 根据食物分类估算保质期
     const expiryMap: { [key: string]: number } = {
@@ -306,10 +306,10 @@ export class InventorySync {
       'GRAINS': 30,
       'OILS': 180,
       'SNACKS': 90,
-      'BEVERAGES': 60
-    }
+      'BEVERAGES': 60,
+    };
 
-    daysToAdd = expiryMap[category] || 7
+    daysToAdd = expiryMap[category] || 7;
 
     // 特殊食物的处理
     const specialItems: { [key: string]: number } = {
@@ -317,15 +317,15 @@ export class InventorySync {
       '鸡蛋': 21,
       '面包': 3,
       '酸奶': 14,
-      '奶酪': 30
-    }
+      '奶酪': 30,
+    };
 
     if (specialItems[foodName]) {
-      daysToAdd = specialItems[foodName]
+      daysToAdd = specialItems[foodName];
     }
 
-    const expiryDate = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000)
-    return expiryDate
+    const expiryDate = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    return expiryDate;
   }
 
   /**
@@ -341,10 +341,10 @@ export class InventorySync {
       'GRAINS': StorageLocation.PANTRY,
       'OILS': StorageLocation.PANTRY,
       'SNACKS': StorageLocation.PANTRY,
-      'BEVERAGES': StorageLocation.PANTRY
-    }
+      'BEVERAGES': StorageLocation.PANTRY,
+    };
 
-    return storageMap[category] || StorageLocation.PANTRY
+    return storageMap[category] || StorageLocation.PANTRY;
   }
 
   /**
@@ -353,18 +353,18 @@ export class InventorySync {
   private parseOrderItems(order: Order): OrderItem[] {
     try {
       // 假设订单商品信息存储在items字段中，格式为JSON
-      const items = JSON.parse(order.items as string)
+      const items = JSON.parse(order.items as string);
       
       return items.map((item: ParsedOrderItem) => ({
         name: item.name || item.productName,
         quantity: item.quantity || item.amount || 1,
         unit: item.unit || '个',
         price: item.price || item.unitPrice,
-        category: item.category
-      }))
+        category: item.category,
+      }));
     } catch (error) {
-      console.error('解析订单商品失败:', error)
-      return []
+      console.error('解析订单商品失败:', error);
+      return [];
     }
   }
 
@@ -375,9 +375,9 @@ export class InventorySync {
     // 首先尝试精确匹配
     let food = await prisma.food.findFirst({
       where: {
-        name: orderItem.name
-      }
-    })
+        name: orderItem.name,
+      },
+    });
 
     if (!food) {
       // 尝试模糊匹配
@@ -386,10 +386,10 @@ export class InventorySync {
           OR: [
             { name: { contains: orderItem.name } },
             { nameEn: { contains: orderItem.name } },
-            { aliases: { contains: orderItem.name } }
-          ]
-        }
-      })
+            { aliases: { contains: orderItem.name } },
+          ],
+        },
+      });
     }
 
     if (!food) {
@@ -403,12 +403,12 @@ export class InventorySync {
           fat: 5,
           category: (orderItem.category as string) || 'OTHER',
           source: 'USER_SUBMITTED',
-          verified: false
-        }
-      })
+          verified: false,
+        },
+      });
     }
 
-    return food
+    return food;
   }
 
   /**
@@ -432,22 +432,22 @@ export class InventorySync {
       addedItems: 0,
       updatedItems: 0,
       errors: [],
-      warnings: []
-    }
+      warnings: [],
+    };
 
     for (const item of items) {
       try {
-        result.processedItems++
+        result.processedItems++;
 
         // 查找或创建食物
         let food = await prisma.food.findFirst({
           where: {
             OR: [
               { name: item.foodName },
-              { nameEn: { contains: item.foodName } }
-            ]
-          }
-        })
+              { nameEn: { contains: item.foodName } },
+            ],
+          },
+        });
 
         if (!food) {
           food = await prisma.food.create({
@@ -459,9 +459,9 @@ export class InventorySync {
               fat: 5,
               category: 'OTHER',
               source: 'USER_SUBMITTED',
-              verified: false
-            }
-          })
+              verified: false,
+            },
+          });
         }
 
         // 检查现有库存
@@ -469,19 +469,19 @@ export class InventorySync {
           where: {
             memberId,
             foodId: food.id,
-            deletedAt: null
+            deletedAt: null,
           },
-          orderBy: { createdAt: 'desc' }
-        })
+          orderBy: { createdAt: 'desc' },
+        });
 
         if (existingItem) {
-          const newQuantity = existingItem.quantity + item.quantity
+          const newQuantity = existingItem.quantity + item.quantity;
           await inventoryTracker.updateInventoryItem(existingItem.id, {
             quantity: newQuantity,
             purchasePrice: item.purchasePrice,
-            purchaseSource: item.purchaseSource || '手动录入'
-          })
-          result.updatedItems++
+            purchaseSource: item.purchaseSource || '手动录入',
+          });
+          result.updatedItems++;
         } else {
           await inventoryTracker.createInventoryItem({
             memberId,
@@ -491,17 +491,17 @@ export class InventorySync {
             purchasePrice: item.purchasePrice,
             purchaseSource: item.purchaseSource || '手动录入',
             expiryDate: item.expiryDate,
-            storageLocation: item.storageLocation || StorageLocation.PANTRY
-          })
-          result.addedItems++
+            storageLocation: item.storageLocation || StorageLocation.PANTRY,
+          });
+          result.addedItems++;
         }
 
       } catch (error) {
-        result.errors.push(`处理 ${item.foodName} 时出错：${error}`)
+        result.errors.push(`处理 ${item.foodName} 时出错：${error}`);
       }
     }
 
-    return result
+    return result;
   }
 
   /**
@@ -512,26 +512,26 @@ export class InventorySync {
       prisma.order.findMany({
         where: {
           account: { userId: memberId },
-          lastSyncAt: { not: null }
+          lastSyncAt: { not: null },
         },
         include: {
           account: {
-            select: { platform: true }
-          }
+            select: { platform: true },
+          },
         },
         orderBy: { lastSyncAt: 'desc' },
-        take: limit
+        take: limit,
       }),
       prisma.inventoryUsage.findMany({
         where: {
           memberId,
           relatedType: 'MEAL_LOG',
-          createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+          createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
         },
         orderBy: { createdAt: 'desc' },
-        take: limit
-      })
-    ])
+        take: limit,
+      }),
+    ]);
 
     return {
       orderSyncs: orderHistory.map(order => ({
@@ -539,17 +539,17 @@ export class InventorySync {
         platformOrderId: order.platformOrderId,
         platform: order.account.platform,
         syncTime: order.lastSyncAt,
-        status: order.status
+        status: order.status,
       })),
       mealSyncs: mealHistory.map(usage => ({
         id: usage.id,
         relatedId: usage.relatedId,
         syncTime: usage.createdAt,
         usageType: usage.usageType,
-        usedQuantity: usage.usedQuantity
-      }))
-    }
+        usedQuantity: usage.usedQuantity,
+      })),
+    };
   }
 }
 
-export const inventorySync = new InventorySync()
+export const inventorySync = new InventorySync();

@@ -28,15 +28,15 @@ export async function POST(request: NextRequest) {
         {
           error: 'Rate limit exceeded',
           retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime
+          resetTime: rateLimitResult.resetTime,
         },
         {
           status: 429,
           headers: {
             'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
             'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '60'
-          }
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
+          },
         }
       );
     }
@@ -81,12 +81,12 @@ export async function POST(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         healthGoals: true,
@@ -94,9 +94,9 @@ export async function POST(request: NextRequest) {
         allergies: true,
         healthData: {
           orderBy: { measuredAt: 'desc' },
-          take: 5
-        }
-      }
+          take: 5,
+        },
+      },
     });
 
     if (!member) {
@@ -107,29 +107,29 @@ export async function POST(request: NextRequest) {
     }
 
     // 获取或创建会话
-    let conversationSession = sessionId
+    const conversationSession = sessionId
       ? conversationManager.getOrCreateSession(sessionId, memberId)
       : conversationManager.createSession(memberId, {
-          userProfile: {
-            name: member.name,
-            age: Math.floor((Date.now() - member.birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)),
-            gender: member.gender.toLowerCase(),
-            healthGoals: member.healthGoals.map(g => g.goalType),
-            dietaryPreferences: member.dietaryPreference ? {
-              dietType: member.dietaryPreference.dietType,
-              restrictions: [
-                ...(member.dietaryPreference.isVegetarian ? ['vegetarian'] : []),
-                ...(member.dietaryPreference.isVegan ? ['vegan'] : []),
-              ]
-            } : null,
-            allergies: member.allergies.map(a => a.allergenName),
-          },
-          preferences: {
-            language: 'zh',
-            detailLevel: 'detailed',
-            tone: 'friendly',
-          }
-        });
+        userProfile: {
+          name: member.name,
+          age: Math.floor((Date.now() - member.birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)),
+          gender: member.gender.toLowerCase(),
+          healthGoals: member.healthGoals.map(g => g.goalType),
+          dietaryPreferences: member.dietaryPreference ? {
+            dietType: member.dietaryPreference.dietType,
+            restrictions: [
+              ...(member.dietaryPreference.isVegetarian ? ['vegetarian'] : []),
+              ...(member.dietaryPreference.isVegan ? ['vegan'] : []),
+            ],
+          } : null,
+          allergies: member.allergies.map(a => a.allergenName),
+        },
+        preferences: {
+          language: 'zh',
+          detailLevel: 'detailed',
+          tone: 'friendly',
+        },
+      });
 
     // 识别用户意图
     const intent = await conversationManager.recognizeIntent(message);
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
             } catch (error) {
               controller.error(error);
             }
-          }
+          },
         });
 
         return new Response(stream, {
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
           {
             error: 'AI服务暂时不可用，请稍后重试',
             fallback: true,
-            message: '很抱歉，AI助手暂时离线。请稍后重试或咨询专业医生。'
+            message: '很抱歉，AI助手暂时离线。请稍后重试或咨询专业医生。',
           },
           { status: 503 }
         );
@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
           messages: conversationSession.messages,
           status: conversationSession.status,
           tokens: 0,
-        }
+        },
       });
 
       return NextResponse.json({
@@ -299,7 +299,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      questions: filteredQuestions.slice(0, limit)
+      questions: filteredQuestions.slice(0, limit),
     });
 
   } catch (error) {

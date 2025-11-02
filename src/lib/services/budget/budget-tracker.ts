@@ -1,15 +1,15 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 import { 
   Budget, 
   BudgetPeriod, 
   BudgetStatus, 
   Spending,
-  FoodCategory 
-} from '@prisma/client'
-import { BudgetNotificationService } from './budget-notification-service'
+  FoodCategory, 
+} from '@prisma/client';
+import { BudgetNotificationService } from './budget-notification-service';
 
-const prisma = new PrismaClient()
-const budgetNotificationService = new BudgetNotificationService(prisma)
+const prisma = new PrismaClient();
+const budgetNotificationService = new BudgetNotificationService(prisma);
 
 export interface BudgetCreateInput {
   memberId: string
@@ -80,7 +80,7 @@ export class BudgetTracker {
   async createBudget(data: BudgetCreateInput): Promise<Budget> {
     // 验证日期范围
     if (data.endDate <= data.startDate) {
-      throw new Error('结束日期必须晚于开始日期')
+      throw new Error('结束日期必须晚于开始日期');
     }
 
     // 验证分类预算总和不超过总预算
@@ -90,21 +90,21 @@ export class BudgetTracker {
       (data.fruitBudget || 0) +
       (data.grainBudget || 0) +
       (data.dairyBudget || 0) +
-      (data.otherBudget || 0)
+      (data.otherBudget || 0);
 
     if (categoryTotal > data.totalAmount) {
-      throw new Error('分类预算总和不能超过总预算')
+      throw new Error('分类预算总和不能超过总预算');
     }
 
     const budget = await prisma.budget.create({
       data: {
         ...data,
         remainingAmount: data.totalAmount,
-        usagePercentage: 0
-      }
-    })
+        usagePercentage: 0,
+      },
+    });
 
-    return budget
+    return budget;
   }
 
   /**
@@ -114,11 +114,11 @@ export class BudgetTracker {
     // 获取当前预算
     const currentBudget = await prisma.budget.findUnique({
       where: { id },
-      include: { spendings: true }
-    })
+      include: { spendings: true },
+    });
 
     if (!currentBudget) {
-      throw new Error('预算不存在')
+      throw new Error('预算不存在');
     }
 
     // 如果更新了总预算或分类预算，需要验证
@@ -130,37 +130,37 @@ export class BudgetTracker {
         data.dairyBudget !== undefined ||
         data.otherBudget !== undefined) {
       
-      const newTotalAmount = data.totalAmount || currentBudget.totalAmount
+      const newTotalAmount = data.totalAmount || currentBudget.totalAmount;
       const categoryTotal = 
         (data.vegetableBudget ?? currentBudget.vegetableBudget ?? 0) +
         (data.meatBudget ?? currentBudget.meatBudget ?? 0) +
         (data.fruitBudget ?? currentBudget.fruitBudget ?? 0) +
         (data.grainBudget ?? currentBudget.grainBudget ?? 0) +
         (data.dairyBudget ?? currentBudget.dairyBudget ?? 0) +
-        (data.otherBudget ?? currentBudget.otherBudget ?? 0)
+        (data.otherBudget ?? currentBudget.otherBudget ?? 0);
 
       if (categoryTotal > newTotalAmount) {
-        throw new Error('分类预算总和不能超过总预算')
+        throw new Error('分类预算总和不能超过总预算');
       }
 
       // 重新计算剩余金额和使用百分比
-      const usedAmount = currentBudget.usedAmount
-      const remainingAmount = Math.max(0, newTotalAmount - usedAmount)
-      const usagePercentage = (usedAmount / newTotalAmount) * 100
+      const usedAmount = currentBudget.usedAmount;
+      const remainingAmount = Math.max(0, newTotalAmount - usedAmount);
+      const usagePercentage = (usedAmount / newTotalAmount) * 100;
 
       data = {
         ...data,
         remainingAmount,
-        usagePercentage
-      } as BudgetUpdateInput
+        usagePercentage,
+      } as BudgetUpdateInput;
     }
 
     const budget = await prisma.budget.update({
       where: { id },
-      data
-    })
+      data,
+    });
 
-    return budget
+    return budget;
   }
 
   /**
@@ -169,38 +169,38 @@ export class BudgetTracker {
   async recordSpending(data: SpendingCreateInput): Promise<Spending> {
     // 获取预算信息
     const budget = await prisma.budget.findUnique({
-      where: { id: data.budgetId }
-    })
+      where: { id: data.budgetId },
+    });
 
     if (!budget) {
-      throw new Error('预算不存在')
+      throw new Error('预算不存在');
     }
 
     if (budget.status !== BudgetStatus.ACTIVE) {
-      throw new Error('预算未激活，无法记录支出')
+      throw new Error('预算未激活，无法记录支出');
     }
 
     // 检查日期是否在预算期间内
-    const purchaseDate = data.purchaseDate || new Date()
+    const purchaseDate = data.purchaseDate || new Date();
     if (purchaseDate < budget.startDate || purchaseDate > budget.endDate) {
-      throw new Error('支出日期不在预算期间内')
+      throw new Error('支出日期不在预算期间内');
     }
 
     // 创建支出记录
     const spending = await prisma.spending.create({
       data: {
         ...data,
-        purchaseDate
-      }
-    })
+        purchaseDate,
+      },
+    });
 
     // 更新预算使用情况
-    await this.updateBudgetUsage(data.budgetId)
+    await this.updateBudgetUsage(data.budgetId);
 
     // 检查是否需要触发预警
-    await this.checkBudgetAlerts(data.budgetId)
+    await this.checkBudgetAlerts(data.budgetId);
 
-    return spending
+    return spending;
   }
 
   /**
@@ -211,22 +211,22 @@ export class BudgetTracker {
     const totalSpent = await prisma.spending.aggregate({
       where: { 
         budgetId,
-        deletedAt: null 
+        deletedAt: null, 
       },
-      _sum: { amount: true }
-    })
+      _sum: { amount: true },
+    });
 
-    const usedAmount = totalSpent._sum.amount || 0
+    const usedAmount = totalSpent._sum.amount || 0;
 
     // 获取预算信息
     const budget = await prisma.budget.findUnique({
-      where: { id: budgetId }
-    })
+      where: { id: budgetId },
+    });
 
-    if (!budget) return
+    if (!budget) return;
 
-    const remainingAmount = Math.max(0, budget.totalAmount - usedAmount)
-    const usagePercentage = budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0
+    const remainingAmount = Math.max(0, budget.totalAmount - usedAmount);
+    const usagePercentage = budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
 
     // 更新预算
     await prisma.budget.update({
@@ -234,9 +234,9 @@ export class BudgetTracker {
       data: {
         usedAmount,
         remainingAmount,
-        usagePercentage
-      }
-    })
+        usagePercentage,
+      },
+    });
   }
 
   /**
@@ -244,12 +244,12 @@ export class BudgetTracker {
    */
   private async checkBudgetAlerts(budgetId: string): Promise<void> {
     const budget = await prisma.budget.findUnique({
-      where: { id: budgetId }
-    })
+      where: { id: budgetId },
+    });
 
-    if (!budget) return
+    if (!budget) return;
 
-    const alerts = []
+    const alerts = [];
 
     // 检查80%预警
     if (budget.alertThreshold80 && budget.usagePercentage! >= 80 && budget.usagePercentage! < 100) {
@@ -257,8 +257,8 @@ export class BudgetTracker {
         type: 'WARNING_80',
         threshold: 80,
         currentValue: budget.usagePercentage,
-        message: `预算使用已达到${budget.usagePercentage!.toFixed(1)}%，请注意控制支出`
-      })
+        message: `预算使用已达到${budget.usagePercentage!.toFixed(1)}%，请注意控制支出`,
+      });
 
       // 发送80%预算预警通知
       await budgetNotificationService.sendBudgetAlert(budget.memberId, {
@@ -267,7 +267,7 @@ export class BudgetTracker {
         threshold: 80,
         remainingBudget: budget.remainingAmount,
         totalBudget: budget.totalAmount,
-      })
+      });
     }
 
     // 检查100%预警
@@ -276,8 +276,8 @@ export class BudgetTracker {
         type: 'WARNING_100',
         threshold: 100,
         currentValue: budget.usagePercentage,
-        message: `预算已用完！当前使用${budget.usagePercentage!.toFixed(1)}%`
-      })
+        message: `预算已用完！当前使用${budget.usagePercentage!.toFixed(1)}%`,
+      });
 
       // 发送100%预算预警通知
       await budgetNotificationService.sendBudgetAlert(budget.memberId, {
@@ -286,7 +286,7 @@ export class BudgetTracker {
         threshold: 100,
         remainingBudget: budget.remainingAmount,
         totalBudget: budget.totalAmount,
-      })
+      });
     }
 
     // 检查110%超支预警
@@ -295,8 +295,8 @@ export class BudgetTracker {
         type: 'OVER_BUDGET_110',
         threshold: 110,
         currentValue: budget.usagePercentage,
-        message: `预算严重超支！当前使用${budget.usagePercentage!.toFixed(1)}%`
-      })
+        message: `预算严重超支！当前使用${budget.usagePercentage!.toFixed(1)}%`,
+      });
 
       // 发送预算超支通知
       await budgetNotificationService.sendBudgetOverspend(budget.memberId, {
@@ -304,14 +304,14 @@ export class BudgetTracker {
         overspendAmount: budget.usedAmount! - budget.totalAmount,
         totalSpent: budget.usedAmount!,
         budgetLimit: budget.totalAmount,
-      })
+      });
     }
 
     // 检查分类预算预警
-    await this.checkCategoryAlerts(budgetId)
+    await this.checkCategoryAlerts(budgetId);
 
     // 检查日均超标预警
-    await this.checkDailyAverageAlert(budgetId)
+    await this.checkDailyAverageAlert(budgetId);
 
     // 创建预警记录
     for (const alert of alerts) {
@@ -321,9 +321,9 @@ export class BudgetTracker {
           type: alert.type,
           threshold: alert.threshold,
           currentValue: alert.currentValue,
-          message: alert.message
-        }
-      })
+          message: alert.message,
+        },
+      });
     }
   }
 
@@ -332,10 +332,10 @@ export class BudgetTracker {
    */
   private async checkCategoryAlerts(budgetId: string): Promise<void> {
     const budget = await prisma.budget.findUnique({
-      where: { id: budgetId }
-    })
+      where: { id: budgetId },
+    });
 
-    if (!budget) return
+    if (!budget) return;
 
     const categories = [
       { field: 'vegetableBudget', category: FoodCategory.VEGETABLES, categoryName: '蔬菜' },
@@ -343,25 +343,25 @@ export class BudgetTracker {
       { field: 'fruitBudget', category: FoodCategory.FRUITS, categoryName: '水果' },
       { field: 'grainBudget', category: FoodCategory.GRAINS, categoryName: '谷物' },
       { field: 'dairyBudget', category: FoodCategory.DAIRY, categoryName: '乳制品' },
-      { field: 'otherBudget', category: FoodCategory.OTHER, categoryName: '其他' }
-    ]
+      { field: 'otherBudget', category: FoodCategory.OTHER, categoryName: '其他' },
+    ];
 
     for (const { field, category, categoryName } of categories) {
-      const categoryBudget = (budget as any)[field]
-      if (!categoryBudget) continue
+      const categoryBudget = (budget as any)[field];
+      if (!categoryBudget) continue;
 
       // 计算分类支出
       const categorySpent = await prisma.spending.aggregate({
         where: { 
           budgetId,
           category,
-          deletedAt: null 
+          deletedAt: null, 
         },
-        _sum: { amount: true }
-      })
+        _sum: { amount: true },
+      });
 
-      const usedAmount = categorySpent._sum.amount || 0
-      const usagePercentage = (usedAmount / categoryBudget) * 100
+      const usedAmount = categorySpent._sum.amount || 0;
+      const usagePercentage = (usedAmount / categoryBudget) * 100;
 
       if (usagePercentage >= 100) {
         await prisma.budgetAlert.create({
@@ -370,9 +370,9 @@ export class BudgetTracker {
             type: 'CATEGORY_OVER',
             threshold: 100,
             currentValue: usagePercentage,
-            message: `${categoryName}分类预算已超支！当前使用${usagePercentage.toFixed(1)}%`
-          }
-        })
+            message: `${categoryName}分类预算已超支！当前使用${usagePercentage.toFixed(1)}%`,
+          },
+        });
 
         // 发送分类预算预警通知
         await budgetNotificationService.sendCategoryBudgetAlert(budget.memberId, {
@@ -381,7 +381,7 @@ export class BudgetTracker {
           spent: usedAmount,
           budget: categoryBudget,
           percentage: usagePercentage,
-        })
+        });
       }
     }
   }
@@ -391,19 +391,19 @@ export class BudgetTracker {
    */
   private async checkDailyAverageAlert(budgetId: string): Promise<void> {
     const budget = await prisma.budget.findUnique({
-      where: { id: budgetId }
-    })
+      where: { id: budgetId },
+    });
 
-    if (!budget) return
+    if (!budget) return;
 
-    const now = new Date()
-    const daysElapsed = Math.ceil((now.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24))
-    const daysRemaining = Math.ceil((budget.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    const now = new Date();
+    const daysElapsed = Math.ceil((now.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysRemaining = Math.ceil((budget.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (daysElapsed <= 0) return
+    if (daysElapsed <= 0) return;
 
-    const dailyBudget = budget.totalAmount / Math.ceil((budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24))
-    const currentDailyAverage = budget.usedAmount / daysElapsed
+    const dailyBudget = budget.totalAmount / Math.ceil((budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const currentDailyAverage = budget.usedAmount / daysElapsed;
 
     if (currentDailyAverage > dailyBudget * 1.2) { // 超过日均预算20%
       await prisma.budgetAlert.create({
@@ -412,9 +412,9 @@ export class BudgetTracker {
           type: 'DAILY_EXCESS',
           threshold: dailyBudget * 1.2,
           currentValue: currentDailyAverage,
-          message: `当前日均支出${currentDailyAverage.toFixed(2)}元超过预算${dailyBudget.toFixed(2)}元`
-        }
-      })
+          message: `当前日均支出${currentDailyAverage.toFixed(2)}元超过预算${dailyBudget.toFixed(2)}元`,
+        },
+      });
     }
   }
 
@@ -426,56 +426,56 @@ export class BudgetTracker {
       where: { id: budgetId },
       include: {
         spendings: {
-          where: { deletedAt: null }
+          where: { deletedAt: null },
         },
         alerts: {
           where: { status: 'ACTIVE' },
-          orderBy: { createdAt: 'desc' }
-        }
-      }
-    })
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
 
     if (!budget) {
-      throw new Error('预算不存在')
+      throw new Error('预算不存在');
     }
 
-    const now = new Date()
-    const daysElapsed = Math.ceil((now.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24))
-    const daysRemaining = Math.ceil((budget.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    const totalDays = Math.ceil((budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const now = new Date();
+    const daysElapsed = Math.ceil((now.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysRemaining = Math.ceil((budget.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil((budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    const dailyAverage = daysElapsed > 0 ? budget.usedAmount / daysElapsed : 0
-    const projectedSpend = dailyAverage * totalDays
+    const dailyAverage = daysElapsed > 0 ? budget.usedAmount / daysElapsed : 0;
+    const projectedSpend = dailyAverage * totalDays;
 
     // 计算分类使用情况
-    const categoryUsage: { [key in FoodCategory]?: any } = {}
+    const categoryUsage: { [key in FoodCategory]?: any } = {};
     const categories = [
       { field: 'vegetableBudget', category: FoodCategory.VEGETABLES },
       { field: 'meatBudget', category: FoodCategory.PROTEIN },
       { field: 'fruitBudget', category: FoodCategory.FRUITS },
       { field: 'grainBudget', category: FoodCategory.GRAINS },
       { field: 'dairyBudget', category: FoodCategory.DAIRY },
-      { field: 'otherBudget', category: FoodCategory.OTHER }
-    ]
+      { field: 'otherBudget', category: FoodCategory.OTHER },
+    ];
 
     for (const { field, category } of categories) {
-      const categoryBudget = (budget as any)[field]
-      if (!categoryBudget) continue
+      const categoryBudget = (budget as any)[field];
+      if (!categoryBudget) continue;
 
       const categorySpent = budget.spendings
         .filter(s => s.category === category)
-        .reduce((sum, s) => sum + s.amount, 0)
+        .reduce((sum, s) => sum + s.amount, 0);
 
       categoryUsage[category] = {
         budget: categoryBudget,
         used: categorySpent,
         remaining: Math.max(0, categoryBudget - categorySpent),
-        percentage: (categorySpent / categoryBudget) * 100
-      }
+        percentage: (categorySpent / categoryBudget) * 100,
+      };
     }
 
     // 获取预警消息
-    const alerts = budget.alerts.map(alert => alert.message)
+    const alerts = budget.alerts.map(alert => alert.message);
 
     return {
       budget,
@@ -486,8 +486,8 @@ export class BudgetTracker {
       dailyAverage,
       daysRemaining: Math.max(0, daysRemaining),
       projectedSpend,
-      alerts
-    }
+      alerts,
+    };
   }
 
   /**
@@ -498,10 +498,10 @@ export class BudgetTracker {
       where: {
         memberId,
         status: status || undefined,
-        deletedAt: null
+        deletedAt: null,
       },
-      orderBy: { createdAt: 'desc' }
-    })
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   /**
@@ -510,8 +510,8 @@ export class BudgetTracker {
   async deleteBudget(id: string): Promise<void> {
     await prisma.budget.update({
       where: { id },
-      data: { deletedAt: new Date() }
-    })
+      data: { deletedAt: new Date() },
+    });
   }
 
   /**
@@ -522,11 +522,11 @@ export class BudgetTracker {
       where: {
         budgetId,
         category: category || undefined,
-        deletedAt: null
+        deletedAt: null,
       },
-      orderBy: { purchaseDate: 'desc' }
-    })
+      orderBy: { purchaseDate: 'desc' },
+    });
   }
 }
 
-export const budgetTracker = new BudgetTracker()
+export const budgetTracker = new BudgetTracker();

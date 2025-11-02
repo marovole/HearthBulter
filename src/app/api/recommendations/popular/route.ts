@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
           {
             success: false,
             error: 'Invalid category',
-            details: `Category must be one of: ${validCategories.join(', ')}`
+            details: `Category must be one of: ${validCategories.join(', ')}`,
           },
           { status: 400 }
         );
@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
       orderBy: [
         { averageRating: 'desc' },
         { ratingCount: 'desc' },
-        { viewCount: 'desc' }
-      ]
+        { viewCount: 'desc' },
+      ],
     });
 
     type RecipeWithRelations = Awaited<ReturnType<typeof prisma.recipe.findMany>>[number];
@@ -72,13 +72,13 @@ export async function GET(request: NextRequest) {
 
     const enriched = recommendations.reduce<
       Array<(typeof recommendations)[number] & { recipe: RecipeWithRelations }>
-    >((acc, rec) => {
-      const recipe = recipeMap.get(rec.recipeId);
-      if (recipe) {
-        acc.push({ ...rec, recipe });
-      }
-      return acc;
-    }, []);
+        >((acc, rec) => {
+          const recipe = recipeMap.get(rec.recipeId);
+          if (recipe) {
+            acc.push({ ...rec, recipe });
+          }
+          return acc;
+        }, []);
 
     // 按照推荐分数排序
     enriched.sort((a, b) => b.score - a.score);

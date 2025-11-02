@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Switch } from '@/components/ui/switch'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
 import { 
   AlertTriangle, 
   XCircle, 
@@ -21,9 +21,9 @@ import {
   MapPin,
   Clock,
   CheckCircle,
-  AlertCircle
-} from 'lucide-react'
-import { toast } from '@/lib/toast'
+  AlertCircle,
+} from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 interface UserAllergy {
   id: string
@@ -60,27 +60,27 @@ const SEVERITY_CONFIG = {
     label: '轻度',
     color: 'text-yellow-600 bg-yellow-50 border-yellow-200',
     icon: <AlertCircle className="h-4 w-4" />,
-    priority: 1
+    priority: 1,
   },
   MODERATE: {
     label: '中度',
     color: 'text-orange-600 bg-orange-50 border-orange-200',
     icon: <AlertTriangle className="h-4 w-4" />,
-    priority: 2
+    priority: 2,
   },
   SEVERE: {
     label: '严重',
     color: 'text-red-600 bg-red-50 border-red-200',
     icon: <XCircle className="h-4 w-4" />,
-    priority: 3
+    priority: 3,
   },
   ANAPHYLAXIS: {
     label: '过敏性休克',
     color: 'text-red-700 bg-red-100 border-red-300',
     icon: <XCircle className="h-5 w-5" />,
-    priority: 4
-  }
-}
+    priority: 4,
+  },
+};
 
 export function UserAllergyWarning({ 
   ingredients, 
@@ -89,114 +89,114 @@ export function UserAllergyWarning({
   onDismiss,
   onEmergencyContact,
   showEmergencyInfo = true,
-  enableNotifications = true
+  enableNotifications = true,
 }: UserAllergyWarningProps) {
-  const [conflictingAllergies, setConflictingAllergies] = useState<UserAllergy[]>([])
-  const [showDetails, setShowDetails] = useState(false)
-  const [notificationsEnabled, setNotificationsEnabled] = useState(enableNotifications)
-  const [dismissedWarnings, setDismissedWarnings] = useState<Set<string>>(new Set())
-  const [emergencyMode, setEmergencyMode] = useState(false)
+  const [conflictingAllergies, setConflictingAllergies] = useState<UserAllergy[]>([]);
+  const [showDetails, setShowDetails] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(enableNotifications);
+  const [dismissedWarnings, setDismissedWarnings] = useState<Set<string>>(new Set());
+  const [emergencyMode, setEmergencyMode] = useState(false);
 
   useEffect(() => {
-    analyzeAllergies()
-  }, [ingredients, userAllergies])
+    analyzeAllergies();
+  }, [ingredients, userAllergies]);
 
   const analyzeAllergies = () => {
-    const conflicts: UserAllergy[] = []
+    const conflicts: UserAllergy[] = [];
 
     ingredients.forEach(ingredient => {
-      const ingredientAllergens = ingredient.allergens || []
+      const ingredientAllergens = ingredient.allergens || [];
       
       userAllergies.forEach(userAllergy => {
         if (userAllergy.isActive && 
             ingredientAllergens.includes(userAllergy.allergenId) &&
             !dismissedWarnings.has(userAllergy.id)) {
-          conflicts.push(userAllergy)
+          conflicts.push(userAllergy);
         }
-      })
-    })
+      });
+    });
 
     // 按严重程度排序
     conflicts.sort((a, b) => 
       SEVERITY_CONFIG[b.severity].priority - SEVERITY_CONFIG[a.severity].priority
-    )
+    );
 
-    setConflictingAllergies(conflicts)
-  }
+    setConflictingAllergies(conflicts);
+  };
 
   const handleDismissWarning = (allergyId: string) => {
-    setDismissedWarnings(prev => new Set([...prev, allergyId]))
-    setConflictingAllergies(prev => prev.filter(a => a.id !== allergyId))
-    toast.info('已忽略此过敏警告')
-  }
+    setDismissedWarnings(prev => new Set([...prev, allergyId]));
+    setConflictingAllergies(prev => prev.filter(a => a.id !== allergyId));
+    toast.info('已忽略此过敏警告');
+  };
 
   const handleEnableNotifications = (enabled: boolean) => {
-    setNotificationsEnabled(enabled)
+    setNotificationsEnabled(enabled);
     // 这里可以调用API保存设置
-    toast.success(enabled ? '已启用过敏提醒' : '已关闭过敏提醒')
-  }
+    toast.success(enabled ? '已启用过敏提醒' : '已关闭过敏提醒');
+  };
 
   const getHighestSeverity = (): 'MILD' | 'MODERATE' | 'SEVERE' | 'ANAPHYLAXIS' | null => {
-    if (conflictingAllergies.length === 0) return null
+    if (conflictingAllergies.length === 0) return null;
     
     return conflictingAllergies.reduce((highest, current) => 
       SEVERITY_CONFIG[current.severity].priority > SEVERITY_CONFIG[highest.severity].priority 
         ? current 
         : highest
-    ).severity
-  }
+    ).severity;
+  };
 
-  const highestSeverity = getHighestSeverity()
-  const severityConfig = highestSeverity ? SEVERITY_CONFIG[highestSeverity] : null
+  const highestSeverity = getHighestSeverity();
+  const severityConfig = highestSeverity ? SEVERITY_CONFIG[highestSeverity] : null;
 
   const handleEmergencyCall = () => {
     // 在实际应用中，这里可以调用紧急联系人或拨打急救电话
-    toast.warning('正在联系紧急联系人...')
-    onEmergencyContact?.()
-  }
+    toast.warning('正在联系紧急联系人...');
+    onEmergencyContact?.();
+  };
 
   const getEmergencyInstructions = (severity: string): string[] => {
     switch (severity) {
-      case 'ANAPHYLAXIS':
-        return [
-          '立即停止食用该食物',
-          '立即使用肾上腺素自动注射器（如有处方）',
-          '拨打急救电话 120',
-          '保持平躺，抬高双脚',
-          '如呼吸困难，保持坐姿',
-          '等待医疗救援'
-        ]
-      case 'SEVERE':
-        return [
-          '立即停止食用该食物',
-          '服用抗过敏药物（如有处方）',
-          '密切观察症状变化',
-          '如症状加重，立即就医',
-          '联系家人或朋友陪同'
-        ]
-      case 'MODERATE':
-        return [
-          '停止食用该食物',
-          '服用抗过敏药物',
-          '多喝水促进代谢',
-          '观察症状变化',
-          '如有不适及时就医'
-        ]
-      case 'MILD':
-        return [
-          '停止食用该食物',
-          '观察症状变化',
-          '可服用轻微抗过敏药物',
-          '避免抓挠皮肤',
-          '如症状持续或加重，请就医'
-        ]
-      default:
-        return []
+    case 'ANAPHYLAXIS':
+      return [
+        '立即停止食用该食物',
+        '立即使用肾上腺素自动注射器（如有处方）',
+        '拨打急救电话 120',
+        '保持平躺，抬高双脚',
+        '如呼吸困难，保持坐姿',
+        '等待医疗救援',
+      ];
+    case 'SEVERE':
+      return [
+        '立即停止食用该食物',
+        '服用抗过敏药物（如有处方）',
+        '密切观察症状变化',
+        '如症状加重，立即就医',
+        '联系家人或朋友陪同',
+      ];
+    case 'MODERATE':
+      return [
+        '停止食用该食物',
+        '服用抗过敏药物',
+        '多喝水促进代谢',
+        '观察症状变化',
+        '如有不适及时就医',
+      ];
+    case 'MILD':
+      return [
+        '停止食用该食物',
+        '观察症状变化',
+        '可服用轻微抗过敏药物',
+        '避免抓挠皮肤',
+        '如症状持续或加重，请就医',
+      ];
+    default:
+      return [];
     }
-  }
+  };
 
   if (conflictingAllergies.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -407,5 +407,5 @@ export function UserAllergyWarning({
         </div>
       </div>
     </div>
-  )
+  );
 }

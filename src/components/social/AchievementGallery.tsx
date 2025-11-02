@@ -16,7 +16,7 @@ import {
   TrendingUp,
   Calendar,
   Award,
-  Medal
+  Medal,
 } from 'lucide-react';
 import { AchievementType, AchievementRarity } from '@prisma/client';
 import { ShareButton } from './ShareButton';
@@ -56,7 +56,7 @@ export function AchievementGallery({
   memberId,
   className,
   showShareButton = true,
-  onAchievementUnlock
+  onAchievementUnlock,
 }: AchievementGalleryProps) {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +92,7 @@ export function AchievementGallery({
       'SILVER': 'bg-gray-100 text-gray-800 border-gray-200',
       'GOLD': 'bg-yellow-100 text-yellow-800 border-yellow-200',
       'PLATINUM': 'bg-purple-100 text-purple-800 border-purple-200',
-      'DIAMOND': 'bg-blue-100 text-blue-800 border-blue-200'
+      'DIAMOND': 'bg-blue-100 text-blue-800 border-blue-200',
     };
     return colors[rarity] || colors.BRONZE;
   };
@@ -100,18 +100,18 @@ export function AchievementGallery({
   // 获取稀有度图标
   const getRarityIcon = (rarity: AchievementRarity) => {
     switch (rarity) {
-      case 'BRONZE':
-        return <Medal className="h-4 w-4" />;
-      case 'SILVER':
-        return <Award className="h-4 w-4" />;
-      case 'GOLD':
-        return <Trophy className="h-4 w-4" />;
-      case 'PLATINUM':
-        return <Star className="h-4 w-4" />;
-      case 'DIAMOND':
-        return <Star className="h-4 w-4" />;
-      default:
-        return <Medal className="h-4 w-4" />;
+    case 'BRONZE':
+      return <Medal className="h-4 w-4" />;
+    case 'SILVER':
+      return <Award className="h-4 w-4" />;
+    case 'GOLD':
+      return <Trophy className="h-4 w-4" />;
+    case 'PLATINUM':
+      return <Star className="h-4 w-4" />;
+    case 'DIAMOND':
+      return <Star className="h-4 w-4" />;
+    default:
+      return <Medal className="h-4 w-4" />;
     }
   };
 
@@ -122,7 +122,7 @@ export function AchievementGallery({
       'SILVER': '白银',
       'GOLD': '黄金',
       'PLATINUM': '白金',
-      'DIAMOND': '钻石'
+      'DIAMOND': '钻石',
     };
     return labels[rarity] || '青铜';
   };
@@ -130,34 +130,34 @@ export function AchievementGallery({
   // 获取类型图标
   const getTypeIcon = (type: AchievementType) => {
     switch (type) {
-      case 'CHECK_IN_STREAK':
-        return <Calendar className="h-6 w-6" />;
-      case 'WEIGHT_LOSS':
-        return <TrendingUp className="h-6 w-6" />;
-      case 'NUTRITION_GOAL':
-        return <Target className="h-6 w-6" />;
-      case 'EXERCISE_TARGET':
-        return <TrendingUp className="h-6 w-6" />;
-      case 'HEALTH_MILESTONE':
-        return <Trophy className="h-6 w-6" />;
-      case 'COMMUNITY_CONTRIBUTION':
-        return <Star className="h-6 w-6" />;
-      default:
-        return <Award className="h-6 w-6" />;
+    case 'CHECK_IN_STREAK':
+      return <Calendar className="h-6 w-6" />;
+    case 'WEIGHT_LOSS':
+      return <TrendingUp className="h-6 w-6" />;
+    case 'NUTRITION_GOAL':
+      return <Target className="h-6 w-6" />;
+    case 'EXERCISE_TARGET':
+      return <TrendingUp className="h-6 w-6" />;
+    case 'HEALTH_MILESTONE':
+      return <Trophy className="h-6 w-6" />;
+    case 'COMMUNITY_CONTRIBUTION':
+      return <Star className="h-6 w-6" />;
+    default:
+      return <Award className="h-6 w-6" />;
     }
   };
 
   // 过滤成就
   const filteredAchievements = achievements.filter(achievement => {
     switch (activeTab) {
-      case 'unlocked':
-        return achievement.isUnlocked;
-      case 'locked':
-        return !achievement.isUnlocked;
-      case 'shared':
-        return achievement.isShared;
-      default:
-        return true;
+    case 'unlocked':
+      return achievement.isUnlocked;
+    case 'locked':
+      return !achievement.isUnlocked;
+    case 'shared':
+      return achievement.isShared;
+    default:
+      return true;
     }
   });
 
@@ -276,9 +276,9 @@ export function AchievementGallery({
               <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
                 {activeTab === 'locked' ? '暂无进行中的成就' : 
-                 activeTab === 'unlocked' ? '暂无已解锁的成就' :
-                 activeTab === 'shared' ? '暂无已分享的成就' :
-                 '暂无成就'}
+                  activeTab === 'unlocked' ? '暂无已解锁的成就' :
+                    activeTab === 'shared' ? '暂无已分享的成就' :
+                      '暂无成就'}
               </p>
             </div>
           )}
@@ -292,7 +292,7 @@ export function AchievementGallery({
 function AchievementCard({ 
   achievement, 
   showShareButton, 
-  onShare 
+  onShare, 
 }: {
   achievement: Achievement;
   showShareButton?: boolean;
@@ -384,25 +384,25 @@ function getRarityColor(rarity: AchievementRarity) {
     'SILVER': 'bg-gray-100 text-gray-800 border-gray-200',
     'GOLD': 'bg-yellow-100 text-yellow-800 border-yellow-200',
     'PLATINUM': 'bg-purple-100 text-purple-800 border-purple-200',
-    'DIAMOND': 'bg-blue-100 text-blue-800 border-blue-200'
+    'DIAMOND': 'bg-blue-100 text-blue-800 border-blue-200',
   };
   return colors[rarity] || colors.BRONZE;
 }
 
 function getRarityIcon(rarity: AchievementRarity) {
   switch (rarity) {
-    case 'BRONZE':
-      return <Medal className="h-3 w-3" />;
-    case 'SILVER':
-      return <Award className="h-3 w-3" />;
-    case 'GOLD':
-      return <Trophy className="h-3 w-3" />;
-    case 'PLATINUM':
-      return <Star className="h-3 w-3" />;
-    case 'DIAMOND':
-      return <Star className="h-3 w-3" />;
-    default:
-      return <Medal className="h-3 w-3" />;
+  case 'BRONZE':
+    return <Medal className="h-3 w-3" />;
+  case 'SILVER':
+    return <Award className="h-3 w-3" />;
+  case 'GOLD':
+    return <Trophy className="h-3 w-3" />;
+  case 'PLATINUM':
+    return <Star className="h-3 w-3" />;
+  case 'DIAMOND':
+    return <Star className="h-3 w-3" />;
+  default:
+    return <Medal className="h-3 w-3" />;
   }
 }
 
@@ -412,7 +412,7 @@ function getRarityLabel(rarity: AchievementRarity) {
     'SILVER': '白银',
     'GOLD': '黄金',
     'PLATINUM': '白金',
-    'DIAMOND': '钻石'
+    'DIAMOND': '钻石',
   };
   return labels[rarity] || '青铜';
 }
@@ -424,7 +424,7 @@ function getTypeLabel(type: AchievementType) {
     'NUTRITION_GOAL': '营养目标',
     'EXERCISE_TARGET': '运动目标',
     'HEALTH_MILESTONE': '健康里程碑',
-    'COMMUNITY_CONTRIBUTION': '社区贡献'
+    'COMMUNITY_CONTRIBUTION': '社区贡献',
   };
   return labels[type] || '成就';
 }

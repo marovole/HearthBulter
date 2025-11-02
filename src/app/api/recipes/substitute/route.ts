@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     // 检查食材是否存在
     const originalIngredient = await prisma.recipeIngredient.findUnique({
-      where: { id: originalIngredientId }
+      where: { id: originalIngredientId },
     });
 
     if (!originalIngredient) {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const substituteFood = await prisma.food.findUnique({
-      where: { id: substituteFoodId }
+      where: { id: substituteFoodId },
     });
 
     if (!substituteFood) {
@@ -46,22 +46,22 @@ export async function POST(request: NextRequest) {
         nutritionDelta: nutritionDelta ? JSON.stringify(nutritionDelta) : null,
         costDelta: costDelta || null,
         tasteSimilarity: tasteSimilarity || null,
-        conditions: '[]' // 默认空条件
+        conditions: '[]', // 默认空条件
       },
       include: {
         originalIngredient: {
-          include: { food: true }
+          include: { food: true },
         },
-        substituteFood: true
-      }
+        substituteFood: true,
+      },
     });
 
     return NextResponse.json({
       success: true,
       substitution: {
         ...substitution,
-        nutritionDelta: nutritionDelta ? JSON.parse(substitution.nutritionDelta) : null
-      }
+        nutritionDelta: nutritionDelta ? JSON.parse(substitution.nutritionDelta) : null,
+      },
     });
 
   } catch (error) {
@@ -92,19 +92,19 @@ export async function GET(request: NextRequest) {
       where: {
         originalIngredientId,
         ...(substitutionType && { substitutionType }),
-        isValid: true
+        isValid: true,
       },
       include: {
         substituteFood: true,
         originalIngredient: {
-          include: { food: true }
-        }
+          include: { food: true },
+        },
       },
       orderBy: [
         { tasteSimilarity: 'desc' },
-        { costDelta: 'asc' }
+        { costDelta: 'asc' },
       ],
-      take: limit
+      take: limit,
     });
 
     return NextResponse.json({
@@ -112,8 +112,8 @@ export async function GET(request: NextRequest) {
       substitutions: substitutions.map(sub => ({
         ...sub,
         nutritionDelta: sub.nutritionDelta ? JSON.parse(sub.nutritionDelta) : null,
-        conditions: JSON.parse(sub.conditions)
-      }))
+        conditions: JSON.parse(sub.conditions),
+      })),
     });
 
   } catch (error) {

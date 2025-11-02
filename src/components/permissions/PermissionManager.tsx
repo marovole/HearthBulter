@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
   Shield, 
   Users, 
@@ -18,12 +18,12 @@ import {
   XCircle,
   RefreshCw,
   Download,
-  Upload
-} from 'lucide-react'
+  Upload,
+} from 'lucide-react';
 
-import { Permission, FamilyMemberRole } from '@prisma/client'
-import { useFamilyMembers } from '@/hooks/use-family-members'
-import { usePermissions } from '@/hooks/use-permissions'
+import { Permission, FamilyMemberRole } from '@prisma/client';
+import { useFamilyMembers } from '@/hooks/use-family-members';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface PermissionMatrix {
   [key in FamilyMemberRole]?: Permission[]
@@ -54,19 +54,19 @@ interface PermissionAuditLog {
 }
 
 export function PermissionManager() {
-  const [selectedTab, setSelectedTab] = useState('overview')
-  const [selectedMember, setSelectedMember] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [auditLogs, setAuditLogs] = useState<PermissionAuditLog[]>([])
+  const [selectedTab, setSelectedTab] = useState('overview');
+  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<PermissionAuditLog[]>([]);
 
   // 获取家庭成员和权限数据
-  const { members, loading: membersLoading } = useFamilyMembers()
+  const { members, loading: membersLoading } = useFamilyMembers();
   const { 
     permissions, 
     loading: permissionsLoading,
     updateMemberPermissions,
-    permissionMatrix
-  } = usePermissions()
+    permissionMatrix,
+  } = usePermissions();
 
   // 权限显示配置
   const permissionGroups = {
@@ -75,25 +75,25 @@ export function PermissionManager() {
       Permission.READ_TASK,
       Permission.UPDATE_TASK,
       Permission.DELETE_TASK,
-      Permission.ASSIGN_TASK
+      Permission.ASSIGN_TASK,
     ],
     活动管理: [
       Permission.CREATE_ACTIVITY,
       Permission.READ_ACTIVITY,
       Permission.UPDATE_ACTIVITY,
-      Permission.DELETE_ACTIVITY
+      Permission.DELETE_ACTIVITY,
     ],
     评论权限: [
       Permission.CREATE_COMMENT,
       Permission.READ_COMMENT,
       Permission.UPDATE_COMMENT,
-      Permission.DELETE_COMMENT
+      Permission.DELETE_COMMENT,
     ],
     目标管理: [
       Permission.CREATE_GOAL,
       Permission.READ_GOAL,
       Permission.UPDATE_GOAL,
-      Permission.DELETE_GOAL
+      Permission.DELETE_GOAL,
     ],
     购物清单: [
       Permission.CREATE_SHOPPING_ITEM,
@@ -101,16 +101,16 @@ export function PermissionManager() {
       Permission.UPDATE_SHOPPING_ITEM,
       Permission.DELETE_SHOPPING_ITEM,
       Permission.ASSIGN_SHOPPING_ITEM,
-      Permission.PURCHASE_SHOPPING_ITEM
+      Permission.PURCHASE_SHOPPING_ITEM,
     ],
     家庭管理: [
       Permission.MANAGE_FAMILY,
       Permission.MANAGE_MEMBERS,
       Permission.INVITE_MEMBERS,
       Permission.REMOVE_MEMBERS,
-      Permission.VIEW_FAMILY_DATA
-    ]
-  }
+      Permission.VIEW_FAMILY_DATA,
+    ],
+  };
 
   // 获取权限显示名称
   const getPermissionDisplayName = (permission: Permission): string => {
@@ -147,36 +147,36 @@ export function PermissionManager() {
       [Permission.MANAGE_MEMBERS]: '管理成员',
       [Permission.INVITE_MEMBERS]: '邀请成员',
       [Permission.REMOVE_MEMBERS]: '移除成员',
-      [Permission.VIEW_FAMILY_DATA]: '查看家庭数据'
-    }
+      [Permission.VIEW_FAMILY_DATA]: '查看家庭数据',
+    };
     
-    return displayNames[permission] || permission
-  }
+    return displayNames[permission] || permission;
+  };
 
   // 获取角色显示名称
   const getRoleDisplayName = (role: FamilyMemberRole): string => {
     const roleNames: Record<FamilyMemberRole, string> = {
       [FamilyMemberRole.ADMIN]: '管理员',
       [FamilyMemberRole.MEMBER]: '成员',
-      [FamilyMemberRole.GUEST]: '访客'
-    }
+      [FamilyMemberRole.GUEST]: '访客',
+    };
     
-    return roleNames[role] || role
-  }
+    return roleNames[role] || role;
+  };
 
   // 更新成员角色
   const handleRoleChange = async (memberId: string, newRole: FamilyMemberRole) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await updateMemberPermissions(memberId, { role: newRole })
+      await updateMemberPermissions(memberId, { role: newRole });
       // 刷新审计日志
-      loadAuditLogs()
+      loadAuditLogs();
     } catch (error) {
-      console.error('更新角色失败:', error)
+      console.error('更新角色失败:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // 更新成员权限
   const handlePermissionToggle = async (
@@ -184,19 +184,19 @@ export function PermissionManager() {
     permission: Permission, 
     granted: boolean
   ) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       await updateMemberPermissions(memberId, { 
-        permissionChanges: [{ permission, granted }] 
-      })
+        permissionChanges: [{ permission, granted }], 
+      });
       // 刷新审计日志
-      loadAuditLogs()
+      loadAuditLogs();
     } catch (error) {
-      console.error('更新权限失败:', error)
+      console.error('更新权限失败:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // 加载审计日志
   const loadAuditLogs = async () => {
@@ -206,9 +206,9 @@ export function PermissionManager() {
       // const logs = await response.json()
       // setAuditLogs(logs)
     } catch (error) {
-      console.error('加载审计日志失败:', error)
+      console.error('加载审计日志失败:', error);
     }
-  }
+  };
 
   // 导出权限配置
   const exportPermissions = async () => {
@@ -220,49 +220,49 @@ export function PermissionManager() {
         members: members.map(member => ({
           id: member.id,
           name: member.name,
-          role: member.role
-        }))
-      }
+          role: member.role,
+        })),
+      };
       
       const blob = new Blob([JSON.stringify(config, null, 2)], {
-        type: 'application/json'
-      })
+        type: 'application/json',
+      });
       
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `permissions-config-${new Date().toISOString().split('T')[0]}.json`
-      a.click()
-      URL.revokeObjectURL(url)
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `permissions-config-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('导出权限配置失败:', error)
+      console.error('导出权限配置失败:', error);
     }
-  }
+  };
 
   // 导入权限配置
   const importPermissions = async (file: File) => {
     try {
-      const content = await file.text()
-      const config = JSON.parse(content)
+      const content = await file.text();
+      const config = JSON.parse(content);
       
       // 验证配置格式
       if (!config.permissionMatrix || !config.members) {
-        throw new Error('无效的权限配置文件')
+        throw new Error('无效的权限配置文件');
       }
       
       // 应用配置
       // 这里应该调用API来应用配置
-      console.log('导入权限配置:', config)
+      console.log('导入权限配置:', config);
     } catch (error) {
-      console.error('导入权限配置失败:', error)
+      console.error('导入权限配置失败:', error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadAuditLogs()
-  }, [])
+    loadAuditLogs();
+  }, []);
 
-  const loading = membersLoading || permissionsLoading || isLoading
+  const loading = membersLoading || permissionsLoading || isLoading;
 
   return (
     <div className="space-y-6">
@@ -290,8 +290,8 @@ export function PermissionManager() {
               accept=".json"
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) importPermissions(file)
+                const file = e.target.files?.[0];
+                if (file) importPermissions(file);
               }}
             />
           </label>
@@ -364,8 +364,8 @@ export function PermissionManager() {
             <CardContent>
               <div className="space-y-4">
                 {Object.values(FamilyMemberRole).map(role => {
-                  const count = members.filter(m => m.role === role).length
-                  const percentage = members.length > 0 ? (count / members.length) * 100 : 0
+                  const count = members.filter(m => m.role === role).length;
+                  const percentage = members.length > 0 ? (count / members.length) * 100 : 0;
                   
                   return (
                     <div key={role} className="flex items-center justify-between">
@@ -389,7 +389,7 @@ export function PermissionManager() {
                         </span>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </CardContent>
@@ -597,5 +597,5 @@ export function PermissionManager() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

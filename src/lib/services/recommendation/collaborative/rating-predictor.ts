@@ -32,7 +32,7 @@ export class RatingPredictor {
       maxNeighbors: 50,
       confidenceThreshold: 0.3,
       fallbackToGlobal: true,
-      ...config
+      ...config,
     };
   }
 
@@ -55,27 +55,27 @@ export class RatingPredictor {
         predictedRating: userRatings.get(itemId)!,
         confidence: 1.0,
         method: 'existing',
-        neighborCount: 0
+        neighborCount: 0,
       };
     }
 
     let prediction: PredictionResult;
 
     switch (config.method) {
-      case 'user_based':
-        prediction = this.predictUserBased(matrix, userId, itemId, config);
-        break;
-      case 'item_based':
-        prediction = this.predictItemBased(matrix, userId, itemId, config);
-        break;
-      case 'hybrid':
-        prediction = await this.predictHybrid(matrix, userId, itemId, config);
-        break;
-      case 'matrix_factorization':
-        prediction = await this.predictMatrixFactorization(matrix, userId, itemId, config);
-        break;
-      default:
-        prediction = this.predictUserBased(matrix, userId, itemId, config);
+    case 'user_based':
+      prediction = this.predictUserBased(matrix, userId, itemId, config);
+      break;
+    case 'item_based':
+      prediction = this.predictItemBased(matrix, userId, itemId, config);
+      break;
+    case 'hybrid':
+      prediction = await this.predictHybrid(matrix, userId, itemId, config);
+      break;
+    case 'matrix_factorization':
+      prediction = await this.predictMatrixFactorization(matrix, userId, itemId, config);
+      break;
+    default:
+      prediction = this.predictUserBased(matrix, userId, itemId, config);
     }
 
     // 如果置信度太低，使用全局平均分作为后备
@@ -103,9 +103,9 @@ export class RatingPredictor {
       // 预计算邻居，提高效率
       const neighbors = config.method === 'user_based'
         ? this.neighborSelector.selectUserNeighbors(matrix, userId, {
-            maxNeighbors: config.maxNeighbors,
-            minCommonItems: config.minNeighbors
-          })
+          maxNeighbors: config.maxNeighbors,
+          minCommonItems: config.minNeighbors,
+        })
         : [];
 
       for (const itemId of itemIds) {
@@ -137,7 +137,7 @@ export class RatingPredictor {
   ): PredictionResult {
     const neighbors = this.neighborSelector.selectUserNeighbors(matrix, userId, {
       maxNeighbors: config.maxNeighbors,
-      minCommonItems: config.minNeighbors
+      minCommonItems: config.minNeighbors,
     });
 
     return this.predictUserBasedWithNeighbors(matrix, userId, itemId, neighbors, config);
@@ -159,7 +159,7 @@ export class RatingPredictor {
         predictedRating: 0,
         confidence: 0,
         method: 'user_based',
-        neighborCount: neighbors.length
+        neighborCount: neighbors.length,
       });
     }
 
@@ -189,7 +189,7 @@ export class RatingPredictor {
         predictedRating: 0,
         confidence: 0,
         method: 'user_based',
-        neighborCount: validNeighbors
+        neighborCount: validNeighbors,
       });
     }
 
@@ -201,7 +201,7 @@ export class RatingPredictor {
       predictedRating: Math.max(1, Math.min(5, predictedRating)), // 限制在1-5范围内
       confidence,
       method: 'user_based',
-      neighborCount: validNeighbors
+      neighborCount: validNeighbors,
     };
   }
 
@@ -221,14 +221,14 @@ export class RatingPredictor {
         predictedRating: 0,
         confidence: 0,
         method: 'item_based',
-        neighborCount: 0
+        neighborCount: 0,
       });
     }
 
     // 找到与目标物品相似的物品
     const similarItems = this.neighborSelector.selectItemNeighbors(matrix, itemId, {
       maxNeighbors: config.maxNeighbors,
-      minCommonItems: config.minNeighbors
+      minCommonItems: config.minNeighbors,
     });
 
     if (similarItems.length < config.minNeighbors) {
@@ -237,7 +237,7 @@ export class RatingPredictor {
         predictedRating: 0,
         confidence: 0,
         method: 'item_based',
-        neighborCount: similarItems.length
+        neighborCount: similarItems.length,
       });
     }
 
@@ -266,7 +266,7 @@ export class RatingPredictor {
         predictedRating: 0,
         confidence: 0,
         method: 'item_based',
-        neighborCount: validItems
+        neighborCount: validItems,
       });
     }
 
@@ -278,7 +278,7 @@ export class RatingPredictor {
       predictedRating: Math.max(1, Math.min(5, predictedRating)),
       confidence,
       method: 'item_based',
-      neighborCount: validItems
+      neighborCount: validItems,
     };
   }
 
@@ -303,7 +303,7 @@ export class RatingPredictor {
         predictedRating: 0,
         confidence: 0,
         method: 'hybrid',
-        neighborCount: 0
+        neighborCount: 0,
       });
     }
 
@@ -318,7 +318,7 @@ export class RatingPredictor {
       predictedRating: Math.max(1, Math.min(5, predictedRating)),
       confidence,
       method: 'hybrid',
-      neighborCount: userBased.neighborCount + itemBased.neighborCount
+      neighborCount: userBased.neighborCount + itemBased.neighborCount,
     };
   }
 
@@ -349,7 +349,7 @@ export class RatingPredictor {
       predictedRating: Math.max(1, Math.min(5, predictedRating)),
       confidence,
       method: 'matrix_factorization',
-      neighborCount: 0
+      neighborCount: 0,
     };
   }
 
@@ -367,7 +367,7 @@ export class RatingPredictor {
       ...originalPrediction,
       predictedRating: itemAvg,
       confidence: 0.1, // 低置信度
-      method: originalPrediction.method + '_fallback'
+      method: `${originalPrediction.method}_fallback`,
     };
   }
 

@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   TrendingUpIcon, 
   TrendingDownIcon, 
@@ -14,11 +14,11 @@ import {
   DollarSignIcon,
   ShoppingCartIcon,
   CalendarIcon,
-  TargetIcon
-} from 'lucide-react'
-import { format, formatDistanceToNow } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { BudgetStatus as BudgetStatusType, FoodCategory, BudgetPeriod } from '@prisma/client'
+  TargetIcon,
+} from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { BudgetStatus as BudgetStatusType, FoodCategory, BudgetPeriod } from '@prisma/client';
 
 interface BudgetStatus {
   budget: any
@@ -55,7 +55,7 @@ const categoryIcons = {
   [FoodCategory.SNACKS]: '🍿',
   [FoodCategory.BEVERAGES]: '🥤',
   [FoodCategory.OTHER]: '📦',
-}
+};
 
 const categoryColors = {
   [FoodCategory.VEGETABLES]: 'bg-green-500',
@@ -68,7 +68,7 @@ const categoryColors = {
   [FoodCategory.SNACKS]: 'bg-pink-500',
   [FoodCategory.BEVERAGES]: 'bg-cyan-500',
   [FoodCategory.OTHER]: 'bg-gray-500',
-}
+};
 
 const periodLabels = {
   [BudgetPeriod.WEEKLY]: '周预算',
@@ -76,63 +76,63 @@ const periodLabels = {
   [BudgetPeriod.QUARTERLY]: '季度预算',
   [BudgetPeriod.YEARLY]: '年预算',
   [BudgetPeriod.CUSTOM]: '自定义预算',
-}
+};
 
 export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
-  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
+  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchBudgetStatus = async () => {
     try {
       const url = budgetId 
         ? `/api/budget/current?budgetId=${budgetId}`
-        : `/api/budget/current?memberId=${memberId}`
+        : `/api/budget/current?memberId=${memberId}`;
       
-      const response = await fetch(url)
+      const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('获取预算状态失败')
+        throw new Error('获取预算状态失败');
       }
       
-      const data = await response.json()
-      setBudgetStatus(data)
-      setError(null)
+      const data = await response.json();
+      setBudgetStatus(data);
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取预算状态失败')
+      setError(err instanceof Error ? err.message : '获取预算状态失败');
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchBudgetStatus()
-  }, [memberId, budgetId])
+    fetchBudgetStatus();
+  }, [memberId, budgetId]);
 
   const handleRefresh = () => {
-    setRefreshing(true)
-    fetchBudgetStatus()
-  }
+    setRefreshing(true);
+    fetchBudgetStatus();
+  };
 
   const getUsageColor = (percentage: number) => {
-    if (percentage >= 100) return 'text-red-600'
-    if (percentage >= 80) return 'text-yellow-600'
-    return 'text-green-600'
-  }
+    if (percentage >= 100) return 'text-red-600';
+    if (percentage >= 80) return 'text-yellow-600';
+    return 'text-green-600';
+  };
 
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 100) return 'bg-red-500'
-    if (percentage >= 80) return 'bg-yellow-500'
-    return 'bg-green-500'
-  }
+    if (percentage >= 100) return 'bg-red-500';
+    if (percentage >= 80) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
 
   const getAlertVariant = (alerts: string[]) => {
-    if (alerts.some(alert => alert.includes('严重超支'))) return 'destructive'
-    if (alerts.some(alert => alert.includes('已用完') || alert.includes('超支'))) return 'destructive'
-    if (alerts.some(alert => alert.includes('即将用完'))) return 'default'
-    return 'default'
-  }
+    if (alerts.some(alert => alert.includes('严重超支'))) return 'destructive';
+    if (alerts.some(alert => alert.includes('已用完') || alert.includes('超支'))) return 'destructive';
+    if (alerts.some(alert => alert.includes('即将用完'))) return 'default';
+    return 'default';
+  };
 
   if (loading) {
     return (
@@ -150,7 +150,7 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !budgetStatus) {
@@ -161,10 +161,10 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
           {error || '没有找到活跃的预算'}
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
-  const { budget, usedAmount, remainingAmount, usagePercentage, categoryUsage, dailyAverage, daysRemaining, projectedSpend, alerts } = budgetStatus
+  const { budget, usedAmount, remainingAmount, usagePercentage, categoryUsage, dailyAverage, daysRemaining, projectedSpend, alerts } = budgetStatus;
 
   return (
     <div className="space-y-6">
@@ -411,5 +411,5 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

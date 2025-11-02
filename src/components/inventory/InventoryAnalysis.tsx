@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -16,10 +16,10 @@ import {
   Target,
   Lightbulb,
   BarChart3,
-  PieChart
-} from 'lucide-react'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+  PieChart,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 interface InventoryAnalysis {
   memberId: string
@@ -89,71 +89,71 @@ interface InventoryAnalysisProps {
 const periodOptions = [
   { value: 7, label: '最近7天' },
   { value: 30, label: '最近30天' },
-  { value: 90, label: '最近3个月' }
-]
+  { value: 90, label: '最近3个月' },
+];
 
 const priorityColors = {
   HIGH: 'bg-red-100 text-red-800',
   MEDIUM: 'bg-yellow-100 text-yellow-800',
-  LOW: 'bg-green-100 text-green-800'
-}
+  LOW: 'bg-green-100 text-green-800',
+};
 
 const priorityLabels = {
   HIGH: '高',
   MEDIUM: '中',
-  LOW: '低'
-}
+  LOW: '低',
+};
 
 export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
-  const [analysis, setAnalysis] = useState<InventoryAnalysis | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState(30)
+  const [analysis, setAnalysis] = useState<InventoryAnalysis | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState(30);
 
   useEffect(() => {
-    fetchAnalysis()
-  }, [memberId, period])
+    fetchAnalysis();
+  }, [memberId, period]);
 
   const fetchAnalysis = async () => {
     try {
-      setLoading(true)
-      const endDate = new Date()
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - period)
+      setLoading(true);
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - period);
 
       const response = await fetch(
         `/api/inventory/analysis?memberId=${memberId}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
-      )
-      const result = await response.json()
+      );
+      const result = await response.json();
 
       if (result.success) {
-        setAnalysis(result.data)
+        setAnalysis(result.data);
       }
     } catch (error) {
-      console.error('获取库存分析失败:', error)
+      console.error('获取库存分析失败:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getEfficiencyColor = (efficiency: number) => {
-    if (efficiency >= 80) return 'text-green-600'
-    if (efficiency >= 60) return 'text-yellow-600'
-    return 'text-red-600'
-  }
+    if (efficiency >= 80) return 'text-green-600';
+    if (efficiency >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
   const getEfficiencyLabel = (efficiency: number) => {
-    if (efficiency >= 80) return '优秀'
-    if (efficiency >= 60) return '良好'
-    if (efficiency >= 40) return '一般'
-    return '较差'
-  }
+    if (efficiency >= 80) return '优秀';
+    if (efficiency >= 60) return '良好';
+    if (efficiency >= 40) return '一般';
+    return '较差';
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (!analysis) {
@@ -162,7 +162,7 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
         <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
         <p>无法获取分析数据</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -475,5 +475,5 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

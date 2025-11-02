@@ -58,7 +58,7 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
 
   const loadCommonFoods = async () => {
     try {
-      const response = await fetch(`/api/tracking/meals/common?limit=15`);
+      const response = await fetch('/api/tracking/meals/common?limit=15');
       if (response.ok) {
         const data = await response.json();
         setCommonFoods(data);
@@ -88,7 +88,7 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
   const handleSelectFood = (food: Food) => {
     onSelectFood({
       ...food,
-      amount: selectedAmount
+      amount: selectedAmount,
     });
     onClose();
     setSearchQuery('');

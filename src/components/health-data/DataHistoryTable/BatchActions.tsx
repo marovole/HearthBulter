@@ -1,4 +1,4 @@
-import { Filter, Trash2 } from 'lucide-react'
+import { Filter, Trash2 } from 'lucide-react';
 
 interface BatchActionsProps {
   selectedCount: number
@@ -13,7 +13,7 @@ export function BatchActions({
   totalCount,
   showFilters,
   onToggleFilters,
-  onBatchDelete
+  onBatchDelete,
 }: BatchActionsProps) {
   return (
     <div className="flex items-center justify-between">
@@ -46,5 +46,5 @@ export function BatchActions({
         共 {totalCount} 条记录
       </div>
     </div>
-  )
+  );
 }

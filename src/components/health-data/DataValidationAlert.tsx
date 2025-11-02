@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 import { 
   AlertTriangle, 
   Info, 
@@ -8,8 +8,8 @@ import {
   X,
   TrendingUp,
   TrendingDown,
-  Activity
-} from 'lucide-react'
+  Activity,
+} from 'lucide-react';
 
 interface DataValidationAlertProps {
   type: 'error' | 'warning' | 'info' | 'success'
@@ -34,70 +34,70 @@ export function DataValidationAlert({
   trend,
   onDismiss,
   onAction,
-  actionText
+  actionText,
 }: DataValidationAlertProps) {
   const getAlertStyles = () => {
     switch (type) {
-      case 'error':
-        return {
-          container: 'bg-red-50 border-red-200',
-          icon: 'text-red-400',
-          title: 'text-red-800',
-          message: 'text-red-700',
-          button: 'bg-red-100 text-red-800 hover:bg-red-200'
-        }
-      case 'warning':
-        return {
-          container: 'bg-yellow-50 border-yellow-200',
-          icon: 'text-yellow-400',
-          title: 'text-yellow-800',
-          message: 'text-yellow-700',
-          button: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-        }
-      case 'success':
-        return {
-          container: 'bg-green-50 border-green-200',
-          icon: 'text-green-400',
-          title: 'text-green-800',
-          message: 'text-green-700',
-          button: 'bg-green-100 text-green-800 hover:bg-green-200'
-        }
-      default:
-        return {
-          container: 'bg-blue-50 border-blue-200',
-          icon: 'text-blue-400',
-          title: 'text-blue-800',
-          message: 'text-blue-700',
-          button: 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-        }
+    case 'error':
+      return {
+        container: 'bg-red-50 border-red-200',
+        icon: 'text-red-400',
+        title: 'text-red-800',
+        message: 'text-red-700',
+        button: 'bg-red-100 text-red-800 hover:bg-red-200',
+      };
+    case 'warning':
+      return {
+        container: 'bg-yellow-50 border-yellow-200',
+        icon: 'text-yellow-400',
+        title: 'text-yellow-800',
+        message: 'text-yellow-700',
+        button: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+      };
+    case 'success':
+      return {
+        container: 'bg-green-50 border-green-200',
+        icon: 'text-green-400',
+        title: 'text-green-800',
+        message: 'text-green-700',
+        button: 'bg-green-100 text-green-800 hover:bg-green-200',
+      };
+    default:
+      return {
+        container: 'bg-blue-50 border-blue-200',
+        icon: 'text-blue-400',
+        title: 'text-blue-800',
+        message: 'text-blue-700',
+        button: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
+      };
     }
-  }
+  };
 
   const getIcon = () => {
     switch (type) {
-      case 'error':
-        return <AlertTriangle className="h-5 w-5" />
-      case 'warning':
-        return <AlertTriangle className="h-5 w-5" />
-      case 'success':
-        return <CheckCircle className="h-5 w-5" />
-      default:
-        return <Info className="h-5 w-5" />
+    case 'error':
+      return <AlertTriangle className="h-5 w-5" />;
+    case 'warning':
+      return <AlertTriangle className="h-5 w-5" />;
+    case 'success':
+      return <CheckCircle className="h-5 w-5" />;
+    default:
+      return <Info className="h-5 w-5" />;
     }
-  }
+  };
 
   const getTrendIcon = () => {
     switch (trend?.direction) {
-      case 'up':
-        return <TrendingUp className="h-4 w-4 text-green-600" />
-      case 'down':
-        return <TrendingDown className="h-4 w-4 text-red-600" />
-      default:
-        return <Activity className="h-4 w-4 text-gray-600" />
+    case 'up':
+      return <TrendingUp className="h-4 w-4 text-green-600" />;
+    case 'down':
+      return <TrendingDown className="h-4 w-4 text-red-600" />;
+    default:
+      return <Activity className="h-4 w-4 text-gray-600" />;
     }
-  }
+  };
 
-  const styles = getAlertStyles()
+  const styles = getAlertStyles();
 
   return (
     <div className={`border rounded-md p-4 ${styles.container}`}>
@@ -168,7 +168,7 @@ export function DataValidationAlert({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // 预定义的常用警告组件
@@ -176,15 +176,15 @@ export function WeightAnomalyAlert({
   currentWeight,
   previousWeight,
   onConfirm,
-  onEdit
+  onEdit,
 }: {
   currentWeight: number
   previousWeight: number
   onConfirm?: () => void
   onEdit?: () => void
 }) {
-  const change = currentWeight - previousWeight
-  const changePercent = Math.abs((change / previousWeight) * 100).toFixed(1)
+  const change = currentWeight - previousWeight;
+  const changePercent = Math.abs((change / previousWeight) * 100).toFixed(1);
   
   return (
     <DataValidationAlert
@@ -194,37 +194,37 @@ export function WeightAnomalyAlert({
       suggestions={[
         '请确认测量时间和条件是否一致',
         '检查测量设备是否正常',
-        '如果是真实变化，建议咨询医生'
+        '如果是真实变化，建议咨询医生',
       ]}
       trend={{
         direction: change > 0 ? 'up' : 'down',
         value: `${change > 0 ? '+' : ''}${change.toFixed(1)}kg`,
-        description: '较上次测量'
+        description: '较上次测量',
       }}
       onAction={onConfirm}
       actionText="确认数据正确"
     />
-  )
+  );
 }
 
 export function BloodPressureAlert({
   systolic,
   diastolic,
-  onConfirm
+  onConfirm,
 }: {
   systolic: number
   diastolic: number
   onConfirm?: () => void
 }) {
   const getBPLevel = (sys: number, dia: number) => {
-    if (sys < 120 && dia < 80) return { level: '正常', type: 'success' as const }
-    if (sys < 130 && dia < 80) return { level: '升高', type: 'warning' as const }
-    if (sys < 140 || dia < 90) return { level: '高血压1期', type: 'warning' as const }
-    if (sys < 180 || dia < 120) return { level: '高血压2期', type: 'error' as const }
-    return { level: '高血压危象', type: 'error' as const }
-  }
+    if (sys < 120 && dia < 80) return { level: '正常', type: 'success' as const };
+    if (sys < 130 && dia < 80) return { level: '升高', type: 'warning' as const };
+    if (sys < 140 || dia < 90) return { level: '高血压1期', type: 'warning' as const };
+    if (sys < 180 || dia < 120) return { level: '高血压2期', type: 'error' as const };
+    return { level: '高血压危象', type: 'error' as const };
+  };
 
-  const { level, type } = getBPLevel(systolic, diastolic)
+  const { level, type } = getBPLevel(systolic, diastolic);
 
   return (
     <DataValidationAlert
@@ -235,26 +235,26 @@ export function BloodPressureAlert({
         type === 'error' ? [
           '请立即咨询医生',
           '避免剧烈运动',
-          '监测症状变化'
+          '监测症状变化',
         ] : type === 'warning' ? [
           '建议调整生活方式',
           '减少钠盐摄入',
-          '增加运动量'
+          '增加运动量',
         ] : [
           '继续保持健康的生活方式',
-          '定期监测血压'
+          '定期监测血压',
         ]
       }
       onAction={onConfirm}
       actionText="我知道了"
     />
-  )
+  );
 }
 
 export function BloodSugarAlert({
   bloodSugar,
   fasting,
-  onConfirm
+  onConfirm,
 }: {
   bloodSugar: number
   fasting: boolean
@@ -262,17 +262,17 @@ export function BloodSugarAlert({
 }) {
   const getBSLevel = (bs: number, isFasting: boolean) => {
     if (isFasting) {
-      if (bs < 6.1) return { level: '正常', type: 'success' as const }
-      if (bs < 7.0) return { level: '空腹血糖受损', type: 'warning' as const }
-      return { level: '糖尿病', type: 'error' as const }
+      if (bs < 6.1) return { level: '正常', type: 'success' as const };
+      if (bs < 7.0) return { level: '空腹血糖受损', type: 'warning' as const };
+      return { level: '糖尿病', type: 'error' as const };
     } else {
-      if (bs < 7.8) return { level: '正常', type: 'success' as const }
-      if (bs < 11.1) return { level: '糖耐量异常', type: 'warning' as const }
-      return { level: '糖尿病', type: 'error' as const }
+      if (bs < 7.8) return { level: '正常', type: 'success' as const };
+      if (bs < 11.1) return { level: '糖耐量异常', type: 'warning' as const };
+      return { level: '糖尿病', type: 'error' as const };
     }
-  }
+  };
 
-  const { level, type } = getBSLevel(bloodSugar, fasting)
+  const { level, type } = getBSLevel(bloodSugar, fasting);
 
   return (
     <DataValidationAlert
@@ -283,25 +283,25 @@ export function BloodSugarAlert({
         type === 'error' ? [
           '请立即咨询医生',
           '控制饮食中的糖分摄入',
-          '定期监测血糖'
+          '定期监测血糖',
         ] : type === 'warning' ? [
           '建议调整饮食结构',
           '增加运动量',
-          '定期检查血糖'
+          '定期检查血糖',
         ] : [
           '继续保持健康的饮食习惯',
-          '定期监测血糖'
+          '定期监测血糖',
         ]
       }
       onAction={onConfirm}
       actionText="我知道了"
     />
-  )
+  );
 }
 
 export function DataEntrySuccessAlert({
   metrics,
-  onViewHistory
+  onViewHistory,
 }: {
   metrics: string[]
   onViewHistory?: () => void
@@ -314,10 +314,10 @@ export function DataEntrySuccessAlert({
       suggestions={[
         '建议定期测量并记录健康数据',
         '保持良好的生活习惯',
-        '如有异常请及时咨询医生'
+        '如有异常请及时咨询医生',
       ]}
       onAction={onViewHistory}
       actionText="查看历史记录"
     />
-  )
+  );
 }

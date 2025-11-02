@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, 
   Filter, 
@@ -16,17 +16,17 @@ import {
   Package,
   TrendingUp,
   TrendingDown,
-  MoreHorizontal
-} from 'lucide-react'
+  MoreHorizontal,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { InventoryStatus, StorageLocation } from '@prisma/client'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
+} from '@/components/ui/dropdown-menu';
+import { InventoryStatus, StorageLocation } from '@prisma/client';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 interface InventoryItem {
   id: string
@@ -73,16 +73,16 @@ const statusColors = {
   EXPIRING: 'bg-yellow-100 text-yellow-800',
   EXPIRED: 'bg-red-100 text-red-800',
   LOW_STOCK: 'bg-orange-100 text-orange-800',
-  OUT_OF_STOCK: 'bg-gray-100 text-gray-800'
-}
+  OUT_OF_STOCK: 'bg-gray-100 text-gray-800',
+};
 
 const statusLabels = {
   FRESH: '新鲜',
   EXPIRING: '临期',
   EXPIRED: '已过期',
   LOW_STOCK: '库存不足',
-  OUT_OF_STOCK: '缺货'
-}
+  OUT_OF_STOCK: '缺货',
+};
 
 const storageLocationLabels = {
   REFRIGERATOR: '冷藏',
@@ -90,41 +90,41 @@ const storageLocationLabels = {
   PANTRY: '常温',
   COUNTER: '台面',
   CABINET: '橱柜',
-  OTHER: '其他'
-}
+  OTHER: '其他',
+};
 
 export function InventoryList({ 
   memberId, 
   onAddItem, 
   onEditItem, 
-  onUseItem 
+  onUseItem, 
 }: InventoryListProps) {
-  const [items, setItems] = useState<InventoryItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<InventoryStatus | ''>('')
-  const [locationFilter, setLocationFilter] = useState<StorageLocation | ''>('')
-  const [categoryFilter, setCategoryFilter] = useState('')
-  const [sortBy, setSortBy] = useState<'status' | 'expiry' | 'name' | 'quantity'>('status')
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<InventoryStatus | ''>('');
+  const [locationFilter, setLocationFilter] = useState<StorageLocation | ''>('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [sortBy, setSortBy] = useState<'status' | 'expiry' | 'name' | 'quantity'>('status');
 
   useEffect(() => {
-    fetchInventoryItems()
-  }, [memberId, statusFilter, locationFilter, categoryFilter])
+    fetchInventoryItems();
+  }, [memberId, statusFilter, locationFilter, categoryFilter]);
 
   const fetchInventoryItems = async () => {
     try {
-      setLoading(true)
-      const params = new URLSearchParams()
+      setLoading(true);
+      const params = new URLSearchParams();
       
-      if (statusFilter) params.append('status', statusFilter)
-      if (locationFilter) params.append('storageLocation', locationFilter)
-      if (categoryFilter) params.append('category', categoryFilter)
+      if (statusFilter) params.append('status', statusFilter);
+      if (locationFilter) params.append('storageLocation', locationFilter);
+      if (categoryFilter) params.append('category', categoryFilter);
 
-      const response = await fetch(`/api/inventory/items?${params.toString()}`)
-      const result = await response.json()
+      const response = await fetch(`/api/inventory/items?${params.toString()}`);
+      const result = await response.json();
 
       if (result.success) {
-        let filteredItems = result.data
+        let filteredItems = result.data;
 
         // 客户端搜索
         if (searchTerm) {
@@ -132,100 +132,100 @@ export function InventoryList({
             item.food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.food.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.brand?.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          );
         }
 
         // 排序
         filteredItems.sort((a: InventoryItem, b: InventoryItem) => {
           switch (sortBy) {
-            case 'status':
-              return a.status.localeCompare(b.status)
-            case 'expiry':
-              if (!a.expiryDate) return 1
-              if (!b.expiryDate) return -1
-              return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()
-            case 'name':
-              return a.food.name.localeCompare(b.food.name)
-            case 'quantity':
-              return b.quantity - a.quantity
-            default:
-              return 0
+          case 'status':
+            return a.status.localeCompare(b.status);
+          case 'expiry':
+            if (!a.expiryDate) return 1;
+            if (!b.expiryDate) return -1;
+            return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+          case 'name':
+            return a.food.name.localeCompare(b.food.name);
+          case 'quantity':
+            return b.quantity - a.quantity;
+          default:
+            return 0;
           }
-        })
+        });
 
-        setItems(filteredItems)
+        setItems(filteredItems);
       }
     } catch (error) {
-      console.error('获取库存列表失败:', error)
+      console.error('获取库存列表失败:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getExpiryInfo = (item: InventoryItem) => {
-    if (!item.expiryDate) return null
+    if (!item.expiryDate) return null;
 
-    const daysToExpiry = item.daysToExpiry || 0
-    const expiryDate = new Date(item.expiryDate)
+    const daysToExpiry = item.daysToExpiry || 0;
+    const expiryDate = new Date(item.expiryDate);
 
     if (daysToExpiry < 0) {
       return {
         text: `已过期 ${Math.abs(daysToExpiry)} 天`,
         color: 'text-red-600',
-        icon: AlertTriangle
-      }
+        icon: AlertTriangle,
+      };
     } else if (daysToExpiry <= 3) {
       return {
         text: `${daysToExpiry} 天后过期`,
         color: 'text-yellow-600',
-        icon: Clock
-      }
+        icon: Clock,
+      };
     } else if (daysToExpiry <= 7) {
       return {
         text: `${daysToExpiry} 天后过期`,
         color: 'text-orange-600',
-        icon: Clock
-      }
+        icon: Clock,
+      };
     } else {
       return {
         text: format(expiryDate, 'yyyy-MM-dd', { locale: zhCN }),
         color: 'text-gray-600',
-        icon: null
-      }
+        icon: null,
+      };
     }
-  }
+  };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!confirm('确定要删除这个库存条目吗？')) return
+    if (!confirm('确定要删除这个库存条目吗？')) return;
 
     try {
       const response = await fetch(`/api/inventory/items/${itemId}`, {
-        method: 'DELETE'
-      })
+        method: 'DELETE',
+      });
 
       if (response.ok) {
-        setItems(items.filter(item => item.id !== itemId))
+        setItems(items.filter(item => item.id !== itemId));
       }
     } catch (error) {
-      console.error('删除库存条目失败:', error)
+      console.error('删除库存条目失败:', error);
     }
-  }
+  };
 
-  const filteredItems = items
+  const filteredItems = items;
   const stats = {
     total: filteredItems.length,
     fresh: filteredItems.filter(item => item.status === 'FRESH').length,
     expiring: filteredItems.filter(item => item.status === 'EXPIRING').length,
     expired: filteredItems.filter(item => item.status === 'EXPIRED').length,
-    lowStock: filteredItems.filter(item => item.isLowStock).length
-  }
+    lowStock: filteredItems.filter(item => item.isLowStock).length,
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">加载中...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -358,7 +358,7 @@ export function InventoryList({
           {/* 库存列表 */}
           <div className="space-y-3">
             {filteredItems.map((item) => {
-              const expiryInfo = getExpiryInfo(item)
+              const expiryInfo = getExpiryInfo(item);
               
               return (
                 <Card key={item.id} className="hover:shadow-md transition-shadow">
@@ -450,7 +450,7 @@ export function InventoryList({
                     </div>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
 
             {filteredItems.length === 0 && (
@@ -464,5 +464,5 @@ export function InventoryList({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

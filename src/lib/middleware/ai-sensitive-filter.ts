@@ -35,7 +35,7 @@ export function filterUserInput(
   });
 
   if (options.enableLogging && filterResult.hasSensitiveInfo) {
-    console.warn(`[AI敏感信息过滤] 用户输入检测到敏感信息`, {
+    console.warn('[AI敏感信息过滤] 用户输入检测到敏感信息', {
       riskLevel: filterResult.riskLevel,
       detectedTypes: filterResult.detectedItems.map(item => item.type),
       contentLength: content.length,
@@ -65,7 +65,7 @@ export function filterAIOutput(
   });
 
   if (options.enableLogging && filterResult.hasSensitiveInfo) {
-    console.warn(`[AI敏感信息过滤] AI输出检测到敏感信息（异常情况）`, {
+    console.warn('[AI敏感信息过滤] AI输出检测到敏感信息（异常情况）', {
       riskLevel: filterResult.riskLevel,
       detectedTypes: filterResult.detectedItems.map(item => item.type),
       contentLength: content.length,

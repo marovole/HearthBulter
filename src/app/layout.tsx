@@ -1,19 +1,19 @@
-import { SessionProvider } from '@/components/providers/session-provider'
-import './globals.css'
-import { Inter } from 'next/font/google'
-import { startScheduler } from '@/lib/services/scheduler/startup'
+import { SessionProvider } from '@/components/providers/session-provider';
+import './globals.css';
+import { Inter } from 'next/font/google';
+import { startScheduler } from '@/lib/services/scheduler/startup';
 
 // 启动调度器（仅在服务端执行）
 if (typeof window === 'undefined') {
-  startScheduler().catch(console.error)
+  startScheduler().catch(console.error);
 }
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: 'Health Butler - 健康管家',
   description: '基于健康数据与电商库存的动态饮食引擎',
-}
+};
 
 export default function RootLayout({
   children,
@@ -28,5 +28,5 @@ export default function RootLayout({
         </SessionProvider>
       </body>
     </html>
-  )
+  );
 }

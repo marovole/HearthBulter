@@ -1,5 +1,5 @@
-import { SortAsc, SortDesc } from 'lucide-react'
-import type { SortField, SortDirection } from './types'
+import { SortAsc, SortDesc } from 'lucide-react';
+import type { SortField, SortDirection } from './types';
 
 interface TableHeaderProps {
   allSelected: boolean
@@ -14,12 +14,12 @@ export function TableHeader({
   sortField,
   sortDirection,
   onSelectAll,
-  onSort
+  onSort,
 }: TableHeaderProps) {
   const renderSortIcon = (field: SortField) => {
-    if (sortField !== field) return null
-    return sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-  }
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />;
+  };
 
   return (
     <thead className="bg-gray-50">
@@ -60,5 +60,5 @@ export function TableHeader({
         </th>
       </tr>
     </thead>
-  )
+  );
 }

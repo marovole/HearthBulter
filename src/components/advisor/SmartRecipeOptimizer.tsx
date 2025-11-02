@@ -120,7 +120,7 @@ export function SmartRecipeOptimizer({
   recipe,
   memberId,
   targetNutrition,
-  onOptimizationComplete
+  onOptimizationComplete,
 }: SmartRecipeOptimizerProps) {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
@@ -395,7 +395,7 @@ export function SmartRecipeOptimizer({
                         </div>
                         <Badge variant="outline">
                           {sub.cost_difference === 'cheaper' ? '💰更便宜' :
-                           sub.cost_difference === 'expensive' ? '💎更贵' : '⚖️价格相似'}
+                            sub.cost_difference === 'expensive' ? '💎更贵' : '⚖️价格相似'}
                         </Badge>
                       </div>
 

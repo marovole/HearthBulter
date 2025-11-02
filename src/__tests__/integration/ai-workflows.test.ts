@@ -10,10 +10,10 @@ jest.mock('@/lib/services/ai/openai-client', () => ({
   openaiClient: {
     chat: {
       completions: {
-        create: jest.fn()
-      }
-    }
-  }
+        create: jest.fn(),
+      },
+    },
+  },
 }));
 
 // Mock database
@@ -21,23 +21,23 @@ jest.mock('@/lib/db', () => ({
   prisma: {
     userConsent: {
       findUnique: jest.fn(),
-      upsert: jest.fn()
+      upsert: jest.fn(),
     },
     familyMember: {
-      findFirst: jest.fn()
+      findFirst: jest.fn(),
     },
     aIAdvice: {
-      create: jest.fn()
+      create: jest.fn(),
     },
     aIConversation: {
-      upsert: jest.fn()
-    }
-  }
+      upsert: jest.fn(),
+    },
+  },
 }));
 
 // Mock auth
 jest.mock('@/lib/auth', () => ({
-  auth: jest.fn()
+  auth: jest.fn(),
 }));
 
 import { openaiClient } from '@/lib/services/ai/openai-client';
@@ -50,14 +50,14 @@ describe('AI Workflows Integration Tests', () => {
 
     // Setup default mocks
     (auth as jest.Mock).mockResolvedValue({
-      user: { id: 'user-123' }
+      user: { id: 'user-123' },
     });
 
     (prisma.userConsent.findUnique as jest.Mock).mockResolvedValue({
       userId: 'user-123',
       consentId: 'ai_health_analysis',
       granted: true,
-      grantedAt: new Date()
+      grantedAt: new Date(),
     });
 
     (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({
@@ -72,7 +72,7 @@ describe('AI Workflows Integration Tests', () => {
       allergies: [],
       dietaryPreference: null,
       healthData: [],
-      medicalReports: []
+      medicalReports: [],
     });
 
     (openaiClient.chat.completions.create as jest.Mock).mockResolvedValue({
@@ -84,17 +84,17 @@ describe('AI Workflows Integration Tests', () => {
             key_findings: ['正常体重', '需要改善饮食结构'],
             nutritional_recommendations: {
               daily_calories: 2000,
-              macros: { carbs_percent: 50, protein_percent: 25, fat_percent: 25 }
+              macros: { carbs_percent: 50, protein_percent: 25, fat_percent: 25 },
             },
-            lifestyle_modifications: ['增加运动', '改善睡眠质量']
-          })
-        }
+            lifestyle_modifications: ['增加运动', '改善睡眠质量'],
+          }),
+        },
       }],
       usage: {
         prompt_tokens: 100,
         completion_tokens: 200,
-        total_tokens: 300
-      }
+        total_tokens: 300,
+      },
     });
   });
 
@@ -103,7 +103,7 @@ describe('AI Workflows Integration Tests', () => {
       // 创建请求
       const requestBody = {
         memberId: 'member-123',
-        includeRecommendations: true
+        includeRecommendations: true,
       };
 
       const request = new NextRequest(
@@ -111,7 +111,7 @@ describe('AI Workflows Integration Tests', () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -138,9 +138,9 @@ describe('AI Workflows Integration Tests', () => {
           content: expect.objectContaining({
             analysis: expect.any(Object),
             nutritionTargets: expect.any(Object),
-            userProfile: expect.any(Object)
-          })
-        })
+            userProfile: expect.any(Object),
+          }),
+        }),
       });
     });
 
@@ -153,7 +153,7 @@ describe('AI Workflows Integration Tests', () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberId: 'member-123' })
+          body: JSON.stringify({ memberId: 'member-123' }),
         }
       );
 
@@ -178,7 +178,7 @@ describe('AI Workflows Integration Tests', () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberId: 'member-123' })
+          body: JSON.stringify({ memberId: 'member-123' }),
         }
       );
 
@@ -200,7 +200,7 @@ describe('AI Workflows Integration Tests', () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberId: 'member-123' })
+          body: JSON.stringify({ memberId: 'member-123' }),
         }
       );
 
@@ -220,14 +220,14 @@ describe('AI Workflows Integration Tests', () => {
       (openaiClient.chat.completions.create as jest.Mock).mockResolvedValue({
         choices: [{
           message: {
-            content: '根据您的健康目标，我建议您每天摄入2000卡路里，其中25%来自蛋白质。'
-          }
+            content: '根据您的健康目标，我建议您每天摄入2000卡路里，其中25%来自蛋白质。',
+          },
         }],
         usage: {
           prompt_tokens: 50,
           completion_tokens: 100,
-          total_tokens: 150
-        }
+          total_tokens: 150,
+        },
       });
 
       // 第一轮对话
@@ -238,8 +238,8 @@ describe('AI Workflows Integration Tests', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: '我应该如何控制饮食来减重？',
-            memberId: 'member-123'
-          })
+            memberId: 'member-123',
+          }),
         }
       );
 
@@ -260,8 +260,8 @@ describe('AI Workflows Integration Tests', () => {
           body: JSON.stringify({
             message: '蛋白质具体应该吃多少？',
             memberId: 'member-123',
-            sessionId: firstData.sessionId
-          })
+            sessionId: firstData.sessionId,
+          }),
         }
       );
 
@@ -294,8 +294,8 @@ describe('AI Workflows Integration Tests', () => {
           body: JSON.stringify({
             message: '给我一些建议',
             memberId: 'member-123',
-            stream: true
-          })
+            stream: true,
+          }),
         }
       );
 
@@ -319,8 +319,8 @@ describe('AI Workflows Integration Tests', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: '我的身份证号是123456789012345678，电话是13800138000，帮我分析健康状况',
-            memberId: 'member-123'
-          })
+            memberId: 'member-123',
+          }),
         }
       );
 
@@ -335,9 +335,9 @@ describe('AI Workflows Integration Tests', () => {
           messages: expect.arrayContaining([
             expect.objectContaining({
               content: expect.not.toContain('123456789012345678'),
-              content: expect.not.toContain('13800138000')
-            })
-          ])
+              content: expect.not.toContain('13800138000'),
+            }),
+          ]),
         })
       );
     });
@@ -356,10 +356,10 @@ describe('AI Workflows Integration Tests', () => {
                   calories_gap: -150,
                   protein_gap: -10,
                   carbs_gap: 50,
-                  fat_gap: -5
+                  fat_gap: -5,
                 },
                 strengths: ['蛋白质含量充足', '食材搭配均衡'],
-                weaknesses: ['碳水化合物偏高', '缺少膳食纤维']
+                weaknesses: ['碳水化合物偏高', '缺少膳食纤维'],
               },
               optimizations: {
                 ingredient_substitutions: [
@@ -369,29 +369,29 @@ describe('AI Workflows Integration Tests', () => {
                     reason: '增加膳食纤维，降低升糖指数',
                     nutritional_impact: {
                       similar_nutrients: ['碳水化合物', 'B族维生素'],
-                      improved_aspects: ['膳食纤维', '矿物质含量']
-                    }
-                  }
+                      improved_aspects: ['膳食纤维', '矿物质含量'],
+                    },
+                  },
                 ],
                 improved_recipe: {
                   name: '优化版宫保鸡丁',
                   ingredients: [
                     { name: '糙米饭', amount: 150, unit: 'g' },
-                    { name: '鸡胸肉', amount: 200, unit: 'g' }
+                    { name: '鸡胸肉', amount: 200, unit: 'g' },
                   ],
                   nutrition_facts: {
                     calories: 450,
                     macronutrients: {
                       protein: { amount: 35, unit: 'g' },
                       carbohydrates: { amount: 45, unit: 'g' },
-                      fat: { amount: 15, unit: 'g' }
-                    }
-                  }
-                }
-              }
-            })
-          }
-        }]
+                      fat: { amount: 15, unit: 'g' },
+                    },
+                  },
+                },
+              },
+            }),
+          },
+        }],
       });
 
       const request = new NextRequest(
@@ -406,15 +406,15 @@ describe('AI Workflows Integration Tests', () => {
               calories: 600,
               protein: 40,
               carbs: 50,
-              fat: 20
+              fat: 20,
             },
             preferences: {
               dietary_restrictions: [],
               allergies: ['nuts'],
               preferred_cuisines: ['chinese'],
-              budget_level: 'medium'
-            }
-          })
+              budget_level: 'medium',
+            },
+          }),
         }
       );
 
@@ -448,9 +448,9 @@ describe('AI Workflows Integration Tests', () => {
             preferences: {
               dietary_restrictions: ['vegetarian'],
               allergies: ['nuts', 'dairy'],
-              preferred_cuisines: ['mediterranean']
-            }
-          })
+              preferred_cuisines: ['mediterranean'],
+            },
+          }),
         }
       );
 
@@ -467,9 +467,9 @@ describe('AI Workflows Integration Tests', () => {
               content: expect.stringContaining('vegetarian'),
               content: expect.stringContaining('nuts'),
               content: expect.stringContaining('dairy'),
-              content: expect.stringContaining('mediterranean')
-            })
-          ])
+              content: expect.stringContaining('mediterranean'),
+            }),
+          ]),
         })
       );
     });
@@ -482,7 +482,7 @@ describe('AI Workflows Integration Tests', () => {
         id: 'advice-123',
         memberId: 'member-123',
         type: 'HEALTH_ANALYSIS',
-        content: { analysis: 'test data' }
+        content: { analysis: 'test data' },
       });
 
       const feedbackRequest = new NextRequest(
@@ -496,8 +496,8 @@ describe('AI Workflows Integration Tests', () => {
             liked: true,
             rating: 5,
             comments: '非常有用的建议',
-            categories: ['helpfulness', 'accuracy']
-          })
+            categories: ['helpfulness', 'accuracy'],
+          }),
         }
       );
 
@@ -519,10 +519,10 @@ describe('AI Workflows Integration Tests', () => {
               rating: 5,
               liked: true,
               comments: '非常有用的建议',
-              categories: ['helpfulness', 'accuracy']
-            })
-          ])
-        }
+              categories: ['helpfulness', 'accuracy'],
+            }),
+          ]),
+        },
       });
     });
 
@@ -532,9 +532,9 @@ describe('AI Workflows Integration Tests', () => {
         {
           feedback: [
             { rating: 5, categories: ['helpfulness'] },
-            { rating: 4, categories: ['accuracy'] }
-          ]
-        }
+            { rating: 4, categories: ['accuracy'] },
+          ],
+        },
       ]);
 
       const statsRequest = new NextRequest(
@@ -563,8 +563,8 @@ describe('AI Workflows Integration Tests', () => {
           body: JSON.stringify({
             consentId: 'ai_health_analysis',
             action: 'grant',
-            context: { source: 'health_analysis_page' }
-          })
+            context: { source: 'health_analysis_page' },
+          }),
         }
       );
 
@@ -582,14 +582,14 @@ describe('AI Workflows Integration Tests', () => {
         where: {
           userId_consentId: {
             userId: 'user-123',
-            consentId: 'ai_health_analysis'
-          }
+            consentId: 'ai_health_analysis',
+          },
         },
         create: expect.objectContaining({
           userId: 'user-123',
           consentId: 'ai_health_analysis',
-          granted: true
-        })
+          granted: true,
+        }),
       });
     });
 
@@ -627,9 +627,9 @@ describe('AI Workflows Integration Tests', () => {
         where: {
           userId_consentId: {
             userId: 'user-123',
-            consentId: 'ai_health_analysis'
-          }
-        }
+            consentId: 'ai_health_analysis',
+          },
+        },
       });
     });
   });
@@ -644,8 +644,8 @@ describe('AI Workflows Integration Tests', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             consentId: 'ai_health_analysis',
-            action: 'grant'
-          })
+            action: 'grant',
+          }),
         }
       );
 
@@ -661,8 +661,8 @@ describe('AI Workflows Integration Tests', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             memberId: 'member-123',
-            includeRecommendations: true
-          })
+            includeRecommendations: true,
+          }),
         }
       );
 
@@ -681,8 +681,8 @@ describe('AI Workflows Integration Tests', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: '根据我的分析结果，您建议我从哪方面开始改善？',
-            memberId: 'member-123'
-          })
+            memberId: 'member-123',
+          }),
         }
       );
 
@@ -701,8 +701,8 @@ describe('AI Workflows Integration Tests', () => {
             feedbackType: 'advice',
             liked: true,
             rating: 5,
-            comments: '分析很全面，建议很实用'
-          })
+            comments: '分析很全面，建议很实用',
+          }),
         }
       );
 
@@ -730,7 +730,7 @@ describe('AI Workflows Integration Tests', () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberId: 'member-123' })
+          body: JSON.stringify({ memberId: 'member-123' }),
         }
       );
 
@@ -760,8 +760,8 @@ describe('AI Workflows Integration Tests', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: '测试消息',
-            memberId: 'member-123'
-          })
+            memberId: 'member-123',
+          }),
         }
       );
 

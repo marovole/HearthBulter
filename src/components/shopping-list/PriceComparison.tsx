@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 
 interface PriceData {
   platform: string
@@ -28,94 +28,94 @@ export function PriceComparison({
   amount,
   onClose,
 }: PriceComparisonProps) {
-  const [priceData, setPriceData] = useState<PriceData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'sales'>('price')
+  const [priceData, setPriceData] = useState<PriceData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'sales'>('price');
 
   useEffect(() => {
-    fetchPriceComparison()
-  }, [foodId, amount])
+    fetchPriceComparison();
+  }, [foodId, amount]);
 
   const fetchPriceComparison = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
-      const response = await fetch(`/api/ecommerce/compare?foodId=${foodId}&amount=${amount}`)
+      const response = await fetch(`/api/ecommerce/compare?foodId=${foodId}&amount=${amount}`);
       if (!response.ok) {
-        throw new Error('获取价格比较失败')
+        throw new Error('获取价格比较失败');
       }
 
-      const data = await response.json()
-      setPriceData(data.prices || [])
+      const data = await response.json();
+      setPriceData(data.prices || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取价格比较失败')
+      setError(err instanceof Error ? err.message : '获取价格比较失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getSortedData = () => {
-    const sorted = [...priceData]
+    const sorted = [...priceData];
     switch (sortBy) {
-      case 'price':
-        return sorted.sort((a, b) => a.price - b.price)
-      case 'rating':
-        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-      case 'sales':
-        return sorted.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0))
-      default:
-        return sorted
+    case 'price':
+      return sorted.sort((a, b) => a.price - b.price);
+    case 'rating':
+      return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    case 'sales':
+      return sorted.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+    default:
+      return sorted;
     }
-  }
+  };
 
   const getAvailabilityText = (availability: string) => {
     switch (availability) {
-      case 'IN_STOCK':
-        return '有货'
-      case 'OUT_OF_STOCK':
-        return '缺货'
-      case 'LOW_STOCK':
-        return '库存紧张'
-      default:
-        return '未知'
+    case 'IN_STOCK':
+      return '有货';
+    case 'OUT_OF_STOCK':
+      return '缺货';
+    case 'LOW_STOCK':
+      return '库存紧张';
+    default:
+      return '未知';
     }
-  }
+  };
 
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
-      case 'IN_STOCK':
-        return 'text-green-600 bg-green-50'
-      case 'OUT_OF_STOCK':
-        return 'text-red-600 bg-red-50'
-      case 'LOW_STOCK':
-        return 'text-orange-600 bg-orange-50'
-      default:
-        return 'text-gray-600 bg-gray-50'
+    case 'IN_STOCK':
+      return 'text-green-600 bg-green-50';
+    case 'OUT_OF_STOCK':
+      return 'text-red-600 bg-red-50';
+    case 'LOW_STOCK':
+      return 'text-orange-600 bg-orange-50';
+    default:
+      return 'text-gray-600 bg-gray-50';
     }
-  }
+  };
 
   const calculateSavings = (currentPrice: number, originalPrice?: number) => {
-    if (!originalPrice || originalPrice <= currentPrice) return null
-    const savings = originalPrice - currentPrice
-    const percentage = (savings / originalPrice) * 100
-    return { amount: savings, percentage }
-  }
+    if (!originalPrice || originalPrice <= currentPrice) return null;
+    const savings = originalPrice - currentPrice;
+    const percentage = (savings / originalPrice) * 100;
+    return { amount: savings, percentage };
+  };
 
   const formatTimeAgo = (timestamp: string) => {
-    const now = new Date()
-    const time = new Date(timestamp)
-    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60))
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60));
     
-    if (diffInMinutes < 60) return `${diffInMinutes}分钟前`
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}小时前`
-    return `${Math.floor(diffInMinutes / 1440)}天前`
-  }
+    if (diffInMinutes < 60) return `${diffInMinutes}分钟前`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}小时前`;
+    return `${Math.floor(diffInMinutes / 1440)}天前`;
+  };
 
-  const sortedData = getSortedData()
-  const lowestPrice = sortedData.length > 0 ? sortedData[0].price : null
-  const highestPrice = sortedData.length > 0 ? sortedData[sortedData.length - 1].price : null
+  const sortedData = getSortedData();
+  const lowestPrice = sortedData.length > 0 ? sortedData[0].price : null;
+  const highestPrice = sortedData.length > 0 ? sortedData[sortedData.length - 1].price : null;
 
   if (loading) {
     return (
@@ -126,7 +126,7 @@ export function PriceComparison({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -213,8 +213,8 @@ export function PriceComparison({
           ) : (
             <div className="divide-y divide-gray-200">
               {sortedData.map((item, index) => {
-                const savings = calculateSavings(item.price, item.originalPrice)
-                const isLowestPrice = item.price === lowestPrice
+                const savings = calculateSavings(item.price, item.originalPrice);
+                const isLowestPrice = item.price === lowestPrice;
                 
                 return (
                   <div
@@ -303,12 +303,12 @@ export function PriceComparison({
                       </div>
                     )}
                   </div>
-                )
+                );
               })}
             </div>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

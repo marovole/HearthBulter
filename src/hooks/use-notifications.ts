@@ -107,7 +107,7 @@ export function useNotifications(options: UseNotificationsOptions) {
     memberId, 
     autoRefresh = false, 
     refreshInterval = 30000,
-    pageSize = 20 
+    pageSize = 20, 
   } = options;
 
   // 获取通知列表

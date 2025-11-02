@@ -9,13 +9,13 @@
  */
 export function calculateBMI(weight: number, height: number): number {
   if (weight <= 0 || height <= 0) {
-    throw new Error('Weight and height must be positive numbers')
+    throw new Error('Weight and height must be positive numbers');
   }
 
-  const heightInMeters = height / 100
-  const bmi = weight / (heightInMeters * heightInMeters)
+  const heightInMeters = height / 100;
+  const bmi = weight / (heightInMeters * heightInMeters);
 
-  return Math.round(bmi * 10) / 10 // Round to 1 decimal place
+  return Math.round(bmi * 10) / 10; // Round to 1 decimal place
 }
 
 /**
@@ -30,15 +30,15 @@ export function calculateBMR(
   gender: 'MALE' | 'FEMALE'
 ): number {
   if (weight <= 0 || height <= 0 || age <= 0) {
-    throw new Error('Weight, height, and age must be positive numbers')
+    throw new Error('Weight, height, and age must be positive numbers');
   }
 
   const bmr =
     gender === 'MALE'
       ? 10 * weight + 6.25 * height - 5 * age + 5
-      : 10 * weight + 6.25 * height - 5 * age - 161
+      : 10 * weight + 6.25 * height - 5 * age - 161;
 
-  return Math.round(bmr)
+  return Math.round(bmr);
 }
 
 /**
@@ -47,10 +47,10 @@ export function calculateBMR(
  */
 export function calculateTDEE(bmr: number, activityFactor: number): number {
   if (bmr <= 0 || activityFactor <= 0) {
-    throw new Error('BMR and activity factor must be positive numbers')
+    throw new Error('BMR and activity factor must be positive numbers');
   }
 
-  return Math.round(bmr * activityFactor)
+  return Math.round(bmr * activityFactor);
 }
 
 /**
@@ -62,7 +62,7 @@ export const ACTIVITY_FACTORS = {
   MODERATE: 1.55, // 中度活动 - Moderate exercise 3-5 days/week
   ACTIVE: 1.725, // 高度活动 - Hard exercise 6-7 days/week
   VERY_ACTIVE: 1.9, // 非常活跃 - Very hard exercise, physical job
-} as const
+} as const;
 
 /**
  * Calculate progress towards weight goal
@@ -74,38 +74,38 @@ export function calculateProgress(
   targetWeight: number | null
 ): number {
   if (!startWeight || !currentWeight || !targetWeight) {
-    return 0
+    return 0;
   }
 
-  const totalChange = targetWeight - startWeight
-  const currentChange = currentWeight - startWeight
+  const totalChange = targetWeight - startWeight;
+  const currentChange = currentWeight - startWeight;
 
   if (totalChange === 0) {
-    return 0
+    return 0;
   }
 
-  const progress = (currentChange / totalChange) * 100
+  const progress = (currentChange / totalChange) * 100;
 
   // Clamp between 0-100
-  return Math.max(0, Math.min(100, Math.round(progress)))
+  return Math.max(0, Math.min(100, Math.round(progress)));
 }
 
 /**
  * Calculate age from birth date
  */
 export function calculateAge(birthDate: Date): number {
-  const today = new Date()
-  let age = today.getFullYear() - birthDate.getFullYear()
-  const monthDiff = today.getMonth() - birthDate.getMonth()
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
 
   if (
     monthDiff < 0 ||
     (monthDiff === 0 && today.getDate() < birthDate.getDate())
   ) {
-    age--
+    age--;
   }
 
-  return age
+  return age;
 }
 
 /**
@@ -114,12 +114,12 @@ export function calculateAge(birthDate: Date): number {
 export function calculateAgeGroup(
   birthDate: Date
 ): 'CHILD' | 'TEENAGER' | 'ADULT' | 'ELDERLY' {
-  const age = calculateAge(birthDate)
+  const age = calculateAge(birthDate);
 
-  if (age < 12) return 'CHILD'
-  if (age < 18) return 'TEENAGER'
-  if (age < 65) return 'ADULT'
-  return 'ELDERLY'
+  if (age < 12) return 'CHILD';
+  if (age < 18) return 'TEENAGER';
+  if (age < 65) return 'ADULT';
+  return 'ELDERLY';
 }
 
 /**
@@ -131,17 +131,17 @@ export function calculateCalorieTarget(
   goalType: 'LOSE_WEIGHT' | 'GAIN_MUSCLE' | 'MAINTAIN' | 'IMPROVE_HEALTH'
 ): number {
   switch (goalType) {
-    case 'LOSE_WEIGHT':
-      // 500 calorie deficit for ~0.5kg loss per week
-      return Math.round(tdee - 500)
-    case 'GAIN_MUSCLE':
-      // 300 calorie surplus for muscle gain
-      return Math.round(tdee + 300)
-    case 'MAINTAIN':
-    case 'IMPROVE_HEALTH':
-      return tdee
-    default:
-      return tdee
+  case 'LOSE_WEIGHT':
+    // 500 calorie deficit for ~0.5kg loss per week
+    return Math.round(tdee - 500);
+  case 'GAIN_MUSCLE':
+    // 300 calorie surplus for muscle gain
+    return Math.round(tdee + 300);
+  case 'MAINTAIN':
+  case 'IMPROVE_HEALTH':
+    return tdee;
+  default:
+    return tdee;
   }
 }
 
@@ -159,21 +159,21 @@ export function calculateMacroTargets(
   fat: number
 } {
   // Validate ratios sum to 1 (or 100%)
-  const totalRatio = carbRatio + proteinRatio + fatRatio
+  const totalRatio = carbRatio + proteinRatio + fatRatio;
   if (Math.abs(totalRatio - 1) > 0.01) {
-    throw new Error('Macronutrient ratios must sum to 1 (100%)')
+    throw new Error('Macronutrient ratios must sum to 1 (100%)');
   }
 
   // Calories per gram: Carbs=4, Protein=4, Fat=9
-  const carbCalories = calorieTarget * carbRatio
-  const proteinCalories = calorieTarget * proteinRatio
-  const fatCalories = calorieTarget * fatRatio
+  const carbCalories = calorieTarget * carbRatio;
+  const proteinCalories = calorieTarget * proteinRatio;
+  const fatCalories = calorieTarget * fatRatio;
 
   return {
     carbs: Math.round(carbCalories / 4),
     protein: Math.round(proteinCalories / 4),
     fat: Math.round(fatCalories / 9),
-  }
+  };
 }
 
 /**
@@ -185,10 +185,10 @@ export function estimateWeeksToTarget(
   targetWeight: number,
   goalType: 'LOSE_WEIGHT' | 'GAIN_MUSCLE'
 ): number {
-  const weightDifference = Math.abs(targetWeight - currentWeight)
+  const weightDifference = Math.abs(targetWeight - currentWeight);
 
   // Safe rate: 0.5kg per week
-  const weeksNeeded = weightDifference / 0.5
+  const weeksNeeded = weightDifference / 0.5;
 
-  return Math.ceil(weeksNeeded)
+  return Math.ceil(weeksNeeded);
 }

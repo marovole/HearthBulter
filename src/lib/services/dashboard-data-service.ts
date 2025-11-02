@@ -5,10 +5,10 @@
  * 提供统一的数据获取接口，聚合多个数据源，实现缓存和错误处理
  */
 
-import { prisma } from '@/lib/db'
-import { analyticsService } from './analytics-service'
-import { healthScoreCalculator } from './health-score-calculator'
-import { reportGenerator } from './report-generator'
+import { prisma } from '@/lib/db';
+import { analyticsService } from './analytics-service';
+import { healthScoreCalculator } from './health-score-calculator';
+import { reportGenerator } from './report-generator';
 
 export interface DashboardData {
   member: {
@@ -49,7 +49,7 @@ export interface DataFetchOptions {
 }
 
 export class DashboardDataService {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 
   /**
    * 获取仪表盘完整数据
@@ -63,15 +63,15 @@ export class DashboardDataService {
       cacheTTL = 5 * 60 * 1000, // 5分钟缓存
       retryAttempts = 3,
       timeout = 10000, // 10秒超时
-    } = options
+    } = options;
 
-    const cacheKey = `dashboard_${memberId}`
+    const cacheKey = `dashboard_${memberId}`;
     
     // 检查缓存
     if (useCache) {
-      const cached = this.getFromCache(cacheKey)
+      const cached = this.getFromCache(cacheKey);
       if (cached) {
-        return cached
+        return cached;
       }
     }
 
@@ -80,37 +80,37 @@ export class DashboardDataService {
       const data = await this.fetchWithTimeout(
         this.aggregateDashboardData(memberId),
         timeout
-      )
+      );
 
       // 缓存结果
       if (useCache) {
-        this.setCache(cacheKey, data, cacheTTL)
+        this.setCache(cacheKey, data, cacheTTL);
       }
 
-      return data
+      return data;
     } catch (error) {
       // 重试机制
       for (let attempt = 1; attempt <= retryAttempts; attempt++) {
         try {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt)) // 指数退避
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // 指数退避
           const data = await this.fetchWithTimeout(
             this.aggregateDashboardData(memberId),
             timeout
-          )
+          );
           
           if (useCache) {
-            this.setCache(cacheKey, data, cacheTTL)
+            this.setCache(cacheKey, data, cacheTTL);
           }
           
-          return data
+          return data;
         } catch (retryError) {
           if (attempt === retryAttempts) {
-            throw new Error(`数据获取失败，已重试${retryAttempts}次: ${error}`)
+            throw new Error(`数据获取失败，已重试${retryAttempts}次: ${error}`);
           }
         }
       }
       
-      throw error
+      throw error;
     }
   }
 
@@ -119,7 +119,7 @@ export class DashboardDataService {
    */
   private async aggregateDashboardData(memberId: string): Promise<DashboardData> {
     // 获取成员基本信息
-    const member = await this.getMemberInfo(memberId)
+    const member = await this.getMemberInfo(memberId);
 
     // 并行获取各项数据
     const [
@@ -136,10 +136,10 @@ export class DashboardDataService {
       healthScoreCalculator.calculateHealthScore(memberId),
       reportGenerator.generateWeeklyReport(memberId, member.name),
       reportGenerator.generateMonthlyReport(memberId, member.name),
-    ])
+    ]);
 
     // 获取最近的健康数据
-    const recentData = await this.getRecentHealthData(memberId, 7)
+    const recentData = await this.getRecentHealthData(memberId, 7);
 
     return {
       member: {
@@ -170,7 +170,7 @@ export class DashboardDataService {
         weekly: weeklyReport,
         monthly: monthlyReport,
       },
-    }
+    };
   }
 
   /**
@@ -190,10 +190,10 @@ export class DashboardDataService {
           },
         },
       },
-    })
+    });
 
     if (!member) {
-      throw new Error('成员不存在')
+      throw new Error('成员不存在');
     }
 
     return {
@@ -202,15 +202,15 @@ export class DashboardDataService {
       avatar: member.avatar,
       role: member.family.creatorId === member.userId ? 'admin' : 'member',
       lastActive: member.updatedAt,
-    }
+    };
   }
 
   /**
    * 获取最近的健康数据
    */
   private async getRecentHealthData(memberId: string, days: number) {
-    const endDate = new Date()
-    const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000)
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
     return await prisma.healthData.findMany({
       where: {
@@ -222,24 +222,24 @@ export class DashboardDataService {
       },
       orderBy: { measuredAt: 'desc' },
       take: 100,
-    })
+    });
   }
 
   /**
    * 计算数据趋势
    */
   private calculateTrends(data: any[]) {
-    if (data.length < 2) return null
+    if (data.length < 2) return null;
 
-    const recent = data.slice(0, Math.floor(data.length / 2))
-    const older = data.slice(Math.floor(data.length / 2))
+    const recent = data.slice(0, Math.floor(data.length / 2));
+    const older = data.slice(Math.floor(data.length / 2));
 
     const calculateAverage = (items: any[], field: string) => {
-      const validItems = items.filter(item => item[field] !== null)
+      const validItems = items.filter(item => item[field] !== null);
       return validItems.length > 0
         ? validItems.reduce((sum, item) => sum + item[field], 0) / validItems.length
-        : 0
-    }
+        : 0;
+    };
 
     return {
       weight: {
@@ -257,7 +257,7 @@ export class DashboardDataService {
         previous: calculateAverage(older, 'muscleMass'),
         trend: calculateAverage(recent, 'muscleMass') - calculateAverage(older, 'muscleMass'),
       },
-    }
+    };
   }
 
   /**
@@ -266,18 +266,18 @@ export class DashboardDataService {
   private async getNutritionAdherenceHistory(memberId: string, days: number) {
     // 这里应该从实际的营养记录中获取数据
     // 暂时返回模拟数据
-    const history = []
-    const now = new Date()
+    const history = [];
+    const now = new Date();
 
     for (let i = 0; i < days; i++) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
       history.push({
         date: date.toISOString().split('T')[0],
         adherenceRate: 70 + Math.random() * 30, // 70-100%的随机达标率
-      })
+      });
     }
 
-    return history.reverse()
+    return history.reverse();
   }
 
   /**
@@ -313,13 +313,13 @@ export class DashboardDataService {
           },
         },
       },
-    })
+    });
 
-    const members = []
+    const members = [];
     
     for (const family of families) {
       for (const member of family.members) {
-        const healthScore = await healthScoreCalculator.calculateHealthScore(member.id)
+        const healthScore = await healthScoreCalculator.calculateHealthScore(member.id);
         
         members.push({
           id: member.id,
@@ -329,27 +329,27 @@ export class DashboardDataService {
           email: member.user?.email,
           healthScore: healthScore.totalScore,
           lastActive: member.updatedAt,
-        })
+        });
       }
     }
 
-    return members
+    return members;
   }
 
   /**
    * 缓存管理
    */
   private getFromCache(key: string): any | null {
-    const cached = this.cache.get(key)
-    if (!cached) return null
+    const cached = this.cache.get(key);
+    if (!cached) return null;
 
-    const now = Date.now()
+    const now = Date.now();
     if (now - cached.timestamp > cached.ttl) {
-      this.cache.delete(key)
-      return null
+      this.cache.delete(key);
+      return null;
     }
 
-    return cached.data
+    return cached.data;
   }
 
   private setCache(key: string, data: any, ttl: number) {
@@ -357,18 +357,18 @@ export class DashboardDataService {
       data,
       timestamp: Date.now(),
       ttl,
-    })
+    });
   }
 
   clearCache(pattern?: string) {
     if (pattern) {
       for (const key of this.cache.keys()) {
         if (key.includes(pattern)) {
-          this.cache.delete(key)
+          this.cache.delete(key);
         }
       }
     } else {
-      this.cache.clear()
+      this.cache.clear();
     }
   }
 
@@ -381,7 +381,7 @@ export class DashboardDataService {
       new Promise<T>((_, reject) =>
         setTimeout(() => reject(new Error('请求超时')), timeout)
       ),
-    ])
+    ]);
   }
 
   /**
@@ -391,19 +391,19 @@ export class DashboardDataService {
     const promises = memberIds.map(memberId =>
       this.getDashboardData(memberId, { useCache: true, cacheTTL: 10 * 60 * 1000 })
         .catch(error => console.error(`预加载失败 ${memberId}:`, error))
-    )
+    );
 
-    await Promise.allSettled(promises)
+    await Promise.allSettled(promises);
   }
 
   /**
    * 数据导出
    */
   async exportData(memberId: string, format: 'json' | 'csv' = 'json') {
-    const data = await this.getDashboardData(memberId, { useCache: false })
+    const data = await this.getDashboardData(memberId, { useCache: false });
 
     if (format === 'json') {
-      return JSON.stringify(data, null, 2)
+      return JSON.stringify(data, null, 2);
     }
 
     if (format === 'csv') {
@@ -413,14 +413,14 @@ export class DashboardDataService {
         ...data.healthMetrics.recentData.map(item =>
           `${item.measuredAt},${item.weight || ''},${item.bodyFat || ''},${item.muscleMass || ''},${data.overview.healthScore.totalScore}`
         ),
-      ]
+      ];
       
-      return csvRows.join('\n')
+      return csvRows.join('\n');
     }
 
-    throw new Error(`不支持的导出格式: ${format}`)
+    throw new Error(`不支持的导出格式: ${format}`);
   }
 }
 
 // 导出单例
-export const dashboardDataService = new DashboardDataService()
+export const dashboardDataService = new DashboardDataService();

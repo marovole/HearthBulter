@@ -4,13 +4,13 @@
  * 基于模板生成个性化7天食谱计划，支持过敏过滤、季节性食材优先和营养平衡
  */
 
-import { prisma } from '@/lib/db'
-import { MacroCalculator, type MealMacroTargets } from './macro-calculator'
-import { nutritionCalculator } from './nutrition-calculator'
-import type { GoalType, MealType, FoodCategory } from '@prisma/client'
-import { addDays, startOfDay } from 'date-fns'
-import { readFileSync } from 'fs'
-import { join } from 'path'
+import { prisma } from '@/lib/db';
+import { MacroCalculator, type MealMacroTargets } from './macro-calculator';
+import { nutritionCalculator } from './nutrition-calculator';
+import type { GoalType, MealType, FoodCategory } from '@prisma/client';
+import { addDays, startOfDay } from 'date-fns';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 /**
  * 餐食模板接口（JSON格式）
@@ -39,17 +39,17 @@ const SEASONAL_FOODS: Record<
   SUMMER: ['西瓜', '黄瓜', '番茄', '茄子', '冬瓜', '苦瓜', '丝瓜'],
   AUTUMN: ['南瓜', '红薯', '山药', '栗子', '莲藕', '萝卜'],
   WINTER: ['白菜', '萝卜', '胡萝卜', '白萝卜', '大白菜', '卷心菜'],
-}
+};
 
 /**
  * 获取当前季节
  */
 function getCurrentSeason(): 'SPRING' | 'SUMMER' | 'AUTUMN' | 'WINTER' {
-  const month = new Date().getMonth() + 1 // 1-12
-  if (month >= 3 && month <= 5) return 'SPRING'
-  if (month >= 6 && month <= 8) return 'SUMMER'
-  if (month >= 9 && month <= 11) return 'AUTUMN'
-  return 'WINTER'
+  const month = new Date().getMonth() + 1; // 1-12
+  if (month >= 3 && month <= 5) return 'SPRING';
+  if (month >= 6 && month <= 8) return 'SUMMER';
+  if (month >= 9 && month <= 11) return 'AUTUMN';
+  return 'WINTER';
 }
 
 /**
@@ -65,19 +65,19 @@ export class MealPlanner {
   ): Promise<MealTemplate[]> {
     try {
       // 根据餐食类型确定文件名
-      const fileName = `${mealType.toLowerCase()}.json`
-      const filePath = join(process.cwd(), 'src', 'data', 'meal-templates', fileName)
+      const fileName = `${mealType.toLowerCase()}.json`;
+      const filePath = join(process.cwd(), 'src', 'data', 'meal-templates', fileName);
 
       // 读取 JSON 文件
-      const fileContent = readFileSync(filePath, 'utf-8')
-      const templatesJSON: MealTemplateJSON[] = JSON.parse(fileContent)
+      const fileContent = readFileSync(filePath, 'utf-8');
+      const templatesJSON: MealTemplateJSON[] = JSON.parse(fileContent);
 
       // 转换为完整模板格式
-      const templates: MealTemplate[] = []
+      const templates: MealTemplate[] = [];
 
       for (const templateJSON of templatesJSON) {
         // 查找所有食材的 foodId
-        const ingredientFoodIds: Array<{ foodId: string; amount: number }> = []
+        const ingredientFoodIds: Array<{ foodId: string; amount: number }> = [];
 
         for (const ing of templateJSON.ingredients) {
           // 通过名称查找食物（支持别名匹配）
@@ -88,13 +88,13 @@ export class MealPlanner {
                 { aliases: { contains: ing.foodName, mode: 'insensitive' } },
               ],
             },
-          })
+          });
 
           if (food) {
             ingredientFoodIds.push({
               foodId: food.id,
               amount: ing.amount,
-            })
+            });
           }
         }
 
@@ -105,7 +105,7 @@ export class MealPlanner {
               foodId: ing.foodId,
               amount: ing.amount,
             }))
-          )
+          );
 
           templates.push({
             id: templateJSON.id,
@@ -120,14 +120,14 @@ export class MealPlanner {
             },
             suitableGoals: templateJSON.suitableGoals,
             tags: templateJSON.tags,
-          })
+          });
         }
       }
 
-      return templates
+      return templates;
     } catch (error) {
-      console.error(`加载${mealType}模板失败:`, error)
-      return []
+      console.error(`加载${mealType}模板失败:`, error);
+      return [];
     }
   }
 
@@ -144,9 +144,9 @@ export class MealPlanner {
       select: {
         allergenName: true,
       },
-    })
+    });
 
-    return allergies.map((a) => a.allergenName)
+    return allergies.map((a) => a.allergenName);
   }
 
   /**
@@ -157,17 +157,17 @@ export class MealPlanner {
     foodAliases: string,
     allergies: string[]
   ): boolean {
-    const foodNameLower = foodName.toLowerCase()
-    const aliases = JSON.parse(foodAliases || '[]') as string[]
+    const foodNameLower = foodName.toLowerCase();
+    const aliases = JSON.parse(foodAliases || '[]') as string[];
 
     return allergies.some((allergen) => {
-      const allergenLower = allergen.toLowerCase()
+      const allergenLower = allergen.toLowerCase();
       // 检查食物名称或别名是否包含过敏原
-      if (foodNameLower.includes(allergenLower)) return true
+      if (foodNameLower.includes(allergenLower)) return true;
       return aliases.some((alias) =>
         alias.toLowerCase().includes(allergenLower)
-      )
-    })
+      );
+    });
   }
 
   /**
@@ -179,7 +179,7 @@ export class MealPlanner {
   ): Array<{ id: string; name: string; aliases: string }> {
     return foods.filter(
       (food) => !this.isAllergenic(food.name, food.aliases, allergies)
-    )
+    );
   }
 
   /**
@@ -191,21 +191,21 @@ export class MealPlanner {
     foodAliases: string,
     season: 'SPRING' | 'SUMMER' | 'AUTUMN' | 'WINTER'
   ): number {
-    const seasonalFoods = SEASONAL_FOODS[season]
-    const foodNameLower = foodName.toLowerCase()
-    const aliases = JSON.parse(foodAliases || '[]') as string[]
+    const seasonalFoods = SEASONAL_FOODS[season];
+    const foodNameLower = foodName.toLowerCase();
+    const aliases = JSON.parse(foodAliases || '[]') as string[];
 
     // 检查是否匹配季节性食材
     for (const seasonalFood of seasonalFoods) {
       if (foodNameLower.includes(seasonalFood.toLowerCase())) {
-        return 10 // 高优先级
+        return 10; // 高优先级
       }
       if (aliases.some((alias) => alias.toLowerCase().includes(seasonalFood.toLowerCase()))) {
-        return 10
+        return 10;
       }
     }
 
-    return 0 // 非季节性食材
+    return 0; // 非季节性食材
   }
 
   /**
@@ -217,17 +217,17 @@ export class MealPlanner {
     target: { calories: number; protein: number; carbs: number; fat: number },
     tolerance: number = 0.05 // 5% 误差容忍度
   ): number {
-    const calorieDiff = Math.abs(actual.calories - target.calories) / target.calories
-    const proteinDiff = Math.abs(actual.protein - target.protein) / Math.max(target.protein, 1)
-    const carbsDiff = Math.abs(actual.carbs - target.carbs) / Math.max(target.carbs, 1)
-    const fatDiff = Math.abs(actual.fat - target.fat) / Math.max(target.fat, 1)
+    const calorieDiff = Math.abs(actual.calories - target.calories) / target.calories;
+    const proteinDiff = Math.abs(actual.protein - target.protein) / Math.max(target.protein, 1);
+    const carbsDiff = Math.abs(actual.carbs - target.carbs) / Math.max(target.carbs, 1);
+    const fatDiff = Math.abs(actual.fat - target.fat) / Math.max(target.fat, 1);
 
     // 如果超过容忍度，返回较大的差异值
     if (calorieDiff > tolerance || proteinDiff > tolerance || carbsDiff > tolerance || fatDiff > tolerance) {
-      return calorieDiff + proteinDiff + carbsDiff + fatDiff + 10
+      return calorieDiff + proteinDiff + carbsDiff + fatDiff + 10;
     }
 
-    return calorieDiff + proteinDiff + carbsDiff + fatDiff
+    return calorieDiff + proteinDiff + carbsDiff + fatDiff;
   }
 
   /**
@@ -243,10 +243,10 @@ export class MealPlanner {
     // 过滤掉已使用的模板
     const availableTemplates = templates.filter(
       (t) => !usedTemplateIds.has(t.id)
-    )
+    );
 
     if (availableTemplates.length === 0) {
-      return null
+      return null;
     }
 
     // 对模板进行评分排序
@@ -255,24 +255,24 @@ export class MealPlanner {
       const nutritionDiff = this.calculateNutritionDifference(
         template.nutrition,
         target
-      )
+      );
 
       // 计算季节性优先级
       const seasonalScore = template.ingredients.reduce((score, ing) => {
         // 需要查询食物信息获取季节性分数
         // 这里简化处理，假设食材已包含季节性信息
-        return score
-      }, 0)
+        return score;
+      }, 0);
 
       // 综合评分（营养差异越小越好，季节性分数越高越好）
-      const score = -nutritionDiff + seasonalScore * 0.1
+      const score = -nutritionDiff + seasonalScore * 0.1;
 
-      return { template, score }
-    })
+      return { template, score };
+    });
 
     // 按分数排序，选择最佳模板
-    scoredTemplates.sort((a, b) => b.score - a.score)
-    return scoredTemplates[0].template
+    scoredTemplates.sort((a, b) => b.score - a.score);
+    return scoredTemplates[0].template;
   }
 
   /**
@@ -290,36 +290,36 @@ export class MealPlanner {
     ingredients: Array<{ foodId: string; amount: number }>
     nutrition: { calories: number; protein: number; carbs: number; fat: number }
   }>> {
-    const allergies = await this.getMemberAllergies(memberId)
-    const season = getCurrentSeason()
-    const meals: MealType[] = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK']
+    const allergies = await this.getMemberAllergies(memberId);
+    const season = getCurrentSeason();
+    const meals: MealType[] = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
 
-    const dailyMeals = []
+    const dailyMeals = [];
 
     for (const mealType of meals) {
-      let target: { calories: number; protein: number; carbs: number; fat: number }
+      let target: { calories: number; protein: number; carbs: number; fat: number };
       switch (mealType) {
-        case 'BREAKFAST':
-          target = mealTargets.breakfast
-          break
-        case 'LUNCH':
-          target = mealTargets.lunch
-          break
-        case 'DINNER':
-          target = mealTargets.dinner
-          break
-        case 'SNACK':
-          target = mealTargets.snack
-          break
-        default:
-          throw new Error(`未知的餐食类型: ${mealType}`)
+      case 'BREAKFAST':
+        target = mealTargets.breakfast;
+        break;
+      case 'LUNCH':
+        target = mealTargets.lunch;
+        break;
+      case 'DINNER':
+        target = mealTargets.dinner;
+        break;
+      case 'SNACK':
+        target = mealTargets.snack;
+        break;
+      default:
+        throw new Error(`未知的餐食类型: ${mealType}`);
       }
 
       // 加载对应类型的模板
-      const templates = await this.loadTemplates(mealType)
+      const templates = await this.loadTemplates(mealType);
       const suitableTemplates = templates.filter((t) =>
         t.suitableGoals.includes(goalType)
-      )
+      );
 
       // 选择最佳模板
       const selectedTemplate = this.selectBestTemplate(
@@ -328,20 +328,20 @@ export class MealPlanner {
         allergies,
         season,
         usedTemplateIds
-      )
+      );
 
       if (selectedTemplate) {
-        usedTemplateIds.add(selectedTemplate.id)
+        usedTemplateIds.add(selectedTemplate.id);
         dailyMeals.push({
           date: startOfDay(date),
           mealType: selectedTemplate.mealType,
           ingredients: selectedTemplate.ingredients,
           nutrition: selectedTemplate.nutrition,
-        })
+        });
       }
     }
 
-    return dailyMeals
+    return dailyMeals;
   }
 
   /**
@@ -384,25 +384,25 @@ export class MealPlanner {
           take: 1,
         },
       },
-    })
+    });
 
     if (!member) {
-      throw new Error('成员不存在')
+      throw new Error('成员不存在');
     }
 
     if (!member.weight || !member.height) {
-      throw new Error('成员体重或身高信息不完整')
+      throw new Error('成员体重或身高信息不完整');
     }
 
-    const activeGoal = member.healthGoals[0]
+    const activeGoal = member.healthGoals[0];
     if (!activeGoal) {
-      throw new Error('成员没有活跃的健康目标')
+      throw new Error('成员没有活跃的健康目标');
     }
 
     // 计算宏量营养素目标
     const activityLevel = activeGoal.activityFactor
       ? this.mapActivityFactorToLevel(activeGoal.activityFactor)
-      : 'MODERATE'
+      : 'MODERATE';
 
     const macroInput = {
       weight: member.weight,
@@ -414,28 +414,28 @@ export class MealPlanner {
       carbRatio: activeGoal.carbRatio ?? undefined,
       proteinRatio: activeGoal.proteinRatio ?? undefined,
       fatRatio: activeGoal.fatRatio ?? undefined,
-    }
+    };
 
-    const macroTargets = MacroCalculator.calculateFullMacroTargets(macroInput)
+    const macroTargets = MacroCalculator.calculateFullMacroTargets(macroInput);
 
     // 确定开始日期
-    const planStartDate = startDate ? startOfDay(startDate) : startOfDay(new Date())
-    const planEndDate = addDays(planStartDate, days - 1)
+    const planStartDate = startDate ? startOfDay(startDate) : startOfDay(new Date());
+    const planEndDate = addDays(planStartDate, days - 1);
 
     // 生成每日餐食
-    const usedTemplateIds = new Set<string>()
-    const allMeals = []
+    const usedTemplateIds = new Set<string>();
+    const allMeals = [];
 
     for (let i = 0; i < days; i++) {
-      const currentDate = addDays(planStartDate, i)
+      const currentDate = addDays(planStartDate, i);
       const dailyMeals = await this.generateDailyMeals(
         currentDate,
         macroTargets.mealTargets,
         activeGoal.goalType,
         memberId,
         usedTemplateIds
-      )
-      allMeals.push(...dailyMeals)
+      );
+      allMeals.push(...dailyMeals);
     }
 
     // 保存到数据库
@@ -478,7 +478,7 @@ export class MealPlanner {
           },
         },
       },
-    })
+    });
 
     return {
       planId: mealPlan.id,
@@ -505,7 +505,7 @@ export class MealPlanner {
           fat: meal.fat,
         },
       })),
-    }
+    };
   }
 
   /**
@@ -545,19 +545,19 @@ export class MealPlanner {
           },
         },
       },
-    })
+    });
 
     if (!currentMeal) {
-      throw new Error('餐食不存在')
+      throw new Error('餐食不存在');
     }
 
     if (currentMeal.plan.memberId !== memberId) {
-      throw new Error('无权限替换此餐食')
+      throw new Error('无权限替换此餐食');
     }
 
-    const activeGoal = currentMeal.plan.member.healthGoals[0]
+    const activeGoal = currentMeal.plan.member.healthGoals[0];
     if (!activeGoal) {
-      throw new Error('成员没有活跃的健康目标')
+      throw new Error('成员没有活跃的健康目标');
     }
 
     // 获取目标营养值（使用当前餐食的营养值作为目标）
@@ -566,17 +566,17 @@ export class MealPlanner {
       protein: currentMeal.protein,
       carbs: currentMeal.carbs,
       fat: currentMeal.fat,
-    }
+    };
 
     // 获取过敏信息
-    const allergies = await this.getMemberAllergies(memberId)
-    const season = getCurrentSeason()
+    const allergies = await this.getMemberAllergies(memberId);
+    const season = getCurrentSeason();
 
     // 加载对应类型的模板
-    const templates = await this.loadTemplates(currentMeal.mealType)
+    const templates = await this.loadTemplates(currentMeal.mealType);
     const suitableTemplates = templates.filter((t) =>
       t.suitableGoals.includes(activeGoal.goalType)
-    )
+    );
 
     // 选择营养相近的替代模板（不使用已使用的模板ID限制，允许替换）
     const replacementTemplate = this.selectBestTemplate(
@@ -585,16 +585,16 @@ export class MealPlanner {
       allergies,
       season,
       new Set() // 不使用已使用限制，允许选择任何模板
-    )
+    );
 
     if (!replacementTemplate) {
-      throw new Error('未找到合适的替代餐食')
+      throw new Error('未找到合适的替代餐食');
     }
 
     // 删除旧食材并创建新食材
     await prisma.mealIngredient.deleteMany({
       where: { mealId },
-    })
+    });
 
     await prisma.mealIngredient.createMany({
       data: replacementTemplate.ingredients.map((ing) => ({
@@ -602,7 +602,7 @@ export class MealPlanner {
         foodId: ing.foodId,
         amount: ing.amount,
       })),
-    })
+    });
 
     // 更新餐食营养信息
     const updatedMeal = await prisma.meal.update({
@@ -620,7 +620,7 @@ export class MealPlanner {
           },
         },
       },
-    })
+    });
 
     return {
       id: updatedMeal.id,
@@ -636,7 +636,7 @@ export class MealPlanner {
         carbs: updatedMeal.carbs,
         fat: updatedMeal.fat,
       },
-    }
+    };
   }
 
   /**
@@ -645,13 +645,13 @@ export class MealPlanner {
   private mapActivityFactorToLevel(
     activityFactor: number
   ): 'SEDENTARY' | 'LIGHT' | 'MODERATE' | 'ACTIVE' | 'VERY_ACTIVE' {
-    if (activityFactor <= 1.2) return 'SEDENTARY'
-    if (activityFactor <= 1.375) return 'LIGHT'
-    if (activityFactor <= 1.55) return 'MODERATE'
-    if (activityFactor <= 1.725) return 'ACTIVE'
-    return 'VERY_ACTIVE'
+    if (activityFactor <= 1.2) return 'SEDENTARY';
+    if (activityFactor <= 1.375) return 'LIGHT';
+    if (activityFactor <= 1.55) return 'MODERATE';
+    if (activityFactor <= 1.725) return 'ACTIVE';
+    return 'VERY_ACTIVE';
   }
 }
 
 // 导出单例实例
-export const mealPlanner = new MealPlanner()
+export const mealPlanner = new MealPlanner();

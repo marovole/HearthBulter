@@ -1,55 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/db'
-import { CartAggregator } from '@/lib/services/cart-aggregator'
-import { PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/db';
+import { CartAggregator } from '@/lib/services/cart-aggregator';
+import { PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json()
-    const { items, address, config } = body
+    const body = await request.json();
+    const { items, address, config } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { error: 'items array is required' },
         { status: 400 }
-      )
+      );
     }
 
     if (!address || !address.province || !address.city || !address.district || !address.detail) {
       return NextResponse.json(
         { error: 'Valid address is required' },
         { status: 400 }
-      )
+      );
     }
 
     // 提取食材ID和数量
-    const foodIds = items.map((item: any) => item.foodId)
-    const quantities = new Map<string, number>()
+    const foodIds = items.map((item: any) => item.foodId);
+    const quantities = new Map<string, number>();
     
     items.forEach((item: any) => {
-      quantities.set(item.foodId, item.quantity || 1)
-    })
+      quantities.set(item.foodId, item.quantity || 1);
+    });
 
     // 获取食材信息
     const foods = await prisma.food.findMany({
       where: {
-        id: { in: foodIds }
-      }
-    })
+        id: { in: foodIds },
+      },
+    });
 
     if (foods.length === 0) {
-      return NextResponse.json({ error: 'No foods found' }, { status: 404 })
+      return NextResponse.json({ error: 'No foods found' }, { status: 404 });
     }
 
     // 初始化购物车聚合服务
-    const cartAggregator = new CartAggregator(prisma)
+    const cartAggregator = new CartAggregator(prisma);
 
     // 执行购物车聚合
     const aggregationConfig = {
@@ -59,15 +59,15 @@ export async function POST(request: NextRequest) {
       considerDiscounts: config?.considerDiscounts !== false,
       preferInStock: config?.preferInStock !== false,
       allowCrossPlatform: config?.allowCrossPlatform !== false,
-      optimizeFor: config?.optimizeFor || 'balance'
-    }
+      optimizeFor: config?.optimizeFor || 'balance',
+    };
 
     const aggregationResult = await cartAggregator.aggregateCart(
       foods,
       quantities,
       address,
       aggregationConfig
-    )
+    );
 
     // 转换结果格式
     const formattedResult = {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
           isInStock: item.selectedProduct.isInStock,
           imageUrl: item.selectedProduct.imageUrl,
           confidence: item.matches.find(m => m.platformProduct.platformProductId === item.selectedProduct?.platformProductId)?.confidence,
-          valueScore: (item.selectedProduct as any).valueScore
+          valueScore: (item.selectedProduct as any).valueScore,
         } : null,
         alternatives: item.matches.slice(0, 3).map(match => ({
           platform: match.platformProduct.platform,
@@ -106,8 +106,8 @@ export async function POST(request: NextRequest) {
           isInStock: match.platformProduct.isInStock,
           imageUrl: match.platformProduct.imageUrl,
           confidence: match.confidence,
-          valueScore: (match.platformProduct as any).valueScore
-        }))
+          valueScore: (match.platformProduct as any).valueScore,
+        })),
       })),
       totalByPlatform: aggregationResult.totalByPlatform,
       grandTotal: aggregationResult.grandTotal,
@@ -117,70 +117,70 @@ export async function POST(request: NextRequest) {
         totalQuantity: aggregationResult.items.reduce((sum, item) => sum + item.quantity, 0),
         platformsUsed: Object.keys(aggregationResult.totalByPlatform).length,
         averageConfidence: calculateAverageConfidence(aggregationResult.items),
-        potentialSavings: calculatePotentialSavings(aggregationResult.recommendations)
-      }
-    }
+        potentialSavings: calculatePotentialSavings(aggregationResult.recommendations),
+      },
+    };
 
     return NextResponse.json({
       success: true,
-      result: formattedResult
-    })
+      result: formattedResult,
+    });
   } catch (error) {
-    console.error('Cart aggregation error:', error)
+    console.error('Cart aggregation error:', error);
     
     if (error instanceof PlatformError) {
       return NextResponse.json(
         { error: error.message, type: error.type },
         { status: 400 }
-      )
+      );
     }
 
     return NextResponse.json(
       { error: 'Failed to aggregate cart' },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    const foodIds = searchParams.get('foodIds')
+    const { searchParams } = new URL(request.url);
+    const foodIds = searchParams.get('foodIds');
 
     if (!foodIds) {
-      return NextResponse.json({ error: 'foodIds is required' }, { status: 400 })
+      return NextResponse.json({ error: 'foodIds is required' }, { status: 400 });
     }
 
-    const foodIdArray = foodIds.split(',').filter(id => id.trim())
+    const foodIdArray = foodIds.split(',').filter(id => id.trim());
     
     if (foodIdArray.length === 0) {
-      return NextResponse.json({ error: 'No valid foodIds provided' }, { status: 400 })
+      return NextResponse.json({ error: 'No valid foodIds provided' }, { status: 400 });
     }
 
     // 获取食材信息
     const foods = await prisma.food.findMany({
       where: {
-        id: { in: foodIdArray }
-      }
-    })
+        id: { in: foodIdArray },
+      },
+    });
 
     if (foods.length === 0) {
-      return NextResponse.json({ error: 'No foods found' }, { status: 404 })
+      return NextResponse.json({ error: 'No foods found' }, { status: 404 });
     }
 
     // 初始化购物车聚合服务
-    const cartAggregator = new CartAggregator(prisma)
+    const cartAggregator = new CartAggregator(prisma);
 
     // 为每个食材设置默认数量1
-    const quantities = new Map<string, number>()
+    const quantities = new Map<string, number>();
     foods.forEach(food => {
-      quantities.set(food.id, 1)
-    })
+      quantities.set(food.id, 1);
+    });
 
     // 使用默认地址（示例）
     const defaultAddress = {
@@ -190,8 +190,8 @@ export async function GET(request: NextRequest) {
       detail: '张江高科技园区',
       postalCode: '201203',
       contactName: '测试用户',
-      contactPhone: '13800138000'
-    }
+      contactPhone: '13800138000',
+    };
 
     // 执行购物车聚合
     const aggregationResult = await cartAggregator.aggregateCart(
@@ -205,9 +205,9 @@ export async function GET(request: NextRequest) {
         considerDiscounts: true,
         preferInStock: true,
         allowCrossPlatform: true,
-        optimizeFor: 'balance'
+        optimizeFor: 'balance',
       }
-    )
+    );
 
     // 转换为简化格式
     const simplifiedResult = {
@@ -224,8 +224,8 @@ export async function GET(request: NextRequest) {
             price: match.platformProduct.price,
             stock: match.platformProduct.stock,
             isInStock: match.platformProduct.isInStock,
-            confidence: match.confidence
-          })) || []
+            confidence: match.confidence,
+          })) || [],
       })),
       summary: {
         totalFoods: foods.length,
@@ -234,28 +234,28 @@ export async function GET(request: NextRequest) {
           aggregationResult.items.flatMap(item => 
             item.matches.map(match => match.platformProduct.platform)
           )
-        ))
-      }
-    }
+        )),
+      },
+    };
 
     return NextResponse.json({
       success: true,
-      result: simplifiedResult
-    })
+      result: simplifiedResult,
+    });
   } catch (error) {
-    console.error('Quick cart analysis error:', error)
+    console.error('Quick cart analysis error:', error);
     
     if (error instanceof PlatformError) {
       return NextResponse.json(
         { error: error.message, type: error.type },
         { status: 400 }
-      )
+      );
     }
 
     return NextResponse.json(
       { error: 'Failed to analyze cart' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -266,19 +266,19 @@ function calculateAverageConfidence(items: any[]): number {
     .map(item => {
       const match = item.matches.find(m => 
         m.platformProduct.platformProductId === item.selectedProduct?.platformProductId
-      )
-      return match?.confidence || 0
+      );
+      return match?.confidence || 0;
     })
-    .filter(confidence => confidence > 0)
+    .filter(confidence => confidence > 0);
 
   return confidences.length > 0 
     ? confidences.reduce((sum, confidence) => sum + confidence, 0) / confidences.length 
-    : 0
+    : 0;
 }
 
 // 计算潜在节省金额
 function calculatePotentialSavings(recommendations: any[]): number {
   return recommendations
     .filter(rec => rec.potentialSavings)
-    .reduce((sum, rec) => sum + rec.potentialSavings, 0)
+    .reduce((sum, rec) => sum + rec.potentialSavings, 0);
 }

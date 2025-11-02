@@ -13,38 +13,38 @@ jest.mock('@/lib/services/ai/openai-client', () => ({
   openaiClient: {
     chat: {
       completions: {
-        create: jest.fn()
-      }
-    }
-  }
+        create: jest.fn(),
+      },
+    },
+  },
 }));
 
 jest.mock('@/lib/db', () => ({
   prisma: {
     userConsent: {
       findUnique: jest.fn(),
-      upsert: jest.fn()
+      upsert: jest.fn(),
     },
     aIConversation: {
       create: jest.fn(),
-      findMany: jest.fn()
+      findMany: jest.fn(),
     },
     aIAdvice: {
-      create: jest.fn()
-    }
-  }
+      create: jest.fn(),
+    },
+  },
 }));
 
 jest.mock('@/lib/services/ai-review-service', () => ({
   aiReviewService: {
-    reviewContent: jest.fn()
-  }
+    reviewContent: jest.fn(),
+  },
 }));
 
 jest.mock('@/lib/services/ai/rate-limiter', () => ({
   rateLimiter: {
-    checkLimit: jest.fn()
-  }
+    checkLimit: jest.fn(),
+  },
 }));
 
 import { openaiClient } from '@/lib/services/ai/openai-client';
@@ -60,7 +60,7 @@ describe('AI Concurrent Load Tests', () => {
     (prisma.userConsent.findUnique as jest.Mock).mockResolvedValue({
       userId: 'test-user',
       hasConsented: true,
-      consentedAt: new Date()
+      consentedAt: new Date(),
     });
 
     (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async () => {
@@ -69,14 +69,14 @@ describe('AI Concurrent Load Tests', () => {
       return {
         choices: [{
           message: {
-            content: 'AI生成的营养建议'
-          }
+            content: 'AI生成的营养建议',
+          },
         }],
         usage: {
           prompt_tokens: 150,
           completion_tokens: 80,
-          total_tokens: 230
-        }
+          total_tokens: 230,
+        },
       };
     });
 
@@ -89,13 +89,13 @@ describe('AI Concurrent Load Tests', () => {
       metadata: {
         reviewTimestamp: new Date(),
         processingTime: 50,
-        reviewerVersion: '1.0.0'
-      }
+        reviewerVersion: '1.0.0',
+      },
     });
 
     (rateLimiter.checkLimit as jest.Mock).mockResolvedValue({
       allowed: true,
-      remaining: 100
+      remaining: 100,
     });
   });
 
@@ -106,15 +106,15 @@ describe('AI Concurrent Load Tests', () => {
         const requestData = {
           message: `测试消息 ${i + 1}`,
           userId: `user-${i + 1}`,
-          sessionId: `session-${i + 1}`
+          sessionId: `session-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify(requestData),
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         });
       });
 
@@ -140,15 +140,15 @@ describe('AI Concurrent Load Tests', () => {
         const requestData = {
           message: `并发测试消息 ${i + 1}`,
           userId: `concurrent-user-${i + 1}`,
-          sessionId: `concurrent-session-${i + 1}`
+          sessionId: `concurrent-session-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify(requestData),
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         });
       });
 
@@ -178,12 +178,12 @@ describe('AI Concurrent Load Tests', () => {
           return {
             allowed: false,
             remaining: 0,
-            resetTime: new Date(Date.now() + 60000)
+            resetTime: new Date(Date.now() + 60000),
           };
         }
         return {
           allowed: true,
-          remaining: 20 - requestCount
+          remaining: 20 - requestCount,
         };
       });
 
@@ -192,15 +192,15 @@ describe('AI Concurrent Load Tests', () => {
         const requestData = {
           message: `速率限制测试 ${i + 1}`,
           userId: `rate-limit-user-${i + 1}`,
-          sessionId: `rate-limit-session-${i + 1}`
+          sessionId: `rate-limit-session-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify(requestData),
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         });
       });
 
@@ -220,13 +220,13 @@ describe('AI Concurrent Load Tests', () => {
         const requestData = {
           message: `聊天测试 ${i + 1}`,
           userId: `chat-user-${i + 1}`,
-          sessionId: `chat-session-${i + 1}`
+          sessionId: `chat-session-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify(requestData),
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
       });
 
@@ -236,15 +236,15 @@ describe('AI Concurrent Load Tests', () => {
             cholesterol: 5.5 + i * 0.1,
             bloodSugar: 5.0 + i * 0.2,
             age: 30 + i,
-            gender: 'male'
+            gender: 'male',
           },
-          userId: `health-user-${i + 1}`
+          userId: `health-user-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/analyze-health', {
           method: 'POST',
           body: JSON.stringify(requestData),
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
       });
 
@@ -254,25 +254,25 @@ describe('AI Concurrent Load Tests', () => {
             name: `食谱 ${i + 1}`,
             ingredients: [
               { name: '米饭', amount: 100 },
-              { name: '鸡肉', amount: 50 }
+              { name: '鸡肉', amount: 50 },
             ],
             nutrition: {
               calories: 300 + i * 50,
               protein: 20 + i * 5,
-              carbs: 40 + i * 10
-            }
+              carbs: 40 + i * 10,
+            },
           },
           healthGoals: {
             targetCalories: 2000,
-            targetProtein: 100
+            targetProtein: 100,
           },
-          userId: `recipe-user-${i + 1}`
+          userId: `recipe-user-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/optimize-recipe', {
           method: 'POST',
           body: JSON.stringify(requestData),
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
       });
 
@@ -301,8 +301,8 @@ describe('AI Concurrent Load Tests', () => {
     it('应该在大量并发请求下保持内存稳定', async () => {
       const initialMemory = process.memoryUsage();
       console.log('初始内存使用:', {
-        rss: Math.round(initialMemory.rss / 1024 / 1024) + 'MB',
-        heapUsed: Math.round(initialMemory.heapUsed / 1024 / 1024) + 'MB'
+        rss: `${Math.round(initialMemory.rss / 1024 / 1024)}MB`,
+        heapUsed: `${Math.round(initialMemory.heapUsed / 1024 / 1024)}MB`,
       });
 
       // Execute 100 requests in batches
@@ -314,13 +314,13 @@ describe('AI Concurrent Load Tests', () => {
           const requestData = {
             message: `内存测试批次${batch + 1}消息${i + 1}`,
             userId: `memory-user-${batch}-${i}`,
-            sessionId: `memory-session-${batch}-${i}`
+            sessionId: `memory-session-${batch}-${i}`,
           };
 
           return new NextRequest('http://localhost/api/ai/chat', {
             method: 'POST',
             body: JSON.stringify(requestData),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
           });
         });
 
@@ -337,8 +337,8 @@ describe('AI Concurrent Load Tests', () => {
 
       const finalMemory = process.memoryUsage();
       console.log('最终内存使用:', {
-        rss: Math.round(finalMemory.rss / 1024 / 1024) + 'MB',
-        heapUsed: Math.round(finalMemory.heapUsed / 1024 / 1024) + 'MB'
+        rss: `${Math.round(finalMemory.rss / 1024 / 1024)}MB`,
+        heapUsed: `${Math.round(finalMemory.heapUsed / 1024 / 1024)}MB`,
       });
 
       const memoryIncrease = finalMemory.heapUsed - initialMemory.heapUsed;
@@ -362,13 +362,13 @@ describe('AI Concurrent Load Tests', () => {
         const requestData = {
           message: `数据库连接测试 ${i + 1}`,
           userId: `db-user-${i + 1}`,
-          sessionId: `db-session-${i + 1}`
+          sessionId: `db-session-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify(requestData),
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
       });
 
@@ -391,7 +391,7 @@ describe('AI Concurrent Load Tests', () => {
         await new Promise(resolve => setTimeout(resolve, 500));
         return {
           choices: [{ message: { content: '成功响应' } }],
-          usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 }
+          usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
         };
       });
 
@@ -400,13 +400,13 @@ describe('AI Concurrent Load Tests', () => {
         const requestData = {
           message: `错误恢复测试 ${i + 1}`,
           userId: `recovery-user-${i + 1}`,
-          sessionId: `recovery-session-${i + 1}`
+          sessionId: `recovery-session-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify(requestData),
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
       });
 
@@ -437,13 +437,13 @@ describe('AI Concurrent Load Tests', () => {
         const requestData = {
           message: `性能基准测试 ${i + 1}`,
           userId: `perf-user-${i + 1}`,
-          sessionId: `perf-session-${i + 1}`
+          sessionId: `perf-session-${i + 1}`,
         };
 
         return new NextRequest('http://localhost/api/ai/chat', {
           method: 'POST',
           body: JSON.stringify(requestData),
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
       });
 
@@ -471,7 +471,7 @@ describe('AI Concurrent Load Tests', () => {
         平均响应时间: `${Math.round(avgResponseTime)}ms`,
         最大响应时间: `${maxResponseTime}ms`,
         最小响应时间: `${minResponseTime}ms`,
-        P95响应时间: `${p95ResponseTime}ms`
+        P95响应时间: `${p95ResponseTime}ms`,
       });
 
       // Performance assertions

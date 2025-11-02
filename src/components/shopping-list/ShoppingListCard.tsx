@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { EditShoppingListButton } from './EditShoppingListButton'
+import { useState } from 'react';
+import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { EditShoppingListButton } from './EditShoppingListButton';
 
 interface ShoppingItem {
   id: string
@@ -48,58 +48,58 @@ interface ShoppingListCardProps {
 export function ShoppingListCard({ 
   shoppingList, 
   onDeleted, 
-  onUpdated 
+  onUpdated, 
 }: ShoppingListCardProps) {
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm('确定要删除这个购物清单吗？')) {
-      return
+      return;
     }
 
     try {
-      setIsDeleting(true)
+      setIsDeleting(true);
       const response = await fetch(`/api/shopping-lists/${shoppingList.id}`, {
         method: 'DELETE',
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('删除失败')
+        throw new Error('删除失败');
       }
 
-      onDeleted(shoppingList.id)
+      onDeleted(shoppingList.id);
     } catch (err) {
-      alert(err instanceof Error ? err.message : '删除失败')
+      alert(err instanceof Error ? err.message : '删除失败');
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-800'
-      case 'IN_PROGRESS':
-        return 'bg-blue-100 text-blue-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+    case 'COMPLETED':
+      return 'bg-green-100 text-green-800';
+    case 'IN_PROGRESS':
+      return 'bg-blue-100 text-blue-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
     }
-  }
+  };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'COMPLETED':
-        return '已完成'
-      case 'IN_PROGRESS':
-        return '采购中'
-      default:
-        return '待采购'
+    case 'COMPLETED':
+      return '已完成';
+    case 'IN_PROGRESS':
+      return '采购中';
+    default:
+      return '待采购';
     }
-  }
+  };
 
-  const purchasedCount = shoppingList.items.filter(item => item.purchased).length
-  const totalItems = shoppingList.items.length
-  const progress = totalItems > 0 ? (purchasedCount / totalItems) * 100 : 0
+  const purchasedCount = shoppingList.items.filter(item => item.purchased).length;
+  const totalItems = shoppingList.items.length;
+  const progress = totalItems > 0 ? (purchasedCount / totalItems) * 100 : 0;
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
@@ -115,7 +115,7 @@ export function ShoppingListCard({
           <p className="text-sm text-gray-500 mt-1">
             创建于 {formatDistanceToNow(new Date(shoppingList.createdAt), { 
               addSuffix: true, 
-              locale: zhCN 
+              locale: zhCN, 
             })}
           </p>
         </div>
@@ -169,9 +169,9 @@ export function ShoppingListCard({
         <div className="flex flex-wrap gap-1">
           {Object.entries(
             shoppingList.items.reduce((acc, item) => {
-              const category = item.category
-              acc[category] = (acc[category] || 0) + 1
-              return acc
+              const category = item.category;
+              acc[category] = (acc[category] || 0) + 1;
+              return acc;
             }, {} as Record<string, number>)
           ).map(([category, count]) => (
             <span 
@@ -207,5 +207,5 @@ export function ShoppingListCard({
         </button>
       </div>
     </div>
-  )
+  );
 }

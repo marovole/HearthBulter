@@ -1,31 +1,31 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { PlusIcon, SettingsIcon, TrendingUpIcon } from 'lucide-react'
-import { BudgetSetting, BudgetDashboard, BudgetStatusIndicator } from '@/components/budget'
-import { BudgetStatus } from '@prisma/client'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PlusIcon, SettingsIcon, TrendingUpIcon } from 'lucide-react';
+import { BudgetSetting, BudgetDashboard, BudgetStatusIndicator } from '@/components/budget';
+import { BudgetStatus } from '@prisma/client';
 
 // 模拟用户ID，实际应用中从认证系统获取
-const MOCK_MEMBER_ID = 'user-member-id'
+const MOCK_MEMBER_ID = 'user-member-id';
 
 export default function BudgetManagementPage() {
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleBudgetCreated = (budget: any) => {
-    setShowCreateDialog(false)
-    setSelectedBudgetId(budget.id)
-    setRefreshKey(prev => prev + 1) // 触发刷新
-  }
+    setShowCreateDialog(false);
+    setSelectedBudgetId(budget.id);
+    setRefreshKey(prev => prev + 1); // 触发刷新
+  };
 
   const handleBudgetSelect = (budgetStatus: any) => {
-    setSelectedBudgetId(budgetStatus.budget.id)
-  }
+    setSelectedBudgetId(budgetStatus.budget.id);
+  };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -204,5 +204,5 @@ export default function BudgetManagementPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

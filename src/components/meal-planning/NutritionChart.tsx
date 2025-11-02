@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { 
   PieChart, 
@@ -11,8 +11,8 @@ import {
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid
-} from 'recharts'
+  CartesianGrid,
+} from 'recharts';
 
 interface NutritionChartProps {
   calories: number
@@ -29,13 +29,13 @@ const COLORS = {
   protein: '#3B82F6', // blue-500
   carbs: '#10B981',   // emerald-500
   fat: '#F59E0B',     // amber-500
-}
+};
 
 const MACRO_LABELS = {
   protein: '蛋白质',
   carbs: '碳水化合物',
   fat: '脂肪',
-}
+};
 
 export function NutritionChart({ 
   calories, 
@@ -45,12 +45,12 @@ export function NutritionChart({
   targetCalories,
   targetProtein,
   targetCarbs,
-  targetFat
+  targetFat,
 }: NutritionChartProps) {
   // 计算宏量营养素的热量贡献
-  const proteinCalories = protein * 4
-  const carbsCalories = carbs * 4
-  const fatCalories = fat * 9
+  const proteinCalories = protein * 4;
+  const carbsCalories = carbs * 4;
+  const fatCalories = fat * 9;
 
   // 饼图数据
   const pieData = [
@@ -59,23 +59,23 @@ export function NutritionChart({
       value: proteinCalories,
       grams: protein,
       percentage: ((proteinCalories / calories) * 100).toFixed(1),
-      color: COLORS.protein
+      color: COLORS.protein,
     },
     {
       name: MACRO_LABELS.carbs,
       value: carbsCalories,
       grams: carbs,
       percentage: ((carbsCalories / calories) * 100).toFixed(1),
-      color: COLORS.carbs
+      color: COLORS.carbs,
     },
     {
       name: MACRO_LABELS.fat,
       value: fatCalories,
       grams: fat,
       percentage: ((fatCalories / calories) * 100).toFixed(1),
-      color: COLORS.fat
-    }
-  ]
+      color: COLORS.fat,
+    },
+  ];
 
   // 柱状图数据（实际 vs 目标）
   const barData = [
@@ -83,36 +83,36 @@ export function NutritionChart({
       name: '热量',
       actual: calories,
       target: targetCalories || calories,
-      unit: 'kcal'
+      unit: 'kcal',
     },
     {
       name: '蛋白质',
       actual: protein,
       target: targetProtein || protein,
-      unit: 'g'
+      unit: 'g',
     },
     {
       name: '碳水',
       actual: carbs,
       target: targetCarbs || carbs,
-      unit: 'g'
+      unit: 'g',
     },
     {
       name: '脂肪',
       actual: fat,
       target: targetFat || fat,
-      unit: 'g'
-    }
-  ]
+      unit: 'g',
+    },
+  ];
 
   // 自定义饼图标签
   const renderCustomizedLabel = ({
-    cx, cy, midAngle, innerRadius, outerRadius, percentage
+    cx, cy, midAngle, innerRadius, outerRadius, percentage,
   }: any) => {
-    const RADIAN = Math.PI / 180
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
-    const x = cx + radius * Math.cos(-midAngle * RADIAN)
-    const y = cy + radius * Math.sin(-midAngle * RADIAN)
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
       <text 
@@ -125,13 +125,13 @@ export function NutritionChart({
       >
         {`${percentage}%`}
       </text>
-    )
-  }
+    );
+  };
 
   // 自定义Tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      const data = payload[0].payload;
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-medium text-gray-900">{data.name}</p>
@@ -142,17 +142,17 @@ export function NutritionChart({
             重量: {data.grams.toFixed(1)} g
           </p>
         </div>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
   const BarTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const actual = payload[0].value
-      const target = payload[1].value
-      const unit = payload[0].payload.unit
-      const achievement = ((actual / target) * 100).toFixed(1)
+      const actual = payload[0].value;
+      const target = payload[1].value;
+      const unit = payload[0].payload.unit;
+      const achievement = ((actual / target) * 100).toFixed(1);
       
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
@@ -167,10 +167,10 @@ export function NutritionChart({
             达成率: {achievement}%
           </p>
         </div>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
   return (
     <div className="space-y-6">
@@ -266,5 +266,5 @@ export function NutritionChart({
         </div>
       </div>
     </div>
-  )
+  );
 }

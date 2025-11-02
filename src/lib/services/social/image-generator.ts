@@ -3,53 +3,53 @@
  * 使用html2canvas生成分享卡片图片
  */
 
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import QRCode from 'qrcode'
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import QRCode from 'qrcode';
 import { 
   ShareTemplate, 
   ImageGenerationConfig,
-  SHARE_TEMPLATE_CONFIGS 
-} from '@/types/social-sharing'
+  SHARE_TEMPLATE_CONFIGS, 
+} from '@/types/social-sharing';
 
 /**
  * 图片生成器类
  */
 export class ShareImageGenerator {
-  private static instance: ShareImageGenerator
+  private static instance: ShareImageGenerator;
 
   static getInstance(): ShareImageGenerator {
     if (!ShareImageGenerator.instance) {
-      ShareImageGenerator.instance = new ShareImageGenerator()
+      ShareImageGenerator.instance = new ShareImageGenerator();
     }
-    return ShareImageGenerator.instance
+    return ShareImageGenerator.instance;
   }
 
   /**
    * 生成分享图片
    */
   async generateShareImage(template: ShareTemplate, data: any, config?: Partial<ImageGenerationConfig>): Promise<string> {
-    const finalConfig = { ...SHARE_TEMPLATE_CONFIGS[template], ...config }
+    const finalConfig = { ...SHARE_TEMPLATE_CONFIGS[template], ...config };
     
     switch (template) {
-      case ShareTemplate.HEALTH_REPORT:
-        return this.generateHealthReportImage(data, finalConfig)
-      case ShareTemplate.GOAL_ACHIEVED:
-        return this.generateGoalAchievedImage(data, finalConfig)
-      case ShareTemplate.ACHIEVEMENT_UNLOCKED:
-        return this.generateAchievementUnlockedImage(data, finalConfig)
-      case ShareTemplate.WEIGHT_LOSS:
-        return this.generateWeightLossImage(data, finalConfig)
-      case ShareTemplate.STREAK_CELEBRATION:
-        return this.generateStreakCelebrationImage(data, finalConfig)
-      case ShareTemplate.RECIPE_CARD:
-        return this.generateRecipeCardImage(data, finalConfig)
-      case ShareTemplate.PERSONAL_RECORD:
-        return this.generatePersonalRecordImage(data, finalConfig)
-      case ShareTemplate.COMMUNITY_POST:
-        return this.generateCommunityPostImage(data, finalConfig)
-      default:
-        throw new Error(`不支持的分享模板: ${template}`)
+    case ShareTemplate.HEALTH_REPORT:
+      return this.generateHealthReportImage(data, finalConfig);
+    case ShareTemplate.GOAL_ACHIEVED:
+      return this.generateGoalAchievedImage(data, finalConfig);
+    case ShareTemplate.ACHIEVEMENT_UNLOCKED:
+      return this.generateAchievementUnlockedImage(data, finalConfig);
+    case ShareTemplate.WEIGHT_LOSS:
+      return this.generateWeightLossImage(data, finalConfig);
+    case ShareTemplate.STREAK_CELEBRATION:
+      return this.generateStreakCelebrationImage(data, finalConfig);
+    case ShareTemplate.RECIPE_CARD:
+      return this.generateRecipeCardImage(data, finalConfig);
+    case ShareTemplate.PERSONAL_RECORD:
+      return this.generatePersonalRecordImage(data, finalConfig);
+    case ShareTemplate.COMMUNITY_POST:
+      return this.generateCommunityPostImage(data, finalConfig);
+    default:
+      throw new Error(`不支持的分享模板: ${template}`);
     }
   }
 
@@ -57,64 +57,64 @@ export class ShareImageGenerator {
    * 生成健康报告图片
    */
   private async generateHealthReportImage(data: any, config: ImageGenerationConfig): Promise<string> {
-    const html = this.createHealthReportHTML(data, config)
-    return this.generateImageFromHTML(html, config)
+    const html = this.createHealthReportHTML(data, config);
+    return this.generateImageFromHTML(html, config);
   }
 
   /**
    * 生成目标达成图片
    */
   private async generateGoalAchievedImage(data: any, config: ImageGenerationConfig): Promise<string> {
-    const html = this.createGoalAchievedHTML(data, config)
-    return this.generateImageFromHTML(html, config)
+    const html = this.createGoalAchievedHTML(data, config);
+    return this.generateImageFromHTML(html, config);
   }
 
   /**
    * 生成成就解锁图片
    */
   private async generateAchievementUnlockedImage(data: any, config: ImageGenerationConfig): Promise<string> {
-    const html = this.createAchievementUnlockedHTML(data, config)
-    return this.generateImageFromHTML(html, config)
+    const html = this.createAchievementUnlockedHTML(data, config);
+    return this.generateImageFromHTML(html, config);
   }
 
   /**
    * 生成减重图片
    */
   private async generateWeightLossImage(data: any, config: ImageGenerationConfig): Promise<string> {
-    const html = this.createWeightLossHTML(data, config)
-    return this.generateImageFromHTML(html, config)
+    const html = this.createWeightLossHTML(data, config);
+    return this.generateImageFromHTML(html, config);
   }
 
   /**
    * 生成连续打卡庆祝图片
    */
   private async generateStreakCelebrationImage(data: any, config: ImageGenerationConfig): Promise<string> {
-    const html = this.createStreakCelebrationHTML(data, config)
-    return this.generateImageFromHTML(html, config)
+    const html = this.createStreakCelebrationHTML(data, config);
+    return this.generateImageFromHTML(html, config);
   }
 
   /**
    * 生成食谱卡片图片
    */
   private async generateRecipeCardImage(data: any, config: ImageGenerationConfig): Promise<string> {
-    const html = this.createRecipeCardHTML(data, config)
-    return this.generateImageFromHTML(html, config)
+    const html = this.createRecipeCardHTML(data, config);
+    return this.generateImageFromHTML(html, config);
   }
 
   /**
    * 生成个人记录图片
    */
   private async generatePersonalRecordImage(data: any, config: ImageGenerationConfig): Promise<string> {
-    const html = this.createPersonalRecordHTML(data, config)
-    return this.generateImageFromHTML(html, config)
+    const html = this.createPersonalRecordHTML(data, config);
+    return this.generateImageFromHTML(html, config);
   }
 
   /**
    * 生成社区帖子图片
    */
   private async generateCommunityPostImage(data: any, config: ImageGenerationConfig): Promise<string> {
-    const html = this.createCommunityPostHTML(data, config)
-    return this.generateImageFromHTML(html, config)
+    const html = this.createCommunityPostHTML(data, config);
+    return this.generateImageFromHTML(html, config);
   }
 
   /**
@@ -124,47 +124,47 @@ export class ShareImageGenerator {
     // 在浏览器环境中使用html2canvas
     if (typeof window !== 'undefined') {
       try {
-        const { default: html2canvas } = await import('html2canvas')
+        const { default: html2canvas } = await import('html2canvas');
         
         // 创建临时DOM元素
-        const tempDiv = document.createElement('div')
-        tempDiv.innerHTML = html
-        tempDiv.style.position = 'absolute'
-        tempDiv.style.left = '-9999px'
-        tempDiv.style.top = '-9999px'
-        tempDiv.style.width = `${config.width}px`
-        tempDiv.style.fontFamily = config.fontFamily
-        document.body.appendChild(tempDiv)
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '-9999px';
+        tempDiv.style.width = `${config.width}px`;
+        tempDiv.style.fontFamily = config.fontFamily;
+        document.body.appendChild(tempDiv);
 
         // 生成图片
         const canvas = await html2canvas(tempDiv, {
           width: config.width,
           height: config.height,
           backgroundColor: config.backgroundColor,
-          scale: 2 // 高清显示
-        })
+          scale: 2, // 高清显示
+        });
 
         // 清理临时元素
-        document.body.removeChild(tempDiv)
+        document.body.removeChild(tempDiv);
 
         // 转换为blob并获取URL
         return new Promise((resolve, reject) => {
           canvas.toBlob((blob) => {
             if (blob) {
-              const url = URL.createObjectURL(blob)
-              resolve(url)
+              const url = URL.createObjectURL(blob);
+              resolve(url);
             } else {
-              reject(new Error('图片生成失败'))
+              reject(new Error('图片生成失败'));
             }
-          }, `image/${config.format}`, config.quality / 100)
-        })
+          }, `image/${config.format}`, config.quality / 100);
+        });
       } catch (error) {
-        console.error('HTML转图片失败:', error)
-        throw new Error('图片生成失败')
+        console.error('HTML转图片失败:', error);
+        throw new Error('图片生成失败');
       }
     } else {
       // 服务端环境，使用Puppeteer
-      return this.generateImageWithPuppeteer(html, config)
+      return this.generateImageWithPuppeteer(html, config);
     }
   }
 
@@ -173,36 +173,36 @@ export class ShareImageGenerator {
    */
   private async generateImageWithPuppeteer(html: string, config: ImageGenerationConfig): Promise<string> {
     try {
-      const puppeteer = await import('puppeteer')
+      const puppeteer = await import('puppeteer');
       const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      })
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
       
-      const page = await browser.newPage()
-      await page.setContent(html, { waitUntil: 'networkidle0' })
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
       
       // 设置视口大小
       await page.setViewport({
         width: config.width,
         height: config.height,
-        deviceScaleFactor: 2
-      })
+        deviceScaleFactor: 2,
+      });
 
       // 生成截图
       const screenshot = await page.screenshot({
         type: config.format as any,
-        quality: config.format === 'jpeg' ? config.quality : undefined
-      })
+        quality: config.format === 'jpeg' ? config.quality : undefined,
+      });
 
-      await browser.close()
+      await browser.close();
 
       // 转换为base64
-      const base64 = screenshot.toString('base64')
-      return `data:image/${config.format};base64,${base64}`
+      const base64 = screenshot.toString('base64');
+      return `data:image/${config.format};base64,${base64}`;
     } catch (error) {
-      console.error('Puppeteer图片生成失败:', error)
-      throw new Error('服务端图片生成失败')
+      console.error('Puppeteer图片生成失败:', error);
+      throw new Error('服务端图片生成失败');
     }
   }
 
@@ -216,13 +216,13 @@ export class ShareImageGenerator {
         margin: 1,
         color: {
           dark: '#000000',
-          light: '#FFFFFF'
-        }
-      })
-      return qrDataUrl
+          light: '#FFFFFF',
+        },
+      });
+      return qrDataUrl;
     } catch (error) {
-      console.error('二维码生成失败:', error)
-      throw new Error('二维码生成失败')
+      console.error('二维码生成失败:', error);
+      throw new Error('二维码生成失败');
     }
   }
 
@@ -230,8 +230,8 @@ export class ShareImageGenerator {
    * 健康报告HTML模板
    */
   private createHealthReportHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, healthScore, weightChange, dataPoints, period, latestData } = data
-    const currentDate = format(new Date(), 'yyyy年MM月dd日', { locale: zhCN })
+    const { memberName, healthScore, weightChange, dataPoints, period, latestData } = data;
+    const currentDate = format(new Date(), 'yyyy年MM月dd日', { locale: zhCN });
 
     return `
       <div style="
@@ -318,15 +318,15 @@ export class ShareImageGenerator {
           </div>
         ` : ''}
       </div>
-    `
+    `;
   }
 
   /**
    * 目标达成HTML模板
    */
   private createGoalAchievedHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, goalTitle, progress, achievedDate, metric } = data
-    const dateStr = format(new Date(achievedDate), 'yyyy年MM月dd日', { locale: zhCN })
+    const { memberName, goalTitle, progress, achievedDate, metric } = data;
+    const dateStr = format(new Date(achievedDate), 'yyyy年MM月dd日', { locale: zhCN });
 
     return `
       <div style="
@@ -398,15 +398,15 @@ export class ShareImageGenerator {
           为${memberName}的坚持喝彩！🎉
         </div>
       </div>
-    `
+    `;
   }
 
   /**
    * 成就解锁HTML模板
    */
   private createAchievementUnlockedHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, achievementTitle, achievementDescription, points, icon, color, unlockedAt } = data
-    const dateStr = format(new Date(unlockedAt), 'yyyy年MM月dd日', { locale: zhCN })
+    const { memberName, achievementTitle, achievementDescription, points, icon, color, unlockedAt } = data;
+    const dateStr = format(new Date(unlockedAt), 'yyyy年MM月dd日', { locale: zhCN });
 
     return `
       <div style="
@@ -495,14 +495,14 @@ export class ShareImageGenerator {
           ${memberName}的成就收藏 • 继续加油！
         </div>
       </div>
-    `
+    `;
   }
 
   /**
    * 减重HTML模板
    */
   private createWeightLossHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, initialWeight, currentWeight, weightLoss, weightLossPercent, period, icon } = data
+    const { memberName, initialWeight, currentWeight, weightLoss, weightLossPercent, period, icon } = data;
 
     return `
       <div style="
@@ -585,14 +585,14 @@ export class ShareImageGenerator {
           </div>
         </div>
       </div>
-    `
+    `;
   }
 
   /**
    * 连续打卡庆祝HTML模板
    */
   private createStreakCelebrationHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, streakDays, currentStreak, bestStreak, period, icon } = data
+    const { memberName, streakDays, currentStreak, bestStreak, period, icon } = data;
 
     return `
       <div style="
@@ -692,15 +692,15 @@ export class ShareImageGenerator {
           100% { transform: scale(1); }
         }
       </style>
-    `
+    `;
   }
 
   /**
    * 食谱卡片HTML模板
    */
   private createRecipeCardHTML(data: any, config: ImageGenerationConfig): string {
-    const { recipeName, memberName, calories, protein, ingredients, createdAt } = data
-    const dateStr = format(new Date(createdAt), 'MM月dd日', { locale: zhCN })
+    const { recipeName, memberName, calories, protein, ingredients, createdAt } = data;
+    const dateStr = format(new Date(createdAt), 'MM月dd日', { locale: zhCN });
 
     return `
       <div style="
@@ -789,15 +789,15 @@ export class ShareImageGenerator {
           </div>
         </div>
       </div>
-    `
+    `;
   }
 
   /**
    * 个人记录HTML模板
    */
   private createPersonalRecordHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, title, description, recordDate, icon } = data
-    const dateStr = format(new Date(recordDate), 'yyyy年MM月dd日 HH:mm', { locale: zhCN })
+    const { memberName, title, description, recordDate, icon } = data;
+    const dateStr = format(new Date(recordDate), 'yyyy年MM月dd日 HH:mm', { locale: zhCN });
 
     return `
       <div style="
@@ -861,15 +861,15 @@ export class ShareImageGenerator {
           恭喜${memberName}创造新纪录！
         </div>
       </div>
-    `
+    `;
   }
 
   /**
    * 社区帖子HTML模板
    */
   private createCommunityPostHTML(data: any, config: ImageGenerationConfig): string {
-    const { title, content, imageUrl, authorName, createdAt } = data
-    const dateStr = format(new Date(createdAt), 'yyyy年MM月dd日', { locale: zhCN })
+    const { title, content, imageUrl, authorName, createdAt } = data;
+    const dateStr = format(new Date(createdAt), 'yyyy年MM月dd日', { locale: zhCN });
 
     return `
       <div style="
@@ -931,26 +931,26 @@ export class ShareImageGenerator {
           </div>
         </div>
       </div>
-    `
+    `;
   }
 }
 
 // 导出单例实例
-export const shareImageGenerator = ShareImageGenerator.getInstance()
+export const shareImageGenerator = ShareImageGenerator.getInstance();
 
 // 导出工具函数
 export async function generateShareImage(template: ShareTemplate, data: any, config?: Partial<any>): Promise<string> {
-  const generator = ShareImageGenerator.getInstance()
-  return generator.generateShareImage(template, data, config)
+  const generator = ShareImageGenerator.getInstance();
+  return generator.generateShareImage(template, data, config);
 }
 
 export async function generateSharePreview(template: ShareTemplate, data: any): Promise<string> {
-  const generator = ShareImageGenerator.getInstance()
-  const config = SHARE_TEMPLATE_CONFIGS[template]
+  const generator = ShareImageGenerator.getInstance();
+  const config = SHARE_TEMPLATE_CONFIGS[template];
   return generator.generateShareImage(template, data, {
     ...config,
     quality: 70, // 预览质量稍低
     width: 600, // 预览尺寸较小
-    height: 315
-  })
+    height: 315,
+  });
 }

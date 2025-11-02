@@ -8,8 +8,8 @@ import type {
   SyncStatus,
   DevicePermission,
   HealthDataType,
-  HealthDataSource
-} from '@prisma/client'
+  HealthDataSource,
+} from '@prisma/client';
 
 /**
  * 设备连接输入类型
@@ -126,8 +126,8 @@ export const DEVICE_PERMISSION_LABELS: Record<DevicePermission, string> = {
   READ_BLOOD_PRESSURE: '读取血压',
   READ_DISTANCE: '读取距离',
   READ_ACTIVE_MINUTES: '读取活动时间',
-  READ_EXERCISE: '读取运动记录'
-}
+  READ_EXERCISE: '读取运动记录',
+};
 
 /**
  * 设备类型映射
@@ -139,8 +139,8 @@ export const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
   BLOOD_PRESSURE_MONITOR: '血压计',
   GLUCOSE_METER: '血糖仪',
   SMART_RING: '智能戒指',
-  OTHER: '其他设备'
-}
+  OTHER: '其他设备',
+};
 
 /**
  * 平台类型映射
@@ -153,8 +153,8 @@ export const PLATFORM_TYPE_LABELS: Record<PlatformType, string> = {
   SAMSUNG_HEALTH: 'Samsung Health',
   GARMIN_CONNECT: 'Garmin Connect',
   FITBIT: 'Fitbit',
-  OTHER_PLATFORM: '其他平台'
-}
+  OTHER_PLATFORM: '其他平台',
+};
 
 /**
  * 同步状态映射
@@ -164,8 +164,8 @@ export const SYNC_STATUS_LABELS: Record<SyncStatus, string> = {
   SYNCING: '同步中',
   SUCCESS: '同步成功',
   FAILED: '同步失败',
-  DISABLED: '已禁用'
-}
+  DISABLED: '已禁用',
+};
 
 /**
  * 健康数据类型映射
@@ -186,8 +186,8 @@ export const HEALTH_DATA_TYPE_LABELS: Record<HealthDataType, string> = {
   EXERCISE_DURATION: '运动时长',
   RESTING_HEART_RATE: '静息心率',
   FLOORS_CLIMBED: '爬楼层数',
-  STANDING_HOURS: '站立时间'
-}
+  STANDING_HOURS: '站立时间',
+};
 
 /**
  * 去重窗口时间（小时）
@@ -208,5 +208,5 @@ export const DEDUPLICATION_WINDOWS: Record<HealthDataType, number> = {
   EXERCISE_DURATION: 24,
   RESTING_HEART_RATE: 12,
   FLOORS_CLIMBED: 12,
-  STANDING_HOURS: 12
-}
+  STANDING_HOURS: 12,
+};

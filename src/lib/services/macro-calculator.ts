@@ -12,7 +12,7 @@ import {
   calculateAge,
   ACTIVITY_FACTORS,
   type GoalType,
-} from '@/lib/health-calculations'
+} from '@/lib/health-calculations';
 
 export type ActivityLevel =
   | 'SEDENTARY'
@@ -58,17 +58,17 @@ export class MacroCalculator {
     goalType: GoalType
   ): { carbRatio: number; proteinRatio: number; fatRatio: number } {
     switch (goalType) {
-      case 'LOSE_WEIGHT':
-        // 减重：高蛋白、中等碳水、低脂肪
-        return { carbRatio: 0.45, proteinRatio: 0.3, fatRatio: 0.25 }
-      case 'GAIN_MUSCLE':
-        // 增肌：高蛋白、高碳水、中等脂肪
-        return { carbRatio: 0.4, proteinRatio: 0.35, fatRatio: 0.25 }
-      case 'MAINTAIN':
-      case 'IMPROVE_HEALTH':
-      default:
-        // 维持/健康：均衡比例
-        return { carbRatio: 0.5, proteinRatio: 0.2, fatRatio: 0.3 }
+    case 'LOSE_WEIGHT':
+      // 减重：高蛋白、中等碳水、低脂肪
+      return { carbRatio: 0.45, proteinRatio: 0.3, fatRatio: 0.25 };
+    case 'GAIN_MUSCLE':
+      // 增肌：高蛋白、高碳水、中等脂肪
+      return { carbRatio: 0.4, proteinRatio: 0.35, fatRatio: 0.25 };
+    case 'MAINTAIN':
+    case 'IMPROVE_HEALTH':
+    default:
+      // 维持/健康：均衡比例
+      return { carbRatio: 0.5, proteinRatio: 0.2, fatRatio: 0.3 };
     }
   }
 
@@ -82,10 +82,10 @@ export class MacroCalculator {
     gender: 'MALE' | 'FEMALE',
     activityLevel: ActivityLevel
   ): number {
-    const age = calculateAge(birthDate)
-    const bmr = calculateBMR(weight, height, age, gender)
-    const activityFactor = ACTIVITY_FACTORS[activityLevel]
-    return calculateTDEE(bmr, activityFactor)
+    const age = calculateAge(birthDate);
+    const bmr = calculateBMR(weight, height, age, gender);
+    const activityFactor = ACTIVITY_FACTORS[activityLevel];
+    return calculateTDEE(bmr, activityFactor);
   }
 
   /**
@@ -99,14 +99,14 @@ export class MacroCalculator {
     goalType: GoalType
   ): number {
     switch (goalType) {
-      case 'LOSE_WEIGHT':
-        return Math.round(tdee - 400)
-      case 'GAIN_MUSCLE':
-        return Math.round(tdee + 300)
-      case 'MAINTAIN':
-      case 'IMPROVE_HEALTH':
-      default:
-        return tdee
+    case 'LOSE_WEIGHT':
+      return Math.round(tdee - 400);
+    case 'GAIN_MUSCLE':
+      return Math.round(tdee + 300);
+    case 'MAINTAIN':
+    case 'IMPROVE_HEALTH':
+    default:
+      return tdee;
     }
   }
 
@@ -122,23 +122,23 @@ export class MacroCalculator {
       fatRatio?: number
     }
   ): DailyMacroTargets {
-    const defaultRatios = this.getDefaultMacroRatios(goalType)
-    const carbRatio = customRatios?.carbRatio ?? defaultRatios.carbRatio
+    const defaultRatios = this.getDefaultMacroRatios(goalType);
+    const carbRatio = customRatios?.carbRatio ?? defaultRatios.carbRatio;
     const proteinRatio =
-      customRatios?.proteinRatio ?? defaultRatios.proteinRatio
-    const fatRatio = customRatios?.fatRatio ?? defaultRatios.fatRatio
+      customRatios?.proteinRatio ?? defaultRatios.proteinRatio;
+    const fatRatio = customRatios?.fatRatio ?? defaultRatios.fatRatio;
 
     const macros = calculateMacroTargets(
       targetCalories,
       carbRatio,
       proteinRatio,
       fatRatio
-    )
+    );
 
     return {
       calories: targetCalories,
       ...macros,
-    }
+    };
   }
 
   /**
@@ -154,62 +154,62 @@ export class MacroCalculator {
       lunch: 0.35,
       dinner: 0.25,
       snack: 0.1,
-    }
+    };
 
     const breakfast = {
       calories: Math.round(dailyTargets.calories * mealRatios.breakfast),
       protein: Math.round(dailyTargets.protein * mealRatios.breakfast),
       carbs: Math.round(dailyTargets.carbs * mealRatios.breakfast),
       fat: Math.round(dailyTargets.fat * mealRatios.breakfast),
-    }
+    };
 
     const lunch = {
       calories: Math.round(dailyTargets.calories * mealRatios.lunch),
       protein: Math.round(dailyTargets.protein * mealRatios.lunch),
       carbs: Math.round(dailyTargets.carbs * mealRatios.lunch),
       fat: Math.round(dailyTargets.fat * mealRatios.lunch),
-    }
+    };
 
     const dinner = {
       calories: Math.round(dailyTargets.calories * mealRatios.dinner),
       protein: Math.round(dailyTargets.protein * mealRatios.dinner),
       carbs: Math.round(dailyTargets.carbs * mealRatios.dinner),
       fat: Math.round(dailyTargets.fat * mealRatios.dinner),
-    }
+    };
 
     const snack = {
       calories: Math.round(dailyTargets.calories * mealRatios.snack),
       protein: Math.round(dailyTargets.protein * mealRatios.snack),
       carbs: Math.round(dailyTargets.carbs * mealRatios.snack),
       fat: Math.round(dailyTargets.fat * mealRatios.snack),
-    }
+    };
 
     // 确保每餐蛋白质≥20g
-    const minProtein = 20
-    const meals = [breakfast, lunch, dinner]
-    const totalProtein = meals.reduce((sum, meal) => sum + meal.protein, 0)
-    const remainingProtein = dailyTargets.protein - totalProtein
+    const minProtein = 20;
+    const meals = [breakfast, lunch, dinner];
+    const totalProtein = meals.reduce((sum, meal) => sum + meal.protein, 0);
+    const remainingProtein = dailyTargets.protein - totalProtein;
 
     // 如果某餐蛋白质不足，从其他餐调整
     meals.forEach((meal) => {
       if (meal.protein < minProtein) {
-        const deficit = minProtein - meal.protein
-        meal.protein = minProtein
+        const deficit = minProtein - meal.protein;
+        meal.protein = minProtein;
         // 从snack中扣除（如果snack有足够蛋白质）
         if (snack.protein >= deficit) {
-          snack.protein -= deficit
+          snack.protein -= deficit;
         } else {
           // 如果snack不够，从其他餐扣除
-          const otherMeals = meals.filter((m) => m !== meal)
-          const deficitPerMeal = Math.ceil(deficit / otherMeals.length)
+          const otherMeals = meals.filter((m) => m !== meal);
+          const deficitPerMeal = Math.ceil(deficit / otherMeals.length);
           otherMeals.forEach((m) => {
-            m.protein = Math.max(minProtein, m.protein - deficitPerMeal)
-          })
+            m.protein = Math.max(minProtein, m.protein - deficitPerMeal);
+          });
         }
       }
-    })
+    });
 
-    return { breakfast, lunch, dinner, snack }
+    return { breakfast, lunch, dinner, snack };
   }
 
   /**
@@ -229,9 +229,9 @@ export class MacroCalculator {
       input.birthDate,
       input.gender,
       input.activityLevel
-    )
+    );
 
-    const targetCalories = this.calculateTargetCalories(tdee, input.goalType)
+    const targetCalories = this.calculateTargetCalories(tdee, input.goalType);
 
     const dailyTargets = this.calculateDailyMacroTargets(
       targetCalories,
@@ -241,15 +241,15 @@ export class MacroCalculator {
         proteinRatio: input.proteinRatio,
         fatRatio: input.fatRatio,
       }
-    )
+    );
 
-    const mealTargets = this.calculateMealMacroTargets(dailyTargets)
+    const mealTargets = this.calculateMealMacroTargets(dailyTargets);
 
     return {
       tdee,
       targetCalories,
       dailyTargets,
       mealTargets,
-    }
+    };
   }
 }

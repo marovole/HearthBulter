@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Heart, 
   Search, 
@@ -19,11 +19,11 @@ import {
   X,
   SortAsc,
   SortDesc,
-  Star
-} from 'lucide-react'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { toast } from '@/lib/toast'
+  Star,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { toast } from '@/lib/toast';
 
 interface FavoriteMeal {
   id: string
@@ -53,50 +53,50 @@ const MEAL_TYPE_LABELS = {
   LUNCH: '午餐',
   DINNER: '晚餐',
   SNACK: '加餐',
-}
+};
 
 const DIFFICULTY_LABELS = {
   EASY: '简单',
   MEDIUM: '中等',
   HARD: '困难',
-}
+};
 
 const DIFFICULTY_COLORS = {
   EASY: 'bg-green-100 text-green-800',
   MEDIUM: 'bg-yellow-100 text-yellow-800',
   HARD: 'bg-red-100 text-red-800',
-}
+};
 
 export function FavoriteMeals({ 
   userId, 
   onMealSelect, 
-  onRemoveFavorite 
+  onRemoveFavorite, 
 }: FavoriteMealsProps) {
-  const [favorites, setFavorites] = useState<FavoriteMeal[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [sortBy, setSortBy] = useState<'date' | 'calories' | 'cookingTime'>('date')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [filterType, setFilterType] = useState<string>('all')
-  const [filterDifficulty, setFilterDifficulty] = useState<string>('all')
+  const [favorites, setFavorites] = useState<FavoriteMeal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<'date' | 'calories' | 'cookingTime'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
 
   useEffect(() => {
-    loadFavorites()
-  }, [])
+    loadFavorites();
+  }, []);
 
   const loadFavorites = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       // 模拟API调用 - 实际应该调用后端
-      const mockFavorites = generateMockFavorites()
-      setFavorites(mockFavorites)
+      const mockFavorites = generateMockFavorites();
+      setFavorites(mockFavorites);
     } catch (error) {
-      toast.error('加载收藏列表失败')
+      toast.error('加载收藏列表失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const generateMockFavorites = (): FavoriteMeal[] => {
     return [
@@ -114,7 +114,7 @@ export function FavoriteMeals({
         mealType: 'LUNCH',
         date: new Date('2024-01-15'),
         tags: ['川菜', '鸡肉', '下饭菜'],
-        image: '/images/kungpao-chicken.jpg'
+        image: '/images/kungpao-chicken.jpg',
       },
       {
         id: '2',
@@ -130,7 +130,7 @@ export function FavoriteMeals({
         mealType: 'BREAKFAST',
         date: new Date('2024-01-14'),
         tags: ['家常菜', '鸡蛋', '营养'],
-        image: '/images/steamed-egg.jpg'
+        image: '/images/steamed-egg.jpg',
       },
       {
         id: '3',
@@ -146,7 +146,7 @@ export function FavoriteMeals({
         mealType: 'DINNER',
         date: new Date('2024-01-13'),
         tags: ['红烧', '猪肉', '经典'],
-        image: '/images/braised-pork.jpg'
+        image: '/images/braised-pork.jpg',
       },
       {
         id: '4',
@@ -162,70 +162,70 @@ export function FavoriteMeals({
         mealType: 'LUNCH',
         date: new Date('2024-01-12'),
         tags: ['素食', '减脂', '沙拉'],
-        image: '/images/vegetable-salad.jpg'
-      }
-    ]
-  }
+        image: '/images/vegetable-salad.jpg',
+      },
+    ];
+  };
 
   const handleRemoveFavorite = async (mealId: string) => {
     try {
       // 调用API取消收藏
-      setFavorites(prev => prev.filter(fav => fav.id !== mealId))
-      onRemoveFavorite?.(mealId)
-      toast.success('已取消收藏')
+      setFavorites(prev => prev.filter(fav => fav.id !== mealId));
+      onRemoveFavorite?.(mealId);
+      toast.success('已取消收藏');
     } catch (error) {
-      toast.error('取消收藏失败')
+      toast.error('取消收藏失败');
     }
-  }
+  };
 
   const filteredAndSorted = favorites
     .filter(meal => {
       if (searchTerm && !meal.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false
+        return false;
       }
       if (filterType !== 'all' && meal.mealType !== filterType) {
-        return false
+        return false;
       }
       if (filterDifficulty !== 'all' && meal.difficulty !== filterDifficulty) {
-        return false
+        return false;
       }
-      return true
+      return true;
     })
     .sort((a, b) => {
-      let aValue: any, bValue: any
+      let aValue: any, bValue: any;
       
       switch (sortBy) {
-        case 'date':
-          aValue = a.date.getTime()
-          bValue = b.date.getTime()
-          break
-        case 'calories':
-          aValue = a.calories
-          bValue = b.calories
-          break
-        case 'cookingTime':
-          aValue = a.cookingTime || 0
-          bValue = b.cookingTime || 0
-          break
-        default:
-          return 0
+      case 'date':
+        aValue = a.date.getTime();
+        bValue = b.date.getTime();
+        break;
+      case 'calories':
+        aValue = a.calories;
+        bValue = b.calories;
+        break;
+      case 'cookingTime':
+        aValue = a.cookingTime || 0;
+        bValue = b.cookingTime || 0;
+        break;
+      default:
+        return 0;
       }
       
       if (sortOrder === 'asc') {
-        return aValue - bValue
+        return aValue - bValue;
       } else {
-        return bValue - aValue
+        return bValue - aValue;
       }
-    })
+    });
 
   const toggleSort = (field: 'date' | 'calories' | 'cookingTime') => {
     if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortBy(field)
-      setSortOrder('desc')
+      setSortBy(field);
+      setSortOrder('desc');
     }
-  }
+  };
 
   const renderGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -243,8 +243,8 @@ export function FavoriteMeals({
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  handleRemoveFavorite(meal.id)
+                  e.stopPropagation();
+                  handleRemoveFavorite(meal.id);
                 }}
                 className="text-red-500 hover:text-red-700 hover:bg-red-50"
               >
@@ -342,7 +342,7 @@ export function FavoriteMeals({
         </Card>
       ))}
     </div>
-  )
+  );
 
   const renderListView = () => (
     <div className="space-y-3">
@@ -423,7 +423,7 @@ export function FavoriteMeals({
         </Card>
       ))}
     </div>
-  )
+  );
 
   if (loading) {
     return (
@@ -431,7 +431,7 @@ export function FavoriteMeals({
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <span className="ml-2 text-gray-600">加载收藏列表...</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -555,5 +555,5 @@ export function FavoriteMeals({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

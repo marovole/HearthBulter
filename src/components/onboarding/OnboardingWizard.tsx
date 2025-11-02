@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useOnboarding } from '@/lib/context/OnboardingContext'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useOnboarding } from '@/lib/context/OnboardingContext';
 
 interface OnboardingStep {
   id: string
@@ -21,71 +21,71 @@ const steps: OnboardingStep[] = [
     id: 'welcome',
     title: '欢迎使用 Health Butler',
     description: '了解您的智能家庭健康管家',
-    component: () => null // Will be handled by welcome page
+    component: () => null, // Will be handled by welcome page
   },
   {
     id: 'family-setup',
     title: '家庭设置',
     description: '创建家庭成员档案',
-    component: null // Will be implemented
+    component: null, // Will be implemented
   },
   {
     id: 'health-goals',
     title: '健康目标',
     description: '设置个人健康目标',
-    component: null // Will be implemented
+    component: null, // Will be implemented
   },
   {
     id: 'feature-tour',
     title: '功能导览',
     description: '了解核心功能使用',
-    component: null // Will be implemented
-  }
-]
+    component: null, // Will be implemented
+  },
+];
 
 export function OnboardingWizard() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [isCompleted, setIsCompleted] = useState(false)
-  const router = useRouter()
-  const { completeOnboarding, saveProgress } = useOnboarding()
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const router = useRouter();
+  const { completeOnboarding, saveProgress } = useOnboarding();
 
-  const progress = ((currentStep + 1) / steps.length) * 100
+  const progress = ((currentStep + 1) / steps.length) * 100;
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      const nextStep = currentStep + 1
-      setCurrentStep(nextStep)
-      saveProgress(nextStep)
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      saveProgress(nextStep);
     } else {
-      handleComplete()
+      handleComplete();
     }
-  }
+  };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      const prevStep = currentStep - 1
-      setCurrentStep(prevStep)
-      saveProgress(prevStep)
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      saveProgress(prevStep);
     }
-  }
+  };
 
   const handleSkip = () => {
-    completeOnboarding()
-    router.push('/dashboard')
-  }
+    completeOnboarding();
+    router.push('/dashboard');
+  };
 
   const handleComplete = () => {
-    completeOnboarding()
-    setIsCompleted(true)
+    completeOnboarding();
+    setIsCompleted(true);
     setTimeout(() => {
-      router.push('/dashboard')
-    }, 2000)
-  }
+      router.push('/dashboard');
+    }, 2000);
+  };
 
   const goToStep = (stepIndex: number) => {
-    setCurrentStep(stepIndex)
-    saveProgress(stepIndex)
-  }
+    setCurrentStep(stepIndex);
+    saveProgress(stepIndex);
+  };
 
   if (isCompleted) {
     return (
@@ -105,10 +105,10 @@ export function OnboardingWizard() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
-  const currentStepData = steps[currentStep]
+  const currentStepData = steps[currentStep];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
@@ -153,8 +153,8 @@ export function OnboardingWizard() {
                   index === currentStep
                     ? 'bg-blue-600'
                     : index < currentStep
-                    ? 'bg-green-500'
-                    : 'bg-gray-300'
+                      ? 'bg-green-500'
+                      : 'bg-gray-300'
                 }`}
                 aria-label={`转到步骤 ${index + 1}`}
               />
@@ -259,5 +259,5 @@ export function OnboardingWizard() {
         </div>
       </div>
     </div>
-  )
+  );
 }

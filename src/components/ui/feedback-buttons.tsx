@@ -338,7 +338,7 @@ interface QuickFeedbackProps {
 export function QuickFeedback({
   onFeedback,
   className,
-  disabled = false
+  disabled = false,
 }: QuickFeedbackProps) {
   const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
 

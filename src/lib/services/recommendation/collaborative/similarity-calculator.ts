@@ -38,23 +38,23 @@ export class SimilarityCalculator {
     let similarity = 0;
 
     switch (metric) {
-      case 'cosine':
-        similarity = this.cosineSimilarity(user1Ratings, user2Ratings);
-        break;
-      case 'pearson':
-        similarity = this.pearsonCorrelation(matrix, user1Id, user2Id);
-        break;
-      case 'jaccard':
-        similarity = this.jaccardSimilarity(user1Ratings, user2Ratings);
-        break;
-      case 'adjusted_cosine':
-        similarity = this.adjustedCosineSimilarity(matrix, user1Id, user2Id);
-        break;
-      case 'euclidean':
-        similarity = this.euclideanSimilarity(user1Ratings, user2Ratings);
-        break;
-      default:
-        similarity = this.cosineSimilarity(user1Ratings, user2Ratings);
+    case 'cosine':
+      similarity = this.cosineSimilarity(user1Ratings, user2Ratings);
+      break;
+    case 'pearson':
+      similarity = this.pearsonCorrelation(matrix, user1Id, user2Id);
+      break;
+    case 'jaccard':
+      similarity = this.jaccardSimilarity(user1Ratings, user2Ratings);
+      break;
+    case 'adjusted_cosine':
+      similarity = this.adjustedCosineSimilarity(matrix, user1Id, user2Id);
+      break;
+    case 'euclidean':
+      similarity = this.euclideanSimilarity(user1Ratings, user2Ratings);
+      break;
+    default:
+      similarity = this.cosineSimilarity(user1Ratings, user2Ratings);
     }
 
     // 缓存结果
@@ -92,23 +92,23 @@ export class SimilarityCalculator {
     let similarity = 0;
 
     switch (metric) {
-      case 'cosine':
-        similarity = this.cosineSimilarity(item1Ratings, item2Ratings);
-        break;
-      case 'pearson':
-        similarity = this.pearsonCorrelationForItems(matrix, item1Id, item2Id);
-        break;
-      case 'jaccard':
-        similarity = this.jaccardSimilarity(item1Ratings, item2Ratings);
-        break;
-      case 'adjusted_cosine':
-        similarity = this.adjustedCosineSimilarityForItems(matrix, item1Id, item2Id);
-        break;
-      case 'euclidean':
-        similarity = this.euclideanSimilarity(item1Ratings, item2Ratings);
-        break;
-      default:
-        similarity = this.cosineSimilarity(item1Ratings, item2Ratings);
+    case 'cosine':
+      similarity = this.cosineSimilarity(item1Ratings, item2Ratings);
+      break;
+    case 'pearson':
+      similarity = this.pearsonCorrelationForItems(matrix, item1Id, item2Id);
+      break;
+    case 'jaccard':
+      similarity = this.jaccardSimilarity(item1Ratings, item2Ratings);
+      break;
+    case 'adjusted_cosine':
+      similarity = this.adjustedCosineSimilarityForItems(matrix, item1Id, item2Id);
+      break;
+    case 'euclidean':
+      similarity = this.euclideanSimilarity(item1Ratings, item2Ratings);
+      break;
+    default:
+      similarity = this.cosineSimilarity(item1Ratings, item2Ratings);
     }
 
     // 缓存结果
@@ -147,7 +147,7 @@ export class SimilarityCalculator {
       similarities.push({
         id: userId,
         similarity,
-        commonItems
+        commonItems,
       });
     });
 
@@ -184,7 +184,7 @@ export class SimilarityCalculator {
       similarities.push({
         id: itemId,
         similarity,
-        commonItems: commonUsers
+        commonItems: commonUsers,
       });
     });
 
@@ -504,13 +504,13 @@ export class SimilarityCalculator {
           // 检查共同评分数量
           const commonCount = type === 'user'
             ? this.getCommonItemCount(
-                matrix.ratings.get(id1) || new Map(),
-                matrix.ratings.get(id2) || new Map()
-              )
+              matrix.ratings.get(id1) || new Map(),
+              matrix.ratings.get(id2) || new Map()
+            )
             : this.getCommonItemCount(
-                this.getItemRatings(matrix, id1),
-                this.getItemRatings(matrix, id2)
-              );
+              this.getItemRatings(matrix, id1),
+              this.getItemRatings(matrix, id2)
+            );
           
           if (commonCount >= minCommonRatings) {
             similarities.set(id2, similarity);
@@ -537,7 +537,7 @@ export class SimilarityCalculator {
   getCacheStatus(): { size: number; keys: string[] } {
     return {
       size: this.similarityCache.size,
-      keys: Array.from(this.similarityCache.keys())
+      keys: Array.from(this.similarityCache.keys()),
     };
   }
 

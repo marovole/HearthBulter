@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Minus, AlertTriangle } from 'lucide-react'
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Minus, AlertTriangle } from 'lucide-react';
 
 interface InventoryItem {
   id: string
@@ -41,23 +41,23 @@ const usageTypes = [
   { value: 'MANUAL', label: '手动使用' },
   { value: 'RECIPE', label: '食谱制作' },
   { value: 'SHARING', label: '分享' },
-  { value: 'OTHER', label: '其他' }
-]
+  { value: 'OTHER', label: '其他' },
+];
 
 export function UseInventoryItem({ 
   isOpen, 
   onClose, 
   item, 
   memberId, 
-  onSuccess 
+  onSuccess, 
 }: UseInventoryItemProps) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     usedQuantity: '',
     usageType: 'MANUAL',
     notes: '',
-    recipeName: ''
-  })
+    recipeName: '',
+  });
 
   React.useEffect(() => {
     if (isOpen && item) {
@@ -65,28 +65,28 @@ export function UseInventoryItem({
         usedQuantity: '',
         usageType: 'MANUAL',
         notes: '',
-        recipeName: ''
-      })
+        recipeName: '',
+      });
     }
-  }, [isOpen, item])
+  }, [isOpen, item]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
-    if (!item) return
+    if (!item) return;
 
-    const usedQuantity = parseFloat(formData.usedQuantity)
+    const usedQuantity = parseFloat(formData.usedQuantity);
     if (!usedQuantity || usedQuantity <= 0) {
-      alert('请输入有效的使用数量')
-      return
+      alert('请输入有效的使用数量');
+      return;
     }
 
     if (usedQuantity > item.quantity) {
-      alert(`使用数量不能超过库存数量 (${item.quantity} ${item.unit})`)
-      return
+      alert(`使用数量不能超过库存数量 (${item.quantity} ${item.unit})`);
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const payload = {
@@ -97,54 +97,54 @@ export function UseInventoryItem({
         notes: formData.notes || undefined,
         recipeName: formData.usageType === 'COOKING' || formData.usageType === 'RECIPE' 
           ? formData.recipeName || undefined 
-          : undefined
-      }
+          : undefined,
+      };
 
       const response = await fetch('/api/inventory/usage', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
-      })
+        body: JSON.stringify(payload),
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success) {
-        onSuccess?.()
-        onClose()
+        onSuccess?.();
+        onClose();
       } else {
-        alert(result.error || '使用失败')
+        alert(result.error || '使用失败');
       }
     } catch (error) {
-      console.error('使用库存失败:', error)
-      alert('使用失败，请重试')
+      console.error('使用库存失败:', error);
+      alert('使用失败，请重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getExpiryWarning = () => {
-    if (!item?.expiryDate) return null
+    if (!item?.expiryDate) return null;
 
-    const daysToExpiry = item.daysToExpiry || 0
+    const daysToExpiry = item.daysToExpiry || 0;
     if (daysToExpiry < 0) {
       return {
         type: 'error' as const,
-        message: `该物品已过期 ${Math.abs(daysToExpiry)} 天，使用前请确认安全性`
-      }
+        message: `该物品已过期 ${Math.abs(daysToExpiry)} 天，使用前请确认安全性`,
+      };
     } else if (daysToExpiry <= 3) {
       return {
         type: 'warning' as const,
-        message: `该物品即将在 ${daysToExpiry} 天后过期，建议优先使用`
-      }
+        message: `该物品即将在 ${daysToExpiry} 天后过期，建议优先使用`,
+      };
     }
-    return null
-  }
+    return null;
+  };
 
-  const expiryWarning = getExpiryWarning()
+  const expiryWarning = getExpiryWarning();
 
-  if (!item) return null
+  if (!item) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -223,7 +223,7 @@ export function UseInventoryItem({
                   size="sm"
                   onClick={() => setFormData(prev => ({ 
                     ...prev, 
-                    usedQuantity: (item.quantity / 2).toString() 
+                    usedQuantity: (item.quantity / 2).toString(), 
                   }))}
                 >
                   一半
@@ -234,7 +234,7 @@ export function UseInventoryItem({
                   size="sm"
                   onClick={() => setFormData(prev => ({ 
                     ...prev, 
-                    usedQuantity: item.quantity.toString() 
+                    usedQuantity: item.quantity.toString(), 
                   }))}
                 >
                   全部
@@ -313,5 +313,5 @@ export function UseInventoryItem({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

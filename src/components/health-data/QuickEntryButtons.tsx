@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { 
   Weight, 
   Heart, 
@@ -8,8 +8,8 @@ import {
   Moon, 
   Zap,
   Plus,
-  CheckCircle
-} from 'lucide-react'
+  CheckCircle,
+} from 'lucide-react';
 
 interface QuickEntryButtonsProps {
   memberId: string
@@ -30,10 +30,10 @@ interface QuickEntryItem {
 }
 
 export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsProps) {
-  const [activeEntry, setActiveEntry] = useState<string | null>(null)
-  const [entryValues, setEntryValues] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<string[]>([])
+  const [activeEntry, setActiveEntry] = useState<string | null>(null);
+  const [entryValues, setEntryValues] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
 
   const quickEntryItems: QuickEntryItem[] = [
     {
@@ -46,7 +46,7 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
       unit: 'kg',
       min: 20,
       max: 300,
-      step: 0.1
+      step: 0.1,
     },
     {
       id: 'bloodPressure',
@@ -57,7 +57,7 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
       placeholder: '120/80',
       unit: 'mmHg',
       min: 60,
-      max: 200
+      max: 200,
     },
     {
       id: 'heartRate',
@@ -68,7 +68,7 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
       placeholder: '72',
       unit: 'bpm',
       min: 40,
-      max: 220
+      max: 220,
     },
     {
       id: 'sleep',
@@ -80,7 +80,7 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
       unit: '小时',
       min: 0,
       max: 24,
-      step: 0.5
+      step: 0.5,
     },
     {
       id: 'exercise',
@@ -91,64 +91,64 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
       placeholder: '30',
       unit: '分钟',
       min: 0,
-      max: 300
-    }
-  ]
+      max: 300,
+    },
+  ];
 
   const handleQuickEntry = (itemId: string) => {
-    setActiveEntry(itemId === activeEntry ? null : itemId)
-    setErrors([])
-  }
+    setActiveEntry(itemId === activeEntry ? null : itemId);
+    setErrors([]);
+  };
 
   const handleValueChange = (itemId: string, value: string) => {
     setEntryValues(prev => ({
       ...prev,
-      [itemId]: value
-    }))
-  }
+      [itemId]: value,
+    }));
+  };
 
   const handleSubmit = async (itemId: string) => {
-    const value = entryValues[itemId]
+    const value = entryValues[itemId];
     if (!value) {
-      setErrors(['请输入数值'])
-      return
+      setErrors(['请输入数值']);
+      return;
     }
 
-    setLoading(true)
-    setErrors([])
+    setLoading(true);
+    setErrors([]);
 
     try {
       const payload: any = {
         measuredAt: new Date().toISOString(),
         source: 'MANUAL',
-      }
+      };
 
       // 根据不同的快速录入类型设置相应的字段
-      const item = quickEntryItems.find(i => i.id === itemId)
+      const item = quickEntryItems.find(i => i.id === itemId);
       switch (itemId) {
-        case 'weight':
-          payload.weight = parseFloat(value)
-          break
-        case 'bloodPressure':
-          const [systolic, diastolic] = value.split('/').map(v => parseInt(v.trim()))
-          if (systolic && diastolic) {
-            payload.bloodPressureSystolic = systolic
-            payload.bloodPressureDiastolic = diastolic
-          } else {
-            throw new Error('血压格式不正确，请使用 120/80 格式')
-          }
-          break
-        case 'heartRate':
-          payload.heartRate = parseInt(value)
-          break
-        case 'sleep':
-          // 睡眠数据可能需要扩展数据库schema，暂时放在notes中
-          payload.notes = `睡眠时长: ${value}小时`
-          break
-        case 'exercise':
-          // 运动数据也暂时放在notes中
-          payload.notes = `运动时长: ${value}分钟`
-          break
+      case 'weight':
+        payload.weight = parseFloat(value);
+        break;
+      case 'bloodPressure':
+        const [systolic, diastolic] = value.split('/').map(v => parseInt(v.trim()));
+        if (systolic && diastolic) {
+          payload.bloodPressureSystolic = systolic;
+          payload.bloodPressureDiastolic = diastolic;
+        } else {
+          throw new Error('血压格式不正确，请使用 120/80 格式');
+        }
+        break;
+      case 'heartRate':
+        payload.heartRate = parseInt(value);
+        break;
+      case 'sleep':
+        // 睡眠数据可能需要扩展数据库schema，暂时放在notes中
+        payload.notes = `睡眠时长: ${value}小时`;
+        break;
+      case 'exercise':
+        // 运动数据也暂时放在notes中
+        payload.notes = `运动时长: ${value}分钟`;
+        break;
       }
 
       const response = await fetch(`/api/members/${memberId}/health-data`, {
@@ -157,38 +157,38 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        setErrors(data.details || [data.error || '录入失败'])
-        return
+        setErrors(data.details || [data.error || '录入失败']);
+        return;
       }
 
       // 成功
       setEntryValues(prev => ({
         ...prev,
-        [itemId]: ''
-      }))
-      setActiveEntry(null)
+        [itemId]: '',
+      }));
+      setActiveEntry(null);
 
       if (onDataAdded) {
-        onDataAdded()
+        onDataAdded();
       }
 
       // 显示成功提示
       setTimeout(() => {
-        alert('数据录入成功！')
-      }, 100)
+        alert('数据录入成功！');
+      }, 100);
 
     } catch (error) {
-      console.error('快速录入失败:', error)
-      setErrors([error instanceof Error ? error.message : '录入失败'])
+      console.error('快速录入失败:', error);
+      setErrors([error instanceof Error ? error.message : '录入失败']);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
@@ -206,9 +206,9 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {quickEntryItems.map((item) => {
-          const Icon = item.icon
-          const isActive = activeEntry === item.id
-          const value = entryValues[item.id] || ''
+          const Icon = item.icon;
+          const isActive = activeEntry === item.id;
+          const value = entryValues[item.id] || '';
 
           return (
             <div key={item.id} className="relative">
@@ -277,7 +277,7 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
                 </div>
               )}
             </div>
-          )
+          );
         })}
       </div>
       
@@ -285,5 +285,5 @@ export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsPr
         点击任意指标进行快速录入，支持体重、血压、心率等常用健康数据
       </div>
     </div>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { CategoryList } from './CategoryList'
-import { BudgetTracker } from './BudgetTracker'
+import { useState, useEffect } from 'react';
+import { CategoryList } from './CategoryList';
+import { BudgetTracker } from './BudgetTracker';
 
 // 打印样式（仅在打印时应用）
 const PRINT_STYLES = `
@@ -68,7 +68,7 @@ const PRINT_STYLES = `
       font-weight: bold;
     }
   }
-`
+`;
 
 interface ShoppingItem {
   id: string
@@ -104,54 +104,54 @@ export function ShoppingListView({
   shoppingListId,
   planId,
 }: ShoppingListViewProps) {
-  const [shoppingList, setShoppingList] = useState<ShoppingList | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [copySuccess, setCopySuccess] = useState(false)
+  const [shoppingList, setShoppingList] = useState<ShoppingList | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
-    fetchShoppingList()
-  }, [shoppingListId])
+    fetchShoppingList();
+  }, [shoppingListId]);
 
   // 注入打印样式
   useEffect(() => {
-    const styleId = 'shopping-list-print-styles'
+    const styleId = 'shopping-list-print-styles';
     if (!document.getElementById(styleId)) {
-      const styleElement = document.createElement('style')
-      styleElement.id = styleId
-      styleElement.textContent = PRINT_STYLES
-      document.head.appendChild(styleElement)
+      const styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      styleElement.textContent = PRINT_STYLES;
+      document.head.appendChild(styleElement);
     }
-  }, [])
+  }, []);
 
   const fetchShoppingList = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const url = planId
         ? `/api/shopping-lists?planId=${planId}`
-        : `/api/shopping-lists`
-      const response = await fetch(url)
+        : '/api/shopping-lists';
+      const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error('获取购物清单失败')
+        throw new Error('获取购物清单失败');
       }
 
-      const data = await response.json()
+      const data = await response.json();
       const list = data.shoppingLists.find(
         (l: ShoppingList) => l.id === shoppingListId
-      )
+      );
 
       if (!list) {
-        throw new Error('购物清单不存在')
+        throw new Error('购物清单不存在');
       }
 
-      setShoppingList(list)
+      setShoppingList(list);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误')
+      setError(err instanceof Error ? err.message : '未知错误');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleItemToggle = async (itemId: string, purchased: boolean) => {
     try {
@@ -164,18 +164,18 @@ export function ShoppingListView({
           },
           body: JSON.stringify({ purchased }),
         }
-      )
+      );
 
       if (!response.ok) {
-        throw new Error('更新失败')
+        throw new Error('更新失败');
       }
 
       // 重新获取清单
-      await fetchShoppingList()
+      await fetchShoppingList();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '更新失败')
+      alert(err instanceof Error ? err.message : '更新失败');
     }
-  }
+  };
 
   const handleComplete = async (actualCost?: number) => {
     try {
@@ -188,26 +188,26 @@ export function ShoppingListView({
           },
           body: JSON.stringify({ actualCost }),
         }
-      )
+      );
 
       if (!response.ok) {
-        throw new Error('完成采购失败')
+        throw new Error('完成采购失败');
       }
 
-      await fetchShoppingList()
+      await fetchShoppingList();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '完成失败')
+      alert(err instanceof Error ? err.message : '完成失败');
     }
-  }
+  };
 
   // 打印功能
   const handlePrint = () => {
-    window.print()
-  }
+    window.print();
+  };
 
   // 生成文本格式的购物清单
   const generateShoppingListText = () => {
-    if (!shoppingList) return ''
+    if (!shoppingList) return '';
 
     const CATEGORY_LABELS: Record<string, string> = {
       VEGETABLES: '蔬菜',
@@ -220,35 +220,35 @@ export function ShoppingListView({
       SNACKS: '零食',
       BEVERAGES: '饮料',
       OTHER: '其他',
-    }
+    };
 
-    let text = '📋 购物清单\n'
-    text += `生成日期: ${new Date(shoppingList.createdAt).toLocaleDateString('zh-CN')}\n`
+    let text = '📋 购物清单\n';
+    text += `生成日期: ${new Date(shoppingList.createdAt).toLocaleDateString('zh-CN')}\n`;
     
     if (shoppingList.budget || shoppingList.estimatedCost) {
-      text += '\n💰 预算信息:\n'
+      text += '\n💰 预算信息:\n';
       if (shoppingList.budget) {
-        text += `  预算: ¥${shoppingList.budget.toFixed(2)}\n`
+        text += `  预算: ¥${shoppingList.budget.toFixed(2)}\n`;
       }
       if (shoppingList.estimatedCost) {
-        text += `  估算成本: ¥${shoppingList.estimatedCost.toFixed(2)}\n`
+        text += `  估算成本: ¥${shoppingList.estimatedCost.toFixed(2)}\n`;
       }
     }
 
-    text += '\n'
+    text += '\n';
 
     // 按分类分组
     const groupedItems = shoppingList.items.reduce(
       (acc, item) => {
-        const category = item.category
+        const category = item.category;
         if (!acc[category]) {
-          acc[category] = []
+          acc[category] = [];
         }
-        acc[category].push(item)
-        return acc
+        acc[category].push(item);
+        return acc;
       },
       {} as Record<string, typeof shoppingList.items>
-    )
+    );
 
     const categoryOrder = [
       'VEGETABLES',
@@ -261,67 +261,67 @@ export function ShoppingListView({
       'SNACKS',
       'BEVERAGES',
       'OTHER',
-    ]
+    ];
 
     categoryOrder.forEach((category) => {
-      const items = groupedItems[category]
+      const items = groupedItems[category];
       if (items && items.length > 0) {
-        text += `\n【${CATEGORY_LABELS[category] || category}】\n`
+        text += `\n【${CATEGORY_LABELS[category] || category}】\n`;
         items.forEach((item) => {
-          const checkbox = item.purchased ? '☑' : '☐'
+          const checkbox = item.purchased ? '☑' : '☐';
           const amount = item.amount >= 1000 
             ? `${(item.amount / 1000).toFixed(1)}kg` 
-            : `${item.amount.toFixed(0)}g`
-          text += `  ${checkbox} ${item.food.name} - ${amount}\n`
-        })
+            : `${item.amount.toFixed(0)}g`;
+          text += `  ${checkbox} ${item.food.name} - ${amount}\n`;
+        });
       }
-    })
+    });
 
-    return text
-  }
+    return text;
+  };
 
   // 复制到剪贴板
   const handleCopy = async () => {
     try {
-      const text = generateShoppingListText()
-      await navigator.clipboard.writeText(text)
-      setCopySuccess(true)
-      setTimeout(() => setCopySuccess(false), 2000)
+      const text = generateShoppingListText();
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      alert('复制失败，请手动复制')
+      alert('复制失败，请手动复制');
     }
-  }
+  };
 
   // 分享功能（使用Web Share API，如果支持的话）
   const handleShare = async () => {
-    const text = generateShoppingListText()
+    const text = generateShoppingListText();
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: '购物清单',
           text: text,
-        })
+        });
       } catch (err) {
         // 用户取消分享或分享失败
         if ((err as Error).name !== 'AbortError') {
-          console.error('分享失败:', err)
+          console.error('分享失败:', err);
           // 降级到复制功能
-          handleCopy()
+          handleCopy();
         }
       }
     } else {
       // 不支持Web Share API，使用复制功能
-      handleCopy()
+      handleCopy();
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-gray-600">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -329,7 +329,7 @@ export function ShoppingListView({
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <p className="text-red-800">{error}</p>
       </div>
-    )
+    );
   }
 
   if (!shoppingList) {
@@ -337,13 +337,13 @@ export function ShoppingListView({
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <p className="text-gray-600">购物清单不存在</p>
       </div>
-    )
+    );
   }
 
   const purchasedCount = shoppingList.items.filter((item) => item.purchased)
-    .length
-  const totalItems = shoppingList.items.length
-  const progress = totalItems > 0 ? (purchasedCount / totalItems) * 100 : 0
+    .length;
+  const totalItems = shoppingList.items.length;
+  const progress = totalItems > 0 ? (purchasedCount / totalItems) * 100 : 0;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 shopping-list-print">
@@ -417,12 +417,12 @@ export function ShoppingListView({
         {/* 预算追踪 */}
         {shoppingList.budget !== null ||
         shoppingList.estimatedCost !== null ? (
-          <BudgetTracker
-            budget={shoppingList.budget}
-            estimatedCost={shoppingList.estimatedCost}
-            actualCost={shoppingList.actualCost}
-          />
-        ) : null}
+            <BudgetTracker
+              budget={shoppingList.budget}
+              estimatedCost={shoppingList.estimatedCost}
+              actualCost={shoppingList.actualCost}
+            />
+          ) : null}
       </div>
 
       {/* 分类列表 */}
@@ -448,6 +448,6 @@ export function ShoppingListView({
         </div>
       )}
     </div>
-  )
+  );
 }
 

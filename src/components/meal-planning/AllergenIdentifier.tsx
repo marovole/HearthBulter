@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   AlertTriangle, 
   Shield, 
@@ -22,8 +22,8 @@ import {
   Egg,
   TreePine,
   Shell,
-  Cookie
-} from 'lucide-react'
+  Cookie,
+} from 'lucide-react';
 
 interface Allergen {
   id: string
@@ -58,7 +58,7 @@ const COMMON_ALLERGENS: Allergen[] = [
     description: '花生是最常见的食物过敏原之一，可能引起严重的过敏反应',
     symptoms: ['皮肤瘙痒', '荨麻疹', '呼吸困难', '过敏性休克'],
     icon: <Cookie className="h-4 w-4" />,
-    color: 'bg-red-100 text-red-800 border-red-200'
+    color: 'bg-red-100 text-red-800 border-red-200',
   },
   {
     id: 'tree_nut',
@@ -68,7 +68,7 @@ const COMMON_ALLERGENS: Allergen[] = [
     description: '包括核桃、杏仁、腰果等各种树生坚果',
     symptoms: ['口腔瘙痒', '消化不良', '呼吸困难', '血压下降'],
     icon: <TreePine className="h-4 w-4" />,
-    color: 'bg-red-100 text-red-800 border-red-200'
+    color: 'bg-red-100 text-red-800 border-red-200',
   },
   {
     id: 'shellfish',
@@ -78,7 +78,7 @@ const COMMON_ALLERGENS: Allergen[] = [
     description: '包括虾、蟹、龙虾、蛤蜊等贝类海鲜',
     symptoms: ['面部肿胀', '呼吸困难', '恶心呕吐', '过敏性休克'],
     icon: <Shell className="h-4 w-4" />,
-    color: 'bg-red-100 text-red-800 border-red-200'
+    color: 'bg-red-100 text-red-800 border-red-200',
   },
   {
     id: 'fish',
@@ -88,7 +88,7 @@ const COMMON_ALLERGENS: Allergen[] = [
     description: '各种鱼类，如鲑鱼、金枪鱼、鳕鱼等',
     symptoms: ['皮肤反应', '胃肠道症状', '呼吸道症状'],
     icon: <Fish className="h-4 w-4" />,
-    color: 'bg-orange-100 text-orange-800 border-orange-200'
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
   },
   {
     id: 'milk',
@@ -98,7 +98,7 @@ const COMMON_ALLERGENS: Allergen[] = [
     description: '牛奶及乳制品中的蛋白质过敏原',
     symptoms: ['腹泻', '腹痛', '皮疹', '呕吐'],
     icon: <Milk className="h-4 w-4" />,
-    color: 'bg-orange-100 text-orange-800 border-orange-200'
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
   },
   {
     id: 'egg',
@@ -108,7 +108,7 @@ const COMMON_ALLERGENS: Allergen[] = [
     description: '鸡蛋中的蛋白质过敏原，常见于儿童',
     symptoms: ['皮肤瘙痒', '湿疹', '呼吸困难', '消化不良'],
     icon: <Egg className="h-4 w-4" />,
-    color: 'bg-orange-100 text-orange-800 border-orange-200'
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
   },
   {
     id: 'wheat',
@@ -118,7 +118,7 @@ const COMMON_ALLERGENS: Allergen[] = [
     description: '小麦中的蛋白质过敏原，与麸质过敏不同',
     symptoms: ['皮肤瘙痒', '鼻塞', '消化不良', '头痛'],
     icon: <Wheat className="h-4 w-4" />,
-    color: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   },
   {
     id: 'soy',
@@ -128,111 +128,111 @@ const COMMON_ALLERGENS: Allergen[] = [
     description: '大豆及豆制品中的蛋白质过敏原',
     symptoms: ['皮疹', '口腔瘙痒', '消化不良', '呼吸道症状'],
     icon: <Bug className="h-4 w-4" />,
-    color: 'bg-yellow-100 text-yellow-800 border-yellow-200'
-  }
-]
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  },
+];
 
 const SEVERITY_CONFIG = {
   MILD: {
     label: '轻度',
     icon: <AlertCircle className="h-4 w-4" />,
     color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50'
+    bgColor: 'bg-yellow-50',
   },
   MODERATE: {
     label: '中度',
     icon: <AlertTriangle className="h-4 w-4" />,
     color: 'text-orange-600',
-    bgColor: 'bg-orange-50'
+    bgColor: 'bg-orange-50',
   },
   SEVERE: {
     label: '严重',
     icon: <XCircle className="h-4 w-4" />,
     color: 'text-red-600',
-    bgColor: 'bg-red-50'
-  }
-}
+    bgColor: 'bg-red-50',
+  },
+};
 
 export function AllergenIdentifier({ 
   ingredients, 
   userAllergens = [], 
   showDetails = false, 
-  onAllergenClick 
+  onAllergenClick, 
 }: AllergenIdentifierProps) {
-  const [detectedAllergens, setDetectedAllergens] = useState<Allergen[]>([])
-  const [highRiskAllergens, setHighRiskAllergens] = useState<Allergen[]>([])
-  const [showAllergenDetails, setShowAllergenDetails] = useState(false)
-  const [hiddenAllergens, setHiddenAllergens] = useState<Set<string>>(new Set())
+  const [detectedAllergens, setDetectedAllergens] = useState<Allergen[]>([]);
+  const [highRiskAllergens, setHighRiskAllergens] = useState<Allergen[]>([]);
+  const [showAllergenDetails, setShowAllergenDetails] = useState(false);
+  const [hiddenAllergens, setHiddenAllergens] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    analyzeAllergens()
-  }, [ingredients, userAllergens])
+    analyzeAllergens();
+  }, [ingredients, userAllergens]);
 
   const analyzeAllergens = () => {
-    const detected: Allergen[] = []
-    const highRisk: Allergen[] = []
+    const detected: Allergen[] = [];
+    const highRisk: Allergen[] = [];
 
     ingredients.forEach(ingredient => {
-      const ingredientAllergens = ingredient.allergens || []
+      const ingredientAllergens = ingredient.allergens || [];
       
       ingredientAllergens.forEach(allergenId => {
-        const allergen = COMMON_ALLERGENS.find(a => a.id === allergenId)
+        const allergen = COMMON_ALLERGENS.find(a => a.id === allergenId);
         if (allergen && !detected.find(a => a.id === allergen.id)) {
-          detected.push(allergen)
+          detected.push(allergen);
           
           // 检查是否为用户过敏原
           if (userAllergens.includes(allergen.id) || 
               userAllergens.includes(allergen.name) ||
               userAllergens.includes(allergen.category)) {
-            highRisk.push(allergen)
+            highRisk.push(allergen);
           }
         }
-      })
-    })
+      });
+    });
 
-    setDetectedAllergens(detected)
-    setHighRiskAllergens(highRisk)
-  }
+    setDetectedAllergens(detected);
+    setHighRiskAllergens(highRisk);
+  };
 
   const toggleAllergenVisibility = (allergenId: string) => {
-    const newHidden = new Set(hiddenAllergens)
+    const newHidden = new Set(hiddenAllergens);
     if (newHidden.has(allergenId)) {
-      newHidden.delete(allergenId)
+      newHidden.delete(allergenId);
     } else {
-      newHidden.add(allergenId)
+      newHidden.add(allergenId);
     }
-    setHiddenAllergens(newHidden)
-  }
+    setHiddenAllergens(newHidden);
+  };
 
   const visibleAllergens = detectedAllergens.filter(
     allergen => !hiddenAllergens.has(allergen.id)
-  )
+  );
 
   const getRiskLevel = (): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' => {
     if (highRiskAllergens.length > 0) {
-      const hasSevere = highRiskAllergens.some(a => a.severity === 'SEVERE')
-      return hasSevere ? 'CRITICAL' : 'HIGH'
+      const hasSevere = highRiskAllergens.some(a => a.severity === 'SEVERE');
+      return hasSevere ? 'CRITICAL' : 'HIGH';
     }
     
     if (detectedAllergens.length > 0) {
       const hasModerateOrSevere = detectedAllergens.some(a => 
         a.severity === 'MODERATE' || a.severity === 'SEVERE'
-      )
-      return hasModerateOrSevere ? 'MEDIUM' : 'LOW'
+      );
+      return hasModerateOrSevere ? 'MEDIUM' : 'LOW';
     }
     
-    return 'LOW'
-  }
+    return 'LOW';
+  };
 
-  const riskLevel = getRiskLevel()
+  const riskLevel = getRiskLevel();
   const riskConfig = {
     LOW: { label: '低风险', color: 'text-green-600 bg-green-50', icon: <CheckCircle className="h-4 w-4" /> },
     MEDIUM: { label: '中风险', color: 'text-yellow-600 bg-yellow-50', icon: <AlertCircle className="h-4 w-4" /> },
     HIGH: { label: '高风险', color: 'text-orange-600 bg-orange-50', icon: <AlertTriangle className="h-4 w-4" /> },
-    CRITICAL: { label: '极高风险', color: 'text-red-600 bg-red-50', icon: <XCircle className="h-4 w-4" /> }
-  }
+    CRITICAL: { label: '极高风险', color: 'text-red-600 bg-red-50', icon: <XCircle className="h-4 w-4" /> },
+  };
 
-  const currentRisk = riskConfig[riskLevel]
+  const currentRisk = riskConfig[riskLevel];
 
   if (detectedAllergens.length === 0) {
     return (
@@ -244,7 +244,7 @@ export function AllergenIdentifier({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -409,5 +409,5 @@ export function AllergenIdentifier({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback } from 'react';
 
 interface SwipeOptions {
   onSwipeLeft?: () => void
@@ -24,83 +24,83 @@ export function useSwipe(options: SwipeOptions = {}) {
     onSwipeUp,
     onSwipeDown,
     threshold = 50,
-    preventDefault = true
-  } = options
+    preventDefault = true,
+  } = options;
 
-  const touchStart = useRef<TouchPoint | null>(null)
-  const touchEnd = useRef<TouchPoint | null>(null)
+  const touchStart = useRef<TouchPoint | null>(null);
+  const touchEnd = useRef<TouchPoint | null>(null);
 
-  const minSwipeDistance = threshold
+  const minSwipeDistance = threshold;
 
   const onTouchStart = useCallback((e: TouchEvent) => {
-    touchEnd.current = null
+    touchEnd.current = null;
     touchStart.current = {
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY,
-      time: Date.now()
-    }
-  }, [])
+      time: Date.now(),
+    };
+  }, []);
 
   const onTouchMove = useCallback((e: TouchEvent) => {
     if (preventDefault) {
-      e.preventDefault()
+      e.preventDefault();
     }
     touchEnd.current = {
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY,
-      time: Date.now()
-    }
-  }, [preventDefault])
+      time: Date.now(),
+    };
+  }, [preventDefault]);
 
   const onTouchEnd = useCallback((e: TouchEvent) => {
-    if (!touchStart.current || !touchEnd.current) return
+    if (!touchStart.current || !touchEnd.current) return;
 
-    const startX = touchStart.current.x
-    const startY = touchStart.current.y
-    const endX = touchEnd.current.x
-    const endY = touchEnd.current.y
+    const startX = touchStart.current.x;
+    const startY = touchStart.current.y;
+    const endX = touchEnd.current.x;
+    const endY = touchEnd.current.y;
 
-    const deltaX = endX - startX
-    const deltaY = endY - startY
-    const deltaTime = Date.now() - touchStart.current.time
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    const deltaTime = Date.now() - touchStart.current.time;
 
     // 检查是否为有效的滑动（距离和时间）
-    if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) return
-    if (deltaTime > 500) return // 超过500ms不算滑动
+    if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) return;
+    if (deltaTime > 500) return; // 超过500ms不算滑动
 
-    const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY)
+    const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
     
     if (isHorizontalSwipe) {
       if (deltaX > 0) {
-        onSwipeRight?.()
+        onSwipeRight?.();
       } else {
-        onSwipeLeft?.()
+        onSwipeLeft?.();
       }
     } else {
       if (deltaY > 0) {
-        onSwipeDown?.()
+        onSwipeDown?.();
       } else {
-        onSwipeUp?.()
+        onSwipeUp?.();
       }
     }
-  }, [minSwipeDistance, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown])
+  }, [minSwipeDistance, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown]);
 
   const addEventListeners = useCallback((element: HTMLElement) => {
-    element.addEventListener('touchstart', onTouchStart, { passive: !preventDefault })
-    element.addEventListener('touchmove', onTouchMove, { passive: !preventDefault })
-    element.addEventListener('touchend', onTouchEnd)
-  }, [onTouchStart, onTouchMove, onTouchEnd, preventDefault])
+    element.addEventListener('touchstart', onTouchStart, { passive: !preventDefault });
+    element.addEventListener('touchmove', onTouchMove, { passive: !preventDefault });
+    element.addEventListener('touchend', onTouchEnd);
+  }, [onTouchStart, onTouchMove, onTouchEnd, preventDefault]);
 
   const removeEventListeners = useCallback((element: HTMLElement) => {
-    element.removeEventListener('touchstart', onTouchStart)
-    element.removeEventListener('touchmove', onTouchMove)
-    element.removeEventListener('touchend', onTouchEnd)
-  }, [onTouchStart, onTouchMove, onTouchEnd])
+    element.removeEventListener('touchstart', onTouchStart);
+    element.removeEventListener('touchmove', onTouchMove);
+    element.removeEventListener('touchend', onTouchEnd);
+  }, [onTouchStart, onTouchMove, onTouchEnd]);
 
   return {
     addEventListeners,
-    removeEventListeners
-  }
+    removeEventListeners,
+  };
 }
 
 interface LongPressOptions {
@@ -113,50 +113,50 @@ export function useLongPress(options: LongPressOptions = {}) {
   const {
     onLongPress,
     onClick,
-    threshold = 500
-  } = options
+    threshold = 500,
+  } = options;
 
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const isLongPress = useRef(false)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPress = useRef(false);
 
   const start = useCallback(() => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
+      clearTimeout(timeoutRef.current);
     }
     
-    isLongPress.current = false
+    isLongPress.current = false;
     
     timeoutRef.current = setTimeout(() => {
-      isLongPress.current = true
-      onLongPress?.()
-    }, threshold)
-  }, [onLongPress, threshold])
+      isLongPress.current = true;
+      onLongPress?.();
+    }, threshold);
+  }, [onLongPress, threshold]);
 
   const clear = useCallback(() => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
-  }, [])
+  }, []);
 
   const click = useCallback(() => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     
     if (!isLongPress.current) {
-      onClick?.()
+      onClick?.();
     }
-  }, [onClick])
+  }, [onClick]);
 
   return {
     onMouseDown: start,
     onMouseUp: click,
     onMouseLeave: clear,
     onTouchStart: start,
-    onTouchEnd: click
-  }
+    onTouchEnd: click,
+  };
 }
 
 interface PinchZoomOptions {
@@ -173,56 +173,56 @@ export function usePinchZoom(options: PinchZoomOptions = {}) {
     onPinchStart,
     onPinchEnd,
     minScale = 0.5,
-    maxScale = 3
-  } = options
+    maxScale = 3,
+  } = options;
 
-  const initialDistance = useRef<number | null>(null)
-  const initialScale = useRef(1)
+  const initialDistance = useRef<number | null>(null);
+  const initialScale = useRef(1);
 
   const getDistance = (touches: TouchList) => {
-    const dx = touches[0].clientX - touches[1].clientX
-    const dy = touches[0].clientY - touches[1].clientY
-    return Math.sqrt(dx * dx + dy * dy)
-  }
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
 
   const onTouchStart = useCallback((e: TouchEvent) => {
     if (e.touches.length === 2) {
-      initialDistance.current = getDistance(e.touches)
-      initialScale.current = 1
-      onPinchStart?.()
+      initialDistance.current = getDistance(e.touches);
+      initialScale.current = 1;
+      onPinchStart?.();
     }
-  }, [onPinchStart])
+  }, [onPinchStart]);
 
   const onTouchMove = useCallback((e: TouchEvent) => {
     if (e.touches.length === 2 && initialDistance.current !== null) {
-      const currentDistance = getDistance(e.touches)
-      const scale = currentDistance / initialDistance.current
-      const clampedScale = Math.max(minScale, Math.min(maxScale, scale))
-      onPinchZoom?.(clampedScale)
+      const currentDistance = getDistance(e.touches);
+      const scale = currentDistance / initialDistance.current;
+      const clampedScale = Math.max(minScale, Math.min(maxScale, scale));
+      onPinchZoom?.(clampedScale);
     }
-  }, [onPinchZoom, minScale, maxScale])
+  }, [onPinchZoom, minScale, maxScale]);
 
   const onTouchEnd = useCallback((e: TouchEvent) => {
     if (e.touches.length < 2) {
-      initialDistance.current = null
-      onPinchEnd?.()
+      initialDistance.current = null;
+      onPinchEnd?.();
     }
-  }, [onPinchEnd])
+  }, [onPinchEnd]);
 
   const addEventListeners = useCallback((element: HTMLElement) => {
-    element.addEventListener('touchstart', onTouchStart)
-    element.addEventListener('touchmove', onTouchMove)
-    element.addEventListener('touchend', onTouchEnd)
-  }, [onTouchStart, onTouchMove, onTouchEnd])
+    element.addEventListener('touchstart', onTouchStart);
+    element.addEventListener('touchmove', onTouchMove);
+    element.addEventListener('touchend', onTouchEnd);
+  }, [onTouchStart, onTouchMove, onTouchEnd]);
 
   const removeEventListeners = useCallback((element: HTMLElement) => {
-    element.removeEventListener('touchstart', onTouchStart)
-    element.removeEventListener('touchmove', onTouchMove)
-    element.removeEventListener('touchend', onTouchEnd)
-  }, [onTouchStart, onTouchMove, onTouchEnd])
+    element.removeEventListener('touchstart', onTouchStart);
+    element.removeEventListener('touchmove', onTouchMove);
+    element.removeEventListener('touchend', onTouchEnd);
+  }, [onTouchStart, onTouchMove, onTouchEnd]);
 
   return {
     addEventListeners,
-    removeEventListeners
-  }
+    removeEventListeners,
+  };
 }

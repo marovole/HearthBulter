@@ -3,24 +3,24 @@
  * 提供Apple Health数据的读取和同步功能
  */
 
-import { addHours, startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns'
-import type { AppleHealthData, DeviceConnectionInput, SyncResult } from '@/types/wearable-devices'
-import type { DeviceConnection, HealthData, HealthDataType } from '@prisma/client'
-import { prisma } from '@/lib/db'
-import { checkDataDuplication, batchDeduplicate } from './data-deduplication'
+import { addHours, startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns';
+import type { AppleHealthData, DeviceConnectionInput, SyncResult } from '@/types/wearable-devices';
+import type { DeviceConnection, HealthData, HealthDataType } from '@prisma/client';
+import { prisma } from '@/lib/db';
+import { checkDataDuplication, batchDeduplicate } from './data-deduplication';
 
 /**
  * Apple HealthKit 服务类
  */
 export class HealthKitService {
-  private static instance: HealthKitService
-  private deviceId: string = 'apple-healthkit'
+  private static instance: HealthKitService;
+  private deviceId: string = 'apple-healthkit';
 
   static getInstance(): HealthKitService {
     if (!HealthKitService.instance) {
-      HealthKitService.instance = new HealthKitService()
+      HealthKitService.instance = new HealthKitService();
     }
-    return HealthKitService.instance
+    return HealthKitService.instance;
   }
 
   /**
@@ -38,13 +38,13 @@ export class HealthKitService {
         calories: true,
         sleep: true,
         distance: true,
-        activeMinutes: true
-      }
+        activeMinutes: true,
+      };
 
-      return Object.values(mockPermissions).every(permission => permission)
+      return Object.values(mockPermissions).every(permission => permission);
     } catch (error) {
-      console.error('HealthKit权限请求失败:', error)
-      return false
+      console.error('HealthKit权限请求失败:', error);
+      return false;
     }
   }
 
@@ -55,10 +55,10 @@ export class HealthKitService {
     try {
       // 在实际实现中，这里会检查设备是否支持HealthKit
       // 模拟检查结果
-      return true
+      return true;
     } catch (error) {
-      console.error('HealthKit可用性检查失败:', error)
-      return false
+      console.error('HealthKit可用性检查失败:', error);
+      return false;
     }
   }
 
@@ -78,7 +78,7 @@ export class HealthKitService {
         'READ_CALORIES',
         'READ_SLEEP',
         'READ_DISTANCE',
-        'READ_ACTIVE_MINUTES'
+        'READ_ACTIVE_MINUTES',
       ],
       dataTypes: [
         'STEPS',
@@ -87,9 +87,9 @@ export class HealthKitService {
         'SLEEP_DURATION',
         'SLEEP_QUALITY',
         'DISTANCE',
-        'ACTIVE_MINUTES'
-      ]
-    }
+        'ACTIVE_MINUTES',
+      ],
+    };
   }
 
   /**
@@ -100,31 +100,31 @@ export class HealthKitService {
     startDate: Date,
     endDate: Date
   ): Promise<HealthData[]> {
-    const stepsData = []
+    const stepsData = [];
     
     // 在实际实现中，这里会调用HealthKit API获取步数数据
-    const mockStepsData = this.generateMockStepsData(startDate, endDate)
+    const mockStepsData = this.generateMockStepsData(startDate, endDate);
     
     for (const dayData of mockStepsData) {
       const healthInput = {
         memberId,
         measuredAt: dayData.date,
         source: 'APPLE_HEALTHKIT' as const,
-        notes: `步数: ${dayData.steps}`
-      }
+        notes: `步数: ${dayData.steps}`,
+      };
 
       // 检查去重
-      const deduplicationResult = await checkDataDuplication(healthInput, memberId)
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
       
       if (deduplicationResult.shouldInsert) {
         const healthRecord = await prisma.healthData.create({
-          data: healthInput
-        })
-        stepsData.push(healthRecord)
+          data: healthInput,
+        });
+        stepsData.push(healthRecord);
       }
     }
 
-    return stepsData
+    return stepsData;
   }
 
   /**
@@ -135,9 +135,9 @@ export class HealthKitService {
     startDate: Date,
     endDate: Date
   ): Promise<HealthData[]> {
-    const heartRateData = []
+    const heartRateData = [];
     
-    const mockHeartRateData = this.generateMockHeartRateData(startDate, endDate)
+    const mockHeartRateData = this.generateMockHeartRateData(startDate, endDate);
     
     for (const record of mockHeartRateData) {
       const healthInput = {
@@ -145,20 +145,20 @@ export class HealthKitService {
         heartRate: record.value,
         measuredAt: record.timestamp,
         source: 'APPLE_HEALTHKIT' as const,
-        notes: `心率: ${record.value} bpm`
-      }
+        notes: `心率: ${record.value} bpm`,
+      };
 
-      const deduplicationResult = await checkDataDuplication(healthInput, memberId)
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
       
       if (deduplicationResult.shouldInsert) {
         const healthRecord = await prisma.healthData.create({
-          data: healthInput
-        })
-        heartRateData.push(healthRecord)
+          data: healthInput,
+        });
+        heartRateData.push(healthRecord);
       }
     }
 
-    return heartRateData
+    return heartRateData;
   }
 
   /**
@@ -169,29 +169,29 @@ export class HealthKitService {
     startDate: Date,
     endDate: Date
   ): Promise<HealthData[]> {
-    const sleepData = []
+    const sleepData = [];
     
-    const mockSleepData = this.generateMockSleepData(startDate, endDate)
+    const mockSleepData = this.generateMockSleepData(startDate, endDate);
     
     for (const record of mockSleepData) {
       const healthInput = {
         memberId,
         measuredAt: record.date,
         source: 'APPLE_HEALTHKIT' as const,
-        notes: `睡眠时长: ${record.duration}小时, 质量: ${record.quality}`
-      }
+        notes: `睡眠时长: ${record.duration}小时, 质量: ${record.quality}`,
+      };
 
-      const deduplicationResult = await checkDataDuplication(healthInput, memberId)
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
       
       if (deduplicationResult.shouldInsert) {
         const healthRecord = await prisma.healthData.create({
-          data: healthInput
-        })
-        sleepData.push(healthRecord)
+          data: healthInput,
+        });
+        sleepData.push(healthRecord);
       }
     }
 
-    return sleepData
+    return sleepData;
   }
 
   /**
@@ -202,24 +202,24 @@ export class HealthKitService {
     deviceConnectionId: string,
     lastSyncDate?: Date
   ): Promise<SyncResult> {
-    const startDate = lastSyncDate || subDays(new Date(), 7) // 如果没有上次同步日期，同步最近7天
-    const endDate = new Date()
+    const startDate = lastSyncDate || subDays(new Date(), 7); // 如果没有上次同步日期，同步最近7天
+    const endDate = new Date();
     
-    const errors: string[] = []
-    let totalSynced = 0
+    const errors: string[] = [];
+    let totalSynced = 0;
 
     try {
       // 同步步数数据
-      const stepsData = await this.syncStepsData(memberId, startDate, endDate)
-      totalSynced += stepsData.length
+      const stepsData = await this.syncStepsData(memberId, startDate, endDate);
+      totalSynced += stepsData.length;
 
       // 同步心率数据
-      const heartRateData = await this.syncHeartRateData(memberId, startDate, endDate)
-      totalSynced += heartRateData.length
+      const heartRateData = await this.syncHeartRateData(memberId, startDate, endDate);
+      totalSynced += heartRateData.length;
 
       // 同步睡眠数据
-      const sleepData = await this.syncSleepData(memberId, startDate, endDate)
-      totalSynced += sleepData.length
+      const sleepData = await this.syncSleepData(memberId, startDate, endDate);
+      totalSynced += sleepData.length;
 
       // 更新设备连接的同步状态
       await prisma.deviceConnection.update({
@@ -229,12 +229,12 @@ export class HealthKitService {
           syncStatus: 'SUCCESS',
           errorCount: 0,
           lastError: null,
-          retryCount: 0
-        }
-      })
+          retryCount: 0,
+        },
+      });
 
     } catch (error) {
-      errors.push(`HealthKit同步失败: ${error instanceof Error ? error.message : '未知错误'}`)
+      errors.push(`HealthKit同步失败: ${error instanceof Error ? error.message : '未知错误'}`);
       
       // 更新错误状态
       await prisma.deviceConnection.update({
@@ -242,9 +242,9 @@ export class HealthKitService {
         data: {
           syncStatus: 'FAILED',
           lastError: error instanceof Error ? error.message : '未知错误',
-          errorCount: { increment: 1 }
-        }
-      })
+          errorCount: { increment: 1 },
+        },
+      });
     }
 
     return {
@@ -252,72 +252,72 @@ export class HealthKitService {
       syncedCount: totalSynced,
       skippedCount: 0, // 在实际实现中，应该计算跳过的记录数
       errors,
-      lastSyncDate: new Date()
-    }
+      lastSyncDate: new Date(),
+    };
   }
 
   /**
    * 生成模拟步数数据
    */
   private generateMockStepsData(startDate: Date, endDate: Date): AppleHealthData[] {
-    const data: AppleHealthData[] = []
-    const currentDate = new Date(startDate)
+    const data: AppleHealthData[] = [];
+    const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
       data.push({
         steps: Math.floor(Math.random() * 8000) + 4000, // 4000-12000步
-        date: new Date(currentDate)
-      })
+        date: new Date(currentDate),
+      });
       
-      currentDate.setDate(currentDate.getDate() + 1)
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    return data
+    return data;
   }
 
   /**
    * 生成模拟心率数据
    */
   private generateMockHeartRateData(startDate: Date, endDate: Date): Array<{timestamp: Date, value: number}> {
-    const data: Array<{timestamp: Date, value: number}> = []
-    const currentTimestamp = new Date(startDate)
+    const data: Array<{timestamp: Date, value: number}> = [];
+    const currentTimestamp = new Date(startDate);
 
     while (currentTimestamp <= endDate) {
       // 每小时生成一个心率数据点
       for (let hour = 0; hour < 24; hour++) {
-        const timestamp = new Date(currentTimestamp)
-        timestamp.setHours(hour, 0, 0, 0)
+        const timestamp = new Date(currentTimestamp);
+        timestamp.setHours(hour, 0, 0, 0);
         
         data.push({
           timestamp,
-          value: Math.floor(Math.random() * 30) + 60 // 60-90 bpm
-        })
+          value: Math.floor(Math.random() * 30) + 60, // 60-90 bpm
+        });
       }
       
-      currentTimestamp.setDate(currentTimestamp.getDate() + 1)
+      currentTimestamp.setDate(currentTimestamp.getDate() + 1);
     }
 
-    return data
+    return data;
   }
 
   /**
    * 生成模拟睡眠数据
    */
   private generateMockSleepData(startDate: Date, endDate: Date): Array<{date: Date, duration: number, quality: number}> {
-    const data: Array<{date: Date, duration: number, quality: number}> = []
-    const currentDate = new Date(startDate)
+    const data: Array<{date: Date, duration: number, quality: number}> = [];
+    const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
       data.push({
         date: new Date(currentDate),
         duration: Math.random() * 3 + 5, // 5-8小时
-        quality: Math.random() * 30 + 60 // 60-90分
-      })
+        quality: Math.random() * 30 + 60, // 60-90分
+      });
       
-      currentDate.setDate(currentDate.getDate() + 1)
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    return data
+    return data;
   }
 
   /**
@@ -326,17 +326,17 @@ export class HealthKitService {
   async testConnection(): Promise<boolean> {
     try {
       // 测试HealthKit是否可用
-      const isAvailable = await this.isHealthKitAvailable()
+      const isAvailable = await this.isHealthKitAvailable();
       if (!isAvailable) {
-        return false
+        return false;
       }
 
       // 测试权限
-      const hasPermissions = await this.requestPermissions()
-      return hasPermissions
+      const hasPermissions = await this.requestPermissions();
+      return hasPermissions;
     } catch (error) {
-      console.error('HealthKit连接测试失败:', error)
-      return false
+      console.error('HealthKit连接测试失败:', error);
+      return false;
     }
   }
 
@@ -352,8 +352,8 @@ export class HealthKitService {
       'READ_DISTANCE',
       'READ_ACTIVE_MINUTES',
       'READ_WEIGHT',
-      'READ_BLOOD_PRESSURE'
-    ]
+      'READ_BLOOD_PRESSURE',
+    ];
   }
 
   /**
@@ -372,45 +372,45 @@ export class HealthKitService {
         '卡路里消耗',
         '运动记录',
         '体重管理',
-        '血压监测'
-      ]
-    }
+        '血压监测',
+      ],
+    };
   }
 }
 
 // 导出单例实例
-export const healthKitService = HealthKitService.getInstance()
+export const healthKitService = HealthKitService.getInstance();
 
 // 导出工具函数
 export async function connectHealthKitDevice(
   memberId: string,
   deviceInfo: Partial<DeviceConnectionInput>
 ): Promise<DeviceConnection> {
-  const service = HealthKitService.getInstance()
+  const service = HealthKitService.getInstance();
   
   // 测试连接
-  const isConnected = await service.testConnection()
+  const isConnected = await service.testConnection();
   if (!isConnected) {
-    throw new Error('HealthKit连接失败，请检查权限设置')
+    throw new Error('HealthKit连接失败，请检查权限设置');
   }
 
   // 获取设备信息
-  const fullDeviceInfo = await service.getDeviceInfo()
-  const deviceData = { ...fullDeviceInfo, ...deviceInfo, memberId }
+  const fullDeviceInfo = await service.getDeviceInfo();
+  const deviceData = { ...fullDeviceInfo, ...deviceInfo, memberId };
 
   // 创建设备连接记录
   const deviceConnection = await prisma.deviceConnection.create({
     data: {
       ...deviceData,
       syncStatus: 'SUCCESS',
-      lastSyncAt: new Date()
-    }
-  })
+      lastSyncAt: new Date(),
+    },
+  });
 
   // 执行初始同步
-  await service.syncAllData(memberId, deviceConnection.id)
+  await service.syncAllData(memberId, deviceConnection.id);
 
-  return deviceConnection
+  return deviceConnection;
 }
 
 export async function disconnectHealthKitDevice(deviceId: string): Promise<void> {
@@ -420,7 +420,7 @@ export async function disconnectHealthKitDevice(deviceId: string): Promise<void>
       isActive: false,
       isAutoSync: false,
       syncStatus: 'DISABLED',
-      disconnectionDate: new Date()
-    }
-  })
+      disconnectionDate: new Date(),
+    },
+  });
 }

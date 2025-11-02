@@ -3,7 +3,7 @@ import {
   calculateTrendDirection,
   detectAnomalyPatterns,
   generateDeviationReport,
-  getDeviationSeverity 
+  getDeviationSeverity, 
 } from '@/lib/services/tracking/deviation-analyzer';
 
 describe('Deviation Analyzer', () => {
@@ -11,7 +11,7 @@ describe('Deviation Analyzer', () => {
     calories: 2000,
     protein: 120,
     carbs: 250,
-    fat: 65
+    fat: 65,
   };
 
   const mockWeeklyData = [
@@ -21,7 +21,7 @@ describe('Deviation Analyzer', () => {
     { date: '2024-01-04', calories: 1400, protein: 60, carbs: 200, fat: 50 },
     { date: '2024-01-05', calories: 1200, protein: 40, carbs: 180, fat: 45 },
     { date: '2024-01-06', calories: 1000, protein: 20, carbs: 160, fat: 40 },
-    { date: '2024-01-07', calories: 800, protein: 10, carbs: 140, fat: 35 }
+    { date: '2024-01-07', calories: 800, protein: 10, carbs: 140, fat: 35 },
   ];
 
   describe('analyzeNutritionDeviations', () => {
@@ -49,7 +49,7 @@ describe('Deviation Analyzer', () => {
       const normalData = [
         { date: '2024-01-01', calories: 2000, protein: 120, carbs: 250, fat: 65 },
         { date: '2024-01-02', calories: 2100, protein: 125, carbs: 260, fat: 68 },
-        { date: '2024-01-03', calories: 1900, protein: 115, carbs: 240, fat: 62 }
+        { date: '2024-01-03', calories: 1900, protein: 115, carbs: 240, fat: 62 },
       ];
 
       const deviations = analyzeNutritionDeviations(normalData, mockNutritionGoals);
@@ -61,7 +61,7 @@ describe('Deviation Analyzer', () => {
       const excessData = [
         { date: '2024-01-01', calories: 2500, protein: 150, carbs: 300, fat: 80 },
         { date: '2024-01-02', calories: 2600, protein: 160, carbs: 320, fat: 85 },
-        { date: '2024-01-03', calories: 2400, protein: 140, carbs: 310, fat: 75 }
+        { date: '2024-01-03', calories: 2400, protein: 140, carbs: 310, fat: 75 },
       ];
 
       const deviations = analyzeNutritionDeviations(excessData, mockNutritionGoals);
@@ -72,7 +72,7 @@ describe('Deviation Analyzer', () => {
 
     it('should handle insufficient data', () => {
       const insufficientData = [
-        { date: '2024-01-01', calories: 2000, protein: 120, carbs: 250, fat: 65 }
+        { date: '2024-01-01', calories: 2000, protein: 120, carbs: 250, fat: 65 },
       ];
 
       const deviations = analyzeNutritionDeviations(insufficientData, mockNutritionGoals);
@@ -134,7 +134,7 @@ describe('Deviation Analyzer', () => {
         { date: '2024-01-04', calories: 2000, protein: 120, carbs: 250, fat: 65 }, // Thursday
         { date: '2024-01-05', calories: 2000, protein: 120, carbs: 250, fat: 65 }, // Friday
         { date: '2024-01-06', calories: 2800, protein: 140, carbs: 350, fat: 90 }, // Saturday
-        { date: '2024-01-07', calories: 3000, protein: 150, carbs: 380, fat: 100 } // Sunday
+        { date: '2024-01-07', calories: 3000, protein: 150, carbs: 380, fat: 100 }, // Sunday
       ];
 
       const patterns = detectAnomalyPatterns(dataWithWeekendPattern);
@@ -143,7 +143,7 @@ describe('Deviation Analyzer', () => {
         type: 'WEEKEND_OVEREATING',
         description: expect.stringContaining('周末'),
         severity: 'MODERATE',
-        frequency: 2
+        frequency: 2,
       });
     });
 
@@ -153,7 +153,7 @@ describe('Deviation Analyzer', () => {
         { date: '2024-01-02', calories: 1200, protein: 80, carbs: 150, fat: 40, mealsCount: 2 },
         { date: '2024-01-03', calories: 2000, protein: 120, carbs: 250, fat: 65, mealsCount: 3 },
         { date: '2024-01-04', calories: 1000, protein: 60, carbs: 120, fat: 30, mealsCount: 1 },
-        { date: '2024-01-05', calories: 2000, protein: 120, carbs: 250, fat: 65, mealsCount: 3 }
+        { date: '2024-01-05', calories: 2000, protein: 120, carbs: 250, fat: 65, mealsCount: 3 },
       ];
 
       const patterns = detectAnomalyPatterns(mealSkippingData);
@@ -162,7 +162,7 @@ describe('Deviation Analyzer', () => {
         type: 'MEAL_SKIPPING',
         description: expect.stringContaining('漏餐'),
         severity: 'HIGH',
-        frequency: 2
+        frequency: 2,
       });
     });
 
@@ -172,7 +172,7 @@ describe('Deviation Analyzer', () => {
         { date: '2024-01-02', calories: 1800, protein: 100, carbs: 240, fat: 60 },
         { date: '2024-01-03', calories: 4000, protein: 180, carbs: 500, fat: 120 }, // Binge
         { date: '2024-01-04', calories: 1600, protein: 90, carbs: 220, fat: 50 },
-        { date: '2024-01-05', calories: 4200, protein: 200, carbs: 550, fat: 130 } // Binge
+        { date: '2024-01-05', calories: 4200, protein: 200, carbs: 550, fat: 130 }, // Binge
       ];
 
       const patterns = detectAnomalyPatterns(bingeEatingData);
@@ -181,7 +181,7 @@ describe('Deviation Analyzer', () => {
         type: 'BINGE_EATING',
         description: expect.stringContaining('暴饮暴食'),
         severity: 'HIGH',
-        frequency: 2
+        frequency: 2,
       });
     });
 
@@ -189,7 +189,7 @@ describe('Deviation Analyzer', () => {
       const normalData = [
         { date: '2024-01-01', calories: 2000, protein: 120, carbs: 250, fat: 65, mealsCount: 3 },
         { date: '2024-01-02', calories: 2100, protein: 125, carbs: 260, fat: 68, mealsCount: 3 },
-        { date: '2024-01-03', calories: 1900, protein: 115, carbs: 240, fat: 62, mealsCount: 3 }
+        { date: '2024-01-03', calories: 1900, protein: 115, carbs: 240, fat: 62, mealsCount: 3 },
       ];
 
       const patterns = detectAnomalyPatterns(normalData);
@@ -223,8 +223,8 @@ describe('Deviation Analyzer', () => {
           type: 'DEFICIENCY',
           severity: 'HIGH',
           days: 5,
-          averageDeviation: -40
-        }
+          averageDeviation: -40,
+        },
       ];
 
       const report = generateDeviationReport(deviations, [], mockWeeklyData);
@@ -246,7 +246,7 @@ describe('Deviation Analyzer', () => {
       expect(report.recommendations).toContainEqual({
         type: 'MAINTENANCE',
         description: expect.stringContaining('保持'),
-        priority: 'LOW'
+        priority: 'LOW',
       });
     });
   });

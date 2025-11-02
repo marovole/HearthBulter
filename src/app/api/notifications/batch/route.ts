@@ -12,17 +12,17 @@ export async function POST(request: NextRequest) {
     const { operation, data } = body;
 
     switch (operation) {
-      case 'create':
-        return await handleBatchCreate(data);
-      case 'markRead':
-        return await handleBatchMarkRead(data);
-      case 'delete':
-        return await handleBatchDelete(data);
-      default:
-        return NextResponse.json(
-          { error: 'Invalid operation' },
-          { status: 400 }
-        );
+    case 'create':
+      return await handleBatchCreate(data);
+    case 'markRead':
+      return await handleBatchMarkRead(data);
+    case 'delete':
+      return await handleBatchDelete(data);
+    default:
+      return NextResponse.json(
+        { error: 'Invalid operation' },
+        { status: 400 }
+      );
     }
   } catch (error) {
     console.error('Error in batch operation:', error);

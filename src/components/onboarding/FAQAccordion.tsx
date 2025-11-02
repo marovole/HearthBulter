@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { 
   ChevronDown, 
   ChevronUp, 
   Search, 
   HelpCircle, 
   Tag,
-  MessageCircle
-} from 'lucide-react'
-import { useContextualHelp } from './HelpTooltip'
+  MessageCircle,
+} from 'lucide-react';
+import { useContextualHelp } from './HelpTooltip';
 
 interface FAQItem {
   id: string
@@ -40,50 +40,50 @@ export function FAQAccordion({
   showSearch = true,
   showCategories = true,
   onFeedback,
-  onContactSupport
+  onContactSupport,
 }: FAQAccordionProps) {
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [feedbackGiven, setFeedbackGiven] = useState<Set<string>>(new Set())
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [feedbackGiven, setFeedbackGiven] = useState<Set<string>>(new Set());
 
   const toggleItem = (itemId: string) => {
     setExpandedItems(prev => {
-      const newSet = new Set(prev)
+      const newSet = new Set(prev);
       if (newSet.has(itemId)) {
-        newSet.delete(itemId)
+        newSet.delete(itemId);
       } else {
-        newSet.add(itemId)
+        newSet.add(itemId);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   const handleFeedback = (itemId: string, isHelpful: boolean) => {
-    setFeedbackGiven(prev => new Set(prev).add(itemId))
-    onFeedback?.(itemId, isHelpful)
-  }
+    setFeedbackGiven(prev => new Set(prev).add(itemId));
+    onFeedback?.(itemId, isHelpful);
+  };
 
   const filteredItems = items.filter(item => {
     const matchesSearch = searchTerm === '' || 
       item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
 
-    return matchesSearch && matchesCategory
-  })
+    return matchesSearch && matchesCategory;
+  });
 
   const getCategoryStats = () => {
-    const stats: Record<string, number> = {}
+    const stats: Record<string, number> = {};
     items.forEach(item => {
-      stats[item.category] = (stats[item.category] || 0) + 1
-    })
-    return stats
-  }
+      stats[item.category] = (stats[item.category] || 0) + 1;
+    });
+    return stats;
+  };
 
-  const categoryStats = getCategoryStats()
+  const categoryStats = getCategoryStats();
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
@@ -193,8 +193,8 @@ export function FAQAccordion({
                             variant="secondary" 
                             className="text-xs cursor-pointer hover:bg-gray-200"
                             onClick={(e) => {
-                              e.stopPropagation()
-                              setSearchTerm(tag)
+                              e.stopPropagation();
+                              setSearchTerm(tag);
                             }}
                           >
                             {tag}
@@ -215,8 +215,8 @@ export function FAQAccordion({
                         size="sm"
                         disabled={feedbackGiven.has(item.id)}
                         onClick={(e) => {
-                          e.stopPropagation()
-                          handleFeedback(item.id, true)
+                          e.stopPropagation();
+                          handleFeedback(item.id, true);
                         }}
                         className={feedbackGiven.has(item.id) ? 'text-green-600' : ''}
                       >
@@ -227,8 +227,8 @@ export function FAQAccordion({
                         size="sm"
                         disabled={feedbackGiven.has(item.id)}
                         onClick={(e) => {
-                          e.stopPropagation()
-                          handleFeedback(item.id, false)
+                          e.stopPropagation();
+                          handleFeedback(item.id, false);
                         }}
                         className={feedbackGiven.has(item.id) ? 'text-red-600' : ''}
                       >
@@ -261,7 +261,7 @@ export function FAQAccordion({
         </Card>
       )}
     </div>
-  )
+  );
 }
 
 // Default FAQ data for Health Butler
@@ -273,7 +273,7 @@ export const defaultFAQData: FAQItem[] = [
     category: '入门指南',
     tags: ['新用户', '设置', '引导'],
     helpful: 45,
-    notHelpful: 2
+    notHelpful: 2,
   },
   {
     id: '2',
@@ -282,7 +282,7 @@ export const defaultFAQData: FAQItem[] = [
     category: '健康数据',
     tags: ['数据录入', '设备同步', '数据分析'],
     helpful: 38,
-    notHelpful: 3
+    notHelpful: 3,
   },
   {
     id: '3',
@@ -291,7 +291,7 @@ export const defaultFAQData: FAQItem[] = [
     category: '食谱规划',
     tags: ['AI推荐', '营养分析', '个性化'],
     helpful: 52,
-    notHelpful: 1
+    notHelpful: 1,
   },
   {
     id: '4',
@@ -300,7 +300,7 @@ export const defaultFAQData: FAQItem[] = [
     category: '设备连接',
     tags: ['蓝牙', '智能设备', '数据同步'],
     helpful: 29,
-    notHelpful: 5
+    notHelpful: 5,
   },
   {
     id: '5',
@@ -309,7 +309,7 @@ export const defaultFAQData: FAQItem[] = [
     category: '购物清单',
     tags: ['自动生成', '食材管理', '清单分享'],
     helpful: 41,
-    notHelpful: 2
+    notHelpful: 2,
   },
   {
     id: '6',
@@ -318,7 +318,7 @@ export const defaultFAQData: FAQItem[] = [
     category: '家庭管理',
     tags: ['邀请', '权限管理', '数据共享'],
     helpful: 33,
-    notHelpful: 4
+    notHelpful: 4,
   },
   {
     id: '7',
@@ -327,7 +327,7 @@ export const defaultFAQData: FAQItem[] = [
     category: '安全隐私',
     tags: ['数据加密', '隐私保护', 'GDPR'],
     helpful: 47,
-    notHelpful: 1
+    notHelpful: 1,
   },
   {
     id: '8',
@@ -336,9 +336,9 @@ export const defaultFAQData: FAQItem[] = [
     category: '账户管理',
     tags: ['取消订阅', '删除账户', '数据删除'],
     helpful: 22,
-    notHelpful: 3
-  }
-]
+    notHelpful: 3,
+  },
+];
 
 export const defaultCategories = [
   '入门指南',
@@ -348,5 +348,5 @@ export const defaultCategories = [
   '购物清单',
   '家庭管理',
   '安全隐私',
-  '账户管理'
-]
+  '账户管理',
+];

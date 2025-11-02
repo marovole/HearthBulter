@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
-import { HealthDataForm } from '@/components/health/HealthDataForm'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { HealthDataForm } from '@/components/health/HealthDataForm';
+import { useRouter } from 'next/navigation';
 
 interface AddHealthDataPageProps {
   userId: string
@@ -20,10 +20,10 @@ interface FamilyMember {
 }
 
 export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null)
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // 获取家庭成员数据
   useEffect(() => {
@@ -37,7 +37,7 @@ export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
             role: 'admin',
             email: 'zhangsan@example.com',
             healthScore: 85,
-            lastActive: new Date()
+            lastActive: new Date(),
           },
           {
             id: '2',
@@ -45,36 +45,36 @@ export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
             role: 'member',
             email: 'lisi@example.com',
             healthScore: 78,
-            lastActive: new Date()
-          }
-        ]
+            lastActive: new Date(),
+          },
+        ];
         
-        setFamilyMembers(mockMembers)
+        setFamilyMembers(mockMembers);
         if (mockMembers.length > 0) {
-          setSelectedMemberId(mockMembers[0].id)
+          setSelectedMemberId(mockMembers[0].id);
         }
       } catch (error) {
-        console.error('获取家庭成员失败:', error)
+        console.error('获取家庭成员失败:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchFamilyMembers()
-  }, [])
+    fetchFamilyMembers();
+  }, []);
 
   const handleMemberChange = (memberId: string) => {
-    setSelectedMemberId(memberId)
-  }
+    setSelectedMemberId(memberId);
+  };
 
   const handleDataAdded = () => {
     // 数据添加成功后返回健康数据主页
-    router.push('/health-data')
-  }
+    router.push('/health-data');
+  };
 
   const handleCancel = () => {
-    router.push('/health-data')
-  }
+    router.push('/health-data');
+  };
 
   if (loading) {
     return (
@@ -83,7 +83,7 @@ export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
@@ -125,5 +125,5 @@ export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
         )}
       </div>
     </DashboardLayout>
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
 /**
  * GET /api/foods/popular
@@ -7,13 +7,13 @@ import { prisma } from '@/lib/db'
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get('limit') || '20');
 
     const foods = await prisma.food.findMany({
       take: limit,
       orderBy: { createdAt: 'desc' },
-    })
+    });
 
     return NextResponse.json(
       {
@@ -42,13 +42,13 @@ export async function GET(request: NextRequest) {
         total: foods.length,
       },
       { status: 200 }
-    )
+    );
   } catch (error) {
-    console.error('获取热门食材失败:', error)
+    console.error('获取热门食材失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 

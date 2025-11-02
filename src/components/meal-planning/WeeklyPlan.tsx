@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { format, startOfDay, addDays, isSameDay } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { MealCard } from './MealCard'
-import type { MealType, MealPlan, Meal, MealIngredient } from '@prisma/client'
+import { useState } from 'react';
+import { format, startOfDay, addDays, isSameDay } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { MealCard } from './MealCard';
+import type { MealType, MealPlan, Meal, MealIngredient } from '@prisma/client';
 
 interface MealPlanWithMeals extends MealPlan {
   meals: (Meal & {
@@ -23,7 +23,7 @@ interface WeeklyPlanProps {
   onGenerateShoppingList?: () => void
 }
 
-const MEAL_TYPE_ORDER: MealType[] = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK']
+const MEAL_TYPE_ORDER: MealType[] = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
 
 type DailyMeals = {
   date: Date
@@ -42,57 +42,57 @@ export function WeeklyPlan({
   onReplaceMeal,
   onGenerateShoppingList,
 }: WeeklyPlanProps) {
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
 
   // 按日期组织餐食
-  const dailyMealsMap = new Map<string, DailyMeals>()
+  const dailyMealsMap = new Map<string, DailyMeals>();
 
   // 生成日期范围
-  const startDate = startOfDay(new Date(mealPlan.startDate))
-  const endDate = startOfDay(new Date(mealPlan.endDate))
+  const startDate = startOfDay(new Date(mealPlan.startDate));
+  const endDate = startOfDay(new Date(mealPlan.endDate));
   const daysDiff = Math.ceil(
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-  )
+  );
 
   // 初始化每日餐食
   for (let i = 0; i <= daysDiff; i++) {
-    const date = addDays(startDate, i)
-    const dateKey = format(date, 'yyyy-MM-dd')
+    const date = addDays(startDate, i);
+    const dateKey = format(date, 'yyyy-MM-dd');
     dailyMealsMap.set(dateKey, {
       date,
       meals: [],
-    })
+    });
   }
 
   // 分配餐食到对应日期
   mealPlan.meals.forEach((meal) => {
-    const dateKey = format(new Date(meal.date), 'yyyy-MM-dd')
-    const dailyMeals = dailyMealsMap.get(dateKey)
+    const dateKey = format(new Date(meal.date), 'yyyy-MM-dd');
+    const dailyMeals = dailyMealsMap.get(dateKey);
     if (dailyMeals) {
-      dailyMeals.meals.push(meal)
+      dailyMeals.meals.push(meal);
     }
-  })
+  });
 
   // 按餐次排序每日餐食
   dailyMealsMap.forEach((dailyMeals) => {
     dailyMeals.meals.sort((a, b) => {
-      const aIndex = MEAL_TYPE_ORDER.indexOf(a.mealType)
-      const bIndex = MEAL_TYPE_ORDER.indexOf(b.mealType)
-      return aIndex - bIndex
-    })
-  })
+      const aIndex = MEAL_TYPE_ORDER.indexOf(a.mealType);
+      const bIndex = MEAL_TYPE_ORDER.indexOf(b.mealType);
+      return aIndex - bIndex;
+    });
+  });
 
-  const dailyMeals = Array.from(dailyMealsMap.values())
+  const dailyMeals = Array.from(dailyMealsMap.values());
 
   const toggleDay = (dateKey: string) => {
-    const newExpanded = new Set(expandedDays)
+    const newExpanded = new Set(expandedDays);
     if (newExpanded.has(dateKey)) {
-      newExpanded.delete(dateKey)
+      newExpanded.delete(dateKey);
     } else {
-      newExpanded.add(dateKey)
+      newExpanded.add(dateKey);
     }
-    setExpandedDays(newExpanded)
-  }
+    setExpandedDays(newExpanded);
+  };
 
   // 计算每日营养汇总
   const calculateDailyNutrition = (meals: DailyMeals['meals']) => {
@@ -104,8 +104,8 @@ export function WeeklyPlan({
         fat: acc.fat + meal.fat,
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
-    )
-  }
+    );
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -144,9 +144,9 @@ export function WeeklyPlan({
           </div>
         ) : (
           dailyMeals.map((daily) => {
-            const dateKey = format(daily.date, 'yyyy-MM-dd')
-            const isExpanded = expandedDays.has(dateKey)
-            const nutrition = calculateDailyNutrition(daily.meals)
+            const dateKey = format(daily.date, 'yyyy-MM-dd');
+            const isExpanded = expandedDays.has(dateKey);
+            const nutrition = calculateDailyNutrition(daily.meals);
 
             return (
               <div
@@ -238,11 +238,11 @@ export function WeeklyPlan({
                   </div>
                 </div>
               </div>
-            )
+            );
           })
         )}
       </div>
     </div>
-  )
+  );
 }
 

@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Checkbox } from '@/components/ui/checkbox'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Send, 
   MessageCircle, 
@@ -20,8 +20,8 @@ import {
   Heart,
   Star,
   Upload,
-  X
-} from 'lucide-react'
+  X,
+} from 'lucide-react';
 
 interface FeedbackFormProps {
   onSubmit: (feedback: FeedbackData) => void
@@ -48,7 +48,7 @@ export function FeedbackForm({
   onCancel,
   type = 'general',
   showRating = true,
-  showAttachment = true
+  showAttachment = true,
 }: FeedbackFormProps) {
   const [formData, setFormData] = useState<Partial<FeedbackData>>({
     type,
@@ -57,65 +57,65 @@ export function FeedbackForm({
     description: '',
     rating: 0,
     email: '',
-    attachments: []
-  })
+    attachments: [],
+  });
   
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   const feedbackTypes = [
     { value: 'general', label: '一般反馈', icon: <MessageCircle className="h-4 w-4" /> },
     { value: 'bug', label: '问题报告', icon: <Bug className="h-4 w-4" /> },
     { value: 'feature', label: '功能建议', icon: <Lightbulb className="h-4 w-4" /> },
-    { value: 'satisfaction', label: '满意度调查', icon: <Heart className="h-4 w-4" /> }
-  ]
+    { value: 'satisfaction', label: '满意度调查', icon: <Heart className="h-4 w-4" /> },
+  ];
 
   const categories = {
     general: ['用户体验', '界面设计', '功能建议', '其他'],
     bug: ['功能异常', '性能问题', '界面错误', '数据问题', '其他'],
     feature: ['新功能建议', '功能改进', '流程优化', '其他'],
-    satisfaction: ['整体满意度', '功能满意度', '客服满意度', '其他']
-  }
+    satisfaction: ['整体满意度', '功能满意度', '客服满意度', '其他'],
+  };
 
   const handleInputChange = (field: keyof FeedbackData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleFileAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
+    const files = Array.from(event.target.files || []);
     const validFiles = files.filter(file => {
-      const maxSize = 5 * 1024 * 1024 // 5MB
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain']
-      return file.size <= maxSize && validTypes.includes(file.type)
-    })
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
+      return file.size <= maxSize && validTypes.includes(file.type);
+    });
 
-    setAttachedFiles(prev => [...prev, ...validFiles])
-  }
+    setAttachedFiles(prev => [...prev, ...validFiles]);
+  };
 
   const removeFile = (index: number) => {
-    setAttachedFiles(prev => prev.filter((_, i) => i !== index))
-  }
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     const submissionData: FeedbackData = {
       ...formData,
       attachments: attachedFiles,
       userAgent: navigator.userAgent,
-      timestamp: new Date().toISOString()
-    } as FeedbackData
+      timestamp: new Date().toISOString(),
+    } as FeedbackData;
 
     try {
-      await onSubmit(submissionData)
+      await onSubmit(submissionData);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const renderRatingStars = () => {
-    if (!showRating || formData.type !== 'satisfaction') return null
+    if (!showRating || formData.type !== 'satisfaction') return null;
 
     return (
       <div className="space-y-2">
@@ -146,8 +146,8 @@ export function FeedbackForm({
           {formData.rating === 5 && '非常满意'}
         </p>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -330,7 +330,7 @@ export function FeedbackForm({
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // Quick Feedback Component
@@ -343,7 +343,7 @@ interface QuickFeedbackProps {
 export function QuickFeedback({ 
   onPositive, 
   onNegative, 
-  message = '这个内容对您有帮助吗？' 
+  message = '这个内容对您有帮助吗？', 
 }: QuickFeedbackProps) {
   return (
     <div className="flex items-center justify-center space-x-4 p-4 bg-gray-50 rounded-lg">
@@ -369,5 +369,5 @@ export function QuickFeedback({
         </Button>
       </div>
     </div>
-  )
+  );
 }

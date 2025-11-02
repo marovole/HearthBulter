@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 interface GoalProgressBarProps {
   goalType: string
@@ -21,33 +21,33 @@ export function GoalProgressBar({
 }: GoalProgressBarProps) {
   const getGoalTypeLabel = (type: string) => {
     switch (type) {
-      case 'LOSE_WEIGHT':
-        return '减重目标'
-      case 'GAIN_MUSCLE':
-        return '增肌目标'
-      case 'MAINTAIN':
-        return '维持体重'
-      case 'IMPROVE_HEALTH':
-        return '改善健康'
-      default:
-        return '健康目标'
+    case 'LOSE_WEIGHT':
+      return '减重目标';
+    case 'GAIN_MUSCLE':
+      return '增肌目标';
+    case 'MAINTAIN':
+      return '维持体重';
+    case 'IMPROVE_HEALTH':
+      return '改善健康';
+    default:
+      return '健康目标';
     }
-  }
+  };
 
   const getProgressColor = () => {
-    if (currentProgress >= 80) return 'bg-green-600'
-    if (currentProgress >= 50) return 'bg-blue-600'
-    if (currentProgress >= 25) return 'bg-yellow-500'
-    return 'bg-red-500'
-  }
+    if (currentProgress >= 80) return 'bg-green-600';
+    if (currentProgress >= 50) return 'bg-blue-600';
+    if (currentProgress >= 25) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
 
   const getStatusColor = () => {
-    return onTrack ? 'text-green-600' : 'text-red-600'
-  }
+    return onTrack ? 'text-green-600' : 'text-red-600';
+  };
 
   const getStatusText = () => {
-    return onTrack ? '正常进度' : '进度滞后'
-  }
+    return onTrack ? '正常进度' : '进度滞后';
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -105,6 +105,6 @@ export function GoalProgressBar({
         </div>
       )}
     </div>
-  )
+  );
 }
 

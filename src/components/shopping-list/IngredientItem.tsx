@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface Food {
   id: string
@@ -35,28 +35,28 @@ export function IngredientItem({
   showEcommerce = false,
   onEcommerceClick,
 }: IngredientItemProps) {
-  const [isEditingAmount, setIsEditingAmount] = useState(false)
-  const [tempAmount, setTempAmount] = useState(amount.toString())
+  const [isEditingAmount, setIsEditingAmount] = useState(false);
+  const [tempAmount, setTempAmount] = useState(amount.toString());
 
   const formatAmount = (amount: number) => {
     if (amount >= 1000) {
-      return `${(amount / 1000).toFixed(1)}kg`
+      return `${(amount / 1000).toFixed(1)}kg`;
     }
-    return `${amount.toFixed(0)}g`
-  }
+    return `${amount.toFixed(0)}g`;
+  };
 
   const handleAmountSubmit = () => {
-    const newAmount = parseFloat(tempAmount)
+    const newAmount = parseFloat(tempAmount);
     if (!isNaN(newAmount) && newAmount > 0 && onAmountChange) {
-      onAmountChange(id, newAmount)
-      setIsEditingAmount(false)
+      onAmountChange(id, newAmount);
+      setIsEditingAmount(false);
     }
-  }
+  };
 
   const handleAmountCancel = () => {
-    setTempAmount(amount.toString())
-    setIsEditingAmount(false)
-  }
+    setTempAmount(amount.toString());
+    setIsEditingAmount(false);
+  };
 
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
@@ -70,9 +70,9 @@ export function IngredientItem({
       SNACKS: '零食',
       BEVERAGES: '饮料',
       OTHER: '其他',
-    }
-    return labels[category] || category
-  }
+    };
+    return labels[category] || category;
+  };
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
@@ -86,9 +86,9 @@ export function IngredientItem({
       SNACKS: 'bg-pink-100 text-pink-800',
       BEVERAGES: 'bg-cyan-100 text-cyan-800',
       OTHER: 'bg-gray-100 text-gray-800',
-    }
-    return colors[category] || 'bg-gray-100 text-gray-800'
-  }
+    };
+    return colors[category] || 'bg-gray-100 text-gray-800';
+  };
 
   return (
     <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-all ${
@@ -211,5 +211,5 @@ export function IngredientItem({
         )}
       </div>
     </div>
-  )
+  );
 }

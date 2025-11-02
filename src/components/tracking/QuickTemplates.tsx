@@ -37,7 +37,7 @@ export function QuickTemplates({
   mealType,
   onSelectTemplate,
   onEditTemplate,
-  onCreateTemplate
+  onCreateTemplate,
 }: QuickTemplatesProps) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,7 +85,7 @@ export function QuickTemplates({
       BREAKFAST: '早餐',
       LUNCH: '午餐',
       DINNER: '晚餐',
-      SNACK: '加餐'
+      SNACK: '加餐',
     };
     return labels[type as keyof typeof labels] || type;
   };

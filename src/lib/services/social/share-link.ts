@@ -158,7 +158,7 @@ export function generateSocialShareUrls(
     qzone: `https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedDescription}`,
     
     // 通用复制链接
-    copy: shareUrl
+    copy: shareUrl,
   };
 }
 
@@ -181,6 +181,6 @@ export function generateOpenGraphMetadata(
     'twitter:card': 'summary_large_image',
     'twitter:title': title,
     'twitter:description': description,
-    'twitter:image': imageUrl || ''
+    'twitter:image': imageUrl || '',
   };
 }

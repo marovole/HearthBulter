@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { CalendarIcon, PlusIcon, TrashIcon } from 'lucide-react'
-import { format, addWeeks, addMonths, addQuarters } from 'date-fns'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { BudgetPeriod, FoodCategory } from '@prisma/client'
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { CalendarIcon, PlusIcon, TrashIcon } from 'lucide-react';
+import { format, addWeeks, addMonths, addQuarters } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { BudgetPeriod, FoodCategory } from '@prisma/client';
 
 const budgetFormSchema = z.object({
   name: z.string().min(1, '预算名称不能为空'),
@@ -47,12 +47,12 @@ const budgetFormSchema = z.object({
     (data.fruitBudget || 0) +
     (data.grainBudget || 0) +
     (data.dairyBudget || 0) +
-    (data.otherBudget || 0)
-  return categoryTotal <= data.totalAmount
+    (data.otherBudget || 0);
+  return categoryTotal <= data.totalAmount;
 }, {
   message: '分类预算总和不能超过总预算',
   path: ['totalAmount'],
-})
+});
 
 type BudgetFormData = z.infer<typeof budgetFormSchema>
 
@@ -69,7 +69,7 @@ const periodOptions = [
   { value: BudgetPeriod.QUARTERLY, label: '季度预算', description: '90天周期' },
   { value: BudgetPeriod.YEARLY, label: '年预算', description: '365天周期' },
   { value: BudgetPeriod.CUSTOM, label: '自定义', description: '自定义日期范围' },
-]
+];
 
 const categoryFields = [
   { key: 'vegetableBudget', label: '蔬菜类预算', icon: '🥬', color: 'bg-green-100 text-green-800' },
@@ -78,11 +78,11 @@ const categoryFields = [
   { key: 'grainBudget', label: '谷物类预算', icon: '🌾', color: 'bg-yellow-100 text-yellow-800' },
   { key: 'dairyBudget', label: '乳制品预算', icon: '🥛', color: 'bg-blue-100 text-blue-800' },
   { key: 'otherBudget', label: '其他类预算', icon: '📦', color: 'bg-gray-100 text-gray-800' },
-] as const
+] as const;
 
 export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: BudgetSettingProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetFormSchema),
@@ -102,53 +102,53 @@ export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: Bu
       alertThreshold100: initialData?.alertThreshold100 ?? true,
       alertThreshold110: initialData?.alertThreshold110 ?? true,
     },
-  })
+  });
 
-  const selectedPeriod = form.watch('period')
-  const totalAmount = form.watch('totalAmount')
-  const categoryValues = form.watch(['vegetableBudget', 'meatBudget', 'fruitBudget', 'grainBudget', 'dairyBudget', 'otherBudget'])
-  const categoryTotal = categoryValues.reduce((sum, value) => sum + (value || 0), 0)
-  const remainingForOther = totalAmount - categoryTotal
+  const selectedPeriod = form.watch('period');
+  const totalAmount = form.watch('totalAmount');
+  const categoryValues = form.watch(['vegetableBudget', 'meatBudget', 'fruitBudget', 'grainBudget', 'dairyBudget', 'otherBudget']);
+  const categoryTotal = categoryValues.reduce((sum, value) => sum + (value || 0), 0);
+  const remainingForOther = totalAmount - categoryTotal;
 
   // 自动设置日期范围
   const handlePeriodChange = (period: BudgetPeriod) => {
-    const startDate = new Date()
-    let endDate: Date
+    const startDate = new Date();
+    let endDate: Date;
 
     switch (period) {
-      case BudgetPeriod.WEEKLY:
-        endDate = addWeeks(startDate, 1)
-        break
-      case BudgetPeriod.MONTHLY:
-        endDate = addMonths(startDate, 1)
-        break
-      case BudgetPeriod.QUARTERLY:
-        endDate = addQuarters(startDate, 1)
-        break
-      case BudgetPeriod.YEARLY:
-        endDate = addMonths(startDate, 12)
-        break
-      case BudgetPeriod.CUSTOM:
-        // 保持当前日期
-        return
+    case BudgetPeriod.WEEKLY:
+      endDate = addWeeks(startDate, 1);
+      break;
+    case BudgetPeriod.MONTHLY:
+      endDate = addMonths(startDate, 1);
+      break;
+    case BudgetPeriod.QUARTERLY:
+      endDate = addQuarters(startDate, 1);
+      break;
+    case BudgetPeriod.YEARLY:
+      endDate = addMonths(startDate, 12);
+      break;
+    case BudgetPeriod.CUSTOM:
+      // 保持当前日期
+      return;
     }
 
-    form.setValue('startDate', startDate)
-    form.setValue('endDate', endDate)
-  }
+    form.setValue('startDate', startDate);
+    form.setValue('endDate', endDate);
+  };
 
   // 平均分配分类预算
   const distributeEvenly = () => {
-    const evenAmount = totalAmount / 6
+    const evenAmount = totalAmount / 6;
     categoryFields.forEach(field => {
-      form.setValue(field.key as any, Math.floor(evenAmount))
-    })
-  }
+      form.setValue(field.key as any, Math.floor(evenAmount));
+    });
+  };
 
   // 提交表单
   const onSubmit = async (data: BudgetFormData) => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/budget/set', {
@@ -160,21 +160,21 @@ export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: Bu
           ...data,
           memberId,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || '创建预算失败')
+        const errorData = await response.json();
+        throw new Error(errorData.error || '创建预算失败');
       }
 
-      const budget = await response.json()
-      onSuccess?.(budget)
+      const budget = await response.json();
+      onSuccess?.(budget);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建预算失败')
+      setError(err instanceof Error ? err.message : '创建预算失败');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -219,8 +219,8 @@ export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: Bu
                   <FormItem>
                     <FormLabel>预算周期</FormLabel>
                     <Select onValueChange={(value) => {
-                      field.onChange(value)
-                      handlePeriodChange(value as BudgetPeriod)
+                      field.onChange(value);
+                      handlePeriodChange(value as BudgetPeriod);
                     }} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -258,12 +258,12 @@ export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: Bu
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "yyyy-MM-dd")
+                              format(field.value, 'yyyy-MM-dd')
                             ) : (
                               <span>选择日期</span>
                             )}
@@ -300,12 +300,12 @@ export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: Bu
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "yyyy-MM-dd")
+                              format(field.value, 'yyyy-MM-dd')
                             ) : (
                               <span>选择日期</span>
                             )}
@@ -385,7 +385,7 @@ export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: Bu
                     render={({ field: formField }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
-                          <span className={cn("px-2 py-1 rounded-full text-xs font-medium", field.color)}>
+                          <span className={cn('px-2 py-1 rounded-full text-xs font-medium', field.color)}>
                             {field.icon} {field.label}
                           </span>
                         </FormLabel>
@@ -525,5 +525,5 @@ export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: Bu
         </Form>
       </CardContent>
     </Card>
-  )
+  );
 }

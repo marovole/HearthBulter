@@ -26,21 +26,21 @@ export async function GET(request: NextRequest) {
         recipe: {
           include: {
             ingredients: {
-              include: { food: true }
-            }
-          }
-        }
+              include: { food: true },
+            },
+          },
+        },
       },
       orderBy: {
-        [sortBy]: sortOrder
+        [sortBy]: sortOrder,
       },
       skip,
-      take: limit
+      take: limit,
     });
 
     // 获取总数
     const total = await prisma.recipeFavorite.count({
-      where: { memberId }
+      where: { memberId },
     });
 
     return NextResponse.json({
@@ -49,14 +49,14 @@ export async function GET(request: NextRequest) {
         id: fav.id,
         favoritedAt: fav.favoritedAt,
         notes: fav.notes,
-        recipe: fav.recipe
+        recipe: fav.recipe,
       })),
       pagination: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     });
 
   } catch (error) {

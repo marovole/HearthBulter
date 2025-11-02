@@ -25,23 +25,23 @@ export async function GET(request: NextRequest) {
       where: {
         memberId,
         viewedAt: {
-          gte: startDate
-        }
+          gte: startDate,
+        },
       },
       include: {
         recipe: {
           include: {
             ingredients: {
-              include: { food: true }
-            }
-          }
-        }
+              include: { food: true },
+            },
+          },
+        },
       },
       orderBy: {
-        viewedAt: 'desc'
+        viewedAt: 'desc',
       },
       skip,
-      take: limit
+      take: limit,
     });
 
     // 获取总数
@@ -49,9 +49,9 @@ export async function GET(request: NextRequest) {
       where: {
         memberId,
         viewedAt: {
-          gte: startDate
-        }
-      }
+          gte: startDate,
+        },
+      },
     });
 
     return NextResponse.json({
@@ -61,14 +61,14 @@ export async function GET(request: NextRequest) {
         viewedAt: view.viewedAt,
         viewDuration: view.viewDuration,
         source: view.source,
-        recipe: view.recipe
+        recipe: view.recipe,
       })),
       pagination: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     });
 
   } catch (error) {
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     // 检查食谱是否存在
     const recipe = await prisma.recipe.findUnique({
-      where: { id: recipeId }
+      where: { id: recipeId },
     });
 
     if (!recipe) {
@@ -110,8 +110,8 @@ export async function POST(request: NextRequest) {
         memberId,
         recipeId,
         viewDuration: viewDuration || null,
-        source: source || 'direct'
-      }
+        source: source || 'direct',
+      },
     });
 
     // 更新食谱浏览计数
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      view
+      view,
     });
 
   } catch (error) {
@@ -133,11 +133,11 @@ export async function POST(request: NextRequest) {
 
 async function updateRecipeViewCount(recipeId: string) {
   const count = await prisma.recipeView.count({
-    where: { recipeId }
+    where: { recipeId },
   });
 
   await prisma.recipe.update({
     where: { id: recipeId },
-    data: { viewCount: count }
+    data: { viewCount: count },
   });
 }

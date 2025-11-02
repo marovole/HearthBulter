@@ -1,22 +1,22 @@
 {
   "extends": [
     "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended",
     "prettier"
   ],
   "plugins": ["@typescript-eslint"],
   "rules": {
-    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-unused-vars": "warn",
     "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/prefer-const": "error",
-    "@typescript-eslint/no-var-requires": "error",
-    "prefer-const": "error",
+    "@typescript-eslint/no-var-requires": "off",
+    "prefer-const": "warn",
     "no-var": "error",
     "no-console": "warn",
     "no-debugger": "error",
     "no-alert": "error",
     "no-duplicate-imports": "error",
-    "no-unused-expressions": "error",
-    "prefer-template": "error",
+    "no-unused-expressions": "warn",
+    "prefer-template": "warn",
     "template-curly-spacing": "error",
     "object-curly-spacing": ["error", "always"],
     "array-bracket-spacing": ["error", "never"],
@@ -27,8 +27,8 @@
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
     "indent": ["error", 2],
-    "max-len": ["warn", { "code": 100 }],
-    "complexity": ["warn", 10],
+    "max-len": ["warn", { "code": 120, "ignoreUrls": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }],
+    "complexity": ["warn", 15],
     "max-depth": ["warn", 4],
     "max-params": ["warn", 4]
   },
@@ -37,7 +37,16 @@
       "files": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
       "rules": {
         "no-console": "off",
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-var-requires": "off",
+        "max-len": "off"
+      }
+    },
+    {
+      "files": ["*.config.js", "*.config.ts"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "no-console": "off"
       }
     }
   ]

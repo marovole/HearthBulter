@@ -69,8 +69,8 @@ describe('RecommendationEngine', () => {
           mealTypes: ['午餐', '晚餐'],
           ingredients: [
             { food: { name: '番茄', category: '蔬菜' } },
-            { food: { name: '鸡蛋', category: '蛋类' } }
-          ]
+            { food: { name: '鸡蛋', category: '蛋类' } },
+          ],
         },
         {
           id: 'recipe2',
@@ -88,9 +88,9 @@ describe('RecommendationEngine', () => {
           mealTypes: ['午餐', '晚餐'],
           ingredients: [
             { food: { name: '鸡肉', category: '肉类' } },
-            { food: { name: '花生', category: '坚果' } }
-          ]
-        }
+            { food: { name: '花生', category: '坚果' } },
+          ],
+        },
       ];
 
       const mockUserPreference = {
@@ -101,14 +101,14 @@ describe('RecommendationEngine', () => {
         preferredIngredients: JSON.stringify(['鸡肉', '鸡蛋']),
         avoidedIngredients: JSON.stringify([]),
         spiceLevel: 'MEDIUM',
-        costLevel: 'MEDIUM'
+        costLevel: 'MEDIUM',
       };
 
       const mockHealthGoal = {
         id: 'goal1',
         memberId: 'user1',
         goalType: 'MAINTAIN',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
       };
 
       // Setup mocks
@@ -130,7 +130,7 @@ describe('RecommendationEngine', () => {
         dietaryRestrictions: [],
         excludedIngredients: [],
         preferredCuisines: ['中式'],
-        season: '春'
+        season: '春',
       };
 
       // Execute
@@ -167,7 +167,7 @@ describe('RecommendationEngine', () => {
         dietaryRestrictions: [],
         excludedIngredients: [],
         preferredCuisines: [],
-        season: '春'
+        season: '春',
       };
 
       const recommendations = await recommendationEngine.getRecommendations(context, 5);
@@ -194,8 +194,8 @@ describe('RecommendationEngine', () => {
         mealTypes: ['午餐', '晚餐'],
         ingredients: [
           { food: { name: '番茄', category: '蔬菜' } },
-          { food: { name: '鸡蛋', category: '蛋类' } }
-        ]
+          { food: { name: '鸡蛋', category: '蛋类' } },
+        ],
       };
 
       const mockSimilarRecipes = [
@@ -209,9 +209,9 @@ describe('RecommendationEngine', () => {
           difficulty: 'EASY',
           ingredients: [
             { food: { name: '鸡蛋', category: '蛋类' } },
-            { food: { name: '青菜', category: '蔬菜' } }
-          ]
-        }
+            { food: { name: '青菜', category: '蔬菜' } },
+          ],
+        },
       ];
 
       mockPrisma.recipe.findUnique.mockResolvedValue(mockRecipe);
@@ -239,7 +239,7 @@ describe('RecommendationEngine', () => {
           estimatedCost: 15,
           category: 'MAIN_DISH',
           cuisine: '中式',
-          difficulty: 'EASY'
+          difficulty: 'EASY',
         },
         {
           id: 'recipe2',
@@ -251,8 +251,8 @@ describe('RecommendationEngine', () => {
           estimatedCost: 35,
           category: 'MAIN_DISH',
           cuisine: '川菜',
-          difficulty: 'MEDIUM'
-        }
+          difficulty: 'MEDIUM',
+        },
       ];
 
       mockPrisma.recipe.findMany.mockResolvedValue(mockPopularRecipes);
@@ -278,7 +278,7 @@ describe('RecommendationEngine', () => {
         spiceLevel: 'MEDIUM',
         costLevel: 'MEDIUM',
         learnedPreferences: JSON.stringify({}),
-        preferenceScore: 0
+        preferenceScore: 0,
       };
 
       mockPrisma.userPreference.findUnique.mockResolvedValue(mockUserPreference);
@@ -287,9 +287,9 @@ describe('RecommendationEngine', () => {
         learnedPreferences: JSON.stringify({
           preferredIngredients: ['鸡肉', '鸡蛋'],
           avoidedIngredients: ['香菜'],
-          spiceLevel: 'MEDIUM_HIGH'
+          spiceLevel: 'MEDIUM_HIGH',
         }),
-        preferenceScore: 0.8
+        preferenceScore: 0.8,
       });
 
       await recommendationEngine.updateUserPreferences('user1');
@@ -298,8 +298,8 @@ describe('RecommendationEngine', () => {
         where: { memberId: 'user1' },
         data: expect.objectContaining({
           learnedPreferences: expect.any(String),
-          preferenceScore: expect.any(Number)
-        })
+          preferenceScore: expect.any(Number),
+        }),
       });
     });
   });
@@ -317,7 +317,7 @@ describe('RecommendationEngine', () => {
         dietaryRestrictions: [],
         excludedIngredients: [],
         preferredCuisines: [],
-        season: '春'
+        season: '春',
       };
 
       await expect(recommendationEngine.getRecommendations(context, 5))

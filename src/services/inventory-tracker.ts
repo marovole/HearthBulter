@@ -1,6 +1,6 @@
-import { PrismaClient, InventoryItem, InventoryUsage, InventoryStatus, StorageLocation } from '@prisma/client'
+import { PrismaClient, InventoryItem, InventoryUsage, InventoryStatus, StorageLocation } from '@prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 export interface CreateInventoryItemInput {
   memberId: string
@@ -95,7 +95,7 @@ export class InventoryTracker {
         originalQuantity: input.quantity,
         daysToExpiry: input.expiryDate ? this.calculateDaysToExpiry(input.expiryDate) : null,
         status: this.calculateInventoryStatus(input.quantity, input.expiryDate, input.minStockThreshold),
-        isLowStock: input.minStockThreshold ? input.quantity <= input.minStockThreshold : false
+        isLowStock: input.minStockThreshold ? input.quantity <= input.minStockThreshold : false,
       },
       include: {
         food: {
@@ -107,15 +107,15 @@ export class InventoryTracker {
             calories: true,
             protein: true,
             carbs: true,
-            fat: true
-          }
+            fat: true,
+          },
         },
         usageRecords: true,
-        wasteRecords: true
-      }
-    })
+        wasteRecords: true,
+      },
+    });
 
-    return inventoryItem
+    return inventoryItem;
   }
 
   /**
@@ -126,31 +126,31 @@ export class InventoryTracker {
     input: UpdateInventoryItemInput
   ): Promise<InventoryItemWithRelations> {
     const existingItem = await prisma.inventoryItem.findUnique({
-      where: { id }
-    })
+      where: { id },
+    });
 
     if (!existingItem) {
-      throw new Error('库存条目不存在')
+      throw new Error('库存条目不存在');
     }
 
-    const updateData: Partial<UpdateInventoryItemInput> = { ...input }
+    const updateData: Partial<UpdateInventoryItemInput> = { ...input };
 
     // 如果更新了数量或阈值，重新计算状态
     if (input.quantity !== undefined || input.minStockThreshold !== undefined) {
-      const quantity = input.quantity ?? existingItem.quantity
-      const minStockThreshold = input.minStockThreshold ?? existingItem.minStockThreshold
+      const quantity = input.quantity ?? existingItem.quantity;
+      const minStockThreshold = input.minStockThreshold ?? existingItem.minStockThreshold;
       
       updateData.status = this.calculateInventoryStatus(
         quantity,
         input.expiryDate ?? existingItem.expiryDate,
         minStockThreshold
-      )
-      updateData.isLowStock = minStockThreshold ? quantity <= minStockThreshold : false
+      );
+      updateData.isLowStock = minStockThreshold ? quantity <= minStockThreshold : false;
     }
 
     // 如果更新了保质期，重新计算剩余天数
     if (input.expiryDate !== undefined) {
-      updateData.daysToExpiry = this.calculateDaysToExpiry(input.expiryDate)
+      updateData.daysToExpiry = this.calculateDaysToExpiry(input.expiryDate);
     }
 
     const updatedItem = await prisma.inventoryItem.update({
@@ -166,15 +166,15 @@ export class InventoryTracker {
             calories: true,
             protein: true,
             carbs: true,
-            fat: true
-          }
+            fat: true,
+          },
         },
         usageRecords: true,
-        wasteRecords: true
-      }
-    })
+        wasteRecords: true,
+      },
+    });
 
-    return updatedItem
+    return updatedItem;
   }
 
   /**
@@ -182,8 +182,8 @@ export class InventoryTracker {
    */
   async deleteInventoryItem(id: string): Promise<void> {
     await prisma.inventoryItem.delete({
-      where: { id }
-    })
+      where: { id },
+    });
   }
 
   /**
@@ -200,36 +200,36 @@ export class InventoryTracker {
       isLowStock?: boolean
     }
   ): Promise<InventoryItemWithRelations[]> {
-    const where: InventoryWhereClause = { memberId }
+    const where: InventoryWhereClause = { memberId };
 
     if (filters) {
-      if (filters.status) where.status = filters.status
-      if (filters.storageLocation) where.storageLocation = filters.storageLocation
-      if (filters.isLowStock) where.isLowStock = true
+      if (filters.status) where.status = filters.status;
+      if (filters.storageLocation) where.storageLocation = filters.storageLocation;
+      if (filters.isLowStock) where.isLowStock = true;
 
       // 处理临期和过期筛选
       if (filters.isExpiring || filters.isExpired) {
-        const now = new Date()
-        const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+        const now = new Date();
+        const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
         if (filters.isExpiring) {
           where.expiryDate = {
             gte: now,
-            lte: sevenDaysLater
-          }
+            lte: sevenDaysLater,
+          };
         }
         if (filters.isExpired) {
           where.expiryDate = {
-            lt: now
-          }
+            lt: now,
+          };
         }
       }
 
       // 处理食物分类筛选
       if (filters.category) {
         where.food = {
-          category: filters.category
-        }
+          category: filters.category,
+        };
       }
     }
 
@@ -245,26 +245,26 @@ export class InventoryTracker {
             calories: true,
             protein: true,
             carbs: true,
-            fat: true
-          }
+            fat: true,
+          },
         },
         usageRecords: {
           orderBy: { usedAt: 'desc' },
-          take: 5
+          take: 5,
         },
         wasteRecords: {
           orderBy: { wastedAt: 'desc' },
-          take: 5
-        }
+          take: 5,
+        },
       },
       orderBy: [
         { status: 'asc' },
         { expiryDate: 'asc' },
-        { createdAt: 'desc' }
-      ]
-    })
+        { createdAt: 'desc' },
+      ],
+    });
 
-    return items
+    return items;
   }
 
   /**
@@ -283,19 +283,19 @@ export class InventoryTracker {
             calories: true,
             protein: true,
             carbs: true,
-            fat: true
-          }
+            fat: true,
+          },
         },
         usageRecords: {
-          orderBy: { usedAt: 'desc' }
+          orderBy: { usedAt: 'desc' },
         },
         wasteRecords: {
-          orderBy: { wastedAt: 'desc' }
-        }
-      }
-    })
+          orderBy: { wastedAt: 'desc' },
+        },
+      },
+    });
 
-    return item
+    return item;
   }
 
   /**
@@ -314,15 +314,15 @@ export class InventoryTracker {
     }
   ): Promise<InventoryItemWithRelations> {
     const inventoryItem = await prisma.inventoryItem.findUnique({
-      where: { id: inventoryItemId }
-    })
+      where: { id: inventoryItemId },
+    });
 
     if (!inventoryItem) {
-      throw new Error('库存条目不存在')
+      throw new Error('库存条目不存在');
     }
 
     if (inventoryItem.quantity < usedQuantity) {
-      throw new Error('库存不足')
+      throw new Error('库存不足');
     }
 
     // 创建使用记录
@@ -335,17 +335,17 @@ export class InventoryTracker {
         relatedId: options?.relatedId,
         relatedType: options?.relatedType,
         notes: options?.notes,
-        recipeName: options?.recipeName
-      }
-    })
+        recipeName: options?.recipeName,
+      },
+    });
 
     // 更新库存数量
-    const newQuantity = inventoryItem.quantity - usedQuantity
+    const newQuantity = inventoryItem.quantity - usedQuantity;
     const updatedItem = await this.updateInventoryItem(inventoryItemId, {
-      quantity: newQuantity
-    })
+      quantity: newQuantity,
+    });
 
-    return updatedItem
+    return updatedItem;
   }
 
   /**
@@ -360,7 +360,7 @@ export class InventoryTracker {
     }>,
     recipeName: string
   ): Promise<InventoryItemWithRelations[]> {
-    const results: InventoryItemWithRelations[] = []
+    const results: InventoryItemWithRelations[] = [];
 
     for (const ingredient of ingredients) {
       // 查找匹配的库存条目（优先使用临期食材）
@@ -369,7 +369,7 @@ export class InventoryTracker {
           memberId,
           foodId: ingredient.foodId,
           quantity: { gte: ingredient.quantity },
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           food: {
@@ -381,17 +381,17 @@ export class InventoryTracker {
               calories: true,
               protein: true,
               carbs: true,
-              fat: true
-            }
+              fat: true,
+            },
           },
           usageRecords: true,
-          wasteRecords: true
+          wasteRecords: true,
         },
         orderBy: [
           { expiryDate: 'asc' },
-          { createdAt: 'asc' }
-        ]
-      })
+          { createdAt: 'asc' },
+        ],
+      });
 
       if (inventoryItem) {
         const updatedItem = await this.useInventory(
@@ -401,24 +401,24 @@ export class InventoryTracker {
           memberId,
           {
             recipeName,
-            notes: `食谱：${recipeName}`
+            notes: `食谱：${recipeName}`,
           }
-        )
-        results.push(updatedItem)
+        );
+        results.push(updatedItem);
       }
     }
 
-    return results
+    return results;
   }
 
   /**
    * 计算剩余保质期天数
    */
   private calculateDaysToExpiry(expiryDate: Date): number {
-    const now = new Date()
-    const diffTime = expiryDate.getTime() - now.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
+    const now = new Date();
+    const diffTime = expiryDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   }
 
   /**
@@ -430,25 +430,25 @@ export class InventoryTracker {
     minStockThreshold?: number
   ): InventoryStatus {
     if (quantity <= 0) {
-      return InventoryStatus.OUT_OF_STOCK
+      return InventoryStatus.OUT_OF_STOCK;
     }
 
     if (minStockThreshold && quantity <= minStockThreshold) {
-      return InventoryStatus.LOW_STOCK
+      return InventoryStatus.LOW_STOCK;
     }
 
     if (expiryDate) {
-      const now = new Date()
-      const daysToExpiry = this.calculateDaysToExpiry(expiryDate)
+      const now = new Date();
+      const daysToExpiry = this.calculateDaysToExpiry(expiryDate);
 
       if (daysToExpiry < 0) {
-        return InventoryStatus.EXPIRED
+        return InventoryStatus.EXPIRED;
       } else if (daysToExpiry <= 3) {
-        return InventoryStatus.EXPIRING
+        return InventoryStatus.EXPIRING;
       }
     }
 
-    return InventoryStatus.FRESH
+    return InventoryStatus.FRESH;
   }
 
   /**
@@ -468,10 +468,10 @@ export class InventoryTracker {
       where: { memberId, deletedAt: null },
       include: {
         food: {
-          select: { category: true }
-        }
-      }
-    })
+          select: { category: true },
+        },
+      },
+    });
 
     const stats = {
       totalItems: items.length,
@@ -482,12 +482,12 @@ export class InventoryTracker {
       lowStockItems: items.filter(item => item.status === InventoryStatus.LOW_STOCK).length,
       outOfStockItems: items.filter(item => item.status === InventoryStatus.OUT_OF_STOCK).length,
       estimatedValue: items.reduce((sum, item) => {
-        return sum + (item.purchasePrice || 0)
-      }, 0)
-    }
+        return sum + (item.purchasePrice || 0);
+      }, 0),
+    };
 
-    return stats
+    return stats;
   }
 }
 
-export const inventoryTracker = new InventoryTracker()
+export const inventoryTracker = new InventoryTracker();

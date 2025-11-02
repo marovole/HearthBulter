@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { usdaService } from '@/lib/services/usda-service'
-import type { FoodCategory } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { usdaService } from '@/lib/services/usda-service';
+import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from '@/lib/cache/redis-client';
+import type { FoodCategory } from '@prisma/client';
 
 /**
  * GET /api/foods/search?q=鸡胸肉
@@ -9,17 +10,30 @@ import type { FoodCategory } from '@prisma/client'
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams
-    const query = searchParams.get('q')
-    const category = searchParams.get('category') as FoodCategory | null
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const page = parseInt(searchParams.get('page') || '1')
+    const searchParams = request.nextUrl.searchParams;
+    const query = searchParams.get('q');
+    const category = searchParams.get('category') as FoodCategory | null;
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = parseInt(searchParams.get('page') || '1');
 
     if (!query || query.trim() === '') {
       return NextResponse.json(
         { error: '请提供搜索关键词' },
         { status: 400 }
-      )
+      );
+    }
+
+    // 生成缓存键
+    const cacheKey = CacheKeyBuilder.build('foods-search', query, `${category || 'all'}-${limit}-${page}`);
+
+    // 尝试从缓存获取结果
+    const cachedResult = await CacheService.get(cacheKey);
+    if (cachedResult) {
+      return NextResponse.json(cachedResult, {
+        headers: {
+          'X-Cache': 'HIT',
+        },
+      });
     }
 
     // 1. 先在本地数据库搜索
@@ -28,10 +42,10 @@ export async function GET(request: NextRequest) {
         { name: { contains: query } },
         { nameEn: { contains: query } },
       ],
-    }
+    };
 
     if (category) {
-      where.category = category
+      where.category = category;
     }
 
     const [localFoods, totalCount] = await Promise.all([
@@ -42,20 +56,27 @@ export async function GET(request: NextRequest) {
         orderBy: { name: 'asc' },
       }),
       prisma.food.count({ where }),
-    ])
+    ]);
 
     // 如果本地有足够的结果，直接返回
     if (localFoods.length >= limit) {
-      return NextResponse.json(
-        {
-          foods: localFoods.map(parseFoodResponse),
-          total: totalCount,
-          page,
-          limit,
-          type: 'local',
+      const result = {
+        foods: localFoods.map(parseFoodResponse),
+        total: totalCount,
+        page,
+        limit,
+        type: 'local',
+      };
+
+      // 缓存结果
+      await CacheService.set(cacheKey, result, CACHE_CONFIG.TTL.NUTRITION_DATA);
+
+      return NextResponse.json(result, {
+        status: 200,
+        headers: {
+          'X-Cache': 'MISS',
         },
-        { status: 200 }
-      )
+      });
     }
 
     // 2. 如果本地结果不足，尝试从USDA API搜索
@@ -63,7 +84,7 @@ export async function GET(request: NextRequest) {
       const usdaResults = await usdaService.searchAndMapFoods(
         query,
         limit - localFoods.length
-      )
+      );
 
       // 将USDA结果保存到数据库（异步，不阻塞响应）
       Promise.all(
@@ -72,7 +93,7 @@ export async function GET(request: NextRequest) {
             // 检查是否已存在
             const existing = await prisma.food.findFirst({
               where: { usdaId: foodData.usdaId },
-            })
+            });
 
             if (!existing && foodData.usdaId) {
               await prisma.food.create({
@@ -98,16 +119,16 @@ export async function GET(request: NextRequest) {
                   verified: foodData.verified,
                   cachedAt: new Date(),
                 },
-              })
+              });
             }
           } catch (error) {
             // 忽略重复键错误等
-            console.error('保存USDA数据失败:', error)
+            console.error('保存USDA数据失败:', error);
           }
         })
       ).catch((error) => {
-        console.error('批量保存USDA数据失败:', error)
-      })
+        console.error('批量保存USDA数据失败:', error);
+      });
 
       // 合并结果
       const allFoods = [
@@ -118,39 +139,53 @@ export async function GET(request: NextRequest) {
           aliases: f.aliases,
           tags: f.tags,
         })),
-      ]
+      ];
 
-      return NextResponse.json(
-        {
-          foods: allFoods.slice(0, limit),
-          total: totalCount + usdaResults.length,
-          page,
-          limit,
-          type: 'mixed',
+      const result = {
+        foods: allFoods.slice(0, limit),
+        total: totalCount + usdaResults.length,
+        page,
+        limit,
+        type: 'mixed',
+      };
+
+      // 缓存混合结果（缓存时间稍短，因为包含外部API数据）
+      await CacheService.set(cacheKey, result, CACHE_CONFIG.TTL.API_RESPONSE);
+
+      return NextResponse.json(result, {
+        status: 200,
+        headers: {
+          'X-Cache': 'MISS',
         },
-        { status: 200 }
-      )
+      });
     } catch (usdaError) {
       // USDA API失败，只返回本地结果
-      console.error('USDA API搜索失败:', usdaError)
-      return NextResponse.json(
-        {
-          foods: localFoods.map(parseFoodResponse),
-          total: totalCount,
-          page,
-          limit,
-          type: 'local',
-          warning: 'USDA API暂时不可用，仅显示本地结果',
+      console.error('USDA API搜索失败:', usdaError);
+      const result = {
+        foods: localFoods.map(parseFoodResponse),
+        total: totalCount,
+        page,
+        limit,
+        type: 'local',
+        warning: 'USDA API暂时不可用，仅显示本地结果',
+      };
+
+      // 缓存失败回退结果（缓存时间较短）
+      await CacheService.set(cacheKey, result, CACHE_CONFIG.TTL.API_RESPONSE / 2);
+
+      return NextResponse.json(result, {
+        status: 200,
+        headers: {
+          'X-Cache': 'MISS',
         },
-        { status: 200 }
-      )
+      });
     }
   } catch (error) {
-    console.error('搜索食物失败:', error)
+    console.error('搜索食物失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -181,6 +216,6 @@ function parseFoodResponse(food: any) {
     verified: food.verified,
     createdAt: food.createdAt,
     updatedAt: food.updatedAt,
-  }
+  };
 }
 

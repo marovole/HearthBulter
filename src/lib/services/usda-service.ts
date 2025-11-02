@@ -75,7 +75,7 @@ const FOOD_TRANSLATIONS: Record<string, string> = {
   燕麦: 'oats',
   酸奶: 'yogurt',
   奶酪: 'cheese',
-}
+};
 
 /**
  * 根据营养物ID获取营养素值
@@ -84,8 +84,8 @@ function getNutrientValue(
   nutrients: USDAFoodNutrient[],
   nutrientId: number
 ): number | undefined {
-  const nutrient = nutrients.find((n) => n.nutrientId === nutrientId)
-  return nutrient?.value
+  const nutrient = nutrients.find((n) => n.nutrientId === nutrientId);
+  return nutrient?.value;
 }
 
 /**
@@ -104,29 +104,29 @@ const NUTRIENT_IDS = {
   VITAMIN_C: 1162, // Vitamin C, total ascorbic acid
   CALCIUM: 1087, // Calcium, Ca
   IRON: 1089, // Iron, Fe
-} as const
+} as const;
 
 /**
  * 将USDA API响应映射到本地Food模型
  */
 function mapUSDAToLocal(usdaFood: USDAFood): Omit<FoodData, 'id'> {
-  const nutrients = usdaFood.foodNutrients || []
+  const nutrients = usdaFood.foodNutrients || [];
 
   // 提取主要营养素
-  const calories = getNutrientValue(nutrients, NUTRIENT_IDS.ENERGY) || 0
-  const protein = getNutrientValue(nutrients, NUTRIENT_IDS.PROTEIN) || 0
-  const carbs = getNutrientValue(nutrients, NUTRIENT_IDS.CARBOHYDRATE) || 0
-  const fat = getNutrientValue(nutrients, NUTRIENT_IDS.FAT) || 0
-  const fiber = getNutrientValue(nutrients, NUTRIENT_IDS.FIBER)
-  const sugar = getNutrientValue(nutrients, NUTRIENT_IDS.SUGAR)
-  const sodium = getNutrientValue(nutrients, NUTRIENT_IDS.SODIUM)
-  const vitaminA = getNutrientValue(nutrients, NUTRIENT_IDS.VITAMIN_A)
-  const vitaminC = getNutrientValue(nutrients, NUTRIENT_IDS.VITAMIN_C)
-  const calcium = getNutrientValue(nutrients, NUTRIENT_IDS.CALCIUM)
-  const iron = getNutrientValue(nutrients, NUTRIENT_IDS.IRON)
+  const calories = getNutrientValue(nutrients, NUTRIENT_IDS.ENERGY) || 0;
+  const protein = getNutrientValue(nutrients, NUTRIENT_IDS.PROTEIN) || 0;
+  const carbs = getNutrientValue(nutrients, NUTRIENT_IDS.CARBOHYDRATE) || 0;
+  const fat = getNutrientValue(nutrients, NUTRIENT_IDS.FAT) || 0;
+  const fiber = getNutrientValue(nutrients, NUTRIENT_IDS.FIBER);
+  const sugar = getNutrientValue(nutrients, NUTRIENT_IDS.SUGAR);
+  const sodium = getNutrientValue(nutrients, NUTRIENT_IDS.SODIUM);
+  const vitaminA = getNutrientValue(nutrients, NUTRIENT_IDS.VITAMIN_A);
+  const vitaminC = getNutrientValue(nutrients, NUTRIENT_IDS.VITAMIN_C);
+  const calcium = getNutrientValue(nutrients, NUTRIENT_IDS.CALCIUM);
+  const iron = getNutrientValue(nutrients, NUTRIENT_IDS.IRON);
 
   // 简单的分类判断（可以根据description进一步优化）
-  const category = inferCategory(usdaFood.description)
+  const category = inferCategory(usdaFood.description);
 
   return {
     name: translateToChinese(usdaFood.description),
@@ -148,7 +148,7 @@ function mapUSDAToLocal(usdaFood: USDAFood): Omit<FoodData, 'id'> {
     source: 'USDA',
     usdaId: usdaFood.fdcId.toString(),
     verified: false,
-  }
+  };
 }
 
 /**
@@ -158,69 +158,69 @@ function translateToChinese(englishName: string): string {
   // 反转映射表查找
   const entry = Object.entries(FOOD_TRANSLATIONS).find(
     ([_, en]) => en.toLowerCase() === englishName.toLowerCase()
-  )
-  return entry ? entry[0] : englishName
+  );
+  return entry ? entry[0] : englishName;
 }
 
 /**
  * 将中文食物名翻译为英文
  */
 function translateToEnglish(chineseName: string): string {
-  return FOOD_TRANSLATIONS[chineseName] || chineseName
+  return FOOD_TRANSLATIONS[chineseName] || chineseName;
 }
 
 /**
  * 根据食物描述推断分类
  */
 function inferCategory(description: string): string {
-  const desc = description.toLowerCase()
+  const desc = description.toLowerCase();
   if (desc.includes('chicken') || desc.includes('beef') || desc.includes('pork')) {
-    return 'PROTEIN'
+    return 'PROTEIN';
   }
   if (desc.includes('salmon') || desc.includes('shrimp') || desc.includes('fish')) {
-    return 'SEAFOOD'
+    return 'SEAFOOD';
   }
   if (desc.includes('milk') || desc.includes('cheese') || desc.includes('yogurt')) {
-    return 'DAIRY'
+    return 'DAIRY';
   }
   if (desc.includes('broccoli') || desc.includes('spinach') || desc.includes('lettuce')) {
-    return 'VEGETABLES'
+    return 'VEGETABLES';
   }
   if (desc.includes('apple') || desc.includes('banana') || desc.includes('orange')) {
-    return 'FRUITS'
+    return 'FRUITS';
   }
   if (desc.includes('rice') || desc.includes('wheat') || desc.includes('oats')) {
-    return 'GRAINS'
+    return 'GRAINS';
   }
-  return 'OTHER'
+  return 'OTHER';
 }
 
 /**
  * 根据营养素推断标签
  */
 function inferTags(protein: number, carbs: number, fat: number): string[] {
-  const tags: string[] = []
-  if (protein > 20) tags.push('高蛋白')
-  if (carbs < 10) tags.push('低碳水')
-  if (fat < 5) tags.push('低脂')
-  return tags
+  const tags: string[] = [];
+  if (protein > 20) tags.push('高蛋白');
+  if (carbs < 10) tags.push('低碳水');
+  if (fat < 5) tags.push('低脂');
+  return tags;
 }
 
 /**
  * USDA API服务类
  */
 export class USDAService {
-  private readonly apiKey: string
-  private readonly baseUrl = 'https://api.nal.usda.gov/fdc/v1'
-  private readonly maxRetries = 3
-  private readonly retryDelay = 1000 // ms
+  private readonly apiKey: string;
+  private readonly baseUrl = 'https://api.nal.usda.gov/fdc/v1';
+  private readonly maxRetries = 3;
+  private readonly retryDelay = 1000; // ms
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.USDA_API_KEY || ''
+    this.apiKey = apiKey || process.env.USDA_API_KEY || '';
     if (!this.apiKey) {
       console.warn(
         'USDA_API_KEY not configured. USDA features will be limited.'
-      )
+      );
     }
   }
 
@@ -236,20 +236,20 @@ export class USDAService {
     pageNumber = 1
   ): Promise<USDASearchResponse> {
     if (!this.apiKey) {
-      throw new Error('USDA API key is not configured')
+      throw new Error('USDA API key is not configured');
     }
 
     // 如果是中文，尝试翻译为英文
-    const searchQuery = translateToEnglish(query)
+    const searchQuery = translateToEnglish(query);
 
-    const url = new URL(`${this.baseUrl}/foods/search`)
-    url.searchParams.set('api_key', this.apiKey)
-    url.searchParams.set('query', searchQuery)
-    url.searchParams.set('pageSize', pageSize.toString())
-    url.searchParams.set('pageNumber', pageNumber.toString())
-    url.searchParams.set('dataType', 'Foundation,SR Legacy') // 限制数据源类型
+    const url = new URL(`${this.baseUrl}/foods/search`);
+    url.searchParams.set('api_key', this.apiKey);
+    url.searchParams.set('query', searchQuery);
+    url.searchParams.set('pageSize', pageSize.toString());
+    url.searchParams.set('pageNumber', pageNumber.toString());
+    url.searchParams.set('dataType', 'Foundation,SR Legacy'); // 限制数据源类型
 
-    let lastError: Error | null = null
+    let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
@@ -257,37 +257,37 @@ export class USDAService {
           headers: {
             'Content-Type': 'application/json',
           },
-        })
+        });
 
         if (!response.ok) {
           if (response.status === 429) {
             // Rate limit exceeded
-            const retryAfter = response.headers.get('Retry-After')
+            const retryAfter = response.headers.get('Retry-After');
             const delay = retryAfter
               ? parseInt(retryAfter) * 1000
-              : this.retryDelay * attempt
-            await this.sleep(delay)
-            continue
+              : this.retryDelay * attempt;
+            await this.sleep(delay);
+            continue;
           }
 
           throw new Error(
             `USDA API error: ${response.status} ${response.statusText}`
-          )
+          );
         }
 
-        const data = await response.json()
-        return data as USDASearchResponse
+        const data = await response.json();
+        return data as USDASearchResponse;
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error))
+        lastError = error instanceof Error ? error : new Error(String(error));
         if (attempt < this.maxRetries) {
-          await this.sleep(this.retryDelay * attempt)
+          await this.sleep(this.retryDelay * attempt);
         }
       }
     }
 
     throw new Error(
       `Failed to search USDA API after ${this.maxRetries} attempts: ${lastError?.message}`
-    )
+    );
   }
 
   /**
@@ -295,13 +295,13 @@ export class USDAService {
    */
   async getFoodByFdcId(fdcId: number): Promise<USDAFood> {
     if (!this.apiKey) {
-      throw new Error('USDA API key is not configured')
+      throw new Error('USDA API key is not configured');
     }
 
-    const url = new URL(`${this.baseUrl}/food/${fdcId}`)
-    url.searchParams.set('api_key', this.apiKey)
+    const url = new URL(`${this.baseUrl}/food/${fdcId}`);
+    url.searchParams.set('api_key', this.apiKey);
 
-    let lastError: Error | null = null
+    let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
@@ -309,35 +309,35 @@ export class USDAService {
           headers: {
             'Content-Type': 'application/json',
           },
-        })
+        });
 
         if (!response.ok) {
           if (response.status === 429) {
-            const retryAfter = response.headers.get('Retry-After')
+            const retryAfter = response.headers.get('Retry-After');
             const delay = retryAfter
               ? parseInt(retryAfter) * 1000
-              : this.retryDelay * attempt
-            await this.sleep(delay)
-            continue
+              : this.retryDelay * attempt;
+            await this.sleep(delay);
+            continue;
           }
 
           throw new Error(
             `USDA API error: ${response.status} ${response.statusText}`
-          )
+          );
         }
 
-        return (await response.json()) as USDAFood
+        return (await response.json()) as USDAFood;
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error))
+        lastError = error instanceof Error ? error : new Error(String(error));
         if (attempt < this.maxRetries) {
-          await this.sleep(this.retryDelay * attempt)
+          await this.sleep(this.retryDelay * attempt);
         }
       }
     }
 
     throw new Error(
       `Failed to fetch USDA food after ${this.maxRetries} attempts: ${lastError?.message}`
-    )
+    );
   }
 
   /**
@@ -347,8 +347,8 @@ export class USDAService {
     query: string,
     limit = 10
   ): Promise<Omit<FoodData, 'id'>[]> {
-    const response = await this.searchFoods(query, limit, 1)
-    return response.foods.map(mapUSDAToLocal)
+    const response = await this.searchFoods(query, limit, 1);
+    return response.foods.map(mapUSDAToLocal);
   }
 
   /**
@@ -357,21 +357,21 @@ export class USDAService {
   async getFoodByFdcIdAndMap(
     fdcId: number
   ): Promise<Omit<FoodData, 'id'>> {
-    const usdaFood = await this.getFoodByFdcId(fdcId)
-    return mapUSDAToLocal(usdaFood)
+    const usdaFood = await this.getFoodByFdcId(fdcId);
+    return mapUSDAToLocal(usdaFood);
   }
 
   /**
    * 休眠函数
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
 // 导出单例实例
-export const usdaService = new USDAService()
+export const usdaService = new USDAService();
 
 // 导出类型
-export type { FoodData, USDAFood, USDASearchResponse }
+export type { FoodData, USDAFood, USDASearchResponse };
 

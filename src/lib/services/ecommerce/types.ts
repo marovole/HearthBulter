@@ -1,4 +1,4 @@
-import { EcommercePlatform, OrderStatus, DeliveryStatus } from '@prisma/client'
+import { EcommercePlatform, OrderStatus, DeliveryStatus } from '@prisma/client';
 
 // 平台商品信息接口
 export interface PlatformProductInfo {

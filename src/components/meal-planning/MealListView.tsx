@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { format, isSameDay, startOfDay, endOfDay } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { MealCard } from './MealCard'
-import { RecipeDetailModal } from './RecipeDetailModal'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import { format, isSameDay, startOfDay, endOfDay } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { MealCard } from './MealCard';
+import { RecipeDetailModal } from './RecipeDetailModal';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Search, 
   Filter, 
@@ -18,9 +18,9 @@ import {
   Utensils,
   AlertTriangle,
   Heart,
-  Eye
-} from 'lucide-react'
-import { toast } from '@/lib/toast'
+  Eye,
+} from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 interface Meal {
   id: string
@@ -56,23 +56,23 @@ const MEAL_TYPE_LABELS = {
   LUNCH: '午餐',
   DINNER: '晚餐',
   SNACK: '加餐',
-}
+};
 
 const MEAL_TYPE_COLORS = {
   BREAKFAST: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   LUNCH: 'bg-blue-100 text-blue-800 border-blue-200',
   DINNER: 'bg-purple-100 text-purple-800 border-purple-200',
   SNACK: 'bg-green-100 text-green-800 border-green-200',
-}
+};
 
 export function MealListView({ meals }: MealListViewProps) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [sortField, setSortField] = useState<SortField>('date')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [filterMealType, setFilterMealType] = useState<FilterMealType>('ALL')
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
-  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null)
-  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [filterMealType, setFilterMealType] = useState<FilterMealType>('ALL');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // 过滤和排序餐食
   const filteredAndSortedMeals = meals
@@ -81,101 +81,101 @@ export function MealListView({ meals }: MealListViewProps) {
       const searchMatch = searchTerm === '' || 
         meal.ingredients.some(ing => 
           ing.food.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        );
       
       // 餐次类型过滤
-      const typeMatch = filterMealType === 'ALL' || meal.mealType === filterMealType
+      const typeMatch = filterMealType === 'ALL' || meal.mealType === filterMealType;
       
       // 收藏过滤
-      const favoriteMatch = !showFavoritesOnly || meal.isFavorite
+      const favoriteMatch = !showFavoritesOnly || meal.isFavorite;
       
-      return searchMatch && typeMatch && favoriteMatch
+      return searchMatch && typeMatch && favoriteMatch;
     })
     .sort((a, b) => {
-      let comparison = 0
+      let comparison = 0;
       
       switch (sortField) {
-        case 'date':
-          comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
-          break
-        case 'calories':
-          comparison = a.calories - b.calories
-          break
-        case 'protein':
-          comparison = a.protein - b.protein
-          break
-        case 'mealType':
-          const typeOrder = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK']
-          comparison = typeOrder.indexOf(a.mealType) - typeOrder.indexOf(b.mealType)
-          break
+      case 'date':
+        comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+        break;
+      case 'calories':
+        comparison = a.calories - b.calories;
+        break;
+      case 'protein':
+        comparison = a.protein - b.protein;
+        break;
+      case 'mealType':
+        const typeOrder = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
+        comparison = typeOrder.indexOf(a.mealType) - typeOrder.indexOf(b.mealType);
+        break;
       }
       
-      return sortOrder === 'asc' ? comparison : -comparison
-    })
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
   // 按日期分组
   const groupedMeals = filteredAndSortedMeals.reduce((groups, meal) => {
-    const dateKey = format(new Date(meal.date), 'yyyy-MM-dd')
+    const dateKey = format(new Date(meal.date), 'yyyy-MM-dd');
     if (!groups[dateKey]) {
       groups[dateKey] = {
         date: new Date(meal.date),
-        meals: []
-      }
+        meals: [],
+      };
     }
-    groups[dateKey].meals.push(meal)
-    return groups
-  }, {} as Record<string, { date: Date; meals: Meal[] }>)
+    groups[dateKey].meals.push(meal);
+    return groups;
+  }, {} as Record<string, { date: Date; meals: Meal[] }>);
 
   // 处理餐食点击
   const handleMealClick = (meal: Meal) => {
-    setSelectedMeal(meal)
-    setShowDetailModal(true)
-  }
+    setSelectedMeal(meal);
+    setShowDetailModal(true);
+  };
 
   // 处理餐食替换
   const handleReplaceMeal = async (mealId: string) => {
     try {
       const response = await fetch(`/api/meal-plans/meals/${mealId}/replace`, {
         method: 'POST',
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('替换餐食失败')
+        throw new Error('替换餐食失败');
       }
 
-      toast.success('餐食替换成功')
+      toast.success('餐食替换成功');
       // 这里可以触发数据刷新
     } catch (error) {
-      console.error('替换餐食失败:', error)
-      toast.error('替换餐食失败，请重试')
+      console.error('替换餐食失败:', error);
+      toast.error('替换餐食失败，请重试');
     }
-  }
+  };
 
   // 处理收藏切换
   const handleToggleFavorite = async (mealId: string) => {
     try {
       const response = await fetch(`/api/meal-plans/meals/${mealId}/favorite`, {
         method: 'POST',
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('操作失败')
+        throw new Error('操作失败');
       }
 
-      toast.success('收藏状态已更新')
+      toast.success('收藏状态已更新');
       // 这里可以触发数据刷新
     } catch (error) {
-      console.error('更新收藏状态失败:', error)
-      toast.error('操作失败，请重试')
+      console.error('更新收藏状态失败:', error);
+      toast.error('操作失败，请重试');
     }
-  }
+  };
 
   // 计算统计信息
-  const totalMeals = filteredAndSortedMeals.length
-  const totalCalories = filteredAndSortedMeals.reduce((sum, meal) => sum + meal.calories, 0)
-  const avgCalories = totalMeals > 0 ? totalCalories / totalMeals : 0
-  const favoriteCount = filteredAndSortedMeals.filter(meal => meal.isFavorite).length
-  const allergenCount = filteredAndSortedMeals.filter(meal => meal.hasAllergens).length
+  const totalMeals = filteredAndSortedMeals.length;
+  const totalCalories = filteredAndSortedMeals.reduce((sum, meal) => sum + meal.calories, 0);
+  const avgCalories = totalMeals > 0 ? totalCalories / totalMeals : 0;
+  const favoriteCount = filteredAndSortedMeals.filter(meal => meal.isFavorite).length;
+  const allergenCount = filteredAndSortedMeals.filter(meal => meal.hasAllergens).length;
 
   return (
     <div className="space-y-6">
@@ -361,18 +361,18 @@ export function MealListView({ meals }: MealListViewProps) {
           meal={selectedMeal}
           isOpen={showDetailModal}
           onClose={() => {
-            setShowDetailModal(false)
-            setSelectedMeal(null)
+            setShowDetailModal(false);
+            setSelectedMeal(null);
           }}
           onReplace={() => {
-            handleReplaceMeal(selectedMeal.id)
-            setShowDetailModal(false)
+            handleReplaceMeal(selectedMeal.id);
+            setShowDetailModal(false);
           }}
           onToggleFavorite={() => {
-            handleToggleFavorite(selectedMeal.id)
+            handleToggleFavorite(selectedMeal.id);
           }}
         />
       )}
     </div>
-  )
+  );
 }

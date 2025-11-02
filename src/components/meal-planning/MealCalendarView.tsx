@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { format, startOfWeek, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, getDay } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { MealCard } from './MealCard'
-import { RecipeDetailModal } from './RecipeDetailModal'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import { format, startOfWeek, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, getDay } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { MealCard } from './MealCard';
+import { RecipeDetailModal } from './RecipeDetailModal';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   ChevronLeft, 
   ChevronRight, 
   Plus,
   AlertTriangle,
   Heart,
-  Eye
-} from 'lucide-react'
-import { toast } from '@/lib/toast'
+  Eye,
+} from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 type ViewMode = 'day' | 'week' | 'month'
 
@@ -53,91 +53,91 @@ const MEAL_TYPE_LABELS = {
   LUNCH: '午餐',
   DINNER: '晚餐',
   SNACK: '加餐',
-}
+};
 
 const MEAL_TYPE_COLORS = {
   BREAKFAST: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   LUNCH: 'bg-blue-100 text-blue-800 border-blue-200',
   DINNER: 'bg-purple-100 text-purple-800 border-purple-200',
   SNACK: 'bg-green-100 text-green-800 border-green-200',
-}
+};
 
 const MEAL_TYPE_ICONS = {
   BREAKFAST: '🍳',
   LUNCH: '🍱',
   DINNER: '🍽️',
   SNACK: '🍎',
-}
+};
 
 export function MealCalendarView({ 
   meals, 
   viewMode, 
   currentDate, 
-  onMealUpdate 
+  onMealUpdate, 
 }: MealCalendarViewProps) {
-  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null)
-  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // 按日期组织餐食
   const getMealsForDate = (date: Date) => {
-    return meals.filter(meal => isSameDay(new Date(meal.date), date))
-  }
+    return meals.filter(meal => isSameDay(new Date(meal.date), date));
+  };
 
   // 处理餐食点击
   const handleMealClick = (meal: Meal) => {
-    setSelectedMeal(meal)
-    setShowDetailModal(true)
-  }
+    setSelectedMeal(meal);
+    setShowDetailModal(true);
+  };
 
   // 处理餐食替换
   const handleReplaceMeal = async (mealId: string) => {
     try {
       const response = await fetch(`/api/meal-plans/meals/${mealId}/replace`, {
         method: 'POST',
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('替换餐食失败')
+        throw new Error('替换餐食失败');
       }
 
-      toast.success('餐食替换成功')
-      onMealUpdate?.()
+      toast.success('餐食替换成功');
+      onMealUpdate?.();
     } catch (error) {
-      console.error('替换餐食失败:', error)
-      toast.error('替换餐食失败，请重试')
+      console.error('替换餐食失败:', error);
+      toast.error('替换餐食失败，请重试');
     }
-  }
+  };
 
   // 处理收藏切换
   const handleToggleFavorite = async (mealId: string) => {
     try {
       const response = await fetch(`/api/meal-plans/meals/${mealId}/favorite`, {
         method: 'POST',
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('操作失败')
+        throw new Error('操作失败');
       }
 
-      toast.success('收藏状态已更新')
-      onMealUpdate?.()
+      toast.success('收藏状态已更新');
+      onMealUpdate?.();
     } catch (error) {
-      console.error('更新收藏状态失败:', error)
-      toast.error('操作失败，请重试')
+      console.error('更新收藏状态失败:', error);
+      toast.error('操作失败，请重试');
     }
-  }
+  };
 
   // 日视图渲染
   const renderDayView = () => {
-    const dayMeals = getMealsForDate(currentDate)
+    const dayMeals = getMealsForDate(currentDate);
     const groupedMeals = dayMeals.reduce((acc, meal) => {
-      const key = meal.mealType as keyof typeof MEAL_TYPE_LABELS
+      const key = meal.mealType as keyof typeof MEAL_TYPE_LABELS;
       if (!acc[key]) {
-        acc[key] = []
+        acc[key] = [];
       }
-      acc[key]!.push(meal)
-      return acc
-    }, {} as Partial<Record<keyof typeof MEAL_TYPE_LABELS, Meal[]>>)
+      acc[key]!.push(meal);
+      return acc;
+    }, {} as Partial<Record<keyof typeof MEAL_TYPE_LABELS, Meal[]>>);
 
     return (
       <div className="space-y-6">
@@ -152,7 +152,7 @@ export function MealCalendarView({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {Object.entries(MEAL_TYPE_LABELS).map(([mealType, label]) => {
-            const mealsForType = groupedMeals[mealType as keyof typeof MEAL_TYPE_LABELS] || []
+            const mealsForType = groupedMeals[mealType as keyof typeof MEAL_TYPE_LABELS] || [];
             
             return (
               <Card key={mealType} className="h-fit">
@@ -211,17 +211,17 @@ export function MealCalendarView({
                   )}
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   // 周视图渲染
   const renderWeekView = () => {
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
-    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
     return (
       <div className="space-y-6">
@@ -236,10 +236,10 @@ export function MealCalendarView({
 
         <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
           {weekDays.map((day, index) => {
-            const dayMeals = getMealsForDate(day)
-            const isToday = isSameDay(day, new Date())
-            const dayName = format(day, 'EEEE', { locale: zhCN })
-            const dayNumber = format(day, 'd')
+            const dayMeals = getMealsForDate(day);
+            const isToday = isSameDay(day, new Date());
+            const dayName = format(day, 'EEEE', { locale: zhCN });
+            const dayNumber = format(day, 'd');
 
             return (
               <Card 
@@ -299,23 +299,23 @@ export function MealCalendarView({
                   )}
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   // 月视图渲染
   const renderMonthView = () => {
-    const monthStart = startOfMonth(currentDate)
-    const monthEnd = endOfMonth(currentDate)
-    const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
-    const startDayOfWeek = getDay(monthStart)
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    const startDayOfWeek = getDay(monthStart);
     const calendarDays: (Date | null)[] = [
       ...Array(startDayOfWeek).fill(null),
       ...monthDays,
-    ]
+    ];
 
     return (
       <div className="space-y-6">
@@ -343,12 +343,12 @@ export function MealCalendarView({
             <div className="grid grid-cols-7 gap-2">
               {calendarDays.map((day, index) => {
                 if (!day) {
-                  return <div key={`empty-${index}`} className="aspect-square" />
+                  return <div key={`empty-${index}`} className="aspect-square" />;
                 }
 
-                const dayMeals = getMealsForDate(day)
-                const isToday = isSameDay(day, new Date())
-                const isCurrentMonth = isSameMonth(day, currentDate)
+                const dayMeals = getMealsForDate(day);
+                const isToday = isSameDay(day, new Date());
+                const isCurrentMonth = isSameMonth(day, currentDate);
 
                 return (
                   <div
@@ -357,13 +357,13 @@ export function MealCalendarView({
                       isToday 
                         ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' 
                         : isCurrentMonth 
-                        ? 'bg-white border-gray-200 hover:bg-gray-50'
-                        : 'bg-gray-50 border-gray-100 text-gray-400'
+                          ? 'bg-white border-gray-200 hover:bg-gray-50'
+                          : 'bg-gray-50 border-gray-100 text-gray-400'
                     }`}
                     onClick={() => {
                       if (dayMeals.length > 0) {
-                        setSelectedMeal(dayMeals[0] as Meal)
-                        setShowDetailModal(true)
+                        setSelectedMeal(dayMeals[0] as Meal);
+                        setShowDetailModal(true);
                       }
                     }}
                   >
@@ -394,14 +394,14 @@ export function MealCalendarView({
                       </div>
                     )}
                   </div>
-                )
+                );
               })}
             </div>
           </CardContent>
         </Card>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <>
@@ -417,18 +417,18 @@ export function MealCalendarView({
           meal={selectedMeal}
           isOpen={showDetailModal}
           onClose={() => {
-            setShowDetailModal(false)
-            setSelectedMeal(null)
+            setShowDetailModal(false);
+            setSelectedMeal(null);
           }}
           onReplace={() => {
-            handleReplaceMeal(selectedMeal.id)
-            setShowDetailModal(false)
+            handleReplaceMeal(selectedMeal.id);
+            setShowDetailModal(false);
           }}
           onToggleFavorite={() => {
-            handleToggleFavorite(selectedMeal.id)
+            handleToggleFavorite(selectedMeal.id);
           }}
         />
       )}
     </>
-  )
+  );
 }

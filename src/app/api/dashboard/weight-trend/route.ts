@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
-import { analyticsService } from '@/lib/services/analytics-service'
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
+import { analyticsService } from '@/lib/services/analytics-service';
 
 /**
  * 验证用户是否有权限访问成员的健康数据
@@ -23,19 +23,19 @@ async function verifyMemberAccess(
         },
       },
     },
-  })
+  });
 
   if (!member) {
-    return { hasAccess: false }
+    return { hasAccess: false };
   }
 
-  const isCreator = member.family.creatorId === userId
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator
-  const isSelf = member.userId === userId
+  const isCreator = member.family.creatorId === userId;
+  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isSelf = member.userId === userId;
 
   return {
     hasAccess: isAdmin || isSelf,
-  }
+  };
 }
 
 /**
@@ -44,47 +44,47 @@ async function verifyMemberAccess(
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 })
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     // 解析查询参数
-    const searchParams = request.nextUrl.searchParams
-    const memberId = searchParams.get('memberId')
-    const days = parseInt(searchParams.get('days') || '30')
+    const searchParams = request.nextUrl.searchParams;
+    const memberId = searchParams.get('memberId');
+    const days = parseInt(searchParams.get('days') || '30');
 
     if (!memberId) {
       return NextResponse.json(
         { error: '缺少成员ID参数' },
         { status: 400 }
-      )
+      );
     }
 
     // 验证权限
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id)
+    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限访问该成员的体重趋势数据' },
         { status: 403 }
-      )
+      );
     }
 
     // 获取体重趋势分析
     const weightTrend = await analyticsService.analyzeWeightTrend(
       memberId,
       days
-    )
+    );
 
-    return NextResponse.json({ data: weightTrend }, { status: 200 })
+    return NextResponse.json({ data: weightTrend }, { status: 200 });
   } catch (error) {
-    console.error('获取体重趋势失败:', error)
+    console.error('获取体重趋势失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 

@@ -62,25 +62,25 @@ export default function RecipeRecommendationList({
   onGetSimilar,
   showActions = true,
   showMetadata = true,
-  compact = false
+  compact = false,
 }: RecipeRecommendationListProps) {
   const [ratingStates, setRatingStates] = useState<Record<string, number>>({});
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'EASY': return 'bg-green-100 text-green-800';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-      case 'HARD': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    case 'EASY': return 'bg-green-100 text-green-800';
+    case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+    case 'HARD': return 'bg-red-100 text-red-800';
+    default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getDifficultyText = (difficulty: string) => {
     switch (difficulty) {
-      case 'EASY': return '简单';
-      case 'MEDIUM': return '中等';
-      case 'HARD': return '困难';
-      default: return '未知';
+    case 'EASY': return '简单';
+    case 'MEDIUM': return '中等';
+    case 'HARD': return '困难';
+    default: return '未知';
     }
   };
 
@@ -95,7 +95,7 @@ export default function RecipeRecommendationList({
       { key: 'priceMatch', label: '价格匹配', color: 'bg-green-600' },
       { key: 'nutritionMatch', label: '营养匹配', color: 'bg-purple-600' },
       { key: 'preferenceMatch', label: '偏好匹配', color: 'bg-orange-600' },
-      { key: 'seasonalMatch', label: '季节匹配', color: 'bg-pink-600' }
+      { key: 'seasonalMatch', label: '季节匹配', color: 'bg-pink-600' },
     ];
 
     return (

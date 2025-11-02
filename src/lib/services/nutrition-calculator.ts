@@ -4,8 +4,8 @@
  * 提供营养计算工具，包括批量计算、单位转换等功能
  */
 
-import { prisma } from '@/lib/db'
-import type { FoodCategory, DataSource } from '@prisma/client'
+import { prisma } from '@/lib/db';
+import type { FoodCategory, DataSource } from '@prisma/client';
 
 interface NutritionInput {
   foodId: string
@@ -55,16 +55,16 @@ export class UnitConverter {
    */
   static toGrams(amount: number, unit: 'g' | 'kg' | 'oz' | 'lb'): number {
     switch (unit) {
-      case 'g':
-        return amount
-      case 'kg':
-        return amount * 1000
-      case 'oz':
-        return amount * 28.35 // 1 oz = 28.35g
-      case 'lb':
-        return amount * 453.592 // 1 lb = 453.592g
-      default:
-        return amount
+    case 'g':
+      return amount;
+    case 'kg':
+      return amount * 1000;
+    case 'oz':
+      return amount * 28.35; // 1 oz = 28.35g
+    case 'lb':
+      return amount * 453.592; // 1 lb = 453.592g
+    default:
+      return amount;
     }
   }
 
@@ -85,26 +85,26 @@ export class UnitConverter {
       milk: { cup: 240, tbsp: 15, tsp: 5, ml: 1, l: 1000 }, // 牛奶：1杯≈240g
       oil: { cup: 220, tbsp: 14, tsp: 4.7, ml: 0.9, l: 900 }, // 油：1杯≈220g
       default: { cup: 200, tbsp: 12.5, tsp: 4.2, ml: 1, l: 1000 },
-    }
+    };
 
     const table =
       foodType && conversionTable[foodType]
         ? conversionTable[foodType]
-        : conversionTable.default
+        : conversionTable.default;
 
     switch (unit) {
-      case 'cup':
-        return amount * table.cup
-      case 'tbsp':
-        return amount * table.tbsp
-      case 'tsp':
-        return amount * table.tsp
-      case 'ml':
-        return amount * table.ml
-      case 'l':
-        return amount * table.l
-      default:
-        return amount
+    case 'cup':
+      return amount * table.cup;
+    case 'tbsp':
+      return amount * table.tbsp;
+    case 'tsp':
+      return amount * table.tsp;
+    case 'ml':
+      return amount * table.ml;
+    case 'l':
+      return amount * table.l;
+    default:
+      return amount;
     }
   }
 }
@@ -124,13 +124,13 @@ export class NutritionCalculator {
   ): Promise<NutritionResult | null> {
     const food = await prisma.food.findUnique({
       where: { id: foodId },
-    })
+    });
 
     if (!food) {
-      return null
+      return null;
     }
 
-    const ratio = amount / 100 // 数据库存储per 100g
+    const ratio = amount / 100; // 数据库存储per 100g
 
     return {
       foodId: food.id,
@@ -159,7 +159,7 @@ export class NutritionCalculator {
         ? Math.round(food.calcium * ratio * 10) / 10
         : undefined,
       iron: food.iron ? Math.round(food.iron * ratio * 10) / 10 : undefined,
-    }
+    };
   }
 
   /**
@@ -168,23 +168,23 @@ export class NutritionCalculator {
    */
   async calculateBatch(inputs: NutritionInput[]): Promise<NutritionSummary> {
     // 批量查询所有食物
-    const foodIds = inputs.map((input) => input.foodId)
+    const foodIds = inputs.map((input) => input.foodId);
     const foods = await prisma.food.findMany({
       where: { id: { in: foodIds } },
-    })
+    });
 
     // 创建食物ID到食物对象的映射
-    const foodMap = new Map(foods.map((food) => [food.id, food]))
+    const foodMap = new Map(foods.map((food) => [food.id, food]));
 
     // 计算每个食物的营养
-    const items: NutritionResult[] = []
+    const items: NutritionResult[] = [];
     for (const input of inputs) {
-      const food = foodMap.get(input.foodId)
+      const food = foodMap.get(input.foodId);
       if (!food) {
-        continue // 跳过未找到的食物
+        continue; // 跳过未找到的食物
       }
 
-      const ratio = input.amount / 100
+      const ratio = input.amount / 100;
       items.push({
         foodId: food.id,
         foodName: food.name,
@@ -214,7 +214,7 @@ export class NutritionCalculator {
         iron: food.iron
           ? Math.round(food.iron * ratio * 10) / 10
           : undefined,
-      })
+      });
     }
 
     // 计算总和
@@ -232,65 +232,65 @@ export class NutritionCalculator {
         items.reduce((sum, item) => sum + item.fat, 0) * 10
       ) / 10,
       items,
-    }
+    };
 
     // 可选营养素的总和
     if (items.some((item) => item.fiber !== undefined)) {
       summary.totalFiber =
         Math.round(
           items.reduce((sum, item) => sum + (item.fiber || 0), 0) * 10
-        ) / 10
+        ) / 10;
     }
 
     if (items.some((item) => item.sugar !== undefined)) {
       summary.totalSugar =
         Math.round(
           items.reduce((sum, item) => sum + (item.sugar || 0), 0) * 10
-        ) / 10
+        ) / 10;
     }
 
     if (items.some((item) => item.sodium !== undefined)) {
       summary.totalSodium =
         Math.round(
           items.reduce((sum, item) => sum + (item.sodium || 0), 0) * 10
-        ) / 10
+        ) / 10;
     }
 
     if (items.some((item) => item.vitaminA !== undefined)) {
       summary.totalVitaminA =
         Math.round(
           items.reduce((sum, item) => sum + (item.vitaminA || 0), 0) * 10
-        ) / 10
+        ) / 10;
     }
 
     if (items.some((item) => item.vitaminC !== undefined)) {
       summary.totalVitaminC =
         Math.round(
           items.reduce((sum, item) => sum + (item.vitaminC || 0), 0) * 10
-        ) / 10
+        ) / 10;
     }
 
     if (items.some((item) => item.calcium !== undefined)) {
       summary.totalCalcium =
         Math.round(
           items.reduce((sum, item) => sum + (item.calcium || 0), 0) * 10
-        ) / 10
+        ) / 10;
     }
 
     if (items.some((item) => item.iron !== undefined)) {
       summary.totalIron =
         Math.round(
           items.reduce((sum, item) => sum + (item.iron || 0), 0) * 10
-        ) / 10
+        ) / 10;
     }
 
-    return summary
+    return summary;
   }
 }
 
 // 导出单例实例
-export const nutritionCalculator = new NutritionCalculator()
+export const nutritionCalculator = new NutritionCalculator();
 
 // 导出类型
-export type { NutritionInput, NutritionResult, NutritionSummary }
+export type { NutritionInput, NutritionResult, NutritionSummary };
 

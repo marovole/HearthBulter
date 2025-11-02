@@ -234,14 +234,14 @@ export async function analyzePeriodDeviation(
     // 计算平均偏差
     const deviations = targets.map((t) => {
       switch (nutrient) {
-        case 'calories':
-          return t.caloriesDeviation;
-        case 'protein':
-          return t.proteinDeviation;
-        case 'carbs':
-          return t.carbsDeviation;
-        case 'fat':
-          return t.fatDeviation;
+      case 'calories':
+        return t.caloriesDeviation;
+      case 'protein':
+        return t.proteinDeviation;
+      case 'carbs':
+        return t.carbsDeviation;
+      case 'fat':
+        return t.fatDeviation;
       }
     });
 

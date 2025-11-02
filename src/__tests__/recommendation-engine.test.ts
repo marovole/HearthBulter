@@ -106,8 +106,8 @@ describe('RecommendationEngine', () => {
         name: '测试食谱',
         ingredients: [
           {
-            food: { name: '鸡肉' }
-          }
+            food: { name: '鸡肉' },
+          },
         ],
         tags: ['辣', '快手菜'],
       });
@@ -221,13 +221,13 @@ describe('RecommendationEngine', () => {
       (mockPrisma.recipeRating.findMany as jest.Mock).mockResolvedValue([
         {
           rating: 5,
-          recipe: { cuisine: '川菜' }
+          recipe: { cuisine: '川菜' },
         },
       ]);
 
       (mockPrisma.recipeFavorite.findMany as jest.Mock).mockResolvedValue([
         {
-          recipe: { cuisine: '粤菜' }
+          recipe: { cuisine: '粤菜' },
         },
       ]);
 
@@ -237,7 +237,7 @@ describe('RecommendationEngine', () => {
         memberId,
         learnedPreferences: {
           preferredCuisines: ['川菜', '粤菜'],
-          confidence: 0.8
+          confidence: 0.8,
         },
       });
 

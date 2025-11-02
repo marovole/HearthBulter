@@ -56,7 +56,7 @@ class ImageCache {
       url,
       createdAt: now,
       expiresAt,
-      metadata: { template, data }
+      metadata: { template, data },
     });
   }
 
@@ -92,7 +92,7 @@ class ImageCache {
     totalEntries: number;
     expiredEntries: number;
     size: number;
-  } {
+    } {
     const now = new Date();
     let expiredCount = 0;
 
@@ -105,7 +105,7 @@ class ImageCache {
     return {
       totalEntries: this.cache.size,
       expiredEntries: expiredCount,
-      size: this.cache.size
+      size: this.cache.size,
     };
   }
 

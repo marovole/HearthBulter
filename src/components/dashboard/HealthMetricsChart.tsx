@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -13,15 +13,15 @@ import {
   ReferenceLine,
   Area,
   AreaChart,
-} from 'recharts'
+} from 'recharts';
 import { 
   Activity, 
   TrendingUp, 
   Heart, 
   Calendar,
   Target,
-  AlertCircle 
-} from 'lucide-react'
+  AlertCircle, 
+} from 'lucide-react';
 
 interface HealthMetricData {
   date: Date
@@ -51,12 +51,12 @@ interface MetricConfig {
 export function HealthMetricsChart({ 
   memberId, 
   days = 30,
-  metrics = ['weight', 'bodyFat', 'bloodPressure']
+  metrics = ['weight', 'bodyFat', 'bloodPressure'],
 }: HealthMetricsChartProps) {
-  const [data, setData] = useState<HealthMetricData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedMetric, setSelectedMetric] = useState<string>('weight')
+  const [data, setData] = useState<HealthMetricData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedMetric, setSelectedMetric] = useState<string>('weight');
 
   const metricConfigs: Record<string, MetricConfig> = {
     weight: {
@@ -66,7 +66,7 @@ export function HealthMetricsChart({
       unit: 'kg',
       icon: TrendingUp,
       targetValue: 70,
-      normalRange: { min: 50, max: 90 }
+      normalRange: { min: 50, max: 90 },
     },
     bodyFat: {
       key: 'bodyFat',
@@ -75,7 +75,7 @@ export function HealthMetricsChart({
       unit: '%',
       icon: Activity,
       targetValue: 20,
-      normalRange: { min: 10, max: 30 }
+      normalRange: { min: 10, max: 30 },
     },
     bloodPressure: {
       key: 'systolic',
@@ -84,7 +84,7 @@ export function HealthMetricsChart({
       unit: 'mmHg',
       icon: Heart,
       targetValue: 120,
-      normalRange: { min: 90, max: 140 }
+      normalRange: { min: 90, max: 140 },
     },
     heartRate: {
       key: 'heartRate',
@@ -93,24 +93,24 @@ export function HealthMetricsChart({
       unit: 'bpm',
       icon: Heart,
       targetValue: 72,
-      normalRange: { min: 60, max: 100 }
-    }
-  }
+      normalRange: { min: 60, max: 100 },
+    },
+  };
 
   useEffect(() => {
-    loadData()
-  }, [memberId, days])
+    loadData();
+  }, [memberId, days]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       // 模拟API调用 - 实际应该调用真实的健康数据API
-      const mockData: HealthMetricData[] = []
-      const today = new Date()
+      const mockData: HealthMetricData[] = [];
+      const today = new Date();
       
       for (let i = days - 1; i >= 0; i--) {
-        const date = new Date(today)
-        date.setDate(date.getDate() - i)
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
         
         mockData.push({
           date,
@@ -119,16 +119,16 @@ export function HealthMetricsChart({
           systolic: 120 + Math.random() * 20 - 10,
           diastolic: 80 + Math.random() * 10 - 5,
           heartRate: 72 + Math.random() * 20 - 10,
-        })
+        });
       }
       
-      setData(mockData)
+      setData(mockData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -140,7 +140,7 @@ export function HealthMetricsChart({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -153,7 +153,7 @@ export function HealthMetricsChart({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (data.length === 0) {
@@ -163,7 +163,7 @@ export function HealthMetricsChart({
           <p>暂无健康数据</p>
         </div>
       </div>
-    )
+    );
   }
 
   // 格式化数据供图表使用
@@ -178,16 +178,16 @@ export function HealthMetricsChart({
     systolic: item.systolic || null,
     diastolic: item.diastolic || null,
     heartRate: item.heartRate || null,
-  }))
+  }));
 
-  const currentConfig = metricConfigs[selectedMetric]
-  const Icon = currentConfig.icon
+  const currentConfig = metricConfigs[selectedMetric];
+  const Icon = currentConfig.icon;
 
   // 计算统计信息
-  const currentValues = data.map(d => d[currentConfig.key]).filter(v => v !== undefined) as number[]
-  const currentValue = currentValues[currentValues.length - 1] || 0
-  const averageValue = currentValues.reduce((a, b) => a + b, 0) / currentValues.length || 0
-  const changeValue = currentValues.length > 1 ? currentValue - currentValues[0] : 0
+  const currentValues = data.map(d => d[currentConfig.key]).filter(v => v !== undefined) as number[];
+  const currentValue = currentValues[currentValues.length - 1] || 0;
+  const averageValue = currentValues.reduce((a, b) => a + b, 0) / currentValues.length || 0;
+  const changeValue = currentValues.length > 1 ? currentValue - currentValues[0] : 0;
 
   const renderChart = () => {
     if (selectedMetric === 'bloodPressure') {
@@ -218,14 +218,14 @@ export function HealthMetricsChart({
                 borderRadius: '0.375rem',
               }}
               labelFormatter={(label) => {
-                const item = chartData.find((d) => d.date === label)
+                const item = chartData.find((d) => d.date === label);
                 return item
                   ? new Date(item.fullDate).toLocaleDateString('zh-CN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })
-                  : label
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                  : label;
               }}
             />
             <Legend />
@@ -249,7 +249,7 @@ export function HealthMetricsChart({
             <ReferenceLine y={80} stroke="#f59e0b" strokeDasharray="3 3" label="舒张压目标" />
           </LineChart>
         </ResponsiveContainer>
-      )
+      );
     }
 
     return (
@@ -279,14 +279,14 @@ export function HealthMetricsChart({
               borderRadius: '0.375rem',
             }}
             labelFormatter={(label) => {
-              const item = chartData.find((d) => d.date === label)
+              const item = chartData.find((d) => d.date === label);
               return item
                 ? new Date(item.fullDate).toLocaleDateString('zh-CN', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })
-                : label
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+                : label;
             }}
             formatter={(value: number) => [`${value?.toFixed(1)} ${currentConfig.unit}`, currentConfig.label]}
           />
@@ -313,8 +313,8 @@ export function HealthMetricsChart({
           )}
         </AreaChart>
       </ResponsiveContainer>
-    )
-  }
+    );
+  };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -347,8 +347,8 @@ export function HealthMetricsChart({
       {/* 指标选择器 */}
       <div className="flex flex-wrap gap-2 mb-6">
         {metrics.map((metric) => {
-          const config = metricConfigs[metric]
-          const MetricIcon = config.icon
+          const config = metricConfigs[metric];
+          const MetricIcon = config.icon;
           return (
             <button
               key={metric}
@@ -362,7 +362,7 @@ export function HealthMetricsChart({
               <MetricIcon className="h-4 w-4" />
               <span>{config.label}</span>
             </button>
-          )
+          );
         })}
       </div>
 
@@ -417,5 +417,5 @@ export function HealthMetricsChart({
         </div>
       </div>
     </div>
-  )
+  );
 }

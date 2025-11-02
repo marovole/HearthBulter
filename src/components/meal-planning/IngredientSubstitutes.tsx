@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle,
-  DialogFooter 
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+  DialogFooter, 
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { 
   Search, 
   AlertTriangle, 
@@ -18,9 +18,9 @@ import {
   X,
   Info,
   Leaf,
-  Heart
-} from 'lucide-react'
-import { toast } from '@/lib/toast'
+  Heart,
+} from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 interface Food {
   id: string
@@ -66,7 +66,7 @@ const CATEGORIES = {
   NUTS: '坚果',
   SPICE: '调味料',
   OIL: '油脂',
-}
+};
 
 const SUBSTITUTION_RULES = {
   // 蛋白质类替换规则
@@ -91,100 +91,100 @@ const SUBSTITUTION_RULES = {
   MILK: ['豆浆', '杏仁奶', '燕麦奶', '椰奶'],
   CHEESE: ['营养酵母', '豆腐奶酪', '坚果奶酪'],
   YOGURT: ['椰奶酸奶', '豆浆酸奶', '杏仁酸奶'],
-}
+};
 
 function calculateSimilarity(original: Food, substitute: Food): number {
-  let score = 0
+  let score = 0;
   
   // 类别匹配 (40%)
   if (original.category === substitute.category) {
-    score += 40
+    score += 40;
   } else if (isSimilarCategory(original.category, substitute.category)) {
-    score += 20
+    score += 20;
   }
   
   // 营养相似度 (40%)
   if (original.calories && substitute.calories) {
-    const calorieDiff = Math.abs(original.calories - substitute.calories) / original.calories
-    score += Math.max(0, 40 - calorieDiff * 100)
+    const calorieDiff = Math.abs(original.calories - substitute.calories) / original.calories;
+    score += Math.max(0, 40 - calorieDiff * 100);
   }
   
   // 通用性 (20%)
   if (!substitute.isCommonAllergen) {
-    score += 10
+    score += 10;
   }
   if (substitute.tags?.includes('common')) {
-    score += 10
+    score += 10;
   }
   
-  return Math.min(100, Math.round(score))
+  return Math.min(100, Math.round(score));
 }
 
 function isSimilarCategory(cat1?: string, cat2?: string): boolean {
-  const proteinGroups = ['PROTEIN', 'DAIRY', 'NUTS']
-  const vegetableGroups = ['VEGETABLE', 'FRUIT']
-  const grainGroups = ['GRAIN']
+  const proteinGroups = ['PROTEIN', 'DAIRY', 'NUTS'];
+  const vegetableGroups = ['VEGETABLE', 'FRUIT'];
+  const grainGroups = ['GRAIN'];
   
   return (proteinGroups.includes(cat1 || '') && proteinGroups.includes(cat2 || '')) ||
          (vegetableGroups.includes(cat1 || '') && vegetableGroups.includes(cat2 || '')) ||
-         (grainGroups.includes(cat1 || '') && grainGroups.includes(cat2 || ''))
+         (grainGroups.includes(cat1 || '') && grainGroups.includes(cat2 || ''));
 }
 
 function calculateNutritionMatch(original: Food, substitute: Food): number {
-  if (!original.calories || !substitute.calories) return 50
+  if (!original.calories || !substitute.calories) return 50;
   
   const proteinMatch = original.protein && substitute.protein 
     ? 100 - Math.abs(original.protein - substitute.protein) / original.protein * 100
-    : 50
+    : 50;
   
   const carbMatch = original.carbs && substitute.carbs
     ? 100 - Math.abs(original.carbs - substitute.carbs) / original.carbs * 100
-    : 50
+    : 50;
   
   const fatMatch = original.fat && substitute.fat
     ? 100 - Math.abs(original.fat - substitute.fat) / original.fat * 100
-    : 50
+    : 50;
   
-  return Math.round((proteinMatch + carbMatch + fatMatch) / 3)
+  return Math.round((proteinMatch + carbMatch + fatMatch) / 3);
 }
 
 export function IngredientSubstitutes({ 
   ingredient, 
   isOpen, 
   onClose, 
-  onSubstitute 
+  onSubstitute, 
 }: IngredientSubstitutesProps) {
-  const [substitutes, setSubstitutes] = useState<SubstituteOption[]>([])
-  const [loading, setLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedSubstitute, setSelectedSubstitute] = useState<SubstituteOption | null>(null)
+  const [substitutes, setSubstitutes] = useState<SubstituteOption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSubstitute, setSelectedSubstitute] = useState<SubstituteOption | null>(null);
 
   useEffect(() => {
     if (isOpen && ingredient) {
-      fetchSubstitutes()
+      fetchSubstitutes();
     }
-  }, [isOpen, ingredient])
+  }, [isOpen, ingredient]);
 
   const fetchSubstitutes = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       // 这里应该调用实际的API
       // 现在使用模拟数据
-      const mockSubstitutes = await generateMockSubstitutes(ingredient)
-      setSubstitutes(mockSubstitutes)
+      const mockSubstitutes = await generateMockSubstitutes(ingredient);
+      setSubstitutes(mockSubstitutes);
     } catch (error) {
-      console.error('获取替代食材失败:', error)
-      toast.error('获取替代食材失败')
+      console.error('获取替代食材失败:', error);
+      toast.error('获取替代食材失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const generateMockSubstitutes = async (original: MealIngredient): Promise<SubstituteOption[]> => {
     // 模拟API延迟
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    const baseSubstitutes = SUBSTITUTION_RULES[original.food.name.toUpperCase() as keyof typeof SUBSTITUTION_RULES] || []
+    const baseSubstitutes = SUBSTITUTION_RULES[original.food.name.toUpperCase() as keyof typeof SUBSTITUTION_RULES] || [];
     
     const mockFoods: Food[] = baseSubstitutes.map((name, index) => ({
       id: `sub-${index}`,
@@ -197,68 +197,68 @@ export function IngredientSubstitutes({
       fat: original.food.fat ? original.food.fat + (Math.random() - 0.5) * 5 : undefined,
       isOrganic: Math.random() > 0.7,
       isCommonAllergen: ['坚果', '牛奶', '大豆'].some(allergen => name.includes(allergen)),
-      tags: Math.random() > 0.5 ? ['common', 'healthy'] : ['organic']
-    }))
+      tags: Math.random() > 0.5 ? ['common', 'healthy'] : ['organic'],
+    }));
 
     return mockFoods.map(food => ({
       food,
       similarity: calculateSimilarity(original.food, food),
       nutritionMatch: calculateNutritionMatch(original.food, food),
       reasons: generateSubstitutionReasons(original.food, food),
-      warnings: food.isCommonAllergen ? ['含常见过敏原'] : undefined
-    })).sort((a, b) => b.similarity - a.similarity)
-  }
+      warnings: food.isCommonAllergen ? ['含常见过敏原'] : undefined,
+    })).sort((a, b) => b.similarity - a.similarity);
+  };
 
   const generateSubstitutionReasons = (original: Food, substitute: Food): string[] => {
-    const reasons = []
+    const reasons = [];
     
     if (original.category === substitute.category) {
-      reasons.push('同类食材，口感相似')
+      reasons.push('同类食材，口感相似');
     }
     
     if (substitute.isOrganic) {
-      reasons.push('有机食材，更健康')
+      reasons.push('有机食材，更健康');
     }
     
     if (substitute.calories && original.calories && substitute.calories < original.calories) {
-      reasons.push('热量更低，有助于减重')
+      reasons.push('热量更低，有助于减重');
     }
     
     if (substitute.protein && original.protein && substitute.protein > original.protein) {
-      reasons.push('蛋白质含量更高')
+      reasons.push('蛋白质含量更高');
     }
     
-    reasons.push('营养搭配均衡')
+    reasons.push('营养搭配均衡');
     
-    return reasons.slice(0, 3)
-  }
+    return reasons.slice(0, 3);
+  };
 
   const handleSearch = (value: string) => {
-    setSearchTerm(value)
-  }
+    setSearchTerm(value);
+  };
 
   const filteredSubstitutes = substitutes.filter(substitute =>
     substitute.food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     substitute.food.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
   const handleSelectSubstitute = (substitute: SubstituteOption) => {
-    setSelectedSubstitute(substitute)
-  }
+    setSelectedSubstitute(substitute);
+  };
 
   const handleConfirmSubstitute = () => {
-    if (!selectedSubstitute) return
+    if (!selectedSubstitute) return;
     
     const newIngredient: MealIngredient = {
       id: `new-${Date.now()}`,
       amount: ingredient.amount, // 保持相同用量
-      food: selectedSubstitute.food
-    }
+      food: selectedSubstitute.food,
+    };
     
-    onSubstitute(newIngredient)
-    onClose()
-    toast.success(`已将 ${ingredient.food.name} 替换为 ${selectedSubstitute.food.name}`)
-  }
+    onSubstitute(newIngredient);
+    onClose();
+    toast.success(`已将 ${ingredient.food.name} 替换为 ${selectedSubstitute.food.name}`);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -405,5 +405,5 @@ export function IngredientSubstitutes({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

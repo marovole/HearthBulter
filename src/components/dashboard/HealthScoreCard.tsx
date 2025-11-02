@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   PieChart,
   Pie,
@@ -12,12 +12,12 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-} from 'recharts'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Heart, 
   TrendingUp, 
@@ -26,8 +26,8 @@ import {
   Activity,
   AlertCircle,
   CheckCircle,
-  Info
-} from 'lucide-react'
+  Info,
+} from 'lucide-react';
 
 interface HealthScoreData {
   totalScore: number
@@ -61,62 +61,62 @@ const SCORE_COLORS = {
   good: '#3b82f6', // 蓝色
   average: '#f59e0b', // 橙色
   poor: '#ef4444', // 红色
-}
+};
 
 const BREAKDOWN_LABELS = {
   bmiScore: 'BMI指数',
   nutritionScore: '营养达标',
   activityScore: '运动频率',
   dataCompletenessScore: '数据完整',
-}
+};
 
 const BREAKDOWN_COLORS = {
   bmiScore: '#8b5cf6',
   nutritionScore: '#10b981',
   activityScore: '#f59e0b',
   dataCompletenessScore: '#3b82f6',
-}
+};
 
 export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
-  const [data, setData] = useState<HealthScoreData | null>(null)
-  const [history, setHistory] = useState<HealthScoreHistory[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<HealthScoreData | null>(null);
+  const [history, setHistory] = useState<HealthScoreHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData()
-  }, [memberId])
+    loadData();
+  }, [memberId]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
-      const response = await fetch(`/api/dashboard/health-score?memberId=${memberId}`)
+      setLoading(true);
+      const response = await fetch(`/api/dashboard/health-score?memberId=${memberId}`);
       if (!response.ok) {
-        throw new Error('加载健康评分失败')
+        throw new Error('加载健康评分失败');
       }
-      const result = await response.json()
-      setData(result.data)
+      const result = await response.json();
+      setData(result.data);
       
       // 加载历史数据
-      loadHistory()
+      loadHistory();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadHistory = async () => {
     try {
-      const response = await fetch(`/api/dashboard/health-score/history?memberId=${memberId}`)
+      const response = await fetch(`/api/dashboard/health-score/history?memberId=${memberId}`);
       if (response.ok) {
-        const result = await response.json()
-        setHistory(result.data || [])
+        const result = await response.json();
+        setHistory(result.data || []);
       }
     } catch (err) {
-      console.error('加载健康评分历史失败:', err)
+      console.error('加载健康评分历史失败:', err);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -126,7 +126,7 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
           <p className="mt-2 text-sm text-gray-500">加载中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -134,7 +134,7 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
         <p className="text-sm text-red-800">{error}</p>
       </div>
-    )
+    );
   }
 
   if (!data) {
@@ -142,29 +142,29 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
       <div className="flex items-center justify-center h-64 text-gray-500">
         <p>暂无数据</p>
       </div>
-    )
+    );
   }
 
   // 获取评分等级
   const getScoreGrade = (score: number) => {
-    if (score >= 80) return { grade: '优秀', color: SCORE_COLORS.excellent, icon: CheckCircle }
-    if (score >= 60) return { grade: '良好', color: SCORE_COLORS.good, icon: TrendingUp }
-    if (score >= 40) return { grade: '一般', color: SCORE_COLORS.average, icon: AlertCircle }
-    return { grade: '需改善', color: SCORE_COLORS.poor, icon: TrendingDown }
-  }
+    if (score >= 80) return { grade: '优秀', color: SCORE_COLORS.excellent, icon: CheckCircle };
+    if (score >= 60) return { grade: '良好', color: SCORE_COLORS.good, icon: TrendingUp };
+    if (score >= 40) return { grade: '一般', color: SCORE_COLORS.average, icon: AlertCircle };
+    return { grade: '需改善', color: SCORE_COLORS.poor, icon: TrendingDown };
+  };
 
-  const scoreGrade = getScoreGrade(data.totalScore)
-  const GradeIcon = scoreGrade.icon
+  const scoreGrade = getScoreGrade(data.totalScore);
+  const GradeIcon = scoreGrade.icon;
 
   // 准备饼图数据
   const breakdownData = Object.entries(data.breakdown).map(([key, value]) => ({
     name: BREAKDOWN_LABELS[key as keyof typeof BREAKDOWN_LABELS],
     value,
     color: BREAKDOWN_COLORS[key as keyof typeof BREAKDOWN_COLORS],
-  }))
+  }));
 
   // 准备历史数据
-  const chartHistory = history.slice(-30) // 最近30天
+  const chartHistory = history.slice(-30); // 最近30天
 
   // 自定义工具提示
   const CustomTooltip = ({ active, payload }: any) => {
@@ -174,10 +174,10 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
           <p className="font-semibold">{payload[0].payload.name}</p>
           <p className="text-sm">分数: {payload[0].value}分</p>
         </div>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
   return (
     <Card className="w-full">
@@ -248,10 +248,10 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">各项指标</h3>
                 {Object.entries(data.breakdown).map(([key, value]) => {
-                  const maxScore = key === 'bmiScore' || key === 'nutritionScore' ? 30 : 20
-                  const percentage = (value / maxScore) * 100
-                  const label = BREAKDOWN_LABELS[key as keyof typeof BREAKDOWN_LABELS]
-                  const color = BREAKDOWN_COLORS[key as keyof typeof BREAKDOWN_COLORS]
+                  const maxScore = key === 'bmiScore' || key === 'nutritionScore' ? 30 : 20;
+                  const percentage = (value / maxScore) * 100;
+                  const label = BREAKDOWN_LABELS[key as keyof typeof BREAKDOWN_LABELS];
+                  const color = BREAKDOWN_COLORS[key as keyof typeof BREAKDOWN_COLORS];
 
                   return (
                     <div key={key} className="space-y-2">
@@ -265,11 +265,11 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
                         value={percentage} 
                         className="h-2"
                         style={{ 
-                          '--progress-background': color 
+                          '--progress-background': color, 
                         } as React.CSSProperties}
                       />
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -392,14 +392,14 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
                       dataKey="date" 
                       tick={{ fontSize: 12 }}
                       tickFormatter={(value) => {
-                        const date = new Date(value)
-                        return `${date.getMonth() + 1}/${date.getDate()}`
+                        const date = new Date(value);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
                       }}
                     />
                     <YAxis domain={[0, 100]} />
                     <Tooltip 
                       labelFormatter={(label) => {
-                        return new Date(label).toLocaleDateString('zh-CN')
+                        return new Date(label).toLocaleDateString('zh-CN');
                       }}
                       formatter={(value: number) => [`${value}分`, '健康评分']}
                     />
@@ -412,5 +412,5 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
         </Tabs>
       </CardContent>
     </Card>
-  )
+  );
 }

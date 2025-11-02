@@ -28,7 +28,7 @@ export class NeighborSelector {
       minCommonItems: 3,
       similarityMetric: 'cosine',
       selectionStrategy: 'top_k',
-      ...config
+      ...config,
     };
   }
 
@@ -122,20 +122,20 @@ export class NeighborSelector {
     let candidates: SimilarityResult[] = [];
 
     switch (config.selectionStrategy) {
-      case 'top_k':
-        candidates = similarities.slice(0, config.maxNeighbors);
-        break;
+    case 'top_k':
+      candidates = similarities.slice(0, config.maxNeighbors);
+      break;
       
-      case 'threshold':
-        candidates = similarities.filter(s => s.similarity >= config.minSimilarity);
-        break;
+    case 'threshold':
+      candidates = similarities.filter(s => s.similarity >= config.minSimilarity);
+      break;
       
-      case 'hybrid':
-        // 先按阈值过滤，再取前K个
-        candidates = similarities
-          .filter(s => s.similarity >= config.minSimilarity)
-          .slice(0, config.maxNeighbors);
-        break;
+    case 'hybrid':
+      // 先按阈值过滤，再取前K个
+      candidates = similarities
+        .filter(s => s.similarity >= config.minSimilarity)
+        .slice(0, config.maxNeighbors);
+      break;
     }
 
     // 转换为Neighbor对象并计算权重
@@ -143,7 +143,7 @@ export class NeighborSelector {
       id: candidate.id,
       similarity: candidate.similarity,
       commonItems: candidate.commonItems,
-      weight: this.calculateNeighborWeight(candidate, config)
+      weight: this.calculateNeighborWeight(candidate, config),
     }));
 
     return neighbors;
@@ -249,7 +249,7 @@ export class NeighborSelector {
 
       return {
         ...neighbor,
-        weight: neighbor.weight * timeWeight
+        weight: neighbor.weight * timeWeight,
       };
     });
   }
@@ -459,8 +459,8 @@ export class NeighborSelector {
       metrics: {
         avgSimilarity,
         avgCommonItems,
-        coverage
-      }
+        coverage,
+      },
     };
   }
 

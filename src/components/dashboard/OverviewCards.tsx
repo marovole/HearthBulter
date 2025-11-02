@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { HealthScoreGauge } from './HealthScoreGauge'
-import { GoalProgressBar } from './GoalProgressBar'
+import { useState, useEffect } from 'react';
+import { HealthScoreGauge } from './HealthScoreGauge';
+import { GoalProgressBar } from './GoalProgressBar';
 
 interface OverviewData {
   overview: {
@@ -52,31 +52,31 @@ interface OverviewCardsProps {
 }
 
 export function OverviewCards({ memberId }: OverviewCardsProps) {
-  const [data, setData] = useState<OverviewData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<OverviewData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData()
-  }, [memberId])
+    loadData();
+  }, [memberId]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch(
         `/api/dashboard/overview?memberId=${memberId}`
-      )
+      );
       if (!response.ok) {
-        throw new Error('加载概览数据失败')
+        throw new Error('加载概览数据失败');
       }
-      const result = await response.json()
-      setData(result)
+      const result = await response.json();
+      setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -91,7 +91,7 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (error || !data) {
@@ -99,10 +99,10 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <p className="text-sm text-red-800">{error || '加载失败'}</p>
       </div>
-    )
+    );
   }
 
-  const { overview, healthScore } = data
+  const { overview, healthScore } = data;
 
   return (
     <div className="space-y-4">
@@ -199,6 +199,6 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

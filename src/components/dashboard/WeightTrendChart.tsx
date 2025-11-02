@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
-} from 'recharts'
+} from 'recharts';
 
 interface WeightTrendData {
   data: Array<{ date: Date; weight: number }>
@@ -39,31 +39,31 @@ export function WeightTrendChart({
   memberId,
   days = 30,
 }: WeightTrendChartProps) {
-  const [data, setData] = useState<WeightTrendData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<WeightTrendData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData()
-  }, [memberId, days])
+    loadData();
+  }, [memberId, days]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch(
         `/api/dashboard/weight-trend?memberId=${memberId}&days=${days}`
-      )
+      );
       if (!response.ok) {
-        throw new Error('加载体重趋势数据失败')
+        throw new Error('加载体重趋势数据失败');
       }
-      const result = await response.json()
-      setData(result.data)
+      const result = await response.json();
+      setData(result.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -73,7 +73,7 @@ export function WeightTrendChart({
           <p className="mt-2 text-sm text-gray-500">加载中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -81,7 +81,7 @@ export function WeightTrendChart({
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
         <p className="text-sm text-red-800">{error}</p>
       </div>
-    )
+    );
   }
 
   if (!data || data.data.length === 0) {
@@ -89,7 +89,7 @@ export function WeightTrendChart({
       <div className="flex items-center justify-center h-64 text-gray-500">
         <p>暂无数据</p>
       </div>
-    )
+    );
   }
 
   // 格式化数据供图表使用
@@ -100,12 +100,12 @@ export function WeightTrendChart({
     }),
     weight: item.weight,
     fullDate: item.date,
-  }))
+  }));
 
   // 异常点标记
   const anomalyDates = new Set(
     data.anomalies.map((a) => new Date(a.date).toLocaleDateString())
-  )
+  );
 
   return (
     <div className="w-full">
@@ -135,14 +135,14 @@ export function WeightTrendChart({
               borderRadius: '0.375rem',
             }}
             labelFormatter={(label) => {
-              const item = chartData.find((d) => d.date === label)
+              const item = chartData.find((d) => d.date === label);
               return item
                 ? new Date(item.fullDate).toLocaleDateString('zh-CN', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })
-                : label
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+                : label;
             }}
             formatter={(value: number) => [`${value.toFixed(1)} kg`, '体重']}
           />
@@ -238,6 +238,6 @@ export function WeightTrendChart({
         </div>
       )}
     </div>
-  )
+  );
 }
 

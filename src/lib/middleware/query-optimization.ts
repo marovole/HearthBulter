@@ -3,7 +3,7 @@
  * 提供查询性能监控、分页优化和缓存机制
  */
 
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/db';
 
 interface QueryOptions {
   take?: number
@@ -24,40 +24,40 @@ interface QueryMetrics {
 }
 
 class QueryOptimizer {
-  private static instance: QueryOptimizer
-  private queryMetrics: QueryMetrics[] = []
-  private slowQueryThreshold = 100 // 100ms阈值
-  private cache = new Map<string, { data: any; timestamp: Date }>()
-  private cacheTimeout = 5 * 60 * 1000 // 5分钟缓存
+  private static instance: QueryOptimizer;
+  private queryMetrics: QueryMetrics[] = [];
+  private slowQueryThreshold = 100; // 100ms阈值
+  private cache = new Map<string, { data: any; timestamp: Date }>();
+  private cacheTimeout = 5 * 60 * 1000; // 5分钟缓存
 
   static getInstance(): QueryOptimizer {
     if (!QueryOptimizer.instance) {
-      QueryOptimizer.instance = new QueryOptimizer()
+      QueryOptimizer.instance = new QueryOptimizer();
     }
-    return QueryOptimizer.instance
+    return QueryOptimizer.instance;
   }
 
   /**
    * 生成缓存键
    */
   private generateCacheKey(query: string, params?: any): string {
-    const paramsStr = params ? JSON.stringify(params) : ''
-    return `${query}_${paramsStr}`
+    const paramsStr = params ? JSON.stringify(params) : '';
+    return `${query}_${paramsStr}`;
   }
 
   /**
    * 检查缓存
    */
   private checkCache<T>(cacheKey: string): T | null {
-    const cached = this.cache.get(cacheKey)
+    const cached = this.cache.get(cacheKey);
     if (cached) {
-      const now = new Date()
+      const now = new Date();
       if (now.getTime() - cached.timestamp.getTime() < this.cacheTimeout) {
-        return cached.data
+        return cached.data;
       }
-      this.cache.delete(cacheKey)
+      this.cache.delete(cacheKey);
     }
-    return null
+    return null;
   }
 
   /**
@@ -66,21 +66,21 @@ class QueryOptimizer {
   private setCache<T>(cacheKey: string, data: T): void {
     this.cache.set(cacheKey, {
       data,
-      timestamp: new Date()
-    })
+      timestamp: new Date(),
+    });
 
     // 清理过期缓存
-    this.cleanExpiredCache()
+    this.cleanExpiredCache();
   }
 
   /**
    * 清理过期缓存
    */
   private cleanExpiredCache(): void {
-    const now = new Date()
+    const now = new Date();
     for (const [key, value] of this.cache.entries()) {
       if (now.getTime() - value.timestamp.getTime() > this.cacheTimeout) {
-        this.cache.delete(key)
+        this.cache.delete(key);
       }
     }
   }
@@ -94,14 +94,14 @@ class QueryOptimizer {
       duration,
       timestamp: new Date(),
       resultCount,
-      params
-    }
+      params,
+    };
 
-    this.queryMetrics.push(metric)
+    this.queryMetrics.push(metric);
     
     // 只保留最近1000条查询记录
     if (this.queryMetrics.length > 1000) {
-      this.queryMetrics = this.queryMetrics.slice(-1000)
+      this.queryMetrics = this.queryMetrics.slice(-1000);
     }
 
     // 如果是慢查询，记录警告
@@ -109,8 +109,8 @@ class QueryOptimizer {
       console.warn(`🐌 慢查询检测: ${query} - 耗时: ${duration}ms`, {
         duration,
         resultCount,
-        params
-      })
+        params,
+      });
     }
   }
 
@@ -121,7 +121,7 @@ class QueryOptimizer {
     model: string,
     options: QueryOptions & { useCache?: boolean; cacheKey?: string } = {}
   ): Promise<T[]> {
-    const startTime = Date.now()
+    const startTime = Date.now();
     
     // 设置默认值
     const {
@@ -130,21 +130,21 @@ class QueryOptimizer {
       useCache = false,
       cacheKey,
       ...queryOptions
-    } = options
+    } = options;
 
     // 强制添加take限制
     const optimizedOptions = {
       ...queryOptions,
       take: Math.min(take, 100), // 最大100条
-    }
+    };
 
     try {
       // 检查缓存
       if (useCache && cacheKey) {
-        const cached = this.checkCache<T[]>(cacheKey)
+        const cached = this.checkCache<T[]>(cacheKey);
         if (cached) {
-          this.recordQueryMetrics(model, Date.now() - startTime, cached.length, { cached: true })
-          return cached
+          this.recordQueryMetrics(model, Date.now() - startTime, cached.length, { cached: true });
+          return cached;
         }
       }
 
@@ -152,26 +152,26 @@ class QueryOptimizer {
       const result = await this.executeWithTimeout<T[]>(
         () => (prisma as any)[model].findMany(optimizedOptions),
         timeout
-      )
+      );
 
-      const duration = Date.now() - startTime
-      this.recordQueryMetrics(model, duration, result.length, optimizedOptions)
+      const duration = Date.now() - startTime;
+      this.recordQueryMetrics(model, duration, result.length, optimizedOptions);
 
       // 设置缓存
       if (useCache && cacheKey && result.length > 0) {
-        this.setCache(cacheKey, result)
+        this.setCache(cacheKey, result);
       }
 
-      return result
+      return result;
     } catch (error) {
-      const duration = Date.now() - startTime
-      this.recordQueryMetrics(model, duration, 0, { error: error.message })
+      const duration = Date.now() - startTime;
+      this.recordQueryMetrics(model, duration, 0, { error: error.message });
       
       if (error.name === 'QueryTimeoutError') {
-        throw new Error(`查询超时: ${model} - 超时时间: ${timeout}ms`)
+        throw new Error(`查询超时: ${model} - 超时时间: ${timeout}ms`);
       }
       
-      throw error
+      throw error;
     }
   }
 
@@ -183,15 +183,15 @@ class QueryOptimizer {
     where: any,
     options: { useCache?: boolean; cacheKey?: string } = {}
   ): Promise<number> {
-    const startTime = Date.now()
-    const { useCache = false, cacheKey } = options
+    const startTime = Date.now();
+    const { useCache = false, cacheKey } = options;
 
     // 检查缓存
     if (useCache && cacheKey) {
-      const cached = this.checkCache<number>(cacheKey)
+      const cached = this.checkCache<number>(cacheKey);
       if (cached !== null) {
-        this.recordQueryMetrics(`${model}.count`, Date.now() - startTime, 1, { cached: true })
-        return cached
+        this.recordQueryMetrics(`${model}.count`, Date.now() - startTime, 1, { cached: true });
+        return cached;
       }
     }
 
@@ -199,21 +199,21 @@ class QueryOptimizer {
       const result = await this.executeWithTimeout<number>(
         () => (prisma as any)[model].count({ where }),
         10000 // count查询10秒超时
-      )
+      );
 
-      const duration = Date.now() - startTime
-      this.recordQueryMetrics(`${model}.count`, duration, 1, { count: true })
+      const duration = Date.now() - startTime;
+      this.recordQueryMetrics(`${model}.count`, duration, 1, { count: true });
 
       // 设置缓存
       if (useCache && cacheKey) {
-        this.setCache(cacheKey, result)
+        this.setCache(cacheKey, result);
       }
 
-      return result
+      return result;
     } catch (error) {
-      const duration = Date.now() - startTime
-      this.recordQueryMetrics(`${model}.count`, duration, 0, { error: error.message })
-      throw error
+      const duration = Date.now() - startTime;
+      this.recordQueryMetrics(`${model}.count`, duration, 0, { error: error.message });
+      throw error;
     }
   }
 
@@ -226,19 +226,19 @@ class QueryOptimizer {
   ): Promise<T> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        reject(new Error(`QueryTimeoutError: 查询超时 ${timeoutMs}ms`))
-      }, timeoutMs)
+        reject(new Error(`QueryTimeoutError: 查询超时 ${timeoutMs}ms`));
+      }, timeoutMs);
 
       queryFn()
         .then((result) => {
-          clearTimeout(timeoutId)
-          resolve(result)
+          clearTimeout(timeoutId);
+          resolve(result);
         })
         .catch((error) => {
-          clearTimeout(timeoutId)
-          reject(error)
-        })
-    })
+          clearTimeout(timeoutId);
+          reject(error);
+        });
+    });
   }
 
   /**
@@ -250,23 +250,23 @@ class QueryOptimizer {
         totalQueries: 0,
         avgDuration: 0,
         slowQueries: 0,
-        slowQueryRatio: 0
-      }
+        slowQueryRatio: 0,
+      };
     }
 
-    const totalQueries = this.queryMetrics.length
-    const totalDuration = this.queryMetrics.reduce((sum, m) => sum + m.duration, 0)
-    const avgDuration = Math.round(totalDuration / totalQueries)
-    const slowQueries = this.queryMetrics.filter(m => m.duration > this.slowQueryThreshold).length
-    const slowQueryRatio = Math.round((slowQueries / totalQueries) * 100)
+    const totalQueries = this.queryMetrics.length;
+    const totalDuration = this.queryMetrics.reduce((sum, m) => sum + m.duration, 0);
+    const avgDuration = Math.round(totalDuration / totalQueries);
+    const slowQueries = this.queryMetrics.filter(m => m.duration > this.slowQueryThreshold).length;
+    const slowQueryRatio = Math.round((slowQueries / totalQueries) * 100);
 
     return {
       totalQueries,
       avgDuration,
       slowQueries,
       slowQueryRatio,
-      slowQueryThreshold: this.slowQueryThreshold
-    }
+      slowQueryThreshold: this.slowQueryThreshold,
+    };
   }
 
   /**
@@ -279,27 +279,27 @@ class QueryOptimizer {
       .slice(0, limit)
       .map(m => ({
         ...m,
-        severity: m.duration > 500 ? 'critical' : m.duration > 200 ? 'high' : 'medium'
-      }))
+        severity: m.duration > 500 ? 'critical' : m.duration > 200 ? 'high' : 'medium',
+      }));
   }
 
   /**
    * 清空查询指标
    */
   resetMetrics() {
-    this.queryMetrics = []
+    this.queryMetrics = [];
   }
 
   /**
    * 清空缓存
    */
   clearCache() {
-    this.cache.clear()
+    this.cache.clear();
   }
 }
 
 // 导出单例实例
-export const queryOptimizer = QueryOptimizer.getInstance()
+export const queryOptimizer = QueryOptimizer.getInstance();
 
 // 导出便捷方法
 export const optimizedQuery = {
@@ -315,8 +315,8 @@ export const optimizedQuery = {
   
   resetMetrics: () => queryOptimizer.resetMetrics(),
   
-  clearCache: () => queryOptimizer.clearCache()
-}
+  clearCache: () => queryOptimizer.clearCache(),
+};
 
 // 类型声明
 declare global {

@@ -31,10 +31,10 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            avatar: true
-          }
-        }
-      }
+            avatar: true,
+          },
+        },
+      },
     });
 
     if (!sharedContent) {
@@ -57,7 +57,7 @@ export async function GET(
       // 自动标记为过期
       await prisma.sharedContent.update({
         where: { id: sharedContent.id },
-        data: { status: 'EXPIRED' }
+        data: { status: 'EXPIRED' },
       });
       
       return NextResponse.json(
@@ -70,8 +70,8 @@ export async function GET(
     await prisma.sharedContent.update({
       where: { id: sharedContent.id },
       data: {
-        viewCount: sharedContent.viewCount + 1
-      }
+        viewCount: sharedContent.viewCount + 1,
+      },
     });
 
     // 返回分享内容
@@ -92,8 +92,8 @@ export async function GET(
         commentCount: sharedContent.commentCount,
         shareCount: sharedContent.shareCount,
         createdAt: sharedContent.createdAt,
-        metadata: sharedContent.metadata
-      }
+        metadata: sharedContent.metadata,
+      },
     });
   } catch (error) {
     console.error('获取分享内容失败:', error);
@@ -119,7 +119,7 @@ export async function POST(
 
     // 查找分享内容
     const sharedContent = await prisma.sharedContent.findUnique({
-      where: { shareToken: token }
+      where: { shareToken: token },
     });
 
     if (!sharedContent) {
@@ -130,33 +130,33 @@ export async function POST(
     }
 
     // 根据动作类型更新统计
-    let updateData: any = {};
+    const updateData: any = {};
     
     switch (action) {
-      case 'click':
-        updateData.clickCount = sharedContent.clickCount + 1;
-        break;
-      case 'share':
-        updateData.shareCount = sharedContent.shareCount + 1;
-        break;
-      case 'conversion':
-        updateData.conversionCount = sharedContent.conversionCount + 1;
-        break;
-      default:
-        return NextResponse.json(
-          { error: '不支持的动作类型' },
-          { status: 400 }
-        );
+    case 'click':
+      updateData.clickCount = sharedContent.clickCount + 1;
+      break;
+    case 'share':
+      updateData.shareCount = sharedContent.shareCount + 1;
+      break;
+    case 'conversion':
+      updateData.conversionCount = sharedContent.conversionCount + 1;
+      break;
+    default:
+      return NextResponse.json(
+        { error: '不支持的动作类型' },
+        { status: 400 }
+      );
     }
 
     await prisma.sharedContent.update({
       where: { id: sharedContent.id },
-      data: updateData
+      data: updateData,
     });
 
     return NextResponse.json({
       success: true,
-      message: '统计更新成功'
+      message: '统计更新成功',
     });
   } catch (error) {
     console.error('更新分享统计失败:', error);
@@ -190,7 +190,7 @@ export async function DELETE(
 
     // 查找分享内容
     const sharedContent = await prisma.sharedContent.findUnique({
-      where: { shareToken: token }
+      where: { shareToken: token },
     });
 
     if (!sharedContent) {
@@ -211,12 +211,12 @@ export async function DELETE(
     // 撤回分享
     await prisma.sharedContent.update({
       where: { id: sharedContent.id },
-      data: { status: 'REVOKED' }
+      data: { status: 'REVOKED' },
     });
 
     return NextResponse.json({
       success: true,
-      message: '分享已撤回'
+      message: '分享已撤回',
     });
   } catch (error) {
     console.error('撤回分享失败:', error);

@@ -287,7 +287,7 @@ export class AIResponseCacheService {
       await this.set(item.key, item.value, item.ttl);
     }
 
-    console.log(`AI缓存预热完成`);
+    console.log('AI缓存预热完成');
   }
 }
 

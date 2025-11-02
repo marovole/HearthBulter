@@ -1,41 +1,41 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function SignUpPage() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const router = useRouter()
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const router = useRouter();
 
   const validatePassword = (password: string) => {
-    return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/.test(password)
-  }
+    return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/.test(password);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
 
     // 验证密码匹配
     if (password !== confirmPassword) {
-      setError('两次输入的密码不一致')
-      setIsLoading(false)
-      return
+      setError('两次输入的密码不一致');
+      setIsLoading(false);
+      return;
     }
 
     // 验证密码强度
     if (!validatePassword(password)) {
-      setError('密码必须至少8个字符，包含字母和数字')
-      setIsLoading(false)
-      return
+      setError('密码必须至少8个字符，包含字母和数字');
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -49,24 +49,24 @@ export default function SignUpPage() {
           email,
           password,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setSuccess('注册成功！正在跳转到登录页面...')
+        setSuccess('注册成功！正在跳转到登录页面...');
         setTimeout(() => {
-          router.push('/auth/signin')
-        }, 2000)
+          router.push('/auth/signin');
+        }, 2000);
       } else {
-        setError(data.error || '注册失败，请重试')
+        setError(data.error || '注册失败，请重试');
       }
     } catch (error) {
-      setError('网络错误，请重试')
+      setError('网络错误，请重试');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
@@ -178,5 +178,5 @@ export default function SignUpPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }

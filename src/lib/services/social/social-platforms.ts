@@ -32,7 +32,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     icon: '💬',
     color: '#07C160',
     shareUrl: (url: string) => url, // 微信需要二维码
-    isAvailable: true
+    isAvailable: true,
   },
   
   wechatMoments: {
@@ -41,7 +41,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     icon: '📱',
     color: '#07C160',
     shareUrl: (url: string) => url, // 朋友圈需要二维码
-    isAvailable: true
+    isAvailable: true,
   },
   
   weibo: {
@@ -53,7 +53,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
       const text = `${title} ${description || ''}`;
       return `https://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`;
     },
-    isAvailable: true
+    isAvailable: true,
   },
   
   qq: {
@@ -64,7 +64,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     shareUrl: (url: string, title: string, description: string) => {
       return `https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(description || '')}`;
     },
-    isAvailable: true
+    isAvailable: true,
   },
   
   qzone: {
@@ -75,7 +75,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     shareUrl: (url: string, title: string, description: string) => {
       return `https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(description || '')}`;
     },
-    isAvailable: true
+    isAvailable: true,
   },
   
   copy: {
@@ -84,8 +84,8 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     icon: '📋',
     color: '#6B7280',
     shareUrl: (url: string) => url,
-    isAvailable: true
-  }
+    isAvailable: true,
+  },
 };
 
 /**
@@ -111,18 +111,18 @@ export async function shareToPlatform(
     const shareUrl = generateShareUrl(platform, data);
     
     switch (platform) {
-      case 'wechat':
-      case 'wechatMoments':
-        // 微信分享需要生成二维码
-        return await shareToWechat(shareUrl, data);
+    case 'wechat':
+    case 'wechatMoments':
+      // 微信分享需要生成二维码
+      return await shareToWechat(shareUrl, data);
       
-      case 'copy':
-        return await copyToClipboard(shareUrl);
+    case 'copy':
+      return await copyToClipboard(shareUrl);
       
-      default:
-        // 其他平台直接打开链接
-        window.open(shareUrl, '_blank', 'width=600,height=400');
-        return true;
+    default:
+      // 其他平台直接打开链接
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+      return true;
     }
   } catch (error) {
     console.error(`分享到${platform}失败:`, error);
@@ -154,7 +154,7 @@ async function shareToWechat(url: string, data: ShareData): Promise<boolean> {
 async function generateQRCode(url: string): Promise<string> {
   // 这里可以使用二维码生成库，如 qrcode
   // 暂时返回一个模拟的二维码URL
-  return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==`;
+  return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
 }
 
 /**
@@ -271,8 +271,8 @@ export class WechatSDK {
               'updateAppMessageShareData',
               'updateTimelineShareData',
               'onMenuShareTimeline',
-              'onMenuShareAppMessage'
-            ]
+              'onMenuShareAppMessage',
+            ],
           });
           
           (window as any).wx.ready(() => {
@@ -314,7 +314,7 @@ export class WechatSDK {
       },
       fail: (err: any) => {
         console.error('分享到微信好友失败:', err);
-      }
+      },
     });
   }
   
@@ -335,7 +335,7 @@ export class WechatSDK {
       },
       fail: (err: any) => {
         console.error('分享到朋友圈失败:', err);
-      }
+      },
     });
   }
   
@@ -393,7 +393,7 @@ export class ShareAnalytics {
         body: JSON.stringify({
           action,
           platform,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         }),
       });
     } catch (error) {
@@ -413,7 +413,7 @@ export class ShareAnalytics {
         },
         body: JSON.stringify({
           action: 'view',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         }),
       });
     } catch (error) {

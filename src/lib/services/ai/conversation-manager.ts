@@ -335,7 +335,7 @@ export class ConversationManager {
     const sentences = fullResponse.split(/[。！？.!?]+/).filter(s => s.trim().length > 0);
 
     for (const sentence of sentences) {
-      yield sentence.trim() + '。';
+      yield `${sentence.trim()}。`;
       // 模拟打字效果延迟
       await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
     }
@@ -500,26 +500,26 @@ export class ConversationManager {
   private selectModelForIntent(intent: IntentRecognition): string {
     // 根据意图选择合适的模型
     switch (intent.intent) {
-      case 'advice_request':
-        return RECOMMENDED_MODELS.PAID[0]; // 使用更强的付费模型
-      case 'question':
-        return RECOMMENDED_MODELS.FREE[0]; // 简单问题用免费模型
-      default:
-        return RECOMMENDED_MODELS.FREE[0];
+    case 'advice_request':
+      return RECOMMENDED_MODELS.PAID[0]; // 使用更强的付费模型
+    case 'question':
+      return RECOMMENDED_MODELS.FREE[0]; // 简单问题用免费模型
+    default:
+      return RECOMMENDED_MODELS.FREE[0];
     }
   }
 
   private getCacheTTL(intent: IntentRecognition): number {
     // 根据意图类型设置不同的缓存时间
     switch (intent.intent) {
-      case 'question':
-        return 7200; // 2小时 - 事实性问题缓存更久
-      case 'advice_request':
-        return 3600; // 1小时 - 建议类问题缓存适中
-      case 'general_chat':
-        return 1800; // 30分钟 - 通用聊天缓存较短
-      default:
-        return 3600; // 默认1小时
+    case 'question':
+      return 7200; // 2小时 - 事实性问题缓存更久
+    case 'advice_request':
+      return 3600; // 1小时 - 建议类问题缓存适中
+    case 'general_chat':
+      return 1800; // 30分钟 - 通用聊天缓存较短
+    default:
+      return 3600; // 默认1小时
     }
   }
 

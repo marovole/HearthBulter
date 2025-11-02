@@ -48,117 +48,117 @@ export async function aggregateTimeSeriesData(
   const dataPoints: TimeSeriesPoint[] = [];
 
   switch (dataType) {
-    case 'WEIGHT':
-    case 'BODY_FAT':
-    case 'MUSCLE_MASS':
-    case 'BLOOD_PRESSURE':
-    case 'HEART_RATE': {
-      const healthData = await prisma.healthData.findMany({
-        where: {
-          memberId,
-          measuredAt: {
-            gte: startDate,
-            lte: endDate,
-          },
+  case 'WEIGHT':
+  case 'BODY_FAT':
+  case 'MUSCLE_MASS':
+  case 'BLOOD_PRESSURE':
+  case 'HEART_RATE': {
+    const healthData = await prisma.healthData.findMany({
+      where: {
+        memberId,
+        measuredAt: {
+          gte: startDate,
+          lte: endDate,
         },
-        orderBy: { measuredAt: 'asc' },
-      });
+      },
+      orderBy: { measuredAt: 'asc' },
+    });
 
-      for (const data of healthData) {
-        let value: number | null = null;
-        if (dataType === 'WEIGHT') value = data.weight;
-        else if (dataType === 'BODY_FAT') value = data.bodyFat;
-        else if (dataType === 'MUSCLE_MASS') value = data.muscleMass;
-        else if (dataType === 'HEART_RATE') value = data.heartRate;
-        else if (dataType === 'BLOOD_PRESSURE' && data.bloodPressureSystolic) {
-          value = data.bloodPressureSystolic;
-        }
-
-        if (value !== null) {
-          dataPoints.push({ date: data.measuredAt, value });
-        }
+    for (const data of healthData) {
+      let value: number | null = null;
+      if (dataType === 'WEIGHT') value = data.weight;
+      else if (dataType === 'BODY_FAT') value = data.bodyFat;
+      else if (dataType === 'MUSCLE_MASS') value = data.muscleMass;
+      else if (dataType === 'HEART_RATE') value = data.heartRate;
+      else if (dataType === 'BLOOD_PRESSURE' && data.bloodPressureSystolic) {
+        value = data.bloodPressureSystolic;
       }
-      break;
+
+      if (value !== null) {
+        dataPoints.push({ date: data.measuredAt, value });
+      }
+    }
+    break;
+  }
+
+  case 'CALORIES':
+  case 'PROTEIN':
+  case 'CARBS':
+  case 'FAT': {
+    const mealLogs = await prisma.mealLog.findMany({
+      where: {
+        memberId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    // 按日期聚合
+    const dailyData = new Map<string, number>();
+    for (const log of mealLogs) {
+      const dateKey = log.date.toISOString().split('T')[0];
+      let value = 0;
+      if (dataType === 'CALORIES') value = log.calories;
+      else if (dataType === 'PROTEIN') value = log.protein;
+      else if (dataType === 'CARBS') value = log.carbs;
+      else if (dataType === 'FAT') value = log.fat;
+
+      dailyData.set(dateKey, (dailyData.get(dateKey) || 0) + value);
     }
 
-    case 'CALORIES':
-    case 'PROTEIN':
-    case 'CARBS':
-    case 'FAT': {
-      const mealLogs = await prisma.mealLog.findMany({
-        where: {
-          memberId,
-          date: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
-        orderBy: { date: 'asc' },
-      });
-
-      // 按日期聚合
-      const dailyData = new Map<string, number>();
-      for (const log of mealLogs) {
-        const dateKey = log.date.toISOString().split('T')[0];
-        let value = 0;
-        if (dataType === 'CALORIES') value = log.calories;
-        else if (dataType === 'PROTEIN') value = log.protein;
-        else if (dataType === 'CARBS') value = log.carbs;
-        else if (dataType === 'FAT') value = log.fat;
-
-        dailyData.set(dateKey, (dailyData.get(dateKey) || 0) + value);
-      }
-
-      for (const [dateKey, value] of dailyData.entries()) {
-        dataPoints.push({ date: new Date(dateKey), value });
-      }
-      break;
+    for (const [dateKey, value] of dailyData.entries()) {
+      dataPoints.push({ date: new Date(dateKey), value });
     }
+    break;
+  }
 
-    case 'EXERCISE':
-    case 'SLEEP':
-    case 'WATER': {
-      const auxiliaryData = await prisma.auxiliaryTracking.findMany({
-        where: {
-          memberId,
-          date: {
-            gte: startDate,
-            lte: endDate,
-          },
+  case 'EXERCISE':
+  case 'SLEEP':
+  case 'WATER': {
+    const auxiliaryData = await prisma.auxiliaryTracking.findMany({
+      where: {
+        memberId,
+        date: {
+          gte: startDate,
+          lte: endDate,
         },
-        orderBy: { date: 'asc' },
-      });
+      },
+      orderBy: { date: 'asc' },
+    });
 
-      for (const data of auxiliaryData) {
-        let value: number | null = null;
-        if (dataType === 'EXERCISE') value = data.exerciseMinutes;
-        else if (dataType === 'SLEEP') value = data.sleepHours;
-        else if (dataType === 'WATER') value = data.waterIntake;
+    for (const data of auxiliaryData) {
+      let value: number | null = null;
+      if (dataType === 'EXERCISE') value = data.exerciseMinutes;
+      else if (dataType === 'SLEEP') value = data.sleepHours;
+      else if (dataType === 'WATER') value = data.waterIntake;
 
-        if (value !== null) {
-          dataPoints.push({ date: new Date(data.date), value });
-        }
+      if (value !== null) {
+        dataPoints.push({ date: new Date(data.date), value });
       }
-      break;
     }
+    break;
+  }
 
-    case 'HEALTH_SCORE': {
-      const scores = await prisma.healthScore.findMany({
-        where: {
-          memberId,
-          date: {
-            gte: startDate,
-            lte: endDate,
-          },
+  case 'HEALTH_SCORE': {
+    const scores = await prisma.healthScore.findMany({
+      where: {
+        memberId,
+        date: {
+          gte: startDate,
+          lte: endDate,
         },
-        orderBy: { date: 'asc' },
-      });
+      },
+      orderBy: { date: 'asc' },
+    });
 
-      for (const score of scores) {
-        dataPoints.push({ date: new Date(score.date), value: score.overallScore });
-      }
-      break;
+    for (const score of scores) {
+      dataPoints.push({ date: new Date(score.date), value: score.overallScore });
     }
+    break;
+  }
   }
 
   return dataPoints;

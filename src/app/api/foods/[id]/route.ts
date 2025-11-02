@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { usdaService } from '@/lib/services/usda-service'
-import { foodCacheService } from '@/lib/services/cache-service'
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { usdaService } from '@/lib/services/usda-service';
+import { foodCacheService } from '@/lib/services/cache-service';
 
 /**
  * GET /api/foods/:id
@@ -12,23 +12,23 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id } = await params;
 
     // 1. 尝试从缓存获取
-    const cachedFood = await foodCacheService.getFood(id)
+    const cachedFood = await foodCacheService.getFood(id);
     if (cachedFood) {
-      return NextResponse.json(parseFoodResponse(cachedFood), { status: 200 })
+      return NextResponse.json(parseFoodResponse(cachedFood), { status: 200 });
     }
 
     // 2. 从数据库查找
     const food = await prisma.food.findUnique({
       where: { id },
-    })
+    });
 
     if (food) {
       // 缓存食物数据
-      await foodCacheService.setFood(food)
-      return NextResponse.json(parseFoodResponse(food), { status: 200 })
+      await foodCacheService.setFood(food);
+      return NextResponse.json(parseFoodResponse(food), { status: 200 });
     }
 
     // 如果在数据库中找不到，尝试从USDA获取（如果是USDA ID）
@@ -36,7 +36,7 @@ export async function GET(
       try {
         const usdaFood = await usdaService.getFoodByFdcIdAndMap(
           parseInt(id)
-        )
+        );
 
         // 保存到数据库
         const savedFood = await prisma.food.create({
@@ -62,24 +62,24 @@ export async function GET(
             verified: usdaFood.verified,
             cachedAt: new Date(),
           },
-        })
+        });
 
         // 缓存新保存的食物
-        await foodCacheService.setFood(savedFood)
+        await foodCacheService.setFood(savedFood);
 
-        return NextResponse.json(parseFoodResponse(savedFood), { status: 200 })
+        return NextResponse.json(parseFoodResponse(savedFood), { status: 200 });
       } catch (usdaError) {
-        console.error('从USDA获取食物失败:', usdaError)
+        console.error('从USDA获取食物失败:', usdaError);
       }
     }
 
-    return NextResponse.json({ error: '食物不存在' }, { status: 404 })
+    return NextResponse.json({ error: '食物不存在' }, { status: 404 });
   } catch (error) {
-    console.error('获取食物详情失败:', error)
+    console.error('获取食物详情失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -110,6 +110,6 @@ function parseFoodResponse(food: any) {
     verified: food.verified,
     createdAt: food.createdAt,
     updatedAt: food.updatedAt,
-  }
+  };
 }
 

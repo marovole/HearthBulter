@@ -16,7 +16,7 @@ export function FavoriteButton({
   recipeId,
   memberId,
   size = 'default',
-  showText = false
+  showText = false,
 }: FavoriteButtonProps) {
   const [isFavorited, setIsFavorited] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ export function FavoriteButton({
       const response = await fetch(`/api/recipes/${recipeId}/favorite`, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberId })
+        body: JSON.stringify({ memberId }),
       });
 
       const data = await response.json();
@@ -61,14 +61,14 @@ export function FavoriteButton({
       setIsFavorited(!isFavorited);
       toast({
         title: isFavorited ? '已取消收藏' : '已收藏',
-        description: isFavorited ? '食谱已从收藏中移除' : '食谱已添加到收藏列表'
+        description: isFavorited ? '食谱已从收藏中移除' : '食谱已添加到收藏列表',
       });
 
     } catch (error) {
       toast({
         title: '操作失败',
         description: error instanceof Error ? error.message : '未知错误',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);

@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import type { MealType } from '@prisma/client'
+import { useState } from 'react';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import type { MealType } from '@prisma/client';
 
 interface MealIngredient {
   id: string
@@ -36,33 +36,33 @@ const MEAL_TYPE_LABELS: Record<MealType, string> = {
   LUNCH: '午餐',
   DINNER: '晚餐',
   SNACK: '加餐',
-}
+};
 
 const MEAL_TYPE_COLORS: Record<MealType, string> = {
   BREAKFAST: 'bg-yellow-100 text-yellow-800',
   LUNCH: 'bg-blue-100 text-blue-800',
   DINNER: 'bg-purple-100 text-purple-800',
   SNACK: 'bg-green-100 text-green-800',
-}
+};
 
 function formatAmount(amount: number): string {
   if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(1)}kg`
+    return `${(amount / 1000).toFixed(1)}kg`;
   }
-  return `${amount.toFixed(0)}g`
+  return `${amount.toFixed(0)}g`;
 }
 
 export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
-  const [showAllIngredients, setShowAllIngredients] = useState(false)
-  const MAX_INGREDIENTS_DISPLAY = 5
-  const hasMoreIngredients = meal.ingredients.length > MAX_INGREDIENTS_DISPLAY
+  const [showAllIngredients, setShowAllIngredients] = useState(false);
+  const MAX_INGREDIENTS_DISPLAY = 5;
+  const hasMoreIngredients = meal.ingredients.length > MAX_INGREDIENTS_DISPLAY;
   const displayedIngredients = showAllIngredients 
     ? meal.ingredients 
-    : meal.ingredients.slice(0, MAX_INGREDIENTS_DISPLAY)
+    : meal.ingredients.slice(0, MAX_INGREDIENTS_DISPLAY);
 
   // 计算营养成分百分比 (假设每餐目标为 500 kcal)
-  const targetCalories = 500
-  const caloriesPercentage = Math.min((meal.calories / targetCalories) * 100, 100)
+  const targetCalories = 500;
+  const caloriesPercentage = Math.min((meal.calories / targetCalories) * 100, 100);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200 active:scale-98">
@@ -191,6 +191,6 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

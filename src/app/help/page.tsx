@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { FAQAccordion, defaultFAQData, defaultCategories } from '@/components/onboarding/FAQAccordion'
-import { FeedbackForm } from '@/components/onboarding/FeedbackForm'
-import { VideoTutorial } from '@/components/onboarding/VideoPlayer'
-import { HelpTooltip, useContextualHelp } from '@/components/onboarding/HelpTooltip'
-import { logger } from '@/lib/logger'
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FAQAccordion, defaultFAQData, defaultCategories } from '@/components/onboarding/FAQAccordion';
+import { FeedbackForm } from '@/components/onboarding/FeedbackForm';
+import { VideoTutorial } from '@/components/onboarding/VideoPlayer';
+import { HelpTooltip, useContextualHelp } from '@/components/onboarding/HelpTooltip';
+import { logger } from '@/lib/logger';
 import { 
   Search, 
   BookOpen, 
@@ -22,32 +22,32 @@ import {
   ExternalLink,
   Star,
   Clock,
-  Users
-} from 'lucide-react'
+  Users,
+} from 'lucide-react';
 
 export default function HelpCenterPage() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false)
-  const [activeTab, setActiveTab] = useState('faq')
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('faq');
 
   const handleSearch = (term: string) => {
-    setSearchTerm(term)
+    setSearchTerm(term);
     // Switch to FAQ tab when searching
     if (term) {
-      setActiveTab('faq')
+      setActiveTab('faq');
     }
-  }
+  };
 
   const handleFeedbackSubmit = (feedback: any) => {
-    logger.info('Feedback submitted', { feedback })
-    setShowFeedbackForm(false)
+    logger.info('Feedback submitted', { feedback });
+    setShowFeedbackForm(false);
     // Show success message
-  }
+  };
 
   const handleContactSupport = (question?: string) => {
     // Open support chat or redirect to contact page
-    window.location.href = '/support'
-  }
+    window.location.href = '/support';
+  };
 
   const tutorialVideos = [
     {
@@ -55,23 +55,23 @@ export default function HelpCenterPage() {
       title: '健康数据录入教程',
       description: '学习如何记录和查看健康数据，包括手动录入和设备同步',
       duration: 180, // 3 minutes
-      poster: '/images/health-data-tutorial-poster.jpg'
+      poster: '/images/health-data-tutorial-poster.jpg',
     },
     {
       src: '/videos/meal-planning-tutorial.mp4',
       title: '食谱规划使用指南',
       description: '了解如何使用AI食谱推荐功能和自定义食谱',
       duration: 300, // 5 minutes
-      poster: '/images/meal-planning-tutorial-poster.jpg'
+      poster: '/images/meal-planning-tutorial-poster.jpg',
     },
     {
       src: '/videos/shopping-list-tutorial.mp4',
       title: '购物清单生成教程',
       description: '学习如何根据食谱自动生成购物清单',
       duration: 120, // 2 minutes
-      poster: '/images/shopping-list-tutorial-poster.jpg'
-    }
-  ]
+      poster: '/images/shopping-list-tutorial-poster.jpg',
+    },
+  ];
 
   const quickLinks = [
     {
@@ -79,30 +79,30 @@ export default function HelpCenterPage() {
       description: '快速了解Health Butler的基本功能',
       icon: <BookOpen className="h-5 w-5" />,
       href: '/onboarding/welcome',
-      badge: '推荐'
+      badge: '推荐',
     },
     {
       title: '常见问题',
       description: '查看用户最常遇到的问题和解答',
       icon: <HelpCircle className="h-5 w-5" />,
       href: '#faq',
-      badge: '热门'
+      badge: '热门',
     },
     {
       title: '视频教程',
       description: '通过视频学习功能使用方法',
       icon: <Video className="h-5 w-5" />,
       href: '#tutorials',
-      badge: 'NEW'
+      badge: 'NEW',
     },
     {
       title: '联系客服',
       description: '获取一对一的专业帮助',
       icon: <MessageCircle className="h-5 w-5" />,
       href: '/support',
-      badge: '在线'
-    }
-  ]
+      badge: '在线',
+    },
+  ];
 
   const supportChannels = [
     {
@@ -110,23 +110,23 @@ export default function HelpCenterPage() {
       description: '工作日 9:00-18:00 实时响应',
       icon: <MessageCircle className="h-5 w-5" />,
       action: '开始聊天',
-      href: '/support/chat'
+      href: '/support/chat',
     },
     {
       name: '电话支持',
       description: '400-123-4567',
       icon: <Phone className="h-5 w-5" />,
       action: '拨打电话',
-      href: 'tel:400-123-4567'
+      href: 'tel:400-123-4567',
     },
     {
       name: '邮件支持',
       description: 'support@healthbutler.com',
       icon: <Mail className="h-5 w-5" />,
       action: '发送邮件',
-      href: 'mailto:support@healthbutler.com'
-    }
-  ]
+      href: 'mailto:support@healthbutler.com',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -206,7 +206,7 @@ export default function HelpCenterPage() {
                   showSearch={false}
                   showCategories={true}
                   onFeedback={(itemId, isHelpful) => {
-                    console.log(`Feedback for ${itemId}: ${isHelpful ? 'helpful' : 'not helpful'}`)
+                    console.log(`Feedback for ${itemId}: ${isHelpful ? 'helpful' : 'not helpful'}`);
                   }}
                   onContactSupport={handleContactSupport}
                 />
@@ -231,7 +231,7 @@ export default function HelpCenterPage() {
                         key={index}
                         video={video}
                         onComplete={() => {
-                          console.log(`Tutorial ${video.title} completed`)
+                          console.log(`Tutorial ${video.title} completed`);
                         }}
                       />
                     ))}
@@ -459,5 +459,5 @@ export default function HelpCenterPage() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

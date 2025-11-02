@@ -1,39 +1,39 @@
-import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom'
-import { FamilyMembersCard } from '../../components/dashboard/FamilyMembersCard'
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { FamilyMembersCard } from '../../components/dashboard/FamilyMembersCard';
 
 // Mock the API calls
-const mockFetch = global.fetch as jest.Mock
+const mockFetch = global.fetch as jest.Mock;
 
 describe('FamilyMembersCard', () => {
   const defaultProps = {
     familyId: 'test-family-1',
-    onMemberSelect: jest.fn()
-  }
+    onMemberSelect: jest.fn(),
+  };
 
   beforeEach(() => {
-    mockFetch.mockClear()
-    jest.clearAllMocks()
-  })
+    mockFetch.mockClear();
+    jest.clearAllMocks();
+  });
 
   it('renders loading state initially', () => {
-    mockFetch.mockImplementationOnce(() => new Promise(() => {})) // Never resolves
+    mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
-    expect(screen.getByText('加载家庭成员中...')).toBeInTheDocument()
-  })
+    expect(screen.getByText('加载家庭成员中...')).toBeInTheDocument();
+  });
 
   it('renders error state when API fails', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('API Error'))
+    mockFetch.mockRejectedValueOnce(new Error('API Error'));
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('API Error')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText('API Error')).toBeInTheDocument();
+    });
+  });
 
   it('renders family members list on successful API call', async () => {
     const mockMembers = {
@@ -46,7 +46,7 @@ describe('FamilyMembersCard', () => {
           healthScore: 85,
           lastActive: new Date(),
           goals: ['减重5kg', '血压控制'],
-          allergies: ['花生']
+          allergies: ['花生'],
         },
         {
           id: '2',
@@ -56,27 +56,27 @@ describe('FamilyMembersCard', () => {
           healthScore: 88,
           lastActive: new Date(),
           goals: ['改善睡眠'],
-          allergies: []
-        }
-      ]
-    }
+          allergies: [],
+        },
+      ],
+    };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockMembers
-    })
+      json: async () => mockMembers,
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('家庭成员')).toBeInTheDocument()
-    })
+      expect(screen.getByText('家庭成员')).toBeInTheDocument();
+    });
     
-    expect(screen.getByText('张爸爸')).toBeInTheDocument()
-    expect(screen.getByText('李妈妈')).toBeInTheDocument()
-    expect(screen.getByText('85')).toBeInTheDocument()
-    expect(screen.getByText('88')).toBeInTheDocument()
-  })
+    expect(screen.getByText('张爸爸')).toBeInTheDocument();
+    expect(screen.getByText('李妈妈')).toBeInTheDocument();
+    expect(screen.getByText('85')).toBeInTheDocument();
+    expect(screen.getByText('88')).toBeInTheDocument();
+  });
 
   it('switches between grid and list views', async () => {
     const mockMembers = {
@@ -89,29 +89,29 @@ describe('FamilyMembersCard', () => {
           healthScore: 85,
           lastActive: new Date(),
           goals: [],
-          allergies: []
-        }
-      ]
-    }
+          allergies: [],
+        },
+      ],
+    };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockMembers
-    })
+      json: async () => mockMembers,
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('家庭成员')).toBeInTheDocument()
-    })
+      expect(screen.getByText('家庭成员')).toBeInTheDocument();
+    });
     
     // Find and click the list view button
-    const listViewButton = screen.getByLabelText('列表视图')
-    fireEvent.click(listViewButton)
+    const listViewButton = screen.getByLabelText('列表视图');
+    fireEvent.click(listViewButton);
     
     // Verify the view changed (list view should have different layout)
-    expect(screen.getByText('张爸爸')).toBeInTheDocument()
-  })
+    expect(screen.getByText('张爸爸')).toBeInTheDocument();
+  });
 
   it('calls onMemberSelect when a member is clicked', async () => {
     const mockMembers = {
@@ -124,28 +124,28 @@ describe('FamilyMembersCard', () => {
           healthScore: 85,
           lastActive: new Date(),
           goals: [],
-          allergies: []
-        }
-      ]
-    }
+          allergies: [],
+        },
+      ],
+    };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockMembers
-    })
+      json: async () => mockMembers,
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('张爸爸')).toBeInTheDocument()
-    })
+      expect(screen.getByText('张爸爸')).toBeInTheDocument();
+    });
     
     // Click on the member card
-    const memberCard = screen.getByText('张爸爸').closest('div')
-    fireEvent.click(memberCard!)
+    const memberCard = screen.getByText('张爸爸').closest('div');
+    fireEvent.click(memberCard!);
     
-    expect(defaultProps.onMemberSelect).toHaveBeenCalledWith('1')
-  })
+    expect(defaultProps.onMemberSelect).toHaveBeenCalledWith('1');
+  });
 
   it('displays member role badges correctly', async () => {
     const mockMembers = {
@@ -158,7 +158,7 @@ describe('FamilyMembersCard', () => {
           healthScore: 85,
           lastActive: new Date(),
           goals: [],
-          allergies: []
+          allergies: [],
         },
         {
           id: '2',
@@ -167,23 +167,23 @@ describe('FamilyMembersCard', () => {
           healthScore: 78,
           lastActive: new Date(),
           goals: [],
-          allergies: []
-        }
-      ]
-    }
+          allergies: [],
+        },
+      ],
+    };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockMembers
-    })
+      json: async () => mockMembers,
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('管理员')).toBeInTheDocument()
-      expect(screen.getByText('儿童')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText('管理员')).toBeInTheDocument();
+      expect(screen.getByText('儿童')).toBeInTheDocument();
+    });
+  });
 
   it('displays member goals and allergies', async () => {
     const mockMembers = {
@@ -196,38 +196,38 @@ describe('FamilyMembersCard', () => {
           healthScore: 85,
           lastActive: new Date(),
           goals: ['减重5kg', '血压控制'],
-          allergies: ['花生', '海鲜']
-        }
-      ]
-    }
+          allergies: ['花生', '海鲜'],
+        },
+      ],
+    };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockMembers
-    })
+      json: async () => mockMembers,
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('减重5kg')).toBeInTheDocument()
-      expect(screen.getByText('血压控制')).toBeInTheDocument()
-      expect(screen.getByText('花生')).toBeInTheDocument()
-      expect(screen.getByText('海鲜')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText('减重5kg')).toBeInTheDocument();
+      expect(screen.getByText('血压控制')).toBeInTheDocument();
+      expect(screen.getByText('花生')).toBeInTheDocument();
+      expect(screen.getByText('海鲜')).toBeInTheDocument();
+    });
+  });
 
   it('shows empty state when no members exist', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ data: [] })
-    })
+      json: async () => ({ data: [] }),
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('暂无家庭成员')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText('暂无家庭成员')).toBeInTheDocument();
+    });
+  });
 
   it('displays family statistics', async () => {
     const mockMembers = {
@@ -239,7 +239,7 @@ describe('FamilyMembersCard', () => {
           healthScore: 85,
           lastActive: new Date(),
           goals: [],
-          allergies: []
+          allergies: [],
         },
         {
           id: '2',
@@ -248,25 +248,25 @@ describe('FamilyMembersCard', () => {
           healthScore: 88,
           lastActive: new Date(),
           goals: [],
-          allergies: []
-        }
-      ]
-    }
+          allergies: [],
+        },
+      ],
+    };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockMembers
-    })
+      json: async () => mockMembers,
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('家庭统计')).toBeInTheDocument()
-    })
+      expect(screen.getByText('家庭统计')).toBeInTheDocument();
+    });
     
-    expect(screen.getByText('2')).toBeInTheDocument() // Total members
-    expect(screen.getByText('86.5')).toBeInTheDocument() // Average health score
-  })
+    expect(screen.getByText('2')).toBeInTheDocument(); // Total members
+    expect(screen.getByText('86.5')).toBeInTheDocument(); // Average health score
+  });
 
   it('handles member filtering', async () => {
     const mockMembers = {
@@ -278,7 +278,7 @@ describe('FamilyMembersCard', () => {
           healthScore: 85,
           lastActive: new Date(),
           goals: [],
-          allergies: []
+          allergies: [],
         },
         {
           id: '2',
@@ -287,44 +287,44 @@ describe('FamilyMembersCard', () => {
           healthScore: 88,
           lastActive: new Date(),
           goals: [],
-          allergies: []
-        }
-      ]
-    }
+          allergies: [],
+        },
+      ],
+    };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => mockMembers
-    })
+      json: async () => mockMembers,
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('张爸爸')).toBeInTheDocument()
-      expect(screen.getByText('李妈妈')).toBeInTheDocument()
-    })
+      expect(screen.getByText('张爸爸')).toBeInTheDocument();
+      expect(screen.getByText('李妈妈')).toBeInTheDocument();
+    });
     
     // Type in search box
-    const searchInput = screen.getByPlaceholderText('搜索成员...')
-    fireEvent.change(searchInput, { target: { value: '张爸爸' } })
+    const searchInput = screen.getByPlaceholderText('搜索成员...');
+    fireEvent.change(searchInput, { target: { value: '张爸爸' } });
     
     // Should only show 张爸爸
-    expect(screen.getByText('张爸爸')).toBeInTheDocument()
-    expect(screen.queryByText('李妈妈')).not.toBeInTheDocument()
-  })
+    expect(screen.getByText('张爸爸')).toBeInTheDocument();
+    expect(screen.queryByText('李妈妈')).not.toBeInTheDocument();
+  });
 
   it('calls API with correct parameters', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ data: [] })
-    })
+      json: async () => ({ data: [] }),
+    });
 
-    render(<FamilyMembersCard {...defaultProps} />)
+    render(<FamilyMembersCard {...defaultProps} />);
     
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        `/api/dashboard/family-members?familyId=test-family-1`
-      )
-    })
-  })
-})
+        '/api/dashboard/family-members?familyId=test-family-1'
+      );
+    });
+  });
+});

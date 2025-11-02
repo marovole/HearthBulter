@@ -21,7 +21,7 @@ import {
   BarChart3,
   Shield,
   Zap,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 import { CodeReviewInput, CodeReviewResult, CodeReviewIssue, codeReviewService } from '@/lib/services/code-review-service';
 import { cn } from '@/lib/utils';
@@ -79,29 +79,29 @@ export function CodeReviewPanel({
 
   const getRiskColor = (riskLevel: CodeReviewResult['riskLevel']) => {
     switch (riskLevel) {
-      case 'critical':
-        return 'text-red-600 bg-red-50 border-red-200';
-      case 'high':
-        return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'low':
-        return 'text-green-600 bg-green-50 border-green-200';
-      default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+    case 'critical':
+      return 'text-red-600 bg-red-50 border-red-200';
+    case 'high':
+      return 'text-orange-600 bg-orange-50 border-orange-200';
+    case 'medium':
+      return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    case 'low':
+      return 'text-green-600 bg-green-50 border-green-200';
+    default:
+      return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
 
   const getSeverityIcon = (severity: CodeReviewIssue['severity']) => {
     switch (severity) {
-      case 'critical':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'high':
-        return <AlertTriangle className="w-4 h-4 text-orange-500" />;
-      case 'medium':
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case 'low':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+    case 'critical':
+      return <XCircle className="w-4 h-4 text-red-500" />;
+    case 'high':
+      return <AlertTriangle className="w-4 h-4 text-orange-500" />;
+    case 'medium':
+      return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+    case 'low':
+      return <CheckCircle className="w-4 h-4 text-green-500" />;
     }
   };
 
@@ -187,14 +187,14 @@ export function CodeReviewPanel({
             <span className="text-sm font-medium">风险等级:</span>
             <Badge className={cn('capitalize', getRiskColor(reviewResult.riskLevel))}>
               {reviewResult.riskLevel === 'critical' ? '严重' :
-               reviewResult.riskLevel === 'high' ? '高' :
-               reviewResult.riskLevel === 'medium' ? '中' : '低'}
+                reviewResult.riskLevel === 'high' ? '高' :
+                  reviewResult.riskLevel === 'medium' ? '中' : '低'}
             </Badge>
           </div>
           <div className="text-sm text-muted-foreground">
             发现 {reviewResult.issues.length} 个问题
           </div>
-        </CardContent>
+        </div>
 
         {/* 代码指标 */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-white/50 rounded-lg">
@@ -278,8 +278,8 @@ export function CodeReviewPanel({
                       </div>
                       <Badge variant="outline" className="text-xs">
                         {issue.severity === 'critical' ? '严重' :
-                         issue.severity === 'high' ? '高' :
-                         issue.severity === 'medium' ? '中' : '低'}
+                          issue.severity === 'high' ? '高' :
+                            issue.severity === 'medium' ? '中' : '低'}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">

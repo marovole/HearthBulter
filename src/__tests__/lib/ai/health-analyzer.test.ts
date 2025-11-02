@@ -9,10 +9,10 @@ jest.mock('@/lib/services/ai/openai-client', () => ({
   openaiClient: {
     chat: {
       completions: {
-        create: jest.fn()
-      }
-    }
-  }
+        create: jest.fn(),
+      },
+    },
+  },
 }));
 
 import { openaiClient } from '@/lib/services/ai/openai-client';
@@ -34,7 +34,7 @@ describe('Health Analyzer', () => {
           unit: 'mmHg',
           category: '心血管',
           referenceRange: '90-140/60-90',
-          status: 'normal'
+          status: 'normal',
         },
         {
           name: '总胆固醇',
@@ -42,7 +42,7 @@ describe('Health Analyzer', () => {
           unit: 'mmol/L',
           category: '血脂',
           referenceRange: '<5.2',
-          status: 'normal'
+          status: 'normal',
         },
         {
           name: '空腹血糖',
@@ -50,8 +50,8 @@ describe('Health Analyzer', () => {
           unit: 'mmol/L',
           category: '血糖',
           referenceRange: '3.9-6.1',
-          status: 'normal'
-        }
+          status: 'normal',
+        },
       ];
 
       const structuredData = healthAnalyzer.structureMedicalData(rawIndicators);
@@ -72,7 +72,7 @@ describe('Health Analyzer', () => {
           unit: 'mmHg',
           category: '心血管',
           referenceRange: '90-140/60-90',
-          status: 'high'
+          status: 'high',
         },
         {
           name: '总胆固醇',
@@ -80,8 +80,8 @@ describe('Health Analyzer', () => {
           unit: 'mmol/L',
           category: '血脂',
           referenceRange: '<5.2',
-          status: 'high'
-        }
+          status: 'high',
+        },
       ];
 
       const structuredData = healthAnalyzer.structureMedicalData(indicatorsWithIssues);
@@ -100,15 +100,15 @@ describe('Health Analyzer', () => {
           values: [75, 74, 73, 72, 71],
           unit: 'kg',
           dates: ['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01'],
-          category: '体格测量'
+          category: '体格测量',
         },
         {
           name: 'BMI',
           values: [25.2, 24.8, 24.4, 24.0, 23.6],
           unit: 'kg/m²',
           dates: ['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01'],
-          category: '体格测量'
-        }
+          category: '体格测量',
+        },
       ];
 
       const structuredData = healthAnalyzer.structureMedicalData(trendIndicators);
@@ -127,19 +127,19 @@ describe('Health Analyzer', () => {
           value: '', // 空值
           unit: 'mmHg',
           category: '心血管',
-          status: 'unknown'
+          status: 'unknown',
         },
         {
           name: '心率',
           value: 72,
           unit: 'bpm', // 缺少reference range
-          category: '心血管'
+          category: '心血管',
         },
         {
           name: '体温', // 缺少value
           unit: '°C',
-          category: '生命体征'
-        }
+          category: '生命体征',
+        },
       ];
 
       const structuredData = healthAnalyzer.structureMedicalData(incompleteIndicators);
@@ -160,7 +160,7 @@ describe('Health Analyzer', () => {
         bmi: 27.8,
         health_goals: ['weight_loss'],
         dietary_preferences: ['balanced'],
-        allergies: []
+        allergies: [],
       };
 
       const medicalData = {
@@ -172,7 +172,7 @@ describe('Health Analyzer', () => {
         glucose: 5.8,
         family_history: ['heart_disease'],
         smoking_status: 'former',
-        exercise_frequency: 'rarely'
+        exercise_frequency: 'rarely',
       };
 
       const riskAssessment = healthAnalyzer.assessHealthRisks(userProfile, medicalData);
@@ -194,7 +194,7 @@ describe('Health Analyzer', () => {
         bmi: 27.5,
         health_goals: [],
         dietary_preferences: [],
-        allergies: []
+        allergies: [],
       };
 
       const medicalData = {
@@ -202,7 +202,7 @@ describe('Health Analyzer', () => {
         blood_pressure: '135/85',
         glucose: 6.0,
         hdl_cholesterol: 1.1,
-        triglycerides: 1.9
+        triglycerides: 1.9,
       };
 
       const riskAssessment = healthAnalyzer.assessHealthRisks(userProfile, medicalData);
@@ -221,14 +221,14 @@ describe('Health Analyzer', () => {
         bmi: 20.1,
         health_goals: ['muscle_gain'],
         dietary_preferences: ['vegetarian'],
-        allergies: ['dairy', 'nuts']
+        allergies: ['dairy', 'nuts'],
       };
 
       const nutritionData = {
         dietary_restrictions: ['vegetarian', 'dairy_free', 'nut_free'],
         supplement_use: ['protein_powder'],
         recent_weight_change: -2,
-        appetite_level: 'poor'
+        appetite_level: 'poor',
       };
 
       const riskAssessment = healthAnalyzer.assessNutritionalRisks(userProfile, nutritionData);
@@ -250,13 +250,13 @@ describe('Health Analyzer', () => {
         bmi: 27.8,
         health_goals: ['weight_loss'],
         dietary_preferences: ['balanced'],
-        allergies: []
+        allergies: [],
       };
 
       const healthAnalysis = {
         risk_level: 'medium',
         key_findings: ['Overweight', 'Elevated blood pressure'],
-        activity_level: 'sedentary'
+        activity_level: 'sedentary',
       };
 
       const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['weight_loss']);
@@ -277,13 +277,13 @@ describe('Health Analyzer', () => {
         bmi: 21.6,
         health_goals: ['muscle_gain'],
         dietary_preferences: ['high_protein'],
-        allergies: []
+        allergies: [],
       };
 
       const healthAnalysis = {
         risk_level: 'low',
         key_findings: ['Normal weight', 'Good muscle mass'],
-        activity_level: 'active'
+        activity_level: 'active',
       };
 
       const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['muscle_gain']);
@@ -303,13 +303,13 @@ describe('Health Analyzer', () => {
         bmi: 22.0,
         health_goals: ['weight_maintenance'],
         dietary_preferences: ['vegetarian'],
-        allergies: ['dairy', 'gluten']
+        allergies: ['dairy', 'gluten'],
       };
 
       const healthAnalysis = {
         risk_level: 'low',
         key_findings: ['Healthy weight'],
-        activity_level: 'moderate'
+        activity_level: 'moderate',
       };
 
       const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['weight_maintenance']);
@@ -331,12 +331,12 @@ describe('Health Analyzer', () => {
         processed_foods: 'high',
         sodium_intake: 'high',
         fruit_vegetable_intake: 'low',
-        alcohol_consumption: 'moderate'
+        alcohol_consumption: 'moderate',
       };
 
       const adjustments = healthAnalyzer.generateDietaryAdjustments({
         health_issues,
-        current_diet: currentDiet
+        current_diet: currentDiet,
       });
 
       expect(adjustments).toContain('减少钠盐摄入至每日<5g');
@@ -350,12 +350,12 @@ describe('Health Analyzer', () => {
       const currentDiet = {
         saturated_fat: 'high',
         fiber_intake: 'low',
-        omega_3_intake: 'low'
+        omega_3_intake: 'low',
       };
 
       const adjustments = healthAnalyzer.generateDietaryAdjustments({
         health_issues,
-        current_diet: currentDiet
+        current_diet: currentDiet,
       });
 
       expect(adjustments).toContain('减少饱和脂肪摄入');
@@ -369,12 +369,12 @@ describe('Health Analyzer', () => {
       const currentDiet = {
         refined_carbs: 'high',
         fiber_intake: 'low',
-        meal_timing: 'irregular'
+        meal_timing: 'irregular',
       };
 
       const adjustments = healthAnalyzer.generateDietaryAdjustments({
         health_issues,
-        current_diet: currentDiet
+        current_diet: currentDiet,
       });
 
       expect(adjustments).toContain('选择低升糖指数碳水化合物');
@@ -393,12 +393,12 @@ describe('Health Analyzer', () => {
           { issue: '轻度高血压', severity: 'moderate', urgency: 'medium' },
           { issue: '维生素D缺乏', severity: 'mild', urgency: 'low' },
           { issue: '肥胖', severity: 'moderate', urgency: 'high' },
-          { issue: '高胆固醇', severity: 'moderate', urgency: 'medium' }
+          { issue: '高胆固醇', severity: 'moderate', urgency: 'medium' },
         ],
         risk_assessment: {
           immediate_risks: ['cardiovascular_disease'],
-          long_term_risks: ['diabetes', 'osteoporosis']
-        }
+          long_term_risks: ['diabetes', 'osteoporosis'],
+        },
       };
 
       const prioritizedConcerns = healthAnalyzer.prioritizeHealthConcerns(healthAnalysis);
@@ -416,8 +416,8 @@ describe('Health Analyzer', () => {
         key_findings: [
           { issue: '运动不足', severity: 'mild', urgency: 'low' },
           { issue: '睡眠质量差', severity: 'mild', urgency: 'low' },
-          { issue: '压力过大', severity: 'moderate', urgency: 'medium' }
-        ]
+          { issue: '压力过大', severity: 'moderate', urgency: 'medium' },
+        ],
       };
 
       const userGoals = ['weight_loss', 'muscle_gain'];
@@ -445,30 +445,30 @@ describe('Health Analyzer', () => {
               key_findings: [
                 '体重略超重',
                 '血压偏高',
-                '需要改善饮食结构'
+                '需要改善饮食结构',
               ],
               risk_assessment: {
                 level: 'medium',
                 concerns: ['hypertension_risk', 'metabolic_syndrome_risk'],
-                urgent_actions: ['减重5-10kg', '降低血压至130/80以下']
+                urgent_actions: ['减重5-10kg', '降低血压至130/80以下'],
               },
               nutritional_recommendations: {
                 macro_distribution: {
                   carbs_percent: 45,
                   protein_percent: 25,
-                  fat_percent: 30
+                  fat_percent: 30,
                 },
                 daily_calories: 1800,
-                micronutrients: ['vitamin_d', 'omega_3', 'magnesium']
+                micronutrients: ['vitamin_d', 'omega_3', 'magnesium'],
               },
               lifestyle_modifications: [
                 '每周至少150分钟中等强度运动',
                 '保证7-8小时睡眠',
-                '学习压力管理技巧'
-              ]
-            })
-          }
-        }]
+                '学习压力管理技巧',
+              ],
+            }),
+          },
+        }],
       });
     });
 
@@ -481,7 +481,7 @@ describe('Health Analyzer', () => {
         bmi: 26.8,
         health_goals: ['weight_loss'],
         dietary_preferences: ['balanced'],
-        allergies: []
+        allergies: [],
       };
 
       const medicalData = {
@@ -490,7 +490,7 @@ describe('Health Analyzer', () => {
         cholesterol: 5.8,
         glucose: 5.6,
         weight_trend: 'increasing',
-        exercise_level: 'low'
+        exercise_level: 'low',
       };
 
       const analysis = await healthAnalyzer.analyzeHealthStatus(userProfile, medicalData);
@@ -514,12 +514,12 @@ describe('Health Analyzer', () => {
         bmi: 22.0,
         health_goals: [],
         dietary_preferences: [],
-        allergies: []
+        allergies: [],
       };
 
       const medicalData = {
         blood_pressure: '120/80',
-        heart_rate: 72
+        heart_rate: 72,
       };
 
       await expect(healthAnalyzer.analyzeHealthStatus(userProfile, medicalData)).rejects.toThrow('AI service unavailable');
@@ -534,12 +534,12 @@ describe('Health Analyzer', () => {
         bmi: 22.9,
         health_goals: [],
         dietary_preferences: [],
-        allergies: []
+        allergies: [],
       };
 
       const medicalData = {
         blood_pressure: '120/80',
-        heart_rate: 70
+        heart_rate: 70,
       };
 
       // 第一次分析
@@ -561,10 +561,10 @@ describe('Health Analyzer', () => {
         nutritional_recommendations: {
           macro_distribution: { carbs_percent: 45, protein_percent: 25, fat_percent: 30 },
           daily_calories: 1800,
-          micronutrients: ['vitamin_d', 'omega_3']
+          micronutrients: ['vitamin_d', 'omega_3'],
         },
         lifestyle_modifications: ['增加运动', '改善睡眠'],
-        follow_up_suggestions: ['3个月后复查血压', '6个月后全面体检']
+        follow_up_suggestions: ['3个月后复查血压', '6个月后全面体检'],
       };
 
       const report = healthAnalyzer.generateHealthReport(analysisResults);
@@ -582,7 +582,7 @@ describe('Health Analyzer', () => {
       const technicalResults = {
         risk_factors: ['hypertension_stage_1', 'overweight_class_1'],
         metabolic_profile: { insulin_resistance: 'mild', lipid_profile: 'borderline_high' },
-        nutritional_deficiencies: ['vitamin_d_insufficient', 'omega_3_deficient']
+        nutritional_deficiencies: ['vitamin_d_insufficient', 'omega_3_deficient'],
       };
 
       const userFriendlyAdvice = healthAnalyzer.generateUserFriendlyAdvice(technicalResults);
@@ -601,7 +601,7 @@ describe('Health Analyzer', () => {
         data_completeness: 0.8,
         data_recency: 0.9,
         consistency_score: 0.85,
-        confidence_level: 0.78
+        confidence_level: 0.78,
       };
 
       const quality = healthAnalyzer.assessAnalysisQuality(analysisResult);
@@ -618,7 +618,7 @@ describe('Health Analyzer', () => {
       const poorQualityData = {
         blood_pressure: { value: null, last_measured: '2023-01-01' },
         weight: { value: 70, last_measured: '2024-10-30' },
-        cholesterol: { value: undefined, last_measured: '2022-12-01' }
+        cholesterol: { value: undefined, last_measured: '2022-12-01' },
       };
 
       const qualityIssues = healthAnalyzer.identifyDataQualityIssues(poorQualityData);

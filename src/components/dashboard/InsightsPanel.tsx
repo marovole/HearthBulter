@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 
 interface InsightsPanelProps {
   memberId: string
@@ -18,37 +18,37 @@ interface HealthScore {
 }
 
 export function InsightsPanel({ memberId }: InsightsPanelProps) {
-  const [healthScore, setHealthScore] = useState<HealthScore | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [weightTrend, setWeightTrend] = useState<any>(null)
+  const [healthScore, setHealthScore] = useState<HealthScore | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [weightTrend, setWeightTrend] = useState<any>(null);
 
   useEffect(() => {
-    loadData()
-  }, [memberId])
+    loadData();
+  }, [memberId]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const [scoreResponse, trendResponse] = await Promise.all([
         fetch(`/api/dashboard/health-score?memberId=${memberId}`),
         fetch(`/api/dashboard/weight-trend?memberId=${memberId}&days=30`),
-      ])
+      ]);
 
       if (scoreResponse.ok) {
-        const scoreData = await scoreResponse.json()
-        setHealthScore(scoreData.data)
+        const scoreData = await scoreResponse.json();
+        setHealthScore(scoreData.data);
       }
 
       if (trendResponse.ok) {
-        const trendData = await trendResponse.json()
-        setWeightTrend(trendData.data)
+        const trendData = await trendResponse.json();
+        setWeightTrend(trendData.data);
       }
     } catch (err) {
-      console.error('加载洞察数据失败:', err)
+      console.error('加载洞察数据失败:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -59,14 +59,14 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
           <div className="h-4 bg-gray-200 rounded w-3/4"></div>
         </div>
       </div>
-    )
+    );
   }
 
-  const insights: string[] = []
+  const insights: string[] = [];
 
   // 从健康评分获取建议
   if (healthScore?.recommendations) {
-    insights.push(...healthScore.recommendations)
+    insights.push(...healthScore.recommendations);
   }
 
   // 从体重趋势获取洞察
@@ -74,18 +74,18 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
     if (weightTrend.anomalies && weightTrend.anomalies.length > 0) {
       const highSeverityAnomalies = weightTrend.anomalies.filter(
         (a: any) => a.severity === 'high'
-      )
+      );
       if (highSeverityAnomalies.length > 0) {
         insights.push(
           `检测到${highSeverityAnomalies.length}个体重异常波动，建议关注数据准确性`
-        )
+        );
       }
     }
 
     if (weightTrend.changePercent > 5) {
       insights.push(
         `过去30天体重${weightTrend.change >= 0 ? '增加' : '减少'}了${Math.abs(weightTrend.changePercent).toFixed(1)}%，${weightTrend.change >= 0 ? '注意控制饮食' : '继续保持'}`
-      )
+      );
     }
   }
 
@@ -94,13 +94,13 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
     if (healthScore.details.dataCompletenessRate < 50) {
       insights.push(
         `数据完整性较低（${Math.round(healthScore.details.dataCompletenessRate)}%），建议完善健康数据记录`
-      )
+      );
     }
 
     if (healthScore.details.activityFrequency < 15) {
       insights.push(
         `过去30天仅记录${healthScore.details.activityFrequency}天，建议每天记录健康数据以获取更准确的洞察`
-      )
+      );
     }
   }
 
@@ -179,6 +179,6 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
 

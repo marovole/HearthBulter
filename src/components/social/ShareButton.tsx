@@ -7,7 +7,7 @@ import {
   Download, 
   MessageCircle, 
   Heart,
-  MoreHorizontal
+  MoreHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,7 +45,7 @@ export function ShareButton({
   className,
   variant = 'outline',
   size = 'default',
-  onShare
+  onShare,
 }: ShareButtonProps) {
   const [isSharing, setIsSharing] = useState(false);
   const [shareData, setShareData] = useState<any>(null);
@@ -66,7 +66,7 @@ export function ShareButton({
           contentType,
           contentId,
           title,
-          description
+          description,
         }),
       });
 
@@ -100,7 +100,7 @@ export function ShareButton({
       fetch(`/api/social/share/${shareData.shareToken}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'share' })
+        body: JSON.stringify({ action: 'share' }),
       });
     } catch (error) {
       toast.error('复制失败');
@@ -157,7 +157,7 @@ export function ShareButton({
     fetch(`/api/social/share/${shareData.shareToken}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'share' })
+      body: JSON.stringify({ action: 'share' }),
     });
   };
 

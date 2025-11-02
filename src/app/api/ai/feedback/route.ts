@@ -38,13 +38,13 @@ export async function POST(request: NextRequest) {
     if (feedbackType === 'advice') {
       feedbackTarget = await prisma.aIAdvice.findUnique({
         where: { id: adviceId },
-        select: { memberId: true, type: true, content: true }
+        select: { memberId: true, type: true, content: true },
       });
       memberId = feedbackTarget?.memberId;
     } else if (feedbackType === 'conversation') {
       feedbackTarget = await prisma.aIConversation.findUnique({
         where: { id: adviceId },
-        select: { memberId: true, messages: true }
+        select: { memberId: true, messages: true },
       });
       memberId = feedbackTarget?.memberId;
     }
@@ -67,13 +67,13 @@ export async function POST(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
-      }
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
+      },
     });
 
     if (!member) {
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     if (feedbackType === 'advice') {
       const existingFeedback = await prisma.aIAdvice.findUnique({
         where: { id: adviceId },
-        select: { feedback: true }
+        select: { feedback: true },
       });
 
       const updatedFeedback = existingFeedback?.feedback
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         data: {
           feedback: updatedFeedback,
           updatedAt: new Date(),
-        }
+        },
       });
 
       // 如果是食谱优化反馈，传递给学习机制
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
           data: {
             messages,
             updatedAt: new Date(),
-          }
+          },
         });
       }
     }
@@ -200,13 +200,13 @@ export async function GET(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
-      }
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
+      },
     });
 
     if (!member) {

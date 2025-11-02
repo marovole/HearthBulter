@@ -64,7 +64,7 @@ describe('ShareGenerator', () => {
     const mockMember = {
       id: 'member-1',
       name: '测试用户',
-      family: { id: 'family-1' }
+      family: { id: 'family-1' },
     };
 
     const mockShareData = {
@@ -72,7 +72,7 @@ describe('ShareGenerator', () => {
       contentType: 'HEALTH_REPORT' as ShareContentType,
       contentId: 'report-1',
       title: '测试分享',
-      description: '测试描述'
+      description: '测试描述',
     };
 
     it('应该成功生成健康报告分享内容', async () => {
@@ -86,7 +86,7 @@ describe('ShareGenerator', () => {
         startDate: new Date('2024-01-01'),
         endDate: new Date('2024-01-07'),
         summary: '健康状况良好',
-        overallScore: 85
+        overallScore: 85,
       };
       
       mockPrisma.healthReport.findFirst.mockResolvedValue(mockReport);
@@ -102,10 +102,10 @@ describe('ShareGenerator', () => {
           reportType: 'WEEKLY',
           period: {
             start: new Date('2024-01-01'),
-            end: new Date('2024-01-07')
+            end: new Date('2024-01-07'),
           },
-          score: 85
-        }
+          score: 85,
+        },
       });
     });
 
@@ -130,13 +130,13 @@ describe('ShareGenerator', () => {
         member: { name: '测试用户' },
         reportType: 'WEEKLY',
         summary: '健康状况良好',
-        overallScore: 85
+        overallScore: 85,
       });
 
       const result = await generateShareContent({
         ...mockShareData,
         title: '自定义标题',
-        description: '自定义描述'
+        description: '自定义描述',
       });
 
       expect(result.title).toBe('自定义标题');
@@ -148,7 +148,7 @@ describe('ShareGenerator', () => {
     const mockMember = {
       id: 'member-1',
       name: '测试用户',
-      family: { id: 'family-1' }
+      family: { id: 'family-1' },
     };
 
     beforeEach(() => {
@@ -161,13 +161,13 @@ describe('ShareGenerator', () => {
         memberId: 'member-1',
         member: { name: '测试用户' },
         goalType: 'LOSE_WEIGHT',
-        progress: 100
+        progress: 100,
       });
 
       const result = await generateShareContent({
         memberId: 'member-1',
         contentType: 'GOAL_ACHIEVEMENT',
-        contentId: 'goal-1'
+        contentId: 'goal-1',
       });
 
       expect(result.title).toContain('目标达成');
@@ -181,13 +181,13 @@ describe('ShareGenerator', () => {
         mealType: 'BREAKFAST',
         date: new Date(),
         calories: 450,
-        foods: []
+        foods: [],
       });
 
       const result = await generateShareContent({
         memberId: 'member-1',
         contentType: 'MEAL_LOG',
-        contentId: 'meal-1'
+        contentId: 'meal-1',
       });
 
       expect(result.title).toContain('早餐打卡');
@@ -202,13 +202,13 @@ describe('ShareGenerator', () => {
         description: '成就描述',
         rarity: 'GOLD',
         points: 100,
-        isUnlocked: true
+        isUnlocked: true,
       });
 
       const result = await generateShareContent({
         memberId: 'member-1',
         contentType: 'ACHIEVEMENT',
-        contentId: 'achievement-1'
+        contentId: 'achievement-1',
       });
 
       expect(result.title).toContain('解锁了新成就');
@@ -218,7 +218,7 @@ describe('ShareGenerator', () => {
       await expect(generateShareContent({
         memberId: 'member-1',
         contentType: 'INVALID_TYPE' as ShareContentType,
-        contentId: 'test-1'
+        contentId: 'test-1',
       })).rejects.toThrow('不支持的分享内容类型');
     });
   });

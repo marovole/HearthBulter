@@ -7,7 +7,7 @@
 import type {
   IndicatorType,
   IndicatorStatus,
-} from '@prisma/client'
+} from '@prisma/client';
 
 /**
  * 解析出的指标数据
@@ -61,9 +61,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'mmol/L',
     normalRange: { max: 5.2 },
     getStatus: (value) => {
-      if (value > 6.2) return 'CRITICAL'
-      if (value > 5.2) return 'HIGH'
-      return 'NORMAL'
+      if (value > 6.2) return 'CRITICAL';
+      if (value > 5.2) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -76,9 +76,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'mmol/L',
     normalRange: { max: 3.4 },
     getStatus: (value) => {
-      if (value > 4.1) return 'CRITICAL'
-      if (value > 3.4) return 'HIGH'
-      return 'NORMAL'
+      if (value > 4.1) return 'CRITICAL';
+      if (value > 3.4) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -91,8 +91,8 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'mmol/L',
     normalRange: { min: 1.0 },
     getStatus: (value) => {
-      if (value < 0.9) return 'LOW'
-      return 'NORMAL'
+      if (value < 0.9) return 'LOW';
+      return 'NORMAL';
     },
   },
   {
@@ -105,9 +105,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'mmol/L',
     normalRange: { max: 1.7 },
     getStatus: (value) => {
-      if (value > 2.3) return 'CRITICAL'
-      if (value > 1.7) return 'HIGH'
-      return 'NORMAL'
+      if (value > 2.3) return 'CRITICAL';
+      if (value > 1.7) return 'HIGH';
+      return 'NORMAL';
     },
   },
 
@@ -122,9 +122,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'mmol/L',
     normalRange: { min: 3.9, max: 6.1 },
     getStatus: (value) => {
-      if (value >= 7.0 || value < 3.0) return 'CRITICAL'
-      if (value >= 6.1 || value < 3.9) return 'HIGH'
-      return 'NORMAL'
+      if (value >= 7.0 || value < 3.0) return 'CRITICAL';
+      if (value >= 6.1 || value < 3.9) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -137,9 +137,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'mmol/L',
     normalRange: { max: 7.8 },
     getStatus: (value) => {
-      if (value >= 11.1) return 'CRITICAL'
-      if (value >= 7.8) return 'HIGH'
-      return 'NORMAL'
+      if (value >= 11.1) return 'CRITICAL';
+      if (value >= 7.8) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -152,9 +152,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: '%',
     normalRange: { max: 6.5 },
     getStatus: (value) => {
-      if (value >= 8.0) return 'CRITICAL'
-      if (value >= 6.5) return 'HIGH'
-      return 'NORMAL'
+      if (value >= 8.0) return 'CRITICAL';
+      if (value >= 6.5) return 'HIGH';
+      return 'NORMAL';
     },
   },
 
@@ -169,9 +169,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'U/L',
     normalRange: { max: 40 },
     getStatus: (value) => {
-      if (value > 120) return 'CRITICAL'
-      if (value > 40) return 'HIGH'
-      return 'NORMAL'
+      if (value > 120) return 'CRITICAL';
+      if (value > 40) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -184,9 +184,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'U/L',
     normalRange: { max: 40 },
     getStatus: (value) => {
-      if (value > 120) return 'CRITICAL'
-      if (value > 40) return 'HIGH'
-      return 'NORMAL'
+      if (value > 120) return 'CRITICAL';
+      if (value > 40) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -199,9 +199,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'μmol/L',
     normalRange: { max: 21 },
     getStatus: (value) => {
-      if (value > 34) return 'CRITICAL'
-      if (value > 21) return 'HIGH'
-      return 'NORMAL'
+      if (value > 34) return 'CRITICAL';
+      if (value > 21) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -214,9 +214,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'μmol/L',
     normalRange: { max: 6.8 },
     getStatus: (value) => {
-      if (value > 10) return 'CRITICAL'
-      if (value > 6.8) return 'HIGH'
-      return 'NORMAL'
+      if (value > 10) return 'CRITICAL';
+      if (value > 6.8) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -228,9 +228,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'U/L',
     normalRange: { min: 40, max: 150 },
     getStatus: (value) => {
-      if (value > 300 || value < 30) return 'CRITICAL'
-      if (value > 150 || value < 40) return 'HIGH'
-      return 'NORMAL'
+      if (value > 300 || value < 30) return 'CRITICAL';
+      if (value > 150 || value < 40) return 'HIGH';
+      return 'NORMAL';
     },
   },
 
@@ -246,9 +246,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'μmol/L',
     normalRange: { max: 133 },
     getStatus: (value) => {
-      if (value > 200) return 'CRITICAL'
-      if (value > 133) return 'HIGH'
-      return 'NORMAL'
+      if (value > 200) return 'CRITICAL';
+      if (value > 133) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -261,9 +261,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'mmol/L',
     normalRange: { max: 7.1 },
     getStatus: (value) => {
-      if (value > 10) return 'CRITICAL'
-      if (value > 7.1) return 'HIGH'
-      return 'NORMAL'
+      if (value > 10) return 'CRITICAL';
+      if (value > 7.1) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -276,9 +276,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'μmol/L',
     normalRange: { max: 420 },
     getStatus: (value) => {
-      if (value > 600) return 'CRITICAL'
-      if (value > 420) return 'HIGH'
-      return 'NORMAL'
+      if (value > 600) return 'CRITICAL';
+      if (value > 420) return 'HIGH';
+      return 'NORMAL';
     },
   },
 
@@ -293,9 +293,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: '×10^9/L',
     normalRange: { min: 4.0, max: 10.0 },
     getStatus: (value) => {
-      if (value > 15 || value < 2) return 'CRITICAL'
-      if (value > 10 || value < 4) return 'HIGH'
-      return 'NORMAL'
+      if (value > 15 || value < 2) return 'CRITICAL';
+      if (value > 10 || value < 4) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -308,9 +308,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: '×10^12/L',
     normalRange: { min: 4.0, max: 5.5 },
     getStatus: (value) => {
-      if (value > 6 || value < 3) return 'CRITICAL'
-      if (value > 5.5 || value < 4) return 'HIGH'
-      return 'NORMAL'
+      if (value > 6 || value < 3) return 'CRITICAL';
+      if (value > 5.5 || value < 4) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -323,9 +323,9 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: 'g/L',
     normalRange: { min: 120, max: 160 },
     getStatus: (value) => {
-      if (value > 180 || value < 80) return 'CRITICAL'
-      if (value > 160 || value < 120) return 'HIGH'
-      return 'NORMAL'
+      if (value > 180 || value < 80) return 'CRITICAL';
+      if (value > 160 || value < 120) return 'HIGH';
+      return 'NORMAL';
     },
   },
   {
@@ -338,12 +338,12 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
     unit: '×10^9/L',
     normalRange: { min: 100, max: 300 },
     getStatus: (value) => {
-      if (value > 500 || value < 50) return 'CRITICAL'
-      if (value > 300 || value < 100) return 'HIGH'
-      return 'NORMAL'
+      if (value > 500 || value < 50) return 'CRITICAL';
+      if (value > 300 || value < 100) return 'HIGH';
+      return 'NORMAL';
     },
   },
-]
+];
 
 /**
  * 获取指标名称
@@ -370,23 +370,23 @@ function getIndicatorName(type: IndicatorType): string {
     HEMOGLOBIN: '血红蛋白',
     PLATELET: '血小板',
     OTHER: '其他',
-  }
-  return names[type] || '未知指标'
+  };
+  return names[type] || '未知指标';
 }
 
 /**
  * 获取参考范围字符串
  */
 function getReferenceRange(def: IndicatorDefinition): string {
-  const { min, max } = def.normalRange
+  const { min, max } = def.normalRange;
   if (min !== undefined && max !== undefined) {
-    return `${min}-${max} ${def.unit}`
+    return `${min}-${max} ${def.unit}`;
   } else if (min !== undefined) {
-    return `≥${min} ${def.unit}`
+    return `≥${min} ${def.unit}`;
   } else if (max !== undefined) {
-    return `<${max} ${def.unit}`
+    return `<${max} ${def.unit}`;
   }
-  return ''
+  return '';
 }
 
 /**
@@ -398,19 +398,19 @@ function extractReportDate(text: string): Date | undefined {
     /(\d{4})[年\-/](\d{1,2})[月\-/](\d{1,2})[日]?/g,
     /(\d{4})-(\d{2})-(\d{2})/g,
     /(\d{4})\/(\d{2})\/(\d{2})/g,
-  ]
+  ];
 
   for (const pattern of patterns) {
-    const match = text.match(pattern)
+    const match = text.match(pattern);
     if (match) {
       const dateStr = match[0]
         .replace(/年|月/g, '-')
         .replace(/日/g, '')
-        .replace(/\//g, '-')
+        .replace(/\//g, '-');
       try {
-        const date = new Date(dateStr)
+        const date = new Date(dateStr);
         if (!isNaN(date.getTime())) {
-          return date
+          return date;
         }
       } catch {
         // 忽略解析错误
@@ -418,7 +418,7 @@ function extractReportDate(text: string): Date | undefined {
     }
   }
 
-  return undefined
+  return undefined;
 }
 
 /**
@@ -430,16 +430,16 @@ function extractInstitution(text: string): string | undefined {
     /([\u4e00-\u9fa5]+医院)/,
     /([\u4e00-\u9fa5]+体检中心)/,
     /([\u4e00-\u9fa5]+医疗)/,
-  ]
+  ];
 
   for (const pattern of patterns) {
-    const match = text.match(pattern)
+    const match = text.match(pattern);
     if (match && match[1] && match[1].length >= 2) {
-      return match[1]
+      return match[1];
     }
   }
 
-  return undefined
+  return undefined;
 }
 
 /**
@@ -450,39 +450,39 @@ export class ReportParser {
    * 解析OCR文本，提取指标数据
    */
   static parse(text: string): ParsedReport {
-    const indicators: ParsedIndicator[] = []
-    const foundTypes = new Set<IndicatorType>()
+    const indicators: ParsedIndicator[] = [];
+    const foundTypes = new Set<IndicatorType>();
 
     // 遍历所有指标定义，提取数据
     for (const def of INDICATOR_DEFINITIONS) {
       // 避免重复提取同一指标
       if (foundTypes.has(def.type)) {
-        continue
+        continue;
       }
 
       // 尝试匹配所有模式
       for (const pattern of def.patterns) {
-        const matches = Array.from(text.matchAll(pattern))
+        const matches = Array.from(text.matchAll(pattern));
 
         if (matches.length > 0) {
           // 取第一个匹配的值（通常同一指标在报告中只出现一次）
-          const match = matches[0]
-          const valueStr = match[1]
+          const match = matches[0];
+          const valueStr = match[1];
 
           try {
-            const value = parseFloat(valueStr)
+            const value = parseFloat(valueStr);
 
             // 验证数值是否合理
             if (isNaN(value) || value < 0 || value > 10000) {
-              continue
+              continue;
             }
 
             // 判断状态
-            const status = def.getStatus(value)
-            const isAbnormal = status !== 'NORMAL'
+            const status = def.getStatus(value);
+            const isAbnormal = status !== 'NORMAL';
 
             // 获取参考范围
-            const referenceRange = getReferenceRange(def)
+            const referenceRange = getReferenceRange(def);
 
             indicators.push({
               indicatorType: def.type,
@@ -492,34 +492,34 @@ export class ReportParser {
               referenceRange,
               isAbnormal,
               status,
-            })
+            });
 
-            foundTypes.add(def.type)
-            break // 找到后跳出模式循环
+            foundTypes.add(def.type);
+            break; // 找到后跳出模式循环
           } catch (error) {
-            console.warn(`解析指标值失败: ${valueStr}`, error)
+            console.warn(`解析指标值失败: ${valueStr}`, error);
           }
         }
       }
     }
 
     // 提取报告元数据
-    const reportDate = extractReportDate(text)
-    const institution = extractInstitution(text)
+    const reportDate = extractReportDate(text);
+    const institution = extractInstitution(text);
     const reportType = text.includes('体检报告')
       ? '体检报告'
       : text.includes('血常规')
-      ? '血常规'
-      : text.includes('生化')
-      ? '生化检查'
-      : undefined
+        ? '血常规'
+        : text.includes('生化')
+          ? '生化检查'
+          : undefined;
 
     return {
       indicators,
       reportDate,
       institution,
       reportType,
-    }
+    };
   }
 
   /**
@@ -529,14 +529,14 @@ export class ReportParser {
     valid: boolean
     errors: string[]
   } {
-    const errors: string[] = []
+    const errors: string[] = [];
 
     if (parsed.indicators.length === 0) {
-      errors.push('未识别到任何健康指标')
+      errors.push('未识别到任何健康指标');
     }
 
     // 检查是否有异常值
-    const abnormalCount = parsed.indicators.filter((i) => i.isAbnormal).length
+    const abnormalCount = parsed.indicators.filter((i) => i.isAbnormal).length;
     if (abnormalCount > 0) {
       // 这不算错误，只是提醒
     }
@@ -544,10 +544,10 @@ export class ReportParser {
     return {
       valid: errors.length === 0,
       errors,
-    }
+    };
   }
 }
 
 // 导出单例实例
-export const reportParser = new ReportParser()
+export const reportParser = new ReportParser();
 

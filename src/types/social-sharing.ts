@@ -13,8 +13,8 @@ import type {
   AchievementRarity,
   LeaderboardType,
   CommunityPostType,
-  CommunityPostStatus
-} from '@prisma/client'
+  CommunityPostStatus,
+} from '@prisma/client';
 
 /**
  * 分享内容输入类型
@@ -255,8 +255,8 @@ export const SHARE_CONTENT_TYPE_LABELS: Record<ShareContentType, string> = {
   [ShareContentType.WEIGHT_MILESTONE]: '体重里程碑',
   [ShareContentType.CHECKIN_STREAK]: '连续打卡',
   [ShareContentType.PERSONAL_RECORD]: '个人记录',
-  [ShareContentType.COMMUNITY_POST]: '社区帖子'
-}
+  [ShareContentType.COMMUNITY_POST]: '社区帖子',
+};
 
 /**
  * 社交平台配置映射
@@ -271,8 +271,8 @@ export const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
   [SocialPlatform.FACEBOOK]: 'Facebook',
   [SocialPlatform.INSTAGRAM]: 'Instagram',
   [SocialPlatform.COPY_LINK]: '复制链接',
-  [SocialPlatform.DOWNLOAD]: '下载图片'
-}
+  [SocialPlatform.DOWNLOAD]: '下载图片',
+};
 
 /**
  * 分享模板配置
@@ -286,7 +286,7 @@ export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig
     quality: 90,
     backgroundColor: '#f8fafc',
     fontFamily: 'Inter, sans-serif',
-    branding: true
+    branding: true,
   },
   [ShareTemplate.GOAL_ACHIEVED]: {
     template: ShareTemplate.GOAL_ACHIEVED,
@@ -296,7 +296,7 @@ export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig
     quality: 90,
     backgroundColor: '#fef3c7',
     fontFamily: 'Inter, sans-serif',
-    branding: true
+    branding: true,
   },
   [ShareTemplate.ACHIEVEMENT_UNLOCKED]: {
     template: ShareTemplate.ACHIEVEMENT_UNLOCKED,
@@ -306,7 +306,7 @@ export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig
     quality: 90,
     backgroundColor: '#dbeafe',
     fontFamily: 'Inter, sans-serif',
-    branding: true
+    branding: true,
   },
   [ShareTemplate.WEIGHT_LOSS]: {
     template: ShareTemplate.WEIGHT_LOSS,
@@ -316,7 +316,7 @@ export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig
     quality: 90,
     backgroundColor: '#dcfce7',
     fontFamily: 'Inter, sans-serif',
-    branding: true
+    branding: true,
   },
   [ShareTemplate.STREAK_CELEBRATION]: {
     template: ShareTemplate.STREAK_CELEBRATION,
@@ -326,7 +326,7 @@ export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig
     quality: 90,
     backgroundColor: '#fce7f3',
     fontFamily: 'Inter, sans-serif',
-    branding: true
+    branding: true,
   },
   [ShareTemplate.RECIPE_CARD]: {
     template: ShareTemplate.RECIPE_CARD,
@@ -336,7 +336,7 @@ export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig
     quality: 90,
     backgroundColor: '#fff7ed',
     fontFamily: 'Inter, sans-serif',
-    branding: true
+    branding: true,
   },
   [ShareTemplate.PERSONAL_RECORD]: {
     template: ShareTemplate.PERSONAL_RECORD,
@@ -346,7 +346,7 @@ export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig
     quality: 90,
     backgroundColor: '#f3e8ff',
     fontFamily: 'Inter, sans-serif',
-    branding: true
+    branding: true,
   },
   [ShareTemplate.COMMUNITY_POST]: {
     template: ShareTemplate.COMMUNITY_POST,
@@ -356,9 +356,9 @@ export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig
     quality: 90,
     backgroundColor: '#f0fdf4',
     fontFamily: 'Inter, sans-serif',
-    branding: false
-  }
-}
+    branding: false,
+  },
+};
 
 /**
  * 成就类型配置
@@ -377,7 +377,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '🎯',
     color: '#3b82f6',
     rarity: 'COMMON',
-    points: 10
+    points: 10,
   },
   [AchievementType.SEVEN_DAY_STREAK]: {
     label: '连续打卡7天',
@@ -385,7 +385,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '🔥',
     color: '#ef4444',
     rarity: 'UNCOMMON',
-    points: 50
+    points: 50,
   },
   [AchievementType.MONTHLY_CHAMPION]: {
     label: '月度健康达人',
@@ -393,7 +393,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '👑',
     color: '#f59e0b',
     rarity: 'RARE',
-    points: 200
+    points: 200,
   },
   [AchievementType.WEIGHT_GOAL_ACHIEVED]: {
     label: '减重目标达成',
@@ -401,7 +401,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '🎯',
     color: '#10b981',
     rarity: 'UNCOMMON',
-    points: 100
+    points: 100,
   },
   [AchievementType.RECIPE_MASTER]: {
     label: '食谱达人',
@@ -409,7 +409,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '👨‍🍳',
     color: '#8b5cf6',
     rarity: 'RARE',
-    points: 150
+    points: 150,
   },
   [AchievementType.SOCIAL_BUTTERFLY]: {
     label: '社交达人',
@@ -417,7 +417,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '🦋',
     color: '#ec4899',
     rarity: 'EPIC',
-    points: 300
+    points: 300,
   },
   [AchievementType.PERFECT_WEEK]: {
     label: '完美一周',
@@ -425,7 +425,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '⭐',
     color: '#22c55e',
     rarity: 'RARE',
-    points: 180
+    points: 180,
   },
   [AchievementType.EARLY_BIRD]: {
     label: '早起达人',
@@ -433,7 +433,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '🐦',
     color: '#06b6d4',
     rarity: 'UNCOMMON',
-    points: 80
+    points: 80,
   },
   [AchievementType.CALORIE_CHAMPION]: {
     label: '卡路里管理大师',
@@ -441,7 +441,7 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '🏃',
     color: '#84cc16',
     rarity: 'EPIC',
-    points: 250
+    points: 250,
   },
   [AchievementType.INVITE_MASTER]: {
     label: '邀请达人',
@@ -449,9 +449,9 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
     icon: '👥',
     color: '#f97316',
     rarity: 'RARE',
-    points: 200
-  }
-}
+    points: 200,
+  },
+};
 
 /**
  * 排行榜类型配置
@@ -468,34 +468,34 @@ export const LEADERBOARD_TYPE_CONFIGS: Record<LeaderboardType, {
     description: '综合健康指标评分',
     unit: '分',
     sortDirection: 'desc',
-    timeframe: 'weekly'
+    timeframe: 'weekly',
   },
   [LeaderboardType.CHECKIN_STREAK]: {
     label: '连续打卡',
     description: '连续记录天数',
     unit: '天',
     sortDirection: 'desc',
-    timeframe: 'all-time'
+    timeframe: 'all-time',
   },
   [LeaderboardType.WEIGHT_LOSS]: {
     label: '减重排行',
     description: '累计减重量',
     unit: 'kg',
     sortDirection: 'desc',
-    timeframe: 'monthly'
+    timeframe: 'monthly',
   },
   [LeaderboardType.EXERCISE_MINUTES]: {
     label: '运动时长',
     description: '累计运动时间',
     unit: '分钟',
     sortDirection: 'desc',
-    timeframe: 'weekly'
+    timeframe: 'weekly',
   },
   [LeaderboardType.CALORIES_MANAGEMENT]: {
     label: '卡路里管理',
     description: '卡路里控制准确率',
     unit: '%',
     sortDirection: 'desc',
-    timeframe: 'monthly'
-  }
-}
+    timeframe: 'monthly',
+  },
+};

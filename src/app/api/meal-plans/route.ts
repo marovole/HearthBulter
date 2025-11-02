@@ -1,22 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
 
 // GET /api/meal-plans?startDate=...&endDate=...
 // Returns the most recent active meal plan for the authenticated user that overlaps the range.
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 })
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    const startDateParam = searchParams.get('startDate')
-    const endDateParam = searchParams.get('endDate')
+    const { searchParams } = new URL(request.url);
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
 
-    const rangeStart = startDateParam ? new Date(startDateParam) : undefined
-    const rangeEnd = endDateParam ? new Date(endDateParam) : undefined
+    const rangeStart = startDateParam ? new Date(startDateParam) : undefined;
+    const rangeEnd = endDateParam ? new Date(endDateParam) : undefined;
 
     // Find latest plan for any member belonging to this user
     const mealPlan = await prisma.mealPlan.findFirst({
@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
         member: { userId: session.user.id, deletedAt: null },
         ...(rangeStart && rangeEnd
           ? {
-              // overlap condition: plan.start <= rangeEnd AND plan.end >= rangeStart
-              startDate: { lte: rangeEnd },
-              endDate: { gte: rangeStart },
-            }
+            // overlap condition: plan.start <= rangeEnd AND plan.end >= rangeStart
+            startDate: { lte: rangeEnd },
+            endDate: { gte: rangeStart },
+          }
           : {}),
       },
       orderBy: { createdAt: 'desc' },
@@ -40,10 +40,10 @@ export async function GET(request: NextRequest) {
           orderBy: [{ date: 'asc' }, { mealType: 'asc' }],
         },
       },
-    })
+    });
 
     if (!mealPlan) {
-      return NextResponse.json({ message: '暂无食谱计划', plan: null }, { status: 200 })
+      return NextResponse.json({ message: '暂无食谱计划', plan: null }, { status: 200 });
     }
 
     // Shape minimal front-end expected structure
@@ -74,9 +74,9 @@ export async function GET(request: NextRequest) {
         nutritionSummary: null,
       },
       { status: 200 }
-    )
+    );
   } catch (error) {
-    console.error('获取食谱计划失败:', error)
-    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 })
+    console.error('获取食谱计划失败:', error);
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

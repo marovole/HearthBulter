@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 
 interface PlatformProduct {
   id: string
@@ -32,10 +32,10 @@ export function EcommerceIntegration({
   onProductSelect,
   onClose,
 }: EcommerceIntegrationProps) {
-  const [products, setProducts] = useState<PlatformProduct[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('all')
+  const [products, setProducts] = useState<PlatformProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
 
   const platforms = [
     { id: 'all', name: '全部平台' },
@@ -43,60 +43,60 @@ export function EcommerceIntegration({
     { id: 'hema', name: '盒马鲜生' },
     { id: 'jd', name: '京东到家' },
     { id: 'meituan', name: '美团买菜' },
-  ]
+  ];
 
   useEffect(() => {
-    fetchProducts()
-  }, [foodId, selectedPlatform])
+    fetchProducts();
+  }, [foodId, selectedPlatform]);
 
   const fetchProducts = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       const url = selectedPlatform === 'all' 
         ? `/api/ecommerce/match?foodId=${foodId}&amount=${amount}`
-        : `/api/ecommerce/match?foodId=${foodId}&amount=${amount}&platform=${selectedPlatform}`
+        : `/api/ecommerce/match?foodId=${foodId}&amount=${amount}&platform=${selectedPlatform}`;
 
-      const response = await fetch(url)
+      const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('获取商品信息失败')
+        throw new Error('获取商品信息失败');
       }
 
-      const data = await response.json()
-      setProducts(data.products || [])
+      const data = await response.json();
+      setProducts(data.products || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取商品信息失败')
+      setError(err instanceof Error ? err.message : '获取商品信息失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getAvailabilityText = (availability: string) => {
     switch (availability) {
-      case 'IN_STOCK':
-        return '有货'
-      case 'OUT_OF_STOCK':
-        return '缺货'
-      case 'LOW_STOCK':
-        return '库存紧张'
-      default:
-        return '未知'
+    case 'IN_STOCK':
+      return '有货';
+    case 'OUT_OF_STOCK':
+      return '缺货';
+    case 'LOW_STOCK':
+      return '库存紧张';
+    default:
+      return '未知';
     }
-  }
+  };
 
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
-      case 'IN_STOCK':
-        return 'text-green-600 bg-green-50'
-      case 'OUT_OF_STOCK':
-        return 'text-red-600 bg-red-50'
-      case 'LOW_STOCK':
-        return 'text-orange-600 bg-orange-50'
-      default:
-        return 'text-gray-600 bg-gray-50'
+    case 'IN_STOCK':
+      return 'text-green-600 bg-green-50';
+    case 'OUT_OF_STOCK':
+      return 'text-red-600 bg-red-50';
+    case 'LOW_STOCK':
+      return 'text-orange-600 bg-orange-50';
+    default:
+      return 'text-gray-600 bg-gray-50';
     }
-  }
+  };
 
   const formatPrice = (price: number, originalPrice?: number) => {
     if (originalPrice && originalPrice > price) {
@@ -105,10 +105,10 @@ export function EcommerceIntegration({
           <span className="text-red-600 font-semibold">¥{price.toFixed(2)}</span>
           <span className="text-gray-400 line-through text-sm">¥{originalPrice.toFixed(2)}</span>
         </div>
-      )
+      );
     }
-    return <span className="text-gray-900 font-semibold">¥{price.toFixed(2)}</span>
-  }
+    return <span className="text-gray-900 font-semibold">¥{price.toFixed(2)}</span>;
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -243,5 +243,5 @@ export function EcommerceIntegration({
         </div>
       </div>
     </div>
-  )
+  );
 }

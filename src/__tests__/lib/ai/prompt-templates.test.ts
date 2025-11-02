@@ -10,7 +10,7 @@ import {
   HEALTH_ANALYSIS_PROMPTS,
   RECIPE_OPTIMIZATION_PROMPTS,
   CHAT_PROMPTS,
-  REPORT_GENERATION_PROMPTS
+  REPORT_GENERATION_PROMPTS,
 } from '@/lib/services/ai/prompt-templates';
 
 describe('Prompt Templates', () => {
@@ -25,7 +25,7 @@ describe('Prompt Templates', () => {
         parameters: ['name', 'age'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = { name: 'John', age: 30 };
@@ -44,7 +44,7 @@ describe('Prompt Templates', () => {
         parameters: ['name', 'age'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = { name: 'John' };
@@ -63,7 +63,7 @@ describe('Prompt Templates', () => {
         parameters: ['name'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = {};
@@ -82,12 +82,12 @@ describe('Prompt Templates', () => {
         parameters: ['goals', 'allergies'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = {
         goals: ['weight_loss', 'muscle_gain'],
-        allergies: ['nuts', 'dairy']
+        allergies: ['nuts', 'dairy'],
       };
       const result = renderPrompt(template, variables);
 
@@ -104,11 +104,11 @@ describe('Prompt Templates', () => {
         parameters: ['health'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = {
-        health: { bmi: 22.5, bp: '120/80' }
+        health: { bmi: 22.5, bp: '120/80' },
       };
       const result = renderPrompt(template, variables);
 
@@ -127,7 +127,7 @@ describe('Prompt Templates', () => {
         parameters: ['name', 'age'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = { name: 'John', age: 30 };
@@ -147,7 +147,7 @@ describe('Prompt Templates', () => {
         parameters: ['name', 'age'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = { name: 'John' };
@@ -167,7 +167,7 @@ describe('Prompt Templates', () => {
         parameters: ['name'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = { name: 'John' };
@@ -262,7 +262,7 @@ describe('Prompt Templates', () => {
         weight: 70,
         health_goals: '减重、增肌',
         dietary_preferences: '均衡饮食',
-        allergies: '无'
+        allergies: '无',
       };
 
       const rendered = renderPrompt(template, variables);
@@ -293,7 +293,7 @@ describe('Prompt Templates', () => {
         recipe_info: '宫保鸡丁: 鸡肉500g, 花生100g, 辣椒50g',
         target_nutrition: '热量600kcal, 蛋白质40g',
         user_profile: '30岁男性，健身人群',
-        preferences: '减脂增肌，喜欢川菜'
+        preferences: '减脂增肌，喜欢川菜',
       };
 
       const rendered = renderPrompt(template, variables);
@@ -321,7 +321,7 @@ describe('Prompt Templates', () => {
         user_profile: '30岁男性，目标是减重',
         conversation_history: '用户: 我想减肥\n助手: 我可以帮您制定减重计划',
         current_message: '应该如何开始？',
-        context: '初次咨询'
+        context: '初次咨询',
       };
 
       const rendered = renderPrompt(template, variables);
@@ -349,7 +349,7 @@ describe('Prompt Templates', () => {
         user_profile: '30岁男性，程序员',
         health_data: '体重变化: 70kg -> 69kg, 运动次数: 3次',
         period: '2024年10月第3周',
-        report_type: '周报'
+        report_type: '周报',
       };
 
       const rendered = renderPrompt(template, variables);
@@ -372,7 +372,7 @@ describe('Prompt Templates', () => {
         parameters: ['name'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
@@ -392,7 +392,7 @@ describe('Prompt Templates', () => {
         parameters: ['content'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const longString = 'a'.repeat(10000);
@@ -416,7 +416,7 @@ describe('Prompt Templates', () => {
         parameters: ['name'],
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const variables = { name: 'John' };
@@ -447,7 +447,7 @@ describe('Prompt Templates', () => {
         parameters: Object.keys(variables),
         outputFormat: 'text' as const,
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       const startTime = performance.now();

@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { ChevronLeft, ChevronRight, Play, CheckCircle } from 'lucide-react'
-import Link from 'next/link'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { ChevronLeft, ChevronRight, Play, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 
 interface TutorialStep {
   id: string
@@ -35,14 +35,14 @@ const tutorialSteps: TutorialStep[] = [
         '点击"添加数据"按钮',
         '选择要记录的指标类型（体重、血压、血糖等）',
         '输入测量数值和时间',
-        '点击"保存"完成录入'
+        '点击"保存"完成录入',
       ],
       tips: [
         '建议每天固定时间测量，如早晨起床后',
         '数据异常时系统会自动提醒',
-        '可以查看历史数据趋势图'
-      ]
-    }
+        '可以查看历史数据趋势图',
+      ],
+    },
   },
   {
     id: 'meal-planning',
@@ -57,14 +57,14 @@ const tutorialSteps: TutorialStep[] = [
         '查看今日推荐食谱',
         '点击食谱查看详细营养信息',
         '选择"接受"或"修改"食谱',
-        '确认后添加到您的食谱计划'
+        '确认后添加到您的食谱计划',
       ],
       tips: [
         '可以根据家庭成员调整食谱份量',
         '支持设置饮食偏好和禁忌',
-        '食谱会根据健康目标自动优化'
-      ]
-    }
+        '食谱会根据健康目标自动优化',
+      ],
+    },
   },
   {
     id: 'shopping-list',
@@ -79,14 +79,14 @@ const tutorialSteps: TutorialStep[] = [
         '查看根据食谱生成的清单',
         '勾选已购买的物品',
         '添加其他需要的物品',
-        '分享清单给家人或导出'
+        '分享清单给家人或导出',
       ],
       tips: [
         '清单按商店区域分类，方便购物',
         '可以设置提醒避免遗漏',
-        '支持多人协作编辑清单'
-      ]
-    }
+        '支持多人协作编辑清单',
+      ],
+    },
   },
   {
     id: 'device-sync',
@@ -101,58 +101,58 @@ const tutorialSteps: TutorialStep[] = [
         '点击"添加设备"按钮',
         '选择设备类型和品牌',
         '按照指引完成配对',
-        '设置同步频率和时间'
+        '设置同步频率和时间',
       ],
       tips: [
         '确保设备蓝牙已开启',
         '首次连接可能需要较长时间',
-        '可以手动触发同步或设置自动同步'
-      ]
-    }
-  }
-]
+        '可以手动触发同步或设置自动同步',
+      ],
+    },
+  },
+];
 
 export default function TutorialPage() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set())
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
 
   const handleNext = () => {
     if (currentStep < tutorialSteps.length - 1) {
-      markStepComplete(tutorialSteps[currentStep].id)
-      setCurrentStep(currentStep + 1)
+      markStepComplete(tutorialSteps[currentStep].id);
+      setCurrentStep(currentStep + 1);
     } else {
-      markStepComplete(tutorialSteps[currentStep].id)
+      markStepComplete(tutorialSteps[currentStep].id);
       // Complete all tutorials
-      completeAllTutorials()
+      completeAllTutorials();
     }
-  }
+  };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const markStepComplete = (stepId: string) => {
-    setCompletedSteps(prev => new Set(prev).add(stepId))
-  }
+    setCompletedSteps(prev => new Set(prev).add(stepId));
+  };
 
   const completeAllTutorials = () => {
-    localStorage.setItem('tutorials-completed', 'true')
-    window.location.href = '/dashboard'
-  }
+    localStorage.setItem('tutorials-completed', 'true');
+    window.location.href = '/dashboard';
+  };
 
   const skipTutorial = () => {
-    localStorage.setItem('tutorials-completed', 'true')
-    window.location.href = '/dashboard'
-  }
+    localStorage.setItem('tutorials-completed', 'true');
+    window.location.href = '/dashboard';
+  };
 
   const goToStep = (index: number) => {
-    setCurrentStep(index)
-  }
+    setCurrentStep(index);
+  };
 
-  const currentTutorial = tutorialSteps[currentStep]
-  const progress = (completedSteps.size / tutorialSteps.length) * 100
+  const currentTutorial = tutorialSteps[currentStep];
+  const progress = (completedSteps.size / tutorialSteps.length) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
@@ -193,8 +193,8 @@ export default function TutorialPage() {
                 index === currentStep
                   ? 'bg-blue-600 text-white'
                   : completedSteps.has(tutorial.id)
-                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
               <div className="flex items-center space-x-2">
@@ -303,5 +303,5 @@ export default function TutorialPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

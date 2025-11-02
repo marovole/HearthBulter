@@ -9,9 +9,9 @@
  * - 数据完整性评分（20分）
  */
 
-import { prisma } from '@/lib/db'
-import { calculateBMI } from '@/lib/health-calculations'
-import { subDays } from 'date-fns'
+import { prisma } from '@/lib/db';
+import { calculateBMI } from '@/lib/health-calculations';
+import { subDays } from 'date-fns';
 
 export interface HealthScore {
   totalScore: number // 总分（0-100）
@@ -54,35 +54,35 @@ export class HealthScoreCalculator {
           orderBy: { measuredAt: 'desc' },
         },
       },
-    })
+    });
 
     if (!member) {
-      throw new Error('成员不存在')
+      throw new Error('成员不存在');
     }
 
     // 1. BMI评分（30分）
-    const bmiScore = this.calculateBMIScore(member)
+    const bmiScore = this.calculateBMIScore(member);
     const bmi = member.height && member.weight
       ? calculateBMI(member.weight, member.height)
-      : null
+      : null;
 
     // 2. 营养达标率评分（30分）
-    const nutritionScore = await this.calculateNutritionScore(memberId)
+    const nutritionScore = await this.calculateNutritionScore(memberId);
 
     // 3. 运动频率评分（20分）
-    const activityScore = this.calculateActivityScore(member.healthData)
+    const activityScore = this.calculateActivityScore(member.healthData);
 
     // 4. 数据完整性评分（20分）
     const dataCompletenessScore = this.calculateDataCompletenessScore(
       member.healthData
-    )
+    );
 
     const totalScore = Math.round(
       bmiScore.score +
         nutritionScore.score +
         activityScore.score +
         dataCompletenessScore.score
-    )
+    );
 
     // 生成建议
     const recommendations = this.generateRecommendations({
@@ -90,7 +90,7 @@ export class HealthScoreCalculator {
       nutritionScore,
       activityScore,
       dataCompletenessScore,
-    })
+    });
 
     return {
       totalScore,
@@ -108,7 +108,7 @@ export class HealthScoreCalculator {
         dataCompletenessRate: dataCompletenessScore.completenessRate,
       },
       recommendations,
-    }
+    };
   }
 
   /**
@@ -122,29 +122,29 @@ export class HealthScoreCalculator {
     category: 'underweight' | 'normal' | 'overweight' | 'obese' | null
   } {
     if (!member.height || !member.weight) {
-      return { score: 0, category: null }
+      return { score: 0, category: null };
     }
 
-    const bmi = calculateBMI(member.weight, member.height)
-    let score = 0
+    const bmi = calculateBMI(member.weight, member.height);
+    let score = 0;
     let category: 'underweight' | 'normal' | 'overweight' | 'obese' | null =
-      null
+      null;
 
     if (bmi < 18.5) {
-      score = 15 // 偏瘦
-      category = 'underweight'
+      score = 15; // 偏瘦
+      category = 'underweight';
     } else if (bmi >= 18.5 && bmi <= 24.9) {
-      score = 30 // 正常范围
-      category = 'normal'
+      score = 30; // 正常范围
+      category = 'normal';
     } else if (bmi >= 25 && bmi <= 29.9) {
-      score = 20 // 超重
-      category = 'overweight'
+      score = 20; // 超重
+      category = 'overweight';
     } else {
-      score = 10 // 肥胖
-      category = 'obese'
+      score = 10; // 肥胖
+      category = 'obese';
     }
 
-    return { score, category }
+    return { score, category };
   }
 
   /**
@@ -165,17 +165,17 @@ export class HealthScoreCalculator {
           take: 1,
         },
       },
-    })
+    });
 
     if (!member || !member.healthGoals[0]) {
-      return { score: 0, adherenceRate: 0 }
+      return { score: 0, adherenceRate: 0 };
     }
 
     // 暂时返回中等评分，meal-planning完成后会基于实际数据计算
-    const adherenceRate = 70 // 假设70%达标率
-    const score = Math.round((adherenceRate / 100) * 30)
+    const adherenceRate = 70; // 假设70%达标率
+    const score = Math.round((adherenceRate / 100) * 30);
 
-    return { score, adherenceRate }
+    return { score, adherenceRate };
   }
 
   /**
@@ -191,15 +191,15 @@ export class HealthScoreCalculator {
     // 计算过去30天有记录的天数
     const daysWithData = new Set(
       healthData.map((d) => d.measuredAt.toISOString().split('T')[0])
-    ).size
+    ).size;
 
     // 理想情况：每天记录
-    const idealDays = 30
-    const frequency = daysWithData
-    const completenessRate = Math.min(100, (daysWithData / idealDays) * 100)
-    const score = Math.round((completenessRate / 100) * 20)
+    const idealDays = 30;
+    const frequency = daysWithData;
+    const completenessRate = Math.min(100, (daysWithData / idealDays) * 100);
+    const score = Math.round((completenessRate / 100) * 20);
 
-    return { score, frequency: daysWithData }
+    return { score, frequency: daysWithData };
   }
 
   /**
@@ -219,25 +219,25 @@ export class HealthScoreCalculator {
     completenessRate: number
   } {
     if (healthData.length === 0) {
-      return { score: 0, completenessRate: 0 }
+      return { score: 0, completenessRate: 0 };
     }
 
     // 计算数据完整性：检查各项指标是否有数据
-    const totalFields = healthData.length * 5 // 5个主要指标
-    let filledFields = 0
+    const totalFields = healthData.length * 5; // 5个主要指标
+    let filledFields = 0;
 
     healthData.forEach((data) => {
-      if (data.weight !== null) filledFields++
-      if (data.bodyFat !== null) filledFields++
-      if (data.muscleMass !== null) filledFields++
-      if (data.bloodPressureSystolic !== null) filledFields++
-      if (data.heartRate !== null) filledFields++
-    })
+      if (data.weight !== null) filledFields++;
+      if (data.bodyFat !== null) filledFields++;
+      if (data.muscleMass !== null) filledFields++;
+      if (data.bloodPressureSystolic !== null) filledFields++;
+      if (data.heartRate !== null) filledFields++;
+    });
 
-    const completenessRate = (filledFields / totalFields) * 100
-    const score = Math.round((completenessRate / 100) * 20)
+    const completenessRate = (filledFields / totalFields) * 100;
+    const score = Math.round((completenessRate / 100) * 20);
 
-    return { score, completenessRate }
+    return { score, completenessRate };
   }
 
   /**
@@ -249,16 +249,16 @@ export class HealthScoreCalculator {
     activityScore: { score: number; frequency: number }
     dataCompletenessScore: { score: number; completenessRate: number }
   }): string[] {
-    const recommendations: string[] = []
+    const recommendations: string[] = [];
 
     // BMI建议
     if (data.bmiScore.score < 30) {
       if (data.bmiScore.category === 'underweight') {
-        recommendations.push('BMI偏低，建议增加营养摄入和适度运动')
+        recommendations.push('BMI偏低，建议增加营养摄入和适度运动');
       } else if (data.bmiScore.category === 'overweight') {
-        recommendations.push('BMI偏高，建议控制饮食并增加有氧运动')
+        recommendations.push('BMI偏高，建议控制饮食并增加有氧运动');
       } else if (data.bmiScore.category === 'obese') {
-        recommendations.push('BMI过高，建议制定减重计划并咨询专业医生')
+        recommendations.push('BMI过高，建议制定减重计划并咨询专业医生');
       }
     }
 
@@ -266,32 +266,32 @@ export class HealthScoreCalculator {
     if (data.nutritionScore.score < 25) {
       recommendations.push(
         `营养达标率较低（${data.nutritionScore.adherenceRate}%），建议关注每日营养摄入`
-      )
+      );
     }
 
     // 运动建议
     if (data.activityScore.score < 15) {
       recommendations.push(
         `过去30天仅记录${data.activityScore.frequency}天，建议每天记录健康数据`
-      )
+      );
     }
 
     // 数据完整性建议
     if (data.dataCompletenessScore.score < 15) {
       recommendations.push(
         `数据完整性较低（${Math.round(data.dataCompletenessScore.completenessRate)}%），建议完善各项健康指标记录`
-      )
+      );
     }
 
     // 如果没有问题，给出正面鼓励
     if (recommendations.length === 0) {
-      recommendations.push('继续保持！您的健康数据表现良好')
+      recommendations.push('继续保持！您的健康数据表现良好');
     }
 
-    return recommendations
+    return recommendations;
   }
 }
 
 // 导出单例
-export const healthScoreCalculator = new HealthScoreCalculator()
+export const healthScoreCalculator = new HealthScoreCalculator();
 

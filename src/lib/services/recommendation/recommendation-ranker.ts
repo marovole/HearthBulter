@@ -44,8 +44,8 @@ export class RecommendationRanker {
           priceMatch: 0,
           nutritionMatch: 0,
           preferenceMatch: finalScore / 100,
-          seasonalMatch: 0
-        }
+          seasonalMatch: 0,
+        },
       };
     });
 
@@ -78,8 +78,8 @@ export class RecommendationRanker {
         tags: true,
         difficulty: true,
         totalTime: true,
-        estimatedCost: true
-      }
+        estimatedCost: true,
+      },
     });
 
     return candidates.map(candidate => {
@@ -92,7 +92,7 @@ export class RecommendationRanker {
         freshnessScore: this.calculateFreshnessScore(recipe),
         diversityScore: 0, // 将在多样性调整中计算
         personalizationScore: this.calculatePersonalizationScore(recipe, context),
-        qualityScore: this.calculateQualityScore(recipe)
+        qualityScore: this.calculateQualityScore(recipe),
       };
     });
   }
@@ -135,7 +135,7 @@ export class RecommendationRanker {
    * 计算个性化分数
    */
   private calculatePersonalizationScore(recipe: any, context: RecommendationContext): number {
-    let score = 50; // 基础分
+    const score = 50; // 基础分
 
     // 基于用户历史行为调整
     // 这里可以加入更复杂的个性化逻辑
@@ -210,7 +210,7 @@ export class RecommendationRanker {
       freshness: 0.1,   // 新鲜度
       diversity: 0.1,   // 多样性
       personalization: 0.2, // 个性化
-      quality: 0.1      // 质量分数
+      quality: 0.1,      // 质量分数
     };
 
     const weightedScore = 
@@ -303,7 +303,7 @@ export class RecommendationRanker {
     return {
       category: 'MAIN_DISH',
       cuisine: '川菜',
-      tags: '["辣", "快手菜"]'
+      tags: '["辣", "快手菜"]',
     };
   }
 
@@ -363,14 +363,14 @@ export class RecommendationRanker {
       price: '重点考虑了您的预算需求',
       nutrition: '优先考虑了您的营养目标',
       preference: '深度匹配了您的个人口味偏好',
-      seasonal: '推荐了当季最新鲜的食材搭配'
+      seasonal: '推荐了当季最新鲜的食材搭配',
     };
 
     if (topWeight[1] > 0.3) {
       explanations.push(weightExplanations[topWeight[0]]);
     }
 
-    return explanations.length > 0 ? explanations.join('，') + '。' : '经过多维度综合评估为您推荐。';
+    return explanations.length > 0 ? `${explanations.join('，')}。` : '经过多维度综合评估为您推荐。';
   }
 
   /**

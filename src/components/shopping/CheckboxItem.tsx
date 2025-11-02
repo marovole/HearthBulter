@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 interface ShoppingItem {
   id: string
@@ -24,9 +24,9 @@ interface CheckboxItemProps {
  */
 function formatAmount(amount: number): string {
   if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(1)} kg`
+    return `${(amount / 1000).toFixed(1)} kg`;
   }
-  return `${amount} g`
+  return `${amount} g`;
 }
 
 /**
@@ -34,9 +34,9 @@ function formatAmount(amount: number): string {
  */
 function formatPrice(price: number | null): string {
   if (price === null) {
-    return '暂无价格'
+    return '暂无价格';
   }
-  return `¥${price.toFixed(2)}`
+  return `¥${price.toFixed(2)}`;
 }
 
 export function CheckboxItem({ item, onToggle }: CheckboxItemProps) {
@@ -77,6 +77,6 @@ export function CheckboxItem({ item, onToggle }: CheckboxItemProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

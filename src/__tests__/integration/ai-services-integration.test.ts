@@ -14,10 +14,10 @@ jest.mock('@/lib/services/ai/openai-client', () => ({
   openaiClient: {
     chat: {
       completions: {
-        create: jest.fn()
-      }
-    }
-  }
+        create: jest.fn(),
+      },
+    },
+  },
 }));
 
 import { openaiClient } from '@/lib/services/ai/openai-client';
@@ -54,12 +54,12 @@ describe('AI Services Integration Tests', () => {
               key_findings: ['体重略超重', '血压偏高'],
               nutritional_recommendations: {
                 daily_calories: 1800,
-                macros: { carbs_percent: 45, protein_percent: 30, fat_percent: 25 }
+                macros: { carbs_percent: 45, protein_percent: 30, fat_percent: 25 },
               },
-              lifestyle_modifications: ['增加有氧运动', '减少钠盐摄入']
-            })
-          }
-        }]
+              lifestyle_modifications: ['增加有氧运动', '减少钠盐摄入'],
+            }),
+          },
+        }],
       });
 
       // 1. 执行健康分析
@@ -71,13 +71,13 @@ describe('AI Services Integration Tests', () => {
         bmi: 26.8,
         health_goals: ['weight_loss'],
         dietary_preferences: ['balanced'],
-        allergies: []
+        allergies: [],
       };
 
       const medicalData = {
         blood_pressure: '145/90',
         cholesterol: 5.8,
-        glucose: 5.6
+        glucose: 5.6,
       };
 
       const analysisResult = await healthAnalyzer.analyzeHealthStatus(userProfile, medicalData);
@@ -92,7 +92,7 @@ describe('AI Services Integration Tests', () => {
         gender: 'male',
         health_goals: ['weight_loss'],
         dietary_preferences: { diet_type: 'balanced' },
-        allergies: []
+        allergies: [],
       });
 
       // 3. 基于分析结果进行对话
@@ -105,9 +105,9 @@ describe('AI Services Integration Tests', () => {
       (openaiClient.chat.completions.create as jest.Mock).mockResolvedValueOnce({
         choices: [{
           message: {
-            content: '根据您的健康分析，我建议从以下方面开始改善：\n1. 控制血压：减少钠盐摄入，增加有氧运动\n2. 管理体重：控制每日热量在1800卡路里左右\n3. 改善饮食：增加蔬菜水果摄入，减少加工食品'
-          }
-        }]
+            content: '根据您的健康分析，我建议从以下方面开始改善：\n1. 控制血压：减少钠盐摄入，增加有氧运动\n2. 管理体重：控制每日热量在1800卡路里左右\n3. 改善饮食：增加蔬菜水果摄入，减少加工食品',
+          },
+        }],
       });
 
       const conversationHistory = conversationManager.formatConversationHistory(session.id);
@@ -124,7 +124,7 @@ describe('AI Services Integration Tests', () => {
       // Mock AI响应
       const mockResponse = '根据您的健康目标，建议每天摄入2000卡路里';
       (openaiClient.chat.completions.create as jest.Mock).mockResolvedValue({
-        choices: [{ message: { content: mockResponse } }]
+        choices: [{ message: { content: mockResponse } }],
       });
 
       const userProfile = {
@@ -133,7 +133,7 @@ describe('AI Services Integration Tests', () => {
         gender: 'male',
         health_goals: ['weight_loss'],
         dietary_preferences: null,
-        allergies: []
+        allergies: [],
       };
 
       // 创建会话
@@ -146,7 +146,7 @@ describe('AI Services Integration Tests', () => {
       const cacheKey1 = cache.generateKey({
         userProfile,
         message: '我应该摄入多少卡路里？',
-        context: 'nutrition_advice'
+        context: 'nutrition_advice',
       });
 
       await cache.set(cacheKey1, { response: mockResponse }, 3600);
@@ -157,7 +157,7 @@ describe('AI Services Integration Tests', () => {
       const cacheKey2 = cache.generateKey({
         userProfile,
         message: '我需要多少卡路里？',
-        context: 'nutrition_advice'
+        context: 'nutrition_advice',
       });
 
       // 缓存键应该相似但不完全相同（因为消息不同）
@@ -167,7 +167,7 @@ describe('AI Services Integration Tests', () => {
       const cacheKey3 = cache.generateKey({
         userProfile,
         message: '我应该摄入多少卡路里？',
-        context: 'nutrition_advice'
+        context: 'nutrition_advice',
       });
 
       const cachedResponse = await cache.get(cacheKey3);
@@ -217,18 +217,18 @@ describe('AI Services Integration Tests', () => {
                 overall_score: 80,
                 nutritional_recommendations: {
                   daily_calories: 1900,
-                  macros: { carbs_percent: 45, protein_percent: 30, fat_percent: 25 }
-                }
-              })
-            }
-          }]
+                  macros: { carbs_percent: 45, protein_percent: 30, fat_percent: 25 },
+                },
+              }),
+            },
+          }],
         })
         .mockResolvedValueOnce({
           choices: [{
             message: {
-              content: '根据您的健康目标，建议：\n1. 每日1900卡路里\n2. 蛋白质占30%\n3. 多吃蔬菜水果'
-            }
-          }]
+              content: '根据您的健康目标，建议：\n1. 每日1900卡路里\n2. 蛋白质占30%\n3. 多吃蔬菜水果',
+            },
+          }],
         });
 
       // 1. 用户档案设置
@@ -238,14 +238,14 @@ describe('AI Services Integration Tests', () => {
         gender: 'female',
         health_goals: ['weight_maintenance', 'muscle_tone'],
         dietary_preferences: { diet_type: 'mediterranean' },
-        allergies: ['dairy']
+        allergies: ['dairy'],
       };
 
       const medicalData = {
         weight: 65,
         height: 165,
         blood_pressure: '115/75',
-        resting_heart_rate: 65
+        resting_heart_rate: 65,
       };
 
       // 2. 健康分析
@@ -272,7 +272,7 @@ describe('AI Services Integration Tests', () => {
       const cacheKey = cache.generateKey({
         userProfile,
         medicalData,
-        analysisType: 'comprehensive'
+        analysisType: 'comprehensive',
       });
 
       await cache.set(cacheKey, analysis, 3600);
@@ -309,12 +309,12 @@ describe('AI Services Integration Tests', () => {
         gender: 'male',
         health_goals: ['heart_health'],
         dietary_preferences: null,
-        allergies: []
+        allergies: [],
       };
 
       const medicalData = {
         blood_pressure: '160/100',
-        cholesterol: 6.5
+        cholesterol: 6.5,
       };
 
       // 尝试健康分析，应该使用降级方案
@@ -338,14 +338,14 @@ describe('AI Services Integration Tests', () => {
         gender: 'male',
         health_goals: [],
         dietary_preferences: null,
-        allergies: []
+        allergies: [],
       };
 
       const medicalData = { weight: 70, height: 175 };
 
       // Mock快速AI响应
       (openaiClient.chat.completions.create as jest.Mock).mockResolvedValue({
-        choices: [{ message: { content: 'Quick response' } }]
+        choices: [{ message: { content: 'Quick response' } }],
       });
 
       // 创建多个并发会话

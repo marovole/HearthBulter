@@ -38,27 +38,27 @@ export async function GET(req: NextRequest) {
     let result;
 
     switch (type) {
-      case 'weight':
-        result = await getWeightTrend(memberId, days);
-        break;
+    case 'weight':
+      result = await getWeightTrend(memberId, days);
+      break;
 
-      case 'sleep':
-        result = await getSleepStats(memberId, days);
-        break;
+    case 'sleep':
+      result = await getSleepStats(memberId, days);
+      break;
 
-      case 'exercise':
-        result = await getExerciseStats(memberId, days);
-        break;
+    case 'exercise':
+      result = await getExerciseStats(memberId, days);
+      break;
 
-      case 'water':
-        result = await getWaterStats(memberId, days);
-        break;
+    case 'water':
+      result = await getWaterStats(memberId, days);
+      break;
 
-      default:
-        return NextResponse.json(
-          { error: '无效的统计类型' },
-          { status: 400 }
-        );
+    default:
+      return NextResponse.json(
+        { error: '无效的统计类型' },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(result);

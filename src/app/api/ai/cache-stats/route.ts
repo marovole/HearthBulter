@@ -40,15 +40,15 @@ export async function GET(request: NextRequest) {
         {
           error: 'Rate limit exceeded',
           retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime
+          resetTime: rateLimitResult.resetTime,
         },
         {
           status: 429,
           headers: {
             'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
             'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '60'
-          }
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
+          },
         }
       );
     }

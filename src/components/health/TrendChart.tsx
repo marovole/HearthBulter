@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 
 interface TrendDataPoint {
   date: string
@@ -42,48 +42,48 @@ interface TrendChartProps {
 }
 
 export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
-  const [trends, setTrends] = useState<TrendsResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [trends, setTrends] = useState<TrendsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadTrends()
-  }, [memberId, days])
+    loadTrends();
+  }, [memberId, days]);
 
   const loadTrends = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch(
         `/api/members/${memberId}/health-data/trends?days=${days}`
-      )
+      );
       if (!response.ok) {
-        throw new Error('加载趋势数据失败')
+        throw new Error('加载趋势数据失败');
       }
-      const data = await response.json()
-      setTrends(data)
+      const data = await response.json();
+      setTrends(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getTypeLabel = () => {
     switch (type) {
-      case 'weight':
-        return '体重 (kg)'
-      case 'bodyFat':
-        return '体脂率 (%)'
-      case 'muscleMass':
-        return '肌肉量 (kg)'
-      case 'heartRate':
-        return '心率 (bpm)'
-      case 'bloodPressure':
-        return '血压 (mmHg)'
-      default:
-        return ''
+    case 'weight':
+      return '体重 (kg)';
+    case 'bodyFat':
+      return '体脂率 (%)';
+    case 'muscleMass':
+      return '肌肉量 (kg)';
+    case 'heartRate':
+      return '心率 (bpm)';
+    case 'bloodPressure':
+      return '血压 (mmHg)';
+    default:
+      return '';
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -91,7 +91,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <p className="mt-2 text-sm text-gray-500">加载中...</p>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -99,71 +99,71 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
         <p className="text-sm text-red-800">{error}</p>
       </div>
-    )
+    );
   }
 
   if (!trends) {
-    return null
+    return null;
   }
 
-  const trendData = trends.trends[type]
+  const trendData = trends.trends[type];
 
   if (!trendData || (type !== 'bloodPressure' && trendData.data.length === 0)) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-500">暂无{getTypeLabel()}趋势数据</p>
       </div>
-    )
+    );
   }
 
   // 简单趋势图渲染（使用SVG）
   if (type === 'bloodPressure') {
-    const bpData = trends.trends.bloodPressure!
+    const bpData = trends.trends.bloodPressure!;
     if (bpData.data.length === 0) {
       return (
         <div className="text-center py-8">
           <p className="text-gray-500">暂无血压趋势数据</p>
         </div>
-      )
+      );
     }
 
-    const chartWidth = 800
-    const chartHeight = 200
-    const padding = 40
-    const chartAreaWidth = chartWidth - padding * 2
-    const chartAreaHeight = chartHeight - padding * 2
+    const chartWidth = 800;
+    const chartHeight = 200;
+    const padding = 40;
+    const chartAreaWidth = chartWidth - padding * 2;
+    const chartAreaHeight = chartHeight - padding * 2;
 
-    const maxSystolic = Math.max(...bpData.data.map((d) => d.systolic))
-    const minSystolic = Math.min(...bpData.data.map((d) => d.systolic))
-    const maxDiastolic = Math.max(...bpData.data.map((d) => d.diastolic))
-    const minDiastolic = Math.min(...bpData.data.map((d) => d.diastolic))
-    const max = Math.max(maxSystolic, maxDiastolic)
-    const min = Math.min(minSystolic, minDiastolic)
-    const range = max - min || 1
+    const maxSystolic = Math.max(...bpData.data.map((d) => d.systolic));
+    const minSystolic = Math.min(...bpData.data.map((d) => d.systolic));
+    const maxDiastolic = Math.max(...bpData.data.map((d) => d.diastolic));
+    const minDiastolic = Math.min(...bpData.data.map((d) => d.diastolic));
+    const max = Math.max(maxSystolic, maxDiastolic);
+    const min = Math.min(minSystolic, minDiastolic);
+    const range = max - min || 1;
 
     const points = bpData.data.map((d, i) => {
-      const x = padding + (i / (bpData.data.length - 1 || 1)) * chartAreaWidth
+      const x = padding + (i / (bpData.data.length - 1 || 1)) * chartAreaWidth;
       const ySystolic =
         padding +
         chartAreaHeight -
-        ((d.systolic - min) / range) * chartAreaHeight
+        ((d.systolic - min) / range) * chartAreaHeight;
       const yDiastolic =
         padding +
         chartAreaHeight -
-        ((d.diastolic - min) / range) * chartAreaHeight
-      return { x, ySystolic, yDiastolic, date: d.date }
-    })
+        ((d.diastolic - min) / range) * chartAreaHeight;
+      return { x, ySystolic, yDiastolic, date: d.date };
+    });
 
     const systolicPath = points
       .map(
         (p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.ySystolic}`
       )
-      .join(' ')
+      .join(' ');
     const diastolicPath = points
       .map(
         (p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yDiastolic}`
       )
-      .join(' ')
+      .join(' ');
 
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -173,7 +173,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
         <svg width={chartWidth} height={chartHeight} className="w-full">
           {/* 网格线 */}
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const y = padding + chartAreaHeight - ratio * chartAreaHeight
+            const y = padding + chartAreaHeight - ratio * chartAreaHeight;
             return (
               <line
                 key={ratio}
@@ -184,7 +184,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
                 stroke="#e5e7eb"
                 strokeWidth="1"
               />
-            )
+            );
           })}
           {/* 收缩压曲线 */}
           <path
@@ -229,31 +229,31 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // 其他类型的趋势图
-  const simpleTrendData = trendData as TrendData
-  const chartWidth = 800
-  const chartHeight = 200
-  const padding = 40
-  const chartAreaWidth = chartWidth - padding * 2
-  const chartAreaHeight = chartHeight - padding * 2
+  const simpleTrendData = trendData as TrendData;
+  const chartWidth = 800;
+  const chartHeight = 200;
+  const padding = 40;
+  const chartAreaWidth = chartWidth - padding * 2;
+  const chartAreaHeight = chartHeight - padding * 2;
 
-  const values = simpleTrendData.data.map((d) => d.value)
-  const max = simpleTrendData.max || Math.max(...values)
-  const min = simpleTrendData.min || Math.min(...values)
-  const range = max - min || 1
+  const values = simpleTrendData.data.map((d) => d.value);
+  const max = simpleTrendData.max || Math.max(...values);
+  const min = simpleTrendData.min || Math.min(...values);
+  const range = max - min || 1;
 
   const points = simpleTrendData.data.map((d, i) => {
-    const x = padding + (i / (simpleTrendData.data.length - 1 || 1)) * chartAreaWidth
-    const y = padding + chartAreaHeight - ((d.value - min) / range) * chartAreaHeight
-    return { x, y, value: d.value, date: d.date }
-  })
+    const x = padding + (i / (simpleTrendData.data.length - 1 || 1)) * chartAreaWidth;
+    const y = padding + chartAreaHeight - ((d.value - min) / range) * chartAreaHeight;
+    return { x, y, value: d.value, date: d.date };
+  });
 
   const path = points
     .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-    .join(' ')
+    .join(' ');
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -263,7 +263,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
       <svg width={chartWidth} height={chartHeight} className="w-full">
         {/* 网格线 */}
         {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-          const y = padding + chartAreaHeight - ratio * chartAreaHeight
+          const y = padding + chartAreaHeight - ratio * chartAreaHeight;
           return (
             <line
               key={ratio}
@@ -274,7 +274,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
               stroke="#e5e7eb"
               strokeWidth="1"
             />
-          )
+          );
         })}
         {/* 趋势线 */}
         <path d={path} fill="none" stroke="#3b82f6" strokeWidth="2" />
@@ -305,5 +305,5 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
         )}
       </div>
     </div>
-  )
+  );
 }

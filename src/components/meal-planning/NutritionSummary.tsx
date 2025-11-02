@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { MacroPieChart } from '@/components/dashboard/MacroPieChart'
+import { useState, useEffect } from 'react';
+import { MacroPieChart } from '@/components/dashboard/MacroPieChart';
 
 interface NutritionData {
   planId: string
@@ -30,55 +30,55 @@ interface NutritionSummaryProps {
 }
 
 function calculatePercentage(actual: number, target: number): number {
-  if (target === 0) return 0
-  return Math.min((actual / target) * 100, 100)
+  if (target === 0) return 0;
+  return Math.min((actual / target) * 100, 100);
 }
 
 function getProgressColor(percentage: number): string {
-  if (percentage >= 90 && percentage <= 110) return 'bg-green-600'
-  if (percentage >= 80 && percentage < 90) return 'bg-yellow-500'
-  if (percentage > 110) return 'bg-orange-500'
-  return 'bg-red-500'
+  if (percentage >= 90 && percentage <= 110) return 'bg-green-600';
+  if (percentage >= 80 && percentage < 90) return 'bg-yellow-500';
+  if (percentage > 110) return 'bg-orange-500';
+  return 'bg-red-500';
 }
 
 export function NutritionSummary({ planId }: NutritionSummaryProps) {
-  const [nutrition, setNutrition] = useState<NutritionData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [nutrition, setNutrition] = useState<NutritionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchNutrition()
-  }, [planId])
+    fetchNutrition();
+  }, [planId]);
 
   const fetchNutrition = async (isRefresh = false) => {
     try {
       if (isRefresh) {
-        setRefreshing(true)
+        setRefreshing(true);
       } else {
-        setLoading(true)
+        setLoading(true);
       }
-      setError(null)
+      setError(null);
 
-      const response = await fetch(`/api/meal-plans/${planId}/nutrition`)
+      const response = await fetch(`/api/meal-plans/${planId}/nutrition`);
 
       if (!response.ok) {
-        throw new Error('获取营养汇总失败')
+        throw new Error('获取营养汇总失败');
       }
 
-      const data = await response.json()
-      setNutrition(data)
+      const data = await response.json();
+      setNutrition(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误')
+      setError(err instanceof Error ? err.message : '未知错误');
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   const handleRefresh = () => {
-    fetchNutrition(true)
-  }
+    fetchNutrition(true);
+  };
 
   // 生成营养建议
   const getNutritionAdvice = (
@@ -86,15 +86,15 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
     target: number,
     nutrientName: string
   ): string | null => {
-    const percentage = (actual / target) * 100
+    const percentage = (actual / target) * 100;
     
     if (percentage < 80) {
-      return `${nutrientName}摄入偏低，建议适当增加富含${nutrientName}的食物`
+      return `${nutrientName}摄入偏低，建议适当增加富含${nutrientName}的食物`;
     } else if (percentage > 120) {
-      return `${nutrientName}摄入偏高，建议适当减少摄入量`
+      return `${nutrientName}摄入偏高，建议适当减少摄入量`;
     }
-    return null
-  }
+    return null;
+  };
 
   if (loading && !nutrition) {
     return (
@@ -106,7 +106,7 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -128,7 +128,7 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!nutrition) {
@@ -138,25 +138,25 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
           <p className="text-gray-600">暂无营养数据</p>
         </div>
       </div>
-    )
+    );
   }
 
   const caloriesPercentage = calculatePercentage(
     nutrition.daily.calories,
     nutrition.target.calories
-  )
+  );
   const proteinPercentage = calculatePercentage(
     nutrition.daily.protein,
     nutrition.target.protein
-  )
+  );
   const carbsPercentage = calculatePercentage(
     nutrition.daily.carbs,
     nutrition.target.carbs
-  )
+  );
   const fatPercentage = calculatePercentage(
     nutrition.daily.fat,
     nutrition.target.fat
-  )
+  );
 
   // 收集所有建议
   const adviceList = [
@@ -164,7 +164,7 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
     getNutritionAdvice(nutrition.daily.protein, nutrition.target.protein, '蛋白质'),
     getNutritionAdvice(nutrition.daily.carbs, nutrition.target.carbs, '碳水化合物'),
     getNutritionAdvice(nutrition.daily.fat, nutrition.target.fat, '脂肪'),
-  ].filter(Boolean)
+  ].filter(Boolean);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
@@ -401,6 +401,6 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 

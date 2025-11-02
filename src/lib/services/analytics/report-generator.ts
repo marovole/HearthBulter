@@ -152,8 +152,8 @@ export function generateHTMLReport(data: ReportData): string {
 
   const grade = data.summary.averageScore >= 90 ? gradeLabel[90]
     : data.summary.averageScore >= 75 ? gradeLabel[75]
-    : data.summary.averageScore >= 60 ? gradeLabel[60]
-    : gradeLabel[0];
+      : data.summary.averageScore >= 60 ? gradeLabel[60]
+        : gradeLabel[0];
 
   return `
 <!DOCTYPE html>
@@ -384,15 +384,15 @@ function calculatePeriod(
   const startDate = new Date();
 
   switch (reportType) {
-    case 'WEEKLY':
-      startDate.setDate(endDate.getDate() - 7);
-      break;
-    case 'MONTHLY':
-      startDate.setMonth(endDate.getMonth() - 1);
-      break;
-    case 'QUARTERLY':
-      startDate.setMonth(endDate.getMonth() - 3);
-      break;
+  case 'WEEKLY':
+    startDate.setDate(endDate.getDate() - 7);
+    break;
+  case 'MONTHLY':
+    startDate.setMonth(endDate.getMonth() - 1);
+    break;
+  case 'QUARTERLY':
+    startDate.setMonth(endDate.getMonth() - 3);
+    break;
   }
 
   return { startDate, endDate };

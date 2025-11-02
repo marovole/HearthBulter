@@ -96,16 +96,16 @@ async function getDailyStats(memberId: string, days: number) {
       dayStats.total += count;
 
       switch (stat.status) {
-        case 'SENT':
-          dayStats.sent += count;
-          break;
-        case 'FAILED':
-          dayStats.failed += count;
-          break;
-        case 'PENDING':
-        case 'SENDING':
-          dayStats.pending += count;
-          break;
+      case 'SENT':
+        dayStats.sent += count;
+        break;
+      case 'FAILED':
+        dayStats.failed += count;
+        break;
+      case 'PENDING':
+      case 'SENDING':
+        dayStats.pending += count;
+        break;
       }
     });
 
@@ -158,12 +158,12 @@ async function getChannelStats(memberId: string, days: number) {
     channelStats[channel].total += count;
 
     switch (log.status) {
-      case 'SENT':
-        channelStats[channel].sent += count;
-        break;
-      case 'FAILED':
-        channelStats[channel].failed += count;
-        break;
+    case 'SENT':
+      channelStats[channel].sent += count;
+      break;
+    case 'FAILED':
+      channelStats[channel].failed += count;
+      break;
     }
   });
 

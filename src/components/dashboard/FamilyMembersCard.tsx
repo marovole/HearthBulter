@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { 
   Users, 
   UserPlus, 
@@ -12,8 +12,8 @@ import {
   Mail,
   MoreHorizontal,
   Crown,
-  User
-} from 'lucide-react'
+  User,
+} from 'lucide-react';
 
 interface FamilyMember {
   id: string
@@ -41,56 +41,56 @@ interface FamilyMembersCardProps {
 export function FamilyMembersCard({ 
   members, 
   currentMemberId, 
-  onMemberSelect 
+  onMemberSelect, 
 }: FamilyMembersCardProps) {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
 
   const getHealthScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-100'
-    if (score >= 75) return 'text-blue-600 bg-blue-100'
-    if (score >= 60) return 'text-yellow-600 bg-yellow-100'
-    return 'text-red-600 bg-red-100'
-  }
+    if (score >= 90) return 'text-green-600 bg-green-100';
+    if (score >= 75) return 'text-blue-600 bg-blue-100';
+    if (score >= 60) return 'text-yellow-600 bg-yellow-100';
+    return 'text-red-600 bg-red-100';
+  };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin':
-        return <Crown className="h-4 w-4 text-yellow-500" />
-      case 'member':
-        return <User className="h-4 w-4 text-blue-500" />
-      case 'child':
-        return <User className="h-4 w-4 text-green-500" />
-      default:
-        return <User className="h-4 w-4 text-gray-500" />
+    case 'admin':
+      return <Crown className="h-4 w-4 text-yellow-500" />;
+    case 'member':
+      return <User className="h-4 w-4 text-blue-500" />;
+    case 'child':
+      return <User className="h-4 w-4 text-green-500" />;
+    default:
+      return <User className="h-4 w-4 text-gray-500" />;
     }
-  }
+  };
 
   const getRoleText = (role: string) => {
     switch (role) {
-      case 'admin':
-        return '管理员'
-      case 'member':
-        return '成员'
-      case 'child':
-        return '儿童'
-      default:
-        return '成员'
+    case 'admin':
+      return '管理员';
+    case 'member':
+      return '成员';
+    case 'child':
+      return '儿童';
+    default:
+      return '成员';
     }
-  }
+  };
 
   const formatLastActive = (date?: Date) => {
-    if (!date) return '从未活跃'
+    if (!date) return '从未活跃';
     
-    const now = new Date()
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
     
-    if (diffInHours < 1) return '刚刚活跃'
-    if (diffInHours < 24) return `${diffInHours}小时前`
-    if (diffInHours < 48) return '昨天'
-    if (diffInHours < 24 * 7) return `${Math.floor(diffInHours / 24)}天前`
-    return date.toLocaleDateString('zh-CN')
-  }
+    if (diffInHours < 1) return '刚刚活跃';
+    if (diffInHours < 24) return `${diffInHours}小时前`;
+    if (diffInHours < 48) return '昨天';
+    if (diffInHours < 24 * 7) return `${Math.floor(diffInHours / 24)}天前`;
+    return date.toLocaleDateString('zh-CN');
+  };
 
   const MemberCard = ({ member }: { member: FamilyMember }) => (
     <div
@@ -168,7 +168,7 @@ export function FamilyMembersCard({
         )}
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="space-y-6">
@@ -332,5 +332,5 @@ export function FamilyMembersCard({
         </div>
       </div>
     </div>
-  )
+  );
 }

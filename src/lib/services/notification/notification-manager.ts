@@ -8,7 +8,7 @@ import {
   NotificationType, 
   NotificationChannel, 
   NotificationPriority,
-  NotificationStatus 
+  NotificationStatus, 
 } from '@prisma/client';
 
 export interface CreateNotificationRequest {
@@ -288,60 +288,60 @@ export class NotificationManager {
       let cost: number | undefined;
 
       switch (channel) {
-        case NotificationChannel.IN_APP:
-          // 应用内通知直接标记为成功
-          externalId = notification.id;
-          break;
+      case NotificationChannel.IN_APP:
+        // 应用内通知直接标记为成功
+        externalId = notification.id;
+        break;
 
-        case NotificationChannel.EMAIL:
-          if (!preferences.emailEnabled) {
-            throw new Error('Email notifications disabled');
-          }
-          externalId = await this.emailService.send(
-            notification.memberId,
-            notification.title,
-            notification.content
-          );
-          cost = 0.1; // 假设邮件成本
-          break;
+      case NotificationChannel.EMAIL:
+        if (!preferences.emailEnabled) {
+          throw new Error('Email notifications disabled');
+        }
+        externalId = await this.emailService.send(
+          notification.memberId,
+          notification.title,
+          notification.content
+        );
+        cost = 0.1; // 假设邮件成本
+        break;
 
-        case NotificationChannel.SMS:
-          if (!preferences.phoneEnabled) {
-            throw new Error('SMS notifications disabled');
-          }
-          externalId = await this.smsService.send(
-            preferences.phoneNumber,
-            notification.content
-          );
-          cost = 0.05; // 假设短信成本
-          break;
+      case NotificationChannel.SMS:
+        if (!preferences.phoneEnabled) {
+          throw new Error('SMS notifications disabled');
+        }
+        externalId = await this.smsService.send(
+          preferences.phoneNumber,
+          notification.content
+        );
+        cost = 0.05; // 假设短信成本
+        break;
 
-        case NotificationChannel.WECHAT:
-          if (!preferences.wechatSubscribed) {
-            throw new Error('WeChat notifications disabled');
-          }
-          externalId = await this.wechatService.sendTemplateMessage(
-            preferences.wechatOpenId,
-            notification.type,
-            notification.title,
-            notification.content
-          );
-          break;
+      case NotificationChannel.WECHAT:
+        if (!preferences.wechatSubscribed) {
+          throw new Error('WeChat notifications disabled');
+        }
+        externalId = await this.wechatService.sendTemplateMessage(
+          preferences.wechatOpenId,
+          notification.type,
+          notification.title,
+          notification.content
+        );
+        break;
 
-        case NotificationChannel.PUSH:
-          if (!preferences.pushEnabled) {
-            throw new Error('Push notifications disabled');
-          }
-          externalId = await this.sendPushNotification(
-            preferences.pushToken,
-            notification.title,
-            notification.content,
-            notification.actionUrl
-          );
-          break;
+      case NotificationChannel.PUSH:
+        if (!preferences.pushEnabled) {
+          throw new Error('Push notifications disabled');
+        }
+        externalId = await this.sendPushNotification(
+          preferences.pushToken,
+          notification.title,
+          notification.content,
+          notification.actionUrl
+        );
+        break;
 
-        default:
-          throw new Error(`Unsupported channel: ${channel}`);
+      default:
+        throw new Error(`Unsupported channel: ${channel}`);
       }
 
       const processingTime = Date.now() - startTime;
@@ -503,7 +503,7 @@ export class NotificationManager {
     if (existingNotification) {
       return { 
         isDeduped: true, 
-        existingNotificationId: existingNotification.id 
+        existingNotificationId: existingNotification.id, 
       };
     }
 

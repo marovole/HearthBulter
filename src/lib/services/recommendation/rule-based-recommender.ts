@@ -30,14 +30,14 @@ export class RuleBasedRecommender {
     const whereClause: any = {
       status: 'PUBLISHED',
       isPublic: true,
-      deletedAt: null
+      deletedAt: null,
     };
 
     // 基础过滤条件
     if (context.mealType) {
       whereClause.mealTypes = {
         path: [],
-        string_contains: context.mealType
+        string_contains: context.mealType,
       };
     }
 
@@ -48,7 +48,7 @@ export class RuleBasedRecommender {
     if (context.season) {
       whereClause.seasons = {
         path: [],
-        string_contains: context.season
+        string_contains: context.season,
       };
     }
 
@@ -61,10 +61,10 @@ export class RuleBasedRecommender {
       where: whereClause,
       include: {
         ingredients: {
-          include: { food: true }
-        }
+          include: { food: true },
+        },
       },
-      take: limit * 3 // 获取更多候选以便筛选
+      take: limit * 3, // 获取更多候选以便筛选
     });
   }
 
@@ -73,7 +73,7 @@ export class RuleBasedRecommender {
    */
   private async scoreRecipes(recipes: any[], context: RecommendationContext): Promise<RecipeRecommendation[]> {
     const userPreference = await this.prisma.userPreference.findUnique({
-      where: { memberId: context.memberId }
+      where: { memberId: context.memberId },
     });
 
     return Promise.all(
@@ -84,7 +84,7 @@ export class RuleBasedRecommender {
           priceMatch: 0,
           nutritionMatch: 0,
           preferenceMatch: 0,
-          seasonalMatch: 0
+          seasonalMatch: 0,
         };
 
         // 1. 库存匹配评分 (0-30分)
@@ -117,7 +117,7 @@ export class RuleBasedRecommender {
           score,
           reasons: this.generateReasons(metadata),
           explanation: '', // 将在主引擎中生成
-          metadata
+          metadata,
         };
       })
     );
@@ -155,7 +155,7 @@ export class RuleBasedRecommender {
     const costThresholds = {
       LOW: 20,
       MEDIUM: 50,
-      HIGH: 100
+      HIGH: 100,
     };
 
     const threshold = costThresholds[userCostLevel as keyof typeof costThresholds];
@@ -183,9 +183,9 @@ export class RuleBasedRecommender {
     const healthGoal = await this.prisma.healthGoal.findFirst({
       where: { 
         memberId,
-        status: 'ACTIVE'
+        status: 'ACTIVE',
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
     if (!healthGoal) {
@@ -196,21 +196,21 @@ export class RuleBasedRecommender {
 
     // 根据目标类型调整评分
     switch (healthGoal.goalType) {
-      case 'LOSE_WEIGHT':
-        if (recipe.calories <= 400) score += 10;
-        if (recipe.carbs <= recipe.protein * 2) score += 5;
-        break;
-      case 'GAIN_MUSCLE':
-        if (recipe.protein >= 25) score += 10;
-        if (recipe.calories >= 500) score += 5;
-        break;
-      case 'MAINTAIN':
-        if (recipe.calories >= 300 && recipe.calories <= 600) score += 10;
-        break;
-      case 'IMPROVE_HEALTH':
-        if (recipe.fiber && recipe.fiber >= 5) score += 8;
-        if (recipe.sodium && recipe.sodium <= 600) score += 7;
-        break;
+    case 'LOSE_WEIGHT':
+      if (recipe.calories <= 400) score += 10;
+      if (recipe.carbs <= recipe.protein * 2) score += 5;
+      break;
+    case 'GAIN_MUSCLE':
+      if (recipe.protein >= 25) score += 10;
+      if (recipe.calories >= 500) score += 5;
+      break;
+    case 'MAINTAIN':
+      if (recipe.calories >= 300 && recipe.calories <= 600) score += 10;
+      break;
+    case 'IMPROVE_HEALTH':
+      if (recipe.fiber && recipe.fiber >= 5) score += 8;
+      if (recipe.sodium && recipe.sodium <= 600) score += 7;
+      break;
     }
 
     return Math.min(score, 30);
@@ -294,7 +294,7 @@ export class RuleBasedRecommender {
     // 暂时返回一些常见食材作为示例
     return [
       '鸡蛋', '西红柿', '土豆', '洋葱', '大蒜',
-      '鸡肉', '猪肉', '牛肉', '白菜', '胡萝卜'
+      '鸡肉', '猪肉', '牛肉', '白菜', '胡萝卜',
     ];
   }
 

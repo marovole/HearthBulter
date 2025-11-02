@@ -96,7 +96,7 @@ describe('Nutrition Tracking E2E Tests', () => {
 
       // 2. User starts meal check-in
       const checkInResponse = await fetch(
-        `http://localhost:3000/api/tracking/meals`,
+        'http://localhost:3000/api/tracking/meals',
         {
           method: 'POST',
           headers: {
@@ -137,7 +137,7 @@ describe('Nutrition Tracking E2E Tests', () => {
 
       // 4. User creates quick template
       const templateResponse = await fetch(
-        `http://localhost:3000/api/tracking/templates`,
+        'http://localhost:3000/api/tracking/templates',
         {
           method: 'POST',
           headers: {
@@ -163,7 +163,7 @@ describe('Nutrition Tracking E2E Tests', () => {
 
       // 5. User uses template for lunch
       const lunchFromTemplateResponse = await fetch(
-        `http://localhost:3000/api/tracking/meals/from-template`,
+        'http://localhost:3000/api/tracking/meals/from-template',
         {
           method: 'POST',
           headers: {
@@ -226,7 +226,7 @@ describe('Nutrition Tracking E2E Tests', () => {
 
       // 9. User sets up reminders
       const reminderResponse = await fetch(
-        `http://localhost:3000/api/tracking/reminders`,
+        'http://localhost:3000/api/tracking/reminders',
         {
           method: 'POST',
           headers: {
@@ -272,7 +272,7 @@ describe('Nutrition Tracking E2E Tests', () => {
         currentDate.setDate(currentDate.getDate() - (2 - day));
 
         // Breakfast
-        await fetch(`http://localhost:3000/api/tracking/meals`, {
+        await fetch('http://localhost:3000/api/tracking/meals', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -287,7 +287,7 @@ describe('Nutrition Tracking E2E Tests', () => {
         });
 
         // Lunch
-        await fetch(`http://localhost:3000/api/tracking/meals`, {
+        await fetch('http://localhost:3000/api/tracking/meals', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -302,7 +302,7 @@ describe('Nutrition Tracking E2E Tests', () => {
         });
 
         // Dinner
-        await fetch(`http://localhost:3000/api/tracking/meals`, {
+        await fetch('http://localhost:3000/api/tracking/meals', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -367,7 +367,7 @@ describe('Nutrition Tracking E2E Tests', () => {
       // Create multiple templates
       const templates = [];
       for (let i = 0; i < 3; i++) {
-        const response = await fetch(`http://localhost:3000/api/tracking/templates`, {
+        const response = await fetch('http://localhost:3000/api/tracking/templates', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -404,7 +404,7 @@ describe('Nutrition Tracking E2E Tests', () => {
 
       // Use templates multiple times
       for (let i = 0; i < 5; i++) {
-        await fetch(`http://localhost:3000/api/tracking/meals/from-template`, {
+        await fetch('http://localhost:3000/api/tracking/meals/from-template', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -485,7 +485,7 @@ describe('Nutrition Tracking E2E Tests', () => {
   describe('Error Handling and Validation', () => {
     it('should handle invalid requests gracefully', async () => {
       // Test invalid meal type
-      const invalidMealResponse = await fetch(`http://localhost:3000/api/tracking/meals`, {
+      const invalidMealResponse = await fetch('http://localhost:3000/api/tracking/meals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -510,7 +510,7 @@ describe('Nutrition Tracking E2E Tests', () => {
       expect(unauthorizedResponse.status).toBe(401);
 
       // Test invalid food amount
-      const invalidAmountResponse = await fetch(`http://localhost:3000/api/tracking/meals`, {
+      const invalidAmountResponse = await fetch('http://localhost:3000/api/tracking/meals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -534,7 +534,7 @@ describe('Nutrition Tracking E2E Tests', () => {
 
       // Create 50 concurrent meal logging requests
       const concurrentRequests = Array.from({ length: 50 }, () =>
-        fetch(`http://localhost:3000/api/tracking/meals`, {
+        fetch('http://localhost:3000/api/tracking/meals', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

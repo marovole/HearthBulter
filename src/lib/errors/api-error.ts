@@ -4,9 +4,9 @@
  */
 
 export class APIError extends Error {
-  public readonly statusCode: number
-  public readonly code: string
-  public readonly details?: any
+  public readonly statusCode: number;
+  public readonly code: string;
+  public readonly details?: any;
 
   constructor(
     message: string,
@@ -14,39 +14,39 @@ export class APIError extends Error {
     code: string = 'INTERNAL_ERROR',
     details?: any
   ) {
-    super(message)
-    this.name = 'APIError'
-    this.statusCode = statusCode
-    this.code = code
-    this.details = details
+    super(message);
+    this.name = 'APIError';
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
   }
 
   static badRequest(message: string, details?: any) {
-    return new APIError(message, 400, 'BAD_REQUEST', details)
+    return new APIError(message, 400, 'BAD_REQUEST', details);
   }
 
   static unauthorized(message: string = '未授权访问') {
-    return new APIError(message, 401, 'UNAUTHORIZED')
+    return new APIError(message, 401, 'UNAUTHORIZED');
   }
 
   static forbidden(message: string = '禁止访问') {
-    return new APIError(message, 403, 'FORBIDDEN')
+    return new APIError(message, 403, 'FORBIDDEN');
   }
 
   static notFound(message: string = '资源未找到') {
-    return new APIError(message, 404, 'NOT_FOUND')
+    return new APIError(message, 404, 'NOT_FOUND');
   }
 
   static internal(message: string = '服务器内部错误', details?: any) {
-    return new APIError(message, 500, 'INTERNAL_ERROR', details)
+    return new APIError(message, 500, 'INTERNAL_ERROR', details);
   }
 
   toJSON() {
     return {
       error: this.message,
       code: this.code,
-      ...(this.details && { details: this.details })
-    }
+      ...(this.details && { details: this.details }),
+    };
   }
 }
 
@@ -55,16 +55,16 @@ export class APIError extends Error {
  */
 export function handleAPIError(error: unknown): APIError {
   if (error instanceof APIError) {
-    return error
+    return error;
   }
 
   if (error instanceof Error) {
-    console.error('API Error:', error)
-    return APIError.internal(error.message)
+    console.error('API Error:', error);
+    return APIError.internal(error.message);
   }
 
-  console.error('Unknown API Error:', error)
-  return APIError.internal('未知错误')
+  console.error('Unknown API Error:', error);
+  return APIError.internal('未知错误');
 }
 
 /**
@@ -79,8 +79,8 @@ export function createAPIResponse<T>(
     success: true,
     data,
     message,
-    timestamp: new Date().toISOString()
-  }, { status })
+    timestamp: new Date().toISOString(),
+  }, { status });
 }
 
 /**
@@ -88,6 +88,6 @@ export function createAPIResponse<T>(
  */
 export function createErrorResponse(error: APIError) {
   return Response.json(error.toJSON(), { 
-    status: error.statusCode 
-  })
+    status: error.statusCode, 
+  });
 }

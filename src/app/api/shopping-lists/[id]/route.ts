@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
-import { z } from 'zod'
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
+import { z } from 'zod';
 
 // 更新购物清单的验证 schema
 const updateShoppingListSchema = z.object({
   name: z.string().optional(), // 清单名称
   budget: z.number().min(0).nullable().optional(), // 预算（元）
-})
+});
 
 // PATCH /api/shopping-lists/:id - 更新购物清单
 export async function PATCH(
@@ -15,10 +15,10 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: listId } = await params
-    const session = await auth()
+    const { id: listId } = await params;
+    const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 })
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     // 查询购物清单并验证权限
@@ -43,30 +43,30 @@ export async function PATCH(
           },
         },
       },
-    })
+    });
 
     if (!shoppingList) {
-      return NextResponse.json({ error: '购物清单不存在' }, { status: 404 })
+      return NextResponse.json({ error: '购物清单不存在' }, { status: 404 });
     }
 
     // 验证权限
     const isCreator =
-      shoppingList.plan.member.family.creatorId === session.user.id
+      shoppingList.plan.member.family.creatorId === session.user.id;
     const isAdmin =
       shoppingList.plan.member.family.members[0]?.role === 'ADMIN' ||
-      isCreator
-    const isSelf = shoppingList.plan.member.userId === session.user.id
+      isCreator;
+    const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限修改该购物清单' },
         { status: 403 }
-      )
+      );
     }
 
     // 解析请求体
-    const body = await request.json()
-    const validatedData = updateShoppingListSchema.parse(body)
+    const body = await request.json();
+    const validatedData = updateShoppingListSchema.parse(body);
 
     // 更新购物清单
     const updatedList = await prisma.shoppingList.update({
@@ -82,7 +82,7 @@ export async function PATCH(
           },
         },
       },
-    })
+    });
 
     return NextResponse.json(
       {
@@ -90,20 +90,20 @@ export async function PATCH(
         shoppingList: updatedList,
       },
       { status: 200 }
-    )
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '请求参数验证失败', details: error.errors },
         { status: 400 }
-      )
+      );
     }
 
-    console.error('更新购物清单失败:', error)
+    console.error('更新购物清单失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -113,10 +113,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: listId } = await params
-    const session = await auth()
+    const { id: listId } = await params;
+    const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 })
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     // 查询购物清单并验证权限
@@ -141,44 +141,44 @@ export async function DELETE(
           },
         },
       },
-    })
+    });
 
     if (!shoppingList) {
-      return NextResponse.json({ error: '购物清单不存在' }, { status: 404 })
+      return NextResponse.json({ error: '购物清单不存在' }, { status: 404 });
     }
 
     // 验证权限
     const isCreator =
-      shoppingList.plan.member.family.creatorId === session.user.id
+      shoppingList.plan.member.family.creatorId === session.user.id;
     const isAdmin =
       shoppingList.plan.member.family.members[0]?.role === 'ADMIN' ||
-      isCreator
-    const isSelf = shoppingList.plan.member.userId === session.user.id
+      isCreator;
+    const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限删除该购物清单' },
         { status: 403 }
-      )
+      );
     }
 
     // 删除购物清单（级联删除清单项）
     await prisma.shoppingList.delete({
       where: { id: listId },
-    })
+    });
 
     return NextResponse.json(
       {
         message: '购物清单删除成功',
       },
       { status: 200 }
-    )
+    );
   } catch (error) {
-    console.error('删除购物清单失败:', error)
+    console.error('删除购物清单失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 

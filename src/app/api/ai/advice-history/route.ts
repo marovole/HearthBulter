@@ -36,13 +36,13 @@ export async function GET(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
-      }
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
+      },
     });
 
     if (!member) {
@@ -78,11 +78,11 @@ export async function GET(request: NextRequest) {
           feedback: true,
           generatedAt: true,
           createdAt: true,
-        }
+        },
       }),
       prisma.aIAdvice.count({
         where: whereCondition,
-      })
+      }),
     ]);
 
     // 获取对话历史
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         updatedAt: true,
         lastMessageAt: true,
-      }
+      },
     });
 
     // 处理对话历史，只保留最近的几条消息
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
         totalAdvice: totalCount,
         totalConversations: processedConversations.length,
         adviceByType: await getAdviceStats(memberId),
-      }
+      },
     });
 
   } catch (error) {

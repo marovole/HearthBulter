@@ -3,7 +3,7 @@ import {
   calculateNutritionProgress, 
   calculateWeeklyAverage,
   detectNutritionDeficiencies,
-  calculateRemainingMealsNutrition 
+  calculateRemainingMealsNutrition, 
 } from '@/lib/services/tracking/nutrition-calculator';
 
 describe('Nutrition Calculator', () => {
@@ -15,7 +15,7 @@ describe('Nutrition Calculator', () => {
       protein: 31,
       carbs: 0,
       fat: 3.6,
-      unit: '100g'
+      unit: '100g',
     },
     'food2': {
       id: 'food2',
@@ -24,7 +24,7 @@ describe('Nutrition Calculator', () => {
       protein: 2.7,
       carbs: 28,
       fat: 0.3,
-      unit: '100g'
+      unit: '100g',
     },
     'food3': {
       id: 'food3',
@@ -33,15 +33,15 @@ describe('Nutrition Calculator', () => {
       protein: 2.8,
       carbs: 7,
       fat: 0.4,
-      unit: '100g'
-    }
+      unit: '100g',
+    },
   };
 
   const mockNutritionGoals = {
     calories: 2000,
     protein: 120,
     carbs: 250,
-    fat: 65
+    fat: 65,
   };
 
   describe('calculateDailyNutrition', () => {
@@ -51,16 +51,16 @@ describe('Nutrition Calculator', () => {
           mealType: 'BREAKFAST',
           foods: [
             { foodId: 'food1', amount: 100 },
-            { foodId: 'food2', amount: 150 }
-          ]
+            { foodId: 'food2', amount: 150 },
+          ],
         },
         {
           mealType: 'LUNCH',
           foods: [
             { foodId: 'food1', amount: 150 },
-            { foodId: 'food3', amount: 200 }
-          ]
-        }
+            { foodId: 'food3', amount: 200 },
+          ],
+        },
       ];
 
       const result = calculateDailyNutrition(meals, mockFoodDatabase);
@@ -70,7 +70,7 @@ describe('Nutrition Calculator', () => {
         protein: 109.05, // (31 + 4.05) + (46.5 + 5.6)
         carbs: 68.5, // (0 + 42) + (0 + 14)
         fat: 11.1, // (3.6 + 0.45) + (5.4 + 0.8)
-        mealsCount: 2
+        mealsCount: 2,
       });
     });
 
@@ -82,14 +82,14 @@ describe('Nutrition Calculator', () => {
         protein: 0,
         carbs: 0,
         fat: 0,
-        mealsCount: 0
+        mealsCount: 0,
       });
     });
 
     it('should handle meals with no foods', () => {
       const meals = [
         { mealType: 'BREAKFAST', foods: [] },
-        { mealType: 'LUNCH', foods: [] }
+        { mealType: 'LUNCH', foods: [] },
       ];
 
       const result = calculateDailyNutrition(meals, mockFoodDatabase);
@@ -102,8 +102,8 @@ describe('Nutrition Calculator', () => {
       const meals = [
         {
           mealType: 'BREAKFAST',
-          foods: [{ foodId: 'unknown', amount: 100 }]
-        }
+          foods: [{ foodId: 'unknown', amount: 100 }],
+        },
       ];
 
       expect(() => {
@@ -118,7 +118,7 @@ describe('Nutrition Calculator', () => {
         calories: 1500,
         protein: 90,
         carbs: 200,
-        fat: 40
+        fat: 40,
       };
 
       const progress = calculateNutritionProgress(current, mockNutritionGoals);
@@ -127,7 +127,7 @@ describe('Nutrition Calculator', () => {
         calories: { current: 1500, target: 2000, percentage: 75, status: 'ON_TRACK' },
         protein: { current: 90, target: 120, percentage: 75, status: 'ON_TRACK' },
         carbs: { current: 200, target: 250, percentage: 80, status: 'ON_TRACK' },
-        fat: { current: 40, target: 65, percentage: 61.5, status: 'ON_TRACK' }
+        fat: { current: 40, target: 65, percentage: 61.5, status: 'ON_TRACK' },
       });
     });
 
@@ -136,7 +136,7 @@ describe('Nutrition Calculator', () => {
         calories: 2200,
         protein: 140,
         carbs: 300,
-        fat: 80
+        fat: 80,
       };
 
       const progress = calculateNutritionProgress(current, mockNutritionGoals);
@@ -152,7 +152,7 @@ describe('Nutrition Calculator', () => {
         calories: 1000,
         protein: 40,
         carbs: 100,
-        fat: 20
+        fat: 20,
       };
 
       const progress = calculateNutritionProgress(current, mockNutritionGoals);
@@ -168,14 +168,14 @@ describe('Nutrition Calculator', () => {
         calories: 1000,
         protein: 40,
         carbs: 100,
-        fat: 20
+        fat: 20,
       };
 
       const zeroGoals = {
         calories: 0,
         protein: 0,
         carbs: 0,
-        fat: 0
+        fat: 0,
       };
 
       const progress = calculateNutritionProgress(current, zeroGoals);
@@ -196,7 +196,7 @@ describe('Nutrition Calculator', () => {
         { calories: 1900, protein: 115, carbs: 245, fat: 62 },
         { calories: 2100, protein: 125, carbs: 255, fat: 68 },
         { calories: 2000, protein: 120, carbs: 250, fat: 65 },
-        { calories: 2000, protein: 120, carbs: 250, fat: 65 }
+        { calories: 2000, protein: 120, carbs: 250, fat: 65 },
       ];
 
       const average = calculateWeeklyAverage(dailyData);
@@ -206,7 +206,7 @@ describe('Nutrition Calculator', () => {
         protein: 120,
         carbs: 250,
         fat: 65,
-        daysCount: 7
+        daysCount: 7,
       });
     });
 
@@ -214,7 +214,7 @@ describe('Nutrition Calculator', () => {
       const dailyData = [
         { calories: 2000, protein: 120, carbs: 250, fat: 65 },
         { calories: 1800, protein: 110, carbs: 240, fat: 60 },
-        { calories: 2200, protein: 130, carbs: 260, fat: 70 }
+        { calories: 2200, protein: 130, carbs: 260, fat: 70 },
       ];
 
       const average = calculateWeeklyAverage(dailyData);
@@ -232,7 +232,7 @@ describe('Nutrition Calculator', () => {
         protein: 0,
         carbs: 0,
         fat: 0,
-        daysCount: 0
+        daysCount: 0,
       });
     });
   });
@@ -243,7 +243,7 @@ describe('Nutrition Calculator', () => {
         calories: 1000,
         protein: 40,
         carbs: 100,
-        fat: 20
+        fat: 20,
       };
 
       const deficiencies = detectNutritionDeficiencies(current, mockNutritionGoals);
@@ -253,7 +253,7 @@ describe('Nutrition Calculator', () => {
         nutrient: 'calories',
         severity: 'SEVERE',
         currentPercent: 50,
-        recommendation: expect.stringContaining('严重不足')
+        recommendation: expect.stringContaining('严重不足'),
       });
     });
 
@@ -262,7 +262,7 @@ describe('Nutrition Calculator', () => {
         calories: 1400,
         protein: 72,
         carbs: 150,
-        fat: 39
+        fat: 39,
       };
 
       const deficiencies = detectNutritionDeficiencies(current, mockNutritionGoals);
@@ -276,7 +276,7 @@ describe('Nutrition Calculator', () => {
         calories: 1800,
         protein: 108,
         carbs: 225,
-        fat: 58.5
+        fat: 58.5,
       };
 
       const deficiencies = detectNutritionDeficiencies(current, mockNutritionGoals);
@@ -289,7 +289,7 @@ describe('Nutrition Calculator', () => {
         calories: 1000,
         protein: 40,
         carbs: 100,
-        fat: 20
+        fat: 20,
       };
 
       const deficiencies = detectNutritionDeficiencies(current, mockNutritionGoals);
@@ -310,7 +310,7 @@ describe('Nutrition Calculator', () => {
         calories: 1200,
         protein: 60,
         carbs: 120,
-        fat: 30
+        fat: 30,
       };
 
       const remaining = calculateRemainingMealsNutrition(current, mockNutritionGoals, ['DINNER']);
@@ -321,14 +321,14 @@ describe('Nutrition Calculator', () => {
           calories: 800,
           protein: 60,
           carbs: 130,
-          fat: 35
+          fat: 35,
         },
         perMealAverage: {
           calories: 800,
           protein: 60,
           carbs: 130,
-          fat: 35
-        }
+          fat: 35,
+        },
       });
     });
 
@@ -337,7 +337,7 @@ describe('Nutrition Calculator', () => {
         calories: 800,
         protein: 40,
         carbs: 80,
-        fat: 20
+        fat: 20,
       };
 
       const remaining = calculateRemainingMealsNutrition(
@@ -350,7 +350,7 @@ describe('Nutrition Calculator', () => {
         calories: 600,
         protein: 40,
         carbs: 85,
-        fat: 22.5
+        fat: 22.5,
       });
     });
 
@@ -359,7 +359,7 @@ describe('Nutrition Calculator', () => {
         calories: 1200,
         protein: 60,
         carbs: 120,
-        fat: 30
+        fat: 30,
       };
 
       const remaining = calculateRemainingMealsNutrition(current, mockNutritionGoals, []);
@@ -374,7 +374,7 @@ describe('Nutrition Calculator', () => {
         calories: 2200,
         protein: 140,
         carbs: 300,
-        fat: 80
+        fat: 80,
       };
 
       const remaining = calculateRemainingMealsNutrition(current, mockNutritionGoals, ['DINNER']);

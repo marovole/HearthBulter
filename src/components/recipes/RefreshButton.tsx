@@ -19,7 +19,7 @@ export function RefreshButton({
   size = 'default',
   variant = 'outline',
   children,
-  disabled = false
+  disabled = false,
 }: RefreshButtonProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 

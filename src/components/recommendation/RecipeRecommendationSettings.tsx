@@ -47,7 +47,7 @@ export default function RecipeRecommendationSettings({
   onSettingsChange,
   onApplySettings,
   loading = false,
-  showAdvanced = false
+  showAdvanced = false,
 }: RecipeRecommendationSettingsProps) {
   const [newRestriction, setNewRestriction] = useState('');
   const [newExcludedIngredient, setNewExcludedIngredient] = useState('');
@@ -56,19 +56,19 @@ export default function RecipeRecommendationSettings({
     { value: 'BREAKFAST', label: '早餐' },
     { value: 'LUNCH', label: '午餐' },
     { value: 'DINNER', label: '晚餐' },
-    { value: 'SNACK', label: '加餐' }
+    { value: 'SNACK', label: '加餐' },
   ];
 
   const seasons = [
     { value: 'SPRING', label: '春季' },
     { value: 'SUMMER', label: '夏季' },
     { value: 'AUTUMN', label: '秋季' },
-    { value: 'WINTER', label: '冬季' }
+    { value: 'WINTER', label: '冬季' },
   ];
 
   const cuisines = [
     '中式', '川菜', '粤菜', '湘菜', '鲁菜', '苏菜', '浙菜', '闽菜', '徽菜',
-    '日式', '韩式', '意式', '法式', '泰式', '印度菜', '墨西哥菜', '地中海菜'
+    '日式', '韩式', '意式', '法式', '泰式', '印度菜', '墨西哥菜', '地中海菜',
   ];
 
   const spiceLevels = [
@@ -76,7 +76,7 @@ export default function RecipeRecommendationSettings({
     { value: 'LOW', label: '微辣' },
     { value: 'MEDIUM', label: '中辣' },
     { value: 'HIGH', label: '重辣' },
-    { value: 'EXTREME', label: '极辣' }
+    { value: 'EXTREME', label: '极辣' },
   ];
 
   const sweetnessLevels = [
@@ -84,20 +84,20 @@ export default function RecipeRecommendationSettings({
     { value: 'LOW', label: '微甜' },
     { value: 'MEDIUM', label: '中等甜' },
     { value: 'HIGH', label: '甜' },
-    { value: 'EXTREME', label: '极甜' }
+    { value: 'EXTREME', label: '极甜' },
   ];
 
   const saltinessLevels = [
     { value: 'LOW', label: '清淡' },
     { value: 'MEDIUM', label: '适中' },
     { value: 'HIGH', label: '咸' },
-    { value: 'EXTREME', label: '很咸' }
+    { value: 'EXTREME', label: '很咸' },
   ];
 
   const costLevels = [
     { value: 'LOW', label: '经济实惠' },
     { value: 'MEDIUM', label: '中等价位' },
-    { value: 'HIGH', label: '高端食材' }
+    { value: 'HIGH', label: '高端食材' },
   ];
 
   const updateSetting = <K extends keyof RecommendationSettings>(
@@ -313,7 +313,7 @@ export default function RecipeRecommendationSettings({
               {cuisines.map(cuisine => (
                 <Button
                   key={cuisine}
-                  variant={settings.preferredCuisines.includes(cuisine) ? "default" : "outline"}
+                  variant={settings.preferredCuisines.includes(cuisine) ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => toggleArrayItem('preferredCuisines', cuisine)}
                   className="justify-start"

@@ -3,10 +3,10 @@
  * 提供SQL注入、XSS、CSRF防护和安全审计
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { APIError, createErrorResponse } from '@/lib/errors/api-error'
-import { logger } from '@/lib/logger'
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { APIError, createErrorResponse } from '@/lib/errors/api-error';
+import { logger } from '@/lib/logger';
 
 export interface SecurityOptions {
   // SQL注入防护
@@ -72,46 +72,46 @@ export class SQLInjectionDetector {
     // 条件语句
     /\b(IF|CASE|WHEN|THEN|ELSE|END|OR|AND)\b/i,
     // 存储过程
-    /\b(EXEC|SP_EXECUTESQL|EXECUTE)\b/i
-  ]
+    /\b(EXEC|SP_EXECUTESQL|EXECUTE)\b/i,
+  ];
 
   static detect(input: string): { detected: boolean; pattern?: string } {
     for (const pattern of this.patterns) {
       if (pattern.test(input)) {
-        return { detected: true, pattern: pattern.source }
+        return { detected: true, pattern: pattern.source };
       }
     }
-    return { detected: false }
+    return { detected: false };
   }
 
   static sanitize(input: any): any {
     if (typeof input !== 'object' || input === null) {
-      return this.sanitizeString(input)
+      return this.sanitizeString(input);
     }
 
     if (Array.isArray(input)) {
-      return input.map(item => this.sanitize(item))
+      return input.map(item => this.sanitize(item));
     }
 
-    const sanitized: any = {}
+    const sanitized: any = {};
     for (const [key, value] of Object.entries(input)) {
-      const sanitizedKey = this.sanitizeString(key)
+      const sanitizedKey = this.sanitizeString(key);
       
       if (typeof value === 'string') {
-        sanitized[sanitizedKey] = this.sanitizeString(value)
+        sanitized[sanitizedKey] = this.sanitizeString(value);
       } else if (typeof value === 'object' && value !== null) {
-        sanitized[sanitizedKey] = this.sanitize(value)
+        sanitized[sanitizedKey] = this.sanitize(value);
       } else {
-        sanitized[sanitizedKey] = value
+        sanitized[sanitizedKey] = value;
       }
     }
 
-    return sanitized
+    return sanitized;
   }
 
   private static sanitizeString(str: any): string {
     if (typeof str !== 'string') {
-      return str
+      return str;
     }
 
     // 移除SQL注入字符
@@ -119,7 +119,7 @@ export class SQLInjectionDetector {
       .replace(/['"`;\\]/g, '')
       .replace(/\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, '')
       .replace(/--|\/\*|\*\/|#/g, '')
-      .trim()
+      .trim();
   }
 }
 
@@ -141,44 +141,44 @@ export class XSSDetector {
     // VB脚本
     /vbscript:\s*/gi,
     // 数据URI
-    /data:\s*(text|application)\/\w+/gi
-  ]
+    /data:\s*(text|application)\/\w+/gi,
+  ];
 
   static detect(input: string): { detected: boolean; pattern?: string } {
     for (const pattern of this.dangerousPatterns) {
       if (pattern.test(input)) {
-        return { detected: true, pattern: pattern.source }
+        return { detected: true, pattern: pattern.source };
       }
     }
-    return { detected: false }
+    return { detected: false };
   }
 
   static sanitize(input: any): any {
     if (typeof input !== 'object' || input === null) {
-      return this.sanitizeString(input)
+      return this.sanitizeString(input);
     }
 
     if (Array.isArray(input)) {
-      return input.map(item => this.sanitize(item))
+      return input.map(item => this.sanitize(item));
     }
 
-    const sanitized: any = {}
+    const sanitized: any = {};
     for (const [key, value] of Object.entries(input)) {
       if (typeof value === 'string') {
-        sanitized[key] = this.sanitizeString(value)
+        sanitized[key] = this.sanitizeString(value);
       } else if (typeof value === 'object' && value !== null) {
-        sanitized[key] = this.sanitize(value)
+        sanitized[key] = this.sanitize(value);
       } else {
-        sanitized[key] = value
+        sanitized[key] = value;
       }
     }
 
-    return sanitized
+    return sanitized;
   }
 
   private static sanitizeString(str: any): string {
     if (typeof str !== 'string') {
-      return str
+      return str;
     }
 
     return str
@@ -188,7 +188,7 @@ export class XSSDetector {
       .replace(/'/g, '&#39;')
       .replace(/\//g, '&#x2F;')
       .replace(/javascript:/gi, '')
-      .replace(/on\w+=/gi, '')
+      .replace(/on\w+=/gi, '');
   }
 }
 
@@ -196,41 +196,41 @@ export class XSSDetector {
  * CSRF令牌管理
  */
 export class CSRFProtection {
-  private static tokens = new Map<string, { token: string; expires: number }>()
-  private static tokenExpiry = 60 * 60 * 1000 // 1小时
+  private static tokens = new Map<string, { token: string; expires: number }>();
+  private static tokenExpiry = 60 * 60 * 1000; // 1小时
 
   static generateToken(sessionId: string): string {
-    const token = Buffer.from(`${sessionId}:${Date.now()}:${Math.random()}`).toString('base64')
+    const token = Buffer.from(`${sessionId}:${Date.now()}:${Math.random()}`).toString('base64');
     
     this.tokens.set(sessionId, {
       token,
-      expires: Date.now() + this.tokenExpiry
-    })
+      expires: Date.now() + this.tokenExpiry,
+    });
 
-    this.cleanExpiredTokens()
-    return token
+    this.cleanExpiredTokens();
+    return token;
   }
 
   static validateToken(sessionId: string, token: string): boolean {
-    const stored = this.tokens.get(sessionId)
+    const stored = this.tokens.get(sessionId);
     
     if (!stored || stored.token !== token) {
-      return false
+      return false;
     }
 
     if (Date.now() > stored.expires) {
-      this.tokens.delete(sessionId)
-      return false
+      this.tokens.delete(sessionId);
+      return false;
     }
 
-    return true
+    return true;
   }
 
   private static cleanExpiredTokens(): void {
-    const now = Date.now()
+    const now = Date.now();
     for (const [sessionId, data] of this.tokens.entries()) {
       if (now > data.expires) {
-        this.tokens.delete(sessionId)
+        this.tokens.delete(sessionId);
       }
     }
   }
@@ -240,33 +240,33 @@ export class CSRFProtection {
  * 请求频率限制
  */
 export class RateLimiter {
-  private static requests = new Map<string, { count: number; resetTime: number }>()
+  private static requests = new Map<string, { count: number; resetTime: number }>();
   private static defaultLimit = {
     windowMs: 60 * 1000, // 1分钟
-    maxRequests: 60      // 60次请求
-  }
+    maxRequests: 60,      // 60次请求
+  };
 
   static checkLimit(
     identifier: string,
     limit?: { windowMs: number; maxRequests: number }
   ): { allowed: boolean; remaining: number; resetTime: number } {
-    const config = limit || this.defaultLimit
-    const now = Date.now()
-    const record = this.requests.get(identifier)
+    const config = limit || this.defaultLimit;
+    const now = Date.now();
+    const record = this.requests.get(identifier);
 
     // 创建新记录或重置过期记录
     if (!record || now > record.resetTime) {
       this.requests.set(identifier, {
         count: 1,
-        resetTime: now + config.windowMs
-      })
-      this.cleanExpiredRecords()
+        resetTime: now + config.windowMs,
+      });
+      this.cleanExpiredRecords();
       
       return {
         allowed: true,
         remaining: config.maxRequests - 1,
-        resetTime: now + config.windowMs
-      }
+        resetTime: now + config.windowMs,
+      };
     }
 
     // 检查限制
@@ -274,24 +274,24 @@ export class RateLimiter {
       return {
         allowed: false,
         remaining: 0,
-        resetTime: record.resetTime
-      }
+        resetTime: record.resetTime,
+      };
     }
 
     // 增加计数
-    record.count++
+    record.count++;
     return {
       allowed: true,
       remaining: config.maxRequests - record.count,
-      resetTime: record.resetTime
-    }
+      resetTime: record.resetTime,
+    };
   }
 
   private static cleanExpiredRecords(): void {
-    const now = Date.now()
+    const now = Date.now();
     for (const [identifier, record] of this.requests.entries()) {
       if (now > record.resetTime) {
-        this.requests.delete(identifier)
+        this.requests.delete(identifier);
       }
     }
   }
@@ -301,20 +301,20 @@ export class RateLimiter {
  * 安全中间件类
  */
 export class SecurityMiddleware {
-  private static instance: SecurityMiddleware
+  private static instance: SecurityMiddleware;
 
   static getInstance(): SecurityMiddleware {
     if (!SecurityMiddleware.instance) {
-      SecurityMiddleware.instance = new SecurityMiddleware()
+      SecurityMiddleware.instance = new SecurityMiddleware();
     }
-    return SecurityMiddleware.instance
+    return SecurityMiddleware.instance;
   }
 
   async checkSecurity(
     request: NextRequest,
     options: SecurityOptions = {}
   ): Promise<SecurityCheckResult> {
-    const startTime = Date.now()
+    const startTime = Date.now();
     const audit: SecurityAudit = {
       timestamp: new Date(),
       ip: this.getClientIP(request),
@@ -323,87 +323,87 @@ export class SecurityMiddleware {
       method: request.method,
       threats: [],
       severity: 'low',
-      blocked: false
-    }
+      blocked: false,
+    };
 
     try {
-      const threats: string[] = []
-      let sanitized = null
+      const threats: string[] = [];
+      let sanitized = null;
 
       // 1. SQL注入防护
       if (options.preventSQLInjection !== false) {
-        const sqlResult = await this.checkSQLInjection(request, options.customSQLPatterns)
+        const sqlResult = await this.checkSQLInjection(request, options.customSQLPatterns);
         if (sqlResult.threats.length > 0) {
-          threats.push(...sqlResult.threats)
-          audit.threats.push(...sqlResult.threats)
+          threats.push(...sqlResult.threats);
+          audit.threats.push(...sqlResult.threats);
         }
-        sanitized = sqlResult.sanitized
+        sanitized = sqlResult.sanitized;
       }
 
       // 2. XSS防护
       if (options.preventXSS !== false) {
-        const xssResult = await this.checkXSS(request)
+        const xssResult = await this.checkXSS(request);
         if (xssResult.threats.length > 0) {
-          threats.push(...xssResult.threats)
-          audit.threats.push(...xssResult.threats)
+          threats.push(...xssResult.threats);
+          audit.threats.push(...xssResult.threats);
         }
-        sanitized = sanitized || xssResult.sanitized
+        sanitized = sanitized || xssResult.sanitized;
       }
 
       // 3. CSRF防护
       if (options.preventCSRF) {
-        const csrfResult = await this.checkCSRF(request, options.csrfTokenExpiry)
+        const csrfResult = await this.checkCSRF(request, options.csrfTokenExpiry);
         if (!csrfResult.valid) {
-          threats.push('CSRF Token Invalid')
-          audit.threats.push('CSRF Token Invalid')
+          threats.push('CSRF Token Invalid');
+          audit.threats.push('CSRF Token Invalid');
         }
       }
 
       // 4. 频率限制
       if (options.enableRateLimit && options.rateLimit) {
-        const rateLimitResult = await this.checkRateLimit(request, options.rateLimit)
+        const rateLimitResult = await this.checkRateLimit(request, options.rateLimit);
         if (!rateLimitResult.allowed) {
-          threats.push('Rate Limit Exceeded')
-          audit.threats.push('Rate Limit Exceeded')
+          threats.push('Rate Limit Exceeded');
+          audit.threats.push('Rate Limit Exceeded');
         }
       }
 
       // 计算威胁严重程度
       if (threats.length > 0) {
-        audit.severity = this.calculateSeverity(threats, audit)
-        audit.blocked = audit.severity === 'critical' || audit.severity === 'high'
-        audit.threats = threats
+        audit.severity = this.calculateSeverity(threats, audit);
+        audit.blocked = audit.severity === 'critical' || audit.severity === 'high';
+        audit.threats = threats;
       }
 
       // 记录审计日志
       if (options.enableAudit && (audit.threats.length > 0 || audit.severity !== 'low')) {
-        await this.logSecurityAudit(audit, options.auditLevel)
+        await this.logSecurityAudit(audit, options.auditLevel);
       }
 
-      const duration = Date.now() - startTime
+      const duration = Date.now() - startTime;
 
       return {
         safe: threats.length === 0 || !audit.blocked,
         threats: threats.length > 0 ? threats : undefined,
         sanitized,
-        audit
-      }
+        audit,
+      };
     } catch (error) {
-      const duration = Date.now() - startTime
+      const duration = Date.now() - startTime;
       
       logger.error('安全检查异常', {
         error: error instanceof Error ? error.message : String(error),
         duration,
         url: request.url,
         method: request.method,
-        ip: audit.ip
-      })
+        ip: audit.ip,
+      });
 
       return {
         safe: false,
         threats: ['Security Check Failed'],
-        audit
-      }
+        audit,
+      };
     }
   }
 
@@ -414,19 +414,19 @@ export class SecurityMiddleware {
     request: NextRequest,
     customPatterns?: RegExp[]
   ): Promise<{ threats: string[]; sanitized?: any }> {
-    const threats: string[] = []
+    const threats: string[] = [];
     const combinedPatterns = [
       ...SQLInjectionDetector.patterns,
-      ...(customPatterns || [])
-    ]
+      ...(customPatterns || []),
+    ];
 
     // 检查查询参数
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(request.url);
     for (const [key, value] of searchParams) {
       for (const pattern of combinedPatterns) {
         if (pattern.test(value)) {
-          threats.push(`SQL Injection in query param: ${key}`)
-          break
+          threats.push(`SQL Injection in query param: ${key}`);
+          break;
         }
       }
     }
@@ -434,44 +434,44 @@ export class SecurityMiddleware {
     // 检查请求体
     if (request.headers.get('content-type')?.includes('json')) {
       try {
-        const body = await request.json()
-        const sanitized = SQLInjectionDetector.sanitize(body)
-        return { threats, sanitized }
+        const body = await request.json();
+        const sanitized = SQLInjectionDetector.sanitize(body);
+        return { threats, sanitized };
       } catch {
         // 忽略JSON解析错误
       }
     }
 
-    return { threats }
+    return { threats };
   }
 
   /**
    * 检查XSS攻击
    */
   private async checkXSS(request: NextRequest): Promise<{ threats: string[]; sanitized?: any }> {
-    const threats: string[] = []
+    const threats: string[] = [];
 
     // 检查查询参数
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(request.url);
     for (const [key, value] of searchParams) {
-      const xssCheck = XSSDetector.detect(value)
+      const xssCheck = XSSDetector.detect(value);
       if (xssCheck.detected) {
-        threats.push(`XSS in query param: ${key}`)
+        threats.push(`XSS in query param: ${key}`);
       }
     }
 
     // 检查请求体
     if (request.headers.get('content-type')?.includes('json')) {
       try {
-        const body = await request.json()
-        const sanitized = XSSDetector.sanitize(body)
-        return { threats, sanitized }
+        const body = await request.json();
+        const sanitized = XSSDetector.sanitize(body);
+        return { threats, sanitized };
       } catch {
         // 忽略JSON解析错误
       }
     }
 
-    return { threats }
+    return { threats };
   }
 
   /**
@@ -481,16 +481,16 @@ export class SecurityMiddleware {
     request: NextRequest,
     tokenExpiry?: number
   ): Promise<{ valid: boolean }> {
-    const sessionId = request.headers.get('x-session-id')
-    const csrfToken = request.headers.get('x-csrf-token')
+    const sessionId = request.headers.get('x-session-id');
+    const csrfToken = request.headers.get('x-csrf-token');
 
     if (!sessionId || !csrfToken) {
-      return { valid: false }
+      return { valid: false };
     }
 
     return {
-      valid: CSRFProtection.validateToken(sessionId, csrfToken)
-    }
+      valid: CSRFProtection.validateToken(sessionId, csrfToken),
+    };
   }
 
   /**
@@ -500,28 +500,28 @@ export class SecurityMiddleware {
     request: NextRequest,
     rateLimit: { windowMs: number; maxRequests: number; identifier: 'ip' | 'userId' | 'session' }
   ): Promise<{ allowed: boolean }> {
-    let identifier: string
+    let identifier: string;
 
     switch (rateLimit.identifier) {
-      case 'ip':
-        identifier = this.getClientIP(request)
-        break
-      case 'session':
-        identifier = request.headers.get('x-session-id') || 'unknown'
-        break
-      case 'userId':
-        identifier = request.headers.get('x-user-id') || 'unknown'
-        break
-      default:
-        identifier = this.getClientIP(request)
+    case 'ip':
+      identifier = this.getClientIP(request);
+      break;
+    case 'session':
+      identifier = request.headers.get('x-session-id') || 'unknown';
+      break;
+    case 'userId':
+      identifier = request.headers.get('x-user-id') || 'unknown';
+      break;
+    default:
+      identifier = this.getClientIP(request);
     }
 
     const result = RateLimiter.checkLimit(identifier, {
       windowMs: rateLimit.windowMs,
-      maxRequests: rateLimit.maxRequests
-    })
+      maxRequests: rateLimit.maxRequests,
+    });
 
-    return { allowed: result.allowed }
+    return { allowed: result.allowed };
   }
 
   /**
@@ -532,7 +532,7 @@ export class SecurityMiddleware {
       request.headers.get('x-forwarded-for') ||
       request.headers.get('x-real-ip') ||
       '127.0.0.1'
-    )?.split(',')[0]?.trim() || '127.0.0.1'
+    )?.split(',')[0]?.trim() || '127.0.0.1';
   }
 
   /**
@@ -542,22 +542,22 @@ export class SecurityMiddleware {
     threats: string[],
     audit: SecurityAudit
   ): SecurityAudit['severity'] {
-    const criticalThreats = ['SQL Injection', 'Rate Limit Exceeded']
-    const highThreats = ['CSRF Token Invalid', 'XSS Attack']
+    const criticalThreats = ['SQL Injection', 'Rate Limit Exceeded'];
+    const highThreats = ['CSRF Token Invalid', 'XSS Attack'];
 
     if (threats.some(threat => criticalThreats.some(ct => threat.includes(ct)))) {
-      return 'critical'
+      return 'critical';
     }
 
     if (threats.some(threat => highThreats.some(ht => threat.includes(ht)))) {
-      return 'high'
+      return 'high';
     }
 
     if (threats.length > 3) {
-      return 'medium'
+      return 'medium';
     }
 
-    return 'low'
+    return 'low';
   }
 
   /**
@@ -574,28 +574,28 @@ export class SecurityMiddleware {
         method: audit.method,
         threats: audit.threats,
         severity: audit.severity,
-        userAgent: audit.userAgent
-      })
+        userAgent: audit.userAgent,
+      });
     } else {
       logger.warn('安全威胁检测', {
         ip: audit.ip,
         url: audit.url,
         method: audit.method,
         threats: audit.threats,
-        severity: audit.severity
-      })
+        severity: audit.severity,
+      });
     }
   }
 }
 
 // 导出单例实例
-export const securityMiddleware = SecurityMiddleware.getInstance()
+export const securityMiddleware = SecurityMiddleware.getInstance();
 
 // 导出便捷方法
 export const checkSecurity = (
   request: NextRequest,
   options?: SecurityOptions
-) => securityMiddleware.checkSecurity(request, options)
+) => securityMiddleware.checkSecurity(request, options);
 
 // 默认安全配置
 export const defaultSecurityOptions: SecurityOptions = {
@@ -606,11 +606,11 @@ export const defaultSecurityOptions: SecurityOptions = {
   rateLimit: {
     windowMs: 60 * 1000, // 1分钟
     maxRequests: 100,      // 100次请求
-    identifier: 'ip'
+    identifier: 'ip',
   },
   enableAudit: true,
-  auditLevel: 'detailed'
-}
+  auditLevel: 'detailed',
+};
 
 // 创建安全高阶函数
 export function withSecurity(
@@ -621,22 +621,22 @@ export function withSecurity(
   ) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, context?: { params?: Record<string, string> }) => {
-    const securityResult = await checkSecurity(request, options)
+    const securityResult = await checkSecurity(request, options);
     
     if (!securityResult.safe) {
       const error = APIError.badRequest(
         '安全检查失败',
         {
           threats: securityResult.threats,
-          blocked: securityResult.audit?.blocked
+          blocked: securityResult.audit?.blocked,
         }
-      )
-      return createErrorResponse(error)
+      );
+      return createErrorResponse(error);
     }
 
     return handler(request, {
       sanitized: securityResult.sanitized,
-      audit: securityResult.audit
-    })
-  }
+      audit: securityResult.audit,
+    });
+  };
 }

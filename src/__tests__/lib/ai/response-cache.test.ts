@@ -15,10 +15,10 @@ Object.defineProperty(global, 'crypto', {
           hash[i] = data[i] % 256;
         }
         return Promise.resolve(hash.buffer);
-      })
-    }
+      }),
+    },
   },
-  writable: true
+  writable: true,
 });
 
 describe('AI Response Cache', () => {
@@ -162,13 +162,13 @@ describe('AI Response Cache', () => {
       const input1 = {
         prompt: 'Hello',
         context: { user: 'John', session: '123' },
-        options: { temperature: 0.7, max_tokens: 100 }
+        options: { temperature: 0.7, max_tokens: 100 },
       };
 
       const input2 = {
         prompt: 'Hello',
         context: { user: 'John', session: '123' },
-        options: { temperature: 0.7, max_tokens: 100 }
+        options: { temperature: 0.7, max_tokens: 100 },
       };
 
       const key1 = cache.generateKey(input1);
@@ -181,15 +181,15 @@ describe('AI Response Cache', () => {
       const input1 = {
         messages: [
           { role: 'user', content: 'Hello' },
-          { role: 'assistant', content: 'Hi there!' }
-        ]
+          { role: 'assistant', content: 'Hi there!' },
+        ],
       };
 
       const input2 = {
         messages: [
           { role: 'user', content: 'Hello' },
-          { role: 'assistant', content: 'Hi there!' }
-        ]
+          { role: 'assistant', content: 'Hi there!' },
+        ],
       };
 
       const key1 = cache.generateKey(input1);
@@ -296,7 +296,7 @@ describe('AI Response Cache', () => {
       const entries = [
         ['key1', { data: 'value1' }],
         ['key2', { data: 'value2' }],
-        ['key3', { data: 'value3' }]
+        ['key3', { data: 'value3' }],
       ] as const;
 
       // 批量设置
@@ -355,7 +355,7 @@ describe('AI Response Cache', () => {
     it('应该支持缓存预热', async () => {
       const prewarmedData = new Map([
         ['key1', { data: 'value1' }],
-        ['key2', { data: 'value2' }]
+        ['key2', { data: 'value2' }],
       ]);
 
       await cache.prewarm(prewarmedData, 3600);
@@ -438,8 +438,8 @@ describe('AI Response Cache', () => {
         context: {
           user: 'test-user',
           session: 'test-session',
-          history: Array(100).fill({ role: 'user', content: 'test' })
-        }
+          history: Array(100).fill({ role: 'user', content: 'test' }),
+        },
       };
 
       const startTime = performance.now();

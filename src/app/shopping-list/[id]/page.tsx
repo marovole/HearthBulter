@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { ShoppingListView } from '@/components/shopping/ShoppingListView'
+import { ShoppingListView } from '@/components/shopping/ShoppingListView';
 
 interface ShoppingListDetailPageProps {
   params: Promise<{
@@ -11,7 +11,7 @@ interface ShoppingListDetailPageProps {
 export default async function ShoppingListDetailPage({
   params,
 }: ShoppingListDetailPageProps) {
-  const { id } = await params
+  const { id } = await params;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -19,5 +19,5 @@ export default async function ShoppingListDetailPage({
         <ShoppingListView shoppingListId={id} />
       </div>
     </div>
-  )
+  );
 }

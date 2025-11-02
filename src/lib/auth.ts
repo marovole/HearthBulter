@@ -1,8 +1,8 @@
-import NextAuth, { NextAuthConfig } from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import GoogleProvider from 'next-auth/providers/google'
-import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/db'
+import NextAuth, { NextAuthConfig } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
+import bcrypt from 'bcryptjs';
+import { prisma } from '@/lib/db';
 
 export const authConfig: NextAuthConfig = {
   providers: [
@@ -11,25 +11,25 @@ export const authConfig: NextAuthConfig = {
       name: 'credentials',
       credentials: {
         email: { label: '邮箱', type: 'email' },
-        password: { label: '密码', type: 'password' }
+        password: { label: '密码', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null
+          return null;
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string }
-        })
+          where: { email: credentials.email as string },
+        });
 
         if (!user || !user.password) {
-          return null
+          return null;
         }
 
-        const passwordMatch = await bcrypt.compare(credentials.password as string, user.password)
+        const passwordMatch = await bcrypt.compare(credentials.password as string, user.password);
 
         if (!passwordMatch) {
-          return null
+          return null;
         }
 
         return {
@@ -37,8 +37,8 @@ export const authConfig: NextAuthConfig = {
           email: user.email,
           name: user.name,
           role: user.role,
-        }
-      }
+        };
+      },
     }),
 
     // Google OAuth认证
@@ -49,23 +49,23 @@ export const authConfig: NextAuthConfig = {
   ],
 
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
   },
 
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
+        token.role = user.role;
       }
-      return token
+      return token;
     },
 
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.sub!
-        session.user.role = token.role as string
+        session.user.id = token.sub!;
+        session.user.role = token.role as string;
       }
-      return session
+      return session;
     },
   },
 
@@ -74,6 +74,6 @@ export const authConfig: NextAuthConfig = {
   },
 
   secret: process.env.NEXTAUTH_SECRET,
-}
+};
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { 
   Activity, 
   CloudDownload, 
@@ -14,10 +14,10 @@ import {
   Clock,
   TrendingUp,
   Wifi,
-  WifiOff
-} from 'lucide-react'
-import type { DeviceConnectionInfo } from '@/types/wearable-devices'
-import { SYNC_STATUS_LABELS, PLATFORM_TYPE_LABELS } from '@/types/wearable-devices'
+  WifiOff,
+} from 'lucide-react';
+import type { DeviceConnectionInfo } from '@/types/wearable-devices';
+import { SYNC_STATUS_LABELS, PLATFORM_TYPE_LABELS } from '@/types/wearable-devices';
 
 interface SyncStatusProps {
   devices: DeviceConnectionInfo[]
@@ -27,8 +27,8 @@ interface SyncStatusProps {
 }
 
 export function SyncStatus({ devices, onSyncDevice, onSyncAll, className }: SyncStatusProps) {
-  const [isSyncing, setIsSyncing] = useState<string | null>(null)
-  const [lastGlobalSync, setLastGlobalSync] = useState<Date | null>(null)
+  const [isSyncing, setIsSyncing] = useState<string | null>(null);
+  const [lastGlobalSync, setLastGlobalSync] = useState<Date | null>(null);
 
   // 获取最新的全局同步时间
   useEffect(() => {
@@ -36,11 +36,11 @@ export function SyncStatus({ devices, onSyncDevice, onSyncAll, className }: Sync
       const latestSync = devices
         .filter(device => device.lastSyncAt)
         .map(device => new Date(device.lastSyncAt!))
-        .sort((a, b) => b.getTime() - a.getTime())[0]
+        .sort((a, b) => b.getTime() - a.getTime())[0];
       
-      setLastGlobalSync(latestSync || null)
+      setLastGlobalSync(latestSync || null);
     }
-  }, [devices])
+  }, [devices]);
 
   // 计算同步状态统计
   const syncStats = {
@@ -48,77 +48,77 @@ export function SyncStatus({ devices, onSyncDevice, onSyncAll, className }: Sync
     active: devices.filter(device => device.isActive).length,
     success: devices.filter(device => device.syncStatus === 'SUCCESS').length,
     failed: devices.filter(device => device.syncStatus === 'FAILED').length,
-    syncing: devices.filter(device => device.syncStatus === 'SYNCING').length
-  }
+    syncing: devices.filter(device => device.syncStatus === 'SYNCING').length,
+  };
 
   // 获取同步状态颜色
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'SUCCESS':
-        return 'bg-green-100 text-green-800'
-      case 'FAILED':
-        return 'bg-red-100 text-red-800'
-      case 'SYNCING':
-        return 'bg-blue-100 text-blue-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+    case 'SUCCESS':
+      return 'bg-green-100 text-green-800';
+    case 'FAILED':
+      return 'bg-red-100 text-red-800';
+    case 'SYNCING':
+      return 'bg-blue-100 text-blue-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
     }
-  }
+  };
 
   // 格式化时间
   const formatTime = (date: Date | string | null | undefined) => {
-    if (!date) return '从未'
-    const now = new Date()
-    const syncTime = typeof date === 'string' ? new Date(date) : date
-    const diff = now.getTime() - syncTime.getTime()
-    const minutes = Math.floor(diff / (1000 * 60))
+    if (!date) return '从未';
+    const now = new Date();
+    const syncTime = typeof date === 'string' ? new Date(date) : date;
+    const diff = now.getTime() - syncTime.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
     
-    if (minutes < 1) return '刚刚'
-    if (minutes < 60) return `${minutes}分钟前`
-    if (minutes < 1440) return `${Math.floor(minutes / 60)}小时前`
-    return syncTime.toLocaleDateString('zh-CN')
-  }
+    if (minutes < 1) return '刚刚';
+    if (minutes < 60) return `${minutes}分钟前`;
+    if (minutes < 1440) return `${Math.floor(minutes / 60)}小时前`;
+    return syncTime.toLocaleDateString('zh-CN');
+  };
 
   // 获取同步进度
   const getSyncProgress = () => {
-    if (devices.length === 0) return 100
-    const activeDevices = devices.filter(device => device.isActive).length
-    const successDevices = devices.filter(device => device.syncStatus === 'SUCCESS').length
-    return activeDevices > 0 ? (successDevices / activeDevices) * 100 : 0
-  }
+    if (devices.length === 0) return 100;
+    const activeDevices = devices.filter(device => device.isActive).length;
+    const successDevices = devices.filter(device => device.syncStatus === 'SUCCESS').length;
+    return activeDevices > 0 ? (successDevices / activeDevices) * 100 : 0;
+  };
 
   // 获取健康状态
   const getHealthStatus = () => {
-    const activeDevices = devices.filter(device => device.isActive)
+    const activeDevices = devices.filter(device => device.isActive);
     if (activeDevices.length === 0) {
-      return { status: 'NO_DEVICES', label: '无设备', color: 'text-gray-500' }
+      return { status: 'NO_DEVICES', label: '无设备', color: 'text-gray-500' };
     }
 
-    const failedDevices = activeDevices.filter(device => device.syncStatus === 'FAILED')
-    const successDevices = activeDevices.filter(device => device.syncStatus === 'SUCCESS')
+    const failedDevices = activeDevices.filter(device => device.syncStatus === 'FAILED');
+    const successDevices = activeDevices.filter(device => device.syncStatus === 'SUCCESS');
     const hasRecentSync = activeDevices.some(device => {
-      if (!device.lastSyncAt) return false
-      const hours = (new Date().getTime() - new Date(device.lastSyncAt).getTime()) / (1000 * 60 * 60)
-      return hours < 2
-    })
+      if (!device.lastSyncAt) return false;
+      const hours = (new Date().getTime() - new Date(device.lastSyncAt).getTime()) / (1000 * 60 * 60);
+      return hours < 2;
+    });
 
     if (failedDevices.length > 0) {
-      return { status: 'ERROR', label: '同步异常', color: 'text-red-600' }
+      return { status: 'ERROR', label: '同步异常', color: 'text-red-600' };
     }
 
     if (!hasRecentSync && syncStats.active > 0) {
-      return { status: 'STALE', label: '数据过期', color: 'text-yellow-600' }
+      return { status: 'STALE', label: '数据过期', color: 'text-yellow-600' };
     }
 
     if (successDevices.length === activeDevices.length && hasRecentSync) {
-      return { status: 'HEALTHY', label: '状态良好', color: 'text-green-600' }
+      return { status: 'HEALTHY', label: '状态良好', color: 'text-green-600' };
     }
 
-    return { status: 'PENDING', label: '待同步', color: 'text-blue-600' }
-  }
+    return { status: 'PENDING', label: '待同步', color: 'text-blue-600' };
+  };
 
-  const healthStatus = getHealthStatus()
-  const syncProgress = getSyncProgress()
+  const healthStatus = getHealthStatus();
+  const syncProgress = getSyncProgress();
 
   return (
     <div className={className}>
@@ -293,5 +293,5 @@ export function SyncStatus({ devices, onSyncDevice, onSyncAll, className }: Sync
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

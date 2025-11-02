@@ -18,33 +18,33 @@ interface LogEntry {
  * 日志服务类
  */
 class Logger {
-  private static instance: Logger
-  private userId?: string
-  private sessionId?: string
+  private static instance: Logger;
+  private userId?: string;
+  private sessionId?: string;
 
   private constructor() {
-    this.sessionId = this.generateSessionId()
+    this.sessionId = this.generateSessionId();
   }
 
   static getInstance(): Logger {
     if (!Logger.instance) {
-      Logger.instance = new Logger()
+      Logger.instance = new Logger();
     }
-    return Logger.instance
+    return Logger.instance;
   }
 
   /**
    * 设置用户上下文
    */
   setUserId(userId: string): void {
-    this.userId = userId
+    this.userId = userId;
   }
 
   /**
    * 生成会话ID
    */
   private generateSessionId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2)
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
   /**
@@ -57,37 +57,37 @@ class Logger {
       timestamp: new Date(),
       context,
       userId: this.userId,
-      sessionId: this.sessionId
-    }
+      sessionId: this.sessionId,
+    };
   }
 
   /**
    * 输出日志
    */
   private log(level: LogLevel, message: string, context?: Record<string, any>): void {
-    const entry = this.formatLog(level, message, context)
+    const entry = this.formatLog(level, message, context);
     
     // 开发环境输出到控制台
     if (process.env.NODE_ENV === 'development') {
-      const prefix = `[${entry.timestamp.toISOString()}] [${level.toUpperCase()}]`
-      const contextStr = context ? ` ${JSON.stringify(context)}` : ''
+      const prefix = `[${entry.timestamp.toISOString()}] [${level.toUpperCase()}]`;
+      const contextStr = context ? ` ${JSON.stringify(context)}` : '';
       switch (level) {
-        case 'debug':
-        case 'info':
-          console.log(`${prefix} ${message}${contextStr}`)
-          break
-        case 'warn':
-          console.warn(`${prefix} ${message}${contextStr}`)
-          break
-        case 'error':
-          console.error(`${prefix} ${message}${contextStr}`)
-          break
+      case 'debug':
+      case 'info':
+        console.log(`${prefix} ${message}${contextStr}`);
+        break;
+      case 'warn':
+        console.warn(`${prefix} ${message}${contextStr}`);
+        break;
+      case 'error':
+        console.error(`${prefix} ${message}${contextStr}`);
+        break;
       }
     }
     
     // 生产环境可以发送到日志服务
     if (process.env.NODE_ENV === 'production') {
-      this.sendToLogService(entry)
+      this.sendToLogService(entry);
     }
   }
 
@@ -98,35 +98,35 @@ class Logger {
     // 这里可以实现发送到外部日志服务
     // 例如：Sentry, LogRocket, 自定义日志服务等
     // 目前只记录到控制台
-    console.error('PRODUCTION LOG:', entry)
+    console.error('PRODUCTION LOG:', entry);
   }
 
   /**
    * 调试日志
    */
   debug(message: string, context?: Record<string, any>): void {
-    this.log('debug', message, context)
+    this.log('debug', message, context);
   }
 
   /**
    * 信息日志
    */
   info(message: string, context?: Record<string, any>): void {
-    this.log('info', message, context)
+    this.log('info', message, context);
   }
 
   /**
    * 警告日志
    */
   warn(message: string, context?: Record<string, any>): void {
-    this.log('warn', message, context)
+    this.log('warn', message, context);
   }
 
   /**
    * 错误日志
    */
   error(message: string, context?: Record<string, any>): void {
-    this.log('error', message, context)
+    this.log('error', message, context);
   }
 
   /**
@@ -137,8 +137,8 @@ class Logger {
       operation,
       duration,
       type: 'performance',
-      ...context
-    })
+      ...context,
+    });
   }
 
   /**
@@ -148,8 +148,8 @@ class Logger {
     this.info(`User Action: ${action}`, {
       action,
       type: 'user_action',
-      ...context
-    })
+      ...context,
+    });
   }
 
   /**
@@ -162,8 +162,8 @@ class Logger {
       status,
       duration,
       type: 'api_request',
-      ...context
-    })
+      ...context,
+    });
   }
 
   /**
@@ -173,13 +173,13 @@ class Logger {
     this.info(`Business Event: ${event}`, {
       event,
       type: 'business_event',
-      ...context
-    })
+      ...context,
+    });
   }
 }
 
 // 导出单例实例
-export const logger = Logger.getInstance()
+export const logger = Logger.getInstance();
 
 // 导出默认实例（兼容性）
-export default logger
+export default logger;

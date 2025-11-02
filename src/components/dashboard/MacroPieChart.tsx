@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 interface MacroData {
   carbs: number
@@ -18,7 +18,7 @@ const COLORS = {
   carbs: '#3b82f6', // 蓝色
   protein: '#10b981', // 绿色
   fat: '#f59e0b', // 橙色
-}
+};
 
 export function MacroPieChart({
   target,
@@ -26,33 +26,33 @@ export function MacroPieChart({
   size = { width: 400, height: 300 },
 }: MacroPieChartProps) {
   // 如果没有实际数据，使用目标数据
-  const data = actual || target
+  const data = actual || target;
 
   if (!data) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-500">
         <p>暂无营养数据</p>
       </div>
-    )
+    );
   }
 
   // 计算总热量
-  const totalCalories = data.carbs * 4 + data.protein * 4 + data.fat * 9
+  const totalCalories = data.carbs * 4 + data.protein * 4 + data.fat * 9;
 
   // 计算百分比
-  const carbsPercent = (data.carbs * 4 / totalCalories) * 100
-  const proteinPercent = (data.protein * 4 / totalCalories) * 100
-  const fatPercent = (data.fat * 9 / totalCalories) * 100
+  const carbsPercent = (data.carbs * 4 / totalCalories) * 100;
+  const proteinPercent = (data.protein * 4 / totalCalories) * 100;
+  const fatPercent = (data.fat * 9 / totalCalories) * 100;
 
   const chartData = [
     { name: '碳水化合物', value: carbsPercent, calories: data.carbs * 4, grams: data.carbs },
     { name: '蛋白质', value: proteinPercent, calories: data.protein * 4, grams: data.protein },
     { name: '脂肪', value: fatPercent, calories: data.fat * 9, grams: data.fat },
-  ]
+  ];
 
   const renderCustomLabel = (entry: any) => {
-    return `${entry.name}: ${entry.value.toFixed(1)}%`
-  }
+    return `${entry.name}: ${entry.value.toFixed(1)}%`;
+  };
 
   return (
     <div className="w-full">
@@ -91,13 +91,13 @@ export function MacroPieChart({
               return [
                 `${value.toFixed(1)}% (${props.payload.grams.toFixed(1)}g, ${props.payload.calories.toFixed(0)}kcal)`,
                 name,
-              ]
+              ];
             }}
           />
           <Legend
             formatter={(value) => {
-              const item = chartData.find((d) => d.name === value)
-              return item ? `${value} (${item.value.toFixed(1)}%)` : value
+              const item = chartData.find((d) => d.name === value);
+              return item ? `${value} (${item.value.toFixed(1)}%)` : value;
             }}
           />
         </PieChart>
@@ -144,6 +144,6 @@ export function MacroPieChart({
         </div>
       </div>
     </div>
-  )
+  );
 }
 

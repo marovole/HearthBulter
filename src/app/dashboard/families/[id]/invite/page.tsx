@@ -1,102 +1,102 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function InvitePage() {
-  const router = useRouter()
-  const params = useParams()
-  const familyId = params.id as string
+  const router = useRouter();
+  const params = useParams();
+  const familyId = params.id as string;
 
   const [inviteData, setInviteData] = useState<{
     inviteCode: string | null
     inviteUrl: string | null
     message?: string
-  } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [generating, setGenerating] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // 获取当前邀请码
   const fetchInviteCode = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const response = await fetch(`/api/families/${familyId}/invite`)
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/families/${familyId}/invite`);
 
       if (response.ok) {
-        const data = await response.json()
-        setInviteData(data)
+        const data = await response.json();
+        setInviteData(data);
       } else if (response.status === 401) {
-        router.push('/auth/signin')
+        router.push('/auth/signin');
       } else if (response.status === 403) {
-        setError('您没有权限访问此页面')
+        setError('您没有权限访问此页面');
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || '获取邀请码失败')
+        const errorData = await response.json();
+        setError(errorData.error || '获取邀请码失败');
       }
     } catch (err) {
-      console.error('获取邀请码失败:', err)
-      setError('网络错误，请稍后重试')
+      console.error('获取邀请码失败:', err);
+      setError('网络错误，请稍后重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // 生成新的邀请码
   const generateInviteCode = async () => {
     try {
-      setGenerating(true)
-      setError(null)
+      setGenerating(true);
+      setError(null);
       const response = await fetch(`/api/families/${familyId}/invite`, {
         method: 'POST',
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setInviteData(data)
+        const data = await response.json();
+        setInviteData(data);
       } else if (response.status === 401) {
-        router.push('/auth/signin')
+        router.push('/auth/signin');
       } else if (response.status === 403) {
-        setError('只有管理员可以生成邀请码')
+        setError('只有管理员可以生成邀请码');
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || '生成邀请码失败')
+        const errorData = await response.json();
+        setError(errorData.error || '生成邀请码失败');
       }
     } catch (err) {
-      console.error('生成邀请码失败:', err)
-      setError('网络错误，请稍后重试')
+      console.error('生成邀请码失败:', err);
+      setError('网络错误，请稍后重试');
     } finally {
-      setGenerating(false)
+      setGenerating(false);
     }
-  }
+  };
 
   // 复制邀请链接
   const copyInviteUrl = async () => {
-    if (!inviteData?.inviteUrl) return
+    if (!inviteData?.inviteUrl) return;
 
     try {
-      await navigator.clipboard.writeText(inviteData.inviteUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(inviteData.inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('复制失败:', err)
-      alert('复制失败，请手动复制')
+      console.error('复制失败:', err);
+      alert('复制失败，请手动复制');
     }
-  }
+  };
 
   useEffect(() => {
-    fetchInviteCode()
-  }, [familyId])
+    fetchInviteCode();
+  }, [familyId]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-gray-600">加载中...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -237,5 +237,5 @@ export default function InvitePage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

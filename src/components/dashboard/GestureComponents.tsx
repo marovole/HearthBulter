@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import React, { useRef, useEffect, useState } from 'react'
-import { useSwipe, useLongPress, usePinchZoom } from '@/lib/hooks/useGestures'
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react'
+import React, { useRef, useEffect, useState } from 'react';
+import { useSwipe, useLongPress, usePinchZoom } from '@/lib/hooks/useGestures';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 
 interface GestureEnhancedCardProps {
   children: React.ReactNode
@@ -25,11 +25,11 @@ export function GestureEnhancedCard({
   onSwipeDown,
   onLongPress,
   className = '',
-  showGestureHints = true
+  showGestureHints = true,
 }: GestureEnhancedCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
-  const [showSwipeHint, setShowSwipeHint] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
 
   // 滑动手势
   const { addEventListeners: addSwipeListeners } = useSwipe({
@@ -37,46 +37,46 @@ export function GestureEnhancedCard({
     onSwipeRight,
     onSwipeUp,
     onSwipeDown,
-    threshold: 30
-  })
+    threshold: 30,
+  });
 
   // 长按手势
   const longPressHandlers = useLongPress({
     onLongPress,
-    threshold: 500
-  })
+    threshold: 500,
+  });
 
   // 缩放手势
   const { addEventListeners: addPinchListeners } = usePinchZoom({
     onPinchZoom: (newScale) => {
-      setScale(newScale)
+      setScale(newScale);
     },
     onPinchStart: () => {
-      setShowSwipeHint(false)
+      setShowSwipeHint(false);
     },
     onPinchEnd: () => {
       // 缩放结束后恢复到正常大小
-      setTimeout(() => setScale(1), 300)
+      setTimeout(() => setScale(1), 300);
     },
     minScale: 0.8,
-    maxScale: 1.5
-  })
+    maxScale: 1.5,
+  });
 
   useEffect(() => {
-    const element = cardRef.current
-    if (!element) return
+    const element = cardRef.current;
+    if (!element) return;
 
-    addSwipeListeners(element)
-    addPinchListeners(element)
+    addSwipeListeners(element);
+    addPinchListeners(element);
 
     // 显示手势提示
     if (showGestureHints) {
-      const timer = setTimeout(() => setShowSwipeHint(true), 1000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setShowSwipeHint(true), 1000);
+      return () => clearTimeout(timer);
     }
-  }, [addSwipeListeners, addPinchListeners, showGestureHints])
+  }, [addSwipeListeners, addPinchListeners, showGestureHints]);
 
-  const resetScale = () => setScale(1)
+  const resetScale = () => setScale(1);
 
   return (
     <div className={`relative ${className}`}>
@@ -109,7 +109,7 @@ export function GestureEnhancedCard({
         className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-transform duration-300"
         style={{
           transform: `scale(${scale})`,
-          transformOrigin: 'center'
+          transformOrigin: 'center',
         }}
         {...longPressHandlers}
       >
@@ -140,7 +140,7 @@ export function GestureEnhancedCard({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 interface SwipeableCarouselProps {
@@ -152,34 +152,34 @@ interface SwipeableCarouselProps {
 export function SwipeableCarousel({
   items,
   onIndexChange,
-  className = ''
+  className = '',
 }: SwipeableCarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleSwipeLeft = () => {
-    const nextIndex = (currentIndex + 1) % items.length
-    setCurrentIndex(nextIndex)
-    onIndexChange?.(nextIndex)
-  }
+    const nextIndex = (currentIndex + 1) % items.length;
+    setCurrentIndex(nextIndex);
+    onIndexChange?.(nextIndex);
+  };
 
   const handleSwipeRight = () => {
-    const prevIndex = currentIndex === 0 ? items.length - 1 : currentIndex - 1
-    setCurrentIndex(prevIndex)
-    onIndexChange?.(prevIndex)
-  }
+    const prevIndex = currentIndex === 0 ? items.length - 1 : currentIndex - 1;
+    setCurrentIndex(prevIndex);
+    onIndexChange?.(prevIndex);
+  };
 
   const { addEventListeners } = useSwipe({
     onSwipeLeft: handleSwipeLeft,
     onSwipeRight: handleSwipeRight,
-    threshold: 50
-  })
+    threshold: 50,
+  });
 
   useEffect(() => {
-    const element = containerRef.current
-    if (!element) return
-    addEventListeners(element)
-  }, [addEventListeners])
+    const element = containerRef.current;
+    if (!element) return;
+    addEventListeners(element);
+  }, [addEventListeners]);
 
   return (
     <div className={`relative ${className}`}>
@@ -202,8 +202,8 @@ export function SwipeableCarousel({
           <button
             key={index}
             onClick={() => {
-              setCurrentIndex(index)
-              onIndexChange?.(index)
+              setCurrentIndex(index);
+              onIndexChange?.(index);
             }}
             className={`w-2 h-2 rounded-full transition-colors ${
               index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
@@ -230,7 +230,7 @@ export function SwipeableCarousel({
         </>
       )}
     </div>
-  )
+  );
 }
 
 // 移动端数据录入手势组件
@@ -251,21 +251,21 @@ export function GestureInput({
   onSwipeUp,
   onSwipeDown,
   placeholder = '',
-  type = 'text'
+  type = 'text',
 }: GestureInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const { addEventListeners } = useSwipe({
     onSwipeUp,
     onSwipeDown,
-    threshold: 30
-  })
+    threshold: 30,
+  });
 
   useEffect(() => {
-    const element = inputRef.current
-    if (!element) return
-    addEventListeners(element.parentElement!)
-  }, [addEventListeners])
+    const element = inputRef.current;
+    if (!element) return;
+    addEventListeners(element.parentElement!);
+  }, [addEventListeners]);
 
   return (
     <div className="relative">
@@ -286,5 +286,5 @@ export function GestureInput({
         </div>
       )}
     </div>
-  )
+  );
 }

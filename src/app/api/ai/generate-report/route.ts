@@ -26,15 +26,15 @@ export async function POST(request: NextRequest) {
         {
           error: 'Rate limit exceeded',
           retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime
+          resetTime: rateLimitResult.resetTime,
         },
         {
           status: 429,
           headers: {
             'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
             'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '86400'
-          }
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '86400',
+          },
         }
       );
     }
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       reportType = ReportType.WEEKLY,
       startDate,
       endDate,
-      includeAIInsights = true
+      includeAIInsights = true,
     } = body;
 
     if (!memberId || !startDate || !endDate) {
@@ -66,13 +66,13 @@ export async function POST(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
-      }
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
+      },
     });
 
     if (!member) {
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         htmlContent: report.htmlContent,
         status: report.status,
         shareToken: report.shareToken,
-      }
+      },
     });
 
     // 保存AI建议记录
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
           },
           prompt: `Generated ${reportType} health report with AI insights`,
           tokens: 0,
-        }
+        },
       });
     }
 
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
         ...report,
         id: savedReport.id,
         shareToken: savedReport.shareToken,
-      }
+      },
     });
 
   } catch (error) {
@@ -175,13 +175,13 @@ export async function GET(request: NextRequest) {
               members: {
                 some: {
                   userId: session.user.id,
-                  role: 'ADMIN'
-                }
-              }
-            }
-          }
-        ]
-      }
+                  role: 'ADMIN',
+                },
+              },
+            },
+          },
+        ],
+      },
     });
 
     if (!member) {
@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
         status: true,
         createdAt: true,
         shareToken: true,
-      }
+      },
     });
 
     return NextResponse.json({ reports });
@@ -238,13 +238,13 @@ async function collectReportData(
       date: {
         gte: startDate,
         lte: endDate,
-      }
+      },
     },
     orderBy: { date: 'asc' },
     select: {
       date: true,
       overallScore: true,
-    }
+    },
   });
 
   // 获取营养数据
@@ -254,7 +254,7 @@ async function collectReportData(
       date: {
         gte: startDate,
         lte: endDate,
-      }
+      },
     },
     orderBy: { date: 'asc' },
     select: {
@@ -267,7 +267,7 @@ async function collectReportData(
       actualCarbs: true,
       targetFat: true,
       actualFat: true,
-    }
+    },
   });
 
   // 获取活动数据
@@ -277,14 +277,14 @@ async function collectReportData(
       date: {
         gte: startDate,
         lte: endDate,
-      }
+      },
     },
     orderBy: { date: 'asc' },
     select: {
       date: true,
       exerciseMinutes: true,
       waterIntake: true,
-    }
+    },
   });
 
   // 获取健康指标数据
@@ -294,7 +294,7 @@ async function collectReportData(
       measuredAt: {
         gte: startDate,
         lte: endDate,
-      }
+      },
     },
     orderBy: { measuredAt: 'asc' },
     select: {
@@ -303,7 +303,7 @@ async function collectReportData(
       bloodPressureSystolic: true,
       bloodPressureDiastolic: true,
       heartRate: true,
-    }
+    },
   });
 
   // 获取餐饮记录
@@ -313,7 +313,7 @@ async function collectReportData(
       date: {
         gte: startDate,
         lte: endDate,
-      }
+      },
     },
     orderBy: { date: 'asc' },
     select: {
@@ -321,7 +321,7 @@ async function collectReportData(
       mealType: true,
       calories: true,
       notes: true,
-    }
+    },
   });
 
   // 整理数据格式

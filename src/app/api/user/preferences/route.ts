@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     // 获取用户偏好
     const preferences = await prisma.userPreference.findUnique({
-      where: { memberId }
+      where: { memberId },
     });
 
     if (!preferences) {
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
           isDairyFree: false,
           enableRecommendations: true,
           learnedPreferences: {},
-          preferenceScore: 0
-        }
+          preferenceScore: 0,
+        },
       });
     }
 
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
         preferredCuisines: JSON.parse(preferences.preferredCuisines),
         avoidedIngredients: JSON.parse(preferences.avoidedIngredients),
         preferredIngredients: JSON.parse(preferences.preferredIngredients),
-        learnedPreferences: preferences.learnedPreferences ? JSON.parse(preferences.learnedPreferences) : {}
-      }
+        learnedPreferences: preferences.learnedPreferences ? JSON.parse(preferences.learnedPreferences) : {},
+      },
     });
 
   } catch (error) {
@@ -104,14 +104,14 @@ export async function POST(request: NextRequest) {
       isVegan: preferences.isVegan || false,
       isGlutenFree: preferences.isGlutenFree || false,
       isDairyFree: preferences.isDairyFree || false,
-      enableRecommendations: preferences.enableRecommendations !== false
+      enableRecommendations: preferences.enableRecommendations !== false,
     };
 
     // 创建或更新偏好设置
     const userPreference = await prisma.userPreference.upsert({
       where: { memberId },
       update: data,
-      create: data
+      create: data,
     });
 
     return NextResponse.json({
@@ -121,8 +121,8 @@ export async function POST(request: NextRequest) {
         preferredCuisines: JSON.parse(userPreference.preferredCuisines),
         avoidedIngredients: JSON.parse(userPreference.avoidedIngredients),
         preferredIngredients: JSON.parse(userPreference.preferredIngredients),
-        learnedPreferences: userPreference.learnedPreferences ? JSON.parse(userPreference.learnedPreferences) : {}
-      }
+        learnedPreferences: userPreference.learnedPreferences ? JSON.parse(userPreference.learnedPreferences) : {},
+      },
     });
 
   } catch (error) {

@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
 interface HealthScoreGaugeProps {
   score: number // 0-100
@@ -20,21 +20,21 @@ export function HealthScoreGauge({
   const data = [
     { name: '已得分', value: score },
     { name: '剩余', value: 100 - score },
-  ]
+  ];
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10b981' // 绿色
-    if (score >= 60) return '#3b82f6' // 蓝色
-    if (score >= 40) return '#f59e0b' // 橙色
-    return '#ef4444' // 红色
-  }
+    if (score >= 80) return '#10b981'; // 绿色
+    if (score >= 60) return '#3b82f6'; // 蓝色
+    if (score >= 40) return '#f59e0b'; // 橙色
+    return '#ef4444'; // 红色
+  };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 80) return '优秀'
-    if (score >= 60) return '良好'
-    if (score >= 40) return '一般'
-    return '需改进'
-  }
+    if (score >= 80) return '优秀';
+    if (score >= 60) return '良好';
+    if (score >= 40) return '一般';
+    return '需改进';
+  };
 
   return (
     <div className="w-full">
@@ -120,6 +120,6 @@ export function HealthScoreGauge({
         </div>
       )}
     </div>
-  )
+  );
 }
 

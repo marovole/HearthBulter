@@ -64,7 +64,7 @@ export default function RecipeRecommendationDemo() {
     budgetLimit: 50,
     dietaryRestrictions: [],
     excludedIngredients: [],
-    preferredCuisines: []
+    preferredCuisines: [],
   });
 
   const mealTypes = ['早餐', '午餐', '晚餐', '加餐'];
@@ -80,7 +80,7 @@ export default function RecipeRecommendationDemo() {
         servings: context.servings.toString(),
         maxCookTime: context.maxCookTime.toString(),
         budgetLimit: context.budgetLimit.toString(),
-        limit: '10'
+        limit: '10',
       });
 
       if (context.mealType) params.append('mealType', context.mealType);
@@ -114,9 +114,9 @@ export default function RecipeRecommendationDemo() {
           data: {
             recipeId,
             memberId: context.memberId,
-            ...data
-          }
-        })
+            ...data,
+          },
+        }),
       });
     } catch (error) {
       console.error('记录交互失败:', error);
@@ -142,19 +142,19 @@ export default function RecipeRecommendationDemo() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'EASY': return 'bg-green-100 text-green-800';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-      case 'HARD': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    case 'EASY': return 'bg-green-100 text-green-800';
+    case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
+    case 'HARD': return 'bg-red-100 text-red-800';
+    default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getDifficultyText = (difficulty: string) => {
     switch (difficulty) {
-      case 'EASY': return '简单';
-      case 'MEDIUM': return '中等';
-      case 'HARD': return '困难';
-      default: return '未知';
+    case 'EASY': return '简单';
+    case 'MEDIUM': return '中等';
+    case 'HARD': return '困难';
+    default: return '未知';
     }
   };
 
@@ -409,14 +409,14 @@ export default function RecipeRecommendationDemo() {
                   {cuisines.map(cuisine => (
                     <Button
                       key={cuisine}
-                      variant={context.preferredCuisines.includes(cuisine) ? "default" : "outline"}
+                      variant={context.preferredCuisines.includes(cuisine) ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => {
                         setContext(prev => ({
                           ...prev,
                           preferredCuisines: prev.preferredCuisines.includes(cuisine)
                             ? prev.preferredCuisines.filter(c => c !== cuisine)
-                            : [...prev.preferredCuisines, cuisine]
+                            : [...prev.preferredCuisines, cuisine],
                         }));
                       }}
                     >

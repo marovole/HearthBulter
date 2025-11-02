@@ -19,7 +19,7 @@ export async function POST(
 
     // 检查食谱是否存在
     const recipe = await prisma.recipe.findUnique({
-      where: { id: recipeId }
+      where: { id: recipeId },
     });
 
     if (!recipe) {
@@ -34,8 +34,8 @@ export async function POST(
       data: {
         recipeId,
         memberId,
-        notes: notes || null
-      }
+        notes: notes || null,
+      },
     });
 
     // 更新食谱收藏计数
@@ -43,7 +43,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      favorite
+      favorite,
     });
 
   } catch (error) {
@@ -53,15 +53,15 @@ export async function POST(
         where: {
           recipeId_memberId: {
             recipeId: params.id,
-            memberId: (await request.json()).memberId
-          }
-        }
+            memberId: (await request.json()).memberId,
+          },
+        },
       });
 
       return NextResponse.json({
         success: true,
         favorite: existingFavorite,
-        message: 'Recipe already favorited'
+        message: 'Recipe already favorited',
       });
     }
 
@@ -94,9 +94,9 @@ export async function DELETE(
       where: {
         recipeId_memberId: {
           recipeId,
-          memberId
-        }
-      }
+          memberId,
+        },
+      },
     });
 
     // 更新食谱收藏计数
@@ -104,7 +104,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Recipe unfavorited successfully'
+      message: 'Recipe unfavorited successfully',
     });
 
   } catch (error) {
@@ -137,15 +137,15 @@ export async function GET(
       where: {
         recipeId_memberId: {
           recipeId,
-          memberId
-        }
-      }
+          memberId,
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
       isFavorited: !!favorite,
-      favorite
+      favorite,
     });
 
   } catch (error) {
@@ -159,11 +159,11 @@ export async function GET(
 
 async function updateRecipeFavoriteCount(recipeId: string) {
   const count = await prisma.recipeFavorite.count({
-    where: { recipeId }
+    where: { recipeId },
   });
 
   await prisma.recipe.update({
     where: { id: recipeId },
-    data: { favoriteCount: count }
+    data: { favoriteCount: count },
   });
 }

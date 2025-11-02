@@ -271,16 +271,16 @@ export function getActivePrompt(category: PromptTemplate['category'], name?: str
 
 export function getPromptsByCategory(category: PromptTemplate['category']): Record<string, PromptTemplate> {
   switch (category) {
-    case 'health_analysis':
-      return HEALTH_ANALYSIS_PROMPTS;
-    case 'recipe_optimization':
-      return RECIPE_OPTIMIZATION_PROMPTS;
-    case 'nutrition_consultation':
-      return NUTRITION_CONSULTATION_PROMPTS;
-    case 'report_generation':
-      return REPORT_GENERATION_PROMPTS;
-    default:
-      return {};
+  case 'health_analysis':
+    return HEALTH_ANALYSIS_PROMPTS;
+  case 'recipe_optimization':
+    return RECIPE_OPTIMIZATION_PROMPTS;
+  case 'nutrition_consultation':
+    return NUTRITION_CONSULTATION_PROMPTS;
+  case 'report_generation':
+    return REPORT_GENERATION_PROMPTS;
+  default:
+    return {};
   }
 }
 

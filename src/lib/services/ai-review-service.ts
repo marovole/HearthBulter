@@ -303,29 +303,29 @@ class AIReviewService {
 
     for (const issue of issues) {
       switch (issue.type) {
-        case 'uncertainty':
-          // 添加不确定性表达
-          if (!/(?:可能|建议|考虑|或许)/.test(fixedContent)) {
-            fixedContent = `建议${fixedContent.toLowerCase()}`;
-          }
-          break;
+      case 'uncertainty':
+        // 添加不确定性表达
+        if (!/(?:可能|建议|考虑|或许)/.test(fixedContent)) {
+          fixedContent = `建议${fixedContent.toLowerCase()}`;
+        }
+        break;
 
-        case 'incomplete_info':
-          // 添加免责声明
-          if (!/(?:仅供参考|请咨询)/.test(fixedContent)) {
-            fixedContent += '\n\n⚠️ 此建议仅供参考，不构成专业医疗诊断。如有健康问题，请咨询专业医生。';
-          }
-          break;
+      case 'incomplete_info':
+        // 添加免责声明
+        if (!/(?:仅供参考|请咨询)/.test(fixedContent)) {
+          fixedContent += '\n\n⚠️ 此建议仅供参考，不构成专业医疗诊断。如有健康问题，请咨询专业医生。';
+        }
+        break;
 
-        case 'extreme_advice':
-          // 将绝对性语言改为建议性
-          fixedContent = fixedContent
-            .replace(/完全停止/g, '建议减少')
-            .replace(/立即停止/g, '建议逐渐减少')
-            .replace(/绝对不能/g, '建议避免')
-            .replace(/必须完全/g, '建议尽量')
-            .replace(/永久戒除/g, '建议长期避免');
-          break;
+      case 'extreme_advice':
+        // 将绝对性语言改为建议性
+        fixedContent = fixedContent
+          .replace(/完全停止/g, '建议减少')
+          .replace(/立即停止/g, '建议逐渐减少')
+          .replace(/绝对不能/g, '建议避免')
+          .replace(/必须完全/g, '建议尽量')
+          .replace(/永久戒除/g, '建议长期避免');
+        break;
       }
     }
 

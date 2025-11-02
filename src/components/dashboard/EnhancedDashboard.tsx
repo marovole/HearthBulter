@@ -1,18 +1,18 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { DashboardLayout } from './DashboardLayout'
-import { OverviewCards } from './OverviewCards'
-import { TrendsSection } from './TrendsSection'
-import { InsightsPanel } from './InsightsPanel'
-import { HealthMetricsChart } from './HealthMetricsChart'
-import { FamilyMembersCard } from './FamilyMembersCard'
-import { NutritionTrendChart } from './NutritionTrendChart'
-import { HealthScoreDisplay } from './HealthScoreDisplay'
-import { QuickActionsPanel } from './QuickActionsPanel'
-import { WeightTrendChart } from './WeightTrendChart'
-import { NutritionAnalysisChart } from './NutritionAnalysisChart'
-import { HealthScoreCard } from './HealthScoreCard'
+import React, { useState, useEffect } from 'react';
+import { DashboardLayout } from './DashboardLayout';
+import { OverviewCards } from './OverviewCards';
+import { TrendsSection } from './TrendsSection';
+import { InsightsPanel } from './InsightsPanel';
+import { HealthMetricsChart } from './HealthMetricsChart';
+import { FamilyMembersCard } from './FamilyMembersCard';
+import { NutritionTrendChart } from './NutritionTrendChart';
+import { HealthScoreDisplay } from './HealthScoreDisplay';
+import { QuickActionsPanel } from './QuickActionsPanel';
+import { WeightTrendChart } from './WeightTrendChart';
+import { NutritionAnalysisChart } from './NutritionAnalysisChart';
+import { HealthScoreCard } from './HealthScoreCard';
 
 interface EnhancedDashboardProps {
   userId: string
@@ -30,10 +30,10 @@ interface FamilyMember {
 }
 
 export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboardProps) {
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialMemberId || null)
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
-  const [activeTab, setActiveTab] = useState('overview')
-  const [loading, setLoading] = useState(true)
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialMemberId || null);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
 
   // 模拟获取家庭成员数据
   useEffect(() => {
@@ -47,7 +47,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
             role: 'admin',
             email: 'zhangsan@example.com',
             healthScore: 85,
-            lastActive: new Date()
+            lastActive: new Date(),
           },
           {
             id: '2',
@@ -55,7 +55,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
             role: 'member',
             email: 'lisi@example.com',
             healthScore: 78,
-            lastActive: new Date(Date.now() - 24 * 60 * 60 * 1000)
+            lastActive: new Date(Date.now() - 24 * 60 * 60 * 1000),
           },
           {
             id: '3',
@@ -63,33 +63,33 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
             role: 'member',
             email: 'wangwu@example.com',
             healthScore: 92,
-            lastActive: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-          }
-        ]
+            lastActive: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          },
+        ];
         
-        setFamilyMembers(mockMembers)
+        setFamilyMembers(mockMembers);
         
         // 如果没有选中的成员，默认选择第一个
         if (!selectedMemberId && mockMembers.length > 0) {
-          setSelectedMemberId(mockMembers[0].id)
+          setSelectedMemberId(mockMembers[0].id);
         }
       } catch (error) {
-        console.error('Failed to fetch family members:', error)
+        console.error('Failed to fetch family members:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchFamilyMembers()
-  }, [selectedMemberId])
+    fetchFamilyMembers();
+  }, [selectedMemberId]);
 
   const handleMemberChange = (memberId: string) => {
-    setSelectedMemberId(memberId)
-  }
+    setSelectedMemberId(memberId);
+  };
 
   const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId)
-  }
+    setActiveTab(tabId);
+  };
 
   const renderDashboardContent = () => {
     if (loading) {
@@ -97,7 +97,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-      )
+      );
     }
 
     if (!selectedMemberId) {
@@ -106,97 +106,97 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
           <h3 className="text-lg font-medium text-gray-900 mb-2">选择家庭成员</h3>
           <p className="text-gray-600">请从左侧选择一个家庭成员开始查看健康数据</p>
         </div>
-      )
+      );
     }
 
-    const currentMember = familyMembers.find(m => m.id === selectedMemberId)
+    const currentMember = familyMembers.find(m => m.id === selectedMemberId);
 
     switch (activeTab) {
-      case 'overview':
-        return (
-          <div className="space-y-6">
-            <OverviewCards memberId={selectedMemberId} />
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <WeightTrendChart memberId={selectedMemberId} />
-              <HealthScoreCard memberId={selectedMemberId} />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <NutritionAnalysisChart memberId={selectedMemberId} />
-              <TrendsSection memberId={selectedMemberId} />
-            </div>
-            <QuickActionsPanel memberId={selectedMemberId} />
-          </div>
-        )
-      
-      case 'health':
-        return (
-          <div className="space-y-6">
+    case 'overview':
+      return (
+        <div className="space-y-6">
+          <OverviewCards memberId={selectedMemberId} />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <WeightTrendChart memberId={selectedMemberId} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <HealthMetricsChart memberId={selectedMemberId} />
-              <TrendsSection memberId={selectedMemberId} />
-            </div>
-          </div>
-        )
-      
-      case 'nutrition':
-        return (
-          <div className="space-y-6">
-            <NutritionAnalysisChart memberId={selectedMemberId} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <NutritionTrendChart memberId={selectedMemberId} />
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">营养建议</h3>
-                <p className="text-gray-600">基于您的健康数据，我们建议...</p>
-              </div>
-            </div>
-          </div>
-        )
-      
-      case 'family':
-        return (
-          <div className="space-y-6">
-            <FamilyMembersCard 
-              members={familyMembers}
-              currentMemberId={selectedMemberId}
-              onMemberSelect={handleMemberChange}
-            />
-          </div>
-        )
-      
-      case 'score':
-        return (
-          <div className="space-y-6">
             <HealthScoreCard memberId={selectedMemberId} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <HealthScoreDisplay memberId={selectedMemberId} />
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">健康评分趋势</h3>
-                <p className="text-gray-600">评分变化图表将在这里显示</p>
-              </div>
-            </div>
           </div>
-        )
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <NutritionAnalysisChart memberId={selectedMemberId} />
+            <TrendsSection memberId={selectedMemberId} />
+          </div>
+          <QuickActionsPanel memberId={selectedMemberId} />
+        </div>
+      );
       
-      case 'settings':
-        return (
-          <div className="space-y-6">
+    case 'health':
+      return (
+        <div className="space-y-6">
+          <WeightTrendChart memberId={selectedMemberId} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <HealthMetricsChart memberId={selectedMemberId} />
+            <TrendsSection memberId={selectedMemberId} />
+          </div>
+        </div>
+      );
+      
+    case 'nutrition':
+      return (
+        <div className="space-y-6">
+          <NutritionAnalysisChart memberId={selectedMemberId} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <NutritionTrendChart memberId={selectedMemberId} />
             <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">仪表盘设置</h3>
-              <p className="text-gray-600">个性化您的仪表盘显示偏好</p>
+              <h3 className="text-lg font-semibold mb-4">营养建议</h3>
+              <p className="text-gray-600">基于您的健康数据，我们建议...</p>
             </div>
           </div>
-        )
+        </div>
+      );
       
-      default:
-        return (
-          <div className="space-y-6">
-            <OverviewCards memberId={selectedMemberId} />
-            <InsightsPanel memberId={selectedMemberId} />
+    case 'family':
+      return (
+        <div className="space-y-6">
+          <FamilyMembersCard 
+            members={familyMembers}
+            currentMemberId={selectedMemberId}
+            onMemberSelect={handleMemberChange}
+          />
+        </div>
+      );
+      
+    case 'score':
+      return (
+        <div className="space-y-6">
+          <HealthScoreCard memberId={selectedMemberId} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <HealthScoreDisplay memberId={selectedMemberId} />
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-4">健康评分趋势</h3>
+              <p className="text-gray-600">评分变化图表将在这里显示</p>
+            </div>
           </div>
-        )
+        </div>
+      );
+      
+    case 'settings':
+      return (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-4">仪表盘设置</h3>
+            <p className="text-gray-600">个性化您的仪表盘显示偏好</p>
+          </div>
+        </div>
+      );
+      
+    default:
+      return (
+        <div className="space-y-6">
+          <OverviewCards memberId={selectedMemberId} />
+          <InsightsPanel memberId={selectedMemberId} />
+        </div>
+      );
     }
-  }
+  };
 
   return (
     <DashboardLayout
@@ -239,5 +239,5 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         {renderDashboardContent()}
       </div>
     </DashboardLayout>
-  )
+  );
 }

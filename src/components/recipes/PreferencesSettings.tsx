@@ -46,13 +46,13 @@ interface PreferencesSettingsProps {
 const CUISINE_OPTIONS = [
   '川菜', '粤菜', '鲁菜', '苏菜', '浙菜', '闽菜', '湘菜', '徽菜',
   '东北菜', '西北菜', '西南菜', '东南亚菜', '日料', '韩料', '意大利菜',
-  '法国菜', '墨西哥菜', '中东菜', '印度菜', '泰国菜'
+  '法国菜', '墨西哥菜', '中东菜', '印度菜', '泰国菜',
 ];
 
 const COMMON_INGREDIENTS = [
   '鸡肉', '牛肉', '猪肉', '羊肉', '鱼', '虾', '蟹', '鸡蛋', '牛奶',
   '西兰花', '胡萝卜', '土豆', '洋葱', '大蒜', '姜', '青椒', '西红柿',
-  '豆腐', '豆芽', '海带', '香菇', '金针菇', '木耳', '黄瓜', '白菜'
+  '豆腐', '豆芽', '海带', '香菇', '金针菇', '木耳', '黄瓜', '白菜',
 ];
 
 export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
@@ -92,7 +92,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
       const response = await fetch('/api/user/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(preferences)
+        body: JSON.stringify(preferences),
       });
 
       const data = await response.json();
@@ -104,13 +104,13 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
       setPreferences(data.preferences);
       toast({
         title: '偏好设置已保存',
-        description: '您的推荐将根据新设置进行调整'
+        description: '您的推荐将根据新设置进行调整',
       });
     } catch (err) {
       toast({
         title: '保存失败',
         description: err instanceof Error ? err.message : 'Unknown error',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setSaving(false);
@@ -245,10 +245,10 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   {CUISINE_OPTIONS.map((cuisine) => (
                     <Badge
                       key={cuisine}
-                      variant={preferences.preferredCuisines.includes(cuisine) ? "default" : "outline"}
+                      variant={preferences.preferredCuisines.includes(cuisine) ? 'default' : 'outline'}
                       className="cursor-pointer"
                       onClick={() => updatePreferences({
-                        preferredCuisines: toggleArrayItem(preferences.preferredCuisines, cuisine)
+                        preferredCuisines: toggleArrayItem(preferences.preferredCuisines, cuisine),
                       })}
                     >
                       {cuisine}
@@ -297,7 +297,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   { key: 'isVegetarian', label: '素食' },
                   { key: 'isVegan', label: '严格素食' },
                   { key: 'isGlutenFree', label: '无麸质' },
-                  { key: 'isDairyFree', label: '无乳制品' }
+                  { key: 'isDairyFree', label: '无乳制品' },
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox
@@ -318,10 +318,10 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   {COMMON_INGREDIENTS.slice(0, 15).map((ingredient) => (
                     <Badge
                       key={ingredient}
-                      variant={preferences.avoidedIngredients.includes(ingredient) ? "destructive" : "outline"}
+                      variant={preferences.avoidedIngredients.includes(ingredient) ? 'destructive' : 'outline'}
                       className="cursor-pointer"
                       onClick={() => updatePreferences({
-                        avoidedIngredients: toggleArrayItem(preferences.avoidedIngredients, ingredient)
+                        avoidedIngredients: toggleArrayItem(preferences.avoidedIngredients, ingredient),
                       })}
                     >
                       {ingredient}
@@ -336,10 +336,10 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   {COMMON_INGREDIENTS.map((ingredient) => (
                     <Badge
                       key={ingredient}
-                      variant={preferences.preferredIngredients.includes(ingredient) ? "default" : "outline"}
+                      variant={preferences.preferredIngredients.includes(ingredient) ? 'default' : 'outline'}
                       className="cursor-pointer"
                       onClick={() => updatePreferences({
-                        preferredIngredients: toggleArrayItem(preferences.preferredIngredients, ingredient)
+                        preferredIngredients: toggleArrayItem(preferences.preferredIngredients, ingredient),
                       })}
                     >
                       {ingredient}
@@ -426,7 +426,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   type="number"
                   value={preferences.maxEstimatedCost || ''}
                   onChange={(e) => updatePreferences({
-                    maxEstimatedCost: e.target.value ? parseFloat(e.target.value) : undefined
+                    maxEstimatedCost: e.target.value ? parseFloat(e.target.value) : undefined,
                   })}
                   placeholder="不限制"
                   min={0}

@@ -63,7 +63,7 @@ export class RecommendationEngine {
   ): Promise<RecipeRecommendation[]> {
     // 获取用户偏好和权重设置
     const userPreference = await this.prisma.userPreference.findUnique({
-      where: { memberId: context.memberId }
+      where: { memberId: context.memberId },
     });
 
     const defaultWeights: RecommendationWeights = {
@@ -71,31 +71,31 @@ export class RecommendationEngine {
       price: 0.2,
       nutrition: 0.3,
       preference: 0.15,
-      seasonal: 0.05
+      seasonal: 0.05,
     };
 
     const finalWeights = {
       ...defaultWeights,
       ...weights,
-      ...(userPreference?.recommendationWeight as RecommendationWeights)
+      ...(userPreference?.recommendationWeight as RecommendationWeights),
     };
 
     // 并行获取不同策略的推荐结果
     const [
       ruleBasedResults,
       collaborativeResults,
-      contentResults
+      contentResults,
     ] = await Promise.all([
       this.ruleBasedRecommender.getRecommendations(context, limit * 2),
       this.collaborativeFilter.getRecommendations(context.memberId, limit * 2),
-      this.contentFilter.getRecommendations(context, limit * 2)
+      this.contentFilter.getRecommendations(context, limit * 2),
     ]);
 
     // 合并和去重推荐结果
     const allCandidates = this.mergeCandidates([
       ruleBasedResults,
       collaborativeResults,
-      contentResults
+      contentResults,
     ]);
 
     // 使用排名算法对候选食谱进行排序
@@ -126,7 +126,7 @@ export class RecommendationEngine {
     // 获取推荐时排除已推荐的食谱
     const extendedContext = {
       ...context,
-      excludeRecipeIds
+      excludeRecipeIds,
     };
 
     return this.getRecommendations(extendedContext, limit);
@@ -143,10 +143,10 @@ export class RecommendationEngine {
       where: { id: recipeId },
       include: {
         ingredients: {
-          include: { food: true }
+          include: { food: true },
         },
-        tags: true
-      }
+        tags: true,
+      },
     });
 
     if (!recipe) {
@@ -172,7 +172,7 @@ export class RecommendationEngine {
     const whereClause: any = {
       status: 'PUBLISHED',
       isPublic: true,
-      averageRating: { gte: 4.0 }
+      averageRating: { gte: 4.0 },
     };
 
     if (category) {
@@ -184,14 +184,14 @@ export class RecommendationEngine {
       orderBy: [
         { averageRating: 'desc' },
         { ratingCount: 'desc' },
-        { viewCount: 'desc' }
+        { viewCount: 'desc' },
       ],
       take: limit,
       include: {
         ingredients: {
-          include: { food: true }
-        }
-      }
+          include: { food: true },
+        },
+      },
     });
 
     return popularRecipes.map(recipe => ({
@@ -204,8 +204,8 @@ export class RecommendationEngine {
         priceMatch: 0,
         nutritionMatch: 0,
         preferenceMatch: 0,
-        seasonalMatch: 0
-      }
+        seasonalMatch: 0,
+      },
     }));
   }
 
@@ -270,8 +270,8 @@ export class RecommendationEngine {
           ...rec,
           reasons: reasons.length > 0 ? reasons : ['综合推荐'],
           explanation: explanationParts.length > 0 
-            ? explanationParts.join('，') + '。'
-            : '根据多维度分析为您推荐这道菜。'
+            ? `${explanationParts.join('，')}。`
+            : '根据多维度分析为您推荐这道菜。',
         };
       })
     );
@@ -285,25 +285,25 @@ export class RecommendationEngine {
     const [ratings, favorites, views] = await Promise.all([
       this.prisma.recipeRating.findMany({
         where: { memberId },
-        include: { recipe: true }
+        include: { recipe: true },
       }),
       this.prisma.recipeFavorite.findMany({
         where: { memberId },
-        include: { recipe: true }
+        include: { recipe: true },
       }),
       this.prisma.recipeView.findMany({
         where: { memberId },
         include: { recipe: true },
         orderBy: { viewedAt: 'desc' },
-        take: 50
-      })
+        take: 50,
+      }),
     ]);
 
     // 调用AI服务分析偏好
     const learnedPreferences = await this.analyzeUserBehavior({
       ratings,
       favorites,
-      views
+      views,
     });
 
     // 更新用户偏好记录
@@ -312,14 +312,14 @@ export class RecommendationEngine {
       update: {
         learnedPreferences,
         preferenceScore: learnedPreferences.confidence,
-        lastAnalyzedAt: new Date()
+        lastAnalyzedAt: new Date(),
       },
       create: {
         memberId,
         learnedPreferences,
         preferenceScore: learnedPreferences.confidence,
-        lastAnalyzedAt: new Date()
-      }
+        lastAnalyzedAt: new Date(),
+      },
     });
   }
 
@@ -345,9 +345,9 @@ export class RecommendationEngine {
         preferredCuisines,
         preferredIngredients,
         avgRating: data.ratings.reduce((sum, r) => sum + r.rating, 0) / data.ratings.length || 0,
-        favoriteCount: favoriteRecipes.length
+        favoriteCount: favoriteRecipes.length,
       },
-      confidence: Math.min(data.ratings.length + favoriteRecipes.length, 100) / 100
+      confidence: Math.min(data.ratings.length + favoriteRecipes.length, 100) / 100,
     };
   }
 

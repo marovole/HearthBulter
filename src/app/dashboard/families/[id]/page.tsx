@@ -1,19 +1,19 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/db';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 export default async function FamilyDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
-  const session = await auth()
+  const { id } = await params;
+  const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin')
+    redirect('/auth/signin');
   }
 
   // 获取家庭详细信息
@@ -40,20 +40,20 @@ export default async function FamilyDetailPage({
         },
       },
     },
-  })
+  });
 
   if (!family) {
-    notFound()
+    notFound();
   }
 
   // 验证用户是否属于该家庭
-  const userMember = family.members.find((m) => m.userId === session.user.id)
+  const userMember = family.members.find((m) => m.userId === session.user.id);
   if (!userMember) {
-    redirect('/dashboard')
+    redirect('/dashboard');
   }
 
-  const isCreator = family.creatorId === session.user.id
-  const isAdmin = userMember.role === 'ADMIN' || isCreator
+  const isCreator = family.creatorId === session.user.id;
+  const isAdmin = userMember.role === 'ADMIN' || isCreator;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -142,8 +142,8 @@ export default async function FamilyDetailPage({
 
             <div className="divide-y divide-gray-200">
               {family.members.map((member) => {
-                const activeGoal = member.healthGoals[0]
-                const hasAllergies = member.allergies.length > 0
+                const activeGoal = member.healthGoals[0];
+                const hasAllergies = member.allergies.length > 0;
 
                 return (
                   <div
@@ -163,10 +163,10 @@ export default async function FamilyDetailPage({
                             {member.ageGroup === 'CHILD'
                               ? '儿童'
                               : member.ageGroup === 'TEENAGER'
-                              ? '青少年'
-                              : member.ageGroup === 'ADULT'
-                              ? '成年人'
-                              : '老年人'}
+                                ? '青少年'
+                                : member.ageGroup === 'ADULT'
+                                  ? '成年人'
+                                  : '老年人'}
                           </span>
                           {member.role === 'ADMIN' && (
                             <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
@@ -226,10 +226,10 @@ export default async function FamilyDetailPage({
                                   {activeGoal.goalType === 'LOSE_WEIGHT'
                                     ? '减重'
                                     : activeGoal.goalType === 'GAIN_MUSCLE'
-                                    ? '增肌'
-                                    : activeGoal.goalType === 'MAINTAIN'
-                                    ? '维持'
-                                    : '改善健康'}
+                                      ? '增肌'
+                                      : activeGoal.goalType === 'MAINTAIN'
+                                        ? '维持'
+                                        : '改善健康'}
                                 </span>
                                 {activeGoal.targetWeight && (
                                   <span className="ml-2 text-sm text-green-700">
@@ -279,12 +279,12 @@ export default async function FamilyDetailPage({
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </div>
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { BasePlatformAdapter } from './base-adapter'
+import { BasePlatformAdapter } from './base-adapter';
 import {
   OAuthRequest,
   OAuthResponse,
@@ -15,14 +15,14 @@ import {
   OrderItem,
   PlatformProductInfo,
   PlatformError,
-  PlatformErrorType
-} from './types'
-import { EcommercePlatform, OrderStatus, DeliveryStatus } from '@prisma/client'
+  PlatformErrorType,
+} from './types';
+import { EcommercePlatform, OrderStatus, DeliveryStatus } from '@prisma/client';
 
 export class HemaAdapter extends BasePlatformAdapter {
-  readonly platform = EcommercePlatform.HEMA
-  readonly platformName = '盒马鲜生'
-  readonly baseUrl = process.env.HEMA_API_URL || 'https://api.freshhema.com/v2'
+  readonly platform = EcommercePlatform.HEMA;
+  readonly platformName = '盒马鲜生';
+  readonly baseUrl = process.env.HEMA_API_URL || 'https://api.freshhema.com/v2';
 
   // OAuth 认证
   async getAuthorizationUrl(request: OAuthRequest): Promise<OAuthResponse> {
@@ -31,14 +31,14 @@ export class HemaAdapter extends BasePlatformAdapter {
       app_id: process.env.HEMA_APP_ID!,
       redirect_uri: request.redirectUri,
       scope: (request.scope || ['user_info', 'order_write']).join(' '),
-      state: request.state || this.generateState()
-    })
+      state: request.state || this.generateState(),
+    });
 
     return {
       authorizationUrl: `${this.baseUrl}/oauth/authorize?${params.toString()}`,
       state: params.get('state')!,
-      expiresIn: 1800 // 30分钟
-    }
+      expiresIn: 1800, // 30分钟
+    };
   }
 
   async exchangeToken(request: TokenExchangeRequest): Promise<TokenInfo> {
@@ -57,9 +57,9 @@ export class HemaAdapter extends BasePlatformAdapter {
           code: request.code,
           redirect_uri: request.redirectUri,
           app_id: process.env.HEMA_APP_ID!,
-          app_secret: process.env.HEMA_APP_SECRET!
-        })
-      })
+          app_secret: process.env.HEMA_APP_SECRET!,
+        }),
+      });
 
       return {
         accessToken: response.access_token,
@@ -67,14 +67,14 @@ export class HemaAdapter extends BasePlatformAdapter {
         tokenType: response.token_type || 'Bearer',
         scope: response.scope,
         expiresAt: this.parseTokenExpiry(response.expires_in),
-        platformUserId: response.user_id
-      }
+        platformUserId: response.user_id,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to exchange token with Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -93,9 +93,9 @@ export class HemaAdapter extends BasePlatformAdapter {
           grant_type: 'refresh_token',
           refresh_token: refreshToken,
           app_id: process.env.HEMA_APP_ID!,
-          app_secret: process.env.HEMA_APP_SECRET!
-        })
-      })
+          app_secret: process.env.HEMA_APP_SECRET!,
+        }),
+      });
 
       return {
         accessToken: response.access_token,
@@ -103,14 +103,14 @@ export class HemaAdapter extends BasePlatformAdapter {
         tokenType: response.token_type || 'Bearer',
         scope: response.scope,
         expiresAt: this.parseTokenExpiry(response.expires_in),
-        platformUserId: response.user_id
-      }
+        platformUserId: response.user_id,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.TOKEN_EXPIRED,
         message: `Failed to refresh Hema token: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -122,23 +122,23 @@ export class HemaAdapter extends BasePlatformAdapter {
         page: (request.page || 1).toString(),
         page_size: (request.pageSize || 20).toString(),
         sort: request.sortBy || 'default',
-        order: request.sortOrder || 'desc'
-      })
+        order: request.sortOrder || 'desc',
+      });
 
       if (request.category) {
-        params.append('category_id', request.category)
+        params.append('category_id', request.category);
       }
       if (request.brand) {
-        params.append('brand', request.brand)
+        params.append('brand', request.brand);
       }
       if (request.minPrice) {
-        params.append('min_price', request.minPrice.toString())
+        params.append('min_price', request.minPrice.toString());
       }
       if (request.maxPrice) {
-        params.append('max_price', request.maxPrice.toString())
+        params.append('max_price', request.maxPrice.toString());
       }
       if (request.inStock !== undefined) {
-        params.append('stock_status', request.inStock ? 'in_stock' : 'out_of_stock')
+        params.append('stock_status', request.inStock ? 'in_stock' : 'out_of_stock');
       }
 
       const response = await this.makeRequest<{
@@ -147,33 +147,33 @@ export class HemaAdapter extends BasePlatformAdapter {
         current_page: number
         page_size: number
         has_next: boolean
-      }>(`/products/search?${params.toString()}`, {}, token)
+      }>(`/products/search?${params.toString()}`, {}, token);
 
       return {
         products: response.items.map(product => this.standardizeProductInfo(product)),
         total: response.total_count,
         page: response.current_page,
         pageSize: response.page_size,
-        hasMore: response.has_next
-      }
+        hasMore: response.has_next,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to search products on Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
   async getProduct(productId: string, token: string): Promise<PlatformProductInfo | null> {
     try {
-      const response = await this.makeRequest<any>(`/products/${productId}`, {}, token)
-      return this.standardizeProductInfo(response)
+      const response = await this.makeRequest<any>(`/products/${productId}`, {}, token);
+      return this.standardizeProductInfo(response);
     } catch (error) {
       if (error.type === PlatformErrorType.PRODUCT_NOT_FOUND) {
-        return null
+        return null;
       }
-      throw error
+      throw error;
     }
   }
 
@@ -187,31 +187,31 @@ export class HemaAdapter extends BasePlatformAdapter {
       }>>('/products/stock/batch', {
         method: 'POST',
         body: JSON.stringify({
-          product_ids: request.productIds
-        })
-      }, token)
+          product_ids: request.productIds,
+        }),
+      }, token);
 
       const stocks: Record<string, {
         stock: number
         isInStock: boolean
         stockStatus?: string
-      }> = {}
+      }> = {};
 
       for (const [productId, stockInfo] of Object.entries(response)) {
         stocks[productId] = {
           stock: stockInfo.available_stock,
           isInStock: stockInfo.is_available,
-          stockStatus: stockInfo.stock_status
-        }
+          stockStatus: stockInfo.stock_status,
+        };
       }
 
-      return { stocks }
+      return { stocks };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to query stock from Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -222,13 +222,13 @@ export class HemaAdapter extends BasePlatformAdapter {
         items: request.items.map(item => ({
           product_id: item.platformProductId,
           quantity: item.quantity,
-          sku_spec: item.specification
+          sku_spec: item.specification,
         })),
         address: this.standardizeAddress(request.deliveryAddress),
         remark: request.deliveryNotes,
         coupon_code: request.couponCode,
-        payment_type: request.paymentMethod || 'alipay'
-      }
+        payment_type: request.paymentMethod || 'alipay',
+      };
 
       const response = await this.makeRequest<{
         order_code: string
@@ -243,8 +243,8 @@ export class HemaAdapter extends BasePlatformAdapter {
         }
       }>('/orders/create', {
         method: 'POST',
-        body: JSON.stringify(orderData)
-      }, token)
+        body: JSON.stringify(orderData),
+      }, token);
 
       return {
         platformOrderId: response.order_code,
@@ -254,14 +254,14 @@ export class HemaAdapter extends BasePlatformAdapter {
         shippingFee: response.delivery_fee,
         discount: response.discount_amount,
         estimatedDeliveryTime: response.estimated_delivery_time,
-        paymentUrl: response.payment_info?.payment_url
-      }
+        paymentUrl: response.payment_info?.payment_url,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to create order on Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -277,7 +277,7 @@ export class HemaAdapter extends BasePlatformAdapter {
         }
         estimated_delivery_time: string
         actual_delivery_time?: string
-      }>(`/orders/${orderId}`, {}, token)
+      }>(`/orders/${orderId}`, {}, token);
 
       return {
         platformOrderId: response.order_code,
@@ -286,14 +286,14 @@ export class HemaAdapter extends BasePlatformAdapter {
         deliveryStatus: response.delivery_status,
         trackingNumber: response.logistics_info?.tracking_number,
         estimatedDeliveryTime: response.estimated_delivery_time,
-        actualDeliveryTime: response.actual_delivery_time
-      }
+        actualDeliveryTime: response.actual_delivery_time,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get order status from Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -302,16 +302,16 @@ export class HemaAdapter extends BasePlatformAdapter {
       await this.makeRequest(`/orders/${orderId}/cancel`, {
         method: 'POST',
         body: JSON.stringify({
-          cancel_reason: '用户取消'
-        })
-      }, token)
-      return true
+          cancel_reason: '用户取消',
+        }),
+      }, token);
+      return true;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to cancel order on Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -324,21 +324,21 @@ export class HemaAdapter extends BasePlatformAdapter {
       }>>('/products/price/batch', {
         method: 'POST',
         body: JSON.stringify({
-          product_ids: productIds
-        })
-      }, token)
+          product_ids: productIds,
+        }),
+      }, token);
 
-      const prices: Record<string, number> = {}
+      const prices: Record<string, number> = {};
       for (const [productId, priceInfo] of Object.entries(response)) {
-        prices[productId] = priceInfo.promotional_price || priceInfo.price
+        prices[productId] = priceInfo.promotional_price || priceInfo.price;
       }
-      return prices
+      return prices;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get product prices from Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -352,17 +352,17 @@ export class HemaAdapter extends BasePlatformAdapter {
       }>('/delivery/options', {
         method: 'POST',
         body: JSON.stringify({
-          address: this.standardizeAddress(address)
-        })
-      }, token)
+          address: this.standardizeAddress(address),
+        }),
+      }, token);
 
-      return response
+      return response;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get delivery options from Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -384,26 +384,26 @@ export class HemaAdapter extends BasePlatformAdapter {
         body: JSON.stringify({
           items: orderItems.map(item => ({
             product_id: item.platformProductId,
-            quantity: item.quantity
+            quantity: item.quantity,
           })),
-          address: this.standardizeAddress(address)
-        })
-      }, token)
+          address: this.standardizeAddress(address),
+        }),
+      }, token);
 
-      return response.delivery_time
+      return response.delivery_time;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to estimate delivery time from Hema: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
   // 工具方法
   private generateState(): string {
     return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15)
+           Math.random().toString(36).substring(2, 15);
   }
 
   // 盒马特定的商品信息标准化
@@ -433,7 +433,7 @@ export class HemaAdapter extends BasePlatformAdapter {
       deliveryOptions: rawProduct.delivery_info,
       deliveryTime: rawProduct.delivery_time,
       shippingFee: rawProduct.delivery_fee ? parseFloat(rawProduct.delivery_fee) : undefined,
-      platformData: rawProduct
-    }
+      platformData: rawProduct,
+    };
   }
 }

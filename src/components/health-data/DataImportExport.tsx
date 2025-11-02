@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { 
   Download, 
   Upload, 
@@ -10,8 +10,8 @@ import {
   Filter,
   CheckCircle,
   AlertCircle,
-  X
-} from 'lucide-react'
+  X,
+} from 'lucide-react';
 
 interface DataImportExportProps {
   memberId: string
@@ -34,8 +34,8 @@ interface ExportOptions {
 }
 
 export function DataImportExport({ memberId, onClose }: DataImportExportProps) {
-  const [activeTab, setActiveTab] = useState<'export' | 'import'>('export')
-  const [loading, setLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'export' | 'import'>('export');
+  const [loading, setLoading] = useState(false);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     format: 'csv',
     dateRange: 'month',
@@ -45,18 +45,18 @@ export function DataImportExport({ memberId, onClose }: DataImportExportProps) {
       muscleMass: true,
       bloodPressure: true,
       heartRate: true,
-      notes: true
-    }
-  })
-  const [importFile, setImportFile] = useState<File | null>(null)
+      notes: true,
+    },
+  });
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<{
     success: boolean
     message: string
     details?: any
-  } | null>(null)
+  } | null>(null);
 
   const handleExport = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = new URLSearchParams({
         format: exportOptions.format,
@@ -64,136 +64,136 @@ export function DataImportExport({ memberId, onClose }: DataImportExportProps) {
         memberId,
         metrics: Object.keys(exportOptions.includeMetrics)
           .filter(key => exportOptions.includeMetrics[key as keyof typeof exportOptions.includeMetrics])
-          .join(',')
-      })
+          .join(','),
+      });
 
       if (exportOptions.dateRange === 'custom' && exportOptions.customStartDate && exportOptions.customEndDate) {
-        params.append('startDate', exportOptions.customStartDate)
-        params.append('endDate', exportOptions.customEndDate)
+        params.append('startDate', exportOptions.customStartDate);
+        params.append('endDate', exportOptions.customEndDate);
       }
 
-      const response = await fetch(`/api/members/${memberId}/health-data/export?${params}`)
+      const response = await fetch(`/api/members/${memberId}/health-data/export?${params}`);
       
       if (!response.ok) {
-        throw new Error('导出失败')
+        throw new Error('导出失败');
       }
 
       // 下载文件
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.style.display = 'none'
-      a.href = url
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
       
-      const filename = `health-data-${new Date().toISOString().split('T')[0]}.${exportOptions.format}`
-      a.download = filename
+      const filename = `health-data-${new Date().toISOString().split('T')[0]}.${exportOptions.format}`;
+      a.download = filename;
       
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
       setImportResult({
         success: true,
-        message: `数据已成功导出为 ${exportOptions.format.toUpperCase()} 格式`
-      })
+        message: `数据已成功导出为 ${exportOptions.format.toUpperCase()} 格式`,
+      });
 
     } catch (error) {
       setImportResult({
         success: false,
-        message: error instanceof Error ? error.message : '导出失败'
-      })
+        message: error instanceof Error ? error.message : '导出失败',
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleImport = async () => {
     if (!importFile) {
       setImportResult({
         success: false,
-        message: '请选择要导入的文件'
-      })
-      return
+        message: '请选择要导入的文件',
+      });
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const formData = new FormData()
-      formData.append('file', importFile)
-      formData.append('memberId', memberId)
+      const formData = new FormData();
+      formData.append('file', importFile);
+      formData.append('memberId', memberId);
 
       const response = await fetch(`/api/members/${memberId}/health-data/import`, {
         method: 'POST',
-        body: formData
-      })
+        body: formData,
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '导入失败')
+        throw new Error(result.error || '导入失败');
       }
 
       setImportResult({
         success: true,
         message: `成功导入 ${result.imported} 条数据`,
-        details: result
-      })
+        details: result,
+      });
 
       // 清空文件选择
-      setImportFile(null)
+      setImportFile(null);
 
     } catch (error) {
       setImportResult({
         success: false,
-        message: error instanceof Error ? error.message : '导入失败'
-      })
+        message: error instanceof Error ? error.message : '导入失败',
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
       // 验证文件类型
-      const allowedTypes = ['.csv', '.xlsx', '.xls']
-      const fileExtension = file.name.substring(file.name.lastIndexOf('.'))
+      const allowedTypes = ['.csv', '.xlsx', '.xls'];
+      const fileExtension = file.name.substring(file.name.lastIndexOf('.'));
       
       if (!allowedTypes.includes(fileExtension)) {
         setImportResult({
           success: false,
-          message: '仅支持 CSV、Excel 格式的文件'
-        })
-        return
+          message: '仅支持 CSV、Excel 格式的文件',
+        });
+        return;
       }
 
       // 验证文件大小 (10MB)
       if (file.size > 10 * 1024 * 1024) {
         setImportResult({
           success: false,
-          message: '文件大小不能超过 10MB'
-        })
-        return
+          message: '文件大小不能超过 10MB',
+        });
+        return;
       }
 
-      setImportFile(file)
-      setImportResult(null)
+      setImportFile(file);
+      setImportResult(null);
     }
-  }
+  };
 
   const getFormatIcon = (format: string) => {
     switch (format) {
-      case 'csv':
-        return <FileSpreadsheet className="h-5 w-5 text-green-600" />
-      case 'pdf':
-        return <FileText className="h-5 w-5 text-red-600" />
-      case 'excel':
-        return <FileSpreadsheet className="h-5 w-5 text-blue-600" />
-      default:
-        return <FileText className="h-5 w-5 text-gray-600" />
+    case 'csv':
+      return <FileSpreadsheet className="h-5 w-5 text-green-600" />;
+    case 'pdf':
+      return <FileText className="h-5 w-5 text-red-600" />;
+    case 'excel':
+      return <FileSpreadsheet className="h-5 w-5 text-blue-600" />;
+    default:
+      return <FileText className="h-5 w-5 text-gray-600" />;
     }
-  }
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
@@ -247,7 +247,7 @@ export function DataImportExport({ memberId, onClose }: DataImportExportProps) {
                 {[
                   { value: 'csv', label: 'CSV', desc: '适合数据分析' },
                   { value: 'excel', label: 'Excel', desc: '适合表格编辑' },
-                  { value: 'pdf', label: 'PDF', desc: '适合打印分享' }
+                  { value: 'pdf', label: 'PDF', desc: '适合打印分享' },
                 ].map((format) => (
                   <button
                     key={format.value}
@@ -323,17 +323,17 @@ export function DataImportExport({ memberId, onClose }: DataImportExportProps) {
                         ...prev,
                         includeMetrics: {
                           ...prev.includeMetrics,
-                          [key]: e.target.checked
-                        }
+                          [key]: e.target.checked,
+                        },
                       }))}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <span className="text-sm text-gray-700">
                       {key === 'weight' ? '体重' :
-                       key === 'bodyFat' ? '体脂率' :
-                       key === 'muscleMass' ? '肌肉量' :
-                       key === 'bloodPressure' ? '血压' :
-                       key === 'heartRate' ? '心率' : '备注'}
+                        key === 'bodyFat' ? '体脂率' :
+                          key === 'muscleMass' ? '肌肉量' :
+                            key === 'bloodPressure' ? '血压' :
+                              key === 'heartRate' ? '心率' : '备注'}
                     </span>
                   </label>
                 ))}
@@ -441,5 +441,5 @@ export function DataImportExport({ memberId, onClose }: DataImportExportProps) {
         )}
       </div>
     </div>
-  )
+  );
 }

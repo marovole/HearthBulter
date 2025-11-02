@@ -1,4 +1,4 @@
-import { BasePlatformAdapter } from './base-adapter'
+import { BasePlatformAdapter } from './base-adapter';
 import {
   OAuthRequest,
   OAuthResponse,
@@ -15,14 +15,14 @@ import {
   OrderItem,
   PlatformProductInfo,
   PlatformError,
-  PlatformErrorType
-} from './types'
-import { EcommercePlatform, OrderStatus, DeliveryStatus } from '@prisma/client'
+  PlatformErrorType,
+} from './types';
+import { EcommercePlatform, OrderStatus, DeliveryStatus } from '@prisma/client';
 
 export class SamsClubAdapter extends BasePlatformAdapter {
-  readonly platform = EcommercePlatform.SAMS_CLUB
-  readonly platformName = '山姆会员商店'
-  readonly baseUrl = process.env.SAMS_CLUB_API_URL || 'https://api.samsclub.com.cn/v1'
+  readonly platform = EcommercePlatform.SAMS_CLUB;
+  readonly platformName = '山姆会员商店';
+  readonly baseUrl = process.env.SAMS_CLUB_API_URL || 'https://api.samsclub.com.cn/v1';
 
   // OAuth 认证
   async getAuthorizationUrl(request: OAuthRequest): Promise<OAuthResponse> {
@@ -31,14 +31,14 @@ export class SamsClubAdapter extends BasePlatformAdapter {
       client_id: process.env.SAMS_CLUB_CLIENT_ID!,
       redirect_uri: request.redirectUri,
       scope: (request.scope || ['read', 'write']).join(' '),
-      state: request.state || this.generateState()
-    })
+      state: request.state || this.generateState(),
+    });
 
     return {
       authorizationUrl: `${this.baseUrl}/oauth/authorize?${params.toString()}`,
       state: params.get('state')!,
-      expiresIn: 3600 // 1小时
-    }
+      expiresIn: 3600, // 1小时
+    };
   }
 
   async exchangeToken(request: TokenExchangeRequest): Promise<TokenInfo> {
@@ -57,9 +57,9 @@ export class SamsClubAdapter extends BasePlatformAdapter {
           code: request.code,
           redirect_uri: request.redirectUri,
           client_id: process.env.SAMS_CLUB_CLIENT_ID!,
-          client_secret: process.env.SAMS_CLUB_CLIENT_SECRET!
-        })
-      })
+          client_secret: process.env.SAMS_CLUB_CLIENT_SECRET!,
+        }),
+      });
 
       return {
         accessToken: response.access_token,
@@ -67,14 +67,14 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         tokenType: response.token_type || 'Bearer',
         scope: response.scope,
         expiresAt: this.parseTokenExpiry(response.expires_in),
-        platformUserId: response.user_id
-      }
+        platformUserId: response.user_id,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to exchange token with Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -93,9 +93,9 @@ export class SamsClubAdapter extends BasePlatformAdapter {
           grant_type: 'refresh_token',
           refresh_token: refreshToken,
           client_id: process.env.SAMS_CLUB_CLIENT_ID!,
-          client_secret: process.env.SAMS_CLUB_CLIENT_SECRET!
-        })
-      })
+          client_secret: process.env.SAMS_CLUB_CLIENT_SECRET!,
+        }),
+      });
 
       return {
         accessToken: response.access_token,
@@ -103,14 +103,14 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         tokenType: response.token_type || 'Bearer',
         scope: response.scope,
         expiresAt: this.parseTokenExpiry(response.expires_in),
-        platformUserId: response.user_id
-      }
+        platformUserId: response.user_id,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.TOKEN_EXPIRED,
         message: `Failed to refresh Sam's Club token: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -122,23 +122,23 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         page: (request.page || 1).toString(),
         page_size: (request.pageSize || 20).toString(),
         sort_by: request.sortBy || 'relevance',
-        sort_order: request.sortOrder || 'desc'
-      })
+        sort_order: request.sortOrder || 'desc',
+      });
 
       if (request.category) {
-        params.append('category', request.category)
+        params.append('category', request.category);
       }
       if (request.brand) {
-        params.append('brand', request.brand)
+        params.append('brand', request.brand);
       }
       if (request.minPrice) {
-        params.append('min_price', request.minPrice.toString())
+        params.append('min_price', request.minPrice.toString());
       }
       if (request.maxPrice) {
-        params.append('max_price', request.maxPrice.toString())
+        params.append('max_price', request.maxPrice.toString());
       }
       if (request.inStock !== undefined) {
-        params.append('in_stock', request.inStock.toString())
+        params.append('in_stock', request.inStock.toString());
       }
 
       const response = await this.makeRequest<{
@@ -147,33 +147,33 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         page: number
         page_size: number
         has_more: boolean
-      }>(`/products/search?${params.toString()}`, {}, token)
+      }>(`/products/search?${params.toString()}`, {}, token);
 
       return {
         products: response.products.map(product => this.standardizeProductInfo(product)),
         total: response.total,
         page: response.page,
         pageSize: response.page_size,
-        hasMore: response.has_more
-      }
+        hasMore: response.has_more,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to search products on Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
   async getProduct(productId: string, token: string): Promise<PlatformProductInfo | null> {
     try {
-      const response = await this.makeRequest<any>(`/products/${productId}`, {}, token)
-      return this.standardizeProductInfo(response)
+      const response = await this.makeRequest<any>(`/products/${productId}`, {}, token);
+      return this.standardizeProductInfo(response);
     } catch (error) {
       if (error.type === PlatformErrorType.PRODUCT_NOT_FOUND) {
-        return null
+        return null;
       }
-      throw error
+      throw error;
     }
   }
 
@@ -187,31 +187,31 @@ export class SamsClubAdapter extends BasePlatformAdapter {
       }>>('/products/stock', {
         method: 'POST',
         body: JSON.stringify({
-          product_ids: request.productIds
-        })
-      }, token)
+          product_ids: request.productIds,
+        }),
+      }, token);
 
       const stocks: Record<string, {
         stock: number
         isInStock: boolean
         stockStatus?: string
-      }> = {}
+      }> = {};
 
       for (const [productId, stockInfo] of Object.entries(response)) {
         stocks[productId] = {
           stock: stockInfo.stock,
           isInStock: stockInfo.in_stock,
-          stockStatus: stockInfo.stock_status
-        }
+          stockStatus: stockInfo.stock_status,
+        };
       }
 
-      return { stocks }
+      return { stocks };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to query stock from Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -222,13 +222,13 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         items: request.items.map(item => ({
           product_id: item.platformProductId,
           quantity: item.quantity,
-          specification: item.specification
+          specification: item.specification,
         })),
         delivery_address: this.standardizeAddress(request.deliveryAddress),
         delivery_notes: request.deliveryNotes,
         coupon_code: request.couponCode,
-        payment_method: request.paymentMethod || 'wechat_pay'
-      }
+        payment_method: request.paymentMethod || 'wechat_pay',
+      };
 
       const response = await this.makeRequest<{
         order_id: string
@@ -241,8 +241,8 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         payment_url?: string
       }>('/orders', {
         method: 'POST',
-        body: JSON.stringify(orderData)
-      }, token)
+        body: JSON.stringify(orderData),
+      }, token);
 
       return {
         platformOrderId: response.order_id,
@@ -252,14 +252,14 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         shippingFee: response.shipping_fee,
         discount: response.discount,
         estimatedDeliveryTime: response.estimated_delivery_time,
-        paymentUrl: response.payment_url
-      }
+        paymentUrl: response.payment_url,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to create order on Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -273,7 +273,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         tracking_number?: string
         estimated_delivery_time?: string
         actual_delivery_time?: string
-      }>(`/orders/${orderId}`, {}, token)
+      }>(`/orders/${orderId}`, {}, token);
 
       return {
         platformOrderId: response.order_id,
@@ -282,29 +282,29 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         deliveryStatus: response.delivery_status,
         trackingNumber: response.tracking_number,
         estimatedDeliveryTime: response.estimated_delivery_time,
-        actualDeliveryTime: response.actual_delivery_time
-      }
+        actualDeliveryTime: response.actual_delivery_time,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get order status from Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
   async cancelOrder(orderId: string, token: string): Promise<boolean> {
     try {
       await this.makeRequest(`/orders/${orderId}/cancel`, {
-        method: 'POST'
-      }, token)
-      return true
+        method: 'POST',
+      }, token);
+      return true;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to cancel order on Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -314,17 +314,17 @@ export class SamsClubAdapter extends BasePlatformAdapter {
       const response = await this.makeRequest<Record<string, number>>('/products/prices', {
         method: 'POST',
         body: JSON.stringify({
-          product_ids: productIds
-        })
-      }, token)
+          product_ids: productIds,
+        }),
+      }, token);
 
-      return response
+      return response;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get product prices from Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -338,17 +338,17 @@ export class SamsClubAdapter extends BasePlatformAdapter {
       }>('/delivery/options', {
         method: 'POST',
         body: JSON.stringify({
-          address: this.standardizeAddress(address)
-        })
-      }, token)
+          address: this.standardizeAddress(address),
+        }),
+      }, token);
 
-      return response
+      return response;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get delivery options from Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -366,35 +366,35 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         body: JSON.stringify({
           items: orderItems.map(item => ({
             product_id: item.platformProductId,
-            quantity: item.quantity
+            quantity: item.quantity,
           })),
-          address: this.standardizeAddress(address)
-        })
-      }, token)
+          address: this.standardizeAddress(address),
+        }),
+      }, token);
 
-      return response.estimated_time
+      return response.estimated_time;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to estimate delivery time from Sam's Club: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
   // 工具方法
   private generateState(): string {
     return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15)
+           Math.random().toString(36).substring(2, 15);
   }
 
   // 重写token验证逻辑
   protected async validateTokenInternal(token: string): Promise<boolean> {
     try {
-      await this.makeRequest('/user/profile', {}, token)
-      return true
+      await this.makeRequest('/user/profile', {}, token);
+      return true;
     } catch (error) {
-      return false
+      return false;
     }
   }
 
@@ -425,7 +425,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
       deliveryOptions: rawProduct.delivery_options,
       deliveryTime: rawProduct.delivery_time,
       shippingFee: rawProduct.shipping_fee ? parseFloat(rawProduct.shipping_fee) : undefined,
-      platformData: rawProduct
-    }
+      platformData: rawProduct,
+    };
   }
 }

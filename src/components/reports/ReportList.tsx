@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import type { MedicalReport, MedicalIndicator } from '@prisma/client'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import type { MedicalReport, MedicalIndicator } from '@prisma/client';
 
 interface ReportListProps {
   memberId: string
@@ -19,72 +19,72 @@ const STATUS_LABELS: Record<string, string> = {
   PROCESSING: '处理中',
   COMPLETED: '已完成',
   FAILED: '失败',
-}
+};
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: 'bg-gray-100 text-gray-800',
   PROCESSING: 'bg-blue-100 text-blue-800',
   COMPLETED: 'bg-green-100 text-green-800',
   FAILED: 'bg-red-100 text-red-800',
-}
+};
 
 export function ReportList({
   memberId,
   familyId,
   onReportSelect,
 }: ReportListProps) {
-  const router = useRouter()
-  const [reports, setReports] = useState<ReportWithIndicators[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<string>('all') // all, completed, failed, processing
+  const router = useRouter();
+  const [reports, setReports] = useState<ReportWithIndicators[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<string>('all'); // all, completed, failed, processing
 
   const fetchReports = async () => {
     try {
-      setLoading(true)
-      const url = new URL(`/api/members/${memberId}/reports`, window.location.origin)
+      setLoading(true);
+      const url = new URL(`/api/members/${memberId}/reports`, window.location.origin);
       if (filter !== 'all') {
-        url.searchParams.set('status', filter.toUpperCase())
+        url.searchParams.set('status', filter.toUpperCase());
       }
 
-      const response = await fetch(url.toString())
-      const data = await response.json()
+      const response = await fetch(url.toString());
+      const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || '加载失败')
-        setLoading(false)
-        return
+        setError(data.error || '加载失败');
+        setLoading(false);
+        return;
       }
 
-      setReports(data.data)
-      setLoading(false)
+      setReports(data.data);
+      setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
-      setLoading(false)
+      setError(err instanceof Error ? err.message : '加载失败');
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchReports()
-  }, [memberId, filter])
+    fetchReports();
+  }, [memberId, filter]);
 
   const handleReportClick = (reportId: string) => {
     if (onReportSelect) {
-      onReportSelect(reportId)
+      onReportSelect(reportId);
     } else {
       // 如果没有提供onReportSelect，使用默认路径
       const path = familyId
         ? `/dashboard/families/${familyId}/members/${memberId}/reports/${reportId}`
-        : `/dashboard/families/${memberId}/reports/${reportId}`
-      router.push(path)
+        : `/dashboard/families/${memberId}/reports/${reportId}`;
+      router.push(path);
     }
-  }
+  };
 
   const handleDelete = async (reportId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
 
     if (!confirm('确定要删除这份报告吗？删除后无法恢复。')) {
-      return
+      return;
     }
 
     try {
@@ -93,20 +93,20 @@ export function ReportList({
         {
           method: 'DELETE',
         }
-      )
+      );
 
       if (!response.ok) {
-        const data = await response.json()
-        alert(data.error || '删除失败')
-        return
+        const data = await response.json();
+        alert(data.error || '删除失败');
+        return;
       }
 
       // 重新加载列表
-      fetchReports()
+      fetchReports();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '删除失败')
+      alert(err instanceof Error ? err.message : '删除失败');
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -116,7 +116,7 @@ export function ReportList({
           <p className="text-sm text-gray-600">加载中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -124,7 +124,7 @@ export function ReportList({
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
         <p className="text-sm text-red-800">{error}</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -183,7 +183,7 @@ export function ReportList({
           {reports.map((report) => {
             const abnormalCount = report.indicators.filter(
               (ind) => ind.isAbnormal
-            ).length
+            ).length;
 
             return (
               <div
@@ -272,11 +272,11 @@ export function ReportList({
                   </div>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }
 

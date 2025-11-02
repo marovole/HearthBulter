@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface ReportUploaderProps {
   memberId: string
@@ -9,152 +9,152 @@ interface ReportUploaderProps {
   onCancel?: () => void
 }
 
-const SUPPORTED_FORMATS = ['application/pdf', 'image/jpeg', 'image/png']
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const SUPPORTED_FORMATS = ['application/pdf', 'image/jpeg', 'image/png'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function ReportUploader({
   memberId,
   onSuccess,
   onCancel,
 }: ReportUploaderProps) {
-  const router = useRouter()
-  const [file, setFile] = useState<File | null>(null)
-  const [dragging, setDragging] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [error, setError] = useState<string | null>(null)
-  const [reportId, setReportId] = useState<string | null>(null)
+  const router = useRouter();
+  const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [reportId, setReportId] = useState<string | null>(null);
 
   const validateFile = useCallback((file: File): string | null => {
     // 验证文件类型
     if (!SUPPORTED_FORMATS.includes(file.type)) {
-      return '不支持的文件格式，仅支持 PDF、JPG、PNG 格式'
+      return '不支持的文件格式，仅支持 PDF、JPG、PNG 格式';
     }
 
     // 验证文件大小
     if (file.size > MAX_FILE_SIZE) {
-      return `文件大小超过限制（最大 ${MAX_FILE_SIZE / 1024 / 1024}MB）`
+      return `文件大小超过限制（最大 ${MAX_FILE_SIZE / 1024 / 1024}MB）`;
     }
 
-    return null
-  }, [])
+    return null;
+  }, []);
 
   const handleFileSelect = useCallback(
     (selectedFile: File) => {
-      setError(null)
-      const validationError = validateFile(selectedFile)
+      setError(null);
+      const validationError = validateFile(selectedFile);
       if (validationError) {
-        setError(validationError)
-        return
+        setError(validationError);
+        return;
       }
-      setFile(selectedFile)
+      setFile(selectedFile);
     },
     [validateFile]
-  )
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragging(true)
-  }, [])
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(true);
+  }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragging(false)
-  }, [])
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setDragging(false)
+      e.preventDefault();
+      e.stopPropagation();
+      setDragging(false);
 
-      const droppedFile = e.dataTransfer.files[0]
+      const droppedFile = e.dataTransfer.files[0];
       if (droppedFile) {
-        handleFileSelect(droppedFile)
+        handleFileSelect(droppedFile);
       }
     },
     [handleFileSelect]
-  )
+  );
 
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedFile = e.target.files?.[0]
+      const selectedFile = e.target.files?.[0];
       if (selectedFile) {
-        handleFileSelect(selectedFile)
+        handleFileSelect(selectedFile);
       }
     },
     [handleFileSelect]
-  )
+  );
 
   const handleUpload = async () => {
     if (!file) {
-      setError('请选择要上传的文件')
-      return
+      setError('请选择要上传的文件');
+      return;
     }
 
-    setUploading(true)
-    setError(null)
-    setUploadProgress(0)
+    setUploading(true);
+    setError(null);
+    setUploadProgress(0);
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
+      const formData = new FormData();
+      formData.append('file', file);
 
       // 模拟上传进度
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
-            clearInterval(progressInterval)
-            return 90
+            clearInterval(progressInterval);
+            return 90;
           }
-          return prev + 10
-        })
-      }, 200)
+          return prev + 10;
+        });
+      }, 200);
 
       const response = await fetch(`/api/members/${memberId}/reports`, {
         method: 'POST',
         body: formData,
-      })
+      });
 
-      clearInterval(progressInterval)
-      setUploadProgress(100)
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || '上传失败')
-        setUploading(false)
-        setUploadProgress(0)
-        return
+        setError(data.error || '上传失败');
+        setUploading(false);
+        setUploadProgress(0);
+        return;
       }
 
       // 上传成功
-      setReportId(data.reportId)
-      setUploading(false)
+      setReportId(data.reportId);
+      setUploading(false);
 
       // 调用成功回调
       if (onSuccess) {
-        onSuccess(data.reportId)
+        onSuccess(data.reportId);
       } else {
         // 默认跳转到报告详情页
-        router.push(`/dashboard/families/${memberId}/reports/${data.reportId}`)
+        router.push(`/dashboard/families/${memberId}/reports/${data.reportId}`);
       }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : '上传失败，请重试'
-      )
-      setUploading(false)
-      setUploadProgress(0)
+      );
+      setUploading(false);
+      setUploadProgress(0);
     }
-  }
+  };
 
   const handleRemove = () => {
-    setFile(null)
-    setError(null)
-    setReportId(null)
-  }
+    setFile(null);
+    setError(null);
+    setReportId(null);
+  };
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -341,6 +341,6 @@ export function ReportUploader({
         )}
       </div>
     </div>
-  )
+  );
 }
 

@@ -204,7 +204,7 @@ export class BudgetNotificationService {
     try {
       const familyMembers = await this.getFamilyMembers(familyId);
       
-      const notifications = familyMembers.map(memberId => ({
+      const notifications = await Promise.all(familyMembers.map(async memberId => ({
         memberId,
         type: NotificationType.BUDGET_WARNING,
         templateData: {
@@ -221,7 +221,7 @@ export class BudgetNotificationService {
         },
         actionUrl: '/family/budget',
         actionText: '查看家庭预算',
-      }));
+      })));
 
       await this.notificationManager.createBulkNotifications(notifications);
     } catch (error) {

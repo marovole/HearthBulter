@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import { 
   Heart, 
   TrendingUp, 
@@ -9,8 +9,8 @@ import {
   Target,
   AlertCircle,
   CheckCircle,
-  Info
-} from 'lucide-react'
+  Info,
+} from 'lucide-react';
 
 interface HealthScoreData {
   currentScore: number
@@ -45,25 +45,25 @@ interface HealthScoreDisplayProps {
 }
 
 export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayProps) {
-  const [data, setData] = useState<HealthScoreData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedFactor, setSelectedFactor] = useState<string | null>(null)
+  const [data, setData] = useState<HealthScoreData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedFactor, setSelectedFactor] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData()
-  }, [memberId, days])
+    loadData();
+  }, [memberId, days]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       // 模拟API调用 - 实际应该调用真实的健康评分API
       const mockData: HealthScoreData = {
         currentScore: 85,
         previousScore: 82,
         scoreHistory: Array.from({ length: days }, (_, i) => {
-          const date = new Date()
-          date.setDate(date.getDate() - (days - 1 - i))
+          const date = new Date();
+          date.setDate(date.getDate() - (days - 1 - i));
           return {
             date,
             score: 75 + Math.random() * 20,
@@ -72,44 +72,44 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
               nutrition: 75 + Math.random() * 25,
               sleep: 80 + Math.random() * 20,
               stress: 60 + Math.random() * 40,
-            }
-          }
+            },
+          };
         }),
         recommendations: [
           {
             type: 'exercise',
             title: '增加有氧运动',
             description: '建议每周增加2-3次有氧运动，每次30分钟，有助于提升心肺功能。',
-            priority: 'high'
+            priority: 'high',
           },
           {
             type: 'sleep',
             title: '改善睡眠质量',
             description: '保持规律作息，确保每晚7-8小时睡眠，避免睡前使用电子设备。',
-            priority: 'medium'
+            priority: 'medium',
           },
           {
             type: 'nutrition',
             title: '优化营养摄入',
             description: '增加蔬菜水果摄入，减少加工食品，保持营养均衡。',
-            priority: 'medium'
-          }
+            priority: 'medium',
+          },
         ],
         breakdown: {
           exercise: 88,
           nutrition: 82,
           sleep: 79,
-          stress: 91
-        }
-      }
+          stress: 91,
+        },
+      };
       
-      setData(mockData)
+      setData(mockData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -121,7 +121,7 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -134,7 +134,7 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!data) {
@@ -144,67 +144,67 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
           <p>暂无健康评分数据</p>
         </div>
       </div>
-    )
+    );
   }
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600'
-    if (score >= 80) return 'text-blue-600'
-    if (score >= 70) return 'text-yellow-600'
-    if (score >= 60) return 'text-orange-600'
-    return 'text-red-600'
-  }
+    if (score >= 90) return 'text-green-600';
+    if (score >= 80) return 'text-blue-600';
+    if (score >= 70) return 'text-yellow-600';
+    if (score >= 60) return 'text-orange-600';
+    return 'text-red-600';
+  };
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 90) return 'bg-green-100'
-    if (score >= 80) return 'bg-blue-100'
-    if (score >= 70) return 'bg-yellow-100'
-    if (score >= 60) return 'bg-orange-100'
-    return 'bg-red-100'
-  }
+    if (score >= 90) return 'bg-green-100';
+    if (score >= 80) return 'bg-blue-100';
+    if (score >= 70) return 'bg-yellow-100';
+    if (score >= 60) return 'bg-orange-100';
+    return 'bg-red-100';
+  };
 
   const getScoreLevel = (score: number) => {
-    if (score >= 90) return '优秀'
-    if (score >= 80) return '良好'
-    if (score >= 70) return '中等'
-    if (score >= 60) return '需改善'
-    return '较差'
-  }
+    if (score >= 90) return '优秀';
+    if (score >= 80) return '良好';
+    if (score >= 70) return '中等';
+    if (score >= 60) return '需改善';
+    return '较差';
+  };
 
-  const scoreChange = data.previousScore ? data.currentScore - data.previousScore : 0
+  const scoreChange = data.previousScore ? data.currentScore - data.previousScore : 0;
 
   const factorIcons = {
     exercise: Activity,
     nutrition: Heart,
     sleep: Target,
-    stress: TrendingDown
-  }
+    stress: TrendingDown,
+  };
 
   const factorLabels = {
     exercise: '运动',
     nutrition: '营养',
     sleep: '睡眠',
-    stress: '压力管理'
-  }
+    stress: '压力管理',
+  };
 
   const factorColors = {
     exercise: 'text-blue-600 bg-blue-100',
     nutrition: 'text-green-600 bg-green-100',
     sleep: 'text-purple-600 bg-purple-100',
-    stress: 'text-orange-600 bg-orange-100'
-  }
+    stress: 'text-orange-600 bg-orange-100',
+  };
 
   const priorityColors = {
     high: 'bg-red-100 text-red-800 border-red-200',
     medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    low: 'bg-blue-100 text-blue-800 border-blue-200'
-  }
+    low: 'bg-blue-100 text-blue-800 border-blue-200',
+  };
 
   const priorityLabels = {
     high: '高优先级',
     medium: '中优先级',
-    low: '低优先级'
-  }
+    low: '低优先级',
+  };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -253,7 +253,7 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
         <h4 className="text-sm font-medium text-gray-700 mb-4">评分细分</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Object.entries(data.breakdown).map(([factor, score]) => {
-            const Icon = factorIcons[factor as keyof typeof factorIcons]
+            const Icon = factorIcons[factor as keyof typeof factorIcons];
             return (
               <div
                 key={factor}
@@ -273,14 +273,14 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
                   <div
                     className={`h-2 rounded-full ${
                       score >= 80 ? 'bg-green-600' :
-                      score >= 70 ? 'bg-blue-600' :
-                      score >= 60 ? 'bg-yellow-600' : 'bg-red-600'
+                        score >= 70 ? 'bg-blue-600' :
+                          score >= 60 ? 'bg-yellow-600' : 'bg-red-600'
                     }`}
                     style={{ width: `${score}%` }}
                   />
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       </div>
@@ -290,7 +290,7 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
         <h4 className="text-sm font-medium text-gray-700 mb-4">个性化建议</h4>
         <div className="space-y-3">
           {data.recommendations.map((rec, index) => {
-            const Icon = factorIcons[rec.type]
+            const Icon = factorIcons[rec.type];
             return (
               <div key={index} className={`border rounded-lg p-4 ${priorityColors[rec.priority]}`}>
                 <div className="flex items-start space-x-3">
@@ -306,7 +306,7 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
                   </div>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       </div>
@@ -347,5 +347,5 @@ export function HealthScoreDisplay({ memberId, days = 30 }: HealthScoreDisplayPr
         </div>
       </div>
     </div>
-  )
+  );
 }

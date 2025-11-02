@@ -83,8 +83,8 @@ export class UserItemMatrixBuilder {
     minRatingsPerItem: number,
     maxAge?: Date
   ): Promise<UserItemRating[]> {
-    let whereClause: any = {
-      rating: { gte: 1, lte: 5 }
+    const whereClause: any = {
+      rating: { gte: 1, lte: 5 },
     };
 
     if (maxAge) {
@@ -142,7 +142,7 @@ export class UserItemMatrixBuilder {
       userId: r.userId,
       itemId: r.itemId,
       rating: Number(r.rating),
-      timestamp: new Date(r.timestamp)
+      timestamp: new Date(r.timestamp),
     }));
   }
 
@@ -172,7 +172,7 @@ export class UserItemMatrixBuilder {
       userAverages: new Map(),
       itemAverages: new Map(),
       globalAverage: 0,
-      sparsity: 0
+      sparsity: 0,
     };
 
     return matrix;
@@ -271,7 +271,7 @@ export class UserItemMatrixBuilder {
       sparsity: matrix.sparsity,
       ratingDistribution,
       userActivityDistribution,
-      itemPopularityDistribution
+      itemPopularityDistribution,
     };
   }
 
@@ -457,7 +457,7 @@ export class UserItemMatrixBuilder {
   getCacheStatus(): { size: number; keys: string[] } {
     return {
       size: this.matrixCache.size,
-      keys: Array.from(this.matrixCache.keys())
+      keys: Array.from(this.matrixCache.keys()),
     };
   }
 }

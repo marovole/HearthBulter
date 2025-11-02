@@ -1,6 +1,6 @@
-import { prisma } from '@/lib/prisma'
-import { FoodCategory, ListStatus } from '@prisma/client'
-import { hasPermission, Permission, FamilyMemberRole } from '@/lib/permissions'
+import { prisma } from '@/lib/prisma';
+import { FoodCategory, ListStatus } from '@prisma/client';
+import { hasPermission, Permission, FamilyMemberRole } from '@/lib/permissions';
 
 // 购物清单服务
 export class ShoppingListService {
@@ -12,16 +12,16 @@ export class ShoppingListService {
         where: {
           userId,
           familyId,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
           id: true,
-          role: true
-        }
-      })
+          role: true,
+        },
+      });
 
       if (!member) {
-        throw new Error('Not a family member')
+        throw new Error('Not a family member');
       }
 
       // 获取购物清单
@@ -29,9 +29,9 @@ export class ShoppingListService {
         where: {
           plan: {
             memberId: {
-              in: await this.getFamilyMemberIds(familyId)
-            }
-          }
+              in: await this.getFamilyMemberIds(familyId),
+            },
+          },
         },
         include: {
           items: {
@@ -45,37 +45,37 @@ export class ShoppingListService {
                   calories: true,
                   protein: true,
                   carbs: true,
-                  fat: true
-                }
+                  fat: true,
+                },
               },
               assignee: {
                 select: {
                   id: true,
                   name: true,
                   avatar: true,
-                  role: true
-                }
+                  role: true,
+                },
               },
               addedByMember: {
                 select: {
                   id: true,
                   name: true,
                   avatar: true,
-                  role: true
-                }
+                  role: true,
+                },
               },
               purchasedByMember: {
                 select: {
                   id: true,
                   name: true,
                   avatar: true,
-                  role: true
-                }
-              }
+                  role: true,
+                },
+              },
             },
             orderBy: {
-              createdAt: 'asc'
-            }
+              createdAt: 'asc',
+            },
           },
           plan: {
             select: {
@@ -84,16 +84,16 @@ export class ShoppingListService {
                 select: {
                   id: true,
                   name: true,
-                  avatar: true
-                }
-              }
-            }
-          }
+                  avatar: true,
+                },
+              },
+            },
+          },
         },
         orderBy: {
-          createdAt: 'desc'
-        }
-      })
+          createdAt: 'desc',
+        },
+      });
 
       // 计算统计信息
       const listWithStats = shoppingLists.map(list => ({
@@ -103,14 +103,14 @@ export class ShoppingListService {
           purchasedItems: list.items.filter(item => item.purchased).length,
           pendingItems: list.items.filter(item => !item.purchased).length,
           assignedItems: list.items.filter(item => item.assigneeId).length,
-          totalEstimatedCost: list.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0)
-        }
-      }))
+          totalEstimatedCost: list.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0),
+        },
+      }));
 
-      return listWithStats
+      return listWithStats;
     } catch (error) {
-      console.error('Error getting family shopping list:', error)
-      throw error
+      console.error('Error getting family shopping list:', error);
+      throw error;
     }
   }
 
@@ -132,20 +132,20 @@ export class ShoppingListService {
         where: {
           userId,
           familyId,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
           id: true,
-          role: true
-        }
-      })
+          role: true,
+        },
+      });
 
       if (!member) {
-        throw new Error('Not a family member')
+        throw new Error('Not a family member');
       }
 
       if (!hasPermission(member.role, Permission.CREATE_SHOPPING_ITEM)) {
-        throw new Error('Insufficient permissions')
+        throw new Error('Insufficient permissions');
       }
 
       // 验证购物清单属于家庭成员
@@ -154,14 +154,14 @@ export class ShoppingListService {
           id: data.listId,
           plan: {
             memberId: {
-              in: await this.getFamilyMemberIds(familyId)
-            }
-          }
-        }
-      })
+              in: await this.getFamilyMemberIds(familyId),
+            },
+          },
+        },
+      });
 
       if (!list) {
-        throw new Error('Shopping list not found')
+        throw new Error('Shopping list not found');
       }
 
       // 验证被分配人是家庭成员
@@ -170,22 +170,22 @@ export class ShoppingListService {
           where: {
             id: data.assigneeId,
             familyId,
-            deletedAt: null
-          }
-        })
+            deletedAt: null,
+          },
+        });
 
         if (!assignee) {
-          throw new Error('Assignee is not a family member')
+          throw new Error('Assignee is not a family member');
         }
       }
 
       // 创建购物项
       const food = await prisma.food.findUnique({
-        where: { id: data.foodId }
-      })
+        where: { id: data.foodId },
+      });
 
       if (!food) {
-        throw new Error('Food not found')
+        throw new Error('Food not found');
       }
 
       const shoppingItem = await prisma.shoppingItem.create({
@@ -196,7 +196,7 @@ export class ShoppingListService {
           category: food.category,
           estimatedPrice: data.estimatedPrice,
           assigneeId: data.assigneeId,
-          addedBy: member.id
+          addedBy: member.id,
         },
         include: {
           food: {
@@ -204,39 +204,39 @@ export class ShoppingListService {
               id: true,
               name: true,
               nameEn: true,
-              category: true
-            }
+              category: true,
+            },
           },
           assignee: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
+              role: true,
+            },
           },
           addedByMember: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
-          }
-        }
-      })
+              role: true,
+            },
+          },
+        },
+      });
 
       // 记录活动
       await this.logActivity(familyId, member.id, 'SHOPPING_UPDATED', {
         action: 'ADD_ITEM',
         itemId: shoppingItem.id,
-        foodName: food.name
-      })
+        foodName: food.name,
+      });
 
-      return shoppingItem
+      return shoppingItem;
     } catch (error) {
-      console.error('Error adding shopping item:', error)
-      throw error
+      console.error('Error adding shopping item:', error);
+      throw error;
     }
   }
 
@@ -253,20 +253,20 @@ export class ShoppingListService {
         where: {
           userId,
           familyId,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
           id: true,
-          role: true
-        }
-      })
+          role: true,
+        },
+      });
 
       if (!member) {
-        throw new Error('Not a family member')
+        throw new Error('Not a family member');
       }
 
       if (!hasPermission(member.role, Permission.ASSIGN_SHOPPING_ITEM)) {
-        throw new Error('Insufficient permissions')
+        throw new Error('Insufficient permissions');
       }
 
       // 验证购物项
@@ -276,22 +276,22 @@ export class ShoppingListService {
           list: {
             plan: {
               memberId: {
-                in: await this.getFamilyMemberIds(familyId)
-              }
-            }
-          }
+                in: await this.getFamilyMemberIds(familyId),
+              },
+            },
+          },
         },
         include: {
           food: {
             select: {
-              name: true
-            }
-          }
-        }
-      })
+              name: true,
+            },
+          },
+        },
+      });
 
       if (!item) {
-        throw new Error('Shopping item not found')
+        throw new Error('Shopping item not found');
       }
 
       // 验证被分配人
@@ -299,17 +299,17 @@ export class ShoppingListService {
         where: {
           id: assigneeId,
           familyId,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
           id: true,
           name: true,
-          role: true
-        }
-      })
+          role: true,
+        },
+      });
 
       if (!assignee) {
-        throw new Error('Assignee is not a family member')
+        throw new Error('Assignee is not a family member');
       }
 
       // 更新分配
@@ -322,40 +322,40 @@ export class ShoppingListService {
               id: true,
               name: true,
               nameEn: true,
-              category: true
-            }
+              category: true,
+            },
           },
           assignee: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
+              role: true,
+            },
           },
           addedByMember: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
-          }
-        }
-      })
+              role: true,
+            },
+          },
+        },
+      });
 
       // 记录活动
       await this.logActivity(familyId, member.id, 'SHOPPING_UPDATED', {
         action: 'ASSIGN_ITEM',
         itemId: item.id,
         foodName: item.food.name,
-        assigneeName: assignee.name
-      })
+        assigneeName: assignee.name,
+      });
 
-      return updatedItem
+      return updatedItem;
     } catch (error) {
-      console.error('Error assigning shopping item:', error)
-      throw error
+      console.error('Error assigning shopping item:', error);
+      throw error;
     }
   }
 
@@ -372,20 +372,20 @@ export class ShoppingListService {
         where: {
           userId,
           familyId,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
           id: true,
-          role: true
-        }
-      })
+          role: true,
+        },
+      });
 
       if (!member) {
-        throw new Error('Not a family member')
+        throw new Error('Not a family member');
       }
 
       if (!hasPermission(member.role, Permission.PURCHASE_SHOPPING_ITEM)) {
-        throw new Error('Insufficient permissions')
+        throw new Error('Insufficient permissions');
       }
 
       // 验证购物项
@@ -395,22 +395,22 @@ export class ShoppingListService {
           list: {
             plan: {
               memberId: {
-                in: await this.getFamilyMemberIds(familyId)
-              }
-            }
-          }
+                in: await this.getFamilyMemberIds(familyId),
+              },
+            },
+          },
         },
         include: {
           food: {
             select: {
-              name: true
-            }
-          }
-        }
-      })
+              name: true,
+            },
+          },
+        },
+      });
 
       if (!item) {
-        throw new Error('Shopping item not found')
+        throw new Error('Shopping item not found');
       }
 
       // 更新购买状态
@@ -420,7 +420,7 @@ export class ShoppingListService {
           purchased: true,
           purchasedBy: member.id,
           purchasedAt: new Date(),
-          estimatedPrice: actualPrice || item.estimatedPrice
+          estimatedPrice: actualPrice || item.estimatedPrice,
         },
         include: {
           food: {
@@ -428,48 +428,48 @@ export class ShoppingListService {
               id: true,
               name: true,
               nameEn: true,
-              category: true
-            }
+              category: true,
+            },
           },
           assignee: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
+              role: true,
+            },
           },
           addedByMember: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
+              role: true,
+            },
           },
           purchasedByMember: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
-          }
-        }
-      })
+              role: true,
+            },
+          },
+        },
+      });
 
       // 记录活动
       await this.logActivity(familyId, member.id, 'SHOPPING_UPDATED', {
         action: 'PURCHASE_ITEM',
         itemId: item.id,
         foodName: item.food.name,
-        actualPrice
-      })
+        actualPrice,
+      });
 
-      return updatedItem
+      return updatedItem;
     } catch (error) {
-      console.error('Error confirming purchase:', error)
-      throw error
+      console.error('Error confirming purchase:', error);
+      throw error;
     }
   }
 
@@ -490,16 +490,16 @@ export class ShoppingListService {
         where: {
           userId,
           familyId,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
           id: true,
-          role: true
-        }
-      })
+          role: true,
+        },
+      });
 
       if (!member) {
-        throw new Error('Not a family member')
+        throw new Error('Not a family member');
       }
 
       // 验证购物项
@@ -509,27 +509,27 @@ export class ShoppingListService {
           list: {
             plan: {
               memberId: {
-                in: await this.getFamilyMemberIds(familyId)
-              }
-            }
-          }
+                in: await this.getFamilyMemberIds(familyId),
+              },
+            },
+          },
         },
         include: {
           food: {
             select: {
-              name: true
-            }
-          }
-        }
-      })
+              name: true,
+            },
+          },
+        },
+      });
 
       if (!item) {
-        throw new Error('Shopping item not found')
+        throw new Error('Shopping item not found');
       }
 
       // 检查更新权限
       if (!hasPermission(member.role, Permission.UPDATE_SHOPPING_ITEM, item.addedBy, member.id)) {
-        throw new Error('Insufficient permissions to update this item')
+        throw new Error('Insufficient permissions to update this item');
       }
 
       // 验证被分配人
@@ -538,12 +538,12 @@ export class ShoppingListService {
           where: {
             id: data.assigneeId,
             familyId,
-            deletedAt: null
-          }
-        })
+            deletedAt: null,
+          },
+        });
 
         if (!assignee) {
-          throw new Error('Assignee is not a family member')
+          throw new Error('Assignee is not a family member');
         }
       }
 
@@ -552,7 +552,7 @@ export class ShoppingListService {
         where: { id: itemId },
         data: {
           ...data,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         include: {
           food: {
@@ -560,48 +560,48 @@ export class ShoppingListService {
               id: true,
               name: true,
               nameEn: true,
-              category: true
-            }
+              category: true,
+            },
           },
           assignee: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
+              role: true,
+            },
           },
           addedByMember: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
+              role: true,
+            },
           },
           purchasedByMember: {
             select: {
               id: true,
               name: true,
               avatar: true,
-              role: true
-            }
-          }
-        }
-      })
+              role: true,
+            },
+          },
+        },
+      });
 
       // 记录活动
       await this.logActivity(familyId, member.id, 'SHOPPING_UPDATED', {
         action: 'UPDATE_ITEM',
         itemId: item.id,
         foodName: item.food.name,
-        changes: data
-      })
+        changes: data,
+      });
 
-      return updatedItem
+      return updatedItem;
     } catch (error) {
-      console.error('Error updating shopping item:', error)
-      throw error
+      console.error('Error updating shopping item:', error);
+      throw error;
     }
   }
 
@@ -613,16 +613,16 @@ export class ShoppingListService {
         where: {
           userId,
           familyId,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
           id: true,
-          role: true
-        }
-      })
+          role: true,
+        },
+      });
 
       if (!member) {
-        throw new Error('Not a family member')
+        throw new Error('Not a family member');
       }
 
       // 验证购物项
@@ -632,45 +632,45 @@ export class ShoppingListService {
           list: {
             plan: {
               memberId: {
-                in: await this.getFamilyMemberIds(familyId)
-              }
-            }
-          }
+                in: await this.getFamilyMemberIds(familyId),
+              },
+            },
+          },
         },
         include: {
           food: {
             select: {
-              name: true
-            }
-          }
-        }
-      })
+              name: true,
+            },
+          },
+        },
+      });
 
       if (!item) {
-        throw new Error('Shopping item not found')
+        throw new Error('Shopping item not found');
       }
 
       // 检查删除权限
       if (!hasPermission(member.role, Permission.DELETE_SHOPPING_ITEM, item.addedBy, member.id)) {
-        throw new Error('Insufficient permissions to delete this item')
+        throw new Error('Insufficient permissions to delete this item');
       }
 
       // 删除购物项
       await prisma.shoppingItem.delete({
-        where: { id: itemId }
-      })
+        where: { id: itemId },
+      });
 
       // 记录活动
       await this.logActivity(familyId, member.id, 'SHOPPING_UPDATED', {
         action: 'DELETE_ITEM',
         itemId: item.id,
-        foodName: item.food.name
-      })
+        foodName: item.food.name,
+      });
 
-      return { success: true }
+      return { success: true };
     } catch (error) {
-      console.error('Error deleting shopping item:', error)
-      throw error
+      console.error('Error deleting shopping item:', error);
+      throw error;
     }
   }
 
@@ -682,16 +682,16 @@ export class ShoppingListService {
         where: {
           userId,
           familyId,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
           id: true,
-          role: true
-        }
-      })
+          role: true,
+        },
+      });
 
       if (!member) {
-        throw new Error('Not a family member')
+        throw new Error('Not a family member');
       }
 
       // 获取统计信息
@@ -700,28 +700,28 @@ export class ShoppingListService {
           list: {
             plan: {
               memberId: {
-                in: await this.getFamilyMemberIds(familyId)
-              }
-            }
-          }
+                in: await this.getFamilyMemberIds(familyId),
+              },
+            },
+          },
         },
         include: {
           assignee: {
             select: {
               id: true,
               name: true,
-              avatar: true
-            }
+              avatar: true,
+            },
           },
           addedByMember: {
             select: {
               id: true,
               name: true,
-              avatar: true
-            }
-          }
-        }
-      })
+              avatar: true,
+            },
+          },
+        },
+      });
 
       const stats = {
         totalItems: items.length,
@@ -731,48 +731,48 @@ export class ShoppingListService {
         totalEstimatedCost: items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0),
         categoryStats: {} as Record<FoodCategory, number>,
         assigneeStats: {} as Record<string, { name: string; count: number; avatar?: string }>,
-        addedByStats: {} as Record<string, { name: string; count: number; avatar?: string }>
-      }
+        addedByStats: {} as Record<string, { name: string; count: number; avatar?: string }>,
+      };
 
       // 按分类统计
       items.forEach(item => {
-        stats.categoryStats[item.category] = (stats.categoryStats[item.category] || 0) + 1
-      })
+        stats.categoryStats[item.category] = (stats.categoryStats[item.category] || 0) + 1;
+      });
 
       // 按分配人统计
       items.forEach(item => {
         if (item.assignee) {
-          const key = item.assignee.id
+          const key = item.assignee.id;
           if (!stats.assigneeStats[key]) {
             stats.assigneeStats[key] = {
               name: item.assignee.name,
               count: 0,
-              avatar: item.assignee.avatar
-            }
+              avatar: item.assignee.avatar,
+            };
           }
-          stats.assigneeStats[key].count++
+          stats.assigneeStats[key].count++;
         }
-      })
+      });
 
       // 按添加人统计
       items.forEach(item => {
         if (item.addedByMember) {
-          const key = item.addedByMember.id
+          const key = item.addedByMember.id;
           if (!stats.addedByStats[key]) {
             stats.addedByStats[key] = {
               name: item.addedByMember.name,
               count: 0,
-              avatar: item.addedByMember.avatar
-            }
+              avatar: item.addedByMember.avatar,
+            };
           }
-          stats.addedByStats[key].count++
+          stats.addedByStats[key].count++;
         }
-      })
+      });
 
-      return stats
+      return stats;
     } catch (error) {
-      console.error('Error getting shopping stats:', error)
-      throw error
+      console.error('Error getting shopping stats:', error);
+      throw error;
     }
   }
 
@@ -781,14 +781,14 @@ export class ShoppingListService {
     const members = await prisma.familyMember.findMany({
       where: {
         familyId,
-        deletedAt: null
+        deletedAt: null,
       },
       select: {
-        id: true
-      }
-    })
+        id: true,
+      },
+    });
 
-    return members.map(member => member.id)
+    return members.map(member => member.id);
   }
 
   // 辅助方法：记录活动
@@ -806,53 +806,53 @@ export class ShoppingListService {
           activityType: activityType as any,
           title: this.getActivityTitle(activityType, metadata),
           description: this.getActivityDescription(activityType, metadata),
-          metadata
-        }
-      })
+          metadata,
+        },
+      });
     } catch (error) {
-      console.error('Error logging activity:', error)
+      console.error('Error logging activity:', error);
       // 不抛出错误，避免影响主要操作
     }
   }
 
   private static getActivityTitle(activityType: string, metadata: any): string {
     switch (activityType) {
-      case 'SHOPPING_UPDATED':
-        switch (metadata.action) {
-          case 'ADD_ITEM':
-            return '添加了购物项'
-          case 'ASSIGN_ITEM':
-            return '分配了购物项'
-          case 'PURCHASE_ITEM':
-            return '购买了物品'
-          case 'UPDATE_ITEM':
-            return '更新了购物项'
-          case 'DELETE_ITEM':
-            return '删除了购物项'
-          default:
-            return '更新了购物清单'
-        }
+    case 'SHOPPING_UPDATED':
+      switch (metadata.action) {
+      case 'ADD_ITEM':
+        return '添加了购物项';
+      case 'ASSIGN_ITEM':
+        return '分配了购物项';
+      case 'PURCHASE_ITEM':
+        return '购买了物品';
+      case 'UPDATE_ITEM':
+        return '更新了购物项';
+      case 'DELETE_ITEM':
+        return '删除了购物项';
       default:
-        return '购物清单更新'
+        return '更新了购物清单';
+      }
+    default:
+      return '购物清单更新';
     }
   }
 
   private static getActivityDescription(activityType: string, metadata: any): string {
     switch (activityType) {
-      case 'SHOPPING_UPDATED':
-        let description = ''
-        if (metadata.foodName) {
-          description += `${metadata.foodName}`
-        }
-        if (metadata.assigneeName) {
-          description += ` 分配给 ${metadata.assigneeName}`
-        }
-        if (metadata.actualPrice) {
-          description += ` 实际价格: ¥${metadata.actualPrice}`
-        }
-        return description
-      default:
-        return ''
+    case 'SHOPPING_UPDATED':
+      let description = '';
+      if (metadata.foodName) {
+        description += `${metadata.foodName}`;
+      }
+      if (metadata.assigneeName) {
+        description += ` 分配给 ${metadata.assigneeName}`;
+      }
+      if (metadata.actualPrice) {
+        description += ` 实际价格: ¥${metadata.actualPrice}`;
+      }
+      return description;
+    default:
+      return '';
     }
   }
 }

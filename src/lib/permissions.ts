@@ -1,4 +1,4 @@
-import { FamilyMemberRole } from '@prisma/client'
+import { FamilyMemberRole } from '@prisma/client';
 
 // 权限操作类型
 export enum Permission {
@@ -82,7 +82,7 @@ export const ROLE_PERMISSIONS: Record<FamilyMemberRole, Permission[]> = {
     Permission.INVITE_MEMBERS,
     Permission.REMOVE_MEMBERS,
     
-    Permission.VIEW_FAMILY_DATA
+    Permission.VIEW_FAMILY_DATA,
   ],
   
   [FamilyMemberRole.MEMBER]: [
@@ -114,7 +114,7 @@ export const ROLE_PERMISSIONS: Record<FamilyMemberRole, Permission[]> = {
     Permission.ASSIGN_SHOPPING_ITEM,
     Permission.PURCHASE_SHOPPING_ITEM,
     
-    Permission.VIEW_FAMILY_DATA
+    Permission.VIEW_FAMILY_DATA,
   ],
   
   [FamilyMemberRole.GUEST]: [
@@ -129,9 +129,9 @@ export const ROLE_PERMISSIONS: Record<FamilyMemberRole, Permission[]> = {
     Permission.UPDATE_COMMENT, // 只能更新自己的评论
     Permission.DELETE_COMMENT, // 只能删除自己的评论
     
-    Permission.VIEW_FAMILY_DATA
-  ]
-}
+    Permission.VIEW_FAMILY_DATA,
+  ],
+};
 
 // 权限检查函数
 export function hasPermission(
@@ -141,9 +141,9 @@ export function hasPermission(
   currentUserId?: string
 ): boolean {
   // 检查角色是否拥有该权限
-  const permissions = ROLE_PERMISSIONS[userRole]
+  const permissions = ROLE_PERMISSIONS[userRole];
   if (!permissions.includes(permission)) {
-    return false
+    return false;
   }
   
   // 对于需要所有权的操作，检查资源所有者
@@ -158,21 +158,21 @@ export function hasPermission(
       Permission.UPDATE_GOAL,
       Permission.DELETE_GOAL,
       Permission.UPDATE_SHOPPING_ITEM,
-      Permission.DELETE_SHOPPING_ITEM
-    ]
+      Permission.DELETE_SHOPPING_ITEM,
+    ];
     
     if (ownershipRequiredPermissions.includes(permission)) {
       // 管理员可以操作任何资源
       if (userRole === FamilyMemberRole.ADMIN) {
-        return true
+        return true;
       }
       
       // 其他角色只能操作自己的资源
-      return resourceOwnerId === currentUserId
+      return resourceOwnerId === currentUserId;
     }
   }
   
-  return true
+  return true;
 }
 
 // 检查用户是否可以执行特定操作
@@ -182,8 +182,8 @@ export function canPerformAction(
   resourceOwnerId?: string,
   currentUserId?: string
 ): boolean {
-  const permission = action as Permission
-  return hasPermission(userRole, permission, resourceOwnerId, currentUserId)
+  const permission = action as Permission;
+  return hasPermission(userRole, permission, resourceOwnerId, currentUserId);
 }
 
 // 获取用户在家庭中的角色
@@ -196,14 +196,14 @@ export async function getUserFamilyRole(
     where: {
       userId,
       familyId,
-      deletedAt: null
+      deletedAt: null,
     },
     select: {
-      role: true
-    }
-  })
+      role: true,
+    },
+  });
   
-  return member?.role || null
+  return member?.role || null;
 }
 
 // 检查用户是否是家庭管理员
@@ -212,8 +212,8 @@ export async function isFamilyAdmin(
   familyId: string,
   prisma: any
 ): Promise<boolean> {
-  const role = await getUserFamilyRole(userId, familyId, prisma)
-  return role === FamilyMemberRole.ADMIN
+  const role = await getUserFamilyRole(userId, familyId, prisma);
+  return role === FamilyMemberRole.ADMIN;
 }
 
 // 检查用户是否是家庭创建者
@@ -226,32 +226,32 @@ export async function isFamilyCreator(
     where: {
       id: familyId,
       creatorId: userId,
-      deletedAt: null
-    }
-  })
+      deletedAt: null,
+    },
+  });
   
-  return !!family
+  return !!family;
 }
 
 // 权限错误类
 export class PermissionError extends Error {
   constructor(message: string) {
-    super(message)
-    this.name = 'PermissionError'
+    super(message);
+    this.name = 'PermissionError';
   }
 }
 
 // 权限检查装饰器（用于API路由）
 export function requirePermission(permission: Permission) {
   return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
-    const method = descriptor.value
+    const method = descriptor.value;
     
     descriptor.value = async function (...args: any[]) {
       // 这里需要从请求中获取用户信息和家庭信息
       // 实际实现会在中间件中处理
-      return method.apply(this, args)
-    }
-  }
+      return method.apply(this, args);
+    };
+  };
 }
 
 // 常用权限组合
@@ -262,7 +262,7 @@ export const PERMISSIONS = {
     Permission.READ_TASK,
     Permission.UPDATE_TASK,
     Permission.DELETE_TASK,
-    Permission.ASSIGN_TASK
+    Permission.ASSIGN_TASK,
   ],
   
   // 活动管理
@@ -270,7 +270,7 @@ export const PERMISSIONS = {
     Permission.CREATE_ACTIVITY,
     Permission.READ_ACTIVITY,
     Permission.UPDATE_ACTIVITY,
-    Permission.DELETE_ACTIVITY
+    Permission.DELETE_ACTIVITY,
   ],
   
   // 购物清单管理
@@ -280,7 +280,7 @@ export const PERMISSIONS = {
     Permission.UPDATE_SHOPPING_ITEM,
     Permission.DELETE_SHOPPING_ITEM,
     Permission.ASSIGN_SHOPPING_ITEM,
-    Permission.PURCHASE_SHOPPING_ITEM
+    Permission.PURCHASE_SHOPPING_ITEM,
   ],
   
   // 家庭管理
@@ -288,7 +288,7 @@ export const PERMISSIONS = {
     Permission.MANAGE_FAMILY,
     Permission.MANAGE_MEMBERS,
     Permission.INVITE_MEMBERS,
-    Permission.REMOVE_MEMBERS
+    Permission.REMOVE_MEMBERS,
   ],
   
   // 只读权限
@@ -298,6 +298,6 @@ export const PERMISSIONS = {
     Permission.READ_COMMENT,
     Permission.READ_GOAL,
     Permission.READ_SHOPPING_ITEM,
-    Permission.VIEW_FAMILY_DATA
-  ]
-}
+    Permission.VIEW_FAMILY_DATA,
+  ],
+};

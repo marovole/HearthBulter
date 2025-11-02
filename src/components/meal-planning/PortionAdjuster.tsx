@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Plus, 
   Minus, 
@@ -14,9 +14,9 @@ import {
   Scale,
   AlertTriangle,
   CheckCircle,
-  RefreshCw
-} from 'lucide-react'
-import { toast } from '@/lib/toast'
+  RefreshCw,
+} from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 interface PortionAdjusterProps {
   mealId: string
@@ -44,83 +44,83 @@ export function PortionAdjuster({
   originalServings,
   originalIngredients,
   originalNutrition,
-  onAdjust
+  onAdjust,
 }: PortionAdjusterProps) {
-  const [servings, setServings] = useState(originalServings)
-  const [customServings, setCustomServings] = useState(originalServings.toString())
-  const [isCustomMode, setIsCustomMode] = useState(false)
-  const [adjustedIngredients, setAdjustedIngredients] = useState(originalIngredients)
-  const [adjustedNutrition, setAdjustedNutrition] = useState(originalNutrition)
-  const [hasChanges, setHasChanges] = useState(false)
+  const [servings, setServings] = useState(originalServings);
+  const [customServings, setCustomServings] = useState(originalServings.toString());
+  const [isCustomMode, setIsCustomMode] = useState(false);
+  const [adjustedIngredients, setAdjustedIngredients] = useState(originalIngredients);
+  const [adjustedNutrition, setAdjustedNutrition] = useState(originalNutrition);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const scaleFactor = servings / originalServings
+  const scaleFactor = servings / originalServings;
 
   useEffect(() => {
     const newIngredients = originalIngredients.map(ingredient => ({
       ...ingredient,
-      amount: ingredient.amount * scaleFactor
-    }))
+      amount: ingredient.amount * scaleFactor,
+    }));
     
     const newNutrition = {
       calories: originalNutrition.calories * scaleFactor,
       protein: originalNutrition.protein * scaleFactor,
       carbs: originalNutrition.carbs * scaleFactor,
-      fat: originalNutrition.fat * scaleFactor
-    }
+      fat: originalNutrition.fat * scaleFactor,
+    };
     
-    setAdjustedIngredients(newIngredients)
-    setAdjustedNutrition(newNutrition)
-    setHasChanges(servings !== originalServings)
-  }, [servings, originalServings, originalIngredients, originalNutrition])
+    setAdjustedIngredients(newIngredients);
+    setAdjustedNutrition(newNutrition);
+    setHasChanges(servings !== originalServings);
+  }, [servings, originalServings, originalIngredients, originalNutrition]);
 
   const handleQuickAdjust = (newServings: number) => {
     if (newServings < 0.5 || newServings > 20) {
-      toast.error('份量必须在0.5到20人份之间')
-      return
+      toast.error('份量必须在0.5到20人份之间');
+      return;
     }
-    setServings(newServings)
-    setCustomServings(newServings.toString())
-    setIsCustomMode(false)
-  }
+    setServings(newServings);
+    setCustomServings(newServings.toString());
+    setIsCustomMode(false);
+  };
 
   const handleCustomServings = () => {
-    const value = parseFloat(customServings)
+    const value = parseFloat(customServings);
     if (isNaN(value) || value < 0.5 || value > 20) {
-      toast.error('请输入有效的份量数值（0.5-20）')
-      return
+      toast.error('请输入有效的份量数值（0.5-20）');
+      return;
     }
-    setServings(value)
-    setIsCustomMode(false)
-  }
+    setServings(value);
+    setIsCustomMode(false);
+  };
 
   const handleReset = () => {
-    setServings(originalServings)
-    setCustomServings(originalServings.toString())
-    setIsCustomMode(false)
-  }
+    setServings(originalServings);
+    setCustomServings(originalServings.toString());
+    setIsCustomMode(false);
+  };
 
   const handleApplyChanges = () => {
-    onAdjust?.(servings, adjustedIngredients, adjustedNutrition)
-    toast.success(`份量已调整为 ${servings} 人份`)
-  }
+    onAdjust?.(servings, adjustedIngredients, adjustedNutrition);
+    toast.success(`份量已调整为 ${servings} 人份`);
+  };
 
   const formatAmount = (amount: number, unit?: string): string => {
     if (amount >= 1000) {
-      return `${(amount / 1000).toFixed(1)}${unit || 'kg'}`
+      return `${(amount / 1000).toFixed(1)}${unit || 'kg'}`;
     }
-    return `${amount.toFixed(0)}${unit || 'g'}`
-  }
+    return `${amount.toFixed(0)}${unit || 'g'}`;
+  };
 
   const getPercentageChange = (original: number, adjusted: number): string => {
-    const change = ((adjusted - original) / original) * 100
-    return change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`
-  }
+    const change = ((adjusted - original) / original) * 100;
+    return change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
+  };
 
   const getChangeColor = (original: number, adjusted: number): string => {
-    const change = ((adjusted - original) / original) * 100
-    if (Math.abs(change) < 1) return 'text-gray-600'
-    return change > 0 ? 'text-green-600' : 'text-orange-600'
-  }
+    const change = ((adjusted - original) / original) * 100;
+    if (Math.abs(change) < 1) return 'text-gray-600';
+    return change > 0 ? 'text-green-600' : 'text-orange-600';
+  };
 
   return (
     <Card>
@@ -201,7 +201,7 @@ export function PortionAdjuster({
             {[1, 2, 3, 4, 6, 8].map((num) => (
               <Button
                 key={num}
-                variant={servings === num ? "default" : "outline"}
+                variant={servings === num ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleQuickAdjust(num)}
               >
@@ -219,8 +219,8 @@ export function PortionAdjuster({
               type="number"
               value={customServings}
               onChange={(e) => {
-                setCustomServings(e.target.value)
-                setIsCustomMode(true)
+                setCustomServings(e.target.value);
+                setIsCustomMode(true);
               }}
               placeholder="输入份量"
               min="0.5"
@@ -293,7 +293,7 @@ export function PortionAdjuster({
               <h5 className="text-sm font-medium text-blue-900">食材调整</h5>
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {adjustedIngredients.slice(0, 5).map((ingredient) => {
-                  const original = originalIngredients.find(i => i.id === ingredient.id)
+                  const original = originalIngredients.find(i => i.id === ingredient.id);
                   return (
                     <div key={ingredient.id} className="flex justify-between text-sm">
                       <span className="text-gray-700">{ingredient.food.name}</span>
@@ -306,7 +306,7 @@ export function PortionAdjuster({
                         </span>
                       </div>
                     </div>
-                  )
+                  );
                 })}
                 {adjustedIngredients.length > 5 && (
                   <div className="text-sm text-gray-500 text-center">
@@ -357,5 +357,5 @@ export function PortionAdjuster({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -66,7 +66,7 @@ export function RecommendedRecipes({
   excludedIngredients,
   preferredCuisines,
   season,
-  limit = 10
+  limit = 10,
 }: RecommendedRecipesProps) {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +88,7 @@ export function RecommendedRecipes({
         ...(excludedIngredients?.length && { excludedIngredients: excludedIngredients.join(',') }),
         ...(preferredCuisines?.length && { preferredCuisines: preferredCuisines.join(',') }),
         ...(season && { season }),
-        limit: limit.toString()
+        limit: limit.toString(),
       });
 
       if (excludeRecipeIds.length > 0) {
@@ -129,7 +129,7 @@ export function RecommendedRecipes({
     excludedIngredients?.join(','),
     preferredCuisines?.join(','),
     season,
-    limit
+    limit,
   ]);
 
   if (loading && !recommendations.length) {

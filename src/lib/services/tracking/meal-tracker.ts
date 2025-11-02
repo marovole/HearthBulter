@@ -429,9 +429,9 @@ async function updateTrackingStreak(memberId: string, date: Date) {
     
     const isConsecutive = lastCheckIn.getTime() === yesterday.getTime();
 
-    let newCurrentStreak = isConsecutive ? streak.currentStreak + 1 : 1;
-    let newLongestStreak = Math.max(streak.longestStreak, newCurrentStreak);
-    let newBadges = JSON.parse(streak.badges) as string[];
+    const newCurrentStreak = isConsecutive ? streak.currentStreak + 1 : 1;
+    const newLongestStreak = Math.max(streak.longestStreak, newCurrentStreak);
+    const newBadges = JSON.parse(streak.badges) as string[];
 
     // 检查是否解锁新徽章
     const milestones = [7, 30, 100, 365];

@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 import type {
   MedicalReport,
   MedicalIndicator,
   IndicatorStatus,
-} from '@prisma/client'
+} from '@prisma/client';
 
 interface OcrResultProps {
   reportId: string
@@ -21,63 +21,63 @@ const STATUS_COLORS: Record<IndicatorStatus, string> = {
   LOW: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   HIGH: 'bg-orange-100 text-orange-800 border-orange-200',
   CRITICAL: 'bg-red-100 text-red-800 border-red-200',
-}
+};
 
 const STATUS_LABELS: Record<IndicatorStatus, string> = {
   NORMAL: '正常',
   LOW: '偏低',
   HIGH: '偏高',
   CRITICAL: '严重异常',
-}
+};
 
 export function OcrResult({ reportId, memberId }: OcrResultProps) {
-  const [report, setReport] = useState<ReportData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [polling, setPolling] = useState(false)
+  const [report, setReport] = useState<ReportData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [polling, setPolling] = useState(false);
 
   const fetchReport = async () => {
     try {
       const response = await fetch(
         `/api/members/${memberId}/reports/${reportId}`
-      )
-      const data = await response.json()
+      );
+      const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || '加载报告失败')
-        setLoading(false)
-        return
+        setError(data.error || '加载报告失败');
+        setLoading(false);
+        return;
       }
 
-      setReport(data.data)
+      setReport(data.data);
 
       // 如果OCR还在处理中，继续轮询
       if (data.data.ocrStatus === 'PROCESSING' || data.data.ocrStatus === 'PENDING') {
-        setPolling(true)
+        setPolling(true);
       } else {
-        setPolling(false)
-        setLoading(false)
+        setPolling(false);
+        setLoading(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
-      setLoading(false)
+      setError(err instanceof Error ? err.message : '加载失败');
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchReport()
-  }, [reportId, memberId])
+    fetchReport();
+  }, [reportId, memberId]);
 
   // 轮询OCR状态
   useEffect(() => {
-    if (!polling) return
+    if (!polling) return;
 
     const interval = setInterval(() => {
-      fetchReport()
-    }, 3000) // 每3秒轮询一次
+      fetchReport();
+    }, 3000); // 每3秒轮询一次
 
-    return () => clearInterval(interval)
-  }, [polling, reportId, memberId])
+    return () => clearInterval(interval);
+  }, [polling, reportId, memberId]);
 
   if (loading && !report) {
     return (
@@ -87,7 +87,7 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
           <p className="text-sm text-gray-600">加载中...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -95,7 +95,7 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
         <p className="text-sm text-red-800">{error}</p>
       </div>
-    )
+    );
   }
 
   if (!report) {
@@ -103,7 +103,7 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
       <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
         <p className="text-sm text-yellow-800">报告不存在</p>
       </div>
-    )
+    );
   }
 
   // OCR处理中
@@ -118,7 +118,7 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
           这可能需要几分钟时间，请稍候
         </p>
       </div>
-    )
+    );
   }
 
   // OCR处理失败
@@ -135,12 +135,12 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
           提示：请确保报告图片清晰，文字完整可见
         </p>
       </div>
-    )
+    );
   }
 
   // 显示识别结果
-  const abnormalIndicators = report.indicators.filter((ind) => ind.isAbnormal)
-  const normalIndicators = report.indicators.filter((ind) => !ind.isAbnormal)
+  const abnormalIndicators = report.indicators.filter((ind) => ind.isAbnormal);
+  const normalIndicators = report.indicators.filter((ind) => !ind.isAbnormal);
 
   return (
     <div className="space-y-6">
@@ -267,6 +267,6 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
         </details>
       )}
     </div>
-  )
+  );
 }
 

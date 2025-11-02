@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { ShoppingListCard } from '@/components/shopping-list/ShoppingListCard'
-import { CreateShoppingListButton } from '@/components/shopping-list/CreateShoppingListButton'
+import { useState, useEffect } from 'react';
+import { ShoppingListCard } from '@/components/shopping-list/ShoppingListCard';
+import { CreateShoppingListButton } from '@/components/shopping-list/CreateShoppingListButton';
 
 interface ShoppingList {
   id: string
@@ -36,56 +36,56 @@ interface ShoppingList {
 }
 
 export default function ShoppingListPage() {
-  const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all')
+  const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
 
   useEffect(() => {
-    fetchShoppingLists()
-  }, [filter])
+    fetchShoppingLists();
+  }, [filter]);
 
   const fetchShoppingLists = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const url = filter === 'all' 
         ? '/api/shopping-lists'
-        : `/api/shopping-lists?status=${filter.toUpperCase()}`
+        : `/api/shopping-lists?status=${filter.toUpperCase()}`;
       
-      const response = await fetch(url)
+      const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('获取购物清单失败')
+        throw new Error('获取购物清单失败');
       }
 
-      const data = await response.json()
-      setShoppingLists(data.shoppingLists || [])
+      const data = await response.json();
+      setShoppingLists(data.shoppingLists || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误')
+      setError(err instanceof Error ? err.message : '未知错误');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleListCreated = (newList: ShoppingList) => {
-    setShoppingLists(prev => [newList, ...prev])
-  }
+    setShoppingLists(prev => [newList, ...prev]);
+  };
 
   const handleListDeleted = (listId: string) => {
-    setShoppingLists(prev => prev.filter(list => list.id !== listId))
-  }
+    setShoppingLists(prev => prev.filter(list => list.id !== listId));
+  };
 
   const handleListUpdated = (updatedList: ShoppingList) => {
     setShoppingLists(prev => 
       prev.map(list => list.id === updatedList.id ? updatedList : list)
-    )
-  }
+    );
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-gray-600">加载中...</div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -95,7 +95,7 @@ export default function ShoppingListPage() {
           <p className="text-red-800">{error}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -119,7 +119,7 @@ export default function ShoppingListPage() {
               { value: 'all', label: '全部' },
               { value: 'pending', label: '待采购' },
               { value: 'in_progress', label: '采购中' },
-              { value: 'completed', label: '已完成' }
+              { value: 'completed', label: '已完成' },
             ].map(({ value, label }) => (
               <button
                 key={value}
@@ -159,5 +159,5 @@ export default function ShoppingListPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,34 +1,34 @@
-'use client'
+'use client';
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { CheckCircle, Users, Heart, Brain, ShoppingBag } from 'lucide-react'
-import Link from 'next/link'
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, Users, Heart, Brain, ShoppingBag } from 'lucide-react';
+import Link from 'next/link';
 
 export default function WelcomePage() {
   const features = [
     {
       icon: <Users className="h-8 w-8 text-blue-600" />,
       title: '家庭健康管理',
-      description: '为全家成员创建健康档案，统一管理每个人的健康数据'
+      description: '为全家成员创建健康档案，统一管理每个人的健康数据',
     },
     {
       icon: <Heart className="h-8 w-8 text-red-600" />,
       title: '健康数据追踪',
-      description: '记录体重、血压、血糖等关键指标，可视化健康趋势'
+      description: '记录体重、血压、血糖等关键指标，可视化健康趋势',
     },
     {
       icon: <Brain className="h-8 w-8 text-purple-600" />,
       title: 'AI营养建议',
-      description: '基于健康数据和偏好，获得个性化的营养指导和食谱推荐'
+      description: '基于健康数据和偏好，获得个性化的营养指导和食谱推荐',
     },
     {
       icon: <ShoppingBag className="h-8 w-8 text-green-600" />,
       title: '智能购物清单',
-      description: '根据食谱自动生成购物清单，让健康饮食更简单'
-    }
-  ]
+      description: '根据食谱自动生成购物清单，让健康饮食更简单',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
@@ -99,5 +99,5 @@ export default function WelcomePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useRef } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { X, ChevronLeft, ChevronRight, Target, MousePointer } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { X, ChevronLeft, ChevronRight, Target, MousePointer } from 'lucide-react';
 
 interface TourStep {
   id: string
@@ -28,33 +28,33 @@ export function FeatureTour({
   isOpen, 
   onComplete, 
   onSkip, 
-  onStart 
+  onStart, 
 }: FeatureTourProps) {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null)
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
-  const tourRef = useRef<HTMLDivElement>(null)
+  const [currentStep, setCurrentStep] = useState(0);
+  const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const tourRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && steps[currentStep]?.selector) {
-      highlightElement(steps[currentStep].selector)
+      highlightElement(steps[currentStep].selector);
     } else {
-      removeHighlight()
+      removeHighlight();
     }
-  }, [isOpen, currentStep, steps])
+  }, [isOpen, currentStep, steps]);
 
   const highlightElement = (selector: string) => {
-    removeHighlight()
+    removeHighlight();
     
-    const element = document.querySelector(selector) as HTMLElement
+    const element = document.querySelector(selector) as HTMLElement;
     if (element) {
-      setHighlightedElement(element)
-      element.style.position = 'relative'
-      element.style.zIndex = '9999'
+      setHighlightedElement(element);
+      element.style.position = 'relative';
+      element.style.zIndex = '9999';
       
       // Create overlay
-      const overlay = document.createElement('div')
-      overlay.className = 'feature-tour-overlay'
+      const overlay = document.createElement('div');
+      overlay.className = 'feature-tour-overlay';
       overlay.style.cssText = `
         position: fixed;
         top: 0;
@@ -64,79 +64,79 @@ export function FeatureTour({
         background: rgba(0, 0, 0, 0.5);
         z-index: 9998;
         pointer-events: none;
-      `
-      document.body.appendChild(overlay)
+      `;
+      document.body.appendChild(overlay);
 
       // Position tooltip
-      const rect = element.getBoundingClientRect()
-      const tooltipWidth = 350
-      const tooltipHeight = 200
+      const rect = element.getBoundingClientRect();
+      const tooltipWidth = 350;
+      const tooltipHeight = 200;
       
-      let top = rect.bottom + 10
-      let left = rect.left + rect.width / 2 - tooltipWidth / 2
+      let top = rect.bottom + 10;
+      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
       
       // Adjust position if tooltip goes off screen
       if (top + tooltipHeight > window.innerHeight) {
-        top = rect.top - tooltipHeight - 10
+        top = rect.top - tooltipHeight - 10;
       }
       
       if (left < 10) {
-        left = 10
+        left = 10;
       } else if (left + tooltipWidth > window.innerWidth - 10) {
-        left = window.innerWidth - tooltipWidth - 10
+        left = window.innerWidth - tooltipWidth - 10;
       }
       
-      setTooltipPosition({ top, left })
+      setTooltipPosition({ top, left });
 
       // Scroll element into view
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }
+  };
 
   const removeHighlight = () => {
     if (highlightedElement) {
-      highlightedElement.style.zIndex = ''
-      setHighlightedElement(null)
+      highlightedElement.style.zIndex = '';
+      setHighlightedElement(null);
     }
     
-    const overlay = document.querySelector('.feature-tour-overlay')
+    const overlay = document.querySelector('.feature-tour-overlay');
     if (overlay) {
-      overlay.remove()
+      overlay.remove();
     }
-  }
+  };
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     } else {
-      handleComplete()
+      handleComplete();
     }
-  }
+  };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const handleComplete = () => {
-    removeHighlight()
-    onComplete()
-  }
+    removeHighlight();
+    onComplete();
+  };
 
   const handleSkip = () => {
-    removeHighlight()
-    onSkip()
-  }
+    removeHighlight();
+    onSkip();
+  };
 
   const goToStep = (stepIndex: number) => {
-    setCurrentStep(stepIndex)
-  }
+    setCurrentStep(stepIndex);
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const currentStepData = steps[currentStep]
-  const progress = ((currentStep + 1) / steps.length) * 100
+  const currentStepData = steps[currentStep];
+  const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
     <>
@@ -203,8 +203,8 @@ export function FeatureTour({
                       index === currentStep
                         ? 'bg-blue-600'
                         : index < currentStep
-                        ? 'bg-green-500'
-                        : 'bg-gray-200'
+                          ? 'bg-green-500'
+                          : 'bg-gray-200'
                     }`}
                   />
                 ))}
@@ -236,34 +236,34 @@ export function FeatureTour({
         </Card>
       </div>
     </>
-  )
+  );
 }
 
 // Hook for managing feature tours
 export function useFeatureTour() {
-  const [isTourActive, setIsTourActive] = useState(false)
-  const [currentTour, setCurrentTour] = useState<string | null>(null)
+  const [isTourActive, setIsTourActive] = useState(false);
+  const [currentTour, setCurrentTour] = useState<string | null>(null);
 
   const startTour = (tourId: string) => {
-    setCurrentTour(tourId)
-    setIsTourActive(true)
-  }
+    setCurrentTour(tourId);
+    setIsTourActive(true);
+  };
 
   const endTour = () => {
-    setIsTourActive(false)
-    setCurrentTour(null)
-  }
+    setIsTourActive(false);
+    setCurrentTour(null);
+  };
 
   const skipTour = () => {
-    setIsTourActive(false)
-    setCurrentTour(null)
-  }
+    setIsTourActive(false);
+    setCurrentTour(null);
+  };
 
   return {
     isTourActive,
     currentTour,
     startTour,
     endTour,
-    skipTour
-  }
+    skipTour,
+  };
 }

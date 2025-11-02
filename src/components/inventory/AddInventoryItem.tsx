@@ -1,21 +1,21 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { CalendarIcon, Camera, Search } from 'lucide-react'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { cn } from '@/lib/utils'
-import { StorageLocation } from '@prisma/client'
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Camera, Search } from 'lucide-react';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { StorageLocation } from '@prisma/client';
 
 interface Food {
   id: string
@@ -41,24 +41,24 @@ const storageLocationLabels = {
   PANTRY: '常温储藏室',
   COUNTER: '台面',
   CABINET: '橱柜',
-  OTHER: '其他'
-}
+  OTHER: '其他',
+};
 
 const commonUnits = [
-  '个', '斤', 'kg', 'g', 'ml', 'L', '瓶', '盒', '袋', '包', '箱', '颗', '根', '片'
-]
+  '个', '斤', 'kg', 'g', 'ml', 'L', '瓶', '盒', '袋', '包', '箱', '颗', '根', '片',
+];
 
 export function AddInventoryItem({ 
   isOpen, 
   onClose, 
   memberId, 
-  onSuccess 
+  onSuccess, 
 }: AddInventoryItemProps) {
-  const [loading, setLoading] = useState(false)
-  const [foods, setFoods] = useState<Food[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedFood, setSelectedFood] = useState<Food | null>(null)
-  const [showFoodSearch, setShowFoodSearch] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [foods, setFoods] = useState<Food[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFood, setSelectedFood] = useState<Food | null>(null);
+  const [showFoodSearch, setShowFoodSearch] = useState(false);
   
   const [formData, setFormData] = useState({
     quantity: '',
@@ -72,28 +72,28 @@ export function AddInventoryItem({
     minStockThreshold: '',
     barcode: '',
     brand: '',
-    packageInfo: ''
-  })
+    packageInfo: '',
+  });
 
   useEffect(() => {
     if (isOpen) {
-      fetchFoods()
-      resetForm()
+      fetchFoods();
+      resetForm();
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const fetchFoods = async () => {
     try {
-      const response = await fetch('/api/foods?limit=100')
-      const result = await response.json()
+      const response = await fetch('/api/foods?limit=100');
+      const result = await response.json();
       
       if (result.success) {
-        setFoods(result.data)
+        setFoods(result.data);
       }
     } catch (error) {
-      console.error('获取食物列表失败:', error)
+      console.error('获取食物列表失败:', error);
     }
-  }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -108,26 +108,26 @@ export function AddInventoryItem({
       minStockThreshold: '',
       barcode: '',
       brand: '',
-      packageInfo: ''
-    })
-    setSelectedFood(null)
-    setSearchTerm('')
-  }
+      packageInfo: '',
+    });
+    setSelectedFood(null);
+    setSearchTerm('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
     if (!selectedFood) {
-      alert('请选择食物')
-      return
+      alert('请选择食物');
+      return;
     }
 
     if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
-      alert('请输入有效的数量')
-      return
+      alert('请输入有效的数量');
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const payload = {
@@ -144,56 +144,56 @@ export function AddInventoryItem({
         minStockThreshold: formData.minStockThreshold ? parseFloat(formData.minStockThreshold) : undefined,
         barcode: formData.barcode || undefined,
         brand: formData.brand || undefined,
-        packageInfo: formData.packageInfo || undefined
-      }
+        packageInfo: formData.packageInfo || undefined,
+      };
 
       const response = await fetch('/api/inventory/items', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
-      })
+        body: JSON.stringify(payload),
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success) {
-        onSuccess?.()
-        onClose()
-        resetForm()
+        onSuccess?.();
+        onClose();
+        resetForm();
       } else {
-        alert(result.error || '添加失败')
+        alert(result.error || '添加失败');
       }
     } catch (error) {
-      console.error('添加库存条目失败:', error)
-      alert('添加失败，请重试')
+      console.error('添加库存条目失败:', error);
+      alert('添加失败，请重试');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleFoodSelect = (food: Food) => {
-    setSelectedFood(food)
-    setShowFoodSearch(false)
-    setSearchTerm('')
+    setSelectedFood(food);
+    setShowFoodSearch(false);
+    setSearchTerm('');
     
     // 根据食物类型智能推荐存储位置
-    let suggestedLocation = StorageLocation.PANTRY
+    let suggestedLocation = StorageLocation.PANTRY;
     if (['VEGETABLES', 'FRUITS', 'PROTEIN', 'SEAFOOD', 'DAIRY'].includes(food.category)) {
-      suggestedLocation = StorageLocation.REFRIGERATOR
+      suggestedLocation = StorageLocation.REFRIGERATOR;
     }
     
     setFormData(prev => ({
       ...prev,
-      storageLocation: suggestedLocation
-    }))
-  }
+      storageLocation: suggestedLocation,
+    }));
+  };
 
   const filteredFoods = foods.filter(food =>
     food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     food.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     food.category.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -376,15 +376,15 @@ export function AddInventoryItem({
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.productionDate && "text-muted-foreground"
+                        'w-full justify-start text-left font-normal',
+                        !formData.productionDate && 'text-muted-foreground'
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.productionDate ? (
-                        format(formData.productionDate, "yyyy-MM-dd", { locale: zhCN })
+                        format(formData.productionDate, 'yyyy-MM-dd', { locale: zhCN })
                       ) : (
-                        "选择日期"
+                        '选择日期'
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -406,15 +406,15 @@ export function AddInventoryItem({
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.expiryDate && "text-muted-foreground"
+                        'w-full justify-start text-left font-normal',
+                        !formData.expiryDate && 'text-muted-foreground'
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.expiryDate ? (
-                        format(formData.expiryDate, "yyyy-MM-dd", { locale: zhCN })
+                        format(formData.expiryDate, 'yyyy-MM-dd', { locale: zhCN })
                       ) : (
-                        "选择日期"
+                        '选择日期'
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -518,5 +518,5 @@ export function AddInventoryItem({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

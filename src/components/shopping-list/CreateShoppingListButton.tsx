@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface ShoppingListItem {
   id: string
@@ -46,64 +46,64 @@ interface CreateShoppingListButtonProps {
 }
 
 export function CreateShoppingListButton({ onListCreated }: CreateShoppingListButtonProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
-  const [selectedPlanId, setSelectedPlanId] = useState('')
-  const [listName, setListName] = useState('')
-  const [budget, setBudget] = useState('')
-  const [error, setError] = useState('')
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [listName, setListName] = useState('');
+  const [budget, setBudget] = useState('');
+  const [error, setError] = useState('');
 
   const fetchMealPlans = async () => {
     try {
-      const response = await fetch('/api/meal-plans')
+      const response = await fetch('/api/meal-plans');
       if (!response.ok) {
-        throw new Error('获取食谱计划失败')
+        throw new Error('获取食谱计划失败');
       }
-      const data = await response.json()
-      setMealPlans(data.mealPlans || [])
+      const data = await response.json();
+      setMealPlans(data.mealPlans || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取食谱计划失败')
+      setError(err instanceof Error ? err.message : '获取食谱计划失败');
     }
-  }
+  };
 
   const handleOpen = () => {
-    setIsOpen(true)
-    setError('')
-    setSelectedPlanId('')
-    setListName('')
-    setBudget('')
-    fetchMealPlans()
-  }
+    setIsOpen(true);
+    setError('');
+    setSelectedPlanId('');
+    setListName('');
+    setBudget('');
+    fetchMealPlans();
+  };
 
   const handleClose = () => {
-    setIsOpen(false)
-    setError('')
-  }
+    setIsOpen(false);
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
     if (!selectedPlanId) {
-      setError('请选择一个食谱计划')
-      return
+      setError('请选择一个食谱计划');
+      return;
     }
 
     try {
-      setIsLoading(true)
-      setError('')
+      setIsLoading(true);
+      setError('');
 
-      const requestBody: any = {}
+      const requestBody: any = {};
       if (listName.trim()) {
-        requestBody.name = listName.trim()
+        requestBody.name = listName.trim();
       }
       if (budget) {
-        const budgetValue = parseFloat(budget)
+        const budgetValue = parseFloat(budget);
         if (isNaN(budgetValue) || budgetValue < 0) {
-          setError('请输入有效的预算金额')
-          return
+          setError('请输入有效的预算金额');
+          return;
         }
-        requestBody.budget = budgetValue
+        requestBody.budget = budgetValue;
       }
 
       const response = await fetch(`/api/meal-plans/${selectedPlanId}/shopping-list`, {
@@ -112,22 +112,22 @@ export function CreateShoppingListButton({ onListCreated }: CreateShoppingListBu
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || '创建购物清单失败')
+        const errorData = await response.json();
+        throw new Error(errorData.error || '创建购物清单失败');
       }
 
-      const data = await response.json()
-      onListCreated(data.shoppingList)
-      handleClose()
+      const data = await response.json();
+      onListCreated(data.shoppingList);
+      handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建购物清单失败')
+      setError(err instanceof Error ? err.message : '创建购物清单失败');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (!isOpen) {
     return (
@@ -137,7 +137,7 @@ export function CreateShoppingListButton({ onListCreated }: CreateShoppingListBu
       >
         创建购物清单
       </button>
-    )
+    );
   }
 
   return (
@@ -231,5 +231,5 @@ export function CreateShoppingListButton({ onListCreated }: CreateShoppingListBu
         </form>
       </div>
     </div>
-  )
+  );
 }

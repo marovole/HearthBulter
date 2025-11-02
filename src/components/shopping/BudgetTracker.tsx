@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 interface BudgetTrackerProps {
   budget: number | null
@@ -11,23 +11,23 @@ export function BudgetTracker({
   estimatedCost,
   actualCost,
 }: BudgetTrackerProps) {
-  const hasBudget = budget !== null
-  const hasEstimate = estimatedCost !== null
-  const hasActual = actualCost !== null
+  const hasBudget = budget !== null;
+  const hasEstimate = estimatedCost !== null;
+  const hasActual = actualCost !== null;
 
   // 计算超预算金额
   const overBudget =
     hasBudget && hasEstimate && estimatedCost > budget
       ? estimatedCost - budget
-      : null
+      : null;
 
   // 计算价格差异
   const priceDiff =
-    hasEstimate && hasActual ? actualCost - estimatedCost : null
+    hasEstimate && hasActual ? actualCost - estimatedCost : null;
   const priceDiffPercent =
     priceDiff !== null && hasEstimate
       ? (priceDiff / estimatedCost) * 100
-      : null
+      : null;
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -130,6 +130,6 @@ export function BudgetTracker({
         )}
       </div>
     </div>
-  )
+  );
 }
 

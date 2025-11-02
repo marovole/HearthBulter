@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
-import { ocrService, type SupportedMimeType } from '@/lib/services/ocr-service'
-import { reportParser } from '@/lib/services/report-parser'
-import { fileStorageService } from '@/lib/services/file-storage-service'
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
+import { ocrService, type SupportedMimeType } from '@/lib/services/ocr-service';
+import { reportParser } from '@/lib/services/report-parser';
+import { fileStorageService } from '@/lib/services/file-storage-service';
 
 /**
  * 验证用户是否有权限访问成员的健康数据
@@ -25,20 +25,20 @@ async function verifyMemberAccess(
         },
       },
     },
-  })
+  });
 
   if (!member) {
-    return { hasAccess: false, member: null }
+    return { hasAccess: false, member: null };
   }
 
-  const isCreator = member.family.creatorId === userId
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator
-  const isSelf = member.userId === userId
+  const isCreator = member.family.creatorId === userId;
+  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isSelf = member.userId === userId;
 
   return {
     hasAccess: isAdmin || isSelf,
     member,
-  }
+  };
 }
 
 /**
@@ -50,36 +50,36 @@ export async function POST(
   { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const { memberId } = await params
-    const session = await auth()
+    const { memberId } = await params;
+    const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 })
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     // 验证权限
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id)
+    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限为该成员上传报告' },
         { status: 403 }
-      )
+      );
     }
 
     // 解析FormData
-    const formData = await request.formData()
-    const file = formData.get('file') as File | null
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
 
     if (!file) {
       return NextResponse.json(
         { error: '请选择要上传的文件' },
         { status: 400 }
-      )
+      );
     }
 
     // 验证文件类型
-    const mimeType = file.type
+    const mimeType = file.type;
     if (!ocrService.isSupportedMimeType(mimeType)) {
       return NextResponse.json(
         {
@@ -87,7 +87,7 @@ export async function POST(
           supportedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
         },
         { status: 400 }
-      )
+      );
     }
 
     // 验证文件大小
@@ -95,11 +95,11 @@ export async function POST(
       return NextResponse.json(
         { error: '文件大小超过限制（最大10MB）' },
         { status: 400 }
-      )
+      );
     }
 
     // 读取文件内容
-    const fileBuffer = Buffer.from(await file.arrayBuffer())
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
 
     // 创建报告记录（初始状态为PENDING）
     const report = await prisma.medicalReport.create({
@@ -110,7 +110,7 @@ export async function POST(
         mimeType,
         ocrStatus: 'PROCESSING',
       },
-    })
+    });
 
     try {
       // 上传文件到云存储
@@ -121,7 +121,7 @@ export async function POST(
         {
           contentType: mimeType,
         }
-      )
+      );
 
       // 更新报告记录，保存文件URL
       await prisma.medicalReport.update({
@@ -129,12 +129,12 @@ export async function POST(
         data: {
           fileUrl: uploadResult.url,
         },
-      })
+      });
 
       // 执行OCR识别（异步处理，不阻塞响应）
       processOCR(report.id, fileBuffer, mimeType).catch((error) => {
-        console.error('OCR处理失败:', error)
-      })
+        console.error('OCR处理失败:', error);
+      });
 
       // 立即返回响应
       return NextResponse.json(
@@ -144,24 +144,24 @@ export async function POST(
           status: 'PROCESSING',
         },
         { status: 202 } // Accepted - 异步处理中
-      )
+      );
     } catch (error) {
       // 如果上传失败，删除报告记录
       await prisma.medicalReport.delete({
         where: { id: report.id },
-      })
+      });
 
-      throw error
+      throw error;
     }
   } catch (error) {
-    console.error('上传报告失败:', error)
+    console.error('上传报告失败:', error);
     return NextResponse.json(
       {
         error: '服务器内部错误',
         details: error instanceof Error ? error.message : '未知错误',
       },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -175,13 +175,13 @@ async function processOCR(
 ) {
   try {
     // 执行OCR识别
-    const ocrResult = await ocrService.recognize(fileBuffer, mimeType)
+    const ocrResult = await ocrService.recognize(fileBuffer, mimeType);
 
     // 解析报告内容
-    const parsedReport = reportParser.parse(ocrResult.text)
+    const parsedReport = reportParser.parse(ocrResult.text);
 
     // 验证解析结果
-    const validation = reportParser.validate(parsedReport)
+    const validation = reportParser.validate(parsedReport);
 
     // 更新报告记录
     const updateData: any = {
@@ -190,16 +190,16 @@ async function processOCR(
       reportDate: parsedReport.reportDate || null,
       institution: parsedReport.institution || null,
       reportType: parsedReport.reportType || null,
-    }
+    };
 
     if (!validation.valid) {
-      updateData.ocrError = validation.errors.join('; ')
+      updateData.ocrError = validation.errors.join('; ');
     }
 
     await prisma.medicalReport.update({
       where: { id: reportId },
       data: updateData,
-    })
+    });
 
     // 如果解析成功，创建指标记录
     if (validation.valid && parsedReport.indicators.length > 0) {
@@ -214,10 +214,10 @@ async function processOCR(
           isAbnormal: indicator.isAbnormal,
           status: indicator.status,
         })),
-      })
+      });
     }
   } catch (error) {
-    console.error('OCR处理失败:', error)
+    console.error('OCR处理失败:', error);
 
     // 更新报告状态为失败
     await prisma.medicalReport.update({
@@ -227,7 +227,7 @@ async function processOCR(
         ocrError:
           error instanceof Error ? error.message : 'OCR处理失败',
       },
-    })
+    });
   }
 }
 
@@ -240,37 +240,37 @@ export async function GET(
   { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const { memberId } = await params
-    const session = await auth()
+    const { memberId } = await params;
+    const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 })
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     // 验证权限
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id)
+    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限查看该成员的报告' },
         { status: 403 }
-      )
+      );
     }
 
     // 解析查询参数
-    const searchParams = request.nextUrl.searchParams
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const offset = parseInt(searchParams.get('offset') || '0')
-    const status = searchParams.get('status') // OCR状态筛选
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const offset = parseInt(searchParams.get('offset') || '0');
+    const status = searchParams.get('status'); // OCR状态筛选
 
     // 构建查询条件
     const where: any = {
       memberId,
       deletedAt: null,
-    }
+    };
 
     if (status) {
-      where.ocrStatus = status
+      where.ocrStatus = status;
     }
 
     // 查询报告列表
@@ -295,7 +295,7 @@ export async function GET(
         },
       }),
       prisma.medicalReport.count({ where }),
-    ])
+    ]);
 
     return NextResponse.json(
       {
@@ -305,13 +305,13 @@ export async function GET(
         offset,
       },
       { status: 200 }
-    )
+    );
   } catch (error) {
-    console.error('查询报告列表失败:', error)
+    console.error('查询报告列表失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 

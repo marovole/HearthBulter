@@ -15,7 +15,7 @@ import {
   TrendingDown,
   Activity,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
 } from 'lucide-react';
 import { AIThinkingIndicator } from '@/components/ui/loading-indicator';
 import { FeedbackButtons, FeedbackData } from '@/components/ui/feedback-buttons';
@@ -92,15 +92,15 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
       // 根据报告类型设置日期范围
       switch (reportType) {
-        case 'weekly':
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case 'monthly':
-          startDate.setMonth(startDate.getMonth() - 1);
-          break;
-        case 'quarterly':
-          startDate.setMonth(startDate.getMonth() - 3);
-          break;
+      case 'weekly':
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case 'monthly':
+        startDate.setMonth(startDate.getMonth() - 1);
+        break;
+      case 'quarterly':
+        startDate.setMonth(startDate.getMonth() - 3);
+        break;
       }
 
       const response = await fetch('/api/ai/generate-report', {
@@ -155,19 +155,19 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'text-red-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-green-600';
-      default: return 'text-gray-600';
+    case 'high': return 'text-red-600';
+    case 'medium': return 'text-yellow-600';
+    case 'low': return 'text-green-600';
+    default: return 'text-gray-600';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'generating': return <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />;
-      case 'failed': return <AlertCircle className="w-4 h-4 text-red-600" />;
-      default: return <FileText className="w-4 h-4" />;
+    case 'completed': return <CheckCircle className="w-4 h-4 text-green-600" />;
+    case 'generating': return <AIThinkingIndicator size="sm" />;
+    case 'failed': return <AlertCircle className="w-4 h-4 text-red-600" />;
+    default: return <FileText className="w-4 h-4" />;
     }
   };
 
@@ -249,7 +249,7 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <AIThinkingIndicator size="sm" />
                     生成中...
                   </>
                 ) : (
@@ -431,12 +431,12 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
                     <CardHeader>
                       <CardTitle className={`text-lg flex items-center ${
                         section.priority === 'high' ? 'text-red-600' :
-                        section.priority === 'medium' ? 'text-yellow-600' : 'text-green-600'
+                          section.priority === 'medium' ? 'text-yellow-600' : 'text-green-600'
                       }`}>
                         {section.title}
                         <Badge variant="outline" className="ml-2">
                           {section.priority === 'high' ? '重要' :
-                           section.priority === 'medium' ? '一般' : '参考'}
+                            section.priority === 'medium' ? '一般' : '参考'}
                         </Badge>
                       </CardTitle>
                     </CardHeader>

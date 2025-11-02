@@ -104,7 +104,7 @@ export class NotificationUtils {
     
     // 截断长内容
     if (formatted.length > maxLength) {
-      return formatted.substring(0, maxLength) + '...';
+      return `${formatted.substring(0, maxLength)}...`;
     }
     
     return formatted;
@@ -135,7 +135,7 @@ export class NotificationUtils {
     
     // 检查是否包含敏感词（简单实现）
     const sensitiveWords = ['测试', 'test'];
-    const combinedText = (title + ' ' + content).toLowerCase();
+    const combinedText = (`${title} ${content}`).toLowerCase();
     
     for (const word of sensitiveWords) {
       if (combinedText.includes(word.toLowerCase())) {
@@ -358,27 +358,27 @@ export class NotificationUtils {
     const sortedNotifications = [...notifications];
     
     switch (sortBy) {
-      case 'priority':
-        return sortedNotifications.sort((a, b) => {
-          const priorityOrder = {
-            [NotificationPriority.URGENT]: 4,
-            [NotificationPriority.HIGH]: 3,
-            [NotificationPriority.MEDIUM]: 2,
-            [NotificationPriority.LOW]: 1,
-          };
-          return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
-        });
+    case 'priority':
+      return sortedNotifications.sort((a, b) => {
+        const priorityOrder = {
+          [NotificationPriority.URGENT]: 4,
+          [NotificationPriority.HIGH]: 3,
+          [NotificationPriority.MEDIUM]: 2,
+          [NotificationPriority.LOW]: 1,
+        };
+        return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+      });
         
-      case 'time':
-        return sortedNotifications.sort((a, b) => 
-          b.createdAt.getTime() - a.createdAt.getTime()
-        );
+    case 'time':
+      return sortedNotifications.sort((a, b) => 
+        b.createdAt.getTime() - a.createdAt.getTime()
+      );
         
-      case 'score':
-      default:
-        return sortedNotifications.sort((a, b) => 
-          this.calculateNotificationScore(b) - this.calculateNotificationScore(a)
-        );
+    case 'score':
+    default:
+      return sortedNotifications.sort((a, b) => 
+        this.calculateNotificationScore(b) - this.calculateNotificationScore(a)
+      );
     }
   }
 }

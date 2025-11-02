@@ -1,20 +1,20 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { MealPlanGenerator } from '@/components/meal-planning/MealPlanGenerator'
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/db';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { MealPlanGenerator } from '@/components/meal-planning/MealPlanGenerator';
 
 export default async function NewMealPlanPage({
   params,
 }: {
   params: Promise<{ id: string; memberId: string }>
 }) {
-  const { id, memberId } = await params
-  const session = await auth()
+  const { id, memberId } = await params;
+  const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin')
+    redirect('/auth/signin');
   }
 
   // 获取成员信息
@@ -37,19 +37,19 @@ export default async function NewMealPlanPage({
         orderBy: { createdAt: 'desc' },
       },
     },
-  })
+  });
 
   if (!member) {
-    notFound()
+    notFound();
   }
 
   // 验证权限
-  const isCreator = member.family.creatorId === session.user.id
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator
-  const isSelf = member.userId === session.user.id
+  const isCreator = member.family.creatorId === session.user.id;
+  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isSelf = member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
-    redirect(`/dashboard/families/${id}/members/${memberId}`)
+    redirect(`/dashboard/families/${id}/members/${memberId}`);
   }
 
   return (
@@ -100,17 +100,17 @@ export default async function NewMealPlanPage({
             onSuccess={(planId) => {
               redirect(
                 `/dashboard/families/${id}/members/${memberId}/meal-plans/${planId}`
-              )
+              );
             }}
             onCancel={() => {
               redirect(
                 `/dashboard/families/${id}/members/${memberId}/meal-plans`
-              )
+              );
             }}
           />
         </div>
       </div>
     </div>
-  )
+  );
 }
 

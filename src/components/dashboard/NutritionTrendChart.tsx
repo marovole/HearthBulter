@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -17,7 +17,7 @@ import {
   Cell,
   BarChart,
   Bar,
-} from 'recharts'
+} from 'recharts';
 import { 
   Apple, 
   TrendingUp, 
@@ -25,8 +25,8 @@ import {
   Calendar,
   PieChart as PieChartIcon,
   BarChart3,
-  AlertCircle
-} from 'lucide-react'
+  AlertCircle,
+} from 'lucide-react';
 
 interface NutritionData {
   date: Date
@@ -65,46 +65,46 @@ interface MacroTargets {
 export function NutritionTrendChart({ 
   memberId, 
   days = 30,
-  viewMode = 'trends'
+  viewMode = 'trends',
 }: NutritionTrendChartProps) {
-  const [data, setData] = useState<NutritionData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<NutritionData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [targets, setTargets] = useState<MacroTargets>({
     calories: 2000,
     protein: 50,
     carbs: 250,
-    fat: 65
-  })
+    fat: 65,
+  });
 
   const macroColors = {
     calories: '#3b82f6',
     protein: '#10b981',
     carbs: '#f59e0b',
-    fat: '#ef4444'
-  }
+    fat: '#ef4444',
+  };
 
   const macroLabels = {
     calories: '卡路里',
     protein: '蛋白质 (g)',
     carbs: '碳水化合物 (g)',
-    fat: '脂肪 (g)'
-  }
+    fat: '脂肪 (g)',
+  };
 
   useEffect(() => {
-    loadData()
-  }, [memberId, days])
+    loadData();
+  }, [memberId, days]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       // 模拟API调用 - 实际应该调用真实的营养数据API
-      const mockData: NutritionData[] = []
-      const today = new Date()
+      const mockData: NutritionData[] = [];
+      const today = new Date();
       
       for (let i = days - 1; i >= 0; i--) {
-        const date = new Date(today)
-        date.setDate(date.getDate() - i)
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
         
         mockData.push({
           date,
@@ -117,24 +117,24 @@ export function NutritionTrendChart({
             vitaminA: 700 + Math.random() * 300 - 150,
             vitaminC: 80 + Math.random() * 40 - 20,
             vitaminD: 15 + Math.random() * 10 - 5,
-            vitaminE: 12 + Math.random() * 6 - 3
+            vitaminE: 12 + Math.random() * 6 - 3,
           },
           minerals: {
             calcium: 1000 + Math.random() * 400 - 200,
             iron: 15 + Math.random() * 8 - 4,
             magnesium: 350 + Math.random() * 100 - 50,
-            zinc: 10 + Math.random() * 5 - 2.5
-          }
-        })
+            zinc: 10 + Math.random() * 5 - 2.5,
+          },
+        });
       }
       
-      setData(mockData)
+      setData(mockData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -146,7 +146,7 @@ export function NutritionTrendChart({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -159,7 +159,7 @@ export function NutritionTrendChart({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (data.length === 0) {
@@ -169,7 +169,7 @@ export function NutritionTrendChart({
           <p>暂无营养数据</p>
         </div>
       </div>
-    )
+    );
   }
 
   // 格式化趋势数据
@@ -183,7 +183,7 @@ export function NutritionTrendChart({
     protein: Math.round(item.protein || 0),
     carbs: Math.round(item.carbs || 0),
     fat: Math.round(item.fat || 0),
-  }))
+  }));
 
   // 计算宏量营养素平均值
   const avgMacros = {
@@ -191,14 +191,14 @@ export function NutritionTrendChart({
     protein: Math.round(data.reduce((acc, d) => acc + (d.protein || 0), 0) / data.length),
     carbs: Math.round(data.reduce((acc, d) => acc + (d.carbs || 0), 0) / data.length),
     fat: Math.round(data.reduce((acc, d) => acc + (d.fat || 0), 0) / data.length),
-  }
+  };
 
   // 宏量营养素比例数据
   const macroRatioData = [
     { name: '蛋白质', value: avgMacros.protein * 4, color: macroColors.protein },
     { name: '碳水化合物', value: avgMacros.carbs * 4, color: macroColors.carbs },
     { name: '脂肪', value: avgMacros.fat * 9, color: macroColors.fat },
-  ]
+  ];
 
   // 微量营养素数据
   const microData = data.slice(-7).map((item) => ({
@@ -208,7 +208,7 @@ export function NutritionTrendChart({
     vitaminD: item.vitamins?.vitaminD || 0,
     calcium: (item.minerals?.calcium || 0) / 10, // 缩放以便显示
     iron: (item.minerals?.iron || 0) * 10, // 放大以便显示
-  }))
+  }));
 
   // 目标达成度数据
   const goalAchievementData = Object.entries(avgMacros).map(([key, value]) => ({
@@ -216,7 +216,7 @@ export function NutritionTrendChart({
     actual: value,
     target: targets[key as keyof MacroTargets],
     percentage: Math.round((value / targets[key as keyof MacroTargets]) * 100),
-  }))
+  }));
 
   const renderTrendsView = () => (
     <ResponsiveContainer width="100%" height={300}>
@@ -242,7 +242,7 @@ export function NutritionTrendChart({
         <Line type="monotone" dataKey="fat" stroke={macroColors.fat} strokeWidth={2} name="脂肪" />
       </LineChart>
     </ResponsiveContainer>
-  )
+  );
 
   const renderMacrosView = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -287,7 +287,7 @@ export function NutritionTrendChart({
         </ResponsiveContainer>
       </div>
     </div>
-  )
+  );
 
   const renderMicrosView = () => (
     <div>
@@ -307,7 +307,7 @@ export function NutritionTrendChart({
         </LineChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 
   const renderGoalsView = () => (
     <div>
@@ -323,7 +323,7 @@ export function NutritionTrendChart({
                 </span>
                 <span className={`text-sm font-medium ${
                   item.percentage >= 100 ? 'text-green-600' : 
-                  item.percentage >= 80 ? 'text-yellow-600' : 'text-red-600'
+                    item.percentage >= 80 ? 'text-yellow-600' : 'text-red-600'
                 }`}>
                   {item.percentage}%
                 </span>
@@ -332,7 +332,7 @@ export function NutritionTrendChart({
                 <div 
                   className={`h-2 rounded-full ${
                     item.percentage >= 100 ? 'bg-green-600' : 
-                    item.percentage >= 80 ? 'bg-yellow-600' : 'bg-red-600'
+                      item.percentage >= 80 ? 'bg-yellow-600' : 'bg-red-600'
                   }`}
                   style={{ width: `${Math.min(item.percentage, 100)}%` }}
                 />
@@ -342,7 +342,7 @@ export function NutritionTrendChart({
         ))}
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -437,5 +437,5 @@ export function NutritionTrendChart({
         </div>
       </div>
     </div>
-  )
+  );
 }

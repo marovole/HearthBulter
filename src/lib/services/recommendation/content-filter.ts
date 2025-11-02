@@ -73,8 +73,8 @@ export class ContentFilter {
           priceMatch: this.calculatePriceMatch(features, userProfile),
           nutritionMatch: this.calculateNutritionMatch(features, userProfile),
           preferenceMatch: score / 100,
-          seasonalMatch: 0
-        }
+          seasonalMatch: 0,
+        },
       };
     });
 
@@ -96,12 +96,12 @@ export class ContentFilter {
       where: {
         id: { not: targetRecipe.id },
         status: 'PUBLISHED',
-        isPublic: true
+        isPublic: true,
       },
       take: limit * 2,
       include: {
-        ingredients: { include: { food: true } }
-      }
+        ingredients: { include: { food: true } },
+      },
     });
 
     const recommendations = await Promise.all(
@@ -119,8 +119,8 @@ export class ContentFilter {
             priceMatch: 0,
             nutritionMatch: 0,
             preferenceMatch: similarity,
-            seasonalMatch: 0
-          }
+            seasonalMatch: 0,
+          },
         };
       })
     );
@@ -141,24 +141,24 @@ export class ContentFilter {
 
     const [userPreference, healthGoal, recentRatings, recentFavorites] = await Promise.all([
       this.prisma.userPreference.findUnique({
-        where: { memberId }
+        where: { memberId },
       }),
       this.prisma.healthGoal.findFirst({
         where: { memberId, status: 'ACTIVE' },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
       }),
       this.prisma.recipeRating.findMany({
         where: { memberId, rating: { gte: 4 } },
         include: { recipe: { include: { ingredients: { include: { food: true } } } } },
         orderBy: { ratedAt: 'desc' },
-        take: 20
+        take: 20,
       }),
       this.prisma.recipeFavorite.findMany({
         where: { memberId },
         include: { recipe: { include: { ingredients: { include: { food: true } } } } },
         orderBy: { favoritedAt: 'desc' },
-        take: 20
-      })
+        take: 20,
+      }),
     ]);
 
     // 从用户行为中学习偏好
@@ -167,16 +167,16 @@ export class ContentFilter {
     const profile: UserProfile = {
       preferredIngredients: [
         ...(userPreference?.preferredIngredients ? JSON.parse(userPreference.preferredIngredients) : []),
-        ...learnedPreferences.preferredIngredients
+        ...learnedPreferences.preferredIngredients,
       ],
       avoidedIngredients: userPreference?.avoidedIngredients ? JSON.parse(userPreference.avoidedIngredients) : [],
       nutritionPreferences: this.buildNutritionPreferences(healthGoal, userPreference),
       cookingPreferences: {
         maxTime: userPreference?.maxCookTime,
         preferredDifficulty: userPreference?.spiceLevel ? this.mapSpiceToDifficulty(userPreference.spiceLevel) : undefined,
-        preferredCategories: learnedPreferences.preferredCategories
+        preferredCategories: learnedPreferences.preferredCategories,
       },
-      costPreference: userPreference?.costLevel || 'MEDIUM'
+      costPreference: userPreference?.costLevel || 'MEDIUM',
     };
 
     // 缓存档案
@@ -219,7 +219,7 @@ export class ContentFilter {
 
     return {
       preferredIngredients,
-      preferredCategories
+      preferredCategories,
     };
   }
 
@@ -231,23 +231,23 @@ export class ContentFilter {
 
     if (healthGoal) {
       switch (healthGoal.goalType) {
-        case 'LOSE_WEIGHT':
-          preferences.maxCalories = 400;
-          preferences.maxCarbs = healthGoal.carbRatio ? 30 : undefined;
-          preferences.minProtein = healthGoal.proteinRatio ? 15 : undefined;
-          break;
-        case 'GAIN_MUSCLE':
-          preferences.minProtein = 25;
-          preferences.maxCalories = 800;
-          break;
-        case 'MAINTAIN':
-          preferences.maxCalories = 600;
-          preferences.minProtein = 15;
-          break;
-        case 'IMPROVE_HEALTH':
-          preferences.maxFat = 20;
-          preferences.maxCalories = 500;
-          break;
+      case 'LOSE_WEIGHT':
+        preferences.maxCalories = 400;
+        preferences.maxCarbs = healthGoal.carbRatio ? 30 : undefined;
+        preferences.minProtein = healthGoal.proteinRatio ? 15 : undefined;
+        break;
+      case 'GAIN_MUSCLE':
+        preferences.minProtein = 25;
+        preferences.maxCalories = 800;
+        break;
+      case 'MAINTAIN':
+        preferences.maxCalories = 600;
+        preferences.minProtein = 15;
+        break;
+      case 'IMPROVE_HEALTH':
+        preferences.maxFat = 20;
+        preferences.maxCalories = 500;
+        break;
       }
     }
 
@@ -268,13 +268,13 @@ export class ContentFilter {
     const whereClause: any = {
       status: 'PUBLISHED',
       isPublic: true,
-      deletedAt: null
+      deletedAt: null,
     };
 
     if (context.mealType) {
       whereClause.mealTypes = {
         path: [],
-        string_contains: context.mealType
+        string_contains: context.mealType,
       };
     }
 
@@ -289,9 +289,9 @@ export class ContentFilter {
     return this.prisma.recipe.findMany({
       where: whereClause,
       include: {
-        ingredients: { include: { food: true } }
+        ingredients: { include: { food: true } },
       },
-      take: limit
+      take: limit,
     });
   }
 
@@ -320,13 +320,13 @@ export class ContentFilter {
         calories: recipe.calories,
         protein: recipe.protein,
         carbs: recipe.carbs,
-        fat: recipe.fat
+        fat: recipe.fat,
       },
       cookingTime: recipe.totalTime,
       difficulty: recipe.difficulty,
       category: recipe.category,
       tags: recipe.tags ? JSON.parse(recipe.tags) : [],
-      costLevel: recipe.costLevel
+      costLevel: recipe.costLevel,
     };
 
     // 缓存特征
@@ -478,7 +478,7 @@ export class ContentFilter {
     const costScores = {
       LOW: { LOW: 100, MEDIUM: 60, HIGH: 20 },
       MEDIUM: { LOW: 80, MEDIUM: 100, HIGH: 60 },
-      HIGH: { LOW: 40, MEDIUM: 70, HIGH: 100 }
+      HIGH: { LOW: 40, MEDIUM: 70, HIGH: 100 },
     };
 
     return costScores[profile.costPreference as keyof typeof costScores][features.costLevel as keyof typeof costScores['LOW']] / 100;
@@ -524,14 +524,14 @@ export class ContentFilter {
       calories: normalize(nutrition1.calories, 1000),
       protein: normalize(nutrition1.protein, 50),
       carbs: normalize(nutrition1.carbs, 100),
-      fat: normalize(nutrition1.fat, 50)
+      fat: normalize(nutrition1.fat, 50),
     };
 
     const normalized2 = {
       calories: normalize(nutrition2.calories, 1000),
       protein: normalize(nutrition2.protein, 50),
       carbs: normalize(nutrition2.carbs, 100),
-      fat: normalize(nutrition2.fat, 50)
+      fat: normalize(nutrition2.fat, 50),
     };
 
     // 计算欧几里得距离的倒数
@@ -594,7 +594,7 @@ export class ContentFilter {
       explanations.push('难度简单，适合厨房新手');
     }
 
-    return explanations.length > 0 ? explanations.join('，') + '。' : '基于您的偏好分析推荐。';
+    return explanations.length > 0 ? `${explanations.join('，')}。` : '基于您的偏好分析推荐。';
   }
 
   /**
@@ -606,7 +606,7 @@ export class ContentFilter {
       'LOW': 'EASY',
       'MEDIUM': 'MEDIUM',
       'HIGH': 'MEDIUM',
-      'EXTREME': 'HARD'
+      'EXTREME': 'HARD',
     };
     return mapping[spiceLevel] || 'MEDIUM';
   }

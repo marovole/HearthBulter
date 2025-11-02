@@ -19,14 +19,14 @@ global.Response = jest.fn();
 // Mock crypto API
 global.crypto = {
   subtle: {
-    digest: jest.fn()
+    digest: jest.fn(),
   },
-  randomUUID: jest.fn(() => 'test-uuid-12345')
+  randomUUID: jest.fn(() => 'test-uuid-12345'),
 };
 
 // Mock performance API
 global.performance = {
-  now: jest.fn(() => Date.now())
+  now: jest.fn(() => Date.now()),
 };
 
 // Mock WebSocket (if needed)

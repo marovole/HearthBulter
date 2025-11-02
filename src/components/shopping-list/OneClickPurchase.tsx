@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface CartItem {
   foodId: string
@@ -25,47 +25,47 @@ export function OneClickPurchase({
   onPurchaseComplete,
   onCancel,
 }: OneClickPurchaseProps) {
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('dingdong')
-  const [deliveryAddress, setDeliveryAddress] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [orderNotes, setOrderNotes] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('dingdong');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [orderNotes, setOrderNotes] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const platforms = [
     { id: 'dingdong', name: '叮咚买菜', fee: 3 },
     { id: 'hema', name: '盒马鲜生', fee: 6 },
     { id: 'jd', name: '京东到家', fee: 5 },
     { id: 'meituan', name: '美团买菜', fee: 4 },
-  ]
+  ];
 
-  const selectedPlatformInfo = platforms.find(p => p.id === selectedPlatform)
+  const selectedPlatformInfo = platforms.find(p => p.id === selectedPlatform);
 
   const calculateTotal = () => {
-    const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    const deliveryFee = selectedPlatformInfo?.fee || 0
-    return itemsTotal + deliveryFee
-  }
+    const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryFee = selectedPlatformInfo?.fee || 0;
+    return itemsTotal + deliveryFee;
+  };
 
   const handlePurchase = async () => {
     if (!deliveryAddress.trim()) {
-      setError('请填写收货地址')
-      return
+      setError('请填写收货地址');
+      return;
     }
 
     if (!phoneNumber.trim()) {
-      setError('请填写手机号码')
-      return
+      setError('请填写手机号码');
+      return;
     }
 
     if (!/^1[3-9]\d{9}$/.test(phoneNumber)) {
-      setError('请填写正确的手机号码')
-      return
+      setError('请填写正确的手机号码');
+      return;
     }
 
     try {
-      setIsProcessing(true)
-      setError(null)
+      setIsProcessing(true);
+      setError(null);
 
       const orderData = {
         platform: selectedPlatform,
@@ -78,7 +78,7 @@ export function OneClickPurchase({
         phoneNumber: phoneNumber.trim(),
         orderNotes: orderNotes.trim(),
         totalAmount: calculateTotal(),
-      }
+      };
 
       const response = await fetch('/api/ecommerce/purchase', {
         method: 'POST',
@@ -86,21 +86,21 @@ export function OneClickPurchase({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(orderData),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || '下单失败')
+        const errorData = await response.json();
+        throw new Error(errorData.error || '下单失败');
       }
 
-      const data = await response.json()
-      onPurchaseComplete(data.orderId)
+      const data = await response.json();
+      onPurchaseComplete(data.orderId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '下单失败')
+      setError(err instanceof Error ? err.message : '下单失败');
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -262,5 +262,5 @@ export function OneClickPurchase({
         </div>
       </div>
     </div>
-  )
+  );
 }

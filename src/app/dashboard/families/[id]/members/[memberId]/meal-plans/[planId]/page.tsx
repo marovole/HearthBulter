@@ -1,8 +1,8 @@
-import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import { notFound } from 'next/navigation'
-import { MealPlanDetailClient } from './MealPlanDetailClient'
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/db';
+import { notFound } from 'next/navigation';
+import { MealPlanDetailClient } from './MealPlanDetailClient';
 
 interface MealPlanDetailPageProps {
   params: Promise<{
@@ -15,11 +15,11 @@ interface MealPlanDetailPageProps {
 export default async function MealPlanDetailPage({
   params,
 }: MealPlanDetailPageProps) {
-  const { id, memberId, planId } = await params
-  const session = await auth()
+  const { id, memberId, planId } = await params;
+  const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin')
+    redirect('/auth/signin');
   }
 
   // 获取食谱计划和成员信息
@@ -60,24 +60,24 @@ export default async function MealPlanDetailPage({
         ],
       },
     },
-  })
+  });
 
   if (!mealPlan) {
-    notFound()
+    notFound();
   }
 
   // 验证权限
-  const isCreator = mealPlan.member.family.creatorId === session.user.id
-  const isAdmin = mealPlan.member.family.members[0]?.role === 'ADMIN' || isCreator
-  const isSelf = mealPlan.member.userId === session.user.id
+  const isCreator = mealPlan.member.family.creatorId === session.user.id;
+  const isAdmin = mealPlan.member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isSelf = mealPlan.member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
-    redirect(`/dashboard/families/${id}/members/${memberId}`)
+    redirect(`/dashboard/families/${id}/members/${memberId}`);
   }
 
   // 验证成员ID和家庭ID匹配
   if (mealPlan.memberId !== memberId || mealPlan.member.familyId !== id) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -87,6 +87,6 @@ export default async function MealPlanDetailPage({
       familyId={id}
       memberId={memberId}
     />
-  )
+  );
 }
 

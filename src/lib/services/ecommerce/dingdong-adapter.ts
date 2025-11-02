@@ -1,4 +1,4 @@
-import { BasePlatformAdapter } from './base-adapter'
+import { BasePlatformAdapter } from './base-adapter';
 import {
   OAuthRequest,
   OAuthResponse,
@@ -15,14 +15,14 @@ import {
   OrderItem,
   PlatformProductInfo,
   PlatformError,
-  PlatformErrorType
-} from './types'
-import { EcommercePlatform, OrderStatus, DeliveryStatus } from '@prisma/client'
+  PlatformErrorType,
+} from './types';
+import { EcommercePlatform, OrderStatus, DeliveryStatus } from '@prisma/client';
 
 export class DingdongAdapter extends BasePlatformAdapter {
-  readonly platform = EcommercePlatform.DINGDONG
-  readonly platformName = '叮咚买菜'
-  readonly baseUrl = process.env.DINGDONG_API_URL || 'https://api.ddxq.com/v1'
+  readonly platform = EcommercePlatform.DINGDONG;
+  readonly platformName = '叮咚买菜';
+  readonly baseUrl = process.env.DINGDONG_API_URL || 'https://api.ddxq.com/v1';
 
   // OAuth 认证
   async getAuthorizationUrl(request: OAuthRequest): Promise<OAuthResponse> {
@@ -31,14 +31,14 @@ export class DingdongAdapter extends BasePlatformAdapter {
       client_id: process.env.DINGDONG_CLIENT_ID!,
       redirect_uri: request.redirectUri,
       scope: (request.scope || ['user', 'order']).join(' '),
-      state: request.state || this.generateState()
-    })
+      state: request.state || this.generateState(),
+    });
 
     return {
       authorizationUrl: `${this.baseUrl}/oauth/authorize?${params.toString()}`,
       state: params.get('state')!,
-      expiresIn: 2400 // 40分钟
-    }
+      expiresIn: 2400, // 40分钟
+    };
   }
 
   async exchangeToken(request: TokenExchangeRequest): Promise<TokenInfo> {
@@ -57,9 +57,9 @@ export class DingdongAdapter extends BasePlatformAdapter {
           code: request.code,
           redirect_uri: request.redirectUri,
           client_id: process.env.DINGDONG_CLIENT_ID!,
-          client_secret: process.env.DINGDONG_CLIENT_SECRET!
-        })
-      })
+          client_secret: process.env.DINGDONG_CLIENT_SECRET!,
+        }),
+      });
 
       return {
         accessToken: response.access_token,
@@ -67,14 +67,14 @@ export class DingdongAdapter extends BasePlatformAdapter {
         tokenType: response.token_type || 'Bearer',
         scope: response.scope,
         expiresAt: this.parseTokenExpiry(response.expires_in),
-        platformUserId: response.uid
-      }
+        platformUserId: response.uid,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to exchange token with Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -93,9 +93,9 @@ export class DingdongAdapter extends BasePlatformAdapter {
           grant_type: 'refresh_token',
           refresh_token: refreshToken,
           client_id: process.env.DINGDONG_CLIENT_ID!,
-          client_secret: process.env.DINGDONG_CLIENT_SECRET!
-        })
-      })
+          client_secret: process.env.DINGDONG_CLIENT_SECRET!,
+        }),
+      });
 
       return {
         accessToken: response.access_token,
@@ -103,14 +103,14 @@ export class DingdongAdapter extends BasePlatformAdapter {
         tokenType: response.token_type || 'Bearer',
         scope: response.scope,
         expiresAt: this.parseTokenExpiry(response.expires_in),
-        platformUserId: response.uid
-      }
+        platformUserId: response.uid,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.TOKEN_EXPIRED,
         message: `Failed to refresh Dingdong token: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -122,23 +122,23 @@ export class DingdongAdapter extends BasePlatformAdapter {
         page: (request.page || 1).toString(),
         size: (request.pageSize || 20).toString(),
         sort_type: this.mapSortType(request.sortBy || 'default'),
-        sort: request.sortOrder || 'desc'
-      })
+        sort: request.sortOrder || 'desc',
+      });
 
       if (request.category) {
-        params.append('category_id', request.category)
+        params.append('category_id', request.category);
       }
       if (request.brand) {
-        params.append('brand_name', request.brand)
+        params.append('brand_name', request.brand);
       }
       if (request.minPrice) {
-        params.append('min_price', request.minPrice.toString())
+        params.append('min_price', request.minPrice.toString());
       }
       if (request.maxPrice) {
-        params.append('max_price', request.maxPrice.toString())
+        params.append('max_price', request.maxPrice.toString());
       }
       if (request.inStock !== undefined) {
-        params.append('stock', request.inStock ? '1' : '0')
+        params.append('stock', request.inStock ? '1' : '0');
       }
 
       const response = await this.makeRequest<{
@@ -147,33 +147,33 @@ export class DingdongAdapter extends BasePlatformAdapter {
         page: number
         size: number
         is_last: boolean
-      }>(`/product/search?${params.toString()}`, {}, token)
+      }>(`/product/search?${params.toString()}`, {}, token);
 
       return {
         products: response.list.map(product => this.standardizeProductInfo(product)),
         total: response.total,
         page: response.page,
         pageSize: response.size,
-        hasMore: !response.is_last
-      }
+        hasMore: !response.is_last,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to search products on Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
   async getProduct(productId: string, token: string): Promise<PlatformProductInfo | null> {
     try {
-      const response = await this.makeRequest<any>(`/product/detail/${productId}`, {}, token)
-      return this.standardizeProductInfo(response)
+      const response = await this.makeRequest<any>(`/product/detail/${productId}`, {}, token);
+      return this.standardizeProductInfo(response);
     } catch (error) {
       if (error.type === PlatformErrorType.PRODUCT_NOT_FOUND) {
-        return null
+        return null;
       }
-      throw error
+      throw error;
     }
   }
 
@@ -187,31 +187,31 @@ export class DingdongAdapter extends BasePlatformAdapter {
       }>>('/product/stock/batch', {
         method: 'POST',
         body: JSON.stringify({
-          product_ids: request.productIds
-        })
-      }, token)
+          product_ids: request.productIds,
+        }),
+      }, token);
 
       const stocks: Record<string, {
         stock: number
         isInStock: boolean
         stockStatus?: string
-      }> = {}
+      }> = {};
 
       for (const [productId, stockInfo] of Object.entries(response)) {
         stocks[productId] = {
           stock: stockInfo.stock,
           isInStock: stockInfo.is_stock,
-          stockStatus: stockInfo.stock_status
-        }
+          stockStatus: stockInfo.stock_status,
+        };
       }
 
-      return { stocks }
+      return { stocks };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to query stock from Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -222,13 +222,13 @@ export class DingdongAdapter extends BasePlatformAdapter {
         products: request.items.map(item => ({
           product_id: item.platformProductId,
           count: item.quantity,
-          spec: item.specification
+          spec: item.specification,
         })),
         address: this.standardizeAddress(request.deliveryAddress),
         remark: request.deliveryNotes,
         coupon_code: request.couponCode,
-        payment_type: request.paymentMethod || 'wechat'
-      }
+        payment_type: request.paymentMethod || 'wechat',
+      };
 
       const response = await this.makeRequest<{
         order_id: string
@@ -243,8 +243,8 @@ export class DingdongAdapter extends BasePlatformAdapter {
         }
       }>('/order/create', {
         method: 'POST',
-        body: JSON.stringify(orderData)
-      }, token)
+        body: JSON.stringify(orderData),
+      }, token);
 
       return {
         platformOrderId: response.order_id,
@@ -254,14 +254,14 @@ export class DingdongAdapter extends BasePlatformAdapter {
         shippingFee: response.delivery_fee,
         discount: response.discount_money,
         estimatedDeliveryTime: response.deliver_time,
-        paymentUrl: response.pay_info?.pay_url
-      }
+        paymentUrl: response.pay_info?.pay_url,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to create order on Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -277,7 +277,7 @@ export class DingdongAdapter extends BasePlatformAdapter {
         }
         deliver_time: string
         actual_deliver_time?: string
-      }>(`/order/detail/${orderId}`, {}, token)
+      }>(`/order/detail/${orderId}`, {}, token);
 
       return {
         platformOrderId: response.order_id,
@@ -286,14 +286,14 @@ export class DingdongAdapter extends BasePlatformAdapter {
         deliveryStatus: response.delivery_status,
         trackingNumber: response.logistic_info?.tracking_no,
         estimatedDeliveryTime: response.deliver_time,
-        actualDeliveryTime: response.actual_deliver_time
-      }
+        actualDeliveryTime: response.actual_deliver_time,
+      };
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get order status from Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -302,16 +302,16 @@ export class DingdongAdapter extends BasePlatformAdapter {
       await this.makeRequest(`/order/cancel/${orderId}`, {
         method: 'POST',
         body: JSON.stringify({
-          cancel_reason: '用户主动取消'
-        })
-      }, token)
-      return true
+          cancel_reason: '用户主动取消',
+        }),
+      }, token);
+      return true;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to cancel order on Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -324,21 +324,21 @@ export class DingdongAdapter extends BasePlatformAdapter {
       }>>('/product/price/batch', {
         method: 'POST',
         body: JSON.stringify({
-          product_ids: productIds
-        })
-      }, token)
+          product_ids: productIds,
+        }),
+      }, token);
 
-      const prices: Record<string, number> = {}
+      const prices: Record<string, number> = {};
       for (const [productId, priceInfo] of Object.entries(response)) {
-        prices[productId] = priceInfo.activity_price || priceInfo.price
+        prices[productId] = priceInfo.activity_price || priceInfo.price;
       }
-      return prices
+      return prices;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get product prices from Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -352,17 +352,17 @@ export class DingdongAdapter extends BasePlatformAdapter {
       }>('/delivery/time/fee', {
         method: 'POST',
         body: JSON.stringify({
-          address: this.standardizeAddress(address)
-        })
-      }, token)
+          address: this.standardizeAddress(address),
+        }),
+      }, token);
 
-      return response
+      return response;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to get delivery options from Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
@@ -384,40 +384,40 @@ export class DingdongAdapter extends BasePlatformAdapter {
         body: JSON.stringify({
           products: orderItems.map(item => ({
             product_id: item.platformProductId,
-            count: item.quantity
+            count: item.quantity,
           })),
-          address: this.standardizeAddress(address)
-        })
-      }, token)
+          address: this.standardizeAddress(address),
+        }),
+      }, token);
 
-      return response.deliver_time
+      return response.deliver_time;
     } catch (error) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
         message: `Failed to estimate delivery time from Dingdong: ${error.message}`,
-        details: { originalError: error }
-      })
+        details: { originalError: error },
+      });
     }
   }
 
   // 工具方法
   private generateState(): string {
     return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15)
+           Math.random().toString(36).substring(2, 15);
   }
 
   private mapSortType(sortBy?: string): string {
     switch (sortBy) {
-      case 'price':
-        return 'price'
-      case 'sales':
-        return 'sales'
-      case 'rating':
-        return 'rating'
-      case 'name':
-        return 'name'
-      default:
-        return 'default'
+    case 'price':
+      return 'price';
+    case 'sales':
+      return 'sales';
+    case 'rating':
+      return 'rating';
+    case 'name':
+      return 'name';
+    default:
+      return 'default';
     }
   }
 
@@ -448,7 +448,7 @@ export class DingdongAdapter extends BasePlatformAdapter {
       deliveryOptions: rawProduct.delivery_info,
       deliveryTime: rawProduct.delivery_time,
       shippingFee: rawProduct.delivery_fee ? parseFloat(rawProduct.delivery_fee) : undefined,
-      platformData: rawProduct
-    }
+      platformData: rawProduct,
+    };
   }
 }

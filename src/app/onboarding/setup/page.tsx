@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Plus, X, User, Calendar, Target } from 'lucide-react'
-import Link from 'next/link'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Plus, X, User, Calendar, Target } from 'lucide-react';
+import Link from 'next/link';
 
 interface FamilyMember {
   id: string
@@ -22,7 +22,7 @@ interface FamilyMember {
 }
 
 export default function SetupPage() {
-  const router = useRouter()
+  const router = useRouter();
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
     {
       id: '1',
@@ -30,17 +30,17 @@ export default function SetupPage() {
       age: '',
       gender: '',
       relationship: '',
-      healthGoals: []
-    }
-  ])
-  const [currentStep, setCurrentStep] = useState(0)
-  const [healthGoals, setHealthGoals] = useState('')
+      healthGoals: [],
+    },
+  ]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [healthGoals, setHealthGoals] = useState('');
 
   const steps = [
     { title: '家庭成员', description: '添加您的家庭成员' },
     { title: '健康目标', description: '设置家庭的健康目标' },
-    { title: '完成设置', description: '查看并确认您的设置' }
-  ]
+    { title: '完成设置', description: '查看并确认您的设置' },
+  ];
 
   const addFamilyMember = () => {
     const newMember: FamilyMember = {
@@ -49,42 +49,42 @@ export default function SetupPage() {
       age: '',
       gender: '',
       relationship: '',
-      healthGoals: []
-    }
-    setFamilyMembers([...familyMembers, newMember])
-  }
+      healthGoals: [],
+    };
+    setFamilyMembers([...familyMembers, newMember]);
+  };
 
   const removeFamilyMember = (id: string) => {
     if (familyMembers.length > 1) {
-      setFamilyMembers(familyMembers.filter(member => member.id !== id))
+      setFamilyMembers(familyMembers.filter(member => member.id !== id));
     }
-  }
+  };
 
   const updateFamilyMember = (id: string, field: keyof FamilyMember, value: any) => {
     setFamilyMembers(familyMembers.map(member => 
       member.id === id ? { ...member, [field]: value } : member
-    ))
-  }
+    ));
+  };
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     } else {
       // Save setup and redirect to dashboard
-      localStorage.setItem('family-setup', JSON.stringify(familyMembers))
-      localStorage.setItem('health-goals', healthGoals)
-      localStorage.setItem('onboarding-completed', 'true')
-      router.push('/dashboard')
+      localStorage.setItem('family-setup', JSON.stringify(familyMembers));
+      localStorage.setItem('health-goals', healthGoals);
+      localStorage.setItem('onboarding-completed', 'true');
+      router.push('/dashboard');
     }
-  }
+  };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
-  const progress = ((currentStep + 1) / steps.length) * 100
+  const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
@@ -324,5 +324,5 @@ export default function SetupPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

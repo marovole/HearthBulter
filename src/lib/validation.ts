@@ -3,8 +3,8 @@
  * Common validation functions for the application
  */
 
-import { z } from 'zod'
-import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod';
+import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * User Registration Schema
@@ -25,21 +25,21 @@ export const registerSchema = z.object({
       /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
       '密码必须包含字母和数字'
     ),
-})
+});
 
 /**
  * Validate registration data
  */
 export function validateRegistration(data: unknown) {
-  return registerSchema.safeParse(data)
+  return registerSchema.safeParse(data);
 }
 
 /**
  * Email validation
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 /**
@@ -49,10 +49,10 @@ export function isValidEmail(email: string): boolean {
  * - At least one number
  */
 export function isStrongPassword(password: string): boolean {
-  if (password.length < 8) return false
-  if (!/[A-Za-z]/.test(password)) return false
-  if (!/\d/.test(password)) return false
-  return true
+  if (password.length < 8) return false;
+  if (!/[A-Za-z]/.test(password)) return false;
+  if (!/\d/.test(password)) return false;
+  return true;
 }
 
 /**
@@ -64,7 +64,7 @@ export function sanitizeString(input: string): string {
   return input
     .trim()
     .replace(/[<>]/g, '') // Remove < and >
-    .slice(0, 1000) // Limit length to prevent DOS
+    .slice(0, 1000); // Limit length to prevent DOS
 }
 
 /**
@@ -78,7 +78,7 @@ export const memberSchema = z.object({
   birthDate: z.coerce.date(),
   height: z.number().min(50).max(250).optional(),
   weight: z.number().min(20).max(300).optional(),
-})
+});
 
 /**
  * Validate health goal data
@@ -97,7 +97,7 @@ export const healthGoalSchema = z.object({
   carbRatio: z.number().min(0).max(1).default(0.5),
   proteinRatio: z.number().min(0).max(1).default(0.2),
   fatRatio: z.number().min(0).max(1).default(0.3),
-})
+});
 
 /**
  * Validate allergy data
@@ -107,7 +107,7 @@ export const allergySchema = z.object({
   allergenName: z.string().min(1, '过敏原名称不能为空').max(100),
   severity: z.enum(['MILD', 'MODERATE', 'SEVERE', 'LIFE_THREATENING']),
   description: z.string().max(500).optional(),
-})
+});
 
 // ============ API 验证和错误处理工具函数 ============
 
@@ -120,7 +120,7 @@ export function formatValidationError(error: z.ZodError) {
       message: e.message,
       code: e.code,
     })),
-  }
+  };
 }
 
 // 通用验证函数
@@ -129,8 +129,8 @@ export async function validateRequestBody<T>(
   schema: z.ZodSchema<T>
 ): Promise<{ success: true; data: T } | { success: false; response: NextResponse }> {
   try {
-    const body = await request.json()
-    const result = schema.safeParse(body)
+    const body = await request.json();
+    const result = schema.safeParse(body);
 
     if (!result.success) {
       return {
@@ -139,10 +139,10 @@ export async function validateRequestBody<T>(
           formatValidationError(result.error),
           { status: 400 }
         ),
-      }
+      };
     }
 
-    return { success: true, data: result.data }
+    return { success: true, data: result.data };
   } catch (error) {
     return {
       success: false,
@@ -150,19 +150,19 @@ export async function validateRequestBody<T>(
         { error: '请求体格式错误' },
         { status: 400 }
       ),
-    }
+    };
   }
 }
 
 // 通用错误处理函数
 export function handleApiError(error: unknown, context: string) {
-  console.error(`${context}失败:`, error)
+  console.error(`${context}失败:`, error);
 
   if (error instanceof z.ZodError) {
     return NextResponse.json(
       formatValidationError(error),
       { status: 400 }
-    )
+    );
   }
 
   if (error instanceof Error) {
@@ -171,19 +171,19 @@ export function handleApiError(error: unknown, context: string) {
       message: error.message,
       stack: error.stack,
       context,
-    })
+    });
 
     // 返回用户友好的错误信息
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 
   return NextResponse.json(
     { error: '服务器内部错误' },
     { status: 500 }
-  )
+  );
 }
 
 // 常用验证schemas
@@ -236,21 +236,21 @@ export const commonSchemas = {
     .int('年龄必须是整数')
     .min(0, '年龄不能小于0')
     .max(150, '年龄不能大于150'),
-}
+};
 
 // API响应格式化函数
 export function formatApiSuccess<T>(data: T, message?: string) {
   return NextResponse.json(
     { success: true, data, message },
     { status: 200 }
-  )
+  );
 }
 
 export function formatApiCreated<T>(data: T, message = '创建成功') {
   return NextResponse.json(
     { success: true, data, message },
     { status: 201 }
-  )
+  );
 }
 
 // 输入清理函数 (增强版本)
@@ -259,7 +259,7 @@ export function sanitizeStringEnhanced(value: string): string {
     .trim()
     .replace(/\s+/g, ' ') // 将多个空格替换为单个空格
     .replace(/[<>]/g, '') // 移除潜在的HTML标签字符
-    .slice(0, 1000) // 限制长度防止DOS攻击
+    .slice(0, 1000); // 限制长度防止DOS攻击
 }
 
 export function sanitizeHtml(value: string): string {
@@ -269,7 +269,7 @@ export function sanitizeHtml(value: string): string {
     .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // 移除iframe标签
     .replace(/javascript:/gi, '') // 移除javascript:协议
     .replace(/on\w+\s*=/gi, '') // 移除事件处理器
-    .replace(/[<>]/g, '') // 移除HTML标签字符
+    .replace(/[<>]/g, ''); // 移除HTML标签字符
 }
 
 // 邀请相关验证schemas
@@ -282,7 +282,7 @@ export const invitationSchemas = {
   accept: z.object({
     memberName: z.string().min(1, '请提供成员名称').max(50).trim(),
   }),
-}
+};
 
 // 健康数据验证schemas
 export const healthDataSchemas = {
@@ -307,7 +307,7 @@ export const healthDataSchemas = {
     measuredAt: z.date().optional(),
     notes: z.string().max(500).optional(),
   }),
-}
+};
 
 // 权限验证函数
 export function validatePermission(
@@ -315,8 +315,8 @@ export function validatePermission(
   requiredRole: string,
   isCreator: boolean = false
 ): boolean {
-  if (isCreator) return true
-  if (requiredRole === 'ADMIN' && userRole === 'ADMIN') return true
-  if (requiredRole === 'MEMBER') return true
-  return false
+  if (isCreator) return true;
+  if (requiredRole === 'ADMIN' && userRole === 'ADMIN') return true;
+  if (requiredRole === 'MEMBER') return true;
+  return false;
 }

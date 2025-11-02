@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { OcrResult } from '@/components/reports/OcrResult'
-import { CorrectionForm } from '@/components/reports/CorrectionForm'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { OcrResult } from '@/components/reports/OcrResult';
+import { CorrectionForm } from '@/components/reports/CorrectionForm';
 import type {
   MedicalReport,
   MedicalIndicator,
-} from '@prisma/client'
+} from '@prisma/client';
 
 interface ReportWithIndicators extends MedicalReport {
   indicators: MedicalIndicator[]
@@ -25,73 +25,73 @@ interface ReportDetailPageProps {
 export default function ReportDetailPage({
   params: paramsPromise,
 }: ReportDetailPageProps) {
-  const router = useRouter()
+  const router = useRouter();
   const [params, setParams] = useState<{
     id: string
     memberId: string
     reportId: string
-  } | null>(null)
-  const [report, setReport] = useState<ReportWithIndicators | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [memberName, setMemberName] = useState<string>('成员')
-  const [showCorrectionForm, setShowCorrectionForm] = useState(false)
+  } | null>(null);
+  const [report, setReport] = useState<ReportWithIndicators | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [memberName, setMemberName] = useState<string>('成员');
+  const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 
   useEffect(() => {
-    paramsPromise.then(setParams)
-  }, [paramsPromise])
+    paramsPromise.then(setParams);
+  }, [paramsPromise]);
 
   useEffect(() => {
     if (params) {
-      fetchReport()
-      fetchMemberName()
+      fetchReport();
+      fetchMemberName();
     }
-  }, [params])
+  }, [params]);
 
   const fetchMemberName = async () => {
-    if (!params) return
+    if (!params) return;
 
     try {
       const response = await fetch(
         `/api/families/${params.id}/members/${params.memberId}`
-      )
+      );
       if (response.ok) {
-        const data = await response.json()
-        setMemberName(data.member?.name || '成员')
+        const data = await response.json();
+        setMemberName(data.member?.name || '成员');
       }
     } catch (err) {
       // 忽略错误，使用默认值
     }
-  }
+  };
 
   const fetchReport = async () => {
-    if (!params) return
+    if (!params) return;
 
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       const response = await fetch(
         `/api/members/${params.memberId}/reports/${params.reportId}`
-      )
+      );
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || '获取报告失败')
+        const data = await response.json();
+        throw new Error(data.error || '获取报告失败');
       }
 
-      const data = await response.json()
-      setReport(data.data)
+      const data = await response.json();
+      setReport(data.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误')
+      setError(err instanceof Error ? err.message : '未知错误');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
     if (!params || !confirm('确定要删除这份报告吗？删除后无法恢复。')) {
-      return
+      return;
     }
 
     try {
@@ -100,33 +100,33 @@ export default function ReportDetailPage({
         {
           method: 'DELETE',
         }
-      )
+      );
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || '删除失败')
+        const data = await response.json();
+        throw new Error(data.error || '删除失败');
       }
 
       // 导航回列表页
       router.push(
         `/dashboard/families/${params.id}/members/${params.memberId}/reports`
-      )
+      );
     } catch (err) {
-      alert(err instanceof Error ? err.message : '删除失败')
+      alert(err instanceof Error ? err.message : '删除失败');
     }
-  }
+  };
 
   const handleCompare = () => {
-    if (!params) return
+    if (!params) return;
     router.push(
       `/dashboard/families/${params.id}/members/${params.memberId}/reports/${params.reportId}/compare`
-    )
-  }
+    );
+  };
 
   const handleCorrectionSuccess = () => {
-    setShowCorrectionForm(false)
-    fetchReport() // 刷新数据
-  }
+    setShowCorrectionForm(false);
+    fetchReport(); // 刷新数据
+  };
 
   if (loading && !report) {
     return (
@@ -136,7 +136,7 @@ export default function ReportDetailPage({
           <div className="text-gray-600">加载中...</div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !report || !params) {
@@ -150,7 +150,7 @@ export default function ReportDetailPage({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -239,6 +239,6 @@ export default function ReportDetailPage({
         </div>
       </div>
     </div>
-  )
+  );
 }
 

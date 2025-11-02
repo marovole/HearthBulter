@@ -9,10 +9,10 @@ jest.mock('@/lib/services/ai/openai-client', () => ({
   openaiClient: {
     chat: {
       completions: {
-        create: jest.fn()
-      }
-    }
-  }
+        create: jest.fn(),
+      },
+    },
+  },
 }));
 
 import { openaiClient } from '@/lib/services/ai/openai-client';
@@ -38,7 +38,7 @@ describe('Conversation Manager', () => {
         gender: 'male',
         health_goals: ['weight_loss'],
         dietary_preferences: null,
-        allergies: []
+        allergies: [],
       };
 
       const session = conversationManager.createSession(memberId, userProfile);
@@ -155,7 +155,7 @@ describe('Conversation Manager', () => {
         { role: 'user' as const, content: 'Hello' },
         { role: 'assistant' as const, content: 'Hi there!' },
         { role: 'user' as const, content: 'How are you?' },
-        { role: 'assistant' as const, content: 'I am doing well, thanks!' }
+        { role: 'assistant' as const, content: 'I am doing well, thanks!' },
       ];
 
       messages.forEach(msg => {
@@ -205,7 +205,7 @@ describe('Conversation Manager', () => {
         { message: 'How many calories should I consume?', expectedIntent: 'calorie_guidance' },
         { message: 'Is this food healthy?', expectedIntent: 'food_analysis' },
         { message: 'Create a meal plan for me', expectedIntent: 'meal_planning' },
-        { message: 'What are good protein sources?', expectedIntent: 'nutrition_info' }
+        { message: 'What are good protein sources?', expectedIntent: 'nutrition_info' },
       ];
 
       testCases.forEach(({ message, expectedIntent }) => {
@@ -220,7 +220,7 @@ describe('Conversation Manager', () => {
         { message: 'Analyze my health data', expectedIntent: 'health_analysis' },
         { message: 'Check my BMI', expectedIntent: 'health_metrics' },
         { message: 'What do my blood tests mean?', expectedIntent: 'medical_interpretation' },
-        { message: 'Am I healthy?', expectedIntent: 'health_assessment' }
+        { message: 'Am I healthy?', expectedIntent: 'health_assessment' },
       ];
 
       testCases.forEach(({ message, expectedIntent }) => {
@@ -234,7 +234,7 @@ describe('Conversation Manager', () => {
       const testCases = [
         { message: 'How should I exercise?', expectedIntent: 'fitness_advice' },
         { message: 'Create a workout plan', expectedIntent: 'workout_planning' },
-        { message: 'Is this exercise good for weight loss?', expectedIntent: 'exercise_analysis' }
+        { message: 'Is this exercise good for weight loss?', expectedIntent: 'exercise_analysis' },
       ];
 
       testCases.forEach(({ message, expectedIntent }) => {
@@ -249,7 +249,7 @@ describe('Conversation Manager', () => {
         'Help',
         'I need advice',
         'Can you help me?',
-        'What do you think?'
+        'What do you think?',
       ];
 
       ambiguousMessages.forEach(message => {
@@ -263,7 +263,7 @@ describe('Conversation Manager', () => {
       const testCases = [
         { message: '我应该如何减肥？', expectedIntent: 'nutrition_advice' },
         { message: '分析我的健康数据', expectedIntent: 'health_analysis' },
-        { message: '制定运动计划', expectedIntent: 'workout_planning' }
+        { message: '制定运动计划', expectedIntent: 'workout_planning' },
       ];
 
       testCases.forEach(({ message, expectedIntent }) => {
@@ -283,7 +283,7 @@ describe('Conversation Manager', () => {
         gender: 'male',
         health_goals: ['weight_loss'],
         dietary_preferences: { diet_type: 'balanced' },
-        allergies: ['nuts']
+        allergies: ['nuts'],
       };
       const session = conversationManager.createSession('member-123', userProfile);
       sessionId = session.id;
@@ -349,7 +349,7 @@ describe('Conversation Manager', () => {
         gender: 'male',
         health_goals: ['weight_loss'],
         dietary_preferences: null,
-        allergies: []
+        allergies: [],
       };
       const session = conversationManager.createSession('member-123', userProfile);
       sessionId = session.id;
@@ -358,14 +358,14 @@ describe('Conversation Manager', () => {
       mockCreate.mockResolvedValue({
         choices: [{
           message: {
-            content: 'Here is my advice for healthy eating...'
-          }
+            content: 'Here is my advice for healthy eating...',
+          },
         }],
         usage: {
           prompt_tokens: 50,
           completion_tokens: 100,
-          total_tokens: 150
-        }
+          total_tokens: 150,
+        },
       });
     });
 
@@ -374,7 +374,7 @@ describe('Conversation Manager', () => {
 
       const response = await conversationManager.generateResponse(sessionId, {
         temperature: 0.7,
-        maxTokens: 500
+        maxTokens: 500,
       });
 
       expect(response).toBeDefined();
@@ -394,15 +394,15 @@ describe('Conversation Manager', () => {
         ' for',
         ' healthy',
         ' eating',
-        '.'
+        '.',
       ];
 
       mockCreate.mockResolvedValue({
         choices: [{
           message: {
-            content: streamChunks.join('')
-          }
-        }]
+            content: streamChunks.join(''),
+          },
+        }],
       });
 
       conversationManager.addMessage(sessionId, 'user', 'Give me some advice');
@@ -436,9 +436,9 @@ describe('Conversation Manager', () => {
         expect.objectContaining({
           messages: expect.arrayContaining([
             expect.objectContaining({
-              content: expect.stringContaining('John')
-            })
-          ])
+              content: expect.stringContaining('John'),
+            }),
+          ]),
         })
       );
     });
@@ -481,7 +481,7 @@ describe('Conversation Manager', () => {
         gender: 'male',
         health_goals: ['weight_loss'],
         dietary_preferences: null,
-        allergies: ['nuts']
+        allergies: ['nuts'],
       };
 
       const session = conversationManager.createSession('member-123', userProfile);
@@ -514,7 +514,7 @@ describe('Conversation Manager', () => {
         gender: 'male',
         health_goals: ['weight_loss'],
         dietary_preferences: null,
-        allergies: []
+        allergies: [],
       };
       const session = conversationManager.createSession('member-123', userProfile);
       sessionId = session.id;
@@ -579,7 +579,7 @@ describe('Conversation Manager', () => {
           gender: 'male',
           health_goals: [],
           dietary_preferences: null,
-          allergies: []
+          allergies: [],
         };
         sessions.push(conversationManager.createSession(`member-${i}`, userProfile));
       }
@@ -597,7 +597,7 @@ describe('Conversation Manager', () => {
         gender: 'male',
         health_goals: [],
         dietary_preferences: null,
-        allergies: []
+        allergies: [],
       };
       const session = conversationManager.createSession('member-123', userProfile);
 
@@ -634,7 +634,7 @@ describe('Conversation Manager', () => {
         gender: 'male',
         health_goals: [],
         dietary_preferences: null,
-        allergies: []
+        allergies: [],
       };
       const session = conversationManager.createSession('member-123', userProfile);
 

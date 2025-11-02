@@ -45,7 +45,7 @@ interface RecipeHistoryProps {
 export function RecipeHistory({
   memberId,
   limit = 50,
-  showFilters = true
+  showFilters = true,
 }: RecipeHistoryProps) {
   const [views, setViews] = useState<ViewRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +68,7 @@ export function RecipeHistory({
         memberId,
         page: currentPage.toString(),
         limit: limit.toString(),
-        days: days.toString()
+        days: days.toString(),
       });
 
       const response = await fetch(`/api/recipes/history?${params}`);
@@ -211,7 +211,7 @@ export function RecipeHistory({
                       <CardDescription className="text-xs text-muted-foreground mt-1">
                         {formatDate(view.viewedAt)} {new Date(view.viewedAt).toLocaleTimeString('zh-CN', {
                           hour: '2-digit',
-                          minute: '2-digit'
+                          minute: '2-digit',
                         })}
                       </CardDescription>
                     </div>

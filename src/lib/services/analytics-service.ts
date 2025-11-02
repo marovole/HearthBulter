@@ -5,9 +5,9 @@
  * 提供体重趋势分析、营养摄入汇总、目标进度计算和异常检测功能
  */
 
-import { prisma } from '@/lib/db'
-import { calculateBMI, calculateProgress } from '@/lib/health-calculations'
-import { startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
+import { prisma } from '@/lib/db';
+import { calculateBMI, calculateProgress } from '@/lib/health-calculations';
+import { startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 
 export interface WeightTrendAnalysis {
   data: Array<{ date: Date; weight: number }>
@@ -65,8 +65,8 @@ export class AnalyticsService {
     memberId: string,
     days: number = 30
   ): Promise<WeightTrendAnalysis> {
-    const endDate = new Date()
-    const startDate = subDays(endDate, days)
+    const endDate = new Date();
+    const startDate = subDays(endDate, days);
 
     // 获取成员信息和健康目标
     const member = await prisma.familyMember.findUnique({
@@ -81,10 +81,10 @@ export class AnalyticsService {
           take: 1,
         },
       },
-    })
+    });
 
     if (!member) {
-      throw new Error('成员不存在')
+      throw new Error('成员不存在');
     }
 
     // 查询健康数据
@@ -98,15 +98,15 @@ export class AnalyticsService {
         },
       },
       orderBy: { measuredAt: 'asc' },
-    })
+    });
 
     const weightData = healthData.map((d) => ({
       date: d.measuredAt,
       weight: d.weight!,
-    }))
+    }));
 
     if (weightData.length === 0) {
-      const activeGoal = member.healthGoals[0]
+      const activeGoal = member.healthGoals[0];
       return {
         data: [],
         min: 0,
@@ -117,23 +117,23 @@ export class AnalyticsService {
         currentWeight: member.weight,
         targetWeight: activeGoal?.targetWeight || null,
         anomalies: [],
-      }
+      };
     }
 
-    const weights = weightData.map((d) => d.weight)
-    const min = Math.min(...weights)
-    const max = Math.max(...weights)
-    const average = weights.reduce((a, b) => a + b, 0) / weights.length
+    const weights = weightData.map((d) => d.weight);
+    const min = Math.min(...weights);
+    const max = Math.max(...weights);
+    const average = weights.reduce((a, b) => a + b, 0) / weights.length;
 
-    const firstWeight = weightData[0].weight
-    const lastWeight = weightData[weightData.length - 1].weight
-    const change = lastWeight - firstWeight
-    const changePercent = firstWeight > 0 ? (change / firstWeight) * 100 : 0
+    const firstWeight = weightData[0].weight;
+    const lastWeight = weightData[weightData.length - 1].weight;
+    const change = lastWeight - firstWeight;
+    const changePercent = firstWeight > 0 ? (change / firstWeight) * 100 : 0;
 
     // 异常检测：检测突增/突降
-    const anomalies = this.detectWeightAnomalies(weightData)
+    const anomalies = this.detectWeightAnomalies(weightData);
 
-    const activeGoal = member.healthGoals[0]
+    const activeGoal = member.healthGoals[0];
 
     return {
       data: weightData,
@@ -145,7 +145,7 @@ export class AnalyticsService {
       currentWeight: lastWeight,
       targetWeight: activeGoal?.targetWeight || null,
       anomalies,
-    }
+    };
   }
 
   /**
@@ -159,52 +159,52 @@ export class AnalyticsService {
     reason: string
     severity: 'low' | 'medium' | 'high'
   }> {
-    if (weightData.length < 2) return []
+    if (weightData.length < 2) return [];
 
     const anomalies: Array<{
       date: Date
       weight: number
       reason: string
       severity: 'low' | 'medium' | 'high'
-    }> = []
+    }> = [];
 
     // 计算移动平均（3天窗口）
-    const windowSize = Math.min(3, weightData.length)
+    const windowSize = Math.min(3, weightData.length);
     for (let i = windowSize; i < weightData.length; i++) {
-      const current = weightData[i]
-      const previous = weightData[i - 1]
+      const current = weightData[i];
+      const previous = weightData[i - 1];
 
       // 计算前几天的平均
       const window = weightData.slice(
         Math.max(0, i - windowSize),
         i
-      )
+      );
       const avgWeight =
-        window.reduce((sum, d) => sum + d.weight, 0) / window.length
+        window.reduce((sum, d) => sum + d.weight, 0) / window.length;
 
       // 检测异常：变化超过平均值的10%
       const changePercent = Math.abs(
         ((current.weight - previous.weight) / previous.weight) * 100
-      )
+      );
 
       if (changePercent > 5) {
         const severity =
-          changePercent > 10 ? 'high' : changePercent > 7 ? 'medium' : 'low'
+          changePercent > 10 ? 'high' : changePercent > 7 ? 'medium' : 'low';
         const reason =
           current.weight > previous.weight
             ? `体重突增 ${changePercent.toFixed(1)}%`
-            : `体重突降 ${changePercent.toFixed(1)}%`
+            : `体重突降 ${changePercent.toFixed(1)}%`;
 
         anomalies.push({
           date: current.date,
           weight: current.weight,
           reason,
           severity,
-        })
+        });
       }
     }
 
-    return anomalies
+    return anomalies;
   }
 
   /**
@@ -216,23 +216,23 @@ export class AnalyticsService {
     memberId: string,
     period: 'daily' | 'weekly' | 'monthly' = 'daily'
   ): Promise<NutritionSummary> {
-    const now = new Date()
-    let startDate: Date
-    let endDate: Date
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
 
     switch (period) {
-      case 'daily':
-        startDate = startOfDay(now)
-        endDate = endOfDay(now)
-        break
-      case 'weekly':
-        startDate = startOfWeek(now, { weekStartsOn: 1 })
-        endDate = endOfWeek(now, { weekStartsOn: 1 })
-        break
-      case 'monthly':
-        startDate = startOfMonth(now)
-        endDate = endOfMonth(now)
-        break
+    case 'daily':
+      startDate = startOfDay(now);
+      endDate = endOfDay(now);
+      break;
+    case 'weekly':
+      startDate = startOfWeek(now, { weekStartsOn: 1 });
+      endDate = endOfWeek(now, { weekStartsOn: 1 });
+      break;
+    case 'monthly':
+      startDate = startOfMonth(now);
+      endDate = endOfMonth(now);
+      break;
     }
 
     // 获取成员的健康目标
@@ -245,40 +245,40 @@ export class AnalyticsService {
           take: 1,
         },
       },
-    })
+    });
 
     if (!member) {
-      throw new Error('成员不存在')
+      throw new Error('成员不存在');
     }
 
-    const activeGoal = member.healthGoals[0]
+    const activeGoal = member.healthGoals[0];
 
     // 暂时基于目标计算，meal-planning完成后可整合实际营养数据
-    const targetCalories = activeGoal?.tdee || null
+    const targetCalories = activeGoal?.tdee || null;
     const targetCarbs = activeGoal?.carbRatio
       ? targetCalories
         ? Math.round((targetCalories * activeGoal.carbRatio) / 4)
         : null
-      : null
+      : null;
     const targetProtein = activeGoal?.proteinRatio
       ? targetCalories
         ? Math.round((targetCalories * activeGoal.proteinRatio) / 4)
         : null
-      : null
+      : null;
     const targetFat = activeGoal?.fatRatio
       ? targetCalories
         ? Math.round((targetCalories * activeGoal.fatRatio) / 9)
         : null
-      : null
+      : null;
 
     // TODO: 实际营养摄入数据（meal-planning完成后填充）
-    const actualCalories = null
-    const actualCarbs = null
-    const actualProtein = null
-    const actualFat = null
+    const actualCalories = null;
+    const actualCarbs = null;
+    const actualProtein = null;
+    const actualFat = null;
 
     // 计算达标率（暂时返回0，实际数据到位后计算）
-    const adherenceRate = 0
+    const adherenceRate = 0;
 
     return {
       period,
@@ -293,7 +293,7 @@ export class AnalyticsService {
       actualProtein,
       actualFat,
       adherenceRate,
-    }
+    };
   }
 
   /**
@@ -309,10 +309,10 @@ export class AnalyticsService {
           orderBy: { createdAt: 'desc' },
         },
       },
-    })
+    });
 
     if (!member) {
-      throw new Error('成员不存在')
+      throw new Error('成员不存在');
     }
 
     // 获取最新的体重数据
@@ -322,11 +322,11 @@ export class AnalyticsService {
         weight: { not: null },
       },
       orderBy: { measuredAt: 'desc' },
-    })
+    });
 
-    const currentWeight = latestHealthData?.weight || member.weight
+    const currentWeight = latestHealthData?.weight || member.weight;
 
-    const progress: GoalProgress[] = []
+    const progress: GoalProgress[] = [];
 
     for (const goal of member.healthGoals) {
       if (
@@ -334,38 +334,38 @@ export class AnalyticsService {
         !goal.startWeight ||
         goal.goalType === 'IMPROVE_HEALTH'
       ) {
-        continue
+        continue;
       }
 
       const goalProgress = calculateProgress(
         goal.startWeight,
         currentWeight,
         goal.targetWeight
-      )
+      );
 
       // 计算预计完成时间
-      const startDate = goal.startDate
-      const targetDate = goal.targetDate
-      const now = new Date()
+      const startDate = goal.startDate;
+      const targetDate = goal.targetDate;
+      const now = new Date();
 
-      let estimatedCompletionDate: Date | null = null
-      let weeksRemaining: number | null = null
+      let estimatedCompletionDate: Date | null = null;
+      let weeksRemaining: number | null = null;
 
       if (currentWeight && goal.targetWeight && goal.startWeight) {
-        const weightDiff = Math.abs(goal.targetWeight - currentWeight)
-        const totalDiff = Math.abs(goal.targetWeight - goal.startWeight)
+        const weightDiff = Math.abs(goal.targetWeight - currentWeight);
+        const totalDiff = Math.abs(goal.targetWeight - goal.startWeight);
         const elapsedWeeks =
-          (now.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)
+          (now.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000);
 
         if (goalProgress > 0 && elapsedWeeks > 0) {
           const weeklyRate = Math.abs(
             (currentWeight - goal.startWeight) / elapsedWeeks
-          )
+          );
           if (weeklyRate > 0) {
-            weeksRemaining = weightDiff / weeklyRate
+            weeksRemaining = weightDiff / weeklyRate;
             estimatedCompletionDate = new Date(
               now.getTime() + weeksRemaining * 7 * 24 * 60 * 60 * 1000
-            )
+            );
           }
         }
       }
@@ -374,7 +374,7 @@ export class AnalyticsService {
       const onTrack =
         targetDate && estimatedCompletionDate
           ? estimatedCompletionDate <= targetDate
-          : true
+          : true;
 
       progress.push({
         goalId: goal.id,
@@ -388,10 +388,10 @@ export class AnalyticsService {
         estimatedCompletionDate,
         weeksRemaining: weeksRemaining ? Math.ceil(weeksRemaining) : null,
         onTrack,
-      })
+      });
     }
 
-    return progress
+    return progress;
   }
 
   /**
@@ -402,16 +402,16 @@ export class AnalyticsService {
       this.analyzeWeightTrend(memberId, 30),
       this.summarizeNutrition(memberId, 'daily'),
       this.calculateGoalProgress(memberId),
-    ])
+    ]);
 
     return {
       weightTrend,
       nutritionSummary,
       goalProgress,
-    }
+    };
   }
 }
 
 // 导出单例
-export const analyticsService = new AnalyticsService()
+export const analyticsService = new AnalyticsService();
 

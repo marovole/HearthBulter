@@ -52,20 +52,20 @@ export function LoadingIndicator({
           <div className={cn(
             'bg-current rounded-full animate-bounce',
             size === 'sm' ? 'w-1 h-1' :
-            size === 'md' ? 'w-1.5 h-1.5' :
-            size === 'lg' ? 'w-2 h-2' : 'w-3 h-3'
+              size === 'md' ? 'w-1.5 h-1.5' :
+                size === 'lg' ? 'w-2 h-2' : 'w-3 h-3'
           )} style={{ animationDelay: '0ms' }} />
           <div className={cn(
             'bg-current rounded-full animate-bounce',
             size === 'sm' ? 'w-1 h-1' :
-            size === 'md' ? 'w-1.5 h-1.5' :
-            size === 'lg' ? 'w-2 h-2' : 'w-3 h-3'
+              size === 'md' ? 'w-1.5 h-1.5' :
+                size === 'lg' ? 'w-2 h-2' : 'w-3 h-3'
           )} style={{ animationDelay: '150ms' }} />
           <div className={cn(
             'bg-current rounded-full animate-bounce',
             size === 'sm' ? 'w-1 h-1' :
-            size === 'md' ? 'w-1.5 h-1.5' :
-            size === 'lg' ? 'w-2 h-2' : 'w-3 h-3'
+              size === 'md' ? 'w-1.5 h-1.5' :
+                size === 'lg' ? 'w-2 h-2' : 'w-3 h-3'
           )} style={{ animationDelay: '300ms' }} />
         </div>
         {showText && (
@@ -103,8 +103,8 @@ export function LoadingIndicator({
               className={cn(
                 'bg-current animate-pulse',
                 size === 'sm' ? 'w-0.5 h-3' :
-                size === 'md' ? 'w-1 h-4' :
-                size === 'lg' ? 'w-1.5 h-6' : 'w-2 h-8'
+                  size === 'md' ? 'w-1 h-4' :
+                    size === 'lg' ? 'w-1.5 h-6' : 'w-2 h-8'
               )}
               style={{
                 animationDelay: `${i * 100}ms`,
@@ -135,7 +135,7 @@ interface AIThinkingIndicatorProps {
 export function AIThinkingIndicator({
   size = 'md',
   className,
-  message = 'AI正在思考中...'
+  message = 'AI正在思考中...',
 }: AIThinkingIndicatorProps) {
   return (
     <div className={cn('flex items-center space-x-3 p-4 bg-muted/50 rounded-lg', className)}>
@@ -149,7 +149,7 @@ export function AIThinkingIndicator({
         <p className={cn(
           'text-muted-foreground font-medium',
           size === 'sm' ? 'text-sm' :
-          size === 'md' ? 'text-base' : 'text-lg'
+            size === 'md' ? 'text-base' : 'text-lg'
         )}>
           {message}
         </p>
@@ -174,7 +174,7 @@ interface PageLoadingIndicatorProps {
 
 export function PageLoadingIndicator({
   message = '正在加载页面...',
-  className
+  className,
 }: PageLoadingIndicatorProps) {
   return (
     <div className={cn(
@@ -195,7 +195,7 @@ interface InlineLoadingIndicatorProps {
 
 export function InlineLoadingIndicator({
   size = 'sm',
-  className
+  className,
 }: InlineLoadingIndicatorProps) {
   return (
     <div className={cn('flex items-center justify-center', className)}>

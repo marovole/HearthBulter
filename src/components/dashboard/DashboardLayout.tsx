@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -11,9 +11,9 @@ import {
   Menu,
   X,
   Home,
-  Settings
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  Settings,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -29,10 +29,10 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ 
   children, 
   currentMember,
-  familyMembers = [] 
+  familyMembers = [], 
 }: DashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview')
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const navigation = [
     { id: 'overview', name: '概览', icon: Home },
@@ -41,7 +41,7 @@ export function DashboardLayout({
     { id: 'family', name: '家庭成员', icon: Users },
     { id: 'score', name: '健康评分', icon: Heart },
     { id: 'settings', name: '设置', icon: Settings },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -59,7 +59,7 @@ export function DashboardLayout({
             {/* 导航菜单 */}
             <nav className="flex-1 px-2 pb-4 space-y-1">
               {navigation.map((item) => {
-                const Icon = item.icon
+                const Icon = item.icon;
                 return (
                   <button
                     key={item.id}
@@ -74,7 +74,7 @@ export function DashboardLayout({
                     <Icon className="mr-3 h-5 w-5" />
                     {item.name}
                   </button>
-                )
+                );
               })}
             </nav>
 
@@ -138,13 +138,13 @@ export function DashboardLayout({
               
               <nav className="mt-8 px-2 space-y-1">
                 {navigation.map((item) => {
-                  const Icon = item.icon
+                  const Icon = item.icon;
                   return (
                     <button
                       key={item.id}
                       onClick={() => {
-                        setActiveTab(item.id)
-                        setSidebarOpen(false)
+                        setActiveTab(item.id);
+                        setSidebarOpen(false);
                       }}
                       className={cn(
                         activeTab === item.id
@@ -156,7 +156,7 @@ export function DashboardLayout({
                       <Icon className="mr-3 h-5 w-5" />
                       {item.name}
                     </button>
-                  )
+                  );
                 })}
               </nav>
             </div>
@@ -211,5 +211,5 @@ export function DashboardLayout({
         </main>
       </div>
     </div>
-  )
+  );
 }

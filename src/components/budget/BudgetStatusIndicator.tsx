@@ -1,21 +1,21 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { 
   AlertTriangleIcon, 
   TrendingUpIcon, 
   TrendingDownIcon,
   DollarSignIcon,
-  RefreshCwIcon
-} from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { BudgetStatus as BudgetStatusType, FoodCategory } from '@prisma/client'
+  RefreshCwIcon,
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import { BudgetStatus as BudgetStatusType, FoodCategory } from '@prisma/client';
 
 interface BudgetStatus {
   budget: any
@@ -49,68 +49,68 @@ export function BudgetStatusIndicator({
   budgetId, 
   compact = false, 
   showDetails = false,
-  onBudgetClick 
+  onBudgetClick, 
 }: BudgetStatusIndicatorProps) {
-  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchBudgetStatus = async () => {
     try {
       const url = budgetId 
         ? `/api/budget/current?budgetId=${budgetId}`
-        : `/api/budget/current?memberId=${memberId}`
+        : `/api/budget/current?memberId=${memberId}`;
       
-      const response = await fetch(url)
+      const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('获取预算状态失败')
+        throw new Error('获取预算状态失败');
       }
       
-      const data = await response.json()
-      setBudgetStatus(data)
+      const data = await response.json();
+      setBudgetStatus(data);
     } catch (err) {
-      console.error('获取预算状态失败:', err)
-      setBudgetStatus(null)
+      console.error('获取预算状态失败:', err);
+      setBudgetStatus(null);
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchBudgetStatus()
-  }, [memberId, budgetId])
+    fetchBudgetStatus();
+  }, [memberId, budgetId]);
 
   const handleRefresh = () => {
-    setRefreshing(true)
-    fetchBudgetStatus()
-  }
+    setRefreshing(true);
+    fetchBudgetStatus();
+  };
 
   const getUsageColor = (percentage: number) => {
-    if (percentage >= 100) return 'text-red-600'
-    if (percentage >= 80) return 'text-yellow-600'
-    return 'text-green-600'
-  }
+    if (percentage >= 100) return 'text-red-600';
+    if (percentage >= 80) return 'text-yellow-600';
+    return 'text-green-600';
+  };
 
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 100) return 'bg-red-500'
-    if (percentage >= 80) return 'bg-yellow-500'
-    return 'bg-green-500'
-  }
+    if (percentage >= 100) return 'bg-red-500';
+    if (percentage >= 80) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
 
   const getStatusBadge = (percentage: number) => {
     if (percentage >= 100) {
-      return <Badge variant="destructive">已超支</Badge>
+      return <Badge variant="destructive">已超支</Badge>;
     }
     if (percentage >= 80) {
-      return <Badge variant="secondary">即将用完</Badge>
+      return <Badge variant="secondary">即将用完</Badge>;
     }
-    return <Badge variant="default">正常</Badge>
-  }
+    return <Badge variant="default">正常</Badge>;
+  };
 
   const formatCurrency = (amount: number) => {
-    return `¥${amount.toFixed(2)}`
-  }
+    return `¥${amount.toFixed(2)}`;
+  };
 
   if (loading) {
     return (
@@ -123,7 +123,7 @@ export function BudgetStatusIndicator({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!budgetStatus) {
@@ -134,10 +134,10 @@ export function BudgetStatusIndicator({
           没有找到活跃的预算
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
-  const { budget, usedAmount, remainingAmount, usagePercentage, daysRemaining, alerts } = budgetStatus
+  const { budget, usedAmount, remainingAmount, usagePercentage, daysRemaining, alerts } = budgetStatus;
 
   if (compact) {
     return (
@@ -186,7 +186,7 @@ export function BudgetStatusIndicator({
           )}
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -198,7 +198,7 @@ export function BudgetStatusIndicator({
             <p className="text-sm text-muted-foreground">
               剩余 {daysRemaining} 天 · {formatDistanceToNow(new Date(budget.endDate), { 
                 addSuffix: true, 
-                locale: zhCN 
+                locale: zhCN, 
               })}
             </p>
           </div>
@@ -319,5 +319,5 @@ export function BudgetStatusIndicator({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

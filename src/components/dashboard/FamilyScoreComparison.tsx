@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -17,7 +17,7 @@ import {
   Radar,
   LineChart,
   Line,
-} from 'recharts'
+} from 'recharts';
 import { 
   Users, 
   TrendingUp, 
@@ -27,8 +27,8 @@ import {
   Calendar,
   Trophy,
   AlertCircle,
-  ChevronDown
-} from 'lucide-react'
+  ChevronDown,
+} from 'lucide-react';
 
 interface MemberHealthScore {
   memberId: string
@@ -57,21 +57,21 @@ interface FamilyScoreComparisonProps {
 
 export function FamilyScoreComparison({ 
   familyId, 
-  days = 30 
+  days = 30, 
 }: FamilyScoreComparisonProps) {
-  const [members, setMembers] = useState<MemberHealthScore[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'overview' | 'breakdown' | 'trends' | 'achievements'>('overview')
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+  const [members, setMembers] = useState<MemberHealthScore[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'overview' | 'breakdown' | 'trends' | 'achievements'>('overview');
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
   useEffect(() => {
-    loadData()
-  }, [familyId, days])
+    loadData();
+  }, [familyId, days]);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       // 模拟API调用 - 实际应该调用真实的家庭评分对比API
       const mockMembers: MemberHealthScore[] = [
         {
@@ -146,16 +146,16 @@ export function FamilyScoreComparison({
           achievements: 10,
           goalsCompleted: 7,
         },
-      ]
+      ];
       
-      setMembers(mockMembers)
-      setSelectedMembers(mockMembers.map(m => m.memberId))
+      setMembers(mockMembers);
+      setSelectedMembers(mockMembers.map(m => m.memberId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -167,7 +167,7 @@ export function FamilyScoreComparison({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -180,10 +180,10 @@ export function FamilyScoreComparison({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
-  const filteredMembers = members.filter(m => selectedMembers.includes(m.memberId))
+  const filteredMembers = members.filter(m => selectedMembers.includes(m.memberId));
   
   // 准备图表数据
   const scoreComparisonData = filteredMembers.map(member => ({
@@ -191,7 +191,7 @@ export function FamilyScoreComparison({
     当前评分: member.currentScore,
     上期评分: member.previousScore || 0,
     变化: member.previousScore ? member.currentScore - member.previousScore : 0,
-  }))
+  }));
 
   const breakdownData = filteredMembers.map(member => ({
     member: member.memberName,
@@ -199,42 +199,42 @@ export function FamilyScoreComparison({
     营养: member.breakdown.nutrition,
     睡眠: member.breakdown.sleep,
     压力: member.breakdown.stress,
-  }))
+  }));
 
   const trendData = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000)
+    const date = new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000);
     const dataPoint: any = {
       date: date.toLocaleDateString('zh-CN', { weekday: 'short' }),
-    }
+    };
     
     filteredMembers.forEach(member => {
-      dataPoint[member.memberName] = member.weeklyTrend[i]?.score || 0
-    })
+      dataPoint[member.memberName] = member.weeklyTrend[i]?.score || 0;
+    });
     
-    return dataPoint
-  })
+    return dataPoint;
+  });
 
   const achievementData = filteredMembers.map(member => ({
     name: member.memberName,
     成就数: member.achievements,
     完成目标: member.goalsCompleted,
-  }))
+  }));
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return '#10b981'
-    if (score >= 80) return '#3b82f6'
-    if (score >= 70) return '#f59e0b'
-    if (score >= 60) return '#f97316'
-    return '#ef4444'
-  }
+    if (score >= 90) return '#10b981';
+    if (score >= 80) return '#3b82f6';
+    if (score >= 70) return '#f59e0b';
+    if (score >= 60) return '#f97316';
+    return '#ef4444';
+  };
 
   const getScoreLevel = (score: number) => {
-    if (score >= 90) return '优秀'
-    if (score >= 80) return '良好'
-    if (score >= 70) return '中等'
-    if (score >= 60) return '需改善'
-    return '较差'
-  }
+    if (score >= 90) return '优秀';
+    if (score >= 80) return '良好';
+    if (score >= 70) return '中等';
+    if (score >= 60) return '需改善';
+    return '较差';
+  };
 
   const renderOverviewView = () => (
     <div className="space-y-6">
@@ -295,7 +295,7 @@ export function FamilyScoreComparison({
         </div>
       </div>
     </div>
-  )
+  );
 
   const renderBreakdownView = () => (
     <div className="space-y-6">
@@ -350,7 +350,7 @@ export function FamilyScoreComparison({
                     {member.memberName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span className={`font-semibold`} style={{ color: getScoreColor(member.currentScore) }}>
+                    <span className={'font-semibold'} style={{ color: getScoreColor(member.currentScore) }}>
                       {member.currentScore}
                     </span>
                   </td>
@@ -373,7 +373,7 @@ export function FamilyScoreComparison({
         </div>
       </div>
     </div>
-  )
+  );
 
   const renderTrendsView = () => (
     <div>
@@ -397,7 +397,7 @@ export function FamilyScoreComparison({
         </LineChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 
   const renderAchievementsView = () => (
     <div className="space-y-6">
@@ -438,7 +438,7 @@ export function FamilyScoreComparison({
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">健康评分</span>
-                <span className={`font-medium`} style={{ color: getScoreColor(member.currentScore) }}>
+                <span className={'font-medium'} style={{ color: getScoreColor(member.currentScore) }}>
                   {member.currentScore} 分
                 </span>
               </div>
@@ -447,7 +447,7 @@ export function FamilyScoreComparison({
         ))}
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -482,7 +482,7 @@ export function FamilyScoreComparison({
                   prev.includes(member.memberId)
                     ? prev.filter(id => id !== member.memberId)
                     : [...prev, member.memberId]
-                )
+                );
               }}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedMembers.includes(member.memberId)
@@ -580,5 +580,5 @@ export function FamilyScoreComparison({
         </div>
       </div>
     </div>
-  )
+  );
 }

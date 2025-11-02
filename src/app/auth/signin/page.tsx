@@ -1,53 +1,53 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { useState } from 'react';
+import { signIn, getSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function SignInPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
     try {
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
-      })
+      });
 
       if (result?.error) {
-        setError('邮箱或密码错误')
+        setError('邮箱或密码错误');
       } else {
         // 登录成功，刷新session并跳转
-        await getSession()
-        router.push('/dashboard')
-        router.refresh()
+        await getSession();
+        router.push('/dashboard');
+        router.refresh();
       }
     } catch (error) {
-      setError('登录失败，请重试')
+      setError('登录失败，请重试');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await signIn('google', { callbackUrl: '/dashboard' })
+      await signIn('google', { callbackUrl: '/dashboard' });
     } catch (error) {
-      setError('Google登录失败')
-      setIsLoading(false)
+      setError('Google登录失败');
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
@@ -158,5 +158,5 @@ export default function SignInPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }

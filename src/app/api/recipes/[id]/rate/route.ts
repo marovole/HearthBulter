@@ -27,7 +27,7 @@ export async function POST(
 
     // 检查食谱是否存在
     const recipe = await prisma.recipe.findUnique({
-      where: { id: recipeId }
+      where: { id: recipeId },
     });
 
     if (!recipe) {
@@ -42,22 +42,22 @@ export async function POST(
       where: {
         recipeId_memberId: {
           recipeId,
-          memberId
-        }
+          memberId,
+        },
       },
       update: {
         rating,
         comment: comment || null,
         tags: JSON.stringify(tags || []),
-        ratedAt: new Date()
+        ratedAt: new Date(),
       },
       create: {
         recipeId,
         memberId,
         rating,
         comment: comment || null,
-        tags: JSON.stringify(tags || [])
-      }
+        tags: JSON.stringify(tags || []),
+      },
     });
 
     // 更新食谱的平均评分
@@ -65,7 +65,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      rating: recipeRating
+      rating: recipeRating,
     });
 
   } catch (error) {
@@ -98,17 +98,17 @@ export async function GET(
       where: {
         recipeId_memberId: {
           recipeId,
-          memberId
-        }
-      }
+          memberId,
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
       rating: rating ? {
         ...rating,
-        tags: JSON.parse(rating.tags)
-      } : null
+        tags: JSON.parse(rating.tags),
+      } : null,
     });
 
   } catch (error) {
@@ -124,14 +124,14 @@ async function updateRecipeAverageRating(recipeId: string) {
   const ratings = await prisma.recipeRating.aggregate({
     where: { recipeId },
     _avg: { rating: true },
-    _count: { rating: true }
+    _count: { rating: true },
   });
 
   await prisma.recipe.update({
     where: { id: recipeId },
     data: {
       averageRating: ratings._avg.rating || 0,
-      ratingCount: ratings._count.rating
-    }
+      ratingCount: ratings._count.rating,
+    },
   });
 }

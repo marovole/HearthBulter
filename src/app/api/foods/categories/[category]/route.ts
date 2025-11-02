@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import type { FoodCategory } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import type { FoodCategory } from '@prisma/client';
 
 /**
  * GET /api/foods/categories/:category
@@ -11,10 +11,10 @@ export async function GET(
   { params }: { params: Promise<{ category: string }> }
 ) {
   try {
-    const { category } = await params
-    const searchParams = request.nextUrl.searchParams
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const page = parseInt(searchParams.get('page') || '1')
+    const { category } = await params;
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const page = parseInt(searchParams.get('page') || '1');
 
     // 验证category是否有效
     const validCategories: FoodCategory[] = [
@@ -28,13 +28,13 @@ export async function GET(
       'SNACKS',
       'BEVERAGES',
       'OTHER',
-    ]
+    ];
 
     if (!validCategories.includes(category as FoodCategory)) {
       return NextResponse.json(
         { error: '无效的食物分类' },
         { status: 400 }
-      )
+      );
     }
 
     const [foods, total] = await Promise.all([
@@ -51,7 +51,7 @@ export async function GET(
           category: category as FoodCategory,
         },
       }),
-    ])
+    ]);
 
     return NextResponse.json(
       {
@@ -83,13 +83,13 @@ export async function GET(
         category,
       },
       { status: 200 }
-    )
+    );
   } catch (error) {
-    console.error('按类别查询食物失败:', error)
+    console.error('按类别查询食物失败:', error);
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
-    )
+    );
   }
 }
 

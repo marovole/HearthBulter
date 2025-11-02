@@ -6,7 +6,7 @@ import {
   checkAndUnlockAchievements, 
   getMemberAchievements, 
   getAchievementProgress,
-  getAchievementStats 
+  getAchievementStats, 
 } from '@/lib/services/social/achievement-system';
 import { AchievementType } from '@prisma/client';
 
@@ -42,7 +42,7 @@ describe('AchievementSystem', () => {
   describe('checkAndUnlockAchievements', () => {
     const mockMember = {
       id: 'member-1',
-      name: '测试用户'
+      name: '测试用户',
     };
 
     it('应该解锁连续打卡成就', async () => {
@@ -54,7 +54,7 @@ describe('AchievementSystem', () => {
         type: 'CHECK_IN_STREAK',
         title: '初学者',
         isUnlocked: true,
-        points: 10
+        points: 10,
       };
       
       mockPrisma.achievement.upsert.mockResolvedValue(mockAchievement);
@@ -79,7 +79,7 @@ describe('AchievementSystem', () => {
         type: 'WEIGHT_LOSS',
         title: '减重新手',
         isUnlocked: true,
-        points: 15
+        points: 15,
       };
       
       mockPrisma.achievement.upsert.mockResolvedValue(mockAchievement);
@@ -102,7 +102,7 @@ describe('AchievementSystem', () => {
         id: 'achievement-1',
         type: 'CHECK_IN_STREAK',
         title: '初学者',
-        isUnlocked: true
+        isUnlocked: true,
       };
       
       mockPrisma.achievement.findMany.mockResolvedValue([existingAchievement]);
@@ -137,7 +137,7 @@ describe('AchievementSystem', () => {
         type: 'CHECK_IN_STREAK',
         title: '坚持者',
         isUnlocked: false,
-        progress: 50
+        progress: 50,
       });
 
       const result = await checkAndUnlockAchievements(
@@ -160,7 +160,7 @@ describe('AchievementSystem', () => {
           title: '初学者',
           isUnlocked: true,
           points: 10,
-          createdAt: new Date('2024-01-01')
+          createdAt: new Date('2024-01-01'),
         },
         {
           id: 'achievement-2',
@@ -168,8 +168,8 @@ describe('AchievementSystem', () => {
           title: '坚持者',
           isUnlocked: false,
           points: 25,
-          createdAt: new Date('2024-01-02')
-        }
+          createdAt: new Date('2024-01-02'),
+        },
       ];
 
       mockPrisma.achievement.findMany.mockResolvedValue(mockAchievements);
@@ -184,8 +184,8 @@ describe('AchievementSystem', () => {
         orderBy: [
           { isUnlocked: 'desc' },
           { unlockedAt: 'desc' },
-          { createdAt: 'desc' }
-        ]
+          { createdAt: 'desc' },
+        ],
       });
     });
   });
@@ -198,15 +198,15 @@ describe('AchievementSystem', () => {
           currentValue: 3,
           targetValue: 7,
           progress: 42.8,
-          isUnlocked: false
+          isUnlocked: false,
         },
         {
           id: 'achievement-2',
           currentValue: 5,
           targetValue: 10,
           progress: 50,
-          isUnlocked: false
-        }
+          isUnlocked: false,
+        },
       ];
 
       mockPrisma.achievement.findMany.mockResolvedValue(mockAchievements);
@@ -219,7 +219,7 @@ describe('AchievementSystem', () => {
         currentValue: 3,
         targetValue: 7,
         progress: 42.8,
-        isUnlocked: false
+        isUnlocked: false,
       });
     });
   });
@@ -231,20 +231,20 @@ describe('AchievementSystem', () => {
           id: 'achievement-1',
           isUnlocked: true,
           points: 10,
-          rarity: 'BRONZE'
+          rarity: 'BRONZE',
         },
         {
           id: 'achievement-2',
           isUnlocked: true,
           points: 25,
-          rarity: 'SILVER'
+          rarity: 'SILVER',
         },
         {
           id: 'achievement-3',
           isUnlocked: false,
           points: 50,
-          rarity: 'GOLD'
-        }
+          rarity: 'GOLD',
+        },
       ];
 
       mockPrisma.achievement.findMany.mockResolvedValue(mockAchievements);
@@ -257,8 +257,8 @@ describe('AchievementSystem', () => {
         totalPoints: 35,
         rarityDistribution: {
           BRONZE: 1,
-          SILVER: 1
-        }
+          SILVER: 1,
+        },
       });
     });
 
@@ -271,7 +271,7 @@ describe('AchievementSystem', () => {
         totalAchievements: 0,
         unlockedAchievements: 0,
         totalPoints: 0,
-        rarityDistribution: {}
+        rarityDistribution: {},
       });
     });
   });
@@ -279,7 +279,7 @@ describe('AchievementSystem', () => {
   describe('成就规则测试', () => {
     const mockMember = {
       id: 'member-1',
-      name: '测试用户'
+      name: '测试用户',
     };
 
     beforeEach(() => {
@@ -291,7 +291,7 @@ describe('AchievementSystem', () => {
       mockPrisma.achievement.upsert.mockResolvedValue({
         id: 'achievement-streak',
         isUnlocked: true,
-        points: 25
+        points: 25,
       });
 
       const result = await checkAndUnlockAchievements(
@@ -308,7 +308,7 @@ describe('AchievementSystem', () => {
       mockPrisma.achievement.upsert.mockResolvedValue({
         id: 'achievement-weight',
         isUnlocked: true,
-        points: 75
+        points: 75,
       });
 
       const result = await checkAndUnlockAchievements(
@@ -325,7 +325,7 @@ describe('AchievementSystem', () => {
       mockPrisma.achievement.upsert.mockResolvedValue({
         id: 'achievement-nutrition',
         isUnlocked: true,
-        points: 30
+        points: 30,
       });
 
       const result = await checkAndUnlockAchievements(
@@ -342,7 +342,7 @@ describe('AchievementSystem', () => {
       mockPrisma.achievement.upsert.mockResolvedValue({
         id: 'achievement-exercise',
         isUnlocked: true,
-        points: 20
+        points: 20,
       });
 
       const result = await checkAndUnlockAchievements(

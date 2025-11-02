@@ -98,7 +98,7 @@ export function CacheStatsPanel({
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
   const formatUptime = (seconds: number): string => {
@@ -256,26 +256,26 @@ export function CacheStatsPanel({
               <Alert className={cn(
                 'border-2',
                 metrics.hitRate >= 80 ? 'border-green-200 bg-green-50' :
-                metrics.hitRate >= 60 ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'
+                  metrics.hitRate >= 60 ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'
               )}>
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
                   <strong>缓存效率:</strong>{' '}
                   {metrics.hitRate >= 80 ? '优秀' :
-                   metrics.hitRate >= 60 ? '良好' : '需要优化'}
+                    metrics.hitRate >= 60 ? '良好' : '需要优化'}
                 </AlertDescription>
               </Alert>
 
               <Alert className={cn(
                 'border-2',
                 metrics.averageResponseTime <= 50 ? 'border-green-200 bg-green-50' :
-                metrics.averageResponseTime <= 200 ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'
+                  metrics.averageResponseTime <= 200 ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'
               )}>
                 <Clock className="h-4 w-4" />
                 <AlertDescription>
                   <strong>响应速度:</strong>{' '}
                   {metrics.averageResponseTime <= 50 ? '快速' :
-                   metrics.averageResponseTime <= 200 ? '正常' : '较慢'}
+                    metrics.averageResponseTime <= 200 ? '正常' : '较慢'}
                 </AlertDescription>
               </Alert>
 

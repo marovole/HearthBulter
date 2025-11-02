@@ -18,7 +18,7 @@ export function MedicalDisclaimer({
   onAccept,
   onDecline,
   requireAcceptance = true,
-  showAsAlert = false
+  showAsAlert = false,
 }: MedicalDisclaimerProps) {
   const [isAccepted, setIsAccepted] = useState(false);
   const [showDialog, setShowDialog] = useState(requireAcceptance);

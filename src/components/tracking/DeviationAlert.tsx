@@ -54,28 +54,28 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'HIGH': return 'bg-red-50 border-red-200 text-red-800';
-      case 'MEDIUM': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-      case 'LOW': return 'bg-blue-50 border-blue-200 text-blue-800';
-      default: return 'bg-gray-50 border-gray-200 text-gray-800';
+    case 'HIGH': return 'bg-red-50 border-red-200 text-red-800';
+    case 'MEDIUM': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+    case 'LOW': return 'bg-blue-50 border-blue-200 text-blue-800';
+    default: return 'bg-gray-50 border-gray-200 text-gray-800';
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'HIGH': return <AlertTriangle className="w-5 h-5 text-red-600" />;
-      case 'MEDIUM': return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
-      case 'LOW': return <Info className="w-5 h-5 text-blue-600" />;
-      default: return <Info className="w-5 h-5 text-gray-600" />;
+    case 'HIGH': return <AlertTriangle className="w-5 h-5 text-red-600" />;
+    case 'MEDIUM': return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
+    case 'LOW': return <Info className="w-5 h-5 text-blue-600" />;
+    default: return <Info className="w-5 h-5 text-gray-600" />;
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'IMPROVING': return <TrendingDown className="w-4 h-4 text-green-600" />;
-      case 'WORSENING': return <TrendingUp className="w-4 h-4 text-red-600" />;
-      case 'STABLE': return <div className="w-4 h-4 rounded-full bg-gray-400" />;
-      default: return null;
+    case 'IMPROVING': return <TrendingDown className="w-4 h-4 text-green-600" />;
+    case 'WORSENING': return <TrendingUp className="w-4 h-4 text-red-600" />;
+    case 'STABLE': return <div className="w-4 h-4 rounded-full bg-gray-400" />;
+    default: return null;
     }
   };
 
@@ -84,17 +84,17 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
       protein: '蛋白质',
       carbs: '碳水化合物',
       fat: '脂肪',
-      calories: '热量'
+      calories: '热量',
     };
     return labels[nutrient as keyof typeof labels] || nutrient;
   };
 
   const getTrendText = (trend: string) => {
     switch (trend) {
-      case 'IMPROVING': return '趋势改善';
-      case 'WORSENING': return '趋势恶化';
-      case 'STABLE': return '保持稳定';
-      default: return '';
+    case 'IMPROVING': return '趋势改善';
+    case 'WORSENING': return '趋势恶化';
+    case 'STABLE': return '保持稳定';
+    default: return '';
     }
   };
 
@@ -192,11 +192,11 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
                 </span>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
                   deviation.severity === 'HIGH' ? 'bg-red-100 text-red-700' :
-                  deviation.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-blue-100 text-blue-700'
+                    deviation.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-blue-100 text-blue-700'
                 }`}>
                   {deviation.severity === 'HIGH' ? '严重' :
-                   deviation.severity === 'MEDIUM' ? '中等' : '轻微'}
+                    deviation.severity === 'MEDIUM' ? '中等' : '轻微'}
                 </span>
               </div>
             </div>
