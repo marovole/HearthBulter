@@ -1,4 +1,4 @@
-## NEW Requirements
+## ADDED Requirements
 
 ### Requirement: Component Modularization
 The system SHALL break down large components (>400 lines) into smaller, focused components with clear responsibilities and reusable interfaces.

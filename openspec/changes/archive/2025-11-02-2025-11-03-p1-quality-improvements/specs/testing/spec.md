@@ -1,4 +1,4 @@
-## NEW Requirements
+## ADDED Requirements
 
 ### Requirement: Comprehensive Test Coverage
 The system SHALL maintain high test coverage across all layers including unit tests, integration tests, and end-to-end tests.
