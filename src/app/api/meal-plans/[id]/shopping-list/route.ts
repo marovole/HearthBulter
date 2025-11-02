@@ -7,6 +7,7 @@ import { z } from 'zod'
 
 // 生成购物清单的验证 schema
 const createShoppingListSchema = z.object({
+  name: z.string().optional(), // 自定义清单名称
   budget: z.number().min(0).optional(), // 预算（元）
 })
 
@@ -71,7 +72,7 @@ export async function POST(
       )
     }
 
-    // 解析请求体（预算）
+    // 解析请求体（预算和名称）
     const body = await request.json().catch(() => ({}))
     const validatedData = createShoppingListSchema.parse(body)
 
@@ -95,10 +96,14 @@ export async function POST(
       validatedData.budget || null
     )
 
+    // 生成清单名称
+    const listName = validatedData.name || `${plan.member.name}的购物清单`
+
     // 创建购物清单
     const shoppingList = await prisma.shoppingList.create({
       data: {
         planId,
+        name: listName,
         budget: validatedData.budget || null,
         estimatedCost: totalEstimatedCost,
         status: 'PENDING',

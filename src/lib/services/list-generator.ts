@@ -109,6 +109,7 @@ export class ListGenerator {
   ): AggregatedIngredient[] {
     // 使用 Map 按 foodId 聚合
     const ingredientMap = new Map<string, AggregatedIngredient>()
+    const alternativeGroups = new Map<string, AggregatedIngredient[]>()
 
     meals.forEach((meal) => {
       meal.ingredients.forEach((ingredient) => {
@@ -130,16 +131,66 @@ export class ListGenerator {
       })
     })
 
-    // 转换为数组并按分类排序
-    return Array.from(ingredientMap.values()).sort((a, b) => {
-      // 先按分类排序（使用分类枚举顺序）
+    // 智能分组：为相似食材创建分组建议
+    const ingredients = Array.from(ingredientMap.values())
+    this.createAlternativeGroups(ingredients, alternativeGroups)
+
+    // 过滤掉数量过小的食材（小于10g）
+    const filteredIngredients = ingredients.filter(
+      ingredient => ingredient.totalAmount >= 10
+    )
+
+    // 转换为数组并按分类和优先级排序
+    return filteredIngredients.sort((a, b) => {
+      // 优先按易腐性排序（易腐食材优先）
+      const aPerishable = a.perishableDays !== undefined && a.perishableDays <= 7
+      const bPerishable = b.perishableDays !== undefined && b.perishableDays <= 7
+      
+      if (aPerishable && !bPerishable) return -1
+      if (!aPerishable && bPerishable) return 1
+      
+      // 然后按分类排序（使用分类枚举顺序）
       const categoryOrder = Object.values(FoodCategory)
       const categoryDiff =
         categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
       if (categoryDiff !== 0) return categoryDiff
 
-      // 同分类内按名称排序
-      return a.foodName.localeCompare(b.foodName, 'zh-CN')
+      // 最后按数量降序排列（大数量优先）
+      return b.totalAmount - a.totalAmount
+    })
+  }
+
+  /**
+   * 创建替代食材分组
+   * @param ingredients 食材列表
+   * @param groups 分组结果
+   */
+  private createAlternativeGroups(
+    ingredients: AggregatedIngredient[],
+    groups: Map<string, AggregatedIngredient[]>
+  ): void {
+    // 按相似性分组食材（基于名称关键词）
+    const similarityGroups = [
+      // 蔬菜类
+      { keywords: ['番茄', '西红柿', '圣女果'], category: 'VEGETABLES' },
+      { keywords: ['土豆', '马铃薯', '洋芋'], category: 'VEGETABLES' },
+      { keywords: ['黄瓜', '青瓜'], category: 'VEGETABLES' },
+      // 肉类
+      { keywords: ['鸡肉', '鸡胸', '鸡腿', '鸡翅'], category: 'PROTEIN' },
+      { keywords: ['猪肉', '五花肉', '里脊', '排骨'], category: 'PROTEIN' },
+      { keywords: ['牛肉', '牛腩', '牛排', '牛肉块'], category: 'PROTEIN' },
+    ]
+
+    similarityGroups.forEach(group => {
+      const similarIngredients = ingredients.filter(ingredient => 
+        group.category === ingredient.category &&
+        group.keywords.some(keyword => ingredient.foodName.includes(keyword))
+      )
+      
+      if (similarIngredients.length > 1) {
+        const groupKey = group.keywords[0]
+        groups.set(groupKey, similarIngredients)
+      }
     })
   }
 

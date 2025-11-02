@@ -720,11 +720,36 @@ enum IndicatorStatus {
   CRITICAL // 严重异常
 }
 
+// 购物清单分享表
+model ShoppingListShare {
+  id        String   @id @default(cuid())
+  listId    String
+  list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  token     String   @unique // 分享令牌
+  expiresAt DateTime // 过期时间
+  createdBy String   // 创建者ID
+
+  // 统计信息
+  viewCount   Int @default(0) // 访问次数
+  lastViewedAt DateTime? // 最后访问时间
+
+  // 审计字段
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([token])
+  @@index([expiresAt])
+  @@map("shopping_list_shares")
+}
+
 // 购物清单表
 model ShoppingList {
   id     String   @id @default(cuid())
   planId String
   plan   MealPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  
+  // 清单名称
+  name   String   @default('')
 
   // 预算信息
   budget        Float? // 预算（元）
@@ -736,6 +761,7 @@ model ShoppingList {
 
   // 关联关系
   items ShoppingItem[]
+  shares ShoppingListShare[]
 
   // 审计字段
   createdAt DateTime @default(now())
