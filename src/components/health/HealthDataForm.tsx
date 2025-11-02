@@ -25,6 +25,10 @@ export function HealthDataForm({
     bloodPressureSystolic: '',
     bloodPressureDiastolic: '',
     heartRate: '',
+    bloodSugar: '',
+    sleep: '',
+    exercise: '',
+    steps: '',
     measuredAt: new Date().toISOString().split('T')[0],
     notes: '',
   })
@@ -53,6 +57,10 @@ export function HealthDataForm({
           formData.bloodPressureDiastolic
         )
       if (formData.heartRate) payload.heartRate = parseInt(formData.heartRate)
+      if (formData.bloodSugar) payload.bloodSugar = parseFloat(formData.bloodSugar)
+      if (formData.sleep) payload.sleep = parseFloat(formData.sleep)
+      if (formData.exercise) payload.exercise = parseFloat(formData.exercise)
+      if (formData.steps) payload.steps = parseInt(formData.steps)
       if (formData.notes) payload.notes = formData.notes
 
       const response = await fetch(`/api/members/${memberId}/health-data`, {
@@ -88,6 +96,10 @@ export function HealthDataForm({
         bloodPressureSystolic: '',
         bloodPressureDiastolic: '',
         heartRate: '',
+        bloodSugar: '',
+        sleep: '',
+        exercise: '',
+        steps: '',
         measuredAt: new Date().toISOString().split('T')[0],
         notes: '',
       })
@@ -306,6 +318,96 @@ export function HealthDataForm({
             }
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             placeholder="例如: 72"
+          />
+        </div>
+
+        {/* 血糖 */}
+        <div>
+          <label
+            htmlFor="bloodSugar"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            血糖 (mmol/L)
+          </label>
+          <input
+            type="number"
+            id="bloodSugar"
+            step="0.1"
+            min="2"
+            max="30"
+            value={formData.bloodSugar}
+            onChange={(e) =>
+              setFormData({ ...formData, bloodSugar: e.target.value })
+            }
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            placeholder="例如: 5.6"
+          />
+        </div>
+
+        {/* 睡眠时长 */}
+        <div>
+          <label
+            htmlFor="sleep"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            睡眠时长 (小时)
+          </label>
+          <input
+            type="number"
+            id="sleep"
+            step="0.5"
+            min="0"
+            max="24"
+            value={formData.sleep}
+            onChange={(e) =>
+              setFormData({ ...formData, sleep: e.target.value })
+            }
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            placeholder="例如: 8"
+          />
+        </div>
+
+        {/* 运动时长 */}
+        <div>
+          <label
+            htmlFor="exercise"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            运动时长 (分钟)
+          </label>
+          <input
+            type="number"
+            id="exercise"
+            min="0"
+            max="300"
+            value={formData.exercise}
+            onChange={(e) =>
+              setFormData({ ...formData, exercise: e.target.value })
+            }
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            placeholder="例如: 30"
+          />
+        </div>
+
+        {/* 步数 */}
+        <div>
+          <label
+            htmlFor="steps"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            步数
+          </label>
+          <input
+            type="number"
+            id="steps"
+            min="0"
+            max="100000"
+            value={formData.steps}
+            onChange={(e) =>
+              setFormData({ ...formData, steps: e.target.value })
+            }
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            placeholder="例如: 10000"
           />
         </div>
 

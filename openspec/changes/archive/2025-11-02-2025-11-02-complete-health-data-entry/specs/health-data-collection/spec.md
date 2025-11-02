@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Comprehensive Health Data Entry Interface
 The system SHALL provide a comprehensive interface for manual health data entry with validation, error handling, and user-friendly feedback.
