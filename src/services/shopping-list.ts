@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 import { FoodCategory, ListStatus } from '@prisma/client';
 import { hasPermission, Permission, FamilyMemberRole } from '@/lib/permissions';
 

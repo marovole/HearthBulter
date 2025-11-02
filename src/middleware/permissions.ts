@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { Permission, hasPermission, getUserFamilyRole, PermissionError } from '@/lib/permissions';
 import { FamilyMemberRole } from '@prisma/client';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 
 // 权限中间件配置
 export interface PermissionMiddlewareConfig {

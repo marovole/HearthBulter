@@ -123,7 +123,7 @@ describe('Health Scorer', () => {
         scores.sleep * weights.sleep +
         scores.medical * weights.medical;
 
-      expect(overallScore).toBeCloseTo(87, 0); // 90*0.4 + 80*0.3 + 85*0.2 + 95*0.1 = 87
+      expect(overallScore).toBeCloseTo(86.5, 0); // 90*0.4 + 80*0.3 + 85*0.2 + 95*0.1 = 86.5
     });
 
     test('should determine grade based on score', () => {
