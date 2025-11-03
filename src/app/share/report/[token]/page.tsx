@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { use } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface ReportData {
   id: string;
@@ -127,7 +128,7 @@ export default function SharedReportPage({ params }: { params: Promise<{ token: 
           <div className="bg-white rounded-lg shadow-sm">
             <div
               className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: report.htmlContent }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(report.htmlContent) }}
             />
           </div>
         )}

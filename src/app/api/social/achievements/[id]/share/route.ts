@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { shareAchievement } from '@/lib/services/social/achievement-system';
 import { generateShareContent } from '@/lib/services/social/share-generator';
 import { generateShareToken } from '@/lib/services/social/share-link';
@@ -17,7 +16,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }

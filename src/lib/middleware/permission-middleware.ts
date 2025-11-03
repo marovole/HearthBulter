@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { Permission, FamilyMemberRole, hasPermission } from '@/lib/permissions';
 import { APIError, createErrorResponse } from '@/lib/errors/api-error';
@@ -67,7 +66,7 @@ export class PermissionMiddleware {
 
     try {
       // 1. 获取用户会话
-      const session = await getServerSession(authOptions);
+      const session = await auth();
       if (!session?.user?.id) {
         return {
           allowed: false,

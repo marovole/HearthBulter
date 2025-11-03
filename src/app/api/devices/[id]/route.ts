@@ -3,8 +3,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { APIError, handleAPIError, createErrorResponse, createAPIResponse } from '@/lib/errors/api-error';
@@ -22,7 +21,7 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user) {
       return createErrorResponse(APIError.unauthorized());
     }
@@ -111,7 +110,7 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },

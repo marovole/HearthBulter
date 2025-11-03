@@ -33,6 +33,12 @@ pnpm-debug.log*
 .env.development
 .env.test
 .env.production
+# But keep example files
+!.env.example
+!.env.local.example
+!.env.production.example
+!.env.development.example
+!.env.test.example
 
 # vercel
 .vercel

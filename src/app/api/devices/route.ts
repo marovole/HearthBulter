@@ -3,8 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { optimizedQuery } from '@/lib/middleware/query-optimization';
@@ -28,7 +27,7 @@ export const GET = withPermissions(
     defaultSecurityOptions,
     withPerformanceMonitoring(
       async (request, context) => {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         
         const validatedQuery = context.data?.query || GETQuerySchema.parse({});
 
@@ -98,7 +97,7 @@ export const GET = withPermissions(
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },

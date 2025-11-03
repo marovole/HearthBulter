@@ -20,8 +20,8 @@ jest.mock('@/lib/services/user', () => ({
 }));
 
 // Mock authentication
-jest.mock('next-auth/next', () => ({
-  getServerSession: jest.fn().mockResolvedValue({
+jest.mock('@/lib/auth', () => ({
+  auth: jest.fn().mockResolvedValue({
     user: {
       id: 'test-user-id',
       email: 'test@example.com',

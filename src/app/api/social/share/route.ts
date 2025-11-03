@@ -3,8 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { shareContentGenerator } from '@/lib/services/social/share-generator';
 import { shareImageGenerator } from '@/lib/services/social/image-generator';
@@ -14,7 +13,7 @@ import type { ShareContentInput, ShareContentType, SocialPlatform } from '@/type
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },
@@ -161,7 +160,7 @@ async function checkForShareAchievements(memberId: string, shareCount: number): 
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
         { error: '未授权访问' },

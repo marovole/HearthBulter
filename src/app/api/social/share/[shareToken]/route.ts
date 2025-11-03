@@ -169,7 +169,7 @@ export async function PATCH(
   try {
     const { shareToken } = params;
     const body = await request.json();
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return NextResponse.json(
@@ -250,7 +250,7 @@ export async function DELETE(
 ) {
   try {
     const { shareToken } = params;
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return NextResponse.json(

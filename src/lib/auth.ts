@@ -77,3 +77,12 @@ export const authConfig: NextAuthConfig = {
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+
+// 导出authOptions用于向后兼容
+export const authOptions = authConfig;
+
+// Helper函数：获取当前用户会话
+export async function getCurrentUser() {
+  const session = await auth();
+  return session?.user || null;
+}

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import {
   createQuickTemplate,
   getQuickTemplates,
@@ -30,7 +29,7 @@ const createTemplateSchema = z.object({
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -85,7 +84,7 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json(

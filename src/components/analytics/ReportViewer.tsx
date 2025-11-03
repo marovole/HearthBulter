@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ReportType } from '@prisma/client';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface Report {
   id: string;
@@ -86,7 +87,7 @@ export default function ReportViewer({
       {report.htmlContent && (
         <div
           className="p-6 prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: report.htmlContent }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(report.htmlContent) }}
         />
       )}
 

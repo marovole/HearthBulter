@@ -2,18 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { withAuthRateLimit } from '@/lib/middleware/rate-limit-middleware';
+import { logger } from '@/lib/logger';
 
-// 注册数据验证schema
+// 注册数据验证schema - 增强的密码要求
 const registerSchema = z.object({
   name: z.string().min(2, '姓名至少需要2个字符'),
   email: z.string().email('请输入有效的邮箱地址'),
-  password: z.string().min(8, '密码至少需要8个字符').regex(
-    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
-    '密码必须包含字母和数字'
-  ),
+  password: z.string()
+    .min(12, '密码至少需要12个字符')
+    .regex(/[A-Z]/, '密码必须包含大写字母')
+    .regex(/[a-z]/, '密码必须包含小写字母')
+    .regex(/[0-9]/, '密码必须包含数字')
+    .regex(/[^A-Za-z0-9]/, '密码必须包含特殊字符'),
 });
 
-export async function POST(request: NextRequest) {
+const handler = async (request: NextRequest) => {
   try {
     const body = await request.json();
 
@@ -65,10 +69,14 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('注册失败:', error);
+    logger.error('用户注册失败', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
     );
   }
-}
+};
+
+export const POST = withAuthRateLimit(handler);
