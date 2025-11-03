@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/lib/auth';
 // PUT - 标记通知为已读
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -25,7 +25,7 @@ export async function PUT(
 
     switch (action) {
     case 'mark_as_read':
-      success = await inventoryNotificationService.markNotificationAsRead(params.id, memberId);
+      success = await inventoryNotificationService.markNotificationAsRead(id, memberId);
       message = success ? '标记已读成功' : '标记已读失败';
       break;
       
@@ -50,7 +50,7 @@ export async function PUT(
 // DELETE - 删除通知
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -65,7 +65,7 @@ export async function DELETE(
       return NextResponse.json({ error: '缺少成员ID' }, { status: 400 });
     }
 
-    const success = await inventoryNotificationService.deleteNotification(params.id, memberId);
+    const success = await inventoryNotificationService.deleteNotification(id, memberId);
 
     return NextResponse.json({
       success,

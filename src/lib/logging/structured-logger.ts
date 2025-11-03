@@ -322,24 +322,24 @@ export class StructuredLogger {
 
     // 根据级别选择控制台方法
     switch (level) {
-      case LogLevel.TRACE:
-        console.trace(logData);
-        break;
-      case LogLevel.DEBUG:
-        console.debug(logData);
-        break;
-      case LogLevel.INFO:
-        console.info(logData);
-        break;
-      case LogLevel.WARN:
-        console.warn(logData);
-        break;
-      case LogLevel.ERROR:
-      case LogLevel.FATAL:
-        console.error(logData);
-        break;
-      default:
-        console.log(logData);
+    case LogLevel.TRACE:
+      console.trace(logData);
+      break;
+    case LogLevel.DEBUG:
+      console.debug(logData);
+      break;
+    case LogLevel.INFO:
+      console.info(logData);
+      break;
+    case LogLevel.WARN:
+      console.warn(logData);
+      break;
+    case LogLevel.ERROR:
+    case LogLevel.FATAL:
+      console.error(logData);
+      break;
+    default:
+      console.log(logData);
     }
   }
 
@@ -478,20 +478,20 @@ export class StructuredLogger {
   private getPerformanceLogLevel(metric: string, value: number): LogLevel {
     // 根据不同指标设置不同阈值
     switch (metric) {
-      case 'response_time':
-        if (value > 2000) return LogLevel.ERROR;
-        if (value > 1000) return LogLevel.WARN;
-        return LogLevel.INFO;
-      case 'memory_usage':
-        if (value > 90) return LogLevel.ERROR;
-        if (value > 70) return LogLevel.WARN;
-        return LogLevel.INFO;
-      case 'cpu_usage':
-        if (value > 90) return LogLevel.ERROR;
-        if (value > 70) return LogLevel.WARN;
-        return LogLevel.INFO;
-      default:
-        return LogLevel.INFO;
+    case 'response_time':
+      if (value > 2000) return LogLevel.ERROR;
+      if (value > 1000) return LogLevel.WARN;
+      return LogLevel.INFO;
+    case 'memory_usage':
+      if (value > 90) return LogLevel.ERROR;
+      if (value > 70) return LogLevel.WARN;
+      return LogLevel.INFO;
+    case 'cpu_usage':
+      if (value > 90) return LogLevel.ERROR;
+      if (value > 70) return LogLevel.WARN;
+      return LogLevel.INFO;
+    default:
+      return LogLevel.INFO;
     }
   }
 
@@ -527,7 +527,7 @@ export class StructuredLogger {
   /**
    * 获取服务信息
    */
-  getServiceInfo(): {
+  getServiceInfo(): { service: string; version: string; environment: string } {
     return {
       service: this.serviceName,
       version: this.version,

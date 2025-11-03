@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { generateShareToken, getReportByShareToken } from '@/lib/services/analytics/report-generator';
+import { generateShareToken } from '@/lib/services/analytics/report-generator';
 
 /**
  * POST /api/analytics/share
@@ -38,37 +38,6 @@ export async function POST(request: NextRequest) {
     console.error('Failed to generate share token:', error);
     return NextResponse.json(
       { error: '生成分享链接失败' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * GET /api/analytics/share/[token]
- * 通过分享token获取报告（公开访问）
- */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { token: string } }
-) {
-  try {
-    const report = await getReportByShareToken(params.token);
-
-    if (!report) {
-      return NextResponse.json(
-        { error: '报告不存在或已过期' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: report,
-    });
-  } catch (error) {
-    console.error('Failed to get shared report:', error);
-    return NextResponse.json(
-      { error: '获取报告失败' },
       { status: 500 }
     );
   }

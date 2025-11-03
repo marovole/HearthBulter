@@ -3,10 +3,10 @@ import { prisma } from '@/lib/db';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const recipeId = params.id;
+    const recipeId = id;
     const { memberId, notes } = await request.json();
 
     // 验证必需参数
@@ -52,7 +52,7 @@ export async function POST(
       const existingFavorite = await prisma.recipeFavorite.findUnique({
         where: {
           recipeId_memberId: {
-            recipeId: params.id,
+            recipeId: id,
             memberId: (await request.json()).memberId,
           },
         },
@@ -75,10 +75,10 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const recipeId = params.id;
+    const recipeId = id;
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
 
@@ -118,10 +118,10 @@ export async function DELETE(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const recipeId = params.id;
+    const recipeId = id;
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
 

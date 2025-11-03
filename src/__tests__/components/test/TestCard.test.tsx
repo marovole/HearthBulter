@@ -179,7 +179,7 @@ describe('TestCard Component', () => {
       padding: '16px',
       border: '1px solid #ccc',
       borderRadius: '8px',
-      margin: '8px'
+      margin: '8px',
     });
   });
 

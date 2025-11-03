@@ -73,14 +73,14 @@ export class NotificationManager {
           email: true,
           phone: true,
           wechatOpenId: true,
-          notificationPreferences: true
-        }
+          notificationPreferences: true,
+        },
       });
 
       if (!user) {
         return {
           success: false,
-          error: 'User not found'
+          error: 'User not found',
         };
       }
 
@@ -89,30 +89,30 @@ export class NotificationManager {
         email: true,
         sms: false,
         wechat: true,
-        push: true
+        push: true,
       };
 
       // 确定要发送的渠道
       const channels = data.channels || ['push'];
       const enabledChannels = channels.filter(channel => {
         switch (channel) {
-          case 'email':
-            return preferences.email && user.email;
-          case 'sms':
-            return preferences.sms && user.phone;
-          case 'wechat':
-            return preferences.wechat && user.wechatOpenId;
-          case 'push':
-            return preferences.push;
-          default:
-            return false;
+        case 'email':
+          return preferences.email && user.email;
+        case 'sms':
+          return preferences.sms && user.phone;
+        case 'wechat':
+          return preferences.wechat && user.wechatOpenId;
+        case 'push':
+          return preferences.push;
+        default:
+          return false;
         }
       });
 
       if (enabledChannels.length === 0) {
         return {
           success: false,
-          error: 'No enabled channels available'
+          error: 'No enabled channels available',
         };
       }
 
@@ -125,41 +125,41 @@ export class NotificationManager {
           content: data.content,
           channels: enabledChannels,
           status: 'sent',
-          metadata: data.metadata || {}
-        }
+          metadata: data.metadata || {},
+        },
       });
 
       // 通过各个渠道发送通知
       const sendPromises = enabledChannels.map(async (channel) => {
         switch (channel) {
-          case 'email':
-            if (user.email) {
-              return await emailService.sendEmail({
-                to: user.email,
-                subject: data.title,
-                text: data.content
-              });
-            }
-            break;
-          case 'sms':
-            if (user.phone) {
-              return await smsService.sendSMS({
-                to: user.phone,
-                message: data.content
-              });
-            }
-            break;
-          case 'wechat':
-            if (user.wechatOpenId) {
-              return await wechatService.sendMessage({
-                openId: user.wechatOpenId,
-                content: data.content
-              });
-            }
-            break;
-          case 'push':
-            // Push notification implementation
-            return { success: true, messageId: 'push-message-id' };
+        case 'email':
+          if (user.email) {
+            return await emailService.sendEmail({
+              to: user.email,
+              subject: data.title,
+              text: data.content,
+            });
+          }
+          break;
+        case 'sms':
+          if (user.phone) {
+            return await smsService.sendSMS({
+              to: user.phone,
+              message: data.content,
+            });
+          }
+          break;
+        case 'wechat':
+          if (user.wechatOpenId) {
+            return await wechatService.sendMessage({
+              openId: user.wechatOpenId,
+              content: data.content,
+            });
+          }
+          break;
+        case 'push':
+          // Push notification implementation
+          return { success: true, messageId: 'push-message-id' };
         }
       });
 
@@ -167,13 +167,13 @@ export class NotificationManager {
 
       return {
         success: true,
-        notificationId: notification.id
+        notificationId: notification.id,
       };
 
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -192,7 +192,7 @@ export class NotificationManager {
       } else {
         return {
           success: false,
-          error: result.reason?.message || 'Unknown error'
+          error: result.reason?.message || 'Unknown error',
         };
       }
     });
@@ -200,13 +200,13 @@ export class NotificationManager {
     const summary = {
       total: formattedResults.length,
       successful: formattedResults.filter(r => r.success).length,
-      failed: formattedResults.filter(r => !r.success).length
+      failed: formattedResults.filter(r => !r.success).length,
     };
 
     return {
       success: summary.failed === 0,
       results: formattedResults,
-      summary
+      summary,
     };
   }
 
@@ -219,7 +219,7 @@ export class NotificationManager {
       if (data.scheduledTime <= new Date()) {
         return {
           success: false,
-          error: 'Cannot schedule notification in the past'
+          error: 'Cannot schedule notification in the past',
         };
       }
 
@@ -233,19 +233,19 @@ export class NotificationManager {
           scheduledTime: data.scheduledTime,
           channels: data.channels || ['push'],
           status: 'scheduled',
-          metadata: data.metadata || {}
-        }
+          metadata: data.metadata || {},
+        },
       });
 
       return {
         success: true,
-        scheduleId: scheduledNotification.id
+        scheduleId: scheduledNotification.id,
       };
 
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -267,11 +267,11 @@ export class NotificationManager {
         where: {
           userId,
           ...(options.type && { type: options.type }),
-          ...(options.status && { status: options.status })
+          ...(options.status && { status: options.status }),
         },
         orderBy: { createdAt: 'desc' },
         take: options.limit || 50,
-        skip: options.offset || 0
+        skip: options.offset || 0,
       });
 
       return {
@@ -283,15 +283,15 @@ export class NotificationManager {
           content: notif.content,
           status: notif.status,
           createdAt: notif.createdAt,
-          read: notif.read || false
-        }))
+          read: notif.read || false,
+        })),
       };
 
     } catch (error) {
       return {
         success: false,
         notifications: [],
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -305,19 +305,19 @@ export class NotificationManager {
         where: { id: notificationId },
         data: {
           read: true,
-          readAt: new Date()
-        }
+          readAt: new Date(),
+        },
       });
 
       return {
         success: true,
-        notificationId
+        notificationId,
       };
 
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -330,36 +330,36 @@ export class NotificationManager {
       // 验证通知属于该用户
       const notification = await prisma.notification.findUnique({
         where: { id: notificationId },
-        select: { userId: true }
+        select: { userId: true },
       });
 
       if (!notification) {
         return {
           success: false,
-          error: 'Notification not found'
+          error: 'Notification not found',
         };
       }
 
       if (notification.userId !== userId) {
         return {
           success: false,
-          error: 'Unauthorized to delete this notification'
+          error: 'Unauthorized to delete this notification',
         };
       }
 
       await prisma.notification.delete({
-        where: { id: notificationId }
+        where: { id: notificationId },
       });
 
       return {
         success: true,
-        notificationId
+        notificationId,
       };
 
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }

@@ -12,7 +12,7 @@ import { HealthScoreDisplay } from './HealthScoreDisplay';
 import { QuickActionsPanel } from './QuickActionsPanel';
 import { WeightTrendChart } from './WeightTrendChart';
 import { NutritionAnalysisChart } from './NutritionAnalysisChart';
-import { HealthScoreCard } from './HealthScoreCard';
+import HealthScoreCard from './HealthScoreCard';
 
 interface EnhancedDashboardProps {
   userId: string

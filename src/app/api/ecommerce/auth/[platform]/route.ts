@@ -7,15 +7,16 @@ import { PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
+    const { platform: platformParam } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const platform = params.platform?.toUpperCase() as EcommercePlatform;
+    const platform = platformParam?.toUpperCase() as EcommercePlatform;
     if (!platformAdapterFactory.isPlatformSupported(platform)) {
       return NextResponse.json({ error: 'Unsupported platform' }, { status: 400 });
     }
@@ -47,15 +48,16 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
+    const { platform: platformParam } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const platform = params.platform?.toUpperCase() as EcommercePlatform;
+    const platform = platformParam?.toUpperCase() as EcommercePlatform;
     if (!platformAdapterFactory.isPlatformSupported(platform)) {
       return NextResponse.json({ error: 'Unsupported platform' }, { status: 400 });
     }

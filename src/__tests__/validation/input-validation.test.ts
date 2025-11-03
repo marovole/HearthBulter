@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { NextRequest } from 'next/server';
 import { validationMiddleware, commonSchemas } from '@/lib/middleware/validation-middleware';
 import { SQLInjectionDetector, XSSDetector } from '@/lib/security/security-middleware';
-import { checkSecurity } from '@/lib/middleware/security-middleware';
+import { checkSecurity } from '@/lib/security/security-middleware';
 
 describe('输入验证测试', () => {
   describe('基础验证测试', () => {

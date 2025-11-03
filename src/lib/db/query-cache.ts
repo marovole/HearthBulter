@@ -441,7 +441,7 @@ export class QueryCache {
     return (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
       const method = descriptor.value;
 
-      descriptor.value = async function (...args: T): Promise<R> => {
+      descriptor.value = async (...args: T): Promise<R> => {
         const { query, params } = queryBuilder(...args);
 
         // 尝试从缓存获取

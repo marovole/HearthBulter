@@ -5,11 +5,11 @@ import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions
 // GET /api/families/[familyId]/shopping/stats - 获取购物统计
 export async function GET(
   request: NextRequest,
-  { params }: { params: { familyId: string } }
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId } = params;
+      const { familyId } = await params;
       const userId = req.user!.id;
 
       const stats = await ShoppingListService.getShoppingStats(familyId, userId);

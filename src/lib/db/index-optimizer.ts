@@ -362,27 +362,27 @@ export class IndexOptimizer {
 
       // 添加索引类型
       switch (type) {
-        case IndexType.BTREE:
-          sql += 'USING btree ';
-          break;
-        case IndexType.HASH:
-          sql += 'USING hash ';
-          break;
-        case IndexType.GIST:
-          sql += 'USING gist ';
-          break;
-        case IndexType.GIN:
-          sql += 'USING gin ';
-          break;
-        case IndexType.BRIN:
-          sql += 'USING brin ';
-          break;
+      case IndexType.BTREE:
+        sql += 'USING btree ';
+        break;
+      case IndexType.HASH:
+        sql += 'USING hash ';
+        break;
+      case IndexType.GIST:
+        sql += 'USING gist ';
+        break;
+      case IndexType.GIN:
+        sql += 'USING gin ';
+        break;
+      case IndexType.BRIN:
+        sql += 'USING brin ';
+        break;
       }
 
       // 添加列
       if (type === IndexType.GIN) {
         // GIN索引用于全文搜索
-        sql += `((to_tsvector('english', ${columns.map(col => `"${col}"`).join(' || ' || ')})))`;
+        sql += `((to_tsvector('english', ${columns.map(col => `"${col}"`).join(' || ')})))`;
       } else {
         sql += `(${columns.map(col => `"${col}"`).join(', ')})`;
       }

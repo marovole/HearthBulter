@@ -6,11 +6,11 @@ import { TaskStatus } from '@prisma/client';
 // PUT /api/families/[familyId]/tasks/[taskId]/status - 更新任务状态
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { familyId: string; taskId: string } }
+  { params }: { params: Promise<{ familyId: string; taskId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId, taskId } = params;
+      const { familyId, taskId } = await params;
       const userId = req.user!.id;
       const body = await request.json();
 

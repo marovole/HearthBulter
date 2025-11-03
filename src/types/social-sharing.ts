@@ -9,11 +9,15 @@ import type {
   SharePrivacyLevel,
   ShareTrackingEventType,
   CommunityPost,
-  AchievementType,
   AchievementRarity,
-  LeaderboardType,
   CommunityPostType,
   CommunityPostStatus,
+} from '@prisma/client';
+
+// AchievementType and LeaderboardType are imported as values because they're used as runtime enum values
+import {
+  AchievementType,
+  LeaderboardType,
 } from '@prisma/client';
 
 /**
@@ -371,85 +375,53 @@ export const ACHIEVEMENT_TYPE_CONFIGS: Record<AchievementType, {
   rarity: AchievementRarity
   points: number
 }> = {
-  [AchievementType.FIRST_LOGIN]: {
-    label: '首次登录',
-    description: '完成首次登录',
-    icon: '🎯',
-    color: '#3b82f6',
-    rarity: 'COMMON',
-    points: 10,
-  },
-  [AchievementType.SEVEN_DAY_STREAK]: {
-    label: '连续打卡7天',
-    description: '连续7天记录健康数据',
+  [AchievementType.CHECK_IN_STREAK]: {
+    label: '连续打卡',
+    description: '连续多天记录健康数据',
     icon: '🔥',
     color: '#ef4444',
-    rarity: 'UNCOMMON',
+    rarity: 'BRONZE',
     points: 50,
   },
-  [AchievementType.MONTHLY_CHAMPION]: {
-    label: '月度健康达人',
-    description: '一个月内健康评分最高',
-    icon: '👑',
-    color: '#f59e0b',
-    rarity: 'RARE',
-    points: 200,
-  },
-  [AchievementType.WEIGHT_GOAL_ACHIEVED]: {
-    label: '减重目标达成',
-    description: '成功达到设定的减重目标',
-    icon: '🎯',
+  [AchievementType.WEIGHT_LOSS]: {
+    label: '减重成就',
+    description: '成功减重并保持健康体重',
+    icon: '⚖️',
     color: '#10b981',
-    rarity: 'UNCOMMON',
+    rarity: 'SILVER',
     points: 100,
   },
-  [AchievementType.RECIPE_MASTER]: {
-    label: '食谱达人',
-    description: '创建10个以上食谱',
-    icon: '👨‍🍳',
-    color: '#8b5cf6',
-    rarity: 'RARE',
-    points: 150,
-  },
-  [AchievementType.SOCIAL_BUTTERFLY]: {
-    label: '社交达人',
-    description: '分享健康内容超过20次',
-    icon: '🦋',
-    color: '#ec4899',
-    rarity: 'EPIC',
-    points: 300,
-  },
-  [AchievementType.PERFECT_WEEK]: {
-    label: '完美一周',
-    description: '一周内所有健康指标达标',
-    icon: '⭐',
-    color: '#22c55e',
-    rarity: 'RARE',
-    points: 180,
-  },
-  [AchievementType.EARLY_BIRD]: {
-    label: '早起达人',
-    description: '连续30天早上7点前记录早餐',
-    icon: '🐦',
-    color: '#06b6d4',
-    rarity: 'UNCOMMON',
-    points: 80,
-  },
-  [AchievementType.CALORIE_CHAMPION]: {
-    label: '卡路里管理大师',
-    description: '连续30天每日卡路里摄入在目标范围内',
-    icon: '🏃',
+  [AchievementType.NUTRITION_GOAL]: {
+    label: '营养目标',
+    description: '达成设定的营养摄入目标',
+    icon: '🥗',
     color: '#84cc16',
-    rarity: 'EPIC',
-    points: 250,
+    rarity: 'BRONZE',
+    points: 40,
   },
-  [AchievementType.INVITE_MASTER]: {
-    label: '邀请达人',
-    description: '成功邀请5位好友注册',
-    icon: '👥',
-    color: '#f97316',
-    rarity: 'RARE',
+  [AchievementType.EXERCISE_TARGET]: {
+    label: '运动目标',
+    description: '完成设定的运动目标',
+    icon: '🏃',
+    color: '#3b82f6',
+    rarity: 'SILVER',
+    points: 60,
+  },
+  [AchievementType.HEALTH_MILESTONE]: {
+    label: '健康里程碑',
+    description: '达成重要的健康指标里程碑',
+    icon: '🎯',
+    color: '#f59e0b',
+    rarity: 'GOLD',
     points: 200,
+  },
+  [AchievementType.COMMUNITY_CONTRIBUTION]: {
+    label: '社区贡献',
+    description: '为社区健康分享做出贡献',
+    icon: '👥',
+    color: '#6366f1',
+    rarity: 'PLATINUM',
+    points: 300,
   },
 };
 
@@ -470,7 +442,7 @@ export const LEADERBOARD_TYPE_CONFIGS: Record<LeaderboardType, {
     sortDirection: 'desc',
     timeframe: 'weekly',
   },
-  [LeaderboardType.CHECKIN_STREAK]: {
+  [LeaderboardType.CHECK_IN_STREAK]: {
     label: '连续打卡',
     description: '连续记录天数',
     unit: '天',
@@ -491,11 +463,11 @@ export const LEADERBOARD_TYPE_CONFIGS: Record<LeaderboardType, {
     sortDirection: 'desc',
     timeframe: 'weekly',
   },
-  [LeaderboardType.CALORIES_MANAGEMENT]: {
-    label: '卡路里管理',
-    description: '卡路里控制准确率',
-    unit: '%',
+  [LeaderboardType.NUTRITION_SCORE]: {
+    label: '营养评分',
+    description: '综合营养指标评分',
+    unit: '分',
     sortDirection: 'desc',
-    timeframe: 'monthly',
+    timeframe: 'weekly',
   },
 };

@@ -120,6 +120,13 @@ describe('RecommendationEngine', () => {
       mockPrisma.recipeView.findMany.mockResolvedValue([]);
       mockPrisma.ingredientSubstitution.findMany.mockResolvedValue([]);
 
+      // Mock the recipe.findMany call in recommendation-ranker
+      mockPrisma.recipe.findMany.mockResolvedValue(mockRecipes);
+
+      // Ensure user behavior data has proper array structure
+      mockPrisma.recipeRating.findMany.mockResolvedValue([]);
+      mockPrisma.recipeFavorite.findMany.mockResolvedValue([]);
+
       // Test context
       const context = {
         memberId: 'user1',

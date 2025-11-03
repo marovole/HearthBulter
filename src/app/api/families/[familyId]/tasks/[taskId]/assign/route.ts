@@ -5,11 +5,11 @@ import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions
 // POST /api/families/[familyId]/tasks/[taskId]/assign - 分配任务
 export async function POST(
   request: NextRequest,
-  { params }: { params: { familyId: string; taskId: string } }
+  { params }: { params: Promise<{ familyId: string; taskId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId, taskId } = params;
+      const { familyId, taskId } = await params;
       const userId = req.user!.id;
       const body = await request.json();
 

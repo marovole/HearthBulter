@@ -30,17 +30,17 @@ const DEFAULT_SECURITY_CONFIG: SecurityHeadersConfig = {
   },
   contentSecurityPolicy: {
     directives: {
-      'default-src': ["'self'"],
-      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
-      'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
-      'font-src': ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
-      'img-src': ["'self'", 'data:', 'https:', 'blob:'],
-      'connect-src': ["'self'", 'https://api.nal.usda.gov', 'https://*.upstash.io'],
-      'frame-src': ["'none'"],
-      'object-src': ["'none'"],
-      'base-uri': ["'self'"],
-      'form-action': ["'self'"],
-      'frame-ancestors': ["'none'"],
+      'default-src': ['\'self\''],
+      'script-src': ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\'', 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
+      'style-src': ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
+      'font-src': ['\'self\'', 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
+      'img-src': ['\'self\'', 'data:', 'https:', 'blob:'],
+      'connect-src': ['\'self\'', 'https://api.nal.usda.gov', 'https://*.upstash.io'],
+      'frame-src': ['\'none\''],
+      'object-src': ['\'none\''],
+      'base-uri': ['\'self\''],
+      'form-action': ['\'self\''],
+      'frame-ancestors': ['\'none\''],
       'upgrade-insecure-requests': [],
     },
   },
@@ -69,8 +69,8 @@ const DEVELOPMENT_SECURITY_CONFIG: SecurityHeadersConfig = {
   contentSecurityPolicy: {
     directives: {
       ...DEFAULT_SECURITY_CONFIG.contentSecurityPolicy!.directives,
-      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'ws:', 'wss:'],
-      'connect-src': ["'self'", 'https://api.nal.usda.gov', 'https://*.upstash.io', 'ws:', 'wss:', 'http://localhost:*', 'https://localhost:*'],
+      'script-src': ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\'', 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'ws:', 'wss:'],
+      'connect-src': ['\'self\'', 'https://api.nal.usda.gov', 'https://*.upstash.io', 'ws:', 'wss:', 'http://localhost:*', 'https://localhost:*'],
     },
   },
   strictTransportSecurity: undefined, // 开发环境不启用HSTS
@@ -121,7 +121,7 @@ export class SecurityMiddleware {
   private generateCSPHeader(directives: Record<string, string[]>): string {
     return Object.entries(directives)
       .map(([key, values]) => {
-        const value = values.length > 0 ? values.join(' ') : "'none'";
+        const value = values.length > 0 ? values.join(' ') : '\'none\'';
         return `${key} ${value}`;
       })
       .join('; ');

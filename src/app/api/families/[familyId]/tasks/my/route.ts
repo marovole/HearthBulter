@@ -6,11 +6,11 @@ import { TaskStatus } from '@prisma/client';
 // GET /api/families/[familyId]/tasks/my - 获取我的任务
 export async function GET(
   request: NextRequest,
-  { params }: { params: { familyId: string } }
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId } = params;
+      const { familyId } = await params;
       const userId = req.user!.id;
       
       // 获取查询参数

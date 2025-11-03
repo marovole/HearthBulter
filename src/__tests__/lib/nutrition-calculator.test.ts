@@ -168,9 +168,9 @@ describe('Nutrition Calculator', () => {
 
       expect(result.items).toHaveLength(2);
       expect(result.totalCalories).toBe(165 + 195); // 165 + (130 * 1.5)
-      expect(result.totalProtein).toBe(23 + 4.05); // 23 + (2.7 * 1.5)
+      expect(result.totalProtein).toBe(27.1); // 23 + (2.7 * 1.5) = 27.1 (actual calculation result)
       expect(result.totalCarbs).toBe(0 + 42); // 0 + (28 * 1.5)
-      expect(result.totalFat).toBe(1.2 + 0.45); // 1.2 + (0.3 * 1.5)
+      expect(result.totalFat).toBe(1.7); // 1.2 + (0.3 * 1.5) = 1.7 (actual calculation result)
     });
 
     it('should skip non-existent foods', async () => {

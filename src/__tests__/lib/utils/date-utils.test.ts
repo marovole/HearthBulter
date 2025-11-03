@@ -10,7 +10,7 @@ import {
   isYesterday,
   getWeekStart,
   getWeekEnd,
-  calculateAge
+  calculateAge,
 } from '@/lib/utils/date-utils';
 
 describe('Date Utils', () => {

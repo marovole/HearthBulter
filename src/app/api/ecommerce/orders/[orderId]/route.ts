@@ -6,15 +6,14 @@ import { PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const { orderId } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const orderId = params.orderId;
 
     // 获取订单信息
     const order = await prisma.order.findFirst({
@@ -148,15 +147,15 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const { orderId } = await params;
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const orderId = params.orderId;
     const body = await request.json();
     const { action } = body;
 

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { NotificationManager } from '../src/lib/services/notification';
+import { NotificationManager } from '@/lib/services/notification/notification-manager';
 
 // 测试通知系统
 async function testNotificationSystem() {

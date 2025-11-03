@@ -6,11 +6,11 @@ import { TaskStatus, TaskCategory, TaskPriority } from '@prisma/client';
 // GET /api/families/[familyId]/tasks - 获取家庭任务列表
 export async function GET(
   request: NextRequest,
-  { params }: { params: { familyId: string } }
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId } = params;
+      const { familyId } = await params;
       const userId = req.user!.id;
       
       // 获取查询参数
@@ -48,11 +48,11 @@ export async function GET(
 // POST /api/families/[familyId]/tasks - 创建任务
 export async function POST(
   request: NextRequest,
-  { params }: { params: { familyId: string } }
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId } = params;
+      const { familyId } = await params;
       const userId = req.user!.id;
       const body = await request.json();
 

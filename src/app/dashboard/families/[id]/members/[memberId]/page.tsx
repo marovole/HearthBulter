@@ -98,12 +98,12 @@ export default async function MemberDetailPage({
               <span className="text-sm text-gray-700">
                 {session.user.name}
               </span>
-              <a
+              <Link
                 href="/api/auth/signout"
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
                 退出登录
-              </a>
+              </Link>
             </div>
           </div>
         </div>

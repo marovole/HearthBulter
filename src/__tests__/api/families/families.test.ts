@@ -4,6 +4,7 @@
 
 import { createMocks } from 'node-mocks-http';
 import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/db';
 
 // Mock the database
 jest.mock('@/lib/db', () => ({
@@ -68,14 +69,13 @@ jest.mock('@/lib/services/notification/notification-manager', () => ({
   },
 }));
 
-// Mock file upload service
-jest.mock('@/lib/services/file-upload', () => ({
+// Mock file storage service
+jest.mock('@/lib/services/file-storage-service', () => ({
   uploadFamilyAvatar: jest.fn().mockResolvedValue({ url: 'https://example.com/avatar.jpg' }),
   deleteFamilyAvatar: jest.fn().mockResolvedValue(true),
 }));
 
 describe('/api/families API', () => {
-  const { prisma } = require('@/lib/db');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -717,7 +717,7 @@ describe('/api/families API', () => {
       try {
         const { DELETE } = await import('@/app/api/families/[id]/members/[memberId]/route');
         const response = await DELETE(request, {
-          params: Promise.resolve({ id: 'family-1', memberId: 'member-2' })
+          params: Promise.resolve({ id: 'family-1', memberId: 'member-2' }),
         });
 
         expect(response.status).toBe(200);
@@ -749,7 +749,7 @@ describe('/api/families API', () => {
       try {
         const { DELETE } = await import('@/app/api/families/[id]/members/[memberId]/route');
         const response = await DELETE(request, {
-          params: Promise.resolve({ id: 'family-1', memberId: 'member-1' })
+          params: Promise.resolve({ id: 'family-1', memberId: 'member-1' }),
         });
 
         expect(response.status).toBe(403);

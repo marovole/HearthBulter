@@ -6,15 +6,16 @@ import { StorageLocation } from '@prisma/client';
 // GET - 获取单个库存条目
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
-    const item = await inventoryTracker.getInventoryItemById(params.id);
+    const item = await inventoryTracker.getInventoryItemById(id);
     
     if (!item) {
       return NextResponse.json({ error: '库存条目不存在' }, { status: 404 });
@@ -37,18 +38,19 @@ export async function GET(
 // PUT - 更新库存条目
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const body = await request.json();
-    
+
     const updateData: any = {};
-    
+
     if (body.quantity !== undefined) updateData.quantity = parseFloat(body.quantity);
     if (body.unit !== undefined) updateData.unit = body.unit;
     if (body.purchasePrice !== undefined) updateData.purchasePrice = parseFloat(body.purchasePrice);
@@ -62,7 +64,7 @@ export async function PUT(
     if (body.brand !== undefined) updateData.brand = body.brand;
     if (body.packageInfo !== undefined) updateData.packageInfo = body.packageInfo;
 
-    const item = await inventoryTracker.updateInventoryItem(params.id, updateData);
+    const item = await inventoryTracker.updateInventoryItem(id, updateData);
 
     return NextResponse.json({
       success: true,
@@ -82,15 +84,16 @@ export async function PUT(
 // DELETE - 删除库存条目
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
-    await inventoryTracker.deleteInventoryItem(params.id);
+    await inventoryTracker.deleteInventoryItem(id);
 
     return NextResponse.json({
       success: true,

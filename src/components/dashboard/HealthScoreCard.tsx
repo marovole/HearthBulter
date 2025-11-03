@@ -77,7 +77,7 @@ const BREAKDOWN_COLORS = {
   dataCompletenessScore: '#3b82f6',
 };
 
-export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
+function HealthScoreCard({ memberId }: HealthScoreCardProps) {
   const [data, setData] = useState<HealthScoreData | null>(null);
   const [history, setHistory] = useState<HealthScoreHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -414,3 +414,5 @@ export function HealthScoreCard({ memberId }: HealthScoreCardProps) {
     </Card>
   );
 }
+
+export default HealthScoreCard;

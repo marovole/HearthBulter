@@ -10,9 +10,10 @@ const prisma = new PrismaClient();
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
@@ -20,7 +21,7 @@ export async function GET(
 
     const report = await prisma.healthReport.findUnique({
       where: {
-        id: params.id,
+        id,
         deletedAt: null,
       },
       include: {
@@ -60,16 +61,17 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     await prisma.healthReport.update({
-      where: { id: params.id },
+      where: { id },
       data: { deletedAt: new Date() },
     });
 

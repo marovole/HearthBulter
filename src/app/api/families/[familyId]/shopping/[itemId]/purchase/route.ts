@@ -5,11 +5,11 @@ import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions
 // POST /api/families/[familyId]/shopping/[itemId]/purchase - 确认购买
 export async function POST(
   request: NextRequest,
-  { params }: { params: { familyId: string; itemId: string } }
+  { params }: { params: Promise<{ familyId: string; itemId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId, itemId } = params;
+      const { familyId, itemId } = await params;
       const userId = req.user!.id;
       const body = await request.json();
 

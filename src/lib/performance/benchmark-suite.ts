@@ -271,26 +271,26 @@ export class BenchmarkSuiteManager {
       let nextExecution: Date;
 
       switch (frequency) {
-        case 'hourly':
-          nextExecution = new Date(now.getTime() + 60 * 60 * 1000);
-          break;
-        case 'daily':
-          if (time) {
-            const [hours, minutes] = time.split(':').map(Number);
-            nextExecution = new Date(now);
-            nextExecution.setHours(hours, minutes, 0, 0);
-            if (nextExecution <= now) {
-              nextExecution.setDate(nextExecution.getDate() + 1);
-            }
-          } else {
-            nextExecution = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      case 'hourly':
+        nextExecution = new Date(now.getTime() + 60 * 60 * 1000);
+        break;
+      case 'daily':
+        if (time) {
+          const [hours, minutes] = time.split(':').map(Number);
+          nextExecution = new Date(now);
+          nextExecution.setHours(hours, minutes, 0, 0);
+          if (nextExecution <= now) {
+            nextExecution.setDate(nextExecution.getDate() + 1);
           }
-          break;
-        case 'weekly':
-          nextExecution = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-          break;
-        default:
-          return;
+        } else {
+          nextExecution = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        }
+        break;
+      case 'weekly':
+        nextExecution = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        return;
       }
 
       const delay = nextExecution.getTime() - now.getTime();
@@ -710,7 +710,7 @@ export class BenchmarkSuiteManager {
     const secondHalfAvg = secondHalf.reduce((sum, score) => sum + score, 0) / secondHalf.length;
 
     const trend = secondHalfAvg > firstHalfAvg + 5 ? 'improving' :
-                  secondHalfAvg < firstHalfAvg - 5 ? 'degrading' : 'stable';
+      secondHalfAvg < firstHalfAvg - 5 ? 'degrading' : 'stable';
 
     const recommendations = this.generateTrendRecommendations(trend, averageScore);
 

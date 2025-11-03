@@ -4,6 +4,8 @@
 
 import { createMocks } from 'node-mocks-http';
 import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/db';
+import { nutritionCalculator } from '@/lib/services/nutrition-calculator';
 
 // Mock the database
 jest.mock('@/lib/db', () => ({
@@ -27,6 +29,7 @@ jest.mock('@/lib/db', () => ({
     nutritionLog: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -59,8 +62,6 @@ jest.mock('@/lib/services/nutrition-calculator', () => ({
 }));
 
 describe('/api/nutrition API', () => {
-  const { prisma } = require('@/lib/db');
-  const nutritionCalculator = require('@/lib/services/nutrition-calculator');
 
   beforeEach(() => {
     jest.clearAllMocks();

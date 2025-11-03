@@ -21,7 +21,7 @@ const updateMealLogSchema = z.object({
  */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -36,7 +36,7 @@ export async function PATCH(
     const body = await req.json();
     const validatedData = updateMealLogSchema.parse(body);
 
-    const mealLog = await updateMealLog(params.id, validatedData);
+    const mealLog = await updateMealLog(id, validatedData);
 
     return NextResponse.json(mealLog);
   } catch (error) {
@@ -62,7 +62,7 @@ export async function PATCH(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -74,7 +74,7 @@ export async function DELETE(
       );
     }
 
-    await deleteMealLog(params.id);
+    await deleteMealLog(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -325,7 +325,11 @@ export class ContentFilter {
       cookingTime: recipe.totalTime,
       difficulty: recipe.difficulty,
       category: recipe.category,
-      tags: recipe.tags ? JSON.parse(recipe.tags) : [],
+      tags: recipe.tags
+        ? (typeof recipe.tags === 'string'
+          ? (recipe.tags.startsWith('[') ? JSON.parse(recipe.tags) : recipe.tags.split(',').map(t => t.trim()))
+          : recipe.tags)
+        : [],
       costLevel: recipe.costLevel,
     };
 

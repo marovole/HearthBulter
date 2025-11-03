@@ -7,10 +7,10 @@ const notificationManager = new NotificationManager(prisma);
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const notificationId = params.id;
+    const notificationId = id;
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
 

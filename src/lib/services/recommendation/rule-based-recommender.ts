@@ -15,7 +15,7 @@ export class RuleBasedRecommender {
     context: RecommendationContext,
     limit: number = 10
   ): Promise<RecipeRecommendation[]> {
-    const candidates = await this.getCandidateRecipes(context);
+    const candidates = await this.getCandidateRecipes(context, limit);
     const scoredRecipes = await this.scoreRecipes(candidates, context);
     
     return scoredRecipes
@@ -26,7 +26,7 @@ export class RuleBasedRecommender {
   /**
    * 获取候选食谱
    */
-  private async getCandidateRecipes(context: RecommendationContext) {
+  private async getCandidateRecipes(context: RecommendationContext, limit: number = 10) {
     const whereClause: any = {
       status: 'PUBLISHED',
       isPublic: true,
@@ -276,7 +276,25 @@ export class RuleBasedRecommender {
       return 2; // 无季节信息时给中等分数
     }
 
-    const recipeSeasons = JSON.parse(recipe.seasons || '[]');
+    // Robust season parsing - handle both JSON arrays and comma-separated strings
+    let recipeSeasons: string[] = [];
+    if (recipe.seasons) {
+      try {
+        if (typeof recipe.seasons === 'string') {
+          if (recipe.seasons.startsWith('[')) {
+            recipeSeasons = JSON.parse(recipe.seasons);
+          } else {
+            recipeSeasons = recipe.seasons.split(',').map((s: string) => s.trim());
+          }
+        } else if (Array.isArray(recipe.seasons)) {
+          recipeSeasons = recipe.seasons;
+        }
+      } catch (error) {
+        console.error('Failed to parse recipe seasons:', error);
+        recipeSeasons = [];
+      }
+    }
+
     if (recipeSeasons.includes(currentSeason)) {
       return 5; // 完全匹配
     } else if (recipeSeasons.length === 0) {

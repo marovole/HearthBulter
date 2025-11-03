@@ -9,7 +9,7 @@ import {
   calculateBMI,
   calculateIdealWeight,
   getNutrientRecommendations,
-  calculateMealMacros
+  calculateMealMacros,
 } from '@/lib/services/health-calculator';
 
 describe('Nutrition Calculator Service', () => {
@@ -21,7 +21,7 @@ describe('Nutrition Calculator Service', () => {
         age: 30,
         gender: 'male',
         activityLevel: 'moderate',
-        goal: 'weight_loss'
+        goal: 'weight_loss',
       });
 
       expect(result).toHaveProperty('calories');
@@ -46,7 +46,7 @@ describe('Nutrition Calculator Service', () => {
         age: 30,
         gender: 'male',
         activityLevel: 'moderate',
-        goal: 'muscle_gain'
+        goal: 'muscle_gain',
       });
 
       // Muscle gain should have calorie surplus
@@ -63,7 +63,7 @@ describe('Nutrition Calculator Service', () => {
         age: 30,
         gender: 'male',
         activityLevel: 'sedentary',
-        goal: 'maintain'
+        goal: 'maintain',
       });
 
       const active = calculateDailyMacros({
@@ -72,7 +72,7 @@ describe('Nutrition Calculator Service', () => {
         age: 30,
         gender: 'male',
         activityLevel: 'very_active',
-        goal: 'maintain'
+        goal: 'maintain',
       });
 
       expect(active.calories).toBeGreaterThan(sedentary.calories);
@@ -85,7 +85,7 @@ describe('Nutrition Calculator Service', () => {
         age: 30,
         gender: 'male',
         activityLevel: 'moderate',
-        goal: 'maintain'
+        goal: 'maintain',
       })).toThrow();
 
       expect(() => calculateDailyMacros({
@@ -94,7 +94,7 @@ describe('Nutrition Calculator Service', () => {
         age: 30,
         gender: 'male',
         activityLevel: 'moderate',
-        goal: 'maintain'
+        goal: 'maintain',
       })).toThrow();
     });
   });
@@ -105,7 +105,7 @@ describe('Nutrition Calculator Service', () => {
         weight: 70,
         height: 175,
         age: 30,
-        gender: 'male'
+        gender: 'male',
       });
 
       // Mifflin-St Jeor: BMR = 10 * weight + 6.25 * height - 5 * age + 5 (male)
@@ -118,7 +118,7 @@ describe('Nutrition Calculator Service', () => {
         weight: 60,
         height: 165,
         age: 25,
-        gender: 'female'
+        gender: 'female',
       });
 
       // Mifflin-St Jeor: BMR = 10 * weight + 6.25 * height - 5 * age - 161 (female)
@@ -184,7 +184,7 @@ describe('Nutrition Calculator Service', () => {
         weight: 70,
         height: 175,
         activityLevel: 'moderate',
-        goal: 'maintain'
+        goal: 'maintain',
       });
 
       expect(recommendations).toHaveProperty('calories');
@@ -210,7 +210,7 @@ describe('Nutrition Calculator Service', () => {
         weight: 70,
         height: 175,
         activityLevel: 'moderate',
-        goal: 'maintain'
+        goal: 'maintain',
       });
 
       const weightLoss = getNutrientRecommendations({
@@ -219,7 +219,7 @@ describe('Nutrition Calculator Service', () => {
         weight: 70,
         height: 175,
         activityLevel: 'moderate',
-        goal: 'weight_loss'
+        goal: 'weight_loss',
       });
 
       expect(weightLoss.calories).toBeLessThan(maintain.calories);
@@ -233,7 +233,7 @@ describe('Nutrition Calculator Service', () => {
         calories: 2000,
         protein: 120,
         carbs: 250,
-        fat: 65
+        fat: 65,
       };
 
       const mealPlan = calculateMealMacros(dailyMacros, 3);
@@ -257,7 +257,7 @@ describe('Nutrition Calculator Service', () => {
         calories: 2000,
         protein: 120,
         carbs: 250,
-        fat: 65
+        fat: 65,
       };
 
       const threeMeals = calculateMealMacros(dailyMacros, 3);

@@ -1,4 +1,5 @@
 import { performance } from 'perf_hooks';
+import * as React from 'react';
 
 // React组件性能指标
 interface ComponentMetrics {

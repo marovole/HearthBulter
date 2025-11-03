@@ -70,7 +70,7 @@ const handler = async (request: NextRequest) => {
 
   } catch (error) {
     logger.error('用户注册失败', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json(
       { error: '服务器内部错误' },

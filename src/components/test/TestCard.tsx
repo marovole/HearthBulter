@@ -17,7 +17,7 @@ export const TestCard: React.FC<TestCardProps> = ({
   content,
   onClick,
   variant = 'default',
-  disabled = false
+  disabled = false,
 }) => {
   return (
     <div
@@ -36,7 +36,7 @@ export const TestCard: React.FC<TestCardProps> = ({
         padding: '16px',
         border: '1px solid #ccc',
         borderRadius: '8px',
-        margin: '8px'
+        margin: '8px',
       }}
     >
       <h3>{title}</h3>

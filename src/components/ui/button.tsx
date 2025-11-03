@@ -37,15 +37,34 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  loading?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading = false, onClick, onKeyDown, disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
+
+    // Handle keyboard navigation for accessibility
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      // Call custom onKeyDown if provided
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
+
+      // Trigger onClick for Enter and Space keys
+      if ((e.key === 'Enter' || e.key === ' ') && onClick && !disabled && !loading) {
+        e.preventDefault();
+        onClick(e as any);
+      }
+    };
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        disabled={disabled || loading}
+        onClick={onClick}
+        onKeyDown={handleKeyDown}
         {...props}
       />
     );

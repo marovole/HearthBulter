@@ -6,7 +6,28 @@
  */
 
 import { prisma } from '@/lib/db';
-import type { FoodCategory, ListStatus } from '@prisma/client';
+import type { ListStatus } from '@prisma/client';
+// Import FoodCategory as value, not just type
+let FoodCategory: any;
+try {
+  // Try to import the actual enum from Prisma if available
+  const prismaModule = require('@prisma/client');
+  FoodCategory = prismaModule.FoodCategory;
+} catch {
+  // Fallback: Define FoodCategory locally if not available in Prisma
+  FoodCategory = {
+    VEGETABLES: 'VEGETABLES',
+    FRUITS: 'FRUITS',
+    PROTEIN: 'PROTEIN',
+    SEAFOOD: 'SEAFOOD',
+    DAIRY: 'DAIRY',
+    GRAINS: 'GRAINS',
+    OILS: 'OILS',
+    SNACKS: 'SNACKS',
+    BEVERAGES: 'BEVERAGES',
+  };
+}
+import type { FoodCategory as FoodCategoryType } from '@prisma/client';
 
 /**
  * 食材聚合结果
@@ -14,7 +35,7 @@ import type { FoodCategory, ListStatus } from '@prisma/client';
 export interface AggregatedIngredient {
   foodId: string
   foodName: string
-  category: FoodCategory
+  category: FoodCategoryType
   totalAmount: number // 总重量（g）
   perishableDays?: number // 保质期天数（可选）
 }
@@ -26,14 +47,14 @@ export interface GeneratedShoppingList {
   planId: string
   items: AggregatedIngredient[]
   totalItems: number
-  categories: Record<FoodCategory, AggregatedIngredient[]>
+  categories: Record<FoodCategoryType, AggregatedIngredient[]>
 }
 
 /**
  * 保质期映射（基于食物分类）
  * 单位：天数
  */
-const PERISHABLE_DAYS: Partial<Record<FoodCategory, number>> = {
+const PERISHABLE_DAYS: Partial<Record<FoodCategoryType, number>> = {
   VEGETABLES: 5, // 蔬菜类平均5天（叶菜3天，根茎类7天）
   FRUITS: 7, // 水果类平均7天
   PROTEIN: 7, // 肉类7天（需冷藏）

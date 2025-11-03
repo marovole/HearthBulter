@@ -512,7 +512,7 @@ export class EnhancedPerformanceMonitor {
     currentMemoryUsage: number;
     activeAlerts: number;
     alertsByLevel: Record<AlertLevel, number>;
-  } {
+    } {
     const allMetrics = Array.from(this.metrics.values()).flat();
     const totalRequests = allMetrics.length;
     const averageResponseTime = totalRequests > 0

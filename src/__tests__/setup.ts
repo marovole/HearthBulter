@@ -130,7 +130,7 @@ global.fetch = jest.fn((url: string | Request, init?: RequestInit) => {
     }),
     json: async () => ({
       data: [],
-      success: true
+      success: true,
     }),
     text: async () => JSON.stringify({ data: [], success: true }),
     blob: async () => new Blob(),
@@ -603,7 +603,7 @@ jest.mock('@/lib/services/notification/notification-manager', () => ({
         total: 1,
         successful: 1,
         failed: 0,
-      }
+      },
     }),
     sendBulkNotifications: jest.fn().mockResolvedValue({
       success: true,
@@ -615,7 +615,7 @@ jest.mock('@/lib/services/notification/notification-manager', () => ({
         total: 2,
         successful: 2,
         failed: 0,
-      }
+      },
     }),
     updateNotification: jest.fn().mockResolvedValue({ id: 'test-notification-id' }),
     deleteNotification: jest.fn().mockResolvedValue(true),

@@ -26,7 +26,7 @@ const updateTemplateSchema = z.object({
  */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -41,7 +41,7 @@ export async function PATCH(
     const body = await req.json();
     const validatedData = updateTemplateSchema.parse(body);
 
-    const template = await updateQuickTemplate(params.id, validatedData);
+    const template = await updateQuickTemplate(id, validatedData);
 
     return NextResponse.json(template);
   } catch (error) {
@@ -67,7 +67,7 @@ export async function PATCH(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -79,7 +79,7 @@ export async function DELETE(
       );
     }
 
-    await deleteQuickTemplate(params.id);
+    await deleteQuickTemplate(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -98,7 +98,7 @@ export async function DELETE(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -110,7 +110,7 @@ export async function POST(
       );
     }
 
-    const template = await useTemplate(params.id);
+    const template = await useTemplate(id);
 
     return NextResponse.json(template);
   } catch (error) {

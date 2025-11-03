@@ -4,6 +4,7 @@
 
 import { createMocks } from 'node-mocks-http';
 import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/db';
 
 // Mock the database
 jest.mock('@/lib/db', () => ({
@@ -57,7 +58,6 @@ jest.mock('crypto', () => ({
 }));
 
 describe('/api/auth API', () => {
-  const { prisma } = require('@/lib/db');
 
   beforeEach(() => {
     jest.clearAllMocks();

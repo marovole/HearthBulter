@@ -2,25 +2,26 @@
  * 通知服务测试
  */
 
-import { NotificationService } from '@/lib/services/notification/notification-manager';
+import { notificationManager } from '@/lib/services/notification/notification-manager';
+import { prisma } from '@/lib/db';
 
 // Mock dependencies
 jest.mock('@/lib/services/notification/email-service', () => ({
   emailService: {
-    sendEmail: jest.fn().mockResolvedValue({ success: true, messageId: 'test-email-id' })
-  }
+    sendEmail: jest.fn().mockResolvedValue({ success: true, messageId: 'test-email-id' }),
+  },
 }));
 
 jest.mock('@/lib/services/notification/sms-service', () => ({
   smsService: {
-    sendSMS: jest.fn().mockResolvedValue({ success: true, messageId: 'test-sms-id' })
-  }
+    sendSMS: jest.fn().mockResolvedValue({ success: true, messageId: 'test-sms-id' }),
+  },
 }));
 
 jest.mock('@/lib/services/notification/wechat-service', () => ({
   wechatService: {
-    sendMessage: jest.fn().mockResolvedValue({ success: true, messageId: 'test-wechat-id' })
-  }
+    sendMessage: jest.fn().mockResolvedValue({ success: true, messageId: 'test-wechat-id' }),
+  },
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -35,11 +36,11 @@ jest.mock('@/lib/db', () => ({
         channels: ['push'],
         status: 'sent',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       }),
       findMany: jest.fn().mockResolvedValue([]),
       update: jest.fn().mockResolvedValue({}),
-      findUnique: jest.fn().mockResolvedValue({})
+      findUnique: jest.fn().mockResolvedValue({}),
     },
     user: {
       findUnique: jest.fn().mockResolvedValue({
@@ -51,18 +52,18 @@ jest.mock('@/lib/db', () => ({
           email: true,
           sms: false,
           wechat: true,
-          push: true
-        }
-      })
-    }
-  }
+          push: true,
+        },
+      }),
+    },
+  },
 }));
 
 describe('Notification Service', () => {
-  let notificationService: NotificationService;
+  let notificationService: any;
 
   beforeEach(() => {
-    notificationService = new NotificationService();
+    notificationService = notificationManager;
     jest.clearAllMocks();
   });
 
@@ -73,7 +74,7 @@ describe('Notification Service', () => {
         type: 'meal_reminder',
         title: 'Meal Reminder',
         content: 'Time to log your meal!',
-        channels: ['email', 'wechat']
+        channels: ['email', 'wechat'],
       };
 
       const result = await notificationService.sendNotification(notificationData);
@@ -88,7 +89,7 @@ describe('Notification Service', () => {
         type: 'meal_reminder',
         title: 'Meal Reminder',
         content: 'Time to log your meal!',
-        channels: ['email', 'sms', 'wechat']
+        channels: ['email', 'sms', 'wechat'],
       };
 
       const result = await notificationService.sendNotification(notificationData);
@@ -98,14 +99,13 @@ describe('Notification Service', () => {
     });
 
     it('should handle missing user gracefully', async () => {
-      const { prisma } = require('@/lib/db');
       prisma.user.findUnique.mockResolvedValue(null);
 
       const notificationData = {
         userId: 'non-existent-user',
         type: 'meal_reminder',
         title: 'Meal Reminder',
-        content: 'Time to log your meal!'
+        content: 'Time to log your meal!',
       };
 
       const result = await notificationService.sendNotification(notificationData);
@@ -122,14 +122,14 @@ describe('Notification Service', () => {
           userId: 'user-1',
           type: 'meal_reminder',
           title: 'Meal Reminder',
-          content: 'Time to log your meal!'
+          content: 'Time to log your meal!',
         },
         {
           userId: 'user-2',
           type: 'meal_reminder',
           title: 'Meal Reminder',
-          content: 'Time to log your meal!'
-        }
+          content: 'Time to log your meal!',
+        },
       ];
 
       const result = await notificationService.sendBulkNotifications(bulkData);
@@ -142,13 +142,12 @@ describe('Notification Service', () => {
     });
 
     it('should handle partial failures in bulk sending', async () => {
-      const { prisma } = require('@/lib/db');
       // Make second user fail
       prisma.user.findUnique
         .mockResolvedValueOnce({
           id: 'user-1',
           email: 'user1@example.com',
-          notificationPreferences: { email: true, sms: false, wechat: false, push: true }
+          notificationPreferences: { email: true, sms: false, wechat: false, push: true },
         })
         .mockResolvedValueOnce(null);
 
@@ -157,14 +156,14 @@ describe('Notification Service', () => {
           userId: 'user-1',
           type: 'meal_reminder',
           title: 'Meal Reminder',
-          content: 'Time to log your meal!'
+          content: 'Time to log your meal!',
         },
         {
           userId: 'user-2',
           type: 'meal_reminder',
           title: 'Meal Reminder',
-          content: 'Time to log your meal!'
-        }
+          content: 'Time to log your meal!',
+        },
       ];
 
       const result = await notificationService.sendBulkNotifications(bulkData);
@@ -186,7 +185,7 @@ describe('Notification Service', () => {
         title: 'Scheduled Meal Reminder',
         content: 'Time to log your meal!',
         scheduledTime,
-        channels: ['push']
+        channels: ['push'],
       };
 
       const result = await notificationService.scheduleNotification(scheduleData);
@@ -204,7 +203,7 @@ describe('Notification Service', () => {
         title: 'Scheduled Meal Reminder',
         content: 'Time to log your meal!',
         scheduledTime: pastTime,
-        channels: ['push']
+        channels: ['push'],
       };
 
       const result = await notificationService.scheduleNotification(scheduleData);
@@ -216,7 +215,6 @@ describe('Notification Service', () => {
 
   describe('getUserNotifications', () => {
     it('should retrieve user notifications', async () => {
-      const { prisma } = require('@/lib/db');
       prisma.notification.findMany.mockResolvedValue([
         {
           id: 'notif-1',
@@ -226,8 +224,8 @@ describe('Notification Service', () => {
           content: 'Time to log your meal!',
           status: 'sent',
           createdAt: new Date(),
-          read: false
-        }
+          read: false,
+        },
       ]);
 
       const result = await notificationService.getUserNotifications('test-user-id');
@@ -238,7 +236,6 @@ describe('Notification Service', () => {
     });
 
     it('should filter notifications by type', async () => {
-      const { prisma } = require('@/lib/db');
       prisma.notification.findMany.mockResolvedValue([
         {
           id: 'notif-1',
@@ -248,8 +245,8 @@ describe('Notification Service', () => {
           content: 'Time to log your meal!',
           status: 'sent',
           createdAt: new Date(),
-          read: false
-        }
+          read: false,
+        },
       ]);
 
       const result = await notificationService.getUserNotifications(
@@ -265,11 +262,10 @@ describe('Notification Service', () => {
 
   describe('markNotificationAsRead', () => {
     it('should mark notification as read', async () => {
-      const { prisma } = require('@/lib/db');
       prisma.notification.update.mockResolvedValue({
         id: 'notif-1',
         read: true,
-        readAt: new Date()
+        readAt: new Date(),
       });
 
       const result = await notificationService.markNotificationAsRead('notif-1');
@@ -279,18 +275,17 @@ describe('Notification Service', () => {
         where: { id: 'notif-1' },
         data: {
           read: true,
-          readAt: expect.any(Date)
-        }
+          readAt: expect.any(Date),
+        },
       });
     });
   });
 
   describe('deleteNotification', () => {
     it('should delete notification', async () => {
-      const { prisma } = require('@/lib/db');
       prisma.notification.findUnique.mockResolvedValue({
         id: 'notif-1',
-        userId: 'test-user-id'
+        userId: 'test-user-id',
       });
       prisma.notification.delete.mockResolvedValue({});
 
@@ -300,10 +295,9 @@ describe('Notification Service', () => {
     });
 
     it('should prevent deleting other user\'s notification', async () => {
-      const { prisma } = require('@/lib/db');
       prisma.notification.findUnique.mockResolvedValue({
         id: 'notif-1',
-        userId: 'different-user-id'
+        userId: 'different-user-id',
       });
 
       const result = await notificationService.deleteNotification('notif-1', 'test-user-id');

@@ -601,7 +601,7 @@ export function analyzeNutritionDeviations(
       deviation,
       status,
       severity,
-      suggestion: generateNutritionSuggestion(nutrient, deviation)
+      suggestion: generateNutritionSuggestion(nutrient, deviation),
     });
   }
 
@@ -664,7 +664,7 @@ export function detectAnomalyPatterns(
       patterns.push({
         type: current > previous ? 'spike' : 'drop',
         date: data[i].date,
-        severity: change > 100 ? 'severe' : change > 75 ? 'moderate' : 'mild'
+        severity: change > 100 ? 'severe' : change > 75 ? 'moderate' : 'mild',
       });
     }
   }
@@ -702,7 +702,7 @@ export function generateDeviationReport(
   return {
     summary,
     severity,
-    recommendations
+    recommendations,
   };
 }
 
@@ -734,7 +734,7 @@ function generateNutritionSuggestion(
     calories: '热量',
     protein: '蛋白质',
     carbs: '碳水化合物',
-    fat: '脂肪'
+    fat: '脂肪',
   };
 
   const name = nutrientNames[nutrient];

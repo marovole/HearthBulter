@@ -5,88 +5,51 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import MealCard from '@/components/meal-planning/MealCard';
-
-// Mock UI components
-jest.mock('@/components/ui/card', () => ({
-  Card: ({ children, className, ...props }: any) => (
-    <div data-testid="card" className={className} {...props}>{children}</div>
-  ),
-  CardContent: ({ children, ...props }: any) => (
-    <div data-testid="card-content" {...props}>{children}</div>
-  ),
-  CardDescription: ({ children, ...props }: any) => (
-    <div data-testid="card-description" {...props}>{children}</div>
-  ),
-  CardHeader: ({ children, ...props }: any) => (
-    <div data-testid="card-header" {...props}>{children}</div>
-  ),
-  CardTitle: ({ children, ...props }: any) => (
-    <div data-testid="card-title" {...props}>{children}</div>
-  ),
-}));
-
-jest.mock('@/components/ui/button', () => ({
-  Button: ({ children, onClick, variant, disabled, ...props }: any) => (
-    <button
-      data-testid="button"
-      data-variant={variant}
-      data-disabled={disabled}
-      onClick={onClick}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  ),
-}));
-
-jest.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, variant, ...props }: any) => (
-    <span data-testid="badge" data-variant={variant} {...props}>{children}</span>
-  ),
-}));
-
-jest.mock('@/components/ui/progress', () => ({
-  Progress: ({ value, max, ...props }: any) => (
-    <div data-testid="progress" data-value={value} data-max={max} {...props}>
-      <div data-testid="progress-bar"></div>
-    </div>
-  ),
-}));
+import { MealCard } from '@/components/meal-planning/MealCard';
 
 describe('MealCard', () => {
   const mockMeal = {
     id: 'test-meal-1',
-    name: '鸡胸肉沙拉',
-    description: '高蛋白低脂的健康沙拉',
-    image: '/images/chicken-salad.jpg',
-    prepTime: 15,
-    cookTime: 0,
-    servings: 2,
-    difficulty: 'easy',
-    nutrition: {
-      calories: 320,
-      protein: 35,
-      carbs: 12,
-      fat: 8,
-      fiber: 6
-    },
+    date: '2025-01-01',
+    mealType: 'LUNCH' as const,
+    calories: 320,
+    protein: 35,
+    carbs: 12,
+    fat: 8,
     ingredients: [
-      { name: '鸡胸肉', amount: '200g' },
-      { name: '生菜', amount: '100g' },
-      { name: '番茄', amount: '50g' },
-      { name: '黄瓜', amount: '50g' }
+      {
+        id: 'ing-1',
+        amount: 200,
+        food: {
+          id: 'food-1',
+          name: '鸡胸肉',
+        },
+      },
+      {
+        id: 'ing-2',
+        amount: 100,
+        food: {
+          id: 'food-2',
+          name: '生菜',
+        },
+      },
+      {
+        id: 'ing-3',
+        amount: 50,
+        food: {
+          id: 'food-3',
+          name: '番茄',
+        },
+      },
+      {
+        id: 'ing-4',
+        amount: 50,
+        food: {
+          id: 'food-4',
+          name: '黄瓜',
+        },
+      },
     ],
-    instructions: [
-      '将鸡胸肉煮熟切片',
-      '将蔬菜洗净切块',
-      '混合所有食材',
-      '添加调味料'
-    ],
-    tags: ['高蛋白', '低脂', '沙拉', '快手菜'],
-    isFavorite: false,
-    rating: 4.5
   };
 
   beforeEach(() => {
@@ -94,287 +57,163 @@ describe('MealCard', () => {
   });
 
   it('should render meal card correctly', () => {
-    render(<MealCard meal={mockMeal} />);
+    const { container } = render(<MealCard meal={mockMeal} />);
 
-    expect(screen.getByTestId('card')).toBeInTheDocument();
-    expect(screen.getByText('鸡胸肉沙拉')).toBeInTheDocument();
-    expect(screen.getByText('高蛋白低脂的健康沙拉')).toBeInTheDocument();
+    // MealCard renders a simple div with specific classes
+    const card = container.querySelector('.hover\\:shadow-lg');
+    expect(card).toBeInTheDocument();
+    expect(screen.getByText('午餐')).toBeInTheDocument(); // LUNCH should display as 午餐
   });
 
   it('should display nutrition information', () => {
-    render(<MealCard meal={mockMeal} />);
+    const { container } = render(<MealCard meal={mockMeal} />);
 
-    expect(screen.getByText('320')).toBeInTheDocument(); // calories
-    expect(screen.getByText('35g')).toBeInTheDocument(); // protein
-    expect(screen.getByText('12g')).toBeInTheDocument(); // carbs
-    expect(screen.getByText('8g')).toBeInTheDocument(); // fat
-  });
-
-  it('should display meal tags', () => {
-    render(<MealCard meal={mockMeal} />);
-
-    mockMeal.tags.forEach(tag => {
-      expect(screen.getByText(tag)).toBeInTheDocument();
-    });
-  });
-
-  it('should show cooking time information', () => {
-    render(<MealCard meal={mockMeal} />);
-
-    expect(screen.getByText('15分钟')).toBeInTheDocument(); // prep time
-  });
-
-  it('should display serving size', () => {
-    render(<MealCard meal={mockMeal} />);
-
-    expect(screen.getByText('2人份')).toBeInTheDocument();
-  });
-
-  it('should handle favorite toggle', async () => {
-    const mockOnToggleFavorite = jest.fn();
-
-    render(
-      <MealCard
-        meal={mockMeal}
-        onToggleFavorite={mockOnToggleFavorite}
-      />
-    );
-
-    // Find favorite button (could be represented by a heart icon or similar)
-    const favoriteButton = screen.getAllByTestId('button').find(btn =>
-      btn.getAttribute('aria-label')?.includes('favorite') ||
-      btn.textContent?.includes('收藏')
-    );
-
-    if (favoriteButton) {
-      fireEvent.click(favoriteButton);
-      await waitFor(() => {
-        expect(mockOnToggleFavorite).toHaveBeenCalledWith(mockMeal.id);
-      });
-    }
-  });
-
-  it('should display rating', () => {
-    render(<MealCard meal={mockMeal} />);
-
-    // Rating might be displayed as stars or numeric value
-    expect(screen.getByText('4.5')).toBeInTheDocument();
-  });
-
-  it('should handle meal click events', async () => {
-    const mockOnClick = jest.fn();
-
-    render(<MealCard meal={mockMeal} onClick={mockOnClick} />);
-
-    const card = screen.getByTestId('card');
-    fireEvent.click(card);
-
-    await waitFor(() => {
-      expect(mockOnClick).toHaveBeenCalledWith(mockMeal);
-    });
-  });
-
-  it('should show difficulty badge', () => {
-    render(<MealCard meal={mockMeal} />);
-
-    expect(screen.getByText('简单')).toBeInTheDocument();
-  });
-
-  it('should handle meal without image', () => {
-    const mealWithoutImage = {
-      ...mockMeal,
-      image: undefined
-    };
-
-    render(<MealCard meal={mealWithoutImage} />);
-
-    expect(screen.getByTestId('card')).toBeInTheDocument();
-    // Should render placeholder or default image
-  });
-
-  it('should handle loading state', () => {
-    render(<MealCard meal={null} />);
-
-    expect(screen.getByTestId('card')).toBeInTheDocument();
-    // Should show loading placeholder or handle gracefully
+    // Calories are displayed as "320 kcal" (with text node and number split)
+    expect(screen.getByText(/320/)).toBeInTheDocument();
+    // Protein, carbs, fat are displayed with g unit
+    expect(container.textContent).toContain('35.0');
+    expect(container.textContent).toContain('12.0');
+    expect(container.textContent).toContain('8.0');
   });
 
   it('should display ingredients list', () => {
     render(<MealCard meal={mockMeal} />);
 
     mockMeal.ingredients.forEach(ingredient => {
-      expect(screen.getByText(ingredient.name)).toBeInTheDocument();
-      expect(screen.getByText(ingredient.amount)).toBeInTheDocument();
+      expect(screen.getByText(ingredient.food.name)).toBeInTheDocument();
     });
   });
 
   it('should handle empty ingredients list', () => {
     const mealWithoutIngredients = {
       ...mockMeal,
-      ingredients: []
+      ingredients: [],
     };
 
-    render(<MealCard meal={mealWithoutIngredients} />);
+    const { container } = render(<MealCard meal={mealWithoutIngredients} />);
 
-    expect(screen.getByTestId('card')).toBeInTheDocument();
-    // Should not crash with empty ingredients
+    const card = container.querySelector('.hover\\:shadow-lg');
+    expect(card).toBeInTheDocument();
+    expect(screen.getByText('暂无食材信息')).toBeInTheDocument();
   });
 
-  it('should display cooking instructions', () => {
-    render(<MealCard meal={mockMeal} />);
+  it('should handle loading state with zero calories', () => {
+    const loadingMeal = {
+      id: 'loading-meal',
+      date: '2025-01-01',
+      mealType: 'LUNCH' as const,
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      ingredients: [],
+    };
 
-    mockMeal.instructions.forEach((instruction, index) => {
-      expect(screen.getByText(`${index + 1}. ${instruction}`)).toBeInTheDocument();
+    const { container } = render(<MealCard meal={loadingMeal} />);
+
+    const card = container.querySelector('.hover\\:shadow-lg');
+    expect(card).toBeInTheDocument();
+    expect(container.textContent).toContain('0.0'); // 0.0 for protein, carbs, fat
+    expect(container.textContent).toContain('0'); // 0 kcal
+  });
+
+  it('should display date when showDate is true', () => {
+    render(<MealCard meal={mockMeal} showDate={true} />);
+
+    // Date should be formatted as "1月1日"
+    expect(screen.getByText('1月1日')).toBeInTheDocument();
+  });
+
+  it('should hide date when showDate is false or not provided', () => {
+    render(<MealCard meal={mockMeal} showDate={false} />);
+
+    // Date should not be displayed
+    const dateElement = screen.queryByText('1月1日');
+    expect(dateElement).not.toBeInTheDocument();
+  });
+
+  it('should handle different meal types', () => {
+    const breakfastMeal = {
+      ...mockMeal,
+      mealType: 'BREAKFAST' as const,
+    };
+
+    render(<MealCard meal={breakfastMeal} />);
+    expect(screen.getByText('早餐')).toBeInTheDocument();
+
+    const { unmount } = render(<MealCard meal={{ ...mockMeal, mealType: 'DINNER' as const }} />);
+    expect(screen.getByText('晚餐')).toBeInTheDocument();
+    unmount();
+
+    render(<MealCard meal={{ ...mockMeal, mealType: 'SNACK' as const }} />);
+    expect(screen.getByText('加餐')).toBeInTheDocument();
+  });
+
+  it('should handle replace button callback', async () => {
+    const mockOnReplace = jest.fn();
+
+    render(<MealCard meal={mockMeal} onReplace={mockOnReplace} />);
+
+    const replaceButton = screen.getByText('替换');
+    fireEvent.click(replaceButton);
+
+    await waitFor(() => {
+      expect(mockOnReplace).toHaveBeenCalled();
     });
   });
 
-  it('should handle meal with empty instructions', () => {
-    const mealWithoutInstructions = {
+  it('should format amounts correctly in grams and kilograms', () => {
+    const mealWithLargeAmount = {
       ...mockMeal,
-      instructions: []
+      ingredients: [
+        {
+          id: 'ing-1',
+          amount: 1500,
+          food: { id: 'food-1', name: '米饭' },
+        },
+        {
+          id: 'ing-2',
+          amount: 50,
+          food: { id: 'food-2', name: '盐' },
+        },
+      ],
     };
 
-    render(<MealCard meal={mealWithoutInstructions} />);
+    const { container } = render(<MealCard meal={mealWithLargeAmount} />);
 
-    expect(screen.getByTestId('card')).toBeInTheDocument();
-    // Should handle gracefully
+    // 1500g should be displayed as 1.5kg
+    expect(screen.getByText('1.5kg')).toBeInTheDocument();
+    // 50g should be displayed as 50g
+    expect(screen.getByText('50g')).toBeInTheDocument();
   });
 
-  it('should handle meal without tags', () => {
-    const mealWithoutTags = {
+  it('should display emoji for meal type', () => {
+    render(<MealCard meal={mockMeal} />);
+
+    // Lunch should show 🍱 emoji
+    expect(screen.getByText('🍱')).toBeInTheDocument();
+  });
+
+  it('should handle large amount of ingredients', () => {
+    const manyIngredientsArray = Array.from({ length: 10 }, (_, i) => ({
+      id: `ing-${i}`,
+      amount: 50 + i * 10,
+      food: { id: `food-${i}`, name: `食材${i + 1}` },
+    }));
+
+    const mealWithManyIngredients = {
       ...mockMeal,
-      tags: []
+      ingredients: manyIngredientsArray,
     };
 
-    render(<MealCard meal={mealWithoutTags} />);
+    render(<MealCard meal={mealWithManyIngredients} />);
 
-    expect(screen.getByTestId('card')).toBeInTheDocument();
-    // Should not display tags section
-  });
-
-  it('should handle different difficulty levels', () => {
-    const mediumDifficultyMeal = {
-      ...mockMeal,
-      difficulty: 'medium'
-    };
-
-    render(<MealCard meal={mediumDifficultyMeal} />);
-
-    expect(screen.getByText('中等')).toBeInTheDocument();
-  });
-
-  it('should show dietary restrictions if available', () => {
-    const mealWithRestrictions = {
-      ...mockMeal,
-      dietaryRestrictions: ['gluten-free', 'dairy-free', 'vegetarian']
-    };
-
-    render(<MealCard meal={mealWithRestrictions} />);
-
-    mealWithRestrictions.dietaryRestrictions.forEach(restriction => {
-      expect(screen.getByText(restriction)).toBeInTheDocument();
-    });
-  });
-
-  it('should handle view details action', async () => {
-    const mockOnViewDetails = jest.fn();
-
-    render(
-      <MealCard
-        meal={mockMeal}
-        onViewDetails={mockOnViewDetails}
-      />
-    );
-
-    const detailsButton = screen.getAllByTestId('button').find(btn =>
-      btn.textContent?.includes('详情') || btn.textContent?.includes('查看')
-    );
-
-    if (detailsButton) {
-      fireEvent.click(detailsButton);
-      await waitFor(() => {
-        expect(mockOnViewDetails).toHaveBeenCalledWith(mockMeal);
-      });
+    // First 5 ingredients should be displayed
+    for (let i = 0; i < 5; i++) {
+      expect(screen.getByText(`食材${i + 1}`)).toBeInTheDocument();
     }
-  });
 
-  it('should handle add to meal plan action', async () => {
-    const mockOnAddToMealPlan = jest.fn();
-
-    render(
-      <MealCard
-        meal={mockMeal}
-        onAddToMealPlan={mockOnAddToMealPlan}
-      />
-    );
-
-    const addButton = screen.getAllByTestId('button').find(btn =>
-      btn.textContent?.includes('添加') || btn.textContent?.includes('加入')
-    );
-
-    if (addButton) {
-      fireEvent.click(addButton);
-      await waitFor(() => {
-        expect(mockOnAddToMealPlan).toHaveBeenCalledWith(mockMeal);
-      });
-    }
-  });
-
-  it('should be accessible', () => {
-    render(<MealCard meal={mockMeal} />);
-
-    const card = screen.getByTestId('card');
-    expect(card).toBeInTheDocument();
-
-    // Check for proper ARIA attributes
-    expect(screen.getByText('鸡胸肉沙拉')).toBeInTheDocument();
-    // Image should have alt text if present
-  });
-
-  it('should display nutrition progress bars', () => {
-    render(<MealCard meal={mockMeal} />);
-
-    // Should show progress indicators for nutrition
-    expect(screen.getAllByTestId('progress')).toHaveLength(4); // protein, carbs, fat, fiber
-  });
-
-  it('should handle long meal names', () => {
-    const mealWithLongName = {
-      ...mockMeal,
-      name: '超级营养均衡的有机鸡胸肉配新鲜蔬菜沙拉配特制酱汁低脂健康餐'
-    };
-
-    render(<MealCard meal={mealWithLongName} />);
-
-    expect(screen.getByTestId('card')).toBeInTheDocument();
-    // Should handle long names gracefully (truncation, etc.)
-  });
-
-  it('should respond to hover interactions', () => {
-    render(<MealCard meal={mockMeal} />);
-
-    const card = screen.getByTestId('card');
-    fireEvent.mouseEnter(card);
-
-    // Should handle hover states (might show additional actions, etc.)
-    expect(card).toBeInTheDocument();
-
-    fireEvent.mouseLeave(card);
-    expect(card).toBeInTheDocument();
-  });
-
-  it('should be keyboard accessible', () => {
-    const mockOnClick = jest.fn();
-
-    render(<MealCard meal={mockMeal} onClick={mockOnClick} />);
-
-    const card = screen.getByTestId('card');
-    card.focus();
-    fireEvent.keyDown(card, { key: 'Enter' });
-
-    expect(mockOnClick).toHaveBeenCalledWith(mockMeal);
-
-    fireEvent.keyDown(card, { key: ' ' });
-    expect(mockOnClick).toHaveBeenCalledWith(mockMeal);
+    // Show more button should be present for additional ingredients
+    expect(screen.getByText(/显示更多/)).toBeInTheDocument();
   });
 });

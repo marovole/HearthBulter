@@ -4,6 +4,7 @@
 
 import { createMocks } from 'node-mocks-http';
 import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/db';
 
 // Mock the database
 jest.mock('@/lib/db', () => ({
@@ -15,6 +16,7 @@ jest.mock('@/lib/db', () => ({
       update: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
+      aggregate: jest.fn(),
     },
     shoppingList: {
       findMany: jest.fn(),
@@ -55,7 +57,6 @@ jest.mock('@/lib/services/notification/notification-manager', () => ({
 }));
 
 describe('/api/inventory API', () => {
-  const { prisma } = require('@/lib/db');
 
   beforeEach(() => {
     jest.clearAllMocks();

@@ -7,8 +7,34 @@ import { FamilyMembersCard } from '../../components/dashboard/FamilyMembersCard'
 const mockFetch = global.fetch as jest.Mock;
 
 describe('FamilyMembersCard', () => {
+  const mockMembers = [
+    {
+      id: 'member-1',
+      name: '张三',
+      email: 'zhangsan@example.com',
+      role: 'admin',
+      avatar: null,
+      healthGoals: ['减重'],
+      allergies: ['花生'],
+      joinedAt: '2024-01-01',
+      isActive: true,
+    },
+    {
+      id: 'member-2',
+      name: '李四',
+      email: 'lisi@example.com',
+      role: 'member',
+      avatar: null,
+      healthGoals: ['增肌'],
+      allergies: [],
+      joinedAt: '2024-01-15',
+      isActive: true,
+    },
+  ];
+
   const defaultProps = {
-    familyId: 'test-family-1',
+    members: mockMembers,
+    currentMemberId: 'member-1',
     onMemberSelect: jest.fn(),
   };
 

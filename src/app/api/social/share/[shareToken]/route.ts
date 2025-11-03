@@ -11,10 +11,10 @@ import { shareTrackingService, ShareTrackingEvent } from '@/lib/services/social/
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { shareToken: string } }
+  { params }: { params: Promise<{ shareToken: string }> }
 ) {
   try {
-    const { shareToken } = params;
+    const { shareToken } = await params;
 
     // 查找分享内容
     const shareContent = await prisma.sharedContent.findUnique({
@@ -97,10 +97,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { shareToken: string } }
+  { params }: { params: Promise<{ shareToken: string }> }
 ) {
   try {
-    const { shareToken } = params;
+    const { shareToken } = await params;
     const body = await request.json();
     
     const { eventType, platform, metadata } = body;
@@ -164,10 +164,10 @@ export async function POST(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { shareToken: string } }
+  { params }: { params: Promise<{ shareToken: string }> }
 ) {
   try {
-    const { shareToken } = params;
+    const { shareToken } = await params;
     const body = await request.json();
     const session = await auth();
 
@@ -246,10 +246,10 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { shareToken: string } }
+  { params }: { params: Promise<{ shareToken: string }> }
 ) {
   try {
-    const { shareToken } = params;
+    const { shareToken } = await params;
     const session = await auth();
 
     if (!session?.user) {

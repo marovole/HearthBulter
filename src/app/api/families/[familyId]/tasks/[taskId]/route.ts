@@ -6,11 +6,11 @@ import { TaskStatus, TaskCategory, TaskPriority } from '@prisma/client';
 // PUT /api/families/[familyId]/tasks/[taskId] - 更新任务
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { familyId: string; taskId: string } }
+  { params }: { params: Promise<{ familyId: string; taskId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId, taskId } = params;
+      const { familyId, taskId } = await params;
       const userId = req.user!.id;
       const body = await request.json();
 
@@ -44,11 +44,11 @@ export async function PUT(
 // DELETE /api/families/[familyId]/tasks/[taskId] - 删除任务
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { familyId: string; taskId: string } }
+  { params }: { params: Promise<{ familyId: string; taskId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
-      const { familyId, taskId } = params;
+      const { familyId, taskId } = await params;
       const userId = req.user!.id;
 
       const result = await TaskManagementService.deleteTask(familyId, userId, taskId);

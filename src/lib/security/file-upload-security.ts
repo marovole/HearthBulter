@@ -246,7 +246,7 @@ export class FileUploadSecurity {
       threatsCount: threats.length,
       fileType,
       fileSize: buffer.length,
-      checksum: checksum.substring(0, 16) + '...',
+      checksum: `${checksum.substring(0, 16)}...`,
     });
 
     return result;

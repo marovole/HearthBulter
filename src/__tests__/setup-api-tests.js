@@ -5,15 +5,20 @@
 
 // Mock Web APIs for Node.js environment
 import { TextEncoder, TextDecoder } from 'util';
+import { URL, URLSearchParams } from 'url';
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
+
+// Add URL and URLSearchParams polyfills for Jest
+global.URL = URL;
+global.URLSearchParams = URLSearchParams;
 
 // Mock fetch API
 global.fetch = jest.fn();
 
 // Mock Next.js Request and Response
-const { NextRequest, NextResponse } = require('next/server');
+import { NextRequest, NextResponse } from 'next/server';
 
 // Mock Next.js APIs
 jest.mock('next/server', () => ({
@@ -57,11 +62,13 @@ global.WebSocket = jest.fn();
 global.File = jest.fn();
 global.FileReader = jest.fn();
 
-// Mock URL API
-global.URL = {
-  createObjectURL: jest.fn(() => 'mock-url'),
-  revokeObjectURL: jest.fn(),
-};
+// Mock URL.createObjectURL and URL.revokeObjectURL for blob URLs
+if (global.URL && typeof global.URL.createObjectURL === 'undefined') {
+  global.URL.createObjectURL = jest.fn(() => 'mock-url');
+}
+if (global.URL && typeof global.URL.revokeObjectURL === 'undefined') {
+  global.URL.revokeObjectURL = jest.fn();
+}
 
 // Mock localStorage
 const localStorageMock = {

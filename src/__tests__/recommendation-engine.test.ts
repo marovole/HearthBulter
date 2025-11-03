@@ -13,11 +13,11 @@ const mockPrisma = {
     findMany: jest.fn(),
   },
   recipeRating: {
-    findMany: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
     create: jest.fn(),
   },
   recipeFavorite: {
-    findMany: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
     create: jest.fn(),
   },
   recipeView: {
@@ -28,6 +28,20 @@ const mockPrisma = {
     findMany: jest.fn(),
     create: jest.fn(),
   },
+  healthGoal: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+  },
+  healthData: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+  },
+  familyMember: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+  },
+  $queryRaw: jest.fn().mockResolvedValue([]),
+  $transaction: jest.fn(),
 } as unknown as PrismaClient;
 
 describe('RecommendationEngine', () => {

@@ -7,6 +7,19 @@ import { ListGenerator } from '@/lib/services/list-generator';
 import { prisma } from '@/lib/db';
 import type { FoodCategory, MealType } from '@prisma/client';
 
+// Define FoodCategory enum values that match Prisma
+const FoodCategoryValues = {
+  VEGETABLES: 'VEGETABLES',
+  FRUITS: 'FRUITS',
+  PROTEIN: 'PROTEIN',
+  SEAFOOD: 'SEAFOOD',
+  DAIRY: 'DAIRY',
+  GRAINS: 'GRAINS',
+  OILS: 'OILS',
+  SNACKS: 'SNACKS',
+  BEVERAGES: 'BEVERAGES',
+} as const;
+
 // Mock Prisma
 jest.mock('@/lib/db', () => ({
   prisma: {
@@ -15,6 +28,11 @@ jest.mock('@/lib/db', () => ({
     },
   },
 }));
+
+// Mock @prisma/client to include FoodCategory enum
+jest.mock('@prisma/client', () => ({
+  FoodCategory: FoodCategoryValues,
+}), { virtual: true });
 
 describe('List Generator', () => {
   const generator = new ListGenerator();

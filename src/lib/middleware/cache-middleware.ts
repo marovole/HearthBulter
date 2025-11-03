@@ -17,7 +17,7 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
     ttl = CACHE_CONFIG.TTL.API_RESPONSE,
     varyHeaders = ['authorization', 'cookie'],
     skipCache = () => false,
-    cacheKeyGenerator
+    cacheKeyGenerator,
   } = options;
 
   return async (request: NextRequest): Promise<NextResponse | null> => {
@@ -88,7 +88,7 @@ export function wrapResponseWithCache(
   const {
     ttl = CACHE_CONFIG.TTL.API_RESPONSE,
     varyHeaders = ['authorization', 'cookie'],
-    cacheKeyGenerator
+    cacheKeyGenerator,
   } = options;
 
   // 只缓存成功的 GET 请求
