@@ -5,18 +5,18 @@
 
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import type { 
-  ShareContentType, 
-  ShareContentInput, 
+import type {
+  ShareContentInput,
   ShareContentResult,
   ShareMetadata,
   OpenGraphMetadata,
   TwitterCardMetadata,
 } from '@/types/social-sharing';
-import { 
+import {
+  ShareContentType,
   SHARE_CONTENT_TYPE_LABELS,
   SHARE_TEMPLATE_CONFIGS,
-  ShareTemplate, 
+  ShareTemplate,
 } from '@/types/social-sharing';
 import { prisma } from '@/lib/db';
 
@@ -714,6 +714,9 @@ export async function createShareContent(input: ShareContentInput): Promise<Shar
   const generator = ShareContentGenerator.getInstance();
   return generator.generateShareContent(input);
 }
+
+// 别名导出，用于测试和向后兼容
+export const generateShareContent = createShareContent;
 
 export async function generateSharePreview(input: Partial<ShareContentInput>): Promise<any> {
   const generator = ShareContentGenerator.getInstance();

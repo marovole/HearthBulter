@@ -1,5 +1,35 @@
 import React from 'react';
 import '@testing-library/jest-dom';
+import { URL, URLSearchParams } from 'url';
+
+// Enhanced URL and URLSearchParams polyfills for Jest environment
+try {
+  // Set up URL constructor if not available or not properly configured
+  if (typeof global.URL === 'undefined' || !(global.URL as any).prototype) {
+    global.URL = URL as any;
+    console.debug('✅ URL polyfill applied from Node.js url module');
+  }
+
+  // Set up URLSearchParams if not available
+  if (typeof global.URLSearchParams === 'undefined') {
+    global.URLSearchParams = URLSearchParams as any;
+    console.debug('✅ URLSearchParams polyfill applied from Node.js url module');
+  }
+
+  // Verify URL constructor works correctly
+  const testUrl = new global.URL('http://localhost:3000/test');
+  if (!testUrl || typeof testUrl.searchParams !== 'object') {
+    throw new Error('URL constructor verification failed');
+  }
+
+  console.debug('✅ URL polyfills verified and working correctly');
+
+} catch (error) {
+  console.error('❌ URL polyfill setup failed:', error);
+  // Fallback to basic mock if polyfill fails
+  global.URL = URL as any;
+  global.URLSearchParams = URLSearchParams as any;
+}
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -53,6 +83,9 @@ jest.mock('recharts', () => ({
   Area: function Area() {
     return React.createElement('div', { 'data-testid': 'area' });
   },
+  ReferenceLine: function ReferenceLine() {
+    return React.createElement('div', { 'data-testid': 'reference-line' });
+  },
   PieChart: function PieChart({ children }: { children: React.ReactNode }) {
     return React.createElement('div', { 'data-testid': 'pie-chart' }, children);
   },
@@ -85,8 +118,31 @@ jest.mock('recharts', () => ({
   },
 }));
 
-// Mock fetch
-global.fetch = jest.fn();
+// Mock fetch with complete Response object
+global.fetch = jest.fn((url: string | Request, init?: RequestInit) => {
+  // Default successful response
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: new Headers({
+      'Content-Type': 'application/json',
+    }),
+    json: async () => ({
+      data: [],
+      success: true
+    }),
+    text: async () => JSON.stringify({ data: [], success: true }),
+    blob: async () => new Blob(),
+    arrayBuffer: async () => new ArrayBuffer(0),
+    clone: jest.fn(),
+    body: null,
+    bodyUsed: false,
+    redirected: false,
+    type: 'basic' as ResponseType,
+    url: typeof url === 'string' ? url : url.url,
+  } as Response);
+});
 
 // Mock IntersectionObserver
 global.IntersectionObserver = jest.fn().mockImplementation(() => ({
@@ -146,6 +202,37 @@ Object.defineProperty(window, 'TouchEvent', {
 
 // Mock Prisma Client to prevent browser environment issues
 jest.mock('@prisma/client', () => ({
+  // Mock enums
+  AchievementType: {
+    CHECK_IN_STREAK: 'CHECK_IN_STREAK',
+    WEIGHT_LOSS: 'WEIGHT_LOSS',
+    NUTRITION_GOAL: 'NUTRITION_GOAL',
+    EXERCISE_TARGET: 'EXERCISE_TARGET',
+    HEALTH_MILESTONE: 'HEALTH_MILESTONE',
+    COMMUNITY_CONTRIBUTION: 'COMMUNITY_CONTRIBUTION',
+  },
+  AchievementRarity: {
+    BRONZE: 'BRONZE',
+    SILVER: 'SILVER',
+    GOLD: 'GOLD',
+    PLATINUM: 'PLATINUM',
+    DIAMOND: 'DIAMOND',
+  },
+  LeaderboardType: {
+    WEIGHT_LOSS: 'WEIGHT_LOSS',
+    NUTRITION_SCORE: 'NUTRITION_SCORE',
+    ACTIVITY_POINTS: 'ACTIVITY_POINTS',
+    CHECK_IN_STREAK: 'CHECK_IN_STREAK',
+    GLOBAL: 'GLOBAL',
+    FRIENDS: 'FRIENDS',
+    FAMILY: 'FAMILY',
+  },
+  SharePrivacyLevel: {
+    PUBLIC: 'PUBLIC',
+    FRIENDS: 'FRIENDS',
+    FAMILY: 'FAMILY',
+    PRIVATE: 'PRIVATE',
+  },
   PrismaClient: jest.fn().mockImplementation(() => ({
     user: {
       findUnique: jest.fn(),
@@ -288,7 +375,7 @@ jest.mock('@/lib/db', () => ({
         channels: ['push'],
         status: 'sent',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       }),
       update: jest.fn().mockResolvedValue({}),
       delete: jest.fn().mockResolvedValue({}),
@@ -301,6 +388,53 @@ jest.mock('@/lib/db', () => ({
       delete: jest.fn(),
       deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
+    healthGoal: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn().mockResolvedValue({ id: 'test-health-goal-id', goalType: 'MAINTAIN', status: 'ACTIVE' }),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    userPreference: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn().mockResolvedValue({ id: 'test-preference-id', memberId: 'test-member-id' }),
+      update: jest.fn(),
+      upsert: jest.fn(),
+      delete: jest.fn(),
+    },
+    recipe: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn().mockResolvedValue({ id: 'test-recipe-id', title: 'Test Recipe' }),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn().mockResolvedValue(0),
+    },
+    recipeIngredient: {
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    healthData: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    healthReminder: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      upsert: jest.fn(),
+      delete: jest.fn(),
+    },
     scheduledNotification: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -312,6 +446,10 @@ jest.mock('@/lib/db', () => ({
     $disconnect: jest.fn().mockResolvedValue(undefined),
     $transaction: jest.fn().mockImplementation((callback) => callback()),
     $aggregate: jest.fn().mockResolvedValue({}),
+    $queryRaw: jest.fn().mockResolvedValue([]),
+    $executeRaw: jest.fn().mockResolvedValue(0),
+    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+    $executeRawUnsafe: jest.fn().mockResolvedValue(0),
   },
 }));
 
@@ -327,8 +465,19 @@ global.Request = class MockRequest {
   method: string;
   headers: Headers;
   body?: BodyInit;
-  json: () => Promise<any> = jest.fn();
-  text: () => Promise<string> = jest.fn();
+  json: () => Promise<any> = jest.fn(function() {
+    if (this.body && typeof this.body === 'string') {
+      try {
+        return Promise.resolve(JSON.parse(this.body));
+      } catch {
+        return Promise.resolve({});
+      }
+    }
+    return Promise.resolve({});
+  });
+  text: () => Promise<string> = jest.fn(function() {
+    return Promise.resolve(this.body?.toString() || '');
+  });
 };
 
 global.Response = class MockResponse {
@@ -356,7 +505,7 @@ jest.mock('@/lib/services/ai/rate-limiter', () => ({
       allowed: true,
       remaining: 4,
       resetTime: Date.now() + 60000,
-      retryAfter: null
+      retryAfter: null,
     }),
     isAllowed: jest.fn().mockResolvedValue(true),
     getRemainingRequests: jest.fn().mockResolvedValue(10),
@@ -365,13 +514,14 @@ jest.mock('@/lib/services/ai/rate-limiter', () => ({
     getStats: jest.fn().mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
     getUserStats: jest.fn().mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
     getStatsByTimeRange: jest.fn().mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
+    getGlobalStats: jest.fn().mockReturnValue({ totalRequests: 0, blockedRequests: 0, activeUsers: 0 }),
     cleanup: jest.fn(),
     updateConfig: jest.fn(),
     hasUserData: jest.fn().mockReturnValue(false),
     getMemoryUsage: jest.fn().mockReturnValue({
       activeUsers: 0,
       totalEntries: 0,
-      memoryBytes: 0
+      memoryBytes: 0,
     }),
     setGlobalLimit: jest.fn(),
     setUserTier: jest.fn(),
@@ -381,11 +531,21 @@ jest.mock('@/lib/services/ai/rate-limiter', () => ({
     isAllowed: jest.fn().mockResolvedValue(true),
     getRemainingRequests: jest.fn().mockResolvedValue(10),
     clearAll: jest.fn(),
+    getGlobalStats: jest.fn().mockReturnValue({ totalRequests: 0, blockedRequests: 0, activeUsers: 0 }),
   },
 }));
 
 // Mock device sync service
 jest.mock('@/lib/services/device-sync-service', () => ({
+  DeviceSyncService: {
+    getInstance: jest.fn().mockReturnValue({
+      startBackgroundSync: jest.fn().mockResolvedValue(true),
+      stopBackgroundSync: jest.fn(),
+      syncAllDevices: jest.fn().mockResolvedValue([]),
+      syncDevice: jest.fn().mockResolvedValue({ synced: true }),
+      cleanupStaleDevices: jest.fn().mockResolvedValue({ cleaned: 0 }),
+    }),
+  },
   syncDeviceData: jest.fn().mockResolvedValue({ synced: true }),
   validateDeviceData: jest.fn().mockResolvedValue({ isValid: true }),
   parseDeviceData: jest.fn().mockResolvedValue({ parsed: true }),
@@ -435,7 +595,28 @@ jest.mock('@/lib/services/ai/conversation-manager', () => ({
 jest.mock('@/lib/services/notification/notification-manager', () => ({
   notificationManager: {
     createNotification: jest.fn().mockResolvedValue({ id: 'test-notification-id' }),
-    sendNotification: jest.fn().mockResolvedValue({ sent: true }),
+    sendNotification: jest.fn().mockResolvedValue({
+      success: true,
+      notificationId: 'test-notification-id',
+      channels: ['email', 'wechat'],
+      summary: {
+        total: 1,
+        successful: 1,
+        failed: 0,
+      }
+    }),
+    sendBulkNotifications: jest.fn().mockResolvedValue({
+      success: true,
+      results: [
+        { userId: 'user-1', success: true, notificationId: 'notif-1' },
+        { userId: 'user-2', success: true, notificationId: 'notif-2' },
+      ],
+      summary: {
+        total: 2,
+        successful: 2,
+        failed: 0,
+      }
+    }),
     updateNotification: jest.fn().mockResolvedValue({ id: 'test-notification-id' }),
     deleteNotification: jest.fn().mockResolvedValue(true),
     getNotifications: jest.fn().mockResolvedValue([]),
@@ -448,21 +629,22 @@ jest.mock('@/lib/services/notification/notification-manager', () => ({
 jest.mock('@/lib/services/usda-service', () => ({
   USDAService: jest.fn().mockImplementation(() => ({
     searchFoods: jest.fn().mockResolvedValue({
+      currentPage: 1,
+      totalPages: 1,
+      totalHits: 1,
       foods: [
         {
           fdcId: 123456,
-          description: 'Test Food',
+          description: 'Chicken breast',
           dataType: 'Foundation',
           foodNutrients: [
-            { nutrientId: 1008, nutrientName: 'Energy', unitName: 'kcal', value: 100 },
-            { nutrientId: 1003, nutrientName: 'Protein', unitName: 'g', value: 10 },
-            { nutrientId: 1005, nutrientName: 'Carbohydrate', unitName: 'g', value: 20 },
-            { nutrientId: 1004, nutrientName: 'Total lipid (fat)', unitName: 'g', value: 5 },
+            { nutrientId: 1008, nutrientName: 'Energy', unitName: 'kcal', value: 165 },
+            { nutrientId: 1003, nutrientName: 'Protein', unitName: 'g', value: 23 },
+            { nutrientId: 1005, nutrientName: 'Carbohydrate', unitName: 'g', value: 0 },
+            { nutrientId: 1004, nutrientName: 'Total lipid (fat)', unitName: 'g', value: 1.2 },
           ],
         },
       ],
-      totalPages: 1,
-      currentPage: 1,
     }),
     getFoodDetails: jest.fn().mockResolvedValue({
       fdcId: 123456,
