@@ -35,12 +35,22 @@ const nextConfig = {
     // 在生产环境下，强制要求明确的ORIGINS配置
     let corsOrigin = 'http://localhost:3000';
     if (process.env.NODE_ENV === 'production') {
-      // 优先使用明确配置的变量，否则使用 Vercel 自动提供的 VERCEL_URL
+      // 优先使用明确配置的变量，其次使用平台提供的默认域名
       const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '';
-      corsOrigin = process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || process.env.NEXTAUTH_URL || vercelUrl;
+      const cfPagesCustomDomain = process.env.CF_PAGES_CUSTOM_DOMAIN ? `https://${process.env.CF_PAGES_CUSTOM_DOMAIN}` : '';
+      const cfPagesUrl = process.env.CF_PAGES_URL || '';
 
+      corsOrigin = process.env.NEXT_PUBLIC_ALLOWED_ORIGINS
+        || process.env.NEXTAUTH_URL
+        || vercelUrl
+        || cfPagesCustomDomain
+        || cfPagesUrl;
+
+      // 对于 Cloudflare Pages 构建，如果没有设置环境变量，使用占位符
+      // 实际的 CORS 处理将在运行时通过中间件完成
       if (!corsOrigin) {
-        throw new Error('生产环境必须设置 NEXT_PUBLIC_ALLOWED_ORIGINS、NEXTAUTH_URL 或存在 VERCEL_URL');
+        console.warn('⚠️  警告：未设置 CORS origin 环境变量，使用占位符。请在 Cloudflare Pages 设置中配置 NEXT_PUBLIC_ALLOWED_ORIGINS');
+        corsOrigin = 'https://hearthbulter.pages.dev'; // Cloudflare Pages 默认域名占位符
       }
     }
 

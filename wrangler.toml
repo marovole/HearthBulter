@@ -12,10 +12,13 @@ name = "hearthbutler-prod"
 # 环境变量配置
 [vars]
 NODE_ENV = "production"
+# Cloudflare Pages 默认域名，在实际部署时可以在 Cloudflare Dashboard 中覆盖
+NEXT_PUBLIC_ALLOWED_ORIGINS = "https://hearthbulter.pages.dev"
 
 # 生产环境变量
 [env.production.vars]
 NODE_ENV = "production"
+NEXT_PUBLIC_ALLOWED_ORIGINS = "https://hearthbulter.pages.dev"
 
 # Staging 环境变量
 # KV 存储 (如果需要)
