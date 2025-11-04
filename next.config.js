@@ -12,9 +12,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   // 暂时跳过有问题的页面的静态生成
-  experimental: {
-    skipTrailingSlashRedirect: true,
-  },
+  skipTrailingSlashRedirect: true,
   serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {
     domains: process.env.NODE_ENV === 'production'
