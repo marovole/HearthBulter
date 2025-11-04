@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "build:cloudflare": "prisma generate && next build && npx @opennextjs/cloudflare build && cp -f .open-next/worker.js .open-next/_worker.js && cp -f wrangler.toml .open-next/wrangler.toml",
+    "build:cloudflare": "prisma generate && next build && npx @opennextjs/cloudflare build && cp -f .open-next/worker.js .open-next/_worker.js && cp -f wrangler.toml .open-next/wrangler.toml && node scripts/add-compat-flags.js",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
