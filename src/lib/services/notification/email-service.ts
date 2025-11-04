@@ -1,4 +1,5 @@
-import nodemailer from 'nodemailer';
+// 动态导入 nodemailer 以支持边缘运行时环境
+import type nodemailer from 'nodemailer';
 
 export interface EmailConfig {
   host: string;
@@ -32,20 +33,38 @@ export interface EmailSendResult {
 }
 
 export class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
   private config: EmailConfig;
   private isConfigured: boolean = false;
+  private setupPromise: Promise<void> | null = null;
 
   constructor(config?: EmailConfig) {
     this.config = config || this.getDefaultConfig();
-    this.setupTransporter();
+    // 不在构造函数中初始化，而是延迟到第一次使用时
   }
 
   /**
-   * 设置邮件传输器
+   * 确保 transporter 已初始化
    */
-  private setupTransporter(): void {
+  private async ensureInitialized(): Promise<void> {
+    if (this.isConfigured) {
+      return;
+    }
+    if (!this.setupPromise) {
+      this.setupPromise = this.setupTransporter();
+    }
+    await this.setupPromise;
+  }
+
+  /**
+   * 设置邮件传输器（动态导入以支持边缘运行时）
+   */
+  private async setupTransporter(): Promise<void> {
     try {
+      // 动态导入 nodemailer，避免在构建时或边缘运行时导入失败
+      const nodemailerModule = await import('nodemailer');
+      const nodemailer = nodemailerModule.default;
+
       this.transporter = nodemailer.createTransporter({
         host: this.config.host,
         port: this.config.port,
@@ -78,7 +97,9 @@ export class EmailService {
       }>;
     } = {}
   ): Promise<string> {
-    if (!this.isConfigured) {
+    await this.ensureInitialized();
+
+    if (!this.isConfigured || !this.transporter) {
       throw new Error('Email service is not configured');
     }
 
@@ -217,7 +238,9 @@ export class EmailService {
    * 验证邮件配置
    */
   async verifyConnection(): Promise<boolean> {
-    if (!this.isConfigured) {
+    await this.ensureInitialized();
+
+    if (!this.isConfigured || !this.transporter) {
       return false;
     }
 
@@ -450,9 +473,11 @@ export class EmailService {
   /**
    * 重新配置服务
    */
-  reconfigure(config: EmailConfig): void {
+  async reconfigure(config: EmailConfig): Promise<void> {
     this.config = config;
-    this.setupTransporter();
+    this.isConfigured = false;
+    this.setupPromise = null;
+    await this.ensureInitialized();
   }
 
   /**
@@ -469,5 +494,26 @@ export class EmailService {
   }
 }
 
-// 导出单例实例
-export const emailService = new EmailService();
+// 导出单例实例（延迟初始化以支持边缘运行时）
+// 使用 Proxy 来实现延迟初始化，保持 API 兼容性
+let emailServiceInstance: EmailService | null = null;
+
+function getEmailServiceInstance(): EmailService {
+  if (!emailServiceInstance) {
+    emailServiceInstance = new EmailService();
+  }
+  return emailServiceInstance;
+}
+
+export const emailService = new Proxy({} as EmailService, {
+  get(target, prop) {
+    const instance = getEmailServiceInstance();
+    const value = (instance as any)[prop];
+    return typeof value === 'function' ? value.bind(instance) : value;
+  },
+  set(target, prop, value) {
+    const instance = getEmailServiceInstance();
+    (instance as any)[prop] = value;
+    return true;
+  }
+});
