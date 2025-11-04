@@ -4,14 +4,15 @@
  */
 
 import { addDays, isAfter, startOfDay, differenceInDays } from 'date-fns';
-import type { 
-  Achievement, 
-  AchievementType, 
-  AchievementRarity, 
+import type {
+  Achievement,
+  AchievementRarity,
   FamilyMember,
   AchievementReward,
   AchievementCondition,
 } from '@prisma/client';
+// AchievementType needs to be imported as value because it's used at runtime
+import { AchievementType } from '@prisma/client';
 import { ACHIEVEMENT_TYPE_CONFIGS } from '@/types/social-sharing';
 import { prisma } from '@/lib/db';
 
