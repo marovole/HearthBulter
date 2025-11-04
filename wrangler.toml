@@ -7,13 +7,16 @@ name = "hearthbutler"
 
 # 兼容性设置 - 启用 Node.js 兼容性
 compatibility_date = "2024-01-01"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "nodejs_als"]
+
+# 告诉 wrangler 不要 bundle worker，因为已经由 OpenNext 预先构建
+no_bundle = true
 
 # 主要配置
 [env.production]
 name = "hearthbutler-prod"
 compatibility_date = "2024-01-01"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
 # 环境变量配置
 [vars]
