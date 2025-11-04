@@ -1,6 +1,12 @@
 # 🩺 Health Butler（健康管家）
 
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)](https://hearth-bulter.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 > 让个人与家庭的健康管理从「主观感性」走向「客观数据驱动」
+
+🚀 **生产环境**: [https://hearth-bulter.vercel.app](https://hearth-bulter.vercel.app)
 
 **Health Butler** 是一个基于健康数据与电商库存的动态饮食引擎，通过AI营养规划、智能食谱生成和电商自动采购，帮助家庭建立可持续的健康管理习惯。
 
@@ -70,9 +76,9 @@ External APIs:
 - Tesseract.js / Azure OCR (文字识别)
 
 **部署**:
-- Vercel (前端 + Serverless Functions)
-- AWS RDS (数据库)
-- GitHub Actions (CI/CD)
+- ✅ Vercel (前端 + Serverless Functions + Edge Functions)
+- ✅ Neon PostgreSQL (Serverless 数据库)
+- ✅ GitHub + Vercel 自动部署 (CI/CD)
 
 ---
 
