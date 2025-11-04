@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "build:cloudflare": "prisma generate && next build && npx @opennextjs/cloudflare",
+    "build:cloudflare": "prisma generate && next build && npx @opennextjs/cloudflare build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
