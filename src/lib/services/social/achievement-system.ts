@@ -503,3 +503,75 @@ export async function getMemberAchievementStats(memberId: string): Promise<any> 
   const system = AchievementSystem.getInstance();
   return system.getAchievementStats(memberId);
 }
+
+/**
+ * 分享成就功能
+ * 创建成就分享记录并增加分享次数
+ */
+export async function shareAchievement(
+  achievementId: string,
+  memberId: string,
+  options: {
+    customMessage?: string;
+    privacyLevel?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
+  } = {}
+): Promise<{
+  success: boolean;
+  shareId?: string;
+  shareUrl?: string;
+  error?: string;
+}> {
+  try {
+    // 验证成就是否存在且属于该用户
+    const achievement = await prisma.achievement.findFirst({
+      where: {
+        id: achievementId,
+        memberId,
+        isUnlocked: true,
+      },
+    });
+
+    if (!achievement) {
+      return {
+        success: false,
+        error: '成就不存在或未解锁',
+      };
+    }
+
+    // 创建分享记录
+    const share = await prisma.achievementShare.create({
+      data: {
+        achievementId,
+        memberId,
+        customMessage: options.customMessage,
+        privacyLevel: options.privacyLevel || 'PUBLIC',
+        shareUrl: `/share/achievement/${achievementId}`, // 临时URL，实际应该生成token
+      },
+    });
+
+    // 增加成就的分享次数
+    await prisma.achievement.update({
+      where: { id: achievementId },
+      data: {
+        shareCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    // 生成分享URL（这里简化处理）
+    const shareUrl = `/share/achievement/${share.id}`;
+
+    return {
+      success: true,
+      shareId: share.id,
+      shareUrl,
+    };
+  } catch (error) {
+    console.error('分享成就失败:', error);
+    return {
+      success: false,
+      error: '分享失败',
+    };
+  }
+}

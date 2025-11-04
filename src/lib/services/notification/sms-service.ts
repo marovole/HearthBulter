@@ -455,3 +455,6 @@ export class SMSService {
     return await this.send(phone, content);
   }
 }
+
+// 导出单例实例
+export const smsService = new SMSService();

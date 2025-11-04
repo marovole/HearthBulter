@@ -1,5 +1,8 @@
 import { FamilyMemberRole } from '@prisma/client';
 
+// 重新导出 FamilyMemberRole 以便其他模块使用
+export { FamilyMemberRole };
+
 // 权限操作类型
 export enum Permission {
   // 任务权限

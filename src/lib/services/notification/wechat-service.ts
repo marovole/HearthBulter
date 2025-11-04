@@ -512,7 +512,7 @@ export class WeChatService {
   async deleteMenu(): Promise<void> {
     try {
       const accessToken = await this.getAccessToken();
-      
+
       const response = await axios.get(
         `https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=${accessToken}`
       );
@@ -526,3 +526,6 @@ export class WeChatService {
     }
   }
 }
+
+// 导出单例实例
+export const wechatService = new WeChatService();

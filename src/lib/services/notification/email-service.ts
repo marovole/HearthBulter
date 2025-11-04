@@ -468,3 +468,6 @@ export class EmailService {
     };
   }
 }
+
+// 导出单例实例
+export const emailService = new EmailService();

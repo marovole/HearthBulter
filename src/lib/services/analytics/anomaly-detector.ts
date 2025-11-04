@@ -474,3 +474,10 @@ function getDataTypeUnit(dataType: TrendDataType): string {
   return units[dataType] || '';
 }
 
+/**
+ * 快捷函数：检测所有异常（使用当前日期）
+ */
+export async function detectAnomalies(memberId: string): Promise<AnomalyDetectionResult[]> {
+  return await detectAllAnomalies(memberId, new Date());
+}
+

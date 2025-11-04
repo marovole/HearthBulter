@@ -201,12 +201,27 @@ export enum PlatformErrorType {
   NETWORK_ERROR = 'NETWORK_ERROR'
 }
 
-// 平台错误接口
-export interface PlatformError {
-  type: PlatformErrorType
-  message: string
-  code?: string
-  details?: Record<string, any>
+// 平台错误类
+export class PlatformError extends Error {
+  type: PlatformErrorType;
+  code?: string;
+  details?: Record<string, any>;
+
+  constructor(
+    type: PlatformErrorType,
+    message: string,
+    code?: string,
+    details?: Record<string, any>
+  ) {
+    super(message);
+    this.name = 'PlatformError';
+    this.type = type;
+    this.code = code;
+    this.details = details;
+
+    // 维护原型链以支持 instanceof
+    Object.setPrototypeOf(this, PlatformError.prototype);
+  }
 }
 
 // 平台适配器工厂接口

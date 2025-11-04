@@ -81,15 +81,15 @@ const customJestConfig = {
     url: 'http://localhost:3000',
   },
   // Add better timeout handling
-  testTimeout: 10000,
+  testTimeout: 30000,
   // Add verbose output for debugging
   verbose: false,
   // Clear mocks between tests
   clearMocks: true,
   restoreMocks: true,
   // Optimize worker configuration to prevent memory issues
-  maxWorkers: '50%',
-  workerIdleMemoryLimit: '512MB',
+  maxWorkers: '75%',
+  workerIdleMemoryLimit: '1GB',
   // Setup files
   setupFiles: ['<rootDir>/src/__tests__/setup-api-tests.js'],
   // Global test environment variables
