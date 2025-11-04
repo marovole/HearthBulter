@@ -9,10 +9,6 @@ compatibility_flags = ["nodejs_compat"]
 main = ".open-next/worker.js"
 pages_build_output_dir = ".open-next/assets"
 
-[assets]
-binding = "ASSETS"
-directory = ".open-next/assets"
-
 # Pages 构建配置
 [build]
 command = "pnpm run build:cloudflare"
