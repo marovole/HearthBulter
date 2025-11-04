@@ -9,9 +9,6 @@ name = "hearthbutler"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
-# 告诉 wrangler 不要 bundle worker，因为已经由 OpenNext 预先构建
-no_bundle = true
-
 # 主要配置
 [env.production]
 name = "hearthbutler-prod"
