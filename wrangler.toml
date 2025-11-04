@@ -5,6 +5,12 @@ name = "hearthbutler"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+# Pages 构建配置
+[build]
+command = "pnpm run build"
+cwd = ""
+watch_dir = "src"
+
 # 主要配置
 [env.production]
 name = "hearthbutler-prod"

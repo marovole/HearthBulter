@@ -11,8 +11,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:cloudflare": "next build && npx @opennextjs/cloudflare",
+    "build": "prisma generate && next build",
+    "build:cloudflare": "prisma generate && next build && npx @opennextjs/cloudflare",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
@@ -40,6 +40,7 @@
     "db:test": "tsx scripts/test-db-connection.ts",
     "test:ocr-setup": "tsx src/lib/services/test-ocr-setup.ts",
     "prepare": "husky install",
+    "postinstall": "prisma generate",
     "openspec:list": "openspec list",
     "openspec:validate": "openspec validate --strict"
   },
