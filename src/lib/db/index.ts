@@ -24,9 +24,36 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 };
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+// 延迟初始化 Prisma Client 以支持边缘运行时
+let prismaInstance: PrismaClient | undefined;
+
+function getPrismaClient(): PrismaClient {
+  if (!prismaInstance) {
+    if (globalForPrisma.prisma) {
+      prismaInstance = globalForPrisma.prisma;
+    } else {
+      prismaInstance = new PrismaClient();
+      if (process.env.NODE_ENV !== 'production') {
+        globalForPrisma.prisma = prismaInstance;
+      }
+    }
+  }
+  return prismaInstance;
+}
+
+// 使用 Proxy 实现延迟初始化，保持 API 兼容性
+export const prisma = new Proxy({} as PrismaClient, {
+  get(target, prop) {
+    const instance = getPrismaClient();
+    const value = (instance as any)[prop];
+    return typeof value === 'function' ? value.bind(instance) : value;
+  },
+  set(target, prop, value) {
+    const instance = getPrismaClient();
+    (instance as any)[prop] = value;
+    return true;
+  }
+});
 
 // 为兼容性导出 db 别名
 export const db = prisma;
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
