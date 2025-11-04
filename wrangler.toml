@@ -5,9 +5,17 @@ name = "hearthbutler"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+# OpenNext 产物输出
+main = ".open-next/worker.js"
+pages_build_output_dir = ".open-next/assets"
+
+[assets]
+binding = "ASSETS"
+directory = ".open-next/assets"
+
 # Pages 构建配置
 [build]
-command = "pnpm run build"
+command = "pnpm run build:cloudflare"
 cwd = ""
 watch_dir = "src"
 
