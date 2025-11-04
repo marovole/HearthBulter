@@ -11,15 +11,15 @@
 - [ ] 1.1.6 Verify all 30+ type errors in social-sharing.ts are resolved
 
 ### 1.2 Next.js 15 Route Handler Migration
-- [ ] 1.2.1 Create migration script or pattern for async params
-- [ ] 1.2.2 Update API routes in `src/app/api/analytics/**/*`
-- [ ] 1.2.3 Update API routes in `src/app/api/ecommerce/**/*`
-- [ ] 1.2.4 Update API routes in `src/app/api/families/**/*`
-- [ ] 1.2.5 Update API routes in `src/app/api/members/**/*`
-- [ ] 1.2.6 Update API routes in `src/app/api/devices/**/*`
-- [ ] 1.2.7 Update remaining API routes with dynamic params
-- [ ] 1.2.8 Update route handler tests to match new signatures
-- [ ] 1.2.9 Verify all 100+ route param type errors resolved
+- [x] 1.2.1 Create migration script or pattern for async params
+- [x] 1.2.2 Update API routes in `src/app/api/analytics/**/*`
+- [x] 1.2.3 Update API routes in `src/app/api/ecommerce/**/*`
+- [x] 1.2.4 Update API routes in `src/app/api/families/**/*`
+- [x] 1.2.5 Update API routes in `src/app/api/members/**/*`
+- [x] 1.2.6 Update API routes in `src/app/api/devices/**/*`
+- [x] 1.2.7 Update remaining API routes with dynamic params
+- [x] 1.2.8 Update route handler tests to match new signatures
+- [x] 1.2.9 Verify all 100+ route param type errors resolved
 
 ### 1.3 Type Safety Verification
 - [x] 1.3.1 Run `npx tsc --noEmit --skipLibCheck` and verify zero errors
@@ -55,8 +55,8 @@
 ## 3. Testing Infrastructure Fixes (P0)
 
 ### 3.1 Jest Configuration
-- [ ] 3.1.1 Investigate Jest worker child process exceptions
-- [ ] 3.1.2 Review Jest memory configuration (`--maxWorkers`, `--workerIdleMemoryLimit`)
+- [x] 3.1.1 Investigate Jest worker child process exceptions
+- [x] 3.1.2 Review Jest memory configuration (`--maxWorkers`, `--workerIdleMemoryLimit`)
 - [ ] 3.1.3 Check for circular dependencies in test imports
 - [ ] 3.1.4 Verify test database connections properly cleaned up
 - [ ] 3.1.5 Fix Jest worker exceptions (target: 0 exceptions)
@@ -130,29 +130,34 @@
 
 ## Progress Tracking
 
-**P0 Tasks**: 35/54 completed
+**P0 Tasks**: 46/54 completed
 **P1 Tasks**: 0/16 completed
-**Total**: 35/70 completed (50%)
+**Total**: 46/70 completed (66%)
 
 **Completed Major Items**:
 - ✅ TypeScript compilation succeeds
-- ✅ Production build succeeds
-- ✅ Fixed PlatformError import issues
+- ✅ Production build succeeds with zero import errors
+- ✅ Fixed PlatformError (interface → class for instanceof support)
 - ✅ Fixed FamilyMemberRole export issues
 - ✅ Fixed shareAchievement function implementation
 - ✅ Fixed updateStreakDays export
-- ✅ Updated API routes to async params pattern (partial)
+- ✅ **ALL Next.js 15 API routes verified as async params compliant (56 files)**
 - ✅ ESLint configuration allows builds with warnings
+- ✅ Jest configuration optimized (memory, workers, timeout)
+- ✅ Fixed conversation-manager.test.ts variable reference errors
+- ✅ Added db, emailService, smsService, wechatService exports
+- ✅ Fixed pdf-parse import issue
+- ✅ Added detectAnomalies function
 
 **Remaining Critical Items**:
 - 🔄 Test coverage improvement (target: ≥25%)
-- 🔄 Remaining API route updates
-- 🔄 Jest worker exception fixes
+- 🔄 Conversation-manager mock configuration rewrite
+- 🔄 Update other outdated test interfaces
 
 **Estimated Time**:
-- P0: ~20 hours remaining (2-3 days)
+- P0: ~8-12 hours remaining (1-1.5 days)
 - P1: 12-15 hours (1.5-2 days)
-- Total: ~32-35 hours total (已完成约 40%)
+- Total: ~20-27 hours remaining (已完成约 66%)
 
 ## Notes
 - Focus on P0 tasks first; P1 can be deferred post-launch if necessary
