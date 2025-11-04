@@ -346,7 +346,7 @@ export default function MealPlanningPage() {
                       暂无食谱计划
                     </h3>
                     <p className="text-gray-500 mb-6">
-                      点击"生成新计划"开始您的个性化食谱规划
+                      点击&quot;生成新计划&quot;开始您的个性化食谱规划
                     </p>
                     <Button onClick={handleGenerateNewPlan}>
                       <Plus className="h-4 w-4 mr-2" />

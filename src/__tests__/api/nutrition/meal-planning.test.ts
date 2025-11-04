@@ -5,7 +5,7 @@
 import { createMocks } from 'node-mocks-http';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { nutritionCalculator } from '@/lib/services/nutrition-calculator';
+// 不直接导入 nutritionCalculator，因为它是被模拟的
 
 // Mock the database
 jest.mock('@/lib/db', () => ({
@@ -60,6 +60,9 @@ jest.mock('@/lib/services/nutrition-calculator', () => ({
   generateMealRecommendations: jest.fn(),
   calculateNutritionScore: jest.fn(),
 }));
+
+// 获取模拟的 nutritionCalculator 实例
+const nutritionCalculator = require('@/lib/services/nutrition-calculator');
 
 describe('/api/nutrition API', () => {
 

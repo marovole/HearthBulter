@@ -186,9 +186,9 @@ export async function POST(
 /**
  * 计算连续打卡天数
  * 当用户录入健康数据时调用此函数更新提醒的连续打卡天数
- * @internal 这是一个内部辅助函数，不是路由处理函数
+ * 导出供其他模块使用
  */
-async function updateStreakDays(memberId: string) {
+export async function updateStreakDays(memberId: string) {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
