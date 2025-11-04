@@ -37,10 +37,13 @@ const nextConfig = {
     // 在生产环境下，强制要求明确的ORIGINS配置
     let corsOrigin = 'http://localhost:3000';
     if (process.env.NODE_ENV === 'production') {
-      if (!process.env.NEXT_PUBLIC_ALLOWED_ORIGINS && !process.env.NEXTAUTH_URL) {
-        throw new Error('生产环境必须设置 NEXT_PUBLIC_ALLOWED_ORIGINS 或 NEXTAUTH_URL');
+      // 优先使用明确配置的变量，否则使用 Vercel 自动提供的 VERCEL_URL
+      const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '';
+      corsOrigin = process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || process.env.NEXTAUTH_URL || vercelUrl;
+
+      if (!corsOrigin) {
+        throw new Error('生产环境必须设置 NEXT_PUBLIC_ALLOWED_ORIGINS、NEXTAUTH_URL 或存在 VERCEL_URL');
       }
-      corsOrigin = process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || process.env.NEXTAUTH_URL || '';
     }
 
     return [
