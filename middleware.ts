@@ -1,45 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { securityMiddleware } from '@/lib/middleware/security-middleware';
-import { cacheMiddleware } from '@/lib/middleware/cache-middleware';
-import { securityAudit } from '@/lib/security/security-audit';
-import { logger } from '@/lib/logging/structured-logger';
-
-// 中间件配置
-interface MiddlewareConfig {
-  security: boolean;
-  cache: boolean;
-  audit: boolean;
-  paths: {
-    exclude: string[];
-    include: string[];
-  };
-}
-
-const DEFAULT_CONFIG: MiddlewareConfig = {
-  security: true,
-  cache: true,
-  audit: true,
-  paths: {
-    exclude: [
-      '/_next',
-      '/api/health',
-      '/api/webhooks',
-      '/favicon.ico',
-      '/robots.txt',
-      '/sitemap.xml',
-    ],
-    include: ['/*'],
-  },
-};
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { auth } from '@/lib/auth';
 
 /**
- * 请求中间件
+ * 优化的轻量级中间件
+ * 整合了认证和基本安全功能，避免了重量级依赖
+ * 适配 Cloudflare Workers 运行时
  */
-export function middleware(request: NextRequest) {
-  const startTime = Date.now();
-  const pathname = request.nextUrl.pathname;
 
-  // 检查是否应该跳过中间件
+export async function middleware(req: NextRequest) {
+  const startTime = Date.now();
+  const { pathname } = req.nextUrl;
+  const method = req.method;
+
+  // 基本路径过滤 - 跳过静态资源
   if (shouldSkipMiddleware(pathname)) {
     return NextResponse.next();
   }
@@ -47,99 +21,32 @@ export function middleware(request: NextRequest) {
   try {
     let response = NextResponse.next();
 
-    // 1. 安全审计（最先执行，记录所有请求）
-    if (DEFAULT_CONFIG.audit) {
-      auditRequest(request);
+    // 1. 基本安全头设置 (轻量级)
+    response = applyBasicSecurityHeaders(req, response);
+
+    // 2. 认证检查 (使用 NextAuth，不直接依赖 Prisma)
+    const authResult = await handleAuthentication(req, pathname);
+    if (!authResult.success) {
+      return authResult.response;
     }
 
-    // 2. 安全中间件（验证请求、应用安全头）
-    if (DEFAULT_CONFIG.security) {
-      const validation = securityMiddleware.validateRequest(request);
-
-      if (!validation.safe && validation.riskLevel === 'high') {
-        // 记录高风险请求被阻止
-        securityAudit.logSecurityViolation(
-          '高风险请求被阻止',
-          `请求 ${request.method} ${request.url} 因安全风险被阻止: ${validation.reasons.join(', ')}`,
-          'high',
-          {
-            method: request.method,
-            url: request.url,
-            reasons: validation.reasons,
-            userAgent: request.headers.get('user-agent') || 'unknown',
-            ipAddress: getClientIP(request),
-          },
-          {
-            ipAddress: getClientIP(request),
-            userAgent: request.headers.get('user-agent') || 'unknown',
-          }
-        );
-
-        return NextResponse.json(
-          { error: '请求被安全策略拒绝' },
-          { status: 403 }
-        );
+    // 3. API 路由保护
+    if (pathname.startsWith('/api/')) {
+      const apiResult = await handleApiRoutes(req, pathname, authResult.session);
+      if (!apiResult.success) {
+        return apiResult.response;
       }
-
-      response = securityMiddleware.applySecurityHeaders(request, response);
     }
 
-    // 3. 缓存中间件（GET请求的响应缓存）
-    if (DEFAULT_CONFIG.cache && request.method === 'GET') {
-      response = cacheMiddleware.handleRequest(request, response);
-    }
-
-    // 4. 添加性能头
+    // 4. 性能监控头
     response.headers.set('X-Response-Time', `${Date.now() - startTime}ms`);
-    response.headers.set('X-Middleware-Time', new Date().toISOString());
-
-    // 5. 记录成功处理的请求
-    if (DEFAULT_CONFIG.audit) {
-      const success = response.status < 400;
-      securityAudit.logApiAccess(
-        pathname,
-        request.method,
-        success ? 'success' : 'failure',
-        {
-          statusCode: response.status,
-          responseTime: Date.now() - startTime,
-          cacheHit: response.headers.get('X-Cache') === 'HIT',
-        },
-        {
-          userId: getUserIdFromRequest(request),
-          ipAddress: getClientIP(request),
-          userAgent: request.headers.get('user-agent') || 'unknown',
-        }
-      );
-    }
+    response.headers.set('X-Middleware-Version', 'optimized-v2');
 
     return response;
   } catch (error) {
-    // 记录中间件错误
-    logger.error('中间件处理失败', error as Error, {
-      type: 'middleware',
-      pathname,
-      method: request.method,
-      processingTime: Date.now() - startTime,
-    });
+    // 简化的错误处理
+    console.error('Middleware error:', error instanceof Error ? error.message : 'Unknown error');
 
-    securityAudit.logSecurityViolation(
-      '中间件处理失败',
-      `请求 ${request.method} ${pathname} 在中间件处理时发生错误: ${error instanceof Error ? error.message : '未知错误'}`,
-      'medium',
-      {
-        pathname,
-        method: request.method,
-        error: error instanceof Error ? error.message : '未知错误',
-        processingTime: Date.now() - startTime,
-      },
-      {
-        ipAddress: getClientIP(request),
-        userAgent: request.headers.get('user-agent') || 'unknown',
-      }
-    );
-
-    // 返回通用错误响应
     return NextResponse.json(
       { error: '服务器内部错误' },
       { status: 500 }
@@ -148,87 +55,183 @@ export function middleware(request: NextRequest) {
 }
 
 /**
- * 检查是否应该跳过中间件
+ * 检查是否应该跳过中间件处理
  */
 function shouldSkipMiddleware(pathname: string): boolean {
-  return DEFAULT_CONFIG.paths.exclude.some(pattern => {
-    if (pattern.endsWith('*')) {
-      return pathname.startsWith(pattern.slice(0, -1));
-    }
-    return pathname === pattern;
-  });
-}
-
-/**
- * 审计请求
- */
-function auditRequest(request: NextRequest): void {
-  const pathname = request.nextUrl.pathname;
-  const method = request.method;
-  const userAgent = request.headers.get('user-agent') || 'unknown';
-  const ipAddress = getClientIP(request);
-
-  // 记录可疑请求模式
-  const suspiciousPatterns = [
-    /\.\./,  // 路径遍历
-    /<script/i,  // XSS尝试
-    /union.*select/i,  // SQL注入尝试
-    /javascript:/i,  // JavaScript协议
-    /data:.*base64/i,  // Base64数据URI
+  const skipPatterns = [
+    '/_next',
+    '/api/health',
+    '/favicon.ico',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/api/auth', // NextAuth 路由
   ];
 
-  const isSuspicious = suspiciousPatterns.some(pattern =>
-    pattern.test(pathname) || pattern.test(request.nextUrl.search)
-  );
-
-  if (isSuspicious) {
-    securityAudit.logSuspiciousActivity(
-      '可疑请求模式',
-      `检测到可疑请求: ${method} ${pathname}${request.nextUrl.search}`,
-      'medium',
-      {
-        method,
-        pathname,
-        search: request.nextUrl.search,
-        userAgent,
-      },
-      {
-        ipAddress,
-        userAgent,
-      }
-    );
-  }
-
-  // 记录异常请求频率
-  const clientKey = `${ipAddress}_${pathname}`;
-  // 这里可以实现请求频率检查逻辑
+  return skipPatterns.some(pattern => pathname.startsWith(pattern));
 }
 
 /**
- * 获取客户端IP
+ * 应用基本安全头 (不依赖外部库)
  */
-function getClientIP(request: NextRequest): string {
+function applyBasicSecurityHeaders(req: NextRequest, response: NextResponse): NextResponse {
+  // 基本安全头
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // CORS 头设置
+  const origin = req.headers.get('origin');
+  if (process.env.NODE_ENV === 'production') {
+    const allowedOrigins = process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || process.env.NEXTAUTH_URL || '';
+    if (allowedOrigins && origin && allowedOrigins.includes(origin)) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+    }
+  } else {
+    // 开发环境允许所有源
+    response.headers.set('Access-Control-Allow-Origin', '*');
+  }
+
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  return response;
+}
+
+/**
+ * 处理认证检查
+ */
+async function handleAuthentication(req: NextRequest, pathname: string): Promise<{
+  success: boolean;
+  session: any;
+  response?: NextResponse;
+}> {
+  try {
+    const session = await auth();
+
+    // 受保护的页面路由
+    const protectedRoutes = [
+      '/dashboard',
+      '/families',
+      '/profile',
+      '/settings',
+    ];
+
+    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+
+    if (isProtectedRoute && !session) {
+      const signInUrl = new URL('/auth/signin', req.url);
+      signInUrl.searchParams.set('callbackUrl', pathname);
+      return {
+        success: false,
+        session: null,
+        response: NextResponse.redirect(signInUrl)
+      };
+    }
+
+    return { success: true, session };
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    return { success: true, session: null }; // 允许继续，但 session 为 null
+  }
+}
+
+/**
+ * 处理 API 路由保护
+ */
+async function handleApiRoutes(
+  req: NextRequest,
+  pathname: string,
+  session: any
+): Promise<{
+  success: boolean;
+  response?: NextResponse;
+}> {
+  // 公开的 API 路由
+  const publicApiRoutes = [
+    '/api/auth',
+    '/api/health',
+    '/api/webhooks',
+  ];
+
+  const isPublicApi = publicApiRoutes.some(route => pathname.startsWith(route));
+
+  if (!isPublicApi && !session) {
+    return {
+      success: false,
+      response: NextResponse.json(
+        { error: '未授权访问' },
+        { status: 401 }
+      )
+    };
+  }
+
+  // 基本的速率限制检查 (简化版)
+  const clientIP = getClientIP(req);
+  if (await isRateLimited(clientIP, pathname)) {
+    return {
+      success: false,
+      response: NextResponse.json(
+        { error: '请求过于频繁' },
+        { status: 429 }
+      )
+    };
+  }
+
+  return { success: true };
+}
+
+/**
+ * 获取客户端 IP
+ */
+function getClientIP(req: NextRequest): string {
   return (
-    request.headers.get('x-real-ip') ||
-    request.headers.get('x-forwarded-for')?.split(',')[0] ||
-    request.ip ||
+    req.headers.get('x-real-ip') ||
+    req.headers.get('x-forwarded-for')?.split(',')[0] ||
+    req.ip ||
     'unknown'
   );
 }
 
 /**
- * 从请求中获取用户ID
+ * 简化的速率限制检查 (内存存储，适合 Cloudflare Workers)
  */
-function getUserIdFromRequest(request: NextRequest): string | undefined {
-  // 尝试从各种可能的来源获取用户ID
-  const authHeader = request.headers.get('authorization');
-  const cookieHeader = request.headers.get('cookie');
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-  // 这里可以根据实际的认证机制来实现
-  // 例如：解析JWT token、session cookie等
+async function isRateLimited(clientIP: string, pathname: string): Promise<boolean> {
+  const key = `${clientIP}:${pathname}`;
+  const now = Date.now();
+  const windowMs = 60000; // 1分钟
+  const maxRequests = 100; // 每分钟最多100次请求
 
-  return undefined; // 暂时返回undefined，需要根据实际认证方式实现
+  const current = rateLimitMap.get(key);
+
+  if (!current || now > current.resetTime) {
+    // 重置或创建新的计数
+    rateLimitMap.set(key, {
+      count: 1,
+      resetTime: now + windowMs
+    });
+    return false;
+  }
+
+  if (current.count >= maxRequests) {
+    return true;
+  }
+
+  current.count++;
+  return false;
 }
+
+// 清理过期的速率限制记录 (定期清理)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of rateLimitMap.entries()) {
+    if (now > value.resetTime) {
+      rateLimitMap.delete(key);
+    }
+  }
+}, 60000); // 每分钟清理一次
 
 /**
  * 中间件匹配配置
@@ -236,12 +239,11 @@ function getUserIdFromRequest(request: NextRequest): string | undefined {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
+     * 匹配所有请求路径，除了：
+     * - _next/static (静态文件)
+     * - _next/image (图片优化)
+     * - favicon.ico
+     * - public 文件夹
      */
     '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],

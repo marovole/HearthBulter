@@ -1,0 +1,42 @@
+# Cloudflare Workers 配置文件
+# 适配 Next.js 15 应用部署到 Cloudflare Pages
+
+name = "hearthbutler"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# 主要配置
+[env.production]
+name = "hearthbutler-prod"
+
+[env.staging]
+name = "hearthbutler-staging"
+
+# 环境变量配置
+[vars]
+NODE_ENV = "production"
+
+# 生产环境变量
+[env.production.vars]
+NODE_ENV = "production"
+
+# Staging 环境变量
+[env.staging.vars]
+NODE_ENV = "staging"
+
+# KV 存储 (如果需要)
+# [[kv_namespaces]]
+# binding = "CACHE_KV"
+# id = "your-kv-namespace-id"
+# preview_id = "your-preview-kv-namespace-id"
+
+# D1 数据库 (如果需要)
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "hearthbutler-db"
+# database_id = "your-database-id"
+
+# R2 存储 (如果需要)
+# [[r2_buckets]]
+# binding = "ASSETS"
+# bucket_name = "hearthbutler-assets"
