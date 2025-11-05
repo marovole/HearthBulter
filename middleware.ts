@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getToken } from 'next-auth/jwt';
 
 /**
  * 优化的轻量级中间件
@@ -107,7 +107,11 @@ async function handleAuthentication(req: NextRequest, pathname: string): Promise
   response?: NextResponse;
 }> {
   try {
-    const session = await auth();
+    // 使用 getToken 而不是 auth() 来避免中间件中的复杂查询
+    const token = await getToken({ 
+      req, 
+      secret: process.env.NEXTAUTH_SECRET 
+    });
 
     // 受保护的页面路由
     const protectedRoutes = [
@@ -115,11 +119,12 @@ async function handleAuthentication(req: NextRequest, pathname: string): Promise
       '/families',
       '/profile',
       '/settings',
+      '/api/protected', // API 保护
     ];
 
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-    if (isProtectedRoute && !session) {
+    if (isProtectedRoute && !token) {
       const signInUrl = new URL('/auth/signin', req.url);
       signInUrl.searchParams.set('callbackUrl', pathname);
       return {
@@ -129,10 +134,13 @@ async function handleAuthentication(req: NextRequest, pathname: string): Promise
       };
     }
 
-    return { success: true, session };
+    return { 
+      success: true, 
+      session: token ? { user: token } : null 
+    };
   } catch (error) {
     console.error('Auth middleware error:', error);
-    return { success: true, session: null }; // 允许继续，但 session 为 null
+    return { success: true, session: null };
   }
 }
 
