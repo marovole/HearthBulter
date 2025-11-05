@@ -4,6 +4,7 @@ import Hero from '@/components/landing/Hero';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import StatsCounter from '@/components/landing/StatsCounter';
 import TestimonialCarousel from '@/components/landing/TestimonialCarousel';
+import ScrollEnhancements from '@/components/landing/ScrollEnhancements';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -18,6 +19,9 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen">
+      {/* 全局滚动增强 */}
+      <ScrollEnhancements />
+
       {/* Hero Section with animated headline and CTA */}
       <Hero />
 
