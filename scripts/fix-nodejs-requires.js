@@ -10,7 +10,7 @@ const nodeBuiltins = [
   'os', 'tls', 'https', 'http2', 'zlib', 'http', 'tty', 'net',
   'string_decoder', 'querystring', 'util/types', 'diagnostics_channel',
   'console', 'worker_threads', 'perf_hooks', 'stream/web', 'module',
-  'inspector', 'fs/promises'
+  'inspector', 'fs/promises', 'punycode'
 ];
 
 // 处理 handler.mjs
@@ -54,6 +54,39 @@ nodeBuiltins.forEach(mod => {
   }
 });
 
+// 也处理 ES6 import 语句
+console.log('\n🔍 修复 handler.mjs 中的 import 语句...');
+let importFixedCount = 0;
+
+nodeBuiltins.forEach(mod => {
+  const escapedMod = mod.replace(/\//g, '\\/');
+
+  // 匹配 import ... from "module"
+  // 包括: import x from "mod", import { x } from "mod", import * as x from "mod"
+  const importPattern = new RegExp(
+    `import\\s+(?:[^from]+)\\s+from\\s+["'\`]${escapedMod}["'\`]`,
+    'g'
+  );
+
+  const importMatches = content.match(importPattern);
+  if (importMatches && importMatches.length > 0) {
+    console.log(`  ✓ 修复 import: ${mod} (${importMatches.length} 次)`);
+
+    // 注释掉这些导入语句
+    content = content.replace(
+      importPattern,
+      (match) => `/* ${match} */ const ${mod.replace(/[\/\-]/g, '_')}_stub = {};`
+    );
+
+    importFixedCount += importMatches.length;
+    modified = true;
+  }
+});
+
+if (importFixedCount > 0) {
+  console.log(`\n✅ 已修复 ${importFixedCount} 个 import 语句`);
+}
+
 if (modified) {
   // 备份原文件
   const backupPath = handlerPath + '.backup';
@@ -61,17 +94,17 @@ if (modified) {
     fs.copyFileSync(handlerPath, backupPath);
     console.log(`\n📦 原文件备份到: handler.mjs.backup`);
   }
-  
+
   // 写入修改后的内容
   fs.writeFileSync(handlerPath, content);
-  
-  console.log(`\n✅ 已修复 handler.mjs (共 ${fixedCount} 处修改)`);
+
+  console.log(`\n✅ 已修复 handler.mjs (require: ${fixedCount} 处, import: ${importFixedCount} 处)`);
 } else {
-  console.log('\nℹ️  未找到需要修复的 require() 调用');
+  console.log('\nℹ️  未找到需要修复的 require() 或 import 调用');
 }
 
-// 修复其他文件中的 node: 前缀导入
-console.log('\n🔍 修复其他文件中的 node: 导入...');
+// 修复其他文件中的 node: 前缀导入和 Node.js 内置模块
+console.log('\n🔍 修复其他文件中的导入...');
 const filesToFix = [
   '.open-next/middleware/handler.mjs',
   '.open-next/cloudflare/init.js',
@@ -85,31 +118,51 @@ filesToFix.forEach(file => {
   if (fs.existsSync(filePath)) {
     let fileContent = fs.readFileSync(filePath, 'utf8');
     let fileModified = false;
-    
-    // 替换所有 node: 前缀的导入
+
+    // 1. 替换所有 node: 前缀的导入
     // import xxx from "node:module" -> import xxx from "module"
     // import { xxx } from "node:module" -> import { xxx } from "module"
     const nodeImportPattern = /from\s+["']node:([^"']+)["']/g;
     const matches = fileContent.match(nodeImportPattern);
-    
+
     if (matches) {
       console.log(`  ✓ ${file}: 修复 ${matches.length} 个 node: 导入`);
       fileContent = fileContent.replace(nodeImportPattern, 'from "$1"');
       totalNodeImportsFix += matches.length;
       fileModified = true;
     }
-    
-    // 也处理动态导入: import("node:module")
+
+    // 2. 处理动态导入: import("node:module")
     const dynamicImportPattern = /import\s*\(\s*["']node:([^"']+)["']\s*\)/g;
     const dynamicMatches = fileContent.match(dynamicImportPattern);
-    
+
     if (dynamicMatches) {
       console.log(`  ✓ ${file}: 修复 ${dynamicMatches.length} 个动态 node: 导入`);
       fileContent = fileContent.replace(dynamicImportPattern, 'import("$1")');
       totalNodeImportsFix += dynamicMatches.length;
       fileModified = true;
     }
-    
+
+    // 3. 修复 Node.js 内置模块的 import 语句（与 handler.mjs 相同的处理）
+    nodeBuiltins.forEach(mod => {
+      const escapedMod = mod.replace(/\//g, '\\/');
+      const importPattern = new RegExp(
+        `import\\s+(?:[^from]+)\\s+from\\s+["'\`]${escapedMod}["'\`]`,
+        'g'
+      );
+
+      const importMatches = fileContent.match(importPattern);
+      if (importMatches && importMatches.length > 0) {
+        console.log(`  ✓ ${file}: 修复模块 import ${mod} (${importMatches.length} 次)`);
+        fileContent = fileContent.replace(
+          importPattern,
+          (match) => `/* ${match} */ const ${mod.replace(/[\/\-]/g, '_')}_stub = {};`
+        );
+        totalNodeImportsFix += importMatches.length;
+        fileModified = true;
+      }
+    });
+
     if (fileModified) {
       // 备份
       if (!fs.existsSync(filePath + '.backup')) {
