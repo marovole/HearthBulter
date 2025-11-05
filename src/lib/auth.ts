@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth/next';
 
-// NextAuth v5 配置
+// NextAuth v4 配置
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -51,7 +51,6 @@ export const authOptions = {
             }
           } catch (dbError) {
             console.warn('Database connection error in auth:', dbError);
-            // 继续返回null，不暴露数据库错误
           }
 
           return null;
@@ -64,7 +63,7 @@ export const authOptions = {
   ],
 
   session: {
-    strategy: 'jwt' as const,
+    strategy: 'jwt',
   },
 
   callbacks: {
@@ -95,7 +94,8 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-export default NextAuth(authOptions);
+const handler = NextAuth(authOptions);
+export { handler };
 
 // Helper函数：获取当前用户会话
 export async function getCurrentUser() {
