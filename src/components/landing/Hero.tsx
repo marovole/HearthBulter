@@ -1,12 +1,12 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Menu, X } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight, Sparkles, Menu, Heart, Zap, Shield, TrendingUp } from 'lucide-react';
 import { staggerContainer, staggerItem } from '@/lib/design-tokens';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface HeroProps {
   onCTAClick?: () => void;
@@ -14,6 +14,10 @@ interface HeroProps {
 
 export default function Hero({ onCTAClick }: HeroProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 300], [0, 50]);
+  const y2 = useTransform(scrollY, [0, 300], [0, -50]);
 
   const navigationItems = [
     { label: '功能介绍', href: '#features' },
@@ -22,13 +26,68 @@ export default function Hero({ onCTAClick }: HeroProps) {
     { label: '联系我们', href: '#contact' },
   ];
 
+  // 浮动图标
+  const floatingIcons = [
+    { Icon: Heart, color: 'text-pink-500', delay: 0, x: '10%', y: '20%' },
+    { Icon: Zap, color: 'text-yellow-500', delay: 1, x: '85%', y: '30%' },
+    { Icon: Shield, color: 'text-green-500', delay: 2, x: '15%', y: '70%' },
+    { Icon: TrendingUp, color: 'text-blue-500', delay: 1.5, x: '80%', y: '75%' },
+  ];
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Background decorative elements */}
+    <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+      {/* 增强的背景装饰元素 */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" />
-        <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" style={{ animationDelay: '1s' }} />
-        <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float" style={{ animationDelay: '2s' }} />
+        {/* 主要渐变球 */}
+        <motion.div
+          className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
+          style={{ y: y1 }}
+        />
+        <motion.div
+          className="absolute top-40 right-10 w-96 h-96 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
+          style={{ animationDelay: '1s', y: y2 }}
+        />
+        <motion.div
+          className="absolute -bottom-8 left-1/2 w-96 h-96 bg-gradient-to-br from-indigo-400 to-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
+          style={{ animationDelay: '2s', y: y1 }}
+        />
+
+        {/* 网格背景 */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+
+        {/* 浮动图标 */}
+        {floatingIcons.map((item, index) => (
+          <motion.div
+            key={index}
+            className="absolute"
+            style={{
+              left: item.x,
+              top: item.y,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              rotate: [0, 10, -10, 0],
+            }}
+            transition={{
+              duration: 4,
+              delay: item.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <div className={`w-12 h-12 ${item.color} opacity-30`}>
+              <item.Icon className="w-full h-full" />
+            </div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Mobile Navigation */}
@@ -107,33 +166,45 @@ export default function Hero({ onCTAClick }: HeroProps) {
           让您和家人享受科学的健康生活方式
         </motion.p>
 
-        {/* CTA Buttons using shadcn/ui */}
+        {/* CTA Buttons using shadcn/ui - 增强版 */}
         <motion.div
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           variants={staggerItem}
         >
-          <Button 
-            size="lg" 
-            className="px-8 py-6 text-base font-semibold bg-gradient-to-r from-brand-blue to-brand-purple hover:from-brand-blue/90 hover:to-brand-purple/90 shadow-lg hover:shadow-xl group"
-            onClick={onCTAClick}
-            asChild
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <a href="/auth/signup" className="inline-flex items-center gap-2">
-              开始免费试用
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </a>
-          </Button>
+            <Button
+              size="lg"
+              className="relative px-10 py-7 text-lg font-bold bg-gradient-to-r from-brand-blue via-brand-purple to-brand-blue bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-2xl hover:shadow-brand-blue/50 group overflow-hidden transition-all duration-500"
+              onClick={onCTAClick}
+              asChild
+            >
+              <a href="/auth/signup" className="inline-flex items-center gap-2 relative z-10">
+                {/* 闪光效果 */}
+                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                开始免费试用
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+              </a>
+            </Button>
+          </motion.div>
 
-          <Button 
-            variant="outline" 
-            size="lg"
-            className="px-8 py-6 text-base font-semibold border-2 hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all duration-300 group"
-            asChild
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <a href="/auth/signin" className="inline-flex items-center gap-2">
-              已有账号？登录
-            </a>
-          </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-10 py-7 text-lg font-bold border-2 border-gray-900 bg-white/50 backdrop-blur-sm hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all duration-300 shadow-lg group"
+              asChild
+            >
+              <a href="/auth/signin" className="inline-flex items-center gap-2">
+                已有账号？登录
+              </a>
+            </Button>
+          </motion.div>
         </motion.div>
 
         {/* Social proof stats - preview with shadcn/ui */}

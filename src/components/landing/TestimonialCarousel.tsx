@@ -65,6 +65,30 @@ export default function TestimonialCarousel() {
     threshold: 0.1
   });
 
+  const [api, setApi] = useState<any>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+
+    // 设置自动轮播
+    const interval = setInterval(() => {
+      api.scrollNext();
+    }, 5000); // 每5秒切换一次
+
+    return () => clearInterval(interval);
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+
+    setCurrent(api.selectedScrollSnap());
+
+    api.on('select', () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
+
   const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex justify-center gap-1 mb-4">
       {[...Array(5)].map((_, i) => (
@@ -114,6 +138,7 @@ export default function TestimonialCarousel() {
               loop: true,
               skipSnaps: false,
             }}
+            setApi={setApi}
             className="w-full max-w-4xl mx-auto"
           >
             <CarouselContent className="-ml-2 md:-ml-4">
@@ -173,16 +198,22 @@ export default function TestimonialCarousel() {
           </Carousel>
         </motion.div>
 
-        {/* Mobile pagination indicator */}
-        <div className="flex justify-center mt-8 md:hidden">
-          <div className="flex gap-1">
-            {testimonials.map((_, index) => (
-              <div
-                key={index}
-                className="w-2 h-2 rounded-full bg-gray-300"
-              />
-            ))}
-          </div>
+        {/* Enhanced pagination indicator */}
+        <div className="flex justify-center mt-8 gap-2">
+          {testimonials.map((_, index) => (
+            <motion.button
+              key={index}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === current
+                  ? 'w-8 bg-brand-blue'
+                  : 'w-2 bg-gray-300 hover:bg-gray-400'
+              }`}
+              onClick={() => api?.scrollTo(index)}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+              aria-label={`跳转到第 ${index + 1} 条评价`}
+            />
+          ))}
         </div>
       </div>
     </section>

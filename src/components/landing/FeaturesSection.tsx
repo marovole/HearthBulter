@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Activity, UtensilsCrossed, ShoppingCart, ChevronRight, Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { staggerContainer } from '@/lib/design-tokens';
+import { useState } from 'react';
 
 const features = [
   {
@@ -56,6 +57,99 @@ const features = [
   },
 ];
 
+// 单独的功能卡片组件，支持 3D 效果
+function FeatureCard({ feature, index }: { feature: typeof features[0], index: number }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.div
+      variants={staggerContainer.children}
+      transition={{ delay: index * 0.1 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      whileHover={{
+        y: -10,
+        scale: 1.02,
+      }}
+    >
+      <Card className="h-full shadow-lg transition-all duration-500 group border-gray-200 hover:border-brand-blue/50 hover:shadow-2xl hover:shadow-brand-blue/20 bg-gradient-to-br from-white to-gray-50 relative overflow-hidden">
+        {/* 悬停时的背景光效 */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-br from-brand-blue/10 via-brand-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          animate={isHovered ? { scale: 1.2 } : { scale: 1 }}
+        />
+        <CardHeader className="space-y-4 relative z-10">
+          <div className="flex items-center justify-between">
+            <motion.div
+              className="w-14 h-14 bg-gradient-to-br from-brand-blue to-brand-purple rounded-xl flex items-center justify-center text-white shadow-lg"
+              animate={isHovered ? { scale: 1.15, rotate: 5 } : { scale: 1, rotate: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <feature.icon className="w-7 h-7" />
+            </motion.div>
+            <Badge
+              variant={feature.status === 'beta' ? 'secondary' : 'default'}
+              className={`${feature.status === 'beta' ? 'bg-orange-100 text-orange-800' : 'bg-brand-blue text-white'}`}
+            >
+              {feature.badge}
+            </Badge>
+          </div>
+          <div>
+            <CardTitle className="text-xl font-bold group-hover:text-brand-blue transition-colors">
+              {feature.title}
+            </CardTitle>
+            <CardDescription className="mt-2 leading-relaxed">
+              {feature.description}
+            </CardDescription>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4 relative z-10">
+          {/* Progress indicator */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">完成度</span>
+              <span className="font-semibold text-gray-900">{feature.progress}%</span>
+            </div>
+            <Progress value={feature.progress} className="h-2" />
+          </div>
+
+          <Separator />
+
+          {/* Expandable details */}
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value={`details-${index}`} className="border-0">
+              <AccordionTrigger className="py-2 text-sm font-medium text-brand-blue hover:no-underline">
+                查看功能详情
+              </AccordionTrigger>
+              <AccordionContent className="pb-0">
+                <ul className="space-y-2">
+                  {feature.details.map((detail, detailIndex) => (
+                    <li key={detailIndex} className="flex items-start gap-2 text-sm text-gray-600">
+                      <ChevronRight className="w-4 h-4 text-brand-blue mt-0.5 flex-shrink-0" />
+                      {detail}
+                    </li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          {/* CTA Button */}
+          <Button
+            variant="outline"
+            className="w-full group-hover:bg-brand-blue group-hover:text-white transition-colors mt-4"
+            size="sm"
+          >
+            了解更多
+            <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
 export default function FeaturesSection() {
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -80,7 +174,7 @@ export default function FeaturesSection() {
           </p>
         </motion.div>
 
-        {/* Feature cards using shadcn/ui */}
+        {/* Feature cards using shadcn/ui - 增强版 3D 效果 */}
         <motion.div
           ref={ref}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
@@ -89,77 +183,7 @@ export default function FeaturesSection() {
           animate={inView ? 'visible' : 'hidden'}
         >
           {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              variants={staggerContainer.children}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group border-gray-200 hover:border-brand-blue/50">
-                <CardHeader className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 bg-gradient-to-br from-brand-blue to-brand-purple rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                      <feature.icon className="w-6 h-6" />
-                    </div>
-                    <Badge 
-                      variant={feature.status === 'beta' ? 'secondary' : 'default'}
-                      className={`${feature.status === 'beta' ? 'bg-orange-100 text-orange-800' : 'bg-brand-blue text-white'}`}
-                    >
-                      {feature.badge}
-                    </Badge>
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold group-hover:text-brand-blue transition-colors">
-                      {feature.title}
-                    </CardTitle>
-                    <CardDescription className="mt-2 leading-relaxed">
-                      {feature.description}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  {/* Progress indicator */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">完成度</span>
-                      <span className="font-semibold text-gray-900">{feature.progress}%</span>
-                    </div>
-                    <Progress value={feature.progress} className="h-2" />
-                  </div>
-
-                  <Separator />
-
-                  {/* Expandable details */}
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value={`details-${index}`} className="border-0">
-                      <AccordionTrigger className="py-2 text-sm font-medium text-brand-blue hover:no-underline">
-                        查看功能详情
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-0">
-                        <ul className="space-y-2">
-                          {feature.details.map((detail, detailIndex) => (
-                            <li key={detailIndex} className="flex items-start gap-2 text-sm text-gray-600">
-                              <ChevronRight className="w-4 h-4 text-brand-blue mt-0.5 flex-shrink-0" />
-                              {detail}
-                            </li>
-                          ))}
-                        </ul>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-
-                  {/* CTA Button */}
-                  <Button 
-                    variant="outline" 
-                    className="w-full group-hover:bg-brand-blue group-hover:text-white transition-colors mt-4"
-                    size="sm"
-                  >
-                    了解更多
-                    <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <FeatureCard key={feature.title} feature={feature} index={index} />
           ))}
         </motion.div>
       </div>

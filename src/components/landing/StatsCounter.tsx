@@ -169,6 +169,10 @@ export default function StatsCounter() {
               end={stat.end}
               label={stat.label}
               suffix={stat.suffix}
+              icon={stat.icon}
+              color={stat.color}
+              targetValue={stat.targetValue}
+              unit={stat.unit}
             />
           ))}
         </motion.div>
