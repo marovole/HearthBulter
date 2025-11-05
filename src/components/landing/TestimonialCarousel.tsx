@@ -35,7 +35,7 @@ const testimonials: Testimonial[] = [
     rating: 5,
     achievement: '减重 5kg，家人健康改善',
     duration: '3个月',
-    avatar: '/avatars/user1.jpg',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
   },
   {
     id: '2',
@@ -45,7 +45,7 @@ const testimonials: Testimonial[] = [
     rating: 5,
     achievement: '血压正常，精力充沛',
     duration: '2个月',
-    avatar: '/avatars/user2.jpg',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
   },
   {
     id: '3',
@@ -55,7 +55,7 @@ const testimonials: Testimonial[] = [
     rating: 5,
     achievement: '健身效果提升 30%',
     duration: '4个月',
-    avatar: '/avatars/user3.jpg',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily',
   },
 ];
 
