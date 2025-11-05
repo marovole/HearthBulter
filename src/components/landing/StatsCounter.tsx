@@ -4,15 +4,23 @@ import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useEffect, useState } from 'react';
 import { fadeInUp } from '@/lib/design-tokens';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, Users, BookOpen, Heart } from 'lucide-react';
 
 interface StatItemProps {
   end: number;
   label: string;
   suffix?: string;
   duration?: number;
+  icon?: React.ElementType;
+  color?: string;
+  targetValue?: number;
+  unit?: string;
 }
 
-function StatItem({ end, label, suffix = '', duration = 2000 }: StatItemProps) {
+function StatItem({ end, label, suffix = '', duration = 2000, icon: Icon, color = '', targetValue, unit }: StatItemProps) {
   const [count, setCount] = useState(0);
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -44,26 +52,91 @@ function StatItem({ end, label, suffix = '', duration = 2000 }: StatItemProps) {
     return num.toLocaleString('zh-CN');
   };
 
+  const progressPercentage = targetValue ? (end / targetValue) * 100 : 100;
+
   return (
     <motion.div
       ref={ref}
-      className="text-center"
       variants={fadeInUp}
     >
-      <div className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-transparent bg-gradient-to-r from-brand-blue via-brand-purple to-brand-green bg-clip-text mb-2">
-        {formatNumber(count)}{suffix}
-      </div>
-      <div className="text-base md:text-lg text-gray-600 font-medium">
-        {label}
-      </div>
+      <Card className="text-center p-6 bg-gradient-to-br from-white to-gray-50 border-gray-200 hover:shadow-lg transition-all duration-300 group">
+        <CardContent className="pt-6">
+          {/* Icon */}
+          {Icon && (
+            <div className="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <Icon className={`w-8 h-8 ${color}`} />
+            </div>
+          )}
+
+          {/* Main number */}
+          <div className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-transparent bg-gradient-to-r from-brand-blue via-brand-purple to-brand-green bg-clip-text mb-2">
+            {formatNumber(count)}{suffix}
+          </div>
+
+          {/* Label */}
+          <div className="text-base md:text-lg text-gray-700 font-semibold mb-4">
+            {label}
+          </div>
+
+          {/* Progress bar */}
+          {targetValue && (
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>完成度</span>
+                <span className="font-medium">{Math.round(progressPercentage)}%</span>
+              </div>
+              <Progress value={progressPercentage} className="h-2" />
+            </div>
+          )}
+
+          {/* Unit/Target badge */}
+          {unit && (
+            <Badge variant="outline" className="mb-4 border-gray-300 text-gray-700">
+              <TrendingUp className="w-3 h-3 mr-1" />
+              {unit}
+            </Badge>
+          )}
+
+          {/* Additional info */}
+          {targetValue && (
+            <p className="text-xs text-gray-500">
+              目标: {formatNumber(targetValue)}{suffix}
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }
 
 const stats = [
-  { end: 10000, label: '活跃用户', suffix: '+' },
-  { end: 100, label: '精选食谱', suffix: '+' },
-  { end: 95, label: '用户满意度', suffix: '%' },
+  { 
+    end: 10000, 
+    label: '活跃用户', 
+    suffix: '+', 
+    icon: Users,
+    color: 'text-blue-600',
+    targetValue: 15000,
+    unit: '月增长 20%'
+  },
+  { 
+    end: 100, 
+    label: '精选食谱', 
+    suffix: '+', 
+    icon: BookOpen,
+    color: 'text-green-600',
+    targetValue: 200,
+    unit: '持续增长'
+  },
+  { 
+    end: 95, 
+    label: '用户满意度', 
+    suffix: '%', 
+    icon: Heart,
+    color: 'text-orange-600',
+    targetValue: 98,
+    unit: '目标 98%'
+  }
 ];
 
 export default function StatsCounter() {
