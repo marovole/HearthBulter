@@ -1,5 +1,5 @@
-import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
 import Hero from '@/components/landing/Hero';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import StatsCounter from '@/components/landing/StatsCounter';
