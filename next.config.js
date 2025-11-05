@@ -16,8 +16,8 @@ const nextConfig = {
   serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {
     domains: process.env.NODE_ENV === 'production'
-      ? ['images.unsplash.com', 'avatars.githubusercontent.com']
-      : ['localhost', 'images.unsplash.com', 'avatars.githubusercontent.com', 'vercel.com'],
+      ? ['images.unsplash.com', 'avatars.githubusercontent.com', 'api.dicebear.com']
+      : ['localhost', 'images.unsplash.com', 'avatars.githubusercontent.com', 'vercel.com', 'api.dicebear.com'],
     formats: ['image/webp', 'image/avif'],
   },
   env: {
