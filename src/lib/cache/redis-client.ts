@@ -21,6 +21,9 @@ export const CACHE_CONFIG = {
     STATIC_CONFIG: 86400,      // 24小时
     API_RESPONSE: 300,         // 5分钟
     QUERY_RESULT: 600,         // 10分钟
+    FOOD_SEARCH: 1800,         // 30分钟 - 食品搜索结果
+    USDA_DATA: 86400,          // 24小时 - USDA API 数据
+    FOOD_SEARCH_EMPTY: 300,    // 5分钟 - 空结果缓存（防止缓存穿透）
   },
 
   // 缓存键前缀
@@ -70,8 +73,105 @@ export class CacheKeyBuilder {
   }
 }
 
+// 缓存统计接口
+interface CacheStats {
+  hits: number;
+  misses: number;
+  totalRequests: number;
+  hitRate: number;
+  lastUpdated: Date;
+}
+
+// 性能日志接口
+interface PerformanceLog {
+  operation: string;
+  duration: number;
+  cacheHit: boolean;
+  timestamp: Date;
+  key?: string;
+}
+
 // 缓存服务类
 export class CacheService {
+  // 内存中的缓存统计（用于实时监控）
+  private static stats: CacheStats = {
+    hits: 0,
+    misses: 0,
+    totalRequests: 0,
+    hitRate: 0,
+    lastUpdated: new Date(),
+  };
+
+  // 性能日志队列（最多保留最近100条）
+  private static performanceLogs: PerformanceLog[] = [];
+  private static readonly MAX_LOGS = 100;
+
+  /**
+   * 记录性能日志
+   */
+  private static logPerformance(log: PerformanceLog): void {
+    this.performanceLogs.push(log);
+    if (this.performanceLogs.length > this.MAX_LOGS) {
+      this.performanceLogs.shift();
+    }
+
+    // 如果响应时间超过3秒，输出告警日志
+    if (log.duration > 3000) {
+      console.warn('⚠️ 性能告警:', {
+        operation: log.operation,
+        duration: `${log.duration}ms`,
+        cacheHit: log.cacheHit,
+        key: log.key,
+        timestamp: log.timestamp.toISOString(),
+      });
+    }
+  }
+
+  /**
+   * 更新缓存统计
+   */
+  private static updateStats(hit: boolean): void {
+    this.stats.totalRequests++;
+    if (hit) {
+      this.stats.hits++;
+    } else {
+      this.stats.misses++;
+    }
+    this.stats.hitRate = this.stats.totalRequests > 0
+      ? (this.stats.hits / this.stats.totalRequests) * 100
+      : 0;
+    this.stats.lastUpdated = new Date();
+  }
+
+  /**
+   * 获取缓存统计信息
+   */
+  static getStats(): CacheStats {
+    return { ...this.stats };
+  }
+
+  /**
+   * 获取性能日志
+   */
+  static getPerformanceLogs(limit?: number): PerformanceLog[] {
+    const logs = [...this.performanceLogs].reverse();
+    return limit ? logs.slice(0, limit) : logs;
+  }
+
+  /**
+   * 重置统计信息
+   */
+  static resetStats(): void {
+    this.stats = {
+      hits: 0,
+      misses: 0,
+      totalRequests: 0,
+      hitRate: 0,
+      lastUpdated: new Date(),
+    };
+    this.performanceLogs = [];
+  }
+
   /**
    * 设置缓存
    */
@@ -80,9 +180,19 @@ export class CacheService {
     value: T,
     ttl: number = CACHE_CONFIG.DEFAULT_TTL
   ): Promise<void> {
+    const startTime = Date.now();
     try {
       const serializedValue = JSON.stringify(value);
       await redis.set(key, serializedValue, { ex: ttl });
+
+      const duration = Date.now() - startTime;
+      this.logPerformance({
+        operation: 'cache:set',
+        duration,
+        cacheHit: false,
+        timestamp: new Date(),
+        key: key.split(':')[0], // 只记录前缀，避免泄露敏感信息
+      });
     } catch (error) {
       console.error('Cache set error:', error);
       // 缓存失败不应该影响主要功能
@@ -93,18 +203,35 @@ export class CacheService {
    * 获取缓存
    */
   static async get<T>(key: string): Promise<T | null> {
+    const startTime = Date.now();
     try {
       const value = await redis.get(key);
+      const duration = Date.now() - startTime;
+      const hit = value !== null;
+
+      // 更新统计
+      this.updateStats(hit);
+
+      // 记录性能日志
+      this.logPerformance({
+        operation: 'cache:get',
+        duration,
+        cacheHit: hit,
+        timestamp: new Date(),
+        key: key.split(':')[0],
+      });
+
       if (!value) return null;
 
       // 尝试解析 JSON，如果失败则返回原始值
       try {
-        return JSON.parse(value) as T;
+        return JSON.parse(value as string) as T;
       } catch {
         return value as T;
       }
     } catch (error) {
       console.error('Cache get error:', error);
+      this.updateStats(false); // 记录为未命中
       return null;
     }
   }
