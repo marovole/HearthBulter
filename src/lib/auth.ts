@@ -107,3 +107,7 @@ export async function getCurrentUser() {
     return null;
   }
 }
+
+// Auth函数：供API路由和页面组件使用
+// 这是 NextAuth v4 的标准认证函数
+export const auth = () => getServerSession(authOptions);

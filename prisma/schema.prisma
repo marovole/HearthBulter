@@ -398,9 +398,14 @@ model Food {
   // 库存管理关联
   inventoryItems InventoryItem[] @relation("InventoryItems")
 
-  @@index([category])
-  @@index([source])
-  @@index([nameEn])
+  // 索引优化（按使用频率和重要性排序）
+  @@index([category])          // 按类别筛选
+  @@index([source])            // 按数据源筛选
+  @@index([name])              // 中文名搜索
+  @@index([nameEn])            // 英文名搜索
+  @@index([usdaId])            // USDA 数据去重
+  @@index([category, name])    // 复合索引：类别+名称联合查询
+  @@index([verified, source])  // 复合索引：已验证数据优先
   @@map("foods")
 }
 

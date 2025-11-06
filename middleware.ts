@@ -119,7 +119,10 @@ async function handleAuthentication(req: NextRequest, pathname: string): Promise
       '/families',
       '/profile',
       '/settings',
-      '/api/protected', // API 保护
+      '/health-data',      // 健康数据页面
+      '/meal-planning',    // 饮食规划页面
+      '/shopping-list',    // 购物清单页面
+      '/api/protected',    // API 保护
     ];
 
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
