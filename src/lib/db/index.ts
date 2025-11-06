@@ -55,5 +55,25 @@ export const prisma = new Proxy({} as PrismaClient, {
   }
 });
 
+// 数据库健康检查函数
+export async function testDatabaseConnection(): Promise<boolean> {
+  try {
+    const instance = getPrismaClient();
+    await instance.$queryRaw`SELECT 1`;
+    return true;
+  } catch (error) {
+    console.error('数据库连接测试失败:', error);
+    return false;
+  }
+}
+
+// 确保数据库连接的包装函数
+export async function ensureDatabaseConnection(): Promise<void> {
+  const isConnected = await testDatabaseConnection();
+  if (!isConnected) {
+    throw new Error('数据库连接失败，请检查DATABASE_URL配置');
+  }
+}
+
 // 为兼容性导出 db 别名
 export const db = prisma;

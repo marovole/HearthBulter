@@ -28,6 +28,7 @@
     "audit": "npm audit",
     "audit:fix": "npm audit fix",
     "security:check": "npm audit && npm outdated",
+    "pre-deploy": "tsx scripts/pre-deploy-check.ts",
     "review": "node scripts/pre-commit-code-review.js",
     "review:report": "node scripts/generate-review-report.js",
     "review:report:html": "node scripts/generate-review-report.js --html",

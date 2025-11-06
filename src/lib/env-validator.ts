@@ -74,8 +74,8 @@ export function validateEnvironmentVariables(): void {
     ].join('\n');
 
     if (isProduction) {
-      console.warn('⚠️ 生产环境环境变量警告:', errorMessage);
-      return; // 生产环境不阻止启动，仅记录警告
+      console.error('❌ 生产环境环境变量错误:', errorMessage);
+      throw new Error(errorMessage); // 生产环境必须严格验证，阻止启动
     } else {
       throw new Error(errorMessage);
     }

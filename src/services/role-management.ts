@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 import { FamilyMemberRole } from '@prisma/client';
 import { PermissionError, isFamilyCreator, isFamilyAdmin } from '@/lib/permissions';
 

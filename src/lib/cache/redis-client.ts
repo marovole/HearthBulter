@@ -5,12 +5,15 @@ import { Redis } from '@upstash/redis';
 const redisUrl = (process.env.UPSTASH_REDIS_REST_URL || '').trim();
 const redisToken = (process.env.UPSTASH_REDIS_REST_TOKEN || '').trim();
 
-const redis = new Redis({
+// 检查Redis配置是否完整
+const isRedisConfigured = redisUrl && redisToken && redisUrl !== '' && redisToken !== '';
+
+const redis = isRedisConfigured ? new Redis({
   url: redisUrl,
   token: redisToken,
-});
+}) : null;
 
-export { redis };
+export { redis, isRedisConfigured };
 
 // 缓存配置
 export const CACHE_CONFIG = {
@@ -97,6 +100,11 @@ interface PerformanceLog {
 
 // 缓存服务类
 export class CacheService {
+  // 连接状态跟踪
+  private static connectionHealthy = isRedisConfigured;
+  private static lastConnectionCheck = new Date();
+  private static readonly CONNECTION_CHECK_INTERVAL = 60000; // 1分钟检查一次
+
   // 内存中的缓存统计（用于实时监控）
   private static stats: CacheStats = {
     hits: 0,
@@ -163,6 +171,67 @@ export class CacheService {
   }
 
   /**
+   * 测试Redis连接
+   */
+  static async testConnection(): Promise<boolean> {
+    if (!isRedisConfigured || !redis) {
+      this.connectionHealthy = false;
+      return false;
+    }
+
+    try {
+      await redis.ping();
+      this.connectionHealthy = true;
+      this.lastConnectionCheck = new Date();
+      return true;
+    } catch (error) {
+      this.connectionHealthy = false;
+      this.lastConnectionCheck = new Date();
+      console.error('Redis连接测试失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 检查是否需要测试连接
+   */
+  private static shouldTestConnection(): boolean {
+    const now = new Date();
+    const timeSinceLastCheck = now.getTime() - this.lastConnectionCheck.getTime();
+    return timeSinceLastCheck > this.CONNECTION_CHECK_INTERVAL;
+  }
+
+  /**
+   * 确保连接可用（如果需要会测试连接）
+   */
+  private static async ensureConnection(): Promise<boolean> {
+    if (!isRedisConfigured) {
+      return false;
+    }
+
+    if (!this.connectionHealthy || this.shouldTestConnection()) {
+      await this.testConnection();
+    }
+
+    return this.connectionHealthy;
+  }
+
+  /**
+   * 获取连接状态
+   */
+  static getConnectionStatus(): {
+    healthy: boolean;
+    configured: boolean;
+    lastCheck: Date;
+  } {
+    return {
+      healthy: this.connectionHealthy,
+      configured: isRedisConfigured,
+      lastCheck: this.lastConnectionCheck,
+    };
+  }
+
+  /**
    * 重置统计信息
    */
   static resetStats(): void {
@@ -186,6 +255,13 @@ export class CacheService {
   ): Promise<void> {
     const startTime = Date.now();
     try {
+      // 检查Redis连接
+      const isConnectionHealthy = await this.ensureConnection();
+      if (!isConnectionHealthy || !redis) {
+        console.warn('Redis连接不可用，跳过缓存设置操作');
+        return;
+      }
+
       const serializedValue = JSON.stringify(value);
       await redis.set(key, serializedValue, { ex: ttl });
 
@@ -199,6 +275,7 @@ export class CacheService {
       });
     } catch (error) {
       console.error('Cache set error:', error);
+      this.connectionHealthy = false; // 标记连接不健康
       // 缓存失败不应该影响主要功能
     }
   }
@@ -209,6 +286,14 @@ export class CacheService {
   static async get<T>(key: string): Promise<T | null> {
     const startTime = Date.now();
     try {
+      // 检查Redis连接
+      const isConnectionHealthy = await this.ensureConnection();
+      if (!isConnectionHealthy || !redis) {
+        console.warn('Redis连接不可用，跳过缓存获取操作');
+        this.updateStats(false); // 记录为未命中
+        return null;
+      }
+
       const value = await redis.get(key);
       const duration = Date.now() - startTime;
       const hit = value !== null;
@@ -235,6 +320,7 @@ export class CacheService {
       }
     } catch (error) {
       console.error('Cache get error:', error);
+      this.connectionHealthy = false; // 标记连接不健康
       this.updateStats(false); // 记录为未命中
       return null;
     }
