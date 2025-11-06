@@ -16,6 +16,8 @@
     "deploy:cloudflare": "pnpm run build:cloudflare && wrangler pages deploy .open-next --project-name=hearthbulter",
     "deploy:vercel": "./scripts/vercel-deploy.sh",
     "check:deployment": "./scripts/check-deployment.sh",
+    "quick-status": "./scripts/quick-status-check.sh",
+    "setup:env": "./scripts/setup-production-env.sh",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
