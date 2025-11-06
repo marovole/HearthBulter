@@ -62,7 +62,7 @@ export function validateEnvironmentVariables(): void {
     }
   }
 
-  // 如果有错误，抛出异常
+  // 如果有错误，在开发环境抛出异常，生产环境仅记录警告
   if (errors.length > 0) {
     const errorMessage = [
       '❌ 环境变量验证失败:',
@@ -73,7 +73,12 @@ export function validateEnvironmentVariables(): void {
       '参考 .env.example 文件了解所需的环境变量。',
     ].join('\n');
 
-    throw new Error(errorMessage);
+    if (isProduction) {
+      console.warn('⚠️ 生产环境环境变量警告:', errorMessage);
+      return; // 生产环境不阻止启动，仅记录警告
+    } else {
+      throw new Error(errorMessage);
+    }
   }
 
   console.log('✅ 环境变量验证通过');
