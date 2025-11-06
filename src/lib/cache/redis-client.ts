@@ -1,9 +1,13 @@
 import { Redis } from '@upstash/redis';
 
 // Redis 客户端配置
+// 自动清理环境变量中的空白字符（防止Vercel配置问题）
+const redisUrl = (process.env.UPSTASH_REDIS_REST_URL || '').trim();
+const redisToken = (process.env.UPSTASH_REDIS_REST_TOKEN || '').trim();
+
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+  url: redisUrl,
+  token: redisToken,
 });
 
 export { redis };
