@@ -14,6 +14,8 @@
     "build": "prisma generate && next build",
     "build:cloudflare": "prisma generate && next build && npx @opennextjs/cloudflare build && cp -f .open-next/worker.js .open-next/_worker.js && cp -f wrangler.toml .open-next/wrangler.toml && node scripts/add-compat-flags.js && node scripts/create-node-stubs.js && node scripts/fix-cloudflare-imports.js",
     "deploy:cloudflare": "pnpm run build:cloudflare && wrangler pages deploy .open-next --project-name=hearthbulter",
+    "deploy:vercel": "./scripts/vercel-deploy.sh",
+    "check:deployment": "./scripts/check-deployment.sh",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
