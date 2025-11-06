@@ -26,10 +26,11 @@ export const GET = withPermissions(
   withSecurity(
     defaultSecurityOptions,
     withPerformanceMonitoring(
-      async (request: NextRequest, context?: { data?: { query?: z.infer<typeof GETQuerySchema> } }) => {
+      async (request: NextRequest) => {
         const session = await auth();
 
-        const validatedQuery = context?.data?.query || GETQuerySchema.parse({});
+        const { searchParams } = new URL(request.url);
+        const validatedQuery = GETQuerySchema.parse(Object.fromEntries(searchParams));
 
         // 构建查询条件
         const where: any = {
