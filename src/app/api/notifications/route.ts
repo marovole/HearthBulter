@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 import { NotificationManager, NotificationUtils } from '@/lib/services/notification';
 import { NotificationType, NotificationChannel, NotificationPriority } from '@prisma/client';
 
-const prisma = new PrismaClient();
 const notificationManager = new NotificationManager(prisma);
 
 // GET /api/notifications - 获取用户通知列表

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { PrismaClient, ShareStatus } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 /**
  * GET /api/social/share/[token]

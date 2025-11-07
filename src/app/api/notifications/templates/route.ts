@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 import { TemplateEngine } from '@/lib/services/notification';
 
-const prisma = new PrismaClient();
 const templateEngine = new TemplateEngine(prisma);
 
 // GET /api/notifications/templates - 获取通知模板列表

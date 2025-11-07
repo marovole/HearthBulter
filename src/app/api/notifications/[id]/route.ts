@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 import { NotificationManager } from '@/lib/services/notification';
 
-const prisma = new PrismaClient();
 const notificationManager = new NotificationManager(prisma);
 
 export async function DELETE(

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { PrismaClient, AnomalyStatus } from '@prisma/client';
 import { getPendingAnomalies, acknowledgeAnomaly, resolveAnomaly, ignoreAnomaly } from '@/lib/services/analytics/anomaly-detector';
 
-const prisma = new PrismaClient();
 
 /**
  * GET /api/analytics/anomalies
