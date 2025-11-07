@@ -61,6 +61,7 @@ function shouldSkipMiddleware(pathname: string): boolean {
   const skipPatterns = [
     '/_next',
     '/api/health',
+    '/api/debug',  // Debug 端点
     '/favicon.ico',
     '/robots.txt',
     '/sitemap.xml',
@@ -233,15 +234,8 @@ async function isRateLimited(clientIP: string, pathname: string): Promise<boolea
   return false;
 }
 
-// 清理过期的速率限制记录 (定期清理)
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of rateLimitMap.entries()) {
-    if (now > value.resetTime) {
-      rateLimitMap.delete(key);
-    }
-  }
-}, 60000); // 每分钟清理一次
+// 注意：在Serverless环境中不使用setInterval，清理会在每次请求时自动发生
+// 当创建新的速率限制记录时，旧的记录会在检查时被忽略
 
 /**
  * 中间件匹配配置
