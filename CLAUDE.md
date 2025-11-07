@@ -16,3 +16,126 @@ Use `@/openspec/AGENTS.md` to learn:
 Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
+
+---
+
+## 补充开发指南
+
+### 常用开发命令
+
+```bash
+# 开发服务器
+pnpm dev                  # 启动开发服务器
+
+# 数据库操作
+pnpm db:generate         # 生成 Prisma 客户端
+pnpm db:push            # 推送 schema 到数据库
+pnpm db:migrate         # 创建并应用迁移
+pnpm db:studio          # 打开 Prisma Studio GUI
+pnpm db:seed            # 初始化数据库数据
+pnpm db:test            # 测试数据库连接
+
+# 代码质量
+pnpm lint               # 运行 ESLint
+pnpm lint:fix           # 自动修复 ESLint 问题
+pnpm format             # 格式化代码
+pnpm type-check         # TypeScript 类型检查
+
+# 测试
+pnpm test               # 运行单元测试
+pnpm test:watch         # 监听模式运行测试
+pnpm test:coverage      # 运行测试并生成覆盖率报告
+pnpm test:e2e           # 运行端到端测试
+
+# 部署
+pnpm deploy:vercel      # 部署到 Vercel
+pnpm build:cloudflare   # 构建 Cloudflare 版本
+pnpm deploy:cloudflare  # 部署到 Cloudflare Pages
+pnpm check:deployment   # 检查部署状态
+```
+
+### 核心架构信息
+
+**技术栈**: Next.js 15 (App Router) + TypeScript 5.x + React 18 + Tailwind CSS 4.x + shadcn/ui + Zustand
+
+**数据库**: PostgreSQL 16 + Prisma 6.x ORM (70+ 表结构)
+
+**认证**: NextAuth.js v5
+
+**AI 服务**: OpenAI GPT-4 + Anthropic Claude
+
+**部署**: Vercel (主) + Cloudflare Pages (备选)
+
+### 关键目录结构
+
+```
+src/
+├── app/                 # Next.js App Router 页面和 API
+│   ├── (auth)/         # 认证相关页面
+│   ├── dashboard/      # 仪表板页面
+│   └── api/            # 70+ API 端点
+├── components/
+│   ├── ui/            # shadcn/ui 基础组件
+│   └── features/      # 业务功能组件
+├── lib/
+│   ├── services/      # AI、分析、预算等业务逻辑
+│   ├── db/            # Prisma 客户端
+│   └── utils/         # 工具函数
+├── types/             # TypeScript 类型定义
+└── hooks/             # 自定义 React hooks
+
+prisma/
+└── schema.prisma       # 数据库 Schema
+
+openspec/
+├── AGENTS.md          # OpenSpec 详细说明
+├── project.md         # 项目规范
+└── changes/           # 变更提案
+```
+
+### 环境变量配置 (参考 .env.example)
+
+必需变量:
+- `DATABASE_URL` - PostgreSQL 连接字符串
+- `NEXTAUTH_SECRET` - 至少32字符
+- `NEXTAUTH_URL` - 应用 URL
+
+推荐变量:
+- `USDA_API_KEY` - 营养数据库 API
+- `OPENAI_API_KEY` - AI 服务
+- `OPENROUTER_API_KEY` - Claude 集成
+
+### 重要开发准则
+
+1. **TypeScript Strict Mode** - 所有代码必须通过严格类型检查
+2. **测试覆盖率** - 最低 25% 覆盖率要求
+3. **API 开发** - 使用 Zod 验证输入，实现适当的错误处理
+4. **AI 功能** - 注意速率限制和成本优化
+5. **性能** - 使用 Prisma 查询优化，实现缓存策略
+6. **安全性** - 基于角色的访问控制，输入验证
+
+### 开发建议
+
+- 修改数据库前先备份
+- 实现 AI 功能时添加详细日志
+- 遵循现有的组件和服务模式
+- 为新功能编写单元测试
+- 使用 Prisma Studio 进行数据库调试
+- 复杂变更前先创建 OpenSpec 提案
+
+### 常见故障排除
+
+**数据库连接失败**:
+- 检查 DATABASE_URL 格式
+- 验证 PostgreSQL 是否运行
+- 使用 `pnpm db:test` 测试连接
+
+**构建失败**:
+- 运行 `pnpm type-check` 检查类型错误
+- 检查所有依赖是否安装
+- 查看具体错误日志
+
+**测试失败**:
+- 检查环境变量是否配置
+- 验证测试数据库初始化
+- 检查异步测试的超时设置
