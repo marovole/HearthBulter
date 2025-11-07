@@ -22,6 +22,7 @@
     "deploy:database": "./scripts/deploy-database.sh",
     "quick-fix": "./scripts/quick-fix-check.sh",
     "restore:supabase": "./scripts/restore-supabase.sh",
+    "emergency:fix": "./scripts/emergency-supabase-fix.sh",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
