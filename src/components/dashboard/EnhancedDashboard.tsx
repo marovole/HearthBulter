@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DashboardLayout } from './DashboardLayout';
 import { OverviewCards } from './OverviewCards';
 import { TrendsSection } from './TrendsSection';
@@ -13,20 +13,11 @@ import { QuickActionsPanel } from './QuickActionsPanel';
 import { WeightTrendChart } from './WeightTrendChart';
 import { NutritionAnalysisChart } from './NutritionAnalysisChart';
 import HealthScoreCard from './HealthScoreCard';
+import type { FamilyMember, RawFamilyMember, RawFamily } from '@/types/family';
 
 interface EnhancedDashboardProps {
   userId: string
   initialMemberId?: string
-}
-
-interface FamilyMember {
-  id: string
-  name: string
-  avatar?: string
-  role: string
-  email?: string
-  healthScore?: number
-  lastActive?: Date
 }
 
 export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboardProps) {
@@ -50,11 +41,10 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         }
 
         const familiesData = await familiesResponse.json();
-        let families = familiesData.families || [];
+        let families: RawFamily[] = familiesData.families || [];
 
         // 2. 如果没有家庭，自动创建一个默认家庭
         if (families.length === 0) {
-          console.log('未找到家庭，正在创建默认家庭...');
           const createFamilyResponse = await fetch('/api/families', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -74,11 +64,10 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
 
         // 3. 使用第一个家庭
         const family = families[0];
-        let members = family.members || [];
+        let members: RawFamilyMember[] = family.members || [];
 
         // 4. 如果家庭没有成员，自动创建一个关联到当前用户的成员
         if (members.length === 0) {
-          console.log('家庭没有成员，正在创建默认成员...');
           const createMemberResponse = await fetch(`/api/families/${family.id}/members`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -99,12 +88,12 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         }
 
         // 5. 转换成员数据格式
-        const formattedMembers: FamilyMember[] = members.map((member: any) => ({
+        const formattedMembers: FamilyMember[] = members.map((member: RawFamilyMember) => ({
           id: member.id,
           name: member.name,
-          avatar: member.avatar,
+          avatar: member.avatar || undefined,
           role: member.role.toLowerCase(),
-          email: member.user?.email,
+          email: member.user?.email || undefined,
           healthScore: 0, // 默认值，后续可以从健康评分 API 获取
           lastActive: new Date(),
         }));
@@ -114,7 +103,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         // 6. 选择成员：优先选择与当前用户关联的成员，否则选择第一个
         if (!selectedMemberId && formattedMembers.length > 0) {
           // 尝试找到关联到当前用户的成员
-          const userMember = members.find((m: any) => m.userId === userId);
+          const userMember = members.find((m: RawFamilyMember) => m.userId === userId);
           const memberId = userMember ? userMember.id : formattedMembers[0].id;
           setSelectedMemberId(memberId);
         }
@@ -136,6 +125,11 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
   };
+
+  // 缓存当前选中的成员，避免重复查找
+  const currentMember = useMemo(() => {
+    return familyMembers.find(m => m.id === selectedMemberId);
+  }, [familyMembers, selectedMemberId]);
 
   const renderDashboardContent = () => {
     if (loading) {
@@ -172,8 +166,6 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         </div>
       );
     }
-
-    const currentMember = familyMembers.find(m => m.id === selectedMemberId);
 
     switch (activeTab) {
     case 'overview':
@@ -269,21 +261,21 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
     >
       <div className="space-y-6">
         {/* 成员信息头部 */}
-        {!loading && selectedMemberId && (
+        {!loading && selectedMemberId && currentMember && (
           <div className="bg-white p-4 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                   <span className="text-lg font-semibold text-blue-600">
-                    {familyMembers.find(m => m.id === selectedMemberId)?.name?.charAt(0)}
+                    {currentMember.name?.charAt(0)}
                   </span>
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {familyMembers.find(m => m.id === selectedMemberId)?.name}
+                    {currentMember.name}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    {familyMembers.find(m => m.id === selectedMemberId)?.role === 'admin' ? '管理员' : '家庭成员'}
+                    {currentMember.role === 'admin' ? '管理员' : '家庭成员'}
                   </p>
                 </div>
               </div>
@@ -291,7 +283,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
                 <div className="text-right">
                   <p className="text-sm text-gray-500">健康评分</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {familyMembers.find(m => m.id === selectedMemberId)?.healthScore || 0}
+                    {currentMember.healthScore || 0}
                   </p>
                 </div>
               </div>
