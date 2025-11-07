@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { verifyFamilyAccess, verifyFamilyAdmin } from '@/lib/auth/permissions';
 
 // 创建成员的验证 schema
 const createMemberSchema = z.object({
@@ -29,23 +30,7 @@ export async function GET(
     const { familyId } = await params;
 
     // 验证用户是否有权限访问该家庭
-    const family = await prisma.family.findFirst({
-      where: {
-        id: familyId,
-        deletedAt: null,
-        OR: [
-          { creatorId: session.user.id },
-          {
-            members: {
-              some: {
-                userId: session.user.id,
-                deletedAt: null,
-              },
-            },
-          },
-        ],
-      },
-    });
+    const family = await verifyFamilyAccess(familyId, session.user.id);
 
     if (!family) {
       return NextResponse.json({ error: '家庭不存在或无权访问' }, { status: 404 });
@@ -93,24 +78,7 @@ export async function POST(
     const { familyId } = await params;
 
     // 验证用户是否有权限管理该家庭
-    const family = await prisma.family.findFirst({
-      where: {
-        id: familyId,
-        deletedAt: null,
-        OR: [
-          { creatorId: session.user.id },
-          {
-            members: {
-              some: {
-                userId: session.user.id,
-                role: 'ADMIN',
-                deletedAt: null,
-              },
-            },
-          },
-        ],
-      },
-    });
+    const family = await verifyFamilyAdmin(familyId, session.user.id);
 
     if (!family) {
       return NextResponse.json({ error: '家庭不存在或无权限创建成员' }, { status: 403 });
