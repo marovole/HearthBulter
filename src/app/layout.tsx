@@ -1,12 +1,13 @@
 import { SessionProvider } from '@/components/providers/session-provider';
 import './globals.css';
 import { Inter } from 'next/font/google';
-import { startScheduler } from '@/lib/services/scheduler/startup';
+// import { startScheduler } from '@/lib/services/scheduler/startup';
 
-// 启动调度器（仅在服务端执行）
-if (typeof window === 'undefined') {
-  startScheduler().catch(console.error);
-}
+// 临时禁用调度器以隔离问题
+// // 启动调度器（仅在服务端执行）
+// if (typeof window === 'undefined') {
+//   startScheduler().catch(console.error);
+// }
 
 const inter = Inter({ subsets: ['latin'] });
 
