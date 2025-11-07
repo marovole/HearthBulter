@@ -4,7 +4,6 @@ import { auth } from '@/lib/auth';
 import { PrismaClient, ReportType } from '@prisma/client';
 import { createReport } from '@/lib/services/analytics/report-generator';
 
-
 /**
  * GET /api/analytics/reports
  * 获取报告列表

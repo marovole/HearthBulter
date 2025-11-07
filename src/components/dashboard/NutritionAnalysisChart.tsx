@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, TrendingUp, TrendingDown, Target } from 'lucide-react';
+import { EmptyStateGuide } from './EmptyStateGuide';
 
 interface NutritionData {
   carbs: number
@@ -68,6 +69,7 @@ export function NutritionAnalysisChart({
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(
         `/api/dashboard/nutrition-analysis?memberId=${memberId}&period=${period}`
       );
@@ -97,17 +99,21 @@ export function NutritionAnalysisChart({
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-sm text-red-800">{error}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-red-800">{error}</p>
+          <button
+            onClick={loadData}
+            className="text-sm text-red-600 hover:text-red-700 font-medium"
+          >
+            重试
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!data) {
-    return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        <p>暂无数据</p>
-      </div>
-    );
+    return <EmptyStateGuide memberId={memberId} type="nutrition" onInitialize={loadData} />;
   }
 
   // 准备饼图数据

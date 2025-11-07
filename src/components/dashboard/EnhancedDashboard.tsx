@@ -26,6 +26,8 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [needsInitialization, setNeedsInitialization] = useState(false);
 
   // 获取真实的家庭成员数据
   useEffect(() => {
@@ -118,6 +120,54 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
     fetchFamilyMembers();
   }, []); // 只在组件挂载时执行一次
 
+  // 检查选中的成员是否需要初始化
+  useEffect(() => {
+    const checkInitialization = async () => {
+      if (!selectedMemberId) return;
+
+      try {
+        const response = await fetch(`/api/members/${selectedMemberId}/initialize`);
+        if (response.ok) {
+          const data = await response.json();
+          setNeedsInitialization(data.needsInitialization);
+
+          // 如果需要初始化，自动触发
+          if (data.needsInitialization) {
+            await autoInitialize();
+          }
+        }
+      } catch (error) {
+        console.error('检查初始化状态失败:', error);
+      }
+    };
+
+    checkInitialization();
+  }, [selectedMemberId]);
+
+  // 自动初始化成员数据
+  const autoInitialize = async () => {
+    if (!selectedMemberId || isInitializing) return;
+
+    setIsInitializing(true);
+    try {
+      const response = await fetch(`/api/members/${selectedMemberId}/initialize`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setNeedsInitialization(false);
+        // 初始化成功后，等待一小段时间让数据同步
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('自动初始化失败:', error);
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
   const handleMemberChange = (memberId: string) => {
     setSelectedMemberId(memberId);
   };
@@ -137,6 +187,16 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         <div className="flex flex-col items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
           <p className="text-gray-600">正在加载家庭数据...</p>
+        </div>
+      );
+    }
+
+    if (isInitializing) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+          <p className="text-gray-900 font-medium mb-2">正在初始化您的健康档案...</p>
+          <p className="text-gray-600 text-sm">这只需要几秒钟</p>
         </div>
       );
     }

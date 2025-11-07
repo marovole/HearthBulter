@@ -20,7 +20,7 @@ export async function GET() {
       database: 'connected',
       environment: envVars,
       uptime: process.uptime(),
-      version: '1.0.0'
+      version: '1.0.0',
     });
   } catch (error) {
     return NextResponse.json(
@@ -28,7 +28,7 @@ export async function GET() {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         error: error instanceof Error ? error.message : 'Unknown error',
-        database: 'disconnected'
+        database: 'disconnected',
       },
       { status: 500 }
     );

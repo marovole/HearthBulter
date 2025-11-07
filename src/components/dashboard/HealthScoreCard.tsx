@@ -28,6 +28,7 @@ import {
   CheckCircle,
   Info,
 } from 'lucide-react';
+import { EmptyStateGuide } from './EmptyStateGuide';
 
 interface HealthScoreData {
   totalScore: number
@@ -90,6 +91,7 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(`/api/dashboard/health-score?memberId=${memberId}`);
       if (!response.ok) {
         throw new Error('加载健康评分失败');
@@ -132,17 +134,21 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-sm text-red-800">{error}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-red-800">{error}</p>
+          <button
+            onClick={loadData}
+            className="text-sm text-red-600 hover:text-red-700 font-medium"
+          >
+            重试
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!data) {
-    return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        <p>暂无数据</p>
-      </div>
-    );
+    return <EmptyStateGuide memberId={memberId} type="health-score" onInitialize={loadData} />;
   }
 
   // 获取评分等级

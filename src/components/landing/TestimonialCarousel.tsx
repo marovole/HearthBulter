@@ -12,7 +12,7 @@ import {
   CarouselContent, 
   CarouselItem, 
   CarouselNext, 
-  CarouselPrevious 
+  CarouselPrevious, 
 } from '@/components/ui/carousel';
 
 interface Testimonial {
@@ -62,7 +62,7 @@ const testimonials: Testimonial[] = [
 export default function TestimonialCarousel() {
   const { ref, inView } = useInView({
     triggerOnce: true,
-    threshold: 0.1
+    threshold: 0.1,
   });
 
   const [api, setApi] = useState<any>();
@@ -134,7 +134,7 @@ export default function TestimonialCarousel() {
         >
           <Carousel
             opts={{
-              align: "center",
+              align: 'center',
               loop: true,
               skipSnaps: false,
             }}

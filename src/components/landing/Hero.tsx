@@ -80,7 +80,7 @@ export default function Hero({ onCTAClick }: HeroProps) {
               duration: 4,
               delay: item.delay,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: 'easeInOut',
             }}
           >
             <div className={`w-12 h-12 ${item.color} opacity-30`}>

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-
 // GET /api/notifications/preferences - 获取用户通知偏好设置
 export async function GET(request: NextRequest) {
   try {

@@ -515,5 +515,5 @@ export const emailService = new Proxy({} as EmailService, {
     const instance = getEmailServiceInstance();
     (instance as any)[prop] = value;
     return true;
-  }
+  },
 });

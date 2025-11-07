@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-
 export async function GET() {
   try {
     // 获取基本统计信息
@@ -17,19 +16,19 @@ export async function GET() {
       stats,
       endpoints: {
         health: '/api/health',
-        monitoring: '/api/monitoring'
+        monitoring: '/api/monitoring',
       },
       uptime: process.uptime(),
-      version: '1.0.0'
+      version: '1.0.0',
     });
   } catch (error) {
     return NextResponse.json(
       {
         system: 'unhealthy',
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
   }
-  }
+}

@@ -5,7 +5,6 @@ import { shareAchievement } from '@/lib/services/social/achievement-system';
 import { generateShareContent } from '@/lib/services/social/share-generator';
 import { generateShareToken } from '@/lib/services/social/share-link';
 
-
 /**
  * POST /api/social/achievements/[id]/share
  * 分享成就
