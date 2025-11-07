@@ -36,15 +36,11 @@ const nextConfig = {
     let corsOrigin = 'http://localhost:3000';
     if (process.env.NODE_ENV === 'production') {
       // 优先使用明确配置的变量，其次使用平台提供的默认域名
-      const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '';
-      const cfPagesCustomDomain = process.env.CF_PAGES_CUSTOM_DOMAIN ? `https://${process.env.CF_PAGES_CUSTOM_DOMAIN}` : '';
-      const cfPagesUrl = process.env.CF_PAGES_URL || '';
+      const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.trim()}` : '';
+      const cfPagesCustomDomain = process.env.CF_PAGES_CUSTOM_DOMAIN ? `https://${process.env.CF_PAGES_CUSTOM_DOMAIN.trim()}` : '';
+      const cfPagesUrl = process.env.CF_PAGES_URL ? process.env.CF_PAGES_URL.trim() : '';
 
-      corsOrigin = process.env.NEXT_PUBLIC_ALLOWED_ORIGINS
-        || process.env.NEXTAUTH_URL
-        || vercelUrl
-        || cfPagesCustomDomain
-        || cfPagesUrl;
+      corsOrigin = (process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || process.env.NEXTAUTH_URL || vercelUrl || cfPagesCustomDomain || cfPagesUrl).trim();
 
       // 对于 Cloudflare Pages 构建，如果没有设置环境变量，使用占位符
       // 实际的 CORS 处理将在运行时通过中间件完成
