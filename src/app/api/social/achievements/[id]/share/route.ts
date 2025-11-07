@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { shareAchievement } from '@/lib/services/social/achievement-system';
 import { generateShareContent } from '@/lib/services/social/share-generator';
 import { generateShareToken } from '@/lib/services/social/share-link';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 /**
  * POST /api/social/achievements/[id]/share

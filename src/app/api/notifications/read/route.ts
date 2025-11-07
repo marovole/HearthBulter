@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 import { NotificationManager } from '@/lib/services/notification';
 
-const prisma = new PrismaClient();
 const notificationManager = new NotificationManager(prisma);
 
 // PUT /api/notifications/read - 标记通知为已读

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 import { RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
 
-const prisma = new PrismaClient();
 const recommendationEngine = new RecommendationEngine(prisma);
 
 export async function GET(request: NextRequest) {

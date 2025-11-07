@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { PrismaClient, ReportType } from '@prisma/client';
 import { createReport } from '@/lib/services/analytics/report-generator';
 
-const prisma = new PrismaClient();
 
 /**
  * GET /api/analytics/reports
