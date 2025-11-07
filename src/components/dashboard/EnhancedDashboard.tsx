@@ -34,54 +34,100 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 模拟获取家庭成员数据
+  // 获取真实的家庭成员数据
   useEffect(() => {
     const fetchFamilyMembers = async () => {
       try {
-        // 这里应该调用实际的API
-        const mockMembers: FamilyMember[] = [
-          {
-            id: '1',
-            name: '张三',
-            role: 'admin',
-            email: 'zhangsan@example.com',
-            healthScore: 85,
-            lastActive: new Date(),
-          },
-          {
-            id: '2',
-            name: '李四',
-            role: 'member',
-            email: 'lisi@example.com',
-            healthScore: 78,
-            lastActive: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          },
-          {
-            id: '3',
-            name: '王五',
-            role: 'member',
-            email: 'wangwu@example.com',
-            healthScore: 92,
-            lastActive: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-          },
-        ];
-        
-        setFamilyMembers(mockMembers);
-        
-        // 如果没有选中的成员，默认选择第一个
-        if (!selectedMemberId && mockMembers.length > 0) {
-          setSelectedMemberId(mockMembers[0].id);
+        setLoading(true);
+        setError(null);
+
+        // 1. 获取用户的家庭列表
+        const familiesResponse = await fetch('/api/families');
+        if (!familiesResponse.ok) {
+          throw new Error('获取家庭列表失败');
+        }
+
+        const familiesData = await familiesResponse.json();
+        let families = familiesData.families || [];
+
+        // 2. 如果没有家庭，自动创建一个默认家庭
+        if (families.length === 0) {
+          console.log('未找到家庭，正在创建默认家庭...');
+          const createFamilyResponse = await fetch('/api/families', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: '我的家庭',
+              description: '默认家庭',
+            }),
+          });
+
+          if (!createFamilyResponse.ok) {
+            throw new Error('创建默认家庭失败');
+          }
+
+          const createFamilyData = await createFamilyResponse.json();
+          families = [createFamilyData.family];
+        }
+
+        // 3. 使用第一个家庭
+        const family = families[0];
+        let members = family.members || [];
+
+        // 4. 如果家庭没有成员，自动创建一个关联到当前用户的成员
+        if (members.length === 0) {
+          console.log('家庭没有成员，正在创建默认成员...');
+          const createMemberResponse = await fetch(`/api/families/${family.id}/members`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: '我',
+              gender: 'OTHER',
+              birthDate: new Date().toISOString(),
+              role: 'ADMIN',
+            }),
+          });
+
+          if (!createMemberResponse.ok) {
+            throw new Error('创建默认成员失败');
+          }
+
+          const createMemberData = await createMemberResponse.json();
+          members = [createMemberData.member];
+        }
+
+        // 5. 转换成员数据格式
+        const formattedMembers: FamilyMember[] = members.map((member: any) => ({
+          id: member.id,
+          name: member.name,
+          avatar: member.avatar,
+          role: member.role.toLowerCase(),
+          email: member.user?.email,
+          healthScore: 0, // 默认值，后续可以从健康评分 API 获取
+          lastActive: new Date(),
+        }));
+
+        setFamilyMembers(formattedMembers);
+
+        // 6. 选择成员：优先选择与当前用户关联的成员，否则选择第一个
+        if (!selectedMemberId && formattedMembers.length > 0) {
+          // 尝试找到关联到当前用户的成员
+          const userMember = members.find((m: any) => m.userId === userId);
+          const memberId = userMember ? userMember.id : formattedMembers[0].id;
+          setSelectedMemberId(memberId);
         }
       } catch (error) {
-        console.error('Failed to fetch family members:', error);
+        console.error('获取家庭成员失败:', error);
+        setError(error instanceof Error ? error.message : '加载失败，请重试');
       } finally {
         setLoading(false);
       }
     };
 
     fetchFamilyMembers();
-  }, [selectedMemberId]);
+  }, []); // 只在组件挂载时执行一次
 
   const handleMemberChange = (memberId: string) => {
     setSelectedMemberId(memberId);
@@ -94,8 +140,26 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
   const renderDashboardContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">正在加载家庭数据...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+            <h3 className="text-lg font-medium text-red-900 mb-2">加载失败</h3>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
+            >
+              重新加载
+            </button>
+          </div>
         </div>
       );
     }
