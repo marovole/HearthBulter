@@ -13,15 +13,6 @@ export interface PermissionMiddlewareConfig {
   allowSelf?: boolean // 允许用户操作自己的资源
 }
 
-// 扩展NextRequest接口以包含用户信息
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      NEXTAUTH_SECRET: string
-    }
-  }
-}
-
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
     id: string

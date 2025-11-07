@@ -3,7 +3,7 @@
  */
 
 import { generateShareContent } from '@/lib/services/social/share-generator';
-import { ShareContentType } from '@prisma/client';
+import { ShareContentType, PrismaClient } from '@prisma/client';
 
 // Mock Prisma Client
 jest.mock('@prisma/client', () => ({
@@ -82,7 +82,7 @@ describe('ShareGenerator', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockPrisma = new (require('@prisma/client').PrismaClient)();
+    mockPrisma = new PrismaClient();
   });
 
   describe('generateShareContent', () => {
