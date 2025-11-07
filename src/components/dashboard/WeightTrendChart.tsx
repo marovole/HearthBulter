@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import { EmptyStateGuide } from './EmptyStateGuide';
 
 interface WeightTrendData {
   data: Array<{ date: Date; weight: number }>
@@ -50,6 +51,7 @@ export function WeightTrendChart({
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(
         `/api/dashboard/weight-trend?memberId=${memberId}&days=${days}`
       );
@@ -79,17 +81,21 @@ export function WeightTrendChart({
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <p className="text-sm text-red-800">{error}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-red-800">{error}</p>
+          <button
+            onClick={loadData}
+            className="text-sm text-red-600 hover:text-red-700 font-medium"
+          >
+            重试
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!data || data.data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        <p>暂无数据</p>
-      </div>
-    );
+    return <EmptyStateGuide memberId={memberId} type="weight" onInitialize={loadData} />;
   }
 
   // 格式化数据供图表使用

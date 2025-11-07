@@ -63,12 +63,12 @@ export async function POST(request: NextRequest) {
         success: true,
         message: '注册成功（临时模式）',
         user: {
-          id: 'temp-' + Date.now(),
+          id: `temp-${Date.now()}`,
           name,
           email,
           role: 'USER',
         },
-        warning: '当前为临时注册模式，重启后数据可能丢失'
+        warning: '当前为临时注册模式，重启后数据可能丢失',
       });
     }
 

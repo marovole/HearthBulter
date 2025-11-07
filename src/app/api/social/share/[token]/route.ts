@@ -3,7 +3,6 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { PrismaClient, ShareStatus } from '@prisma/client';
 
-
 /**
  * GET /api/social/share/[token]
  * 通过分享token获取分享内容（公开访问）

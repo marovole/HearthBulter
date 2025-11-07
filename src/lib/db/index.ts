@@ -52,7 +52,7 @@ export const prisma = new Proxy({} as PrismaClient, {
     const instance = getPrismaClient();
     (instance as any)[prop] = value;
     return true;
-  }
+  },
 });
 
 // 数据库健康检查函数

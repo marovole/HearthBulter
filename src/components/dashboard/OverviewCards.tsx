@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { HealthScoreGauge } from './HealthScoreGauge';
 import { GoalProgressBar } from './GoalProgressBar';
+import { EmptyStateGuide } from './EmptyStateGuide';
 
 interface OverviewData {
   overview: {
@@ -63,6 +64,7 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(
         `/api/dashboard/overview?memberId=${memberId}`
       );
@@ -94,12 +96,25 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-sm text-red-800">{error || '加载失败'}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-red-800">{error}</p>
+          <button
+            onClick={loadData}
+            className="text-sm text-red-600 hover:text-red-700 font-medium"
+          >
+            重试
+          </button>
+        </div>
       </div>
     );
+  }
+
+  // 检查是否有数据，如果没有则显示空状态引导
+  if (!data) {
+    return <EmptyStateGuide memberId={memberId} type="overview" onInitialize={loadData} />;
   }
 
   const { overview, healthScore } = data;

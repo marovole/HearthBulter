@@ -119,7 +119,7 @@ export class ErrorMonitoringService {
     byLevel: Record<ErrorLevel, number>;
     recent: ApiError[];
     criticalIssues: ApiError[];
-  } {
+    } {
     const byLevel = {
       [ErrorLevel.LOW]: 0,
       [ErrorLevel.MEDIUM]: 0,
@@ -153,7 +153,7 @@ export class ErrorMonitoringService {
     slowestRequests: PerformanceMetrics[];
     errorRate: number;
     recent: PerformanceMetrics[];
-  } {
+    } {
     if (this.performance.length === 0) {
       return {
         total: 0,
@@ -191,7 +191,7 @@ export class ErrorMonitoringService {
   private static triggerAlert(error: ApiError): void {
     // 在生产环境中，这里可以集成外部告警系统
     // 例如: Slack, Discord, Email, Sentry等
-    console.error(`\x1b[35m🚨 CRITICAL ALERT 🚨\x1b[0m`, {
+    console.error('\x1b[35m🚨 CRITICAL ALERT 🚨\x1b[0m', {
       message: 'Critical system error detected',
       error: {
         code: error.code,

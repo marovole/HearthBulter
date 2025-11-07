@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
-
 /**
  * GET /api/analytics/reports/[id]
  * 获取报告详情

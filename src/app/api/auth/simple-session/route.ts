@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       headers: {
         hasAuthHeader: !!authHeader,
         hasCookie: !!token,
-      }
+      },
     });
 
   } catch (error) {

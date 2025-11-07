@@ -223,7 +223,7 @@ export class CacheService {
     healthy: boolean;
     configured: boolean;
     lastCheck: Date;
-  } {
+    } {
     return {
       healthy: this.connectionHealthy,
       configured: isRedisConfigured,

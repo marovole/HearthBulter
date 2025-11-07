@@ -117,7 +117,7 @@ const stats = [
     icon: Users,
     color: 'text-blue-600',
     targetValue: 15000,
-    unit: '月增长 20%'
+    unit: '月增长 20%',
   },
   { 
     end: 100, 
@@ -126,7 +126,7 @@ const stats = [
     icon: BookOpen,
     color: 'text-green-600',
     targetValue: 200,
-    unit: '持续增长'
+    unit: '持续增长',
   },
   { 
     end: 95, 
@@ -135,8 +135,8 @@ const stats = [
     icon: Heart,
     color: 'text-orange-600',
     targetValue: 98,
-    unit: '目标 98%'
-  }
+    unit: '目标 98%',
+  },
 ];
 
 export default function StatsCounter() {
