@@ -8,7 +8,7 @@ import {
   getAchievementProgress,
   getAchievementStats, 
 } from '@/lib/services/social/achievement-system';
-import { AchievementType } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 // Mock Prisma Client
 jest.mock('@prisma/client', () => ({
@@ -36,7 +36,7 @@ describe('AchievementSystem', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockPrisma = new (require('@prisma/client').PrismaClient)();
+    mockPrisma = new PrismaClient();
   });
 
   describe('checkAndUnlockAchievements', () => {
