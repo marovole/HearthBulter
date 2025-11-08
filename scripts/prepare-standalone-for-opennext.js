@@ -17,12 +17,6 @@ const projectRoot = process.cwd();
 
 console.log('🔧 Preparing standalone for OpenNext...');
 console.log('  Project root:', projectRoot);
-console.log('  Current directory contents:');
-const rootItems = fs.readdirSync(projectRoot);
-rootItems.forEach(item => {
-  const stat = fs.lstatSync(path.join(projectRoot, item));
-  console.log(`    ${stat.isDirectory() ? '📁' : '📄'} ${item}`);
-});
 
 // Check if .next/standalone exists
 const standaloneDir = path.join(projectRoot, '.next', 'standalone');
@@ -32,7 +26,6 @@ if (!fs.existsSync(standaloneDir)) {
   process.exit(1);
 }
 
-console.log('');
 console.log('  .next/standalone contents:');
 const standaloneItems = fs.readdirSync(standaloneDir, { withFileTypes: true });
 standaloneItems.forEach(item => {
@@ -79,11 +72,10 @@ const monorepoRoot = findMonorepoRoot(projectRoot);
 // Calculate packagePath (relative path from monorepo root to build output)
 const packagePath = path.relative(monorepoRoot, buildOutputPath);
 
-console.log('');
 console.log('  Detected configuration:');
 console.log('    Monorepo root:', monorepoRoot);
 console.log('    Build output path:', buildOutputPath);
-console.log('    Package path:', packagePath);
+console.log('    Package path:', packagePath || '(empty - project root)');
 console.log('    Standalone dir:', standaloneDir);
 
 // Try to find the source directory
@@ -150,7 +142,10 @@ try {
   process.exit(1);
 }
 
-const targetDir = path.join(standaloneDir, packagePath);
+// Determine target directory
+// If packagePath is empty (project is at monorepo root), target is standaloneDir
+// Otherwise, target is standaloneDir/packagePath
+const targetDir = packagePath ? path.join(standaloneDir, packagePath) : standaloneDir;
 
 console.log('');
 console.log('  Final paths:');
@@ -163,16 +158,10 @@ if (!fs.existsSync(sourceDir)) {
   process.exit(1);
 }
 
-// Remove existing target if it exists
-if (fs.existsSync(targetDir)) {
+// Remove existing target if it exists and is a directory
+if (fs.existsSync(targetDir) && fs.lstatSync(targetDir).isDirectory()) {
   console.log('🗑️  Removing existing target directory');
   fs.rmSync(targetDir, { recursive: true, force: true });
-}
-
-// Ensure parent directory exists
-const targetParentDir = path.dirname(targetDir);
-if (!fs.existsSync(targetParentDir)) {
-  fs.mkdirSync(targetParentDir, { recursive: true });
 }
 
 // Copy entire directory tree
@@ -249,7 +238,13 @@ console.log('');
 console.log('✅ Standalone preparation complete');
 console.log('');
 console.log('OpenNext will look for files at:');
-console.log('  .next/standalone/' + packagePath + '/.next/server');
-console.log('  .next/standalone/' + packagePath + '/node_modules');
-console.log('  .next/standalone/' + packagePath + '/package.json');
+if (packagePath) {
+  console.log('  .next/standalone/' + packagePath + '/.next/server');
+  console.log('  .next/standalone/' + packagePath + '/node_modules');
+  console.log('  .next/standalone/' + packagePath + '/package.json');
+} else {
+  console.log('  .next/standalone/.next/server');
+  console.log('  .next/standalone/node_modules');
+  console.log('  .next/standalone/package.json');
+}
 console.log('  .next/standalone/package.json (for nft.json relative paths)');
