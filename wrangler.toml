@@ -1,7 +1,7 @@
 # Cloudflare Pages + Supabase 混合架构配置文件
 # 适配 Next.js 15 静态导出 + Supabase 后端
 
-pages_build_output_dir = ".next"
+pages_build_output_dir = ".open-next"
 
 name = "hearthbutler-supabase"
 
@@ -9,19 +9,15 @@ name = "hearthbutler-supabase"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
-# 主要配置
+# 生产环境配置
 [env.production]
 name = "hearthbutler-supabase-prod"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
-[env.staging]
-name = "hearthbutler-supabase-staging"
-compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat", "nodejs_als"]
-
-[env.development]
-name = "hearthbutler-supabase-dev"
+# Preview 环境配置（替换 staging 和 development）
+[env.preview]
+name = "hearthbutler-supabase-preview"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
@@ -38,21 +34,13 @@ NEXT_PUBLIC_SUPABASE_URL = "https://your-project.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY = "your-anon-key"
 SUPABASE_SERVICE_KEY = "your-service-key"
 
-# Staging 环境变量
-[env.staging.vars]
-NODE_ENV = "staging"
-NEXT_PUBLIC_SITE_URL = "https://staging-hearthbulter-supabase.pages.dev"
-NEXT_PUBLIC_SUPABASE_URL = "https://staging-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "staging-anon-key"
-SUPABASE_SERVICE_KEY = "staging-service-key"
-
-# Development 环境变量
-[env.development.vars]
-NODE_ENV = "development"
-NEXT_PUBLIC_SITE_URL = "http://localhost:3000"
-NEXT_PUBLIC_SUPABASE_URL = "https://dev-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "dev-anon-key"
-SUPABASE_SERVICE_KEY = "dev-service-key"
+# Preview 环境变量
+[env.preview.vars]
+NODE_ENV = "preview"
+NEXT_PUBLIC_SITE_URL = "https://preview-hearthbulter-supabase.pages.dev"
+NEXT_PUBLIC_SUPABASE_URL = "https://preview-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "preview-anon-key"
+SUPABASE_SERVICE_KEY = "preview-service-key"
 
 # Staging 环境变量
 # KV 存储 (如果需要)

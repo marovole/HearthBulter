@@ -3,6 +3,10 @@ import { auth } from '@/lib/auth';
 import { recipeOptimizer } from '@/lib/services/ai/recipe-optimizer';
 import { prisma } from '@/lib/db';
 
+// 支持静态导出的配置
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
