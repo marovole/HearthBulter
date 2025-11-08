@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "build:cloudflare": "prisma generate && next build && npx @opennextjs/cloudflare build && cp -f .open-next/worker.js .open-next/_worker.js && cp -f wrangler.toml .open-next/wrangler.toml && node scripts/add-compat-flags.js && node scripts/create-node-stubs.js && node scripts/fix-cloudflare-imports.js && node scripts/fix-prisma-bundle.js",
+    "build:cloudflare": "prisma generate && next build && node scripts/prepare-standalone-for-opennext.js && npx @opennextjs/cloudflare build --skipNextBuild && cp -f .open-next/worker.js .open-next/_worker.js && cp -f wrangler.toml .open-next/wrangler.toml && node scripts/add-compat-flags.js && node scripts/create-node-stubs.js && node scripts/fix-cloudflare-imports.js && node scripts/fix-prisma-bundle.js",
     "build:cloudflare-optimized": "pnpm run optimize-deps && pnpm run build:cloudflare && pnpm run check-bundle-size",
     "build:cloudflare-hybrid": "bash scripts/build-cloudflare-hybrid.sh",
     "optimize-deps": "node scripts/optimize-dependencies.js",
