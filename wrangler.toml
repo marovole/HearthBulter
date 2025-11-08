@@ -1,31 +1,58 @@
-# Cloudflare Workers 配置文件
-# 适配 Next.js 15 应用部署到 Cloudflare Pages
+# Cloudflare Pages + Supabase 混合架构配置文件
+# 适配 Next.js 15 静态导出 + Supabase 后端
 
-pages_build_output_dir = ".open-next"
+pages_build_output_dir = ".next"
 
-name = "hearthbutler"
+name = "hearthbutler-supabase"
 
 # 兼容性设置 - 启用 Node.js 兼容性
-# 使用 2024-09-23 或更晚版本以支持 stream/web 等内置模块
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
 # 主要配置
 [env.production]
-name = "hearthbutler-prod"
+name = "hearthbutler-supabase-prod"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat", "nodejs_als"]
+
+[env.staging]
+name = "hearthbutler-supabase-staging"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat", "nodejs_als"]
+
+[env.development]
+name = "hearthbutler-supabase-dev"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat", "nodejs_als"]
 
 # 环境变量配置
 [vars]
 NODE_ENV = "production"
-# Cloudflare Pages 默认域名，在实际部署时可以在 Cloudflare Dashboard 中覆盖
-NEXT_PUBLIC_ALLOWED_ORIGINS = "https://hearthbulter.pages.dev"
+NEXT_PUBLIC_SITE_URL = "https://hearthbulter-supabase.pages.dev"
 
 # 生产环境变量
 [env.production.vars]
 NODE_ENV = "production"
-NEXT_PUBLIC_ALLOWED_ORIGINS = "https://hearthbulter.pages.dev"
+NEXT_PUBLIC_SITE_URL = "https://hearthbulter-supabase.pages.dev"
+NEXT_PUBLIC_SUPABASE_URL = "https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "your-anon-key"
+SUPABASE_SERVICE_KEY = "your-service-key"
+
+# Staging 环境变量
+[env.staging.vars]
+NODE_ENV = "staging"
+NEXT_PUBLIC_SITE_URL = "https://staging-hearthbulter-supabase.pages.dev"
+NEXT_PUBLIC_SUPABASE_URL = "https://staging-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "staging-anon-key"
+SUPABASE_SERVICE_KEY = "staging-service-key"
+
+# Development 环境变量
+[env.development.vars]
+NODE_ENV = "development"
+NEXT_PUBLIC_SITE_URL = "http://localhost:3000"
+NEXT_PUBLIC_SUPABASE_URL = "https://dev-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "dev-anon-key"
+SUPABASE_SERVICE_KEY = "dev-service-key"
 
 # Staging 环境变量
 # KV 存储 (如果需要)

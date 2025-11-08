@@ -1,14 +1,17 @@
 # 🩺 Health Butler（健康管家）
 
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)](https://hearth-bulter.vercel.app)
+[![Cloudflare Pages](https://img.shields.io/badge/Deployed%20on-Cloudflare%20Pages-orange?logo=cloudflare)](https://hearthbulter.pages.dev)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![Supabase](https://img.shields.io/badge/Database-Supabase-green?logo=supabase)](https://supabase.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > 让个人与家庭的健康管理从「主观感性」走向「客观数据驱动」
 
-🚀 **生产环境**: [https://hearth-bulter.vercel.app](https://hearth-bulter.vercel.app)
+🚀 **生产环境**: [https://hearthbulter.pages.dev](https://hearthbulter.pages.dev)
 
 **Health Butler** 是一个基于健康数据与电商库存的动态饮食引擎，通过AI营养规划、智能食谱生成和电商自动采购，帮助家庭建立可持续的健康管理习惯。
+
+**架构**: 纯 Cloudflare Pages + Supabase 架构，完全免费部署！
 
 ---
 
@@ -63,22 +66,27 @@ External APIs:
 ### 技术栈
 
 **前端**:
-- Next.js 15 (App Router), TypeScript 5.x
+- Next.js 15 (App Router + Static Export), TypeScript 5.x
 - React 18, Tailwind CSS 4.x, shadcn/ui
 - Zustand (状态管理), React Hook Form + Zod
 
 **后端**:
-- Node.js 20+ LTS, Prisma 6.x
-- PostgreSQL 16, NextAuth.js v5
+- Cloudflare Functions (Serverless API)
+- Prisma 6.x (ORM), NextAuth.js v5
+
+**数据库与存储**:
+- Supabase PostgreSQL (免费 500MB)
+- Supabase Storage (免费 1GB)
 
 **AI/ML**:
 - OpenAI GPT-4 / Anthropic Claude (营养建议)
 - Tesseract.js / Azure OCR (文字识别)
 
 **部署**:
-- ✅ Vercel (前端 + Serverless Functions + Edge Functions)
-- ✅ Neon PostgreSQL (Serverless 数据库)
-- ✅ GitHub + Vercel 自动部署 (CI/CD)
+- ✅ Cloudflare Pages (全球 CDN + 边缘计算)
+- ✅ Supabase (数据库 + 存储 + 认证)
+- ✅ GitHub + Cloudflare Pages 自动部署 (CI/CD)
+- 🎁 完全免费部署方案
 
 ---
 

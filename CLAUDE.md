@@ -27,13 +27,14 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 # 开发服务器
 pnpm dev                  # 启动开发服务器
 
-# 数据库操作
+# 数据库操作 (Supabase)
 pnpm db:generate         # 生成 Prisma 客户端
-pnpm db:push            # 推送 schema 到数据库
+pnpm db:push            # 推送 schema 到 Supabase
 pnpm db:migrate         # 创建并应用迁移
 pnpm db:studio          # 打开 Prisma Studio GUI
 pnpm db:seed            # 初始化数据库数据
 pnpm db:test            # 测试数据库连接
+pnpm supabase:test      # 测试 Supabase 连接
 
 # 代码质量
 pnpm lint               # 运行 ESLint
@@ -47,24 +48,33 @@ pnpm test:watch         # 监听模式运行测试
 pnpm test:coverage      # 运行测试并生成覆盖率报告
 pnpm test:e2e           # 运行端到端测试
 
-# 部署
-pnpm deploy:vercel      # 部署到 Vercel
-pnpm build:cloudflare   # 构建 Cloudflare 版本
-pnpm deploy:cloudflare  # 部署到 Cloudflare Pages
+# 构建和部署
+pnpm build:cloudflare   # 构建 Cloudflare Pages 版本
+pnpm deploy             # 部署到 Cloudflare Pages (生产)
+pnpm deploy:prod        # 部署到 Cloudflare Pages (生产)
+pnpm cloudflare:deploy  # 使用脚本部署
 pnpm check:deployment   # 检查部署状态
 ```
 
 ### 核心架构信息
 
-**技术栈**: Next.js 15 (App Router) + TypeScript 5.x + React 18 + Tailwind CSS 4.x + shadcn/ui + Zustand
+**架构**: 纯 Cloudflare Pages + Supabase 架构（完全免费）
 
-**数据库**: PostgreSQL 16 + Prisma 6.x ORM (70+ 表结构)
+**技术栈**: 
+- 前端: Next.js 15 (App Router + Static Export) + TypeScript 5.x + React 18
+- UI: Tailwind CSS 4.x + shadcn/ui
+- 状态: Zustand
+
+**数据库与存储**: 
+- 数据库: Supabase PostgreSQL (71 张表，免费 500MB)
+- 文件存储: Supabase Storage (免费 1GB)
+- ORM: Prisma 6.x
 
 **认证**: NextAuth.js v5
 
 **AI 服务**: OpenAI GPT-4 + Anthropic Claude
 
-**部署**: Vercel (主) + Cloudflare Pages (备选)
+**部署**: Cloudflare Pages (全球 CDN + 边缘计算)
 
 ### 关键目录结构
 

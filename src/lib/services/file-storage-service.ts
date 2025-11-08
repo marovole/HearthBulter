@@ -1,11 +1,20 @@
 /**
  * 文件存储服务
  * 
- * 集成Vercel Blob Storage，实现文件上传、下载和删除功能
+ * 集成 Supabase Storage，实现文件上传、下载和删除功能
  * 用于存储体检报告文件（PDF/图片）
  */
 
-import { put, head, del } from '@vercel/blob';
+import { createClient } from '@supabase/supabase-js';
+
+// 初始化 Supabase 客户端
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+);
+
+// Supabase Storage Bucket 名称
+const STORAGE_BUCKET = 'medical-reports';
 
 /**
  * 上传文件结果
@@ -60,7 +69,7 @@ export class FileStorageService {
   }
 
   /**
-   * 上传文件到Vercel Blob Storage
+   * 上传文件到 Supabase Storage
    */
   static async uploadFile(
     file: File | Buffer,
@@ -76,29 +85,43 @@ export class FileStorageService {
       const pathname = this.generateFilePath(memberId, fileName);
 
       // 处理文件数据
-      let fileData: Buffer | File;
+      let fileData: File | Buffer | Blob;
       let contentType: string | undefined;
 
       if (file instanceof File) {
         fileData = file;
         contentType = file.type || options?.contentType;
       } else {
-        fileData = file;
+        // Buffer 转 Blob
+        fileData = new Blob([file], { type: options?.contentType });
         contentType = options?.contentType;
       }
 
-      // 上传到Vercel Blob
-      const blob = await put(pathname, fileData, {
-        access: 'private', // 私有访问，需要签名URL
-        contentType,
-        addRandomSuffix: options?.addRandomSuffix ?? false,
-      });
+      // 上传到 Supabase Storage
+      const { data, error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(pathname, fileData, {
+          contentType,
+          upsert: false, // 不覆盖现有文件
+        });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // 获取公共 URL（注意：需要配置 Bucket 为 public 或使用签名 URL）
+      const { data: urlData } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(data.path);
+
+      // 获取文件大小
+      const fileSize = file instanceof File ? file.size : file.length;
 
       return {
-        url: blob.url,
-        pathname: blob.pathname,
-        size: blob.size,
-        uploadedAt: new Date(blob.uploadedAt),
+        url: urlData.publicUrl,
+        pathname: data.path,
+        size: fileSize,
+        uploadedAt: new Date(),
       };
     } catch (error) {
       console.error('文件上传失败:', error);
@@ -113,8 +136,13 @@ export class FileStorageService {
    */
   static async fileExists(pathname: string): Promise<boolean> {
     try {
-      await head(pathname);
-      return true;
+      const { data, error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .list(pathname.substring(0, pathname.lastIndexOf('/')), {
+          search: pathname.substring(pathname.lastIndexOf('/') + 1),
+        });
+      
+      return !error && data && data.length > 0;
     } catch (error) {
       return false;
     }
@@ -125,7 +153,13 @@ export class FileStorageService {
    */
   static async deleteFile(pathname: string): Promise<void> {
     try {
-      await del(pathname);
+      const { error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .remove([pathname]);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
     } catch (error) {
       console.error('文件删除失败:', error);
       throw new Error(
@@ -149,16 +183,40 @@ export class FileStorageService {
   }
 
   /**
-   * 从URL中提取pathname
+   * 从 URL 中提取 pathname
    */
   static extractPathnameFromUrl(url: string): string | null {
     try {
       const urlObj = new URL(url);
-      // Vercel Blob URL格式: https://[account].public.blob.vercel-storage.com/[pathname]
-      const pathnameMatch = urlObj.pathname.match(/^\/(.+)$/);
-      return pathnameMatch ? pathnameMatch[1] : null;
+      // Supabase Storage URL 格式: https://[project-ref].supabase.co/storage/v1/object/public/[bucket]/[pathname]
+      const match = urlObj.pathname.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/);
+      return match ? match[1] : null;
     } catch {
       return null;
+    }
+  }
+  
+  /**
+   * 生成签名 URL（用于私有文件访问）
+   * @param pathname 文件路径
+   * @param expiresIn 过期时间（秒），默认 1 小时
+   */
+  static async createSignedUrl(pathname: string, expiresIn: number = 3600): Promise<string> {
+    try {
+      const { data, error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .createSignedUrl(pathname, expiresIn);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      return data.signedUrl;
+    } catch (error) {
+      console.error('生成签名 URL 失败:', error);
+      throw new Error(
+        `生成签名 URL 失败: ${error instanceof Error ? error.message : '未知错误'}`
+      );
     }
   }
 }
