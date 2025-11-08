@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Cloudflare Pages 部署配置
-  // 注意：export 模式不支持 API Routes，请使用 functions/ 目录
-  output: 'export',
+  // 暂时注释掉 export 模式以支持 API Routes
+  // output: 'export',
   trailingSlash: false,
   
   eslint: {
