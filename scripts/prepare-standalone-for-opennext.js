@@ -143,9 +143,15 @@ try {
 }
 
 // Determine target directory
-// If packagePath is empty (project is at monorepo root), target is standaloneDir
-// Otherwise, target is standaloneDir/packagePath
-const targetDir = packagePath ? path.join(standaloneDir, packagePath) : standaloneDir;
+// OpenNext expects: .next/standalone/{packagePath}/.next
+// If packagePath is empty, it expects: .next/standalone/.next
+let targetDir;
+if (packagePath) {
+  targetDir = path.join(standaloneDir, packagePath);
+} else {
+  // When packagePath is empty, we need to create the .next structure directly in standaloneDir
+  targetDir = path.join(standaloneDir, '.next');
+}
 
 console.log('');
 console.log('  Final paths:');
