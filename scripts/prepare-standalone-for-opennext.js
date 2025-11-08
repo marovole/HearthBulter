@@ -92,17 +92,37 @@ function findSourceDirectory(standaloneDir, packagePath) {
   
   // If there's only one directory and it's not our packagePath, it's likely the monorepo wrapper
   if (items.length === 1 && items[0] !== packagePath) {
-    const nestedPath = path.join(standaloneDir, items[0], packagePath);
-    console.log('    Checking nested path:', nestedPath);
-    if (fs.existsSync(nestedPath)) {
-      console.log('    ✅ Found source directory at nested path');
-      return path.join(standaloneDir, items[0], packagePath);
+    const firstLevel = path.join(standaloneDir, items[0]);
+    console.log(`    First level directory: ${firstLevel}`);
+    
+    // Check if there's a .next directory at this level
+    if (fs.existsSync(path.join(firstLevel, '.next'))) {
+      console.log('    ✅ Found .next directory at first level');
+      return firstLevel;
+    }
+    
+    // Otherwise, look for the project directory (repo, workspace, etc.)
+    const subItems = fs.readdirSync(firstLevel, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
+    
+    console.log('    Subdirectories:', subItems);
+    
+    for (const subItem of subItems) {
+      const secondLevel = path.join(firstLevel, subItem);
+      console.log(`    Checking second level: ${secondLevel}`);
+      
+      if (fs.existsSync(path.join(secondLevel, '.next'))) {
+        console.log('    ✅ Found .next directory at second level');
+        return secondLevel;
+      }
     }
   }
   
   // Try common patterns
   const possiblePaths = [
     path.join(standaloneDir, 'GitHub', 'HearthBulter'), // Local development
+    path.join(standaloneDir, 'buildhome', 'repo'), // CI pattern
     path.join(standaloneDir, 'repo'), // Common CI pattern
     path.join(standaloneDir, 'workspace'), // Another CI pattern
     path.join(standaloneDir, 'project'), // Another CI pattern
@@ -126,6 +146,14 @@ function findSourceDirectory(standaloneDir, packagePath) {
       const subItems = fs.readdirSync(path.join(standaloneDir, item.name));
       subItems.forEach(subItem => {
         console.error(`     📁 ${subItem}`);
+        // List one more level for debugging
+        const subPath = path.join(standaloneDir, item.name, subItem);
+        if (fs.lstatSync(subPath).isDirectory()) {
+          const subSubItems = fs.readdirSync(subPath);
+          subSubItems.forEach(subSubItem => {
+            console.error(`       📁 ${subSubItem}`);
+          });
+        }
       });
     }
   });
@@ -163,6 +191,13 @@ if (!fs.existsSync(sourceDir)) {
   console.error('❌ Source directory does not exist:', sourceDir);
   process.exit(1);
 }
+
+// List source directory contents for verification
+console.log('  Source directory contents:');
+const sourceItems = fs.readdirSync(sourceDir, { withFileTypes: true });
+sourceItems.forEach(item => {
+  console.log(`    ${item.isDirectory() ? '📁' : '📄'} ${item.name}`);
+});
 
 // Remove existing target if it exists and is a directory
 if (fs.existsSync(targetDir) && fs.lstatSync(targetDir).isDirectory()) {
@@ -215,6 +250,13 @@ function copyDir(src, dest) {
 
 copyDir(sourceDir, targetDir);
 console.log('✅ Entire standalone directory copied');
+
+// Verify target directory contents
+console.log('  Target directory contents:');
+const targetItems = fs.readdirSync(targetDir, { withFileTypes: true });
+targetItems.forEach(item => {
+  console.log(`    ${item.isDirectory() ? '📁' : '📄'} ${item.name}`);
+});
 
 // Also copy package.json to standalone root (needed for nft.json relative paths like ../../../../package.json)
 const sourcePackageJson = path.join(sourceDir, 'package.json');
