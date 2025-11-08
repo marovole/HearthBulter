@@ -157,11 +157,15 @@ function compressHandler() {
     console.log('🗜️  压缩 handler.mjs...');
     const content = fs.readFileSync(handlerPath, 'utf8');
     
-    // 删除注释（单行和多行）
+    // 安全地删除注释 - 只删除简单的注释，不影响代码
     let compressed = content
-      .replace(/\/\*[\s\S]*?\*\//g, '') // 删除多行注释
-      .replace(/\/\/.*$/gm, '') // 删除单行注释
-      .replace(/^\s*\n/gm, ''); // 删除空行
+      // 删除多行注释（但保留可能的版权声明）
+      .replace(/\/\*(?!.*(?:Copyright|License|MIT|Apache))[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '')
+      // 删除简单的单行注释（不在字符串中的）
+      .replace(/^\s*\/\/.*$/gm, '') // 只删除行首的注释
+      // 删除空行
+      .replace(/^\s*\n/gm, '')
+      .replace(/\n\s*\n/g, '\n'); // 合并多个空行
     
     // 写入压缩后的文件
     fs.writeFileSync(handlerPath, compressed, 'utf8');
