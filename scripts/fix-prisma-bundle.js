@@ -45,6 +45,33 @@ const targetsToRemove = [
   '**/README*',
   '**/CHANGELOG*',
   '**/HISTORY*',
+  // TypeScript 定义文件（生产环境不需要）
+  '**/*.d.ts',
+  '**/*.d.ts.map',
+  // 测试文件
+  '**/*.test.js',
+  '**/*.test.mjs',
+  '**/*.spec.js',
+  '**/*.spec.mjs',
+  '**/test/**',
+  '**/tests/**',
+  '**/__tests__/**',
+  // 文档文件
+  '**/LICENSE*',
+  '**/NOTICE*',
+  '**/.github/**',
+  '**/docs/**',
+  '**/examples/**',
+  // 开发工具文件
+  '**/.eslintrc*',
+  '**/.prettierrc*',
+  '**/tsconfig.json',
+  '**/jest.config*',
+  // Next.js 开发相关文件
+  '**/next/dist/build/**',
+  '**/next/dist/cli/**',
+  '**/next/dist/telemetry/**',
+  '**/next/dist/trace/**',
 ];
 
 // 直接删除的特定大文件（确保这些被删除）
@@ -59,9 +86,24 @@ const specificFilesToDelete = [
 // 直接删除的目录（确保这些被删除）
 const specificDirsToDelete = [
   'node_modules/.pnpm/@prisma+client@*',
+  'node_modules/.pnpm/@prisma+engines@*',
   'node_modules/@prisma',
   'node_modules/puppeteer',
   'node_modules/puppeteer-core',
+  'node_modules/.pnpm/puppeteer@*',
+  'node_modules/.pnpm/puppeteer-core@*',
+  'node_modules/.pnpm/@sparticuz+chromium@*',
+  'node_modules/.pnpm/chrome-aws-lambda@*',
+  // 删除 Next.js 的构建工具（生产不需要）
+  'node_modules/.pnpm/next@*/node_modules/next/dist/build',
+  'node_modules/.pnpm/next@*/node_modules/next/dist/cli',
+  'node_modules/.pnpm/next@*/node_modules/next/dist/telemetry',
+  'node_modules/.pnpm/next@*/node_modules/next/dist/trace',
+  // 删除测试相关包
+  'node_modules/.pnpm/@testing-library+*',
+  'node_modules/.pnpm/@playwright+*',
+  'node_modules/.pnpm/jest@*',
+  'node_modules/.pnpm/jest-environment-*',
 ];
 
 let removedCount = 0;
@@ -69,16 +111,35 @@ let removedSize = 0;
 
 function findAndRemove(dir, pattern) {
   if (!fs.existsSync(dir)) return;
-  
+
   const files = fs.readdirSync(dir);
-  
+
   files.forEach(file => {
     const fullPath = path.join(dir, file);
-    const stat = fs.lstatSync(fullPath);
-    
+    let stat;
+
+    try {
+      stat = fs.lstatSync(fullPath);
+    } catch (e) {
+      return; // 跳过无法访问的文件
+    }
+
     if (stat.isDirectory()) {
-      // 递归处理子目录
-      if (file.includes('prisma') || file.includes('puppeteer') || file.includes('chromium')) {
+      // 检查是否应该删除整个目录
+      const shouldRemoveDir = file.includes('prisma') ||
+                             file.includes('puppeteer') ||
+                             file.includes('chromium') ||
+                             file.includes('testing-library') ||
+                             file.includes('playwright') ||
+                             file.includes('jest') ||
+                             file.includes('test') ||
+                             file.includes('tests') ||
+                             file === '__tests__' ||
+                             file === 'docs' ||
+                             file === 'examples' ||
+                             file === '.github';
+
+      if (shouldRemoveDir) {
         // 直接删除整个目录
         try {
           const size = getDirectorySize(fullPath);
@@ -94,22 +155,27 @@ function findAndRemove(dir, pattern) {
       }
     } else {
       // 检查文件是否匹配模式
+      const relPath = path.relative(serverFunctionsDir, fullPath);
       const shouldRemove = targetsToRemove.some(target => {
         if (target.includes('*')) {
-          const regex = new RegExp(target.replace(/\*/g, '.*'));
-          return regex.test(file) || regex.test(fullPath);
+          // 将 glob 模式转换为正则表达式
+          const regex = new RegExp('^' + target.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*').replace(/\//g, '\\/') + '$');
+          return regex.test(relPath) || regex.test(file);
         }
-        return fullPath.includes(target);
+        return relPath.includes(target) || fullPath.includes(target);
       });
-      
+
       if (shouldRemove) {
         try {
           removedCount++;
           removedSize += stat.size;
           fs.unlinkSync(fullPath);
-          console.log(`  ✓ 删除文件: ${fullPath} (${formatSize(stat.size)})`);
+          // 只打印大文件的删除信息（>100KB）
+          if (stat.size > 100 * 1024) {
+            console.log(`  ✓ 删除文件: ${relPath} (${formatSize(stat.size)})`);
+          }
         } catch (e) {
-          console.log(`  ✗ 无法删除文件: ${fullPath}`);
+          // 静默忽略删除失败
         }
       }
     }
