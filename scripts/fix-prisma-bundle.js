@@ -28,6 +28,10 @@ const targetsToRemove = [
   'node_modules/.prisma/client/libquery_engine-*.so',
   // 大型字体文件
   'node_modules/next/dist/server/capsize-font-metrics.json',
+  '**/capsize-font-metrics.json',
+  // Meta JSON 文件
+  'handler.mjs.meta.json',
+  '**/*.meta.json',
   // 其他大型依赖
   'node_modules/puppeteer',
   'node_modules/@sparticuz/chromium',
@@ -36,6 +40,11 @@ const targetsToRemove = [
   // WASM 文件
   '**/*.wasm',
   '**/*.wasm-base64.js',
+  // 其他不必要的文件
+  '**/*.map', // Source maps
+  '**/README*',
+  '**/CHANGELOG*',
+  '**/HISTORY*',
 ];
 
 let removedCount = 0;
@@ -135,11 +144,49 @@ console.log(`\n✅ 清理完成！`);
 console.log(`   - 删除文件/目录: ${removedCount} 个`);
 console.log(`   - 释放空间: ${formatSize(removedSize)}`);
 
+// 压缩 handler.mjs
+function compressHandler() {
+  const handlerPath = path.join(serverFunctionsDir, 'handler.mjs');
+  
+  if (!fs.existsSync(handlerPath)) {
+    console.log('⚠️  handler.mjs 不存在，跳过压缩');
+    return;
+  }
+  
+  try {
+    console.log('🗜️  压缩 handler.mjs...');
+    const content = fs.readFileSync(handlerPath, 'utf8');
+    
+    // 删除注释（单行和多行）
+    let compressed = content
+      .replace(/\/\*[\s\S]*?\*\//g, '') // 删除多行注释
+      .replace(/\/\/.*$/gm, '') // 删除单行注释
+      .replace(/^\s*\n/gm, ''); // 删除空行
+    
+    // 写入压缩后的文件
+    fs.writeFileSync(handlerPath, compressed, 'utf8');
+    
+    const originalSize = Buffer.byteLength(content, 'utf8');
+    const compressedSize = Buffer.byteLength(compressed, 'utf8');
+    const saved = originalSize - compressedSize;
+    
+    console.log(`  ✓ 压缩完成: ${formatSize(originalSize)} → ${formatSize(compressedSize)} (节省: ${formatSize(saved)})`);
+    
+    return compressedSize;
+  } catch (e) {
+    console.log(`  ✗ 压缩失败: ${e.message}`);
+    return null;
+  }
+}
+
 // 重新检查 bundle 大小
 const handlerPath = path.join(serverFunctionsDir, 'handler.mjs');
 if (fs.existsSync(handlerPath)) {
+  // 先压缩文件
+  compressHandler();
+  
   const stats = fs.statSync(handlerPath);
-  console.log(`\n📊 优化后 handler.mjs 大小: ${formatSize(stats.size)}`);
+  console.log(`\n📊 最终 handler.mjs 大小: ${formatSize(stats.size)}`);
   
   if (stats.size > 25 * 1024 * 1024) {
     console.log('⚠️  警告: 文件仍然超过 25MB 限制！');
