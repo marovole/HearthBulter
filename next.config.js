@@ -1,8 +1,10 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Cloudflare Pages 部署配置
-  // 暂时注释掉 export 模式以支持 API Routes
-  // output: 'export',
+  // 使用 standalone 模式以支持 API Routes 和 OpenNext
+  output: 'standalone',
   trailingSlash: false,
   
   eslint: {
@@ -36,6 +38,35 @@ const nextConfig = {
   // 实验性功能
   experimental: {
     scrollRestoration: true,
+    // 优化输出文件追踪，减少 bundle 大小
+    outputFileTracingRoot: path.join(__dirname, '../../'),
+    outputFileTracingExcludes: {
+      '*': [
+        // 排除 Prisma 的本地二进制文件
+        '**/node_modules/@prisma/engines/**',
+        '**/node_modules/.prisma/client/libquery_engine-*',
+        // 排除 Puppeteer 和 Chromium
+        '**/node_modules/puppeteer/**',
+        '**/node_modules/puppeteer-core/**',
+        '**/node_modules/@sparticuz/chromium/**',
+        '**/node_modules/chrome-aws-lambda/**',
+        // 排除其他大型依赖
+        '**/node_modules/sharp/build/**',
+        '**/node_modules/@swc/**/*.node',
+        // 排除 source maps
+        '**/*.map',
+        // 排除测试文件
+        '**/*.test.*',
+        '**/*.spec.*',
+        '**/test/**',
+        '**/tests/**',
+        // 排除文档
+        '**/docs/**',
+        '**/README*',
+        '**/CHANGELOG*',
+        '**/HISTORY*',
+      ],
+    },
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,

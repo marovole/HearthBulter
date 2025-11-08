@@ -7,6 +7,14 @@ export default defineCloudflareConfig({
     // 只包含PostgreSQL引擎，排除其他数据库引擎以减少包大小
     includeDatabases: ["postgresql"],
   },
+  // 设置构建输出路径为项目根目录（使用相对路径）
+  // Next.js standalone 会创建 .next/standalone/GitHub/HearthBulter/.next
+  // OpenNext 会在此路径下查找 .next/standalone/{packagePath}/.next
+  // 其中 packagePath = path.relative(monorepoRoot, buildOutputPath)
+  buildOutputPath: ".",
+  // 设置 monorepo 根目录为 GitHub 目录
+  // 这样 packagePath 会是 "HearthBulter"
+  monorepoRoot: "/Users/marovole/GitHub",
   // 优化构建配置
   build: {
     // 排除大型依赖项

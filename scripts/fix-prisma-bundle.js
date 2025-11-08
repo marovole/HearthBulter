@@ -53,6 +53,15 @@ const specificFilesToDelete = [
   'node_modules/.pnpm/next@*/node_modules/next/dist/server/capsize-font-metrics.json',
   'node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/libquery_engine-*.node',
   'node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/libquery_engine-*.dylib',
+  'node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/libquery_engine-*.dylib.node',
+];
+
+// 直接删除的目录（确保这些被删除）
+const specificDirsToDelete = [
+  'node_modules/.pnpm/@prisma+client@*',
+  'node_modules/@prisma',
+  'node_modules/puppeteer',
+  'node_modules/puppeteer-core',
 ];
 
 let removedCount = 0;
@@ -171,6 +180,35 @@ specificFilesToDelete.forEach(pattern => {
         console.log(`  ✗ 无法删除: ${pattern} (${dirError.message})`);
       }
     }
+  }
+});
+
+// 确保删除特定的目录
+console.log('🔍 检查并删除特定的目录...');
+specificDirsToDelete.forEach(pattern => {
+  // 使用 glob 模式查找匹配的目录
+  const baseDir = path.join(serverFunctionsDir, path.dirname(pattern));
+  const dirPattern = path.basename(pattern);
+  
+  if (fs.existsSync(baseDir)) {
+    const files = fs.readdirSync(baseDir);
+    files.forEach(file => {
+      if (file.includes(dirPattern.replace('*', ''))) {
+        const fullPath = path.join(baseDir, file);
+        const stat = fs.lstatSync(fullPath);
+        if (stat.isDirectory()) {
+          try {
+            const size = getDirectorySize(fullPath);
+            fs.rmSync(fullPath, { recursive: true, force: true });
+            removedCount++;
+            removedSize += size;
+            console.log(`  ✓ 删除特定目录: ${path.join(baseDir, file)} (${formatSize(size)})`);
+          } catch (e) {
+            console.log(`  ✗ 无法删除目录: ${fullPath} (${e.message})`);
+          }
+        }
+      }
+    });
   }
 });
 
