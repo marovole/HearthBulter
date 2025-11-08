@@ -47,6 +47,14 @@ const targetsToRemove = [
   '**/HISTORY*',
 ];
 
+// 直接删除的特定大文件（确保这些被删除）
+const specificFilesToDelete = [
+  'handler.mjs.meta.json',
+  'node_modules/.pnpm/next@*/node_modules/next/dist/server/capsize-font-metrics.json',
+  'node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/libquery_engine-*.node',
+  'node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/libquery_engine-*.dylib',
+];
+
 let removedCount = 0;
 let removedSize = 0;
 
@@ -139,6 +147,32 @@ if (fs.existsSync(middlewareDir)) {
   console.log('📂 清理 middleware 目录...');
   findAndRemove(middlewareDir);
 }
+
+// 确保删除特定的大文件
+console.log('🔍 检查并删除特定的大文件...');
+specificFilesToDelete.forEach(pattern => {
+  const fullPath = path.join(serverFunctionsDir, pattern);
+  if (fs.existsSync(fullPath)) {
+    try {
+      const stats = fs.statSync(fullPath);
+      fs.unlinkSync(fullPath);
+      removedCount++;
+      removedSize += stats.size;
+      console.log(`  ✓ 删除特定文件: ${pattern} (${formatSize(stats.size)})`);
+    } catch (e) {
+      // 如果是目录，尝试递归删除
+      try {
+        const size = getDirectorySize(fullPath);
+        fs.rmSync(fullPath, { recursive: true, force: true });
+        removedCount++;
+        removedSize += size;
+        console.log(`  ✓ 删除特定目录: ${pattern} (${formatSize(size)})`);
+      } catch (dirError) {
+        console.log(`  ✗ 无法删除: ${pattern} (${dirError.message})`);
+      }
+    }
+  }
+});
 
 console.log(`\n✅ 清理完成！`);
 console.log(`   - 删除文件/目录: ${removedCount} 个`);
