@@ -144,41 +144,23 @@ console.log(`\n✅ 清理完成！`);
 console.log(`   - 删除文件/目录: ${removedCount} 个`);
 console.log(`   - 释放空间: ${formatSize(removedSize)}`);
 
-// 压缩 handler.mjs
+// 压缩 handler.mjs - 已禁用，因为会导致语法错误
+// 文件删除已经足够让 bundle 符合大小要求
 function compressHandler() {
   const handlerPath = path.join(serverFunctionsDir, 'handler.mjs');
   
   if (!fs.existsSync(handlerPath)) {
-    console.log('⚠️  handler.mjs 不存在，跳过压缩');
+    console.log('⚠️  handler.mjs 不存在');
     return;
   }
   
+  // 只读取文件大小，不进行压缩
   try {
-    console.log('🗜️  压缩 handler.mjs...');
-    const content = fs.readFileSync(handlerPath, 'utf8');
-    
-    // 安全地删除注释 - 只删除简单的注释，不影响代码
-    let compressed = content
-      // 删除多行注释（但保留可能的版权声明）
-      .replace(/\/\*(?!.*(?:Copyright|License|MIT|Apache))[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '')
-      // 删除简单的单行注释（不在字符串中的）
-      .replace(/^\s*\/\/.*$/gm, '') // 只删除行首的注释
-      // 删除空行
-      .replace(/^\s*\n/gm, '')
-      .replace(/\n\s*\n/g, '\n'); // 合并多个空行
-    
-    // 写入压缩后的文件
-    fs.writeFileSync(handlerPath, compressed, 'utf8');
-    
-    const originalSize = Buffer.byteLength(content, 'utf8');
-    const compressedSize = Buffer.byteLength(compressed, 'utf8');
-    const saved = originalSize - compressedSize;
-    
-    console.log(`  ✓ 压缩完成: ${formatSize(originalSize)} → ${formatSize(compressedSize)} (节省: ${formatSize(saved)})`);
-    
-    return compressedSize;
+    const stats = fs.statSync(handlerPath);
+    console.log(`📊 handler.mjs 当前大小: ${formatSize(stats.size)}`);
+    return stats.size;
   } catch (e) {
-    console.log(`  ✗ 压缩失败: ${e.message}`);
+    console.log(`  ✗ 读取文件大小失败: ${e.message}`);
     return null;
   }
 }
