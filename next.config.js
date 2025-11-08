@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Cloudflare Pages 部署配置
+  // 注意：export 模式不支持 API Routes，请使用 functions/ 目录
+  output: 'export',
+  trailingSlash: false,
+  
   eslint: {
     // 暂时忽略 ESLint 错误以加快 staging 部署
     // 类型检查仍然严格执行
@@ -11,14 +16,26 @@ const nextConfig = {
     // TODO P1: 修复 api/devices/route.ts 中间件类型签名问题
     ignoreBuildErrors: true,
   },
-  // 暂时跳过有问题的页面的静态生成
-  skipTrailingSlashRedirect: true,
-  serverExternalPackages: ['@prisma/client', 'prisma'],
+  
+  // 图片优化配置
   images: {
-    domains: process.env.NODE_ENV === 'production'
-      ? ['images.unsplash.com', 'avatars.githubusercontent.com', 'api.dicebear.com']
-      : ['localhost', 'images.unsplash.com', 'avatars.githubusercontent.com', 'vercel.com', 'api.dicebear.com'],
+    unoptimized: true, // Cloudflare Pages 静态导出必需
+    domains: [
+      'images.unsplash.com',
+      'avatars.githubusercontent.com',
+      'api.dicebear.com',
+      'supabase.co',
+      'imagedelivery.net', // Cloudflare Images CDN
+    ],
     formats: ['image/webp', 'image/avif'],
+  },
+  
+  // 优化配置
+  compress: true,
+  
+  // 实验性功能
+  experimental: {
+    scrollRestoration: true,
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
@@ -32,21 +49,22 @@ const nextConfig = {
     ];
   },
   async headers() {
-    // 在生产环境下，强制要求明确的ORIGINS配置
+    // CORS 配置
     let corsOrigin = 'http://localhost:3000';
     if (process.env.NODE_ENV === 'production') {
-      // 优先使用明确配置的变量，其次使用平台提供的默认域名
-      const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.trim()}` : '';
-      const cfPagesCustomDomain = process.env.CF_PAGES_CUSTOM_DOMAIN ? `https://${process.env.CF_PAGES_CUSTOM_DOMAIN.trim()}` : '';
+      // Cloudflare Pages 环境变量优先级
       const cfPagesUrl = process.env.CF_PAGES_URL ? process.env.CF_PAGES_URL.trim() : '';
+      const cfPagesCustomDomain = process.env.CF_PAGES_CUSTOM_DOMAIN ? `https://${process.env.CF_PAGES_CUSTOM_DOMAIN.trim()}` : '';
 
-      corsOrigin = (process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || process.env.NEXTAUTH_URL || vercelUrl || cfPagesCustomDomain || cfPagesUrl).trim();
+      corsOrigin = (
+        process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || 
+        cfPagesCustomDomain || 
+        cfPagesUrl || 
+        'https://hearthbulter.pages.dev'
+      ).trim();
 
-      // 对于 Cloudflare Pages 构建，如果没有设置环境变量，使用占位符
-      // 实际的 CORS 处理将在运行时通过中间件完成
-      if (!corsOrigin) {
-        console.warn('⚠️  警告：未设置 CORS origin 环境变量，使用占位符。请在 Cloudflare Pages 设置中配置 NEXT_PUBLIC_ALLOWED_ORIGINS');
-        corsOrigin = 'https://hearthbulter.pages.dev'; // Cloudflare Pages 默认域名占位符
+      if (!process.env.NEXT_PUBLIC_ALLOWED_ORIGINS) {
+        console.warn('⚠️  警告：未设置 NEXT_PUBLIC_ALLOWED_ORIGINS，使用默认值');
       }
     }
 

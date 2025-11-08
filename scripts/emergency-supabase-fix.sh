@@ -71,7 +71,7 @@ echo ""
 
 echo "📱 步骤 6: 更新 Vercel 环境变量 (5分钟)"
 echo "------------------------------------------"
-echo "1. 访问: https://vercel.com/dashboard"
+echo "1. 访问: https://dash.cloudflare.com"
 echo "2. 进入 'HearthBulter' 项目"
 echo "3. 点击 'Settings' → 'Environment Variables'"
 echo "4. 更新以下变量:"

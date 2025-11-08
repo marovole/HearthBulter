@@ -174,7 +174,7 @@ if (SENTRY_DSN) {
 
   // 设置额外的上下文标签
   Sentry.setTag('app.version', process.env.NEXT_PUBLIC_APP_VERSION || 'unknown');
-  Sentry.setTag('deployment.platform', 'vercel');
+  Sentry.setTag('deployment.platform', 'cloudflare-pages');
 
   console.log(
     `✓ Sentry客户端已初始化 (环境: ${SENTRY_ENVIRONMENT}, 采样率: ${process.env.SENTRY_SAMPLE_RATE || '1.0'})`
