@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 
 export async function GET() {
   try {
-    // 检查数据库连接
-    await prisma.$queryRaw`SELECT 1`;
+    // 动态导入避免在模块加载时初始化 Prisma
+    const { testDatabaseConnection } = await import('@/lib/db');
+    const isConnected = await testDatabaseConnection();
     
     // 检查环境变量
     const envVars = {
@@ -15,9 +15,9 @@ export async function GET() {
     };
 
     return NextResponse.json({
-      status: 'healthy',
+      status: isConnected ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
-      database: 'connected',
+      database: isConnected ? 'connected' : 'disconnected',
       environment: envVars,
       uptime: process.uptime(),
       version: '1.0.0',

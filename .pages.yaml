@@ -1,0 +1,12 @@
+# Cloudflare Pages 构建配置
+# 文档: https://developers.cloudflare.com/pages/configuration/build-configuration/
+
+# 构建配置
+build:
+  command: pnpm install && pnpm build:cloudflare
+  output_directory: .open-next
+
+# 环境变量已通过 wrangler secret 配置：
+# - DATABASE_URL
+# - NEXTAUTH_SECRET
+# 公开变量通过 wrangler.toml 配置
