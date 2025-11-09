@@ -4,8 +4,11 @@ import { Pool, neonConfig } from '@neondatabase/serverless';
 import { validateEnvironmentVariables, validateOptionalEnvironmentVariables } from '../env-validator';
 
 // Cloudflare Workers 兼容性配置
-if (typeof WebSocket === 'undefined') {
-  // 动态导入 ws polyfill (仅在需要时)
+// Neon Serverless Driver 需要 WebSocket
+if (typeof WebSocket !== 'undefined') {
+  neonConfig.webSocketConstructor = WebSocket;
+} else {
+  // 如果环境不支持 WebSocket，使用全局对象
   neonConfig.webSocketConstructor = globalThis.WebSocket;
 }
 
