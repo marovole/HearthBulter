@@ -1,205 +1,151 @@
 # Cloudflare Pages 部署状态
 
-## 🚀 部署已触发
+## 最新更新 (2025-11-08 23:25 UTC+8)
 
-**最后部署时间**: 2025-11-08 22:50 (UTC+8)
-**GitHub Commit**: `b51670b`
-**提交消息**: `fix: correctly find source directory in CI environment`
+### ✅ 已修复的问题
 
-## 📊 部署信息
+#### 1. 构建配置错误 (Commit: a641c13) ✅
+   - ❌ 问题: `ENOENT: no such file or directory, pages-manifest.json`
+   - ✅ 修复: 移除 `next.config.js` 中的 `outputFileTracingRoot` 配置
+   - ✅ 修复: 简化 `open-next.config.ts`，移除 monorepo 相关配置
+   - ✅ 修复: 简化 `prepare-standalone-for-opennext.js` 脚本
+   - 结果: OpenNext 构建成功完成
 
-- **项目**: health-butler
-- **分支**: main
-- **部署平台**: Cloudflare Pages
-- **构建命令**: `pnpm run build:cloudflare`
-- **构建输出目录**: `.open-next`
+#### 2. Bundle 大小超限 (Commit: 2e90dfa) ⏳
+   - ❌ 问题: `handler.mjs` 大小 25.7 MB，超过 Cloudflare Workers 25MB 限制
+   - ✅ 修复: 增强 `fix-prisma-bundle.js` 清理脚本
+   - ✅ 新增删除: TypeScript 定义、测试文件、文档、开发工具
+   - ✅ 新增删除: Next.js build/cli/telemetry 目录
+   - ✅ 新增删除: 测试相关包 (@testing-library, @playwright, jest)
+   - 状态: ⏳ 等待构建验证
 
-## 🔧 解决的问题
+### 🔧 主要修改
 
-### 1. 路径解析问题 ✅ 已修复 (第5次尝试)
-
-**问题**: Next.js standalone 创建的路径与 OpenNext 期望的不匹配
-- Next.js 创建: `.next/standalone/GitHub/HearthBulter/.next` (本地) 或 `.next/standalone/buildhome/repo/.next` (CI)
-- OpenNext 期望: `.next/standalone/{packagePath}/.next`
-- **关键问题**: 脚本只检查一级目录，但 CI 环境有二级嵌套
-
-**解决方案**: 
-- 创建 `scripts/prepare-standalone-for-opennext.js`
-- 自动检测源目录并复制到正确位置
-- 支持本地和 CI/CD 环境
-- **修复**: 检查二级目录结构，正确找到 `.next` 所在目录
-
-### 2. Bundle 大小优化 ✅ 已完成
-
-- 删除 46 个文件/目录
-- 释放 7.46MB 空间
-- 最终 bundle: 2.7KB (worker.js)
-- 远低于 Cloudflare 25MB 限制
-
-### 3. CI/CD 兼容性 ✅ 已修复
-
-- 使用 `process.cwd()` 替代硬编码路径
-- 自动检测 monorepo 根目录
-- 添加详细调试输出
-- 支持多种 CI/CD 环境路径结构
-- **修复**: 检查二级目录结构，找到实际项目目录
-
-## 📋 部署步骤
-
-1. ✅ **GitHub 推送**: `git push origin main`
-2. ⏳ **Cloudflare 构建**: 自动触发 (2-5 分钟)
-3. ⏳ **部署验证**: 检查功能和性能
-4. ⏳ **生产环境**: 访问部署的 URL
-
-## 🔍 如何检查部署状态
-
-### 方法 1: Cloudflare Dashboard
-1. 访问 https://dash.cloudflare.com
-2. 登录你的账户
-3. 进入 Pages > health-butler
-4. 查看部署日志和状态
-
-### 方法 2: 部署日志
-在 Dashboard 中查看:
-- 实时构建日志
-- 错误信息
-- 构建时间线
-- 警告消息
-
-### 方法 3: 部署成功标志
-- ✅ 状态显示 "Success"
-- 🌐 提供访问 URL
-- 📦 所有环境变量已加载
-
-## ⚠️ 常见问题
-
-### 如果部署失败
-
-1. **检查构建日志**:
-   ```bash
-   # 查看具体错误信息
-   ```
-
-2. **验证环境变量**:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_KEY`
-   - `NEXT_PUBLIC_SITE_URL`
-
-3. **检查 Bundle 大小**:
-   ```bash
-   du -sh .open-next/
-   ```
-
-4. **路径问题**:
-   - 检查 `.next/standalone` 结构
-   - 验证 `scripts/prepare-standalone-for-opennext.js` 输出
-   - 确保 `packagePath` 正确处理
-   - 检查文件是否复制到 `.next/standalone/.next/` (当 packagePath 为空)
-   - **检查二级目录**: `.next/standalone/buildhome/repo/.next`
-
-### 如果部署成功但功能异常
-
-1. **检查数据库连接**
-2. **验证 API 路由**
-3. **测试用户认证**
-4. **查看浏览器控制台错误**
-
-## 🎯 下一步
-
-### 部署成功后
-
-1. **访问网站**: 使用 Cloudflare 提供的 URL
-2. **功能测试**: 
-   - 用户注册/登录
-   - 健康数据录入
-   - 饮食建议生成
-   - 家庭管理功能
-3. **性能监控**:
-   - 页面加载速度
-   - API 响应时间
-   - 数据库查询性能
-
-### 持续优化
-
-1. **监控 Bundle 大小**: 定期运行 `scripts/fix-prisma-bundle.js`
-2. **更新依赖**: 保持依赖项最新
-3. **安全扫描**: 定期运行 `npm audit`
-4. **代码质量**: 使用 `pnpm run lint` 和 `pnpm run review`
-
-## 📁 关键文件
-
-### 部署配置
-- `wrangler.toml` - Cloudflare 配置
-- `open-next.config.ts` - OpenNext 配置
-- `package.json` - 构建脚本
-
-### 构建脚本
-- `scripts/prepare-standalone-for-opennext.js` - 路径准备 (已修复第5次)
-- `scripts/fix-prisma-bundle.js` - Bundle 优化
-- `scripts/add-compat-flags.js` - 兼容性标志
-- `scripts/create-node-stubs.js` - Node.js polyfills
-
-### 文档
-- `CLOUDFLARE_DEPLOYMENT_SUCCESS.md` - 完整部署报告
-- `DEPLOYMENT_CHECKLIST.md` - 部署清单
-
-## 🔄 重新部署
-
-如果需要重新部署:
-
-```bash
-# 1. 修复代码问题
-# 2. 提交更改
-git add .
-git commit -m "fix: 描述修复的问题"
-
-# 3. 推送到 GitHub
-git push origin main
-
-# Cloudflare 会自动重新部署
+#### 1. next.config.js
+```diff
+- experimental: {
+-   outputFileTracingRoot: path.join(__dirname, '../../'),
+- }
++ experimental: {
++   scrollRestoration: true,
++ }
++ outputFileTracingExcludes: { ... }
 ```
 
-## 📞 需要帮助?
+#### 2. open-next.config.ts
+```diff
+- monorepoRoot: "/Users/marovole/GitHub",
+- buildOutputPath: ".",
+```
 
-### 查看日志
+#### 3. prepare-standalone-for-opennext.js
+- 从 298 行简化到 60 行
+- 只复制 `.next/static` 目录
+- 保持 Next.js 原始目录结构
+
+#### 4. fix-prisma-bundle.js (增强版)
+```diff
++ // 新增删除目标
++ '**/*.d.ts',              // TypeScript 定义
++ '**/*.test.js',           // 测试文件
++ '**/LICENSE*',            // 文档文件
++ '**/tsconfig.json',       // 开发工具配置
++ '**/next/dist/build/**',  // Next.js 构建工具
++ '**/next/dist/cli/**',    // Next.js CLI
+```
+
+优化：
+- 新增 20+ 个文件/目录删除模式
+- 改进 glob 模式匹配算法（支持 `**` 和 `*`）
+- 更积极的目录删除策略
+- 只打印大文件（>100KB）删除信息
+
+### 📊 部署链接
+
+- **Cloudflare Dashboard**: https://dash.cloudflare.com/b80eef96097fab92f15b574ed5fbb927/pages/view/hearthbulter
+- **生产 URL**: https://hearthbulter-supabase.pages.dev (待部署成功)
+- **GitHub 仓库**: https://github.com/marovole/HearthBulter
+
+### 🎯 当前状态与下一步
+
+**当前**: ⏳ 等待构建验证 (commit: 2e90dfa)
+
+**预期结果**:
+- ✅ handler.mjs 大小 < 25MB
+- ✅ 构建成功完成
+- ✅ 部署到生产环境
+
+**如果仍超限，下一步优化**:
+1. 分析 handler.mjs 组成，识别大型依赖
+2. 考虑将某些依赖标记为 external
+3. 使用 webpack-bundle-analyzer 分析 bundle
+4. 考虑代码分割策略
+
+### 📝 关键学习
+
+#### 1. Next.js Standalone 输出
+- `outputFileTracingRoot` 会创建嵌套目录结构
+- OpenNext 期望特定的目录层级
+- **最佳实践**: 保持简单，使用 Next.js 默认结构
+
+#### 2. OpenNext 配置
+- 非 monorepo 项目不要设置 `monorepoRoot`
+- `buildOutputPath` 默认为 "." 即可
+- **最佳实践**: 最小化配置，只配置必需项
+
+#### 3. Bundle 大小优化
+- **限制**: Cloudflare Workers 25 MB
+- **删除优先级**: Prisma > Tests > Docs > Dev Tools > TypeScript
+- **关键**: 删除 Next.js 的构建工具目录（build/cli/telemetry）
+- **策略**: 删除文件模式 > 删除整个目录 > 检查剩余大小
+
+### 🔗 相关提交
+
+| Commit | 说明 | 状态 |
+|--------|------|------|
+| 2e90dfa | fix: enhance bundle size optimization script | ⏳ 构建中 |
+| a641c13 | fix: resolve Cloudflare Pages deployment build errors | ✅ 部分成功 |
+| b51670b | fix: correctly find source directory in CI environment | ❌ Bundle 超限 |
+
+### 📋 部署清单
+
+- [x] 修复 Next.js 配置
+- [x] 修复 OpenNext 配置
+- [x] 简化准备脚本
+- [x] 增强清理脚本
+- [ ] 验证 bundle 大小 < 25MB
+- [ ] 部署成功
+- [ ] 功能测试
+- [ ] 性能测试
+
+### 🔍 监控命令
+
 ```bash
-# 本地构建测试
+# 检查本地构建
 pnpm run build:cloudflare
 
-# 检查构建输出
-ls -la .open-next/
+# 检查 handler.mjs 大小
+ls -lh .open-next/server-functions/default/handler.mjs
+
+# 查看清理日志
+node scripts/fix-prisma-bundle.js
+
+# 分析 bundle 内容
+du -sh .open-next/server-functions/default/*
 ```
 
-### 调试脚本
-```bash
-# 运行准备脚本（带调试输出）
-node scripts/prepare-standalone-for-opennext.js
+### 📞 故障排除
 
-# 检查 bundle 大小
-node scripts/check-bundle-size.js
-```
+**问题**: Bundle 仍然超过 25MB
 
-### 相关文档
-- [Cloudflare Pages](https://developers.cloudflare.com/pages)
-- [OpenNext.js](https://opennext.js.org/cloudflare)
-- [Next.js](https://nextjs.org/docs)
-- [Prisma](https://prisma.io/docs)
-
-## 📈 部署历史
-
-| 时间 | Commit | 状态 | 说明 |
-|------|--------|------|------|
-| 2025-11-08 22:50 | b51670b | 🟡 部署中 | **修复二级目录查找** |
-| 2025-11-08 22:45 | ac6a864 | ❌ 失败 | targetDir 路径错误 |
-| 2025-11-08 22:40 | 762b38d | ❌ 失败 | 空 packagePath 导致路径错误 |
-| 2025-11-08 22:35 | 3cfe8af | ❌ 失败 | 空 packagePath 导致路径错误 |
-| 2025-11-08 22:20 | 2fcaf77 | ❌ 失败 | 路径硬编码导致 CI 失败 |
-| 2025-11-08 22:03 | 20d482d | ❌ 失败 | 初始路径解析问题 |
+**解决方案**:
+1. 检查哪些文件最大：`du -sh .open-next/server-functions/default/* | sort -h`
+2. 查找大型 node_modules：`find .open-next -type d -name node_modules -exec du -sh {} \;`
+3. 分析未删除的文件：查看清理脚本输出
+4. 考虑更激进的删除策略
 
 ---
 
-**状态**: 🟡 等待 Cloudflare 构建完成 (2-5 分钟)
-**预计完成时间**: 1-3 分钟内
-**成功率**: 高 (已修复二级目录查找)
-**下一步**: 检查 Dashboard 确认部署状态
+_最后更新: 2025-11-08 23:25 UTC+8_
+_状态: ⏳ 等待 Cloudflare Pages 构建完成_
+_预计完成时间: 3-5 分钟_
