@@ -223,7 +223,7 @@ class ModelAdapter<T = any> {
     if (args?.orderBy) {
       Object.entries(args.orderBy).forEach(([key, direction]) => {
         query = query.order(toSnakeCase(key), { 
-          ascending: direction === 'asc' 
+          ascending: direction === 'asc', 
         });
       });
     }
@@ -283,7 +283,7 @@ class ModelAdapter<T = any> {
     const { error, count } = await this.supabase
       .from(this.tableName)
       .insert(snakeData, { 
-        ignoreDuplicates: args.skipDuplicates 
+        ignoreDuplicates: args.skipDuplicates, 
       });
     
     if (error) {

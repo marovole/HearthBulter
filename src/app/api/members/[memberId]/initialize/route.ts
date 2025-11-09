@@ -48,7 +48,7 @@ async function verifyMemberAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const session = await auth();
@@ -57,7 +57,7 @@ export async function GET(
       return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
-    const memberId = params.memberId;
+    const { memberId } = await params;
 
     // 验证权限
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
@@ -94,7 +94,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const session = await auth();
@@ -103,7 +103,7 @@ export async function POST(
       return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
-    const memberId = params.memberId;
+    const { memberId } = await params;
 
     // 验证权限
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);

@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         where: {
           id: memberId,
           user: {
-            families: {
+            createdFamilies: {
               some: {
                 members: {
                   some: {
@@ -266,7 +266,7 @@ async function saveLeaderboardData(
             displayValue: entry.displayValue,
             change: entry.change,
             changeValue: entry.changeValue,
-          },
+          } as any,
           createdAt: new Date(),
         },
         skipDuplicates: true,

@@ -1,16 +1,16 @@
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase'
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
 class SupabaseClient {
-  private static instance: SupabaseClient
-  private client: any
+  private static instance: SupabaseClient;
+  private client: any;
 
   private constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables')
+      throw new Error('Missing Supabase environment variables');
     }
 
     this.client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -32,22 +32,22 @@ class SupabaseClient {
           eventsPerSecond: 10,
         },
       },
-    })
+    });
   }
 
   public static getInstance(): SupabaseClient {
     if (!SupabaseClient.instance) {
-      SupabaseClient.instance = new SupabaseClient()
+      SupabaseClient.instance = new SupabaseClient();
     }
-    return SupabaseClient.instance
+    return SupabaseClient.instance;
   }
 
   public getClient() {
-    return this.client
+    return this.client;
   }
 }
 
-export const supabase = SupabaseClient.getInstance().getClient()
+export const supabase = SupabaseClient.getInstance().getClient();
 
 // 导出类型
 export type SupabaseClientType = ReturnType<typeof createClient>

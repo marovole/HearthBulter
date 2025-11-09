@@ -8,7 +8,19 @@
 
 ### Requirement: 数据库结构迁移
 
+系统 **SHALL** 完整迁移现有 Neon PostgreSQL 数据库的所有表结构（70+ 表）、索引、主键/外键约束、视图和存储过程到 Supabase PostgreSQL，**MUST** 确保所有表之间的关系完整性和引用约束保持一致，并 **SHALL** 在迁移后进行完整性验证，确保表数量、约束数量和索引数量与源数据库完全一致。
+
 #### Scenario: 表结构和关系迁移
+
+**Given** 现有 Neon PostgreSQL 数据库包含 70+ 张表及其关系
+**When** 执行数据库结构迁移到 Supabase
+**Then** 系统 SHALL 使用 pg_dump 导出完整的 schema（仅结构，不含数据）
+**And** 系统 SHALL 保留所有主键、外键约束、唯一约束和检查约束
+**And** 系统 SHALL 迁移所有索引（包括普通索引、唯一索引、复合索引）
+**And** 系统 SHALL 迁移所有视图和物化视图
+**And** 系统 MUST 在单个事务中应用 schema 到 Supabase，确保原子性
+**And** 系统 SHALL 验证迁移后的表数量、约束数量和索引数量与源数据库一致
+**And** 整个结构迁移时间 SHALL 少于 30 分钟，验证时间少于 10 分钟
 
 **需求**：必须完整迁移现有数据库的所有表结构、索引、约束和关系，确保数据一致性。
 
@@ -57,7 +69,19 @@ WHERE schemaname = 'public';
 
 ### Requirement: 数据完整性迁移
 
+系统 **SHALL** 在数据迁移过程中保证零数据丢失和完整性，**MUST** 确保数据行数、数据内容、时间戳、JSON/JSONB 字段和外键引用关系在新旧数据库之间完全一致（误差 < 0.01%），并 **SHALL** 使用 MD5 哈希验证和行数对比两种方式验证数据一致性。
+
 #### Scenario: 数据一致性保证
+
+**Given** 需要从 Neon PostgreSQL 迁移所有数据到 Supabase PostgreSQL
+**When** 执行数据迁移操作
+**Then** 系统 SHALL 逐表迁移数据，并记录每张表的迁移进度
+**And** 系统 MUST 验证新旧数据库中每张表的行数一致性（误差 < 0.01%）
+**And** 系统 SHALL 对每张表的数据内容计算 MD5 哈希值，确保新旧数据库哈希一致
+**And** 系统 SHALL 正确转换和保留所有时间戳字段及时区信息
+**And** 系统 SHALL 完整迁移 JSON 和 JSONB 数据类型，无结构损坏
+**And** 系统 MUST 验证外键引用关系的完整性，确保无悬挂引用
+**And** 若发现数据不一致，系统 SHALL 记录详细的差异报告并中止迁移
 
 **需求**：在迁移过程中必须保证数据的完整性、准确性和一致性，实现零数据丢失。
 
@@ -124,7 +148,19 @@ AND NOT EXISTS (
 
 ### Requirement: 增量数据同步
 
+系统 **SHALL** 实现增量数据同步机制以支持零停机迁移，允许新老数据库系统并行运行，**MUST** 确保同步延迟小于 5 秒，**SHALL** 支持断点续传和自动重试（最多 3 次），并 **SHALL** 提供冲突解决机制（基于时间戳的"最新优先"策略或合并策略）和实时同步状态监控。
+
 #### Scenario: 零停机迁移
+
+**Given** 系统需要在不停机的情况下从 Neon 迁移到 Supabase
+**When** 启用增量数据同步服务
+**Then** 系统 SHALL 捕获 Neon 数据库的所有写操作（INSERT、UPDATE、DELETE）
+**And** 系统 SHALL 将捕获的变更批量同步到 Supabase 数据库
+**And** 系统 MUST 确保同步延迟小于 5 秒，满足准实时要求
+**And** 系统 SHALL 在网络中断或同步失败时支持断点续传，从最后成功位置继续
+**And** 系统 SHALL 在发生写入冲突时使用"最新优先"策略自动解决
+**And** 系统 SHALL 提供同步状态监控面板，显示总同步记录数、错误次数、平均延迟和吞吐量
+**And** 系统 MUST 在同步异常超过阈值时触发告警并暂停同步
 
 **需求**：实现增量数据同步机制，支持新老系统并行运行，实现零停机迁移。
 
@@ -205,7 +241,20 @@ interface SyncMetrics {
 
 ### Requirement: 用户数据迁移
 
+系统 **SHALL** 从 NextAuth.js 的用户认证数据结构完全迁移到 Supabase Auth，**MUST** 转换用户密码哈希（Bcrypt 格式兼容）、OAuth 提供者账户关联、用户元数据（name、avatar_url）和应用元数据（roles、permissions），并 **SHALL** 迁移所有活跃会话（使用 Supabase Auth 创建等效会话），确保用户在迁移后无需重新登录。
+
 #### Scenario: 无缝用户迁移
+
+**Given** 现有系统使用 NextAuth.js 管理用户认证和会话
+**When** 迁移到 Supabase Auth
+**Then** 系统 SHALL 为每个现有用户在 Supabase Auth 中创建对应的用户账户
+**And** 系统 SHALL 转换用户密码哈希（Bcrypt 格式兼容，无需重新加密）
+**And** 系统 SHALL 迁移用户元数据（name、avatar_url）到 Supabase Auth 的 user_metadata 字段
+**And** 系统 SHALL 迁移用户角色和权限到 app_metadata 字段
+**And** 系统 SHALL 迁移 OAuth 账户关联（provider、provider_id）
+**And** 系统 MUST 更新所有外键引用（将旧 user_id 映射到新 Supabase user_id）
+**And** 系统 SHALL 迁移所有活跃会话，创建等效的 Supabase Auth 会话令牌
+**And** 系统 SHALL 确保迁移后用户可直接使用现有凭据登录，无需重置密码
 
 **修改需求**：从NextAuth.js迁移到Supabase Auth，保持用户会话和认证状态。
 
@@ -296,7 +345,20 @@ export class SessionMigrationService {
 
 ### Requirement: 大型数据表迁移
 
+系统 **SHALL** 对大型数据表（行数 > 100万或数据量 > 1GB）采用分区迁移策略，**MUST** 按时间范围或 ID 范围将数据分批迁移（每批 1000-10000 行），**SHALL** 支持多个迁移任务并行执行以提高吞吐量，并 **SHALL** 使用临时表和增量验证机制，确保迁移过程中不影响生产环境性能且可随时中止和恢复。
+
 #### Scenario: TB级数据表迁移
+
+**Given** 数据库中存在大型数据表（如日志表、时间序列数据表）包含数百万行数据
+**When** 执行大型数据表迁移
+**Then** 系统 SHALL 按分区字段（如 created_at、id）将表数据分成多个批次（每批 1000-10000 行）
+**And** 系统 SHALL 为每个分区创建临时表，先迁移到临时表进行验证
+**And** 系统 MUST 启用并行迁移，允许多个分区同时迁移以提高速度
+**And** 系统 SHALL 启用数据传输压缩，减少网络带宽消耗
+**And** 系统 SHALL 对每个已迁移分区执行增量验证（行数和数据哈希）
+**And** 验证成功后，系统 SHALL 将临时表数据合并到目标表
+**And** 系统 SHALL 支持中止和恢复，记录迁移进度允许从断点继续
+**And** 整个迁移过程 MUST 不影响生产环境的查询性能（通过速率限制控制）
 
 **修改需求**：优化大型数据表的迁移策略，避免超时和内存溢出。
 

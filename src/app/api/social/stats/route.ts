@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         where: {
           id: memberId,
           user: {
-            families: {
+            createdFamilies: {
               some: {
                 members: {
                   some: {
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 检查隐私权限
-      if (shareContent.member.user.id !== session.user.id && 
+      if (shareContent.member.user?.id !== session.user.id &&
           shareContent.privacyLevel === 'PRIVATE') {
         return NextResponse.json(
           { error: '无权限查看该分享统计' },
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         where: {
           id: memberId,
           user: {
-            families: {
+            createdFamilies: {
               some: {
                 members: {
                   some: {

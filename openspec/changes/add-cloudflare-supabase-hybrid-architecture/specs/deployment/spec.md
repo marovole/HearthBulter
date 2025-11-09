@@ -8,7 +8,16 @@
 
 ### Requirement: 多云部署架构
 
+系统 **SHALL** 实现多云、多区域部署架构，利用 Cloudflare 的全球 CDN 网络和 Supabase 的多区域数据库支持，确保系统在任意单点故障情况下仍能维持服务可用性，**MUST** 支持至少 2 个独立区域的部署（主区域和备用区域），并 **SHALL** 提供开发、预发布和生产三个独立环境，每个环境拥有独立的配置和数据隔离。
+
 #### Scenario: 高可用部署
+
+**Given** 系统部署在全球多个区域以确保高可用性
+**When** 主区域（如美国西部）发生故障或性能降级
+**Then** Cloudflare 全局负载均衡器 SHALL 自动将流量路由到备用区域（如欧洲）
+**And** 系统 SHALL 确保用户请求在 5 秒内自动切换到备用区域
+**And** 系统 MUST 保持数据一致性，通过 Supabase 多区域复制机制同步数据
+**And** 系统 SHALL 在主区域恢复后自动进行流量回切，或保持在备用区域直到手动切换
 
 **需求**：实现多云、多区域部署架构，确保系统高可用性和灾难恢复能力。
 
@@ -129,7 +138,18 @@ const productionConfig: DeploymentConfig = {
 
 ### Requirement: CI/CD流水线
 
+系统 **SHALL** 使用 GitHub Actions 构建完整的 CI/CD 流水线，实现从代码提交到生产部署的全流程自动化，**MUST** 包含代码质量检查（ESLint、TypeScript类型检查）、自动化测试（单元测试、集成测试、E2E测试）、安全扫描、性能测试和多环境自动部署，并 **SHALL** 在部署失败时提供自动回滚能力和实时通知机制。
+
 #### Scenario: 自动化部署
+
+**Given** 开发者向 main 分支提交代码
+**When** GitHub Actions 流水线被触发
+**Then** 系统 SHALL 依次执行代码质量检查（ESLint、类型检查）和自动化测试（单元测试、集成测试）
+**And** 若所有检查通过，系统 SHALL 自动构建应用并生成部署制品
+**And** 系统 SHALL 先部署到预发布环境并执行验收测试和安全扫描
+**And** 验收测试通过后，系统 MUST 等待手动批准后才能部署到生产环境
+**And** 部署到生产环境后，系统 SHALL 执行健康检查和冒烟测试
+**And** 若部署或测试失败，系统 SHALL 自动回滚到上一个稳定版本并通过 Slack 通知团队
 
 **需求**：构建完整的CI/CD流水线，实现代码提交到生产部署的全自动化。
 
@@ -350,7 +370,18 @@ jobs:
 
 ### Requirement: 部署策略
 
+系统 **SHALL** 支持多种零停机部署策略（蓝绿部署、金丝雀部署、滚动部署和功能开关部署），允许根据变更风险和业务需求灵活选择部署方式，**MUST** 在部署过程中持续进行健康检查和性能监控，并 **SHALL** 在检测到异常指标（错误率 > 1%、P95延迟 > 500ms、成功率 < 99%）时自动触发回滚机制，确保用户完全无感知部署过程。
+
 #### Scenario: 零停机部署
+
+**Given** 系统需要部署新版本代码到生产环境
+**When** 选择蓝绿部署策略进行发布
+**Then** 系统 SHALL 先将新版本部署到绿色环境（非生产环境）
+**And** 系统 SHALL 对绿色环境执行完整的健康检查和功能验证
+**And** 健康检查通过后，系统 SHALL 将流量从蓝色环境切换到绿色环境
+**And** 系统 SHALL 监控绿色环境至少 5 分钟，确保无异常指标
+**And** 若监控指标正常，系统 SHALL 停用蓝色环境并保留作为回滚备份
+**And** 若监控发现异常（错误率升高、响应变慢），系统 MUST 立即回滚到蓝色环境
 
 **需求**：实施零停机部署策略，确保用户无感知地完成部署。
 
@@ -574,7 +605,18 @@ interface CanaryMetrics {
 
 ### Requirement: 数据库迁移策略
 
+系统 **SHALL** 支持零停机数据库 schema 迁移，采用向后兼容迁移、扩展-收缩迁移或影子表迁移策略，**MUST** 在迁移过程中确保数据完整性和一致性（通过双写、数据回填和一致性验证），并 **SHALL** 在迁移失败时提供快速回滚能力（< 5 分钟），确保生产环境数据库始终可用且数据零丢失。
+
 #### Scenario: 零停机数据库迁移
+
+**Given** 需要在生产数据库中添加新字段或修改现有字段结构
+**When** 使用向后兼容迁移策略执行 schema 变更
+**Then** 系统 SHALL 首先添加新字段（允许为空）而不删除旧字段
+**And** 系统 SHALL 启用双写模式，同时写入旧字段和新字段
+**And** 系统 SHALL 批量回填历史数据，将旧字段的数据转换并写入新字段
+**And** 系统 MUST 验证数据一致性，抽样检查旧字段和新字段的数据匹配度
+**And** 一致性验证通过后，系统 SHALL 切换应用读取逻辑到新字段
+**And** 系统 SHALL 停止写入旧字段，并在确认无影响后删除旧字段
 
 **需求**：实现在不停止服务的情况下迁移数据库，确保数据完整性和系统可用性。
 
@@ -814,7 +856,18 @@ interface DataInconsistency {
 
 ### Requirement: 环境配置管理
 
+系统 **SHALL** 实现多环境配置分离和集中管理，支持从环境变量、配置文件和密钥管理服务（如 AWS Secrets Manager）三种来源加载配置，**MUST** 确保敏感信息（数据库密码、API密钥、加密密钥）仅存储在密钥管理服务中而不提交到代码库，并 **SHALL** 提供配置验证机制，在应用启动时自动检测缺失或无效的配置项。
+
 #### Scenario: 多环境配置分离
+
+**Given** 系统需要在开发、预发布和生产环境中使用不同的配置
+**When** 应用在特定环境启动时
+**Then** 系统 SHALL 根据环境标识（如 NODE_ENV）加载对应的配置文件（config/development.json、config/production.json）
+**And** 系统 SHALL 从环境变量中读取覆盖配置（优先级最高）
+**And** 系统 SHALL 从密钥管理服务加载敏感配置（如数据库密码、API密钥）
+**And** 系统 MUST 合并三种配置来源，优先级为：环境变量 > 密钥服务 > 配置文件
+**And** 系统 SHALL 验证所有必需配置项是否存在（如 supabase.url、deployment.region）
+**And** 若缺少必需配置，系统 MUST 抛出错误并阻止应用启动
 
 **需求**：实现环境配置分离，确保开发、测试、预发布和生产环境的配置独立管理。
 
@@ -1055,7 +1108,18 @@ interface EnvironmentConfig {
 
 ### Requirement: 部署流程重构
 
+系统 **SHALL** 从 Vercel 的自动化部署流程完全迁移到 Cloudflare Pages 的部署机制，**MUST** 将构建流程从 Vercel 自动构建改为本地构建 + Wrangler CLI 部署，**SHALL** 将混合部署模式（SSR + Edge Functions）改为完全静态导出 + Pages Functions，并 **MUST** 更新所有部署脚本、环境变量配置和域名/SSL配置以适配 Cloudflare Pages 平台。
+
 #### Scenario: 从Vercel迁移到Cloudflare Pages
+
+**Given** 现有系统使用 Vercel 平台进行自动化部署
+**When** 迁移到 Cloudflare Pages 平台
+**Then** 系统 SHALL 将构建命令从 `next build` 改为 `next build && next export` 以生成静态导出
+**And** 系统 SHALL 将所有 API Routes（`pages/api/**/*.ts`）迁移到 Pages Functions（`functions/api/**/*.js`）
+**And** 系统 SHALL 使用 Wrangler CLI 替代 Vercel CLI 进行部署操作
+**And** 系统 MUST 在 Cloudflare Dashboard 手动配置域名和 SSL 证书，而非依赖自动配置
+**And** 系统 SHALL 更新环境变量配置，从 Vercel Dashboard 迁移到 Cloudflare Dashboard 或 wrangler.toml
+**And** 系统 SHALL 确保部署后的应用完全静态化，无服务器端渲染（SSR）逻辑
 
 **修改需求**：完全重构现有的Vercel部署流程，适配Cloudflare Pages的部署机制。
 
@@ -1158,7 +1222,18 @@ interface EnvironmentConfig {
 
 ### Requirement: 无状态部署
 
+系统 **SHALL** 从 Next.js 的服务器端渲染（SSR）和动态路由架构完全迁移到纯静态导出架构，**MUST** 移除所有服务器端状态存储（包括 getServerSideProps、服务器端会话、req对象传递的状态），**SHALL** 将所有动态数据获取逻辑迁移到客户端（使用 React Query 或 SWR），并 **SHALL** 使用 Cloudflare Workers KV 或 Cache API 替代服务器端内存状态存储。
+
 #### Scenario: 移除服务器端状态
+
+**Given** 现有页面使用 getServerSideProps 在服务器端获取数据并渲染
+**When** 迁移到静态导出架构
+**Then** 系统 SHALL 移除所有 getServerSideProps 函数，改为在客户端使用 useEffect 或 React Query 获取数据
+**And** 系统 SHALL 将存储在 NextAuth.js 会话中的服务器端状态迁移到 Supabase Auth JWT 令牌
+**And** 系统 SHALL 将所有 Next.js API Routes（`pages/api`）迁移到 Cloudflare Pages Functions（`functions/api`）
+**And** 系统 MUST 移除中间件中通过 req 对象传递的状态，改用 Cloudflare KV 或 Cache API 存储临时状态
+**And** 系统 SHALL 为客户端数据获取添加加载状态（Loading Spinner）和错误处理逻辑
+**And** 系统 SHALL 确保应用可完全静态导出，无任何服务器端渲染依赖
 
 **修改需求**：从Next.js的动态渲染架构迁移到纯静态导出架构，移除所有服务器端状态。
 
@@ -1250,7 +1325,19 @@ export default function Dashboard() {
 
 ### Requirement: 依赖管理重构
 
+系统 **SHALL** 完全移除所有 Vercel 特有依赖包，**MUST** 使用 Cloudflare 兼容的替代方案或开源替代品，**SHALL** 移除 @vercel/analytics、@vercel/og、@vercel/blob、@vercel/edge-config、@vercel/postgres 等专属包，并 **SHALL** 更新 Next.js 配置以支持静态导出和 Cloudflare Pages 适配器（@cloudflare/next-on-pages）。
+
 #### Scenario: 移除Vercel特有依赖
+
+**Given** 项目依赖包含 Vercel 专属包（如 @vercel/analytics、@vercel/blob）
+**When** 迁移到 Cloudflare Pages 平台
+**Then** 系统 SHALL 移除 @vercel/analytics 并替换为 @cloudflare/web-analytics
+**And** 系统 SHALL 移除 @vercel/blob 并替换为 Supabase Storage
+**And** 系统 SHALL 移除 @vercel/postgres 并替换为 @supabase/supabase-js
+**And** 系统 SHALL 移除 next-auth 并替换为 @supabase/auth-helpers-nextjs
+**And** 系统 SHALL 移除 @prisma/client 并替换为 Supabase 客户端
+**And** 系统 MUST 新增 @cloudflare/next-on-pages、wrangler、@cloudflare/workers-types 等 Cloudflare 适配依赖
+**And** 系统 SHALL 更新 next.config.js 配置，启用 `output: 'export'` 和 `images: { unoptimized: true }`
 
 **修改需求**：移除Vercel特有依赖，替换为Cloudflare兼容的替代方案。
 
