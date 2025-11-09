@@ -90,6 +90,23 @@ const targetsToRemove = [
   '**/next/dist/cli/**',
   '**/next/dist/telemetry/**',
   '**/next/dist/trace/**',
+  // 新增：更多清理目标
+  '**/node_modules/.pnpm/@next*',
+  '**/node_modules/.pnpm/@babel*',
+  '**/node_modules/.pnpm/playwright*',
+  '**/node_modules/.pnpm/jest*',
+  '**/node_modules/.pnpm/testing-library*',
+  '**/node_modules/.pnpm/eslint*',
+  '**/node_modules/.pnpm/prettier*',
+  '**/node_modules/.pnpm/typescript*',
+  '**/node_modules/.pnpm/tailwindcss*',
+  '**/node_modules/.pnpm/postcss*',
+  '**/node_modules/.pnpm/autoprefixer*',
+  '**/node_modules/.pnpm/tsx*',
+  '**/node_modules/.pnpm/husky*',
+  '**/node_modules/.pnpm/lint-staged*',
+  '**/node_modules/.pnpm/@playwright*',
+  '**/node_modules/.pnpm/@testing-library*',
 ];
 
 // 直接删除的特定大文件（确保这些被删除）
@@ -202,7 +219,40 @@ function findAndRemove(dir, pattern) {
 
 function cleanHearthBulterDir() {
   if (!fs.existsSync(hearthBulterDir)) {
-    console.log('ℹ️  未找到 HearthBulter 子目录，跳过定制清理');
+    console.log('ℹ️  未找到 HearthBulter 子目录，使用通用清理策略...');
+
+    // 即使没有 HearthBulter 子目录，也进行额外的清理
+    console.log('📂 执行额外清理: 删除开发工具和测试包...');
+
+    // 删除整个 node_modules/.pnpm 目录（包含所有开发依赖）
+    const nodeModulesPnpm = path.join(serverFunctionsDir, 'node_modules', '.pnpm');
+    if (fs.existsSync(nodeModulesPnpm)) {
+      const size = getDirectorySize(nodeModulesPnpm);
+      fs.rmSync(nodeModulesPnpm, { recursive: true, force: true });
+      removedCount++;
+      removedSize += size;
+      console.log(`  ✓ 删除目录: node_modules/.pnpm (${formatSize(size)})`);
+    }
+
+    // 删除单独的 node_modules 目录（如果存在）
+    const nodeModules = path.join(serverFunctionsDir, 'node_modules');
+    if (fs.existsSync(nodeModules)) {
+      const size = getDirectorySize(nodeModules);
+      fs.rmSync(nodeModules, { recursive: true, force: true });
+      removedCount++;
+      removedSize += size;
+      console.log(`  ✓ 删除目录: node_modules (${formatSize(size)})`);
+    }
+
+    // 删除大型缓存文件
+    const cacheFiles = ['cache.cjs', 'composable-cache.cjs', 'patchedAsyncStorage.cjs'];
+    cacheFiles.forEach(file => {
+      const filePath = path.join(serverFunctionsDir, file);
+      if (fs.existsSync(filePath)) {
+        removeFileIfExists(filePath, file);
+      }
+    });
+
     return;
   }
 
