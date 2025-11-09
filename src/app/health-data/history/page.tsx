@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { HealthDataHistoryPage } from '@/components/health-data/HealthDataHistoryPage';
 
-export default async function HealthDataHistoryPage() {
+export default async function Page() {
   const session = await auth();
 
   if (!session) {
@@ -10,7 +10,7 @@ export default async function HealthDataHistoryPage() {
   }
 
   return (
-    <HealthDataHistoryPage 
+    <HealthDataHistoryPage
       userId={session.user.id}
     />
   );

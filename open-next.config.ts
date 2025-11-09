@@ -13,7 +13,7 @@ export default defineCloudflareConfig({
     external: [
       // 排除Prisma的其他数据库引擎WASM文件
       "@prisma/client/runtime/query_engine_bg.mysql.wasm",
-      "@prisma/client/runtime/query_engine_bg.sqlite.wasm", 
+      "@prisma/client/runtime/query_engine_bg.sqlite.wasm",
       "@prisma/client/runtime/query_engine_bg.sqlserver.wasm",
       "@prisma/client/runtime/query_engine_bg.cockroachdb.wasm",
       "@prisma/client/runtime/query_compiler_bg.mysql.wasm",
@@ -25,6 +25,8 @@ export default defineCloudflareConfig({
       "@sparticuz/chromium",
       "chrome-aws-lambda",
       "puppeteer-core",
+      // 排除jsdom（仅用于测试环境和客户端组件）
+      "jsdom",
       // 排除其他大型WASM文件
       "**/*.wasm",
       "**/*.wasm-base64.js",
@@ -54,9 +56,10 @@ export default defineCloudflareConfig({
     middleware: {
       external: [
         "puppeteer",
-        "@sparticuz/chromium", 
+        "@sparticuz/chromium",
         "chrome-aws-lambda",
         "puppeteer-core",
+        "jsdom",
         "**/*.wasm",
         "**/*.wasm-base64.js",
       ],
