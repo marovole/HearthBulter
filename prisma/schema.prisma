@@ -3,8 +3,8 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
-  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  // 移除 binaryTargets - Cloudflare Workers 使用 Neon Serverless Driver，不需要二进制引擎
+  // 移除 previewFeatures - driverAdapters 现已稳定
 }
 
 datasource db {
