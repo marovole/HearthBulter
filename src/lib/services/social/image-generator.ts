@@ -119,90 +119,55 @@ export class ShareImageGenerator {
 
   /**
    * 从HTML生成图片
+   * 注意：仅支持浏览器环境，Cloudflare Workers 不支持服务端图片生成
    */
   private async generateImageFromHTML(html: string, config: ImageGenerationConfig): Promise<string> {
-    // 在浏览器环境中使用html2canvas
-    if (typeof window !== 'undefined') {
-      try {
-        const { default: html2canvas } = await import('html2canvas');
-        
-        // 创建临时DOM元素
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
-        tempDiv.style.top = '-9999px';
-        tempDiv.style.width = `${config.width}px`;
-        tempDiv.style.fontFamily = config.fontFamily;
-        document.body.appendChild(tempDiv);
-
-        // 生成图片
-        const canvas = await html2canvas(tempDiv, {
-          width: config.width,
-          height: config.height,
-          backgroundColor: config.backgroundColor,
-          scale: 2, // 高清显示
-        });
-
-        // 清理临时元素
-        document.body.removeChild(tempDiv);
-
-        // 转换为blob并获取URL
-        return new Promise((resolve, reject) => {
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              resolve(url);
-            } else {
-              reject(new Error('图片生成失败'));
-            }
-          }, `image/${config.format}`, config.quality / 100);
-        });
-      } catch (error) {
-        console.error('HTML转图片失败:', error);
-        throw new Error('图片生成失败');
-      }
-    } else {
-      // 服务端环境，使用Puppeteer
-      return this.generateImageWithPuppeteer(html, config);
+    // 仅在浏览器环境中使用html2canvas
+    if (typeof window === 'undefined') {
+      throw new Error(
+        '图片生成仅支持浏览器环境。Cloudflare Workers 不支持 Puppeteer/Chromium。' +
+        '请在客户端调用此功能。'
+      );
     }
-  }
 
-  /**
-   * 使用Puppeteer生成图片（服务端）
-   */
-  private async generateImageWithPuppeteer(html: string, config: ImageGenerationConfig): Promise<string> {
     try {
-      const puppeteer = await import('puppeteer');
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
-      
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-      
-      // 设置视口大小
-      await page.setViewport({
+      const { default: html2canvas } = await import('html2canvas');
+
+      // 创建临时DOM元素
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.width = `${config.width}px`;
+      tempDiv.style.fontFamily = config.fontFamily;
+      document.body.appendChild(tempDiv);
+
+      // 生成图片
+      const canvas = await html2canvas(tempDiv, {
         width: config.width,
         height: config.height,
-        deviceScaleFactor: 2,
+        backgroundColor: config.backgroundColor,
+        scale: 2, // 高清显示
       });
 
-      // 生成截图
-      const screenshot = await page.screenshot({
-        type: config.format as any,
-        quality: config.format === 'jpeg' ? config.quality : undefined,
+      // 清理临时元素
+      document.body.removeChild(tempDiv);
+
+      // 转换为blob并获取URL
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            resolve(url);
+          } else {
+            reject(new Error('图片生成失败'));
+          }
+        }, `image/${config.format}`, config.quality / 100);
       });
-
-      await browser.close();
-
-      // 转换为base64
-      const base64 = screenshot.toString('base64');
-      return `data:image/${config.format};base64,${base64}`;
     } catch (error) {
-      console.error('Puppeteer图片生成失败:', error);
-      throw new Error('服务端图片生成失败');
+      console.error('HTML转图片失败:', error);
+      throw new Error('图片生成失败');
     }
   }
 

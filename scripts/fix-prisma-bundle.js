@@ -106,6 +106,16 @@ const targetsToRemove = [
   '**/node_modules/.pnpm/lint-staged*',
   '**/node_modules/.pnpm/@playwright*',
   '**/node_modules/.pnpm/@testing-library*',
+  // Puppeteer 相关（即使已删除，也防止残留）
+  '**/node_modules/.pnpm/puppeteer*',
+  '**/node_modules/.pnpm/@puppeteer*',
+  '**/node_modules/.pnpm/chromium-bidi@*',
+  '**/node_modules/.pnpm/@sparticuz+chromium@*',
+  '**/node_modules/.pnpm/devtools-protocol@*',
+  // RxJS（如果未使用）
+  '**/node_modules/.pnpm/rxjs@*',
+  // Semver（可能被多次打包）
+  '**/node_modules/.pnpm/semver@7.*',
 ];
 
 // 直接删除的特定大文件（确保这些被删除）
@@ -126,18 +136,30 @@ const specificDirsToDelete = [
   'node_modules/puppeteer-core',
   'node_modules/.pnpm/puppeteer@*',
   'node_modules/.pnpm/puppeteer-core@*',
+  'node_modules/.pnpm/@puppeteer+*',
   'node_modules/.pnpm/@sparticuz+chromium@*',
   'node_modules/.pnpm/chrome-aws-lambda@*',
+  'node_modules/.pnpm/chromium-bidi@*',
+  'node_modules/.pnpm/devtools-protocol@*',
   // 删除 Next.js 的构建工具（生产不需要）
   'node_modules/.pnpm/next@*/node_modules/next/dist/build',
   'node_modules/.pnpm/next@*/node_modules/next/dist/cli',
   'node_modules/.pnpm/next@*/node_modules/next/dist/telemetry',
   'node_modules/.pnpm/next@*/node_modules/next/dist/trace',
   // 删除测试相关包
-  'node_modules/.pnpm/@testing-library+*',
-  'node_modules/.pnpm/@playwright+*',
+  'node_modules/.pnpm/@testing-library*',
+  'node_modules/.pnpm/@playwright*',
   'node_modules/.pnpm/jest@*',
   'node_modules/.pnpm/jest-environment-*',
+  // 删除开发工具
+  'node_modules/.pnpm/@babel*',
+  'node_modules/.pnpm/eslint@*',
+  'node_modules/.pnpm/eslint-*',
+  'node_modules/.pnpm/prettier@*',
+  'node_modules/.pnpm/typescript@*',
+  // 删除 RxJS（如果确认不需要）
+  'node_modules/.pnpm/rxjs@*',
+  'node_modules/rxjs',
 ];
 
 let removedCount = 0;
