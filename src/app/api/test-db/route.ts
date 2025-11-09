@@ -1,37 +1,58 @@
 import { NextResponse } from 'next/server';
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { PrismaNeon } from '@prisma/adapter-neon';
-import { PrismaClient } from '@prisma/client';
+import { supabaseAdapter, testDatabaseConnection } from '@/lib/db/supabase-adapter';
 
-// 配置 WebSocket
-if (typeof WebSocket !== 'undefined') {
-  neonConfig.webSocketConstructor = WebSocket;
-}
+// 使用 Supabase HTTP 客户端 - 完全兼容 Cloudflare Workers
+// 不依赖文件系统，不需要 Prisma 二进制文件
 
 export async function GET() {
   try {
-    const connectionString = process.env.DATABASE_URL;
+    // 检查环境变量配置
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!connectionString) {
+    if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json({
-        error: 'DATABASE_URL not configured',
-        env: Object.keys(process.env).filter(k => !k.includes('SECRET'))
+        status: 'error',
+        error: 'Supabase configuration missing',
+        details: {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseKey,
+          availableEnvKeys: Object.keys(process.env)
+            .filter(k => k.includes('SUPABASE') && !k.includes('SECRET'))
+        }
       }, { status: 500 });
     }
 
-    // 直接创建连接，不使用全局实例
-    const pool = new Pool({ connectionString });
-    const adapter = new PrismaNeon(pool);
-    const prisma = new PrismaClient({ adapter });
+    // 测试数据库连接
+    const isConnected = await testDatabaseConnection();
 
-    await prisma.$queryRaw`SELECT 1`;
+    if (!isConnected) {
+      return NextResponse.json({
+        status: 'error',
+        error: 'Database connection test failed',
+        config: {
+          url: supabaseUrl,
+          adapter: 'Supabase HTTP Client'
+        }
+      }, { status: 500 });
+    }
 
-    await prisma.$disconnect();
+    // 执行一个简单的查询来验证 Supabase 适配器
+    const userCount = await supabaseAdapter.user.count();
 
     return NextResponse.json({
       status: 'success',
-      message: 'Neon Serverless Driver works!',
-      timestamp: new Date().toISOString()
+      message: 'Supabase HTTP adapter works! ✅',
+      timestamp: new Date().toISOString(),
+      connection: {
+        adapter: 'Supabase JS Client (HTTP)',
+        runtime: 'Cloudflare Workers compatible',
+        url: supabaseUrl
+      },
+      stats: {
+        userCount,
+        method: 'Supabase Adapter API'
+      }
     });
   } catch (error) {
     return NextResponse.json(
