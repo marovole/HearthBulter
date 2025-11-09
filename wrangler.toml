@@ -24,23 +24,23 @@ compatibility_flags = ["nodejs_compat", "nodejs_als"]
 # 环境变量配置
 [vars]
 NODE_ENV = "production"
-NEXT_PUBLIC_SITE_URL = "https://hearthbulter-supabase.pages.dev"
+NEXTAUTH_URL = "https://hearthbulter.pages.dev"
+NEXT_PUBLIC_ALLOWED_ORIGINS = "https://hearthbulter.pages.dev"
+NEXT_PUBLIC_SITE_URL = "https://hearthbulter.pages.dev"
 
 # 生产环境变量
 [env.production.vars]
 NODE_ENV = "production"
-NEXT_PUBLIC_SITE_URL = "https://hearthbulter-supabase.pages.dev"
-NEXT_PUBLIC_SUPABASE_URL = "https://your-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "your-anon-key"
-SUPABASE_SERVICE_KEY = "your-service-key"
+NEXTAUTH_URL = "https://hearthbulter.pages.dev"
+NEXT_PUBLIC_ALLOWED_ORIGINS = "https://hearthbulter.pages.dev"
+NEXT_PUBLIC_SITE_URL = "https://hearthbulter.pages.dev"
 
 # Preview 环境变量
 [env.preview.vars]
 NODE_ENV = "preview"
-NEXT_PUBLIC_SITE_URL = "https://preview-hearthbulter-supabase.pages.dev"
-NEXT_PUBLIC_SUPABASE_URL = "https://preview-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "preview-anon-key"
-SUPABASE_SERVICE_KEY = "preview-service-key"
+NEXTAUTH_URL = "https://preview.hearthbulter.pages.dev"
+NEXT_PUBLIC_ALLOWED_ORIGINS = "https://preview.hearthbulter.pages.dev"
+NEXT_PUBLIC_SITE_URL = "https://preview.hearthbulter.pages.dev"
 
 # Staging 环境变量
 # KV 存储 (如果需要)
