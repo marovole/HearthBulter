@@ -90,8 +90,7 @@ const targetsToRemove = [
   '**/next/dist/cli/**',
   '**/next/dist/telemetry/**',
   '**/next/dist/trace/**',
-  // 新增：更多清理目标
-  '**/node_modules/.pnpm/@next*',
+  // 新增：更多清理目标（不要删除 react-server-dom 包）
   '**/node_modules/.pnpm/@babel*',
   '**/node_modules/.pnpm/playwright*',
   '**/node_modules/.pnpm/jest*',
@@ -469,3 +468,29 @@ if (handlerPath) {
 } else {
   console.log('⚠️  未能定位 handler.mjs，无法验证 bundle 大小');
 }
+
+// 修复 handler.mjs 导入路径
+console.log('\n🔧 修复 handler.mjs 导入路径...');
+const defaultHandlerPath = path.join(serverFunctionsDir, 'handler.mjs');
+const hearthHandlerPath = path.join(hearthBulterDir, 'handler.mjs');
+
+// 检查是否存在错误的导入
+if (fs.existsSync(defaultHandlerPath)) {
+  const handlerContent = fs.readFileSync(defaultHandlerPath, 'utf8');
+  if (handlerContent.includes('./HearthBulter/handler.mjs')) {
+    // 修复为从 index.mjs 导入
+    fs.writeFileSync(defaultHandlerPath, 'export { handler } from "./index.mjs";\n');
+    console.log('  ✓ 修复 server-functions/default/handler.mjs 导入路径');
+  }
+}
+
+// 检查 HearthBulter 子目录中的 handler.mjs
+if (fs.existsSync(hearthHandlerPath)) {
+  const hearthHandlerContent = fs.readFileSync(hearthHandlerPath, 'utf8');
+  if (hearthHandlerContent.includes('./HearthBulter/handler.mjs')) {
+    fs.writeFileSync(hearthHandlerPath, 'export { handler } from "./index.mjs";\n');
+    console.log('  ✓ 修复 HearthBulter/handler.mjs 导入路径');
+  }
+}
+
+console.log('✅ handler.mjs 导入路径修复完成');

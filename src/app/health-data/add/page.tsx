@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { AddHealthDataPage } from '@/components/health-data/AddHealthDataPage';
 
-export default async function AddHealthDataPage() {
+export default async function Page() {
   const session = await auth();
 
   if (!session) {
@@ -10,7 +10,7 @@ export default async function AddHealthDataPage() {
   }
 
   return (
-    <AddHealthDataPage 
+    <AddHealthDataPage
       userId={session.user.id}
     />
   );
