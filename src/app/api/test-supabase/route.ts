@@ -13,16 +13,16 @@ export async function GET() {
       config: {
         hasUrl: !!supabaseUrl,
         hasKey: !!supabaseKey,
-        url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'not set',
-        runtime: 'nodejs'
+        url: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'not set',
+        runtime: 'nodejs',
       },
-      note: 'This is a simplified test endpoint without external dependencies'
+      note: 'This is a simplified test endpoint without external dependencies',
     });
   } catch (error) {
     return NextResponse.json({
       status: 'error',
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     }, { status: 500 });
   }
 }

@@ -9,6 +9,6 @@ export async function GET() {
       NODE_ENV: process.env.NODE_ENV,
       hasDatabase: !!process.env.DATABASE_URL,
       hasNextAuth: !!process.env.NEXTAUTH_SECRET,
-    }
+    },
   });
 }

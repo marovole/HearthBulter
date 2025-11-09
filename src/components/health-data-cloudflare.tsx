@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useHealthData, useRealtimeData } from '@/hooks/use-supabase-data'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useToast } from '@/hooks/use-toast'
-import { Plus, TrendingUp, Activity, Heart } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import { useHealthData, useRealtimeData } from '@/hooks/use-supabase-data';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { Plus, TrendingUp, Activity, Heart } from 'lucide-react';
 
 interface HealthDataForm {
   dataType: string
@@ -27,22 +27,22 @@ interface HealthDataItem {
 }
 
 export function HealthDataManager({ memberId }: { memberId: string }) {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const [formData, setFormData] = useState<HealthDataForm>({
     dataType: 'weight',
     value: '',
     unit: 'kg',
-    recordedAt: new Date().toISOString().slice(0, 16)
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+    recordedAt: new Date().toISOString().slice(0, 16),
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 获取健康数据
   const { 
     data: healthData, 
     loading, 
     error, 
-    refetch 
-  } = useHealthData(memberId, { limit: 20 })
+    refetch, 
+  } = useHealthData(memberId, { limit: 20 });
 
   // 实时订阅健康数据更新
   const { data: realtimeHealthData } = useRealtimeData<HealthDataItem>(
@@ -50,101 +50,101 @@ export function HealthDataManager({ memberId }: { memberId: string }) {
     'health_data',
     { member_id: memberId },
     true
-  )
+  );
 
   // 处理表单提交
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const response = await fetch('/api/v1/health', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await getAccessToken()}`
+          'Authorization': `Bearer ${await getAccessToken()}`,
         },
         body: JSON.stringify({
           data_type: formData.dataType,
           value: parseFloat(formData.value),
           unit: formData.unit,
-          recorded_at: formData.recordedAt
-        })
-      })
+          recorded_at: formData.recordedAt,
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to save health data')
+        throw new Error('Failed to save health data');
       }
 
-      const result = await response.json()
+      const result = await response.json();
       
       toast({
         title: 'Success',
         description: 'Health data saved successfully',
-        variant: 'default'
-      })
+        variant: 'default',
+      });
 
       // 重置表单
       setFormData({
         ...formData,
         value: '',
-        recordedAt: new Date().toISOString().slice(0, 16)
-      })
+        recordedAt: new Date().toISOString().slice(0, 16),
+      });
 
       // 刷新数据
-      refetch()
+      refetch();
 
     } catch (error) {
-      console.error('Error saving health data:', error)
+      console.error('Error saving health data:', error);
       toast({
         title: 'Error',
         description: 'Failed to save health data',
-        variant: 'destructive'
-      })
+        variant: 'destructive',
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // 获取访问令牌
   const getAccessToken = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    return session?.access_token || ''
-  }
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || '';
+  };
 
   // 获取单位选项
   const getUnitOptions = (dataType: string) => {
     switch (dataType) {
-      case 'weight':
-        return ['kg', 'lbs', 'g', 'oz']
-      case 'blood_pressure':
-        return ['mmHg', 'kPa']
-      case 'blood_sugar':
-        return ['mg/dL', 'mmol/L']
-      case 'heart_rate':
-        return ['bpm']
-      case 'temperature':
-        return ['celsius', 'fahrenheit']
-      case 'steps':
-        return ['steps']
-      case 'sleep':
-        return ['hours']
-      case 'calories':
-        return ['kcal']
-      case 'water':
-        return ['ml', 'l', 'cups']
-      default:
-        return ['unit']
+    case 'weight':
+      return ['kg', 'lbs', 'g', 'oz'];
+    case 'blood_pressure':
+      return ['mmHg', 'kPa'];
+    case 'blood_sugar':
+      return ['mg/dL', 'mmol/L'];
+    case 'heart_rate':
+      return ['bpm'];
+    case 'temperature':
+      return ['celsius', 'fahrenheit'];
+    case 'steps':
+      return ['steps'];
+    case 'sleep':
+      return ['hours'];
+    case 'calories':
+      return ['kcal'];
+    case 'water':
+      return ['ml', 'l', 'cups'];
+    default:
+      return ['unit'];
     }
-  }
+  };
 
   // 合并静态和实时数据
-  const allHealthData = healthData?.data || []
+  const allHealthData = healthData?.data || [];
   const combinedData = realtimeHealthData.length > 0 
     ? [...realtimeHealthData, ...allHealthData.filter(item => 
-        !realtimeHealthData.some(realtime => realtime.id === item.id)
-      )]
-    : allHealthData
+      !realtimeHealthData.some(realtime => realtime.id === item.id)
+    )]
+    : allHealthData;
 
   if (loading) {
     return (
@@ -152,7 +152,7 @@ export function HealthDataManager({ memberId }: { memberId: string }) {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <span className="ml-2">Loading health data...</span>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -163,7 +163,7 @@ export function HealthDataManager({ memberId }: { memberId: string }) {
           Retry
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -312,8 +312,8 @@ export function HealthDataManager({ memberId }: { memberId: string }) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 // 导出类型定义
-export type { HealthDataItem, HealthDataForm }
+export type { HealthDataItem, HealthDataForm };

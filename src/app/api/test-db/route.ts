@@ -18,8 +18,8 @@ export async function GET() {
           hasUrl: !!supabaseUrl,
           hasKey: !!supabaseKey,
           availableEnvKeys: Object.keys(process.env)
-            .filter(k => k.includes('SUPABASE') && !k.includes('SECRET'))
-        }
+            .filter(k => k.includes('SUPABASE') && !k.includes('SECRET')),
+        },
       }, { status: 500 });
     }
 
@@ -32,8 +32,8 @@ export async function GET() {
         error: 'Database connection test failed',
         config: {
           url: supabaseUrl,
-          adapter: 'Supabase HTTP Client'
-        }
+          adapter: 'Supabase HTTP Client',
+        },
       }, { status: 500 });
     }
 
@@ -47,19 +47,19 @@ export async function GET() {
       connection: {
         adapter: 'Supabase JS Client (HTTP)',
         runtime: 'Cloudflare Workers compatible',
-        url: supabaseUrl
+        url: supabaseUrl,
       },
       stats: {
         userCount,
-        method: 'Supabase Adapter API'
-      }
+        method: 'Supabase Adapter API',
+      },
     });
   } catch (error) {
     return NextResponse.json(
       {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );

@@ -8,7 +8,18 @@
 
 ### Requirement: 全球性能优化
 
+系统 **SHALL** 利用 Cloudflare 全球边缘网络（300+ 城市的数据中心）在靠近用户的位置处理请求，**MUST** 确保静态资源加载全球平均延迟 < 50ms、API 响应全球平均延迟 < 150ms，并 **SHALL** 实现智能路由策略，根据用户地理位置、边缘节点健康度和负载情况自动选择最优边缘节点，以实现全球范围内的低延迟访问。
+
 #### Scenario: 边缘计算加速
+
+**Given** 用户从全球不同地区访问应用（如北美、欧洲、亚洲）
+**When** 用户请求页面或 API 资源
+**Then** 系统 SHALL 通过 Cloudflare CDN 从距离用户最近的边缘节点提供静态资源
+**And** 静态资源加载时间 SHALL 在北美地区 < 20ms，欧洲 < 35ms，亚洲 < 50ms
+**And** 系统 SHALL 使用智能路由选择健康且负载较低的边缘节点
+**And** API 请求 SHALL 通过 Cloudflare Pages Functions 在边缘节点处理
+**And** API 响应时间 MUST 在北美地区 < 80ms，欧洲 < 100ms，亚洲 < 120ms
+**And** 系统 SHALL 监控边缘节点性能指标（CPU、内存、网络延迟、错误率）并动态调整路由
 
 **需求**：系统必须利用Cloudflare全球边缘网络，在靠近用户的位置处理请求，实现全球范围内低延迟访问。
 
@@ -173,7 +184,19 @@ interface NodeMetrics {
 
 ### Requirement: 智能缓存策略
 
+系统 **SHALL** 实现多级缓存架构（客户端浏览器缓存 → CDN 缓存 → 边缘缓存 → 源服务器），**MUST** 确保缓存命中率 > 85%，**SHALL** 对静态资源（JS、CSS、图片）使用长期缓存（1年 TTL），对 API 响应使用短期缓存（5分钟 TTL），并 **SHALL** 提供自适应缓存机制，根据访问频率和内容类型动态调整缓存时间和策略。
+
 #### Scenario: 多级缓存架构
+
+**Given** 用户访问应用并请求各类资源
+**When** 请求静态资源（JS、CSS、图片）或 API 数据
+**Then** 系统 SHALL 首先检查客户端浏览器缓存，若命中则直接返回
+**And** 若浏览器缓存未命中，系统 SHALL 检查 Cloudflare CDN 缓存
+**And** 若 CDN 缓存未命中，系统 SHALL 检查边缘节点缓存（KV 存储）
+**And** 静态资源 SHALL 使用 1 年缓存时间（cache-control: max-age=31536000）
+**And** API 响应 SHALL 使用 5 分钟缓存时间，并根据 Authorization header 区分缓存
+**And** 系统 MUST 确保整体缓存命中率 > 85%
+**And** 系统 SHALL 提供缓存预热和失效机制，支持按 URL 模式批量清除缓存
 
 **需求**：实现多级缓存策略，包括CDN缓存、边缘缓存、客户端缓存，最大化缓存命中率和性能。
 
@@ -377,7 +400,19 @@ interface CacheAnalysis {
 
 ### Requirement: 数据库查询优化
 
-#### 场景：Supabase数据库性能调优
+系统 **SHALL** 优化所有 Supabase 数据库查询以实现最佳性能，**MUST** 确保查询执行时间 < 100ms（P95），**SHALL** 对频繁查询的列添加适当索引（B-tree、复合索引），使用游标分页替代 OFFSET 分页以避免大表扫描，并 **SHALL** 提供查询性能分析工具（EXPLAIN ANALYZE）和慢查询监控（执行时间 > 1秒触发告警）。
+
+#### Scenario: Supabase数据库性能调优
+
+**Given** 应用需要查询 Supabase 数据库以获取用户数据或业务数据
+**When** 执行数据库查询操作
+**Then** 系统 SHALL 在频繁查询的列（如 user_id、created_at）上添加索引
+**And** 系统 SHALL 使用游标分页（基于 ID 或时间戳）替代传统 OFFSET 分页
+**And** 系统 SHALL 批量执行多个独立查询（使用 Promise.all）以减少网络往返
+**And** 查询执行时间 MUST 保持在 100ms 以内（P95 性能指标）
+**And** 系统 SHALL 使用 EXPLAIN ANALYZE 分析慢查询并生成优化建议
+**And** 系统 SHALL 监控所有查询性能，对执行时间 > 1秒的查询发送慢查询告警
+**And** 系统 SHALL 避免 N+1 查询问题，使用 JOIN 或批量查询一次性获取关联数据
 
 **需求**：优化数据库查询性能，确保在Supabase平台上实现最佳查询效率和响应速度。
 
@@ -753,7 +788,19 @@ interface PerformanceReport {
 
 ### Requirement: 前端性能优化
 
-#### 场景：静态导出应用优化
+系统 **SHALL** 优化 Next.js 静态导出应用的前端性能，**MUST** 实现代码分割（按路由和手动代码块分割）、组件懒加载、图片懒加载和优化（WebP 格式、响应式尺寸），**SHALL** 预加载关键路由和资源，并 **SHALL** 确保 Core Web Vitals 指标达标（LCP < 2.5s、FID < 100ms、CLS < 0.1）。
+
+#### Scenario: 静态导出应用优化
+
+**Given** 应用使用 Next.js 静态导出部署到 Cloudflare Pages
+**When** 用户访问应用页面
+**Then** 系统 SHALL 按路由自动分割代码，每个路由独立加载 JavaScript 代码块
+**And** 系统 SHALL 手动分割第三方库（vendor、supabase、charts、ui）到独立代码块
+**And** 系统 SHALL 对非首屏组件使用 React.lazy 懒加载
+**And** 图片 SHALL 使用 WebP 格式（质量 85%）并提供响应式尺寸（640、768、1024、1280、1536px）
+**And** 图片 SHALL 实现懒加载（intersection observer），视口阈值 10%，提前加载边距 100px
+**And** 系统 SHALL 预加载可见链接对应的路由资源（延迟 100ms）
+**And** 系统 MUST 确保 LCP < 2.5s、FID < 100ms、CLS < 0.1 以满足 Core Web Vitals 要求
 
 **需求**：优化Next.js静态导出的前端性能，包括代码分割、懒加载、图片优化等。
 
@@ -1013,7 +1060,20 @@ interface PerformanceRecommendation {
 
 ### Requirement: 性能预算
 
-#### 场景：性能约束管理
+系统 **SHALL** 定义并强制执行性能预算，限制 JavaScript 总大小 < 200KB、每路由 < 100KB，CSS 总大小 < 50KB，图片总大小 < 500KB，**MUST** 确保 TTFB < 800ms、FCP < 2000ms、LCP < 2500ms、TTI < 3500ms，**SHALL** 限制总请求数 < 50个，并 **SHALL** 在构建时和运行时监控性能预算，违反预算时触发告警或阻止部署。
+
+#### Scenario: 性能约束管理
+
+**Given** 开发者添加新功能或第三方库到应用
+**When** 构建应用或在生产环境运行
+**Then** 系统 SHALL 检查 JavaScript 总大小是否超过 200KB 预算
+**And** 系统 SHALL 检查每个路由的 JavaScript 大小是否超过 100KB 预算
+**And** 系统 SHALL 检查 CSS 总大小是否超过 50KB 预算
+**And** 系统 SHALL 检查图片总大小是否超过 500KB 预算
+**And** 系统 MUST 监控加载时间指标（TTFB < 800ms、FCP < 2s、LCP < 2.5s、TTI < 3.5s）
+**And** 系统 SHALL 限制总请求数不超过 50 个
+**And** 若任何指标超出预算，系统 SHALL 记录违规并根据严重程度发送告警（超出 50% 为高严重性）
+**And** 严重违规 MUST 阻止部署到生产环境
 
 **需求**：定义性能预算，限制资源大小和加载时间，确保应用保持良好性能。
 

@@ -9,7 +9,9 @@ import { shareContentGenerator } from '@/lib/services/social/share-generator';
 import { shareImageGenerator } from '@/lib/services/social/image-generator';
 import { shareTrackingService } from '@/lib/services/social/share-tracking';
 import { achievementSystem } from '@/lib/services/social/achievement-system';
-import type { ShareContentInput, ShareContentType, SocialPlatform } from '@/types/social-sharing';
+import type { ShareContentInput } from '@/types/social-sharing';
+import { SocialPlatform } from '@/types/social-sharing';
+import { ShareContentType } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
       where: {
         id: validatedData.memberId,
         user: {
-          families: {
+          createdFamilies: {
             some: {
               members: {
                 some: {
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
         shareToken: shareResult.shareUrl.split('/').pop()!,
         shareUrl: shareResult.shareUrl,
         sharedPlatforms: JSON.stringify(validatedData.platforms),
-        metadata: shareResult.content.metadata,
+        metadata: shareResult.content.metadata ? JSON.parse(JSON.stringify(shareResult.content.metadata)) : undefined,
       },
     });
 
@@ -194,7 +196,7 @@ export async function GET(request: NextRequest) {
         where: {
           id: memberId,
           user: {
-            families: {
+            createdFamilies: {
               some: {
                 members: {
                   some: {

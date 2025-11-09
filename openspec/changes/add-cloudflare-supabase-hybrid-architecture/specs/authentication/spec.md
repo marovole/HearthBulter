@@ -8,7 +8,15 @@
 
 ### Requirement: Supabase Auth集成
 
+系统 **SHALL** 完全集成 Supabase Auth 作为主要认证提供者，替换现有的 NextAuth.js，并提供企业级认证能力，包括但不限于 JWT 令牌管理、多社交登录、密码策略、多因子认证和会话管理。
+
 #### Scenario: 现代化认证系统
+
+**Given** 用户访问应用需要进行身份认证
+**When** 用户通过邮箱/密码或社交账号登录
+**Then** 系统 SHALL 使用 Supabase Auth 生成 JWT 令牌并管理会话
+**And** 系统 SHALL 支持令牌自动刷新机制
+**And** 系统 SHALL 提供密码重置和邮箱验证功能
 
 **需求**：完全集成Supabase Auth，替换现有的NextAuth.js认证系统，提供更强大的认证能力。
 
@@ -237,7 +245,16 @@ type Provider = 'google' | 'github' | 'apple' | 'facebook' | 'microsoft';
 
 ### Requirement: 多因子认证（MFA）
 
+系统 **SHALL** 提供基于 TOTP（Time-based One-Time Password）的多因子认证机制，作为可选的安全增强功能，**MUST** 支持备份码恢复机制以防止用户因设备丢失而永久失去访问权限，并 **SHALL** 使用 AES-256-GCM 加密存储所有 MFA 敏感数据。
+
 #### Scenario: 增强安全认证
+
+**Given** 用户已成功登录并希望启用额外的安全保护
+**When** 用户在账户设置中启用多因子认证
+**Then** 系统 SHALL 生成唯一的 TOTP 密钥和二维码供用户扫描
+**And** 系统 SHALL 同时生成 10 个备份码供用户保存
+**And** 系统 MUST 在用户首次验证 TOTP 令牌成功后才正式启用 MFA
+**And** 系统 SHALL 使用加密方式存储 TOTP 密钥和备份码，确保数据库泄露时无法被直接使用
 
 **需求**：支持多因子认证，提供TOTP（基于时间的一次性密码）和备份码机制。
 
@@ -458,7 +475,17 @@ CREATE POLICY "Users can manage own MFA" ON user_mfa
 
 ### Requirement: 认证中间件
 
+系统 **SHALL** 在 Cloudflare Pages Functions 中实现轻量级认证中间件，用于验证和授权所有受保护的 API 端点，**MUST** 支持从 HTTP Header（Authorization Bearer）和 Cookie（sb-access-token）两种方式提取认证令牌，并 **SHALL** 使用 Cloudflare KV 缓存已验证用户信息以减少对 Supabase Auth API 的重复调用，缓存有效期为 5 分钟。
+
 #### Scenario: 边缘函数认证
+
+**Given** 客户端向受保护的 API 端点发起请求
+**When** 请求携带 JWT 访问令牌（通过 Authorization Header 或 Cookie）
+**Then** 中间件 SHALL 首先检查 Cloudflare KV 缓存中是否存在该令牌对应的用户信息
+**And** 若缓存未命中，中间件 SHALL 调用 Supabase Auth API 验证令牌有效性
+**And** 验证成功后，中间件 SHALL 获取用户的基本信息和权限数据
+**And** 中间件 SHALL 将用户信息缓存到 KV 中并返回给 API 处理器使用
+**And** 若令牌无效或已过期，中间件 MUST 立即返回 401 Unauthorized 错误
 
 **需求**：在Cloudflare Pages Functions中实现轻量级认证中间件，保护API端点。
 
@@ -642,7 +669,17 @@ export async function onRequestGet(context) {
 
 ### Requirement: 会话管理迁移
 
+系统 **SHALL** 从 NextAuth.js 基于数据库的会话存储机制完全迁移到 Supabase Auth 基于 JWT 令牌的无状态会话管理，**MUST** 使用 httpOnly、secure、sameSite=lax 的 Cookie 存储访问令牌（1 小时有效期）和刷新令牌（7 天有效期），并 **SHALL** 实现自动令牌刷新机制，在访问令牌到期前 5 分钟自动使用刷新令牌获取新的访问令牌。
+
 #### Scenario: 从NextAuth.js到Supabase Auth
+
+**Given** 现有系统使用 NextAuth.js 将会话数据存储在数据库中
+**When** 迁移到 Supabase Auth 的 JWT 令牌机制
+**Then** 系统 SHALL 移除数据库中的 `session` 表及相关数据模型
+**And** 系统 SHALL 使用 JWT 访问令牌（access_token）和刷新令牌（refresh_token）替代 sessionToken
+**And** 系统 MUST 将令牌存储在带有安全标志（httpOnly, secure, sameSite）的 Cookie 中
+**And** 系统 SHALL 在客户端检测到访问令牌即将过期时（剩余时间少于 5 分钟）自动触发刷新流程
+**And** 若刷新令牌也已过期，系统 SHALL 清除所有会话数据并重定向用户到登录页面
 
 **修改需求**：完全重构会话管理机制，从NextAuth.js的数据库存储会话转换为Supabase Auth的JWT令牌机制。
 
@@ -748,7 +785,16 @@ const tokenStorageConfig = {
 
 ### Requirement: 权限系统重构
 
+系统 **SHALL** 实现基于角色的访问控制（RBAC）机制，从现有的简单布尔标志权限系统迁移到细粒度的资源-操作权限模型，**MUST** 支持动态角色分配和权限组合，并 **SHALL** 将用户权限信息存储在 JWT 令牌的 app_metadata 中以实现无状态权限验证。
+
 #### Scenario: 基于角色的访问控制（RBAC）
+
+**Given** 系统需要对不同用户提供差异化的功能访问权限
+**When** 用户被分配一个或多个角色（如 free_user、premium_user、family_admin）
+**Then** 系统 SHALL 根据用户角色自动授予相应的权限集合（如 read:health_data、write:recipes）
+**And** 系统 SHALL 在用户登录时将其所有权限合并并写入 JWT 令牌的 app_metadata.permissions 字段
+**And** API 端点 MUST 通过检查 JWT 中的权限字段来决定是否允许访问
+**And** 系统 SHALL 支持运行时动态更新用户角色和权限，新权限在下次令牌刷新时生效
 
 **修改需求**：重构现有的权限系统，从简单的布尔标志转换为基于角色的细粒度访问控制（RBAC）。
 
@@ -784,4 +830,7 @@ CREATE TABLE permissions (
 
 -- 标准角色数据
 INSERT INTO roles (name, description, permissions) VALUES
-('free_user', '免费用户', '[
+('free_user', '免费用户', '["read:health_data", "read:recipes", "write:own_data"]'),
+('premium_user', '高级用户', '["read:health_data", "write:health_data", "read:recipes", "write:recipes", "ai:nutrition_analysis"]'),
+('family_admin', '家庭管理员', '["read:family_data", "write:family_data", "manage:family_members", "read:shared_shopping_lists"]'),
+('system_admin', '系统管理员', '["*:*"]');

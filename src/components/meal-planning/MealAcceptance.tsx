@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
   Edit3,
   MessageSquare,
   AlertTriangle,
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { PortionAdjuster } from './PortionAdjuster';
+import { Ingredient, NutritionData } from '@/types/components';
 
 interface MealAcceptanceProps {
   mealId: string
@@ -26,25 +27,12 @@ interface MealAcceptanceProps {
   rejectionReason?: string
   customizations?: MealCustomization[]
   originalServings?: number
-  originalIngredients?: Array<{
-    id: string
-    amount: number
-    food: {
-      id: string
-      name: string
-      unit?: string
-    }
-  }>
-  originalNutrition?: {
-    calories: number
-    protein: number
-    carbs: number
-    fat: number
-  }
+  originalIngredients?: Ingredient[]
+  originalNutrition?: NutritionData
   onAccept?: (customizations?: MealCustomization[]) => void
   onReject?: (reason: string) => void
   onCustomize?: (customizations: MealCustomization[]) => void
-  onPortionAdjust?: (servings: number, ingredients: any[], nutrition: any) => void
+  onPortionAdjust?: (servings: number, ingredients: Ingredient[], nutrition: NutritionData) => void
 }
 
 interface MealCustomization {
@@ -122,7 +110,7 @@ export function MealAcceptance({
     toast.success('已添加自定义修改');
   };
 
-  const handlePortionAdjust = (servings: number, ingredients: any[], nutrition: any) => {
+  const handlePortionAdjust = (servings: number, ingredients: Ingredient[], nutrition: NutritionData) => {
     const customization: MealCustomization = {
       id: Date.now().toString(),
       type: 'PORTION_ADJUST',

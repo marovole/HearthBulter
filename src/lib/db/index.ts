@@ -89,9 +89,9 @@ export const prisma = new Proxy({} as PrismaClientType, {
           }
           return method[innerProp];
         };
-      }
+      },
     });
-  }
+  },
 });
 
 // 数据库健康检查函数
