@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // 使用 Node.js runtime（OpenNext 兼容）
 // Supabase HTTP 客户端在任何运行时环境都可以工作
+// 此端点用于验证 Cloudflare Workers 环境下的数据库连接
 
 export async function GET() {
   try {
