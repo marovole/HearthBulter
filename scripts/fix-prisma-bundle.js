@@ -12,6 +12,24 @@ console.log('🔧 优化 Prisma Bundle 大小...');
 
 const openNextDir = path.join(__dirname, '..', '.open-next');
 const serverFunctionsDir = path.join(openNextDir, 'server-functions', 'default');
+const hearthBulterDir = path.join(serverFunctionsDir, 'HearthBulter');
+// HearthBulter 函数专用清理项目
+const hearthBulterDirsToDelete = [
+  'node_modules',
+  'tests',
+  'test',
+  '__tests__',
+  '__mocks__',
+  'docs',
+  'examples',
+];
+const hearthBulterFilesToDelete = [
+  'cache.cjs',
+  'composable-cache.cjs',
+  'patchedAsyncStorage.cjs',
+  'tsconfig.json',
+  'tsconfig.tsbuildinfo',
+];
 
 if (!fs.existsSync(serverFunctionsDir)) {
   console.log('⚠️  server-functions 目录不存在，跳过优化');
@@ -182,6 +200,84 @@ function findAndRemove(dir, pattern) {
   });
 }
 
+function cleanHearthBulterDir() {
+  if (!fs.existsSync(hearthBulterDir)) {
+    console.log('ℹ️  未找到 HearthBulter 子目录，跳过定制清理');
+    return;
+  }
+
+  console.log('📂 清理 HearthBulter 子目录...');
+  findAndRemove(hearthBulterDir);
+
+  // 特别处理 handler.mjs 文件（可能在 HearthBulter 目录中）
+  const hearthHandlerPath = path.join(hearthBulterDir, 'handler.mjs');
+  if (fs.existsSync(hearthHandlerPath)) {
+    removeFileIfExists(hearthHandlerPath, 'HearthBulter/handler.mjs');
+  }
+
+  hearthBulterDirsToDelete.forEach(relativeDir => {
+    removeDirIfExists(path.join(hearthBulterDir, relativeDir), `HearthBulter/${relativeDir}`);
+  });
+
+  hearthBulterFilesToDelete.forEach(relativeFile => {
+    removeFileIfExists(path.join(hearthBulterDir, relativeFile), `HearthBulter/${relativeFile}`);
+  });
+}
+
+function removeDirIfExists(targetPath, label) {
+  if (!fs.existsSync(targetPath)) {
+    console.log(`  - ${label} 不存在，跳过`);
+    return;
+  }
+
+  try {
+    const size = getDirectorySize(targetPath);
+    fs.rmSync(targetPath, { recursive: true, force: true });
+    removedCount++;
+    removedSize += size;
+    console.log(`  ✓ 删除目录: ${label} (${formatSize(size)})`);
+  } catch (e) {
+    console.log(`  ✗ 无法删除目录: ${label} (${e.message})`);
+  }
+}
+
+function removeFileIfExists(targetPath, label) {
+  if (!fs.existsSync(targetPath)) {
+    console.log(`  - ${label} 不存在，跳过`);
+    return;
+  }
+
+  try {
+    const stats = fs.statSync(targetPath);
+    fs.rmSync(targetPath, { force: true });
+    removedCount++;
+    removedSize += stats.size;
+    console.log(`  ✓ 删除文件: ${label} (${formatSize(stats.size)})`);
+  } catch (e) {
+    console.log(`  ✗ 无法删除文件: ${label} (${e.message})`);
+  }
+}
+
+function resolveHandlerPath() {
+  const defaultHandler = path.join(serverFunctionsDir, 'handler.mjs');
+  if (fs.existsSync(defaultHandler)) return defaultHandler;
+
+  const hearthHandler = path.join(hearthBulterDir, 'handler.mjs');
+  if (fs.existsSync(hearthHandler)) return hearthHandler;
+
+  try {
+    const entries = fs.readdirSync(serverFunctionsDir);
+    for (const entry of entries) {
+      const candidate = path.join(serverFunctionsDir, entry, 'handler.mjs');
+      if (fs.existsSync(candidate)) return candidate;
+    }
+  } catch (e) {
+    // 忽略读取错误
+  }
+
+  return null;
+}
+
 function getDirectorySize(dirPath) {
   let totalSize = 0;
   
@@ -215,6 +311,7 @@ function formatSize(bytes) {
 // 执行清理
 console.log('📂 清理 server-functions 目录...');
 findAndRemove(serverFunctionsDir);
+cleanHearthBulterDir();
 
 // 清理 middleware 目录（如果存在）
 const middlewareDir = path.join(openNextDir, 'middleware');
@@ -284,18 +381,19 @@ console.log(`   - 释放空间: ${formatSize(removedSize)}`);
 
 // 压缩 handler.mjs - 已禁用，因为会导致语法错误
 // 文件删除已经足够让 bundle 符合大小要求
-function compressHandler() {
-  const handlerPath = path.join(serverFunctionsDir, 'handler.mjs');
-  
-  if (!fs.existsSync(handlerPath)) {
+function compressHandler(customHandlerPath) {
+  const handlerPath = customHandlerPath || path.join(serverFunctionsDir, 'handler.mjs');
+
+  if (!handlerPath || !fs.existsSync(handlerPath)) {
     console.log('⚠️  handler.mjs 不存在');
-    return;
+    return null;
   }
-  
+
   // 只读取文件大小，不进行压缩
   try {
     const stats = fs.statSync(handlerPath);
-    console.log(`📊 handler.mjs 当前大小: ${formatSize(stats.size)}`);
+    const relativeHandlerPath = path.relative(openNextDir, handlerPath);
+    console.log(`📊 handler.mjs 当前大小 (${relativeHandlerPath}): ${formatSize(stats.size)}`);
     return stats.size;
   } catch (e) {
     console.log(`  ✗ 读取文件大小失败: ${e.message}`);
@@ -304,18 +402,20 @@ function compressHandler() {
 }
 
 // 重新检查 bundle 大小
-const handlerPath = path.join(serverFunctionsDir, 'handler.mjs');
-if (fs.existsSync(handlerPath)) {
+const handlerPath = resolveHandlerPath();
+if (handlerPath) {
   // 先压缩文件
-  compressHandler();
-  
+  compressHandler(handlerPath);
+
   const stats = fs.statSync(handlerPath);
   console.log(`\n📊 最终 handler.mjs 大小: ${formatSize(stats.size)}`);
-  
+
   if (stats.size > 25 * 1024 * 1024) {
     console.log('⚠️  警告: 文件仍然超过 25MB 限制！');
     process.exit(1);
   } else {
     console.log('✅ Bundle 大小符合要求！');
   }
+} else {
+  console.log('⚠️  未能定位 handler.mjs，无法验证 bundle 大小');
 }
