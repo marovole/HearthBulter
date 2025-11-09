@@ -1,5 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import { validateEnvironmentVariables, validateOptionalEnvironmentVariables } from '../env-validator';
+
+// Cloudflare Workers 兼容性配置
+if (typeof WebSocket === 'undefined') {
+  // 动态导入 ws polyfill (仅在需要时)
+  neonConfig.webSocketConstructor = globalThis.WebSocket;
+}
 
 // 检测是否在构建阶段
 const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
@@ -32,7 +40,20 @@ function getPrismaClient(): PrismaClient {
     if (globalForPrisma.prisma) {
       prismaInstance = globalForPrisma.prisma;
     } else {
-      prismaInstance = new PrismaClient();
+      // 使用 Neon Serverless Driver 以支持 Cloudflare Workers
+      const connectionString = process.env.DATABASE_URL;
+      if (!connectionString) {
+        throw new Error('DATABASE_URL is not defined');
+      }
+
+      const pool = new Pool({ connectionString });
+      const adapter = new PrismaNeon(pool);
+
+      prismaInstance = new PrismaClient({
+        adapter,
+        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      });
+
       if (process.env.NODE_ENV !== 'production') {
         globalForPrisma.prisma = prismaInstance;
       }
