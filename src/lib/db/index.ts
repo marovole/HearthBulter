@@ -18,18 +18,19 @@ const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
                     process.env.VERCEL_ENV === undefined && process.env.DATABASE_URL === undefined;
 
 // 验证环境变量（仅在运行时执行，构建时跳过）
-if (!globalThis.__envValidated && !isBuildTime) {
-  try {
-    validateEnvironmentVariables();
-    validateOptionalEnvironmentVariables();
-    globalThis.__envValidated = true;
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    if (process.env.NODE_ENV === 'production') {
-      throw error; // 生产环境运行时，环境变量错误应该阻止启动
-    }
-  }
-}
+// 暂时禁用以诊断 fs.readdir 错误
+// if (!globalThis.__envValidated && !isBuildTime) {
+//   try {
+//     validateEnvironmentVariables();
+//     validateOptionalEnvironmentVariables();
+//     globalThis.__envValidated = true;
+//   } catch (error) {
+//     console.error(error instanceof Error ? error.message : String(error));
+//     if (process.env.NODE_ENV === 'production') {
+//       throw error; // 生产环境运行时，环境变量错误应该阻止启动
+//     }
+//   }
+// }
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
