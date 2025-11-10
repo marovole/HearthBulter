@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { NotificationManager } from '@/lib/services/notification';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
-const notificationManager = new NotificationManager(prisma);
-
-// POST /api/notifications/batch - 批量操作
+/**
+ * POST /api/notifications/batch
+ * 批量操作通知
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -38,15 +40,9 @@ async function handleBatchCreate(data: {
     memberId: string;
     type: string;
     title?: string;
-    content?: string;
+    message?: string;
     priority?: string;
-    channels?: string[];
-    metadata?: any;
-    actionUrl?: string;
-    actionText?: string;
-    templateData?: any;
-    dedupKey?: string;
-    batchId?: string;
+    data?: any;
   }>;
 }) {
   if (!data.notifications || !Array.isArray(data.notifications)) {
@@ -70,20 +66,54 @@ async function handleBatchCreate(data: {
     );
   }
 
-  const results = await notificationManager.createBulkNotifications(data.notifications);
+  const supabase = SupabaseClientManager.getInstance();
+  const now = new Date().toISOString();
 
-  const successCount = results.filter(r => r.status !== 'FAILED').length;
-  const failureCount = results.length - successCount;
+  const notificationsData = data.notifications.map((notif) => ({
+    memberId: notif.memberId,
+    type: notif.type,
+    title: notif.title || 'Notification',
+    message: notif.message || '',
+    priority: notif.priority || 'MEDIUM',
+    data: notif.data || null,
+    readAt: null,
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  const { data: created, error } = await supabase
+    .from('notifications')
+    .insert(notificationsData)
+    .select();
+
+  if (error) {
+    console.error('Batch create failed:', error);
+    return NextResponse.json({
+      success: false,
+      data: {
+        results: [],
+        summary: {
+          total: data.notifications.length,
+          success: 0,
+          failed: data.notifications.length,
+          successRate: 0,
+        },
+      },
+    });
+  }
+
+  const successCount = created?.length || 0;
+  const failureCount = data.notifications.length - successCount;
 
   return NextResponse.json({
     success: true,
     data: {
-      results,
+      results: created || [],
       summary: {
-        total: results.length,
+        total: data.notifications.length,
         success: successCount,
         failed: failureCount,
-        successRate: results.length > 0 ? (successCount / results.length) * 100 : 0,
+        successRate: data.notifications.length > 0 ? (successCount / data.notifications.length) * 100 : 0,
       },
     },
   });
@@ -122,20 +152,39 @@ async function handleBatchMarkRead(data: {
     );
   }
 
-  let successCount = 0;
-  let failureCount = 0;
-  const errors: string[] = [];
+  const supabase = SupabaseClientManager.getInstance();
+  const now = new Date().toISOString();
 
-  // 逐个标记为已读
-  for (const notificationId of data.notificationIds) {
-    try {
-      await notificationManager.markAsRead(notificationId, data.memberId);
-      successCount++;
-    } catch (error) {
-      failureCount++;
-      errors.push(`Failed to mark ${notificationId} as read: ${error}`);
-    }
+  // 批量更新
+  const { data: updated, error } = await supabase
+    .from('notifications')
+    .update({
+      readAt: now,
+      updatedAt: now,
+    })
+    .in('id', data.notificationIds)
+    .eq('memberId', data.memberId)
+    .is('readAt', null)
+    .select('id');
+
+  if (error) {
+    console.error('Batch mark read failed:', error);
+    return NextResponse.json({
+      success: false,
+      data: {
+        summary: {
+          total: data.notificationIds.length,
+          success: 0,
+          failed: data.notificationIds.length,
+          successRate: 0,
+        },
+        errors: [error.message],
+      },
+    });
   }
+
+  const successCount = updated?.length || 0;
+  const failureCount = data.notificationIds.length - successCount;
 
   return NextResponse.json({
     success: true,
@@ -146,7 +195,7 @@ async function handleBatchMarkRead(data: {
         failed: failureCount,
         successRate: data.notificationIds.length > 0 ? (successCount / data.notificationIds.length) * 100 : 0,
       },
-      errors: errors.length > 0 ? errors : undefined,
+      errors: failureCount > 0 ? [`${failureCount} notifications were not updated (already read or not found)`] : undefined,
     },
   });
 }
@@ -184,20 +233,34 @@ async function handleBatchDelete(data: {
     );
   }
 
-  let successCount = 0;
-  let failureCount = 0;
-  const errors: string[] = [];
+  const supabase = SupabaseClientManager.getInstance();
 
-  // 逐个删除
-  for (const notificationId of data.notificationIds) {
-    try {
-      await notificationManager.deleteNotification(notificationId, data.memberId);
-      successCount++;
-    } catch (error) {
-      failureCount++;
-      errors.push(`Failed to delete ${notificationId}: ${error}`);
-    }
+  // 批量删除
+  const { data: deleted, error } = await supabase
+    .from('notifications')
+    .delete()
+    .in('id', data.notificationIds)
+    .eq('memberId', data.memberId)
+    .select('id');
+
+  if (error) {
+    console.error('Batch delete failed:', error);
+    return NextResponse.json({
+      success: false,
+      data: {
+        summary: {
+          total: data.notificationIds.length,
+          success: 0,
+          failed: data.notificationIds.length,
+          successRate: 0,
+        },
+        errors: [error.message],
+      },
+    });
   }
+
+  const successCount = deleted?.length || 0;
+  const failureCount = data.notificationIds.length - successCount;
 
   return NextResponse.json({
     success: true,
@@ -208,7 +271,7 @@ async function handleBatchDelete(data: {
         failed: failureCount,
         successRate: data.notificationIds.length > 0 ? (successCount / data.notificationIds.length) * 100 : 0,
       },
-      errors: errors.length > 0 ? errors : undefined,
+      errors: failureCount > 0 ? [`${failureCount} notifications were not deleted (not found or permission denied)`] : undefined,
     },
   });
 }

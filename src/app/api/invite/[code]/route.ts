@@ -1,39 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
-// GET /api/invite/:code - 获取邀请信息
+/**
+ * GET /api/invite/:code
+ * 获取邀请信息
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
   try {
     const { code } = await params;
+    const supabase = SupabaseClientManager.getInstance();
 
     // 查找邀请记录
-    const invitation = await prisma.familyInvitation.findFirst({
-      where: {
-        inviteCode: code,
-      },
-      include: {
-        family: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            _count: {
-              select: {
-                members: {
-                  where: { deletedAt: null },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const { data: invitation, error: inviteError } = await supabase
+      .from('family_invitations')
+      .select(`
+        *,
+        family:families!inner(
+          id,
+          name,
+          description
+        )
+      `)
+      .eq('inviteCode', code)
+      .single();
 
-    if (!invitation) {
+    if (inviteError || !invitation) {
       return NextResponse.json(
         { error: '邀请码无效' },
         { status: 404 }
@@ -41,12 +38,12 @@ export async function GET(
     }
 
     // 检查邀请是否过期
-    if (invitation.expiresAt < new Date()) {
+    if (new Date(invitation.expiresAt) < new Date()) {
       // 自动标记为过期
-      await prisma.familyInvitation.update({
-        where: { id: invitation.id },
-        data: { status: 'EXPIRED' },
-      });
+      await supabase
+        .from('family_invitations')
+        .update({ status: 'EXPIRED', updatedAt: new Date().toISOString() })
+        .eq('id', invitation.id);
 
       return NextResponse.json(
         { error: '邀请已过期' },
@@ -69,6 +66,13 @@ export async function GET(
       );
     }
 
+    // 获取家庭成员数量
+    const { count: memberCount } = await supabase
+      .from('family_members')
+      .select('id', { count: 'exact', head: true })
+      .eq('familyId', invitation.family.id)
+      .is('deletedAt', null);
+
     return NextResponse.json(
       {
         invitation: {
@@ -81,7 +85,7 @@ export async function GET(
           id: invitation.family.id,
           name: invitation.family.name,
           description: invitation.family.description,
-          memberCount: invitation.family._count.members,
+          memberCount: memberCount || 0,
         },
       },
       { status: 200 }
@@ -95,7 +99,14 @@ export async function GET(
   }
 }
 
-// POST /api/invite/:code - 接受邀请并加入家庭
+/**
+ * POST /api/invite/:code
+ * 接受邀请并加入家庭
+ *
+ * Migrated from Prisma to Supabase
+ * WARNING: This endpoint performs multiple operations that should be atomic
+ * Consider using RPC function for production
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
@@ -121,23 +132,23 @@ export async function POST(
       );
     }
 
-    // 查找邀请记录
-    const invitation = await prisma.familyInvitation.findFirst({
-      where: {
-        inviteCode: code,
-      },
-      include: {
-        family: {
-          include: {
-            members: {
-              where: { deletedAt: null },
-            },
-          },
-        },
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!invitation) {
+    // 查找邀请记录
+    const { data: invitation, error: inviteError } = await supabase
+      .from('family_invitations')
+      .select(`
+        *,
+        family:families!inner(
+          id,
+          name,
+          creatorId
+        )
+      `)
+      .eq('inviteCode', code)
+      .single();
+
+    if (inviteError || !invitation) {
       return NextResponse.json(
         { error: '邀请码无效' },
         { status: 404 }
@@ -145,12 +156,12 @@ export async function POST(
     }
 
     // 检查邀请是否过期
-    if (invitation.expiresAt < new Date()) {
+    if (new Date(invitation.expiresAt) < new Date()) {
       // 自动标记为过期
-      await prisma.familyInvitation.update({
-        where: { id: invitation.id },
-        data: { status: 'EXPIRED' },
-      });
+      await supabase
+        .from('family_invitations')
+        .update({ status: 'EXPIRED', updatedAt: new Date().toISOString() })
+        .eq('id', invitation.id);
 
       return NextResponse.json(
         { error: '邀请已过期' },
@@ -166,7 +177,7 @@ export async function POST(
       );
     }
 
-    // 验证邮箱匹配（可选：根据业务需求决定是否强制匹配）
+    // 验证邮箱匹配
     if (invitation.email.toLowerCase() !== session.user.email?.toLowerCase()) {
       return NextResponse.json(
         { error: '邀请邮箱与登录邮箱不匹配' },
@@ -175,9 +186,13 @@ export async function POST(
     }
 
     // 检查用户是否已经是该家庭的成员
-    const existingMember = invitation.family.members.find(
-      (member) => member.userId === session.user.id
-    );
+    const { data: existingMember } = await supabase
+      .from('family_members')
+      .select('id')
+      .eq('familyId', invitation.family.id)
+      .eq('userId', session.user.id)
+      .is('deletedAt', null)
+      .maybeSingle();
 
     if (existingMember) {
       return NextResponse.json(
@@ -187,15 +202,13 @@ export async function POST(
     }
 
     // 检查用户是否已经属于其他家庭
-    const userInOtherFamily = await prisma.familyMember.findFirst({
-      where: {
-        userId: session.user.id,
-        deletedAt: null,
-        familyId: {
-          not: invitation.family.id,
-        },
-      },
-    });
+    const { data: userInOtherFamily } = await supabase
+      .from('family_members')
+      .select('id, familyId')
+      .eq('userId', session.user.id)
+      .is('deletedAt', null)
+      .neq('familyId', invitation.family.id)
+      .maybeSingle();
 
     if (userInOtherFamily) {
       return NextResponse.json(
@@ -204,29 +217,48 @@ export async function POST(
       );
     }
 
-    // 使用事务确保数据一致性
-    const result = await prisma.$transaction(async (tx) => {
-      // 创建家庭成员档案
-      const newMember = await tx.familyMember.create({
-        data: {
-          familyId: invitation.family.id,
-          userId: session.user.id,
-          name: memberName.trim(),
-          // 默认值，用户后续可以更新
-          gender: 'MALE', // 默认性别，需要用户后续设置
-          birthDate: new Date('2000-01-01'), // 默认出生日期，需要用户后续设置
-          role: invitation.role, // 使用邀请中指定的角色
-        },
-      });
+    // ⚠️ 注意：以下操作应该在事务中执行，但 Supabase JS 客户端不支持事务
+    // 生产环境应该使用 RPC 函数来保证原子性
 
-      // 更新邀请状态为已接受
-      await tx.familyInvitation.update({
-        where: { id: invitation.id },
-        data: { status: 'ACCEPTED' },
-      });
+    // 创建家庭成员档案
+    const now = new Date().toISOString();
+    const { data: newMember, error: createError } = await supabase
+      .from('family_members')
+      .insert({
+        familyId: invitation.family.id,
+        userId: session.user.id,
+        name: memberName.trim(),
+        gender: 'MALE', // 默认性别，用户后续可更新
+        birthDate: new Date('2000-01-01').toISOString(), // 默认出生日期
+        role: invitation.role,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .select()
+      .single();
 
-      return newMember;
-    });
+    if (createError) {
+      console.error('创建家庭成员失败:', createError);
+      return NextResponse.json(
+        { error: '加入家庭失败' },
+        { status: 500 }
+      );
+    }
+
+    // 更新邀请状态为已接受
+    const { error: updateError } = await supabase
+      .from('family_invitations')
+      .update({
+        status: 'ACCEPTED',
+        updatedAt: now,
+      })
+      .eq('id', invitation.id);
+
+    if (updateError) {
+      console.error('更新邀请状态失败:', updateError);
+      // 注意：此时成员已创建，但邀请状态未更新，存在数据不一致风险
+      // 生产环境应该使用 RPC 函数或手动回滚
+    }
 
     return NextResponse.json(
       {
@@ -236,9 +268,9 @@ export async function POST(
           name: invitation.family.name,
         },
         member: {
-          id: result.id,
-          name: result.name,
-          role: result.role,
+          id: newMember.id,
+          name: newMember.name,
+          role: newMember.role,
         },
       },
       { status: 201 }
