@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { priceEstimator } from '@/lib/services/price-estimator';
 import { z } from 'zod';
 
@@ -9,7 +9,12 @@ const completeShoppingSchema = z.object({
   actualCost: z.number().min(0).optional(), // 实际花费（元）
 });
 
-// PATCH /api/shopping-lists/:id/complete - 完成采购
+/**
+ * PATCH /api/shopping-lists/:id/complete
+ * 完成采购
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -25,40 +30,49 @@ export async function PATCH(
     const body = await request.json().catch(() => ({}));
     const validatedData = completeShoppingSchema.parse(body);
 
-    // 查询购物清单并验证权限
-    const shoppingList = await prisma.shoppingList.findUnique({
-      where: { id: listId },
-      include: {
-        plan: {
-          include: {
-            member: {
-              include: {
-                family: {
-                  select: {
-                    creatorId: true,
-                    members: {
-                      where: { userId: session.user.id, deletedAt: null },
-                      select: { role: true },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!shoppingList) {
+    // 查询购物清单并验证权限
+    const { data: shoppingList, error: listError } = await supabase
+      .from('shopping_lists')
+      .select(`
+        id,
+        actualCost,
+        estimatedCost,
+        planId,
+        plan:meal_plans!inner(
+          id,
+          memberId,
+          member:family_members!inner(
+            id,
+            userId,
+            familyId,
+            family:families!inner(
+              id,
+              creatorId
+            )
+          )
+        )
+      `)
+      .eq('id', listId)
+      .single();
+
+    if (listError || !shoppingList) {
       return NextResponse.json({ error: '购物清单不存在' }, { status: 404 });
     }
 
+    // Check if user is member of this family
+    const { data: userMember } = await supabase
+      .from('family_members')
+      .select('role')
+      .eq('familyId', shoppingList.plan.member.familyId)
+      .eq('userId', session.user.id)
+      .is('deletedAt', null)
+      .maybeSingle();
+
     // 验证权限
-    const isCreator =
-      shoppingList.plan.member.family.creatorId === session.user.id;
-    const isAdmin =
-      shoppingList.plan.member.family.members[0]?.role === 'ADMIN' ||
-      isCreator;
+    const isCreator = shoppingList.plan.member.family.creatorId === session.user.id;
+    const isAdmin = userMember?.role === 'ADMIN' || isCreator;
     const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
@@ -69,20 +83,35 @@ export async function PATCH(
     }
 
     // 更新清单状态和实际花费
-    const updatedList = await prisma.shoppingList.update({
-      where: { id: listId },
-      data: {
-        status: 'COMPLETED',
-        actualCost: validatedData.actualCost || shoppingList.actualCost,
-      },
-      include: {
-        items: {
-          include: {
-            food: true,
-          },
-        },
-      },
-    });
+    const updateData: any = {
+      status: 'COMPLETED',
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (validatedData.actualCost !== undefined) {
+      updateData.actualCost = validatedData.actualCost;
+    }
+
+    const { data: updatedList, error: updateError } = await supabase
+      .from('shopping_lists')
+      .update(updateData)
+      .eq('id', listId)
+      .select(`
+        *,
+        items:shopping_list_items(
+          *,
+          food:foods(*)
+        )
+      `)
+      .single();
+
+    if (updateError) {
+      console.error('更新购物清单失败:', updateError);
+      return NextResponse.json(
+        { error: '更新购物清单失败' },
+        { status: 500 }
+      );
+    }
 
     // 如果提供了实际花费，更新价格估算器的记录
     if (validatedData.actualCost !== undefined) {

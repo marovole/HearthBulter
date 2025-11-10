@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
-// PATCH /api/shopping-lists/:id/items/:itemId - 标记已购
+/**
+ * PATCH /api/shopping-lists/:id/items/:itemId
+ * 标记已购
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function PATCH(
   request: NextRequest,
   {
@@ -20,40 +25,48 @@ export async function PATCH(
     const body = await request.json();
     const purchased = body.purchased !== undefined ? body.purchased : true;
 
-    // 查询购物清单并验证权限
-    const shoppingList = await prisma.shoppingList.findUnique({
-      where: { id: listId },
-      include: {
-        plan: {
-          include: {
-            member: {
-              include: {
-                family: {
-                  select: {
-                    creatorId: true,
-                    members: {
-                      where: { userId: session.user.id, deletedAt: null },
-                      select: { role: true },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!shoppingList) {
+    // 查询购物清单并验证权限
+    const { data: shoppingList, error: listError } = await supabase
+      .from('shopping_lists')
+      .select(`
+        id,
+        status,
+        planId,
+        plan:meal_plans!inner(
+          id,
+          memberId,
+          member:family_members!inner(
+            id,
+            userId,
+            familyId,
+            family:families!inner(
+              id,
+              creatorId
+            )
+          )
+        )
+      `)
+      .eq('id', listId)
+      .single();
+
+    if (listError || !shoppingList) {
       return NextResponse.json({ error: '购物清单不存在' }, { status: 404 });
     }
 
+    // Check if user is member of this family
+    const { data: userMember } = await supabase
+      .from('family_members')
+      .select('role')
+      .eq('familyId', shoppingList.plan.member.familyId)
+      .eq('userId', session.user.id)
+      .is('deletedAt', null)
+      .maybeSingle();
+
     // 验证权限
-    const isCreator =
-      shoppingList.plan.member.family.creatorId === session.user.id;
-    const isAdmin =
-      shoppingList.plan.member.family.members[0]?.role === 'ADMIN' ||
-      isCreator;
+    const isCreator = shoppingList.plan.member.family.creatorId === session.user.id;
+    const isAdmin = userMember?.role === 'ADMIN' || isCreator;
     const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
@@ -64,40 +77,65 @@ export async function PATCH(
     }
 
     // 检查清单项是否存在
-    const item = await prisma.shoppingItem.findUnique({
-      where: { id: itemId, listId },
-    });
+    const { data: item, error: itemError } = await supabase
+      .from('shopping_list_items')
+      .select('id, purchased')
+      .eq('id', itemId)
+      .eq('listId', listId)
+      .single();
 
-    if (!item) {
+    if (itemError || !item) {
       return NextResponse.json({ error: '清单项不存在' }, { status: 404 });
     }
 
     // 更新清单项
-    const updatedItem = await prisma.shoppingItem.update({
-      where: { id: itemId },
-      data: { purchased },
-      include: {
-        food: true,
-      },
-    });
+    const { data: updatedItem, error: updateError } = await supabase
+      .from('shopping_list_items')
+      .update({
+        purchased,
+        updatedAt: new Date().toISOString(),
+      })
+      .eq('id', itemId)
+      .select(`
+        *,
+        food:foods(*)
+      `)
+      .single();
+
+    if (updateError) {
+      console.error('更新清单项失败:', updateError);
+      return NextResponse.json(
+        { error: '更新清单项失败' },
+        { status: 500 }
+      );
+    }
 
     // 检查是否所有项都已购买，如果是则更新清单状态
-    const allItems = await prisma.shoppingItem.findMany({
-      where: { listId },
-    });
+    const { data: allItems } = await supabase
+      .from('shopping_list_items')
+      .select('id, purchased')
+      .eq('listId', listId);
 
-    const allPurchased = allItems.every((item) => item.purchased);
+    if (allItems) {
+      const allPurchased = allItems.every((item) => item.purchased);
 
-    if (allPurchased && shoppingList.status !== 'COMPLETED') {
-      await prisma.shoppingList.update({
-        where: { id: listId },
-        data: { status: 'COMPLETED' },
-      });
-    } else if (!allPurchased && shoppingList.status === 'PENDING') {
-      await prisma.shoppingList.update({
-        where: { id: listId },
-        data: { status: 'IN_PROGRESS' },
-      });
+      if (allPurchased && shoppingList.status !== 'COMPLETED') {
+        await supabase
+          .from('shopping_lists')
+          .update({
+            status: 'COMPLETED',
+            updatedAt: new Date().toISOString(),
+          })
+          .eq('id', listId);
+      } else if (!allPurchased && shoppingList.status === 'PENDING') {
+        await supabase
+          .from('shopping_lists')
+          .update({
+            status: 'IN_PROGRESS',
+            updatedAt: new Date().toISOString(),
+          })
+          .eq('id', listId);
+      }
     }
 
     return NextResponse.json(
