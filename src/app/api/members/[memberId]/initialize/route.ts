@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import {
   initializeMemberHealthData,
   checkIfMemberNeedsInitialization,
@@ -8,36 +8,54 @@ import {
 
 /**
  * 验证用户是否有权限初始化成员数据
+ *
+ * Migrated from Prisma to Supabase
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean; member: any }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const supabase = SupabaseClientManager.getInstance();
+
+  const { data: member } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      userId,
+      familyId,
+      family:families!inner(
+        id,
+        creatorId
+      )
+    `)
+    .eq('id', memberId)
+    .is('deletedAt', null)
+    .single();
 
   if (!member) {
     return { hasAccess: false, member: null };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isCreator = member.family?.creatorId === userId;
+
+  let isAdmin = false;
+  if (!isCreator) {
+    const { data: adminMember } = await supabase
+      .from('family_members')
+      .select('id, role')
+      .eq('familyId', member.familyId)
+      .eq('userId', userId)
+      .eq('role', 'ADMIN')
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    isAdmin = !!adminMember;
+  }
+
   const isSelf = member.userId === userId;
 
   return {
-    hasAccess: isAdmin || isSelf,
+    hasAccess: isCreator || isAdmin || isSelf,
     member,
   };
 }
@@ -45,6 +63,9 @@ async function verifyMemberAccess(
 /**
  * GET /api/members/[memberId]/initialize
  * 检查成员是否需要初始化
+ *
+ * Migrated from Prisma to Supabase (endpoint layer)
+ * Note: checkIfMemberNeedsInitialization service still uses Prisma
  */
 export async function GET(
   request: NextRequest,
@@ -70,6 +91,7 @@ export async function GET(
     }
 
     // 检查是否需要初始化
+    // Note: Service function still uses Prisma
     const needsInitialization = await checkIfMemberNeedsInitialization(memberId);
 
     return NextResponse.json(
@@ -91,6 +113,9 @@ export async function GET(
 /**
  * POST /api/members/[memberId]/initialize
  * 初始化成员的健康数据
+ *
+ * Migrated from Prisma to Supabase (endpoint layer)
+ * Note: initializeMemberHealthData service still uses Prisma
  */
 export async function POST(
   request: NextRequest,
@@ -116,6 +141,7 @@ export async function POST(
     }
 
     // 执行初始化
+    // Note: Service function still uses Prisma for complex initialization logic
     const result = await initializeMemberHealthData(memberId);
 
     if (!result.success) {

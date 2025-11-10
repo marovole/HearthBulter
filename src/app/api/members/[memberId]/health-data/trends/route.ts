@@ -1,45 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
 /**
  * 验证用户是否有权限访问成员的健康数据
+ *
+ * Migrated from Prisma to Supabase
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const supabase = SupabaseClientManager.getInstance();
+
+  const { data: member } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      userId,
+      familyId,
+      family:families!inner(
+        id,
+        creatorId
+      )
+    `)
+    .eq('id', memberId)
+    .is('deletedAt', null)
+    .single();
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isCreator = member.family?.creatorId === userId;
+
+  let isAdmin = false;
+  if (!isCreator) {
+    const { data: adminMember } = await supabase
+      .from('family_members')
+      .select('id, role')
+      .eq('familyId', member.familyId)
+      .eq('userId', userId)
+      .eq('role', 'ADMIN')
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    isAdmin = !!adminMember;
+  }
+
   const isSelf = member.userId === userId;
 
   return {
-    hasAccess: isAdmin || isSelf,
+    hasAccess: isCreator || isAdmin || isSelf,
   };
 }
 
 /**
  * GET /api/members/:memberId/health-data/trends
  * 获取健康数据趋势分析
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(
   request: NextRequest,
@@ -63,6 +83,8 @@ export async function GET(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
     const days = parseInt(searchParams.get('days') || '30'); // 默认30天
@@ -76,16 +98,21 @@ export async function GET(
       : new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
 
     // 查询数据
-    const healthData = await prisma.healthData.findMany({
-      where: {
-        memberId,
-        measuredAt: {
-          gte: start,
-          lte: end,
-        },
-      },
-      orderBy: { measuredAt: 'asc' },
-    });
+    const { data: healthData, error } = await supabase
+      .from('health_data')
+      .select('*')
+      .eq('memberId', memberId)
+      .gte('measuredAt', start.toISOString())
+      .lte('measuredAt', end.toISOString())
+      .order('measuredAt', { ascending: true });
+
+    if (error) {
+      console.error('查询健康数据失败:', error);
+      return NextResponse.json(
+        { error: '查询健康数据失败' },
+        { status: 500 }
+      );
+    }
 
     // 计算趋势统计
     const trends: any = {
@@ -125,6 +152,19 @@ export async function GET(
         change: null,
       },
     };
+
+    if (!healthData || healthData.length === 0) {
+      return NextResponse.json(
+        {
+          trends,
+          period: {
+            start,
+            end,
+          },
+        },
+        { status: 200 }
+      );
+    }
 
     // 处理体重数据
     const weightData = healthData
@@ -216,13 +256,13 @@ export async function GET(
         change:
           bloodPressureData.length > 1
             ? {
-              systolic:
+                systolic:
                   bloodPressureData[bloodPressureData.length - 1].systolic -
                   bloodPressureData[0].systolic,
-              diastolic:
+                diastolic:
                   bloodPressureData[bloodPressureData.length - 1].diastolic -
                   bloodPressureData[0].diastolic,
-            }
+              }
             : null,
       };
     }
