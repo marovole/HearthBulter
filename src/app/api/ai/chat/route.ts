@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { conversationManager } from '@/lib/services/ai/conversation-manager';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { rateLimiter } from '@/lib/services/ai/rate-limiter';
 import { aiFallbackService } from '@/lib/services/ai/fallback-service';
 import { defaultSensitiveFilter } from '@/lib/middleware/ai-sensitive-filter';
 import { consentManager } from '@/lib/services/consent-manager';
 
+/**
+ * POST /api/ai/chat
+ * AI 对话端点
+ *
+ * Migrated from Prisma to Supabase (endpoint layer)
+ * Note: Service layer (conversationManager, rateLimiter, etc.) still uses Prisma
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -70,41 +77,84 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: 'ADMIN',
-                },
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        healthGoals: true,
-        dietaryPreference: true,
-        allergies: true,
-        healthData: {
-          orderBy: { measuredAt: 'desc' },
-          take: 5,
-        },
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!member) {
+    // 验证用户权限并获取成员数据
+    const { data: memberData } = await supabase
+      .from('family_members')
+      .select('id, name, familyId, userId, birthDate, gender')
+      .eq('id', memberId)
+      .single();
+
+    if (!memberData) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
         { status: 404 }
       );
     }
+
+    // 检查权限：是成员本人或家庭管理员
+    const isOwnMember = memberData.userId === session.user.id;
+    let isAdmin = false;
+
+    if (!isOwnMember) {
+      const { data: adminCheck } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', memberData.familyId)
+        .eq('userId', session.user.id)
+        .eq('role', 'ADMIN')
+        .is('deletedAt', null)
+        .maybeSingle();
+
+      isAdmin = !!adminCheck;
+    }
+
+    if (!isOwnMember && !isAdmin) {
+      return NextResponse.json(
+        { error: 'Member not found or access denied' },
+        { status: 404 }
+      );
+    }
+
+    // 获取健康目标
+    const { data: healthGoals } = await supabase
+      .from('health_goals')
+      .select('goalType')
+      .eq('memberId', memberId)
+      .is('deletedAt', null);
+
+    // 获取饮食偏好
+    const { data: dietaryPreferenceData } = await supabase
+      .from('dietary_preferences')
+      .select('dietType, isVegetarian, isVegan')
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    // 获取过敏信息
+    const { data: allergies } = await supabase
+      .from('allergies')
+      .select('allergenName')
+      .eq('memberId', memberId)
+      .is('deletedAt', null);
+
+    // 获取最近健康数据
+    const { data: healthData } = await supabase
+      .from('health_data')
+      .select('dataType, value, unit, measuredAt')
+      .eq('memberId', memberId)
+      .order('measuredAt', { ascending: false })
+      .limit(5);
+
+    // 组装完整的成员数据
+    const member = {
+      ...memberData,
+      healthGoals: healthGoals || [],
+      dietaryPreference: dietaryPreferenceData,
+      allergies: allergies || [],
+      healthData: healthData || [],
+    };
 
     // 获取或创建会话
     const conversationSession = sessionId
@@ -112,7 +162,7 @@ export async function POST(request: NextRequest) {
       : conversationManager.createSession(memberId, {
         userProfile: {
           name: member.name,
-          age: Math.floor((Date.now() - member.birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)),
+          age: Math.floor((Date.now() - new Date(member.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)),
           gender: member.gender.toLowerCase(),
           healthGoals: member.healthGoals.map(g => g.goalType),
           dietaryPreferences: member.dietaryPreference ? {
@@ -240,21 +290,25 @@ export async function POST(request: NextRequest) {
       );
 
       // 保存对话到数据库
-      await prisma.aIConversation.upsert({
-        where: { id: conversationSession.id },
-        update: {
-          messages: conversationSession.messages,
-          updatedAt: new Date(),
-          lastMessageAt: new Date(),
-        },
-        create: {
+      const now = new Date().toISOString();
+      const { error: upsertError } = await supabase
+        .from('ai_conversations')
+        .upsert({
           id: conversationSession.id,
           memberId,
           messages: conversationSession.messages,
           status: conversationSession.status,
           tokens: 0,
-        },
-      });
+          updatedAt: now,
+          lastMessageAt: now,
+        }, {
+          onConflict: 'id'
+        });
+
+      if (upsertError) {
+        console.error('保存对话失败:', upsertError);
+        // 继续返回结果，即使保存失败
+      }
 
       return NextResponse.json({
         sessionId: conversationSession.id,
@@ -276,7 +330,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET 方法用于获取预设问题
+/**
+ * GET /api/ai/chat
+ * 获取预设问题
+ */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

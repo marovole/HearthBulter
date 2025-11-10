@@ -1,10 +1,13 @@
 /**
  * 批量设备同步API
+ *
+ * Migrated from Prisma to Supabase (endpoint layer)
+ * Note: deviceSyncService still uses Prisma
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { deviceSyncService } from '@/lib/services/device-sync-service';
 import { z } from 'zod';
 
@@ -13,6 +16,12 @@ const BatchSyncSchema = z.object({
   platforms: z.array(z.string()).optional(),
 });
 
+/**
+ * POST /api/devices/sync/all
+ * 批量设备同步
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -26,33 +35,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = BatchSyncSchema.parse(body);
 
-    // 构建查询条件
-    const where: any = {
-      isActive: true,
-      isAutoSync: true,
-      syncStatus: {
-        not: 'DISABLED',
-      },
-    };
+    const supabase = SupabaseClientManager.getInstance();
 
     if (validatedData.memberId) {
-      // 验证用户权限
-      const member = await prisma.familyMember.findFirst({
-        where: {
-          id: validatedData.memberId,
-          user: {
-            families: {
-              some: {
-                members: {
-                  some: {
-                    userId: session.user.id,
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
+      // 验证用户权限 - 检查是否在同一家庭
+      const { data: member } = await supabase
+        .from('family_members')
+        .select('id, familyId')
+        .eq('id', validatedData.memberId)
+        .single();
 
       if (!member) {
         return NextResponse.json(
@@ -61,40 +52,85 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      where.memberId = validatedData.memberId;
-    } else {
-      // 如果没有指定memberId，同步用户所有家庭成员的设备
-      where.member = {
-        family: {
-          members: {
-            some: {
-              userId: session.user.id,
-            },
-          },
-        },
-      };
-    }
+      // 检查是否在同一家庭
+      const { data: sameFamilyCheck } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', member.familyId)
+        .eq('userId', session.user.id)
+        .is('deletedAt', null)
+        .maybeSingle();
 
-    if (validatedData.platforms && validatedData.platforms.length > 0) {
-      where.platform = {
-        in: validatedData.platforms,
-      };
+      if (!sameFamilyCheck) {
+        return NextResponse.json(
+          { error: '无权限访问该家庭成员' },
+          { status: 403 }
+        );
+      }
     }
 
     // 获取需要同步的设备
-    const devicesToSync = await prisma.deviceConnection.findMany({
-      where,
-      include: {
-        member: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
+    let devicesQuery = supabase
+      .from('device_connections')
+      .select(`
+        id,
+        deviceId,
+        deviceName,
+        platform,
+        memberId,
+        syncStatus,
+        member:family_members!inner(id, name)
+      `)
+      .eq('isActive', true)
+      .eq('isAutoSync', true)
+      .neq('syncStatus', 'DISABLED');
 
-    if (devicesToSync.length === 0) {
+    if (validatedData.memberId) {
+      devicesQuery = devicesQuery.eq('memberId', validatedData.memberId);
+    } else {
+      // 如果没有指定memberId，获取用户所有家庭成员的设备
+      // 先获取用户的所有家庭成员ID
+      const { data: userMembers } = await supabase
+        .from('family_members')
+        .select('id, familyId')
+        .eq('userId', session.user.id)
+        .is('deletedAt', null);
+
+      if (!userMembers || userMembers.length === 0) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            message: '没有需要同步的设备',
+            devices: [],
+            summary: {
+              total: 0,
+              success: 0,
+              failed: 0,
+              skipped: 0,
+            },
+          },
+        });
+      }
+
+      const memberIds = userMembers.map(m => m.id);
+      devicesQuery = devicesQuery.in('memberId', memberIds);
+    }
+
+    if (validatedData.platforms && validatedData.platforms.length > 0) {
+      devicesQuery = devicesQuery.in('platform', validatedData.platforms);
+    }
+
+    const { data: devicesToSync, error: devicesError } = await devicesQuery;
+
+    if (devicesError) {
+      console.error('查询设备失败:', devicesError);
+      return NextResponse.json(
+        { error: '查询设备失败' },
+        { status: 500 }
+      );
+    }
+
+    if (!devicesToSync || devicesToSync.length === 0) {
       return NextResponse.json({
         success: true,
         data: {
@@ -112,32 +148,45 @@ export async function POST(request: NextRequest) {
 
     // 执行批量同步
     const syncResults = await deviceSyncService.syncAllDevices();
-    
+
     // 更新设备状态
     const deviceUpdatePromises = syncResults.results.map(async (result) => {
       const device = devicesToSync.find(d => d.deviceId === result.deviceId);
       if (!device) return null;
 
       try {
+        const now = new Date().toISOString();
+
         if (result.success && !result.skipped) {
-          await prisma.deviceConnection.update({
-            where: { id: device.id },
-            data: {
+          await supabase
+            .from('device_connections')
+            .update({
               syncStatus: 'SUCCESS',
-              lastSyncAt: result.endTime,
+              lastSyncAt: result.endTime || now,
               errorCount: 0,
               lastError: null,
-            },
-          });
+              updatedAt: now,
+            })
+            .eq('id', device.id);
         } else if (!result.success) {
-          await prisma.deviceConnection.update({
-            where: { id: device.id },
-            data: {
+          // 获取当前 errorCount
+          const { data: currentDevice } = await supabase
+            .from('device_connections')
+            .select('errorCount')
+            .eq('id', device.id)
+            .single();
+
+          const newErrorCount = (currentDevice?.errorCount || 0) + 1;
+
+          await supabase
+            .from('device_connections')
+            .update({
               syncStatus: 'FAILED',
-              lastError: result.errors?.[0],
-              errorCount: { increment: 1 },
-            },
-          });
+              lastError: result.errors?.[0] || 'Unknown error',
+              errorCount: newErrorCount,
+              updatedAt: now,
+            })
+            .eq('id', device.id);
         }
       } catch (updateError) {
         console.error('更新设备状态失败:', updateError);
@@ -172,7 +221,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('批量设备同步失败:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '参数错误', details: error.errors },
@@ -188,7 +237,10 @@ export async function POST(request: NextRequest) {
 }
 
 /**
+ * GET /api/devices/sync/all
  * 获取同步历史记录
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(request: NextRequest) {
   try {
@@ -205,89 +257,102 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // 构建查询条件
-    const where: any = {
-      member: {
-        family: {
-          members: {
-            some: {
-              userId: session.user.id,
-            },
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 获取用户的所有家庭成员ID
+    const { data: userMembers } = await supabase
+      .from('family_members')
+      .select('id, familyId')
+      .eq('userId', session.user.id)
+      .is('deletedAt', null);
+
+    if (!userMembers || userMembers.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          syncHistory: [],
+          dailyStats: [],
+          pagination: {
+            total: 0,
+            limit,
+            offset,
+            hasMore: false,
           },
         },
-      },
-    };
-
-    if (memberId) {
-      where.memberId = memberId;
+      });
     }
 
-    // 获取同步历史（这里我们通过healthData记录来模拟）
-    const syncHistory = await prisma.healthData.findMany({
-      where: {
-        ...where,
-        source: {
-          in: ['APPLE_HEALTHKIT', 'HUAWEI_HEALTH', 'GOOGLE_FIT'],
-        },
-      },
-      include: {
-        member: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        deviceConnection: {
-          select: {
-            id: true,
-            deviceId: true,
-            deviceName: true,
-            platform: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      skip: offset,
+    const memberIds = userMembers.map(m => m.id);
+
+    // 构建查询条件
+    let syncQuery = supabase
+      .from('health_data')
+      .select(`
+        id,
+        dataType,
+        value,
+        unit,
+        measuredAt,
+        source,
+        createdAt,
+        memberId,
+        deviceConnectionId,
+        member:family_members!inner(id, name),
+        deviceConnection:device_connections(id, deviceId, deviceName, platform)
+      `, { count: 'exact' })
+      .in('memberId', memberIds)
+      .in('source', ['APPLE_HEALTHKIT', 'HUAWEI_HEALTH', 'GOOGLE_FIT'])
+      .order('createdAt', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (memberId) {
+      syncQuery = syncQuery.eq('memberId', memberId);
+    }
+
+    const { data: syncHistory, error: syncError, count: total } = await syncQuery;
+
+    if (syncError) {
+      console.error('获取同步历史失败:', syncError);
+      return NextResponse.json(
+        { error: '获取同步历史失败' },
+        { status: 500 }
+      );
+    }
+
+    // 获取最近30天的日统计数据
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const { data: recentData } = await supabase
+      .from('health_data')
+      .select('createdAt')
+      .in('memberId', memberIds)
+      .in('source', ['APPLE_HEALTHKIT', 'HUAWEI_HEALTH', 'GOOGLE_FIT'])
+      .gte('createdAt', thirtyDaysAgo.toISOString());
+
+    // 客户端分组统计
+    const dailyStatsMap: Record<string, number> = {};
+    (recentData || []).forEach(record => {
+      const date = new Date(record.createdAt).toISOString().split('T')[0];
+      dailyStatsMap[date] = (dailyStatsMap[date] || 0) + 1;
     });
 
-    // 获取总数
-    const total = await prisma.healthData.count({
-      where,
-    });
-
-    // 按日期分组统计
-    const dailyStats = await prisma.healthData.groupBy({
-      by: ['createdAt'],
-      where: {
-        ...where,
-        source: {
-          in: ['APPLE_HEALTHKIT', 'HUAWEI_HEALTH', 'GOOGLE_FIT'],
-        },
-        createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 最近30天
-        },
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const dailyStats = Object.entries(dailyStatsMap)
+      .map(([date, count]) => ({
+        createdAt: date,
+        _count: { id: count },
+      }))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
     return NextResponse.json({
       success: true,
       data: {
-        syncHistory,
+        syncHistory: syncHistory || [],
         dailyStats,
         pagination: {
-          total,
+          total: total || 0,
           limit,
           offset,
-          hasMore: offset + limit < total,
+          hasMore: offset + limit < (total || 0),
         },
       },
     });

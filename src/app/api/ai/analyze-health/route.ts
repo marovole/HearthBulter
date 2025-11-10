@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { healthAnalyzer } from '@/lib/services/ai/health-analyzer';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { rateLimiter } from '@/lib/services/ai/rate-limiter';
 import { aiFallbackService } from '@/lib/services/ai/fallback-service';
 import { medicalReportFilter } from '@/lib/middleware/ai-sensitive-filter';
 import { consentManager } from '@/lib/services/consent-manager';
 
+/**
+ * POST /api/ai/analyze-health
+ * 执行健康分析
+ *
+ * Migrated from Prisma to Supabase (endpoint layer)
+ * Note: Service layer (healthAnalyzer, rateLimiter, etc.) still uses Prisma
+ */
 export async function POST(request: NextRequest) {
   try {
     // 验证用户身份
@@ -77,48 +84,108 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证用户对该成员的访问权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: 'ADMIN',
-                },
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        healthGoals: true,
-        allergies: true,
-        dietaryPreference: true,
-        healthData: {
-          orderBy: { measuredAt: 'desc' },
-          take: 10,
-        },
-        medicalReports: {
-          orderBy: { createdAt: 'desc' },
-          take: 5,
-          include: {
-            indicators: true,
-          },
-        },
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!member) {
+    // 验证用户对该成员的访问权限并获取成员数据
+    const { data: memberData } = await supabase
+      .from('family_members')
+      .select('id, familyId, userId, birthDate, gender, height, weight, bmi')
+      .eq('id', memberId)
+      .single();
+
+    if (!memberData) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
         { status: 404 }
       );
     }
+
+    // 检查权限：是成员本人或家庭管理员
+    const isOwnMember = memberData.userId === session.user.id;
+    let isAdmin = false;
+
+    if (!isOwnMember) {
+      const { data: adminCheck } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', memberData.familyId)
+        .eq('userId', session.user.id)
+        .eq('role', 'ADMIN')
+        .is('deletedAt', null)
+        .maybeSingle();
+
+      isAdmin = !!adminCheck;
+    }
+
+    if (!isOwnMember && !isAdmin) {
+      return NextResponse.json(
+        { error: 'Member not found or access denied' },
+        { status: 404 }
+      );
+    }
+
+    // 获取健康目标
+    const { data: healthGoals } = await supabase
+      .from('health_goals')
+      .select('id, goalType, targetValue, currentValue, deadline, status')
+      .eq('memberId', memberId)
+      .is('deletedAt', null);
+
+    // 获取过敏信息
+    const { data: allergies } = await supabase
+      .from('allergies')
+      .select('id, allergenName, severity, symptoms')
+      .eq('memberId', memberId)
+      .is('deletedAt', null);
+
+    // 获取饮食偏好
+    const { data: dietaryPreferenceData } = await supabase
+      .from('dietary_preferences')
+      .select('dietType, isVegetarian, isVegan, restrictions, preferences')
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    // 获取健康数据（最近10条）
+    const { data: healthData } = await supabase
+      .from('health_data')
+      .select('id, dataType, value, unit, measuredAt, source')
+      .eq('memberId', memberId)
+      .order('measuredAt', { ascending: false })
+      .limit(10);
+
+    // 获取体检报告（最近5条）及其指标
+    const { data: medicalReports } = await supabase
+      .from('medical_reports')
+      .select('id, reportType, reportDate, uploadedAt')
+      .eq('memberId', memberId)
+      .order('createdAt', { ascending: false })
+      .limit(5);
+
+    // 获取所有体检指标
+    let allIndicators: any[] = [];
+    if (medicalReports && medicalReports.length > 0) {
+      const reportIds = medicalReports.map(r => r.id);
+      const { data: indicators } = await supabase
+        .from('medical_report_indicators')
+        .select('id, reportId, indicatorName, value, unit, referenceRange, status')
+        .in('reportId', reportIds);
+
+      allIndicators = indicators || [];
+    }
+
+    // 组装完整的成员数据
+    const member = {
+      ...memberData,
+      healthGoals: healthGoals || [],
+      allergies: allergies || [],
+      dietaryPreference: dietaryPreferenceData,
+      healthData: healthData || [],
+      medicalReports: (medicalReports || []).map(report => ({
+        ...report,
+        indicators: allIndicators.filter(ind => ind.reportId === report.id),
+      })),
+    };
 
     // 结构化体检数据
     const medicalData = await healthAnalyzer.structureMedicalData(
@@ -130,7 +197,7 @@ export async function POST(request: NextRequest) {
 
     // 构建用户健康档案
     const userProfile = {
-      age: Math.floor((Date.now() - member.birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)),
+      age: Math.floor((Date.now() - new Date(member.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)),
       gender: member.gender.toLowerCase() as 'male' | 'female',
       height: member.height || 170,
       weight: member.weight || 70,
@@ -193,8 +260,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 保存建议到数据库
-    const aiAdvice = await prisma.aIAdvice.create({
-      data: {
+    const now = new Date().toISOString();
+    const { data: aiAdvice, error: createError } = await supabase
+      .from('ai_advice')
+      .insert({
         memberId,
         type: 'HEALTH_ANALYSIS',
         content: {
@@ -208,18 +277,27 @@ export async function POST(request: NextRequest) {
         },
         prompt: 'Comprehensive health analysis with personalized recommendations',
         tokens: 0,
-      },
-    });
+        generatedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('保存AI建议失败:', createError);
+      // 继续返回结果，即使保存失败
+    }
 
     const result = {
-      adviceId: aiAdvice.id,
+      adviceId: aiAdvice?.id,
       analysis: analysisResult.data,
       nutritionTargets,
       dietaryAdjustments,
       prioritizedConcerns: !analysisResult.fallbackUsed
         ? healthAnalyzer.prioritizeHealthConcerns(analysisResult.data)
         : ['AI服务不可用，请咨询专业医生'],
-      generatedAt: aiAdvice.generatedAt,
+      generatedAt: aiAdvice?.generatedAt || now,
       fallbackUsed: analysisResult.fallbackUsed,
       message: analysisResult.message,
     };
@@ -235,7 +313,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET 方法用于获取历史分析记录
+/**
+ * GET /api/ai/analyze-health
+ * 获取历史分析记录
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -257,27 +340,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 验证访问权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: 'ADMIN',
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!member) {
+    // 验证访问权限
+    const { data: memberData } = await supabase
+      .from('family_members')
+      .select('id, familyId, userId')
+      .eq('id', memberId)
+      .single();
+
+    if (!memberData) {
+      return NextResponse.json(
+        { error: 'Member not found or access denied' },
+        { status: 404 }
+      );
+    }
+
+    // 检查权限：是成员本人或家庭管理员
+    const isOwnMember = memberData.userId === session.user.id;
+    let isAdmin = false;
+
+    if (!isOwnMember) {
+      const { data: adminCheck } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', memberData.familyId)
+        .eq('userId', session.user.id)
+        .eq('role', 'ADMIN')
+        .is('deletedAt', null)
+        .maybeSingle();
+
+      isAdmin = !!adminCheck;
+    }
+
+    if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
         { status: 404 }
@@ -285,22 +381,23 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取历史分析记录
-    const history = await prisma.aIAdvice.findMany({
-      where: {
-        memberId,
-        type: 'HEALTH_ANALYSIS',
-      },
-      orderBy: { generatedAt: 'desc' },
-      take: limit,
-      select: {
-        id: true,
-        generatedAt: true,
-        content: true,
-        feedback: true,
-      },
-    });
+    const { data: history, error } = await supabase
+      .from('ai_advice')
+      .select('id, generatedAt, content, feedback')
+      .eq('memberId', memberId)
+      .eq('type', 'HEALTH_ANALYSIS')
+      .order('generatedAt', { ascending: false })
+      .limit(limit);
 
-    return NextResponse.json({ history });
+    if (error) {
+      console.error('获取历史记录失败:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch history' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ history: history || [] });
 
   } catch (error) {
     console.error('Health analysis history API error:', error);
