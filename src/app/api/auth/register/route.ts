@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
+/**
+ * POST /api/auth/register
+ * 用户注册
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(request: NextRequest) {
   try {
     const { name, email, password } = await request.json();
@@ -21,10 +27,19 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      const supabase = SupabaseClientManager.getInstance();
+
       // 检查用户是否已存在
-      const existingUser = await prisma.user.findUnique({
-        where: { email },
-      });
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing user:', checkError);
+        throw checkError;
+      }
 
       if (existingUser) {
         return NextResponse.json(
@@ -35,14 +50,24 @@ export async function POST(request: NextRequest) {
 
       // 创建新用户
       const hashedPassword = await bcrypt.hash(password, 12);
-      const user = await prisma.user.create({
-        data: {
+
+      const { data: user, error: createError } = await supabase
+        .from('users')
+        .insert({
           name,
           email,
           password: hashedPassword,
           role: 'USER',
-        },
-      });
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .select('id, name, email, role')
+        .single();
+
+      if (createError) {
+        console.error('Error creating user:', createError);
+        throw createError;
+      }
 
       return NextResponse.json({
         success: true,
@@ -57,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     } catch (dbError) {
       console.error('Database error in registration:', dbError);
-      
+
       // 如果数据库不可用，创建临时用户
       return NextResponse.json({
         success: true,
