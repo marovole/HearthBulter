@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
 import { verifyFamilyAccess, verifyFamilyAdmin } from '@/lib/auth/permissions';
+
+// Type definitions
+type Gender = 'MALE' | 'FEMALE' | 'OTHER';
+type MemberRole = 'ADMIN' | 'MEMBER';
+type AgeGroup = 'INFANT' | 'CHILD' | 'TEEN' | 'ADULT' | 'SENIOR';
 
 // 创建成员的验证 schema
 const createMemberSchema = z.object({
@@ -16,7 +21,12 @@ const createMemberSchema = z.object({
   role: z.enum(['ADMIN', 'MEMBER']).default('MEMBER'),
 });
 
-// GET /api/families/[familyId]/members - 获取家庭成员列表
+/**
+ * GET /api/families/[familyId]/members
+ * 获取家庭成员列表
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string }> }
@@ -36,25 +46,28 @@ export async function GET(
       return NextResponse.json({ error: '家庭不存在或无权访问' }, { status: 404 });
     }
 
-    // 获取成员列表
-    const members = await prisma.familyMember.findMany({
-      where: {
-        familyId,
-        deletedAt: null,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    return NextResponse.json({ members }, { status: 200 });
+    // 获取成员列表
+    const { data: members, error } = await supabase
+      .from('family_members')
+      .select(`
+        *,
+        user:users(id, name, email)
+      `)
+      .eq('familyId', familyId)
+      .is('deletedAt', null)
+      .order('createdAt', { ascending: true });
+
+    if (error) {
+      console.error('获取家庭成员列表失败:', error);
+      return NextResponse.json(
+        { error: '获取家庭成员列表失败' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ members: members || [] }, { status: 200 });
   } catch (error) {
     console.error('获取家庭成员列表失败:', error);
     return NextResponse.json(
@@ -64,7 +77,12 @@ export async function GET(
   }
 }
 
-// POST /api/families/[familyId]/members - 创建家庭成员
+/**
+ * POST /api/families/[familyId]/members
+ * 创建家庭成员
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string }> }
@@ -97,15 +115,21 @@ export async function POST(
 
     const { name, gender, birthDate, height, weight, avatar, userId, role } = validation.data;
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 如果提供了 userId，检查是否已经存在该用户的成员
     if (userId) {
-      const existingMember = await prisma.familyMember.findFirst({
-        where: {
-          familyId,
-          userId,
-          deletedAt: null,
-        },
-      });
+      const { data: existingMember, error: checkError } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', familyId)
+        .eq('userId', userId)
+        .is('deletedAt', null)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('检查成员失败:', checkError);
+      }
 
       if (existingMember) {
         return NextResponse.json(
@@ -118,11 +142,11 @@ export async function POST(
     // 计算 BMI
     const bmi = height && weight
       ? Number((weight / Math.pow(height / 100, 2)).toFixed(1))
-      : undefined;
+      : null;
 
     // 计算年龄段
     const age = new Date().getFullYear() - birthDate.getFullYear();
-    let ageGroup: 'INFANT' | 'CHILD' | 'TEEN' | 'ADULT' | 'SENIOR' | undefined;
+    let ageGroup: AgeGroup;
     if (age < 2) ageGroup = 'INFANT';
     else if (age < 13) ageGroup = 'CHILD';
     else if (age < 20) ageGroup = 'TEEN';
@@ -130,30 +154,39 @@ export async function POST(
     else ageGroup = 'SENIOR';
 
     // 创建成员
-    const member = await prisma.familyMember.create({
-      data: {
-        name,
-        gender,
-        birthDate,
-        height,
-        weight,
-        avatar,
-        bmi,
-        ageGroup,
-        familyId,
-        userId,
-        role,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    const now = new Date().toISOString();
+    const memberData = {
+      name,
+      gender: gender as Gender,
+      birthDate: birthDate.toISOString(),
+      height: height || null,
+      weight: weight || null,
+      avatar: avatar || null,
+      bmi,
+      ageGroup,
+      familyId,
+      userId: userId || null,
+      role: role as MemberRole,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const { data: member, error: createError } = await supabase
+      .from('family_members')
+      .insert(memberData)
+      .select(`
+        *,
+        user:users(id, name, email)
+      `)
+      .single();
+
+    if (createError) {
+      console.error('创建家庭成员失败:', createError);
+      return NextResponse.json(
+        { error: '创建家庭成员失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
