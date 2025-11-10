@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { analyzeTrend, getCachedTrendData, cacheTrendData } from '@/lib/services/analytics/trend-analyzer';
+import { getDefaultContainer } from '@/lib/container/service-container';
 import { TrendDataType } from '@prisma/client';
 
 /**
  * GET /api/analytics/trends
  * 获取趋势数据
+ *
+ * 重构说明：
+ * - 使用 TrendAnalyzer 类实例（依赖注入）
+ * - 移除缓存功能（由 Cloudflare KV 处理）
  */
 export async function GET(request: NextRequest) {
   try {
@@ -30,16 +34,12 @@ export async function GET(request: NextRequest) {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // 先尝试从缓存获取
-    let analysis = await getCachedTrendData(memberId, dataType, start, end);
+    // 使用 Service Container 获取 TrendAnalyzer 实例
+    const container = getDefaultContainer();
+    const trendAnalyzer = container.getTrendAnalyzer();
 
-    if (!analysis) {
-      // 缓存未命中，执行分析
-      analysis = await analyzeTrend(memberId, dataType, start, end);
-      
-      // 缓存结果
-      await cacheTrendData(memberId, dataType, analysis, start, end);
-    }
+    // 执行趋势分析
+    const analysis = await trendAnalyzer.analyzeTrend(memberId, dataType, start, end);
 
     return NextResponse.json({
       success: true,
