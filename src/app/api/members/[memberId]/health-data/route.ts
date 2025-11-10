@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import {
   validateAndDetectAnomaly,
   type HealthDataInput,
@@ -16,36 +16,57 @@ import {
 
 /**
  * 验证用户是否有权限访问成员的健康数据
+ *
+ * Migrated from Prisma to Supabase
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean; member: any }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const supabase = SupabaseClientManager.getInstance();
+
+  const { data: member } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      userId,
+      familyId,
+      family:families!inner(
+        id,
+        creatorId
+      )
+    `)
+    .eq('id', memberId)
+    .is('deletedAt', null)
+    .single();
 
   if (!member) {
     return { hasAccess: false, member: null };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  // 检查是否是家庭创建者
+  const isCreator = member.family?.creatorId === userId;
+
+  // 检查是否是管理员
+  let isAdmin = false;
+  if (!isCreator) {
+    const { data: adminMember } = await supabase
+      .from('family_members')
+      .select('id, role')
+      .eq('familyId', member.familyId)
+      .eq('userId', userId)
+      .eq('role', 'ADMIN')
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    isAdmin = !!adminMember;
+  }
+
+  // 检查是否是本人
   const isSelf = member.userId === userId;
 
   return {
-    hasAccess: isAdmin || isSelf,
+    hasAccess: isCreator || isAdmin || isSelf,
     member,
   };
 }
@@ -53,6 +74,8 @@ async function verifyMemberAccess(
 /**
  * GET /api/members/:memberId/health-data
  * 查询成员的健康数据历史记录
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(
   request: NextRequest,
@@ -79,6 +102,8 @@ export async function GET(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get('startDate');
@@ -86,36 +111,36 @@ export async function GET(
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // 构建查询条件
-    const where: any = {
-      memberId,
-    };
+    // 构建查询
+    let query = supabase
+      .from('health_data')
+      .select('*', { count: 'exact' })
+      .eq('memberId', memberId)
+      .order('measuredAt', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    if (startDate || endDate) {
-      where.measuredAt = {};
-      if (startDate) {
-        where.measuredAt.gte = new Date(startDate);
-      }
-      if (endDate) {
-        where.measuredAt.lte = new Date(endDate);
-      }
+    // 添加日期过滤
+    if (startDate) {
+      query = query.gte('measuredAt', new Date(startDate).toISOString());
+    }
+    if (endDate) {
+      query = query.lte('measuredAt', new Date(endDate).toISOString());
     }
 
-    // 查询数据
-    const [healthData, total] = await Promise.all([
-      prisma.healthData.findMany({
-        where,
-        orderBy: { measuredAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-      prisma.healthData.count({ where }),
-    ]);
+    const { data: healthData, error, count: total } = await query;
+
+    if (error) {
+      console.error('查询健康数据失败:', error);
+      return NextResponse.json(
+        { error: '查询健康数据失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
-        data: healthData,
-        total,
+        data: healthData || [],
+        total: total || 0,
         limit,
         offset,
       },
@@ -133,6 +158,8 @@ export async function GET(
 /**
  * POST /api/members/:memberId/health-data
  * 录入新的健康数据
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function POST(
   request: NextRequest,
@@ -194,9 +221,13 @@ export async function POST(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+    const now = new Date().toISOString();
+
     // 创建健康数据记录
-    const healthData = await prisma.healthData.create({
-      data: {
+    const { data: healthData, error: createError } = await supabase
+      .from('health_data')
+      .insert({
         memberId,
         weight: healthDataInput.weight,
         bodyFat: healthDataInput.bodyFat,
@@ -204,11 +235,22 @@ export async function POST(
         bloodPressureSystolic: healthDataInput.bloodPressureSystolic,
         bloodPressureDiastolic: healthDataInput.bloodPressureDiastolic,
         heartRate: healthDataInput.heartRate,
-        measuredAt: healthDataInput.measuredAt as Date,
+        measuredAt: (healthDataInput.measuredAt as Date).toISOString(),
         source: healthDataInput.source || 'MANUAL',
         notes: healthDataInput.notes,
-      },
-    });
+        createdAt: now,
+        updatedAt: now,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('创建健康数据失败:', createError);
+      return NextResponse.json(
+        { error: '创建健康数据失败' },
+        { status: 500 }
+      );
+    }
 
     // 更新连续打卡天数（异步，不阻塞响应）
     updateStreakDays(memberId).catch((error) => {
