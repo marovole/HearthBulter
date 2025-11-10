@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { recipeOptimizer } from '@/lib/services/ai/recipe-optimizer';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
 // 支持静态导出的配置
 export const dynamic = 'force-static';
 export const revalidate = false;
 
+/**
+ * POST /api/ai/feedback
+ * 提交AI建议反馈
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -35,22 +41,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     let feedbackTarget;
     let memberId;
 
     // 根据反馈类型查找目标记录
     if (feedbackType === 'advice') {
-      feedbackTarget = await prisma.aIAdvice.findUnique({
-        where: { id: adviceId },
-        select: { memberId: true, type: true, content: true },
-      });
-      memberId = feedbackTarget?.memberId;
+      const { data, error } = await supabase
+        .from('ai_advice')
+        .select('memberId, type, content')
+        .eq('id', adviceId)
+        .single();
+
+      if (error || !data) {
+        return NextResponse.json(
+          { error: 'Feedback target not found' },
+          { status: 404 }
+        );
+      }
+
+      feedbackTarget = data;
+      memberId = data.memberId;
     } else if (feedbackType === 'conversation') {
-      feedbackTarget = await prisma.aIConversation.findUnique({
-        where: { id: adviceId },
-        select: { memberId: true, messages: true },
-      });
-      memberId = feedbackTarget?.memberId;
+      const { data, error } = await supabase
+        .from('ai_conversations')
+        .select('memberId, messages')
+        .eq('id', adviceId)
+        .single();
+
+      if (error || !data) {
+        return NextResponse.json(
+          { error: 'Feedback target not found' },
+          { status: 404 }
+        );
+      }
+
+      feedbackTarget = data;
+      memberId = data.memberId;
     }
 
     if (!feedbackTarget || !memberId) {
@@ -60,27 +88,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: 'ADMIN',
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
+    // 验证用户权限 - 分两步查询
+    const { data: memberCheck } = await supabase
+      .from('family_members')
+      .select('id, familyId, userId')
+      .eq('id', memberId)
+      .single();
 
-    if (!member) {
+    if (!memberCheck) {
+      return NextResponse.json(
+        { error: 'Member not found or access denied' },
+        { status: 404 }
+      );
+    }
+
+    // 检查权限：是成员本人
+    const isOwnMember = memberCheck.userId === session.user.id;
+
+    // 如果不是本人，检查是否是家庭管理员
+    let isAdmin = false;
+    if (!isOwnMember) {
+      const { data: adminCheck } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', memberCheck.familyId)
+        .eq('userId', session.user.id)
+        .eq('role', 'ADMIN')
+        .is('deletedAt', null)
+        .maybeSingle();
+
+      isAdmin = !!adminCheck;
+    }
+
+    if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
         { status: 404 }
@@ -94,28 +134,39 @@ export async function POST(request: NextRequest) {
       disliked: disliked || false,
       comments: comments || null,
       categories: categories || [],
-      submittedAt: new Date(),
+      submittedAt: new Date().toISOString(),
       userId: session.user.id,
     };
 
     // 更新建议记录的反馈
     if (feedbackType === 'advice') {
-      const existingFeedback = await prisma.aIAdvice.findUnique({
-        where: { id: adviceId },
-        select: { feedback: true },
-      });
+      // 获取现有反馈
+      const { data: existingAdvice } = await supabase
+        .from('ai_advice')
+        .select('feedback')
+        .eq('id', adviceId)
+        .single();
 
-      const updatedFeedback = existingFeedback?.feedback
-        ? [...(existingFeedback.feedback as any[]), feedbackData]
+      const existingFeedback = existingAdvice?.feedback || [];
+      const updatedFeedback = Array.isArray(existingFeedback)
+        ? [...existingFeedback, feedbackData]
         : [feedbackData];
 
-      await prisma.aIAdvice.update({
-        where: { id: adviceId },
-        data: {
+      const { error: updateError } = await supabase
+        .from('ai_advice')
+        .update({
           feedback: updatedFeedback,
-          updatedAt: new Date(),
-        },
-      });
+          updatedAt: new Date().toISOString(),
+        })
+        .eq('id', adviceId);
+
+      if (updateError) {
+        console.error('更新反馈失败:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update feedback' },
+          { status: 500 }
+        );
+      }
 
       // 如果是食谱优化反馈，传递给学习机制
       if (feedbackTarget.type === 'RECIPE_OPTIMIZATION') {
@@ -136,20 +187,27 @@ export async function POST(request: NextRequest) {
         }
       }
     } else if (feedbackType === 'conversation') {
-      // 为对话添加反馈（可以存储在对话元数据中或单独表）
-      // 这里简化为在最后一条消息中添加反馈标记
-      const messages = feedbackTarget.messages as any[];
+      // 为对话添加反馈（在最后一条消息中添加反馈标记）
+      const messages = feedbackTarget.messages || [];
       if (messages.length > 0) {
         const lastMessage = messages[messages.length - 1];
         lastMessage.feedback = feedbackData;
 
-        await prisma.aIConversation.update({
-          where: { id: adviceId },
-          data: {
+        const { error: updateError } = await supabase
+          .from('ai_conversations')
+          .update({
             messages,
-            updatedAt: new Date(),
-          },
-        });
+            updatedAt: new Date().toISOString(),
+          })
+          .eq('id', adviceId);
+
+        if (updateError) {
+          console.error('更新对话反馈失败:', updateError);
+          return NextResponse.json(
+            { error: 'Failed to update conversation feedback' },
+            { status: 500 }
+          );
+        }
       }
     }
 
@@ -171,7 +229,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET 方法用于获取反馈统计
+/**
+ * GET /api/ai/feedback
+ * 获取反馈统计
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -193,27 +256,41 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        OR: [
-          { userId: session.user.id },
-          {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                  role: 'ADMIN',
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!member) {
+    // 验证用户权限 - 分两步查询
+    const { data: memberCheck } = await supabase
+      .from('family_members')
+      .select('id, familyId, userId')
+      .eq('id', memberId)
+      .single();
+
+    if (!memberCheck) {
+      return NextResponse.json(
+        { error: 'Member not found or access denied' },
+        { status: 404 }
+      );
+    }
+
+    // 检查权限：是成员本人
+    const isOwnMember = memberCheck.userId === session.user.id;
+
+    // 如果不是本人，检查是否是家庭管理员
+    let isAdmin = false;
+    if (!isOwnMember) {
+      const { data: adminCheck } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', memberCheck.familyId)
+        .eq('userId', session.user.id)
+        .eq('role', 'ADMIN')
+        .is('deletedAt', null)
+        .maybeSingle();
+
+      isAdmin = !!adminCheck;
+    }
+
+    if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
         { status: 404 }
@@ -221,7 +298,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 计算反馈统计
-    const feedbackStats = await calculateFeedbackStats(memberId, adviceType);
+    const feedbackStats = await calculateFeedbackStats(supabase, memberId, adviceType);
 
     return NextResponse.json({
       memberId,
@@ -257,28 +334,44 @@ async function logFeedbackAnalytics(
   });
 }
 
-// 辅助函数：计算反馈统计
-async function calculateFeedbackStats(memberId: string, adviceType?: string) {
+/**
+ * 辅助函数：计算反馈统计
+ *
+ * Migrated from Prisma to Supabase
+ */
+async function calculateFeedbackStats(
+  supabase: ReturnType<typeof SupabaseClientManager.getInstance>,
+  memberId: string,
+  adviceType?: string | null
+) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   // 获取最近30天的反馈数据
-  const adviceRecords = await prisma.aIAdvice.findMany({
-    where: {
-      memberId,
-      ...(adviceType && { type: adviceType }),
-      updatedAt: {
-        gte: thirtyDaysAgo,
-      },
-      feedback: {
-        not: null,
-      },
-    },
-    select: {
-      feedback: true,
-      type: true,
-    },
-  });
+  let query = supabase
+    .from('ai_advice')
+    .select('feedback, type')
+    .eq('memberId', memberId)
+    .gte('updatedAt', thirtyDaysAgo.toISOString())
+    .not('feedback', 'is', null);
+
+  if (adviceType) {
+    query = query.eq('type', adviceType);
+  }
+
+  const { data: adviceRecords, error } = await query;
+
+  if (error || !adviceRecords) {
+    console.error('获取反馈数据失败:', error);
+    return {
+      total_feedback: 0,
+      average_rating: 0,
+      rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      top_categories: [],
+      by_type: {},
+      period_days: 30,
+    };
+  }
 
   let totalFeedback = 0;
   let totalRating = 0;
@@ -322,7 +415,7 @@ async function calculateFeedbackStats(memberId: string, adviceType?: string) {
   return {
     total_feedback: totalFeedback,
     average_rating: ratingCount > 0 ? totalRating / ratingCount : 0,
-    rating_distribution: await getRatingDistribution(adviceRecords),
+    rating_distribution: getRatingDistribution(adviceRecords),
     top_categories: Object.entries(categoryStats)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 5)
@@ -333,7 +426,7 @@ async function calculateFeedbackStats(memberId: string, adviceType?: string) {
 }
 
 // 获取评分分布
-async function getRatingDistribution(adviceRecords: any[]) {
+function getRatingDistribution(adviceRecords: any[]) {
   const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
   adviceRecords.forEach(record => {
