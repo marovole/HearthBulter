@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
+/**
+ * GET /api/user/preferences
+ * 获取用户偏好设置
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,10 +19,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 获取用户偏好
-    const preferences = await prisma.userPreference.findUnique({
-      where: { memberId },
-    });
+    const { data: preferences, error } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('memberId', memberId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 = no rows returned, which is expected
+      console.error('Error getting user preferences:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch user preferences' },
+        { status: 500 }
+      );
+    }
 
     if (!preferences) {
       // 如果没有设置偏好，返回默认值
@@ -54,10 +73,18 @@ export async function GET(request: NextRequest) {
       success: true,
       preferences: {
         ...preferences,
-        preferredCuisines: JSON.parse(preferences.preferredCuisines),
-        avoidedIngredients: JSON.parse(preferences.avoidedIngredients),
-        preferredIngredients: JSON.parse(preferences.preferredIngredients),
-        learnedPreferences: preferences.learnedPreferences ? JSON.parse(preferences.learnedPreferences) : {},
+        preferredCuisines: Array.isArray(preferences.preferredCuisines)
+          ? preferences.preferredCuisines
+          : JSON.parse(preferences.preferredCuisines as string),
+        avoidedIngredients: Array.isArray(preferences.avoidedIngredients)
+          ? preferences.avoidedIngredients
+          : JSON.parse(preferences.avoidedIngredients as string),
+        preferredIngredients: Array.isArray(preferences.preferredIngredients)
+          ? preferences.preferredIngredients
+          : JSON.parse(preferences.preferredIngredients as string),
+        learnedPreferences: typeof preferences.learnedPreferences === 'object'
+          ? preferences.learnedPreferences
+          : (preferences.learnedPreferences ? JSON.parse(preferences.learnedPreferences as string) : {}),
       },
     });
 
@@ -70,6 +97,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/user/preferences
+ * 创建或更新用户偏好设置
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(request: NextRequest) {
   try {
     const preferences = await request.json();
@@ -82,15 +115,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 准备数据
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 准备数据 - Supabase 可以直接存储 JSON 类型
     const data = {
       memberId,
       spiceLevel: preferences.spiceLevel || 'MEDIUM',
       sweetness: preferences.sweetness || 'MEDIUM',
       saltiness: preferences.saltiness || 'MEDIUM',
-      preferredCuisines: JSON.stringify(preferences.preferredCuisines || []),
-      avoidedIngredients: JSON.stringify(preferences.avoidedIngredients || []),
-      preferredIngredients: JSON.stringify(preferences.preferredIngredients || []),
+      preferredCuisines: preferences.preferredCuisines || [],
+      avoidedIngredients: preferences.avoidedIngredients || [],
+      preferredIngredients: preferences.preferredIngredients || [],
       maxCookTime: preferences.maxCookTime || null,
       minServings: preferences.minServings || 1,
       maxServings: preferences.maxServings || 10,
@@ -105,23 +140,40 @@ export async function POST(request: NextRequest) {
       isGlutenFree: preferences.isGlutenFree || false,
       isDairyFree: preferences.isDairyFree || false,
       enableRecommendations: preferences.enableRecommendations !== false,
+      updatedAt: new Date().toISOString(),
     };
 
-    // 创建或更新偏好设置
-    const userPreference = await prisma.userPreference.upsert({
-      where: { memberId },
-      update: data,
-      create: data,
-    });
+    // 使用 Supabase 的 upsert
+    const { data: userPreference, error } = await supabase
+      .from('user_preferences')
+      .upsert(data, { onConflict: 'memberId' })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating user preferences:', error);
+      return NextResponse.json(
+        { error: 'Failed to update user preferences' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       preferences: {
         ...userPreference,
-        preferredCuisines: JSON.parse(userPreference.preferredCuisines),
-        avoidedIngredients: JSON.parse(userPreference.avoidedIngredients),
-        preferredIngredients: JSON.parse(userPreference.preferredIngredients),
-        learnedPreferences: userPreference.learnedPreferences ? JSON.parse(userPreference.learnedPreferences) : {},
+        preferredCuisines: Array.isArray(userPreference.preferredCuisines)
+          ? userPreference.preferredCuisines
+          : userPreference.preferredCuisines,
+        avoidedIngredients: Array.isArray(userPreference.avoidedIngredients)
+          ? userPreference.avoidedIngredients
+          : userPreference.avoidedIngredients,
+        preferredIngredients: Array.isArray(userPreference.preferredIngredients)
+          ? userPreference.preferredIngredients
+          : userPreference.preferredIngredients,
+        learnedPreferences: typeof userPreference.learnedPreferences === 'object'
+          ? userPreference.learnedPreferences
+          : (userPreference.learnedPreferences || {}),
       },
     });
 

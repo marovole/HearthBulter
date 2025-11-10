@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import type { FoodCategory } from '@prisma/client';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+
+type FoodCategory =
+  | 'VEGETABLES'
+  | 'FRUITS'
+  | 'GRAINS'
+  | 'PROTEIN'
+  | 'SEAFOOD'
+  | 'DAIRY'
+  | 'OILS'
+  | 'SNACKS'
+  | 'BEVERAGES'
+  | 'OTHER';
 
 /**
  * GET /api/foods/categories/:category
  * 按类别查询食物
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(
   request: NextRequest,
@@ -37,29 +50,34 @@ export async function GET(
       );
     }
 
-    const [foods, total] = await Promise.all([
-      prisma.food.findMany({
-        where: {
-          category: category as FoodCategory,
-        },
-        take: limit,
-        skip: (page - 1) * limit,
-        orderBy: { name: 'asc' },
-      }),
-      prisma.food.count({
-        where: {
-          category: category as FoodCategory,
-        },
-      }),
-    ]);
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 使用 Supabase 的 count 选项和 range 分页
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data: foods, error, count } = await supabase
+      .from('foods')
+      .select('*', { count: 'exact' })
+      .eq('category', category)
+      .order('name', { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      console.error('按类别查询食物失败:', error);
+      return NextResponse.json(
+        { error: '查询食物数据失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
-        foods: foods.map((food) => ({
+        foods: (foods || []).map((food) => ({
           id: food.id,
           name: food.name,
           nameEn: food.nameEn,
-          aliases: JSON.parse(food.aliases || '[]'),
+          aliases: Array.isArray(food.aliases) ? food.aliases : (food.aliases ? JSON.parse(food.aliases as string) : []),
           calories: food.calories,
           protein: food.protein,
           carbs: food.carbs,
@@ -72,12 +90,12 @@ export async function GET(
           calcium: food.calcium,
           iron: food.iron,
           category: food.category,
-          tags: JSON.parse(food.tags || '[]'),
+          tags: Array.isArray(food.tags) ? food.tags : (food.tags ? JSON.parse(food.tags as string) : []),
           source: food.source,
           usdaId: food.usdaId,
           verified: food.verified,
         })),
-        total,
+        total: count || 0,
         page,
         limit,
         category,
