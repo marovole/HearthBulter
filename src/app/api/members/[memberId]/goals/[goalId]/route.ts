@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
 
 // 更新健康目标的验证 schema
@@ -27,7 +27,75 @@ function calculateProgress(startWeight: number | null, currentWeight: number | n
   return Math.max(0, Math.min(100, Math.round(progress)));
 }
 
-// GET /api/members/:memberId/goals/:goalId - 获取单个健康目标
+/**
+ * 验证用户是否有权限访问健康目标
+ *
+ * Migrated from Prisma to Supabase
+ */
+async function verifyGoalAccess(
+  goalId: string,
+  memberId: string,
+  userId: string
+): Promise<{ hasAccess: boolean; goal: any }> {
+  const supabase = SupabaseClientManager.getInstance();
+
+  // 获取健康目标及其成员信息
+  const { data: goal } = await supabase
+    .from('health_goals')
+    .select(`
+      *,
+      member:family_members!inner(
+        id,
+        userId,
+        familyId,
+        family:families!inner(
+          id,
+          creatorId
+        )
+      )
+    `)
+    .eq('id', goalId)
+    .eq('memberId', memberId)
+    .is('deletedAt', null)
+    .single();
+
+  if (!goal) {
+    return { hasAccess: false, goal: null };
+  }
+
+  // 检查是否是家庭创建者
+  const isCreator = goal.member?.family?.creatorId === userId;
+
+  // 检查是否是管理员
+  let isAdmin = false;
+  if (!isCreator && goal.member?.familyId) {
+    const { data: adminMember } = await supabase
+      .from('family_members')
+      .select('id, role')
+      .eq('familyId', goal.member.familyId)
+      .eq('userId', userId)
+      .eq('role', 'ADMIN')
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    isAdmin = !!adminMember;
+  }
+
+  // 检查是否是本人
+  const isSelf = goal.member?.userId === userId;
+
+  return {
+    hasAccess: isCreator || isAdmin || isSelf,
+    goal,
+  };
+}
+
+/**
+ * GET /api/members/:memberId/goals/:goalId
+ * 获取单个健康目标
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ memberId: string; goalId: string }> }
@@ -39,44 +107,15 @@ export async function GET(
       return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
-    // 获取目标信息
-    const goal = await prisma.healthGoal.findUnique({
-      where: {
-        id: goalId,
-        memberId,
-        deletedAt: null,
-      },
-      include: {
-        member: {
-          include: {
-            family: {
-              select: {
-                creatorId: true,
-                members: {
-                  where: { userId: session.user.id, deletedAt: null },
-                  select: { role: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    // 验证权限并获取目标
+    const { hasAccess, goal } = await verifyGoalAccess(
+      goalId,
+      memberId,
+      session.user.id
+    );
 
-    if (!goal) {
+    if (!hasAccess || !goal) {
       return NextResponse.json({ error: '健康目标不存在' }, { status: 404 });
-    }
-
-    // 验证权限
-    const isCreator = goal.member.family.creatorId === session.user.id;
-    const isAdmin = goal.member.family.members[0]?.role === 'ADMIN' || isCreator;
-    const isSelf = goal.member.userId === session.user.id;
-
-    if (!isAdmin && !isSelf) {
-      return NextResponse.json(
-        { error: '无权限访问该健康目标' },
-        { status: 403 }
-      );
     }
 
     return NextResponse.json({ goal }, { status: 200 });
@@ -89,7 +128,12 @@ export async function GET(
   }
 }
 
-// PATCH /api/members/:memberId/goals/:goalId - 更新健康目标
+/**
+ * PATCH /api/members/:memberId/goals/:goalId
+ * 更新健康目标
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ memberId: string; goalId: string }> }
@@ -112,44 +156,15 @@ export async function PATCH(
       );
     }
 
-    // 获取目标信息
-    const goal = await prisma.healthGoal.findUnique({
-      where: {
-        id: goalId,
-        memberId,
-        deletedAt: null,
-      },
-      include: {
-        member: {
-          include: {
-            family: {
-              select: {
-                creatorId: true,
-                members: {
-                  where: { userId: session.user.id, deletedAt: null },
-                  select: { role: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!goal) {
-      return NextResponse.json({ error: '健康目标不存在' }, { status: 404 });
-    }
-
     // 验证权限
-    const isCreator = goal.member.family.creatorId === session.user.id;
-    const isAdmin = goal.member.family.members[0]?.role === 'ADMIN' || isCreator;
-    const isSelf = goal.member.userId === session.user.id;
+    const { hasAccess, goal } = await verifyGoalAccess(
+      goalId,
+      memberId,
+      session.user.id
+    );
 
-    if (!isAdmin && !isSelf) {
-      return NextResponse.json(
-        { error: '无权限修改该健康目标' },
-        { status: 403 }
-      );
+    if (!hasAccess || !goal) {
+      return NextResponse.json({ error: '健康目标不存在' }, { status: 404 });
     }
 
     const updateData: any = {};
@@ -163,7 +178,9 @@ export async function PATCH(
     if (validation.data.targetWeeks !== undefined) {
       updateData.targetWeeks = validation.data.targetWeeks;
       // 重新计算目标日期
-      updateData.targetDate = new Date(goal.startDate.getTime() + validation.data.targetWeeks * 7 * 24 * 60 * 60 * 1000);
+      const startDate = new Date(goal.startDate);
+      const targetDate = new Date(startDate.getTime() + validation.data.targetWeeks * 7 * 24 * 60 * 60 * 1000);
+      updateData.targetDate = targetDate.toISOString();
     }
     if (validation.data.carbRatio !== undefined) updateData.carbRatio = validation.data.carbRatio;
     if (validation.data.proteinRatio !== undefined) updateData.proteinRatio = validation.data.proteinRatio;
@@ -174,11 +191,25 @@ export async function PATCH(
     const targetWeight = updateData.targetWeight ?? goal.targetWeight;
     updateData.progress = calculateProgress(goal.startWeight, currentWeight, targetWeight);
 
+    const supabase = SupabaseClientManager.getInstance();
+    const now = new Date().toISOString();
+    updateData.updatedAt = now;
+
     // 更新目标
-    const updatedGoal = await prisma.healthGoal.update({
-      where: { id: goalId },
-      data: updateData,
-    });
+    const { data: updatedGoal, error: updateError } = await supabase
+      .from('health_goals')
+      .update(updateData)
+      .eq('id', goalId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('更新健康目标失败:', updateError);
+      return NextResponse.json(
+        { error: '更新健康目标失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
@@ -196,7 +227,12 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/members/:memberId/goals/:goalId - 删除健康目标（软删除）
+/**
+ * DELETE /api/members/:memberId/goals/:goalId
+ * 删除健康目标（软删除）
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ memberId: string; goalId: string }> }
@@ -208,51 +244,33 @@ export async function DELETE(
       return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
-    // 获取目标信息
-    const goal = await prisma.healthGoal.findUnique({
-      where: {
-        id: goalId,
-        memberId,
-        deletedAt: null,
-      },
-      include: {
-        member: {
-          include: {
-            family: {
-              select: {
-                creatorId: true,
-                members: {
-                  where: { userId: session.user.id, deletedAt: null },
-                  select: { role: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    // 验证权限
+    const { hasAccess, goal } = await verifyGoalAccess(
+      goalId,
+      memberId,
+      session.user.id
+    );
 
-    if (!goal) {
+    if (!hasAccess || !goal) {
       return NextResponse.json({ error: '健康目标不存在' }, { status: 404 });
     }
 
-    // 验证权限：管理员或自己可以删除
-    const isCreator = goal.member.family.creatorId === session.user.id;
-    const isAdmin = goal.member.family.members[0]?.role === 'ADMIN' || isCreator;
-    const isSelf = goal.member.userId === session.user.id;
-
-    if (!isAdmin && !isSelf) {
-      return NextResponse.json(
-        { error: '无权限删除该健康目标' },
-        { status: 403 }
-      );
-    }
+    const supabase = SupabaseClientManager.getInstance();
+    const now = new Date().toISOString();
 
     // 软删除目标
-    await prisma.healthGoal.update({
-      where: { id: goalId },
-      data: { deletedAt: new Date() },
-    });
+    const { error: deleteError } = await supabase
+      .from('health_goals')
+      .update({ deletedAt: now, updatedAt: now })
+      .eq('id', goalId);
+
+    if (deleteError) {
+      console.error('删除健康目标失败:', deleteError);
+      return NextResponse.json(
+        { error: '删除健康目标失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ message: '健康目标删除成功' }, { status: 200 });
   } catch (error) {
