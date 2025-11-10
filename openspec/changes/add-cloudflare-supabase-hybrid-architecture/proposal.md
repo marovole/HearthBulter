@@ -138,3 +138,116 @@
 3. **类型导入**：从 `@prisma/client` 切换到 Supabase 生成的类型
 4. **错误处理**：Supabase 错误码与 Prisma 不同
 5. **事务 API**：必须使用 RPC 函数，不再支持 `prisma.$transaction`
+
+---
+
+## Implementation Status
+
+**Last Updated**: 2025-11-10
+**Actual Progress**: ~62% of Phase 0 (23/37 tasks), ~18% overall (28/155 total tasks)
+
+⚠️ **重要更新 (2025-11-10)**: 完成 4 个 RPC 函数的 P0 关键缺陷修复，解决 12 个阻塞性问题（安全漏洞、Schema 不一致、并发问题等）。详见 [P0_FIXES_SUMMARY.md](./P0_FIXES_SUMMARY.md)。
+
+### Completed (Phase 0 - Infrastructure)
+
+#### 0.1 Supabase 环境搭建 (50% complete)
+- ✅ Prisma Schema 生成 Supabase 迁移脚本 (129KB)
+- ✅ 71 张数据表结构同步完成
+- ✅ RLS 策略和性能索引配置
+- ✅ 表结构验证脚本和测试端点
+- ⏳ 环境变量配置（待完善）
+- ⏳ 种子数据导入（待完成）
+
+#### 0.2 RPC 函数库开发 (40% complete)
+- ✅ 4 个事务处理 RPC 函数 (100%) **+ P0 修复完成** 🎯
+  - `accept_family_invite` (3.4KB + 测试)
+    - ✅ **P0 修复**: Email 服务端验证、FOR UPDATE NOWAIT、SET search_path
+  - `record_spending_tx` (4.6KB)
+    - ✅ **P0 修复**: Schema 对齐、类别枚举修复、Alert 去重、FOR UPDATE 锁
+  - `create_inventory_notifications_batch` (3.3KB)
+    - ✅ **P0 修复**: SET search_path 安全保护
+  - `update_shopping_list_item_atomic` (3.8KB)
+    - ✅ **P0 修复**: SET search_path 安全保护
+- ⏳ 3 个分析查询 RPC 函数（待完成）
+- ⏳ 3 个辅助 RPC 函数（待完成）
+
+**P0 修复总结**:
+- 修复了 12 个 P0 级别缺陷（5 个安全漏洞、4 个 Schema 不一致、2 个并发问题、1 个数据类型错误）
+- 消除了 search_path 劫持风险（所有 SECURITY DEFINER 函数）
+- 修复了身份验证绕过漏洞（`accept_family_invite`）
+- 修复了类别预算限制失效问题（枚举值错误）
+- 修复了 Alert 重复插入问题（添加 UPSERT 逻辑）
+- 详细修复文档：[P0_FIXES_SUMMARY.md](./P0_FIXES_SUMMARY.md)
+
+#### 0.3 类型生成与验证管道 (80% complete)
+- ✅ 类型生成脚本实现 (11KB)
+- ✅ 3 个类型定义文件生成
+  - `supabase-generated.ts` (6.8KB)
+  - `supabase-database.ts` (14.3KB)
+  - `supabase-rpc.ts` (3.8KB)
+- ✅ Zod schema 库创建 (12.6KB)
+- ✅ TypeScript 严格模式验证脚本
+- ⏳ CI 自动化流程（待配置）
+
+#### 0.4 服务抽象层重构 (75% complete)
+- ✅ Repository 接口设计 (100%)
+  - 5 个接口：Budget, Notification, Analytics, Recommendation + 核心 Adapter
+- ✅ Supabase Repository 实现 (100%)
+  - `SupabaseBudgetRepository` (15.9KB)
+  - `SupabaseNotificationRepository` (11.5KB)
+  - `SupabaseAnalyticsRepository` (14KB)
+  - `SupabaseRecommendationRepository` (14KB)
+  - `SupabaseAdapter` (16.7KB) - 核心数据访问层
+- ✅ Service Container 创建 (9.1KB)
+- ⏳ 4 个核心服务重构为依赖注入（1/4 完成）
+
+#### 0.5 双写验证框架 (0% complete)
+- ⏳ 待开始
+
+### In Progress
+- 🔄 Phase 0 基础设施准备：62% 完成（预计还需 1-2 周）
+- 🔄 服务层依赖注入重构（进行中）
+
+### Pending
+- ⏳ Phase 0.5: 双写验证框架（预计 6-7 天）
+- ⏳ All migration batches (Phase 1-5) - 102 API endpoints
+- ⏳ Production monitoring and rollout
+
+### Risk Assessment
+**Current Status**: ✅ **ACCELERATED PROGRESS + P0 修复完成**
+
+Phase 0 进度已达 62%，显著超过之前估计的 8%。核心基础设施已基本完成：
+
+**已验证的技术可行性**:
+- ✅ Supabase 迁移脚本生成和表结构同步
+- ✅ 事务 RPC 函数实现和测试
+- ✅ **P0 关键缺陷修复完成**（12 个阻塞性问题已解决） 🎯
+- ✅ 类型安全管道完整搭建
+- ✅ Repository 模式完全实现
+- ✅ Service Container 依赖注入架构
+
+**当前风险**:
+- 🟢 **已解决**: RPC 函数 P0 安全和稳定性问题（search_path 劫持、身份验证绕过、并发竞态）
+- 🟡 需要完成剩余 3 个服务的依赖注入重构
+- 🟡 双写验证框架尚未启动
+- 🟡 102 个 API 端点迁移量仍然巨大
+- 🟡 **识别出 P1 问题**（N+1 查询、竞态条件等），已记录待修复
+
+**Mitigation Factors**:
+- ✅ 核心架构已验证可行
+- ✅ 4 个 Repository 实现可作为模板
+- ✅ RPC 函数模式已建立并通过安全审查
+- ✅ 类型安全保障已到位
+- ✅ **P0 修复建立了代码质量标准和审查流程**
+
+**修订后的时间估算**:
+- Phase 0 剩余工作：1-2 周（vs 原估计 4-5 周）
+  - 包括 P1 问题修复（预计 2-3 天）
+- Phase 1-5 API 迁移：可能缩短至 4-6 周（有了完善的模板）
+- 总计：约 6-10 周（vs 原估计 12-14 周）
+
+**质量保障**:
+- ✅ 建立了 CodeX 代码审查协作流程
+- ✅ P0/P1 优先级分类机制
+- ✅ 详细的修复文档和知识沉淀
+- ✅ RPC 函数安全检查清单（SET search_path, FOR UPDATE, 服务端验证等）
