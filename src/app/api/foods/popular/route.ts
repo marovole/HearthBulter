@@ -1,27 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
 /**
  * GET /api/foods/popular
  * 获取热门食材（按创建时间排序，未来可以改为按使用频率）
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    const foods = await prisma.food.findMany({
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-    });
+    const supabase = SupabaseClientManager.getInstance();
+
+    const { data: foods, error } = await supabase
+      .from('foods')
+      .select('*')
+      .order('createdAt', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('获取热门食材失败:', error);
+      return NextResponse.json(
+        { error: '查询食材数据失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
-        foods: foods.map((food) => ({
+        foods: (foods || []).map((food) => ({
           id: food.id,
           name: food.name,
           nameEn: food.nameEn,
-          aliases: JSON.parse(food.aliases || '[]'),
+          aliases: Array.isArray(food.aliases) ? food.aliases : (food.aliases ? JSON.parse(food.aliases as string) : []),
           calories: food.calories,
           protein: food.protein,
           carbs: food.carbs,
@@ -34,12 +47,12 @@ export async function GET(request: NextRequest) {
           calcium: food.calcium,
           iron: food.iron,
           category: food.category,
-          tags: JSON.parse(food.tags || '[]'),
+          tags: Array.isArray(food.tags) ? food.tags : (food.tags ? JSON.parse(food.tags as string) : []),
           source: food.source,
           usdaId: food.usdaId,
           verified: food.verified,
         })),
-        total: foods.length,
+        total: foods?.length || 0,
       },
       { status: 200 }
     );

@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
+/**
+ * POST /api/recipes/[id]/rate
+ * 评分食谱
+ *
+ * Migrated from Prisma to Supabase - Uses RPC function for atomic rating updates
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const recipeId = id;
+    const { id: recipeId } = await params;
     const { memberId, rating, comment, tags } = await request.json();
 
     // 验证必需参数
@@ -25,43 +31,56 @@ export async function POST(
       );
     }
 
-    // 检查食谱是否存在
-    const recipe = await prisma.recipe.findUnique({
-      where: { id: recipeId },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!recipe) {
+    // 检查食谱是否存在
+    const { data: recipe, error: recipeError } = await supabase
+      .from('recipes')
+      .select('id')
+      .eq('id', recipeId)
+      .single();
+
+    if (recipeError || !recipe) {
       return NextResponse.json(
         { error: 'Recipe not found' },
         { status: 404 }
       );
     }
 
-    // 创建或更新评分
-    const recipeRating = await prisma.recipeRating.upsert({
-      where: {
-        recipeId_memberId: {
-          recipeId,
-          memberId,
-        },
-      },
-      update: {
-        rating,
-        comment: comment || null,
-        tags: JSON.stringify(tags || []),
-        ratedAt: new Date(),
-      },
-      create: {
-        recipeId,
-        memberId,
-        rating,
-        comment: comment || null,
-        tags: JSON.stringify(tags || []),
-      },
-    });
+    // 创建或更新评分 - Supabase 可以直接存储数组
+    const ratingData = {
+      recipeId,
+      memberId,
+      rating,
+      comment: comment || null,
+      tags: tags || [],
+      ratedAt: new Date().toISOString(),
+    };
 
-    // 更新食谱的平均评分
-    await updateRecipeAverageRating(recipeId);
+    const { data: recipeRating, error: ratingError } = await supabase
+      .from('recipe_ratings')
+      .upsert(ratingData, {
+        onConflict: 'recipeId,memberId',
+      })
+      .select()
+      .single();
+
+    if (ratingError) {
+      console.error('Error rating recipe:', ratingError);
+      return NextResponse.json(
+        { error: 'Failed to rate recipe' },
+        { status: 500 }
+      );
+    }
+
+    // 使用 RPC 函数更新食谱的平均评分和评分数量
+    const { data: updateResult, error: updateError } = await supabase
+      .rpc('update_recipe_average_rating', { p_recipe_id: recipeId });
+
+    if (updateError) {
+      console.error('Error updating average rating:', updateError);
+      // 不阻止请求，只记录错误
+    }
 
     return NextResponse.json({
       success: true,
@@ -77,12 +96,18 @@ export async function POST(
   }
 }
 
+/**
+ * GET /api/recipes/[id]/rate
+ * 获取用户对食谱的评分
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const recipeId = id;
+    const { id: recipeId } = await params;
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
 
@@ -93,21 +118,30 @@ export async function GET(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 获取用户评分
-    const rating = await prisma.recipeRating.findUnique({
-      where: {
-        recipeId_memberId: {
-          recipeId,
-          memberId,
-        },
-      },
-    });
+    const { data: rating, error } = await supabase
+      .from('recipe_ratings')
+      .select('*')
+      .eq('recipeId', recipeId)
+      .eq('memberId', memberId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 = no rows returned
+      console.error('Error getting recipe rating:', error);
+      return NextResponse.json(
+        { error: 'Failed to get recipe rating' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       rating: rating ? {
         ...rating,
-        tags: JSON.parse(rating.tags),
+        tags: Array.isArray(rating.tags) ? rating.tags : (rating.tags ? JSON.parse(rating.tags as string) : []),
       } : null,
     });
 
@@ -118,20 +152,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
-
-async function updateRecipeAverageRating(recipeId: string) {
-  const ratings = await prisma.recipeRating.aggregate({
-    where: { recipeId },
-    _avg: { rating: true },
-    _count: { rating: true },
-  });
-
-  await prisma.recipe.update({
-    where: { id: recipeId },
-    data: {
-      averageRating: ratings._avg.rating || 0,
-      ratingCount: ratings._count.rating,
-    },
-  });
 }
