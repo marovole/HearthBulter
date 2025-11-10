@@ -1,45 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
 /**
  * 验证用户是否有权限访问成员的健康数据
+ *
+ * Migrated from Prisma to Supabase
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const supabase = SupabaseClientManager.getInstance();
+
+  const { data: member } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      userId,
+      familyId,
+      family:families!inner(
+        id,
+        creatorId
+      )
+    `)
+    .eq('id', memberId)
+    .is('deletedAt', null)
+    .single();
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  // 检查是否是家庭创建者
+  const isCreator = member.family?.creatorId === userId;
+
+  // 检查是否是管理员
+  let isAdmin = false;
+  if (!isCreator) {
+    const { data: adminMember } = await supabase
+      .from('family_members')
+      .select('id, role')
+      .eq('familyId', member.familyId)
+      .eq('userId', userId)
+      .eq('role', 'ADMIN')
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    isAdmin = !!adminMember;
+  }
+
+  // 检查是否是本人
   const isSelf = member.userId === userId;
 
   return {
-    hasAccess: isAdmin || isSelf,
+    hasAccess: isCreator || isAdmin || isSelf,
   };
 }
 
 /**
  * DELETE /api/members/:memberId/health-data/:dataId
  * 删除健康数据记录
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function DELETE(
   request: NextRequest,
@@ -63,13 +86,15 @@ export async function DELETE(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 检查记录是否存在且属于该成员
-    const healthData = await prisma.healthData.findFirst({
-      where: {
-        id: dataId,
-        memberId,
-      },
-    });
+    const { data: healthData } = await supabase
+      .from('health_data')
+      .select('id')
+      .eq('id', dataId)
+      .eq('memberId', memberId)
+      .maybeSingle();
 
     if (!healthData) {
       return NextResponse.json(
@@ -79,9 +104,18 @@ export async function DELETE(
     }
 
     // 删除记录
-    await prisma.healthData.delete({
-      where: { id: dataId },
-    });
+    const { error: deleteError } = await supabase
+      .from('health_data')
+      .delete()
+      .eq('id', dataId);
+
+    if (deleteError) {
+      console.error('删除健康数据失败:', deleteError);
+      return NextResponse.json(
+        { error: '删除健康数据失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
