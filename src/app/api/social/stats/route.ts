@@ -1,14 +1,19 @@
 /**
  * 社交分享API - 分享统计
+ *
+ * Migrated from Prisma to Supabase
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { shareTrackingService } from '@/lib/services/social/share-tracking';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
 /**
+ * GET /api/social/stats
  * 获取分享统计数据
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(request: NextRequest) {
   try {
@@ -26,24 +31,16 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type'); // 'user' | 'global'
     const token = searchParams.get('token'); // 特定分享token
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 验证用户权限
     if (memberId) {
-      const member = await prisma.familyMember.findFirst({
-        where: {
-          id: memberId,
-          user: {
-            createdFamilies: {
-              some: {
-                members: {
-                  some: {
-                    userId: session.user.id,
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
+      // 简化的权限检查：先查询成员，再检查是否在同一家庭
+      const { data: member } = await supabase
+        .from('family_members')
+        .select('id, familyId, userId')
+        .eq('id', memberId)
+        .single();
 
       if (!member) {
         return NextResponse.json(
@@ -51,25 +48,43 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
+
+      // 检查是否是本人或同家庭成员
+      if (member.userId !== session.user.id) {
+        const { data: sameFamilyCheck } = await supabase
+          .from('family_members')
+          .select('id')
+          .eq('familyId', member.familyId)
+          .eq('userId', session.user.id)
+          .is('deletedAt', null)
+          .maybeSingle();
+
+        if (!sameFamilyCheck) {
+          return NextResponse.json(
+            { error: '无权限访问该家庭成员' },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     // 如果查询特定分享的统计
     if (token) {
       const shareStats = await shareTrackingService.getShareStatistics(token);
-      
+
       // 验证访问权限
-      const shareContent = await prisma.sharedContent.findUnique({
-        where: { shareToken: token },
-        include: {
-          member: {
-            select: {
-              user: {
-                select: { id: true },
-              },
-            },
-          },
-        },
-      });
+      const { data: shareContent } = await supabase
+        .from('shared_content')
+        .select(`
+          id,
+          shareToken,
+          privacyLevel,
+          member:family_members!inner(
+            user:users(id)
+          )
+        `)
+        .eq('shareToken', token)
+        .single();
 
       if (!shareContent) {
         return NextResponse.json(
@@ -79,7 +94,8 @@ export async function GET(request: NextRequest) {
       }
 
       // 检查隐私权限
-      if (shareContent.member.user?.id !== session.user.id &&
+      const memberUserId = shareContent.member?.user?.id;
+      if (memberUserId !== session.user.id &&
           shareContent.privacyLevel === 'PRIVATE') {
         return NextResponse.json(
           { error: '无权限查看该分享统计' },
@@ -99,7 +115,7 @@ export async function GET(request: NextRequest) {
 
     // 获取用户或全局分析
     const analysisType = type || 'user';
-    const analytics = memberId 
+    const analytics = memberId
       ? await shareTrackingService.getUserShareAnalytics(memberId, period)
       : await shareTrackingService.getGlobalShareAnalytics(period);
 
@@ -107,9 +123,9 @@ export async function GET(request: NextRequest) {
     let additionalStats = {};
 
     if (analysisType === 'user' && memberId) {
-      additionalStats = await getUserAdditionalStats(memberId, period);
+      additionalStats = await getUserAdditionalStats(supabase, memberId, period);
     } else if (analysisType === 'global') {
-      additionalStats = await getGlobalAdditionalStats(period);
+      additionalStats = await getGlobalAdditionalStats(supabase, period);
     }
 
     return NextResponse.json({
@@ -133,7 +149,10 @@ export async function GET(request: NextRequest) {
 }
 
 /**
+ * POST /api/social/stats
  * 生成分享报告
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function POST(request: NextRequest) {
   try {
@@ -148,6 +167,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { memberId, period, format, type, adminCode } = body;
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 验证管理员权限（如果需要）
     if (adminCode) {
       const isAdmin = await checkAdminPermission(session.user.id, adminCode);
@@ -159,28 +180,35 @@ export async function POST(request: NextRequest) {
       }
     } else if (memberId) {
       // 验证用户权限
-      const member = await prisma.familyMember.findFirst({
-        where: {
-          id: memberId,
-          user: {
-            createdFamilies: {
-              some: {
-                members: {
-                  some: {
-                    userId: session.user.id,
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
+      const { data: member } = await supabase
+        .from('family_members')
+        .select('id, familyId, userId')
+        .eq('id', memberId)
+        .single();
 
       if (!member) {
         return NextResponse.json(
           { error: '无权限访问该家庭成员' },
           { status: 403 }
         );
+      }
+
+      // 检查是否是本人或同家庭成员
+      if (member.userId !== session.user.id) {
+        const { data: sameFamilyCheck } = await supabase
+          .from('family_members')
+          .select('id')
+          .eq('familyId', member.familyId)
+          .eq('userId', session.user.id)
+          .is('deletedAt', null)
+          .maybeSingle();
+
+        if (!sameFamilyCheck) {
+          return NextResponse.json(
+            { error: '无权限访问该家庭成员' },
+            { status: 403 }
+          );
+        }
       }
     }
 
@@ -198,7 +226,7 @@ export async function POST(request: NextRequest) {
       });
     } else if (format === 'csv') {
       const csvData = convertToCSV(report);
-      
+
       return new NextResponse(csvData, {
         status: 200,
         headers: {
@@ -224,81 +252,70 @@ export async function POST(request: NextRequest) {
 
 /**
  * 获取用户额外统计信息
+ *
+ * Migrated from Prisma to Supabase
  */
-async function getUserAdditionalStats(memberId: string, period?: string) {
+async function getUserAdditionalStats(
+  supabase: ReturnType<typeof SupabaseClientManager.getInstance>,
+  memberId: string,
+  period?: string
+) {
   const { startDate, endDate } = getPeriodDates(period);
 
-  const [
-    totalShares,
-    totalViews,
-    totalConversions,
-    avgConversionRate,
-    topShare,
-  ] = await Promise.all([
-    // 总分享数
-    prisma.sharedContent.count({
-      where: {
-        memberId,
-        createdAt: { gte: startDate },
-      },
-    }),
-    
-    // 总浏览数
-    prisma.sharedContent.aggregate({
-      where: {
-        memberId,
-        createdAt: { gte: startDate },
-      },
-      _sum: { viewCount: true },
-    }),
-    
-    // 总转化数
-    prisma.sharedContent.aggregate({
-      where: {
-        memberId,
-        createdAt: { gte: startDate },
-      },
-      _sum: { conversionCount: true },
-    }),
-    
-    // 平均转化率
-    prisma.sharedContent.findMany({
-      where: {
-        memberId,
-        createdAt: { gte: startDate },
-        clickCount: { gt: 0 },
-      },
-      select: { clickCount: true, conversionCount: true },
-    }),
-    
-    // 最佳分享
-    prisma.sharedContent.findFirst({
-      where: {
-        memberId,
-        createdAt: { gte: startDate },
-      },
-      orderBy: { conversionCount: 'desc' },
-      select: {
-        shareToken: true,
-        title: true,
-        viewCount: true,
-        clickCount: true,
-        conversionCount: true,
-      },
-    }),
-  ]);
+  // 总分享数
+  const { count: totalShares } = await supabase
+    .from('shared_content')
+    .select('id', { count: 'exact', head: true })
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString());
 
-  // 计算平均转化率
-  const avgRate = avgConversionRate.length > 0
-    ? avgConversionRate.reduce((sum, item) => {
-      return sum + (item.conversionCount / item.clickCount) * 100;
-    }, 0) / avgConversionRate.length
+  // 总浏览数
+  const { data: viewData } = await supabase
+    .from('shared_content')
+    .select('viewCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString());
+
+  const totalViews = (viewData || []).reduce((sum, item) => sum + (item.viewCount || 0), 0);
+
+  // 总转化数
+  const { data: conversionData } = await supabase
+    .from('shared_content')
+    .select('conversionCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString());
+
+  const totalConversions = (conversionData || []).reduce((sum, item) => sum + (item.conversionCount || 0), 0);
+
+  // 平均转化率计算
+  const { data: rateData } = await supabase
+    .from('shared_content')
+    .select('clickCount, conversionCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString())
+    .gt('clickCount', 0);
+
+  const avgRate = (rateData && rateData.length > 0)
+    ? rateData.reduce((sum, item) => {
+      return sum + ((item.conversionCount || 0) / (item.clickCount || 1)) * 100;
+    }, 0) / rateData.length
     : 0;
 
+  // 最佳分享
+  const { data: topShareData } = await supabase
+    .from('shared_content')
+    .select('shareToken, title, viewCount, clickCount, conversionCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString())
+    .order('conversionCount', { ascending: false })
+    .limit(1);
+
+  const topShare = topShareData?.[0] || null;
+
   return {
-    totalShares,
-    totalViews: totalViews._sum.viewCount || 0,
-    totalConversions: totalConversions._sum.conversionCount || 0,
+    totalShares: totalShares || 0,
+    totalViews,
+    totalConversions,
     avgConversionRate: Math.round(avgRate * 100) / 100,
     topShare,
   };
@@ -306,72 +323,70 @@ async function getUserAdditionalStats(memberId: string, period?: string) {
 
 /**
  * 获取全局额外统计信息
+ *
+ * Migrated from Prisma to Supabase
  */
-async function getGlobalAdditionalStats(period?: string) {
+async function getGlobalAdditionalStats(
+  supabase: ReturnType<typeof SupabaseClientManager.getInstance>,
+  period?: string
+) {
   const { startDate, endDate } = getPeriodDates(period);
 
-  const [
-    totalUsers,
-    totalShares,
-    totalViews,
-    totalConversions,
-    activeSharers,
-  ] = await Promise.all([
-    // 总用户数
-    prisma.sharedContent.findMany({
-      where: {
-        createdAt: { gte: startDate },
-      },
-      select: { memberId: true },
-      distinct: ['memberId'],
-    }).then(users => users.length),
-    
-    // 总分享数
-    prisma.sharedContent.count({
-      where: {
-        createdAt: { gte: startDate },
-      },
-    }),
-    
-    // 总浏览数
-    prisma.sharedContent.aggregate({
-      where: {
-        createdAt: { gte: startDate },
-      },
-      _sum: { viewCount: true },
-    }),
-    
-    // 总转化数
-    prisma.sharedContent.aggregate({
-      where: {
-        createdAt: { gte: startDate },
-      },
-      _sum: { conversionCount: true },
-    }),
-    
-    // 活跃分享用户数（分享超过3次的用户）
-    prisma.sharedContent.groupBy({
-      by: ['memberId'],
-      where: {
-        createdAt: { gte: startDate },
-      },
-      having: {
-        shareCount: {
-          gte: 3,
-        },
-      },
-    }).then(groups => groups.length),
-  ]);
+  // 总用户数 (distinct memberId)
+  const { data: allShares } = await supabase
+    .from('shared_content')
+    .select('memberId')
+    .gte('createdAt', startDate.toISOString());
 
-  const globalConversionRate = totalViews._sum.viewCount && totalViews._sum.viewCount > 0
-    ? ((totalConversions._sum.conversionCount || 0) / totalViews._sum.viewCount) * 100
+  const uniqueMembers = new Set((allShares || []).map(s => s.memberId));
+  const totalUsers = uniqueMembers.size;
+
+  // 总分享数
+  const { count: totalShares } = await supabase
+    .from('shared_content')
+    .select('id', { count: 'exact', head: true })
+    .gte('createdAt', startDate.toISOString());
+
+  // 总浏览数
+  const { data: viewData } = await supabase
+    .from('shared_content')
+    .select('viewCount')
+    .gte('createdAt', startDate.toISOString());
+
+  const totalViews = (viewData || []).reduce((sum, item) => sum + (item.viewCount || 0), 0);
+
+  // 总转化数
+  const { data: conversionData } = await supabase
+    .from('shared_content')
+    .select('conversionCount')
+    .gte('createdAt', startDate.toISOString());
+
+  const totalConversions = (conversionData || []).reduce((sum, item) => sum + (item.conversionCount || 0), 0);
+
+  // 活跃分享用户数（分享超过3次的用户）
+  // Note: Supabase doesn't support groupBy with having clause directly
+  // We need to fetch all data and compute client-side
+  const { data: allSharesForGrouping } = await supabase
+    .from('shared_content')
+    .select('memberId')
+    .gte('createdAt', startDate.toISOString());
+
+  const shareCountByMember: Record<string, number> = {};
+  (allSharesForGrouping || []).forEach(share => {
+    shareCountByMember[share.memberId] = (shareCountByMember[share.memberId] || 0) + 1;
+  });
+
+  const activeSharers = Object.values(shareCountByMember).filter(count => count >= 3).length;
+
+  const globalConversionRate = totalViews > 0
+    ? (totalConversions / totalViews) * 100
     : 0;
 
   return {
     totalUsers,
-    totalShares,
-    totalViews: totalViews._sum.viewCount || 0,
-    totalConversions: totalConversions._sum.conversionCount || 0,
+    totalShares: totalShares || 0,
+    totalViews,
+    totalConversions,
     activeSharers,
     globalConversionRate: Math.round(globalConversionRate * 100) / 100,
   };
