@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabaseAdapter } from '@/lib/db/supabase-adapter';
 import { auth } from '@/lib/auth';
 import { shareAchievement } from '@/lib/services/social/achievement-system';
 import { generateShareContent } from '@/lib/services/social/share-generator';
@@ -19,7 +19,7 @@ export async function POST(
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
-    const { id: achievementId } = params;
+    const { id: achievementId } = await params;
     const body = await request.json();
     const { customMessage, privacyLevel = 'PUBLIC' } = body;
 
@@ -29,7 +29,7 @@ export async function POST(
     }
 
     // 验证成就是否存在且属于该用户
-    const achievement = await prisma.achievement.findFirst({
+    const achievement = await supabaseAdapter.achievement.findFirst({
       where: {
         id: achievementId,
         memberId,
@@ -57,7 +57,7 @@ export async function POST(
     const shareToken = await generateShareToken();
 
     // 创建分享记录
-    const sharedContent = await prisma.sharedContent.create({
+    const sharedContent = await supabaseAdapter.sharedContent.create({
       data: {
         memberId,
         contentType: 'ACHIEVEMENT',
