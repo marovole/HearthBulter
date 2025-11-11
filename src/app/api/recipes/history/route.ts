@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
+/**
+ * GET /api/recipes/history - 获取食谱浏览历史
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -19,44 +24,99 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
+    const supabase = SupabaseClientManager.getInstance();
 
     // 获取浏览历史
-    const views = await prisma.recipeView.findMany({
-      where: {
-        memberId,
-        viewedAt: {
-          gte: startDate,
-        },
-      },
-      include: {
-        recipe: {
-          include: {
-            ingredients: {
-              include: { food: true },
-            },
-          },
-        },
-      },
-      orderBy: {
-        viewedAt: 'desc',
-      },
-      skip,
-      take: limit,
-    });
+    const { data: views, error: viewsError, count } = await supabase
+      .from('recipe_views')
+      .select(`
+        id,
+        viewedAt,
+        viewDuration,
+        source,
+        recipe:recipes!inner(
+          id,
+          name,
+          description,
+          servings,
+          prepTime,
+          cookTime,
+          difficulty,
+          cuisine,
+          tags,
+          imageUrl,
+          createdAt,
+          updatedAt
+        )
+      `, { count: 'exact' })
+      .eq('memberId', memberId)
+      .gte('viewedAt', startDate.toISOString())
+      .order('viewedAt', { ascending: false })
+      .range(skip, skip + limit - 1);
 
-    // 获取总数
-    const total = await prisma.recipeView.count({
-      where: {
-        memberId,
-        viewedAt: {
-          gte: startDate,
-        },
-      },
-    });
+    if (viewsError) {
+      console.error('查询浏览历史失败:', viewsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch recipe history' },
+        { status: 500 }
+      );
+    }
+
+    const total = count || 0;
+
+    // 如果有浏览记录，查询对应的ingredients
+    let viewsWithIngredients = views || [];
+    if (views && views.length > 0) {
+      const recipeIds = views.map((view: any) => view.recipe.id);
+
+      // 查询所有相关的ingredients
+      const { data: ingredients, error: ingredientsError } = await supabase
+        .from('recipe_ingredients')
+        .select(`
+          id,
+          recipeId,
+          amount,
+          unit,
+          notes,
+          food:foods!inner(
+            id,
+            name,
+            nameEn,
+            calories,
+            protein,
+            carbs,
+            fat,
+            category
+          )
+        `)
+        .in('recipeId', recipeIds);
+
+      if (ingredientsError) {
+        console.error('查询食材失败:', ingredientsError);
+      } else {
+        // 按recipeId分组ingredients
+        const ingredientsMap = new Map<string, any[]>();
+        ingredients?.forEach((ing: any) => {
+          if (!ingredientsMap.has(ing.recipeId)) {
+            ingredientsMap.set(ing.recipeId, []);
+          }
+          ingredientsMap.get(ing.recipeId)!.push(ing);
+        });
+
+        // 组装数据
+        viewsWithIngredients = views.map((view: any) => ({
+          ...view,
+          recipe: {
+            ...view.recipe,
+            ingredients: ingredientsMap.get(view.recipe.id) || [],
+          },
+        }));
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      views: views.map(view => ({
+      views: viewsWithIngredients.map((view: any) => ({
         id: view.id,
         viewedAt: view.viewedAt,
         viewDuration: view.viewDuration,
@@ -80,6 +140,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/recipes/history - 记录食谱浏览
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(request: NextRequest) {
   try {
     const { memberId, recipeId, viewDuration, source } = await request.json();
@@ -92,10 +157,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 检查食谱是否存在
-    const recipe = await prisma.recipe.findUnique({
-      where: { id: recipeId },
-    });
+    const { data: recipe, error: recipeError } = await supabase
+      .from('recipes')
+      .select('id')
+      .eq('id', recipeId)
+      .maybeSingle();
+
+    if (recipeError) {
+      console.error('查询食谱失败:', recipeError);
+      return NextResponse.json(
+        { error: 'Failed to check recipe' },
+        { status: 500 }
+      );
+    }
 
     if (!recipe) {
       return NextResponse.json(
@@ -105,14 +182,24 @@ export async function POST(request: NextRequest) {
     }
 
     // 创建浏览记录
-    const view = await prisma.recipeView.create({
-      data: {
+    const { data: view, error: viewError } = await supabase
+      .from('recipe_views')
+      .insert({
         memberId,
         recipeId,
         viewDuration: viewDuration || null,
         source: source || 'direct',
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (viewError) {
+      console.error('创建浏览记录失败:', viewError);
+      return NextResponse.json(
+        { error: 'Failed to record view' },
+        { status: 500 }
+      );
+    }
 
     // 更新食谱浏览计数
     await updateRecipeViewCount(recipeId);
@@ -131,13 +218,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * 更新食谱浏览计数
+ * Migrated from Prisma to Supabase
+ */
 async function updateRecipeViewCount(recipeId: string) {
-  const count = await prisma.recipeView.count({
-    where: { recipeId },
-  });
+  const supabase = SupabaseClientManager.getInstance();
 
-  await prisma.recipe.update({
-    where: { id: recipeId },
-    data: { viewCount: count },
-  });
+  // 查询浏览总数
+  const { count, error: countError } = await supabase
+    .from('recipe_views')
+    .select('*', { count: 'exact', head: true })
+    .eq('recipeId', recipeId);
+
+  if (countError) {
+    console.error('查询浏览计数失败:', countError);
+    return;
+  }
+
+  // 更新食谱的viewCount
+  const { error: updateError } = await supabase
+    .from('recipes')
+    .update({ viewCount: count || 0 })
+    .eq('id', recipeId);
+
+  if (updateError) {
+    console.error('更新食谱浏览计数失败:', updateError);
+  }
 }
