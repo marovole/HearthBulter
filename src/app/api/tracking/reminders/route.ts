@@ -1,38 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
 import { reminderService } from '@/lib/services/tracking/reminder-service';
 
 /**
  * 验证用户是否有权限访问成员的追踪数据
+ *
+ * Migrated from Prisma to Supabase
  */
 async function verifyTrackingAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const supabase = SupabaseClientManager.getInstance();
 
-  if (!member) {
+  // 查询成员信息
+  const { data: member, error: memberError } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      userId,
+      familyId,
+      family:families!inner(
+        id,
+        creatorId
+      )
+    `)
+    .eq('id', memberId)
+    .is('deletedAt', null)
+    .maybeSingle();
+
+  if (memberError || !member) {
     return { hasAccess: false };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
-  const isSelf = member.userId === userId;
+  const memberData = member as any;
+  const isCreator = memberData.family.creatorId === userId;
+  const isSelf = memberData.userId === userId;
+
+  // 查询当前用户在该家庭中的角色
+  const { data: userMember } = await supabase
+    .from('family_members')
+    .select('role')
+    .eq('familyId', memberData.family.id)
+    .eq('userId', userId)
+    .is('deletedAt', null)
+    .maybeSingle();
+
+  const userMemberData = userMember as any;
+  const isAdmin = userMemberData?.role === 'ADMIN' || isCreator;
 
   return {
     hasAccess: isAdmin || isSelf,
@@ -54,6 +71,8 @@ const reminderConfigSchema = z.object({
 /**
  * GET /api/tracking/reminders
  * 获取用户的营养提醒配置
+ *
+ * Migrated from Prisma to Supabase (partial - reminderService still uses Prisma)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -98,6 +117,8 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/tracking/reminders
  * 创建或更新营养提醒配置
+ *
+ * Migrated from Prisma to Supabase (partial - reminderService still uses Prisma)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -157,6 +178,8 @@ export async function POST(request: NextRequest) {
 /**
  * PUT /api/tracking/reminders
  * 批量更新提醒配置
+ *
+ * Migrated from Prisma to Supabase (partial - reminderService still uses Prisma)
  */
 export async function PUT(request: NextRequest) {
   try {

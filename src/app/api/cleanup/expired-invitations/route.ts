@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
-// POST /api/cleanup/expired-invitations - 清理过期邀请
+/**
+ * POST /api/cleanup/expired-invitations - 清理过期邀请
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -15,35 +19,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 清理过期邀请
-    const result = await prisma.familyInvitation.updateMany({
-      where: {
-        status: 'PENDING',
-        expiresAt: { lt: new Date() },
-      },
-      data: {
-        status: 'EXPIRED',
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
+    const now = new Date().toISOString();
+
+    // 清理过期邀请（使用Supabase）
+    const { data: expiredInvitations, error: expiredError } = await supabase
+      .from('family_invitations')
+      .update({ status: 'EXPIRED' } as any)
+      .eq('status', 'PENDING')
+      .lt('expiresAt', now)
+      .select('id');
+
+    if (expiredError) {
+      console.error('更新过期邀请失败:', expiredError);
+      return NextResponse.json(
+        { error: '清理过期邀请失败' },
+        { status: 500 }
+      );
+    }
 
     // 软删除超过30天的已过期/已拒绝邀请
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const softDeleteResult = await prisma.familyInvitation.updateMany({
-      where: {
-        status: { in: ['EXPIRED', 'REJECTED'] },
-        updatedAt: { lt: thirtyDaysAgo },
-      },
-      data: {
-        status: 'DELETED', // 使用软删除
-      },
-    });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: deletedInvitations, error: deleteError } = await supabase
+      .from('family_invitations')
+      .update({ status: 'DELETED' } as any)
+      .in('status', ['EXPIRED', 'REJECTED'])
+      .lt('updatedAt', thirtyDaysAgo)
+      .select('id');
+
+    if (deleteError) {
+      console.error('软删除邀请失败:', deleteError);
+      return NextResponse.json(
+        { error: '软删除邀请失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
         message: '清理任务完成',
         results: {
-          expiredUpdated: result.count,
-          softDeleted: softDeleteResult.count,
+          expiredUpdated: expiredInvitations?.length || 0,
+          softDeleted: deletedInvitations?.length || 0,
         },
       },
       { status: 200 }
@@ -57,7 +74,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/cleanup/expired-invitations - 获取过期邀请统计
+/**
+ * GET /api/cleanup/expired-invitations - 获取过期邀请统计
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -70,43 +91,45 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const now = new Date();
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const supabase = SupabaseClientManager.getInstance();
+    const now = new Date().toISOString();
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // 获取过期邀请统计
+    // 获取过期邀请统计（使用Supabase）
     const [
-      pendingExpired,
-      expiredStatus,
-      rejectedStatus,
-      softDeletable,
+      pendingExpiredResult,
+      expiredStatusResult,
+      rejectedStatusResult,
+      softDeletableResult,
     ] = await Promise.all([
       // 待处理但已过期的邀请
-      prisma.familyInvitation.count({
-        where: {
-          status: 'PENDING',
-          expiresAt: { lt: now },
-        },
-      }),
+      supabase
+        .from('family_invitations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'PENDING')
+        .lt('expiresAt', now),
       // 已标记为过期的邀请
-      prisma.familyInvitation.count({
-        where: {
-          status: 'EXPIRED',
-        },
-      }),
+      supabase
+        .from('family_invitations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'EXPIRED'),
       // 已拒绝的邀请
-      prisma.familyInvitation.count({
-        where: {
-          status: 'REJECTED',
-        },
-      }),
+      supabase
+        .from('family_invitations')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'REJECTED'),
       // 可软删除的过期/拒绝邀请（超过30天）
-      prisma.familyInvitation.count({
-        where: {
-          status: { in: ['EXPIRED', 'REJECTED'] },
-          updatedAt: { lt: thirtyDaysAgo },
-        },
-      }),
+      supabase
+        .from('family_invitations')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['EXPIRED', 'REJECTED'])
+        .lt('updatedAt', thirtyDaysAgo),
     ]);
+
+    const pendingExpired = pendingExpiredResult.count || 0;
+    const expiredStatus = expiredStatusResult.count || 0;
+    const rejectedStatus = rejectedStatusResult.count || 0;
+    const softDeletable = softDeletableResult.count || 0;
 
     return NextResponse.json(
       {
