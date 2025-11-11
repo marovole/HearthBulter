@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabaseAdapter } from '@/lib/db/supabase-adapter';
 import { RecommendationContext, RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
 
-const recommendationEngine = new RecommendationEngine(prisma);
+// TODO: RecommendationEngine 使用 PrismaClient 类型，需要后续重构
+const recommendationEngine = new RecommendationEngine(supabaseAdapter as any);
 
 const parseInteger = (value: string | null): number | undefined => {
   if (!value) return undefined;
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const recipes = await prisma.recipe.findMany({
+    const recipes = await supabaseAdapter.recipe.findMany({
       where: {
         id: { in: recipeIds },
         status: 'PUBLISHED',
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    type RecipeWithRelations = Awaited<ReturnType<typeof prisma.recipe.findMany>>[number];
+    type RecipeWithRelations = Awaited<ReturnType<typeof supabaseAdapter.recipe.findMany>>[number];
     const recipeMap = new Map<string, RecipeWithRelations>();
     for (const recipe of recipes) {
       recipeMap.set(recipe.id, recipe);
