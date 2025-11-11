@@ -1,19 +1,39 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
+/**
+ * GET /api/monitoring - 系统监控端点
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET() {
   try {
-    // 获取基本统计信息
-    const stats = await prisma.$queryRaw`
-      SELECT 
-        COUNT(*) as total_users,
-        NOW() as server_time
-      `;
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 获取基本统计信息（使用Supabase）
+    const { count: totalUsers, error: countError } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      console.error('查询用户统计失败:', countError);
+      return NextResponse.json(
+        {
+          system: 'unhealthy',
+          timestamp: new Date().toISOString(),
+          error: 'Failed to fetch user statistics',
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       system: 'healthy',
       timestamp: new Date().toISOString(),
-      stats,
+      stats: {
+        total_users: totalUsers || 0,
+        server_time: new Date().toISOString(),
+      },
       endpoints: {
         health: '/api/health',
         monitoring: '/api/monitoring',
