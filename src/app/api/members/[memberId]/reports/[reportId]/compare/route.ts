@@ -111,10 +111,18 @@ export async function GET(
     }
 
     // 查询当前报告的指标
-    const { data: currentIndicators } = await supabase
+    const { data: currentIndicators, error: currentIndicatorsError } = await supabase
       .from('medical_indicators')
       .select('*')
       .eq('reportId', reportId);
+
+    if (currentIndicatorsError) {
+      console.error('查询当前指标失败:', currentIndicatorsError);
+      return NextResponse.json(
+        { error: '查询指标失败' },
+        { status: 500 }
+      );
+    }
 
     // 查询该成员的其他报告（按日期排序，获取最近的一条）
     let previousQuery = supabase
@@ -128,10 +136,18 @@ export async function GET(
       previousQuery = previousQuery.lt('reportDate', currentReport.reportDate);
     }
 
-    const { data: previousReports } = await previousQuery
+    const { data: previousReports, error: previousReportsError } = await previousQuery
       .order('reportDate', { ascending: false, nullsFirst: false })
       .order('createdAt', { ascending: false })
       .limit(1);
+
+    if (previousReportsError) {
+      console.error('查询历史报告失败:', previousReportsError);
+      return NextResponse.json(
+        { error: '查询报告失败' },
+        { status: 500 }
+      );
+    }
 
     const previousReport = previousReports?.[0];
 
@@ -148,10 +164,18 @@ export async function GET(
     }
 
     // 查询历史报告的指标
-    const { data: previousIndicators } = await supabase
+    const { data: previousIndicators, error: previousIndicatorsError } = await supabase
       .from('medical_indicators')
       .select('*')
       .eq('reportId', previousReport.id);
+
+    if (previousIndicatorsError) {
+      console.error('查询历史指标失败:', previousIndicatorsError);
+      return NextResponse.json(
+        { error: '查询指标失败' },
+        { status: 500 }
+      );
+    }
 
     // 构建指标对比数据
     const comparison: Array<{
