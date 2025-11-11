@@ -154,9 +154,9 @@ export default function RecipeRecommendationSettings({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>餐次类型</Label>
-              <Select 
-                value={settings.mealType || ''} 
-                onValueChange={(value) => updateSetting('mealType', value as any || undefined)}
+              <Select
+                value={settings.mealType || ''}
+                onValueChange={(value) => updateSetting('mealType', (value as RecommendationSettings['mealType']) || undefined)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择餐次" />
@@ -174,9 +174,9 @@ export default function RecipeRecommendationSettings({
 
             <div className="space-y-2">
               <Label>季节</Label>
-              <Select 
-                value={settings.season || ''} 
-                onValueChange={(value) => updateSetting('season', value as any || undefined)}
+              <Select
+                value={settings.season || ''}
+                onValueChange={(value) => updateSetting('season', (value as RecommendationSettings['season']) || undefined)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择季节" />
@@ -245,9 +245,9 @@ export default function RecipeRecommendationSettings({
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label>辣度偏好</Label>
-              <Select 
-                value={settings.spiceLevel || 'MEDIUM'} 
-                onValueChange={(value) => updateSetting('spiceLevel', value as any)}
+              <Select
+                value={settings.spiceLevel || 'MEDIUM'}
+                onValueChange={(value) => updateSetting('spiceLevel', value as RecommendationSettings['spiceLevel'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -264,9 +264,9 @@ export default function RecipeRecommendationSettings({
 
             <div className="space-y-2">
               <Label>甜度偏好</Label>
-              <Select 
-                value={settings.sweetness || 'MEDIUM'} 
-                onValueChange={(value) => updateSetting('sweetness', value as any)}
+              <Select
+                value={settings.sweetness || 'MEDIUM'}
+                onValueChange={(value) => updateSetting('sweetness', value as RecommendationSettings['sweetness'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -283,9 +283,9 @@ export default function RecipeRecommendationSettings({
 
             <div className="space-y-2">
               <Label>咸度偏好</Label>
-              <Select 
-                value={settings.saltiness || 'MEDIUM'} 
-                onValueChange={(value) => updateSetting('saltiness', value as any)}
+              <Select
+                value={settings.saltiness || 'MEDIUM'}
+                onValueChange={(value) => updateSetting('saltiness', value as RecommendationSettings['saltiness'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -400,9 +400,9 @@ export default function RecipeRecommendationSettings({
               
               <div className="space-y-2">
                 <Label>成本等级</Label>
-                <Select 
-                  value={settings.costLevel || 'MEDIUM'} 
-                  onValueChange={(value) => updateSetting('costLevel', value as any)}
+                <Select
+                  value={settings.costLevel || 'MEDIUM'}
+                  onValueChange={(value) => updateSetting('costLevel', value as RecommendationSettings['costLevel'])}
                 >
                   <SelectTrigger>
                     <SelectValue />

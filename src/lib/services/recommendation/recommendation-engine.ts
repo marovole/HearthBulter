@@ -1,4 +1,11 @@
-import { PrismaClient } from '@prisma/client';
+import type {
+  RecommendationRepository,
+  RecommendationBehaviorWithDetailsDTO,
+  RecommendationWeightsDTO,
+  RecipeDetailDTO,
+  LearnedPreferenceInsightsDTO,
+} from '@/lib/repositories/interfaces/recommendation-repository';
+import type { RecommendationRecipeFilter } from '@/lib/repositories/types/recommendation';
 import { RuleBasedRecommender } from './rule-based-recommender';
 import { CollaborativeFilter } from './collaborative-filter';
 import { ContentFilter } from './content-filter';
@@ -28,44 +35,30 @@ export interface RecommendationContext {
   excludedIngredients?: string[];
   preferredCuisines?: string[];
   season?: 'SPRING' | 'SUMMER' | 'AUTUMN' | 'WINTER';
+  excludeRecipeIds?: string[];
 }
 
-export interface RecommendationWeights {
-  inventory: number;
-  price: number;
-  nutrition: number;
-  preference: number;
-  seasonal: number;
-}
+export type RecommendationWeights = RecommendationWeightsDTO;
 
 export class RecommendationEngine {
-  private prisma: PrismaClient;
-  private ruleBasedRecommender: RuleBasedRecommender;
-  private collaborativeFilter: CollaborativeFilter;
-  private contentFilter: ContentFilter;
-  private ranker: RecommendationRanker;
+  private readonly ruleBased: RuleBasedRecommender;
+  private readonly collaborative: CollaborativeFilter;
+  private readonly content: ContentFilter;
+  private readonly ranker: RecommendationRanker;
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
-    this.ruleBasedRecommender = new RuleBasedRecommender(prisma);
-    this.collaborativeFilter = new CollaborativeFilter(prisma);
-    this.contentFilter = new ContentFilter(prisma);
-    this.ranker = new RecommendationRanker(prisma);
+  constructor(private readonly repository: RecommendationRepository) {
+    this.ruleBased = new RuleBasedRecommender(repository);
+    this.collaborative = new CollaborativeFilter(repository);
+    this.content = new ContentFilter(repository);
+    this.ranker = new RecommendationRanker(repository);
   }
 
-  /**
-   * 获取智能食谱推荐
-   */
   async getRecommendations(
     context: RecommendationContext,
-    limit: number = 10,
+    limit = 10,
     weights?: Partial<RecommendationWeights>
   ): Promise<RecipeRecommendation[]> {
-    // 获取用户偏好和权重设置
-    const userPreference = await this.prisma.userPreference.findUnique({
-      where: { memberId: context.memberId },
-    });
-
+    const userPreference = await this.repository.getUserPreference(context.memberId);
     const defaultWeights: RecommendationWeights = {
       inventory: 0.3,
       price: 0.2,
@@ -74,304 +67,143 @@ export class RecommendationEngine {
       seasonal: 0.05,
     };
 
-    const finalWeights = {
+    const finalWeights: RecommendationWeights = {
       ...defaultWeights,
+      ...userPreference?.recommendationWeights,
       ...weights,
-      ...(userPreference?.recommendationWeight as RecommendationWeights),
     };
 
-    // 并行获取不同策略的推荐结果
-    const [
-      ruleBasedResults,
-      collaborativeResults,
-      contentResults,
-    ] = await Promise.all([
-      this.ruleBasedRecommender.getRecommendations(context, limit * 2),
-      this.collaborativeFilter.getRecommendations(context.memberId, limit * 2),
-      this.contentFilter.getRecommendations(context, limit * 2),
+    const [ruleBased, collaborative, content] = await Promise.all([
+      this.ruleBased.getRecommendations(context, limit * 2),
+      this.collaborative.getRecommendations(context.memberId, limit * 2),
+      this.content.getRecommendations(context, limit * 2),
     ]);
 
-    // 合并和去重推荐结果
-    const allCandidates = this.mergeCandidates([
-      ruleBasedResults,
-      collaborativeResults,
-      contentResults,
-    ]);
-
-    // 使用排名算法对候选食谱进行排序
-    const rankedRecommendations = await this.ranker.rankRecipes(
-      allCandidates,
-      context,
-      finalWeights
-    );
-
-    // 生成推荐理由和解释
-    const recommendationsWithExplanation = await this.generateExplanations(
-      rankedRecommendations.slice(0, limit),
-      context,
-      finalWeights
-    );
-
-    return recommendationsWithExplanation;
+    const merged = Array.from(this.mergeCandidates([ruleBased, collaborative, content]).values());
+    const ranked = await this.ranker.rankRecipes(merged, context, finalWeights);
+    return this.generateExplanations(ranked.slice(0, limit), finalWeights);
   }
 
-  /**
-   * 刷新推荐结果（换一批）
-   */
   async refreshRecommendations(
     context: RecommendationContext,
     excludeRecipeIds: string[],
-    limit: number = 10
+    limit = 10
   ): Promise<RecipeRecommendation[]> {
-    // 获取推荐时排除已推荐的食谱
-    const extendedContext = {
-      ...context,
-      excludeRecipeIds,
-    };
-
-    return this.getRecommendations(extendedContext, limit);
+    return this.getRecommendations({ ...context, excludeRecipeIds }, limit);
   }
 
-  /**
-   * 获取相似食谱推荐
-   */
-  async getSimilarRecipes(
-    recipeId: string,
-    limit: number = 5
-  ): Promise<RecipeRecommendation[]> {
-    const recipe = await this.prisma.recipe.findUnique({
-      where: { id: recipeId },
-      include: {
-        ingredients: {
-          include: { food: true },
-        },
-        tags: true,
-      },
-    });
-
-    if (!recipe) {
-      throw new Error('Recipe not found');
-    }
-
-    // 基于内容相似度获取推荐
-    const similarRecipes = await this.contentFilter.getSimilarRecipes(
-      recipe,
-      limit
-    );
-
-    return similarRecipes;
+  async getSimilarRecipes(recipeId: string, limit = 5): Promise<RecipeRecommendation[]> {
+    const recipe = await this.repository.getRecipeById(recipeId);
+    if (!recipe) throw new Error('Recipe not found');
+    return this.content.getSimilarRecipes(recipe, limit);
   }
 
-  /**
-   * 获取热门食谱推荐
-   */
-  async getPopularRecipes(
-    limit: number = 10,
-    category?: string
-  ): Promise<RecipeRecommendation[]> {
-    const whereClause: any = {
-      status: 'PUBLISHED',
-      isPublic: true,
-      averageRating: { gte: 4.0 },
-    };
-
-    if (category) {
-      whereClause.category = category;
-    }
-
-    const popularRecipes = await this.prisma.recipe.findMany({
-      where: whereClause,
-      orderBy: [
-        { averageRating: 'desc' },
-        { ratingCount: 'desc' },
-        { viewCount: 'desc' },
-      ],
-      take: limit,
-      include: {
-        ingredients: {
-          include: { food: true },
-        },
-      },
-    });
-
-    return popularRecipes.map(recipe => ({
+  async getPopularRecipes(limit = 10, category?: string): Promise<RecipeRecommendation[]> {
+    const recipes = await this.repository.listPopularRecipes(limit, category);
+    return recipes.map(recipe => ({
       recipeId: recipe.id,
-      score: recipe.averageRating,
+      score: recipe.averageRating ?? 0,
       reasons: ['热门推荐', '高评分'],
-      explanation: `此食谱评分${recipe.averageRating}分，已有${recipe.ratingCount}人评价，深受用户喜爱。`,
-      metadata: {
-        inventoryMatch: 0,
-        priceMatch: 0,
-        nutritionMatch: 0,
-        preferenceMatch: 0,
-        seasonalMatch: 0,
-      },
+      explanation: `此食谱评分${recipe.averageRating ?? 0}分，已有${recipe.ratingCount ?? 0}人评价。`,
+      metadata: { inventoryMatch: 0, priceMatch: 0, nutritionMatch: 0, preferenceMatch: 0, seasonalMatch: 0 },
     }));
   }
 
-  /**
-   * 合并不同策略的候选食谱
-   */
+  async updateUserPreferences(memberId: string): Promise<void> {
+    const behavior = await this.repository.getDetailedRecipeBehavior(memberId, { limit: 100 });
+    const insights = this.analyzeUserBehavior(behavior);
+    await this.repository.upsertLearnedUserPreferences(memberId, insights);
+  }
+
   private mergeCandidates(candidates: RecipeRecommendation[][]): Map<string, RecipeRecommendation> {
     const merged = new Map<string, RecipeRecommendation>();
-
-    candidates.forEach(candidateList => {
-      candidateList.forEach(candidate => {
+    candidates.forEach(list =>
+      list.forEach(candidate => {
         const existing = merged.get(candidate.recipeId);
-        if (!existing || candidate.score > existing.score) {
-          merged.set(candidate.recipeId, candidate);
-        }
-      });
-    });
-
+        if (!existing || candidate.score > existing.score) merged.set(candidate.recipeId, candidate);
+      })
+    );
     return merged;
   }
 
-  /**
-   * 生成推荐理由和解释
-   */
   private async generateExplanations(
     recommendations: RecipeRecommendation[],
-    context: RecommendationContext,
     weights: RecommendationWeights
   ): Promise<RecipeRecommendation[]> {
-    return Promise.all(
-      recommendations.map(async rec => {
-        const reasons: string[] = [];
-        const explanationParts: string[] = [];
+    return recommendations.map(rec => {
+      const reasons = [...rec.reasons];
+      if (!reasons.length) reasons.push('综合推荐');
 
-        // 基于权重生成理由
-        if (rec.metadata.inventoryMatch > 0.7) {
-          reasons.push('现有食材充足');
-          explanationParts.push('您现有的食材可以制作这道菜');
-        }
+      const explanationParts: string[] = [];
+      if (rec.metadata.inventoryMatch > 0.7) explanationParts.push('匹配现有食材');
+      if (rec.metadata.priceMatch > 0.7) explanationParts.push('符合预算');
+      if (rec.metadata.nutritionMatch > 0.7) explanationParts.push('满足健康目标');
+      if (rec.metadata.preferenceMatch > 0.7) explanationParts.push('符合口味');
+      if (rec.metadata.seasonalMatch > 0.7) explanationParts.push('使用当季食材');
 
-        if (rec.metadata.priceMatch > 0.7) {
-          reasons.push('经济实惠');
-          explanationParts.push('成本符合您的预算要求');
-        }
-
-        if (rec.metadata.nutritionMatch > 0.7) {
-          reasons.push('营养均衡');
-          explanationParts.push('营养成分符合您的健康目标');
-        }
-
-        if (rec.metadata.preferenceMatch > 0.7) {
-          reasons.push('符合口味');
-          explanationParts.push('根据您的口味偏好推荐');
-        }
-
-        if (rec.metadata.seasonalMatch > 0.7) {
-          reasons.push('当季食材');
-          explanationParts.push('使用当季新鲜食材制作');
-        }
-
-        return {
-          ...rec,
-          reasons: reasons.length > 0 ? reasons : ['综合推荐'],
-          explanation: explanationParts.length > 0 
-            ? `${explanationParts.join('，')}。`
-            : '根据多维度分析为您推荐这道菜。',
+      const topWeight = Object.entries(weights).sort((a, b) => b[1] - a[1])[0];
+      if (topWeight?.[1] >= 0.3) {
+        const weightCopy: Record<keyof RecommendationWeights, string> = {
+          inventory: '重视库存',
+          price: '注重价格',
+          nutrition: '关注营养',
+          preference: '突出偏好',
+          seasonal: '强调季节性',
         };
-      })
-    );
-  }
+        explanationParts.push(weightCopy[topWeight[0]]);
+      }
 
-  /**
-   * 更新用户偏好模型
-   */
-  async updateUserPreferences(memberId: string): Promise<void> {
-    // 分析用户行为数据
-    const [ratings, favorites, views] = await Promise.all([
-      this.prisma.recipeRating.findMany({
-        where: { memberId },
-        include: { recipe: true },
-      }),
-      this.prisma.recipeFavorite.findMany({
-        where: { memberId },
-        include: { recipe: true },
-      }),
-      this.prisma.recipeView.findMany({
-        where: { memberId },
-        include: { recipe: true },
-        orderBy: { viewedAt: 'desc' },
-        take: 50,
-      }),
-    ]);
-
-    // 调用AI服务分析偏好
-    const learnedPreferences = await this.analyzeUserBehavior({
-      ratings,
-      favorites,
-      views,
-    });
-
-    // 更新用户偏好记录
-    await this.prisma.userPreference.upsert({
-      where: { memberId },
-      update: {
-        learnedPreferences,
-        preferenceScore: learnedPreferences.confidence,
-        lastAnalyzedAt: new Date(),
-      },
-      create: {
-        memberId,
-        learnedPreferences,
-        preferenceScore: learnedPreferences.confidence,
-        lastAnalyzedAt: new Date(),
-      },
+      return {
+        ...rec,
+        reasons,
+        explanation: explanationParts.length ? `${explanationParts.join('，')}。` : rec.explanation,
+      };
     });
   }
 
-  /**
-   * 分析用户行为数据（AI服务）
-   */
-  private async analyzeUserBehavior(data: {
-    ratings: any[];
-    favorites: any[];
-    views: any[];
-  }): Promise<{ preferences: any; confidence: number }> {
-    // 这里可以集成AI服务进行偏好分析
-    // 暂时返回基础分析结果
-    const highRatedRecipes = data.ratings.filter(r => r.rating >= 4);
-    const favoriteRecipes = data.favorites;
-    
-    // 提取偏好菜系、食材等
-    const preferredCuisines = this.extractCuisines([...highRatedRecipes, ...favoriteRecipes]);
-    const preferredIngredients = this.extractIngredients([...highRatedRecipes, ...favoriteRecipes]);
-    
+  private analyzeUserBehavior(behavior: RecommendationBehaviorWithDetailsDTO): LearnedPreferenceInsightsDTO {
+    const ratedRecipes = behavior.ratings.filter(r => r.rating >= 4).map(r => r.recipe);
+    const favoriteRecipes = behavior.favorites.map(f => f.recipe);
+    const sample = [...ratedRecipes, ...favoriteRecipes];
+
+    const preferredCuisines = this.extractCuisines(sample);
+    const preferredIngredients = this.extractIngredients(sample);
+
+    const avgRating =
+      behavior.ratings.reduce((sum, r) => sum + r.rating, 0) / (behavior.ratings.length || 1);
+
     return {
       preferences: {
         preferredCuisines,
         preferredIngredients,
-        avgRating: data.ratings.reduce((sum, r) => sum + r.rating, 0) / data.ratings.length || 0,
-        favoriteCount: favoriteRecipes.length,
+        avgRating,
+        favoriteCount: behavior.favorites.length,
       },
-      confidence: Math.min(data.ratings.length + favoriteRecipes.length, 100) / 100,
+      confidence: Math.min(sample.length, 100) / 100,
+      analyzedAt: new Date(),
     };
   }
 
-  private extractCuisines(recipes: any[]): string[] {
-    const cuisineCount = new Map<string, number>();
-    recipes.forEach(r => {
-      if (r.recipe.cuisine) {
-        cuisineCount.set(r.recipe.cuisine, (cuisineCount.get(r.recipe.cuisine) || 0) + 1);
-      }
+  private extractCuisines(recipes: RecipeDetailDTO[]): string[] {
+    const counts = new Map<string, number>();
+    recipes.forEach(recipe => {
+      if (!recipe.cuisine) return;
+      counts.set(recipe.cuisine, (counts.get(recipe.cuisine) || 0) + 1);
     });
-    return Array.from(cuisineCount.entries())
+    return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([cuisine]) => cuisine);
   }
 
-  private extractIngredients(recipes: any[]): string[] {
-    const ingredientCount = new Map<string, number>();
-    recipes.forEach(r => {
-      r.recipe.ingredients?.forEach((ing: any) => {
-        ingredientCount.set(ing.food.name, (ingredientCount.get(ing.food.name) || 0) + 1);
-      });
-    });
-    return Array.from(ingredientCount.entries())
+  private extractIngredients(recipes: RecipeDetailDTO[]): string[] {
+    const counts = new Map<string, number>();
+    recipes.forEach(recipe =>
+      recipe.ingredientsDetailed?.forEach(ingredient => {
+        counts.set(ingredient.food.name, (counts.get(ingredient.food.name) || 0) + 1);
+      })
+    );
+    return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([ingredient]) => ingredient);

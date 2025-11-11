@@ -1,42 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { ocrService, type SupportedMimeType } from '@/lib/services/ocr-service';
 import { reportParser } from '@/lib/services/report-parser';
 import { fileStorageService } from '@/lib/services/file-storage-service';
 
 /**
  * 验证用户是否有权限访问成员的健康数据
+ *
+ * Migrated from Prisma to Supabase
+ * Note: fileStorageService, ocrService, reportParser still use Prisma-dependent logic
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean; member: any }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const supabase = SupabaseClientManager.getInstance();
+
+  const { data: member } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      userId,
+      familyId,
+      family:families!inner(
+        id,
+        creatorId
+      )
+    `)
+    .eq('id', memberId)
+    .is('deletedAt', null)
+    .single();
 
   if (!member) {
     return { hasAccess: false, member: null };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isCreator = member.family?.creatorId === userId;
+
+  let isAdmin = false;
+  if (!isCreator) {
+    const { data: adminMember } = await supabase
+      .from('family_members')
+      .select('id, role')
+      .eq('familyId', member.familyId)
+      .eq('userId', userId)
+      .eq('role', 'ADMIN')
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    isAdmin = !!adminMember;
+  }
+
   const isSelf = member.userId === userId;
 
   return {
-    hasAccess: isAdmin || isSelf,
+    hasAccess: isCreator || isAdmin || isSelf,
     member,
   };
 }
@@ -44,6 +63,8 @@ async function verifyMemberAccess(
 /**
  * POST /api/members/:memberId/reports
  * 上传体检报告文件并触发OCR识别
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function POST(
   request: NextRequest,
@@ -101,16 +122,25 @@ export async function POST(
     // 读取文件内容
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    // 创建报告记录（初始状态为PENDING）
-    const report = await prisma.medicalReport.create({
-      data: {
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 创建报告记录（初始状态为PROCESSING）
+    const { data: report, error: createError } = await supabase
+      .from('medical_reports')
+      .insert({
         memberId,
         fileName: file.name,
         fileSize: file.size,
         mimeType,
         ocrStatus: 'PROCESSING',
-      },
-    });
+      })
+      .select('id')
+      .single();
+
+    if (createError || !report) {
+      console.error('创建报告记录失败:', createError);
+      throw createError ?? new Error('创建报告记录失败');
+    }
 
     try {
       // 上传文件到云存储
@@ -124,12 +154,23 @@ export async function POST(
       );
 
       // 更新报告记录，保存文件URL
-      await prisma.medicalReport.update({
-        where: { id: report.id },
-        data: {
+      const { error: updateError } = await supabase
+        .from('medical_reports')
+        .update({
           fileUrl: uploadResult.url,
-        },
-      });
+        })
+        .eq('id', report.id);
+
+      if (updateError) {
+        console.error('更新文件URL失败:', updateError);
+        // 回滚：删除报告记录
+        await supabase
+          .from('medical_reports')
+          .delete()
+          .eq('id', report.id);
+
+        throw updateError;
+      }
 
       // 执行OCR识别（异步处理，不阻塞响应）
       processOCR(report.id, fileBuffer, mimeType).catch((error) => {
@@ -147,9 +188,10 @@ export async function POST(
       );
     } catch (error) {
       // 如果上传失败，删除报告记录
-      await prisma.medicalReport.delete({
-        where: { id: report.id },
-      });
+      await supabase
+        .from('medical_reports')
+        .delete()
+        .eq('id', report.id);
 
       throw error;
     }
@@ -167,12 +209,16 @@ export async function POST(
 
 /**
  * 异步处理OCR识别和报告解析
+ *
+ * Migrated from Prisma to Supabase
  */
 async function processOCR(
   reportId: string,
   fileBuffer: Buffer,
   mimeType: SupportedMimeType
 ) {
+  const supabase = SupabaseClientManager.getInstance();
+
   try {
     // 执行OCR识别
     const ocrResult = await ocrService.recognize(fileBuffer, mimeType);
@@ -187,7 +233,9 @@ async function processOCR(
     const updateData: any = {
       ocrStatus: validation.valid ? 'COMPLETED' : 'FAILED',
       ocrText: ocrResult.text,
-      reportDate: parsedReport.reportDate || null,
+      reportDate: parsedReport.reportDate
+        ? new Date(parsedReport.reportDate).toISOString()
+        : null,
       institution: parsedReport.institution || null,
       reportType: parsedReport.reportType || null,
     };
@@ -196,44 +244,58 @@ async function processOCR(
       updateData.ocrError = validation.errors.join('; ');
     }
 
-    await prisma.medicalReport.update({
-      where: { id: reportId },
-      data: updateData,
-    });
+    const { error: updateError } = await supabase
+      .from('medical_reports')
+      .update(updateData)
+      .eq('id', reportId);
 
-    // 如果解析成功，创建指标记录
+    if (updateError) {
+      console.error('更新报告OCR结果失败:', updateError);
+      throw updateError;
+    }
+
+    // 如果解析成功，创建指标记录（使用循环插入替代createMany）
     if (validation.valid && parsedReport.indicators.length > 0) {
-      await prisma.medicalIndicator.createMany({
-        data: parsedReport.indicators.map((indicator) => ({
-          reportId,
-          indicatorType: indicator.indicatorType,
-          name: indicator.name,
-          value: indicator.value,
-          unit: indicator.unit,
-          referenceRange: indicator.referenceRange || null,
-          isAbnormal: indicator.isAbnormal,
-          status: indicator.status,
-        })),
-      });
+      for (const indicator of parsedReport.indicators) {
+        const { error: indicatorError } = await supabase
+          .from('medical_indicators')
+          .insert({
+            reportId,
+            indicatorType: indicator.indicatorType,
+            name: indicator.name,
+            value: indicator.value,
+            unit: indicator.unit,
+            referenceRange: indicator.referenceRange || null,
+            isAbnormal: indicator.isAbnormal,
+            status: indicator.status,
+          });
+
+        if (indicatorError) {
+          console.error('创建指标失败:', indicatorError, indicator);
+          // 继续处理其他指标，但记录错误
+        }
+      }
     }
   } catch (error) {
     console.error('OCR处理失败:', error);
 
     // 更新报告状态为失败
-    await prisma.medicalReport.update({
-      where: { id: reportId },
-      data: {
+    await supabase
+      .from('medical_reports')
+      .update({
         ocrStatus: 'FAILED',
         ocrError:
           error instanceof Error ? error.message : 'OCR处理失败',
-      },
-    });
+      })
+      .eq('id', reportId);
   }
 }
 
 /**
  * GET /api/members/:memberId/reports
  * 查询成员的历史报告列表
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(
   request: NextRequest,
@@ -263,44 +325,69 @@ export async function GET(
     const offset = parseInt(searchParams.get('offset') || '0');
     const status = searchParams.get('status'); // OCR状态筛选
 
-    // 构建查询条件
-    const where: any = {
-      memberId,
-      deletedAt: null,
-    };
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 构建查询
+    let query = supabase
+      .from('medical_reports')
+      .select('*', { count: 'exact' })
+      .eq('memberId', memberId)
+      .is('deletedAt', null);
 
     if (status) {
-      where.ocrStatus = status;
+      query = query.eq('ocrStatus', status);
     }
 
-    // 查询报告列表
-    const [reports, total] = await Promise.all([
-      prisma.medicalReport.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
-        include: {
-          indicators: {
-            select: {
-              id: true,
-              indicatorType: true,
-              name: true,
-              value: true,
-              unit: true,
-              isAbnormal: true,
-              status: true,
-            },
-          },
+    // 查询报告列表（带分页）
+    const { data: reports, error: reportsError, count } = await query
+      .order('createdAt', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (reportsError) {
+      console.error('查询报告列表失败:', reportsError);
+      return NextResponse.json(
+        { error: '查询报告列表失败' },
+        { status: 500 }
+      );
+    }
+
+    if (!reports || reports.length === 0) {
+      return NextResponse.json(
+        {
+          data: [],
+          total: count || 0,
+          limit,
+          offset,
         },
-      }),
-      prisma.medicalReport.count({ where }),
-    ]);
+        { status: 200 }
+      );
+    }
+
+    // 查询所有报告的指标
+    const reportIds = reports.map(r => r.id);
+    const { data: indicators } = await supabase
+      .from('medical_indicators')
+      .select('id, reportId, indicatorType, name, value, unit, isAbnormal, status')
+      .in('reportId', reportIds);
+
+    // 手动组装数据
+    const indicatorsMap = new Map<string, any[]>();
+    indicators?.forEach(indicator => {
+      if (!indicatorsMap.has(indicator.reportId)) {
+        indicatorsMap.set(indicator.reportId, []);
+      }
+      indicatorsMap.get(indicator.reportId)!.push(indicator);
+    });
+
+    const assembledReports = reports.map(report => ({
+      ...report,
+      indicators: indicatorsMap.get(report.id) || [],
+    }));
 
     return NextResponse.json(
       {
-        data: reports,
-        total,
+        data: assembledReports,
+        total: count || 0,
         limit,
         offset,
       },

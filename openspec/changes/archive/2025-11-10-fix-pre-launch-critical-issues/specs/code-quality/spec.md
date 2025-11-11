@@ -2,7 +2,7 @@
 
 ## MODIFIED Requirements
 
-### Requirement: TypeScript Type Safety Enforcement
+### Requirement: TypeScript Compilation
 The system SHALL enforce strict TypeScript type checking across all source files and prevent type errors from reaching production.
 
 #### Scenario: TypeScript compilation is executed
@@ -26,7 +26,7 @@ The system SHALL enforce strict TypeScript type checking across all source files
 - **AND** TypeScript's `isolatedModules` check SHALL validate import correctness
 - **AND** build SHALL fail if type/value imports are confused
 
-### Requirement: ESLint Code Quality Standards
+### Requirement: Code Quality Standards
 The system SHALL enforce ESLint rules to maintain code quality while allowing builds with non-critical warnings.
 
 #### Scenario: Code is linted during build

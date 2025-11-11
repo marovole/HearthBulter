@@ -28,7 +28,7 @@ function getSupabaseConfig() {
 }
 
 // 单例模式的 Supabase 客户端
-class SupabaseClientManager {
+export class SupabaseClientManager {
   private static instance: SupabaseClient<Database>;
 
   static getInstance(): SupabaseClient<Database> {

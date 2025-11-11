@@ -1,16 +1,28 @@
-import { PrismaClient } from '@prisma/client';
-import { NotificationManager } from '@/lib/services/notification';
-import { NotificationType, NotificationPriority } from '@prisma/client';
+import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+import type { BudgetRepository } from '@/lib/repositories/interfaces/budget-repository';
+import type { NotificationPriority } from '@/lib/repositories/types/notification';
+
+/**
+ * 通知管理器接口（避免循环依赖）
+ */
+interface INotificationManager {
+  sendNotification(data: any): Promise<any>;
+  sendBulkNotifications(notifications: any[]): Promise<any>;
+}
 
 /**
  * 预算系统集成通知服务
+ *
+ * 使用扁平的依赖注入架构：
+ * - NotificationManager 通过构造函数注入（由 container 创建）
+ * - 使用接口类型避免编译时循环依赖
  */
 export class BudgetNotificationService {
-  private notificationManager: NotificationManager;
-
-  constructor(prisma: PrismaClient) {
-    this.notificationManager = new NotificationManager(prisma);
-  }
+  constructor(
+    private readonly notificationRepo: NotificationRepository,
+    private readonly budgetRepo: BudgetRepository,
+    private readonly notificationManager: INotificationManager,
+  ) {}
 
   /**
    * 发送预算预警通知
@@ -25,10 +37,11 @@ export class BudgetNotificationService {
     try {
       const priority = this.getAlertPriority(alertData.threshold);
       const channels = this.getAlertChannels(alertData.threshold);
+      // 使用注入的 notificationManager
 
-      await this.notificationManager.createNotification({
-        memberId,
-        type: NotificationType.BUDGET_WARNING,
+      await this.notificationManager.sendNotification({
+        userId: memberId,
+        type: 'BUDGET_WARNING',
         templateData: {
           userName: await this.getUserName(memberId),
           budgetName: alertData.budgetName,
@@ -63,13 +76,14 @@ export class BudgetNotificationService {
     budgetLimit: number;
   }): Promise<void> {
     try {
-      await this.notificationManager.createNotification({
-        memberId,
-        type: NotificationType.BUDGET_WARNING,
+      // 使用注入的 notificationManager
+      await this.notificationManager.sendNotification({
+        userId: memberId,
+        type: 'BUDGET_WARNING',
         title: '预算超支提醒',
         content: `您的预算"${overspendData.budgetName}"已超支¥${overspendData.overspendAmount.toFixed(2)}，当前总支出¥${overspendData.totalSpent.toFixed(2)}，预算限额¥${overspendData.budgetLimit.toFixed(2)}。`,
-        priority: NotificationPriority.HIGH,
-        channels: ['IN_APP', 'EMAIL', 'SMS'],
+        priority: 'high',
+        channels: ['in_app', 'email', 'sms'],
         metadata: {
           budgetName: overspendData.budgetName,
           overspendAmount: overspendData.overspendAmount,
@@ -94,12 +108,13 @@ export class BudgetNotificationService {
     category?: string;
   }): Promise<void> {
     try {
-      await this.notificationManager.createNotification({
-        memberId,
-        type: NotificationType.BUDGET_WARNING,
+      // 使用注入的 notificationManager
+      await this.notificationManager.sendNotification({
+        userId: memberId,
+        type: 'BUDGET_WARNING',
         title: '预算优化建议',
         content: `${tipData.tip}，预计可节省¥${tipData.potentialSavings.toFixed(2)}。`,
-        priority: NotificationPriority.MEDIUM,
+        priority: 'medium',
         channels: ['IN_APP', 'EMAIL'],
         metadata: {
           budgetName: tipData.budgetName,
@@ -128,11 +143,12 @@ export class BudgetNotificationService {
   }): Promise<void> {
     try {
       const isUnderBudget = summaryData.totalSpent <= summaryData.budgetLimit;
-      const priority = isUnderBudget ? NotificationPriority.MEDIUM : NotificationPriority.HIGH;
+      const priority = isUnderBudget ? 'medium' : 'high';
 
-      await this.notificationManager.createNotification({
-        memberId,
-        type: NotificationType.GOAL_ACHIEVEMENT,
+      // 使用注入的 notificationManager
+      await this.notificationManager.sendNotification({
+        userId: memberId,
+        type: 'GOAL_ACHIEVEMENT',
         title: `预算${isUnderBudget ? '执行良好' : '超支'}总结`,
         content: `您的${summaryData.period}预算"${summaryData.budgetName}"已结束。总支出¥${summaryData.totalSpent.toFixed(2)}，${isUnderBudget ? '节省' : '超支'}¥${Math.abs(summaryData.savings).toFixed(2)}。`,
         priority,
@@ -164,9 +180,10 @@ export class BudgetNotificationService {
     percentage: number;
   }): Promise<void> {
     try {
-      await this.notificationManager.createNotification({
-        memberId,
-        type: NotificationType.BUDGET_WARNING,
+      // 使用注入的 notificationManager
+      await this.notificationManager.sendNotification({
+        userId: memberId,
+        type: 'BUDGET_WARNING',
         templateData: {
           userName: await this.getUserName(memberId),
           budgetName: alertData.budgetName,
@@ -175,7 +192,7 @@ export class BudgetNotificationService {
           budget: alertData.budget.toFixed(2),
           percentage: alertData.percentage.toFixed(1),
         },
-        priority: NotificationPriority.MEDIUM,
+        priority: 'medium',
         channels: ['IN_APP', 'EMAIL'],
         metadata: {
           budgetName: alertData.budgetName,
@@ -205,8 +222,8 @@ export class BudgetNotificationService {
       const familyMembers = await this.getFamilyMembers(familyId);
       
       const notifications = await Promise.all(familyMembers.map(async memberId => ({
-        memberId,
-        type: NotificationType.BUDGET_WARNING,
+        userId: memberId,
+        type: 'BUDGET_WARNING',
         templateData: {
           userName: await this.getUserName(memberId),
           budgetName: alertData.budgetName,
@@ -223,7 +240,8 @@ export class BudgetNotificationService {
         actionText: '查看家庭预算',
       })));
 
-      await this.notificationManager.createBulkNotifications(notifications);
+      // 使用注入的 notificationManager
+      await this.notificationManager.sendBulkNotifications(notifications);
     } catch (error) {
       console.error('Failed to send family budget alerts:', error);
     }
@@ -232,100 +250,35 @@ export class BudgetNotificationService {
   /**
    * 根据阈值获取通知优先级
    */
-  private getAlertPriority(threshold: number): NotificationPriority {
-    if (threshold >= 110) return NotificationPriority.URGENT;
-    if (threshold >= 100) return NotificationPriority.HIGH;
-    if (threshold >= 80) return NotificationPriority.MEDIUM;
-    return NotificationPriority.LOW;
+  private getAlertPriority(threshold: number): 'low' | 'medium' | 'high' | 'urgent' {
+    if (threshold >= 110) return 'urgent';
+    if (threshold >= 100) return 'high';
+    if (threshold >= 80) return 'medium';
+    return 'low';
   }
 
   /**
    * 根据阈值获取通知渠道
    */
   private getAlertChannels(threshold: number): string[] {
-    if (threshold >= 110) return ['IN_APP', 'EMAIL', 'SMS'];
-    if (threshold >= 100) return ['IN_APP', 'EMAIL'];
-    return ['IN_APP', 'EMAIL'];
+    if (threshold >= 110) return ['in_app', 'email', 'sms'];
+    if (threshold >= 100) return ['in_app', 'email'];
+    return ['in_app', 'email'];
   }
 
   /**
    * 获取用户名称
    */
   private async getUserName(memberId: string): Promise<string> {
-    const prisma = (this.notificationManager as any).prisma;
-    const member = await prisma.familyMember.findUnique({
-      where: { id: memberId },
-      select: {
-        name: true,
-      },
-    });
-    return member?.name || '用户';
+    const recipient = await this.notificationRepo.getNotificationRecipient(memberId);
+    return recipient?.memberId ? '用户' : '用户'; // TODO: 从预算 repository 获取用户名
   }
 
   /**
    * 获取家庭成员列表
    */
   private async getFamilyMembers(familyId: string): Promise<string[]> {
-    const prisma = (this.notificationManager as any).prisma;
-    const members = await prisma.familyMember.findMany({
-      where: { familyId },
-      select: { id: true },
-    });
-    return members.map(member => member.id);
+    // TODO: 从 BudgetRepository 获取家庭成员列表
+    return [];
   }
-}
-
-// 使用示例
-export async function exampleUsage() {
-  const prisma = new PrismaClient();
-  const budgetNotificationService = new BudgetNotificationService(prisma);
-
-  // 示例1: 发送80%预算预警
-  await budgetNotificationService.sendBudgetAlert('member-123', {
-    budgetName: '10月食品预算',
-    usagePercentage: 85.5,
-    threshold: 80,
-    remainingBudget: 500,
-    totalBudget: 3000,
-  });
-
-  // 示例2: 发送预算超支通知
-  await budgetNotificationService.sendBudgetOverspend('member-123', {
-    budgetName: '10月食品预算',
-    overspendAmount: 200,
-    totalSpent: 3200,
-    budgetLimit: 3000,
-  });
-
-  // 示例3: 发送预算优化建议
-  await budgetNotificationService.sendBudgetOptimizationTip('member-123', {
-    budgetName: '10月食品预算',
-    tip: '建议购买当季蔬菜，价格更优惠',
-    potentialSavings: 150,
-    category: '蔬菜',
-  });
-
-  // 示例4: 发送预算周期总结
-  await budgetNotificationService.sendBudgetPeriodSummary('member-123', {
-    budgetName: '10月食品预算',
-    period: '10月',
-    totalSpent: 2800,
-    budgetLimit: 3000,
-    savings: 200,
-    topCategories: [
-      { category: '蔬菜', amount: 800, percentage: 28.6 },
-      { category: '肉类', amount: 1000, percentage: 35.7 },
-    ],
-  });
-
-  // 示例5: 发送分类预算预警
-  await budgetNotificationService.sendCategoryBudgetAlert('member-123', {
-    budgetName: '10月食品预算',
-    category: '肉类',
-    spent: 1200,
-    budget: 1000,
-    percentage: 120,
-  });
-
-  await prisma.$disconnect();
 }

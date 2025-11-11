@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { NotificationManager, NotificationUtils } from '@/lib/services/notification';
+import { getDefaultContainer } from '@/lib/container/service-container';
+import { NotificationUtils } from '@/lib/services/notification';
 
-const notificationManager = new NotificationManager(prisma);
+const notificationManager = getDefaultContainer().getNotificationManager();
 
 // GET /api/notifications/stats - 获取通知统计信息
 export async function GET(request: NextRequest) {

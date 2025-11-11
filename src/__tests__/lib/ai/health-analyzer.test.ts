@@ -3,6 +3,7 @@
  */
 
 import { HealthAnalyzer } from '@/lib/services/ai/health-analyzer';
+import { MedicalIndicator, IndicatorType } from '@/lib/types/medical';
 
 // Mock AI client
 jest.mock('@/lib/services/ai/openai-client', () => ({
@@ -151,7 +152,7 @@ describe('Health Analyzer', () => {
   });
 
   describe('健康风险评估', () => {
-    it('应该评估心血管风险', () => {
+    it('应该评估心血管风险', async () => {
       const userProfile = {
         age: 45,
         gender: 'male',
@@ -163,19 +164,77 @@ describe('Health Analyzer', () => {
         allergies: [],
       };
 
-      const medicalData = {
+      // 将原始 medical 数据转换为 MedicalIndicator 数组
+      const medicalIndicators: MedicalIndicator[] = [
+        {
+          id: '1',
+          reportId: 'report-1',
+          indicatorType: IndicatorType.TOTAL_CHOLESTEROL,
+          name: '总胆固醇',
+          value: 6.2,
+          unit: 'mmol/L',
+          isAbnormal: true,
+          status: 'ABNORMAL',
+          isCorrected: false,
+        },
+        {
+          id: '2',
+          reportId: 'report-1',
+          indicatorType: IndicatorType.HDL_CHOLESTEROL,
+          name: 'HDL胆固醇',
+          value: 1.0,
+          unit: 'mmol/L',
+          isAbnormal: false,
+          status: 'NORMAL',
+          isCorrected: false,
+        },
+        {
+          id: '3',
+          reportId: 'report-1',
+          indicatorType: IndicatorType.LDL_CHOLESTEROL,
+          name: 'LDL胆固醇',
+          value: 4.2,
+          unit: 'mmol/L',
+          isAbnormal: true,
+          status: 'ABNORMAL',
+          isCorrected: false,
+        },
+        {
+          id: '4',
+          reportId: 'report-1',
+          indicatorType: IndicatorType.TRIGLYCERIDES,
+          name: '甘油三酯',
+          value: 2.1,
+          unit: 'mmol/L',
+          isAbnormal: true,
+          status: 'ABNORMAL',
+          isCorrected: false,
+        },
+        {
+          id: '5',
+          reportId: 'report-1',
+          indicatorType: IndicatorType.FASTING_GLUCOSE,
+          name: '空腹血糖',
+          value: 5.8,
+          unit: 'mmol/L',
+          isAbnormal: false,
+          status: 'NORMAL',
+          isCorrected: false,
+        },
+      ];
+
+      // 使用 structureMedicalData 转换数据格式
+      const structuredMedicalData = await healthAnalyzer.structureMedicalData(medicalIndicators);
+
+      // 添加缺失的个人信息（血压、家族史等）
+      structuredMedicalData.other_indicators = {
         blood_pressure: '150/95',
-        cholesterol: 6.2,
-        hdl_cholesterol: 1.0,
-        ldl_cholesterol: 4.2,
-        triglycerides: 2.1,
-        glucose: 5.8,
         family_history: ['heart_disease'],
         smoking_status: 'former',
         exercise_frequency: 'rarely',
       };
 
-      const riskAssessment = healthAnalyzer.assessHealthRisks(userProfile, medicalData);
+      const riskAssessment = await healthAnalyzer.assessHealthRisks(structuredMedicalData);
 
       expect(riskAssessment.cardiovascular_risk).toBeDefined();
       expect(riskAssessment.cardiovascular_risk.level).toBe('high');
@@ -185,7 +244,7 @@ describe('Health Analyzer', () => {
       expect(riskAssessment.cardiovascular_risk.factors).toContain('obesity');
     });
 
-    it('应该评估代谢风险', () => {
+    it('应该评估代谢风险', async () => {
       const userProfile = {
         age: 35,
         gender: 'female',
@@ -197,15 +256,53 @@ describe('Health Analyzer', () => {
         allergies: [],
       };
 
-      const medicalData = {
+      // 将原始 medical 数据转换为 MedicalIndicator 数组
+      const medicalIndicators: MedicalIndicator[] = [
+        {
+          id: '1',
+          reportId: 'report-2',
+          indicatorType: IndicatorType.FASTING_GLUCOSE,
+          name: '空腹血糖',
+          value: 6.0,
+          unit: 'mmol/L',
+          isAbnormal: true,
+          status: 'ABNORMAL',
+          isCorrected: false,
+        },
+        {
+          id: '2',
+          reportId: 'report-2',
+          indicatorType: IndicatorType.HDL_CHOLESTEROL,
+          name: 'HDL胆固醇',
+          value: 1.1,
+          unit: 'mmol/L',
+          isAbnormal: false,
+          status: 'NORMAL',
+          isCorrected: false,
+        },
+        {
+          id: '3',
+          reportId: 'report-2',
+          indicatorType: IndicatorType.TRIGLYCERIDES,
+          name: '甘油三酯',
+          value: 1.9,
+          unit: 'mmol/L',
+          isAbnormal: false,
+          status: 'NORMAL',
+          isCorrected: false,
+        },
+      ];
+
+      // 使用 structureMedicalData 转换数据格式
+      const structuredMedicalData = await healthAnalyzer.structureMedicalData(medicalIndicators);
+
+      // 添加缺失的个人信息（腰围、血压等）
+      structuredMedicalData.other_indicators = {
         waist_circumference: 88,
         blood_pressure: '135/85',
-        glucose: 6.0,
-        hdl_cholesterol: 1.1,
-        triglycerides: 1.9,
       };
 
-      const riskAssessment = healthAnalyzer.assessHealthRisks(userProfile, medicalData);
+      const riskAssessment = await healthAnalyzer.assessHealthRisks(structuredMedicalData);
 
       expect(riskAssessment.metabolic_syndrome_risk).toBeDefined();
       expect(riskAssessment.metabolic_syndrome_risk.criteria_met).toBeGreaterThanOrEqual(0);
@@ -257,6 +354,18 @@ describe('Health Analyzer', () => {
         risk_level: 'medium',
         key_findings: ['Overweight', 'Elevated blood pressure'],
         activity_level: 'sedentary',
+        risk_assessment: {
+          level: 'medium',
+          concerns: ['超重', '血压升高'],
+          urgent_actions: ['控制饮食', '增加运动'],
+        },
+        nutritional_recommendations: {
+          macro_distribution: {
+            carbs_percent: 45,
+            protein_percent: 25,
+            fat_percent: 30,
+          },
+        },
       };
 
       const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['weight_loss']);
@@ -284,6 +393,18 @@ describe('Health Analyzer', () => {
         risk_level: 'low',
         key_findings: ['Normal weight', 'Good muscle mass'],
         activity_level: 'active',
+        risk_assessment: {
+          level: 'low',
+          concerns: [],
+          urgent_actions: [],
+        },
+        nutritional_recommendations: {
+          macro_distribution: {
+            carbs_percent: 50,
+            protein_percent: 30,
+            fat_percent: 20,
+          },
+        },
       };
 
       const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['muscle_gain']);
@@ -310,6 +431,18 @@ describe('Health Analyzer', () => {
         risk_level: 'low',
         key_findings: ['Healthy weight'],
         activity_level: 'moderate',
+        risk_assessment: {
+          level: 'low',
+          concerns: [],
+          urgent_actions: [],
+        },
+        nutritional_recommendations: {
+          macro_distribution: {
+            carbs_percent: 50,
+            protein_percent: 20,
+            fat_percent: 30,
+          },
+        },
       };
 
       const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['weight_maintenance']);
