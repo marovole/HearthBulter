@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
-// GET /api/notifications/preferences - 获取用户通知偏好设置
+/**
+ * GET /api/notifications/preferences - 获取用户通知偏好设置
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -14,14 +18,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let preferences = await prisma.notificationPreference.findUnique({
-      where: { memberId },
-    });
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 查询用户的通知偏好设置
+    const { data: preferences, error } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('memberId', memberId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('查询通知偏好设置失败:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch notification preferences' },
+        { status: 500 }
+      );
+    }
 
     // 如果没有偏好设置，创建默认设置
+    let finalPreferences = preferences;
     if (!preferences) {
-      preferences = await prisma.notificationPreference.create({
-        data: {
+      const { data: newPreferences, error: createError } = await supabase
+        .from('notification_preferences')
+        .insert({
           memberId,
           enableNotifications: true,
           dailyMaxNotifications: 50,
@@ -51,16 +70,27 @@ export async function GET(request: NextRequest) {
             MARKETING: false,
             OTHER: true,
           }),
-        },
-      });
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('创建默认通知偏好失败:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create notification preferences' },
+          { status: 500 }
+        );
+      }
+
+      finalPreferences = newPreferences;
     }
 
     // 解析JSON字段
-    const formattedPreferences = {
-      ...preferences,
-      channelPreferences: JSON.parse(preferences.channelPreferences || '{}'),
-      typeSettings: JSON.parse(preferences.typeSettings || '{}'),
-    };
+    const formattedPreferences = finalPreferences ? {
+      ...finalPreferences,
+      channelPreferences: JSON.parse((finalPreferences as any).channelPreferences || '{}'),
+      typeSettings: JSON.parse((finalPreferences as any).typeSettings || '{}'),
+    } : null;
 
     return NextResponse.json({
       success: true,
@@ -75,7 +105,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT /api/notifications/preferences - 更新用户通知偏好设置
+/**
+ * PUT /api/notifications/preferences - 更新用户通知偏好设置
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
@@ -180,49 +214,64 @@ export async function PUT(request: NextRequest) {
     if (enableSmartScheduling !== undefined) updateData.enableSmartScheduling = enableSmartScheduling;
     if (enableDeduplication !== undefined) updateData.enableDeduplication = enableDeduplication;
 
-    const preferences = await prisma.notificationPreference.upsert({
-      where: { memberId },
-      update: updateData,
-      create: {
-        memberId,
-        enableNotifications: true,
-        dailyMaxNotifications: 50,
-        dailyMaxSMS: 5,
-        dailyMaxEmail: 20,
-        channelPreferences: JSON.stringify({
-          CHECK_IN_REMINDER: ['IN_APP', 'EMAIL'],
-          TASK_NOTIFICATION: ['IN_APP'],
-          EXPIRY_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
-          BUDGET_WARNING: ['IN_APP', 'EMAIL'],
-          HEALTH_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
-          GOAL_ACHIEVEMENT: ['IN_APP', 'EMAIL'],
-          FAMILY_ACTIVITY: ['IN_APP'],
-          SYSTEM_ANNOUNCEMENT: ['IN_APP'],
-          MARKETING: ['IN_APP'],
-          OTHER: ['IN_APP'],
-        }),
-        typeSettings: JSON.stringify({
-          CHECK_IN_REMINDER: true,
-          TASK_NOTIFICATION: true,
-          EXPIRY_ALERT: true,
-          BUDGET_WARNING: true,
-          HEALTH_ALERT: true,
-          GOAL_ACHIEVEMENT: true,
-          FAMILY_ACTIVITY: true,
-          SYSTEM_ANNOUNCEMENT: true,
-          MARKETING: false,
-          OTHER: true,
-        }),
-        ...updateData,
-      },
-    });
+    const supabase = SupabaseClientManager.getInstance();
+
+    // Supabase upsert: 如果存在则更新，不存在则插入
+    const upsertData = {
+      memberId,
+      enableNotifications: enableNotifications ?? true,
+      dailyMaxNotifications: dailyMaxNotifications ?? 50,
+      dailyMaxSMS: dailyMaxSMS ?? 5,
+      dailyMaxEmail: dailyMaxEmail ?? 20,
+      channelPreferences: channelPreferences ? JSON.stringify(channelPreferences) : JSON.stringify({
+        CHECK_IN_REMINDER: ['IN_APP', 'EMAIL'],
+        TASK_NOTIFICATION: ['IN_APP'],
+        EXPIRY_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
+        BUDGET_WARNING: ['IN_APP', 'EMAIL'],
+        HEALTH_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
+        GOAL_ACHIEVEMENT: ['IN_APP', 'EMAIL'],
+        FAMILY_ACTIVITY: ['IN_APP'],
+        SYSTEM_ANNOUNCEMENT: ['IN_APP'],
+        MARKETING: ['IN_APP'],
+        OTHER: ['IN_APP'],
+      }),
+      typeSettings: typeSettings ? JSON.stringify(typeSettings) : JSON.stringify({
+        CHECK_IN_REMINDER: true,
+        TASK_NOTIFICATION: true,
+        EXPIRY_ALERT: true,
+        BUDGET_WARNING: true,
+        HEALTH_ALERT: true,
+        GOAL_ACHIEVEMENT: true,
+        FAMILY_ACTIVITY: true,
+        SYSTEM_ANNOUNCEMENT: true,
+        MARKETING: false,
+        OTHER: true,
+      }),
+      ...updateData,
+    };
+
+    const { data: preferences, error: upsertError } = await supabase
+      .from('notification_preferences')
+      .upsert(upsertData, {
+        onConflict: 'memberId',
+      })
+      .select()
+      .single();
+
+    if (upsertError) {
+      console.error('更新通知偏好失败:', upsertError);
+      return NextResponse.json(
+        { error: 'Failed to update notification preferences' },
+        { status: 500 }
+      );
+    }
 
     // 解析JSON字段返回
-    const formattedPreferences = {
+    const formattedPreferences = preferences ? {
       ...preferences,
-      channelPreferences: JSON.parse(preferences.channelPreferences || '{}'),
-      typeSettings: JSON.parse(preferences.typeSettings || '{}'),
-    };
+      channelPreferences: JSON.parse((preferences as any).channelPreferences || '{}'),
+      typeSettings: JSON.parse((preferences as any).typeSettings || '{}'),
+    } : null;
 
     return NextResponse.json({
       success: true,

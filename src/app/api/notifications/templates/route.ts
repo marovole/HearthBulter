@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { TemplateEngine } from '@/lib/services/notification';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
-const templateEngine = new TemplateEngine(prisma);
-
-// GET /api/notifications/templates - 获取通知模板列表
+/**
+ * GET /api/notifications/templates - 获取通知模板列表
+ *
+ * Migrated from Prisma to Supabase
+ * Note: Previously used TemplateEngine service, now using direct Supabase queries
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,24 +15,43 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const options: any = {
-      limit,
-      offset,
-    };
+    const supabase = SupabaseClientManager.getInstance();
 
+    // 构建查询
+    let query = supabase
+      .from('notification_templates')
+      .select('*', { count: 'exact' });
+
+    // 应用筛选条件
     if (isActive !== null) {
-      options.isActive = isActive === 'true';
+      query = query.eq('isActive', isActive === 'true');
     }
 
     if (category) {
-      options.category = category;
+      query = query.eq('category', category);
     }
 
-    const result = await templateEngine.getAllTemplates(options);
+    // 分页
+    const { data: templates, error, count } = await query
+      .order('createdAt', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('查询通知模板失败:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch notification templates' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      data: result,
+      data: {
+        templates: templates || [],
+        total: count || 0,
+        limit,
+        offset,
+      },
     });
   } catch (error) {
     console.error('Error fetching notification templates:', error);
@@ -41,7 +62,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/notifications/templates - 创建或更新通知模板
+/**
+ * POST /api/notifications/templates - 创建或更新通知模板
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -77,31 +102,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const template = await templateEngine.upsertTemplate({
+    const supabase = SupabaseClientManager.getInstance();
+
+    // Upsert模板（基于type字段）
+    const templateData = {
       type,
       titleTemplate,
       contentTemplate,
-      channelTemplates: channelTemplates ? JSON.stringify(channelTemplates) : undefined,
-      variables: variables ? JSON.stringify(variables) : undefined,
+      channelTemplates: channelTemplates ? JSON.stringify(channelTemplates) : null,
+      variables: variables ? JSON.stringify(variables) : null,
       isActive: isActive !== undefined ? isActive : true,
       version: version || '1.0',
-      defaultChannels: defaultChannels ? JSON.stringify(defaultChannels) : undefined,
-      defaultPriority,
-      translations: translations ? JSON.stringify(translations) : undefined,
-      description,
-      category,
-    });
-
-    // 解析JSON字段返回
-    const formattedTemplate = {
-      ...template,
-      channelPreferences: JSON.parse(template.channelPreferences || '{}'),
-      typeSettings: JSON.parse(template.typeSettings || '{}'),
+      defaultChannels: defaultChannels ? JSON.stringify(defaultChannels) : null,
+      defaultPriority: defaultPriority || 'MEDIUM',
+      translations: translations ? JSON.stringify(translations) : null,
+      description: description || null,
+      category: category || null,
     };
+
+    const { data: template, error: upsertError } = await supabase
+      .from('notification_templates')
+      .upsert(templateData, {
+        onConflict: 'type',
+      })
+      .select()
+      .single();
+
+    if (upsertError) {
+      console.error('保存通知模板失败:', upsertError);
+      return NextResponse.json(
+        { error: 'Failed to save notification template' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      data: formattedTemplate,
+      data: template,
       message: 'Template saved successfully',
     });
   } catch (error) {
@@ -113,7 +150,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/notifications/templates/preview - 预览模板渲染
+/**
+ * PUT /api/notifications/templates/preview - 预览模板渲染
+ *
+ * Migrated from Prisma to Supabase
+ */
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
@@ -126,7 +167,37 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const rendered = await templateEngine.previewTemplate(type, data || {}, locale);
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 获取模板
+    const { data: template, error } = await supabase
+      .from('notification_templates')
+      .select('*')
+      .eq('type', type)
+      .maybeSingle();
+
+    if (error) {
+      console.error('查询模板失败:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch template' },
+        { status: 500 }
+      );
+    }
+
+    if (!template) {
+      return NextResponse.json(
+        { error: 'Template not found' },
+        { status: 404 }
+      );
+    }
+
+    // 简单的模板渲染（替换{{variable}}格式的变量）
+    const rendered = {
+      title: renderTemplate((template as any).titleTemplate, data || {}),
+      content: renderTemplate((template as any).contentTemplate, data || {}),
+      type: (template as any).type,
+      version: (template as any).version,
+    };
 
     return NextResponse.json({
       success: true,
@@ -139,6 +210,13 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// 简单的模板渲染函数
+function renderTemplate(template: string, data: Record<string, any>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+    return data[varName] !== undefined ? String(data[varName]) : match;
+  });
 }
 
 // 验证模板内容
