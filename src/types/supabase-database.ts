@@ -286,6 +286,189 @@ export interface Database {
           updated_at?: string
         }
       }
+      budgets: {
+        Row: {
+          id: string
+          member_id: string
+          name: string
+          period: string
+          start_date: string
+          end_date: string
+          total_amount: number
+          vegetable_budget: number | null
+          meat_budget: number | null
+          fruit_budget: number | null
+          grain_budget: number | null
+          dairy_budget: number | null
+          seafood_budget: number | null
+          oils_budget: number | null
+          snacks_budget: number | null
+          beverages_budget: number | null
+          other_budget: number | null
+          status: string
+          used_amount: number
+          remaining_amount: number | null
+          usage_percentage: number | null
+          alert_threshold_80: boolean
+          alert_threshold_100: boolean
+          alert_threshold_110: boolean
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          member_id: string
+          name: string
+          period: string
+          start_date: string
+          end_date: string
+          total_amount: number
+          vegetable_budget?: number | null
+          meat_budget?: number | null
+          fruit_budget?: number | null
+          grain_budget?: number | null
+          dairy_budget?: number | null
+          seafood_budget?: number | null
+          oils_budget?: number | null
+          snacks_budget?: number | null
+          beverages_budget?: number | null
+          other_budget?: number | null
+          status?: string
+          used_amount?: number
+          remaining_amount?: number | null
+          usage_percentage?: number | null
+          alert_threshold_80?: boolean
+          alert_threshold_100?: boolean
+          alert_threshold_110?: boolean
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          member_id?: string
+          name?: string
+          period?: string
+          start_date?: string
+          end_date?: string
+          total_amount?: number
+          vegetable_budget?: number | null
+          meat_budget?: number | null
+          fruit_budget?: number | null
+          grain_budget?: number | null
+          dairy_budget?: number | null
+          seafood_budget?: number | null
+          oils_budget?: number | null
+          snacks_budget?: number | null
+          beverages_budget?: number | null
+          other_budget?: number | null
+          status?: string
+          used_amount?: number
+          remaining_amount?: number | null
+          usage_percentage?: number | null
+          alert_threshold_80?: boolean
+          alert_threshold_100?: boolean
+          alert_threshold_110?: boolean
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      spendings: {
+        Row: {
+          id: string
+          budget_id: string
+          amount: number
+          category: string
+          description: string | null
+          transaction_id: string | null
+          platform: string | null
+          items: Json | null
+          purchase_date: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          budget_id: string
+          amount: number
+          category: string
+          description?: string | null
+          transaction_id?: string | null
+          platform?: string | null
+          items?: Json | null
+          purchase_date: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          budget_id?: string
+          amount?: number
+          category?: string
+          description?: string | null
+          transaction_id?: string | null
+          platform?: string | null
+          items?: Json | null
+          purchase_date?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+      }
+      budget_alerts: {
+        Row: {
+          id: string
+          budget_id: string
+          type: string
+          threshold: number
+          current_value: number
+          message: string
+          category: string | null
+          status: string
+          acknowledged_at: string | null
+          resolved_at: string | null
+          notified: boolean
+          notified_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          budget_id: string
+          type: string
+          threshold: number
+          current_value: number
+          message: string
+          category?: string | null
+          status?: string
+          acknowledged_at?: string | null
+          resolved_at?: string | null
+          notified?: boolean
+          notified_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          budget_id?: string
+          type?: string
+          threshold?: number
+          current_value?: number
+          message?: string
+          category?: string | null
+          status?: string
+          acknowledged_at?: string | null
+          resolved_at?: string | null
+          notified?: boolean
+          notified_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       // 添加其他表的类型定义...
       // 为简洁起见，这里只列出主要表
       // 实际项目中应包含所有 68 个表

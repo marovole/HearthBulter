@@ -799,6 +799,10 @@ model Budget {
   fruitBudget       Float?
   grainBudget       Float?
   dairyBudget       Float?
+  seafoodBudget     Float?
+  oilsBudget        Float?
+  snacksBudget      Float?
+  beveragesBudget   Float?
   otherBudget       Float?
   status            BudgetStatus  @default(ACTIVE)
   usedAmount        Float         @default(0)

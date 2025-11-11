@@ -1,64 +1,127 @@
-import { PrismaClient, InventoryStatus, NotificationType } from '@prisma/client';
+/**
+ * 库存通知服务
+ *
+ * 提供库存相关的智能通知功能，包括：
+ * - 过期提醒
+ * - 低库存预警
+ * - 浪费报告
+ * - 采购建议
+ *
+ * @module inventory-notification-service
+ */
+
+import type { PrismaClient } from '@prisma/client';
+import { NotificationType } from '@prisma/client';
 import { expiryMonitor } from './expiry-monitor';
 import { inventoryAnalyzer } from './inventory-analyzer';
-
-const prisma = new PrismaClient();
+import type { InventoryRepository } from '@/lib/repositories/interfaces/inventory-repository';
+import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
 
 export interface NotificationConfig {
   expiryAlerts: {
-    enabled: boolean
-    advanceDays: number[] // [3, 7] 表示提前3天和7天提醒
-    frequency: 'DAILY' | 'WEEKLY' | 'IMMEDIATE'
-  }
+    enabled: boolean;
+    advanceDays: number[]; // [3, 7] 表示提前3天和7天提醒
+    frequency: 'DAILY' | 'WEEKLY' | 'IMMEDIATE';
+  };
   lowStockAlerts: {
-    enabled: boolean
-    threshold: number // 低于阈值时提醒
-    frequency: 'DAILY' | 'WEEKLY' | 'IMMEDIATE'
-  }
+    enabled: boolean;
+    threshold: number; // 低于阈值时提醒
+    frequency: 'DAILY' | 'WEEKLY' | 'IMMEDIATE';
+  };
   wasteReports: {
-    enabled: boolean
-    frequency: 'WEEKLY' | 'MONTHLY'
-  }
+    enabled: boolean;
+    frequency: 'WEEKLY' | 'MONTHLY';
+  };
   usageReminders: {
-    enabled: boolean
-    frequency: 'DAILY' | 'WEEKLY'
-  }
+    enabled: boolean;
+    frequency: 'DAILY' | 'WEEKLY';
+  };
   purchaseSuggestions: {
-    enabled: boolean
-    frequency: 'WEEKLY' | 'MONTHLY'
-  }
+    enabled: boolean;
+    frequency: 'WEEKLY' | 'MONTHLY';
+  };
 }
 
 export interface InventoryNotification {
-  id: string
-  memberId: string
-  type: NotificationType
-  title: string
-  message: string
-  priority: 'HIGH' | 'MEDIUM' | 'LOW'
-  data?: any
-  isRead: boolean
-  createdAt: Date
-  scheduledFor?: Date
-  expiresAt?: Date
+  id: string;
+  memberId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  data?: any;
+  isRead: boolean;
+  createdAt: Date;
+  scheduledFor?: Date;
+  expiresAt?: Date;
 }
 
 export interface NotificationSummary {
-  memberId: string
-  totalNotifications: number
-  unreadCount: number
-  highPriorityCount: number
-  mediumPriorityCount: number
-  lowPriorityCount: number
-  notifications: InventoryNotification[]
+  memberId: string;
+  totalNotifications: number;
+  unreadCount: number;
+  highPriorityCount: number;
+  mediumPriorityCount: number;
+  lowPriorityCount: number;
+  notifications: InventoryNotification[];
 }
 
+/**
+ * Prisma 客户端的受限类型
+ * 只允许访问库存通知服务需要的表
+ */
+export type InventoryNotificationPrisma = Pick<
+  PrismaClient,
+  'notificationConfig' | 'notification' | 'wasteLog' | 'user'
+>;
+
+/**
+ * 库存通知服务的依赖接口
+ */
+export interface InventoryNotificationServiceDeps {
+  /** 库存数据访问接口 */
+  inventoryRepo: InventoryRepository;
+  /** 通知数据访问接口 */
+  notificationRepo: NotificationRepository;
+  /** Prisma 客户端（受限访问） */
+  prisma: InventoryNotificationPrisma;
+}
+
+/**
+ * 库存通知服务类
+ *
+ * 通过依赖注入方式访问数据，支持多种智能通知类型
+ */
 export class InventoryNotificationService {
+  private readonly inventoryRepo: InventoryRepository;
+  private readonly notificationRepo: NotificationRepository;
+  private readonly prisma: InventoryNotificationPrisma;
+  /**
+   * 构造函数
+   *
+   * @param dependencies - 服务依赖
+   * @param dependencies.inventoryRepo - 库存数据访问接口
+   * @param dependencies.notificationRepo - 通知数据访问接口
+   * @param dependencies.prisma - Prisma 客户端（受限访问，用于访问尚未抽象的表）
+   *
+   * TODO: 完全移除 Prisma 依赖，创建 NotificationConfigRepository
+   */
+  constructor({
+    inventoryRepo,
+    notificationRepo,
+    prisma,
+  }: InventoryNotificationServiceDeps) {
+    this.inventoryRepo = inventoryRepo;
+    this.notificationRepo = notificationRepo;
+    this.prisma = prisma;
+  }
+
   /**
    * 获取用户的通知配置
    */
   async getNotificationConfig(memberId: string): Promise<NotificationConfig> {
-    const config = await prisma.notificationConfig.findUnique({
+    // TODO: 使用 NotificationConfigRepository 替代 Prisma
+    const config = await this.prisma.notificationConfig.findUnique({
       where: { memberId },
     });
 
@@ -67,24 +130,24 @@ export class InventoryNotificationService {
         expiryAlerts: {
           enabled: config.expiryAlerts,
           advanceDays: config.expiryAdvanceDays || [3, 7],
-          frequency: config.expiryFrequency as any || 'DAILY',
+          frequency: (config.expiryFrequency as any) || 'DAILY',
         },
         lowStockAlerts: {
           enabled: config.lowStockAlerts,
           threshold: config.lowStockThreshold || 1,
-          frequency: config.lowStockFrequency as any || 'IMMEDIATE',
+          frequency: (config.lowStockFrequency as any) || 'IMMEDIATE',
         },
         wasteReports: {
           enabled: config.wasteReports,
-          frequency: config.wasteFrequency as any || 'WEEKLY',
+          frequency: (config.wasteFrequency as any) || 'WEEKLY',
         },
         usageReminders: {
           enabled: config.usageReminders,
-          frequency: config.usageFrequency as any || 'DAILY',
+          frequency: (config.usageFrequency as any) || 'DAILY',
         },
         purchaseSuggestions: {
           enabled: config.purchaseSuggestions,
-          frequency: config.purchaseFrequency as any || 'WEEKLY',
+          frequency: (config.purchaseFrequency as any) || 'WEEKLY',
         },
       };
     }
@@ -119,12 +182,10 @@ export class InventoryNotificationService {
   /**
    * 更新用户的通知配置
    */
-  async updateNotificationConfig(
-    memberId: string, 
-    config: Partial<NotificationConfig>
-  ): Promise<boolean> {
+  async updateNotificationConfig(memberId: string, config: Partial<NotificationConfig>): Promise<boolean> {
     try {
-      await prisma.notificationConfig.upsert({
+      // TODO: 使用 NotificationConfigRepository 替代 Prisma
+      await this.prisma.notificationConfig.upsert({
         where: { memberId },
         update: {
           expiryAlerts: config.expiryAlerts?.enabled,
@@ -180,7 +241,7 @@ export class InventoryNotificationService {
     if (expirySummary.expiringItems.length > 0) {
       const itemsText = expirySummary.expiringItems
         .slice(0, 5)
-        .map(item => `${item.foodName} (${item.daysToExpiry}天)`)
+        .map((item) => `${item.foodName} (${item.daysToExpiry}天)`)
         .join('、');
 
       notifications.push({
@@ -188,7 +249,9 @@ export class InventoryNotificationService {
         memberId,
         type: NotificationType.EXPIRY_ALERT,
         title: '食材即将过期',
-        message: `您有 ${expirySummary.expiringItems.length} 件食材即将过期：${itemsText}${expirySummary.expiringItems.length > 5 ? '等' : ''}`,
+        message: `您有 ${expirySummary.expiringItems.length} 件食材即将过期：${itemsText}${
+          expirySummary.expiringItems.length > 5 ? '等' : ''
+        }`,
         priority: 'HIGH',
         data: {
           expiringItems: expirySummary.expiringItems,
@@ -203,7 +266,7 @@ export class InventoryNotificationService {
     if (expirySummary.expiredItems.length > 0) {
       const itemsText = expirySummary.expiredItems
         .slice(0, 5)
-        .map(item => `${item.foodName}`)
+        .map((item) => `${item.foodName}`)
         .join('、');
 
       notifications.push({
@@ -211,7 +274,9 @@ export class InventoryNotificationService {
         memberId,
         type: NotificationType.EXPIRY_ALERT,
         title: '食材已过期',
-        message: `您有 ${expirySummary.expiredItems.length} 件食材已过期：${itemsText}${expirySummary.expiredItems.length > 5 ? '等' : ''}，请及时处理`,
+        message: `您有 ${expirySummary.expiredItems.length} 件食材已过期：${itemsText}${
+          expirySummary.expiredItems.length > 5 ? '等' : ''
+        }，请及时处理`,
         priority: 'HIGH',
         data: {
           expiredItems: expirySummary.expiredItems,
@@ -236,24 +301,13 @@ export class InventoryNotificationService {
       return notifications;
     }
 
-    const lowStockItems = await prisma.inventoryItem.findMany({
-      where: {
-        memberId,
-        isLowStock: true,
-        deletedAt: null,
-      },
-      include: {
-        food: {
-          select: { name: true },
-        },
-      },
-      take: 10,
-    });
+    // 使用 InventoryRepository 替代 Prisma
+    const lowStockItems = await this.inventoryRepo.getLowStockItems(memberId);
 
     if (lowStockItems.length > 0) {
       const itemsText = lowStockItems
         .slice(0, 5)
-        .map(item => `${item.food.name}`)
+        .map((item) => `${item.food.name}`)
         .join('、');
 
       notifications.push({
@@ -261,10 +315,12 @@ export class InventoryNotificationService {
         memberId,
         type: NotificationType.LOW_STOCK_ALERT,
         title: '库存不足提醒',
-        message: `您有 ${lowStockItems.length} 种食材库存不足：${itemsText}${lowStockItems.length > 5 ? '等' : ''}，建议及时补货`,
+        message: `您有 ${lowStockItems.length} 种食材库存不足：${itemsText}${
+          lowStockItems.length > 5 ? '等' : ''
+        }，建议及时补货`,
         priority: 'MEDIUM',
         data: {
-          lowStockItems: lowStockItems.map(item => ({
+          lowStockItems: lowStockItems.slice(0, 10).map((item) => ({
             foodId: item.foodId,
             foodName: item.food.name,
             currentQuantity: item.quantity,
@@ -291,8 +347,9 @@ export class InventoryNotificationService {
     }
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
-    const wasteRecords = await prisma.wasteLog.findMany({
+
+    // TODO: 使用 WasteRecordRepository 替代 Prisma
+    const wasteRecords = await this.prisma.wasteLog.findMany({
       where: {
         memberId,
         createdAt: { gte: thirtyDaysAgo },
@@ -309,16 +366,13 @@ export class InventoryNotificationService {
     });
 
     if (wasteRecords.length > 0) {
-      const totalWasteValue = wasteRecords.reduce((sum, record) => 
-        sum + (record.estimatedCost || 0), 0
-      );
+      const totalWasteValue = wasteRecords.reduce((sum, record) => sum + (record.estimatedCost || 0), 0);
 
-      const topWastedItems = wasteRecords
-        .reduce((acc, record) => {
-          const foodName = record.inventoryItem.food.name;
-          acc[foodName] = (acc[foodName] || 0) + record.wastedQuantity;
-          return acc;
-        }, {} as Record<string, number>);
+      const topWastedItems = wasteRecords.reduce((acc, record) => {
+        const foodName = record.inventoryItem.food.name;
+        acc[foodName] = (acc[foodName] || 0) + record.wastedQuantity;
+        return acc;
+      }, {} as Record<string, number>);
 
       const topItems = Object.entries(topWastedItems)
         .sort(([, a], [, b]) => b - a)
@@ -331,7 +385,9 @@ export class InventoryNotificationService {
         memberId,
         type: NotificationType.WASTE_REPORT,
         title: '月度浪费报告',
-        message: `过去30天您浪费了 ${wasteRecords.length} 件食材，价值约 ¥${totalWasteValue.toFixed(2)}。主要浪费物品：${topItems}`,
+        message: `过去30天您浪费了 ${wasteRecords.length} 件食材，价值约 ¥${totalWasteValue.toFixed(
+          2
+        )}。主要浪费物品：${topItems}`,
         priority: 'MEDIUM',
         data: {
           wasteCount: wasteRecords.length,
@@ -358,11 +414,11 @@ export class InventoryNotificationService {
     }
 
     const suggestions = await inventoryAnalyzer.generatePurchaseSuggestions(memberId);
-    
+
     if (suggestions.length > 0) {
-      const highPrioritySuggestions = suggestions.filter(s => s.priority === 'HIGH').slice(0, 3);
+      const highPrioritySuggestions = suggestions.filter((s) => s.priority === 'HIGH').slice(0, 3);
       const suggestionsText = highPrioritySuggestions
-        .map(s => `${s.foodName}(${s.suggestedQuantity}${s.unit})`)
+        .map((s) => `${s.foodName}(${s.suggestedQuantity}${s.unit})`)
         .join('、');
 
       notifications.push({
@@ -389,8 +445,9 @@ export class InventoryNotificationService {
    */
   async createNotifications(notifications: Omit<InventoryNotification, 'id'>[]): Promise<boolean> {
     try {
+      // TODO: 使用 NotificationRepository 批量创建方法
       for (const notification of notifications) {
-        await prisma.notification.create({
+        await this.prisma.notification.create({
           data: {
             memberId: notification.memberId,
             type: notification.type,
@@ -417,39 +474,40 @@ export class InventoryNotificationService {
   async getUserNotifications(
     memberId: string,
     filters?: {
-      type?: NotificationType
-      priority?: 'HIGH' | 'MEDIUM' | 'LOW'
-      isRead?: boolean
-      limit?: number
-      offset?: number
+      type?: NotificationType;
+      priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+      isRead?: boolean;
+      limit?: number;
+      offset?: number;
     }
   ): Promise<NotificationSummary> {
     const whereClause: any = { memberId };
-    
+
     if (filters?.type) whereClause.type = filters.type;
     if (filters?.priority) whereClause.priority = filters.priority;
     if (filters?.isRead !== undefined) whereClause.isRead = filters.isRead;
 
-    const notifications = await prisma.notification.findMany({
+    // TODO: 使用 NotificationRepository 替代 Prisma
+    const notifications = await this.prisma.notification.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
       take: filters?.limit || 50,
       skip: filters?.offset || 0,
     });
 
-    const unreadCount = await prisma.notification.count({
+    const unreadCount = await this.prisma.notification.count({
       where: { memberId, isRead: false },
     });
 
-    const highPriorityCount = await prisma.notification.count({
+    const highPriorityCount = await this.prisma.notification.count({
       where: { memberId, priority: 'HIGH', isRead: false },
     });
 
-    const mediumPriorityCount = await prisma.notification.count({
+    const mediumPriorityCount = await this.prisma.notification.count({
       where: { memberId, priority: 'MEDIUM', isRead: false },
     });
 
-    const lowPriorityCount = await prisma.notification.count({
+    const lowPriorityCount = await this.prisma.notification.count({
       where: { memberId, priority: 'LOW', isRead: false },
     });
 
@@ -460,7 +518,7 @@ export class InventoryNotificationService {
       highPriorityCount,
       mediumPriorityCount,
       lowPriorityCount,
-      notifications: notifications.map(n => ({
+      notifications: notifications.map((n) => ({
         ...n,
         data: n.data as any,
       })),
@@ -472,7 +530,8 @@ export class InventoryNotificationService {
    */
   async markNotificationAsRead(notificationId: string, memberId: string): Promise<boolean> {
     try {
-      const result = await prisma.notification.updateMany({
+      // TODO: 使用 NotificationRepository 替代 Prisma
+      const result = await this.prisma.notification.updateMany({
         where: {
           id: notificationId,
           memberId,
@@ -494,7 +553,8 @@ export class InventoryNotificationService {
    */
   async markAllNotificationsAsRead(memberId: string): Promise<boolean> {
     try {
-      await prisma.notification.updateMany({
+      // TODO: 使用 NotificationRepository 替代 Prisma
+      await this.prisma.notification.updateMany({
         where: {
           memberId,
           isRead: false,
@@ -516,7 +576,8 @@ export class InventoryNotificationService {
    */
   async deleteNotification(notificationId: string, memberId: string): Promise<boolean> {
     try {
-      const result = await prisma.notification.deleteMany({
+      // TODO: 使用 NotificationRepository 替代 Prisma
+      const result = await this.prisma.notification.deleteMany({
         where: {
           id: notificationId,
           memberId,
@@ -534,8 +595,8 @@ export class InventoryNotificationService {
    */
   async generateScheduledNotifications(): Promise<void> {
     try {
-      // 获取所有启用了通知的用户
-      const users = await prisma.user.findMany({
+      // TODO: 使用 UserRepository 替代 Prisma
+      const users = await this.prisma.user.findMany({
         where: {
           notificationConfig: {
             isNot: null,
@@ -548,7 +609,7 @@ export class InventoryNotificationService {
         const allNotifications: Omit<InventoryNotification, 'id'>[] = [];
 
         // 生成各类通知
-        const [expiryNotifications, lowStockNotifications, wasteNotifications, purchaseNotifications] = 
+        const [expiryNotifications, lowStockNotifications, wasteNotifications, purchaseNotifications] =
           await Promise.all([
             this.generateExpiryNotifications(user.id),
             this.generateLowStockNotifications(user.id),
@@ -579,8 +640,9 @@ export class InventoryNotificationService {
   async cleanupExpiredNotifications(): Promise<void> {
     try {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      
-      await prisma.notification.deleteMany({
+
+      // TODO: 使用 NotificationRepository 替代 Prisma
+      await this.prisma.notification.deleteMany({
         where: {
           createdAt: { lt: thirtyDaysAgo },
           isRead: true,
@@ -592,4 +654,9 @@ export class InventoryNotificationService {
   }
 }
 
-export const inventoryNotificationService = new InventoryNotificationService();
+/**
+ * 默认库存通知服务实例（用于向后兼容）
+ * @deprecated 建议使用依赖注入方式创建实例
+ */
+// export const inventoryNotificationService = new InventoryNotificationService(inventoryRepo, notificationRepo, prisma);
+// 注释掉单例导出，强制使用依赖注入

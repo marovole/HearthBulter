@@ -1,21 +1,27 @@
-/**
- * 通知管理器
- * 统一管理各种通知渠道和类型
- */
-
-import { prisma } from '@/lib/db';
-import { emailService } from './email-service';
-import { smsService } from './sms-service';
-import { wechatService } from './wechat-service';
+import { randomUUID } from 'crypto';
+import type { NotificationRepository, NotificationRecipientDTO } from '@/lib/repositories/interfaces/notification-repository';
+import type {
+  CreateNotificationDTO,
+  NotificationChannel,
+  NotificationPreferenceDTO,
+  NotificationPriority,
+  NotificationStatus,
+  ScheduledNotificationDTO,
+} from '@/lib/repositories/types/notification';
+import { emailService, EmailService } from './email-service';
+import { smsService, SMSService } from './sms-service';
+import { wechatService, WeChatService } from './wechat-service';
 
 export interface NotificationData {
-  userId: string;
+  userId: string; // memberId
   type: string;
   title: string;
   content: string;
-  channels?: Array<'email' | 'sms' | 'wechat' | 'push'>;
-  priority?: 'low' | 'medium' | 'high';
+  channels?: Array<NotificationChannel | Lowercase<NotificationChannel>>;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   metadata?: Record<string, any>;
+  actionUrl?: string;
+  actionText?: string;
 }
 
 export interface ScheduledNotificationData extends NotificationData {
@@ -59,189 +65,166 @@ export interface UserNotificationsResult {
   error?: string;
 }
 
+interface ChannelDispatchResult {
+  channel: NotificationChannel;
+  success: boolean;
+  messageId?: string;
+  error?: string;
+  sentAt: Date;
+}
+
 export class NotificationManager {
-  /**
-   * 发送单个通知
-   */
+  private readonly email: EmailService;
+  private readonly sms: SMSService;
+  private readonly wechat: WeChatService;
+
+  private readonly defaultChannelPrefs: Record<NotificationChannel, boolean> = {
+    IN_APP: true,
+    EMAIL: true,
+    SMS: false,
+    WECHAT: true,
+    PUSH: true,
+  };
+
+  constructor(
+    private readonly repository: NotificationRepository,
+    services: {
+      emailService?: EmailService;
+      smsService?: SMSService;
+      wechatService?: WeChatService;
+    } = {},
+  ) {
+    this.email = services.emailService ?? emailService;
+    this.sms = services.smsService ?? smsService;
+    this.wechat = services.wechatService ?? wechatService;
+  }
+
   async sendNotification(data: NotificationData): Promise<NotificationResult> {
+    const memberId = data.userId;
+    let notificationId: string | undefined;
+
     try {
-      // 获取用户信息
-      const user = await prisma.user.findUnique({
-        where: { id: data.userId },
-        select: {
-          id: true,
-          email: true,
-          phone: true,
-          wechatOpenId: true,
-          notificationPreferences: true,
-        },
-      });
-
-      if (!user) {
-        return {
-          success: false,
-          error: 'User not found',
-        };
+      const recipient = await this.repository.getNotificationRecipient(memberId);
+      if (!recipient) {
+        return { success: false, error: 'User not found' };
       }
 
-      // 获取用户的通知偏好
-      const preferences = user.notificationPreferences as any || {
-        email: true,
-        sms: false,
-        wechat: true,
-        push: true,
-      };
+      const preferences =
+        recipient.preferences ?? (await this.repository.getNotificationPreferences(memberId)) ?? undefined;
 
-      // 确定要发送的渠道
-      const channels = data.channels || ['push'];
-      const enabledChannels = channels.filter(channel => {
-        switch (channel) {
-        case 'email':
-          return preferences.email && user.email;
-        case 'sms':
-          return preferences.sms && user.phone;
-        case 'wechat':
-          return preferences.wechat && user.wechatOpenId;
-        case 'push':
-          return preferences.push;
-        default:
-          return false;
-        }
-      });
+      const resolvedChannels = this.resolveChannels(data.channels);
+      const enabledChannels = this.filterEnabledChannels(resolvedChannels, recipient, preferences);
 
-      if (enabledChannels.length === 0) {
-        return {
-          success: false,
-          error: 'No enabled channels available',
-        };
+      if (!enabledChannels.length) {
+        return { success: false, error: 'No enabled channels available' };
       }
 
-      // 创建通知记录
-      const notification = await prisma.notification.create({
-        data: {
-          userId: data.userId,
-          type: data.type,
-          title: data.title,
-          content: data.content,
-          channels: enabledChannels,
-          status: 'sent',
-          metadata: data.metadata || {},
-        },
-      });
+      const payload = this.buildNotificationPayload(memberId, data, enabledChannels);
+      const notification = await this.repository.createNotification(payload);
+      notificationId = notification.id;
 
-      // 通过各个渠道发送通知
-      const sendPromises = enabledChannels.map(async (channel) => {
-        switch (channel) {
-        case 'email':
-          if (user.email) {
-            return await emailService.sendEmail({
-              to: user.email,
-              subject: data.title,
-              text: data.content,
-            });
-          }
-          break;
-        case 'sms':
-          if (user.phone) {
-            return await smsService.sendSMS({
-              to: user.phone,
-              message: data.content,
-            });
-          }
-          break;
-        case 'wechat':
-          if (user.wechatOpenId) {
-            return await wechatService.sendMessage({
-              openId: user.wechatOpenId,
-              content: data.content,
-            });
-          }
-          break;
-        case 'push':
-          // Push notification implementation
-          return { success: true, messageId: 'push-message-id' };
-        }
-      });
+      const deliveryResults = await Promise.all(
+        enabledChannels.map(channel =>
+          channel === 'IN_APP'
+            ? Promise.resolve<ChannelDispatchResult>({
+              channel,
+              success: true,
+              sentAt: new Date(),
+            })
+            : this.dispatchChannel(channel, recipient, data),
+        ),
+      );
 
-      await Promise.allSettled(sendPromises);
+      const hasFailure = deliveryResults.some(result => !result.success);
+      await this.repository.updateStatus(notificationId, hasFailure ? 'FAILED' : 'SENT');
+
+      await Promise.all(
+        deliveryResults.map(result =>
+          this.repository.appendDeliveryLog({
+            notificationId: notificationId!,
+            channel: result.channel,
+            status: result.success ? 'SENT' : 'FAILED',
+            detail: result.error,
+            sentAt: result.sentAt,
+          }),
+        ),
+      );
 
       return {
-        success: true,
-        notificationId: notification.id,
+        success: !hasFailure,
+        notificationId,
+        messageId: deliveryResults.find(r => r.success && r.messageId)?.messageId,
+        error: hasFailure ? 'One or more channels failed' : undefined,
       };
-
     } catch (error) {
+      if (notificationId) {
+        await this.safeUpdateStatus(notificationId, 'FAILED');
+      }
       return {
         success: false,
+        notificationId,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  /**
-   * 批量发送通知
-   */
   async sendBulkNotifications(dataList: NotificationData[]): Promise<BulkNotificationResult> {
-    const results = await Promise.allSettled(
-      dataList.map(data => this.sendNotification(data))
+    const results = await Promise.allSettled(dataList.map(data => this.sendNotification(data)));
+
+    const normalized = results.map(result =>
+      result.status === 'fulfilled'
+        ? result.value
+        : { success: false, error: result.reason?.message ?? 'Unknown error' },
     );
 
-    const formattedResults = results.map(result => {
-      if (result.status === 'fulfilled') {
-        return result.value;
-      } else {
-        return {
-          success: false,
-          error: result.reason?.message || 'Unknown error',
-        };
-      }
-    });
-
-    const summary = {
-      total: formattedResults.length,
-      successful: formattedResults.filter(r => r.success).length,
-      failed: formattedResults.filter(r => !r.success).length,
-    };
-
     return {
-      success: summary.failed === 0,
-      results: formattedResults,
-      summary,
+      success: normalized.every(r => r.success),
+      results: normalized,
+      summary: {
+        total: normalized.length,
+        successful: normalized.filter(r => r.success).length,
+        failed: normalized.filter(r => !r.success).length,
+      },
     };
   }
 
-  /**
-   * 计划通知
-   */
   async scheduleNotification(data: ScheduledNotificationData): Promise<ScheduleResult> {
+    if (data.scheduledTime <= new Date()) {
+      return { success: false, error: 'Cannot schedule notification in the past' };
+    }
+
     try {
-      // 验证计划时间不能是过去
-      if (data.scheduledTime <= new Date()) {
-        return {
-          success: false,
-          error: 'Cannot schedule notification in the past',
-        };
+      const memberId = data.userId;
+      const recipient = await this.repository.getNotificationRecipient(memberId);
+      if (!recipient) {
+        return { success: false, error: 'User not found' };
       }
 
-      // 创建计划通知记录
-      const scheduledNotification = await prisma.scheduledNotification.create({
-        data: {
-          userId: data.userId,
-          type: data.type,
-          title: data.title,
-          content: data.content,
-          scheduledTime: data.scheduledTime,
-          channels: data.channels || ['push'],
-          status: 'scheduled',
-          metadata: data.metadata || {},
-        },
-      });
+      const preferences =
+        recipient.preferences ?? (await this.repository.getNotificationPreferences(memberId)) ?? undefined;
 
-      return {
-        success: true,
-        scheduleId: scheduledNotification.id,
+      const channels = this.filterEnabledChannels(
+        this.resolveChannels(data.channels),
+        recipient,
+        preferences,
+      );
+
+      if (!channels.length) {
+        return { success: false, error: 'No enabled channels available' };
+      }
+
+      const schedulePayload: ScheduledNotificationDTO = {
+        id: randomUUID(),
+        memberId,
+        notificationId: undefined,
+        payload: this.buildNotificationPayload(memberId, data, channels),
+        scheduledTime: data.scheduledTime,
+        status: 'SCHEDULED',
+        retryCount: 0,
       };
 
+      const schedule = await this.repository.createScheduledNotification(schedulePayload);
+      return { success: true, scheduleId: schedule.id };
     } catch (error) {
       return {
         success: false,
@@ -250,43 +233,36 @@ export class NotificationManager {
     }
   }
 
-  /**
-   * 获取用户通知
-   */
   async getUserNotifications(
     userId: string,
-    options: {
-      type?: string;
-      status?: string;
-      limit?: number;
-      offset?: number;
-    } = {}
+    options: { type?: string; status?: string; limit?: number; offset?: number } = {},
   ): Promise<UserNotificationsResult> {
     try {
-      const notifications = await prisma.notification.findMany({
-        where: {
-          userId,
-          ...(options.type && { type: options.type }),
-          ...(options.status && { status: options.status }),
+      const page = await this.repository.listMemberNotifications(
+        {
+          memberId: userId,
+          type: options.type as any,
+          status: options.status as NotificationStatus,
+          includeRead: true,
         },
-        orderBy: { createdAt: 'desc' },
-        take: options.limit || 50,
-        skip: options.offset || 0,
-      });
+        {
+          limit: options.limit,
+          offset: options.offset,
+        },
+      );
 
       return {
         success: true,
-        notifications: notifications.map(notif => ({
-          id: notif.id,
-          type: notif.type,
-          title: notif.title,
-          content: notif.content,
-          status: notif.status,
-          createdAt: notif.createdAt,
-          read: notif.read || false,
+        notifications: page.items.map(item => ({
+          id: item.id,
+          type: item.type,
+          title: item.title,
+          content: item.content,
+          status: item.status,
+          createdAt: item.createdAt,
+          read: Boolean(item.readAt),
         })),
       };
-
     } catch (error) {
       return {
         success: false,
@@ -296,24 +272,15 @@ export class NotificationManager {
     }
   }
 
-  /**
-   * 标记通知为已读
-   */
   async markNotificationAsRead(notificationId: string): Promise<NotificationResult> {
     try {
-      await prisma.notification.update({
-        where: { id: notificationId },
-        data: {
-          read: true,
-          readAt: new Date(),
-        },
-      });
+      const notification = await this.repository.getNotificationById(notificationId);
+      if (!notification) {
+        return { success: false, error: 'Notification not found' };
+      }
 
-      return {
-        success: true,
-        notificationId,
-      };
-
+      await this.repository.markAsRead(notificationId, notification.memberId);
+      return { success: true, notificationId };
     } catch (error) {
       return {
         success: false,
@@ -322,51 +289,178 @@ export class NotificationManager {
     }
   }
 
-  /**
-   * 删除通知
-   */
   async deleteNotification(notificationId: string, userId: string): Promise<NotificationResult> {
     try {
-      // 验证通知属于该用户
-      const notification = await prisma.notification.findUnique({
-        where: { id: notificationId },
-        select: { userId: true },
-      });
-
-      if (!notification) {
-        return {
-          success: false,
-          error: 'Notification not found',
-        };
-      }
-
-      if (notification.userId !== userId) {
-        return {
-          success: false,
-          error: 'Unauthorized to delete this notification',
-        };
-      }
-
-      await prisma.notification.delete({
-        where: { id: notificationId },
-      });
-
-      return {
-        success: true,
-        notificationId,
-      };
-
+      await this.repository.deleteNotification(notificationId, userId);
+      return { success: true, notificationId };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  private async dispatchChannel(
+    channel: NotificationChannel,
+    recipient: NotificationRecipientDTO,
+    data: NotificationData,
+  ): Promise<ChannelDispatchResult> {
+    const sentAt = new Date();
+
+    try {
+      let messageId: string | undefined;
+
+      switch (channel) {
+      case 'EMAIL':
+        messageId = await this.email.send(recipient.memberId ?? data.userId, data.title, data.content, { html: true });
+        break;
+      case 'SMS':
+        if (!recipient.phone) throw new Error('User phone not bound');
+        messageId = await this.sms.send(recipient.phone, data.content);
+        break;
+      case 'WECHAT':
+        if (!recipient.wechatOpenId) throw new Error('User WeChat not bound');
+        messageId = await this.wechat.sendMessage(recipient.wechatOpenId, data.content);
+        break;
+      case 'PUSH':
+        messageId = await this.sendPush(recipient, data);
+        break;
+      default:
+        throw new Error(`Unsupported channel: ${channel}`);
+      }
+
+      return { channel, success: true, messageId, sentAt };
+    } catch (error) {
+      return {
+        channel,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        sentAt,
+      };
+    }
+  }
+
+  private resolveChannels(
+    requested?: Array<NotificationChannel | Lowercase<NotificationChannel>>,
+  ): NotificationChannel[] {
+    const normalized = (requested ?? ['push']).map(channel => this.normalizeChannel(channel)).filter(
+      (channel): channel is NotificationChannel => Boolean(channel),
+    );
+
+    if (!normalized.includes('IN_APP')) {
+      normalized.push('IN_APP');
+    }
+
+    return Array.from(new Set(normalized));
+  }
+
+  private normalizeChannel(
+    channel?: NotificationChannel | Lowercase<NotificationChannel>,
+  ): NotificationChannel | null {
+    if (!channel) return null;
+
+    const upper = channel.toUpperCase();
+    switch (upper) {
+    case 'EMAIL':
+      return 'EMAIL';
+    case 'SMS':
+      return 'SMS';
+    case 'WECHAT':
+      return 'WECHAT';
+    case 'PUSH':
+      return 'PUSH';
+    case 'IN_APP':
+      return 'IN_APP';
+    default:
+      return null;
+    }
+  }
+
+  private filterEnabledChannels(
+    channels: NotificationChannel[],
+    recipient: NotificationRecipientDTO,
+    preferences?: NotificationPreferenceDTO,
+  ): NotificationChannel[] {
+    const preferenceMap = {
+      ...this.defaultChannelPrefs,
+      ...(preferences?.channelPreferences ?? {}),
+    };
+
+    return channels.filter(channel => {
+      if (channel === 'IN_APP') return true;
+
+      if (!preferenceMap[channel]) return false;
+
+      switch (channel) {
+      case 'EMAIL':
+        return Boolean(recipient.email);
+      case 'SMS':
+        return Boolean(recipient.phone);
+      case 'WECHAT':
+        return Boolean(recipient.wechatOpenId);
+      case 'PUSH':
+        return Boolean(recipient.pushTokens?.length);
+      default:
+        return false;
+      }
+    });
+  }
+
+  private buildNotificationPayload(
+    memberId: string,
+    data: NotificationData,
+    channels: NotificationChannel[],
+  ): CreateNotificationDTO {
+    return {
+      memberId,
+      type: data.type as any,
+      title: data.title,
+      content: data.content,
+      priority: this.mapPriority(data.priority),
+      channels,
+      metadata: data.metadata,
+      actionUrl: data.actionUrl,
+      actionText: data.actionText,
+    };
+  }
+
+  private mapPriority(priority?: NotificationData['priority']): NotificationPriority {
+    switch (priority) {
+    case 'low':
+      return 'LOW';
+    case 'high':
+      return 'HIGH';
+    case 'urgent':
+      return 'URGENT';
+    default:
+      return 'MEDIUM';
+    }
+  }
+
+  private async safeUpdateStatus(notificationId: string, status: NotificationStatus): Promise<void> {
+    try {
+      await this.repository.updateStatus(notificationId, status);
+    } catch (error) {
+      console.error('[NotificationManager] failed to update status', error);
+    }
+  }
+
+  private async sendPush(recipient: NotificationRecipientDTO, data: NotificationData): Promise<string> {
+    if (!recipient.pushTokens?.length) {
+      throw new Error('User has no registered push token');
+    }
+
+    // TODO: integrate actual push provider
+    return `push_${Date.now()}`;
   }
 }
 
-// 创建单例实例
-export const notificationManager = new NotificationManager();
+// 注意：单例实例已弃用，请使用 ServiceContainer 或直接构造函数创建实例
 
-// 向后兼容的导出
-export const NotificationService = NotificationManager;
+// 向后兼容的导出已移除 - 请使用 service-container 获取实例
+// import { getDefaultContainer } from '@/lib/container/service-container';
+// const manager = getDefaultContainer().getNotificationManager();
+
+// 向后兼容的 NotificationService 别名已移除 - 会与 notification-service.ts 冲突
+// export const NotificationService = NotificationManager;

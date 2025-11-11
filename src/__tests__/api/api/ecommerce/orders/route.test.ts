@@ -6,6 +6,7 @@
 import { NextRequest } from 'next/server';
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { createMocks } from 'node-mocks-http';
+import { GET } from '@/app/api/ecommerce/orders/route';
 
 // Mock Next.js auth
 jest.mock('@/lib/auth', () => ({
@@ -26,8 +27,7 @@ describe('api_ecommerce_orders_route', () => {
 
   describe('GET', () => {
     it('should handle GET request', async () => {
-      // Import the route handler
-      const { GET } = require('@/app/api/ecommerce/orders/route');
+      // Route handler is imported at top of file
 
       // Setup mocks
       // TODO: Configure mocks based on actual API logic

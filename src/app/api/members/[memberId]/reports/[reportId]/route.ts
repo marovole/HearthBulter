@@ -1,47 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { fileStorageService } from '@/lib/services/file-storage-service';
 import type { IndicatorType, IndicatorStatus } from '@prisma/client';
 
 /**
  * 验证用户是否有权限访问成员的健康数据
+ *
+ * Migrated from Prisma to Supabase
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const supabase = SupabaseClientManager.getInstance();
+
+  const { data: member } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      userId,
+      familyId,
+      family:families!inner(
+        id,
+        creatorId
+      )
+    `)
+    .eq('id', memberId)
+    .is('deletedAt', null)
+    .single();
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isCreator = member.family?.creatorId === userId;
+
+  let isAdmin = false;
+  if (!isCreator) {
+    const { data: adminMember } = await supabase
+      .from('family_members')
+      .select('id, role')
+      .eq('familyId', member.familyId)
+      .eq('userId', userId)
+      .eq('role', 'ADMIN')
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    isAdmin = !!adminMember;
+  }
+
   const isSelf = member.userId === userId;
 
   return {
-    hasAccess: isAdmin || isSelf,
+    hasAccess: isCreator || isAdmin || isSelf,
   };
 }
 
 /**
  * GET /api/members/:memberId/reports/:reportId
  * 获取报告详情和指标数据
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(
   request: NextRequest,
@@ -65,22 +85,24 @@ export async function GET(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 查询报告详情
-    const report = await prisma.medicalReport.findFirst({
-      where: {
-        id: reportId,
-        memberId,
-        deletedAt: null,
-      },
-      include: {
-        indicators: {
-          orderBy: [
-            { indicatorType: 'asc' },
-            { createdAt: 'asc' },
-          ],
-        },
-      },
-    });
+    const { data: report, error: reportError } = await supabase
+      .from('medical_reports')
+      .select('*')
+      .eq('id', reportId)
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    if (reportError) {
+      console.error('查询报告失败:', reportError);
+      return NextResponse.json(
+        { error: '查询报告失败' },
+        { status: 500 }
+      );
+    }
 
     if (!report) {
       return NextResponse.json(
@@ -89,7 +111,27 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ data: report }, { status: 200 });
+    // 查询指标数据
+    const { data: indicators, error: indicatorsError } = await supabase
+      .from('medical_indicators')
+      .select('*')
+      .eq('reportId', reportId)
+      .order('indicatorType', { ascending: true })
+      .order('createdAt', { ascending: true });
+
+    if (indicatorsError) {
+      console.error('查询指标失败:', indicatorsError);
+    }
+
+    return NextResponse.json(
+      {
+        data: {
+          ...report,
+          indicators: indicators || [],
+        },
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('查询报告详情失败:', error);
     return NextResponse.json(
@@ -102,6 +144,8 @@ export async function GET(
 /**
  * PATCH /api/members/:memberId/reports/:reportId
  * 手动修正OCR识别结果
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function PATCH(
   request: NextRequest,
@@ -125,14 +169,24 @@ export async function PATCH(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 查询报告
-    const report = await prisma.medicalReport.findFirst({
-      where: {
-        id: reportId,
-        memberId,
-        deletedAt: null,
-      },
-    });
+    const { data: report, error: reportError } = await supabase
+      .from('medical_reports')
+      .select('id')
+      .eq('id', reportId)
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    if (reportError) {
+      console.error('查询报告失败:', reportError);
+      return NextResponse.json(
+        { error: '查询报告失败' },
+        { status: 500 }
+      );
+    }
 
     if (!report) {
       return NextResponse.json(
@@ -142,12 +196,15 @@ export async function PATCH(
     }
 
     const body = await request.json();
+    const now = new Date().toISOString();
 
     // 更新报告元数据
     const updateData: any = {};
 
     if (body.reportDate !== undefined) {
-      updateData.reportDate = body.reportDate ? new Date(body.reportDate) : null;
+      updateData.reportDate = body.reportDate
+        ? new Date(body.reportDate).toISOString()
+        : null;
     }
 
     if (body.institution !== undefined) {
@@ -160,7 +217,8 @@ export async function PATCH(
 
     if (Object.keys(updateData).length > 0) {
       updateData.isCorrected = true;
-      updateData.correctedAt = new Date();
+      updateData.correctedAt = now;
+      updateData.updatedAt = now;
     }
 
     // 更新指标
@@ -173,52 +231,85 @@ export async function PATCH(
         }
 
         // 查询原始指标
-        const indicator = await prisma.medicalIndicator.findFirst({
-          where: {
-            id,
-            reportId,
-          },
-        });
+        const { data: indicator, error: indicatorError } = await supabase
+          .from('medical_indicators')
+          .select('*')
+          .eq('id', id)
+          .eq('reportId', reportId)
+          .maybeSingle();
+
+        if (indicatorError) {
+          console.error('查询指标失败:', indicatorError);
+          continue;
+        }
 
         if (indicator) {
           // 更新指标
-          await prisma.medicalIndicator.update({
-            where: { id },
-            data: {
+          const { error: updateIndicatorError } = await supabase
+            .from('medical_indicators')
+            .update({
               value: value !== undefined ? value : indicator.value,
               unit: unit || indicator.unit,
-              referenceRange: referenceRange !== undefined ? referenceRange : indicator.referenceRange,
+              referenceRange:
+                referenceRange !== undefined
+                  ? referenceRange
+                  : indicator.referenceRange,
               status: (status as IndicatorStatus) || indicator.status,
               isAbnormal: status !== 'NORMAL',
               isCorrected: true,
               originalValue: indicator.originalValue || indicator.value,
-            },
-          });
+              updatedAt: now,
+            })
+            .eq('id', id);
+
+          if (updateIndicatorError) {
+            console.error('更新指标失败:', updateIndicatorError);
+          }
         }
       }
 
       updateData.isCorrected = true;
-      updateData.correctedAt = new Date();
+      updateData.correctedAt = now;
+      updateData.updatedAt = now;
     }
 
     // 更新报告
-    const updatedReport = await prisma.medicalReport.update({
-      where: { id: reportId },
-      data: updateData,
-      include: {
-        indicators: {
-          orderBy: [
-            { indicatorType: 'asc' },
-            { createdAt: 'asc' },
-          ],
-        },
-      },
-    });
+    if (Object.keys(updateData).length > 0) {
+      const { error: updateReportError } = await supabase
+        .from('medical_reports')
+        .update(updateData)
+        .eq('id', reportId);
+
+      if (updateReportError) {
+        console.error('更新报告失败:', updateReportError);
+        return NextResponse.json(
+          { error: '更新报告失败' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // 重新查询完整数据
+    const { data: updatedReport } = await supabase
+      .from('medical_reports')
+      .select('*')
+      .eq('id', reportId)
+      .single();
+
+    const { data: updatedIndicators } = await supabase
+      .from('medical_indicators')
+      .select('*')
+      .eq('reportId', reportId)
+      .order('indicatorType', { ascending: true })
+      .order('createdAt', { ascending: true });
 
     return NextResponse.json(
       {
         message: '报告修正成功',
-        data: updatedReport,
+        data: {
+          ...updatedReport,
+          indicators: updatedIndicators || [],
+        },
       },
       { status: 200 }
     );
@@ -237,6 +328,8 @@ export async function PATCH(
 /**
  * DELETE /api/members/:memberId/reports/:reportId
  * 删除报告（同时删除云存储文件）
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function DELETE(
   request: NextRequest,
@@ -260,14 +353,24 @@ export async function DELETE(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 查询报告
-    const report = await prisma.medicalReport.findFirst({
-      where: {
-        id: reportId,
-        memberId,
-        deletedAt: null,
-      },
-    });
+    const { data: report, error: reportError } = await supabase
+      .from('medical_reports')
+      .select('id, fileUrl')
+      .eq('id', reportId)
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    if (reportError) {
+      console.error('查询报告失败:', reportError);
+      return NextResponse.json(
+        { error: '查询报告失败' },
+        { status: 500 }
+      );
+    }
 
     if (!report) {
       return NextResponse.json(
@@ -286,18 +389,34 @@ export async function DELETE(
       console.warn('删除云存储文件失败（继续删除数据库记录）:', error);
     }
 
-    // 软删除报告（标记deletedAt）
-    await prisma.medicalReport.update({
-      where: { id: reportId },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
+    const now = new Date().toISOString();
 
-    // 删除关联的指标记录
-    await prisma.medicalIndicator.deleteMany({
-      where: { reportId },
-    });
+    // 软删除报告（标记deletedAt）
+    const { error: deleteReportError } = await supabase
+      .from('medical_reports')
+      .update({
+        deletedAt: now,
+        updatedAt: now,
+      })
+      .eq('id', reportId);
+
+    if (deleteReportError) {
+      console.error('软删除报告失败:', deleteReportError);
+      return NextResponse.json(
+        { error: '删除报告失败' },
+        { status: 500 }
+      );
+    }
+
+    // 删除关联的指标记录（硬删除）
+    const { error: deleteIndicatorsError } = await supabase
+      .from('medical_indicators')
+      .delete()
+      .eq('reportId', reportId);
+
+    if (deleteIndicatorsError) {
+      console.error('删除指标记录失败:', deleteIndicatorsError);
+    }
 
     return NextResponse.json(
       { message: '报告删除成功' },

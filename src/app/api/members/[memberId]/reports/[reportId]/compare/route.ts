@@ -1,46 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import type { IndicatorType } from '@prisma/client';
 
 /**
  * 验证用户是否有权限访问成员的健康数据
+ *
+ * Migrated from Prisma to Supabase
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
-      family: {
-        select: {
-          creatorId: true,
-          members: {
-            where: { userId, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
+  const supabase = SupabaseClientManager.getInstance();
+
+  const { data: member } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      userId,
+      familyId,
+      family:families!inner(
+        id,
+        creatorId
+      )
+    `)
+    .eq('id', memberId)
+    .is('deletedAt', null)
+    .single();
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const isCreator = member.family.creatorId === userId;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isCreator = member.family?.creatorId === userId;
+
+  let isAdmin = false;
+  if (!isCreator) {
+    const { data: adminMember } = await supabase
+      .from('family_members')
+      .select('id, role')
+      .eq('familyId', member.familyId)
+      .eq('userId', userId)
+      .eq('role', 'ADMIN')
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    isAdmin = !!adminMember;
+  }
+
   const isSelf = member.userId === userId;
 
   return {
-    hasAccess: isAdmin || isSelf,
+    hasAccess: isCreator || isAdmin || isSelf,
   };
 }
 
 /**
  * GET /api/members/:memberId/reports/:reportId/compare
  * 对比两次报告的数据变化趋势
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(
   request: NextRequest,
@@ -64,17 +84,24 @@ export async function GET(
       );
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 查询当前报告
-    const currentReport = await prisma.medicalReport.findFirst({
-      where: {
-        id: reportId,
-        memberId,
-        deletedAt: null,
-      },
-      include: {
-        indicators: true,
-      },
-    });
+    const { data: currentReport, error: currentError } = await supabase
+      .from('medical_reports')
+      .select('*')
+      .eq('id', reportId)
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    if (currentError) {
+      console.error('查询当前报告失败:', currentError);
+      return NextResponse.json(
+        { error: '查询报告失败' },
+        { status: 500 }
+      );
+    }
 
     if (!currentReport) {
       return NextResponse.json(
@@ -83,24 +110,30 @@ export async function GET(
       );
     }
 
+    // 查询当前报告的指标
+    const { data: currentIndicators } = await supabase
+      .from('medical_indicators')
+      .select('*')
+      .eq('reportId', reportId);
+
     // 查询该成员的其他报告（按日期排序，获取最近的一条）
-    const previousReport = await prisma.medicalReport.findFirst({
-      where: {
-        memberId,
-        deletedAt: null,
-        id: { not: reportId },
-        reportDate: currentReport.reportDate
-          ? { lt: currentReport.reportDate }
-          : undefined,
-      },
-      orderBy: {
-        reportDate: 'desc',
-        createdAt: 'desc',
-      },
-      include: {
-        indicators: true,
-      },
-    });
+    let previousQuery = supabase
+      .from('medical_reports')
+      .select('*')
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .neq('id', reportId);
+
+    if (currentReport.reportDate) {
+      previousQuery = previousQuery.lt('reportDate', currentReport.reportDate);
+    }
+
+    const { data: previousReports } = await previousQuery
+      .order('reportDate', { ascending: false, nullsFirst: false })
+      .order('createdAt', { ascending: false })
+      .limit(1);
+
+    const previousReport = previousReports?.[0];
 
     // 如果没有历史报告，返回当前报告数据
     if (!previousReport) {
@@ -109,10 +142,16 @@ export async function GET(
         current: {
           reportId: currentReport.id,
           reportDate: currentReport.reportDate,
-          indicators: currentReport.indicators,
+          indicators: currentIndicators || [],
         },
       });
     }
+
+    // 查询历史报告的指标
+    const { data: previousIndicators } = await supabase
+      .from('medical_indicators')
+      .select('*')
+      .eq('reportId', previousReport.id);
 
     // 构建指标对比数据
     const comparison: Array<{
@@ -130,11 +169,11 @@ export async function GET(
 
     // 按指标类型分组
     const previousIndicatorsMap = new Map(
-      previousReport.indicators.map((ind) => [ind.indicatorType, ind])
+      (previousIndicators || []).map((ind) => [ind.indicatorType, ind])
     );
 
     const currentIndicatorsMap = new Map(
-      currentReport.indicators.map((ind) => [ind.indicatorType, ind])
+      (currentIndicators || []).map((ind) => [ind.indicatorType, ind])
     );
 
     // 处理所有当前指标
