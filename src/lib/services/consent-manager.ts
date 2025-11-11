@@ -3,7 +3,7 @@
  * 处理AI分析、数据处理等操作的用户同意流程
  */
 
-import { prisma } from '@/lib/db';
+import { supabaseAdapter } from '@/lib/db/supabase-adapter';
 
 export interface ConsentType {
   id: string;
@@ -305,12 +305,10 @@ class ConsentManagerService {
    */
   private async getUserConsent(userId: string, consentId: string): Promise<UserConsent | null> {
     try {
-      const dbConsent = await prisma.userConsent.findUnique({
+      const dbConsent = await supabaseAdapter.userConsent.findUnique({
         where: {
-          userId_consentId: {
-            userId,
-            consentId,
-          },
+          userId,
+          consentId,
         },
       });
 
@@ -340,12 +338,10 @@ class ConsentManagerService {
    */
   private async saveUserConsent(consent: UserConsent): Promise<void> {
     try {
-      await prisma.userConsent.upsert({
+      await supabaseAdapter.userConsent.upsert({
         where: {
-          userId_consentId: {
-            userId: consent.userId,
-            consentId: consent.consentId,
-          },
+          userId: consent.userId,
+          consentId: consent.consentId,
         },
         update: {
           granted: consent.granted,
@@ -377,12 +373,10 @@ class ConsentManagerService {
    */
   private async deleteUserConsent(userId: string, consentId: string): Promise<void> {
     try {
-      await prisma.userConsent.delete({
+      await supabaseAdapter.userConsent.delete({
         where: {
-          userId_consentId: {
-            userId,
-            consentId,
-          },
+          userId,
+          consentId,
         },
       });
     } catch (error) {
