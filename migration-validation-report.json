@@ -1,0 +1,1928 @@
+{
+  "generatedAt": "2025-11-11T13:06:57.650Z",
+  "totalCommits": 20,
+  "totalEndpoints": 62,
+  "migrationSummary": {
+    "full": 0,
+    "partial": 0,
+    "none": 2,
+    "fake": 60
+  },
+  "riskSummary": {
+    "high": 60,
+    "medium": 0,
+    "low": 2
+  },
+  "endpoints": [
+    {
+      "filePath": "src/app/api/social/achievements/[id]/share/route.ts",
+      "route": "//api/social/achievements/[id]/share",
+      "httpMethods": [
+        "POST"
+      ],
+      "batchNumber": 14,
+      "commitHash": "7d2564d",
+      "commitMessage": "chore: Batch 14 Part 1 - 部分迁移 social 端点到 Supabase (2/5)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": false,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "NONE",
+      "riskLevel": "LOW",
+      "issues": [
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/social/achievements/route.ts",
+      "route": "//api/social/achievements",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 14,
+      "commitHash": "7d2564d",
+      "commitMessage": "chore: Batch 14 Part 1 - 部分迁移 social 端点到 Supabase (2/5)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": false,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "NONE",
+      "riskLevel": "LOW",
+      "issues": [
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/social/leaderboard/route.ts",
+      "route": "//api/social/leaderboard",
+      "httpMethods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "batchNumber": 14,
+      "commitHash": "7d2564d",
+      "commitMessage": "chore: Batch 14 Part 1 - 部分迁移 social 端点到 Supabase (2/5)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/social/share/[token]/route.ts",
+      "route": "//api/social/share/[token]",
+      "httpMethods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "batchNumber": 14,
+      "commitHash": "7d2564d",
+      "commitMessage": "chore: Batch 14 Part 1 - 部分迁移 social 端点到 Supabase (2/5)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/social/share/route.ts",
+      "route": "//api/social/share",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 14,
+      "commitHash": "7d2564d",
+      "commitMessage": "chore: Batch 14 Part 1 - 部分迁移 social 端点到 Supabase (2/5)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/analytics/anomalies/route.ts",
+      "route": "//api/analytics/anomalies",
+      "httpMethods": [
+        "GET",
+        "PATCH"
+      ],
+      "batchNumber": 13,
+      "commitHash": "fc99331",
+      "commitMessage": "chore: Batch 13 - 迁移 notifications stats + analytics 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/analytics/reports/[id]/route.ts",
+      "route": "//api/analytics/reports/[id]",
+      "httpMethods": [
+        "GET",
+        "DELETE"
+      ],
+      "batchNumber": 13,
+      "commitHash": "fc99331",
+      "commitMessage": "chore: Batch 13 - 迁移 notifications stats + analytics 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/analytics/reports/route.ts",
+      "route": "//api/analytics/reports",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 13,
+      "commitHash": "fc99331",
+      "commitMessage": "chore: Batch 13 - 迁移 notifications stats + analytics 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/notifications/stats/route.ts",
+      "route": "//api/notifications/stats",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 13,
+      "commitHash": "fc99331",
+      "commitMessage": "chore: Batch 13 - 迁移 notifications stats + analytics 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/cleanup/expired-invitations/route.ts",
+      "route": "//api/cleanup/expired-invitations",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 12,
+      "commitHash": "d336092",
+      "commitMessage": "chore: Batch 12 - 迁移 cleanup + monitoring + tracking 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/monitoring/route.ts",
+      "route": "//api/monitoring",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 12,
+      "commitHash": "d336092",
+      "commitMessage": "chore: Batch 12 - 迁移 cleanup + monitoring + tracking 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/tracking/reminders/route.ts",
+      "route": "//api/tracking/reminders",
+      "httpMethods": [
+        "GET",
+        "POST",
+        "PUT"
+      ],
+      "batchNumber": 12,
+      "commitHash": "d336092",
+      "commitMessage": "chore: Batch 12 - 迁移 cleanup + monitoring + tracking 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/recommendations/popular/route.ts",
+      "route": "//api/recommendations/popular",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 11,
+      "commitHash": "89205e6",
+      "commitMessage": "chore: Batch 11 - 迁移 recommendations 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/recommendations/refresh/route.ts",
+      "route": "//api/recommendations/refresh",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 11,
+      "commitHash": "89205e6",
+      "commitMessage": "chore: Batch 11 - 迁移 recommendations 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/recommendations/similar/route.ts",
+      "route": "//api/recommendations/similar",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 11,
+      "commitHash": "89205e6",
+      "commitMessage": "chore: Batch 11 - 迁移 recommendations 端点到 Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/recipes/favorites/route.ts",
+      "route": "//api/recipes/favorites",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 10,
+      "commitHash": "8ea2b5c",
+      "commitMessage": "feat(migration): Batch 10 - 迁移recipes相关端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/recipes/history/route.ts",
+      "route": "//api/recipes/history",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 10,
+      "commitHash": "8ea2b5c",
+      "commitMessage": "feat(migration): Batch 10 - 迁移recipes相关端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/recipes/substitute/route.ts",
+      "route": "//api/recipes/substitute",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 10,
+      "commitHash": "8ea2b5c",
+      "commitMessage": "feat(migration): Batch 10 - 迁移recipes相关端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/notifications/preferences/route.ts",
+      "route": "//api/notifications/preferences",
+      "httpMethods": [
+        "GET",
+        "PUT"
+      ],
+      "batchNumber": 9,
+      "commitHash": "36755e9",
+      "commitMessage": "feat(migration): Batch 9 - 迁移notifications偏好设置和模板端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/notifications/templates/route.ts",
+      "route": "//api/notifications/templates",
+      "httpMethods": [
+        "GET",
+        "POST",
+        "PUT"
+      ],
+      "batchNumber": 9,
+      "commitHash": "36755e9",
+      "commitMessage": "feat(migration): Batch 9 - 迁移notifications偏好设置和模板端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/devices/[id]/route.ts",
+      "route": "//api/devices/[id]",
+      "httpMethods": [
+        "GET",
+        "DELETE"
+      ],
+      "batchNumber": 8,
+      "commitHash": "f0f3c9c",
+      "commitMessage": "feat(migration): Batch 8 - 迁移devices相关端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/devices/route.ts",
+      "route": "//api/devices",
+      "httpMethods": [
+        "POST"
+      ],
+      "batchNumber": 8,
+      "commitHash": "f0f3c9c",
+      "commitMessage": "feat(migration): Batch 8 - 迁移devices相关端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/devices/sync/route.ts",
+      "route": "//api/devices/sync",
+      "httpMethods": [
+        "POST",
+        "PUT"
+      ],
+      "batchNumber": 8,
+      "commitHash": "f0f3c9c",
+      "commitMessage": "feat(migration): Batch 8 - 迁移devices相关端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/devices/sync/status/route.ts",
+      "route": "//api/devices/sync/status",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 8,
+      "commitHash": "f0f3c9c",
+      "commitMessage": "feat(migration): Batch 8 - 迁移devices相关端点到Supabase",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/foods/[id]/route.ts",
+      "route": "//api/foods/[id]",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 7,
+      "commitHash": "de16d68",
+      "commitMessage": "refactor: Batch 7 - 迁移foods相关端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/foods/search/route.ts",
+      "route": "//api/foods/search",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 7,
+      "commitHash": "de16d68",
+      "commitMessage": "refactor: Batch 7 - 迁移foods相关端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/reports/[reportId]/compare/route.ts",
+      "route": "//api/members/[memberId]/reports/[reportId]/compare",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 6,
+      "commitHash": "17f0cec",
+      "commitMessage": "refactor: Batch 6 Part 4 - 迁移reports相关端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/reports/[reportId]/route.ts",
+      "route": "//api/members/[memberId]/reports/[reportId]",
+      "httpMethods": [
+        "GET",
+        "DELETE",
+        "PATCH"
+      ],
+      "batchNumber": 6,
+      "commitHash": "17f0cec",
+      "commitMessage": "refactor: Batch 6 Part 4 - 迁移reports相关端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": true,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": true,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/reports/route.ts",
+      "route": "//api/members/[memberId]/reports",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 6,
+      "commitHash": "17f0cec",
+      "commitMessage": "refactor: Batch 6 Part 4 - 迁移reports相关端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/notifications/stats/route.ts",
+      "route": "//api/notifications/stats",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 6,
+      "commitHash": "17f0cec",
+      "commitMessage": "refactor: Batch 6 Part 4 - 迁移reports相关端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/health-data/trends/route.ts",
+      "route": "//api/members/[memberId]/health-data/trends",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 6,
+      "commitHash": "fe0705a",
+      "commitMessage": "refactor: Batch 6 Part 3 - 迁移成员初始化和趋势分析端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/initialize/route.ts",
+      "route": "//api/members/[memberId]/initialize",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 6,
+      "commitHash": "fe0705a",
+      "commitMessage": "refactor: Batch 6 Part 3 - 迁移成员初始化和趋势分析端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/allergies/[allergyId]/route.ts",
+      "route": "//api/members/[memberId]/allergies/[allergyId]",
+      "httpMethods": [
+        "GET",
+        "DELETE",
+        "PATCH"
+      ],
+      "batchNumber": 6,
+      "commitHash": "1c8af4f",
+      "commitMessage": "refactor: Batch 6 Part 2 - 迁移成员管理扩展端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/goals/[goalId]/route.ts",
+      "route": "//api/members/[memberId]/goals/[goalId]",
+      "httpMethods": [
+        "GET",
+        "DELETE",
+        "PATCH"
+      ],
+      "batchNumber": 6,
+      "commitHash": "1c8af4f",
+      "commitMessage": "refactor: Batch 6 Part 2 - 迁移成员管理扩展端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/health-reminders/route.ts",
+      "route": "//api/members/[memberId]/health-reminders",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 6,
+      "commitHash": "1c8af4f",
+      "commitMessage": "refactor: Batch 6 Part 2 - 迁移成员管理扩展端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/meal-plans/route.ts",
+      "route": "//api/members/[memberId]/meal-plans",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 6,
+      "commitHash": "1c8af4f",
+      "commitMessage": "refactor: Batch 6 Part 2 - 迁移成员管理扩展端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/allergies/route.ts",
+      "route": "//api/members/[memberId]/allergies",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 6,
+      "commitHash": "8904920",
+      "commitMessage": "refactor: Batch 6 Part 1 - 迁移成员管理核心端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/goals/route.ts",
+      "route": "//api/members/[memberId]/goals",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 6,
+      "commitHash": "8904920",
+      "commitMessage": "refactor: Batch 6 Part 1 - 迁移成员管理核心端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/health-data/[dataId]/route.ts",
+      "route": "//api/members/[memberId]/health-data/[dataId]",
+      "httpMethods": [
+        "DELETE"
+      ],
+      "batchNumber": 6,
+      "commitHash": "8904920",
+      "commitMessage": "refactor: Batch 6 Part 1 - 迁移成员管理核心端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/members/[memberId]/health-data/route.ts",
+      "route": "//api/members/[memberId]/health-data",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 6,
+      "commitHash": "8904920",
+      "commitMessage": "refactor: Batch 6 Part 1 - 迁移成员管理核心端点 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/ai/analyze-health/route.ts",
+      "route": "//api/ai/analyze-health",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 5,
+      "commitHash": "530b70f",
+      "commitMessage": "feat: 完成 Batch 5 Part 2 - 复杂 AI & 设备端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/ai/chat/route.ts",
+      "route": "//api/ai/chat",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 5,
+      "commitHash": "530b70f",
+      "commitMessage": "feat: 完成 Batch 5 Part 2 - 复杂 AI & 设备端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/devices/sync/all/route.ts",
+      "route": "//api/devices/sync/all",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 5,
+      "commitHash": "530b70f",
+      "commitMessage": "feat: 完成 Batch 5 Part 2 - 复杂 AI & 设备端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/ai/advice-history/route.ts",
+      "route": "//api/ai/advice-history",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 5,
+      "commitHash": "1df6397",
+      "commitMessage": "feat: 完成 Batch 5 Part 1 - AI & 社交端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/ai/feedback/route.ts",
+      "route": "//api/ai/feedback",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 5,
+      "commitHash": "1df6397",
+      "commitMessage": "feat: 完成 Batch 5 Part 1 - AI & 社交端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/social/stats/route.ts",
+      "route": "//api/social/stats",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 5,
+      "commitHash": "1df6397",
+      "commitMessage": "feat: 完成 Batch 5 Part 1 - AI & 社交端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/inventory/notifications/route.ts",
+      "route": "//api/inventory/notifications",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 4,
+      "commitHash": "d2999a1",
+      "commitMessage": "feat: 完成 Batch 4 Part 2 - 通知与邀请端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/invite/[code]/route.ts",
+      "route": "//api/invite/[code]",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 4,
+      "commitHash": "d2999a1",
+      "commitMessage": "feat: 完成 Batch 4 Part 2 - 通知与邀请端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/notifications/batch/route.ts",
+      "route": "//api/notifications/batch",
+      "httpMethods": [
+        "POST"
+      ],
+      "batchNumber": 4,
+      "commitHash": "d2999a1",
+      "commitMessage": "feat: 完成 Batch 4 Part 2 - 通知与邀请端点迁移 (Prisma → Supabase)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/budget/current/route.ts",
+      "route": "//api/budget/current",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 4,
+      "commitHash": "bc1f8ed",
+      "commitMessage": "feat: 迁移预算管理端点从 Prisma 到 Supabase (Batch 4 Part 1)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/budget/record-spending/route.ts",
+      "route": "//api/budget/record-spending",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 4,
+      "commitHash": "bc1f8ed",
+      "commitMessage": "feat: 迁移预算管理端点从 Prisma 到 Supabase (Batch 4 Part 1)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/budget/set/route.ts",
+      "route": "//api/budget/set",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 4,
+      "commitHash": "bc1f8ed",
+      "commitMessage": "feat: 迁移预算管理端点从 Prisma 到 Supabase (Batch 4 Part 1)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/budget/spending-history/route.ts",
+      "route": "//api/budget/spending-history",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 4,
+      "commitHash": "bc1f8ed",
+      "commitMessage": "feat: 迁移预算管理端点从 Prisma 到 Supabase (Batch 4 Part 1)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/shopping-lists/[id]/complete/route.ts",
+      "route": "//api/shopping-lists/[id]/complete",
+      "httpMethods": [
+        "PATCH"
+      ],
+      "batchNumber": 3,
+      "commitHash": "aa9fed8",
+      "commitMessage": "feat: 迁移购物清单子端点从 Prisma 到 Supabase (Batch 3 Part 4)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/shopping-lists/[id]/items/[itemId]/route.ts",
+      "route": "//api/shopping-lists/[id]/items/[itemId]",
+      "httpMethods": [
+        "PATCH"
+      ],
+      "batchNumber": 3,
+      "commitHash": "aa9fed8",
+      "commitMessage": "feat: 迁移购物清单子端点从 Prisma 到 Supabase (Batch 3 Part 4)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/shopping-lists/[id]/share/route.ts",
+      "route": "//api/shopping-lists/[id]/share",
+      "httpMethods": [
+        "POST"
+      ],
+      "batchNumber": 3,
+      "commitHash": "aa9fed8",
+      "commitMessage": "feat: 迁移购物清单子端点从 Prisma 到 Supabase (Batch 3 Part 4)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/shopping-lists/[id]/route.ts",
+      "route": "//api/shopping-lists/[id]",
+      "httpMethods": [
+        "DELETE",
+        "PATCH"
+      ],
+      "batchNumber": 3,
+      "commitHash": "158d7b9",
+      "commitMessage": "feat: 迁移购物清单端点从 Prisma 到 Supabase (Batch 3 Part 3)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/shopping-lists/route.ts",
+      "route": "//api/shopping-lists",
+      "httpMethods": [
+        "GET"
+      ],
+      "batchNumber": 3,
+      "commitHash": "158d7b9",
+      "commitMessage": "feat: 迁移购物清单端点从 Prisma 到 Supabase (Batch 3 Part 3)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/families/[familyId]/members/route.ts",
+      "route": "//api/families/[familyId]/members",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 3,
+      "commitHash": "b10e6bc",
+      "commitMessage": "feat: 迁移家庭管理端点从 Prisma 到 Supabase (Batch 3 Part 2)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/families/route.ts",
+      "route": "//api/families",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 3,
+      "commitHash": "b10e6bc",
+      "commitMessage": "feat: 迁移家庭管理端点从 Prisma 到 Supabase (Batch 3 Part 2)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/inventory/items/[id]/route.ts",
+      "route": "//api/inventory/items/[id]",
+      "httpMethods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "batchNumber": 3,
+      "commitHash": "3272573",
+      "commitMessage": "feat: 迁移库存管理端点从 Prisma 到 Supabase (Batch 3 Part 1)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    },
+    {
+      "filePath": "src/app/api/inventory/items/route.ts",
+      "route": "//api/inventory/items",
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "batchNumber": 3,
+      "commitHash": "3272573",
+      "commitMessage": "feat: 迁移库存管理端点从 Prisma 到 Supabase (Batch 3 Part 1)",
+      "usesSupabase": false,
+      "usesPrismaDirectly": false,
+      "usesPrismaFromAdapter": false,
+      "hasMigrationComment": true,
+      "imports": {
+        "supabase": true,
+        "prismaClient": false,
+        "prismaAdapter": true
+      },
+      "calls": {
+        "supabaseQueries": 0,
+        "prismaQueries": 0
+      },
+      "migrationStatus": "FAKE",
+      "riskLevel": "HIGH",
+      "issues": [
+        "[CRITICAL] 标记为已迁移但实际上未迁移（假迁移）",
+        "无数据库查询（可能是代理或转发端点）"
+      ],
+      "codeSamples": {}
+    }
+  ],
+  "recommendations": [
+    "[URGENT] 发现 60 个假迁移端点，需要立即重新迁移。",
+    "[INFO] 有 2 个端点未迁移，符合预期（不在迁移计划中）。",
+    "建议为所有HIGH风险端点实施双写策略，防止数据丢失。"
+  ]
+}
