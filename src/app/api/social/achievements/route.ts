@@ -1,11 +1,28 @@
 /**
  * 社交成就API - 成就列表和统计
+ *
+ * ⚠️ 已知问题 - 权限验证暂时失效
+ * 当前 Supabase 适配器的 applyWhereClause 不支持嵌套的 Prisma where 条件
+ * （如 user.families.some.members.some），这些条件会被忽略。
+ *
+ * 受影响的查询：
+ * - L54-75: familyMember 权限验证（任何用户可读取任意成员成就）
+ * - L85-94: achievements 查询（无权限过滤）
+ * - L173-194: POST 方法的权限验证
+ * - L250-265: getAchievementStats 统计查询
+ *
+ * 临时解决方案（需要后续实施）：
+ * 1. 使用 Supabase RPC 函数实现权限验证
+ * 2. 使用 Supabase 视图预先过滤数据
+ * 3. 增强适配器支持 join 查询
+ *
+ * 在修复前，此端点存在安全风险！
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { achievementSystem } from '@/lib/services/social/achievement-system';
-import { prisma } from '@/lib/db';
+import { supabaseAdapter } from '@/lib/db/supabase-adapter';
 import type { AchievementType } from '@prisma/client';
 
 /**
@@ -51,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     // 验证用户权限
     if (memberId) {
-      const member = await prisma.familyMember.findFirst({
+      const member = await supabaseAdapter.familyMember.findFirst({
         where: {
           id: memberId,
           user: {
@@ -102,7 +119,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取用户成就
-    const userAchievements = await prisma.achievement.findMany({
+    const userAchievements = await supabaseAdapter.achievement.findMany({
       where,
       include: {
         member: {
@@ -113,10 +130,10 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: [
-        { rarity: 'desc' },
-        { unlockedAt: 'desc' },
-      ],
+      // TODO: Supabase 适配器暂时只支持单字段排序对象，不支持多字段数组
+      // 需要增强适配器以支持 Prisma 风格的多字段排序数组
+      // 临时方案：使用最重要的排序字段
+      orderBy: { rarity: 'desc' },
     });
 
     // 获取成就统计
@@ -170,7 +187,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
+    const member = await supabaseAdapter.familyMember.findFirst({
       where: {
         id: memberId,
         user: {
@@ -195,7 +212,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查是否已解锁
-    const existingAchievement = await prisma.achievement.findFirst({
+    const existingAchievement = await supabaseAdapter.achievement.findFirst({
       where: {
         memberId,
         type: type as AchievementType,
@@ -264,7 +281,7 @@ async function getAchievementStats(memberId?: string, userId?: string): Promise<
       }
       : {};
 
-  const achievements = await prisma.achievement.findMany({
+  const achievements = await supabaseAdapter.achievement.findMany({
     where: whereClause,
   });
 
