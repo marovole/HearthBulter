@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma, testDatabaseConnection } from '@/lib/db';
+import { testDatabaseConnection } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { usdaService } from '@/lib/services/usda-service';
 import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from '@/lib/cache/redis-client';
 import type { FoodCategory } from '@prisma/client';
@@ -7,6 +8,9 @@ import type { FoodCategory } from '@prisma/client';
 /**
  * GET /api/foods/search?q=鸡胸肉
  * 搜索食物（支持中英文）
+ *
+ * Migrated from Prisma to Supabase
+ * Note: CacheService and usdaService still use external services
  */
 export async function GET(request: NextRequest) {
   const apiStartTime = Date.now(); // 记录 API 开始时间
@@ -48,6 +52,7 @@ export async function GET(request: NextRequest) {
     let localFoods: any[] = [];
     let totalCount = 0;
     let dbError = null;
+    let dbDuration = 0;
 
     try {
       // 测试数据库连接
@@ -56,60 +61,63 @@ export async function GET(request: NextRequest) {
         throw new Error('数据库连接失败');
       }
 
-      const where: any = {
-        OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { nameEn: { contains: query, mode: 'insensitive' } },
-        ],
-      };
+      const supabase = SupabaseClientManager.getInstance();
 
+      // 构建OR查询: name.ilike.%value% OR nameEn.ilike.%value%
+      const ilikeValue = `%${query}%`;
+      const selection = `
+        id,
+        name,
+        nameEn,
+        aliases,
+        calories,
+        protein,
+        carbs,
+        fat,
+        fiber,
+        sugar,
+        sodium,
+        vitaminA,
+        vitaminC,
+        calcium,
+        iron,
+        category,
+        tags,
+        source,
+        usdaId,
+        verified,
+        createdAt,
+        updatedAt
+      `;
+
+      // 构建查询
+      let dbQuery = supabase
+        .from('foods')
+        .select(selection, { count: 'exact' })
+        .or(`name.ilike.${ilikeValue},nameEn.ilike.${ilikeValue}`)
+        .order('name', { ascending: true })
+        .range((page - 1) * limit, page * limit - 1);
+
+      // 添加category过滤
       if (category) {
-        where.category = category;
+        dbQuery = dbQuery.eq('category', category);
       }
 
-      const [foods, count] = await Promise.all([
-        prisma.food.findMany({
-          where,
-          take: limit,
-          skip: (page - 1) * limit,
-          orderBy: { name: 'asc' },
-          // 只选择需要的字段，减少数据传输
-          select: {
-            id: true,
-            name: true,
-            nameEn: true,
-            aliases: true,
-            calories: true,
-            protein: true,
-            carbs: true,
-            fat: true,
-            fiber: true,
-            sugar: true,
-            sodium: true,
-            vitaminA: true,
-            vitaminC: true,
-            calcium: true,
-            iron: true,
-            category: true,
-            tags: true,
-            source: true,
-            usdaId: true,
-            verified: true,
-            createdAt: true,
-            updatedAt: true,
-          },
-        }),
-        prisma.food.count({ where }),
-      ]);
+      const { data: foods, error: foodsError, count } = await dbQuery;
 
-      localFoods = foods;
-      totalCount = count;
+      if (foodsError) {
+        console.error('数据库查询失败:', foodsError);
+        throw foodsError;
+      }
 
-      const dbDuration = Date.now() - dbStartTime;
+      localFoods = foods || [];
+      totalCount = count ?? 0;
+
+      dbDuration = Date.now() - dbStartTime;
       console.log(`📊 数据库查询 - ${dbDuration}ms - 找到 ${localFoods.length} 条本地结果`);
     } catch (error) {
       dbError = error instanceof Error ? error.message : String(error);
-      const dbDuration = Date.now() - dbStartTime;
+      dbDuration = Date.now() - dbStartTime;
       console.error(`❌ 数据库查询失败 - ${dbDuration}ms:`, dbError);
 
       // 数据库连接失败时，尝试提供静态的降级结果
@@ -161,41 +169,59 @@ export async function GET(request: NextRequest) {
       setImmediate(() => {
         Promise.all(
           usdaResults.map(async (foodData) => {
-            try {
-              // 检查是否已存在（优化：只查询 usdaId 字段）
-              const existing = await prisma.food.findFirst({
-                where: { usdaId: foodData.usdaId },
-                select: { id: true },
-              });
+            if (!foodData.usdaId) {
+              return;
+            }
 
-              if (!existing && foodData.usdaId) {
-                await prisma.food.create({
-                  data: {
-                    name: foodData.name,
-                    nameEn: foodData.nameEn,
-                    aliases: JSON.stringify(foodData.aliases),
-                    calories: foodData.calories,
-                    protein: foodData.protein,
-                    carbs: foodData.carbs,
-                    fat: foodData.fat,
-                    fiber: foodData.fiber,
-                    sugar: foodData.sugar,
-                    sodium: foodData.sodium,
-                    vitaminA: foodData.vitaminA,
-                    vitaminC: foodData.vitaminC,
-                    calcium: foodData.calcium,
-                    iron: foodData.iron,
-                    category: foodData.category as FoodCategory,
-                    tags: JSON.stringify(foodData.tags),
-                    source: foodData.source,
-                    usdaId: foodData.usdaId,
-                    verified: foodData.verified,
-                    cachedAt: new Date(),
-                  },
+            try {
+              const backgroundSupabase = SupabaseClientManager.getInstance();
+
+              // 检查是否已存在
+              const { data: existing, error: existingError } = await backgroundSupabase
+                .from('foods')
+                .select('id')
+                .eq('usdaId', foodData.usdaId)
+                .maybeSingle();
+
+              if (existingError) {
+                console.error('检查USDA数据存在性失败:', existingError);
+                return;
+              }
+
+              if (existing) {
+                return; // 已存在，跳过
+              }
+
+              // 插入新数据
+              const { error: insertError } = await backgroundSupabase
+                .from('foods')
+                .insert({
+                  name: foodData.name,
+                  nameEn: foodData.nameEn,
+                  aliases: JSON.stringify(foodData.aliases),
+                  calories: foodData.calories,
+                  protein: foodData.protein,
+                  carbs: foodData.carbs,
+                  fat: foodData.fat,
+                  fiber: foodData.fiber,
+                  sugar: foodData.sugar,
+                  sodium: foodData.sodium,
+                  vitaminA: foodData.vitaminA,
+                  vitaminC: foodData.vitaminC,
+                  calcium: foodData.calcium,
+                  iron: foodData.iron,
+                  category: foodData.category as FoodCategory,
+                  tags: JSON.stringify(foodData.tags),
+                  source: foodData.source,
+                  usdaId: foodData.usdaId,
+                  verified: foodData.verified,
+                  cachedAt: new Date().toISOString(),
                 });
+
+              if (insertError) {
+                console.error('保存USDA数据失败:', insertError);
               }
             } catch (error) {
-              // 忽略重复键错误等
               console.error('保存USDA数据失败:', error);
             }
           })

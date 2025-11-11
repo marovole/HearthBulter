@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { usdaService } from '@/lib/services/usda-service';
 import { foodCacheService } from '@/lib/services/cache-service';
 
 /**
  * GET /api/foods/:id
  * 获取食物详情
+ *
+ * Migrated from Prisma to Supabase
+ * Note: foodCacheService and usdaService still use external services
  */
 export async function GET(
   request: NextRequest,
@@ -20,10 +23,22 @@ export async function GET(
       return NextResponse.json(parseFoodResponse(cachedFood), { status: 200 });
     }
 
+    const supabase = SupabaseClientManager.getInstance();
+
     // 2. 从数据库查找
-    const food = await prisma.food.findUnique({
-      where: { id },
-    });
+    const { data: food, error } = await supabase
+      .from('foods')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('查询食物失败:', error);
+      return NextResponse.json(
+        { error: '查询食物失败' },
+        { status: 500 }
+      );
+    }
 
     if (food) {
       // 缓存食物数据
@@ -39,8 +54,9 @@ export async function GET(
         );
 
         // 保存到数据库
-        const savedFood = await prisma.food.create({
-          data: {
+        const { data: savedFood, error: insertError } = await supabase
+          .from('foods')
+          .insert({
             name: usdaFood.name,
             nameEn: usdaFood.nameEn,
             aliases: JSON.stringify(usdaFood.aliases),
@@ -60,9 +76,15 @@ export async function GET(
             source: usdaFood.source,
             usdaId: usdaFood.usdaId,
             verified: usdaFood.verified,
-            cachedAt: new Date(),
-          },
-        });
+            cachedAt: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (insertError || !savedFood) {
+          console.error('保存USDA食物失败:', insertError);
+          throw insertError ?? new Error('保存USDA食物失败');
+        }
 
         // 缓存新保存的食物
         await foodCacheService.setFood(savedFood);
