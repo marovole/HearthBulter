@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { RecommendationContext, RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
+
+/**
+ * GET /api/recommendations/refresh - 刷新推荐列表
+ *
+ * Migrated from Prisma to Supabase (partial - RecommendationEngine still uses Prisma)
+ */
 
 const recommendationEngine = new RecommendationEngine(prisma);
 
@@ -74,37 +81,121 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const recipes = await prisma.recipe.findMany({
-      where: {
-        id: { in: recipeIds },
-        status: 'PUBLISHED',
-        isPublic: true,
-        deletedAt: null,
-      },
-      include: {
-        ingredients: {
-          include: { food: true },
+    // 获取食谱详细信息（使用Supabase）
+    const supabase = SupabaseClientManager.getInstance();
+
+    const { data: recipes, error: recipesError } = await supabase
+      .from('recipes')
+      .select(`
+        id,
+        name,
+        description,
+        servings,
+        prepTime,
+        cookTime,
+        difficulty,
+        cuisine,
+        category,
+        tags,
+        imageUrl,
+        status,
+        isPublic,
+        averageRating,
+        ratingCount,
+        viewCount,
+        createdAt,
+        updatedAt
+      `)
+      .in('id', recipeIds)
+      .eq('status', 'PUBLISHED')
+      .eq('isPublic', true)
+      .is('deletedAt', null);
+
+    if (recipesError) {
+      console.error('查询食谱失败:', recipesError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to fetch recipe details',
         },
-        instructions: true,
-        nutrition: true,
-      },
+        { status: 500 }
+      );
+    }
+
+    // 查询相关的ingredients, instructions和nutrition
+    const { data: ingredients } = await supabase
+      .from('recipe_ingredients')
+      .select(`
+        id,
+        recipeId,
+        amount,
+        unit,
+        notes,
+        food:foods!inner(
+          id,
+          name,
+          nameEn,
+          calories,
+          protein,
+          carbs,
+          fat,
+          category
+        )
+      `)
+      .in('recipeId', recipeIds);
+
+    const { data: instructions } = await supabase
+      .from('recipe_instructions')
+      .select('*')
+      .in('recipeId', recipeIds)
+      .order('stepNumber', { ascending: true });
+
+    const { data: nutrition } = await supabase
+      .from('recipe_nutrition')
+      .select('*')
+      .in('recipeId', recipeIds);
+
+    // 手动组装数据
+    const ingredientsMap = new Map<string, any[]>();
+    ingredients?.forEach((ing: any) => {
+      if (!ingredientsMap.has(ing.recipeId)) {
+        ingredientsMap.set(ing.recipeId, []);
+      }
+      ingredientsMap.get(ing.recipeId)!.push(ing);
     });
 
-    type RecipeWithRelations = Awaited<ReturnType<typeof prisma.recipe.findMany>>[number];
-    const recipeMap = new Map<string, RecipeWithRelations>();
-    for (const recipe of recipes) {
+    const instructionsMap = new Map<string, any[]>();
+    instructions?.forEach((inst: any) => {
+      if (!instructionsMap.has(inst.recipeId)) {
+        instructionsMap.set(inst.recipeId, []);
+      }
+      instructionsMap.get(inst.recipeId)!.push(inst);
+    });
+
+    const nutritionMap = new Map<string, any>();
+    nutrition?.forEach((nutr: any) => {
+      nutritionMap.set(nutr.recipeId, nutr);
+    });
+
+    const enrichedRecipes = (recipes || []).map((recipe: any) => ({
+      ...recipe,
+      ingredients: ingredientsMap.get(recipe.id) || [],
+      instructions: instructionsMap.get(recipe.id) || [],
+      nutrition: nutritionMap.get(recipe.id) || null,
+    }));
+
+    const recipeMap = new Map<string, any>();
+    for (const recipe of enrichedRecipes) {
       recipeMap.set(recipe.id, recipe);
     }
 
-    const enriched = recommendations.reduce<
-      Array<(typeof recommendations)[number] & { recipe: RecipeWithRelations }>
-        >((acc, rec) => {
-          const recipe = recipeMap.get(rec.recipeId);
-          if (recipe) {
-            acc.push({ ...rec, recipe });
-          }
-          return acc;
-        }, []);
+    const enriched = recommendations.reduce<any[]>((acc, rec) => {
+      const recipe = recipeMap.get(rec.recipeId);
+      if (recipe) {
+        acc.push({ ...rec, recipe });
+      }
+      return acc;
+    }, []);
 
     return NextResponse.json({
       success: true,
