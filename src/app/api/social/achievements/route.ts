@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { achievementSystem } from '@/lib/services/social/achievement-system';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/db/supabase-adapter';
 import type { AchievementType } from '@prisma/client';
 
 /**
