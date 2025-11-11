@@ -103,27 +103,175 @@ function keysToSnakeCase(obj: any): any {
   return obj;
 }
 
-// 查询构建器 - 处理 include/select
-function buildSelectQuery(include?: any, select?: any): string {
+/**
+ * 查询构建器 - 处理 include/select（支持嵌套关系）
+ *
+ * 支持 Prisma 风格的嵌套 include:
+ * include: { ingredients: { include: { food: true } } }
+ * 生成: *,ingredients(food(*))
+ *
+ * @param include - Prisma 风格的 include 对象
+ * @param select - Prisma 风格的 select 对象
+ * @param includeBaseFields - 是否包含基础字段 (*)
+ * @returns Supabase 查询字符串
+ */
+function buildSelectQuery(
+  include?: Record<string, any>,
+  select?: Record<string, any>,
+  includeBaseFields = true
+): string {
+  // 处理 select 优先
   if (select) {
-    return Object.keys(select)
-      .filter(key => select[key])
-      .map(toSnakeCase)
-      .join(',');
+    return buildSelectFromSelect(select);
   }
-  
+
+  const fragments: string[] = [];
+
+  // 添加基础字段
+  if (includeBaseFields) {
+    fragments.push('*');
+  }
+
+  // 处理 include 关系
   if (include) {
-    const baseFields = '*';
-    const relations = Object.keys(include)
-      .filter(key => include[key])
-      .map(key => `${toSnakeCase(key)}(*)`);
-    
-    return relations.length > 0 
-      ? `${baseFields},${relations.join(',')}`
-      : baseFields;
+    Object.entries(include)
+      .filter(([, value]) => Boolean(value))
+      .forEach(([relation, value]) => {
+        fragments.push(buildRelationFragment(relation, value));
+      });
   }
-  
-  return '*';
+
+  return fragments.length ? fragments.join(',') : '*';
+}
+
+/**
+ * 从 select 对象构建查询字符串
+ */
+function buildSelectFromSelect(select: Record<string, any>): string {
+  const fragments: string[] = [];
+
+  Object.entries(select)
+    .filter(([, value]) => Boolean(value))
+    .forEach(([field, value]) => {
+      if (value === true) {
+        // 简单字段选择
+        fragments.push(toSnakeCase(field));
+        return;
+      }
+
+      // 嵌套关系选择
+      fragments.push(buildRelationFragment(field, value));
+    });
+
+  return fragments.length ? fragments.join(',') : '*';
+}
+
+/**
+ * 构建单个关系的片段（递归处理嵌套）
+ *
+ * @param key - 关系名称
+ * @param value - 关系配置 (true | { include } | { select })
+ * @returns 关系查询片段，如: ingredients(food(*))
+ */
+function buildRelationFragment(key: string, value: any): string {
+  const relation = toSnakeCase(key);
+
+  // 简单的 true 值
+  if (value === true) {
+    return `${relation}(*)`;
+  }
+
+  let nestedInclude: Record<string, any> | undefined;
+  let nestedSelect: Record<string, any> | undefined;
+  let includeBaseFields = true;
+
+  // 解析嵌套配置
+  if (typeof value === 'object' && value !== null) {
+    if ('include' in value || 'select' in value) {
+      nestedInclude = value.include;
+      nestedSelect = value.select;
+    } else {
+      // 对象直接作为 select
+      nestedSelect = value;
+    }
+
+    // 如果有显式 select，不包含默认的 *
+    if (nestedSelect) {
+      includeBaseFields = false;
+    }
+  }
+
+  // 递归构建嵌套查询
+  const nestedQuery = buildSelectQuery(nestedInclude, nestedSelect, includeBaseFields);
+  return `${relation}(${nestedQuery})`;
+}
+
+/**
+ * 构建 JSON path 选择器
+ *
+ * 例如: buildJsonPathSelector('metadata', ['season', 'type'])
+ * 返回: metadata->'season'->>'type'
+ *
+ * @param column - 基础列名
+ * @param path - JSON 路径数组
+ * @returns PostgREST JSON 路径选择器
+ */
+function buildJsonPathSelector(column: string, path: string[]): string {
+  if (!path || path.length === 0) return column;
+
+  // 转义单引号
+  const normalized = path.map(segment => segment.replace(/'/g, "''"));
+  const last = normalized.pop()!;
+
+  // 中间路径使用 ->，最后一个使用 ->>（返回文本）
+  const intermediate = normalized.map(segment => `->'${segment}'`).join('');
+
+  return `${column}${intermediate}->>'${last}'`;
+}
+
+/**
+ * 应用 JSON path 过滤器
+ *
+ * 支持的操作符: equals, not, in, notIn, lt, lte, gt, gte, contains, startsWith, endsWith
+ */
+function applyJsonPathFilters(query: any, column: string, value: any) {
+  const { path, ...operators } = value ?? {};
+
+  if ('equals' in operators) {
+    query = query.eq(column, operators.equals);
+  }
+  if ('not' in operators) {
+    query = query.neq(column, operators.not);
+  }
+  if ('in' in operators) {
+    query = query.in(column, operators.in);
+  }
+  if ('notIn' in operators) {
+    query = query.not(column, 'in', operators.notIn);
+  }
+  if ('lt' in operators) {
+    query = query.lt(column, operators.lt);
+  }
+  if ('lte' in operators) {
+    query = query.lte(column, operators.lte);
+  }
+  if ('gt' in operators) {
+    query = query.gt(column, operators.gt);
+  }
+  if ('gte' in operators) {
+    query = query.gte(column, operators.gte);
+  }
+  if ('contains' in operators) {
+    query = query.ilike(column, `%${operators.contains}%`);
+  }
+  if ('startsWith' in operators) {
+    query = query.ilike(column, `${operators.startsWith}%`);
+  }
+  if ('endsWith' in operators) {
+    query = query.ilike(column, `%${operators.endsWith}`);
+  }
+
+  return query;
 }
 
 // where 条件构建器
@@ -136,6 +284,19 @@ function applyWhereClause(query: any, where: any, tableName: string) {
     if (value === null) {
       query = query.is(snakeKey, null);
     } else if (typeof value === 'object' && !Array.isArray(value)) {
+      // 检查是否为 JSON path 查询
+      const hasJsonPath = Array.isArray((value as any).path) && (value as any).path.length > 0;
+
+      if (hasJsonPath) {
+        // 使用 JSON path 过滤器
+        query = applyJsonPathFilters(
+          query,
+          buildJsonPathSelector(snakeKey, (value as any).path),
+          value
+        );
+        return;
+      }
+
       // 处理复杂查询条件
       if ('equals' in value) {
         query = query.eq(snakeKey, value.equals);
@@ -220,12 +381,25 @@ class ModelAdapter<T = any> {
       query = applyWhereClause(query, args.where, this.tableName);
     }
     
+    // 支持 Prisma 风格的 orderBy 数组和对象格式
+    // orderBy: [{ field1: 'desc' }, { field2: 'asc' }] 或 orderBy: { field: 'desc' }
     if (args?.orderBy) {
-      Object.entries(args.orderBy).forEach(([key, direction]) => {
-        query = query.order(toSnakeCase(key), { 
-          ascending: direction === 'asc', 
+      const orderings = Array.isArray(args.orderBy)
+        ? args.orderBy
+        : [args.orderBy];
+
+      orderings
+        .filter(Boolean)
+        .forEach((clause) => {
+          const entries = Object.entries(clause);
+          if (!entries.length) return;
+
+          // 每个 clause 只取第一个字段（Prisma 每个对象一个字段）
+          const [field, direction] = entries[0] as [string, string];
+          query = query.order(toSnakeCase(field), {
+            ascending: String(direction).toLowerCase() !== 'desc',
+          });
         });
-      });
     }
     
     if (args?.skip) {
@@ -438,9 +612,11 @@ export class SupabaseAdapter {
   budget: ModelAdapter;
   savingsRecommendation: ModelAdapter;
   userPreference: ModelAdapter;
+  recipe: ModelAdapter;
   recipeRating: ModelAdapter;
   recipeFavorite: ModelAdapter;
   recipeView: ModelAdapter;
+  ingredientSubstitution: ModelAdapter;
   task: ModelAdapter;
   activity: ModelAdapter;
   comment: ModelAdapter;
@@ -486,9 +662,11 @@ export class SupabaseAdapter {
     this.budget = new ModelAdapter('budgets', this.supabase);
     this.savingsRecommendation = new ModelAdapter('savings_recommendations', this.supabase);
     this.userPreference = new ModelAdapter('user_preferences', this.supabase);
+    this.recipe = new ModelAdapter('recipes', this.supabase);
     this.recipeRating = new ModelAdapter('recipe_ratings', this.supabase);
     this.recipeFavorite = new ModelAdapter('recipe_favorites', this.supabase);
     this.recipeView = new ModelAdapter('recipe_views', this.supabase);
+    this.ingredientSubstitution = new ModelAdapter('ingredient_substitutions', this.supabase);
     this.task = new ModelAdapter('tasks', this.supabase);
     this.activity = new ModelAdapter('activities', this.supabase);
     this.comment = new ModelAdapter('comments', this.supabase);
