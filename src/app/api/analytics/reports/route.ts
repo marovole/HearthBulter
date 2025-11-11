@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { auth } from '@/lib/auth';
-import { PrismaClient, ReportType } from '@prisma/client';
+import { ReportType } from '@prisma/client';
 import { createReport } from '@/lib/services/analytics/report-generator';
 
 /**
  * GET /api/analytics/reports
  * 获取报告列表
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(request: NextRequest) {
   try {
@@ -28,45 +30,50 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const where: any = {
-      memberId,
-      deletedAt: null,
-    };
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 构建查询
+    let query = supabase
+      .from('health_reports')
+      .select(`
+        id,
+        reportType,
+        startDate,
+        endDate,
+        title,
+        summary,
+        overallScore,
+        status,
+        createdAt
+      `, { count: 'exact' })
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .order('createdAt', { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize - 1);
 
     if (reportType) {
-      where.reportType = reportType;
+      query = query.eq('reportType', reportType);
     }
 
-    const [reports, total] = await Promise.all([
-      prisma.healthReport.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        select: {
-          id: true,
-          reportType: true,
-          startDate: true,
-          endDate: true,
-          title: true,
-          summary: true,
-          overallScore: true,
-          status: true,
-          createdAt: true,
-        },
-      }),
-      prisma.healthReport.count({ where }),
-    ]);
+    const { data: reports, error, count: total } = await query;
+
+    if (error) {
+      console.error('查询报告列表失败:', error);
+      return NextResponse.json(
+        { error: '获取报告列表失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       data: {
-        reports,
+        reports: reports || [],
         pagination: {
           page,
           pageSize,
-          total,
-          totalPages: Math.ceil(total / pageSize),
+          total: total || 0,
+          totalPages: Math.ceil((total || 0) / pageSize),
         },
       },
     });
@@ -82,6 +89,8 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/analytics/reports
  * 生成新报告
+ *
+ * Note: createReport service still uses Prisma
  */
 export async function POST(request: NextRequest) {
   try {

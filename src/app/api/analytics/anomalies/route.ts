@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { auth } from '@/lib/auth';
-import { PrismaClient, AnomalyStatus } from '@prisma/client';
-import { getPendingAnomalies, acknowledgeAnomaly, resolveAnomaly, ignoreAnomaly } from '@/lib/services/analytics/anomaly-detector';
+import { AnomalyStatus } from '@prisma/client';
+import { acknowledgeAnomaly, resolveAnomaly, ignoreAnomaly } from '@/lib/services/analytics/anomaly-detector';
 
 /**
  * GET /api/analytics/anomalies
  * 获取异常记录
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(request: NextRequest) {
   try {
@@ -27,24 +29,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const where: any = {
-      memberId,
-      deletedAt: null,
-    };
+    const supabase = SupabaseClientManager.getInstance();
+
+    // 构建查询
+    let query = supabase
+      .from('health_anomalies')
+      .select('*')
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .order('detectedAt', { ascending: false })
+      .limit(limit);
 
     if (status) {
-      where.status = status;
+      query = query.eq('status', status);
     }
 
-    const anomalies = await prisma.healthAnomaly.findMany({
-      where,
-      orderBy: { detectedAt: 'desc' },
-      take: limit,
-    });
+    const { data: anomalies, error } = await query;
+
+    if (error) {
+      console.error('查询异常记录失败:', error);
+      return NextResponse.json(
+        { error: '获取异常记录失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      data: anomalies,
+      data: anomalies || [],
     });
   } catch (error) {
     console.error('Failed to get anomalies:', error);
@@ -58,6 +70,8 @@ export async function GET(request: NextRequest) {
 /**
  * PATCH /api/analytics/anomalies
  * 更新异常状态
+ *
+ * Note: acknowledgeAnomaly, resolveAnomaly, ignoreAnomaly still use Prisma
  */
 export async function PATCH(request: NextRequest) {
   try {
