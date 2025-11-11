@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/db/supabase-adapter';
 import { auth } from '@/lib/auth';
 import { shareAchievement } from '@/lib/services/social/achievement-system';
 import { generateShareContent } from '@/lib/services/social/share-generator';

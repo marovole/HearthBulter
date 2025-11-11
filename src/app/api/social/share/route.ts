@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { shareContentGenerator } from '@/lib/services/social/share-generator';
 import { shareImageGenerator } from '@/lib/services/social/image-generator';
 import { shareTrackingService } from '@/lib/services/social/share-tracking';
@@ -13,6 +13,11 @@ import type { ShareContentInput } from '@/types/social-sharing';
 import { SocialPlatform } from '@/types/social-sharing';
 import { ShareContentType } from '@prisma/client';
 
+/**
+ * POST /api/social/share - 创建分享
+ *
+ * Migrated from Prisma to Supabase (partial - services still use Prisma)
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -26,25 +31,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = validateShareInput(body);
 
-    // 检查用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: validatedData.memberId,
-        user: {
-          createdFamilies: {
-            some: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    // 检查用户权限（使用Supabase）
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (!member) {
+    const { data: member, error: memberError } = await supabase
+      .from('family_members')
+      .select('id, familyId')
+      .eq('id', validatedData.memberId)
+      .maybeSingle();
+
+    if (memberError || !member) {
+      return NextResponse.json(
+        { error: '无权限访问该家庭成员' },
+        { status: 403 }
+      );
+    }
+
+    // 验证用户是否属于该家庭
+    const { data: userMember } = await supabase
+      .from('family_members')
+      .select('id')
+      .eq('familyId', (member as any).familyId)
+      .eq('userId', session.user.id)
+      .maybeSingle();
+
+    if (!userMember) {
       return NextResponse.json(
         { error: '无权限访问该家庭成员' },
         { status: 403 }
@@ -54,9 +65,10 @@ export async function POST(request: NextRequest) {
     // 生成分享内容
     const shareResult = await shareContentGenerator.generateShareContent(validatedData);
 
-    // 保存到数据库
-    const savedContent = await prisma.sharedContent.create({
-      data: {
+    // 保存到数据库（使用Supabase）
+    const { data: savedContent, error: createError } = await supabase
+      .from('shared_contents')
+      .insert({
         memberId: validatedData.memberId,
         contentType: validatedData.type,
         title: shareResult.content.title,
@@ -67,9 +79,14 @@ export async function POST(request: NextRequest) {
         shareToken: shareResult.shareUrl.split('/').pop()!,
         shareUrl: shareResult.shareUrl,
         sharedPlatforms: JSON.stringify(validatedData.platforms),
-        metadata: shareResult.content.metadata ? JSON.parse(JSON.stringify(shareResult.content.metadata)) : undefined,
-      },
-    });
+        metadata: shareResult.content.metadata ? JSON.stringify(shareResult.content.metadata) : null,
+      })
+      .select()
+      .single();
+
+    if (createError || !savedContent) {
+      throw new Error('创建分享失败');
+    }
 
     // 检查是否有成就解锁
     await checkForShareAchievements(validatedData.memberId, validatedData.platforms.length);
@@ -139,15 +156,19 @@ function validateShareInput(data: any): ShareContentInput {
 
 /**
  * 检查分享相关成就
+ * Migrated from Prisma to Supabase
  */
 async function checkForShareAchievements(memberId: string, shareCount: number): Promise<void> {
   try {
-    // 检查社交达人成就
-    const totalShares = await prisma.sharedContent.count({
-      where: { memberId },
-    });
+    const supabase = SupabaseClientManager.getInstance();
 
-    if (totalShares >= 20) {
+    // 检查社交达人成就
+    const { count: totalShares } = await supabase
+      .from('shared_contents')
+      .select('*', { count: 'exact', head: true })
+      .eq('memberId', memberId);
+
+    if (totalShares && totalShares >= 20) {
       await achievementSystem.checkAchievements(memberId, 'SHARE_CREATED', {
         shareCount: totalShares,
       });
@@ -158,7 +179,9 @@ async function checkForShareAchievements(memberId: string, shareCount: number): 
 }
 
 /**
- * 获取分享列表
+ * GET /api/social/share - 获取分享列表
+ *
+ * Migrated from Prisma to Supabase
  */
 export async function GET(request: NextRequest) {
   try {
@@ -176,38 +199,15 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    // 构建查询条件
-    const where: any = {
-      member: {
-        family: {
-          members: {
-            some: {
-              userId: session.user.id,
-            },
-          },
-        },
-      },
-      status: 'ACTIVE',
-    };
+    const supabase = SupabaseClientManager.getInstance();
 
     if (memberId) {
       // 验证用户权限
-      const member = await prisma.familyMember.findFirst({
-        where: {
-          id: memberId,
-          user: {
-            createdFamilies: {
-              some: {
-                members: {
-                  some: {
-                    userId: session.user.id,
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
+      const { data: member } = await supabase
+        .from('family_members')
+        .select('id, familyId')
+        .eq('id', memberId)
+        .maybeSingle();
 
       if (!member) {
         return NextResponse.json(
@@ -216,42 +216,65 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      where.memberId = memberId;
+      // 验证用户是否属于该家庭
+      const { data: userMember } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', (member as any).familyId)
+        .eq('userId', session.user.id)
+        .maybeSingle();
+
+      if (!userMember) {
+        return NextResponse.json(
+          { error: '无权限访问该家庭成员' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 构建查询
+    let query = supabase
+      .from('shared_contents')
+      .select(`
+        *,
+        member:family_members!inner(
+          id,
+          name,
+          avatar
+        )
+      `, { count: 'exact' })
+      .eq('status', 'ACTIVE')
+      .order('createdAt', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (memberId) {
+      query = query.eq('memberId', memberId);
     }
 
     if (type) {
-      where.contentType = type;
+      query = query.eq('contentType', type);
     }
 
-    const [contents, total] = await Promise.all([
-      prisma.sharedContent.findMany({
-        where,
-        include: {
-          member: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.sharedContent.count({ where }),
-    ]);
+    const { data: contents, error, count: total } = await query;
+
+    if (error) {
+      console.error('查询分享列表失败:', error);
+      return NextResponse.json(
+        { error: '获取分享列表失败' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       data: {
-        contents,
+        contents: contents || [],
         pagination: {
           page,
           limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-          hasNext: page * limit < total,
+          total: total || 0,
+          totalPages: Math.ceil((total || 0) / limit),
+          hasNext: page * limit < (total || 0),
           hasPrev: page > 1,
         },
       },

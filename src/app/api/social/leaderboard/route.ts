@@ -6,10 +6,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { leaderboardService } from '@/lib/services/social/leaderboard';
 import { LeaderboardType } from '@prisma/client';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
 /**
  * 获取排行榜数据
+ *
+ * Migrated from Prisma to Supabase (partial - leaderboardService still uses Prisma)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -47,24 +49,31 @@ export async function GET(request: NextRequest) {
 
     // 验证用户权限（如果指定了memberId）
     if (memberId) {
-      const member = await prisma.familyMember.findFirst({
-        where: {
-          id: memberId,
-          user: {
-            createdFamilies: {
-              some: {
-                members: {
-                  some: {
-                    userId: session.user.id,
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
+      const supabase = SupabaseClientManager.getInstance();
 
-      if (!member) {
+      // 查询家庭成员和验证权限
+      const { data: member, error } = await supabase
+        .from('family_members')
+        .select('id, familyId')
+        .eq('id', memberId)
+        .maybeSingle();
+
+      if (error || !member) {
+        return NextResponse.json(
+          { error: '无权限访问该家庭成员' },
+          { status: 403 }
+        );
+      }
+
+      // 验证当前用户是否属于该家庭
+      const { data: userMember } = await supabase
+        .from('family_members')
+        .select('id')
+        .eq('familyId', (member as any).familyId)
+        .eq('userId', session.user.id)
+        .maybeSingle();
+
+      if (!userMember) {
         return NextResponse.json(
           { error: '无权限访问该家庭成员' },
           { status: 403 }
@@ -245,35 +254,44 @@ export async function PATCH(request: NextRequest) {
 
 /**
  * 保存排行榜数据
+ * Migrated from Prisma to Supabase
  */
 async function saveLeaderboardData(
   leaderboard: any,
   timeframe: string
 ): Promise<void> {
   try {
+    const supabase = SupabaseClientManager.getInstance();
     const entries = leaderboard.data.slice(0, 100); // 只保存前100名
 
-    for (const entry of entries) {
-      await prisma.leaderboardEntry.create({
-        data: {
-          memberId: entry.memberId,
-          type: leaderboard.type,
-          rank: entry.rank,
-          value: entry.value,
-          metadata: {
-            timeframe,
-            memberName: entry.memberName,
-            displayValue: entry.displayValue,
-            change: entry.change,
-            changeValue: entry.changeValue,
-          } as any,
-          createdAt: new Date(),
-        },
-        skipDuplicates: true,
-      });
-    }
+    // 使用 Supabase upsert 批量插入
+    const leaderboardEntries = entries.map((entry: any) => ({
+      memberId: entry.memberId,
+      type: leaderboard.type,
+      rank: entry.rank,
+      value: entry.value,
+      metadata: JSON.stringify({
+        timeframe,
+        memberName: entry.memberName,
+        displayValue: entry.displayValue,
+        change: entry.change,
+        changeValue: entry.changeValue,
+      }),
+      createdAt: new Date().toISOString(),
+    }));
 
-    console.log(`保存了 ${entries.length} 条排行榜数据`);
+    const { error } = await supabase
+      .from('leaderboard_entries')
+      .upsert(leaderboardEntries, {
+        onConflict: 'memberId,type',
+        ignoreDuplicates: false,
+      });
+
+    if (error) {
+      console.error('保存排行榜数据失败:', error);
+    } else {
+      console.log(`保存了 ${entries.length} 条排行榜数据`);
+    }
   } catch (error) {
     console.error('保存排行榜数据失败:', error);
     // 不抛出错误，避免影响主流程
