@@ -1,10 +1,13 @@
 /**
  * 设备同步API - 手动触发设备同步
+ *
+ * Migrated from Prisma to Supabase
+ * Note: healthKitService and huaweiHealthService still use external services
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
 
 const SyncRequestSchema = z.object({
@@ -25,24 +28,35 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const validatedData = SyncRequestSchema.parse(body);
+    const supabase = SupabaseClientManager.getInstance();
 
-    // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: validatedData.memberId,
-        user: {
-          families: {
-            some: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    // 验证用户权限：检查该成员是否属于用户有权访问的家庭
+    const { data: member, error: memberError } = await supabase
+      .from('family_members')
+      .select(`
+        id,
+        userId,
+        familyId,
+        family:families!inner(
+          id,
+          creatorId,
+          members:family_members(
+            id,
+            userId
+          )
+        )
+      `)
+      .eq('id', validatedData.memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    if (memberError) {
+      console.error('查询家庭成员失败:', memberError);
+      return NextResponse.json(
+        { error: '查询家庭成员失败' },
+        { status: 500 }
+      );
+    }
 
     if (!member) {
       return NextResponse.json(
@@ -51,14 +65,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 检查用户是否属于该家庭
+    const familyMembers = member.family?.members || [];
+    const hasAccess = familyMembers.some((m: any) => m.userId === session.user.id);
+
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: '无权限访问该家庭成员' },
+        { status: 403 }
+      );
+    }
+
     // 查找设备连接
-    const deviceConnection = await prisma.deviceConnection.findFirst({
-      where: {
-        deviceId: validatedData.deviceId,
-        memberId: validatedData.memberId,
-        isActive: true,
-      },
-    });
+    const { data: deviceConnection, error: deviceError } = await supabase
+      .from('device_connections')
+      .select('*')
+      .eq('deviceId', validatedData.deviceId)
+      .eq('memberId', validatedData.memberId)
+      .eq('isActive', true)
+      .maybeSingle();
+
+    if (deviceError) {
+      console.error('查询设备连接失败:', deviceError);
+      return NextResponse.json(
+        { error: '查询设备失败' },
+        { status: 500 }
+      );
+    }
 
     if (!deviceConnection) {
       return NextResponse.json(
@@ -68,12 +101,16 @@ export async function POST(request: NextRequest) {
     }
 
     // 更新同步状态为同步中
-    await prisma.deviceConnection.update({
-      where: { id: deviceConnection.id },
-      data: {
+    const { error: updateSyncingError } = await supabase
+      .from('device_connections')
+      .update({
         syncStatus: 'SYNCING',
-      },
-    });
+      })
+      .eq('id', deviceConnection.id);
+
+    if (updateSyncingError) {
+      console.error('更新同步状态失败:', updateSyncingError);
+    }
 
     // 根据平台调用相应的同步服务
     let syncResult;
@@ -102,16 +139,22 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // 如果同步失败，增加重试次数
+    // 如果同步失败，增加重试次数（使用read-then-write模式替代increment）
     if (!syncResult.success) {
-      await prisma.deviceConnection.update({
-        where: { id: deviceConnection.id },
-        data: {
+      const currentRetryCount = deviceConnection.retryCount || 0;
+
+      const { error: updateFailedError } = await supabase
+        .from('device_connections')
+        .update({
           syncStatus: 'FAILED',
           lastError: syncResult.errors[0],
-          retryCount: { increment: 1 },
-        },
-      });
+          retryCount: currentRetryCount + 1,
+        })
+        .eq('id', deviceConnection.id);
+
+      if (updateFailedError) {
+        console.error('更新失败状态失败:', updateFailedError);
+      }
     }
 
     return NextResponse.json({
@@ -126,7 +169,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('设备同步失败:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '参数错误', details: error.errors },
@@ -156,6 +199,7 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const { memberId } = body;
+    const supabase = SupabaseClientManager.getInstance();
 
     if (!memberId) {
       return NextResponse.json(
@@ -164,23 +208,33 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: memberId,
-        user: {
-          families: {
-            some: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    // 验证用户权限：检查该成员是否属于用户有权访问的家庭
+    const { data: member, error: memberError } = await supabase
+      .from('family_members')
+      .select(`
+        id,
+        userId,
+        familyId,
+        family:families!inner(
+          id,
+          creatorId,
+          members:family_members(
+            id,
+            userId
+          )
+        )
+      `)
+      .eq('id', memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    if (memberError) {
+      console.error('查询家庭成员失败:', memberError);
+      return NextResponse.json(
+        { error: '查询家庭成员失败' },
+        { status: 500 }
+      );
+    }
 
     if (!member) {
       return NextResponse.json(
@@ -189,15 +243,33 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 获取所有活跃设备
-    const devices = await prisma.deviceConnection.findMany({
-      where: {
-        memberId,
-        isActive: true,
-      },
-    });
+    // 检查用户是否属于该家庭
+    const familyMembers = member.family?.members || [];
+    const hasAccess = familyMembers.some((m: any) => m.userId === session.user.id);
 
-    if (devices.length === 0) {
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: '无权限访问该家庭成员' },
+        { status: 403 }
+      );
+    }
+
+    // 获取所有活跃设备
+    const { data: devices, error: devicesError } = await supabase
+      .from('device_connections')
+      .select('*')
+      .eq('memberId', memberId)
+      .eq('isActive', true);
+
+    if (devicesError) {
+      console.error('查询设备列表失败:', devicesError);
+      return NextResponse.json(
+        { error: '查询设备列表失败' },
+        { status: 500 }
+      );
+    }
+
+    if (!devices || devices.length === 0) {
       return NextResponse.json({
         success: true,
         data: {
@@ -216,12 +288,16 @@ export async function PUT(request: NextRequest) {
     const syncPromises = devices.map(async (device) => {
       try {
         // 更新同步状态
-        await prisma.deviceConnection.update({
-          where: { id: device.id },
-          data: {
+        const { error: updateSyncingError } = await supabase
+          .from('device_connections')
+          .update({
             syncStatus: 'SYNCING',
-          },
-        });
+          })
+          .eq('id', device.id);
+
+        if (updateSyncingError) {
+          console.error('更新同步状态失败:', updateSyncingError);
+        }
 
         // 调用相应平台的同步服务
         let syncResult;
@@ -241,16 +317,22 @@ export async function PUT(request: NextRequest) {
           );
         }
 
-        // 更新同步结果
-        if (!syncResult.success) {
-          await prisma.deviceConnection.update({
-            where: { id: device.id },
-            data: {
+        // 更新同步结果（使用read-then-write模式替代increment）
+        if (syncResult && !syncResult.success) {
+          const currentRetryCount = device.retryCount || 0;
+
+          const { error: updateFailedError } = await supabase
+            .from('device_connections')
+            .update({
               syncStatus: 'FAILED',
               lastError: syncResult.errors[0],
-              retryCount: { increment: 1 },
-            },
-          });
+              retryCount: currentRetryCount + 1,
+            })
+            .eq('id', device.id);
+
+          if (updateFailedError) {
+            console.error('更新失败状态失败:', updateFailedError);
+          }
         }
 
         return {

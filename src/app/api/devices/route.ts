@@ -1,12 +1,14 @@
 /**
  * 设备管理API - 获取设备列表
+ *
+ * Migrated from Prisma to Supabase
+ * Note: Middleware wrappers preserved, healthkit-service and huawei-health-service still use external services
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
-import { optimizedQuery } from '@/lib/middleware/query-optimization';
 import { validationMiddleware, commonSchemas, withValidation } from '@/lib/middleware/validation-middleware';
 import { APIError, createErrorResponse } from '@/lib/errors/api-error';
 import { withPermissions, requirePermissions } from '@/lib/middleware/permission-middleware';
@@ -21,6 +23,35 @@ const GETQuerySchema = z.object({
   ...commonSchemas.pagination.shape,
 });
 
+/**
+ * 获取用户可访问的成员ID列表
+ * Migrated from Prisma to Supabase
+ */
+async function getAccessibleMemberIds(userId: string): Promise<string[]> {
+  const supabase = SupabaseClientManager.getInstance();
+
+  const { data: members } = await supabase
+    .from('family_members')
+    .select(`
+      id,
+      family:families!inner(
+        members:family_members(
+          userId
+        )
+      )
+    `)
+    .is('deletedAt', null);
+
+  if (!members) return [];
+
+  // 筛选用户所属的家庭成员
+  return members
+    .filter((m: any) =>
+      m.family?.members?.some((fm: any) => fm.userId === userId)
+    )
+    .map((m: any) => m.id);
+}
+
 export const GET = withPermissions(
   requirePermissions([Permission.READ_DEVICE]),
   withSecurity(
@@ -28,64 +59,81 @@ export const GET = withPermissions(
     withPerformanceMonitoring(
       async (request: NextRequest) => {
         const session = await auth();
+        const supabase = SupabaseClientManager.getInstance();
 
         const { searchParams } = new URL(request.url);
         const validatedQuery = GETQuerySchema.parse(Object.fromEntries(searchParams));
 
-        // 构建查询条件
-        const where: any = {
-          member: {
-            family: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                },
-              },
-            },
-          },
-        };
+        // 获取用户可访问的成员ID列表
+        const accessibleMemberIds = await getAccessibleMemberIds(session.user.id);
 
+        if (accessibleMemberIds.length === 0) {
+          return NextResponse.json({
+            success: true,
+            data: [],
+            total: 0,
+            page: validatedQuery.page,
+            limit: validatedQuery.limit,
+            totalPages: 0,
+          });
+        }
+
+        // 构建Supabase查询
+        const skip = (validatedQuery.page - 1) * validatedQuery.limit;
+        let query = supabase
+          .from('device_connections')
+          .select(`
+            id,
+            deviceId,
+            deviceName,
+            platform,
+            isActive,
+            isAutoSync,
+            syncStatus,
+            lastSyncAt,
+            createdAt,
+            updatedAt,
+            errorCount,
+            lastError,
+            memberId,
+            member:family_members!inner(
+              id,
+              name
+            )
+          `, { count: 'exact' })
+          .in('memberId', accessibleMemberIds);
+
+        // 应用筛选条件
         if (validatedQuery.memberId) {
-          where.memberId = validatedQuery.memberId;
+          query = query.eq('memberId', validatedQuery.memberId);
         }
 
         if (validatedQuery.platform) {
-          where.platform = validatedQuery.platform;
+          query = query.eq('platform', validatedQuery.platform);
         }
 
         if (validatedQuery.isActive !== undefined) {
-          where.isActive = validatedQuery.isActive;
+          query = query.eq('isActive', validatedQuery.isActive);
         }
 
-        // 获取设备列表
-        const skip = (validatedQuery.page - 1) * validatedQuery.limit;
-        const cacheKey = `devices_list_${session.user.id}_${JSON.stringify(validatedQuery)}`;
-    
-        const [devices, total] = await Promise.all([
-          optimizedQuery.findMany('deviceConnection', {
-            where,
-            include: {
-              member: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-            orderBy: {
-              lastSyncAt: 'desc',
-            },
-            skip,
-            take: validatedQuery.limit,
-            useCache: true,
-            cacheKey,
-          }),
-          optimizedQuery.count('deviceConnection', where, { useCache: true, cacheKey: `${cacheKey}_count` }),
-        ]);
+        // 排序和分页
+        const { data: devices, error, count } = await query
+          .order('lastSyncAt', { ascending: false, nullsFirst: false })
+          .range(skip, skip + validatedQuery.limit - 1);
+
+        if (error) {
+          console.error('查询设备列表失败:', error);
+          return NextResponse.json(
+            { error: '查询设备列表失败' },
+            { status: 500 }
+          );
+        }
+
+        const total = count || 0;
 
         return NextResponse.json({
           success: true,
-          data: devices,
+          data: devices || [],
           total,
           page: validatedQuery.page,
           limit: validatedQuery.limit,
@@ -107,7 +155,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+    const supabase = SupabaseClientManager.getInstance();
+
     // 验证请求数据
     const connectionSchema = z.object({
       memberId: z.string(),
@@ -127,23 +176,33 @@ export async function POST(request: NextRequest) {
 
     const validatedData = connectionSchema.parse(body);
 
-    // 验证用户权限
-    const member = await prisma.familyMember.findFirst({
-      where: {
-        id: validatedData.memberId,
-        user: {
-          families: {
-            some: {
-              members: {
-                some: {
-                  userId: session.user.id,
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    // 验证用户权限：检查该成员是否属于用户有权访问的家庭
+    const { data: member, error: memberError } = await supabase
+      .from('family_members')
+      .select(`
+        id,
+        userId,
+        familyId,
+        family:families!inner(
+          id,
+          creatorId,
+          members:family_members(
+            id,
+            userId
+          )
+        )
+      `)
+      .eq('id', validatedData.memberId)
+      .is('deletedAt', null)
+      .maybeSingle();
+
+    if (memberError) {
+      console.error('查询家庭成员失败:', memberError);
+      return NextResponse.json(
+        { error: '查询家庭成员失败' },
+        { status: 500 }
+      );
+    }
 
     if (!member) {
       return NextResponse.json(
@@ -152,13 +211,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 检查用户是否属于该家庭
+    const familyMembers = member.family?.members || [];
+    const hasAccess = familyMembers.some((m: any) => m.userId === session.user.id);
+
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: '无权限访问该家庭成员' },
+        { status: 403 }
+      );
+    }
+
     // 检查设备是否已存在
-    const existingDevice = await prisma.deviceConnection.findFirst({
-      where: {
-        deviceId: validatedData.deviceId,
-        isActive: true,
-      },
-    });
+    const { data: existingDevice } = await supabase
+      .from('device_connections')
+      .select('id')
+      .eq('deviceId', validatedData.deviceId)
+      .eq('isActive', true)
+      .maybeSingle();
 
     if (existingDevice) {
       return NextResponse.json(
@@ -177,13 +247,24 @@ export async function POST(request: NextRequest) {
       deviceConnection = await connectHuaweiHealthDevice(validatedData.memberId, validatedData);
     } else {
       // 其他平台的通用处理
-      deviceConnection = await prisma.deviceConnection.create({
-        data: {
+      const { data: newDevice, error: createError } = await supabase
+        .from('device_connections')
+        .insert({
           ...validatedData,
+          permissions: JSON.stringify(validatedData.permissions),
+          dataTypes: JSON.stringify(validatedData.dataTypes),
           syncStatus: 'PENDING',
-          connectionDate: new Date(),
-        },
-      });
+          connectionDate: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('创建设备连接失败:', createError);
+        throw createError;
+      }
+
+      deviceConnection = newDevice;
     }
 
     return NextResponse.json({
@@ -194,7 +275,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('连接设备失败:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '参数错误', details: error.errors },
