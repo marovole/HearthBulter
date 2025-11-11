@@ -254,26 +254,26 @@ async function processOCR(
       throw updateError;
     }
 
-    // 如果解析成功，创建指标记录（使用循环插入替代createMany）
+    // 如果解析成功，批量创建指标记录
     if (validation.valid && parsedReport.indicators.length > 0) {
-      for (const indicator of parsedReport.indicators) {
-        const { error: indicatorError } = await supabase
-          .from('medical_indicators')
-          .insert({
-            reportId,
-            indicatorType: indicator.indicatorType,
-            name: indicator.name,
-            value: indicator.value,
-            unit: indicator.unit,
-            referenceRange: indicator.referenceRange || null,
-            isAbnormal: indicator.isAbnormal,
-            status: indicator.status,
-          });
+      const indicatorsToInsert = parsedReport.indicators.map((indicator) => ({
+        reportId,
+        indicatorType: indicator.indicatorType,
+        name: indicator.name,
+        value: indicator.value,
+        unit: indicator.unit,
+        referenceRange: indicator.referenceRange || null,
+        isAbnormal: indicator.isAbnormal,
+        status: indicator.status,
+      }));
 
-        if (indicatorError) {
-          console.error('创建指标失败:', indicatorError, indicator);
-          // 继续处理其他指标，但记录错误
-        }
+      const { error: indicatorError } = await supabase
+        .from('medical_indicators')
+        .insert(indicatorsToInsert);
+
+      if (indicatorError) {
+        console.error('批量创建指标失败:', indicatorError);
+        throw indicatorError;
       }
     }
   } catch (error) {
@@ -365,10 +365,18 @@ export async function GET(
 
     // 查询所有报告的指标
     const reportIds = reports.map(r => r.id);
-    const { data: indicators } = await supabase
+    const { data: indicators, error: indicatorsError } = await supabase
       .from('medical_indicators')
       .select('id, reportId, indicatorType, name, value, unit, isAbnormal, status')
       .in('reportId', reportIds);
+
+    if (indicatorsError) {
+      console.error('查询指标失败:', indicatorsError);
+      return NextResponse.json(
+        { error: '查询指标失败' },
+        { status: 500 }
+      );
+    }
 
     // 手动组装数据
     const indicatorsMap = new Map<string, any[]>();
