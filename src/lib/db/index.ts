@@ -25,6 +25,10 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClientType | undefined
 };
 
+// Capture the DATABASE_URL once during module initialization so later lazy imports
+// still have access even if Next/Edge runtime strips process.env in async chunks.
+const capturedDatabaseUrl = process.env.DATABASE_URL;
+
 // 延迟初始化 Prisma Client 以支持边缘运行时
 let prismaInstance: PrismaClientType | undefined;
 
@@ -36,7 +40,7 @@ async function getPrismaClient(): Promise<PrismaClientType> {
       // 动态导入以避免在模块加载时触发 fs 操作
       const { PrismaClient } = await import('@prisma/client');
       const { PrismaNeon } = await import('@prisma/adapter-neon');
-      const { Pool, neonConfig } = await import('@neondatabase/serverless');
+      const { neonConfig } = await import('@neondatabase/serverless');
 
       // Cloudflare Workers 兼容性配置
       if (typeof WebSocket !== 'undefined') {
@@ -46,13 +50,12 @@ async function getPrismaClient(): Promise<PrismaClientType> {
       }
 
       // 使用 Neon Serverless Driver 以支持 Cloudflare Workers
-      const connectionString = process.env.DATABASE_URL;
+      const connectionString = capturedDatabaseUrl ?? process.env.DATABASE_URL;
       if (!connectionString) {
         throw new Error('DATABASE_URL is not defined');
       }
 
-      const pool = new Pool({ connectionString });
-      const adapter = new PrismaNeon(pool);
+      const adapter = new PrismaNeon({ connectionString });
 
       prismaInstance = new PrismaClient({
         adapter,
