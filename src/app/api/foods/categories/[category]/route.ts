@@ -1,23 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { createDualWriteDecorator } from '@/lib/db/dual-write';
+import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
+import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
+import { PrismaFoodRepository } from '@/lib/repositories/prisma/prisma-food-repository';
+import { SupabaseFoodRepository } from '@/lib/repositories/supabase/supabase-food-repository';
+import type { FoodRepository } from '@/lib/repositories/interfaces/food-repository';
+import type { FoodCategory } from '@prisma/client';
 
-type FoodCategory =
-  | 'VEGETABLES'
-  | 'FRUITS'
-  | 'GRAINS'
-  | 'PROTEIN'
-  | 'SEAFOOD'
-  | 'DAIRY'
-  | 'OILS'
-  | 'SNACKS'
-  | 'BEVERAGES'
-  | 'OTHER';
+/**
+ * 模块级别的单例 - 避免每次请求都重新创建
+ */
+const supabaseClient = SupabaseClientManager.getInstance();
+const foodRepository = createDualWriteDecorator<FoodRepository>(
+  new PrismaFoodRepository(),
+  new SupabaseFoodRepository(supabaseClient),
+  {
+    featureFlagManager: createFeatureFlagManager(supabaseClient),
+    verifier: createResultVerifier(supabaseClient),
+    apiEndpoint: '/api/foods/categories/[category]',
+  }
+);
+
+const validCategories: FoodCategory[] = [
+  'VEGETABLES',
+  'FRUITS',
+  'GRAINS',
+  'PROTEIN',
+  'SEAFOOD',
+  'DAIRY',
+  'OILS',
+  'SNACKS',
+  'BEVERAGES',
+  'OTHER',
+];
 
 /**
  * GET /api/foods/categories/:category
- * 按类别查询食物
+ * 按类别查询食物（支持分页）
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架，支持 Prisma/Supabase 双写验证
  */
 export async function GET(
   request: NextRequest,
@@ -29,73 +51,25 @@ export async function GET(
     const limit = parseInt(searchParams.get('limit') || '50');
     const page = parseInt(searchParams.get('page') || '1');
 
-    // 验证category是否有效
-    const validCategories: FoodCategory[] = [
-      'VEGETABLES',
-      'FRUITS',
-      'GRAINS',
-      'PROTEIN',
-      'SEAFOOD',
-      'DAIRY',
-      'OILS',
-      'SNACKS',
-      'BEVERAGES',
-      'OTHER',
-    ];
-
+    // 验证 category 是否有效
     if (!validCategories.includes(category as FoodCategory)) {
-      return NextResponse.json(
-        { error: '无效的食物分类' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '无效的食物分类' }, { status: 400 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 使用 Supabase 的 count 选项和 range 分页
+    // 计算分页范围
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { data: foods, error, count } = await supabase
-      .from('foods')
-      .select('*', { count: 'exact' })
-      .eq('category', category)
-      .order('name', { ascending: true })
-      .range(from, to);
-
-    if (error) {
-      console.error('按类别查询食物失败:', error);
-      return NextResponse.json(
-        { error: '查询食物数据失败' },
-        { status: 500 }
-      );
-    }
+    // 使用双写框架并行查询食材列表和总数
+    const [foods, total] = await Promise.all([
+      foodRepository.decorateMethod('listByCategory', category as FoodCategory, from, to),
+      foodRepository.decorateMethod('countByCategory', category as FoodCategory),
+    ]);
 
     return NextResponse.json(
       {
-        foods: (foods || []).map((food) => ({
-          id: food.id,
-          name: food.name,
-          nameEn: food.nameEn,
-          aliases: Array.isArray(food.aliases) ? food.aliases : (food.aliases ? JSON.parse(food.aliases as string) : []),
-          calories: food.calories,
-          protein: food.protein,
-          carbs: food.carbs,
-          fat: food.fat,
-          fiber: food.fiber,
-          sugar: food.sugar,
-          sodium: food.sodium,
-          vitaminA: food.vitaminA,
-          vitaminC: food.vitaminC,
-          calcium: food.calcium,
-          iron: food.iron,
-          category: food.category,
-          tags: Array.isArray(food.tags) ? food.tags : (food.tags ? JSON.parse(food.tags as string) : []),
-          source: food.source,
-          usdaId: food.usdaId,
-          verified: food.verified,
-        })),
-        total: count || 0,
+        foods,
+        total,
         page,
         limit,
         category,
@@ -104,10 +78,6 @@ export async function GET(
     );
   } catch (error) {
     console.error('按类别查询食物失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-
