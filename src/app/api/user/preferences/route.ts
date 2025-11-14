@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { safeParseArray, safeParseObject } from '@/lib/utils/json-helpers';
 
 /**
  * GET /api/user/preferences
@@ -69,23 +70,17 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const normalizedPreferences = {
+      ...preferences,
+      preferredCuisines: safeParseArray(preferences.preferredCuisines),
+      avoidedIngredients: safeParseArray(preferences.avoidedIngredients),
+      preferredIngredients: safeParseArray(preferences.preferredIngredients),
+      learnedPreferences: safeParseObject(preferences.learnedPreferences),
+    };
+
     return NextResponse.json({
       success: true,
-      preferences: {
-        ...preferences,
-        preferredCuisines: Array.isArray(preferences.preferredCuisines)
-          ? preferences.preferredCuisines
-          : JSON.parse(preferences.preferredCuisines as string),
-        avoidedIngredients: Array.isArray(preferences.avoidedIngredients)
-          ? preferences.avoidedIngredients
-          : JSON.parse(preferences.avoidedIngredients as string),
-        preferredIngredients: Array.isArray(preferences.preferredIngredients)
-          ? preferences.preferredIngredients
-          : JSON.parse(preferences.preferredIngredients as string),
-        learnedPreferences: typeof preferences.learnedPreferences === 'object'
-          ? preferences.learnedPreferences
-          : (preferences.learnedPreferences ? JSON.parse(preferences.learnedPreferences as string) : {}),
-      },
+      preferences: normalizedPreferences,
     });
 
   } catch (error) {
@@ -158,23 +153,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedPreference = {
+      ...userPreference,
+      preferredCuisines: safeParseArray(userPreference.preferredCuisines),
+      avoidedIngredients: safeParseArray(userPreference.avoidedIngredients),
+      preferredIngredients: safeParseArray(userPreference.preferredIngredients),
+      learnedPreferences: safeParseObject(userPreference.learnedPreferences),
+    };
+
     return NextResponse.json({
       success: true,
-      preferences: {
-        ...userPreference,
-        preferredCuisines: Array.isArray(userPreference.preferredCuisines)
-          ? userPreference.preferredCuisines
-          : userPreference.preferredCuisines,
-        avoidedIngredients: Array.isArray(userPreference.avoidedIngredients)
-          ? userPreference.avoidedIngredients
-          : userPreference.avoidedIngredients,
-        preferredIngredients: Array.isArray(userPreference.preferredIngredients)
-          ? userPreference.preferredIngredients
-          : userPreference.preferredIngredients,
-        learnedPreferences: typeof userPreference.learnedPreferences === 'object'
-          ? userPreference.learnedPreferences
-          : (userPreference.learnedPreferences || {}),
-      },
+      preferences: normalizedPreference,
     });
 
   } catch (error) {

@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDefaultContainer } from '@/lib/container/service-container';
-import { NotificationUtils } from '@/lib/services/notification';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
-const notificationManager = getDefaultContainer().getNotificationManager();
+/**
+ * 通知统计端点
+ *
+ * Note: 此端点直接使用 Supabase，未使用双写框架，因为：
+ * 1. 统计查询是只读操作，不涉及数据修改
+ * 2. NotificationRepository 接口中没有统计相关方法
+ * 3. 需要使用聚合查询优化性能
+ */
 
 /**
  * GET /api/notifications/stats - 获取通知统计信息
- *
- * Migrated from Prisma to Supabase (partial - notificationManager still uses Prisma)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -23,49 +26,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 获取用户通知统计 (TODO: notificationManager methods need migration)
-    // const userStats = await notificationManager.getUserNotificationStats(memberId, days);
+    if (days < 1 || days > 365) {
+      return NextResponse.json(
+        { error: 'Days must be between 1 and 365' },
+        { status: 400 }
+      );
+    }
 
-    // 获取未读数量
-    // const unreadCount = await notificationManager.getUnreadCount(memberId);
-
-    // 格式化统计摘要
-    // const summary = NotificationUtils.getStatsSummary(userStats);
-
-    // 临时实现：直接查询未读数量
     const supabase = SupabaseClientManager.getInstance();
-    const { count: unreadCount } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('memberId', memberId)
-      .eq('status', 'SENT')
-      .eq('isRead', false);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
 
-    const summary = {
-      total: 0,
-      sent: 0,
-      failed: 0,
-      pending: 0,
-      read: 0,
-      unread: unreadCount || 0,
-    };
-
-    // 获取最近7天的每日统计
-    const dailyStats = await getDailyStats(memberId, 7);
-
-    // 获取渠道使用统计
-    const channelStats = await getChannelStats(memberId, days);
+    // 并行查询所有统计数据
+    const [summary, dailyStats, channelStats] = await Promise.all([
+      getSummaryStats(memberId, startDate),
+      getDailyStats(memberId, 7), // 固定查询最近7天
+      getChannelStats(memberId, startDate),
+    ]);
 
     return NextResponse.json({
       success: true,
       data: {
         summary,
-        unreadCount,
+        unreadCount: summary.unread,
         dailyStats,
         channelStats,
         period: {
           days,
-          startDate: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString(),
+          startDate: startDate.toISOString(),
           endDate: new Date().toISOString(),
         },
       },
@@ -79,81 +67,160 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * 获取汇总统计
+ */
+async function getSummaryStats(memberId: string, startDate: Date) {
+  const supabase = SupabaseClientManager.getInstance();
+
+  // 查询所有通知状态
+  const { data: notifications, error } = await supabase
+    .from('notifications')
+    .select('status, read_at')
+    .eq('member_id', memberId)
+    .gte('created_at', startDate.toISOString());
+
+  if (error) {
+    console.error('查询汇总统计失败:', error);
+    return {
+      total: 0,
+      sent: 0,
+      failed: 0,
+      pending: 0,
+      read: 0,
+      unread: 0,
+    };
+  }
+
+  // 内存中聚合统计（比多次数据库查询更高效）
+  const summary = {
+    total: notifications?.length || 0,
+    sent: 0,
+    failed: 0,
+    pending: 0,
+    read: 0,
+    unread: 0,
+  };
+
+  notifications?.forEach((notif: any) => {
+    // 统计状态
+    switch (notif.status) {
+    case 'SENT':
+      summary.sent++;
+      break;
+    case 'FAILED':
+      summary.failed++;
+      break;
+    case 'PENDING':
+    case 'SENDING':
+      summary.pending++;
+      break;
+    }
+
+    // 统计已读/未读
+    if (notif.read_at) {
+      summary.read++;
+    } else {
+      summary.unread++;
+    }
+  });
+
+  return summary;
+}
+
 /**
  * 获取每日统计
- * Migrated from Prisma to Supabase
+ *
+ * 优化：使用单次查询 + 内存分组，替代多次循环查询
  */
 async function getDailyStats(memberId: string, days: number) {
-  const dailyStats = [];
   const supabase = SupabaseClientManager.getInstance();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  startDate.setHours(0, 0, 0, 0);
+
+  // 一次性查询所有数据
+  const { data: notifications, error } = await supabase
+    .from('notifications')
+    .select('status, created_at')
+    .eq('member_id', memberId)
+    .gte('created_at', startDate.toISOString());
+
+  if (error) {
+    console.error('查询每日统计失败:', error);
+    return [];
+  }
+
+  // 初始化每日统计容器
+  const dailyStatsMap: Record<string, {
+    date: string;
+    total: number;
+    sent: number;
+    failed: number;
+    pending: number;
+  }> = {};
 
   for (let i = 0; i < days; i++) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     date.setHours(0, 0, 0, 0);
+    const dateKey = date.toISOString().split('T')[0];
 
-    const nextDate = new Date(date);
-    nextDate.setDate(nextDate.getDate() + 1);
-
-    // 查询当天的所有通知
-    const { data: notifications, error } = await supabase
-      .from('notifications')
-      .select('status')
-      .eq('memberId', memberId)
-      .gte('createdAt', date.toISOString())
-      .lt('createdAt', nextDate.toISOString());
-
-    if (error) {
-      console.error('查询每日统计失败:', error);
-      continue;
-    }
-
-    const dayStats = {
-      date: date.toISOString().split('T')[0],
+    dailyStatsMap[dateKey] = {
+      date: dateKey,
       total: 0,
       sent: 0,
       failed: 0,
       pending: 0,
     };
+  }
 
-    // 手动分组统计
-    (notifications || []).forEach((notif: any) => {
-      dayStats.total++;
+  // 分组统计
+  notifications?.forEach((notif: any) => {
+    const dateKey = new Date(notif.created_at).toISOString().split('T')[0];
+    const stats = dailyStatsMap[dateKey];
+
+    if (stats) {
+      stats.total++;
 
       switch (notif.status) {
       case 'SENT':
-        dayStats.sent++;
+        stats.sent++;
         break;
       case 'FAILED':
-        dayStats.failed++;
+        stats.failed++;
         break;
       case 'PENDING':
       case 'SENDING':
-        dayStats.pending++;
+        stats.pending++;
         break;
       }
-    });
+    }
+  });
 
-    dailyStats.unshift(dayStats); // 按时间正序排列
-  }
-
-  return dailyStats;
+  // 转换为数组并按日期正序排列
+  return Object.values(dailyStatsMap)
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /**
  * 获取渠道使用统计
- * Migrated from Prisma to Supabase
+ *
+ * 优化：使用单次查询 + 内存分组
  */
-async function getChannelStats(memberId: string, days: number) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
+async function getChannelStats(memberId: string, startDate: Date) {
   const supabase = SupabaseClientManager.getInstance();
 
-  // 首先获取该用户的所有通知ID
+  // 首先获取该用户的通知ID列表
   const { data: notifications, error: notiError } = await supabase
     .from('notifications')
     .select('id')
-    .eq('memberId', memberId);
+    .eq('member_id', memberId)
+    .gte('created_at', startDate.toISOString());
 
   if (notiError || !notifications || notifications.length === 0) {
     return {};
@@ -161,18 +228,19 @@ async function getChannelStats(memberId: string, days: number) {
 
   const notificationIds = notifications.map((n: any) => n.id);
 
-  // 查询这些通知的日志
+  // 查询这些通知的日志（一次性查询）
   const { data: logs, error: logsError } = await supabase
     .from('notification_logs')
     .select('channel, status')
-    .in('notificationId', notificationIds)
-    .gte('createdAt', startDate.toISOString());
+    .in('notification_id', notificationIds)
+    .gte('sent_at', startDate.toISOString());
 
   if (logsError) {
     console.error('查询渠道统计失败:', logsError);
     return {};
   }
 
+  // 内存中分组统计
   const channelStats: Record<string, {
     total: number;
     sent: number;
@@ -180,8 +248,7 @@ async function getChannelStats(memberId: string, days: number) {
     successRate: number;
   }> = {};
 
-  // 手动分组统计
-  (logs || []).forEach((log: any) => {
+  logs?.forEach((log: any) => {
     const channel = log.channel;
 
     if (!channelStats[channel]) {
@@ -195,22 +262,18 @@ async function getChannelStats(memberId: string, days: number) {
 
     channelStats[channel].total++;
 
-    switch (log.status) {
-    case 'SENT':
+    if (log.status === 'SENT') {
       channelStats[channel].sent++;
-      break;
-    case 'FAILED':
+    } else if (log.status === 'FAILED') {
       channelStats[channel].failed++;
-      break;
     }
   });
 
   // 计算成功率
-  Object.keys(channelStats).forEach(channel => {
-    const stats = channelStats[channel];
-    if (stats) {
-      stats.successRate = stats.total > 0 ? (stats.sent / stats.total) * 100 : 0;
-    }
+  Object.values(channelStats).forEach(stats => {
+    stats.successRate = stats.total > 0
+      ? Math.round((stats.sent / stats.total) * 100 * 100) / 100 // 保留2位小数
+      : 0;
   });
 
   return channelStats;

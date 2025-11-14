@@ -37,8 +37,8 @@ BEGIN
 
   -- Count current favorites
   SELECT COUNT(*) INTO v_favorite_count
-  FROM recipe_favorites
-  WHERE "recipeId" = p_recipe_id;
+  FROM recipe_favorite
+  WHERE recipe_id = p_recipe_id;
 
   -- Update recipe favorite count
   -- Note: No FOR UPDATE needed here as eventual consistency is acceptable
@@ -46,8 +46,8 @@ BEGIN
   -- the count will eventually be correct.
   UPDATE recipes
   SET
-    "favoriteCount" = v_favorite_count,
-    "updatedAt" = NOW()
+    favorite_count = v_favorite_count,
+    updated_at = NOW()
   WHERE id = p_recipe_id;
 
   RETURN json_build_object(

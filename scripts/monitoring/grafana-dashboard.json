@@ -1,0 +1,178 @@
+{
+  "dashboard": {
+    "title": "Health Butler - Dual Write Migration Monitoring",
+    "tags": ["dual-write", "migration", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Success Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"2..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "legendFormat": "Success Rate %"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "API Latency (P95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95 Latency"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P99 Latency"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ms"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Dual Write Diff Count (Last 24h)",
+        "type": "stat",
+        "targets": [
+          {
+            "query": "SELECT COUNT(*) FROM dual_write_diffs WHERE created_at >= NOW() - INTERVAL '24 hours'",
+            "datasource": "PostgreSQL"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Diff Error Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "query": "SELECT COUNT(*) * 100.0 / (SELECT COUNT(*) FROM dual_write_diffs WHERE created_at >= NOW() - INTERVAL '24 hours') as error_rate FROM dual_write_diffs WHERE severity = 'error' AND created_at >= NOW() - INTERVAL '24 hours'",
+            "datasource": "PostgreSQL"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 0,
+            "color": "green"
+          },
+          {
+            "value": 1,
+            "color": "yellow"
+          },
+          {
+            "value": 5,
+            "color": "red"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Supabase Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "query": "SELECT COUNT(*) FILTER (WHERE supabase_result->>'status' = 'rejected') * 100.0 / COUNT(*) as error_rate FROM dual_write_diffs WHERE created_at >= NOW() - INTERVAL '1 hour' GROUP BY date_trunc('minute', created_at)",
+            "datasource": "PostgreSQL"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 6,
+        "title": "RPC Function Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "query": "SELECT operation, AVG((diff->>'latency')::numeric) as avg_latency FROM dual_write_diffs WHERE operation LIKE '%_rpc' GROUP BY operation",
+            "datasource": "PostgreSQL"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 12
+        }
+      },
+      {
+        "id": 7,
+        "title": "Top 10 Endpoints with Diffs",
+        "type": "table",
+        "targets": [
+          {
+            "query": "SELECT api_endpoint, COUNT(*) as diff_count, COUNT(*) FILTER (WHERE severity = 'error') as errors, COUNT(*) FILTER (WHERE severity = 'warning') as warnings FROM dual_write_diffs WHERE created_at >= NOW() - INTERVAL '24 hours' GROUP BY api_endpoint ORDER BY diff_count DESC LIMIT 10",
+            "datasource": "PostgreSQL"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "id": 8,
+        "title": "Feature Flag Status",
+        "type": "stat",
+        "targets": [
+          {
+            "query": "SELECT value->>'enableDualWrite' as dual_write, value->>'enableSupabasePrimary' as supabase_primary FROM dual_write_config WHERE key = 'dual_write_feature_flags'",
+            "datasource": "PostgreSQL"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      }
+    ]
+  }
+}

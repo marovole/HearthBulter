@@ -1,10 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { createDualWriteDecorator } from '@/lib/db/dual-write';
+import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
+import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
+import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
+import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
+import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+import type { NotificationPreferenceDTO } from '@/lib/repositories/types/notification';
+
+/**
+ * 模块级别的单例 - 避免每次请求都重新创建
+ */
+const supabaseClient = SupabaseClientManager.getInstance();
+const notificationRepository = createDualWriteDecorator<NotificationRepository>(
+  new PrismaNotificationRepository(),
+  new SupabaseNotificationRepository(supabaseClient),
+  {
+    featureFlagManager: createFeatureFlagManager(supabaseClient),
+    verifier: createResultVerifier(supabaseClient),
+    apiEndpoint: '/api/notifications/preferences',
+  }
+);
+
+/**
+ * 默认通知偏好设置
+ */
+const DEFAULT_PREFERENCES = {
+  channelPreferences: {
+    CHECK_IN_REMINDER: ['IN_APP', 'EMAIL'],
+    TASK_NOTIFICATION: ['IN_APP'],
+    EXPIRY_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
+    BUDGET_WARNING: ['IN_APP', 'EMAIL'],
+    HEALTH_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
+    GOAL_ACHIEVEMENT: ['IN_APP', 'EMAIL'],
+    FAMILY_ACTIVITY: ['IN_APP'],
+    SYSTEM_ANNOUNCEMENT: ['IN_APP'],
+    MARKETING: ['IN_APP'],
+    OTHER: ['IN_APP'],
+  },
+  mutedTypes: ['MARKETING'],
+};
 
 /**
  * GET /api/notifications/preferences - 获取用户通知偏好设置
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架，支持 Prisma/Supabase 双写验证
  */
 export async function GET(request: NextRequest) {
   try {
@@ -18,83 +58,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 查询用户的通知偏好设置
-    const { data: preferences, error } = await supabase
-      .from('notification_preferences')
-      .select('*')
-      .eq('memberId', memberId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('查询通知偏好设置失败:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch notification preferences' },
-        { status: 500 }
-      );
-    }
+    // 使用双写框架查询通知偏好
+    let preferences = await notificationRepository.decorateMethod(
+      'getNotificationPreferences',
+      memberId
+    );
 
     // 如果没有偏好设置，创建默认设置
-    let finalPreferences = preferences;
     if (!preferences) {
-      const { data: newPreferences, error: createError } = await supabase
-        .from('notification_preferences')
-        .insert({
-          memberId,
-          enableNotifications: true,
-          dailyMaxNotifications: 50,
-          dailyMaxSMS: 5,
-          dailyMaxEmail: 20,
-          channelPreferences: JSON.stringify({
-            CHECK_IN_REMINDER: ['IN_APP', 'EMAIL'],
-            TASK_NOTIFICATION: ['IN_APP'],
-            EXPIRY_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
-            BUDGET_WARNING: ['IN_APP', 'EMAIL'],
-            HEALTH_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
-            GOAL_ACHIEVEMENT: ['IN_APP', 'EMAIL'],
-            FAMILY_ACTIVITY: ['IN_APP'],
-            SYSTEM_ANNOUNCEMENT: ['IN_APP'],
-            MARKETING: ['IN_APP'],
-            OTHER: ['IN_APP'],
-          }),
-          typeSettings: JSON.stringify({
-            CHECK_IN_REMINDER: true,
-            TASK_NOTIFICATION: true,
-            EXPIRY_ALERT: true,
-            BUDGET_WARNING: true,
-            HEALTH_ALERT: true,
-            GOAL_ACHIEVEMENT: true,
-            FAMILY_ACTIVITY: true,
-            SYSTEM_ANNOUNCEMENT: true,
-            MARKETING: false,
-            OTHER: true,
-          }),
-        })
-        .select()
-        .single();
+      const defaultPreference: NotificationPreferenceDTO = {
+        memberId,
+        channelPreferences: DEFAULT_PREFERENCES.channelPreferences as any,
+        mutedTypes: DEFAULT_PREFERENCES.mutedTypes as any,
+        lastUpdatedAt: new Date(),
+      };
 
-      if (createError) {
-        console.error('创建默认通知偏好失败:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create notification preferences' },
-          { status: 500 }
-        );
-      }
+      await notificationRepository.decorateMethod(
+        'upsertNotificationPreferences',
+        defaultPreference
+      );
 
-      finalPreferences = newPreferences;
+      preferences = defaultPreference;
     }
-
-    // 解析JSON字段
-    const formattedPreferences = finalPreferences ? {
-      ...finalPreferences,
-      channelPreferences: JSON.parse((finalPreferences as any).channelPreferences || '{}'),
-      typeSettings: JSON.parse((finalPreferences as any).typeSettings || '{}'),
-    } : null;
 
     return NextResponse.json({
       success: true,
-      data: formattedPreferences,
+      data: preferences,
     });
   } catch (error) {
     console.error('Error fetching notification preferences:', error);
@@ -108,30 +97,16 @@ export async function GET(request: NextRequest) {
 /**
  * PUT /api/notifications/preferences - 更新用户通知偏好设置
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架，支持 Prisma/Supabase 双写验证
  */
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const {
       memberId,
-      enableNotifications,
-      globalQuietHoursStart,
-      globalQuietHoursEnd,
-      dailyMaxNotifications,
-      dailyMaxSMS,
-      dailyMaxEmail,
       channelPreferences,
-      typeSettings,
-      wechatOpenId,
-      wechatSubscribed,
-      pushToken,
-      pushEnabled,
-      emailEnabled,
-      phoneEnabled,
-      phoneNumber,
-      enableSmartScheduling,
-      enableDeduplication,
+      quietHours,
+      mutedTypes,
     } = body;
 
     if (!memberId) {
@@ -141,141 +116,42 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 验证时间设置
-    if (globalQuietHoursStart !== undefined && 
-        (globalQuietHoursStart < 0 || globalQuietHoursStart > 23)) {
-      return NextResponse.json(
-        { error: 'Quiet hours start must be between 0 and 23' },
-        { status: 400 }
-      );
-    }
-
-    if (globalQuietHoursEnd !== undefined && 
-        (globalQuietHoursEnd < 0 || globalQuietHoursEnd > 23)) {
-      return NextResponse.json(
-        { error: 'Quiet hours end must be between 0 and 23' },
-        { status: 400 }
-      );
-    }
-
-    // 验证每日限额
-    if (dailyMaxNotifications !== undefined && dailyMaxNotifications < 0) {
-      return NextResponse.json(
-        { error: 'Daily max notifications must be non-negative' },
-        { status: 400 }
-      );
-    }
-
-    if (dailyMaxSMS !== undefined && dailyMaxSMS < 0) {
-      return NextResponse.json(
-        { error: 'Daily max SMS must be non-negative' },
-        { status: 400 }
-      );
-    }
-
-    if (dailyMaxEmail !== undefined && dailyMaxEmail < 0) {
-      return NextResponse.json(
-        { error: 'Daily max email must be non-negative' },
-        { status: 400 }
-      );
-    }
-
-    // 验证手机号格式
-    if (phoneNumber !== undefined && phoneNumber) {
-      const phoneRegex = /^1[3-9]\d{9}$/;
-      if (!phoneRegex.test(phoneNumber)) {
+    // 验证 quietHours 格式
+    if (quietHours) {
+      if (!quietHours.start || !quietHours.end) {
         return NextResponse.json(
-          { error: 'Invalid phone number format' },
+          { error: 'Quiet hours must have both start and end times' },
+          { status: 400 }
+        );
+      }
+
+      const timeRegex = /^\d{2}:\d{2}$/;
+      if (!timeRegex.test(quietHours.start) || !timeRegex.test(quietHours.end)) {
+        return NextResponse.json(
+          { error: 'Quiet hours must be in HH:MM format' },
           { status: 400 }
         );
       }
     }
 
-    const updateData: any = {
-      updatedAt: new Date(),
-    };
-
-    // 只更新提供的字段
-    if (enableNotifications !== undefined) updateData.enableNotifications = enableNotifications;
-    if (globalQuietHoursStart !== undefined) updateData.globalQuietHoursStart = globalQuietHoursStart;
-    if (globalQuietHoursEnd !== undefined) updateData.globalQuietHoursEnd = globalQuietHoursEnd;
-    if (dailyMaxNotifications !== undefined) updateData.dailyMaxNotifications = dailyMaxNotifications;
-    if (dailyMaxSMS !== undefined) updateData.dailyMaxSMS = dailyMaxSMS;
-    if (dailyMaxEmail !== undefined) updateData.dailyMaxEmail = dailyMaxEmail;
-    if (channelPreferences !== undefined) updateData.channelPreferences = JSON.stringify(channelPreferences);
-    if (typeSettings !== undefined) updateData.typeSettings = JSON.stringify(typeSettings);
-    if (wechatOpenId !== undefined) updateData.wechatOpenId = wechatOpenId;
-    if (wechatSubscribed !== undefined) updateData.wechatSubscribed = wechatSubscribed;
-    if (pushToken !== undefined) updateData.pushToken = pushToken;
-    if (pushEnabled !== undefined) updateData.pushEnabled = pushEnabled;
-    if (emailEnabled !== undefined) updateData.emailEnabled = emailEnabled;
-    if (phoneEnabled !== undefined) updateData.phoneEnabled = phoneEnabled;
-    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
-    if (enableSmartScheduling !== undefined) updateData.enableSmartScheduling = enableSmartScheduling;
-    if (enableDeduplication !== undefined) updateData.enableDeduplication = enableDeduplication;
-
-    const supabase = SupabaseClientManager.getInstance();
-
-    // Supabase upsert: 如果存在则更新，不存在则插入
-    const upsertData = {
+    // 准备偏好数据
+    const preferenceData: NotificationPreferenceDTO = {
       memberId,
-      enableNotifications: enableNotifications ?? true,
-      dailyMaxNotifications: dailyMaxNotifications ?? 50,
-      dailyMaxSMS: dailyMaxSMS ?? 5,
-      dailyMaxEmail: dailyMaxEmail ?? 20,
-      channelPreferences: channelPreferences ? JSON.stringify(channelPreferences) : JSON.stringify({
-        CHECK_IN_REMINDER: ['IN_APP', 'EMAIL'],
-        TASK_NOTIFICATION: ['IN_APP'],
-        EXPIRY_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
-        BUDGET_WARNING: ['IN_APP', 'EMAIL'],
-        HEALTH_ALERT: ['IN_APP', 'EMAIL', 'SMS'],
-        GOAL_ACHIEVEMENT: ['IN_APP', 'EMAIL'],
-        FAMILY_ACTIVITY: ['IN_APP'],
-        SYSTEM_ANNOUNCEMENT: ['IN_APP'],
-        MARKETING: ['IN_APP'],
-        OTHER: ['IN_APP'],
-      }),
-      typeSettings: typeSettings ? JSON.stringify(typeSettings) : JSON.stringify({
-        CHECK_IN_REMINDER: true,
-        TASK_NOTIFICATION: true,
-        EXPIRY_ALERT: true,
-        BUDGET_WARNING: true,
-        HEALTH_ALERT: true,
-        GOAL_ACHIEVEMENT: true,
-        FAMILY_ACTIVITY: true,
-        SYSTEM_ANNOUNCEMENT: true,
-        MARKETING: false,
-        OTHER: true,
-      }),
-      ...updateData,
+      channelPreferences: channelPreferences || DEFAULT_PREFERENCES.channelPreferences,
+      quietHours: quietHours || undefined,
+      mutedTypes: mutedTypes || undefined,
+      lastUpdatedAt: new Date(),
     };
 
-    const { data: preferences, error: upsertError } = await supabase
-      .from('notification_preferences')
-      .upsert(upsertData, {
-        onConflict: 'memberId',
-      })
-      .select()
-      .single();
-
-    if (upsertError) {
-      console.error('更新通知偏好失败:', upsertError);
-      return NextResponse.json(
-        { error: 'Failed to update notification preferences' },
-        { status: 500 }
-      );
-    }
-
-    // 解析JSON字段返回
-    const formattedPreferences = preferences ? {
-      ...preferences,
-      channelPreferences: JSON.parse((preferences as any).channelPreferences || '{}'),
-      typeSettings: JSON.parse((preferences as any).typeSettings || '{}'),
-    } : null;
+    // 使用双写框架更新偏好设置
+    await notificationRepository.decorateMethod(
+      'upsertNotificationPreferences',
+      preferenceData
+    );
 
     return NextResponse.json({
       success: true,
-      data: formattedPreferences,
+      data: preferenceData,
       message: 'Notification preferences updated successfully',
     });
   } catch (error) {

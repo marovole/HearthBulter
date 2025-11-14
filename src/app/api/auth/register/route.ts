@@ -83,6 +83,19 @@ export async function POST(request: NextRequest) {
     } catch (dbError) {
       console.error('Database error in registration:', dbError);
 
+      // 检查是否是唯一约束冲突（邮箱已存在）
+      const errorCode =
+        dbError && typeof dbError === 'object'
+          ? (dbError as { code?: string }).code
+          : undefined;
+
+      if (errorCode === '23505') {
+        return NextResponse.json(
+          { error: '该邮箱已被注册' },
+          { status: 409 }
+        );
+      }
+
       // 如果数据库不可用，创建临时用户
       return NextResponse.json({
         success: true,

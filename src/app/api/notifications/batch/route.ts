@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { createDualWriteDecorator } from '@/lib/db/dual-write';
+import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
+import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
+import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
+import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
+import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+import type { CreateNotificationDTO } from '@/lib/repositories/types/notification';
+
+/**
+ * 模块级别的单例 - 避免每次请求都重新创建
+ */
+const supabaseClient = SupabaseClientManager.getInstance();
+const notificationRepository = createDualWriteDecorator<NotificationRepository>(
+  new PrismaNotificationRepository(),
+  new SupabaseNotificationRepository(supabaseClient),
+  {
+    featureFlagManager: createFeatureFlagManager(supabaseClient),
+    verifier: createResultVerifier(supabaseClient),
+    apiEndpoint: '/api/notifications/batch',
+  }
+);
 
 /**
  * POST /api/notifications/batch
  * 批量操作通知
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架，支持 Prisma/Supabase 双写验证
  */
 export async function POST(request: NextRequest) {
   try {
@@ -40,9 +61,14 @@ async function handleBatchCreate(data: {
     memberId: string;
     type: string;
     title?: string;
-    message?: string;
+    content?: string;
     priority?: string;
-    data?: any;
+    channels?: string[];
+    metadata?: any;
+    actionUrl?: string;
+    actionText?: string;
+    dedupKey?: string;
+    batchId?: string;
   }>;
 }) {
   if (!data.notifications || !Array.isArray(data.notifications)) {
@@ -66,55 +92,53 @@ async function handleBatchCreate(data: {
     );
   }
 
-  const supabase = SupabaseClientManager.getInstance();
-  const now = new Date().toISOString();
+  const results = [];
+  const errors = [];
 
-  const notificationsData = data.notifications.map((notif) => ({
-    memberId: notif.memberId,
-    type: notif.type,
-    title: notif.title || 'Notification',
-    message: notif.message || '',
-    priority: notif.priority || 'MEDIUM',
-    data: notif.data || null,
-    readAt: null,
-    createdAt: now,
-    updatedAt: now,
-  }));
+  // 使用双写框架逐个创建通知（保证一致性）
+  for (const notif of data.notifications) {
+    try {
+      const payload: CreateNotificationDTO = {
+        memberId: notif.memberId,
+        type: notif.type as any,
+        title: notif.title || 'Notification',
+        content: notif.content || '',
+        priority: (notif.priority as any) || 'MEDIUM',
+        channels: notif.channels as any,
+        metadata: notif.metadata,
+        actionUrl: notif.actionUrl,
+        actionText: notif.actionText,
+        dedupKey: notif.dedupKey,
+        batchId: notif.batchId,
+      };
 
-  const { data: created, error } = await supabase
-    .from('notifications')
-    .insert(notificationsData)
-    .select();
-
-  if (error) {
-    console.error('Batch create failed:', error);
-    return NextResponse.json({
-      success: false,
-      data: {
-        results: [],
-        summary: {
-          total: data.notifications.length,
-          success: 0,
-          failed: data.notifications.length,
-          successRate: 0,
-        },
-      },
-    });
+      const created = await notificationRepository.decorateMethod(
+        'createNotification',
+        payload
+      );
+      results.push(created);
+    } catch (error) {
+      errors.push({
+        memberId: notif.memberId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
-  const successCount = created?.length || 0;
-  const failureCount = data.notifications.length - successCount;
+  const successCount = results.length;
+  const failureCount = errors.length;
 
   return NextResponse.json({
-    success: true,
+    success: successCount > 0,
     data: {
-      results: created || [],
+      results,
       summary: {
         total: data.notifications.length,
         success: successCount,
         failed: failureCount,
         successRate: data.notifications.length > 0 ? (successCount / data.notifications.length) * 100 : 0,
       },
+      errors: errors.length > 0 ? errors : undefined,
     },
   });
 }
@@ -152,42 +176,30 @@ async function handleBatchMarkRead(data: {
     );
   }
 
-  const supabase = SupabaseClientManager.getInstance();
-  const now = new Date().toISOString();
+  let successCount = 0;
+  const errors = [];
 
-  // 批量更新
-  const { data: updated, error } = await supabase
-    .from('notifications')
-    .update({
-      readAt: now,
-      updatedAt: now,
-    })
-    .in('id', data.notificationIds)
-    .eq('memberId', data.memberId)
-    .is('readAt', null)
-    .select('id');
-
-  if (error) {
-    console.error('Batch mark read failed:', error);
-    return NextResponse.json({
-      success: false,
-      data: {
-        summary: {
-          total: data.notificationIds.length,
-          success: 0,
-          failed: data.notificationIds.length,
-          successRate: 0,
-        },
-        errors: [error.message],
-      },
-    });
+  // 使用双写框架逐个标记已读
+  for (const notificationId of data.notificationIds) {
+    try {
+      await notificationRepository.decorateMethod(
+        'markAsRead',
+        notificationId,
+        data.memberId
+      );
+      successCount++;
+    } catch (error) {
+      errors.push({
+        notificationId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
-  const successCount = updated?.length || 0;
-  const failureCount = data.notificationIds.length - successCount;
+  const failureCount = errors.length;
 
   return NextResponse.json({
-    success: true,
+    success: successCount > 0,
     data: {
       summary: {
         total: data.notificationIds.length,
@@ -195,7 +207,7 @@ async function handleBatchMarkRead(data: {
         failed: failureCount,
         successRate: data.notificationIds.length > 0 ? (successCount / data.notificationIds.length) * 100 : 0,
       },
-      errors: failureCount > 0 ? [`${failureCount} notifications were not updated (already read or not found)`] : undefined,
+      errors: errors.length > 0 ? errors : undefined,
     },
   });
 }
@@ -233,37 +245,30 @@ async function handleBatchDelete(data: {
     );
   }
 
-  const supabase = SupabaseClientManager.getInstance();
+  let successCount = 0;
+  const errors = [];
 
-  // 批量删除
-  const { data: deleted, error } = await supabase
-    .from('notifications')
-    .delete()
-    .in('id', data.notificationIds)
-    .eq('memberId', data.memberId)
-    .select('id');
-
-  if (error) {
-    console.error('Batch delete failed:', error);
-    return NextResponse.json({
-      success: false,
-      data: {
-        summary: {
-          total: data.notificationIds.length,
-          success: 0,
-          failed: data.notificationIds.length,
-          successRate: 0,
-        },
-        errors: [error.message],
-      },
-    });
+  // 使用双写框架逐个删除通知
+  for (const notificationId of data.notificationIds) {
+    try {
+      await notificationRepository.decorateMethod(
+        'deleteNotification',
+        notificationId,
+        data.memberId
+      );
+      successCount++;
+    } catch (error) {
+      errors.push({
+        notificationId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
-  const successCount = deleted?.length || 0;
-  const failureCount = data.notificationIds.length - successCount;
+  const failureCount = errors.length;
 
   return NextResponse.json({
-    success: true,
+    success: successCount > 0,
     data: {
       summary: {
         total: data.notificationIds.length,
@@ -271,7 +276,7 @@ async function handleBatchDelete(data: {
         failed: failureCount,
         successRate: data.notificationIds.length > 0 ? (successCount / data.notificationIds.length) * 100 : 0,
       },
-      errors: failureCount > 0 ? [`${failureCount} notifications were not deleted (not found or permission denied)`] : undefined,
+      errors: errors.length > 0 ? errors : undefined,
     },
   });
 }

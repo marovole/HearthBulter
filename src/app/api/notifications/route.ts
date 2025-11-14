@@ -1,14 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { createDualWriteDecorator } from '@/lib/db/dual-write';
+import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
+import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
+import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
+import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
+import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
 import type {
   NotificationType,
   NotificationChannel,
   NotificationPriority,
-  NotificationStatus,
+  CreateNotificationDTO,
 } from '@/lib/repositories/types/notification';
 
 /**
- * Utility functions for notifications (migrated from NotificationUtils)
+ * 模块级别的单例 - 避免每次请求都重新创建
+ */
+const supabaseClient = SupabaseClientManager.getInstance();
+const notificationRepository = createDualWriteDecorator<NotificationRepository>(
+  new PrismaNotificationRepository(),
+  new SupabaseNotificationRepository(supabaseClient),
+  {
+    featureFlagManager: createFeatureFlagManager(supabaseClient),
+    verifier: createResultVerifier(supabaseClient),
+    apiEndpoint: '/api/notifications',
+  }
+);
+
+/**
+ * Utility functions for notifications
  */
 const NotificationFormatters = {
   formatTime(date: Date): string {
@@ -106,14 +126,14 @@ const NotificationFormatters = {
  * GET /api/notifications
  * 获取用户通知列表
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架，支持 Prisma/Supabase 双写验证
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
     const type = searchParams.get('type') as NotificationType | null;
-    const status = searchParams.get('status') as NotificationStatus | null;
+    const status = searchParams.get('status') as any;
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
     const includeRead = searchParams.get('includeRead') === 'true';
@@ -125,50 +145,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 使用双写框架查询通知列表
+    const result = await notificationRepository.decorateMethod(
+      'listMemberNotifications',
+      {
+        memberId,
+        type: type ?? undefined,
+        status: status ?? undefined,
+        includeRead,
+      },
+      {
+        limit,
+        offset,
+      }
+    );
 
-    // Build query
-    let query = supabase
-      .from('notifications')
-      .select('*', { count: 'exact' })
-      .eq('memberId', memberId)
-      .order('createdAt', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    // Add filters
-    if (type) {
-      query = query.eq('type', type);
-    }
-
-    if (status) {
-      query = query.eq('status', status);
-    }
-
-    if (!includeRead) {
-      query = query.is('readAt', null);
-    }
-
-    const { data: notifications, error, count } = await query;
-
-    if (error) {
-      console.error('Error fetching notifications:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch notifications' },
-        { status: 500 }
-      );
-    }
-
-    // Format notifications
-    const formattedNotifications = (notifications || []).map(notification => ({
+    // 格式化通知列表
+    const formattedNotifications = result.items.map(notification => ({
       id: notification.id,
       type: notification.type,
       title: notification.title,
       content: notification.content,
       status: notification.status,
       priority: notification.priority,
-      channels: Array.isArray(notification.channels)
-        ? notification.channels
-        : JSON.parse(notification.channels || '["IN_APP"]'),
+      channels: notification.channels,
       metadata: notification.metadata,
       actionUrl: notification.actionUrl,
       actionText: notification.actionText,
@@ -177,9 +177,9 @@ export async function GET(request: NextRequest) {
       sentAt: notification.sentAt,
       read: Boolean(notification.readAt),
       formattedTime: NotificationFormatters.formatTime(notification.createdAt),
-      typeIcon: NotificationFormatters.getTypeIcon(notification.type as NotificationType),
-      typeName: NotificationFormatters.getTypeName(notification.type as NotificationType),
-      priorityColor: NotificationFormatters.getPriorityColor(notification.priority as NotificationPriority),
+      typeIcon: NotificationFormatters.getTypeIcon(notification.type),
+      typeName: NotificationFormatters.getTypeName(notification.type),
+      priorityColor: NotificationFormatters.getPriorityColor(notification.priority),
       formattedContent: NotificationFormatters.formatContent(notification.content),
     }));
 
@@ -187,8 +187,8 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         notifications: formattedNotifications,
-        total: count || 0,
-        hasMore: (offset + limit) < (count || 0),
+        total: result.total,
+        hasMore: result.hasMore ?? false,
       },
     });
   } catch (error) {
@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
  * POST /api/notifications
  * 创建通知
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架，支持 Prisma/Supabase 双写验证
  * Note: This simplified version only creates notification records in the database.
  * For full notification delivery (Email, SMS, WeChat, Push), use NotificationManager service.
  */
@@ -276,64 +276,44 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // Check if member exists
-    const { data: member, error: memberError } = await supabase
-      .from('family_members')
-      .select('id')
-      .eq('id', memberId)
-      .single();
-
-    if (memberError || !member) {
-      return NextResponse.json(
-        { error: 'Member not found' },
-        { status: 404 }
-      );
-    }
-
-    // Prepare notification data
-    const notificationData = {
+    // 准备通知数据
+    const notificationPayload: CreateNotificationDTO = {
       memberId,
       type,
       title: title || '',
       content: content || '',
       priority,
       channels: Array.isArray(channels) ? channels : ['IN_APP'],
-      metadata: metadata || null,
-      actionUrl: actionUrl || null,
-      actionText: actionText || null,
-      dedupKey: dedupKey || null,
-      batchId: batchId || null,
-      status: 'PENDING' as NotificationStatus,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      metadata,
+      actionUrl,
+      actionText,
+      dedupKey,
+      batchId,
     };
 
-    // Create notification
-    const { data: notification, error: createError } = await supabase
-      .from('notifications')
-      .insert(notificationData)
-      .select()
-      .single();
-
-    if (createError) {
-      console.error('Error creating notification:', createError);
-      return NextResponse.json(
-        { error: 'Failed to create notification' },
-        { status: 500 }
-      );
-    }
+    // 使用双写框架创建通知
+    const notification = await notificationRepository.decorateMethod(
+      'createNotification',
+      notificationPayload
+    );
 
     return NextResponse.json({
       success: true,
       data: {
         notificationId: notification.id,
         notification: {
-          ...notification,
-          channels: Array.isArray(notification.channels)
-            ? notification.channels
-            : JSON.parse(notification.channels || '["IN_APP"]'),
+          id: notification.id,
+          memberId: notification.memberId,
+          type: notification.type,
+          title: notification.title,
+          content: notification.content,
+          priority: notification.priority,
+          channels: notification.channels,
+          metadata: notification.metadata,
+          actionUrl: notification.actionUrl,
+          actionText: notification.actionText,
+          status: notification.status,
+          createdAt: notification.createdAt,
         },
       },
     });
