@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { getCurrentUser } from '@/lib/auth';
-
-// Type definitions (replacing Prisma enums)
-type InventoryStatus = 'FRESH' | 'EXPIRING_SOON' | 'EXPIRED' | 'USED_UP' | 'WASTED';
-type StorageLocation = 'FRIDGE' | 'FREEZER' | 'PANTRY' | 'CUPBOARD' | 'WINE_CELLAR' | 'OTHER';
+import { inventoryRepository } from '@/lib/repositories/inventory-repository-singleton';
+import type { InventoryItemCreateDTO, InventoryItemFilterDTO } from '@/lib/repositories/types/inventory';
 
 /**
  * GET /api/inventory/items
  * 获取库存列表
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function GET(request: NextRequest) {
   try {
@@ -26,67 +24,51 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '缺少成员ID' }, { status: 400 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 构建过滤器
+    const filter: InventoryItemFilterDTO = {};
 
-    // Build query with filters
-    let query = supabase
-      .from('inventory_items')
-      .select(`
-        *,
-        food:foods(*),
-        member:family_members(id, name, email)
-      `)
-      .eq('memberId', memberId);
-
-    // Apply filters
-    const status = searchParams.get('status') as InventoryStatus | null;
+    const status = searchParams.get('status');
     if (status) {
-      query = query.eq('status', status);
+      filter.status = status as InventoryItemFilterDTO['status'];
     }
 
-    const storageLocation = searchParams.get('storageLocation') as StorageLocation | null;
+    const storageLocation = searchParams.get('storageLocation');
     if (storageLocation) {
-      query = query.eq('storageLocation', storageLocation);
+      filter.storageLocation = storageLocation as InventoryItemFilterDTO['storageLocation'];
     }
 
     const category = searchParams.get('category');
     if (category) {
-      // Need to filter by food category (requires join)
-      query = query.eq('food.category', category);
+      filter.category = category;
     }
 
     const isExpiring = searchParams.get('isExpiring') === 'true';
     if (isExpiring) {
-      query = query.eq('status', 'EXPIRING_SOON');
+      filter.isExpiring = true;
     }
 
     const isExpired = searchParams.get('isExpired') === 'true';
     if (isExpired) {
-      query = query.eq('status', 'EXPIRED');
+      filter.isExpired = true;
     }
 
     const isLowStock = searchParams.get('isLowStock') === 'true';
     if (isLowStock) {
-      query = query.eq('isLowStock', true);
+      filter.isLowStock = true;
     }
 
-    // Order by creation date (newest first)
-    query = query.order('createdAt', { ascending: false });
-
-    const { data: items, error } = await query;
-
-    if (error) {
-      console.error('获取库存列表失败:', error);
-      return NextResponse.json(
-        { error: '获取库存列表失败' },
-        { status: 500 }
-      );
-    }
+    // 使用 Repository 获取库存列表
+    const result = await inventoryRepository.decorateMethod(
+      'listInventoryItems',
+      memberId,
+      Object.keys(filter).length > 0 ? filter : undefined,
+      undefined // 不使用分页，返回所有结果
+    );
 
     return NextResponse.json({
       success: true,
-      data: items || [],
-      count: items?.length || 0,
+      data: result.items || [],
+      count: result.items?.length || 0,
     });
 
   } catch (error) {
@@ -102,7 +84,7 @@ export async function GET(request: NextRequest) {
  * POST /api/inventory/items
  * 创建库存条目
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function POST(request: NextRequest) {
   try {
@@ -150,67 +132,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate derived fields
-    const quantity = parseFloat(body.quantity);
-    const expiryDate = body.expiryDate ? new Date(body.expiryDate) : null;
-    const now = new Date();
-    let daysToExpiry: number | null = null;
-    let status: InventoryStatus = 'FRESH';
-
-    if (expiryDate) {
-      daysToExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysToExpiry < 0) {
-        status = 'EXPIRED';
-      } else if (daysToExpiry <= 3) {
-        status = 'EXPIRING_SOON';
-      }
-    }
-
-    const minStockThreshold = body.minStockThreshold ? parseFloat(body.minStockThreshold) : null;
-    const isLowStock = minStockThreshold ? quantity <= minStockThreshold : false;
-
-    // Create inventory item
-    const itemData = {
+    // 构建 InventoryItemCreateDTO
+    // Repository 会自动计算 daysToExpiry, status, isLowStock
+    const createData: InventoryItemCreateDTO = {
       memberId: body.memberId,
       foodId: body.foodId,
-      quantity,
+      quantity: parseFloat(body.quantity),
       unit: body.unit,
-      originalQuantity: quantity,
-      purchasePrice: body.purchasePrice ? parseFloat(body.purchasePrice) : null,
-      purchaseSource: body.purchaseSource || null,
-      purchaseDate: now.toISOString(),
-      expiryDate: expiryDate?.toISOString() || null,
-      productionDate: body.productionDate ? new Date(body.productionDate).toISOString() : null,
-      daysToExpiry,
-      storageLocation: (body.storageLocation as StorageLocation) || 'PANTRY',
-      storageNotes: body.storageNotes || null,
-      status,
-      minStockThreshold,
-      isLowStock,
-      barcode: body.barcode || null,
-      brand: body.brand || null,
-      packageInfo: body.packageInfo || null,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
+      purchasePrice: body.purchasePrice ? parseFloat(body.purchasePrice) : undefined,
+      purchaseSource: body.purchaseSource || undefined,
+      expiryDate: body.expiryDate ? new Date(body.expiryDate) : undefined,
+      productionDate: body.productionDate ? new Date(body.productionDate) : undefined,
+      storageLocation: body.storageLocation || undefined,
+      storageNotes: body.storageNotes || undefined,
+      minStockThreshold: body.minStockThreshold ? parseFloat(body.minStockThreshold) : undefined,
+      barcode: body.barcode || undefined,
+      brand: body.brand || undefined,
+      packageInfo: body.packageInfo || undefined,
     };
 
-    const { data: item, error: createError } = await supabase
-      .from('inventory_items')
-      .insert(itemData)
-      .select(`
-        *,
-        food:foods(*),
-        member:family_members(id, name, email)
-      `)
-      .single();
-
-    if (createError) {
-      console.error('创建库存条目失败:', createError);
-      return NextResponse.json(
-        { error: '创建库存条目失败' },
-        { status: 500 }
-      );
-    }
+    // 使用 Repository 创建库存物品
+    const item = await inventoryRepository.decorateMethod('createInventoryItem', createData);
 
     return NextResponse.json({
       success: true,
