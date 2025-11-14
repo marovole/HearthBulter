@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 import {
   updateQuickTemplate,
-  deleteQuickTemplate,
   useTemplate,
 } from '@/lib/services/tracking/template-manager';
 import { z } from 'zod';
@@ -29,6 +29,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -64,12 +65,15 @@ export async function PATCH(
 /**
  * DELETE /api/tracking/templates/[id]
  * 删除模板
+ *
+ * 使用双写框架迁移
  */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -79,7 +83,8 @@ export async function DELETE(
       );
     }
 
-    await deleteQuickTemplate(id);
+    // 使用 Repository 删除模板
+    await mealTrackingRepository.decorateMethod('deleteQuickTemplate', id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -95,12 +100,16 @@ export async function DELETE(
 /**
  * POST /api/tracking/templates/[id]/use
  * 使用模板（更新使用统计）
+ *
+ * Note: 此端点用于更新模板使用统计，不创建膳食记录
+ * 要使用模板创建膳食记录，请调用 POST /api/tracking/meals 并传入 templateId
  */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {

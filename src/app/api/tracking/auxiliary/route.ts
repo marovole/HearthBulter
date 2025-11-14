@@ -1,3 +1,10 @@
+/**
+ * 辅助追踪 API
+ *
+ * Note: 使用 auxiliary-tracker 服务层
+ * 涉及水分、运动、睡眠、体重等健康数据追踪，超出 MealTrackingRepository 职责范围
+ * 未来可考虑创建专门的 HealthDataRepository
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import {

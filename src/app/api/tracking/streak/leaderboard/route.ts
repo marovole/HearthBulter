@@ -5,6 +5,10 @@ import { getFamilyStreakLeaderboard } from '@/lib/services/tracking/streak-manag
 /**
  * GET /api/tracking/streak/leaderboard?familyId=xxx
  * 获取家庭打卡排行榜
+ *
+ * Note: 暂时保留服务层调用
+ * 这是跨家庭成员的聚合排行功能，超出单个 MealTracking Repository 的职责范围
+ * 未来可考虑创建专门的 Leaderboard Repository
  */
 export async function GET(req: NextRequest) {
   try {
