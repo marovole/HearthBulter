@@ -76,6 +76,8 @@ export const shoppingListSchema = z.object({
   planId: z.string().uuid(),
   name: z.string().min(1).max(200),
   budget: z.number().min(0).nullable(),
+  estimatedCost: z.number().min(0).nullable().optional(),
+  actualCost: z.number().min(0).nullable().optional(),
   status: shoppingListStatusSchema,
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
@@ -152,3 +154,23 @@ export const updateShoppingListSchema = z.object({
 });
 
 export type UpdateShoppingListDTO = z.infer<typeof updateShoppingListSchema>;
+
+/**
+ * 更新购物项 DTO
+ */
+export const updateShoppingListItemSchema = z.object({
+  purchased: z.boolean().optional(),
+  quantity: z.number().positive().optional(),
+  notes: z.string().optional().nullable(),
+});
+
+export type UpdateShoppingListItemDTO = z.infer<typeof updateShoppingListItemSchema>;
+
+/**
+ * 完成购物清单 DTO
+ */
+export const completeShoppingListSchema = z.object({
+  actualCost: z.number().min(0).optional(),
+});
+
+export type CompleteShoppingListDTO = z.infer<typeof completeShoppingListSchema>;

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { shoppingListRepository } from '@/lib/repositories/shopping-list-repository-singleton';
 
 /**
  * PATCH /api/shopping-lists/:id/items/:itemId
  * 标记已购
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function PATCH(
   request: NextRequest,
@@ -76,65 +77,35 @@ export async function PATCH(
       );
     }
 
-    // 检查清单项是否存在
-    const { data: item, error: itemError } = await supabase
-      .from('shopping_list_items')
-      .select('id, purchased')
-      .eq('id', itemId)
-      .eq('listId', listId)
-      .single();
+    // 使用 Repository 更新购物项
+    const updatedItem = await shoppingListRepository.decorateMethod(
+      'updateShoppingListItem',
+      listId,
+      itemId,
+      { purchased }
+    );
 
-    if (itemError || !item) {
-      return NextResponse.json({ error: '清单项不存在' }, { status: 404 });
-    }
-
-    // 更新清单项
-    const { data: updatedItem, error: updateError } = await supabase
-      .from('shopping_list_items')
-      .update({
-        purchased,
-        updatedAt: new Date().toISOString(),
-      })
-      .eq('id', itemId)
-      .select(`
-        *,
-        food:foods(*)
-      `)
-      .single();
-
-    if (updateError) {
-      console.error('更新清单项失败:', updateError);
-      return NextResponse.json(
-        { error: '更新清单项失败' },
-        { status: 500 }
-      );
-    }
-
-    // 检查是否所有项都已购买，如果是则更新清单状态
+    // 智能状态更新：检查是否所有项都已购买，如果是则更新清单状态
     const { data: allItems } = await supabase
       .from('shopping_list_items')
       .select('id, purchased')
-      .eq('listId', listId);
+      .eq('shopping_list_id', listId);
 
     if (allItems) {
       const allPurchased = allItems.every((item) => item.purchased);
 
       if (allPurchased && shoppingList.status !== 'COMPLETED') {
-        await supabase
-          .from('shopping_lists')
-          .update({
-            status: 'COMPLETED',
-            updatedAt: new Date().toISOString(),
-          })
-          .eq('id', listId);
-      } else if (!allPurchased && shoppingList.status === 'PENDING') {
-        await supabase
-          .from('shopping_lists')
-          .update({
-            status: 'IN_PROGRESS',
-            updatedAt: new Date().toISOString(),
-          })
-          .eq('id', listId);
+        await shoppingListRepository.decorateMethod(
+          'updateShoppingList',
+          listId,
+          { status: 'COMPLETED' }
+        );
+      } else if (!allPurchased && shoppingList.status === 'DRAFT') {
+        await shoppingListRepository.decorateMethod(
+          'updateShoppingList',
+          listId,
+          { status: 'ACTIVE' }
+        );
       }
     }
 
