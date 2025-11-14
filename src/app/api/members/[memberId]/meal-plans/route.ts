@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { mealPlanner } from '@/lib/services/meal-planner';
+import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-singleton';
 import { z } from 'zod';
 
 // 创建食谱计划的验证 schema
@@ -132,7 +133,7 @@ export async function POST(
  * GET /api/members/:memberId/meal-plans
  * 查询历史食谱
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function GET(
   request: NextRequest,
@@ -152,112 +153,44 @@ export async function GET(
       return NextResponse.json({ error: '成员不存在' }, { status: 404 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 使用 Repository 查询膳食计划（包含所有嵌套数据）
+    const result = await mealPlanRepository.decorateMethod(
+      'listMealPlans',
+      { memberId, includeDeleted: false },
+      { page: 1, limit: 100 } // 默认返回最多 100 个计划
+    );
 
-    // 查询膳食计划
-    const { data: mealPlans, error: plansError } = await supabase
-      .from('meal_plans')
-      .select('*')
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .order('createdAt', { ascending: false });
-
-    if (plansError) {
-      console.error('查询膳食计划失败:', plansError);
-      return NextResponse.json(
-        { error: '查询膳食计划失败' },
-        { status: 500 }
-      );
-    }
-
-    if (!mealPlans || mealPlans.length === 0) {
-      return NextResponse.json({ mealPlans: [] }, { status: 200 });
-    }
-
-    const planIds = mealPlans.map(p => p.id);
-
-    // 查询所有相关的 meals
-    const { data: meals, error: mealsError } = await supabase
-      .from('meals')
-      .select('*')
-      .in('planId', planIds)
-      .order('date', { ascending: true });
-
-    if (mealsError) {
-      console.error('查询膳食失败:', mealsError);
-      return NextResponse.json(
-        { error: '查询膳食失败' },
-        { status: 500 }
-      );
-    }
-
-    // 如果有 meals，查询所有相关的 ingredients
-    let ingredients: any[] = [];
-    let foods: any[] = [];
-
-    if (meals && meals.length > 0) {
-      const mealIds = meals.map(m => m.id);
-
-      const { data: ingredientsData, error: ingredientsError } = await supabase
-        .from('meal_ingredients')
-        .select('*')
-        .in('mealId', mealIds);
-
-      if (ingredientsError) {
-        console.error('查询食材失败:', ingredientsError);
-      } else {
-        ingredients = ingredientsData || [];
-      }
-
-      // 如果有 ingredients，查询所有相关的 foods
-      if (ingredients.length > 0) {
-        const foodIds = [...new Set(ingredients.map(i => i.foodId))];
-
-        const { data: foodsData, error: foodsError } = await supabase
-          .from('foods')
-          .select('*')
-          .in('id', foodIds);
-
-        if (foodsError) {
-          console.error('查询食物失败:', foodsError);
-        } else {
-          foods = foodsData || [];
-        }
-      }
-    }
-
-    // 手动组装数据
-    const foodsMap = new Map(foods.map(f => [f.id, f]));
-    const ingredientsMap = new Map<string, any[]>();
-
-    ingredients.forEach(ingredient => {
-      if (!ingredientsMap.has(ingredient.mealId)) {
-        ingredientsMap.set(ingredient.mealId, []);
-      }
-      ingredientsMap.get(ingredient.mealId)!.push({
-        ...ingredient,
-        food: foodsMap.get(ingredient.foodId),
-      });
-    });
-
-    const mealsMap = new Map<string, any[]>();
-    meals?.forEach(meal => {
-      if (!mealsMap.has(meal.planId)) {
-        mealsMap.set(meal.planId, []);
-      }
-      mealsMap.get(meal.planId)!.push({
-        ...meal,
-        ingredients: ingredientsMap.get(meal.id) || [],
-      });
-    });
-
-    // 组装最终数据
-    const assembledMealPlans = mealPlans.map(plan => ({
-      ...plan,
-      meals: mealsMap.get(plan.id) || [],
+    // 转换为原有的响应格式以保持向后兼容
+    const mealPlans = result.data.map(plan => ({
+      id: plan.id,
+      memberId: plan.memberId,
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+      goalType: plan.goalType,
+      targetCalories: plan.targetCalories,
+      targetProtein: plan.targetProtein,
+      targetCarbs: plan.targetCarbs,
+      targetFat: plan.targetFat,
+      status: plan.status,
+      createdAt: plan.createdAt,
+      updatedAt: plan.updatedAt,
+      deletedAt: plan.deletedAt,
+      meals: plan.meals.map(meal => ({
+        id: meal.id,
+        planId: meal.planId,
+        date: meal.date,
+        mealType: meal.mealType,
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        createdAt: meal.createdAt,
+        updatedAt: meal.updatedAt,
+        ingredients: meal.ingredients,
+      })),
     }));
 
-    return NextResponse.json({ mealPlans: assembledMealPlans }, { status: 200 });
+    return NextResponse.json({ mealPlans }, { status: 200 });
   } catch (error) {
     console.error('查询食谱计划失败:', error);
     return NextResponse.json(

@@ -133,12 +133,152 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
     throw new Error('SupabaseMealPlanRepository.createMeal not fully implemented yet');
   }
 
-  async getMealById(_id: string): Promise<MealDTO | null> {
-    throw new Error('SupabaseMealPlanRepository.getMealById not fully implemented yet');
+  async getMealById(id: string): Promise<MealDTO | null> {
+    const { data, error } = await this.client
+      .from('meals')
+      .select(`
+        *,
+        ingredients:meal_ingredients(
+          id,
+          mealId,
+          foodId,
+          amount
+        )
+      `)
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      planId: data.planId,
+      date: new Date(data.date),
+      mealType: data.mealType,
+      calories: data.calories,
+      protein: data.protein,
+      carbs: data.carbs,
+      fat: data.fat,
+      createdAt: new Date(data.createdAt),
+      updatedAt: new Date(data.updatedAt),
+      ingredients: (data.ingredients || []).map((ing: any) => ({
+        id: ing.id,
+        mealId: ing.mealId,
+        foodId: ing.foodId,
+        amount: ing.amount,
+      })),
+    };
   }
 
-  async updateMeal(_id: string, _input: MealUpdateInputDTO): Promise<MealDTO> {
-    throw new Error('SupabaseMealPlanRepository.updateMeal not fully implemented yet');
+  async updateMeal(id: string, input: MealUpdateInputDTO): Promise<MealDTO> {
+    const updateData: any = {};
+
+    if (input.date !== undefined) updateData.date = input.date.toISOString();
+    if (input.mealType !== undefined) updateData.mealType = input.mealType;
+    if (input.calories !== undefined) updateData.calories = input.calories;
+    if (input.protein !== undefined) updateData.protein = input.protein;
+    if (input.carbs !== undefined) updateData.carbs = input.carbs;
+    if (input.fat !== undefined) updateData.fat = input.fat;
+
+    // 更新 updatedAt 时间戳
+    updateData.updatedAt = new Date().toISOString();
+
+    const { data, error } = await this.client
+      .from('meals')
+      .update(updateData)
+      .eq('id', id)
+      .select(`
+        *,
+        ingredients:meal_ingredients(
+          id,
+          mealId,
+          foodId,
+          amount
+        )
+      `)
+      .single();
+
+    if (error) throw error;
+
+    // 如果提供了 ingredients，更新它们
+    if (input.ingredients) {
+      // 先删除所有现有 ingredients
+      await this.client
+        .from('meal_ingredients')
+        .delete()
+        .eq('mealId', id);
+
+      // 插入新的 ingredients
+      if (input.ingredients.length > 0) {
+        const { error: insertError } = await this.client
+          .from('meal_ingredients')
+          .insert(
+            input.ingredients.map(ing => ({
+              mealId: id,
+              foodId: ing.foodId,
+              amount: ing.amount,
+            }))
+          );
+
+        if (insertError) throw insertError;
+      }
+
+      // 重新查询以获取更新后的 ingredients
+      const { data: updatedData, error: fetchError } = await this.client
+        .from('meals')
+        .select(`
+          *,
+          ingredients:meal_ingredients(
+            id,
+            mealId,
+            foodId,
+            amount
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      return {
+        id: updatedData.id,
+        planId: updatedData.planId,
+        date: new Date(updatedData.date),
+        mealType: updatedData.mealType,
+        calories: updatedData.calories,
+        protein: updatedData.protein,
+        carbs: updatedData.carbs,
+        fat: updatedData.fat,
+        createdAt: new Date(updatedData.createdAt),
+        updatedAt: new Date(updatedData.updatedAt),
+        ingredients: (updatedData.ingredients || []).map((ing: any) => ({
+          id: ing.id,
+          mealId: ing.mealId,
+          foodId: ing.foodId,
+          amount: ing.amount,
+        })),
+      };
+    }
+
+    return {
+      id: data.id,
+      planId: data.planId,
+      date: new Date(data.date),
+      mealType: data.mealType,
+      calories: data.calories,
+      protein: data.protein,
+      carbs: data.carbs,
+      fat: data.fat,
+      createdAt: new Date(data.createdAt),
+      updatedAt: new Date(data.updatedAt),
+      ingredients: (data.ingredients || []).map((ing: any) => ({
+        id: ing.id,
+        mealId: ing.mealId,
+        foodId: ing.foodId,
+        amount: ing.amount,
+      })),
+    };
   }
 
   async deleteMeal(_id: string): Promise<void> {
@@ -146,10 +286,65 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
   }
 
   async updateMealIngredients(
-    _mealId: string,
-    _ingredients: MealIngredientCreateInputDTO[]
+    mealId: string,
+    ingredients: MealIngredientCreateInputDTO[]
   ): Promise<MealDTO> {
-    throw new Error('SupabaseMealPlanRepository.updateMealIngredients not fully implemented yet');
+    // 先删除所有现有 ingredients
+    await this.client
+      .from('meal_ingredients')
+      .delete()
+      .eq('mealId', mealId);
+
+    // 插入新的 ingredients
+    if (ingredients.length > 0) {
+      const { error: insertError } = await this.client
+        .from('meal_ingredients')
+        .insert(
+          ingredients.map(ing => ({
+            mealId,
+            foodId: ing.foodId,
+            amount: ing.amount,
+          }))
+        );
+
+      if (insertError) throw insertError;
+    }
+
+    // 查询更新后的 meal（包含新的 ingredients）
+    const { data, error } = await this.client
+      .from('meals')
+      .select(`
+        *,
+        ingredients:meal_ingredients(
+          id,
+          mealId,
+          foodId,
+          amount
+        )
+      `)
+      .eq('id', mealId)
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      planId: data.planId,
+      date: new Date(data.date),
+      mealType: data.mealType,
+      calories: data.calories,
+      protein: data.protein,
+      carbs: data.carbs,
+      fat: data.fat,
+      createdAt: new Date(data.createdAt),
+      updatedAt: new Date(data.updatedAt),
+      ingredients: (data.ingredients || []).map((ing: any) => ({
+        id: ing.id,
+        mealId: ing.mealId,
+        foodId: ing.foodId,
+        amount: ing.amount,
+      })),
+    };
   }
 
   async getActivePlanByMember(memberId: string): Promise<MealPlanDTO | null> {

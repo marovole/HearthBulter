@@ -3,7 +3,12 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { mealPlanner } from '@/lib/services/meal-planner';
 
-// POST /api/meal-plans/meals/:mealId/replace
+/**
+ * POST /api/meal-plans/meals/:mealId/replace
+ *
+ * Note: 保留服务层调用
+ * 此端点使用智能餐食替换算法（同 PATCH /meal-plans/:planId/meals/:mealId）
+ */
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ mealId: string }> }

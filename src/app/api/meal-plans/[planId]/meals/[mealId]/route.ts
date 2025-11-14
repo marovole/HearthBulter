@@ -3,7 +3,16 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { mealPlanner } from '@/lib/services/meal-planner';
 
-// PATCH /api/meal-plans/:planId/meals/:mealId - 替换单餐
+/**
+ * PATCH /api/meal-plans/:planId/meals/:mealId
+ *
+ * Note: 保留服务层调用
+ * 此端点使用智能餐食替换算法，涉及：
+ * - 营养相似度计算
+ * - 食材可替代性分析
+ * - 保持整体营养平衡
+ * 这些复杂逻辑应保持在 mealPlanner 服务层
+ */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ planId: string; mealId: string }> }
