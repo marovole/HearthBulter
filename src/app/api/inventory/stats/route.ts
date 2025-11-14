@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { inventoryTracker } from '@/services/inventory-tracker';
+import { inventoryRepository } from '@/lib/repositories/inventory-repository-singleton';
 import { inventoryAnalyzer } from '@/services/inventory-analyzer';
 import { expiryMonitor } from '@/services/expiry-monitor';
 import { getCurrentUser } from '@/lib/auth';
@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
 
     switch (type) {
     case 'basic':
-      // 基础统计
-      data = await inventoryTracker.getInventoryStats(memberId);
+      // 基础统计 - 使用双写框架迁移
+      data = await inventoryRepository.decorateMethod('getInventoryStats', memberId);
       break;
 
     case 'efficiency':
