@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { updateMealLog, deleteMealLog } from '@/lib/services/tracking/meal-tracker';
+import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 import { z } from 'zod';
 
 const updateMealLogSchema = z.object({
@@ -18,12 +18,15 @@ const updateMealLogSchema = z.object({
 /**
  * PATCH /api/tracking/meals/[id]
  * 更新餐饮记录
+ *
+ * 使用双写框架迁移
  */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -36,7 +39,9 @@ export async function PATCH(
     const body = await req.json();
     const validatedData = updateMealLogSchema.parse(body);
 
-    const mealLog = await updateMealLog(id, validatedData);
+    // 使用 Repository 更新膳食记录
+    // Repository 会自动重新计算营养（如果更新了食物列表）
+    const mealLog = await mealTrackingRepository.decorateMethod('updateMealLog', id, validatedData);
 
     return NextResponse.json(mealLog);
   } catch (error) {
@@ -58,13 +63,16 @@ export async function PATCH(
 
 /**
  * DELETE /api/tracking/meals/[id]
- * 删除餐饮记录
+ * 软删除餐饮记录
+ *
+ * 使用双写框架迁移
  */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -74,7 +82,8 @@ export async function DELETE(
       );
     }
 
-    await deleteMealLog(id);
+    // 使用 Repository 软删除膳食记录
+    await mealTrackingRepository.decorateMethod('deleteMealLog', id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

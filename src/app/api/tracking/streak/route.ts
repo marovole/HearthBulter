@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 import {
-  getTrackingStreak,
   getCheckInStats,
   getCheckInCalendar,
   getFamilyStreakLeaderboard,
@@ -11,6 +11,8 @@ import {
 /**
  * GET /api/tracking/streak?memberId=xxx
  * 获取连续打卡记录
+ *
+ * 使用双写框架迁移
  */
 export async function GET(req: NextRequest) {
   try {
@@ -33,7 +35,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const streak = await getTrackingStreak(memberId);
+    // 使用 Repository 获取连续打卡记录
+    const streak = await mealTrackingRepository.decorateMethod('getTrackingStreak', memberId);
 
     return NextResponse.json(streak);
   } catch (error) {

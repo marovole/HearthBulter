@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import {
-  createMealLog,
-  getTodayMealLogs,
-  getMealLogHistory,
-} from '@/lib/services/tracking/meal-tracker';
+import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 import { z } from 'zod';
 
 const createMealLogSchema = z.object({
@@ -23,6 +19,8 @@ const createMealLogSchema = z.object({
 /**
  * POST /api/tracking/meals
  * 创建餐饮记录
+ *
+ * 使用双写框架迁移
  */
 export async function POST(req: NextRequest) {
   try {
@@ -38,7 +36,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validatedData = createMealLogSchema.parse(body);
 
-    const mealLog = await createMealLog(validatedData);
+    // 使用 Repository 创建膳食记录
+    // Repository 会自动：计算营养、创建记录、更新连续打卡
+    const mealLog = await mealTrackingRepository.decorateMethod('createMealLog', validatedData);
 
     return NextResponse.json(mealLog, { status: 201 });
   } catch (error) {
@@ -61,6 +61,8 @@ export async function POST(req: NextRequest) {
 /**
  * GET /api/tracking/meals?memberId=xxx&period=today|history&startDate=xxx&endDate=xxx
  * 获取餐饮记录
+ *
+ * 使用双写框架迁移
  */
 export async function GET(req: NextRequest) {
   try {
@@ -89,16 +91,26 @@ export async function GET(req: NextRequest) {
     }
 
     if (period === 'today') {
-      const logs = await getTodayMealLogs(memberId);
+      // 使用 Repository 获取今日记录
+      const logs = await mealTrackingRepository.decorateMethod('getTodayMealLogs', memberId);
       return NextResponse.json({ logs });
     } else {
-      const options: any = {};
-      if (startDate) options.startDate = new Date(startDate);
-      if (endDate) options.endDate = new Date(endDate);
-      if (limit) options.limit = parseInt(limit);
-      if (offset) options.offset = parseInt(offset);
+      // 使用 Repository 获取历史记录
+      const filter: any = {};
+      if (startDate) filter.startDate = new Date(startDate);
+      if (endDate) filter.endDate = new Date(endDate);
 
-      const result = await getMealLogHistory(memberId, options);
+      const pagination: any = {};
+      if (limit) pagination.limit = parseInt(limit);
+      if (offset) pagination.offset = parseInt(offset);
+
+      const result = await mealTrackingRepository.decorateMethod(
+        'getMealLogHistory',
+        memberId,
+        Object.keys(filter).length > 0 ? filter : undefined,
+        Object.keys(pagination).length > 0 ? pagination : undefined
+      );
+
       return NextResponse.json(result);
     }
   } catch (error) {
