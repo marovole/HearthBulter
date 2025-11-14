@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 import {
-  createQuickTemplate,
-  getQuickTemplates,
   getRecommendedTemplates,
   createTemplateFromMealLog,
-  useTemplate,
   autoGenerateTemplates,
 } from '@/lib/services/tracking/template-manager';
 import { z } from 'zod';
@@ -26,6 +24,9 @@ const createTemplateSchema = z.object({
 /**
  * POST /api/tracking/templates
  * 创建快速模板
+ *
+ * 部分使用双写框架迁移（基本创建功能）
+ * 高级功能（createFromMealLog, autoGenerate）暂时保留服务层
  */
 export async function POST(req: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // 检查是否是从餐饮记录创建模板
+    // 检查是否是从餐饮记录创建模板（使用服务层）
     if (body.mealLogId) {
       const template = await createTemplateFromMealLog(
         body.mealLogId,
@@ -50,15 +51,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(template, { status: 201 });
     }
 
-    // 检查是否是自动生成模板
+    // 检查是否是自动生成模板（使用服务层）
     if (body.autoGenerate) {
       const templates = await autoGenerateTemplates(body.memberId);
       return NextResponse.json({ templates }, { status: 201 });
     }
 
-    // 常规创建模板
+    // 常规创建模板（使用 Repository）
     const validatedData = createTemplateSchema.parse(body);
-    const template = await createQuickTemplate(validatedData);
+    const template = await mealTrackingRepository.decorateMethod('createQuickTemplate', validatedData);
 
     return NextResponse.json(template, { status: 201 });
   } catch (error) {
@@ -81,6 +82,9 @@ export async function POST(req: NextRequest) {
 /**
  * GET /api/tracking/templates?memberId=xxx&mealType=BREAKFAST&recommended=true
  * 获取模板列表
+ *
+ * 部分使用双写框架迁移（基本列表功能）
+ * 推荐功能（recommended）暂时保留服务层
  */
 export async function GET(req: NextRequest) {
   try {
@@ -106,6 +110,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // 推荐模板（使用服务层）
     if (recommended) {
       const templates = await getRecommendedTemplates(
         memberId,
@@ -115,7 +120,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ templates });
     }
 
-    const templates = await getQuickTemplates(memberId, mealType as any);
+    // 常规模板列表（使用 Repository）
+    const templates = await mealTrackingRepository.decorateMethod(
+      'listQuickTemplates',
+      memberId,
+      mealType || undefined
+    );
 
     return NextResponse.json({ templates });
   } catch (error) {

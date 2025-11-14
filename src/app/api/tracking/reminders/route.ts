@@ -72,7 +72,9 @@ const reminderConfigSchema = z.object({
  * GET /api/tracking/reminders
  * 获取用户的营养提醒配置
  *
- * Migrated from Prisma to Supabase (partial - reminderService still uses Prisma)
+ * Note: 使用 reminderService
+ * 提醒功能涉及通知系统、定时任务等，超出 MealTrackingRepository 职责范围
+ * 未来可考虑创建专门的 ReminderRepository
  */
 export async function GET(request: NextRequest) {
   try {

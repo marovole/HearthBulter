@@ -1,3 +1,10 @@
+/**
+ * 营养偏差分析 API
+ *
+ * Note: 使用 deviation-analyzer 服务层
+ * 这是复杂的分析和报告生成功能，涉及数据聚合、统计分析、AI 建议等
+ * 应保留在服务层，不属于 Repository 职责范围
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import {

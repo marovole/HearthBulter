@@ -10,6 +10,10 @@ import {
 /**
  * GET /api/tracking/auxiliary/stats?memberId=xxx&type=weight&days=30
  * 获取辅助打卡统计数据
+ *
+ * Note: 使用 auxiliary-tracker 服务层
+ * 这是健康数据的统计和趋势分析，超出 MealTrackingRepository 职责范围
+ * 未来可考虑创建专门的 HealthDataRepository
  */
 export async function GET(req: NextRequest) {
   try {

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getRecentFoods } from '@/lib/services/tracking/meal-tracker';
+import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 
 /**
- * GET /api/tracking/meals/recent-foods?memberId=xxx&days=7&limit=10&mealType=BREAKFAST
+ * GET /api/tracking/meals/recent-foods?memberId=xxx&limit=10
  * 获取最近常吃的食物
+ *
+ * 使用双写框架迁移
+ * Note: Repository 当前只支持 memberId 和 limit 参数
+ * 忽略 days 和 mealType 参数（Repository 默认查询最近30天）
  */
 export async function GET(req: NextRequest) {
   try {
@@ -19,9 +23,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const memberId = searchParams.get('memberId');
-    const days = searchParams.get('days');
     const limit = searchParams.get('limit');
-    const mealType = searchParams.get('mealType');
 
     if (!memberId) {
       return NextResponse.json(
@@ -30,12 +32,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const options: any = {};
-    if (days) options.days = parseInt(days);
-    if (limit) options.limit = parseInt(limit);
-    if (mealType) options.mealType = mealType;
-
-    const recentFoods = await getRecentFoods(memberId, options);
+    // 使用 Repository 获取最近常用食物
+    const recentFoods = await mealTrackingRepository.decorateMethod(
+      'getRecentFoods',
+      memberId,
+      limit ? parseInt(limit) : undefined
+    );
 
     return NextResponse.json({ recentFoods });
   } catch (error) {

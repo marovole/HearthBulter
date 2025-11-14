@@ -5,6 +5,10 @@ import { getCheckInCalendar } from '@/lib/services/tracking/streak-manager';
 /**
  * GET /api/tracking/streak/calendar?memberId=xxx&year=2024&month=1
  * 获取打卡日历
+ *
+ * Note: 暂时保留服务层调用
+ * 这是复杂的聚合功能，Repository 目前只有基本的 getTrackingStreak 方法
+ * 未来可考虑添加 getCheckInCalendar 到 Repository 接口
  */
 export async function GET(req: NextRequest) {
   try {
