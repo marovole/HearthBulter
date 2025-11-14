@@ -1,18 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { createDualWriteDecorator } from '@/lib/db/dual-write';
+import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
+import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
+import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
+import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
+import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+
+/**
+ * 模块级别的单例 - 避免每次请求都重新创建
+ */
+const supabaseClient = SupabaseClientManager.getInstance();
+const notificationRepository = createDualWriteDecorator<NotificationRepository>(
+  new PrismaNotificationRepository(),
+  new SupabaseNotificationRepository(supabaseClient),
+  {
+    featureFlagManager: createFeatureFlagManager(supabaseClient),
+    verifier: createResultVerifier(supabaseClient),
+    apiEndpoint: '/api/notifications/read',
+  }
+);
 
 /**
  * PUT /api/notifications/read
  * 标记通知为已读
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架，支持 Prisma/Supabase 双写验证
  */
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { notificationId, memberId, markAll } = body;
-
-    const supabase = SupabaseClientManager.getInstance();
 
     if (markAll) {
       // 标记所有通知为已读
@@ -23,29 +41,16 @@ export async function PUT(request: NextRequest) {
         );
       }
 
-      // Update all unread notifications for this member
-      const { data, error: updateError } = await supabase
-        .from('notifications')
-        .update({
-          readAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-        .eq('memberId', memberId)
-        .is('readAt', null)
-        .select('id');
-
-      if (updateError) {
-        console.error('Error marking all notifications as read:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to mark all notifications as read' },
-          { status: 500 }
-        );
-      }
+      // 使用双写框架批量标记已读
+      const count = await notificationRepository.decorateMethod(
+        'markAllAsRead',
+        memberId
+      );
 
       return NextResponse.json({
         success: true,
         message: 'All notifications marked as read',
-        count: data?.length || 0,
+        count,
       });
     } else {
       // 标记单个通知为已读
@@ -56,46 +61,12 @@ export async function PUT(request: NextRequest) {
         );
       }
 
-      // Verify notification exists and belongs to member
-      const { data: notification, error: checkError } = await supabase
-        .from('notifications')
-        .select('id, memberId, readAt')
-        .eq('id', notificationId)
-        .eq('memberId', memberId)
-        .single();
-
-      if (checkError || !notification) {
-        return NextResponse.json(
-          { error: 'Notification not found or does not belong to member' },
-          { status: 404 }
-        );
-      }
-
-      // If already read, return success
-      if (notification.readAt) {
-        return NextResponse.json({
-          success: true,
-          message: 'Notification already marked as read',
-        });
-      }
-
-      // Mark as read
-      const { error: updateError } = await supabase
-        .from('notifications')
-        .update({
-          readAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-        .eq('id', notificationId)
-        .eq('memberId', memberId);
-
-      if (updateError) {
-        console.error('Error marking notification as read:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to mark notification as read' },
-          { status: 500 }
-        );
-      }
+      // 使用双写框架标记单个通知已读
+      await notificationRepository.decorateMethod(
+        'markAsRead',
+        notificationId,
+        memberId
+      );
 
       return NextResponse.json({
         success: true,

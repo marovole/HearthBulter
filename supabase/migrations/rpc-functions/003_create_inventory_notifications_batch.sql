@@ -31,7 +31,7 @@ BEGIN
         'item_name', v_item->>'item_name',
         'current_quantity', (v_item->>'current_quantity')::DECIMAL,
         'threshold_quantity', (v_item->>'threshold_quantity')::DECIMAL,
-        'expiry_date', v_item->>'expiry_date,
+        'expiry_date', v_item->>'expiry_date',
         'additional_info', v_item
       );
       

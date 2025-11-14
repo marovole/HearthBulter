@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { memberRepository } from '@/lib/repositories/member-repository-singleton';
 import { z } from 'zod';
 
 // 计算 BMR (基础代谢率) - Mifflin-St Jeor 公式
@@ -37,72 +37,12 @@ const createGoalSchema = z.object({
   fatRatio: z.number().min(0).max(1).optional().default(0.3),
 });
 
-/**
- * 验证用户是否有权限访问成员的健康目标
- *
- * Migrated from Prisma to Supabase
- */
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean; member: any }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  const { data: member } = await supabase
-    .from('family_members')
-    .select(`
-      id,
-      userId,
-      familyId,
-      birthDate,
-      gender,
-      weight,
-      height,
-      family:families!inner(
-        id,
-        creatorId
-      )
-    `)
-    .eq('id', memberId)
-    .is('deletedAt', null)
-    .single();
-
-  if (!member) {
-    return { hasAccess: false, member: null };
-  }
-
-  // 检查是否是家庭创建者
-  const isCreator = member.family?.creatorId === userId;
-
-  // 检查是否是管理员
-  let isAdmin = false;
-  if (!isCreator) {
-    const { data: adminMember } = await supabase
-      .from('family_members')
-      .select('id, role')
-      .eq('familyId', member.familyId)
-      .eq('userId', userId)
-      .eq('role', 'ADMIN')
-      .is('deletedAt', null)
-      .maybeSingle();
-
-    isAdmin = !!adminMember;
-  }
-
-  // 检查是否是本人
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-    member,
-  };
-}
 
 /**
  * GET /api/members/:memberId/goals
  * 获取成员的健康目标列表
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function GET(
   request: NextRequest,
@@ -115,8 +55,12 @@ export async function GET(
       return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
-    // 验证权限
-    const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
+    // 使用 Repository 验证权限
+    const { hasAccess } = await memberRepository.decorateMethod(
+      'verifyMemberAccess',
+      memberId,
+      session.user.id
+    );
 
     if (!hasAccess) {
       return NextResponse.json(
@@ -125,25 +69,14 @@ export async function GET(
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 使用 Repository 获取健康目标列表（包含所有状态）
+    const healthGoals = await memberRepository.decorateMethod(
+      'getHealthGoals',
+      memberId,
+      true // includeInactive
+    );
 
-    // 获取健康目标列表
-    const { data: healthGoals, error } = await supabase
-      .from('health_goals')
-      .select('*')
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .order('createdAt', { ascending: false });
-
-    if (error) {
-      console.error('获取健康目标失败:', error);
-      return NextResponse.json(
-        { error: '获取健康目标失败' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ goals: healthGoals || [] }, { status: 200 });
+    return NextResponse.json({ goals: healthGoals }, { status: 200 });
   } catch (error) {
     console.error('获取健康目标失败:', error);
     return NextResponse.json(
@@ -157,7 +90,7 @@ export async function GET(
  * POST /api/members/:memberId/goals
  * 创建新的健康目标
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移 - 保留 BMR/TDEE 计算业务逻辑
  */
 export async function POST(
   request: NextRequest,
@@ -181,8 +114,12 @@ export async function POST(
       );
     }
 
-    // 验证权限并获取成员信息
-    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
+    // 使用 Repository 验证权限
+    const { hasAccess, member } = await memberRepository.decorateMethod(
+      'verifyMemberAccess',
+      memberId,
+      session.user.id
+    );
 
     if (!hasAccess) {
       return NextResponse.json(
@@ -197,61 +134,57 @@ export async function POST(
 
     const { goalType, targetWeight, targetWeeks, activityLevel, carbRatio, proteinRatio, fatRatio } = validation.data;
 
-    // 计算年龄
-    const birthDate = new Date(member.birthDate);
+    // 为了计算 BMR/TDEE，需要获取成员的详细信息
+    // 注意：verifyMemberAccess 返回的 member 对象不包含这些字段
+    // 这里需要单独查询（保留业务逻辑层）
+    const { SupabaseClientManager } = await import('@/lib/db/supabase-adapter');
+    const supabase = SupabaseClientManager.getInstance();
+    const { data: memberDetails } = await supabase
+      .from('family_members')
+      .select('birthDate, gender, weight, height')
+      .eq('id', memberId)
+      .is('deletedAt', null)
+      .single();
+
+    if (!memberDetails) {
+      return NextResponse.json({ error: '无法获取成员详细信息' }, { status: 500 });
+    }
+
+    // 计算年龄（业务逻辑）
+    const birthDate = new Date(memberDetails.birthDate);
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
 
-    // 计算 BMR 和 TDEE
-    const bmr = member.weight && member.height
-      ? calculateBMR(member.weight, member.height, age, member.gender)
-      : null;
+    // 计算 BMR 和 TDEE（业务逻辑）
+    const bmr = memberDetails.weight && memberDetails.height
+      ? calculateBMR(memberDetails.weight, memberDetails.height, age, memberDetails.gender)
+      : undefined;
 
     const activityFactor = ACTIVITY_FACTORS[activityLevel];
-    const tdee = bmr ? calculateTDEE(bmr, activityFactor) : null;
+    const tdee = bmr ? calculateTDEE(bmr, activityFactor) : undefined;
 
-    // 计算目标日期
+    // 计算目标日期（业务逻辑）
     const startDate = new Date();
     const targetDate = targetWeeks
       ? new Date(startDate.getTime() + targetWeeks * 7 * 24 * 60 * 60 * 1000)
-      : null;
+      : undefined;
 
-    const supabase = SupabaseClientManager.getInstance();
-    const now = new Date().toISOString();
-
-    // 创建健康目标
-    const { data: goal, error: createError } = await supabase
-      .from('health_goals')
-      .insert({
-        memberId,
-        goalType,
-        targetWeight,
-        currentWeight: member.weight,
-        startWeight: member.weight,
-        targetWeeks,
-        startDate: startDate.toISOString(),
-        targetDate: targetDate ? targetDate.toISOString() : null,
-        bmr,
-        tdee,
-        activityFactor,
-        carbRatio,
-        proteinRatio,
-        fatRatio,
-        status: 'ACTIVE',
-        progress: 0,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .select()
-      .single();
-
-    if (createError) {
-      console.error('创建健康目标失败:', createError);
-      return NextResponse.json(
-        { error: '创建健康目标失败' },
-        { status: 500 }
-      );
-    }
+    // 使用 Repository 创建健康目标
+    const goal = await memberRepository.decorateMethod('createHealthGoal', memberId, {
+      goalType,
+      targetWeight,
+      currentWeight: memberDetails.weight,
+      startWeight: memberDetails.weight,
+      targetWeeks,
+      startDate,
+      targetDate,
+      bmr,
+      tdee,
+      activityFactor,
+      carbRatio,
+      proteinRatio,
+      fatRatio,
+    });
 
     return NextResponse.json(
       {

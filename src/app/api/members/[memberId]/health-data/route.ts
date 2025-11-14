@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { memberRepository } from '@/lib/repositories/member-repository-singleton';
 import {
   validateAndDetectAnomaly,
   type HealthDataInput,
@@ -10,72 +10,15 @@ import {
   validateRequestBody,
   handleApiError,
   healthDataSchemas,
-  commonSchemas,
   formatApiCreated,
 } from '@/lib/validation';
 
-/**
- * 验证用户是否有权限访问成员的健康数据
- *
- * Migrated from Prisma to Supabase
- */
-async function verifyMemberAccess(
-  memberId: string,
-  userId: string
-): Promise<{ hasAccess: boolean; member: any }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  const { data: member } = await supabase
-    .from('family_members')
-    .select(`
-      id,
-      userId,
-      familyId,
-      family:families!inner(
-        id,
-        creatorId
-      )
-    `)
-    .eq('id', memberId)
-    .is('deletedAt', null)
-    .single();
-
-  if (!member) {
-    return { hasAccess: false, member: null };
-  }
-
-  // 检查是否是家庭创建者
-  const isCreator = member.family?.creatorId === userId;
-
-  // 检查是否是管理员
-  let isAdmin = false;
-  if (!isCreator) {
-    const { data: adminMember } = await supabase
-      .from('family_members')
-      .select('id, role')
-      .eq('familyId', member.familyId)
-      .eq('userId', userId)
-      .eq('role', 'ADMIN')
-      .is('deletedAt', null)
-      .maybeSingle();
-
-    isAdmin = !!adminMember;
-  }
-
-  // 检查是否是本人
-  const isSelf = member.userId === userId;
-
-  return {
-    hasAccess: isCreator || isAdmin || isSelf,
-    member,
-  };
-}
 
 /**
  * GET /api/members/:memberId/health-data
  * 查询成员的健康数据历史记录
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function GET(
   request: NextRequest,
@@ -89,8 +32,9 @@ export async function GET(
       return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
-    // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(
+    // 使用 Repository 验证权限
+    const { hasAccess } = await memberRepository.decorateMethod(
+      'verifyMemberAccess',
       memberId,
       session.user.id
     );
@@ -102,45 +46,31 @@ export async function GET(
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const startDate = searchParams.get('startDate') || undefined;
+    const endDate = searchParams.get('endDate') || undefined;
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // 构建查询
-    let query = supabase
-      .from('health_data')
-      .select('*', { count: 'exact' })
-      .eq('memberId', memberId)
-      .order('measuredAt', { ascending: false })
-      .range(offset, offset + limit - 1);
+    // 转换 offset 分页为 page 分页（Repository 使用 page/limit）
+    const page = Math.floor(offset / limit) + 1;
 
-    // 添加日期过滤
-    if (startDate) {
-      query = query.gte('measuredAt', new Date(startDate).toISOString());
-    }
-    if (endDate) {
-      query = query.lte('measuredAt', new Date(endDate).toISOString());
-    }
+    // 使用 Repository 查询健康数据
+    const result = await memberRepository.decorateMethod('getHealthData', {
+      memberId,
+      startDate,
+      endDate,
+      page,
+      limit,
+      sortOrder: 'desc',
+    });
 
-    const { data: healthData, error, count: total } = await query;
-
-    if (error) {
-      console.error('查询健康数据失败:', error);
-      return NextResponse.json(
-        { error: '查询健康数据失败' },
-        { status: 500 }
-      );
-    }
-
+    // 转换响应格式以匹配原 API（使用 offset 而不是 page）
     return NextResponse.json(
       {
-        data: healthData || [],
-        total: total || 0,
+        data: result.data,
+        total: result.pagination.total,
         limit,
         offset,
       },
@@ -159,7 +89,7 @@ export async function GET(
  * POST /api/members/:memberId/health-data
  * 录入新的健康数据
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移 - 保留业务逻辑验证和异常检测
  */
 export async function POST(
   request: NextRequest,
@@ -173,8 +103,9 @@ export async function POST(
       return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
-    // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(
+    // 使用 Repository 验证权限
+    const { hasAccess } = await memberRepository.decorateMethod(
+      'verifyMemberAccess',
       memberId,
       session.user.id
     );
@@ -186,7 +117,7 @@ export async function POST(
       );
     }
 
-    // 验证请求体
+    // 验证请求体（业务逻辑层）
     const validation = await validateRequestBody(request, healthDataSchemas.create);
     if (!validation.success) {
       return validation.response;
@@ -194,7 +125,7 @@ export async function POST(
 
     const data = validation.data;
 
-    // 构建健康数据输入
+    // 构建健康数据输入（业务逻辑层）
     const healthDataInput: HealthDataInput = {
       weight: data.weight ?? null,
       bodyFat: data.bodyFat ?? null,
@@ -207,7 +138,7 @@ export async function POST(
       notes: data.notes ?? null,
     };
 
-    // 验证数据（业务逻辑验证）
+    // 验证数据和异常检测（业务逻辑验证 - 保留在端点层）
     const businessValidation = await validateAndDetectAnomaly(memberId, healthDataInput);
 
     if (!businessValidation.valid) {
@@ -221,38 +152,20 @@ export async function POST(
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-    const now = new Date().toISOString();
+    // 使用 Repository 创建健康数据记录
+    const healthData = await memberRepository.decorateMethod('createHealthData', memberId, {
+      weight: healthDataInput.weight ?? undefined,
+      bodyFat: healthDataInput.bodyFat ?? undefined,
+      muscleMass: healthDataInput.muscleMass ?? undefined,
+      bloodPressureSystolic: healthDataInput.bloodPressureSystolic ?? undefined,
+      bloodPressureDiastolic: healthDataInput.bloodPressureDiastolic ?? undefined,
+      heartRate: healthDataInput.heartRate ?? undefined,
+      measuredAt: healthDataInput.measuredAt as Date,
+      source: (healthDataInput.source as 'MANUAL' | 'DEVICE' | 'IMPORTED') || 'MANUAL',
+      notes: healthDataInput.notes ?? undefined,
+    });
 
-    // 创建健康数据记录
-    const { data: healthData, error: createError } = await supabase
-      .from('health_data')
-      .insert({
-        memberId,
-        weight: healthDataInput.weight,
-        bodyFat: healthDataInput.bodyFat,
-        muscleMass: healthDataInput.muscleMass,
-        bloodPressureSystolic: healthDataInput.bloodPressureSystolic,
-        bloodPressureDiastolic: healthDataInput.bloodPressureDiastolic,
-        heartRate: healthDataInput.heartRate,
-        measuredAt: (healthDataInput.measuredAt as Date).toISOString(),
-        source: healthDataInput.source || 'MANUAL',
-        notes: healthDataInput.notes,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .select()
-      .single();
-
-    if (createError) {
-      console.error('创建健康数据失败:', createError);
-      return NextResponse.json(
-        { error: '创建健康数据失败' },
-        { status: 500 }
-      );
-    }
-
-    // 更新连续打卡天数（异步，不阻塞响应）
+    // 更新连续打卡天数（异步，不阻塞响应 - 业务逻辑）
     updateStreakDays(memberId).catch((error) => {
       console.error('更新连续打卡天数失败:', error);
     });

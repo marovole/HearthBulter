@@ -42,8 +42,8 @@ BEGIN
     COALESCE(AVG(rating), 0),
     COUNT(*)
   INTO v_average_rating, v_rating_count
-  FROM recipe_ratings
-  WHERE "recipeId" = p_recipe_id;
+  FROM recipe_rating
+  WHERE recipe_id = p_recipe_id;
 
   -- Update recipe with new rating statistics
   -- Note: No FOR UPDATE needed here as eventual consistency is acceptable
@@ -51,9 +51,9 @@ BEGIN
   -- current state at the time of execution.
   UPDATE recipes
   SET
-    "averageRating" = v_average_rating,
-    "ratingCount" = v_rating_count,
-    "updatedAt" = NOW()
+    average_rating = v_average_rating,
+    rating_count = v_rating_count,
+    updated_at = NOW()
   WHERE id = p_recipe_id;
 
   RETURN json_build_object(
