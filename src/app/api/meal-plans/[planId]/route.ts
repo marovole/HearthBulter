@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { mealPlanner } from '@/lib/services/meal-planner';
+import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-singleton';
 
 // DELETE /api/meal-plans/:planId - 删除食谱
+//
+// 使用双写框架迁移
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ planId: string }> }
@@ -50,11 +53,8 @@ export async function DELETE(
       );
     }
 
-    // 软删除
-    await prisma.mealPlan.update({
-      where: { id: planId },
-      data: { deletedAt: new Date() },
-    });
+    // 使用 Repository 软删除
+    await mealPlanRepository.decorateMethod('deleteMealPlan', planId);
 
     return NextResponse.json(
       { message: '食谱计划删除成功' },
