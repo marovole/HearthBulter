@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { foodCategorySchema, type FoodCategory } from '@/lib/repositories/types/budget';
+import { budgetRepository } from '@/lib/repositories/budget-repository-singleton';
+import { foodCategorySchema, type FoodCategory, type SpendingCreateDTO } from '@/lib/repositories/types/budget';
 
 /**
  * POST /api/budget/record-spending
@@ -50,70 +50,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
     // 获取预算并验证
-    const { data: budget, error: budgetError } = await supabase
-      .from('budgets')
-      .select('*')
-      .eq('id', budgetId)
-      .single();
+    const budget = await budgetRepository.decorateMethod('getBudgetById', budgetId);
 
-    if (budgetError || !budget) {
+    if (!budget) {
       return NextResponse.json(
         { error: '预算不存在' },
         { status: 404 }
       );
     }
 
-    // 创建支出记录
-    const now = new Date().toISOString();
-    const spendingData = {
+    // 构建 SpendingCreateDTO
+    const spendingData: SpendingCreateDTO = {
       budgetId,
       amount: spendAmount,
       category: category as FoodCategory,
       description,
-      transactionId: transactionId || null,
-      platform: platform || null,
-      items: items || null,
-      purchaseDate: purchaseDate ? new Date(purchaseDate).toISOString() : now,
-      createdAt: now,
-      updatedAt: now,
+      transactionId: transactionId || undefined,
+      platform: platform || undefined,
+      items: items || undefined,
+      purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),
     };
 
-    const { data: spending, error: spendingError } = await supabase
-      .from('spendings')
-      .insert(spendingData)
-      .select()
-      .single();
-
-    if (spendingError) {
-      console.error('创建支出记录失败:', spendingError);
-      return NextResponse.json(
-        { error: '创建支出记录失败' },
-        { status: 500 }
-      );
-    }
+    // 使用 Repository 创建支出记录
+    const spending = await budgetRepository.decorateMethod('recordSpending', spendingData);
 
     // 更新预算的 usedAmount
+    // 注意：这里存在潜在的数据不一致风险
+    // 在生产环境中，应该使用 RPC 函数或数据库触发器来保证一致性
     const newUsedAmount = (budget.usedAmount || 0) + spendAmount;
-    const { error: updateError } = await supabase
-      .from('budgets')
-      .update({
-        usedAmount: newUsedAmount,
-        updatedAt: now,
-      })
-      .eq('id', budgetId);
-
-    if (updateError) {
-      console.error('更新预算失败:', updateError);
-      // 注意：这里存在潜在的数据不一致风险
-      // 在生产环境中，应该使用 RPC 函数或数据库触发器来保证一致性
-      return NextResponse.json(
-        { error: '更新预算失败' },
-        { status: 500 }
-      );
-    }
+    await budgetRepository.decorateMethod('updateBudget', budgetId, {
+      usedAmount: newUsedAmount,
+    });
 
     return NextResponse.json(spending);
   } catch (error) {
@@ -137,7 +105,7 @@ export async function POST(request: NextRequest) {
  * GET /api/budget/record-spending
  * 获取支出历史
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function GET(request: NextRequest) {
   try {
@@ -152,29 +120,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 使用 Repository 获取支出历史
+    const result = await budgetRepository.decorateMethod(
+      'listSpendings',
+      {
+        budgetId,
+        category: category || undefined,
+      },
+      undefined // 不使用分页，返回所有结果
+    );
 
-    let query = supabase
-      .from('spendings')
-      .select('*')
-      .eq('budgetId', budgetId)
-      .order('purchaseDate', { ascending: false });
-
-    if (category) {
-      query = query.eq('category', category);
-    }
-
-    const { data: spendings, error } = await query;
-
-    if (error) {
-      console.error('获取支出历史失败:', error);
-      return NextResponse.json(
-        { error: '获取支出历史失败' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(spendings || []);
+    return NextResponse.json(result.data || []);
   } catch (error) {
     console.error('获取支出历史失败:', error);
     return NextResponse.json(
