@@ -3,7 +3,13 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { nutritionCalculator } from '@/lib/services/nutrition-calculator';
 
-// GET /api/meal-plans/:planId/nutrition - 获取营养汇总
+/**
+ * GET /api/meal-plans/:planId/nutrition
+ *
+ * Note: 保留服务层调用
+ * 此端点使用 nutritionCalculator 服务进行营养计算和聚合
+ * 营养计算涉及复杂的转换和聚合逻辑，应保持在服务层
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ planId: string }> }

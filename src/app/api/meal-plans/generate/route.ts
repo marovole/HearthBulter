@@ -3,6 +3,16 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { mealPlanner } from '@/lib/services/meal-planner';
 
+/**
+ * POST /api/meal-plans/generate
+ *
+ * Note: 保留服务层调用
+ * 此端点使用 AI 驱动的智能膳食计划生成，涉及复杂的业务逻辑：
+ * - 基于用户偏好和营养目标的智能推荐
+ * - 营养平衡算法
+ * - 食材多样性控制
+ * 这些复杂逻辑应保持在 mealPlanner 服务层，不适合迁移到 Repository
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
