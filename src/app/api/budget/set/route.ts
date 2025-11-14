@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { budgetPeriodSchema, type BudgetPeriod, type BudgetStatus } from '@/lib/repositories/types/budget';
+import { budgetRepository } from '@/lib/repositories/budget-repository-singleton';
+import { budgetPeriodSchema, type BudgetPeriod, type BudgetStatus, type BudgetCreateDTO } from '@/lib/repositories/types/budget';
 
 /**
  * POST /api/budget/set
@@ -105,40 +105,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 创建预算
-    const now = new Date().toISOString();
-    const budgetData = {
+    // 构建 BudgetCreateDTO
+    const budgetCreateData: BudgetCreateDTO = {
       memberId,
       name,
       period: period as BudgetPeriod,
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
+      startDate: start,
+      endDate: end,
       totalAmount: total,
-      usedAmount: 0,
-      categoryBudgets,
+      categoryBudgets: Object.keys(categoryBudgets).length > 0 ? categoryBudgets : undefined,
       alertThreshold80: alertThreshold80 !== undefined ? alertThreshold80 : true,
       alertThreshold100: alertThreshold100 !== undefined ? alertThreshold100 : true,
       alertThreshold110: alertThreshold110 !== undefined ? alertThreshold110 : true,
-      status: 'ACTIVE' as BudgetStatus,
-      createdAt: now,
-      updatedAt: now,
     };
 
-    const { data: budget, error: createError } = await supabase
-      .from('budgets')
-      .insert(budgetData)
-      .select()
-      .single();
-
-    if (createError) {
-      console.error('创建预算失败:', createError);
-      return NextResponse.json(
-        { error: '创建预算失败' },
-        { status: 500 }
-      );
-    }
+    // 使用 Repository 创建预算
+    const budget = await budgetRepository.decorateMethod('createBudget', budgetCreateData);
 
     return NextResponse.json(budget);
   } catch (error) {
@@ -162,7 +144,7 @@ export async function POST(request: NextRequest) {
  * GET /api/budget/set
  * 获取预算列表
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function GET(request: NextRequest) {
   try {
@@ -177,29 +159,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 使用 Repository 获取预算列表
+    const result = await budgetRepository.decorateMethod(
+      'listBudgets',
+      memberId,
+      status ? { status } : undefined,
+      undefined // 不使用分页，返回所有结果
+    );
 
-    let query = supabase
-      .from('budgets')
-      .select('*')
-      .eq('memberId', memberId)
-      .order('createdAt', { ascending: false });
-
-    if (status) {
-      query = query.eq('status', status);
-    }
-
-    const { data: budgets, error: budgetsError } = await query;
-
-    if (budgetsError) {
-      console.error('获取预算列表失败:', budgetsError);
-      return NextResponse.json(
-        { error: '获取预算列表失败' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(budgets || []);
+    return NextResponse.json(result.data || []);
   } catch (error) {
     console.error('获取预算列表失败:', error);
     return NextResponse.json(
