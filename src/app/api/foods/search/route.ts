@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { testDatabaseConnection } from '@/lib/db';
+import { foodRepository } from '@/lib/repositories/food-repository-singleton';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { usdaService } from '@/lib/services/usda-service';
 import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from '@/lib/cache/redis-client';
@@ -9,8 +10,8 @@ import type { FoodCategory } from '@prisma/client';
  * GET /api/foods/search?q=鸡胸肉
  * 搜索食物（支持中英文）
  *
- * Migrated from Prisma to Supabase
- * Note: CacheService and usdaService still use external services
+ * 使用双写框架迁移
+ * 保留缓存、USDA fallback 和降级逻辑
  */
 export async function GET(request: NextRequest) {
   const apiStartTime = Date.now(); // 记录 API 开始时间
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 1. 检查数据库连接并在本地数据库搜索
+    // 1. 使用 Repository 在本地数据库搜索
     const dbStartTime = Date.now();
     let localFoods: any[] = [];
     let totalCount = 0;
@@ -61,57 +62,16 @@ export async function GET(request: NextRequest) {
         throw new Error('数据库连接失败');
       }
 
-      const supabase = SupabaseClientManager.getInstance();
+      // 使用 Repository 执行搜索
+      const searchResult = await foodRepository.decorateMethod('searchFoods', {
+        query,
+        category: category || undefined,
+        page,
+        limit,
+      });
 
-      // 构建OR查询: name.ilike.%value% OR nameEn.ilike.%value%
-      const ilikeValue = `%${query}%`;
-      const selection = `
-        id,
-        name,
-        nameEn,
-        aliases,
-        calories,
-        protein,
-        carbs,
-        fat,
-        fiber,
-        sugar,
-        sodium,
-        vitaminA,
-        vitaminC,
-        calcium,
-        iron,
-        category,
-        tags,
-        source,
-        usdaId,
-        verified,
-        createdAt,
-        updatedAt
-      `;
-
-      // 构建查询
-      let dbQuery = supabase
-        .from('foods')
-        .select(selection, { count: 'exact' })
-        .or(`name.ilike.${ilikeValue},nameEn.ilike.${ilikeValue}`)
-        .order('name', { ascending: true })
-        .range((page - 1) * limit, page * limit - 1);
-
-      // 添加category过滤
-      if (category) {
-        dbQuery = dbQuery.eq('category', category);
-      }
-
-      const { data: foods, error: foodsError, count } = await dbQuery;
-
-      if (foodsError) {
-        console.error('数据库查询失败:', foodsError);
-        throw foodsError;
-      }
-
-      localFoods = foods || [];
-      totalCount = count ?? 0;
+      localFoods = searchResult.foods;
+      totalCount = searchResult.total;
 
       dbDuration = Date.now() - dbStartTime;
       console.log(`📊 数据库查询 - ${dbDuration}ms - 找到 ${localFoods.length} 条本地结果`);

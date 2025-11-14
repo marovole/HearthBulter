@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { foodRepository } from '@/lib/repositories/food-repository-singleton';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { usdaService } from '@/lib/services/usda-service';
 import { foodCacheService } from '@/lib/services/cache-service';
+import type { FoodRecord } from '@/lib/repositories/interfaces/food-repository';
 
 /**
  * GET /api/foods/:id
  * 获取食物详情
  *
- * Migrated from Prisma to Supabase
- * Note: foodCacheService and usdaService still use external services
+ * 使用双写框架迁移
+ * 保留缓存和 USDA fallback 逻辑
  */
 export async function GET(
   request: NextRequest,
@@ -23,22 +25,8 @@ export async function GET(
       return NextResponse.json(parseFoodResponse(cachedFood), { status: 200 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 2. 从数据库查找
-    const { data: food, error } = await supabase
-      .from('foods')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('查询食物失败:', error);
-      return NextResponse.json(
-        { error: '查询食物失败' },
-        { status: 500 }
-      );
-    }
+    // 2. 使用 Repository 从数据库查找
+    const food = await foodRepository.decorateMethod('findById', id);
 
     if (food) {
       // 缓存食物数据
@@ -46,14 +34,13 @@ export async function GET(
       return NextResponse.json(parseFoodResponse(food), { status: 200 });
     }
 
-    // 如果在数据库中找不到，尝试从USDA获取（如果是USDA ID）
+    // 3. 如果在数据库中找不到，尝试从 USDA 获取（如果是 USDA ID）
     if (/^\d+$/.test(id)) {
       try {
-        const usdaFood = await usdaService.getFoodByFdcIdAndMap(
-          parseInt(id)
-        );
+        const usdaFood = await usdaService.getFoodByFdcIdAndMap(parseInt(id));
 
-        // 保存到数据库
+        // 保存到数据库（仅 Supabase，避免双写到外部数据源）
+        const supabase = SupabaseClientManager.getInstance();
         const { data: savedFood, error: insertError } = await supabase
           .from('foods')
           .insert({
@@ -106,14 +93,14 @@ export async function GET(
 }
 
 /**
- * 解析Food对象为响应格式
+ * 解析 FoodRecord 为响应格式
  */
-function parseFoodResponse(food: any) {
+function parseFoodResponse(food: FoodRecord | any) {
   return {
     id: food.id,
     name: food.name,
     nameEn: food.nameEn,
-    aliases: JSON.parse(food.aliases || '[]'),
+    aliases: Array.isArray(food.aliases) ? food.aliases : JSON.parse(food.aliases || '[]'),
     calories: food.calories,
     protein: food.protein,
     carbs: food.carbs,
@@ -126,7 +113,7 @@ function parseFoodResponse(food: any) {
     calcium: food.calcium,
     iron: food.iron,
     category: food.category,
-    tags: JSON.parse(food.tags || '[]'),
+    tags: Array.isArray(food.tags) ? food.tags : JSON.parse(food.tags || '[]'),
     source: food.source,
     usdaId: food.usdaId,
     verified: food.verified,
