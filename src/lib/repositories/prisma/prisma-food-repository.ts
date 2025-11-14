@@ -1,7 +1,12 @@
 import type { Food as PrismaFood, FoodCategory } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { safeParseArray } from '@/lib/utils/json-helpers';
-import type { FoodRecord, FoodRepository } from '@/lib/repositories/interfaces/food-repository';
+import type {
+  FoodRecord,
+  FoodRepository,
+  FoodSearchQuery,
+  FoodSearchResult
+} from '@/lib/repositories/interfaces/food-repository';
 
 /**
  * 将 Prisma Food 模型规范化为统一的 FoodRecord 格式
@@ -25,6 +30,44 @@ function normalizePrismaFood(food: PrismaFood): FoodRecord {
  * 使用 Prisma ORM 访问食材数据
  */
 export class PrismaFoodRepository implements FoodRepository {
+  async findById(id: string): Promise<FoodRecord | null> {
+    const food = await prisma.food.findUnique({
+      where: { id },
+    });
+
+    return food ? normalizePrismaFood(food) : null;
+  }
+
+  async searchFoods(params: FoodSearchQuery): Promise<FoodSearchResult> {
+    const { query, category, page = 1, limit = 20 } = params;
+
+    // 构建 where 条件：name 或 nameEn 包含查询关键词（不区分大小写）
+    const where = {
+      OR: [
+        { name: { contains: query, mode: 'insensitive' as const } },
+        { nameEn: { contains: query, mode: 'insensitive' as const } },
+      ],
+      ...(category && { category }),
+    };
+
+    const [foods, total] = await Promise.all([
+      prisma.food.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.food.count({ where }),
+    ]);
+
+    return {
+      foods: foods.map(normalizePrismaFood),
+      total,
+      page,
+      limit,
+    };
+  }
+
   async findPopular(limit: number): Promise<FoodRecord[]> {
     const foods = await prisma.food.findMany({
       orderBy: { createdAt: 'desc' },
