@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { recipeRepository } from '@/lib/repositories/recipe-repository-singleton';
+import { updateRecipeAverageRating } from '@/lib/db/supabase-rpc-helpers';
 
 /**
  * POST /api/recipes/[id]/rate
  * 评分食谱
  *
- * Migrated from Prisma to Supabase - Uses RPC function for atomic rating updates
+ * 使用双写框架迁移 - 保留 RPC 函数用于原子性评分更新
  */
 export async function POST(
   request: NextRequest,
@@ -31,54 +32,29 @@ export async function POST(
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
     // 检查食谱是否存在
-    const { data: recipe, error: recipeError } = await supabase
-      .from('recipes')
-      .select('id')
-      .eq('id', recipeId)
-      .single();
-
-    if (recipeError || !recipe) {
+    const recipeExists = await recipeRepository.decorateMethod('recipeExists', recipeId);
+    if (!recipeExists) {
       return NextResponse.json(
         { error: 'Recipe not found' },
         { status: 404 }
       );
     }
 
-    // 创建或更新评分 - Supabase 可以直接存储数组
-    const ratingData = {
+    // 使用 Repository 添加或更新评分
+    const recipeRating = await recipeRepository.decorateMethod('addOrUpdateRating', {
       recipeId,
       memberId,
       rating,
-      comment: comment || null,
-      tags: tags || [],
-      ratedAt: new Date().toISOString(),
-    };
-
-    const { data: recipeRating, error: ratingError } = await supabase
-      .from('recipe_ratings')
-      .upsert(ratingData, {
-        onConflict: 'recipeId,memberId',
-      })
-      .select()
-      .single();
-
-    if (ratingError) {
-      console.error('Error rating recipe:', ratingError);
-      return NextResponse.json(
-        { error: 'Failed to rate recipe' },
-        { status: 500 }
-      );
-    }
+      comment,
+      tags,
+    });
 
     // 使用 RPC 函数更新食谱的平均评分和评分数量
-    const { data: updateResult, error: updateError } = await supabase
-      .rpc('update_recipe_average_rating', { p_recipe_id: recipeId });
+    const ratingUpdate = await updateRecipeAverageRating(recipeId);
 
-    if (updateError) {
-      console.error('Error updating average rating:', updateError);
+    if (!ratingUpdate.success) {
+      console.error('Error updating average rating:', ratingUpdate.error);
       // 不阻止请求，只记录错误
     }
 
@@ -100,7 +76,7 @@ export async function POST(
  * GET /api/recipes/[id]/rate
  * 获取用户对食谱的评分
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function GET(
   request: NextRequest,
@@ -118,31 +94,12 @@ export async function GET(
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 获取用户评分
-    const { data: rating, error } = await supabase
-      .from('recipe_ratings')
-      .select('*')
-      .eq('recipeId', recipeId)
-      .eq('memberId', memberId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 = no rows returned
-      console.error('Error getting recipe rating:', error);
-      return NextResponse.json(
-        { error: 'Failed to get recipe rating' },
-        { status: 500 }
-      );
-    }
+    // 使用 Repository 获取评分
+    const rating = await recipeRepository.decorateMethod('getRating', recipeId, memberId);
 
     return NextResponse.json({
       success: true,
-      rating: rating ? {
-        ...rating,
-        tags: Array.isArray(rating.tags) ? rating.tags : (rating.tags ? JSON.parse(rating.tags as string) : []),
-      } : null,
+      rating,
     });
 
   } catch (error) {
