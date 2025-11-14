@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { priceEstimator } from '@/lib/services/price-estimator';
+import { shoppingListRepository } from '@/lib/repositories/shopping-list-repository-singleton';
 import { z } from 'zod';
 
 // 完成采购的验证 schema
@@ -13,7 +14,7 @@ const completeShoppingSchema = z.object({
  * PATCH /api/shopping-lists/:id/complete
  * 完成采购
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function PATCH(
   request: NextRequest,
@@ -82,36 +83,12 @@ export async function PATCH(
       );
     }
 
-    // 更新清单状态和实际花费
-    const updateData: any = {
-      status: 'COMPLETED',
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (validatedData.actualCost !== undefined) {
-      updateData.actualCost = validatedData.actualCost;
-    }
-
-    const { data: updatedList, error: updateError } = await supabase
-      .from('shopping_lists')
-      .update(updateData)
-      .eq('id', listId)
-      .select(`
-        *,
-        items:shopping_list_items(
-          *,
-          food:foods(*)
-        )
-      `)
-      .single();
-
-    if (updateError) {
-      console.error('更新购物清单失败:', updateError);
-      return NextResponse.json(
-        { error: '更新购物清单失败' },
-        { status: 500 }
-      );
-    }
+    // 使用 Repository 完成购物清单
+    const updatedList = await shoppingListRepository.decorateMethod(
+      'completeShoppingList',
+      listId,
+      validatedData
+    );
 
     // 如果提供了实际花费，更新价格估算器的记录
     if (validatedData.actualCost !== undefined) {

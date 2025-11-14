@@ -12,6 +12,9 @@ import type {
   ShoppingListGetOptions,
   ShoppingListListQuery,
   UpdateShoppingListDTO,
+  ShoppingListItemDTO,
+  UpdateShoppingListItemDTO,
+  CompleteShoppingListDTO,
 } from '../types/shopping-list';
 
 /**
@@ -74,4 +77,34 @@ export interface ShoppingListRepository {
    * @param id - 购物清单ID
    */
   deleteShoppingList(id: string): Promise<void>;
+
+  /**
+   * 更新购物项
+   *
+   * 主要用于标记已购、修改数量等操作
+   *
+   * @param listId - 购物清单ID
+   * @param itemId - 购物项ID
+   * @param payload - 更新参数
+   * @returns 更新后的购物项对象
+   */
+  updateShoppingListItem(
+    listId: string,
+    itemId: string,
+    payload: UpdateShoppingListItemDTO
+  ): Promise<ShoppingListItemDTO>;
+
+  /**
+   * 完成购物清单
+   *
+   * 更新清单状态为 COMPLETED，可选记录实际花费
+   *
+   * @param listId - 购物清单ID
+   * @param payload - 完成参数（实际花费等）
+   * @returns 更新后的购物清单对象
+   */
+  completeShoppingList(
+    listId: string,
+    payload: CompleteShoppingListDTO
+  ): Promise<ShoppingListDTO>;
 }

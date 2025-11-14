@@ -13,6 +13,9 @@ import type {
   ShoppingListGetOptions,
   ShoppingListListQuery,
   UpdateShoppingListDTO,
+  ShoppingListItemDTO,
+  UpdateShoppingListItemDTO,
+  CompleteShoppingListDTO,
 } from '../types/shopping-list';
 import type { ShoppingListRepository } from '../interfaces/shopping-list-repository';
 
@@ -63,6 +66,27 @@ export class PrismaShoppingListRepository implements ShoppingListRepository {
    */
   async deleteShoppingList(id: string): Promise<void> {
     return this.notImplemented('deleteShoppingList');
+  }
+
+  /**
+   * 更新购物项
+   */
+  async updateShoppingListItem(
+    listId: string,
+    itemId: string,
+    payload: UpdateShoppingListItemDTO
+  ): Promise<ShoppingListItemDTO> {
+    return this.notImplemented('updateShoppingListItem');
+  }
+
+  /**
+   * 完成购物清单
+   */
+  async completeShoppingList(
+    listId: string,
+    payload: CompleteShoppingListDTO
+  ): Promise<ShoppingListDTO> {
+    return this.notImplemented('completeShoppingList');
   }
 
   /**

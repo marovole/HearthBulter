@@ -14,6 +14,8 @@ import type {
   ShoppingListListQuery,
   UpdateShoppingListDTO,
   ShoppingListItemDTO,
+  UpdateShoppingListItemDTO,
+  CompleteShoppingListDTO,
 } from '../types/shopping-list';
 import type { PaginatedResult, PaginationInput } from '../types/common';
 
@@ -193,6 +195,68 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
     }
   }
 
+  async updateShoppingListItem(
+    listId: string,
+    itemId: string,
+    payload: UpdateShoppingListItemDTO
+  ): Promise<ShoppingListItemDTO> {
+    const updateData: Partial<ShoppingListItemRow> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (payload.purchased !== undefined) updateData.purchased = payload.purchased;
+    if (payload.quantity !== undefined) updateData.quantity = payload.quantity;
+    if (payload.notes !== undefined) updateData.notes = payload.notes;
+
+    const { data, error } = await this.client
+      .from('shopping_list_items')
+      .update(updateData)
+      .eq('id', itemId)
+      .eq('shopping_list_id', listId)
+      .select('*, food:foods(*)')
+      .single();
+
+    if (error) {
+      this.handleError('updateShoppingListItem', error);
+    }
+
+    return this.mapShoppingListItemRow(data!);
+  }
+
+  async completeShoppingList(
+    listId: string,
+    payload: CompleteShoppingListDTO
+  ): Promise<ShoppingListDTO> {
+    const updateData: Partial<ShoppingListRow> = {
+      status: 'COMPLETED',
+      updated_at: new Date().toISOString(),
+    };
+
+    if (payload.actualCost !== undefined) {
+      updateData.actual_cost = payload.actualCost;
+    }
+
+    const { data, error } = await this.client
+      .from('shopping_lists')
+      .update(updateData)
+      .eq('id', listId)
+      .select('*, items:shopping_list_items(*, food:foods(*))')
+      .single();
+
+    if (error) {
+      this.handleError('completeShoppingList', error);
+    }
+
+    const mapped = this.mapShoppingListRow(data!);
+
+    // 如果包含 items，进行排序
+    if (mapped.items && mapped.items.length > 0) {
+      mapped.items = this.sortShoppingListItems(mapped.items);
+    }
+
+    return mapped;
+  }
+
   // ==================== 辅助方法 ====================
 
   /**
@@ -238,6 +302,8 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
       planId: row.plan_id,
       name: row.name,
       budget: row.budget,
+      estimatedCost: row.estimated_cost ?? undefined,
+      actualCost: row.actual_cost ?? undefined,
       status: row.status as any,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
