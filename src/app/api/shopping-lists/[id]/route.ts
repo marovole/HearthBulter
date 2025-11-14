@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { shoppingListRepository } from '@/lib/repositories/shopping-list-repository-singleton';
 import { z } from 'zod';
 
 // 更新购物清单的验证 schema
@@ -13,7 +14,7 @@ const updateShoppingListSchema = z.object({
  * PATCH /api/shopping-lists/:id
  * 更新购物清单
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function PATCH(
   request: NextRequest,
@@ -80,39 +81,12 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateShoppingListSchema.parse(body);
 
-    // Build update data
-    const updateData: any = {
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (validatedData.name !== undefined) {
-      updateData.name = validatedData.name;
-    }
-    if (validatedData.budget !== undefined) {
-      updateData.budget = validatedData.budget;
-    }
-
-    // 更新购物清单
-    const { data: updatedList, error: updateError } = await supabase
-      .from('shopping_lists')
-      .update(updateData)
-      .eq('id', listId)
-      .select(`
-        *,
-        items:shopping_list_items(
-          *,
-          food:foods(*)
-        )
-      `)
-      .single();
-
-    if (updateError) {
-      console.error('更新购物清单失败:', updateError);
-      return NextResponse.json(
-        { error: '更新购物清单失败' },
-        { status: 500 }
-      );
-    }
+    // 使用 ShoppingListRepository 更新
+    const updatedList = await shoppingListRepository.decorateMethod(
+      'updateShoppingList',
+      listId,
+      validatedData
+    );
 
     return NextResponse.json(
       {
@@ -141,7 +115,7 @@ export async function PATCH(
  * DELETE /api/shopping-lists/:id
  * 删除购物清单
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function DELETE(
   request: NextRequest,
@@ -204,19 +178,8 @@ export async function DELETE(
       );
     }
 
-    // 删除购物清单（级联删除清单项）
-    const { error: deleteError } = await supabase
-      .from('shopping_lists')
-      .delete()
-      .eq('id', listId);
-
-    if (deleteError) {
-      console.error('删除购物清单失败:', deleteError);
-      return NextResponse.json(
-        { error: '删除购物清单失败' },
-        { status: 500 }
-      );
-    }
+    // 使用 ShoppingListRepository 删除（级联删除清单项）
+    await shoppingListRepository.decorateMethod('deleteShoppingList', listId);
 
     return NextResponse.json(
       {

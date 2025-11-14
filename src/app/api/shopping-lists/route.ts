@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-
-// Type definitions
-type ShoppingListStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
+import { shoppingListRepository } from '@/lib/repositories/shopping-list-repository-singleton';
+import type { ShoppingListStatus } from '@/lib/repositories/types/shopping-list';
 
 /**
  * GET /api/shopping-lists
  * 查询购物清单
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移
  */
 export async function GET(request: NextRequest) {
   try {
@@ -71,55 +70,15 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Query shopping lists for this plan
-      let query = supabase
-        .from('shopping_lists')
-        .select(`
-          *,
-          plan:meal_plans(
-            id,
-            name,
-            member:family_members(id, name)
-          ),
-          items:shopping_list_items(
-            *,
-            food:foods(*)
-          )
-        `)
-        .eq('planId', planId);
+      // 使用 ShoppingListRepository 查询
+      const result = await shoppingListRepository.decorateMethod('listShoppingLists', {
+        planId,
+        statuses: status ? [status] : undefined,
+        includePlan: true,
+        includeItems: true,
+      });
 
-      if (status) {
-        query = query.eq('status', status);
-      }
-
-      query = query.order('createdAt', { ascending: false });
-
-      const { data: shoppingLists, error: listsError } = await query;
-
-      if (listsError) {
-        console.error('查询购物清单失败:', listsError);
-        return NextResponse.json(
-          { error: '查询购物清单失败' },
-          { status: 500 }
-        );
-      }
-
-      // Sort items within each shopping list
-      const formattedLists = (shoppingLists || []).map((list: any) => ({
-        ...list,
-        items: (list.items || []).sort((a: any, b: any) => {
-          // Sort by: category -> purchased -> food.name
-          if (a.category !== b.category) {
-            return (a.category || '').localeCompare(b.category || '');
-          }
-          if (a.purchased !== b.purchased) {
-            return a.purchased ? 1 : -1;
-          }
-          return (a.food?.name || '').localeCompare(b.food?.name || '');
-        }),
-      }));
-
-      return NextResponse.json({ shoppingLists: formattedLists }, { status: 200 });
+      return NextResponse.json({ shoppingLists: result.items }, { status: 200 });
     } else {
       // 如果没有指定 planId，只能查询当前用户相关的清单
       // 通过查找用户所属的家庭成员的食谱计划
@@ -147,55 +106,15 @@ export async function GET(request: NextRequest) {
 
       const planIds = plans.map((p) => p.id);
 
-      // Query shopping lists for these plans
-      let query = supabase
-        .from('shopping_lists')
-        .select(`
-          *,
-          plan:meal_plans(
-            id,
-            name,
-            member:family_members(id, name)
-          ),
-          items:shopping_list_items(
-            *,
-            food:foods(*)
-          )
-        `)
-        .in('planId', planIds);
+      // 使用 ShoppingListRepository 查询
+      const result = await shoppingListRepository.decorateMethod('listShoppingLists', {
+        planIds,
+        statuses: status ? [status] : undefined,
+        includePlan: true,
+        includeItems: true,
+      });
 
-      if (status) {
-        query = query.eq('status', status);
-      }
-
-      query = query.order('createdAt', { ascending: false });
-
-      const { data: shoppingLists, error: listsError } = await query;
-
-      if (listsError) {
-        console.error('查询购物清单失败:', listsError);
-        return NextResponse.json(
-          { error: '查询购物清单失败' },
-          { status: 500 }
-        );
-      }
-
-      // Sort items within each shopping list
-      const formattedLists = (shoppingLists || []).map((list: any) => ({
-        ...list,
-        items: (list.items || []).sort((a: any, b: any) => {
-          // Sort by: category -> purchased -> food.name
-          if (a.category !== b.category) {
-            return (a.category || '').localeCompare(b.category || '');
-          }
-          if (a.purchased !== b.purchased) {
-            return a.purchased ? 1 : -1;
-          }
-          return (a.food?.name || '').localeCompare(b.food?.name || '');
-        }),
-      }));
-
-      return NextResponse.json({ shoppingLists: formattedLists }, { status: 200 });
+      return NextResponse.json({ shoppingLists: result.items }, { status: 200 });
     }
   } catch (error) {
     console.error('查询购物清单失败:', error);
