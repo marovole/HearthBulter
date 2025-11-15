@@ -12,7 +12,6 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase-database';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
 import type { RecommendationRepository } from '@/lib/repositories/interfaces/recommendation-repository';
 import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
@@ -90,7 +89,13 @@ export class ServiceContainer {
    */
   private constructor(config: ServiceContainerConfig = {}) {
     this.config = config;
-    this.supabaseClient = config.supabaseClient ?? SupabaseClientManager.getInstance();
+    // 延迟加载 SupabaseClientManager 以避免模块顶层执行
+    if (config.supabaseClient) {
+      this.supabaseClient = config.supabaseClient;
+    } else {
+      const { SupabaseClientManager } = require('@/lib/db/supabase-adapter');
+      this.supabaseClient = SupabaseClientManager.getInstance();
+    }
   }
 
   /**

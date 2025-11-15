@@ -10,7 +10,8 @@
  * - 元数据: expiresAt, hitCount, createdAt, updatedAt
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase-database';
 import type { TrendDataType } from '@/lib/types/analytics';
 
 /**
@@ -101,7 +102,19 @@ export interface TrendCacheResult extends TrendCacheData {
  * 提供 L2 缓存的 CRUD 操作
  */
 export class SupabaseTrendCache {
-  private readonly supabase = SupabaseClientManager.getInstance();
+  private _supabase: SupabaseClient<Database> | null = null;
+
+  /**
+   * 获取 Supabase 客户端实例（延迟加载）
+   */
+  private get supabase(): SupabaseClient<Database> {
+    if (!this._supabase) {
+      // 动态导入以避免模块顶层执行
+      const { SupabaseClientManager } = require('@/lib/db/supabase-adapter');
+      this._supabase = SupabaseClientManager.getInstance();
+    }
+    return this._supabase;
+  }
 
   /**
    * 获取趋势缓存
