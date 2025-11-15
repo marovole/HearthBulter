@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { supabaseAdapter } from '@/lib/db/supabase-adapter';
 import { auth } from '@/lib/auth';
-import { ShareStatus } from '@prisma/client';
 
 /**
  * GET /api/social/share/[token]
@@ -24,7 +23,7 @@ export async function GET(
     }
 
     // 查找分享内容
-    const sharedContent = await prisma.sharedContent.findUnique({
+    const sharedContent = await supabaseAdapter.sharedContent.findUnique({
       where: { shareToken: token },
       include: {
         member: {
@@ -53,13 +52,13 @@ export async function GET(
     }
 
     // 检查是否过期
-    if (sharedContent.expiresAt && sharedContent.expiresAt < new Date()) {
+    if (sharedContent.expiresAt && new Date(sharedContent.expiresAt) < new Date()) {
       // 自动标记为过期
-      await prisma.sharedContent.update({
+      await supabaseAdapter.sharedContent.update({
         where: { id: sharedContent.id },
         data: { status: 'EXPIRED' },
       });
-      
+
       return NextResponse.json(
         { error: '分享已过期' },
         { status: 410 }
@@ -67,7 +66,7 @@ export async function GET(
     }
 
     // 增加浏览次数
-    await prisma.sharedContent.update({
+    await supabaseAdapter.sharedContent.update({
       where: { id: sharedContent.id },
       data: {
         viewCount: sharedContent.viewCount + 1,
@@ -118,7 +117,7 @@ export async function POST(
     const { action = 'click' } = body;
 
     // 查找分享内容
-    const sharedContent = await prisma.sharedContent.findUnique({
+    const sharedContent = await supabaseAdapter.sharedContent.findUnique({
       where: { shareToken: token },
     });
 
@@ -131,7 +130,7 @@ export async function POST(
 
     // 根据动作类型更新统计
     const updateData: any = {};
-    
+
     switch (action) {
     case 'click':
       updateData.clickCount = sharedContent.clickCount + 1;
@@ -149,7 +148,7 @@ export async function POST(
       );
     }
 
-    await prisma.sharedContent.update({
+    await supabaseAdapter.sharedContent.update({
       where: { id: sharedContent.id },
       data: updateData,
     });
@@ -189,7 +188,7 @@ export async function DELETE(
     }
 
     // 查找分享内容
-    const sharedContent = await prisma.sharedContent.findUnique({
+    const sharedContent = await supabaseAdapter.sharedContent.findUnique({
       where: { shareToken: token },
     });
 
@@ -209,7 +208,7 @@ export async function DELETE(
     }
 
     // 撤回分享
-    await prisma.sharedContent.update({
+    await supabaseAdapter.sharedContent.update({
       where: { id: sharedContent.id },
       data: { status: 'REVOKED' },
     });

@@ -1,8 +1,42 @@
+/**
+ * ⚠️⚠️⚠️ 严重警告 - 此端点迁移存在多个阻塞性问题 ⚠️⚠️⚠️
+ *
+ * CodeX Review 发现的 BLOCKER 级别问题：
+ *
+ * 1. **嵌套关系数据丢失** (BLOCKER)
+ *    - `ingredients.include.food` 不会被 Supabase 适配器正确 join
+ *    - 推荐引擎依赖 `recipe.ingredients[n].food` 会导致运行时崩溃
+ *    - 位置: 所有调用 recommendationEngine 的地方
+ *
+ * 2. **orderBy 数组格式不支持** (BLOCKER)
+ *    - 适配器将数组 `[{key: 'desc'}]` 视为对象，生成无效 SQL
+ *    - 导致 500 错误
+ *    - 位置: popular 端点的排序查询
+ *
+ * 3. **上下文过滤器失效** (MAJOR)
+ *    - Prisma JSON 操作符（path, string_contains）不支持
+ *    - 用户的餐类型/季节/排除过滤器被完全忽略
+ *    - 业务逻辑已改变！
+ *
+ * 4. **RecommendationEngine 架构问题** (MEDIUM)
+ *    - 使用 `as any` 类型断言隐藏编译时错误
+ *    - 引擎及其依赖类仍期望 PrismaClient 类型
+ *
+ * **修复方案**（需要架构级别重构）：
+ * 1. 增强适配器支持嵌套关系 join
+ * 2. 实现 Prisma 风格的 orderBy 数组支持
+ * 3. 添加 JSON 操作符支持或使用 Supabase RPC
+ * 4. 创建 RecommendationDataSource 接口抽象层
+ *
+ * **当前状态**: 此端点在生产环境中会崩溃！仅供开发参考。
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabaseAdapter } from '@/lib/db/supabase-adapter';
 import { RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
 
-const recommendationEngine = new RecommendationEngine(prisma);
+// 临时使用类型断言，但会导致运行时错误（见上述警告）
+const recommendationEngine = new RecommendationEngine(supabaseAdapter as any);
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +75,20 @@ export async function GET(request: NextRequest) {
 
     // 获取推荐的食谱详细信息
     const recipeIds = recommendations.map(r => r.recipeId);
-    const recipes = await prisma.recipe.findMany({
+
+    // 空 ID 数组保护
+    if (recipeIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          recommendations: [],
+          context,
+          total: 0,
+        },
+      });
+    }
+
+    const recipes = await supabaseAdapter.recipe.findMany({
       where: {
         id: { in: recipeIds },
         status: 'PUBLISHED',
@@ -96,7 +143,7 @@ export async function POST(request: NextRequest) {
     switch (type) {
     case 'rating':
       // 记录用户评分
-      const rating = await prisma.recipeRating.create({
+      const rating = await supabaseAdapter.recipeRating.create({
         data: {
           recipeId: data.recipeId,
           memberId: data.memberId,
@@ -109,7 +156,7 @@ export async function POST(request: NextRequest) {
 
     case 'favorite':
       // 记录用户收藏
-      const favorite = await prisma.recipeFavorite.create({
+      const favorite = await supabaseAdapter.recipeFavorite.create({
         data: {
           recipeId: data.recipeId,
           memberId: data.memberId,
@@ -121,7 +168,7 @@ export async function POST(request: NextRequest) {
 
     case 'view':
       // 记录用户浏览
-      const view = await prisma.recipeView.create({
+      const view = await supabaseAdapter.recipeView.create({
         data: {
           recipeId: data.recipeId,
           memberId: data.memberId,
@@ -135,7 +182,7 @@ export async function POST(request: NextRequest) {
 
     case 'substitution':
       // 记录食材替换
-      const substitution = await prisma.ingredientSubstitution.create({
+      const substitution = await supabaseAdapter.ingredientSubstitution.create({
         data: {
           recipeId: data.recipeId,
           memberId: data.memberId,
