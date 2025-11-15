@@ -489,6 +489,16 @@ export function createAnalyticsService(repository: AnalyticsRepository): Analyti
   return new AnalyticsService(repository);
 }
 
-// 向后兼容的单例导出已移除 - 请使用 service-container 获取实例
-// import { getDefaultContainer } from '@/lib/container/service-container';
-// const service = getDefaultContainer().getAnalyticsService();
+// 兼容层：导出 singleton 供旧代码使用
+// TODO: 迁移所有使用方到 DI container 后移除此导出
+let analyticsServiceInstance: AnalyticsService | null = null;
+
+export function getAnalyticsServiceSingleton(): AnalyticsService {
+  if (!analyticsServiceInstance) {
+    const { getDefaultContainer } = require('@/lib/container/service-container');
+    analyticsServiceInstance = getDefaultContainer().getAnalyticsService();
+  }
+  return analyticsServiceInstance;
+}
+
+export const analyticsService = getAnalyticsServiceSingleton();

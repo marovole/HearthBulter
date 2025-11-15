@@ -22,6 +22,7 @@ import type {
   SpendingFilterDTO,
 } from '../types/budget';
 import type { PaginatedResult, PaginationInput } from '../types/common';
+import type { RecordSpendingParams, RecordSpendingResult } from '@/types/supabase-rpc';
 
 type BudgetRow = Database['public']['Tables']['budgets']['Row'];
 type BudgetInsert = Database['public']['Tables']['budgets']['Insert'];
@@ -122,17 +123,97 @@ export class SupabaseBudgetRepository implements BudgetRepository {
   }
 
   /**
-   * 记录支出
+   * 记录支出（使用 RPC 函数确保原子性）
+   *
+   * 调用 `record_spending_tx` RPC 函数，该函数在单个事务中完成：
+   * - 验证预算是否存在且处于活跃状态
+   * - 检查总预算和分类预算限制
+   * - 创建支出记录
+   * - 更新预算的 usedAmount
+   * - 自动生成预警（80%、100%、110%）
+   *
+   * ⚠️ 注意：RPC 函数直接操作 Supabase，绕过了 Prisma
+   * 因此双写框架在这个方法上只会写入 Supabase 侧
+   *
+   * @param payload - 支出创建参数
+   * @returns 创建的支出记录
+   * @throws 如果预算不存在、已超支、或其他验证失败
    */
   async recordSpending(payload: SpendingCreateDTO): Promise<SpendingDTO> {
-    const insertPayload = this.mapSpendingDtoToInsert(payload);
-    const { data, error } = await this.client
-      .from('spendings')
-      .insert(insertPayload as any)
-      .select('*')
-      .single();
-    if (error) this.handleError('recordSpending', error);
-    return this.mapSpendingRow(data!);
+    // 第一步：构建 RPC 函数参数
+    const rpcParams: RecordSpendingParams = {
+      p_budget_id: payload.budgetId,
+      p_amount: payload.amount,
+      p_category: payload.category,
+      p_description: payload.description ?? null,
+      p_purchase_date: (payload.purchaseDate ?? new Date()).toISOString(),
+      p_transaction_id: payload.transactionId ?? null,
+      p_platform: payload.platform ?? null,
+      p_items: payload.items ?? null,
+    };
+
+    // 第二步：调用 RPC 函数
+    const { data, error } = await this.client.rpc<RecordSpendingResult>(
+      'record_spending_tx',
+      rpcParams
+    );
+
+    if (error) {
+      this.handleError('recordSpending:rpc', error);
+    }
+
+    // 第三步：检查 RPC 返回的成功标志
+    if (!data?.success) {
+      const errorMessage = data?.error ?? data?.message ?? 'record_spending_tx failed';
+      throw new Error(errorMessage);
+    }
+
+    // 第四步：验证返回数据的完整性
+    if (!data.data?.spending || !data.data?.budget?.id) {
+      throw new Error('record_spending_tx 返回的数据不完整');
+    }
+
+    // 第五步：验证返回的 budget ID 与请求一致（防御性编程）
+    if (data.data.budget.id !== payload.budgetId) {
+      console.error(
+        `[SupabaseBudgetRepository] Budget ID mismatch: requested=${payload.budgetId}, returned=${data.data.budget.id}`
+      );
+      throw new Error('返回的预算 ID 与请求不一致');
+    }
+
+    // 第六步：映射 RPC 返回值到 DTO
+    return this.mapRpcSpendingToDto(
+      data.data.spending,
+      data.data.budget.id,
+      payload.items
+    );
+  }
+
+  /**
+   * 映射 RPC 返回的 spending 对象到 SpendingDTO
+   *
+   * @param record - RPC 函数返回的 spending 记录
+   * @param budgetId - 预算 ID（RPC 函数只返回 budget.id）
+   * @param fallbackItems - 如果 RPC 返回的 items 为 null，使用此备用值
+   * @returns SpendingDTO
+   */
+  private mapRpcSpendingToDto(
+    record: RecordSpendingResult['data']['spending'],
+    budgetId: string,
+    fallbackItems?: SpendingCreateDTO['items']
+  ): SpendingDTO {
+    return {
+      id: record.id,
+      budgetId,
+      amount: record.amount,
+      category: record.category as SpendingDTO['category'],
+      description: record.description ?? undefined,
+      transactionId: record.transaction_id ?? undefined,
+      platform: record.platform ?? undefined,
+      items: (record.items ?? fallbackItems) as SpendingDTO['items'] | undefined,
+      purchaseDate: new Date(record.purchase_date),
+      createdAt: new Date(record.created_at),
+    };
   }
 
   /**
@@ -392,22 +473,6 @@ export class SupabaseBudgetRepository implements BudgetRepository {
         BEVERAGES: row.beverages_budget ?? 0,
         OTHER: row.other_budget ?? 0,
       },
-    };
-  }
-
-  /**
-   * 数据映射：SpendingCreateDTO → SpendingInsert
-   */
-  private mapSpendingDtoToInsert(dto: SpendingCreateDTO): SpendingInsert {
-    return {
-      budget_id: dto.budgetId,
-      amount: dto.amount,
-      category: dto.category,
-      description: dto.description ?? null,
-      transaction_id: dto.transactionId ?? null,
-      platform: dto.platform ?? null,
-      items: dto.items ?? null,
-      purchase_date: (dto.purchaseDate ?? new Date()).toISOString(),
     };
   }
 

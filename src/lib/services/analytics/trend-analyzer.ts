@@ -10,7 +10,7 @@
  */
 
 import type { AnalyticsRepository } from '@/lib/repositories/interfaces/analytics-repository';
-import type { TrendDataType } from '@prisma/client';
+import type { TrendDataType } from '@/lib/types/analytics';
 
 export interface TimeSeriesPoint {
   date: Date;

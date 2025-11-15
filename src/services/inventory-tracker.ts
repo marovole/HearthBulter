@@ -388,5 +388,16 @@ export class InventoryTracker {
  * 默认库存追踪器实例（用于向后兼容）
  * @deprecated 建议使用依赖注入方式创建实例
  */
-// export const inventoryTracker = new InventoryTracker(defaultRepository);
-// 注释掉单例导出，强制使用依赖注入
+// 兼容层：导出 singleton 供旧代码使用
+// TODO: 迁移所有使用方到 DI container 后移除此导出
+let inventoryTrackerInstance: InventoryTracker | null = null;
+
+function getInventoryTrackerSingleton(): InventoryTracker {
+  if (!inventoryTrackerInstance) {
+    const { inventoryRepository } = require('@/lib/repositories/inventory-repository-singleton');
+    inventoryTrackerInstance = new InventoryTracker(inventoryRepository);
+  }
+  return inventoryTrackerInstance;
+}
+
+export const inventoryTracker = getInventoryTrackerSingleton();

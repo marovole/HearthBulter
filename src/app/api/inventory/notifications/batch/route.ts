@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { inventoryNotificationService } from '@/services/inventory-notification';
+import { notificationRepository } from '@/lib/repositories/notification-repository-singleton';
 import { getCurrentUser } from '@/lib/auth';
 
-// POST - 批量操作通知
+/**
+ * POST /api/inventory/notifications/batch
+ * 批量操作库存通知
+ *
+ * 使用双写框架迁移 - 通过 NotificationRepository 访问数据
+ * 与 /api/notifications/batch 保持一致的实现
+ */
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -24,11 +30,20 @@ export async function POST(request: NextRequest) {
     let success = false;
     let message = '';
     let processedCount = 0;
+    const errors: Array<{ notificationId: string; error: string }> = [];
 
     switch (action) {
     case 'mark_all_as_read':
-      success = await inventoryNotificationService.markAllNotificationsAsRead(memberId);
-      message = success ? '全部标记已读成功' : '全部标记已读失败';
+      // 批量标记所有通知为已读
+      try {
+        await notificationRepository.decorateMethod('markAllAsRead', memberId);
+        success = true;
+        message = '全部标记已读成功';
+      } catch (error) {
+        console.error('标记全部已读失败:', error);
+        success = false;
+        message = '全部标记已读失败';
+      }
       break;
 
     case 'mark_selected_as_read':
@@ -36,11 +51,23 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: '请选择要操作的通知' }, { status: 400 });
       }
 
+      // 逐个标记为已读
       for (const notificationId of notificationIds) {
-        const result = await inventoryNotificationService.markNotificationAsRead(notificationId, memberId);
-        if (result) processedCount++;
+        try {
+          await notificationRepository.decorateMethod(
+            'markAsRead',
+            notificationId,
+            memberId
+          );
+          processedCount++;
+        } catch (error) {
+          errors.push({
+            notificationId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
       }
-        
+
       success = processedCount > 0;
       message = `成功标记 ${processedCount} 条通知为已读`;
       break;
@@ -50,11 +77,23 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: '请选择要删除的通知' }, { status: 400 });
       }
 
+      // 逐个删除通知
       for (const notificationId of notificationIds) {
-        const result = await inventoryNotificationService.deleteNotification(notificationId, memberId);
-        if (result) processedCount++;
+        try {
+          await notificationRepository.decorateMethod(
+            'deleteNotification',
+            notificationId,
+            memberId
+          );
+          processedCount++;
+        } catch (error) {
+          errors.push({
+            notificationId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
       }
-        
+
       success = processedCount > 0;
       message = `成功删除 ${processedCount} 条通知`;
       break;
@@ -67,12 +106,13 @@ export async function POST(request: NextRequest) {
       success,
       message,
       processedCount,
+      errors: errors.length > 0 ? errors : undefined,
     });
 
   } catch (error) {
     console.error('批量操作通知失败:', error);
     return NextResponse.json(
-      { error: '批量操作通知失败', details: error },
+      { error: '批量操作通知失败' },
       { status: 500 }
     );
   }

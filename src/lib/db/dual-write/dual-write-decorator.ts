@@ -26,6 +26,17 @@ export interface DualWriteConfig {
 }
 
 /**
+ * 仅在 Supabase 实现的方法白名单
+ *
+ * 这些方法使用 Supabase RPC 函数，无法在 Prisma 中实现
+ * 当双写启用时，这些方法会跳过 Prisma 调用，只执行 Supabase 侧
+ */
+const SUPABASE_ONLY_METHODS = new Set([
+  'recordSpending', // 使用 record_spending_tx RPC 函数
+  // 未来如果有其他 RPC-only 方法，在此添加
+]);
+
+/**
  * 双写装饰器
  *
  * 装饰任意 Repository 接口，提供双写验证能力
@@ -34,6 +45,7 @@ export interface DualWriteConfig {
  * 1. 单写模式（双写关闭）：根据 Feature Flag 选择主库
  * 2. 双写模式：同时写入 Prisma 和 Supabase，主库结果返回
  * 3. 影子读模式：主库返回，同时读取影子库进行比对
+ * 4. Supabase-only 模式：某些方法只在 Supabase 实现（RPC 函数）
  *
  * @template T - Repository 接口类型
  */
@@ -78,6 +90,16 @@ export class DualWriteDecorator<T extends object> {
    */
   async decorateMethod<R>(methodName: string, ...args: any[]): Promise<R> {
     const flags = await this.getFlags();
+
+    // Supabase-only 方法：直接调用 Supabase 实现，跳过 Prisma
+    // 这些方法使用 RPC 函数，Prisma 无法实现
+    if (SUPABASE_ONLY_METHODS.has(methodName)) {
+      const method = (this.supabaseRepo as any)[methodName];
+      if (!method) {
+        throw new Error(`Method ${methodName} not found in Supabase repository`);
+      }
+      return method.apply(this.supabaseRepo, args) as Promise<R>;
+    }
 
     // 单写模式
     if (!flags.enableDualWrite) {

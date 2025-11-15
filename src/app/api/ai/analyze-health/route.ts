@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { healthAnalyzer } from '@/lib/services/ai/health-analyzer';
+import { healthRepository } from '@/lib/repositories/health-repository-singleton';
+import { SupabaseFamilyRepository } from '@/lib/repositories/implementations/supabase-family-repository';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { rateLimiter } from '@/lib/services/ai/rate-limiter';
 import { aiFallbackService } from '@/lib/services/ai/fallback-service';
 import { medicalReportFilter } from '@/lib/middleware/ai-sensitive-filter';
 import { consentManager } from '@/lib/services/consent-manager';
+
+// 创建专门用于权限检查的 FamilyRepository 实例（不需要双写）
+const familyRepo = new SupabaseFamilyRepository(SupabaseClientManager.getInstance());
 
 /**
  * POST /api/ai/analyze-health
@@ -84,37 +89,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 使用 HealthRepository 获取成员健康上下文（一次性获取所有数据）
+    const memberContext = await healthRepository.getMemberHealthContext(memberId);
 
-    // 验证用户对该成员的访问权限并获取成员数据
-    const { data: memberData } = await supabase
-      .from('family_members')
-      .select('id, familyId, userId, birthDate, gender, height, weight, bmi')
-      .eq('id', memberId)
-      .single();
-
-    if (!memberData) {
+    if (!memberContext) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
         { status: 404 }
       );
     }
 
-    // 检查权限：是成员本人或家庭管理员
-    const isOwnMember = memberData.userId === session.user.id;
+    // 使用 FamilyRepository 检查权限：是成员本人或家庭管理员
+    const isOwnMember = memberContext.member.userId === session.user.id;
     let isAdmin = false;
 
     if (!isOwnMember) {
-      const { data: adminCheck } = await supabase
-        .from('family_members')
-        .select('id')
-        .eq('familyId', memberData.familyId)
-        .eq('userId', session.user.id)
-        .eq('role', 'ADMIN')
-        .is('deletedAt', null)
-        .maybeSingle();
-
-      isAdmin = !!adminCheck;
+      const role = await familyRepo.getUserFamilyRole(
+        memberContext.member.familyId,
+        session.user.id
+      );
+      isAdmin = role === 'ADMIN';
     }
 
     if (!isOwnMember && !isAdmin) {
@@ -124,67 +118,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 获取健康目标
-    const { data: healthGoals } = await supabase
-      .from('health_goals')
-      .select('id, goalType, targetValue, currentValue, deadline, status')
-      .eq('memberId', memberId)
-      .is('deletedAt', null);
-
-    // 获取过敏信息
-    const { data: allergies } = await supabase
-      .from('allergies')
-      .select('id, allergenName, severity, symptoms')
-      .eq('memberId', memberId)
-      .is('deletedAt', null);
-
-    // 获取饮食偏好
-    const { data: dietaryPreferenceData } = await supabase
-      .from('dietary_preferences')
-      .select('dietType, isVegetarian, isVegan, restrictions, preferences')
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .maybeSingle();
-
-    // 获取健康数据（最近10条）
-    const { data: healthData } = await supabase
-      .from('health_data')
-      .select('id, dataType, value, unit, measuredAt, source')
-      .eq('memberId', memberId)
-      .order('measuredAt', { ascending: false })
-      .limit(10);
-
-    // 获取体检报告（最近5条）及其指标
-    const { data: medicalReports } = await supabase
-      .from('medical_reports')
-      .select('id, reportType, reportDate, uploadedAt')
-      .eq('memberId', memberId)
-      .order('createdAt', { ascending: false })
-      .limit(5);
-
-    // 获取所有体检指标
-    let allIndicators: any[] = [];
-    if (medicalReports && medicalReports.length > 0) {
-      const reportIds = medicalReports.map(r => r.id);
-      const { data: indicators } = await supabase
-        .from('medical_report_indicators')
-        .select('id, reportId, indicatorName, value, unit, referenceRange, status')
-        .in('reportId', reportIds);
-
-      allIndicators = indicators || [];
-    }
-
-    // 组装完整的成员数据
+    // 组装完整的成员数据（兼容现有代码）
     const member = {
-      ...memberData,
-      healthGoals: healthGoals || [],
-      allergies: allergies || [],
-      dietaryPreference: dietaryPreferenceData,
-      healthData: healthData || [],
-      medicalReports: (medicalReports || []).map(report => ({
-        ...report,
-        indicators: allIndicators.filter(ind => ind.reportId === report.id),
-      })),
+      ...memberContext.member,
+      birthDate: memberContext.member.birthDate.toISOString(),
+      gender: memberContext.member.gender.toLowerCase(),
+      healthGoals: memberContext.healthGoals,
+      allergies: memberContext.allergies,
+      dietaryPreference: memberContext.dietaryPreference,
+      healthData: memberContext.healthData,
+      medicalReports: memberContext.medicalReports,
     };
 
     // 结构化体检数据
@@ -259,33 +202,25 @@ export async function POST(request: NextRequest) {
       ];
     }
 
-    // 保存建议到数据库
-    const now = new Date().toISOString();
-    const { data: aiAdvice, error: createError } = await supabase
-      .from('ai_advice')
-      .insert({
-        memberId,
-        type: 'HEALTH_ANALYSIS',
-        content: {
-          analysis: analysisResult.data,
-          nutritionTargets,
-          dietaryAdjustments,
-          medicalData,
-          userProfile,
-          fallbackUsed: analysisResult.fallbackUsed,
-          fallbackReason: analysisResult.reason,
-        },
-        prompt: 'Comprehensive health analysis with personalized recommendations',
-        tokens: 0,
-        generatedAt: now,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .select()
-      .single();
+    // 使用 HealthRepository 保存建议到数据库
+    const aiAdvice = await healthRepository.saveHealthAdvice({
+      memberId,
+      type: 'HEALTH_ANALYSIS',
+      content: {
+        analysis: analysisResult.data,
+        nutritionTargets,
+        dietaryAdjustments,
+        medicalData,
+        userProfile,
+        fallbackUsed: analysisResult.fallbackUsed,
+        fallbackReason: analysisResult.reason,
+      },
+      prompt: 'Comprehensive health analysis with personalized recommendations',
+      tokens: 0,
+    });
 
-    if (createError) {
-      console.error('保存AI建议失败:', createError);
+    if (!aiAdvice) {
+      console.error('保存AI建议失败');
       // 继续返回结果，即使保存失败
     }
 
@@ -297,7 +232,7 @@ export async function POST(request: NextRequest) {
       prioritizedConcerns: !analysisResult.fallbackUsed
         ? healthAnalyzer.prioritizeHealthConcerns(analysisResult.data)
         : ['AI服务不可用，请咨询专业医生'],
-      generatedAt: aiAdvice?.generatedAt || now,
+      generatedAt: aiAdvice?.generatedAt || new Date(),
       fallbackUsed: analysisResult.fallbackUsed,
       message: analysisResult.message,
     };
@@ -340,14 +275,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 验证访问权限
-    const { data: memberData } = await supabase
-      .from('family_members')
-      .select('id, familyId, userId')
-      .eq('id', memberId)
-      .single();
+    // 使用 FamilyRepository 验证访问权限
+    const memberData = await familyRepo.getFamilyMemberById(memberId);
 
     if (!memberData) {
       return NextResponse.json(
@@ -361,16 +290,11 @@ export async function GET(request: NextRequest) {
     let isAdmin = false;
 
     if (!isOwnMember) {
-      const { data: adminCheck } = await supabase
-        .from('family_members')
-        .select('id')
-        .eq('familyId', memberData.familyId)
-        .eq('userId', session.user.id)
-        .eq('role', 'ADMIN')
-        .is('deletedAt', null)
-        .maybeSingle();
-
-      isAdmin = !!adminCheck;
+      const role = await familyRepo.getUserFamilyRole(
+        memberData.familyId,
+        session.user.id
+      );
+      isAdmin = role === 'ADMIN';
     }
 
     if (!isOwnMember && !isAdmin) {
@@ -380,24 +304,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 获取历史分析记录
-    const { data: history, error } = await supabase
-      .from('ai_advice')
-      .select('id, generatedAt, content, feedback')
-      .eq('memberId', memberId)
-      .eq('type', 'HEALTH_ANALYSIS')
-      .order('generatedAt', { ascending: false })
-      .limit(limit);
+    // 使用 HealthRepository 获取历史分析记录
+    const history = await healthRepository.getMemberHealthHistory(memberId, limit);
 
-    if (error) {
-      console.error('获取历史记录失败:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch history' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ history: history || [] });
+    return NextResponse.json({ history });
 
   } catch (error) {
     console.error('Health analysis history API error:', error);

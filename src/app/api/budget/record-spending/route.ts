@@ -50,16 +50,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 获取预算并验证
-    const budget = await budgetRepository.decorateMethod('getBudgetById', budgetId);
-
-    if (!budget) {
-      return NextResponse.json(
-        { error: '预算不存在' },
-        { status: 404 }
-      );
-    }
-
     // 构建 SpendingCreateDTO
     const spendingData: SpendingCreateDTO = {
       budgetId,
@@ -73,23 +63,58 @@ export async function POST(request: NextRequest) {
     };
 
     // 使用 Repository 创建支出记录
+    // Repository 内部调用 record_spending_tx RPC 函数，确保：
+    // - 原子性：支出创建 + 预算更新在同一事务中
+    // - 验证：预算存在性、总预算和分类预算限制
+    // - 预警：自动生成 80%、100%、110% 预警
     const spending = await budgetRepository.decorateMethod('recordSpending', spendingData);
-
-    // 更新预算的 usedAmount
-    // 注意：这里存在潜在的数据不一致风险
-    // 在生产环境中，应该使用 RPC 函数或数据库触发器来保证一致性
-    const newUsedAmount = (budget.usedAmount || 0) + spendAmount;
-    await budgetRepository.decorateMethod('updateBudget', budgetId, {
-      usedAmount: newUsedAmount,
-    });
 
     return NextResponse.json(spending);
   } catch (error) {
     console.error('记录支出失败:', error);
 
     if (error instanceof Error) {
+      // 根据 RPC 函数返回的错误类型，映射到合适的 HTTP 状态码
+      const message = error.message;
+
+      if (message.includes('BUDGET_NOT_FOUND') || message.includes('预算不存在')) {
+        return NextResponse.json(
+          { error: '预算不存在或已不活跃' },
+          { status: 404 }
+        );
+      }
+
+      if (message.includes('DATE_OUT_OF_RANGE') || message.includes('不在预算周期内')) {
+        return NextResponse.json(
+          { error: '支出日期不在预算周期内' },
+          { status: 400 }
+        );
+      }
+
+      if (message.includes('BUDGET_EXCEEDED') || message.includes('超出预算')) {
+        return NextResponse.json(
+          { error: message },
+          { status: 400 }
+        );
+      }
+
+      if (message.includes('CATEGORY_LIMIT_EXCEEDED') || message.includes('分类预算')) {
+        return NextResponse.json(
+          { error: message },
+          { status: 400 }
+        );
+      }
+
+      if (message.includes('ID 与请求不一致')) {
+        return NextResponse.json(
+          { error: '系统错误：预算 ID 不一致' },
+          { status: 500 }
+        );
+      }
+
+      // 其他错误
       return NextResponse.json(
-        { error: error.message },
+        { error: message },
         { status: 400 }
       );
     }

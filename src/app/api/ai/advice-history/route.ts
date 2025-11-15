@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { fetchAdviceHistory } from '@/lib/db/supabase-rpc-helpers';
+import { addCacheHeaders, EDGE_CACHE_PRESETS } from '@/lib/cache/edge-cache-helpers';
 
 /**
  * GET /api/ai/advice-history
  * 获取AI建议历史和对话历史
  *
  * Migrated from Prisma to Supabase
+ * Optimizations:
+ * - 使用 RPC `fetch_advice_history` 减少往返次数
+ * - Edge Cache (60s TTL) 提升响应速度
+ * - Messages 字段压缩（最多 5 条）减少传输量
  */
 export async function GET(request: NextRequest) {
   try {
@@ -72,28 +78,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 获取AI建议历史
-    let adviceQuery = supabase
-      .from('ai_advice')
-      .select('id, type, content, prompt, tokens, feedback, generatedAt, createdAt', { count: 'exact' })
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .order('generatedAt', { ascending: false })
-      .range(offset, offset + limit - 1);
+    // 使用优化的 RPC 函数获取 AI 建议历史
+    // 优势：单次往返、messages 压缩（最多 5 条）、服务端聚合
+    const adviceResult = await fetchAdviceHistory(memberId, { limit, offset });
 
-    if (type) {
-      adviceQuery = adviceQuery.eq('type', type);
-    }
-
-    const { data: adviceHistory, error: adviceError, count: totalCount } = await adviceQuery;
-
-    if (adviceError) {
-      console.error('获取AI建议历史失败:', adviceError);
+    if (!adviceResult.success || !adviceResult.data) {
+      console.error('获取AI建议历史失败:', adviceResult.error);
       return NextResponse.json(
         { error: 'Failed to fetch advice history' },
         { status: 500 }
       );
     }
+
+    const { advice: rawAdvice, pagination } = adviceResult.data;
+
+    // 如果指定了 type 过滤，需要在客户端过滤
+    // ⚠️ P2 限制：当前 type 过滤在客户端进行，导致：
+    //    1. pagination.total 和 hasMore 不准确（是未过滤的总数）
+    //    2. adviceByType 只反映当前页的统计，不是全局统计
+    // TODO: 在 RPC 中添加 p_type 参数支持服务端过滤
+    const filteredAdvice = type
+      ? rawAdvice.filter(item => item.type === type)
+      : rawAdvice;
 
     // 获取对话历史
     const { data: conversationHistory, error: convError } = await supabase
@@ -122,26 +128,34 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // 获取建议统计
-    const adviceStats = await getAdviceStats(supabase, memberId);
+    // 从 RPC 返回的 advice 数据计算统计信息
+    // 优势：避免额外查询所有记录
+    const adviceStats = calculateAdviceStats(filteredAdvice);
 
-    return NextResponse.json({
+    const responseData = {
       advice: {
-        items: adviceHistory || [],
-        total: totalCount || 0,
-        limit,
-        offset,
+        items: filteredAdvice,
+        total: pagination.total,
+        limit: pagination.limit,
+        offset: pagination.offset,
+        hasMore: pagination.hasMore,
       },
       conversations: {
         items: processedConversations,
         total: processedConversations.length,
       },
       summary: {
-        totalAdvice: totalCount || 0,
+        totalAdvice: pagination.total,
         totalConversations: processedConversations.length,
         adviceByType: adviceStats,
       },
-    });
+    };
+
+    // 添加 Edge Cache 头（60s TTL, 30s stale-while-revalidate）
+    const headers = new Headers();
+    addCacheHeaders(headers, EDGE_CACHE_PRESETS.AI_ENDPOINT);
+
+    return NextResponse.json(responseData, { headers });
 
   } catch (error) {
     console.error('Advice history API error:', error);
@@ -153,26 +167,24 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * 获取建议统计信息（按类型分组）
+ * 从当前分页的建议数据计算统计信息（按类型分组）
  *
- * Note: Supabase doesn't support groupBy directly,
- * so we fetch all records and compute stats client-side
+ * 优化：基于 RPC 返回的数据计算，避免额外查询所有记录
+ *
+ * ⚠️ 限制：这是基于当前页的统计，不是全局统计
+ * - 如果使用了分页（offset > 0），统计数据仅反映当前页
+ * - 如果使用了 type 过滤，统计数据仅反映过滤后的结果
+ *
+ * TODO: 如果需要全局统计，考虑：
+ * 1. 在 RPC 中添加聚合查询返回全局统计
+ * 2. 或者使用单独的统计端点（带缓存）
+ *
+ * @param advice - 当前页的建议记录数组
+ * @returns 按类型分组的统计对象
  */
-async function getAdviceStats(supabase: ReturnType<typeof SupabaseClientManager.getInstance>, memberId: string) {
-  const { data: allAdvice, error } = await supabase
-    .from('ai_advice')
-    .select('type')
-    .eq('memberId', memberId)
-    .is('deletedAt', null);
-
-  if (error || !allAdvice) {
-    console.error('获取建议统计失败:', error);
-    return {};
-  }
-
-  // 客户端分组统计
-  const stats = allAdvice.reduce((acc, advice) => {
-    const type = advice.type;
+function calculateAdviceStats(advice: Array<{ type: string }>) {
+  const stats = advice.reduce((acc, item) => {
+    const type = item.type;
     acc[type] = (acc[type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);

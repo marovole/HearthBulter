@@ -5,7 +5,7 @@
 -- Security: DEFINER with search_path protection against hijacking
 
 CREATE OR REPLACE FUNCTION record_spending_tx(
-  p_member_id UUID,
+  p_budget_id UUID,
   p_amount DECIMAL(10,2),
   p_category TEXT,
   p_description TEXT DEFAULT NULL,
@@ -23,12 +23,12 @@ DECLARE
   v_budget RECORD;
   v_total_spent DECIMAL(10,2);
   v_new_spending spendings%ROWTYPE;
-  v_budget_id UUID;  -- Fixed: Changed from TEXT to UUID
+  v_budget_id UUID;
   v_new_usage DECIMAL(10,2);
   v_category_budget DECIMAL(10,2);
   v_category_spent DECIMAL(10,2);
 BEGIN
-  -- Find active budget for the member with row lock to prevent concurrent issues
+  -- Lock the specified budget and verify it's active and covers the purchase date
   SELECT
     id,
     total_amount,
@@ -48,19 +48,24 @@ BEGIN
     other_budget
   INTO v_budget
   FROM budgets
-  WHERE member_id = p_member_id
+  WHERE id = p_budget_id
     AND status = 'ACTIVE'
-    AND start_date <= p_purchase_date
-    AND end_date >= p_purchase_date
-  ORDER BY created_at DESC
-  LIMIT 1
   FOR UPDATE;
-  
+
   IF NOT FOUND THEN
     RETURN json_build_object(
       'success', false,
       'error', 'BUDGET_NOT_FOUND',
-      'message', '未找到活跃的预算记录'
+      'message', '预算不存在或已不活跃'
+    );
+  END IF;
+
+  -- Verify purchase date is within budget period
+  IF p_purchase_date < v_budget.start_date OR p_purchase_date > v_budget.end_date THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'DATE_OUT_OF_RANGE',
+      'message', '支出日期不在预算周期内'
     );
   END IF;
 
@@ -233,7 +238,10 @@ BEGIN
           'description', v_new_spending.description,
           'purchase_date', v_new_spending.purchase_date,
           'transaction_id', v_new_spending.transaction_id,
-          'platform', v_new_spending.platform
+          'platform', v_new_spending.platform,
+          'items', v_new_spending.items,
+          'created_at', v_new_spending.created_at,
+          'updated_at', v_new_spending.updated_at
         ),
         'budget', json_build_object(
           'id', v_budget_id,

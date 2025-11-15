@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { budgetRepository } from '@/lib/repositories/budget-repository-singleton';
 import type { FoodCategory } from '@/lib/repositories/types/budget';
 
 /**
  * GET /api/budget/spending-history
  * 获取支出历史
  *
- * Migrated from Prisma to Supabase
+ * 使用双写框架迁移 - 完全通过 Repository 层访问数据
  */
 export async function GET(request: NextRequest) {
   try {
@@ -25,57 +25,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 构建查询过滤器
+    const filter = {
+      budgetId,
+      category: category || undefined,
+      range: (startDate || endDate) ? {
+        start: startDate ? new Date(startDate) : undefined,
+        end: endDate ? new Date(endDate) : undefined,
+      } : undefined,
+    };
 
-    // 构建查询
-    let query = supabase
-      .from('spendings')
-      .select('*', { count: 'exact' })
-      .eq('budgetId', budgetId)
-      .order('purchaseDate', { ascending: false });
+    // 获取所有支出（用于统计）
+    const allSpendingsResult = await budgetRepository.decorateMethod(
+      'listSpendings',
+      filter,
+      undefined // 不使用分页，获取所有数据用于统计
+    );
 
-    // 分类过滤
-    if (category) {
-      query = query.eq('category', category);
-    }
-
-    // 日期过滤
-    if (startDate) {
-      query = query.gte('purchaseDate', new Date(startDate).toISOString());
-    }
-    if (endDate) {
-      query = query.lte('purchaseDate', new Date(endDate).toISOString());
-    }
-
-    // 先获取统计信息（不分页）
-    const { data: allSpendings, error: allError } = await supabase
-      .from('spendings')
-      .select('amount, category, purchaseDate')
-      .eq('budgetId', budgetId)
-      .eq('category', category || undefined);
-
-    if (allError) {
-      console.error('获取支出统计失败:', allError);
-    }
-
-    // 分页查询
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    query = query.range(from, to);
-
-    const { data: spendings, error, count } = await query;
-
-    if (error) {
-      console.error('获取支出历史失败:', error);
-      return NextResponse.json(
-        { error: '获取支出历史失败' },
-        { status: 500 }
-      );
-    }
+    // 获取分页数据
+    const offset = (page - 1) * limit;
+    const paginatedResult = await budgetRepository.decorateMethod(
+      'listSpendings',
+      filter,
+      { offset, limit }
+    );
 
     // 计算统计信息
-    const totalAmount = (allSpendings || []).reduce((sum, s) => sum + s.amount, 0);
-    const categoryStats = (allSpendings || []).reduce((stats, spending) => {
+    const allSpendings = allSpendingsResult.items;
+    const totalAmount = allSpendings.reduce((sum, s) => sum + s.amount, 0);
+    const categoryStats = allSpendings.reduce((stats, spending) => {
       const cat = spending.category;
       if (!stats[cat]) {
         stats[cat] = {
@@ -90,18 +68,18 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, { count: number; amount: number; category: FoodCategory }>);
 
     return NextResponse.json({
-      spendings: spendings || [],
+      spendings: paginatedResult.items,
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+        total: paginatedResult.total,
+        totalPages: Math.ceil(paginatedResult.total / limit),
       },
       statistics: {
         totalAmount,
-        totalTransactions: (allSpendings || []).length,
-        averageAmount: (allSpendings || []).length > 0
-          ? totalAmount / (allSpendings || []).length
+        totalTransactions: allSpendings.length,
+        averageAmount: allSpendings.length > 0
+          ? totalAmount / allSpendings.length
           : 0,
         categoryBreakdown: Object.values(categoryStats),
       },
