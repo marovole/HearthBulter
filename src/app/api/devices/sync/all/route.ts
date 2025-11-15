@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { deviceSyncService } from '@/lib/services/device-sync-service';
+import { fetchDevicesForSync } from '@/lib/db/supabase-rpc-helpers';
 import { z } from 'zod';
 
 const BatchSyncSchema = z.object({
@@ -21,6 +22,10 @@ const BatchSyncSchema = z.object({
  * 批量设备同步
  *
  * Migrated from Prisma to Supabase
+ * Optimizations:
+ * - 使用 RPC `fetch_devices_for_sync`（仅当有 memberId 时）
+ * - 单次往返获取设备列表和统计
+ * - 无 memberId 时保持现有逻辑（安全性优先）
  */
 export async function POST(request: NextRequest) {
   try {
@@ -70,25 +75,56 @@ export async function POST(request: NextRequest) {
     }
 
     // 获取需要同步的设备
-    let devicesQuery = supabase
-      .from('device_connections')
-      .select(`
-        id,
-        deviceId,
-        deviceName,
-        platform,
-        memberId,
-        syncStatus,
-        member:family_members!inner(id, name)
-      `)
-      .eq('isActive', true)
-      .eq('isAutoSync', true)
-      .neq('syncStatus', 'DISABLED');
+    let devicesToSync: any[] = [];
 
     if (validatedData.memberId) {
-      devicesQuery = devicesQuery.eq('memberId', validatedData.memberId);
+      // 有 memberId：使用优化的 RPC
+      // 优势：单次往返、服务端过滤、包含汇总统计
+      const devicesResult = await fetchDevicesForSync({
+        memberId: validatedData.memberId,
+        platforms: validatedData.platforms,
+        limit: 200, // RPC 最大限制
+      });
+
+      if (!devicesResult.success || !devicesResult.data) {
+        console.error('RPC fetch_devices_for_sync failed:', devicesResult.error);
+        return NextResponse.json(
+          { error: '查询设备失败' },
+          { status: 500 }
+        );
+      }
+
+      // 映射 RPC 数据结构到原有格式
+      devicesToSync = devicesResult.data.devices.map(d => ({
+        id: d.id,
+        deviceId: d.deviceId,
+        deviceName: d.deviceName,
+        platform: d.platform,
+        memberId: d.memberId,
+        syncStatus: d.syncStatus,
+        member: {
+          id: d.memberId,
+          name: d.memberName,
+        },
+      }));
+
+      if (devicesToSync.length === 0) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            message: '没有需要同步的设备',
+            devices: [],
+            summary: {
+              total: 0,
+              success: 0,
+              failed: 0,
+              skipped: 0,
+            },
+          },
+        });
+      }
     } else {
-      // 如果没有指定memberId，获取用户所有家庭成员的设备
+      // 无 memberId：保持现有逻辑（避免安全问题）
       // 先获取用户的所有家庭成员ID
       const { data: userMembers } = await supabase
         .from('family_members')
@@ -113,37 +149,55 @@ export async function POST(request: NextRequest) {
       }
 
       const memberIds = userMembers.map(m => m.id);
-      devicesQuery = devicesQuery.in('memberId', memberIds);
-    }
 
-    if (validatedData.platforms && validatedData.platforms.length > 0) {
-      devicesQuery = devicesQuery.in('platform', validatedData.platforms);
-    }
+      // 手动查询设备
+      let devicesQuery = supabase
+        .from('device_connections')
+        .select(`
+          id,
+          deviceId,
+          deviceName,
+          platform,
+          memberId,
+          syncStatus,
+          member:family_members!inner(id, name)
+        `)
+        .eq('isActive', true)
+        .eq('isAutoSync', true)
+        .neq('syncStatus', 'DISABLED')
+        .in('memberId', memberIds);
 
-    const { data: devicesToSync, error: devicesError } = await devicesQuery;
+      if (validatedData.platforms && validatedData.platforms.length > 0) {
+        devicesQuery = devicesQuery.in('platform', validatedData.platforms);
+      }
 
-    if (devicesError) {
-      console.error('查询设备失败:', devicesError);
-      return NextResponse.json(
-        { error: '查询设备失败' },
-        { status: 500 }
-      );
-    }
+      const { data: devices, error: devicesError } = await devicesQuery;
 
-    if (!devicesToSync || devicesToSync.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          message: '没有需要同步的设备',
-          devices: [],
-          summary: {
-            total: 0,
-            success: 0,
-            failed: 0,
-            skipped: 0,
+      if (devicesError) {
+        console.error('查询设备失败:', devicesError);
+        return NextResponse.json(
+          { error: '查询设备失败' },
+          { status: 500 }
+        );
+      }
+
+      if (!devices || devices.length === 0) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            message: '没有需要同步的设备',
+            devices: [],
+            summary: {
+              total: 0,
+              success: 0,
+              failed: 0,
+              skipped: 0,
+            },
           },
-        },
-      });
+        });
+      }
+
+      devicesToSync = devices;
     }
 
     // 执行批量同步

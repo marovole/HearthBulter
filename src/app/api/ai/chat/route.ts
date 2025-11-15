@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { conversationManager } from '@/lib/services/ai/conversation-manager';
+import { healthRepository } from '@/lib/repositories/health-repository-singleton';
+import { SupabaseFamilyRepository } from '@/lib/repositories/implementations/supabase-family-repository';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { rateLimiter } from '@/lib/services/ai/rate-limiter';
 import { aiFallbackService } from '@/lib/services/ai/fallback-service';
 import { defaultSensitiveFilter } from '@/lib/middleware/ai-sensitive-filter';
 import { consentManager } from '@/lib/services/consent-manager';
+
+// 创建专门用于权限检查的 FamilyRepository 实例
+const familyRepo = new SupabaseFamilyRepository(SupabaseClientManager.getInstance());
 
 /**
  * POST /api/ai/chat
@@ -77,37 +82,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = SupabaseClientManager.getInstance();
+    // 使用 HealthRepository 获取成员健康上下文（只获取基本数据，不需要体检报告）
+    const memberContext = await healthRepository.getMemberHealthContext(memberId, {
+      healthDataLimit: 5,
+      medicalReportsLimit: 0, // 对话不需要体检报告
+    });
 
-    // 验证用户权限并获取成员数据
-    const { data: memberData } = await supabase
-      .from('family_members')
-      .select('id, name, familyId, userId, birthDate, gender')
-      .eq('id', memberId)
-      .single();
-
-    if (!memberData) {
+    if (!memberContext) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
         { status: 404 }
       );
     }
 
-    // 检查权限：是成员本人或家庭管理员
-    const isOwnMember = memberData.userId === session.user.id;
+    // 使用 FamilyRepository 检查权限：是成员本人或家庭管理员
+    const isOwnMember = memberContext.member.userId === session.user.id;
     let isAdmin = false;
 
     if (!isOwnMember) {
-      const { data: adminCheck } = await supabase
-        .from('family_members')
-        .select('id')
-        .eq('familyId', memberData.familyId)
-        .eq('userId', session.user.id)
-        .eq('role', 'ADMIN')
-        .is('deletedAt', null)
-        .maybeSingle();
-
-      isAdmin = !!adminCheck;
+      const role = await familyRepo.getUserFamilyRole(
+        memberContext.member.familyId,
+        session.user.id
+      );
+      isAdmin = role === 'ADMIN';
     }
 
     if (!isOwnMember && !isAdmin) {
@@ -117,43 +114,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 获取健康目标
-    const { data: healthGoals } = await supabase
-      .from('health_goals')
-      .select('goalType')
-      .eq('memberId', memberId)
-      .is('deletedAt', null);
-
-    // 获取饮食偏好
-    const { data: dietaryPreferenceData } = await supabase
-      .from('dietary_preferences')
-      .select('dietType, isVegetarian, isVegan')
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .maybeSingle();
-
-    // 获取过敏信息
-    const { data: allergies } = await supabase
-      .from('allergies')
-      .select('allergenName')
-      .eq('memberId', memberId)
-      .is('deletedAt', null);
-
-    // 获取最近健康数据
-    const { data: healthData } = await supabase
-      .from('health_data')
-      .select('dataType, value, unit, measuredAt')
-      .eq('memberId', memberId)
-      .order('measuredAt', { ascending: false })
-      .limit(5);
-
-    // 组装完整的成员数据
+    // 组装完整的成员数据（兼容现有代码）
     const member = {
-      ...memberData,
-      healthGoals: healthGoals || [],
-      dietaryPreference: dietaryPreferenceData,
-      allergies: allergies || [],
-      healthData: healthData || [],
+      ...memberContext.member,
+      name: memberContext.member.name,
+      birthDate: memberContext.member.birthDate.toISOString(),
+      gender: memberContext.member.gender,
+      healthGoals: memberContext.healthGoals.map((g) => ({ goalType: g.goalType })),
+      dietaryPreference: memberContext.dietaryPreference
+        ? {
+            dietType: memberContext.dietaryPreference.dietType,
+            isVegetarian: memberContext.dietaryPreference.isVegetarian,
+            isVegan: memberContext.dietaryPreference.isVegan,
+          }
+        : null,
+      allergies: memberContext.allergies.map((a) => ({ allergenName: a.allergenName })),
+      healthData: memberContext.healthData.map((h) => ({
+        dataType: h.dataType,
+        value: h.value,
+        unit: h.unit,
+        measuredAt: h.measuredAt?.toISOString(),
+      })),
     };
 
     // 获取或创建会话
@@ -289,24 +270,23 @@ export async function POST(request: NextRequest) {
         }
       );
 
-      // 保存对话到数据库
-      const now = new Date().toISOString();
-      const { error: upsertError } = await supabase
-        .from('ai_conversations')
-        .upsert({
+      // 使用 HealthRepository 保存对话到数据库（自动压缩 messages）
+      const now = new Date();
+      try {
+        // 规范化 status 值为大写
+        const normalizedStatus = conversationSession.status === 'archived' ? 'ARCHIVED' : 'ACTIVE';
+
+        await healthRepository.saveConversation({
           id: conversationSession.id,
           memberId,
           messages: conversationSession.messages,
-          status: conversationSession.status,
+          status: normalizedStatus,
           tokens: 0,
           updatedAt: now,
           lastMessageAt: now,
-        }, {
-          onConflict: 'id'
         });
-
-      if (upsertError) {
-        console.error('保存对话失败:', upsertError);
+      } catch (error) {
+        console.error('保存对话失败:', error);
         // 继续返回结果，即使保存失败
       }
 

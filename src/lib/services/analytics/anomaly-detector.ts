@@ -3,7 +3,8 @@
  * 基于统计方法检测健康数据异常并生成预警
  */
 
-import { PrismaClient, AnomalyType, AnomalySeverity, TrendDataType } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import type { AnomalyType, AnomalySeverity, TrendDataType } from '@/lib/types/analytics';
 import { aggregateTimeSeriesData, calculateStatistics } from './trend-analyzer';
 
 const prisma = new PrismaClient();

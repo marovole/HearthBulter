@@ -103,9 +103,7 @@ export async function GET(
  * POST /api/invite/:code
  * 接受邀请并加入家庭
  *
- * Migrated from Prisma to Supabase
- * WARNING: This endpoint performs multiple operations that should be atomic
- * Consider using RPC function for production
+ * 使用 accept_family_invite RPC 函数确保原子性
  */
 export async function POST(
   request: NextRequest,
@@ -123,7 +121,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { memberName } = body;
+    const { memberName, gender, birthDate } = body;
 
     if (!memberName || typeof memberName !== 'string' || memberName.trim() === '') {
       return NextResponse.json(
@@ -137,14 +135,7 @@ export async function POST(
     // 查找邀请记录
     const { data: invitation, error: inviteError } = await supabase
       .from('family_invitations')
-      .select(`
-        *,
-        family:families!inner(
-          id,
-          name,
-          creatorId
-        )
-      `)
+      .select('id, email')
       .eq('inviteCode', code)
       .single();
 
@@ -155,123 +146,69 @@ export async function POST(
       );
     }
 
-    // 检查邀请是否过期
-    if (new Date(invitation.expiresAt) < new Date()) {
-      // 自动标记为过期
-      await supabase
-        .from('family_invitations')
-        .update({ status: 'EXPIRED', updatedAt: new Date().toISOString() })
-        .eq('id', invitation.id);
+    // 调用 RPC 函数处理邀请接受
+    // RPC 函数会验证：
+    // - 用户邮箱是否匹配
+    // - 邀请是否有效、未过期
+    // - 用户是否已是成员
+    // - 用户是否在其他家庭
+    // 并且原子地创建成员和更新邀请状态
+    const { data: result, error: rpcError } = await supabase.rpc('accept_family_invite', {
+      p_invitation_id: invitation.id,
+      p_user_id: session.user.id,
+      p_member_name: memberName.trim(),
+      p_gender: gender || 'MALE',
+      p_birth_date: birthDate || '2000-01-01',
+    });
 
-      return NextResponse.json(
-        { error: '邀请已过期' },
-        { status: 410 }
-      );
-    }
-
-    // 检查邀请状态
-    if (invitation.status !== 'PENDING') {
-      return NextResponse.json(
-        { error: '该邀请不可用' },
-        { status: 410 }
-      );
-    }
-
-    // 验证邮箱匹配
-    if (invitation.email.toLowerCase() !== session.user.email?.toLowerCase()) {
-      return NextResponse.json(
-        { error: '邀请邮箱与登录邮箱不匹配' },
-        { status: 403 }
-      );
-    }
-
-    // 检查用户是否已经是该家庭的成员
-    const { data: existingMember } = await supabase
-      .from('family_members')
-      .select('id')
-      .eq('familyId', invitation.family.id)
-      .eq('userId', session.user.id)
-      .is('deletedAt', null)
-      .maybeSingle();
-
-    if (existingMember) {
-      return NextResponse.json(
-        { error: '您已经是该家庭的成员' },
-        { status: 400 }
-      );
-    }
-
-    // 检查用户是否已经属于其他家庭
-    const { data: userInOtherFamily } = await supabase
-      .from('family_members')
-      .select('id, familyId')
-      .eq('userId', session.user.id)
-      .is('deletedAt', null)
-      .neq('familyId', invitation.family.id)
-      .maybeSingle();
-
-    if (userInOtherFamily) {
-      return NextResponse.json(
-        { error: '您已经属于另一个家庭，请先退出后再加入新家庭' },
-        { status: 400 }
-      );
-    }
-
-    // ⚠️ 注意：以下操作应该在事务中执行，但 Supabase JS 客户端不支持事务
-    // 生产环境应该使用 RPC 函数来保证原子性
-
-    // 创建家庭成员档案
-    const now = new Date().toISOString();
-    const { data: newMember, error: createError } = await supabase
-      .from('family_members')
-      .insert({
-        familyId: invitation.family.id,
-        userId: session.user.id,
-        name: memberName.trim(),
-        gender: 'MALE', // 默认性别，用户后续可更新
-        birthDate: new Date('2000-01-01').toISOString(), // 默认出生日期
-        role: invitation.role,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .select()
-      .single();
-
-    if (createError) {
-      console.error('创建家庭成员失败:', createError);
+    if (rpcError) {
+      console.error('RPC 调用失败:', rpcError);
       return NextResponse.json(
         { error: '加入家庭失败' },
         { status: 500 }
       );
     }
 
-    // 更新邀请状态为已接受
-    const { error: updateError } = await supabase
-      .from('family_invitations')
-      .update({
-        status: 'ACCEPTED',
-        updatedAt: now,
-      })
-      .eq('id', invitation.id);
+    // 检查 RPC 返回的成功标志
+    if (!result?.success) {
+      const errorCode = result?.error;
+      const message = result?.message || '加入家庭失败';
 
-    if (updateError) {
-      console.error('更新邀请状态失败:', updateError);
-      // 注意：此时成员已创建，但邀请状态未更新，存在数据不一致风险
-      // 生产环境应该使用 RPC 函数或手动回滚
+      // 根据错误码返回适当的 HTTP 状态码
+      if (errorCode === 'USER_NOT_FOUND') {
+        return NextResponse.json({ error: message }, { status: 401 });
+      }
+
+      if (errorCode === 'INVALID_OR_EXPIRED_INVITATION') {
+        return NextResponse.json({ error: message }, { status: 410 });
+      }
+
+      if (errorCode === 'ALREADY_MEMBER') {
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+
+      if (errorCode === 'MEMBER_OF_OTHER_FAMILY') {
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+
+      if (errorCode === 'FAMILY_NOT_FOUND') {
+        return NextResponse.json({ error: message }, { status: 404 });
+      }
+
+      if (errorCode === 'CONCURRENT_ACCEPTANCE') {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+
+      // 其他错误
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
+    // 返回成功结果
     return NextResponse.json(
       {
-        message: '成功加入家庭',
-        family: {
-          id: invitation.family.id,
-          name: invitation.family.name,
-        },
-        member: {
-          id: newMember.id,
-          name: newMember.name,
-          role: newMember.role,
-        },
+        message: result.message,
+        family: result.data.family,
+        member: result.data.member,
       },
       { status: 201 }
     );

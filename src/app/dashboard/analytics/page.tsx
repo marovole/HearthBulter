@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import TrendChart from '@/components/analytics/TrendChart';
 import HealthScoreCard from '@/components/analytics/HealthScoreCard';
 import AnomalyAlert from '@/components/analytics/AnomalyAlert';
-import { TrendDataType } from '@prisma/client';
+import type { TrendDataType } from '@/lib/types/analytics';
 
 export default function AnalyticsPage() {
   const { data: session } = useSession();

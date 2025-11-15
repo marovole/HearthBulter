@@ -7,7 +7,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { shareTrackingService } from '@/lib/services/social/share-tracking';
+import type { ShareAnalytics } from '@/lib/services/social/share-tracking';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { calculateSocialStats } from '@/lib/db/supabase-rpc-helpers';
+import { addCacheHeaders, EDGE_CACHE_PRESETS } from '@/lib/cache/edge-cache-helpers';
 
 /**
  * GET /api/social/stats
@@ -115,20 +118,42 @@ export async function GET(request: NextRequest) {
 
     // 获取用户或全局分析
     const analysisType = type || 'user';
-    const analytics = memberId
-      ? await shareTrackingService.getUserShareAnalytics(memberId, period)
-      : await shareTrackingService.getGlobalShareAnalytics(period);
-
-    // 获取额外的统计信息
+    let analytics: ShareAnalytics;
     let additionalStats = {};
 
     if (analysisType === 'user' && memberId) {
-      additionalStats = await getUserAdditionalStats(supabase, memberId, period);
+      // 使用优化的 RPC 获取用户统计数据
+      // 优势：单次往返、服务端聚合、减少网络延迟
+      const statsResult = await calculateSocialStats(memberId, {
+        period: period || '30d'
+      });
+
+      if (statsResult.success && statsResult.data) {
+        // 将 RPC 数据映射到 ShareAnalytics 格式
+        analytics = await mapRpcToShareAnalytics(statsResult.data, memberId, supabase);
+
+        // 从 RPC 数据计算额外统计，避免额外查询
+        additionalStats = calculateAdditionalStatsFromRpc(statsResult.data, analytics);
+      } else {
+        // RPC 失败，降级到原有服务层
+        console.warn('RPC calculate_social_stats failed, falling back to service layer:', statsResult.error);
+        analytics = await shareTrackingService.getUserShareAnalytics(memberId, period);
+        additionalStats = await getUserAdditionalStats(supabase, memberId, period);
+      }
     } else if (analysisType === 'global') {
+      // Global 模式暂时保持现有逻辑
+      // TODO: 创建支持 NULL member_id 的 RPC 或物化视图
+      analytics = await shareTrackingService.getGlobalShareAnalytics(period);
       additionalStats = await getGlobalAdditionalStats(supabase, period);
+    } else {
+      // 无 memberId 且非 global 模式，返回错误
+      return NextResponse.json(
+        { error: 'memberId is required for user analytics' },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: {
         type: analysisType,
@@ -137,7 +162,18 @@ export async function GET(request: NextRequest) {
         additional: additionalStats,
         generatedAt: new Date().toISOString(),
       },
-    });
+    };
+
+    // 添加 Edge Cache（仅 global 模式，私有缓存）
+    const headers = new Headers();
+    if (analysisType === 'global') {
+      addCacheHeaders(headers, {
+        ...EDGE_CACHE_PRESETS.ANALYTICS_ENDPOINT,
+        private: true, // P0 修复：即使是 global 也使用私有缓存（基于 Cookie 认证）
+      });
+    }
+
+    return NextResponse.json(responseData, { headers });
 
   } catch (error) {
     console.error('获取分享统计失败:', error);
@@ -460,4 +496,166 @@ async function checkAdminPermission(userId: string, adminCode?: string): Promise
 
   const validAdminCodes = process.env.ADMIN_CODES?.split(',') || [];
   return validAdminCodes.includes(adminCode);
+}
+
+/**
+ * 将 RPC 数据映射到 ShareAnalytics 格式
+ *
+ * RPC `calculate_social_stats` 返回的数据结构与 ShareAnalytics 接口不完全匹配，
+ * 需要进行映射和补充。
+ *
+ * @param rpcData - RPC 返回的统计数据
+ * @param memberId - 成员 ID
+ * @param supabase - Supabase 客户端
+ * @returns ShareAnalytics 格式的数据
+ */
+async function mapRpcToShareAnalytics(
+  rpcData: import('@/lib/db/supabase-rpc-helpers').SocialStatsRpcResult,
+  memberId: string,
+  supabase: ReturnType<typeof SupabaseClientManager.getInstance>
+): Promise<ShareAnalytics> {
+  const { totals, platformBreakdown, daily, period } = rpcData;
+
+  // 映射平台分布数据
+  // RPC: { "iOS": { shares, views, clicks, conversions, conversionRate }, ... }
+  // ShareAnalytics: Record<string, { shares, clicks, conversions }>
+  const mappedPlatformBreakdown: Record<string, {
+    shares: number;
+    clicks: number;
+    conversions: number;
+  }> = {};
+
+  for (const [platform, stats] of Object.entries(platformBreakdown)) {
+    mappedPlatformBreakdown[platform] = {
+      shares: stats.shares,
+      clicks: stats.clicks,
+      conversions: stats.conversions,
+    };
+  }
+
+  // 获取 topPerformingContent（RPC 不提供，需要额外查询）
+  // 优化：只查询 TOP 5，减少数据传输
+
+  // ⚠️ 规范化 period 值：确保符合 getPeriodDates 的预期格式
+  // RPC 返回的 period 应该是 '7d' | '30d' | '90d' | '1y'
+  // 如果 RPC 返回其他格式，这里需要转换
+  const normalizedPeriod = normalizePeriod(period);
+  const { startDate } = getPeriodDates(normalizedPeriod);
+  const { data: topContent } = await supabase
+    .from('shared_content')
+    .select('shareToken, title, viewCount, clickCount, conversionCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString())
+    .order('conversionCount', { ascending: false })
+    .limit(5);
+
+  const topPerformingContent = (topContent || []).map(item => ({
+    shareToken: item.shareToken,
+    title: item.title || 'Untitled',
+    views: item.viewCount || 0,
+    clicks: item.clickCount || 0,
+    conversions: item.conversionCount || 0,
+    // ⚠️ 重要：使用 conversions / clicks（与服务层一致）
+    // RPC 使用 conversions / views，但这里需要与原逻辑保持一致
+    conversionRate: (item.clickCount && item.clickCount > 0)
+      ? (item.conversionCount || 0) / item.clickCount * 100
+      : 0,
+  }));
+
+  // ⚠️ 重要：重新计算总体转化率以保持一致性
+  // RPC 使用 conversions / views，但服务层使用 conversions / clicks
+  // 为保持向后兼容，需要重新计算
+  const consistentConversionRate = totals.clicks > 0
+    ? (totals.conversions / totals.clicks) * 100
+    : 0;
+
+  return {
+    period,
+    totalShares: totals.shares,
+    totalViews: totals.views,
+    totalClicks: totals.clicks,
+    totalConversions: totals.conversions,
+    conversionRate: consistentConversionRate, // 使用重新计算的值
+    topPerformingContent,
+    platformBreakdown: mappedPlatformBreakdown,
+    dailyTrends: daily, // 字段名一致，直接使用
+  };
+}
+
+/**
+ * 规范化 period 值
+ *
+ * 确保 period 值符合 getPeriodDates 函数的预期格式。
+ * RPC 应该返回标准格式，但这里添加防御性编程。
+ *
+ * @param period - RPC 返回的 period 值
+ * @returns 规范化后的 period 值
+ */
+function normalizePeriod(period: string): string {
+  const validPeriods = ['7d', '30d', '90d', '1y'];
+
+  // 如果已经是有效值，直接返回
+  if (validPeriods.includes(period)) {
+    return period;
+  }
+
+  // 尝试转换其他常见格式
+  const normalized = period.toLowerCase().replace(/[_\s]/g, '');
+  switch (normalized) {
+  case 'last7days':
+  case '7days':
+  case '1week':
+  case 'week':
+    return '7d';
+  case 'last30days':
+  case '30days':
+  case '1month':
+  case 'month':
+    return '30d';
+  case 'last90days':
+  case '90days':
+  case '3months':
+  case 'quarter':
+    return '90d';
+  case 'lastyear':
+  case '1year':
+  case 'year':
+    return '1y';
+  default:
+    // 降级到默认值
+    console.warn(`Invalid period value "${period}", falling back to 30d`);
+    return '30d';
+  }
+}
+
+/**
+ * 从 RPC 数据计算额外统计
+ *
+ * 利用 RPC 已经返回的数据计算额外指标，避免额外查询。
+ *
+ * @param rpcData - RPC 返回的统计数据
+ * @param analytics - 映射后的 ShareAnalytics 数据
+ * @returns 额外统计数据
+ */
+function calculateAdditionalStatsFromRpc(
+  rpcData: import('@/lib/db/supabase-rpc-helpers').SocialStatsRpcResult,
+  analytics: ShareAnalytics
+): Record<string, any> {
+  const { totals } = rpcData;
+  const { topPerformingContent } = analytics;
+
+  // ⚠️ 重要：avgConversionRate 需要与服务层一致（conversions / clicks）
+  // 不能直接使用 RPC 的 conversionRate（它是 conversions / views）
+  const avgConversionRate = totals.clicks > 0
+    ? (totals.conversions / totals.clicks) * 100
+    : 0;
+
+  return {
+    totalShares: totals.shares,
+    totalViews: totals.views,
+    totalConversions: totals.conversions,
+    avgConversionRate: Math.round(avgConversionRate * 100) / 100, // 保留 2 位小数
+    // 最佳分享从 topPerformingContent 取第一个
+    topShare: topPerformingContent[0] || null,
+  };
 }

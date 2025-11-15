@@ -884,6 +884,10 @@ export class SupabaseAdapter {
 // 导出单例实例
 export const supabaseAdapter = new SupabaseAdapter();
 
+// 兼容层：导出 prisma 别名供旧代码使用
+// TODO: 迁移所有使用方到 Supabase adapter 后移除此导出
+export const prisma = supabaseAdapter;
+
 // 导出数据库健康检查
 export async function testDatabaseConnection(): Promise<boolean> {
   try {

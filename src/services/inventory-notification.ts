@@ -658,5 +658,38 @@ export class InventoryNotificationService {
  * 默认库存通知服务实例（用于向后兼容）
  * @deprecated 建议使用依赖注入方式创建实例
  */
-// export const inventoryNotificationService = new InventoryNotificationService(inventoryRepo, notificationRepo, prisma);
-// 注释掉单例导出，强制使用依赖注入
+// 兼容层：导出 singleton 供旧代码使用
+// TODO: 迁移所有使用方到 DI container 后移除此导出
+let inventoryNotificationServiceInstance: InventoryNotificationService | null = null;
+
+function getInventoryNotificationServiceSingleton(): InventoryNotificationService {
+  if (!inventoryNotificationServiceInstance) {
+    const { inventoryRepository } = require('@/lib/repositories/inventory-repository-singleton');
+    const { notificationRepository } = require('@/lib/repositories/notification-repository-singleton');
+    const { getPrismaClient } = require('@/lib/db');
+
+    // 注意：这里使用 lazy loading，因为 getPrismaClient 是异步的
+    // 实际使用时会在第一次调用 service 方法时初始化
+    const prismaProxy = new Proxy({} as any, {
+      get: (_target, prop) => {
+        return async (...args: any[]) => {
+          const prisma = await getPrismaClient();
+          const method = (prisma as any)[prop];
+          if (typeof method === 'function') {
+            return method.apply(prisma, args);
+          }
+          return method;
+        };
+      },
+    });
+
+    inventoryNotificationServiceInstance = new InventoryNotificationService({
+      inventoryRepo: inventoryRepository,
+      notificationRepo: notificationRepository,
+      prisma: prismaProxy,
+    });
+  }
+  return inventoryNotificationServiceInstance;
+}
+
+export const inventoryNotificationService = getInventoryNotificationServiceSingleton();

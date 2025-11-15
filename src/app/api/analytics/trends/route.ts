@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getDefaultContainer } from '@/lib/container/service-container';
-import { TrendDataType } from '@prisma/client';
+import type { TrendDataType } from '@/lib/types/analytics';
 
 /**
  * GET /api/analytics/trends
@@ -9,7 +9,8 @@ import { TrendDataType } from '@prisma/client';
  *
  * 重构说明：
  * - 使用 TrendAnalyzer 类实例（依赖注入）
- * - 移除缓存功能（由 Cloudflare KV 处理）
+ * - 使用多层缓存策略（L1: KV, L2: trend_data, L3: Materialized View）
+ * - 添加 Cache-Control 头支持 CDN 缓存
  */
 export async function GET(request: NextRequest) {
   try {
@@ -34,17 +35,57 @@ export async function GET(request: NextRequest) {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // 使用 Service Container 获取 TrendAnalyzer 实例
-    const container = getDefaultContainer();
-    const trendAnalyzer = container.getTrendAnalyzer();
+    // 动态导入缓存模块以避免循环依赖
+    const { getMultiLayerCache } = await import('@/lib/cache/multi-layer-cache');
 
-    // 执行趋势分析
-    const analysis = await trendAnalyzer.analyzeTrend(memberId, dataType, start, end);
-
-    return NextResponse.json({
-      success: true,
-      data: analysis,
+    // 使用多层缓存获取数据
+    const cache = getMultiLayerCache({
+      l1Ttl: 60,   // L1 (KV): 60 秒
+      l2Ttl: 300,  // L2 (trend_data): 5 分钟
+      debug: process.env.NODE_ENV === 'development',
     });
+
+    const result = await cache.getTrendData(
+      {
+        memberId,
+        dataType,
+        startDate: start,
+        endDate: end,
+      },
+      async () => {
+        // Fallback: 实时分析（L1/L2 miss 时执行）
+        const container = getDefaultContainer();
+        const trendAnalyzer = container.getTrendAnalyzer();
+        return await trendAnalyzer.analyzeTrend(memberId, dataType, start, end);
+      }
+    );
+
+    // 动态导入缓存头辅助函数以避免循环依赖
+    const { addCacheHeaders, EDGE_CACHE_PRESETS } = await import('@/lib/cache/edge-cache-helpers');
+
+    // 创建响应头
+    const headers = new Headers();
+    addCacheHeaders(headers, EDGE_CACHE_PRESETS.ANALYTICS_ENDPOINT);
+
+    // 添加缓存元数据（仅开发环境）
+    if (process.env.NODE_ENV === 'development') {
+      headers.set('X-Cache-Layer', result.source);
+      headers.set('X-Cache-Hit', result.hit.toString());
+      headers.set('X-Cache-Duration', `${result.duration}ms`);
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: result.data,
+        _cache: process.env.NODE_ENV === 'development' ? {
+          source: result.source,
+          hit: result.hit,
+          duration: result.duration,
+        } : undefined,
+      },
+      { headers }
+    );
   } catch (error) {
     console.error('Failed to get trend data:', error);
     return NextResponse.json(

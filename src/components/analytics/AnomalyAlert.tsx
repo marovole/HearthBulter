@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AnomalySeverity, AnomalyType } from '@prisma/client';
+import type { AnomalySeverity, AnomalyType } from '@/lib/types/analytics';
 
 interface AnomalyAlertProps {
   anomaly: {

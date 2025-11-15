@@ -24,53 +24,60 @@ export const AcceptFamilyInviteParams = z.object({
 
 export type AcceptFamilyInviteParams = z.infer<typeof AcceptFamilyInviteParams>;
 
-export interface AcceptFamilyInviteResult {
-  success: boolean;
-  message: string;
-  data: {
-    family: {
-      id: string;
-      name: string;
-    };
-    member: {
-      id: string;
-      name: string;
-      role: string;
-    };
+export type AcceptFamilyInviteResult = RPCResponse<{
+  family: {
+    id: string;
+    name: string;
+    description: string | null;
   };
-}
+  member: {
+    id: string;
+    name: string;
+    role: string;
+    gender: string | null;
+    birth_date: string | null;
+  };
+  invitation: {
+    id: string;
+    email: string;
+  };
+}>;
 
 // record_spending_tx
 export const RecordSpendingParams = z.object({
-  p_user_id: z.string().uuid(),
+  p_budget_id: z.string().uuid(),
   p_amount: z.number().positive(),
   p_category: z.string(),
-  p_description: z.string().optional(),
-  p_spent_at: z.string().datetime().optional(),
+  p_description: z.string().optional().nullable(),
+  p_purchase_date: z.string().datetime(),
+  p_transaction_id: z.string().optional().nullable(),
+  p_platform: z.string().optional().nullable(),
+  p_items: z.any().optional().nullable(),
 });
 
 export type RecordSpendingParams = z.infer<typeof RecordSpendingParams>;
 
-export interface RecordSpendingResult {
-  success: boolean;
-  message: string;
-  data: {
-    spending: {
-      id: string;
-      amount: number;
-      category: string;
-      description: string;
-      spent_at: string;
-    };
-    budget: {
-      id: string;
-      amount: number;
-      used_amount: number;
-      remaining: number;
-      usage_percent: number;
-    };
+export type RecordSpendingResult = RPCResponse<{
+  spending: {
+    id: string;
+    amount: number;
+    category: string;
+    description: string | null;
+    purchase_date: string;
+    transaction_id: string | null;
+    platform: string | null;
+    items: unknown | null;
+    created_at: string;
+    updated_at: string;
   };
-}
+  budget: {
+    id: string;
+    total_amount: number;
+    used_amount: number;
+    remaining: number;
+    usage_percent: number;
+  };
+}>;
 
 // create_inventory_notifications_batch
 export const CreateInventoryNotificationsParams = z.object({

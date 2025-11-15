@@ -124,3 +124,7 @@ export async function getDB() {
 
 // 为兼容性导出 db 别名
 export const db = prisma;
+
+// 兼容层：导出 getPrismaClient 供旧的 repository singleton 使用
+// TODO: 迁移所有 repository 使用 DI container 后移除此导出
+export { getPrismaClient };

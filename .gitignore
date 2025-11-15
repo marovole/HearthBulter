@@ -116,3 +116,4 @@ coverage/
 *.backup
 *.bak
 *.old
+.wrangler/
