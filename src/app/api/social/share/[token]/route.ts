@@ -8,6 +8,9 @@ import { auth } from '@/lib/auth';
  *
  * Migrated from Prisma to Supabase
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }

@@ -10,6 +10,9 @@ import { defaultSensitiveFilter } from '@/lib/middleware/ai-sensitive-filter';
 import { consentManager } from '@/lib/services/consent-manager';
 
 // 创建专门用于权限检查的 FamilyRepository 实例
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const familyRepo = new SupabaseFamilyRepository(SupabaseClientManager.getInstance());
 
 /**

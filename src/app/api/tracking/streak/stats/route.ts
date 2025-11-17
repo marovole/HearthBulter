@@ -10,6 +10,9 @@ import { getCheckInStats } from '@/lib/services/tracking/streak-manager';
  * 这是复杂的聚合统计功能，Repository 目前只有基本的 getTrackingStreak 方法
  * 未来可考虑添加 getCheckInStats 到 Repository 接口
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();

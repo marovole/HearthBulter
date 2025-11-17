@@ -3,6 +3,9 @@ import { inventoryAnalyzer } from '@/services/inventory-analyzer';
 import { getCurrentUser } from '@/lib/auth';
 
 // GET - 获取采购建议
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();

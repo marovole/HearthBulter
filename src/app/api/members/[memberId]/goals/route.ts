@@ -4,6 +4,9 @@ import { memberRepository } from '@/lib/repositories/member-repository-singleton
 import { z } from 'zod';
 
 // 计算 BMR (基础代谢率) - Mifflin-St Jeor 公式
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 function calculateBMR(weight: number, height: number, age: number, gender: string): number {
   if (gender === 'MALE') {
     return Math.round(10 * weight + 6.25 * height - 5 * age + 5);

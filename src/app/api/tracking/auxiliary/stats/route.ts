@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import {
+
   getWeightTrend,
   getSleepStats,
   getExerciseStats,
   getWaterStats,
 } from '@/lib/services/tracking/auxiliary-tracker';
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/tracking/auxiliary/stats?memberId=xxx&type=weight&days=30

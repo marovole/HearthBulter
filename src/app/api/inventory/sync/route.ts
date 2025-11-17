@@ -3,6 +3,9 @@ import { inventorySync } from '@/services/inventory-sync';
 import { getCurrentUser } from '@/lib/auth';
 
 // POST - 手动添加库存
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();

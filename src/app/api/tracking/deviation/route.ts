@@ -8,11 +8,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import {
+
   analyzeDailyDeviation,
   analyzePeriodDeviation,
   generateWeeklyReport,
   getRemainingMealSuggestion,
 } from '@/lib/services/tracking/deviation-analyzer';
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/tracking/deviation?memberId=xxx&date=2024-01-01&type=daily

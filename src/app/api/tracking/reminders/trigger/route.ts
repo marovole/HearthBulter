@@ -6,6 +6,9 @@ import { reminderService } from '@/lib/services/tracking/reminder-service';
  * POST /api/tracking/reminders/trigger
  * 手动触发提醒检查（用于测试或定时任务）
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

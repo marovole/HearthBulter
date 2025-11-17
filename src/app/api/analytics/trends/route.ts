@@ -12,6 +12,9 @@ import type { TrendDataType } from '@/lib/types/analytics';
  * - 添加 Cache-Control 头支持 CDN 缓存
  * - 所有容器和缓存模块使用动态导入以避免模块初始化问题
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

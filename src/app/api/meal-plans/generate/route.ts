@@ -13,6 +13,9 @@ import { mealPlanner } from '@/lib/services/meal-planner';
  * - 食材多样性控制
  * 这些复杂逻辑应保持在 mealPlanner 服务层，不适合迁移到 Repository
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

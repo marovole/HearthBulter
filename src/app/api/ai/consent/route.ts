@@ -3,6 +3,9 @@ import { auth } from '@/lib/auth';
 import { consentManager, getConsentType } from '@/lib/services/consent-manager';
 
 // GET - 获取用户同意状态
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

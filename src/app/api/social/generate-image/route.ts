@@ -7,6 +7,9 @@ import { auth } from '@/lib/auth';
 import { shareImageGenerator } from '@/lib/services/social/image-generator';
 import { ShareTemplate } from '@/types/social-sharing';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

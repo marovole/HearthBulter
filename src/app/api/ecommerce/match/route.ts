@@ -5,6 +5,9 @@ import { SKUMatcher } from '@/lib/services/sku-matcher';
 import { PriceComparator } from '@/lib/services/price-comparator';
 import { PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

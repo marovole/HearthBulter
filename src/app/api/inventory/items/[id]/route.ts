@@ -9,6 +9,9 @@ import type { InventoryItemUpdateDTO } from '@/lib/repositories/types/inventory'
  *
  * 使用双写框架迁移
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -10,6 +10,9 @@ import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const SyncRequestSchema = z.object({
   deviceId: z.string(),
   memberId: z.string(),

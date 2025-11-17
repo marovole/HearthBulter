@@ -4,6 +4,9 @@ import { memberRepository } from '@/lib/repositories/member-repository-singleton
 import { z } from 'zod';
 
 // 创建过敏记录的验证 schema
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const createAllergySchema = z.object({
   allergenType: z.enum(['FOOD', 'ENVIRONMENTAL', 'MEDICATION', 'OTHER']),
   allergenName: z.string().min(1, '过敏原名称不能为空'),

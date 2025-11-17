@@ -5,6 +5,9 @@ import type { UseInventoryInputDTO } from '@/lib/repositories/types/inventory';
 
 // POST - 使用库存
 // 使用双写框架迁移
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();

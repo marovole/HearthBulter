@@ -28,6 +28,9 @@ import type { AchievementType } from '@prisma/client';
 /**
  * 获取成就列表
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

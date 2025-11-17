@@ -7,6 +7,9 @@ import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-sing
 // Returns meal plans for the authenticated user, optionally filtered by date range
 //
 // 使用双写框架迁移（部分）
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

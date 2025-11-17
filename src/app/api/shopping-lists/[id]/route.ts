@@ -5,6 +5,9 @@ import { shoppingListRepository } from '@/lib/repositories/shopping-list-reposit
 import { z } from 'zod';
 
 // 更新购物清单的验证 schema
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const updateShoppingListSchema = z.object({
   name: z.string().optional(), // 清单名称
   budget: z.number().min(0).nullable().optional(), // 预算（元）

@@ -10,6 +10,9 @@ import { getFamilyStreakLeaderboard } from '@/lib/services/tracking/streak-manag
  * 这是跨家庭成员的聚合排行功能，超出单个 MealTracking Repository 的职责范围
  * 未来可考虑创建专门的 Leaderboard Repository
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();

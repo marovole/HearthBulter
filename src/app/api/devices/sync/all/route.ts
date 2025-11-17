@@ -12,6 +12,9 @@ import { deviceSyncService } from '@/lib/services/device-sync-service';
 import { fetchDevicesForSync } from '@/lib/db/supabase-rpc-helpers';
 import { z } from 'zod';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const BatchSyncSchema = z.object({
   memberId: z.string().optional(),
   platforms: z.array(z.string()).optional(),

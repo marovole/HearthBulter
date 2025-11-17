@@ -3,6 +3,9 @@ import { inventoryNotificationService } from '@/services/inventory-notification'
 import { getCurrentUser } from '@/lib/auth';
 
 // GET - 获取通知配置
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();

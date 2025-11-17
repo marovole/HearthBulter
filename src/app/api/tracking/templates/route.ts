@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 import {
+
   getRecommendedTemplates,
   createTemplateFromMealLog,
   autoGenerateTemplates,
 } from '@/lib/services/tracking/template-manager';
 import { z } from 'zod';
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 
 const createTemplateSchema = z.object({
   memberId: z.string(),

@@ -4,6 +4,9 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
 
 // 更新过敏记录的验证 schema
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const updateAllergySchema = z.object({
   allergenType: z.enum(['FOOD', 'ENVIRONMENTAL', 'MEDICATION', 'OTHER']).optional(),
   allergenName: z.string().min(1).optional(),

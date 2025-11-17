@@ -9,6 +9,9 @@ import { generateShareToken } from '@/lib/services/social/share-link';
  * POST /api/social/achievements/[id]/share
  * 分享成就
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

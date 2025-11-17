@@ -10,6 +10,9 @@ import { createReport } from '@/lib/services/analytics/report-generator';
  *
  * Migrated from Prisma to Supabase
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

@@ -6,6 +6,9 @@ import { calculateHealthScore, saveHealthScore, getScoreTrend } from '@/lib/serv
  * GET /api/analytics/health-score
  * 获取健康评分
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

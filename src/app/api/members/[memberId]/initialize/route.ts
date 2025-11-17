@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import {
+
   initializeMemberHealthData,
   checkIfMemberNeedsInitialization,
 } from '@/lib/services/user-initialization';
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 
 /**
  * 验证用户是否有权限初始化成员数据

@@ -4,6 +4,9 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
 
 // 更新健康目标的验证 schema
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const updateGoalSchema = z.object({
   currentWeight: z.number().min(20).max(300).optional(),
   status: z.enum(['ACTIVE', 'COMPLETED', 'PAUSED', 'CANCELLED']).optional(),

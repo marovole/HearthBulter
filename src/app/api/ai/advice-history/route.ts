@@ -14,6 +14,9 @@ import { addCacheHeaders, EDGE_CACHE_PRESETS } from '@/lib/cache/edge-cache-help
  * - Edge Cache (60s TTL) 提升响应速度
  * - Messages 字段压缩（最多 5 条）减少传输量
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

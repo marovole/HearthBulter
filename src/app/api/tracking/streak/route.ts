@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 import {
+
   getCheckInStats,
   getCheckInCalendar,
   getFamilyStreakLeaderboard,
   checkAndUnlockBadges,
 } from '@/lib/services/tracking/streak-manager';
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/tracking/streak?memberId=xxx

@@ -5,6 +5,9 @@ import { aiResponseCache } from '@/lib/services/ai/response-cache';
 import { rateLimiter } from '@/lib/services/ai/rate-limiter';
 
 // 管理员权限检查
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 async function checkAdminPermission(userId: string): Promise<boolean> {
   return true; // 临时允许所有用户访问
 }

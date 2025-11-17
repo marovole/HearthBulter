@@ -3,6 +3,9 @@ import { inventoryNotificationService } from '@/services/inventory-notification'
 import { getCurrentUser } from '@/lib/auth';
 
 // PUT - 标记通知为已读
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

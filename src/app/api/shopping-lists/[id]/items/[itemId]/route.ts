@@ -9,6 +9,9 @@ import { shoppingListRepository } from '@/lib/repositories/shopping-list-reposit
  *
  * 使用双写框架迁移
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function PATCH(
   request: NextRequest,
   {

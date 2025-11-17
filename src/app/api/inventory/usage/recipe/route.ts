@@ -3,6 +3,9 @@ import { inventoryTracker } from '@/services/inventory-tracker';
 import { getCurrentUser } from '@/lib/auth';
 
 // POST - 为食谱使用库存
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
