@@ -13,6 +13,9 @@ import type { FoodCategory } from '@prisma/client';
  * 使用双写框架迁移
  * 保留缓存、USDA fallback 和降级逻辑
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const apiStartTime = Date.now(); // 记录 API 开始时间
 

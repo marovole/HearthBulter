@@ -14,6 +14,9 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 /**
  * GET /api/notifications/templates - 获取通知模板列表
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

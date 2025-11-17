@@ -12,6 +12,9 @@ import type { FoodRecord } from '@/lib/repositories/interfaces/food-repository';
  * 使用双写框架迁移
  * 保留缓存和 USDA fallback 逻辑
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -8,6 +8,9 @@ import type { FoodCategory } from '@/lib/repositories/types/budget';
  *
  * 使用双写框架迁移 - 完全通过 Repository 层访问数据
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

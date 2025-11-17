@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 
 // 最小化依赖版本 - 只测试环境变量和基础功能
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;

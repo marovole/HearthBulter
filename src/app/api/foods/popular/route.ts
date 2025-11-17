@@ -7,6 +7,9 @@ import { foodRepository } from '@/lib/repositories/food-repository-singleton';
  *
  * 使用双写框架迁移
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;

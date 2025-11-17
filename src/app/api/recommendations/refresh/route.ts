@@ -3,6 +3,9 @@ import { supabaseAdapter } from '@/lib/db/supabase-adapter';
 import { RecommendationContext, RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
 
 // TODO: RecommendationEngine 使用 PrismaClient 类型，需要后续重构
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 const recommendationEngine = new RecommendationEngine(supabaseAdapter as any);
 
 const parseInteger = (value: string | null): number | undefined => {

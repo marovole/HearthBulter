@@ -7,6 +7,9 @@ import type { GetFavoritesQuery } from '@/lib/repositories/interfaces/recipe-rep
  *
  * 使用双写框架迁移
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
