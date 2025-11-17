@@ -33,6 +33,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { operation, data } = body;
 
+    // 验证 data 参数是否存在
+    if (!data) {
+      return NextResponse.json(
+        { error: 'Missing required field: data' },
+        { status: 400 }
+      );
+    }
+
     switch (operation) {
     case 'create':
       return await handleBatchCreate(data);

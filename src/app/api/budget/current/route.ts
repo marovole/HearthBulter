@@ -35,14 +35,14 @@ export async function GET(request: NextRequest) {
         { offset: 0, limit: 1 }
       );
 
-      if (!budgets.data || budgets.data.length === 0) {
+      if (!budgets.items || budgets.items.length === 0) {
         return NextResponse.json(
           { error: '没有找到活跃的预算' },
           { status: 404 }
         );
       }
 
-      targetBudgetId = budgets.data[0].id;
+      targetBudgetId = budgets.items[0].id;
     }
 
     // 使用 Repository 获取完整的预算状态

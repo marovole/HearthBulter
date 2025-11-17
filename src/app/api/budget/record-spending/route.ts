@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
       undefined // 不使用分页，返回所有结果
     );
 
-    return NextResponse.json(result.data || []);
+    return NextResponse.json(result.items || []);
   } catch (error) {
     console.error('获取支出历史失败:', error);
     return NextResponse.json(
