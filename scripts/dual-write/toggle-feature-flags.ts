@@ -18,12 +18,15 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase-database';
+import * as dotenv from 'dotenv';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+dotenv.config();
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('❌ 错误: 缺少环境变量 SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY');
+  console.error('❌ 错误: 缺少环境变量 NEXT_PUBLIC_SUPABASE_URL 或 SUPABASE_SERVICE_KEY');
   process.exit(1);
 }
 

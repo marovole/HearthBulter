@@ -79,12 +79,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 构建分类预算
+    // 构建分类预算 (使用正确的复数形式键名以匹配 Repository)
     const categoryBudgets: any = {};
-    if (vegetableBudget) categoryBudgets.VEGETABLE = parseFloat(vegetableBudget);
-    if (meatBudget) categoryBudgets.MEAT = parseFloat(meatBudget);
-    if (fruitBudget) categoryBudgets.FRUIT = parseFloat(fruitBudget);
-    if (grainBudget) categoryBudgets.GRAIN = parseFloat(grainBudget);
+    if (vegetableBudget) categoryBudgets.VEGETABLES = parseFloat(vegetableBudget);
+    if (meatBudget) categoryBudgets.PROTEIN = parseFloat(meatBudget);
+    if (fruitBudget) categoryBudgets.FRUITS = parseFloat(fruitBudget);
+    if (grainBudget) categoryBudgets.GRAINS = parseFloat(grainBudget);
     if (dairyBudget) categoryBudgets.DAIRY = parseFloat(dairyBudget);
     if (seafoodBudget) categoryBudgets.SEAFOOD = parseFloat(seafoodBudget);
     if (oilsBudget) categoryBudgets.OILS = parseFloat(oilsBudget);
@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
       undefined // 不使用分页，返回所有结果
     );
 
-    return NextResponse.json(result.data || []);
+    return NextResponse.json(result.items || []);
   } catch (error) {
     console.error('获取预算列表失败:', error);
     return NextResponse.json(

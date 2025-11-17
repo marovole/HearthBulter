@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { getCurrentUser } from '@/lib/auth';
+import { memberRepository } from '@/lib/repositories/member-repository-singleton';
 import type { NotificationType, NotificationPriority } from '@/lib/repositories/types/notification';
 
 /**
@@ -26,6 +27,20 @@ export async function GET(request: NextRequest) {
 
     if (!memberId) {
       return NextResponse.json({ error: '缺少成员ID' }, { status: 400 });
+    }
+
+    // 验证用户是否有权访问该成员的通知
+    const { hasAccess } = await memberRepository.decorateMethod(
+      'verifyMemberAccess',
+      memberId,
+      user.id
+    );
+
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: '无权限访问该成员的通知' },
+        { status: 403 }
+      );
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -75,7 +90,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/inventory/notifications
- * 创建通知（管理员功能）
+ * 创建通知（需要权限验证）
  *
  * Migrated from Prisma to Supabase
  */
@@ -93,6 +108,20 @@ export async function POST(request: NextRequest) {
       if (!body[field]) {
         return NextResponse.json({ error: `缺少必需字段: ${field}` }, { status: 400 });
       }
+    }
+
+    // 验证用户是否有权为该成员创建通知
+    const { hasAccess } = await memberRepository.decorateMethod(
+      'verifyMemberAccess',
+      body.memberId,
+      user.id
+    );
+
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: '无权限为该成员创建通知' },
+        { status: 403 }
+      );
     }
 
     const supabase = SupabaseClientManager.getInstance();
