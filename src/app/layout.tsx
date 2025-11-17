@@ -1,7 +1,12 @@
-import Providers from './providers';
+import dynamic from 'next/dynamic';
 import './globals.css';
 import { Inter } from 'next/font/google';
 // import { startScheduler } from '@/lib/services/scheduler/startup';
+
+// Dynamically import Providers with SSR disabled to prevent Context prerender errors
+const Providers = dynamic(() => import('./providers'), {
+  ssr: false,
+});
 
 // 临时禁用调度器以隔离问题
 // // 启动调度器（仅在服务端执行）
