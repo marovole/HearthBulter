@@ -3,7 +3,7 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Cloudflare Pages 部署配置
-  // 使用 standalone 模式以支持 API Routes 和 OpenNext
+  // 使用 standalone 模式（OpenNext 要求）
   output: 'standalone',
   trailingSlash: false,
   

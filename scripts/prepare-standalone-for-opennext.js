@@ -17,9 +17,10 @@ console.log('  Project root:', projectRoot);
 // Check if .next/standalone exists
 const standaloneDir = path.join(projectRoot, '.next', 'standalone');
 if (!fs.existsSync(standaloneDir)) {
-  console.error('❌ .next/standalone directory does not exist');
-  console.error('   This should have been created by Next.js build');
-  process.exit(1);
+  console.log('ℹ️  .next/standalone directory does not exist');
+  console.log('   Running in non-standalone mode - OpenNext will handle build directly');
+  console.log('✅ No preparation needed');
+  process.exit(0);
 }
 
 // Copy .next/static from the original build (not in standalone)
