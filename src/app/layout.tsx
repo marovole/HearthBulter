@@ -1,11 +1,16 @@
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import './globals.css';
 import { Inter } from 'next/font/google';
 // import { startScheduler } from '@/lib/services/scheduler/startup';
 
+//Force all pages to be dynamic
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Dynamically import Providers with SSR disabled to prevent Context prerender errors
-const Providers = dynamic(() => import('./providers'), {
+const Providers = dynamicImport(() => import('./providers'), {
   ssr: false,
+  loading: () => null, // No loading state to avoid hydration issues
 });
 
 // 临时禁用调度器以隔离问题
