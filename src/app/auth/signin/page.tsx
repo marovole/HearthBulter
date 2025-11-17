@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering to prevent prerender errors with React Context
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { signIn, getSession, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
