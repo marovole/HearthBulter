@@ -175,8 +175,8 @@ build_project() {
     rm -rf .open-next
 
     # 运行构建
-    log_info "执行 Next.js 构建..."
-    if pnpm build; then
+    log_info "执行 Cloudflare Next.js 构建..."
+    if pnpm build:cloudflare; then
         log_success "项目构建成功"
     else
         log_error "项目构建失败"

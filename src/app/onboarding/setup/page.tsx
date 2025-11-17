@@ -21,6 +21,8 @@ interface FamilyMember {
   healthGoals: string[]
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function SetupPage() {
   const router = useRouter();
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([

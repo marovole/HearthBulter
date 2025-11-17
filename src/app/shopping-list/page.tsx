@@ -35,6 +35,8 @@ interface ShoppingList {
   }
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function ShoppingListPage() {
   const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
   const [loading, setLoading] = useState(true);

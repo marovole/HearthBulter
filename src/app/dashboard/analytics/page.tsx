@@ -7,6 +7,8 @@ import HealthScoreCard from '@/components/analytics/HealthScoreCard';
 import AnomalyAlert from '@/components/analytics/AnomalyAlert';
 import type { TrendDataType } from '@/lib/types/analytics';
 
+export const dynamic = 'force-dynamic'
+
 export default function AnalyticsPage() {
   const { data: session } = useSession();
   const [selectedMember, setSelectedMember] = useState<string>('');

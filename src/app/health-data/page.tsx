@@ -2,6 +2,8 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { HealthDataDashboard } from '@/components/health-data/HealthDataDashboard';
 
+export const dynamic = 'force-dynamic'
+
 export default async function HealthDataPage() {
   const session = await auth();
 

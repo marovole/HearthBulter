@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Users, Heart, Brain, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic'
+
 export default function WelcomePage() {
   const features = [
     {
