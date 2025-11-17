@@ -5,6 +5,9 @@ import { prisma } from '@/lib/db';
 import { rateLimiter } from '@/lib/services/ai/rate-limiter';
 import { sensitiveFilter } from '@/lib/services/sensitive-filter';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

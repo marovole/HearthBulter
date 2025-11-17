@@ -11,6 +11,9 @@ import { fileStorageService } from '@/lib/services/file-storage-service';
  * Migrated from Prisma to Supabase
  * Note: fileStorageService, ocrService, reportParser still use Prisma-dependent logic
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
   userId: string

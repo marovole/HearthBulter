@@ -6,6 +6,9 @@ import { generateShareToken } from '@/lib/services/analytics/report-generator';
  * POST /api/analytics/share
  * 生成报告分享链接
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

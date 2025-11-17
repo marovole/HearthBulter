@@ -6,6 +6,9 @@ import { authOptions } from '@/lib/auth';
  * Session 验证 API 端点
  * 获取当前用户的会话信息
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

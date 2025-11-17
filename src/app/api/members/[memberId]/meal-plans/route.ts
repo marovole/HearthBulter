@@ -6,6 +6,9 @@ import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-sing
 import { z } from 'zod';
 
 // 创建食谱计划的验证 schema
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const createMealPlanSchema = z.object({
   days: z.number().min(1).max(14).default(7), // 默认7天
   startDate: z.string().datetime().optional(), // ISO 8601 格式

@@ -9,6 +9,9 @@ import { mealPlanner } from '@/lib/services/meal-planner';
  * Note: 保留服务层调用
  * 此端点使用智能餐食替换算法（同 PATCH /meal-plans/:planId/meals/:mealId）
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ mealId: string }> }

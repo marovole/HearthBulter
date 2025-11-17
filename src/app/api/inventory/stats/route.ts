@@ -5,6 +5,9 @@ import { expiryMonitor } from '@/services/expiry-monitor';
 import { getCurrentUser } from '@/lib/auth';
 
 // GET - 获取库存统计信息
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();

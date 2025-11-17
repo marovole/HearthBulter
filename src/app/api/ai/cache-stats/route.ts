@@ -4,6 +4,9 @@ import { aiResponseCache } from '@/lib/services/ai/response-cache';
 import { rateLimiter } from '@/lib/services/ai/rate-limiter';
 
 // 管理员权限检查
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 async function checkAdminPermission(userId: string): Promise<boolean> {
   // 这里应该检查用户是否有管理员权限
   // 暂时简化实现，实际项目中应该检查用户角色

@@ -6,6 +6,9 @@ import type { Gender, AgeGroup } from '@/lib/repositories/types/family';
 import { z } from 'zod';
 
 // 创建成员的验证 schema
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const createMemberSchema = z.object({
   name: z.string().min(1, '成员名称不能为空'),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']),

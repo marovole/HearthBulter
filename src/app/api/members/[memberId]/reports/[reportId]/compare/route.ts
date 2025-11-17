@@ -8,6 +8,9 @@ import type { IndicatorType } from '@prisma/client';
  *
  * Migrated from Prisma to Supabase
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
   userId: string

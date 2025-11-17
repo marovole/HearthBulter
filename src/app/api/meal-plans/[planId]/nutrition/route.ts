@@ -10,6 +10,9 @@ import { nutritionCalculator } from '@/lib/services/nutrition-calculator';
  * 此端点使用 nutritionCalculator 服务进行营养计算和聚合
  * 营养计算涉及复杂的转换和聚合逻辑，应保持在服务层
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ planId: string }> }

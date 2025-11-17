@@ -11,6 +11,9 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
 import { APIError, handleAPIError, createErrorResponse, createAPIResponse } from '@/lib/errors/api-error';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 interface RouteParams {
   params: Promise<{ id: string }>
 }

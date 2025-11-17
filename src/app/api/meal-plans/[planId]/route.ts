@@ -7,6 +7,9 @@ import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-sing
 // DELETE /api/meal-plans/:planId - 删除食谱
 //
 // 使用双写框架迁移
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ planId: string }> }

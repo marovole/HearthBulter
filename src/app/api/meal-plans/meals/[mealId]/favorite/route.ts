@@ -3,6 +3,9 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 // POST /api/meal-plans/meals/:mealId/favorite - 切换收藏状态
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ mealId: string }> }

@@ -9,6 +9,9 @@ import { reminderService } from '@/lib/services/tracking/reminder-service';
  *
  * Migrated from Prisma to Supabase
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 async function verifyTrackingAccess(
   memberId: string,
   userId: string

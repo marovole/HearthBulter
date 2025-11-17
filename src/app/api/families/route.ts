@@ -4,6 +4,9 @@ import { familyRepository } from '@/lib/repositories/family-repository-singleton
 import { z } from 'zod';
 
 // 创建家庭的验证 schema
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const createFamilySchema = z.object({
   name: z.string().min(2, '家庭名称至少需要2个字符'),
   description: z.string().optional(),

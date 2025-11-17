@@ -10,6 +10,9 @@ import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-reposit
  * Note: Repository 当前只支持 memberId 和 limit 参数
  * 忽略 days 和 mealType 参数（Repository 默认查询最近30天）
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();

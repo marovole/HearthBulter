@@ -7,6 +7,9 @@ import { subDays, format } from 'date-fns';
 /**
  * 验证用户是否有权限访问成员的健康数据
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
   userId: string

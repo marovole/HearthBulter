@@ -3,6 +3,9 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const emailShareSchema = z.object({
   emailAddress: z.string().email('请输入正确的邮箱地址'),
   listName: z.string(),

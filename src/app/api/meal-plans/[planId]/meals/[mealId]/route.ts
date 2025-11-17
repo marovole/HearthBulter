@@ -13,6 +13,9 @@ import { mealPlanner } from '@/lib/services/meal-planner';
  * - 保持整体营养平衡
  * 这些复杂逻辑应保持在 mealPlanner 服务层
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ planId: string; mealId: string }> }

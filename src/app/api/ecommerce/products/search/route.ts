@@ -5,6 +5,9 @@ import { platformAdapterFactory } from '@/lib/services/ecommerce';
 import { EcommercePlatform } from '@prisma/client';
 import { ProductSearchRequest, PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

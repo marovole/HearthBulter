@@ -7,6 +7,9 @@ import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-sing
 // POST /api/meal-plans/meals/:mealId/ingredients/:ingredientId/replace
 //
 // 使用双写框架迁移（部分）
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ mealId: string; ingredientId: string }> }

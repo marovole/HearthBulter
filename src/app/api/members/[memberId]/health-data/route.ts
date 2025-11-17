@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { memberRepository } from '@/lib/repositories/member-repository-singleton';
 import {
+
   validateAndDetectAnomaly,
   type HealthDataInput,
 } from '@/lib/services/health-data-validator';
@@ -12,6 +13,9 @@ import {
   healthDataSchemas,
   formatApiCreated,
 } from '@/lib/validation';
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 
 
 /**

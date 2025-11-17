@@ -16,6 +16,9 @@ import { withSecurity, defaultSecurityOptions } from '@/lib/security/security-mi
 import { withPerformanceMonitoring } from '@/lib/monitoring/performance-monitor';
 import { Permission } from '@/lib/permissions';
 
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 const GETQuerySchema = z.object({
   memberId: z.string().optional(),
   platform: z.string().optional(),

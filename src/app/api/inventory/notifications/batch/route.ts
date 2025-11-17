@@ -9,6 +9,9 @@ import { getCurrentUser } from '@/lib/auth';
  * 使用双写框架迁移 - 通过 NotificationRepository 访问数据
  * 与 /api/notifications/batch 保持一致的实现
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();

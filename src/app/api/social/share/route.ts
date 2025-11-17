@@ -18,6 +18,9 @@ import { ShareContentType } from '@prisma/client';
  *
  * Migrated from Prisma to Supabase (partial - services still use Prisma)
  */
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

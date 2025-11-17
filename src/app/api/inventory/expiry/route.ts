@@ -5,6 +5,9 @@ import type { WasteRecordCreateDTO } from '@/lib/repositories/types/inventory';
 
 // GET - 获取即将过期的物品
 // 使用双写框架迁移
+
+// Force dynamic rendering for auth()
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
