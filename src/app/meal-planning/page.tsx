@@ -1,4 +1,5 @@
-'use client';
+'use client'
+
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -47,8 +48,6 @@ interface MealPlanData {
     goalAchievementRate: number
   }
 }
-
-export const dynamic = 'force-dynamic'
 
 export default function MealPlanningPage() {
   const { data: session, status } = useSession();

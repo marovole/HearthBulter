@@ -1,4 +1,5 @@
-'use client';
+'use client'
+
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,6 @@ import { BudgetStatus } from '@prisma/client';
 
 // 模拟用户ID，实际应用中从认证系统获取
 const MOCK_MEMBER_ID = 'user-member-id';
-
-export const dynamic = 'force-dynamic'
 
 export default function BudgetManagementPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);

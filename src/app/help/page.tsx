@@ -1,4 +1,5 @@
-'use client';
+'use client'
+
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,8 +25,6 @@ import {
   Clock,
   Users,
 } from 'lucide-react';
-
-export const dynamic = 'force-dynamic'
 
 export default function HelpCenterPage() {
   const [searchTerm, setSearchTerm] = useState('');

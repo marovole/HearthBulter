@@ -1,4 +1,3 @@
-'use client';
 
 import { ShoppingListView } from '@/components/shopping/ShoppingListView';
 
@@ -7,6 +6,8 @@ interface ShoppingListDetailPageProps {
     id: string
   }>
 }
+
+export const dynamic = 'force-dynamic'
 
 export default async function ShoppingListDetailPage({
   params,

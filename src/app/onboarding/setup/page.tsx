@@ -1,4 +1,5 @@
-'use client';
+'use client'
+
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,8 +21,6 @@ interface FamilyMember {
   relationship: string
   healthGoals: string[]
 }
-
-export const dynamic = 'force-dynamic'
 
 export default function SetupPage() {
   const router = useRouter();
