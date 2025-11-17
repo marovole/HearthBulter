@@ -1,11 +1,10 @@
-'use client';
+'use client'
+
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ReportType } from '@prisma/client';
-
-export const dynamic = 'force-dynamic'
 
 export default function ReportsPage() {
   const { data: session } = useSession();

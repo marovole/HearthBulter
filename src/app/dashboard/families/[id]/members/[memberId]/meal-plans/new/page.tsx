@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MealPlanGenerator } from '@/components/meal-planning/MealPlanGenerator';
 
+export const dynamic = 'force-dynamic'
+
 export default async function NewMealPlanPage({
   params,
 }: {

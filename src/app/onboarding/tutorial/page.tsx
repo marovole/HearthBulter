@@ -1,4 +1,5 @@
-'use client';
+'use client'
+
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -111,8 +112,6 @@ const tutorialSteps: TutorialStep[] = [
     },
   },
 ];
-
-export const dynamic = 'force-dynamic'
 
 export default function TutorialPage() {
   const [currentStep, setCurrentStep] = useState(0);

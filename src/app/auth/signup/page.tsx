@@ -1,10 +1,9 @@
-'use client';
+'use client'
+
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-export const dynamic = 'force-dynamic'
 
 export default function SignUpPage() {
   const [name, setName] = useState('');

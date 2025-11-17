@@ -6,6 +6,8 @@ import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
+export const dynamic = 'force-dynamic'
+
 export default async function MealPlansPage({
   params,
 }: {

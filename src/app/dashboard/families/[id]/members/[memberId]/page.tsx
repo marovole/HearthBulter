@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic'
+
 export default async function MemberDetailPage({
   params,
 }: {

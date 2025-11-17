@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ReportList } from '@/components/reports/ReportList';
 
+export const dynamic = 'force-dynamic'
+
 export default async function ReportsPage({
   params,
 }: {

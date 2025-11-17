@@ -1,4 +1,5 @@
-'use client';
+'use client'
+
 
 import { useState, useEffect } from 'react';
 import { ShoppingListCard } from '@/components/shopping-list/ShoppingListCard';
@@ -34,8 +35,6 @@ interface ShoppingList {
     }
   }
 }
-
-export const dynamic = 'force-dynamic'
 
 export default function ShoppingListPage() {
   const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);

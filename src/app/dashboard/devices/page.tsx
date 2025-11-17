@@ -2,7 +2,6 @@
  * 设备管理页面
  */
 
-'use client';
 
 import { Suspense } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
