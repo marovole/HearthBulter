@@ -5,6 +5,9 @@ import { CacheService } from '@/lib/cache/redis-client';
  * GET /api/cache/stats
  * 获取缓存统计信息和性能日志
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const stats = CacheService.getStats();

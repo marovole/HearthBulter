@@ -10,6 +10,9 @@ import type { NotificationRepository } from '@/lib/repositories/interfaces/notif
 /**
  * 模块级别的单例 - 避免每次请求都重新创建
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 const supabaseClient = SupabaseClientManager.getInstance();
 const notificationRepository = createDualWriteDecorator<NotificationRepository>(
   new PrismaNotificationRepository(),

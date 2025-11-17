@@ -3,6 +3,9 @@ import { ShoppingListService } from '@/services/shopping-list';
 import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions';
 
 // GET /api/families/[familyId]/shopping - 获取家庭购物清单
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string }> }

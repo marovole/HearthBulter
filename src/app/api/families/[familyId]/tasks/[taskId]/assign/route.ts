@@ -11,6 +11,9 @@ import { prisma } from '@/lib/db';
  *
  * 使用双写框架迁移
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string; taskId: string }> }

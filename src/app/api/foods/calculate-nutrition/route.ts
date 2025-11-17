@@ -5,6 +5,9 @@ import { z } from 'zod';
 /**
  * 营养计算请求验证schema
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 const calculateNutritionSchema = z.object({
   inputs: z
     .array(

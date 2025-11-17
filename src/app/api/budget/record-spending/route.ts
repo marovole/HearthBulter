@@ -9,6 +9,9 @@ import { foodCategorySchema, type FoodCategory, type SpendingCreateDTO } from '@
  * Migrated from Prisma to Supabase
  * WARNING: Critical endpoint - handles financial transactions
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

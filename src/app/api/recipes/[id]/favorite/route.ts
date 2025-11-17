@@ -8,6 +8,9 @@ import { updateRecipeFavoriteCount } from '@/lib/db/supabase-rpc-helpers';
  *
  * 使用双写框架迁移 - 保留 RPC 函数用于原子性计数更新
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

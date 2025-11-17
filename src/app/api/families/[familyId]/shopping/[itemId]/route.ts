@@ -3,6 +3,9 @@ import { ShoppingListService } from '@/services/shopping-list';
 import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions';
 
 // PUT /api/families/[familyId]/shopping/[itemId] - 更新购物项
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string; itemId: string }> }

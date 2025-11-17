@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // 动态导入避免在模块加载时初始化 Prisma

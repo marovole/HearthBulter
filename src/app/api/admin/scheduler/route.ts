@@ -6,6 +6,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { scheduler } from '@/lib/services/scheduler';
 
 // GET - 获取调度器状态
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const status = scheduler.getStatus();

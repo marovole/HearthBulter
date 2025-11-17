@@ -3,6 +3,9 @@ import { savingsRecommender } from '@/lib/services/budget/savings-recommender';
 import { economicMode } from '@/lib/services/budget/economic-mode';
 import { spendingAnalyzer } from '@/lib/services/budget/spending-analyzer';
 
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

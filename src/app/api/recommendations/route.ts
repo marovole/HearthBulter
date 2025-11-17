@@ -36,6 +36,9 @@ import { supabaseAdapter } from '@/lib/db/supabase-adapter';
 import { RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
 
 // 临时使用类型断言，但会导致运行时错误（见上述警告）
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 const recommendationEngine = new RecommendationEngine(supabaseAdapter as any);
 
 export async function GET(request: NextRequest) {

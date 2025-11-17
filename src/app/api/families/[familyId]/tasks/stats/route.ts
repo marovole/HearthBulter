@@ -9,6 +9,9 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
  *
  * 使用双写框架迁移
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string }> }

@@ -12,6 +12,9 @@ import type { TaskStatus } from '@/lib/repositories/types/task';
  *
  * 使用双写框架迁移
  */
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string; taskId: string }> }
