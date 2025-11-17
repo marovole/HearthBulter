@@ -1,4 +1,6 @@
+'use client';
 
+import { use } from 'react';
 import { ShoppingListView } from '@/components/shopping/ShoppingListView';
 
 interface ShoppingListDetailPageProps {
@@ -7,12 +9,18 @@ interface ShoppingListDetailPageProps {
   }>
 }
 
-export const dynamic = 'force-dynamic'
-
-export default async function ShoppingListDetailPage({
+/**
+ * Shopping List Detail Page Component
+ *
+ * Displays a specific shopping list with items and management features.
+ * Authentication is handled within the ShoppingListView component.
+ *
+ * IMPORTANT: Client component for Cloudflare Pages static export compatibility.
+ */
+export default function ShoppingListDetailPage({
   params,
 }: ShoppingListDetailPageProps) {
-  const { id } = await params;
+  const { id } = use(params);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

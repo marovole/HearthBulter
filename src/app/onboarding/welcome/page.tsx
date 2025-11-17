@@ -1,3 +1,4 @@
+'use client';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,8 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Users, Heart, Brain, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
-export const dynamic = 'force-dynamic'
-
+/**
+ * Welcome Page Component
+ *
+ * Initial welcome page for new users, introducing Health Butler features
+ * and guiding them to start the onboarding process.
+ *
+ * IMPORTANT: Client component for Cloudflare Pages static export compatibility.
+ */
 export default function WelcomePage() {
   const features = [
     {

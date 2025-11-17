@@ -1,19 +1,35 @@
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { HealthDataDashboard } from '@/components/health-data/HealthDataDashboard';
 
-export const dynamic = 'force-dynamic'
+/**
+ * Health Data Page Component
+ *
+ * Main page for viewing and managing health data records.
+ * Requires authentication.
+ *
+ * IMPORTANT: Client component for Cloudflare Pages static export compatibility.
+ */
+export default function HealthDataPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-export default async function HealthDataPage() {
-  const session = await auth();
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    }
+  }, [status, router]);
 
-  if (!session) {
-    redirect('/auth/signin');
+  if (status === 'loading' || !session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
   }
 
-  return (
-    <HealthDataDashboard 
-      userId={session.user.id}
-    />
-  );
+  return <HealthDataDashboard userId={session.user.id} />;
 }

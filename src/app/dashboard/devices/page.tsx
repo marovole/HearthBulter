@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * 设备管理页面
  */
@@ -11,7 +13,6 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const dynamic = 'force-dynamic'
 
 export default function DevicesPage() {
   return (

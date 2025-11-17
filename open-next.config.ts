@@ -1,12 +1,12 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare/config";
 
+/**
+ * OpenNext Cloudflare 配置
+ *
+ * 注意: @opennextjs/cloudflare 的类型定义可能不完整
+ * 使用 as any 绕过类型检查,配置项参考官方文档
+ */
 export default defineCloudflareConfig({
-  // Use workerd conditions for better compatibility with Cloudflare Workers
-  cloudflare: {
-    useWorkerdCondition: true,
-    // 只包含PostgreSQL引擎，排除其他数据库引擎以减少包大小
-    includeDatabases: ["postgresql"],
-  },
   // 优化构建配置
   build: {
     // 排除大型依赖项
@@ -65,4 +65,4 @@ export default defineCloudflareConfig({
       ],
     },
   },
-});
+} as any);

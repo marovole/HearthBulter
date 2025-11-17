@@ -10,6 +10,7 @@
  */
 
 import type { AnalyticsRepository } from '@/lib/repositories/interfaces/analytics-repository';
+import { SupabaseAnalyticsRepository } from '@/lib/repositories/implementations/supabase-analytics-repository';
 import type { TrendDataType } from '@/lib/types/analytics';
 
 export interface TimeSeriesPoint {
@@ -39,6 +40,68 @@ export interface TrendAnalysis {
     changePercent: number;
     changeType: 'INCREASE' | 'DECREASE' | 'STABLE';
   };
+}
+
+/**
+ * TrendDataType 到 AnalyticsRepository metric 的映射
+ *
+ * 中心化维护映射关系,避免重复定义
+ */
+const TREND_METRIC_MAP: Record<TrendDataType, string> = {
+  'WEIGHT': 'WEIGHT',
+  'BODY_FAT': 'BODY_FAT',
+  'MUSCLE_MASS': 'MUSCLE_MASS',
+  'BLOOD_PRESSURE': 'BLOOD_PRESSURE',
+  'HEART_RATE': 'HEART_RATE',
+  'CALORIES': 'CALORIES',
+  'PROTEIN': 'PROTEIN',
+  'CARBS': 'CARBS',
+  'FAT': 'FAT',
+  'EXERCISE': 'EXERCISE',
+  'SLEEP': 'SLEEP',
+  'WATER': 'WATER',
+  'HEALTH_SCORE': 'HEALTH_SCORE',
+};
+
+/**
+ * 从 AnalyticsRepository 获取时序数据
+ *
+ * 共享函数,供 TrendAnalyzer 类和向后兼容包装器使用
+ *
+ * @param repository - 分析数据仓库实例
+ * @param memberId - 成员ID
+ * @param dataType - 数据类型
+ * @param startDate - 开始日期
+ * @param endDate - 结束日期
+ * @returns 时序数据点数组
+ * @throws {Error} 当数据类型不支持时抛出错误
+ */
+async function fetchTimeSeriesDataFromRepository(
+  repository: AnalyticsRepository,
+  memberId: string,
+  dataType: TrendDataType,
+  startDate: Date,
+  endDate: Date
+): Promise<TimeSeriesPoint[]> {
+  const metric = TREND_METRIC_MAP[dataType];
+  if (!metric) {
+    throw new Error(`Unsupported data type: ${dataType}`);
+  }
+
+  const trendSeries = await repository.fetchTrendSeries({
+    memberId,
+    metric,
+    range: {
+      start: startDate,
+      end: endDate,
+    },
+  });
+
+  // 转换为标准时序数据点格式
+  return trendSeries.points.map(point => ({
+    date: point.date,
+    value: point.value,
+  }));
 }
 
 /**
@@ -116,42 +179,13 @@ export class TrendAnalyzer {
     startDate: Date,
     endDate: Date
   ): Promise<TimeSeriesPoint[]> {
-    // 映射 TrendDataType 到 AnalyticsRepository 的 metric
-    const metricMap: Record<TrendDataType, string> = {
-      'WEIGHT': 'WEIGHT',
-      'BODY_FAT': 'BODY_FAT',
-      'MUSCLE_MASS': 'MUSCLE_MASS',
-      'BLOOD_PRESSURE': 'BLOOD_PRESSURE',
-      'HEART_RATE': 'HEART_RATE',
-      'CALORIES': 'CALORIES',
-      'PROTEIN': 'PROTEIN',
-      'CARBS': 'CARBS',
-      'FAT': 'FAT',
-      'EXERCISE': 'EXERCISE',
-      'SLEEP': 'SLEEP',
-      'WATER': 'WATER',
-      'HEALTH_SCORE': 'HEALTH_SCORE',
-    };
-
-    const metric = metricMap[dataType];
-    if (!metric) {
-      throw new Error(`Unsupported data type: ${dataType}`);
-    }
-
-    const trendSeries = await this.analyticsRepository.fetchTrendSeries({
+    return fetchTimeSeriesDataFromRepository(
+      this.analyticsRepository,
       memberId,
-      metric,
-      range: {
-        start: startDate,
-        end: endDate,
-      },
-    });
-
-    // 转换格式
-    return trendSeries.points.map(point => ({
-      date: point.date,
-      value: point.value,
-    }));
+      dataType,
+      startDate,
+      endDate
+    );
   }
 
   /**
@@ -344,6 +378,125 @@ export class TrendAnalyzer {
       changeType,
     };
   }
+}
+
+// ============================================================================
+// 向后兼容的单例和包装函数
+// ============================================================================
+
+/**
+ * 默认 AnalyticsRepository 单例
+ *
+ * 避免每次调用都创建新实例,提高性能
+ */
+let defaultAnalyticsRepository: AnalyticsRepository | undefined;
+
+/**
+ * 获取默认的 AnalyticsRepository 实例
+ *
+ * 使用单例模式,确保整个应用共享同一实例
+ *
+ * @returns AnalyticsRepository 实例
+ */
+function getDefaultAnalyticsRepository(): AnalyticsRepository {
+  if (!defaultAnalyticsRepository) {
+    defaultAnalyticsRepository = new SupabaseAnalyticsRepository();
+  }
+  return defaultAnalyticsRepository;
+}
+
+/**
+ * 默认 TrendAnalyzer 单例
+ *
+ * 避免每次调用都创建新实例和依赖,提高性能
+ */
+let defaultTrendAnalyzer: TrendAnalyzer | undefined;
+
+/**
+ * 获取默认的 TrendAnalyzer 实例
+ *
+ * 使用单例模式,确保整个应用共享同一实例
+ *
+ * @returns TrendAnalyzer 实例
+ */
+function getDefaultTrendAnalyzer(): TrendAnalyzer {
+  if (!defaultTrendAnalyzer) {
+    defaultTrendAnalyzer = new TrendAnalyzer(getDefaultAnalyticsRepository());
+  }
+  return defaultTrendAnalyzer;
+}
+
+/**
+ * 聚合时序数据（向后兼容函数）
+ *
+ * 为未迁移到依赖注入模式的旧代码提供向后兼容接口。
+ * 新代码应该使用 TrendAnalyzer 类实例。
+ *
+ * @param memberId - 成员ID
+ * @param dataType - 数据类型
+ * @param startDate - 开始日期
+ * @param endDate - 结束日期
+ * @returns 时序数据点数组
+ * @deprecated 推荐使用 TrendAnalyzer 类的实例方法
+ *
+ * @example
+ * ```typescript
+ * // 当前用法（向后兼容）
+ * const data = await aggregateTimeSeriesData(memberId, 'WEIGHT', startDate, endDate);
+ *
+ * // 推荐用法（依赖注入）- 未来迁移路径
+ * const container = getDefaultContainer();
+ * const analyzer = container.getTrendAnalyzer();
+ * const analysis = await analyzer.analyzeTrend(memberId, 'WEIGHT', startDate, endDate);
+ * // 然后从 analysis.dataPoints 获取时序数据
+ * ```
+ */
+export async function aggregateTimeSeriesData(
+  memberId: string,
+  dataType: TrendDataType,
+  startDate: Date,
+  endDate: Date
+): Promise<TimeSeriesPoint[]> {
+  return fetchTimeSeriesDataFromRepository(
+    getDefaultAnalyticsRepository(),
+    memberId,
+    dataType,
+    startDate,
+    endDate
+  );
+}
+
+/**
+ * 分析趋势（向后兼容函数）
+ *
+ * 为未迁移到依赖注入模式的旧代码提供向后兼容接口。
+ * 新代码应该使用 TrendAnalyzer 类实例。
+ *
+ * @param memberId - 成员ID
+ * @param dataType - 数据类型
+ * @param startDate - 开始日期
+ * @param endDate - 结束日期
+ * @returns 完整的趋势分析结果
+ * @deprecated 推荐使用 TrendAnalyzer 类的实例方法
+ *
+ * @example
+ * ```typescript
+ * // 当前用法（向后兼容）
+ * const analysis = await analyzeTrend(memberId, 'WEIGHT', startDate, endDate);
+ *
+ * // 推荐用法（依赖注入）- 未来迁移路径
+ * const container = getDefaultContainer();
+ * const analyzer = container.getTrendAnalyzer();
+ * const analysis = await analyzer.analyzeTrend(memberId, 'WEIGHT', startDate, endDate);
+ * ```
+ */
+export async function analyzeTrend(
+  memberId: string,
+  dataType: TrendDataType,
+  startDate: Date,
+  endDate: Date
+): Promise<TrendAnalysis> {
+  return getDefaultTrendAnalyzer().analyzeTrend(memberId, dataType, startDate, endDate);
 }
 
 // ============================================================================

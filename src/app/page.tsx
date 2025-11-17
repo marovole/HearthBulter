@@ -1,5 +1,8 @@
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
+'use client';
+
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Hero from '@/components/landing/Hero';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import StatsCounter from '@/components/landing/StatsCounter';
@@ -8,16 +11,26 @@ import ScrollEnhancements from '@/components/landing/ScrollEnhancements';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { Toaster } from '@/components/ui/sonner';
 
-export const dynamic = 'force-dynamic'
+/**
+ * Landing Page Component
+ *
+ * Displays marketing content for unauthenticated users.
+ * Automatically redirects authenticated users to the dashboard.
+ *
+ * IMPORTANT: This is a client component to support useSession hook
+ * for Cloudflare Pages static export compatibility.
+ */
+export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-export default async function Home() {
-  const session = await auth();
-
-  if (session) {
-    redirect('/dashboard');
-  }
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.push('/dashboard');
+    }
+  }, [status, session, router]);
 
   return (
     <main className="min-h-screen">
@@ -94,9 +107,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      {/* Toast notifications */}
-      <Toaster />
     </main>
   );
 }
