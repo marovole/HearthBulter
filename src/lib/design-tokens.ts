@@ -220,3 +220,39 @@ export const hoverEffects = {
     transition: transitions.default,
   },
 };
+
+/**
+ * Animation Hooks Integration
+ *
+ * For scroll-triggered animations and motion preferences, use the hooks from `@/lib/hooks`:
+ *
+ * @example
+ * ```tsx
+ * import { useAnimateOnView } from '@/lib/hooks';
+ * import { fadeInUp, scaleIn } from '@/lib/design-tokens';
+ *
+ * function MyComponent() {
+ *   // Use default fadeInUp animation
+ *   const defaultAnimation = useAnimateOnView();
+ *
+ *   // Use custom variant
+ *   const customAnimation = useAnimateOnView({
+ *     variants: scaleIn,
+ *     threshold: 0.3
+ *   });
+ *
+ *   return (
+ *     <>
+ *       <motion.div {...defaultAnimation}>Fades in up</motion.div>
+ *       <motion.div {...customAnimation}>Scales in</motion.div>
+ *     </>
+ *   );
+ * }
+ * ```
+ *
+ * **Available Hooks**:
+ * - `usePrefersReducedMotion()` - Detects user's motion preference
+ * - `useMotionConfig()` - Returns animation configuration
+ * - `useAnimateOnView(options)` - Scroll-triggered animations
+ * - `useScrollAnimation()` - Simplified scroll animation
+ */

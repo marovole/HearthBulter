@@ -6,7 +6,6 @@
  * @module food-repository-singleton
  */
 
-import { getPrismaClient } from '@/lib/db';
 import { createDualWriteDecorator } from '@/lib/db/dual-write';
 import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
 import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
@@ -17,7 +16,6 @@ import type { FoodRepository } from './interfaces/food-repository';
 
 // 模块级别的 Repository 单例（避免请求开销）
 const supabaseClient = SupabaseClientManager.getInstance();
-const prismaClient = await getPrismaClient();
 
 export const foodRepository = createDualWriteDecorator<FoodRepository>(
   new PrismaFoodRepository(),

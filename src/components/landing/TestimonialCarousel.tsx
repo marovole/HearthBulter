@@ -1,19 +1,20 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useState, useEffect } from 'react';
 import { Star, Quote } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious, 
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
 } from '@/components/ui/carousel';
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 
 interface Testimonial {
   id: string;
@@ -65,28 +66,40 @@ export default function TestimonialCarousel() {
     threshold: 0.1,
   });
 
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [api, setApi] = useState<any>();
   const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (!api) return;
 
-    // 设置自动轮播
+    // Skip auto-play if user prefers reduced motion or if paused
+    if (prefersReducedMotion || isPaused) return;
+
+    // Auto-play with 5s interval
     const interval = setInterval(() => {
       api.scrollNext();
-    }, 5000); // 每5秒切换一次
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [api]);
+  }, [api, isPaused, prefersReducedMotion]);
 
   useEffect(() => {
     if (!api) return;
 
     setCurrent(api.selectedScrollSnap());
 
-    api.on('select', () => {
+    const handleSelect = () => {
       setCurrent(api.selectedScrollSnap());
-    });
+    };
+
+    api.on('select', handleSelect);
+
+    // Cleanup: remove listener on unmount or api change
+    return () => {
+      api.off('select', handleSelect);
+    };
   }, [api]);
 
   const StarRating = ({ rating }: { rating: number }) => (
@@ -127,10 +140,12 @@ export default function TestimonialCarousel() {
 
         {/* Testimonial Carousel using shadcn/ui */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.2 }}
           className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
         >
           <Carousel
             opts={{
