@@ -1,17 +1,32 @@
-'use client'
+'use client';
 
-
-import { useState } from 'react';
-import { signIn, getSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
+import { signIn, getSession, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+/**
+ * Sign In Page Component
+ *
+ * Handles user authentication with email/password or Google OAuth.
+ * Automatically redirects authenticated users to the dashboard.
+ *
+ * IMPORTANT: Client component for Cloudflare Pages static export compatibility.
+ */
 export default function SignInPage() {
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  // Redirect if user is already authenticated
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.push('/dashboard');
+    }
+  }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

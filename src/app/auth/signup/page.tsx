@@ -1,11 +1,20 @@
-'use client'
+'use client';
 
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+/**
+ * Sign Up Page Component
+ *
+ * Handles user registration with email/password.
+ * Validates password strength and automatically redirects authenticated users.
+ *
+ * IMPORTANT: Client component for Cloudflare Pages static export compatibility.
+ */
 export default function SignUpPage() {
+  const { data: session, status } = useSession();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,6 +23,13 @@ export default function SignUpPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
+
+  // Redirect if user is already authenticated
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.push('/dashboard');
+    }
+  }, [status, session, router]);
 
   const validatePassword = (password: string) => {
     return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/.test(password);

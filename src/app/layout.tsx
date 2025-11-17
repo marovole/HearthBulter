@@ -1,4 +1,4 @@
-import { SessionProvider } from '@/components/providers/session-provider';
+import Providers from './providers';
 import './globals.css';
 import { Inter } from 'next/font/google';
 // import { startScheduler } from '@/lib/services/scheduler/startup';
@@ -24,9 +24,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        <SessionProvider>
+        <Providers>
           {children}
-        </SessionProvider>
+        </Providers>
       </body>
     </html>
   );
