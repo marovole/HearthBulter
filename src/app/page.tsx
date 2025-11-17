@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const session = await auth();
 

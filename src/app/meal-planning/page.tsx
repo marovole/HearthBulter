@@ -48,6 +48,8 @@ interface MealPlanData {
   }
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function MealPlanningPage() {
   const { data: session, status } = useSession();
   const router = useRouter();

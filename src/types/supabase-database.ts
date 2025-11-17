@@ -13,6 +13,12 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type DualWriteFeatureFlagsValue = {
+  enableDualWrite: boolean
+  enableSupabasePrimary: boolean
+  [key: string]: Json | undefined
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -467,6 +473,61 @@ export interface Database {
           notified_at?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      dual_write_config: {
+        Row: {
+          key: string
+          value: DualWriteFeatureFlagsValue
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: DualWriteFeatureFlagsValue
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: DualWriteFeatureFlagsValue
+          updated_at?: string
+        }
+      }
+      dual_write_diffs: {
+        Row: {
+          id: string
+          api_endpoint: string
+          operation: string
+          payload: Json | null
+          request_id: string | null
+          prisma_result: Json | null
+          supabase_result: Json | null
+          diff: Json | null
+          severity: 'info' | 'warning' | 'error'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          api_endpoint: string
+          operation: string
+          payload?: Json | null
+          request_id?: string | null
+          prisma_result?: Json | null
+          supabase_result?: Json | null
+          diff?: Json | null
+          severity: 'info' | 'warning' | 'error'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          api_endpoint?: string
+          operation?: string
+          payload?: Json | null
+          request_id?: string | null
+          prisma_result?: Json | null
+          supabase_result?: Json | null
+          diff?: Json | null
+          severity?: 'info' | 'warning' | 'error'
+          created_at?: string
         }
       }
       // 添加其他表的类型定义...

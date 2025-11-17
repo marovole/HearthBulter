@@ -25,6 +25,8 @@ import {
   Users,
 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic'
+
 export default function HelpCenterPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);

@@ -112,6 +112,8 @@ const tutorialSteps: TutorialStep[] = [
   },
 ];
 
+export const dynamic = 'force-dynamic'
+
 export default function TutorialPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
