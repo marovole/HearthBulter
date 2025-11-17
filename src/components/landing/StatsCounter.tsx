@@ -2,12 +2,13 @@
 
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { fadeInUp } from '@/lib/design-tokens';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Users, BookOpen, Heart } from 'lucide-react';
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 
 interface StatItemProps {
   end: number;
@@ -22,6 +23,10 @@ interface StatItemProps {
 
 function StatItem({ end, label, suffix = '', duration = 2000, icon: Icon, color = '', targetValue, unit }: StatItemProps) {
   const [count, setCount] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const animationRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.5,
@@ -30,23 +35,43 @@ function StatItem({ end, label, suffix = '', duration = 2000, icon: Icon, color 
   useEffect(() => {
     if (!inView) return;
 
-    const steps = 60;
-    const increment = end / steps;
-    const stepTime = duration / steps;
+    // Skip animation if user prefers reduced motion
+    if (prefersReducedMotion) {
+      setCount(end);
+      return;
+    }
 
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(current));
+    // Use requestAnimationFrame for smooth animation
+    const animate = (timestamp: number) => {
+      if (!startTimeRef.current) {
+        startTimeRef.current = timestamp;
       }
-    }, stepTime);
 
-    return () => clearInterval(timer);
-  }, [end, duration, inView]);
+      const elapsed = timestamp - startTimeRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function (ease-out cubic)
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const currentValue = Math.floor(easedProgress * end);
+
+      setCount(currentValue);
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+      }
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      startTimeRef.current = null;
+    };
+  }, [end, duration, inView, prefersReducedMotion]);
 
   const formatNumber = (num: number): string => {
     return num.toLocaleString('zh-CN');

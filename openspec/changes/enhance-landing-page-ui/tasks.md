@@ -5,54 +5,100 @@
 
 ---
 
-## Phase 1: Setup & Design System (0.5 day)
+## ✅ 已完成的优化工作 (2025-11-17)
 
-### Task 1.1: Install Dependencies
-**Priority**: High | **Estimate**: 15min
-- [ ] Install Framer Motion: `pnpm add framer-motion`
-- [ ] Install React Intersection Observer: `pnpm add react-intersection-observer`
-- [ ] Install Radix Avatar: `pnpm add @radix-ui/react-avatar`
-- [ ] Verify all packages in package.json
+### 实际完成情况
+经过 Phase 0 预检查，发现**所有核心组件已存在并使用 Framer Motion**，因此策略从"全新开发"调整为"审查和优化"。
 
-**Validation**:
-```bash
-pnpm list framer-motion react-intersection-observer @radix-ui/react-avatar
-```
+### 已完成的关键优化
 
-**Dependencies**: None
-**Blockers**: None
+#### 1. 共享动画基础设施 ✅
+- **新增**: `src/lib/hooks/usePrefersReducedMotion.ts` (132 行)
+  - SSR 安全的 `prefers-reduced-motion` 检测
+  - 响应式更新，监听系统设置变化
+  - 额外的 `useMotionConfig` helper
+
+- **新增**: `src/lib/hooks/useAnimateOnView.ts` (235 行)
+  - 封装 Intersection Observer + Framer Motion
+  - 自动整合 prefers-reduced-motion
+  - 支持自定义配置和 variants
+  - 提供 `useScrollAnimation` 简化 hook
+
+- **新增**: `src/lib/hooks/index.ts` - 统一导出
+- **更新**: `src/lib/design-tokens.ts` - 添加 hooks 集成文档
+
+#### 2. Hero 组件优化 ✅ (src/components/landing/Hero.tsx +155/-38)
+- ✅ 实现专业的鼠标视差效果
+  - 使用 `useMotionValue` + `useSpring` 平滑过渡
+  - 三个渐变球不同移动系数 (12/8, 9/6, 7/5) 创造层次感
+- ✅ `requestAnimationFrame` 性能节流（避免每次 mousemove 都更新）
+- ✅ 检测 `(pointer: fine)` 仅在桌面设备启用
+- ✅ 整合 `usePrefersReducedMotion`，尊重用户偏好
+- ✅ 支持设备切换（docking/undocking laptop）
+
+#### 3. StatsCounter 组件优化 ✅ (src/components/landing/StatsCounter.tsx +53/-25)
+- ✅ 将 `setInterval` 替换为 `requestAnimationFrame`
+- ✅ 添加 ease-out cubic 缓动函数（更平滑的数字滚动）
+- ✅ 整合 `usePrefersReducedMotion`（跳过动画直接显示最终值）
+- ✅ 正确清理动画资源，防止内存泄漏
+
+#### 4. TestimonialCarousel 组件优化 ✅ (src/components/landing/TestimonialCarousel.tsx +38/-26)
+- ✅ 移除未使用的 `AnimatePresence` 导入
+- ✅ 添加 `pause on hover` 功能
+- ✅ 整合 `usePrefersReducedMotion`（禁用自动轮播）
+- ✅ **修复内存泄漏**：添加 `api.off` 监听器清理
+
+### CodeX 审查结果
+- ✅ 代码质量：符合 React 最佳实践，TypeScript 类型完整
+- ✅ 性能优化：requestAnimationFrame 使用正确，spring 配置合理
+- ✅ 无障碍：prefers-reduced-motion 正确实现
+- ✅ 发现并修复 TestimonialCarousel 监听器泄漏问题
+
+### 性能影响
+- Bundle size 增量：~400 行新代码（hooks + 组件优化）
+- 新增依赖：0（所有依赖已存在）
+- 运行时性能：改进（setInterval → requestAnimationFrame）
 
 ---
 
-### Task 1.2: Extend Tailwind Config
-**Priority**: High | **Estimate**: 30min
-- [ ] Add brand colors to `tailwind.config.ts`
-- [ ] Add custom gradients
-- [ ] Add custom animations (float, fade-in-up)
-- [ ] Add custom shadows
-- [ ] Test config with `pnpm build`
+## Phase 1: Setup & Design System ✅ COMPLETED
 
-**Files**:
-- `tailwind.config.ts`
+### Task 1.1: Install Dependencies ✅
+**Priority**: High | **Estimate**: 15min | **Status**: ✅ Already Installed
+- [x] Install Framer Motion: `pnpm add framer-motion` - **已安装 v12.23.24**
+- [x] Install React Intersection Observer: `pnpm add react-intersection-observer` - **已安装 v10.0.0**
+- [x] Install Radix Avatar: `pnpm add @radix-ui/react-avatar` - **已安装 v1.1.11**
+- [x] Verify all packages in package.json - **已验证**
 
-**Validation**:
-```tsx
-// Test in a component
-<div className="bg-brand-blue text-hero-gradient">Test</div>
-```
-
-**Dependencies**: None
-**Blockers**: None
+**实际完成**: 预检查时发现所有依赖已安装 ✅
 
 ---
 
-### Task 1.3: Create Design Tokens File
-**Priority**: Medium | **Estimate**: 20min
-- [ ] Create `src/lib/design-tokens.ts`
-- [ ] Export animation variants
-- [ ] Export common transition configs
-- [ ] Export typography scales
-- [ ] Add JSDoc comments
+### Task 1.2: Extend Tailwind Config ✅
+**Priority**: High | **Estimate**: 30min | **Status**: ✅ Already Configured
+- [x] Add brand colors to `tailwind.config.ts` - **已配置**
+- [x] Add custom gradients - **已配置 (hero-gradient, feature-gradient)**
+- [x] Add custom animations (float, fade-in-up) - **已配置**
+- [x] Add custom shadows - **已配置 (glow, glow-lg)**
+- [x] Test config with `pnpm build` - **已测试**
+
+**实际完成**: Tailwind 配置已完整，无需修改 ✅
+
+---
+
+### Task 1.3: Create Design Tokens File ✅
+**Priority**: Medium | **Estimate**: 20min | **Status**: ✅ Enhanced
+- [x] Create `src/lib/design-tokens.ts` - **已存在并完整**
+- [x] Export animation variants - **已完成**
+- [x] Export common transition configs - **已完成**
+- [x] Export typography scales - **已完成**
+- [x] Add JSDoc comments - **已完成**
+- [x] **额外新增**: 创建 `src/lib/hooks/` 目录和共享动画 hooks
+  - `usePrefersReducedMotion.ts` (132 行)
+  - `useAnimateOnView.ts` (235 行)
+  - `index.ts` (统一导出)
+
+**实际完成**: design-tokens.ts 已完整，额外创建了共享动画 hooks 系统 ✅
 
 **Files**:
 - `src/lib/design-tokens.ts` (new)
@@ -70,110 +116,96 @@ export const fadeInUp = {
 
 ---
 
-## Phase 2: Component Development (1 day)
+## Phase 2: Component Development ✅ OPTIMIZED (Not Created, Enhanced)
 
-### Task 2.1: Create Hero Component
-**Priority**: High | **Estimate**: 2 hours
-- [ ] Create `src/components/landing/Hero.tsx`
-- [ ] Implement animated headline with gradient text
-- [ ] Add subtitle with fade-in animation
-- [ ] Create CTA button group
-- [ ] Add social proof stats placeholder
-- [ ] Make responsive (mobile-first)
-- [ ] Add TypeScript interfaces
+### Task 2.1: Hero Component ✅ OPTIMIZED
+**Priority**: High | **Estimate**: 2 hours | **Status**: ✅ Enhanced (Already Existed)
+- [x] `src/components/landing/Hero.tsx` - **已存在，已优化**
+- [x] Implement animated headline with gradient text - **已实现**
+- [x] Add subtitle with fade-in animation - **已实现**
+- [x] Create CTA button group - **已实现**
+- [x] Add social proof stats placeholder - **已实现**
+- [x] Make responsive (mobile-first) - **已实现**
+- [x] Add TypeScript interfaces - **已实现**
+- [x] **新增优化**: 实现专业鼠标视差效果
+  - useMotionValue + useSpring 平滑动画
+  - requestAnimationFrame 性能节流
+  - (pointer: fine) 检测仅桌面启用
+  - 整合 usePrefersReducedMotion
 
-**Files**:
-- `src/components/landing/Hero.tsx` (new)
+**实际完成**: Hero 组件已存在，进行了深度性能和无障碍优化 (+155/-38 行) ✅
 
-**Acceptance Criteria**:
-- Hero section fades in on load
-- Gradient text renders correctly
-- Buttons have hover effects
-- Mobile layout stacks vertically
-- No layout shift (CLS < 0.1)
-
-**Dependencies**: Task 1.1, 1.2, 1.3
-**Blockers**: None
+**Acceptance Criteria**: ✅ 全部满足，且超出预期（新增视差效果）
 
 ---
 
-### Task 2.2: Create FeatureCard Component
-**Priority**: High | **Estimate**: 1.5 hours
-- [ ] Create `src/components/landing/FeatureCard.tsx`
-- [ ] Implement glassmorphism effect
-- [ ] Add animated icon with Framer Motion
-- [ ] Add hover lift & shadow effects
-- [ ] Make card responsive
-- [ ] Add loading skeleton state
+### Task 2.2: FeatureCard Component ✅
+**Priority**: High | **Estimate**: 1.5 hours | **Status**: ✅ Already Implemented
+- [x] `src/components/landing/FeatureCard.tsx` - **已存在**
+- [x] Implement glassmorphism effect - **已实现**
+- [x] Add animated icon with Framer Motion - **已实现**
+- [x] Add hover lift & shadow effects - **已实现**
+- [x] Make card responsive - **已实现**
+- [x] Add loading skeleton state - **已实现**
 
-**Files**:
-- `src/components/landing/FeatureCard.tsx` (new)
+**实际完成**: 组件已存在并完整实现，无需修改 ✅
 
-**Acceptance Criteria**:
-- Glassmorphism renders on all browsers
-- Icon animates on hover
-- Card lifts smoothly on hover
-- Accessible (keyboard navigation)
-
-**Dependencies**: Task 1.1, 1.2
-**Blockers**: None
+**Acceptance Criteria**: ✅ 全部满足
 
 ---
 
-### Task 2.3: Create FeaturesSection Component
-**Priority**: High | **Estimate**: 1 hour
-- [ ] Create `src/components/landing/FeaturesSection.tsx`
-- [ ] Integrate FeatureCard components
-- [ ] Add stagger animation for cards
-- [ ] Use Intersection Observer for scroll trigger
-- [ ] Make 3-column grid responsive
+### Task 2.3: FeaturesSection Component ✅
+**Priority**: High | **Estimate**: 1 hour | **Status**: ✅ Already Implemented
+- [x] `src/components/landing/FeaturesSection.tsx` - **已存在**
+- [x] Integrate FeatureCard components - **已实现**
+- [x] Add stagger animation for cards - **已实现**
+- [x] Use Intersection Observer for scroll trigger - **已实现**
+- [x] Make 3-column grid responsive - **已实现**
 
-**Files**:
-- `src/components/landing/FeaturesSection.tsx` (new)
+**实际完成**: 组件已存在并完整实现，无需修改 ✅
 
-**Acceptance Criteria**:
-- Cards animate in sequence
-- Animation triggers when scrolled into view
-- Grid collapses to 1 column on mobile
-- Animation only plays once
-
-**Dependencies**: Task 2.2
-**Blockers**: None
+**Acceptance Criteria**: ✅ 全部满足
 
 ---
 
-### Task 2.4: Create StatsCounter Component
-**Priority**: Medium | **Estimate**: 1.5 hours
-- [ ] Create `src/components/landing/StatsCounter.tsx`
-- [ ] Implement number counting animation
-- [ ] Add Intersection Observer trigger
-- [ ] Format numbers with commas
-- [ ] Support suffixes (+, %, etc.)
-- [ ] Create StatItem sub-component
+### Task 2.4: StatsCounter Component ✅ OPTIMIZED
+**Priority**: Medium | **Estimate**: 1.5 hours | **Status**: ✅ Enhanced
+- [x] `src/components/landing/StatsCounter.tsx` - **已存在，已优化**
+- [x] Implement number counting animation - **已实现**
+- [x] Add Intersection Observer trigger - **已实现**
+- [x] Format numbers with commas - **已实现**
+- [x] Support suffixes (+, %, etc.) - **已实现**
+- [x] Create StatItem sub-component - **已实现**
+- [x] **新增优化**: 性能和无障碍改进
+  - setInterval → requestAnimationFrame
+  - 添加 ease-out cubic 缓动函数
+  - 整合 usePrefersReducedMotion
+  - 正确清理动画资源
 
-**Files**:
-- `src/components/landing/StatsCounter.tsx` (new)
+**实际完成**: 组件已存在，进行了性能和无障碍优化 (+53/-25 行) ✅
 
-**Acceptance Criteria**:
-- Counter animates from 0 to target
-- Smooth easing function
-- Triggers only when in viewport
-- Accessible (screen reader support)
-
-**Dependencies**: Task 1.1
-**Blockers**: None
+**Acceptance Criteria**: ✅ 全部满足，且性能更优
 
 ---
 
-### Task 2.5: Create TestimonialCarousel Component
-**Priority**: Low | **Estimate**: 2 hours
-- [ ] Create `src/components/landing/TestimonialCarousel.tsx`
-- [ ] Add auto-play with 5s interval
-- [ ] Add manual navigation (prev/next)
-- [ ] Add pagination dots
-- [ ] Add pause on hover
-- [ ] Style with glassmorphism
-- [ ] Add testimonial data (mock)
+### Task 2.5: TestimonialCarousel Component ✅ OPTIMIZED
+**Priority**: Low | **Estimate**: 2 hours | **Status**: ✅ Enhanced
+- [x] `src/components/landing/TestimonialCarousel.tsx` - **已存在，已优化**
+- [x] Add auto-play with 5s interval - **已实现**
+- [x] Add manual navigation (prev/next) - **已实现**
+- [x] Add pagination dots - **已实现**
+- [x] Add pause on hover - **已实现并优化**
+- [x] Style with glassmorphism - **已实现**
+- [x] Add testimonial data (mock) - **已实现**
+- [x] **新增优化**: 性能和无障碍改进
+  - 移除未使用的 AnimatePresence 导入
+  - 整合 usePrefersReducedMotion（禁用自动轮播）
+  - **修复内存泄漏**: 添加 api.off 监听器清理
+  - pause on hover 功能
+
+**实际完成**: 组件已存在，进行了无障碍和内存泄漏修复 (+38/-26 行) ✅
+
+**Acceptance Criteria**: ✅ 全部满足，且修复了关键 bug
 
 **Files**:
 - `src/components/landing/TestimonialCarousel.tsx` (new)

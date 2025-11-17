@@ -1,12 +1,13 @@
 'use client';
 
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion';
 import { ArrowRight, Sparkles, Menu, Heart, Zap, Shield, TrendingUp } from 'lucide-react';
 import { staggerContainer, staggerItem } from '@/lib/design-tokens';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 
 interface HeroProps {
   onCTAClick?: () => void;
@@ -14,10 +15,48 @@ interface HeroProps {
 
 export default function Hero({ onCTAClick }: HeroProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  // Mouse parallax motion values
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const smoothPointerX = useSpring(pointerX, {
+    stiffness: 110,
+    damping: 24,
+    mass: 0.9,
+  });
+  const smoothPointerY = useSpring(pointerY, {
+    stiffness: 110,
+    damping: 24,
+    mass: 0.9,
+  });
+
+  // Scroll parallax
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 300], [0, 50]);
   const y2 = useTransform(scrollY, [0, 300], [0, -50]);
+
+  // Transform pointer motion to pixel movement (different coefficients for depth)
+  const primaryPointerX = useTransform(smoothPointerX, (value) => value * 12);
+  const primaryPointerY = useTransform(smoothPointerY, (value) => value * 8);
+  const secondaryPointerX = useTransform(smoothPointerX, (value) => value * 9);
+  const secondaryPointerY = useTransform(smoothPointerY, (value) => value * 6);
+  const tertiaryPointerX = useTransform(smoothPointerX, (value) => value * 7);
+  const tertiaryPointerY = useTransform(smoothPointerY, (value) => value * 5);
+
+  // Combine scroll and pointer y transforms
+  const combinedY1 = useTransform(
+    [y1, primaryPointerY],
+    ([scrollVal, pointerVal]: [number, number]) => scrollVal + pointerVal
+  );
+  const combinedY2 = useTransform(
+    [y2, secondaryPointerY],
+    ([scrollVal, pointerVal]: [number, number]) => scrollVal + pointerVal
+  );
+  const combinedY3 = useTransform(
+    [y1, tertiaryPointerY],
+    ([scrollVal, pointerVal]: [number, number]) => scrollVal + pointerVal
+  );
 
   const navigationItems = [
     { label: '功能介绍', href: '#features' },
@@ -34,30 +73,122 @@ export default function Hero({ onCTAClick }: HeroProps) {
     { Icon: TrendingUp, color: 'text-blue-500', delay: 1.5, x: '80%', y: '75%' },
   ];
 
+  // Mouse parallax effect (desktop only, respects reduced motion)
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Initialize to center
+    pointerX.set(0);
+    pointerY.set(0);
+
+    // Skip if user prefers reduced motion
+    if (prefersReducedMotion) {
+      return;
+    }
+
+    // Only enable on devices with fine pointer (mouse/trackpad, not touch)
+    const mediaQuery = window.matchMedia('(pointer: fine)');
+    let frame: number | null = null;
+
+    // Normalize mouse position to [-1, 1] range
+    const normalize = (clientValue: number, max: number) => {
+      if (max === 0) return 0;
+      return ((clientValue / max) - 0.5) * 2;
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+
+    const updatePointer = (event: MouseEvent) => {
+      const width = window.innerWidth || 1;
+      const height = window.innerHeight || 1;
+      pointerX.set(normalize(event.clientX, width));
+      pointerY.set(normalize(event.clientY, height));
+    };
+
+    // Throttle with requestAnimationFrame
+    const handleMouseMove = (event: MouseEvent) => {
+      if (frame !== null) return;
+
+      frame = window.requestAnimationFrame(() => {
+        updatePointer(event);
+        frame = null;
+      });
+    };
+
+    const addMouseListener = () => {
+      window.addEventListener('mousemove', handleMouseMove);
+    };
+
+    const removeMouseListener = () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+        frame = null;
+      }
+    };
+
+    // Add listener if fine pointer is available
+    if (mediaQuery.matches) {
+      addMouseListener();
+    }
+
+    // Listen for pointer type changes (e.g., docking/undocking laptop)
+    const handlePointerChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        addMouseListener();
+      } else {
+        removeMouseListener();
+        pointerX.set(0);
+        pointerY.set(0);
+      }
+    };
+
+    if ('addEventListener' in mediaQuery) {
+      mediaQuery.addEventListener('change', handlePointerChange);
+    } else {
+      // @ts-expect-error - addListener is deprecated but needed for Safari < 14
+      mediaQuery.addListener(handlePointerChange);
+    }
+
+    return () => {
+      removeMouseListener();
+
+      if ('removeEventListener' in mediaQuery) {
+        mediaQuery.removeEventListener('change', handlePointerChange);
+      } else {
+        // @ts-expect-error - removeListener is deprecated but needed for Safari < 14
+        mediaQuery.removeListener(handlePointerChange);
+      }
+    };
+  }, [pointerX, pointerY, prefersReducedMotion]);
 
   return (
     <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       {/* 增强的背景装饰元素 */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* 主要渐变球 */}
+        {/* 主要渐变球 - 带鼠标视差效果 */}
         <motion.div
           className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
-          style={{ y: y1 }}
+          style={{
+            x: primaryPointerX,
+            y: combinedY1,
+          }}
         />
         <motion.div
           className="absolute top-40 right-10 w-96 h-96 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
-          style={{ animationDelay: '1s', y: y2 }}
+          style={{
+            animationDelay: '1s',
+            x: secondaryPointerX,
+            y: combinedY2,
+          }}
         />
         <motion.div
           className="absolute -bottom-8 left-1/2 w-96 h-96 bg-gradient-to-br from-indigo-400 to-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
-          style={{ animationDelay: '2s', y: y1 }}
+          style={{
+            animationDelay: '2s',
+            x: tertiaryPointerX,
+            y: combinedY3,
+          }}
         />
 
         {/* 网格背景 */}
