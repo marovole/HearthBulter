@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering to prevent prerender errors with React Context
+export const dynamic = 'force-dynamic';
+
 /**
  * 设备管理页面
  */

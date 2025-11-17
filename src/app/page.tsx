@@ -12,6 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
+// Force dynamic rendering to prevent prerender errors with React Context
+export const dynamic = 'force-dynamic';
+
 /**
  * Landing Page Component
  *
