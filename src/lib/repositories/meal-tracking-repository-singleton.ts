@@ -1,28 +1,38 @@
 /**
  * 膳食追踪 Repository 单例
  *
- * 提供统一的双写 MealTrackingRepository 实例，供所有膳食追踪相关端点使用
+ * 提供全局单例 MealTrackingRepository 实例
  *
  * @module meal-tracking-repository-singleton
  */
 
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { PrismaMealTrackingRepository } from './implementations/prisma-meal-tracking-repository';
 import { SupabaseMealTrackingRepository } from './implementations/supabase-meal-tracking-repository';
 import type { MealTrackingRepository } from './interfaces/meal-tracking-repository';
 
-// 模块级别的 Repository 单例（避免请求开销）
-const supabaseClient = SupabaseClientManager.getInstance();
+let instance: MealTrackingRepository | null = null;
 
-export const mealTrackingRepository = createDualWriteDecorator<MealTrackingRepository>(
-  new PrismaMealTrackingRepository(),
-  new SupabaseMealTrackingRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/tracking',
+/**
+ * 获取 MealTrackingRepository 单例实例
+ *
+ * @returns MealTrackingRepository 实例
+ */
+export function getMealTrackingRepository(): MealTrackingRepository {
+  if (!instance) {
+    const supabaseClient = SupabaseClientManager.getInstance();
+    instance = new SupabaseMealTrackingRepository(supabaseClient);
   }
-);
+  return instance;
+}
+
+/**
+ * 全局 MealTrackingRepository 单例
+ *
+ * 使用方式：
+ * ```typescript
+ * import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
+ *
+ * const tracking = await mealTrackingRepository.getTrackingById(id);
+ * ```
+ */
+export const mealTrackingRepository = getMealTrackingRepository();

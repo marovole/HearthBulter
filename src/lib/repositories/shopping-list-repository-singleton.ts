@@ -1,30 +1,38 @@
 /**
  * 购物清单 Repository 单例
  *
- * 提供统一的双写 ShoppingListRepository 实例，供所有购物清单相关端点使用
+ * 提供全局单例 ShoppingListRepository 实例
  *
  * @module shopping-list-repository-singleton
  */
 
-import { getPrismaClient } from '@/lib/db';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { PrismaShoppingListRepository } from './implementations/prisma-shopping-list-repository';
 import { SupabaseShoppingListRepository } from './implementations/supabase-shopping-list-repository';
 import type { ShoppingListRepository } from './interfaces/shopping-list-repository';
 
-// 模块级别的 Repository 单例（避免请求开销）
-const supabaseClient = SupabaseClientManager.getInstance();
-const prismaClient = await getPrismaClient();
+let instance: ShoppingListRepository | null = null;
 
-export const shoppingListRepository = createDualWriteDecorator<ShoppingListRepository>(
-  new PrismaShoppingListRepository(prismaClient),
-  new SupabaseShoppingListRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/shopping-lists',
+/**
+ * 获取 ShoppingListRepository 单例实例
+ *
+ * @returns ShoppingListRepository 实例
+ */
+export function getShoppingListRepository(): ShoppingListRepository {
+  if (!instance) {
+    const supabaseClient = SupabaseClientManager.getInstance();
+    instance = new SupabaseShoppingListRepository(supabaseClient);
   }
-);
+  return instance;
+}
+
+/**
+ * 全局 ShoppingListRepository 单例
+ *
+ * 使用方式：
+ * ```typescript
+ * import { shoppingListRepository } from '@/lib/repositories/shopping-list-repository-singleton';
+ *
+ * const item = await shoppingListRepository.getItemById(id);
+ * ```
+ */
+export const shoppingListRepository = getShoppingListRepository();

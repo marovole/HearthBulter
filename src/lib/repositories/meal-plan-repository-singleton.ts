@@ -1,28 +1,38 @@
 /**
  * 膳食计划 Repository 单例
  *
- * 提供统一的双写 MealPlanRepository 实例，供所有膳食计划相关端点使用
+ * 提供全局单例 MealPlanRepository 实例
  *
  * @module meal-plan-repository-singleton
  */
 
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { PrismaMealPlanRepository } from './implementations/prisma-meal-plan-repository';
 import { SupabaseMealPlanRepository } from './implementations/supabase-meal-plan-repository';
 import type { MealPlanRepository } from './interfaces/meal-plan-repository';
 
-// 模块级别的 Repository 单例（避免请求开销）
-const supabaseClient = SupabaseClientManager.getInstance();
+let instance: MealPlanRepository | null = null;
 
-export const mealPlanRepository = createDualWriteDecorator<MealPlanRepository>(
-  new PrismaMealPlanRepository(),
-  new SupabaseMealPlanRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/meal-plans',
+/**
+ * 获取 MealPlanRepository 单例实例
+ *
+ * @returns MealPlanRepository 实例
+ */
+export function getMealPlanRepository(): MealPlanRepository {
+  if (!instance) {
+    const supabaseClient = SupabaseClientManager.getInstance();
+    instance = new SupabaseMealPlanRepository(supabaseClient);
   }
-);
+  return instance;
+}
+
+/**
+ * 全局 MealPlanRepository 单例
+ *
+ * 使用方式：
+ * ```typescript
+ * import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-singleton';
+ *
+ * const plan = await mealPlanRepository.getPlanById(id);
+ * ```
+ */
+export const mealPlanRepository = getMealPlanRepository();

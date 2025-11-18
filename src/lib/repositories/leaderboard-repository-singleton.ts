@@ -1,28 +1,38 @@
 /**
  * 排行榜 Repository 单例
  *
- * 提供统一的双写 LeaderboardRepository 实例，供所有排行榜相关端点使用
+ * 提供全局单例 LeaderboardRepository 实例
  *
  * @module leaderboard-repository-singleton
  */
 
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { PrismaLeaderboardRepository } from './implementations/prisma-leaderboard-repository';
 import { SupabaseLeaderboardRepository } from './implementations/supabase-leaderboard-repository';
 import type { LeaderboardRepository } from './interfaces/leaderboard-repository';
 
-// 模块级别的 Repository 单例（避免请求开销）
-const supabaseClient = SupabaseClientManager.getInstance();
+let instance: LeaderboardRepository | null = null;
 
-export const leaderboardRepository = createDualWriteDecorator<LeaderboardRepository>(
-  new PrismaLeaderboardRepository(),
-  new SupabaseLeaderboardRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/social/leaderboard',
+/**
+ * 获取 LeaderboardRepository 单例实例
+ *
+ * @returns LeaderboardRepository 实例
+ */
+export function getLeaderboardRepository(): LeaderboardRepository {
+  if (!instance) {
+    const supabaseClient = SupabaseClientManager.getInstance();
+    instance = new SupabaseLeaderboardRepository(supabaseClient);
   }
-);
+  return instance;
+}
+
+/**
+ * 全局 LeaderboardRepository 单例
+ *
+ * 使用方式：
+ * ```typescript
+ * import { leaderboardRepository } from '@/lib/repositories/leaderboard-repository-singleton';
+ *
+ * const leaderboard = await leaderboardRepository.getLeaderboard();
+ * ```
+ */
+export const leaderboardRepository = getLeaderboardRepository();

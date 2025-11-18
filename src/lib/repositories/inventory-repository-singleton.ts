@@ -1,30 +1,38 @@
 /**
  * 库存 Repository 单例
  *
- * 提供统一的双写 InventoryRepository 实例，供所有库存相关端点使用
+ * 提供全局单例 InventoryRepository 实例
  *
  * @module inventory-repository-singleton
  */
 
-import { getPrismaClient } from '@/lib/db';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { PrismaInventoryRepository } from './implementations/prisma-inventory-repository';
 import { SupabaseInventoryRepository } from './implementations/supabase-inventory-repository';
 import type { InventoryRepository } from './interfaces/inventory-repository';
 
-// 模块级别的 Repository 单例（避免请求开销）
-const supabaseClient = SupabaseClientManager.getInstance();
-const prismaClient = await getPrismaClient();
+let instance: InventoryRepository | null = null;
 
-export const inventoryRepository = createDualWriteDecorator<InventoryRepository>(
-  new PrismaInventoryRepository(),
-  new SupabaseInventoryRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/inventory',
+/**
+ * 获取 InventoryRepository 单例实例
+ *
+ * @returns InventoryRepository 实例
+ */
+export function getInventoryRepository(): InventoryRepository {
+  if (!instance) {
+    const supabaseClient = SupabaseClientManager.getInstance();
+    instance = new SupabaseInventoryRepository(supabaseClient);
   }
-);
+  return instance;
+}
+
+/**
+ * 全局 InventoryRepository 单例
+ *
+ * 使用方式：
+ * ```typescript
+ * import { inventoryRepository } from '@/lib/repositories/inventory-repository-singleton';
+ *
+ * const item = await inventoryRepository.getItemById(id);
+ * ```
+ */
+export const inventoryRepository = getInventoryRepository();
