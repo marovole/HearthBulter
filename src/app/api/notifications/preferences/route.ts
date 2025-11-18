@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
-import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
-import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
-import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+import { notificationRepository } from '@/lib/repositories/notification-repository-singleton';
 import type { NotificationPreferenceDTO } from '@/lib/repositories/types/notification';
 
 /**
@@ -14,17 +8,6 @@ import type { NotificationPreferenceDTO } from '@/lib/repositories/types/notific
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
-const supabaseClient = SupabaseClientManager.getInstance();
-const notificationRepository = createDualWriteDecorator<NotificationRepository>(
-  new PrismaNotificationRepository(),
-  new SupabaseNotificationRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/notifications/preferences',
-  }
-);
-
 /**
  * 默认通知偏好设置
  */
@@ -62,9 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 使用双写框架查询通知偏好
-    let preferences = await notificationRepository.decorateMethod(
-      'getNotificationPreferences',
-      memberId
+    let preferences = await notificationRepository.getNotificationPreferences(memberId
     );
 
     // 如果没有偏好设置，创建默认设置
@@ -76,9 +57,7 @@ export async function GET(request: NextRequest) {
         lastUpdatedAt: new Date(),
       };
 
-      await notificationRepository.decorateMethod(
-        'upsertNotificationPreferences',
-        defaultPreference
+      await notificationRepository.upsertNotificationPreferences(defaultPreference
       );
 
       preferences = defaultPreference;
@@ -147,9 +126,7 @@ export async function PUT(request: NextRequest) {
     };
 
     // 使用双写框架更新偏好设置
-    await notificationRepository.decorateMethod(
-      'upsertNotificationPreferences',
-      preferenceData
+    await notificationRepository.upsertNotificationPreferences(preferenceData
     );
 
     return NextResponse.json({
