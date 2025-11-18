@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
-import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
-import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
-import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+import { notificationRepository } from '@/lib/repositories/notification-repository-singleton';
 import type { CreateNotificationDTO } from '@/lib/repositories/types/notification';
 
 /**
@@ -14,17 +8,6 @@ import type { CreateNotificationDTO } from '@/lib/repositories/types/notificatio
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
-const supabaseClient = SupabaseClientManager.getInstance();
-const notificationRepository = createDualWriteDecorator<NotificationRepository>(
-  new PrismaNotificationRepository(),
-  new SupabaseNotificationRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/notifications/batch',
-  }
-);
-
 /**
  * POST /api/notifications/batch
  * 批量操作通知
@@ -123,9 +106,7 @@ async function handleBatchCreate(data: {
         batchId: notif.batchId,
       };
 
-      const created = await notificationRepository.decorateMethod(
-        'createNotification',
-        payload
+      const created = await notificationRepository.createNotification(payload
       );
       results.push(created);
     } catch (error) {
@@ -193,9 +174,7 @@ async function handleBatchMarkRead(data: {
   // 使用双写框架逐个标记已读
   for (const notificationId of data.notificationIds) {
     try {
-      await notificationRepository.decorateMethod(
-        'markAsRead',
-        notificationId,
+      await notificationRepository.markAsRead(notificationId,
         data.memberId
       );
       successCount++;
@@ -262,9 +241,7 @@ async function handleBatchDelete(data: {
   // 使用双写框架逐个删除通知
   for (const notificationId of data.notificationIds) {
     try {
-      await notificationRepository.decorateMethod(
-        'deleteNotification',
-        notificationId,
+      await notificationRepository.deleteNotification(notificationId,
         data.memberId
       );
       successCount++;

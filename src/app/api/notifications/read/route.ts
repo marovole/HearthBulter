@@ -1,29 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
-import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
-import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
-import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
-
+import { notificationRepository } from '@/lib/repositories/notification-repository-singleton';
 /**
  * 模块级别的单例 - 避免每次请求都重新创建
  */
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
-const supabaseClient = SupabaseClientManager.getInstance();
-const notificationRepository = createDualWriteDecorator<NotificationRepository>(
-  new PrismaNotificationRepository(),
-  new SupabaseNotificationRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/notifications/read',
-  }
-);
-
 /**
  * PUT /api/notifications/read
  * 标记通知为已读
@@ -45,9 +27,7 @@ export async function PUT(request: NextRequest) {
       }
 
       // 使用双写框架批量标记已读
-      const count = await notificationRepository.decorateMethod(
-        'markAllAsRead',
-        memberId
+      const count = await notificationRepository.markAllAsRead(memberId
       );
 
       return NextResponse.json({
@@ -65,9 +45,7 @@ export async function PUT(request: NextRequest) {
       }
 
       // 使用双写框架标记单个通知已读
-      await notificationRepository.decorateMethod(
-        'markAsRead',
-        notificationId,
+      await notificationRepository.markAsRead(notificationId,
         memberId
       );
 

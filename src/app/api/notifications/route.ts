@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
-import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
-import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
-import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+import { notificationRepository } from '@/lib/repositories/notification-repository-singleton';
 import type {
   NotificationType,
   NotificationChannel,
@@ -13,22 +7,8 @@ import type {
   CreateNotificationDTO,
 } from '@/lib/repositories/types/notification';
 
-/**
- * 模块级别的单例 - 避免每次请求都重新创建
- */
-
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
-const supabaseClient = SupabaseClientManager.getInstance();
-const notificationRepository = createDualWriteDecorator<NotificationRepository>(
-  new PrismaNotificationRepository(),
-  new SupabaseNotificationRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/notifications',
-  }
-);
 
 /**
  * Utility functions for notifications
@@ -128,8 +108,6 @@ const NotificationFormatters = {
 /**
  * GET /api/notifications
  * 获取用户通知列表
- *
- * 使用双写框架，支持 Prisma/Supabase 双写验证
  */
 export async function GET(request: NextRequest) {
   try {
@@ -148,9 +126,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 使用双写框架查询通知列表
-    const result = await notificationRepository.decorateMethod(
-      'listMemberNotifications',
+    // 查询通知列表
+    const result = await notificationRepository.listMemberNotifications(
       {
         memberId,
         type: type ?? undefined,
@@ -207,7 +184,6 @@ export async function GET(request: NextRequest) {
  * POST /api/notifications
  * 创建通知
  *
- * 使用双写框架，支持 Prisma/Supabase 双写验证
  * Note: This simplified version only creates notification records in the database.
  * For full notification delivery (Email, SMS, WeChat, Push), use NotificationManager service.
  */
@@ -294,11 +270,8 @@ export async function POST(request: NextRequest) {
       batchId,
     };
 
-    // 使用双写框架创建通知
-    const notification = await notificationRepository.decorateMethod(
-      'createNotification',
-      notificationPayload
-    );
+    // 创建通知
+    const notification = await notificationRepository.createNotification(notificationPayload);
 
     return NextResponse.json({
       success: true,

@@ -1,29 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
-import { PrismaNotificationRepository } from '@/lib/repositories/prisma/prisma-notification-repository';
-import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
-import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
-
+import { notificationRepository } from '@/lib/repositories/notification-repository-singleton';
 /**
  * 模块级别的单例 - 避免每次请求都重新创建
  */
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
-const supabaseClient = SupabaseClientManager.getInstance();
-const notificationRepository = createDualWriteDecorator<NotificationRepository>(
-  new PrismaNotificationRepository(),
-  new SupabaseNotificationRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/notifications/[id]',
-  }
-);
-
 /**
  * GET /api/notifications/[id]
  * 获取单个通知详情
@@ -46,9 +28,7 @@ export async function GET(
     }
 
     // 使用双写框架获取通知
-    const notification = await notificationRepository.decorateMethod(
-      'getNotificationById',
-      notificationId
+    const notification = await notificationRepository.getNotificationById(notificationId
     );
 
     if (!notification) {
@@ -97,9 +77,7 @@ export async function DELETE(
     }
 
     // 使用双写框架删除通知（软删除）
-    await notificationRepository.decorateMethod(
-      'deleteNotification',
-      notificationId,
+    await notificationRepository.deleteNotification(notificationId,
       memberId
     );
 

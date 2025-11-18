@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
-import { PrismaFoodRepository } from '@/lib/repositories/prisma/prisma-food-repository';
-import { SupabaseFoodRepository } from '@/lib/repositories/supabase/supabase-food-repository';
-import type { FoodRepository } from '@/lib/repositories/interfaces/food-repository';
+import { foodRepository } from '@/lib/repositories/food-repository-singleton';
 import type { FoodCategory } from '@prisma/client';
 
 /**
@@ -14,17 +8,6 @@ import type { FoodCategory } from '@prisma/client';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
-const supabaseClient = SupabaseClientManager.getInstance();
-const foodRepository = createDualWriteDecorator<FoodRepository>(
-  new PrismaFoodRepository(),
-  new SupabaseFoodRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/foods/categories/[category]',
-  }
-);
-
 const validCategories: FoodCategory[] = [
   'VEGETABLES',
   'FRUITS',
@@ -65,8 +48,8 @@ export async function GET(
 
     // 使用双写框架并行查询食材列表和总数
     const [foods, total] = await Promise.all([
-      foodRepository.decorateMethod('listByCategory', category as FoodCategory, from, to),
-      foodRepository.decorateMethod('countByCategory', category as FoodCategory),
+      foodRepository.listByCategory(category as FoodCategory, from, to),
+      foodRepository.countByCategory(category as FoodCategory),
     ]);
 
     return NextResponse.json(
