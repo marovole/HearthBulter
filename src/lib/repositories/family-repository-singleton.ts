@@ -1,30 +1,38 @@
 /**
  * 家庭 Repository 单例
  *
- * 提供统一的双写 FamilyRepository 实例，供所有家庭相关端点使用
+ * 提供全局单例 FamilyRepository 实例
  *
  * @module family-repository-singleton
  */
 
-import { getPrismaClient } from '@/lib/db';
-import { createDualWriteDecorator } from '@/lib/db/dual-write';
-import { createFeatureFlagManager } from '@/lib/db/dual-write/feature-flags';
-import { createResultVerifier } from '@/lib/db/dual-write/result-verifier';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { PrismaFamilyRepository } from './implementations/prisma-family-repository';
 import { SupabaseFamilyRepository } from './implementations/supabase-family-repository';
 import type { FamilyRepository } from './interfaces/family-repository';
 
-// 模块级别的 Repository 单例（避免请求开销）
-const supabaseClient = SupabaseClientManager.getInstance();
-const prismaClient = await getPrismaClient();
+let instance: FamilyRepository | null = null;
 
-export const familyRepository = createDualWriteDecorator<FamilyRepository>(
-  new PrismaFamilyRepository(prismaClient),
-  new SupabaseFamilyRepository(supabaseClient),
-  {
-    featureFlagManager: createFeatureFlagManager(supabaseClient),
-    verifier: createResultVerifier(supabaseClient),
-    apiEndpoint: '/api/families',
+/**
+ * 获取 FamilyRepository 单例实例
+ *
+ * @returns FamilyRepository 实例
+ */
+export function getFamilyRepository(): FamilyRepository {
+  if (!instance) {
+    const supabaseClient = SupabaseClientManager.getInstance();
+    instance = new SupabaseFamilyRepository(supabaseClient);
   }
-);
+  return instance;
+}
+
+/**
+ * 全局 FamilyRepository 单例
+ *
+ * 使用方式：
+ * ```typescript
+ * import { familyRepository } from '@/lib/repositories/family-repository-singleton';
+ *
+ * const family = await familyRepository.getFamilyById(id);
+ * ```
+ */
+export const familyRepository = getFamilyRepository();
