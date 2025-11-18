@@ -1,17 +1,44 @@
 import { NextResponse } from 'next/server';
-
+import { createClient } from '@supabase/supabase-js';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
+
+async function testSupabaseDatabaseConnection(): Promise<boolean> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Supabase 环境变量缺失');
+      return false;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 执行简单查询测试连接
+    const { error } = await supabase.from('users').select('id').limit(1);
+
+    if (error) {
+      console.error('Supabase 连接测试失败:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Supabase 连接测试异常:', error);
+    return false;
+  }
+}
+
 export async function GET() {
   try {
-    // 动态导入避免在模块加载时初始化 Prisma
-    const { testDatabaseConnection } = await import('@/lib/db');
-    const isConnected = await testDatabaseConnection();
-    
+    const isConnected = await testSupabaseDatabaseConnection();
+
     // 检查环境变量
     const envVars = {
-      DATABASE_URL: process.env.DATABASE_URL ? '✅' : '❌',
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅' : '❌',
+      SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? '✅' : '❌',
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? '✅' : '❌',
       NEXTAUTH_URL: process.env.NEXTAUTH_URL ? '✅' : '❌',
       UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL ? '✅' : '❌',
@@ -23,7 +50,7 @@ export async function GET() {
       database: isConnected ? 'connected' : 'disconnected',
       environment: envVars,
       uptime: process.uptime(),
-      version: '1.0.0',
+      version: '1.0.1',
     });
   } catch (error) {
     return NextResponse.json(
