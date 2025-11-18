@@ -1,5 +1,19 @@
-import type { PrismaClient as PrismaClientType } from '@prisma/client';
+/**
+ * 数据库访问层 - Supabase Only 模式
+ *
+ * 本文件已从 Prisma Client 迁移到 Supabase Adapter。
+ * 所有数据库操作现在通过 Supabase PostgreSQL 进行。
+ *
+ * 迁移日期: 2025-11-18
+ * OpenSpec Change: refactor-database-layer-to-supabase
+ */
+
 import { validateEnvironmentVariables, validateOptionalEnvironmentVariables } from '../env-validator';
+import {
+  supabaseAdapter,
+  testDatabaseConnection as supabaseTestConnection,
+  ensureDatabaseConnection as supabaseEnsureConnection
+} from './supabase-adapter';
 
 // 检测是否在构建阶段
 const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
@@ -21,110 +35,25 @@ if (!globalThis.__envValidated && !isBuildTime) {
   }
 }
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClientType | undefined
-};
-
-// Capture the DATABASE_URL once during module initialization so later lazy imports
-// still have access even if Next/Edge runtime strips process.env in async chunks.
-const capturedDatabaseUrl = process.env.DATABASE_URL;
-
-// 延迟初始化 Prisma Client 以支持边缘运行时
-let prismaInstance: PrismaClientType | undefined;
-
-async function getPrismaClient(): Promise<PrismaClientType> {
-  if (!prismaInstance) {
-    if (globalForPrisma.prisma) {
-      prismaInstance = globalForPrisma.prisma;
-    } else {
-      // 动态导入以避免在模块加载时触发 fs 操作
-      const { PrismaClient } = await import('@prisma/client');
-      const { PrismaNeon } = await import('@prisma/adapter-neon');
-      const { neonConfig } = await import('@neondatabase/serverless');
-
-      // Cloudflare Workers 兼容性配置
-      if (typeof WebSocket !== 'undefined') {
-        neonConfig.webSocketConstructor = WebSocket;
-      } else {
-        neonConfig.webSocketConstructor = globalThis.WebSocket;
-      }
-
-      // 使用 Neon Serverless Driver 以支持 Cloudflare Workers
-      const connectionString = capturedDatabaseUrl ?? process.env.DATABASE_URL;
-      if (!connectionString) {
-        throw new Error('DATABASE_URL is not defined');
-      }
-
-      const adapter = new PrismaNeon({ connectionString });
-
-      prismaInstance = new PrismaClient({
-        adapter,
-        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-      });
-
-      if (process.env.NODE_ENV !== 'production') {
-        globalForPrisma.prisma = prismaInstance;
-      }
-    }
-  }
-  return prismaInstance;
-}
-
-// 使用 Proxy 实现延迟初始化，但所有数据库操作必须是异步的
-export const prisma = new Proxy({} as PrismaClientType, {
-  get(target, prop) {
-    // 对于常见的 Prisma 方法，返回异步包装
-    return new Proxy(() => {}, {
-      async apply(_targetFunc, _thisArg, args) {
-        const instance = await getPrismaClient();
-        const value = (instance as any)[prop];
-        if (typeof value === 'function') {
-          return value.apply(instance, args);
-        }
-        return value;
-      },
-      get(_targetProp, innerProp) {
-        return async (...args: any[]) => {
-          const instance = await getPrismaClient();
-          const method = (instance as any)[prop];
-          if (method && typeof method[innerProp] === 'function') {
-            return method[innerProp].apply(method, args);
-          }
-          return method[innerProp];
-        };
-      },
-    });
-  },
-});
-
-// 数据库健康检查函数
-export async function testDatabaseConnection(): Promise<boolean> {
-  try {
-    const instance = await getPrismaClient();
-    await instance.$queryRaw`SELECT 1`;
-    return true;
-  } catch (error) {
-    console.error('数据库连接测试失败:', error);
-    return false;
-  }
-}
-
-// 确保数据库连接的包装函数
-export async function ensureDatabaseConnection(): Promise<void> {
-  const isConnected = await testDatabaseConnection();
-  if (!isConnected) {
-    throw new Error('数据库连接失败，请检查DATABASE_URL配置');
-  }
-}
-
-// 推荐使用的异步获取方法（避免 Proxy 复杂性）
-export async function getDB() {
-  return getPrismaClient();
-}
+// 导出 Supabase Adapter 作为 prisma（向后兼容）
+export const prisma = supabaseAdapter;
 
 // 为兼容性导出 db 别名
-export const db = prisma;
+export const db = supabaseAdapter;
 
-// 兼容层：导出 getPrismaClient 供旧的 repository singleton 使用
-// TODO: 迁移所有 repository 使用 DI container 后移除此导出
-export { getPrismaClient };
+// 数据库健康检查函数（Supabase 版本）
+export const testDatabaseConnection = supabaseTestConnection;
+
+// 确保数据库连接的包装函数（Supabase 版本）
+export const ensureDatabaseConnection = supabaseEnsureConnection;
+
+// 推荐使用的异步获取方法
+export async function getDB() {
+  return supabaseAdapter;
+}
+
+// 兼容层：导出 getPrismaClient 别名，但返回 Supabase Adapter
+// 保持向后兼容，所有旧代码仍然可以工作
+export async function getPrismaClient() {
+  return supabaseAdapter;
+}
