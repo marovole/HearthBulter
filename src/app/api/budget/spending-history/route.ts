@@ -39,16 +39,14 @@ export async function GET(request: NextRequest) {
     };
 
     // 获取所有支出（用于统计）
-    const allSpendingsResult = await budgetRepository.decorateMethod(
-      'listSpendings',
+    const allSpendingsResult = await budgetRepository.listSpendings(
       filter,
       undefined // 不使用分页，获取所有数据用于统计
     );
 
     // 获取分页数据
     const offset = (page - 1) * limit;
-    const paginatedResult = await budgetRepository.decorateMethod(
-      'listSpendings',
+    const paginatedResult = await budgetRepository.listSpendings(
       filter,
       { offset, limit }
     );

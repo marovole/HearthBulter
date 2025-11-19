@@ -45,7 +45,7 @@ export async function GET(
       const status = searchParams.get('status') as TaskStatus | undefined;
 
       // 使用 Repository 查询我的任务
-      const tasks = await taskRepository.decorateMethod('getMyTasks', familyId, member.id, status);
+      const tasks = await taskRepository.getMyTasks(familyId, member.id, status);
 
       return NextResponse.json({
         success: true,

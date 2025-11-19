@@ -37,8 +37,7 @@ export async function GET(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess } = await memberRepository.decorateMethod(
-      'verifyMemberAccess',
+    const { hasAccess } = await memberRepository.verifyMemberAccess(
       memberId,
       session.user.id
     );
@@ -61,7 +60,7 @@ export async function GET(
     const page = Math.floor(offset / limit) + 1;
 
     // 使用 Repository 查询健康数据
-    const result = await memberRepository.decorateMethod('getHealthData', {
+    const result = await memberRepository.getHealthData({
       memberId,
       startDate,
       endDate,
@@ -108,8 +107,7 @@ export async function POST(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess } = await memberRepository.decorateMethod(
-      'verifyMemberAccess',
+    const { hasAccess } = await memberRepository.verifyMemberAccess(
       memberId,
       session.user.id
     );
@@ -157,7 +155,7 @@ export async function POST(
     }
 
     // 使用 Repository 创建健康数据记录
-    const healthData = await memberRepository.decorateMethod('createHealthData', memberId, {
+    const healthData = await memberRepository.createHealthData(memberId, {
       weight: healthDataInput.weight ?? undefined,
       bodyFat: healthDataInput.bodyFat ?? undefined,
       muscleMass: healthDataInput.muscleMass ?? undefined,

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // 使用 Repository 创建膳食记录
     // Repository 会自动：计算营养、创建记录、更新连续打卡
-    const mealLog = await mealTrackingRepository.decorateMethod('createMealLog', validatedData);
+    const mealLog = await mealTrackingRepository.createMealLog(validatedData);
 
     return NextResponse.json(mealLog, { status: 201 });
   } catch (error) {
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
 
     if (period === 'today') {
       // 使用 Repository 获取今日记录
-      const logs = await mealTrackingRepository.decorateMethod('getTodayMealLogs', memberId);
+      const logs = await mealTrackingRepository.getTodayMealLogs(memberId);
       return NextResponse.json({ logs });
     } else {
       // 使用 Repository 获取历史记录
@@ -107,8 +107,7 @@ export async function GET(req: NextRequest) {
       if (limit) pagination.limit = parseInt(limit);
       if (offset) pagination.offset = parseInt(offset);
 
-      const result = await mealTrackingRepository.decorateMethod(
-        'getMealLogHistory',
+      const result = await mealTrackingRepository.getMealLogHistory(
         memberId,
         Object.keys(filter).length > 0 ? filter : undefined,
         Object.keys(pagination).length > 0 ? pagination : undefined

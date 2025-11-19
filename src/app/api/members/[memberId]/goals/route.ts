@@ -59,8 +59,7 @@ export async function GET(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess } = await memberRepository.decorateMethod(
-      'verifyMemberAccess',
+    const { hasAccess } = await memberRepository.verifyMemberAccess(
       memberId,
       session.user.id
     );
@@ -73,8 +72,7 @@ export async function GET(
     }
 
     // 使用 Repository 获取健康目标列表（包含所有状态）
-    const healthGoals = await memberRepository.decorateMethod(
-      'getHealthGoals',
+    const healthGoals = await memberRepository.getHealthGoals(
       memberId,
       true // includeInactive
     );
@@ -118,8 +116,7 @@ export async function POST(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess, member } = await memberRepository.decorateMethod(
-      'verifyMemberAccess',
+    const { hasAccess, member } = await memberRepository.verifyMemberAccess(
       memberId,
       session.user.id
     );
@@ -173,7 +170,7 @@ export async function POST(
       : undefined;
 
     // 使用 Repository 创建健康目标
-    const goal = await memberRepository.decorateMethod('createHealthGoal', memberId, {
+    const goal = await memberRepository.createHealthGoal(memberId, {
       goalType,
       targetWeight,
       currentWeight: memberDetails.weight,

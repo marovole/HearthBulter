@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     // 使用 Repository 使用库存
     // Repository 会自动扣减数量、创建使用记录、更新状态
-    const item = await inventoryRepository.decorateMethod('useInventoryItem', useInventoryData);
+    const item = await inventoryRepository.useInventoryItem(useInventoryData);
 
     return NextResponse.json({
       success: true,
@@ -84,8 +84,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 使用 Repository 获取使用记录
-    const result = await inventoryRepository.decorateMethod(
-      'listInventoryUsages',
+    const result = await inventoryRepository.listInventoryUsages(
       inventoryItemId,
       { limit, offset }
     );

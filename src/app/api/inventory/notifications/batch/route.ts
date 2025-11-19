@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     case 'mark_all_as_read':
       // 批量标记所有通知为已读
       try {
-        await notificationRepository.decorateMethod('markAllAsRead', memberId);
+        await notificationRepository.markAllAsRead(memberId);
         success = true;
         message = '全部标记已读成功';
       } catch (error) {
@@ -57,11 +57,7 @@ export async function POST(request: NextRequest) {
       // 逐个标记为已读
       for (const notificationId of notificationIds) {
         try {
-          await notificationRepository.decorateMethod(
-            'markAsRead',
-            notificationId,
-            memberId
-          );
+          await notificationRepository.markAsRead(notificationId, memberId);
           processedCount++;
         } catch (error) {
           errors.push({
@@ -83,11 +79,7 @@ export async function POST(request: NextRequest) {
       // 逐个删除通知
       for (const notificationId of notificationIds) {
         try {
-          await notificationRepository.decorateMethod(
-            'deleteNotification',
-            notificationId,
-            memberId
-          );
+          await notificationRepository.deleteNotification(notificationId, memberId);
           processedCount++;
         } catch (error) {
           errors.push({

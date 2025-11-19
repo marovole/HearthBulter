@@ -44,7 +44,7 @@ export async function PATCH(
 
     // 使用 Repository 更新膳食记录
     // Repository 会自动重新计算营养（如果更新了食物列表）
-    const mealLog = await mealTrackingRepository.decorateMethod('updateMealLog', id, validatedData);
+    const mealLog = await mealTrackingRepository.updateMealLog( id, validatedData);
 
     return NextResponse.json(mealLog);
   } catch (error) {
@@ -86,7 +86,7 @@ export async function DELETE(
     }
 
     // 使用 Repository 软删除膳食记录
-    await mealTrackingRepository.decorateMethod('deleteMealLog', id);
+    await mealTrackingRepository.deleteMealLog( id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -61,7 +61,7 @@ export async function POST(
       }
 
       // 验证任务存在
-      const task = await taskRepository.decorateMethod('getTaskById', familyId, taskId);
+      const task = await taskRepository.getTaskById(familyId, taskId);
 
       if (!task) {
         return NextResponse.json(
@@ -87,7 +87,7 @@ export async function POST(
       }
 
       // 使用 Repository 分配任务
-      const updatedTask = await taskRepository.decorateMethod('assignTask', familyId, taskId, assigneeId);
+      const updatedTask = await taskRepository.assignTask(familyId, taskId, assigneeId);
 
       // 记录活动日志
       await prisma.activity.create({

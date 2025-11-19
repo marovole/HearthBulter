@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
       targetBudgetId = budgetId;
     } else {
       // 如果只提供了memberId，获取当前活跃预算
-      const budgets = await budgetRepository.decorateMethod(
-        'listBudgets',
+      const budgets = await budgetRepository.listBudgets(
         memberId!,
         { status: 'ACTIVE' },
         { offset: 0, limit: 1 }
@@ -50,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     // 使用 Repository 获取完整的预算状态
     // getBudgetStatus 已包含所有计算：日均、预测、分类使用情况等
-    const budgetStatus = await budgetRepository.decorateMethod('getBudgetStatus', targetBudgetId);
+    const budgetStatus = await budgetRepository.getBudgetStatus(targetBudgetId);
 
     // 生成警报（业务逻辑保留在端点层）
     const alerts: string[] = [];

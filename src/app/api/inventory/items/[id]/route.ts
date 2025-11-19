@@ -24,7 +24,7 @@ export async function GET(
     }
 
     // 使用 Repository 获取库存物品（含使用记录和浪费记录）
-    const item = await inventoryRepository.decorateMethod('getInventoryItemById', id);
+    const item = await inventoryRepository.getInventoryItemById(id);
 
     if (!item) {
       return NextResponse.json({ error: '库存条目不存在' }, { status: 404 });
@@ -85,7 +85,7 @@ export async function PUT(
 
     // 使用 Repository 更新库存物品
     // Repository 会自动重新计算 daysToExpiry（如果更新了 expiryDate）
-    const updatedItem = await inventoryRepository.decorateMethod('updateInventoryItem', id, updateData);
+    const updatedItem = await inventoryRepository.updateInventoryItem(id, updateData);
 
     return NextResponse.json({
       success: true,
@@ -125,7 +125,7 @@ export async function DELETE(
     }
 
     // 使用 Repository 软删除库存物品
-    await inventoryRepository.decorateMethod('softDeleteInventoryItem', id);
+    await inventoryRepository.softDeleteInventoryItem(id);
 
     return NextResponse.json({
       success: true,

@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
     // 使用 Repository 查询
     if (startDateParam && endDateParam) {
       // 按日期范围查询
-      const result = await mealPlanRepository.decorateMethod(
-        'getPlansByDateRange',
+      const result = await mealPlanRepository.getPlansByDateRange(
         memberId,
         new Date(startDateParam),
         new Date(endDateParam),
@@ -82,7 +81,7 @@ export async function GET(request: NextRequest) {
       );
     } else {
       // 获取当前活跃计划
-      const mealPlan = await mealPlanRepository.decorateMethod('getActivePlanByMember', memberId);
+      const mealPlan = await mealPlanRepository.getActivePlanByMember(memberId);
 
       if (!mealPlan) {
         return NextResponse.json({ message: '暂无食谱计划', plan: null }, { status: 200 });

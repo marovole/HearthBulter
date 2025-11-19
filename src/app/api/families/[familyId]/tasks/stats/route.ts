@@ -40,7 +40,7 @@ export async function GET(
       }
 
       // 使用 Repository 获取任务统计
-      const stats = await taskRepository.decorateMethod('getTaskStats', familyId);
+      const stats = await taskRepository.getTaskStats(familyId);
 
       return NextResponse.json({
         success: true,

@@ -45,7 +45,7 @@ export async function PUT(
       }
 
       // 验证任务并检查权限
-      const existingTask = await taskRepository.decorateMethod('getTaskById', familyId, taskId);
+      const existingTask = await taskRepository.getTaskById(familyId, taskId);
 
       if (!existingTask) {
         return NextResponse.json(
@@ -63,7 +63,7 @@ export async function PUT(
       }
 
       // 使用 Repository 更新任务
-      const updatedTask = await taskRepository.decorateMethod('updateTask', familyId, taskId, {
+      const updatedTask = await taskRepository.updateTask(familyId, taskId, {
         title,
         description,
         category,
@@ -141,7 +141,7 @@ export async function DELETE(
       }
 
       // 验证任务并检查权限
-      const task = await taskRepository.decorateMethod('getTaskById', familyId, taskId);
+      const task = await taskRepository.getTaskById(familyId, taskId);
 
       if (!task) {
         return NextResponse.json(
@@ -159,7 +159,7 @@ export async function DELETE(
       }
 
       // 使用 Repository 删除任务
-      await taskRepository.decorateMethod('deleteTask', familyId, taskId);
+      await taskRepository.deleteTask(familyId, taskId);
 
       // 记录活动日志
       await prisma.activity.create({

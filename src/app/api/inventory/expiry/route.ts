@@ -24,8 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 使用 Repository 获取即将过期的物品
-    const expiringItems = await inventoryRepository.decorateMethod(
-      'getExpiringItems',
+    const expiringItems = await inventoryRepository.getExpiringItems(
       memberId,
       daysThreshold
     );
@@ -77,7 +76,7 @@ export async function POST(request: NextRequest) {
     for (const itemId of body.itemIds) {
       try {
         // 1. 获取物品信息
-        const item = await inventoryRepository.decorateMethod('getInventoryItemById', itemId);
+        const item = await inventoryRepository.getInventoryItemById(itemId);
 
         if (!item) {
           errors.push(`物品 ${itemId} 不存在`);
@@ -93,10 +92,10 @@ export async function POST(request: NextRequest) {
           notes: '自动处理过期物品',
         };
 
-        await inventoryRepository.decorateMethod('createWasteRecord', wasteData);
+        await inventoryRepository.createWasteRecord(wasteData);
 
         // 3. 软删除物品
-        await inventoryRepository.decorateMethod('softDeleteInventoryItem', itemId);
+        await inventoryRepository.softDeleteInventoryItem(itemId);
       } catch (itemError) {
         console.error(`处理物品 ${itemId} 失败:`, itemError);
         errors.push(`物品 ${itemId}: ${itemError instanceof Error ? itemError.message : '未知错误'}`);

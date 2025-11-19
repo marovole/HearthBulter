@@ -36,8 +36,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 使用 Repository 获取最近常用食物
-    const recentFoods = await mealTrackingRepository.decorateMethod(
-      'getRecentFoods',
+    const recentFoods = await mealTrackingRepository.getRecentFoods(
       memberId,
       limit ? parseInt(limit) : undefined
     );

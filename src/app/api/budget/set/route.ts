@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     };
 
     // 使用 Repository 创建预算
-    const budget = await budgetRepository.decorateMethod('createBudget', budgetCreateData);
+    const budget = await budgetRepository.createBudget(budgetCreateData);
 
     return NextResponse.json(budget);
   } catch (error) {
@@ -163,8 +163,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 使用 Repository 获取预算列表
-    const result = await budgetRepository.decorateMethod(
-      'listBudgets',
+    const result = await budgetRepository.listBudgets(
       memberId,
       status ? { status } : undefined,
       undefined // 不使用分页，返回所有结果

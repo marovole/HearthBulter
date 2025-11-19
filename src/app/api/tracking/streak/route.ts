@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 使用 Repository 获取连续打卡记录
-    const streak = await mealTrackingRepository.decorateMethod('getTrackingStreak', memberId);
+    const streak = await mealTrackingRepository.getTrackingStreak(memberId);
 
     return NextResponse.json(streak);
   } catch (error) {

@@ -88,7 +88,7 @@ export async function DELETE(
     }
 
     // 使用 Repository 删除模板
-    await mealTrackingRepository.decorateMethod('deleteQuickTemplate', id);
+    await mealTrackingRepository.deleteQuickTemplate( id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

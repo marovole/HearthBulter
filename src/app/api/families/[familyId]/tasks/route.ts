@@ -60,7 +60,7 @@ export async function GET(
       };
 
       // 使用 Repository 查询任务
-      const result = await taskRepository.decorateMethod('listTasks', filters);
+      const result = await taskRepository.listTasks(filters);
 
       // 添加权限信息到每个任务
       const tasksWithPermissions = result.items.map(task => ({
@@ -160,7 +160,7 @@ export async function POST(
       }
 
       // 使用 Repository 创建任务
-      const task = await taskRepository.decorateMethod('createTask', familyId, member.id, {
+      const task = await taskRepository.createTask(familyId, member.id, {
         title,
         description,
         category,
