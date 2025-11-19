@@ -22,41 +22,12 @@ export const authOptions = {
           const email = credentials.email as string;
           const password = credentials.password as string;
 
-          // 测试用户验证
-          if (email === 'test@example.com' && password === 'test123') {
-            return {
-              id: '1',
-              email: 'test@example.com',
-              name: '测试用户',
-              role: 'USER',
-            };
-          }
-
-          // 数据库用户验证 - 增强错误处理
+          // 数据库用户验证
           try {
             // 首先测试数据库连接
             const dbConnected = await testDatabaseConnection();
             if (!dbConnected) {
-              console.warn('数据库连接失败，使用降级认证模式');
-
-              // 数据库连接失败时的降级策略
-              // 允许一些预定义的测试用户继续使用系统
-              const fallbackUsers = [
-                { email: 'admin@example.com', password: 'admin123', id: 'admin-1', name: '管理员', role: 'ADMIN' },
-                { email: 'user@example.com', password: 'user123', id: 'user-1', name: '普通用户', role: 'USER' },
-              ];
-
-              const fallbackUser = fallbackUsers.find(u => u.email === email && u.password === password);
-              if (fallbackUser) {
-                console.log(`使用降级认证用户: ${fallbackUser.email}`);
-                return {
-                  id: fallbackUser.id,
-                  email: fallbackUser.email,
-                  name: fallbackUser.name,
-                  role: fallbackUser.role,
-                };
-              }
-
+              console.error('数据库连接失败');
               return null;
             }
 
@@ -77,16 +48,6 @@ export const authOptions = {
             }
           } catch (dbError) {
             console.error('数据库认证错误:', dbError);
-            // 数据库错误时，尝试降级到测试用户
-            if (email === 'fallback@example.com' && password === 'fallback123') {
-              console.log('使用紧急降级用户');
-              return {
-                id: 'fallback-user',
-                email: 'fallback@example.com',
-                name: '降级用户',
-                role: 'USER',
-              };
-            }
           }
 
           return null;

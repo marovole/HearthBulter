@@ -10,57 +10,57 @@ export interface Database {
       users: {
         Row: User;
         Insert: Omit<User, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>;
       };
       families: {
         Row: Family;
         Insert: Omit<Family, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<Family, 'id' | 'created_at' | 'updated_at'>>;
       };
       family_members: {
         Row: FamilyMember;
         Insert: Omit<FamilyMember, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<FamilyMember, 'id' | 'created_at' | 'updated_at'>>;
       };
       family_invitations: {
         Row: FamilyInvitation;
         Insert: Omit<FamilyInvitation, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<FamilyInvitation, 'id' | 'created_at' | 'updated_at'>>;
       };
       budget: {
         Row: Budget;
         Insert: Omit<Budget, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<Budget, 'id' | 'created_at' | 'updated_at'>>;
       };
       spendings: {
         Row: Spending;
         Insert: Omit<Spending, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<Spending, 'id' | 'created_at' | 'updated_at'>>;
       };
       notifications: {
         Row: Notification;
         Insert: Omit<Notification, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<Notification, 'id' | 'created_at' | 'updated_at'>>;
       };
       shopping_items: {
         Row: ShoppingItem;
         Insert: Omit<ShoppingItem, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<ShoppingItem, 'id' | 'created_at' | 'updated_at'>>;
       };
       inventory_items: {
         Row: InventoryItem;
         Insert: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>>;
       };
       foods: {
         Row: Food;
         Insert: Omit<Food, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<Food, 'id' | 'created_at' | 'updated_at'>>;
       };
       recipes: {
         Row: Recipe;
         Insert: Omit<Recipe, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Insert>;
+        Update: Partial<Omit<Recipe, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
     Views: {
