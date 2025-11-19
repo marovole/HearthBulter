@@ -36,7 +36,7 @@ export async function POST(
     }
 
     // 检查食谱是否存在
-    const recipeExists = await recipeRepository.decorateMethod('recipeExists', recipeId);
+    const recipeExists = await recipeRepository.recipeExists( recipeId);
     if (!recipeExists) {
       return NextResponse.json(
         { error: 'Recipe not found' },
@@ -45,7 +45,7 @@ export async function POST(
     }
 
     // 使用 Repository 添加或更新评分
-    const recipeRating = await recipeRepository.decorateMethod('addOrUpdateRating', {
+    const recipeRating = await recipeRepository.addOrUpdateRating( {
       recipeId,
       memberId,
       rating,
@@ -98,7 +98,7 @@ export async function GET(
     }
 
     // 使用 Repository 获取评分
-    const rating = await recipeRepository.decorateMethod('getRating', recipeId, memberId);
+    const rating = await recipeRepository.getRating( recipeId, memberId);
 
     return NextResponse.json({
       success: true,

@@ -61,8 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 使用 Repository 获取库存列表
-    const result = await inventoryRepository.decorateMethod(
-      'listInventoryItems',
+    const result = await inventoryRepository.listInventoryItems(
       memberId,
       Object.keys(filter).length > 0 ? filter : undefined,
       undefined // 不使用分页，返回所有结果
@@ -155,7 +154,7 @@ export async function POST(request: NextRequest) {
     };
 
     // 使用 Repository 创建库存物品
-    const item = await inventoryRepository.decorateMethod('createInventoryItem', createData);
+    const item = await inventoryRepository.createInventoryItem(createData);
 
     return NextResponse.json({
       success: true,

@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 使用 ShoppingListRepository 查询
-      const result = await shoppingListRepository.decorateMethod('listShoppingLists', {
+      const result = await shoppingListRepository.listShoppingLists({
         planId,
         statuses: status ? [status] : undefined,
         includePlan: true,
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
       const planIds = plans.map((p) => p.id);
 
       // 使用 ShoppingListRepository 查询
-      const result = await shoppingListRepository.decorateMethod('listShoppingLists', {
+      const result = await shoppingListRepository.listShoppingLists({
         planIds,
         statuses: status ? [status] : undefined,
         includePlan: true,

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     // - 原子性：支出创建 + 预算更新在同一事务中
     // - 验证：预算存在性、总预算和分类预算限制
     // - 预警：自动生成 80%、100%、110% 预警
-    const spending = await budgetRepository.decorateMethod('recordSpending', spendingData);
+    const spending = await budgetRepository.recordSpending(spendingData);
 
     return NextResponse.json(spending);
   } catch (error) {
@@ -149,8 +149,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 使用 Repository 获取支出历史
-    const result = await budgetRepository.decorateMethod(
-      'listSpendings',
+    const result = await budgetRepository.listSpendings(
       {
         budgetId,
         category: category || undefined,

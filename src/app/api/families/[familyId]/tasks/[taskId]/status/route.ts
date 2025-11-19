@@ -55,7 +55,7 @@ export async function PUT(
       }
 
       // 验证任务并检查权限
-      const task = await taskRepository.decorateMethod('getTaskById', familyId, taskId);
+      const task = await taskRepository.getTaskById(familyId, taskId);
 
       if (!task) {
         return NextResponse.json(
@@ -77,7 +77,7 @@ export async function PUT(
       }
 
       // 使用 Repository 更新任务状态
-      const updatedTask = await taskRepository.decorateMethod('updateTaskStatus', familyId, taskId, {
+      const updatedTask = await taskRepository.updateTaskStatus(familyId, taskId, {
         status,
         note,
       });

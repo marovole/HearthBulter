@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { verifyFamilyAccess, verifyFamilyAdmin } from '@/lib/auth/permissions';
 import { familyRepository } from '@/lib/repositories/family-repository-singleton';
-import type { Gender, AgeGroup } from '@/lib/repositories/types/family';
+import type { AgeGroup } from '@/lib/repositories/types/family';
 import { z } from 'zod';
 
 // 创建成员的验证 schema
@@ -46,8 +46,7 @@ export async function GET(
     }
 
     // 使用 FamilyRepository 获取成员列表
-    const members = await familyRepository.decorateMethod(
-      'listFamilyMembers',
+    const members = await familyRepository.listFamilyMembers(
       familyId,
       false // includeDeleted = false
     );
@@ -102,8 +101,7 @@ export async function POST(
 
     // 如果提供了 userId，检查是否已经存在该用户的成员
     if (userId) {
-      const isMember = await familyRepository.decorateMethod(
-        'isUserFamilyMember',
+      const isMember = await familyRepository.isUserFamilyMember(
         familyId,
         userId
       );
@@ -132,7 +130,7 @@ export async function POST(
 
     // 使用 FamilyRepository 创建成员
     // 注意：userId 可以为空，允许创建不关联系统用户的成员（如儿童档案）
-    const member = await familyRepository.decorateMethod('addFamilyMember', {
+    const member = await familyRepository.addFamilyMember({
       familyId,
       userId: userId, // 保持原有逻辑：可选字段，允许为 undefined
       name,

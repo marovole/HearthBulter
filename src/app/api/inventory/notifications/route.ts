@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证用户是否有权访问该成员的通知
-    const { hasAccess } = await memberRepository.decorateMethod(
+    const { hasAccess } = await memberRepository.verifyMemberAccess(
       'verifyMemberAccess',
       memberId,
       user.id
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证用户是否有权为该成员创建通知
-    const { hasAccess } = await memberRepository.decorateMethod(
+    const { hasAccess } = await memberRepository.verifyMemberAccess(
       'verifyMemberAccess',
       body.memberId,
       user.id

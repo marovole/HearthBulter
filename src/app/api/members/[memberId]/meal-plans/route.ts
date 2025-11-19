@@ -157,8 +157,7 @@ export async function GET(
     }
 
     // 使用 Repository 查询膳食计划（包含所有嵌套数据）
-    const result = await mealPlanRepository.decorateMethod(
-      'listMealPlans',
+    const result = await mealPlanRepository.listMealPlans(
       { memberId, includeDeleted: false },
       { page: 1, limit: 100 } // 默认返回最多 100 个计划
     );

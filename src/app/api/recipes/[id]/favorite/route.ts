@@ -28,7 +28,7 @@ export async function POST(
     }
 
     // 检查食谱是否存在
-    const recipeExists = await recipeRepository.decorateMethod('recipeExists', recipeId);
+    const recipeExists = await recipeRepository.recipeExists( recipeId);
     if (!recipeExists) {
       return NextResponse.json(
         { error: 'Recipe not found' },
@@ -37,7 +37,7 @@ export async function POST(
     }
 
     // 使用 Repository 添加收藏
-    const favorite = await recipeRepository.decorateMethod('addFavorite', {
+    const favorite = await recipeRepository.addFavorite( {
       recipeId,
       memberId,
       notes,
@@ -88,7 +88,7 @@ export async function DELETE(
     }
 
     // 使用 Repository 删除收藏
-    await recipeRepository.decorateMethod('removeFavorite', recipeId, memberId);
+    await recipeRepository.removeFavorite( recipeId, memberId);
 
     // 使用 RPC 函数更新食谱收藏计数
     const favoriteCountUpdate = await updateRecipeFavoriteCount(recipeId);
@@ -135,7 +135,7 @@ export async function GET(
     }
 
     // 使用 Repository 检查收藏状态
-    const favorite = await recipeRepository.decorateMethod('checkFavoriteStatus', recipeId, memberId);
+    const favorite = await recipeRepository.checkFavoriteStatus( recipeId, memberId);
 
     return NextResponse.json({
       success: true,

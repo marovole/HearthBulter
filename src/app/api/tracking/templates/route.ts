@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     // 常规创建模板（使用 Repository）
     const validatedData = createTemplateSchema.parse(body);
-    const template = await mealTrackingRepository.decorateMethod('createQuickTemplate', validatedData);
+    const template = await mealTrackingRepository.createQuickTemplate(validatedData);
 
     return NextResponse.json(template, { status: 201 });
   } catch (error) {
@@ -125,8 +125,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 常规模板列表（使用 Repository）
-    const templates = await mealTrackingRepository.decorateMethod(
-      'listQuickTemplates',
+    const templates = await mealTrackingRepository.listQuickTemplates(
       memberId,
       mealType || undefined
     );

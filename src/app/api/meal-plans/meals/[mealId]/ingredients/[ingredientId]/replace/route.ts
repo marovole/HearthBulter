@@ -130,7 +130,7 @@ export async function POST(
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
     // 使用 Repository 更新餐食营养数据
-    await mealPlanRepository.decorateMethod('updateMeal', mealId, {
+    await mealPlanRepository.updateMeal(mealId, {
       calories: totalNutrition.calories,
       protein: totalNutrition.protein,
       carbs: totalNutrition.carbs,

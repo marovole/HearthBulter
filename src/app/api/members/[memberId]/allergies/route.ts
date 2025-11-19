@@ -33,8 +33,7 @@ export async function GET(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess } = await memberRepository.decorateMethod(
-      'verifyMemberAccess',
+    const { hasAccess } = await memberRepository.verifyMemberAccess(
       memberId,
       session.user.id
     );
@@ -47,7 +46,7 @@ export async function GET(
     }
 
     // 使用 Repository 获取过敏记录列表
-    const allergies = await memberRepository.decorateMethod('getAllergies', memberId);
+    const allergies = await memberRepository.getAllergies(memberId);
 
     return NextResponse.json({ allergies }, { status: 200 });
   } catch (error) {
@@ -88,8 +87,7 @@ export async function POST(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess, member } = await memberRepository.decorateMethod(
-      'verifyMemberAccess',
+    const { hasAccess, member } = await memberRepository.verifyMemberAccess(
       memberId,
       session.user.id
     );
@@ -108,7 +106,7 @@ export async function POST(
     const { allergenType, allergenName, severity, description } = validation.data;
 
     // 使用 Repository 创建过敏记录
-    const allergy = await memberRepository.decorateMethod('createAllergy', memberId, {
+    const allergy = await memberRepository.createAllergy(memberId, {
       allergenType,
       allergenName,
       severity,

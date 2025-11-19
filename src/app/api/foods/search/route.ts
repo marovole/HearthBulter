@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 使用 Repository 执行搜索
-      const searchResult = await foodRepository.decorateMethod('searchFoods', {
+      const searchResult = await foodRepository.searchFoods({
         query,
         category: category || undefined,
         page,

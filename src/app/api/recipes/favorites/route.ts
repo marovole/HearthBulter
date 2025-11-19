@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     };
 
     // 使用 Repository 获取收藏列表
-    const result = await recipeRepository.decorateMethod('getFavoritesByMember', query);
+    const result = await recipeRepository.getFavoritesByMember(query);
 
     return NextResponse.json({
       success: true,

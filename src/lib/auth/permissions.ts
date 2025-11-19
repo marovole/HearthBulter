@@ -16,25 +16,29 @@ import { familyRepository } from '@/lib/repositories/family-repository-singleton
  * @returns 如果有权访问返回家庭对象，否则返回 null
  */
 export async function verifyFamilyAccess(familyId: string, userId: string) {
-  // 先检查家庭是否存在
-  const family = await familyRepository.decorateMethod('getFamilyById', familyId);
+  try {
+    // 先检查家庭是否存在
+    const family = await familyRepository.getFamilyById(familyId);
 
-  if (!family) {
-    return null;
+    if (!family) {
+      return null;
+    }
+
+    // 检查用户是否是创建者或成员
+    if (family.creatorId === userId) {
+      return family;
+    }
+
+    const isMember = await familyRepository.isUserFamilyMember(
+      familyId,
+      userId
+    );
+
+    return isMember ? family : null;
+  } catch (error) {
+    console.error('Failed to verify family access:', error);
+    throw error;
   }
-
-  // 检查用户是否是创建者或成员
-  if (family.creatorId === userId) {
-    return family;
-  }
-
-  const isMember = await familyRepository.decorateMethod(
-    'isUserFamilyMember',
-    familyId,
-    userId
-  );
-
-  return isMember ? family : null;
 }
 
 /**
@@ -47,24 +51,28 @@ export async function verifyFamilyAccess(familyId: string, userId: string) {
  * @returns 如果有管理权限返回家庭对象，否则返回 null
  */
 export async function verifyFamilyAdmin(familyId: string, userId: string) {
-  // 先检查家庭是否存在
-  const family = await familyRepository.decorateMethod('getFamilyById', familyId);
+  try {
+    // 先检查家庭是否存在
+    const family = await familyRepository.getFamilyById(familyId);
 
-  if (!family) {
-    return null;
+    if (!family) {
+      return null;
+    }
+
+    // 检查用户是否是创建者
+    if (family.creatorId === userId) {
+      return family;
+    }
+
+    // 检查用户角色是否是 ADMIN
+    const role = await familyRepository.getUserFamilyRole(
+      familyId,
+      userId
+    );
+
+    return role === 'ADMIN' ? family : null;
+  } catch (error) {
+    console.error('Failed to verify family admin permission:', error);
+    throw error;
   }
-
-  // 检查用户是否是创建者
-  if (family.creatorId === userId) {
-    return family;
-  }
-
-  // 检查用户角色是否是 ADMIN
-  const role = await familyRepository.decorateMethod(
-    'getUserFamilyRole',
-    familyId,
-    userId
-  );
-
-  return role === 'ADMIN' ? family : null;
 }

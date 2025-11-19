@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     switch (type) {
     case 'basic':
       // 基础统计 - 使用双写框架迁移
-      data = await inventoryRepository.decorateMethod('getInventoryStats', memberId);
+      data = await inventoryRepository.getInventoryStats(memberId);
       break;
 
     case 'efficiency':

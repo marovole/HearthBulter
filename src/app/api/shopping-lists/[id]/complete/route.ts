@@ -87,8 +87,7 @@ export async function PATCH(
     }
 
     // 使用 Repository 完成购物清单
-    const updatedList = await shoppingListRepository.decorateMethod(
-      'completeShoppingList',
+    const updatedList = await shoppingListRepository.completeShoppingList(
       listId,
       validatedData
     );

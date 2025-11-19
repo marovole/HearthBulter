@@ -29,7 +29,7 @@ export async function GET(
     }
 
     // 2. 使用 Repository 从数据库查找
-    const food = await foodRepository.decorateMethod('findById', id);
+    const food = await foodRepository.findById(id);
 
     if (food) {
       // 缓存食物数据

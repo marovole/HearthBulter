@@ -57,7 +57,7 @@ export async function DELETE(
     }
 
     // 使用 Repository 软删除
-    await mealPlanRepository.decorateMethod('deleteMealPlan', planId);
+    await mealPlanRepository.deleteMealPlan(planId);
 
     return NextResponse.json(
       { message: '食谱计划删除成功' },

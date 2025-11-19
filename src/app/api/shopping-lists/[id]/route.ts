@@ -85,8 +85,7 @@ export async function PATCH(
     const validatedData = updateShoppingListSchema.parse(body);
 
     // 使用 ShoppingListRepository 更新
-    const updatedList = await shoppingListRepository.decorateMethod(
-      'updateShoppingList',
+    const updatedList = await shoppingListRepository.updateShoppingList(
       listId,
       validatedData
     );
@@ -182,7 +181,7 @@ export async function DELETE(
     }
 
     // 使用 ShoppingListRepository 删除（级联删除清单项）
-    await shoppingListRepository.decorateMethod('deleteShoppingList', listId);
+    await shoppingListRepository.deleteShoppingList(listId);
 
     return NextResponse.json(
       {

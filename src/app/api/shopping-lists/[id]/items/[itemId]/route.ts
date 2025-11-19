@@ -81,8 +81,7 @@ export async function PATCH(
     }
 
     // 使用 Repository 更新购物项
-    const updatedItem = await shoppingListRepository.decorateMethod(
-      'updateShoppingListItem',
+    const updatedItem = await shoppingListRepository.updateShoppingListItem(
       listId,
       itemId,
       { purchased }
@@ -98,14 +97,12 @@ export async function PATCH(
       const allPurchased = allItems.every((item) => item.purchased);
 
       if (allPurchased && shoppingList.status !== 'COMPLETED') {
-        await shoppingListRepository.decorateMethod(
-          'updateShoppingList',
+        await shoppingListRepository.updateShoppingList(
           listId,
           { status: 'COMPLETED' }
         );
       } else if (!allPurchased && shoppingList.status === 'DRAFT') {
-        await shoppingListRepository.decorateMethod(
-          'updateShoppingList',
+        await shoppingListRepository.updateShoppingList(
           listId,
           { status: 'ACTIVE' }
         );

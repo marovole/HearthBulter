@@ -38,8 +38,7 @@ export async function GET(request: NextRequest) {
     const offset = (validatedQuery.page - 1) * validatedQuery.limit;
 
     // 使用 FamilyRepository 的 listUserFamilies 方法
-    const result = await familyRepository.decorateMethod(
-      'listUserFamilies',
+    const result = await familyRepository.listUserFamilies(
       {
         userId: session.user.id,
         includeDeleted: false,
@@ -101,7 +100,7 @@ export async function POST(request: NextRequest) {
     const { name, description } = validation.data;
 
     // 使用 FamilyRepository 创建家庭（邀请码生成由 Repository 处理）
-    const family = await familyRepository.decorateMethod('createFamily', {
+    const family = await familyRepository.createFamily({
       name,
       description,
       creatorId: session.user.id,
