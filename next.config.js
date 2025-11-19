@@ -6,19 +6,16 @@ const nextConfig = {
   // 使用 standalone 模式（OpenNext 要求）
   output: 'standalone',
   trailingSlash: false,
-  
+
   eslint: {
-    // 暂时忽略 ESLint 错误以加快 staging 部署
-    // 类型检查仍然严格执行
-    // TODO: 修复 ESLint 错误后改回 false
-    ignoreDuringBuilds: true,
+    // 开启严格检查
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    // 暂时忽略类型错误以加快 staging 部署
-    // TODO P1: 修复 api/devices/route.ts 中间件类型签名问题
-    ignoreBuildErrors: true,
+    // 开启严格类型检查
+    ignoreBuildErrors: false,
   },
-  
+
   // 图片优化配置
   images: {
     unoptimized: true, // Cloudflare Pages 静态导出必需
@@ -31,10 +28,10 @@ const nextConfig = {
     ],
     formats: ['image/webp', 'image/avif'],
   },
-  
+
   // 优化配置
   compress: true,
-  
+
   // 实验性功能
   experimental: {
     scrollRestoration: true,
@@ -87,9 +84,9 @@ const nextConfig = {
       const cfPagesCustomDomain = process.env.CF_PAGES_CUSTOM_DOMAIN ? `https://${process.env.CF_PAGES_CUSTOM_DOMAIN.trim()}` : '';
 
       corsOrigin = (
-        process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || 
-        cfPagesCustomDomain || 
-        cfPagesUrl || 
+        process.env.NEXT_PUBLIC_ALLOWED_ORIGINS ||
+        cfPagesCustomDomain ||
+        cfPagesUrl ||
         'https://hearthbulter.pages.dev'
       ).trim();
 
