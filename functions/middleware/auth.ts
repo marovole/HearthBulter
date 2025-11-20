@@ -251,7 +251,8 @@ export function composeMiddlewares(...middlewares: Array<
       }
 
       const middleware = middlewares[index++];
-      return middleware(context, next);
+      // 安全断言：已通过 length 检查确保 middleware 存在
+      return middleware!(context, next);
     };
 
     return next();
