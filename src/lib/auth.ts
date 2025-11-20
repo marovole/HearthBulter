@@ -132,15 +132,17 @@ export async function testAuthSystem() {
 // 认证配置检查
 export function checkAuthConfiguration() {
   const issues: string[] = [];
+  const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+  const nextAuthUrl = process.env.NEXTAUTH_URL;
 
   // 检查必需的环境变量
-  if (!process.env.NEXTAUTH_SECRET) {
+  if (!nextAuthSecret) {
     issues.push('NEXTAUTH_SECRET 未设置');
-  } else if (process.env.NEXTAUTH_SECRET.length < 32) {
+  } else if (nextAuthSecret.length < 32) {
     issues.push('NEXTAUTH_SECRET 长度不足32字符');
   }
 
-  if (!process.env.NEXTAUTH_URL) {
+  if (!nextAuthUrl) {
     issues.push('NEXTAUTH_URL 未设置');
   }
 
