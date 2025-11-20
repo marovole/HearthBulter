@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { fetchAdviceHistory } from '@/lib/db/supabase-rpc-helpers';
-import { addCacheHeaders, EDGE_CACHE_PRESETS } from '@/lib/cache/edge-cache-helpers';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { fetchAdviceHistory } from "@/lib/db/supabase-rpc-helpers";
+import {
+  addCacheHeaders,
+  EDGE_CACHE_PRESETS,
+} from "@/lib/cache/edge-cache-helpers";
 
 /**
  * GET /api/ai/advice-history
@@ -16,27 +19,24 @@ import { addCacheHeaders, EDGE_CACHE_PRESETS } from '@/lib/cache/edge-cache-help
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
-    const type = searchParams.get('type') as any;
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const memberId = searchParams.get("memberId");
+    const type = searchParams.get("type") as any;
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const offset = parseInt(searchParams.get("offset") || "0");
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID is required' },
-        { status: 400 }
+        { error: "Member ID is required" },
+        { status: 400 },
       );
     }
 
@@ -44,31 +44,35 @@ export async function GET(request: NextRequest) {
 
     // 验证用户权限 - 检查是否是成员本人或家庭管理员
     const { data: memberCheck } = await supabase
-      .from('family_members')
-      .select('id, familyId, userId')
-      .eq('id', memberId)
+      .from("family_members")
+      .select("id, familyId, userId")
+      .eq("id", memberId)
       .single();
 
     if (!memberCheck) {
       return NextResponse.json(
-        { error: 'Member not found or access denied' },
-        { status: 404 }
+        { error: "Member not found or access denied" },
+        { status: 404 },
       );
     }
 
+    // 类型断言：memberCheck 已通过 null 检查
+    type MemberData = { id: string; familyId: string; userId: string };
+    const member = memberCheck as MemberData;
+
     // 检查权限：是成员本人
-    const isOwnMember = memberCheck.userId === session.user.id;
+    const isOwnMember = member.userId === session.user.id;
 
     // 如果不是本人，检查是否是家庭管理员
     let isAdmin = false;
     if (!isOwnMember) {
       const { data: adminCheck } = await supabase
-        .from('family_members')
-        .select('id')
-        .eq('familyId', memberCheck.familyId)
-        .eq('userId', session.user.id)
-        .eq('role', 'ADMIN')
-        .is('deletedAt', null)
+        .from("family_members")
+        .select("id")
+        .eq("familyId", member.familyId)
+        .eq("userId", session.user.id)
+        .eq("role", "ADMIN")
+        .is("deletedAt", null)
         .maybeSingle();
 
       isAdmin = !!adminCheck;
@@ -76,8 +80,8 @@ export async function GET(request: NextRequest) {
 
     if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
-        { error: 'Member not found or access denied' },
-        { status: 404 }
+        { error: "Member not found or access denied" },
+        { status: 404 },
       );
     }
 
@@ -86,10 +90,10 @@ export async function GET(request: NextRequest) {
     const adviceResult = await fetchAdviceHistory(memberId, { limit, offset });
 
     if (!adviceResult.success || !adviceResult.data) {
-      console.error('获取AI建议历史失败:', adviceResult.error);
+      console.error("获取AI建议历史失败:", adviceResult.error);
       return NextResponse.json(
-        { error: 'Failed to fetch advice history' },
-        { status: 500 }
+        { error: "Failed to fetch advice history" },
+        { status: 500 },
       );
     }
 
@@ -101,35 +105,49 @@ export async function GET(request: NextRequest) {
     //    2. adviceByType 只反映当前页的统计，不是全局统计
     // TODO: 在 RPC 中添加 p_type 参数支持服务端过滤
     const filteredAdvice = type
-      ? rawAdvice.filter(item => item.type === type)
+      ? rawAdvice.filter((item) => item.type === type)
       : rawAdvice;
 
     // 获取对话历史
     const { data: conversationHistory, error: convError } = await supabase
-      .from('ai_conversations')
-      .select('id, title, messages, status, tokens, createdAt, updatedAt, lastMessageAt')
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .order('lastMessageAt', { ascending: false })
+      .from("ai_conversations")
+      .select(
+        "id, title, messages, status, tokens, createdAt, updatedAt, lastMessageAt",
+      )
+      .eq("memberId", memberId)
+      .is("deletedAt", null)
+      .order("lastMessageAt", { ascending: false })
       .limit(Math.min(limit, 10));
 
     if (convError) {
-      console.error('获取对话历史失败:', convError);
+      console.error("获取对话历史失败:", convError);
       return NextResponse.json(
-        { error: 'Failed to fetch conversation history' },
-        { status: 500 }
+        { error: "Failed to fetch conversation history" },
+        { status: 500 },
       );
     }
 
     // 处理对话历史，只保留最近的几条消息
-    const processedConversations = (conversationHistory || []).map(conv => {
-      const messages = conv.messages || [];
-      return {
-        ...conv,
-        messages: messages.slice(-5), // 只保留最近5条消息
-        messageCount: messages.length,
-      };
-    });
+    type ConversationData = {
+      id: string;
+      title: string | null;
+      messages: any[];
+      status: string;
+      tokens: number | null;
+      createdAt: string;
+      updatedAt: string;
+      lastMessageAt: string | null;
+    };
+    const processedConversations = (conversationHistory || []).map(
+      (conv: ConversationData) => {
+        const messages = conv.messages || [];
+        return {
+          ...conv,
+          messages: messages.slice(-5), // 只保留最近5条消息
+          messageCount: messages.length,
+        };
+      },
+    );
 
     // 从 RPC 返回的 advice 数据计算统计信息
     // 优势：避免额外查询所有记录
@@ -159,12 +177,11 @@ export async function GET(request: NextRequest) {
     addCacheHeaders(headers, EDGE_CACHE_PRESETS.AI_ENDPOINT);
 
     return NextResponse.json(responseData, { headers });
-
   } catch (error) {
-    console.error('Advice history API error:', error);
+    console.error("Advice history API error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -186,11 +203,14 @@ export async function GET(request: NextRequest) {
  * @returns 按类型分组的统计对象
  */
 function calculateAdviceStats(advice: Array<{ type: string }>) {
-  const stats = advice.reduce((acc, item) => {
-    const type = item.type;
-    acc[type] = (acc[type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const stats = advice.reduce(
+    (acc, item) => {
+      const type = item.type;
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   return stats;
 }

@@ -1,0 +1,342 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+# 定义环境变量
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10'
+
+# 取消同一分支的并发运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================
+  # Job 1: 代码质量检查（快速失败）
+  # ==========================================
+  quality-check:
+    name: 代码质量检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史以便 lint-staged 工作
+
+      - name: 📦 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📚 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 🎨 Prettier 格式检查
+        run: pnpm format:check
+        continue-on-error: false
+
+      - name: 🔍 ESLint 检查
+        run: pnpm lint
+        continue-on-error: false
+
+      - name: 📊 输出检查结果
+        if: always()
+        run: |
+          echo "✅ 代码质量检查完成"
+
+  # ==========================================
+  # Job 2: TypeScript 类型检查
+  # ==========================================
+  type-check:
+    name: TypeScript 类型检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 📦 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📚 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ 生成 Prisma Client
+        run: pnpm db:generate
+
+      - name: 🔧 TypeScript 类型检查
+        run: pnpm type-check
+        continue-on-error: false
+
+  # ==========================================
+  # Job 3: 单元测试
+  # ==========================================
+  test:
+    name: 单元测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 📦 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📚 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ 生成 Prisma Client
+        run: pnpm db:generate
+
+      - name: 🧪 运行单元测试
+        run: pnpm test:coverage
+        env:
+          # 测试环境变量（使用 mock 值）
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co"
+          SUPABASE_SERVICE_KEY: "test-service-key"
+          NEXTAUTH_SECRET: "test-secret-key-for-ci-testing-only"
+          NEXTAUTH_URL: "http://localhost:3000"
+
+      - name: 📊 上传测试覆盖率报告
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: 📈 生成测试摘要
+        if: always()
+        run: |
+          echo "### 🧪 测试结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f "coverage/coverage-summary.json" ]; then
+            echo "测试覆盖率报告已生成" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ 未找到覆盖率报告" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ==========================================
+  # Job 4: 构建检查
+  # ==========================================
+  build:
+    name: 构建检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [quality-check, type-check]
+
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 📦 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📚 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ 生成 Prisma Client
+        run: pnpm db:generate
+
+      - name: 🔨 运行 Next.js 构建
+        run: pnpm build
+        env:
+          # 构建环境变量（使用 mock 值）
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co"
+          SUPABASE_SERVICE_KEY: "test-service-key"
+          NEXTAUTH_SECRET: "test-secret-key-for-ci-building-only"
+          NEXTAUTH_URL: "http://localhost:3000"
+          SKIP_ENV_VALIDATION: "true"
+
+      - name: 📦 缓存构建产物
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
+      - name: 📊 检查构建大小
+        run: |
+          echo "### 📦 构建大小报告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          du -sh .next 2>/dev/null || echo "构建目录不存在"
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ==========================================
+  # Job 5: Cloudflare 构建测试（可选）
+  # ==========================================
+  cloudflare-build:
+    name: Cloudflare 构建测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [quality-check, type-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 📦 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📚 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Cloudflare 构建测试
+        run: pnpm build:cloudflare
+        env:
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co"
+          SUPABASE_SERVICE_KEY: "test-service-key"
+          NEXTAUTH_SECRET: "test-secret-key-for-cloudflare-build"
+          NEXTAUTH_URL: "https://hearthbulter.pages.dev"
+          SKIP_ENV_VALIDATION: "true"
+
+      - name: 📊 检查 Bundle 大小
+        run: |
+          echo "### ☁️ Cloudflare Bundle 大小" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f ".open-next/server-functions/default/handler.mjs" ]; then
+            SIZE=$(du -h .open-next/server-functions/default/handler.mjs | cut -f1)
+            echo "- handler.mjs: $SIZE" >> $GITHUB_STEP_SUMMARY
+
+            # 检查是否超过 25MB
+            SIZE_BYTES=$(du -b .open-next/server-functions/default/handler.mjs | cut -f1)
+            MAX_SIZE=$((25 * 1024 * 1024))
+
+            if [ $SIZE_BYTES -gt $MAX_SIZE ]; then
+              echo "⚠️ **警告**: handler.mjs 超过 25MB Cloudflare 限制！" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ Bundle 大小符合 Cloudflare 限制" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ 未找到 handler.mjs 文件" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ==========================================
+  # Job 6: 安全检查
+  # ==========================================
+  security:
+    name: 安全检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 📦 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 📚 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔒 运行安全审计
+        run: pnpm audit --audit-level moderate
+        continue-on-error: true
+
+      - name: 📊 生成安全报告
+        if: always()
+        run: |
+          echo "### 🔒 安全审计结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          pnpm audit --json > audit-result.json || true
+          if [ -f "audit-result.json" ]; then
+            echo "安全审计已完成" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ==========================================
+  # Job 7: 最终状态检查
+  # ==========================================
+  final-check:
+    name: ✅ 最终状态检查
+    runs-on: ubuntu-latest
+    needs: [quality-check, type-check, test, build, security]
+    if: always()
+
+    steps:
+      - name: 📊 检查所有 Job 状态
+        run: |
+          echo "### 🎯 CI/CD Pipeline 结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 代码质量检查: ${{ needs.quality-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 类型检查: ${{ needs.type-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 单元测试: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 构建检查: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 安全检查: ${{ needs.security.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 检查是否所有必需的 job 都成功
+          if [[ "${{ needs.quality-check.result }}" == "success" ]] && \
+             [[ "${{ needs.type-check.result }}" == "success" ]] && \
+             [[ "${{ needs.test.result }}" == "success" ]] && \
+             [[ "${{ needs.build.result }}" == "success" ]]; then
+            echo "🎉 **所有检查都通过了！**" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo "❌ **部分检查失败，请修复后再提交**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

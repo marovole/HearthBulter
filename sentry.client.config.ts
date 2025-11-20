@@ -6,10 +6,11 @@
  * 文档：https://docs.sentry.io/platforms/javascript/guides/nextjs/
  */
 
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from "@sentry/nextjs";
 
 const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
-const SENTRY_ENVIRONMENT = process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development';
+const SENTRY_ENVIRONMENT =
+  process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || "development";
 
 // 仅在配置了DSN时初始化Sentry
 if (SENTRY_DSN) {
@@ -25,7 +26,7 @@ if (SENTRY_DSN) {
     // 1.0 = 100% 的错误都会被发送
     // 0.5 = 50% 的错误会被发送
     // Staging环境建议使用1.0以捕获所有问题
-    sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || '1.0'),
+    sampleRate: parseFloat(process.env.SENTRY_SAMPLE_RATE || "1.0"),
 
     // 性能监控采样率
     // 控制发送到Sentry的性能追踪数据比例
@@ -33,7 +34,9 @@ if (SENTRY_DSN) {
     // - 开发环境：0 或 0.1（最小化数据）
     // - Staging：0.5（捕获一半的性能数据）
     // - 生产环境：0.1-0.3（根据流量调整）
-    tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.5'),
+    tracesSampleRate: parseFloat(
+      process.env.SENTRY_TRACES_SAMPLE_RATE || "0.5",
+    ),
 
     // 发布版本标识
     // 用于追踪错误是在哪个版本的代码中发生的
@@ -43,37 +46,38 @@ if (SENTRY_DSN) {
     integrations: [
       // 浏览器追踪集成（性能监控）
       Sentry.browserTracingIntegration({
-        // 追踪所有路由变化
-        tracingOrigins: [
-          'localhost',
-          /^\//,  // 匹配所有相对路径
-          /^https:\/\/.*\.hearthbutler\.com/,  // 匹配所有子域名
-        ],
-
         // 追踪fetch和XHR请求
         traceFetch: true,
         traceXHR: true,
-
-        // 启用React路由追踪
-        routingInstrumentation: Sentry.reactRouterV6Instrumentation,
+        // Note: tracingOrigins 已被移除，现在使用 tracePropagationTargets
+        // routingInstrumentation 已自动处理，无需手动配置
       }),
 
       // 回放集成（录制用户会话）
       // 注意：这会增加带宽使用，建议仅在需要时启用
-      ...(SENTRY_ENVIRONMENT === 'staging' || SENTRY_ENVIRONMENT === 'production'
+      ...(SENTRY_ENVIRONMENT === "staging" ||
+      SENTRY_ENVIRONMENT === "production"
         ? [
             Sentry.replayIntegration({
               // 仅在发生错误时录制回放
               maskAllText: true,
               blockAllMedia: true,
-              // 错误会话采样率：发生错误时录制
-              replaysOnErrorSampleRate: 1.0,
-              // 正常会话采样率：随机录制一些会话
-              replaysSessionSampleRate: 0.1,
+              // 注意：replaysOnErrorSampleRate 已更名为 errorSampleRate
+              // 但在最新版本中，这些配置已移到顶层 replaysSessionSampleRate 和 replaysOnErrorSampleRate
             }),
           ]
         : []),
     ],
+
+    // Replay 配置（移到顶层）
+    replaysSessionSampleRate:
+      SENTRY_ENVIRONMENT === "production" || SENTRY_ENVIRONMENT === "staging"
+        ? 0.1
+        : 0,
+    replaysOnErrorSampleRate:
+      SENTRY_ENVIRONMENT === "production" || SENTRY_ENVIRONMENT === "staging"
+        ? 1.0
+        : 0,
 
     // 在发送错误前修改或过滤事件
     beforeSend(event, hint) {
@@ -81,28 +85,33 @@ if (SENTRY_DSN) {
       const error = hint.originalException;
 
       // 忽略特定的错误消息
-      if (error && typeof error === 'object' && 'message' in error) {
+      if (error && typeof error === "object" && "message" in error) {
         const message = String(error.message);
 
         // 忽略已知的第三方错误
         const ignoredErrors = [
-          'ResizeObserver loop limit exceeded',
-          'Non-Error promise rejection captured',
-          'Loading chunk',  // 代码分割加载失败（通常是网络问题）
+          "ResizeObserver loop limit exceeded",
+          "Non-Error promise rejection captured",
+          "Loading chunk", // 代码分割加载失败（通常是网络问题）
         ];
 
         if (ignoredErrors.some((ignored) => message.includes(ignored))) {
-          return null;  // 不发送此错误
+          return null; // 不发送此错误
         }
       }
 
       // 在Staging/Production环境中，移除敏感信息
-      if (SENTRY_ENVIRONMENT !== 'development') {
+      if (SENTRY_ENVIRONMENT !== "development") {
         // 移除可能包含敏感信息的breadcrumb
         if (event.breadcrumbs) {
           event.breadcrumbs = event.breadcrumbs.filter((breadcrumb) => {
             // 过滤掉包含密码、令牌等的breadcrumb
-            const sensitivePatterns = ['password', 'token', 'secret', 'api_key'];
+            const sensitivePatterns = [
+              "password",
+              "token",
+              "secret",
+              "api_key",
+            ];
             const data = JSON.stringify(breadcrumb.data || {}).toLowerCase();
             return !sensitivePatterns.some((pattern) => data.includes(pattern));
           });
@@ -110,8 +119,8 @@ if (SENTRY_DSN) {
 
         // 移除请求数据中的敏感头部
         if (event.request?.headers) {
-          delete event.request.headers['authorization'];
-          delete event.request.headers['cookie'];
+          delete event.request.headers["authorization"];
+          delete event.request.headers["cookie"];
         }
       }
 
@@ -121,18 +130,18 @@ if (SENTRY_DSN) {
     // 忽略特定URL的错误
     ignoreErrors: [
       // 浏览器扩展错误
-      'top.GLOBALS',
-      'originalCreateNotification',
-      'canvas.contentDocument',
-      'MyApp_RemoveAllHighlights',
+      "top.GLOBALS",
+      "originalCreateNotification",
+      "canvas.contentDocument",
+      "MyApp_RemoveAllHighlights",
       // 随机插件错误
-      'Can\'t find variable: ZiteReader',
-      'jigsaw is not defined',
-      'ComboSearch is not defined',
+      "Can't find variable: ZiteReader",
+      "jigsaw is not defined",
+      "ComboSearch is not defined",
       // Facebook相关错误
-      'fb_xd_fragment',
+      "fb_xd_fragment",
       // 其他常见的浏览器错误
-      'Non-Error promise rejection captured with value',
+      "Non-Error promise rejection captured with value",
     ],
 
     // 忽略特定域名的错误
@@ -148,14 +157,13 @@ if (SENTRY_DSN) {
     ],
 
     // 启用调试模式（仅在开发环境）
-    debug: SENTRY_ENVIRONMENT === 'development',
+    debug: SENTRY_ENVIRONMENT === "development",
 
-    // 自动会话追踪
-    autoSessionTracking: true,
+    // 注意：autoSessionTracking 已在 Sentry 10+ 中移除，会话追踪已自动启用
 
     // 启用用户反馈
     // 在发生错误时允许用户提交反馈
-    ...(SENTRY_ENVIRONMENT !== 'development' && {
+    ...(SENTRY_ENVIRONMENT !== "development" && {
       beforeSendTransaction(event) {
         // 可以在这里过滤或修改性能追踪数据
         return event;
@@ -173,14 +181,17 @@ if (SENTRY_DSN) {
   // });
 
   // 设置额外的上下文标签
-  Sentry.setTag('app.version', process.env.NEXT_PUBLIC_APP_VERSION || 'unknown');
-  Sentry.setTag('deployment.platform', 'cloudflare-pages');
+  Sentry.setTag(
+    "app.version",
+    process.env.NEXT_PUBLIC_APP_VERSION || "unknown",
+  );
+  Sentry.setTag("deployment.platform", "cloudflare-pages");
 
   console.log(
-    `✓ Sentry客户端已初始化 (环境: ${SENTRY_ENVIRONMENT}, 采样率: ${process.env.SENTRY_SAMPLE_RATE || '1.0'})`
+    `✓ Sentry客户端已初始化 (环境: ${SENTRY_ENVIRONMENT}, 采样率: ${process.env.SENTRY_SAMPLE_RATE || "1.0"})`,
   );
 } else {
-  console.warn('⚠ Sentry DSN未配置，错误追踪已禁用');
+  console.warn("⚠ Sentry DSN未配置，错误追踪已禁用");
 }
 
 /**
