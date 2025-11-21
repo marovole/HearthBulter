@@ -8,17 +8,24 @@
  * OpenSpec Change: refactor-database-layer-to-supabase
  */
 
-import { validateEnvironmentVariables, validateOptionalEnvironmentVariables } from '../env-validator';
+import {
+  validateEnvironmentVariables,
+  validateOptionalEnvironmentVariables,
+} from "../env-validator";
 import {
   supabaseAdapter,
   testDatabaseConnection as supabaseTestConnection,
-  ensureDatabaseConnection as supabaseEnsureConnection
-} from './supabase-adapter';
+  ensureDatabaseConnection as supabaseEnsureConnection,
+} from "./supabase-adapter";
 
 // 检测是否在构建阶段
-const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
-                    process.env.npm_lifecycle_event === 'build' ||
-                    process.env.VERCEL_ENV === undefined && process.env.DATABASE_URL === undefined;
+// Cloudflare Workers 环境：CF_PAGES 变量存在时为运行时
+const isBuildTime =
+  process.env.NEXT_PHASE === "phase-production-build" ||
+  process.env.npm_lifecycle_event === "build" ||
+  (typeof process.env.CF_PAGES === "undefined" &&
+    process.env.VERCEL_ENV === undefined &&
+    process.env.DATABASE_URL === undefined);
 
 // 验证环境变量（仅在运行时执行，构建时跳过）
 if (!globalThis.__envValidated && !isBuildTime) {
