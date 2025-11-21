@@ -37,6 +37,9 @@ NODE_ENV = "production"
 NEXTAUTH_URL = "https://hearthbulter.pages.dev"
 NEXT_PUBLIC_ALLOWED_ORIGINS = "https://hearthbulter.pages.dev"
 NEXT_PUBLIC_SITE_URL = "https://hearthbulter.pages.dev"
+NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwbWxpcHRqdnp1cmV3c2l3c3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODQ0MzEsImV4cCI6MjA3ODE2MDQzMX0.r1_kuC6ekX1u1omuxjdf4c7ZQ_e70ciqwKGGqK6mkP0"
+UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
 
 # 生产环境变量
 [env.production.vars]
@@ -44,6 +47,9 @@ NODE_ENV = "production"
 NEXTAUTH_URL = "https://hearthbulter.pages.dev"
 NEXT_PUBLIC_ALLOWED_ORIGINS = "https://hearthbulter.pages.dev"
 NEXT_PUBLIC_SITE_URL = "https://hearthbulter.pages.dev"
+NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwbWxpcHRqdnp1cmV3c2l3c3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODQ0MzEsImV4cCI6MjA3ODE2MDQzMX0.r1_kuC6ekX1u1omuxjdf4c7ZQ_e70ciqwKGGqK6mkP0"
+UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
 
 # Preview 环境变量
 [env.preview.vars]
@@ -51,6 +57,9 @@ NODE_ENV = "preview"
 NEXTAUTH_URL = "https://preview.hearthbulter.pages.dev"
 NEXT_PUBLIC_ALLOWED_ORIGINS = "https://preview.hearthbulter.pages.dev"
 NEXT_PUBLIC_SITE_URL = "https://preview.hearthbulter.pages.dev"
+NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwbWxpcHRqdnp1cmV3c2l3c3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODQ0MzEsImV4cCI6MjA3ODE2MDQzMX0.r1_kuC6ekX1u1omuxjdf4c7ZQ_e70ciqwKGGqK6mkP0"
+UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
 
 # KV 存储配置已移至各环境配置中
 # 生产环境: env.production.kv_namespaces
