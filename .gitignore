@@ -117,3 +117,4 @@ coverage/
 *.bak
 *.old
 .wrangler/
+.secrets.json
