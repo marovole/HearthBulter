@@ -215,7 +215,7 @@ export class InventoryTracker {
   ): Promise<InventoryItemWithRelations> {
     // 验证 usageType 是否为有效的枚举值
     const validReasons: Array<typeof usageReasonSchema._type> = [
-      'COOKING', 'EATING', 'RECIPE', 'EXPIRED', 'DAMAGED', 'OTHER'
+      'COOKING', 'EATING', 'RECIPE', 'EXPIRED', 'DAMAGED', 'OTHER',
     ];
 
     if (!validReasons.includes(usageType as typeof usageReasonSchema._type)) {

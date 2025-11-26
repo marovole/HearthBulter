@@ -1,4 +1,4 @@
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 
 /**
  * 计算连续打卡天数
@@ -15,10 +15,10 @@ export async function updateStreakDays(memberId: string) {
 
     // 检查今天是否已经录入数据
     const { data: todayData } = await supabase
-      .from("health_data")
-      .select("id")
-      .eq("memberId", memberId)
-      .gte("measuredAt", today.toISOString())
+      .from('health_data')
+      .select('id')
+      .eq('memberId', memberId)
+      .gte('measuredAt', today.toISOString())
       .limit(1)
       .maybeSingle();
 
@@ -28,10 +28,10 @@ export async function updateStreakDays(memberId: string) {
 
     // 获取所有启用的提醒配置
     const { data: reminders } = await supabase
-      .from("health_reminders")
-      .select("*")
-      .eq("memberId", memberId)
-      .eq("enabled", true);
+      .from('health_reminders')
+      .select('*')
+      .eq('memberId', memberId)
+      .eq('enabled', true);
 
     if (!reminders || reminders.length === 0) {
       return;
@@ -42,12 +42,12 @@ export async function updateStreakDays(memberId: string) {
     yesterday.setDate(yesterday.getDate() - 1);
 
     const { data: lastData } = await supabase
-      .from("health_data")
-      .select("id, measuredAt")
-      .eq("memberId", memberId)
-      .gte("measuredAt", yesterday.toISOString())
-      .lt("measuredAt", today.toISOString())
-      .order("measuredAt", { ascending: false })
+      .from('health_data')
+      .select('id, measuredAt')
+      .eq('memberId', memberId)
+      .gte('measuredAt', yesterday.toISOString())
+      .lt('measuredAt', today.toISOString())
+      .order('measuredAt', { ascending: false })
       .limit(1)
       .maybeSingle();
 
@@ -58,36 +58,36 @@ export async function updateStreakDays(memberId: string) {
       if (lastData) {
         // 如果昨天有数据，连续天数+1
         await supabase
-          .from("health_reminders")
+          .from('health_reminders')
           .update({
             streakDays: reminder.streakDays + 1,
             lastTriggeredAt: now,
             updatedAt: now,
           })
-          .eq("id", reminder.id);
+          .eq('id', reminder.id);
       } else if (reminder.streakDays === 0) {
         // 如果昨天没有数据但连续天数为0，则设置为1（今天第一次）
         await supabase
-          .from("health_reminders")
+          .from('health_reminders')
           .update({
             streakDays: 1,
             lastTriggeredAt: now,
             updatedAt: now,
           })
-          .eq("id", reminder.id);
+          .eq('id', reminder.id);
       } else {
         // 如果昨天没有数据且连续天数>0，重置为0
         await supabase
-          .from("health_reminders")
+          .from('health_reminders')
           .update({
             streakDays: 0,
             updatedAt: now,
           })
-          .eq("id", reminder.id);
+          .eq('id', reminder.id);
       }
     }
   } catch (error) {
-    console.error("更新连续打卡天数失败:", error);
+    console.error('更新连续打卡天数失败:', error);
     // 不影响主流程，只记录错误
   }
 }

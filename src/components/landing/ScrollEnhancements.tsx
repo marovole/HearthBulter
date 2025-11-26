@@ -33,13 +33,13 @@ export default function ScrollEnhancements() {
 
   return (
     <>
-      {/* 滚动进度条 */}
+      {/* Scroll progress bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-blue via-brand-purple to-brand-green z-50 origin-left"
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-primary z-50 origin-left"
         style={{ scaleX }}
       />
 
-      {/* 返回顶部按钮 */}
+      {/* Back to top button */}
       <motion.div
         className="fixed bottom-8 right-8 z-40"
         initial={{ opacity: 0, y: 20 }}
@@ -51,7 +51,8 @@ export default function ScrollEnhancements() {
       >
         <Button
           size="icon"
-          className="h-12 w-12 rounded-full bg-brand-blue hover:bg-brand-purple shadow-lg hover:shadow-2xl transition-all duration-300 group"
+          variant="glow"
+          className="h-12 w-12 rounded-full shadow-soft-lg group"
           onClick={scrollToTop}
           aria-label="返回顶部"
         >

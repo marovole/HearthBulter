@@ -10,7 +10,6 @@ import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { deviceSyncService } from '@/lib/services/device-sync-service';
 
-
 // Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {

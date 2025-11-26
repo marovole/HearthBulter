@@ -1,9 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { HealthScoreGauge } from './HealthScoreGauge';
 import { GoalProgressBar } from './GoalProgressBar';
 import { EmptyStateGuide } from './EmptyStateGuide';
+import { TrendingUp, TrendingDown, Scale, Target, Utensils, Activity } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface OverviewData {
   overview: {
@@ -65,12 +68,8 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(
-        `/api/dashboard/overview?memberId=${memberId}`
-      );
-      if (!response.ok) {
-        throw new Error('加载概览数据失败');
-      }
+      const response = await fetch(`/api/dashboard/overview?memberId=${memberId}`);
+      if (!response.ok) throw new Error('加载概览数据失败');
       const result = await response.json();
       setData(result);
     } catch (err) {
@@ -84,13 +83,12 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse"
-          >
-            <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-            <div className="h-8 bg-gray-200 rounded w-24"></div>
-          </div>
+          <Card key={i} variant="default" className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-4 bg-muted rounded w-20 mb-3" />
+              <div className="h-8 bg-muted rounded w-24" />
+            </CardContent>
+          </Card>
         ))}
       </div>
     );
@@ -98,122 +96,151 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-red-800">{error}</p>
-          <button
-            onClick={loadData}
-            className="text-sm text-red-600 hover:text-red-700 font-medium"
-          >
-            重试
-          </button>
-        </div>
-      </div>
+      <Card variant="outline" className="border-destructive/50">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-destructive">{error}</p>
+            <button
+              onClick={loadData}
+              className="text-sm text-primary font-medium hover:underline"
+            >
+              重试
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  // 检查是否有数据，如果没有则显示空状态引导
   if (!data) {
     return <EmptyStateGuide memberId={memberId} type="overview" onInitialize={loadData} />;
   }
 
   const { overview, healthScore } = data;
 
+  const statCards = [
+    {
+      label: '当前体重',
+      value: overview.weightTrend.currentWeight 
+        ? `${overview.weightTrend.currentWeight.toFixed(1)} kg`
+        : '--',
+      subtext: overview.weightTrend.targetWeight 
+        ? `目标: ${overview.weightTrend.targetWeight.toFixed(1)} kg`
+        : undefined,
+      icon: Scale,
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
+    },
+    {
+      label: '体重变化',
+      value: `${overview.weightTrend.change >= 0 ? '+' : ''}${overview.weightTrend.change.toFixed(1)} kg`,
+      subtext: `${overview.weightTrend.changePercent >= 0 ? '+' : ''}${overview.weightTrend.changePercent.toFixed(1)}%`,
+      icon: overview.weightTrend.change >= 0 ? TrendingUp : TrendingDown,
+      color: overview.weightTrend.change >= 0 ? 'text-destructive' : 'text-success',
+      bgColor: overview.weightTrend.change >= 0 ? 'bg-destructive/10' : 'bg-success/10',
+    },
+    {
+      label: '营养达标率',
+      value: `${overview.nutritionSummary.adherenceRate.toFixed(0)}%`,
+      subtext: overview.nutritionSummary.targetCalories 
+        ? `目标: ${overview.nutritionSummary.targetCalories} kcal`
+        : undefined,
+      icon: Utensils,
+      color: 'text-accent',
+      bgColor: 'bg-accent/10',
+    },
+    {
+      label: '健康评分',
+      value: `${healthScore.totalScore} 分`,
+      subtext: healthScore.details.bmiCategory 
+        ? `BMI: ${healthScore.details.bmiCategory === 'normal' ? '正常' : '需关注'}`
+        : undefined,
+      icon: Activity,
+      color: 'text-info',
+      bgColor: 'bg-info/10',
+    },
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* 关键指标卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">当前体重</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {overview.weightTrend.currentWeight
-              ? `${overview.weightTrend.currentWeight.toFixed(1)} kg`
-              : '--'}
-          </div>
-          {overview.weightTrend.targetWeight && (
-            <div className="text-xs text-gray-500 mt-1">
-              目标: {overview.weightTrend.targetWeight.toFixed(1)} kg
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">体重变化</div>
-          <div
-            className={`text-2xl font-bold ${
-              overview.weightTrend.change >= 0
-                ? 'text-red-600'
-                : 'text-green-600'
-            }`}
+    <div className="space-y-6">
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((stat, index) => (
+          <Card 
+            key={stat.label} 
+            variant="elevated"
+            className="group"
           >
-            {overview.weightTrend.change >= 0 ? '+' : ''}
-            {overview.weightTrend.change.toFixed(1)} kg
-          </div>
-          <div className="text-xs text-gray-500 mt-1">
-            {overview.weightTrend.changePercent >= 0 ? '+' : ''}
-            {overview.weightTrend.changePercent.toFixed(1)}%
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">营养达标率</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {overview.nutritionSummary.adherenceRate.toFixed(0)}%
-          </div>
-          {overview.nutritionSummary.targetCalories && (
-            <div className="text-xs text-gray-500 mt-1">
-              目标: {overview.nutritionSummary.targetCalories} kcal
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">健康评分</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {healthScore.totalScore} 分
-          </div>
-          <div className="text-xs text-gray-500 mt-1">
-            {healthScore.details.bmiCategory &&
-              `BMI: ${healthScore.details.bmiCategory === 'normal' ? '正常' : '需关注'}`}
-          </div>
-        </div>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {stat.label}
+                </span>
+                <div className={cn('p-2 rounded-lg transition-transform group-hover:scale-110', stat.bgColor)}>
+                  <stat.icon className={cn('h-4 w-4', stat.color)} />
+                </div>
+              </div>
+              <div className={cn('font-mono text-2xl font-bold mb-1', stat.color === 'text-destructive' || stat.color === 'text-success' ? stat.color : 'text-foreground')}>
+                {stat.value}
+              </div>
+              {stat.subtext && (
+                <div className="text-xs text-muted-foreground">
+                  {stat.subtext}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* 健康评分仪表盘和目标进度 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">健康评分</h3>
-          <HealthScoreGauge
-            score={healthScore.totalScore}
-            breakdown={healthScore.breakdown}
-          />
-        </div>
+      {/* Score and Goals */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card variant="elevated">
+          <CardContent className="p-6">
+            <h3 className="font-display text-lg font-semibold text-foreground mb-4">
+              健康评分
+            </h3>
+            <HealthScoreGauge
+              score={healthScore.totalScore}
+              breakdown={healthScore.breakdown}
+            />
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">目标进度</h3>
-          {overview.goalProgress.length > 0 ? (
-            <div className="space-y-3">
-              {overview.goalProgress.map((goal) => (
-                <GoalProgressBar
-                  key={goal.goalId}
-                  goalType={goal.goalType}
-                  currentProgress={goal.currentProgress}
-                  targetWeight={goal.targetWeight}
-                  currentWeight={goal.currentWeight}
-                  startWeight={goal.startWeight}
-                  onTrack={goal.onTrack}
-                  weeksRemaining={goal.weeksRemaining}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              <p className="text-sm">暂无活跃目标</p>
-            </div>
-          )}
-        </div>
+        <Card variant="elevated">
+          <CardContent className="p-6">
+            <h3 className="font-display text-lg font-semibold text-foreground mb-4">
+              目标进度
+            </h3>
+            {overview.goalProgress.length > 0 ? (
+              <div className="space-y-4">
+                {overview.goalProgress.map((goal) => (
+                  <GoalProgressBar
+                    key={goal.goalId}
+                    goalType={goal.goalType}
+                    currentProgress={goal.currentProgress}
+                    targetWeight={goal.targetWeight}
+                    currentWeight={goal.currentWeight}
+                    startWeight={goal.startWeight}
+                    onTrack={goal.onTrack}
+                    weeksRemaining={goal.weeksRemaining}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="p-3 rounded-full bg-muted mb-3">
+                  <Target className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">暂无活跃目标</p>
+                <button className="mt-2 text-sm text-primary font-medium hover:underline">
+                  设置健康目标
+                </button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
-

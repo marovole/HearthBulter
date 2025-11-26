@@ -11,19 +11,19 @@
 import {
   validateEnvironmentVariables,
   validateOptionalEnvironmentVariables,
-} from "../env-validator";
+} from '../env-validator';
 import {
   supabaseAdapter,
   testDatabaseConnection as supabaseTestConnection,
   ensureDatabaseConnection as supabaseEnsureConnection,
-} from "./supabase-adapter";
+} from './supabase-adapter';
 
 // 检测是否在构建阶段
 // Cloudflare Workers 环境：CF_PAGES 变量存在时为运行时
 const isBuildTime =
-  process.env.NEXT_PHASE === "phase-production-build" ||
-  process.env.npm_lifecycle_event === "build" ||
-  (typeof process.env.CF_PAGES === "undefined" &&
+  process.env.NEXT_PHASE === 'phase-production-build' ||
+  process.env.npm_lifecycle_event === 'build' ||
+  (typeof process.env.CF_PAGES === 'undefined' &&
     process.env.VERCEL_ENV === undefined &&
     process.env.DATABASE_URL === undefined);
 

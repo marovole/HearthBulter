@@ -5,7 +5,7 @@ import type {
   FoodRecord,
   FoodRepository,
   FoodSearchQuery,
-  FoodSearchResult
+  FoodSearchResult,
 } from '@/lib/repositories/interfaces/food-repository';
 
 /**

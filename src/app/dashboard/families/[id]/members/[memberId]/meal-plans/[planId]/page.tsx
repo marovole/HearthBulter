@@ -14,7 +14,6 @@ interface MealPlanDetailPageProps {
   }>
 }
 
-
 export default async function MealPlanDetailPage({
   params,
 }: MealPlanDetailPageProps) {

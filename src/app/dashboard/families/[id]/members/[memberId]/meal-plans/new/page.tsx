@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MealPlanGenerator } from '@/components/meal-planning/MealPlanGenerator';
 
-
 export default async function NewMealPlanPage({
   params,
 }: {

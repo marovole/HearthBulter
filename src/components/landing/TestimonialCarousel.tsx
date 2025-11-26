@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { Star, Quote } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import {
   Carousel,
   CarouselContent,
@@ -14,7 +13,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 
 interface Testimonial {
   id: string;
@@ -24,7 +22,6 @@ interface Testimonial {
   content: string;
   rating: number;
   achievement?: string;
-  duration?: string;
 }
 
 const testimonials: Testimonial[] = [
@@ -34,8 +31,7 @@ const testimonials: Testimonial[] = [
     role: '全职妈妈',
     content: '使用 Health Butler 3 个月，全家的饮食更科学了，孩子也更健康！AI 生成的食谱非常实用，购物清单功能节省了我很多时间。',
     rating: 5,
-    achievement: '减重 5kg，家人健康改善',
-    duration: '3个月',
+    achievement: '全家健康改善',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
   },
   {
@@ -44,8 +40,7 @@ const testimonials: Testimonial[] = [
     role: '程序员',
     content: '作为加班族，很难保持健康饮食。Health Butler 帮我规划每日营养，血压和体重都有明显改善，强烈推荐！',
     rating: 5,
-    achievement: '血压正常，精力充沛',
-    duration: '2个月',
+    achievement: '血压恢复正常',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
   },
   {
@@ -54,8 +49,7 @@ const testimonials: Testimonial[] = [
     role: '健身教练',
     content: '专业的营养分析和食谱推荐让我的健身效果事半功倍。数据可视化功能特别好用，能清楚看到身体变化趋势。',
     rating: 5,
-    achievement: '健身效果提升 30%',
-    duration: '4个月',
+    achievement: '健身效果提升',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily',
   },
 ];
@@ -66,24 +60,19 @@ export default function TestimonialCarousel() {
     threshold: 0.1,
   });
 
-  const prefersReducedMotion = usePrefersReducedMotion();
   const [api, setApi] = useState<any>();
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    if (!api) return;
+    if (!api || isPaused) return;
 
-    // Skip auto-play if user prefers reduced motion or if paused
-    if (prefersReducedMotion || isPaused) return;
-
-    // Auto-play with 5s interval
     const interval = setInterval(() => {
       api.scrollNext();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [api, isPaused, prefersReducedMotion]);
+  }, [api, isPaused]);
 
   useEffect(() => {
     if (!api) return;
@@ -95,22 +84,16 @@ export default function TestimonialCarousel() {
     };
 
     api.on('select', handleSelect);
-
-    // Cleanup: remove listener on unmount or api change
-    return () => {
-      api.off('select', handleSelect);
-    };
+    return () => api.off('select', handleSelect);
   }, [api]);
 
   const StarRating = ({ rating }: { rating: number }) => (
-    <div className="flex justify-center gap-1 mb-4">
+    <div className="flex gap-0.5 mb-4">
       {[...Array(5)].map((_, i) => (
         <Star
           key={i}
-          className={`w-5 h-5 ${
-            i < rating 
-              ? 'fill-brand-orange text-brand-orange' 
-              : 'text-gray-300'
+          className={`w-4 h-4 ${
+            i < rating ? 'fill-accent text-accent' : 'text-muted'
           }`}
         />
       ))}
@@ -118,10 +101,7 @@ export default function TestimonialCarousel() {
   );
 
   return (
-    <section 
-      id="testimonials"
-      className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white"
-    >
+    <section id="testimonials" className="py-24 md:py-32 bg-muted/30">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           ref={ref}
@@ -130,102 +110,89 @@ export default function TestimonialCarousel() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            用户的真实反馈
+          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-4">
+            用户评价
+          </span>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-4">
+            他们的故事
           </h2>
-          <p className="text-lg text-gray-600">
-            看看其他用户如何通过 Health Butler 改善健康
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            看看其他用户如何通过 Health Butler 改善健康生活
           </p>
         </motion.div>
 
-        {/* Testimonial Carousel using shadcn/ui */}
         <motion.div
-          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 30 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.2 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
           className="relative"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
           <Carousel
-            opts={{
-              align: 'center',
-              loop: true,
-              skipSnaps: false,
-            }}
+            opts={{ align: 'center', loop: true }}
             setApi={setApi}
-            className="w-full max-w-4xl mx-auto"
+            className="w-full"
           >
-            <CarouselContent className="-ml-2 md:-ml-4">
+            <CarouselContent className="-ml-4">
               {testimonials.map((testimonial) => (
-                <CarouselItem key={testimonial.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                  <Card className="h-full bg-white/90 backdrop-blur-sm border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+                <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <Card variant="elevated" className="h-full">
                     <CardContent className="p-6 flex flex-col h-full">
                       {/* Quote icon */}
-                      <div className="w-10 h-10 bg-brand-blue/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-brand-blue/20 transition-colors">
-                        <Quote className="w-5 h-5 text-brand-blue" />
+                      <div className="inline-flex self-start p-2.5 rounded-xl bg-primary/10 mb-4">
+                        <Quote className="w-5 h-5 text-primary" />
                       </div>
 
-                      {/* Star rating */}
                       <StarRating rating={testimonial.rating} />
 
-                      {/* Content */}
-                      <p className="text-gray-700 text-sm leading-relaxed mb-4 flex-grow line-clamp-4">
-                        {testimonial.content}
+                      <p className="text-foreground/80 text-sm leading-relaxed mb-6 flex-grow">
+                        &ldquo;{testimonial.content}&rdquo;
                       </p>
 
-                      {/* Achievement badge */}
                       {testimonial.achievement && (
-                        <Badge variant="secondary" className="mb-4 bg-brand-green/10 text-brand-green border-brand-green/20">
+                        <div className="inline-flex self-start px-3 py-1 rounded-full bg-success/10 text-success text-xs font-medium mb-4">
                           {testimonial.achievement}
-                        </Badge>
+                        </div>
                       )}
 
-                      {/* User info */}
-                      <div className="flex items-center gap-3 mt-auto">
+                      <div className="flex items-center gap-3 mt-auto pt-4 border-t border-border">
                         <Avatar className="w-10 h-10">
                           <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                          <AvatarFallback className="bg-brand-blue text-white">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                             {testimonial.name[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900 text-sm">
+                        <div>
+                          <div className="font-semibold text-foreground text-sm">
                             {testimonial.name}
                           </div>
-                          <div className="text-xs text-gray-600">
+                          <div className="text-xs text-muted-foreground">
                             {testimonial.role}
                           </div>
                         </div>
-                        {testimonial.duration && (
-                          <Badge variant="outline" className="text-xs border-brand-blue text-brand-blue">
-                            {testimonial.duration}
-                          </Badge>
-                        )}
                       </div>
                     </CardContent>
                   </Card>
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
+            <CarouselPrevious className="hidden md:flex -left-4" />
+            <CarouselNext className="hidden md:flex -right-4" />
           </Carousel>
         </motion.div>
 
-        {/* Enhanced pagination indicator */}
+        {/* Pagination dots */}
         <div className="flex justify-center mt-8 gap-2">
           {testimonials.map((_, index) => (
-            <motion.button
+            <button
               key={index}
               className={`h-2 rounded-full transition-all duration-300 ${
                 index === current
-                  ? 'w-8 bg-brand-blue'
-                  : 'w-2 bg-gray-300 hover:bg-gray-400'
+                  ? 'w-6 bg-primary'
+                  : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
               }`}
               onClick={() => api?.scrollTo(index)}
-              whileHover={{ scale: 1.2 }}
-              whileTap={{ scale: 0.9 }}
               aria-label={`跳转到第 ${index + 1} 条评价`}
             />
           ))}

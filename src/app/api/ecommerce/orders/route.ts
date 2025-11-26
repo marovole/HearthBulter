@@ -6,7 +6,6 @@ import { platformAdapterFactory } from '@/lib/services/ecommerce';
 import { EcommercePlatform, OrderStatus } from '@prisma/client';
 import { PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types';
 
-
 // Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {

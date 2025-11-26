@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import { fetchAdviceHistory } from "@/lib/db/supabase-rpc-helpers";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { fetchAdviceHistory } from '@/lib/db/supabase-rpc-helpers';
 import {
   addCacheHeaders,
   EDGE_CACHE_PRESETS,
-} from "@/lib/cache/edge-cache-helpers";
+} from '@/lib/cache/edge-cache-helpers';
 
 /**
  * GET /api/ai/advice-history
@@ -19,23 +19,23 @@ import {
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get("memberId");
-    const type = searchParams.get("type") as any;
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const offset = parseInt(searchParams.get("offset") || "0");
+    const memberId = searchParams.get('memberId');
+    const type = searchParams.get('type') as any;
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
     if (!memberId) {
       return NextResponse.json(
-        { error: "Member ID is required" },
+        { error: 'Member ID is required' },
         { status: 400 },
       );
     }
@@ -44,14 +44,14 @@ export async function GET(request: NextRequest) {
 
     // 验证用户权限 - 检查是否是成员本人或家庭管理员
     const { data: memberCheck } = await supabase
-      .from("family_members")
-      .select("id, familyId, userId")
-      .eq("id", memberId)
+      .from('family_members')
+      .select('id, familyId, userId')
+      .eq('id', memberId)
       .single();
 
     if (!memberCheck) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -67,12 +67,12 @@ export async function GET(request: NextRequest) {
     let isAdmin = false;
     if (!isOwnMember) {
       const { data: adminCheck } = await supabase
-        .from("family_members")
-        .select("id")
-        .eq("familyId", member.familyId)
-        .eq("userId", session.user.id)
-        .eq("role", "ADMIN")
-        .is("deletedAt", null)
+        .from('family_members')
+        .select('id')
+        .eq('familyId', member.familyId)
+        .eq('userId', session.user.id)
+        .eq('role', 'ADMIN')
+        .is('deletedAt', null)
         .maybeSingle();
 
       isAdmin = !!adminCheck;
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
 
     if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -90,9 +90,9 @@ export async function GET(request: NextRequest) {
     const adviceResult = await fetchAdviceHistory(memberId, { limit, offset });
 
     if (!adviceResult.success || !adviceResult.data) {
-      console.error("获取AI建议历史失败:", adviceResult.error);
+      console.error('获取AI建议历史失败:', adviceResult.error);
       return NextResponse.json(
-        { error: "Failed to fetch advice history" },
+        { error: 'Failed to fetch advice history' },
         { status: 500 },
       );
     }
@@ -110,19 +110,19 @@ export async function GET(request: NextRequest) {
 
     // 获取对话历史
     const { data: conversationHistory, error: convError } = await supabase
-      .from("ai_conversations")
+      .from('ai_conversations')
       .select(
-        "id, title, messages, status, tokens, createdAt, updatedAt, lastMessageAt",
+        'id, title, messages, status, tokens, createdAt, updatedAt, lastMessageAt',
       )
-      .eq("memberId", memberId)
-      .is("deletedAt", null)
-      .order("lastMessageAt", { ascending: false })
+      .eq('memberId', memberId)
+      .is('deletedAt', null)
+      .order('lastMessageAt', { ascending: false })
       .limit(Math.min(limit, 10));
 
     if (convError) {
-      console.error("获取对话历史失败:", convError);
+      console.error('获取对话历史失败:', convError);
       return NextResponse.json(
-        { error: "Failed to fetch conversation history" },
+        { error: 'Failed to fetch conversation history' },
         { status: 500 },
       );
     }
@@ -178,9 +178,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseData, { headers });
   } catch (error) {
-    console.error("Advice history API error:", error);
+    console.error('Advice history API error:', error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

@@ -163,7 +163,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
       }
       throw new RepositoryError({
         code: RepositoryErrorCode.DATABASE_ERROR,
-        message: `Repository.getMemberHealthData failed`,
+        message: 'Repository.getMemberHealthData failed',
         operation: 'getMemberHealthData',
         cause: error,
       });
@@ -850,8 +850,8 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
     const measuredAt = row.measured_at
       ? new Date(row.measured_at)
       : row.created_at
-      ? new Date(row.created_at)
-      : new Date();
+        ? new Date(row.created_at)
+        : new Date();
 
     const createdAt = row.created_at ? new Date(row.created_at) : measuredAt;
     const updatedAt = row.updated_at ? new Date(row.updated_at) : createdAt;

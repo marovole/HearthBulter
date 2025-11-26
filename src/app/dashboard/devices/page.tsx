@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic';
  * 设备管理页面
  */
 
-
 import { Suspense } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DeviceConnection } from '@/components/features/devices/DeviceConnection';
@@ -15,7 +14,6 @@ import { SyncStatus } from '@/components/features/devices/SyncStatus';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-
 
 export default function DevicesPage() {
   return (

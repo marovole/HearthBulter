@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { costOptimizer } from '@/lib/services/budget/cost-optimizer';
 import { priceAnalyzer } from '@/lib/services/budget/price-analyzer';
 
-
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {

@@ -6,7 +6,6 @@ import { prisma } from '@/lib/db';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-
 export default async function FamilyDetailPage({
   params,
 }: {

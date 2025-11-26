@@ -1,25 +1,13 @@
 import dynamicImport from 'next/dynamic';
 import './globals.css';
-import { Inter } from 'next/font/google';
-// import { startScheduler } from '@/lib/services/scheduler/startup';
 
-//Force all pages to be dynamic
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Dynamically import Providers with SSR disabled to prevent Context prerender errors
 const Providers = dynamicImport(() => import('./providers'), {
   ssr: false,
-  loading: () => null, // No loading state to avoid hydration issues
+  loading: () => null,
 });
-
-// 临时禁用调度器以隔离问题
-// // 启动调度器（仅在服务端执行）
-// if (typeof window === 'undefined') {
-//   startScheduler().catch(console.error);
-// }
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: 'Health Butler - 健康管家',
@@ -32,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="zh-CN">
-      <body className={inter.className}>
+    <html lang="zh-CN" suppressHydrationWarning>
+      <body className="font-body antialiased bg-background text-foreground">
         <Providers>
           {children}
         </Providers>

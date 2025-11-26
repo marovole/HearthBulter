@@ -14,7 +14,6 @@ const createAllergySchema = z.object({
   description: z.string().optional(),
 });
 
-
 /**
  * GET /api/members/:memberId/allergies
  * 获取成员的过敏史列表
