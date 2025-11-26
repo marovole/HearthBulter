@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ReportUploader } from '@/components/reports/ReportUploader';
 
-
 export default async function NewReportPage({
   params,
 }: {

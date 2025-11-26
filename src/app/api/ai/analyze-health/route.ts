@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { healthAnalyzer } from "@/lib/services/ai/health-analyzer";
-import { healthRepository } from "@/lib/repositories/health-repository-singleton";
-import { SupabaseFamilyRepository } from "@/lib/repositories/implementations/supabase-family-repository";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import { rateLimiter } from "@/lib/services/ai/rate-limiter";
-import { aiFallbackService } from "@/lib/services/ai/fallback-service";
-import { medicalReportFilter } from "@/lib/middleware/ai-sensitive-filter";
-import { consentManager } from "@/lib/services/consent-manager";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { healthAnalyzer } from '@/lib/services/ai/health-analyzer';
+import { healthRepository } from '@/lib/repositories/health-repository-singleton';
+import { SupabaseFamilyRepository } from '@/lib/repositories/implementations/supabase-family-repository';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { rateLimiter } from '@/lib/services/ai/rate-limiter';
+import { aiFallbackService } from '@/lib/services/ai/fallback-service';
+import { medicalReportFilter } from '@/lib/middleware/ai-sensitive-filter';
+import { consentManager } from '@/lib/services/consent-manager';
 
 // 创建专门用于权限检查的 FamilyRepository 实例（不需要双写）
 
 // Force dynamic rendering for auth()
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 const familyRepo = new SupabaseFamilyRepository(
   SupabaseClientManager.getInstance(),
 );
@@ -29,35 +29,35 @@ export async function POST(request: NextRequest) {
     // 验证用户身份
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // 速率限制检查
     const rateLimitResult = await rateLimiter.checkLimit(
       session.user.id,
-      "ai_analyze_health",
+      'ai_analyze_health',
     );
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
-          error: "Rate limit exceeded",
+          error: 'Rate limit exceeded',
           retryAfter: rateLimitResult.retryAfter,
           resetTime: rateLimitResult.resetTime,
         },
         {
           status: 429,
           headers: {
-            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
-            "Retry-After": rateLimitResult.retryAfter?.toString() || "3600",
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
           },
         },
       );
     }
 
     // 同意检查
-    const requiredConsents = ["ai_health_analysis", "medical_data_processing"];
+    const requiredConsents = ['ai_health_analysis', 'medical_data_processing'];
     const consentResults = await consentManager.checkMultipleConsents(
       session.user.id,
       requiredConsents,
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: "Required consents not granted",
+          error: 'Required consents not granted',
           requiredConsents: consentTypes.map((type) => ({
             id: type?.id,
             name: type?.name,
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     if (!memberId) {
       return NextResponse.json(
-        { error: "Member ID is required" },
+        { error: 'Member ID is required' },
         { status: 400 },
       );
     }
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (!memberContext) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -118,12 +118,12 @@ export async function POST(request: NextRequest) {
         memberContext.member.familyId,
         session.user.id,
       );
-      isAdmin = role === "ADMIN";
+      isAdmin = role === 'ADMIN';
     }
 
     if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -155,20 +155,20 @@ export async function POST(request: NextRequest) {
         (Date.now() - new Date(member.birthDate).getTime()) /
           (365.25 * 24 * 60 * 60 * 1000),
       ),
-      gender: member.gender.toLowerCase() as "male" | "female",
+      gender: member.gender.toLowerCase() as 'male' | 'female',
       height: member.height || 170,
       weight: member.weight || 70,
       bmi: member.bmi || 24,
       health_goals: member.healthGoals.map((g) => g.goalType),
       dietary_preferences: member.dietaryPreference
         ? [
-            member.dietaryPreference.dietType,
-            ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
-            ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
-          ].filter((pref): pref is string => pref !== null)
+          member.dietaryPreference.dietType,
+          ...(member.dietaryPreference.isVegetarian ? ['vegetarian'] : []),
+          ...(member.dietaryPreference.isVegan ? ['vegan'] : []),
+        ].filter((pref): pref is string => pref !== null)
         : [],
       allergies: member.allergies.map((a) => a.allergenName),
-      activity_level: "moderate" as const, // 可以从健康数据推断
+      activity_level: 'moderate' as const, // 可以从健康数据推断
     };
 
     // 执行健康分析（带降级策略）
@@ -202,26 +202,26 @@ export async function POST(request: NextRequest) {
     } else {
       // 使用降级方案，生成基础建议
       nutritionTargets = {
-        daily_calories: userProfile.gender === "male" ? 2000 : 1800,
+        daily_calories: userProfile.gender === 'male' ? 2000 : 1800,
         macros: {
           carbs_percent: 50,
           protein_percent: 20,
           fat_percent: 30,
         },
-        micronutrients: ["需要专业医生详细分析"],
+        micronutrients: ['需要专业医生详细分析'],
       };
 
       dietaryAdjustments = [
-        "AI服务暂时不可用，请咨询专业营养师",
-        "保持均衡饮食，适量运动",
-        "定期监测健康指标",
+        'AI服务暂时不可用，请咨询专业营养师',
+        '保持均衡饮食，适量运动',
+        '定期监测健康指标',
       ];
     }
 
     // 使用 HealthRepository 保存建议到数据库
     const aiAdvice = await healthRepository.saveHealthAdvice({
       memberId,
-      type: "HEALTH_ANALYSIS",
+      type: 'HEALTH_ANALYSIS',
       content: {
         analysis: analysisResult.data,
         nutritionTargets,
@@ -231,12 +231,12 @@ export async function POST(request: NextRequest) {
         fallbackUsed: analysisResult.fallbackUsed,
         fallbackReason: analysisResult.reason,
       },
-      prompt: "Comprehensive health analysis with personalized recommendations",
+      prompt: 'Comprehensive health analysis with personalized recommendations',
       tokens: 0,
     });
 
     if (!aiAdvice) {
-      console.error("保存AI建议失败");
+      console.error('保存AI建议失败');
       // 继续返回结果，即使保存失败
     }
 
@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
       dietaryAdjustments,
       prioritizedConcerns: !analysisResult.fallbackUsed
         ? healthAnalyzer.prioritizeHealthConcerns(analysisResult.data)
-        : ["AI服务不可用，请咨询专业医生"],
+        : ['AI服务不可用，请咨询专业医生'],
       generatedAt: aiAdvice?.generatedAt || new Date(),
       fallbackUsed: analysisResult.fallbackUsed,
       message: analysisResult.message,
@@ -255,9 +255,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Health analysis API error:", error);
+    console.error('Health analysis API error:', error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }
@@ -273,16 +273,16 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get("memberId");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const memberId = searchParams.get('memberId');
+    const limit = parseInt(searchParams.get('limit') || '10');
 
     if (!memberId) {
       return NextResponse.json(
-        { error: "Member ID is required" },
+        { error: 'Member ID is required' },
         { status: 400 },
       );
     }
@@ -292,7 +292,7 @@ export async function GET(request: NextRequest) {
 
     if (!memberData) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -306,12 +306,12 @@ export async function GET(request: NextRequest) {
         memberData.familyId,
         session.user.id,
       );
-      isAdmin = role === "ADMIN";
+      isAdmin = role === 'ADMIN';
     }
 
     if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -324,9 +324,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ history });
   } catch (error) {
-    console.error("Health analysis history API error:", error);
+    console.error('Health analysis history API error:', error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

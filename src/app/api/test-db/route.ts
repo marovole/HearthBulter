@@ -4,7 +4,6 @@ import { supabaseAdapter, testDatabaseConnection } from '@/lib/db/supabase-adapt
 // 使用 Supabase HTTP 客户端 - 完全兼容 Cloudflare Workers
 // 不依赖文件系统，不需要 Prisma 二进制文件
 
-
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export async function GET() {

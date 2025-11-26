@@ -3,7 +3,6 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
-
 // Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 const emailShareSchema = z.object({

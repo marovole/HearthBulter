@@ -51,10 +51,10 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
     // 构建 select 字符串
     let selectStr = '*';
     if (includePlan) {
-      selectStr += `, plan:meal_plans(id, name, member:family_members(id, name))`;
+      selectStr += ', plan:meal_plans(id, name, member:family_members(id, name))';
     }
     if (includeItems) {
-      selectStr += `, items:shopping_list_items(*, food:foods(*))`;
+      selectStr += ', items:shopping_list_items(*, food:foods(*))';
     }
 
     // 构建查询
@@ -126,10 +126,10 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
     // 构建 select 字符串
     let selectStr = '*';
     if (includePlan) {
-      selectStr += `, plan:meal_plans(id, name, member:family_members(id, name))`;
+      selectStr += ', plan:meal_plans(id, name, member:family_members(id, name))';
     }
     if (includeItems) {
-      selectStr += `, items:shopping_list_items(*, food:foods(*))`;
+      selectStr += ', items:shopping_list_items(*, food:foods(*))';
     }
 
     const { data, error } = await this.client
@@ -310,15 +310,15 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
       deletedAt: row.deleted_at ? new Date(row.deleted_at) : undefined,
       plan: rowWithRelations.plan
         ? {
-            id: rowWithRelations.plan.id,
-            name: rowWithRelations.plan.name,
-            member: rowWithRelations.plan.member
-              ? {
-                  id: rowWithRelations.plan.member.id,
-                  name: rowWithRelations.plan.member.name,
-                }
-              : undefined,
-          }
+          id: rowWithRelations.plan.id,
+          name: rowWithRelations.plan.name,
+          member: rowWithRelations.plan.member
+            ? {
+              id: rowWithRelations.plan.member.id,
+              name: rowWithRelations.plan.member.name,
+            }
+            : undefined,
+        }
         : undefined,
       items: rowWithRelations.items
         ? rowWithRelations.items.map(this.mapShoppingListItemRow)
@@ -345,12 +345,12 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
       updatedAt: new Date(row.updated_at),
       food: rowWithFood.food
         ? {
-            id: rowWithFood.food.id,
-            name: rowWithFood.food.name,
-            category: rowWithFood.food.category || undefined,
-            defaultUnit: rowWithFood.food.default_unit || undefined,
-            imageUrl: rowWithFood.food.image_url || undefined,
-          }
+          id: rowWithFood.food.id,
+          name: rowWithFood.food.name,
+          category: rowWithFood.food.category || undefined,
+          defaultUnit: rowWithFood.food.default_unit || undefined,
+          imageUrl: rowWithFood.food.image_url || undefined,
+        }
         : undefined,
     };
   }

@@ -5,8 +5,8 @@
  * 可以最小化代码变更，保持业务逻辑不变。
  */
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/supabase-database";
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase-database';
 
 // 环境变量获取函数，支持多种环境
 function getSupabaseConfig() {
@@ -19,16 +19,16 @@ function getSupabaseConfig() {
 
   if (!supabaseUrl || !supabaseKey) {
     const error =
-      "Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY";
-    console.error("❌ Supabase 配置错误:", error);
-    console.error("环境变量状态:", {
+      'Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY';
+    console.error('❌ Supabase 配置错误:', error);
+    console.error('环境变量状态:', {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL
-        ? "✅"
-        : "❌",
-      SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? "✅" : "❌",
+        ? '✅'
+        : '❌',
+      SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? '✅' : '❌',
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        ? "✅"
-        : "❌",
+        ? '✅'
+        : '❌',
     });
     // 在生产环境仍然抛出错误，但提供更多诊断信息
     throw new Error(error);
@@ -54,11 +54,11 @@ export class SupabaseClientManager {
             autoRefreshToken: false,
           },
           db: {
-            schema: "public",
+            schema: 'public',
           },
           global: {
             headers: {
-              "x-application-name": "health-butler",
+              'x-application-name': 'health-butler',
             },
           },
         },
@@ -77,9 +77,9 @@ function toCamelCase(str: string): string {
 // 辅助函数：将 camelCase 转换为 snake_case
 function toSnakeCase(str: string): string {
   return str
-    .replace(/([A-Z])/g, "_$1")
+    .replace(/([A-Z])/g, '_$1')
     .toLowerCase()
-    .replace(/^_/, "");
+    .replace(/^_/, '');
 }
 
 // 辅助函数：转换对象的键从 snake_case 到 camelCase
@@ -88,7 +88,7 @@ function keysToCamelCase(obj: any): any {
     return obj.map(keysToCamelCase);
   }
 
-  if (obj !== null && typeof obj === "object") {
+  if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce((result, key) => {
       const camelKey = toCamelCase(key);
       result[camelKey] = keysToCamelCase(obj[key]);
@@ -105,7 +105,7 @@ function keysToSnakeCase(obj: any): any {
     return obj.map(keysToSnakeCase);
   }
 
-  if (obj !== null && typeof obj === "object") {
+  if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce((result, key) => {
       const snakeKey = toSnakeCase(key);
       result[snakeKey] = keysToSnakeCase(obj[key]);
@@ -142,7 +142,7 @@ function buildSelectQuery(
 
   // 添加基础字段
   if (includeBaseFields) {
-    fragments.push("*");
+    fragments.push('*');
   }
 
   // 处理 include 关系
@@ -154,7 +154,7 @@ function buildSelectQuery(
       });
   }
 
-  return fragments.length ? fragments.join(",") : "*";
+  return fragments.length ? fragments.join(',') : '*';
 }
 
 /**
@@ -176,7 +176,7 @@ function buildSelectFromSelect(select: Record<string, any>): string {
       fragments.push(buildRelationFragment(field, value));
     });
 
-  return fragments.length ? fragments.join(",") : "*";
+  return fragments.length ? fragments.join(',') : '*';
 }
 
 /**
@@ -199,8 +199,8 @@ function buildRelationFragment(key: string, value: any): string {
   let includeBaseFields = true;
 
   // 解析嵌套配置
-  if (typeof value === "object" && value !== null) {
-    if ("include" in value || "select" in value) {
+  if (typeof value === 'object' && value !== null) {
+    if ('include' in value || 'select' in value) {
       nestedInclude = value.include;
       nestedSelect = value.select;
     } else {
@@ -237,11 +237,11 @@ function buildJsonPathSelector(column: string, path: string[]): string {
   if (!path || path.length === 0) return column;
 
   // 转义单引号
-  const normalized = path.map((segment) => segment.replace(/'/g, "''"));
+  const normalized = path.map((segment) => segment.replace(/'/g, '\'\''));
   const last = normalized.pop()!;
 
   // 中间路径使用 ->，最后一个使用 ->>（返回文本）
-  const intermediate = normalized.map((segment) => `->'${segment}'`).join("");
+  const intermediate = normalized.map((segment) => `->'${segment}'`).join('');
 
   return `${column}${intermediate}->>'${last}'`;
 }
@@ -254,37 +254,37 @@ function buildJsonPathSelector(column: string, path: string[]): string {
 function applyJsonPathFilters(query: any, column: string, value: any) {
   const { path, ...operators } = value ?? {};
 
-  if ("equals" in operators) {
+  if ('equals' in operators) {
     query = query.eq(column, operators.equals);
   }
-  if ("not" in operators) {
+  if ('not' in operators) {
     query = query.neq(column, operators.not);
   }
-  if ("in" in operators) {
+  if ('in' in operators) {
     query = query.in(column, operators.in);
   }
-  if ("notIn" in operators) {
-    query = query.not(column, "in", operators.notIn);
+  if ('notIn' in operators) {
+    query = query.not(column, 'in', operators.notIn);
   }
-  if ("lt" in operators) {
+  if ('lt' in operators) {
     query = query.lt(column, operators.lt);
   }
-  if ("lte" in operators) {
+  if ('lte' in operators) {
     query = query.lte(column, operators.lte);
   }
-  if ("gt" in operators) {
+  if ('gt' in operators) {
     query = query.gt(column, operators.gt);
   }
-  if ("gte" in operators) {
+  if ('gte' in operators) {
     query = query.gte(column, operators.gte);
   }
-  if ("contains" in operators) {
+  if ('contains' in operators) {
     query = query.ilike(column, `%${operators.contains}%`);
   }
-  if ("startsWith" in operators) {
+  if ('startsWith' in operators) {
     query = query.ilike(column, `${operators.startsWith}%`);
   }
-  if ("endsWith" in operators) {
+  if ('endsWith' in operators) {
     query = query.ilike(column, `%${operators.endsWith}`);
   }
 
@@ -313,7 +313,7 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
 
   Object.entries(where).forEach(([key, value]) => {
     // 处理逻辑运算符
-    if (key === "OR" && Array.isArray(value)) {
+    if (key === 'OR' && Array.isArray(value)) {
       // 构建 OR 表达式：column1.eq.value1,column2.eq.value2
       const orExpressions: string[] = [];
       value.forEach((condition) => {
@@ -322,12 +322,12 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
       });
 
       if (orExpressions.length > 0) {
-        query = query.or(orExpressions.join(","));
+        query = query.or(orExpressions.join(','));
       }
       return;
     }
 
-    if (key === "AND" && Array.isArray(value)) {
+    if (key === 'AND' && Array.isArray(value)) {
       // AND 通过多次调用 applyWhereClause 实现
       value.forEach((condition) => {
         query = applyWhereClause(query, condition, tableName);
@@ -335,15 +335,15 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
       return;
     }
 
-    if (key === "NOT") {
+    if (key === 'NOT') {
       // NOT 需要反转条件
       // 由于 Supabase 的 not() API 较复杂，这里简化处理
-      if (typeof value === "object" && !Array.isArray(value)) {
+      if (typeof value === 'object' && !Array.isArray(value)) {
         Object.entries(value).forEach(([notKey, notValue]) => {
           const snakeKey = toSnakeCase(notKey);
           if (notValue === null) {
-            query = query.not(snakeKey, "is", null);
-          } else if (typeof notValue === "object") {
+            query = query.not(snakeKey, 'is', null);
+          } else if (typeof notValue === 'object') {
             // NOT 复杂条件暂不支持
             throw new Error(
               `Complex NOT conditions not yet supported in Supabase adapter for table ${tableName}`,
@@ -358,24 +358,24 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
 
     // 检查关系过滤（some/every/none）
     if (
-      typeof value === "object" &&
+      typeof value === 'object' &&
       !Array.isArray(value) &&
-      ("some" in value || "every" in value || "none" in value)
+      ('some' in value || 'every' in value || 'none' in value)
     ) {
       const relationFilter =
-        "some" in value ? "some" : "every" in value ? "every" : "none";
+        'some' in value ? 'some' : 'every' in value ? 'every' : 'none';
       const condition = JSON.stringify(value[relationFilter]);
       throw new Error(
-        "Relation filter not yet supported in Supabase adapter:\n" +
+        'Relation filter not yet supported in Supabase adapter:\n' +
           `  Table: ${tableName}\n` +
           `  Field: ${key}\n` +
           `  Filter: ${relationFilter}\n` +
           `  Condition: ${condition}\n\n` +
-          "Workarounds:\n" +
+          'Workarounds:\n' +
           `  1. Use Supabase inner joins in select (e.g., .select('*, ${toSnakeCase(key)}!inner(*)'))\n` +
-          "  2. Implement as Postgres RPC function\n" +
-          "  3. Filter in application layer after fetch\n\n" +
-          "This feature will be added in Step 3 of the migration.",
+          '  2. Implement as Postgres RPC function\n' +
+          '  3. Filter in application layer after fetch\n\n' +
+          'This feature will be added in Step 3 of the migration.',
       );
     }
 
@@ -384,7 +384,7 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
 
     if (value === null) {
       query = query.is(snakeKey, null);
-    } else if (typeof value === "object" && !Array.isArray(value)) {
+    } else if (typeof value === 'object' && !Array.isArray(value)) {
       // 检查是否为 JSON path 查询
       const hasJsonPath =
         Array.isArray((value as any).path) && (value as any).path.length > 0;
@@ -400,37 +400,37 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
       }
 
       // 处理复杂查询条件
-      if ("equals" in value) {
+      if ('equals' in value) {
         query = query.eq(snakeKey, value.equals);
       }
-      if ("not" in value) {
+      if ('not' in value) {
         query = query.neq(snakeKey, value.not);
       }
-      if ("in" in value) {
+      if ('in' in value) {
         query = query.in(snakeKey, value.in);
       }
-      if ("notIn" in value) {
-        query = query.not(snakeKey, "in", value.notIn);
+      if ('notIn' in value) {
+        query = query.not(snakeKey, 'in', value.notIn);
       }
-      if ("lt" in value) {
+      if ('lt' in value) {
         query = query.lt(snakeKey, value.lt);
       }
-      if ("lte" in value) {
+      if ('lte' in value) {
         query = query.lte(snakeKey, value.lte);
       }
-      if ("gt" in value) {
+      if ('gt' in value) {
         query = query.gt(snakeKey, value.gt);
       }
-      if ("gte" in value) {
+      if ('gte' in value) {
         query = query.gte(snakeKey, value.gte);
       }
-      if ("contains" in value) {
+      if ('contains' in value) {
         query = query.ilike(snakeKey, `%${value.contains}%`);
       }
-      if ("startsWith" in value) {
+      if ('startsWith' in value) {
         query = query.ilike(snakeKey, `${value.startsWith}%`);
       }
-      if ("endsWith" in value) {
+      if ('endsWith' in value) {
         query = query.ilike(snakeKey, `%${value.endsWith}`);
       }
     } else {
@@ -458,31 +458,31 @@ function buildFilterExpressions(where: any): string[] {
 
     if (value === null) {
       expressions.push(`${snakeKey}.is.null`);
-    } else if (typeof value === "object" && !Array.isArray(value)) {
+    } else if (typeof value === 'object' && !Array.isArray(value)) {
       // 处理运算符对象
       Object.entries(value).forEach(([operator, operatorValue]) => {
-        if (operator === "equals") {
+        if (operator === 'equals') {
           expressions.push(`${snakeKey}.eq.${operatorValue}`);
-        } else if (operator === "not") {
+        } else if (operator === 'not') {
           expressions.push(`${snakeKey}.neq.${operatorValue}`);
-        } else if (operator === "in") {
+        } else if (operator === 'in') {
           const values = Array.isArray(operatorValue)
-            ? operatorValue.join(",")
+            ? operatorValue.join(',')
             : operatorValue;
           expressions.push(`${snakeKey}.in.(${values})`);
-        } else if (operator === "lt") {
+        } else if (operator === 'lt') {
           expressions.push(`${snakeKey}.lt.${operatorValue}`);
-        } else if (operator === "lte") {
+        } else if (operator === 'lte') {
           expressions.push(`${snakeKey}.lte.${operatorValue}`);
-        } else if (operator === "gt") {
+        } else if (operator === 'gt') {
           expressions.push(`${snakeKey}.gt.${operatorValue}`);
-        } else if (operator === "gte") {
+        } else if (operator === 'gte') {
           expressions.push(`${snakeKey}.gte.${operatorValue}`);
-        } else if (operator === "contains") {
+        } else if (operator === 'contains') {
           expressions.push(`${snakeKey}.ilike.%${operatorValue}%`);
-        } else if (operator === "startsWith") {
+        } else if (operator === 'startsWith') {
           expressions.push(`${snakeKey}.ilike.${operatorValue}%`);
-        } else if (operator === "endsWith") {
+        } else if (operator === 'endsWith') {
           expressions.push(`${snakeKey}.ilike.%${operatorValue}`);
         }
       });
@@ -515,7 +515,7 @@ class ModelAdapter<T = any> {
     const { data, error } = await query.single();
 
     if (error) {
-      if (error.code === "PGRST116") return null; // Not found
+      if (error.code === 'PGRST116') return null; // Not found
       throw new Error(`Supabase query error: ${error.message}`);
     }
 
@@ -551,7 +551,7 @@ class ModelAdapter<T = any> {
         // 每个 clause 只取第一个字段（Prisma 每个对象一个字段）
         const [field, direction] = entries[0] as [string, string];
         query = query.order(toSnakeCase(field), {
-          ascending: String(direction).toLowerCase() !== "desc",
+          ascending: String(direction).toLowerCase() !== 'desc',
         });
       });
     }
@@ -683,9 +683,9 @@ class ModelAdapter<T = any> {
     const scalarWhereFields: Record<string, any> = {};
     Object.entries(args.where).forEach(([key, value]) => {
       // 只保留简单标量值（用于唯一键匹配）
-      if (typeof value !== "object" || value === null) {
+      if (typeof value !== 'object' || value === null) {
         scalarWhereFields[key] = value;
-      } else if (typeof value === "object" && "equals" in value) {
+      } else if (typeof value === 'object' && 'equals' in value) {
         // 处理 { field: { equals: value } } 形式
         scalarWhereFields[key] = value.equals;
       }
@@ -705,7 +705,7 @@ class ModelAdapter<T = any> {
     const snakeWhereFields = keysToSnakeCase(scalarWhereFields);
 
     // 构建 onConflict 列
-    const conflictColumns = Object.keys(snakeWhereFields).join(",");
+    const conflictColumns = Object.keys(snakeWhereFields).join(',');
 
     // 合并数据：create 作为基础，where 字段确保存在，update 最后覆盖
     // 这样可以保证：
@@ -792,7 +792,7 @@ class ModelAdapter<T = any> {
   async count(args?: { where?: any }): Promise<number> {
     let query = this.supabase
       .from(this.tableName)
-      .select("*", { count: "exact", head: true });
+      .select('*', { count: 'exact', head: true });
 
     if (args?.where) {
       query = applyWhereClause(query, args.where, this.tableName);
@@ -817,7 +817,7 @@ class ModelAdapter<T = any> {
   }): Promise<any> {
     // 注意：Supabase 不直接支持聚合函数，需要使用 RPC 或原生 SQL
     throw new Error(
-      "Aggregate functions need to be implemented using Supabase RPC",
+      'Aggregate functions need to be implemented using Supabase RPC',
     );
   }
 }
@@ -878,96 +878,96 @@ export class SupabaseAdapter {
     this.supabase = SupabaseClientManager.getInstance();
 
     // 初始化所有模型适配器
-    this.user = new ModelAdapter("users", this.supabase);
-    this.family = new ModelAdapter("families", this.supabase);
-    this.familyMember = new ModelAdapter("family_members", this.supabase);
-    this.healthGoal = new ModelAdapter("health_goals", this.supabase);
-    this.allergy = new ModelAdapter("allergies", this.supabase);
+    this.user = new ModelAdapter('users', this.supabase);
+    this.family = new ModelAdapter('families', this.supabase);
+    this.familyMember = new ModelAdapter('family_members', this.supabase);
+    this.healthGoal = new ModelAdapter('health_goals', this.supabase);
+    this.allergy = new ModelAdapter('allergies', this.supabase);
     this.dietaryPreference = new ModelAdapter(
-      "dietary_preferences",
+      'dietary_preferences',
       this.supabase,
     );
-    this.healthData = new ModelAdapter("health_data", this.supabase);
-    this.healthReminder = new ModelAdapter("health_reminders", this.supabase);
-    this.mealPlan = new ModelAdapter("meal_plans", this.supabase);
-    this.medicalReport = new ModelAdapter("medical_reports", this.supabase);
-    this.mealLog = new ModelAdapter("meal_logs", this.supabase);
-    this.trackingStreak = new ModelAdapter("tracking_streaks", this.supabase);
-    this.quickTemplate = new ModelAdapter("quick_templates", this.supabase);
+    this.healthData = new ModelAdapter('health_data', this.supabase);
+    this.healthReminder = new ModelAdapter('health_reminders', this.supabase);
+    this.mealPlan = new ModelAdapter('meal_plans', this.supabase);
+    this.medicalReport = new ModelAdapter('medical_reports', this.supabase);
+    this.mealLog = new ModelAdapter('meal_logs', this.supabase);
+    this.trackingStreak = new ModelAdapter('tracking_streaks', this.supabase);
+    this.quickTemplate = new ModelAdapter('quick_templates', this.supabase);
     this.dailyNutritionTarget = new ModelAdapter(
-      "daily_nutrition_targets",
+      'daily_nutrition_targets',
       this.supabase,
     );
     this.auxiliaryTracking = new ModelAdapter(
-      "auxiliary_trackings",
+      'auxiliary_trackings',
       this.supabase,
     );
-    this.healthReport = new ModelAdapter("health_reports", this.supabase);
-    this.healthScore = new ModelAdapter("health_scores", this.supabase);
-    this.trendData = new ModelAdapter("trend_data", this.supabase);
-    this.healthAnomaly = new ModelAdapter("health_anomalies", this.supabase);
-    this.aiAdvice = new ModelAdapter("ai_advices", this.supabase);
-    this.aiConversation = new ModelAdapter("ai_conversations", this.supabase);
-    this.budget = new ModelAdapter("budgets", this.supabase);
+    this.healthReport = new ModelAdapter('health_reports', this.supabase);
+    this.healthScore = new ModelAdapter('health_scores', this.supabase);
+    this.trendData = new ModelAdapter('trend_data', this.supabase);
+    this.healthAnomaly = new ModelAdapter('health_anomalies', this.supabase);
+    this.aiAdvice = new ModelAdapter('ai_advices', this.supabase);
+    this.aiConversation = new ModelAdapter('ai_conversations', this.supabase);
+    this.budget = new ModelAdapter('budgets', this.supabase);
     this.savingsRecommendation = new ModelAdapter(
-      "savings_recommendations",
+      'savings_recommendations',
       this.supabase,
     );
-    this.userPreference = new ModelAdapter("user_preferences", this.supabase);
-    this.recipe = new ModelAdapter("recipes", this.supabase);
-    this.recipeRating = new ModelAdapter("recipe_ratings", this.supabase);
-    this.recipeFavorite = new ModelAdapter("recipe_favorites", this.supabase);
-    this.recipeView = new ModelAdapter("recipe_views", this.supabase);
+    this.userPreference = new ModelAdapter('user_preferences', this.supabase);
+    this.recipe = new ModelAdapter('recipes', this.supabase);
+    this.recipeRating = new ModelAdapter('recipe_ratings', this.supabase);
+    this.recipeFavorite = new ModelAdapter('recipe_favorites', this.supabase);
+    this.recipeView = new ModelAdapter('recipe_views', this.supabase);
     this.ingredientSubstitution = new ModelAdapter(
-      "ingredient_substitutions",
+      'ingredient_substitutions',
       this.supabase,
     );
-    this.task = new ModelAdapter("tasks", this.supabase);
-    this.activity = new ModelAdapter("activities", this.supabase);
-    this.comment = new ModelAdapter("comments", this.supabase);
-    this.familyGoal = new ModelAdapter("family_goals", this.supabase);
-    this.shoppingItem = new ModelAdapter("shopping_items", this.supabase);
-    this.sharedContent = new ModelAdapter("shared_contents", this.supabase);
-    this.achievement = new ModelAdapter("achievements", this.supabase);
+    this.task = new ModelAdapter('tasks', this.supabase);
+    this.activity = new ModelAdapter('activities', this.supabase);
+    this.comment = new ModelAdapter('comments', this.supabase);
+    this.familyGoal = new ModelAdapter('family_goals', this.supabase);
+    this.shoppingItem = new ModelAdapter('shopping_items', this.supabase);
+    this.sharedContent = new ModelAdapter('shared_contents', this.supabase);
+    this.achievement = new ModelAdapter('achievements', this.supabase);
     this.leaderboardEntry = new ModelAdapter(
-      "leaderboard_entries",
+      'leaderboard_entries',
       this.supabase,
     );
-    this.communityPost = new ModelAdapter("community_posts", this.supabase);
+    this.communityPost = new ModelAdapter('community_posts', this.supabase);
     this.communityComment = new ModelAdapter(
-      "community_comments",
+      'community_comments',
       this.supabase,
     );
-    this.notification = new ModelAdapter("notifications", this.supabase);
+    this.notification = new ModelAdapter('notifications', this.supabase);
     this.notificationPreference = new ModelAdapter(
-      "notification_preferences",
+      'notification_preferences',
       this.supabase,
     );
-    this.inventoryItem = new ModelAdapter("inventory_items", this.supabase);
-    this.inventoryUsage = new ModelAdapter("inventory_usages", this.supabase);
-    this.wasteLog = new ModelAdapter("waste_logs", this.supabase);
+    this.inventoryItem = new ModelAdapter('inventory_items', this.supabase);
+    this.inventoryUsage = new ModelAdapter('inventory_usages', this.supabase);
+    this.wasteLog = new ModelAdapter('waste_logs', this.supabase);
     this.deviceConnection = new ModelAdapter(
-      "device_connections",
+      'device_connections',
       this.supabase,
     );
-    this.userConsent = new ModelAdapter("user_consents", this.supabase);
+    this.userConsent = new ModelAdapter('user_consents', this.supabase);
   }
 
   // 原生 SQL 查询支持
   async $queryRaw(query: TemplateStringsArray, ...values: any[]): Promise<any> {
-    throw new Error("Raw queries should use Supabase RPC functions");
+    throw new Error('Raw queries should use Supabase RPC functions');
   }
 
   async $executeRaw(
     query: TemplateStringsArray,
     ...values: any[]
   ): Promise<number> {
-    throw new Error("Raw queries should use Supabase RPC functions");
+    throw new Error('Raw queries should use Supabase RPC functions');
   }
 
   // 事务支持 (Supabase 暂不直接支持，需要使用数据库函数)
   async $transaction(queries: any[]): Promise<any[]> {
-    throw new Error("Transactions should use Supabase database functions");
+    throw new Error('Transactions should use Supabase database functions');
   }
 
   // 连接管理
@@ -993,10 +993,10 @@ export const prisma = supabaseAdapter;
 export async function testDatabaseConnection(): Promise<boolean> {
   try {
     const supabase = SupabaseClientManager.getInstance();
-    const { error } = await supabase.from("users").select("id").limit(1);
+    const { error } = await supabase.from('users').select('id').limit(1);
     return !error;
   } catch (error) {
-    console.error("Supabase connection test failed:", error);
+    console.error('Supabase connection test failed:', error);
     return false;
   }
 }
@@ -1005,6 +1005,6 @@ export async function testDatabaseConnection(): Promise<boolean> {
 export async function ensureDatabaseConnection(): Promise<void> {
   const isConnected = await testDatabaseConnection();
   if (!isConnected) {
-    throw new Error("Supabase connection failed");
+    throw new Error('Supabase connection failed');
   }
 }

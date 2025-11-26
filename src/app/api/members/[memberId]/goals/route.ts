@@ -40,7 +40,6 @@ const createGoalSchema = z.object({
   fatRatio: z.number().min(0).max(1).optional().default(0.3),
 });
 
-
 /**
  * GET /api/members/:memberId/goals
  * 获取成员的健康目标列表

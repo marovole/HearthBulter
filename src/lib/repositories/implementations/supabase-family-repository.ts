@@ -417,10 +417,10 @@ export class SupabaseFamilyRepository implements FamilyRepository {
       // 关联用户信息
       user: rowWithUser.user
         ? {
-            id: rowWithUser.user.id,
-            name: rowWithUser.user.name,
-            email: rowWithUser.user.email,
-          }
+          id: rowWithUser.user.id,
+          name: rowWithUser.user.name,
+          email: rowWithUser.user.email,
+        }
         : undefined,
     };
   }

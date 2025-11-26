@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       // 使用优化的 RPC 获取用户统计数据
       // 优势：单次往返、服务端聚合、减少网络延迟
       const statsResult = await calculateSocialStats(memberId, {
-        period: period || '30d'
+        period: period || '30d',
       });
 
       if (statsResult.success && statsResult.data) {

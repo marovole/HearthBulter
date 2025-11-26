@@ -7,28 +7,16 @@ import Hero from '@/components/landing/Hero';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import StatsCounter from '@/components/landing/StatsCounter';
 import TestimonialCarousel from '@/components/landing/TestimonialCarousel';
-import ScrollEnhancements from '@/components/landing/ScrollEnhancements';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 
-// Force dynamic rendering to prevent prerender errors with React Context
 export const dynamic = 'force-dynamic';
 
-/**
- * Landing Page Component
- *
- * Displays marketing content for unauthenticated users.
- * Automatically redirects authenticated users to the dashboard.
- *
- * IMPORTANT: This is a client component to support useSession hook
- * for Cloudflare Pages static export compatibility.
- */
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Redirect authenticated users to dashboard
   useEffect(() => {
     if (status === 'authenticated' && session) {
       router.push('/dashboard');
@@ -36,80 +24,92 @@ export default function Home() {
   }, [status, session, router]);
 
   return (
-    <main className="min-h-screen">
-      {/* 全局滚动增强 */}
-      <ScrollEnhancements />
-
-      {/* Hero Section with animated headline and CTA */}
+    <main className="min-h-screen bg-background">
       <Hero />
-
-      {/* Features Section with glassmorphism cards */}
       <FeaturesSection />
-
-      {/* Stats Counter with scroll animation */}
       <StatsCounter />
-
-      {/* Testimonials Carousel */}
       <TestimonialCarousel />
 
-      {/* Final CTA Section with shadcn/ui */}
-      <section className="py-20 md:py-28 bg-gradient-to-br from-brand-blue via-brand-purple to-brand-green">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* Final CTA Section */}
+      <section className="py-24 md:py-32 bg-gradient-to-br from-primary via-primary-dark to-primary relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {/* Badge */}
-          <Badge className="mb-6 bg-white/20 text-white border-white/30 px-4 py-2">
-            <Sparkles className="w-4 h-4 mr-2" />
-            免费开始
-          </Badge>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white text-sm font-medium mb-8 backdrop-blur-sm">
+            <Sparkles className="w-4 h-4" />
+            永久免费开始
+          </div>
 
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
             准备好开始您的健康之旅了吗？
           </h2>
-          <p className="text-lg md:text-xl text-white/90 mb-8">
-            加入 10,000+ 用户，让 Health Butler 成为您的专属健康管家
+          <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-2xl mx-auto">
+            加入超过 10,000 个家庭，让 Health Butler 成为您的专属健康管家。
           </p>
 
-          {/* CTA Buttons using shadcn/ui */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button 
-              size="lg" 
-              className="px-8 py-4 text-lg font-semibold bg-white text-brand-blue hover:bg-gray-100 shadow-lg hover:shadow-2xl group"
               asChild
+              size="xl"
+              className="bg-white text-primary hover:bg-white/90 shadow-soft-xl group"
             >
-              <a href="/auth/signup" className="inline-flex items-center gap-2">
+              <Link href="/auth/signup">
                 立即开始免费试用
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
+              </Link>
             </Button>
 
             <Button 
-              variant="outline" 
-              size="lg"
-              className="px-8 py-4 text-lg font-semibold bg-transparent text-white border-white hover:bg-white hover:text-brand-blue transition-all duration-300 group"
               asChild
+              size="xl"
+              variant="outline"
+              className="border-white/30 text-white hover:bg-white/10 hover:border-white/50"
             >
-              <a href="/auth/signin" className="inline-flex items-center gap-2">
+              <Link href="/auth/signin">
                 已有账号？登录
-              </a>
+              </Link>
             </Button>
           </div>
 
           {/* Trust indicators */}
-          <div className="flex flex-wrap justify-center gap-6 text-white/80 text-sm">
+          <div className="flex flex-wrap justify-center gap-8 text-white/70 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>无需信用卡</span>
+              <div className="w-2 h-2 rounded-full bg-white/80" />
+              无需信用卡
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>5分钟快速开始</span>
+              <div className="w-2 h-2 rounded-full bg-white/80" />
+              5分钟快速开始
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>24/7 客服支持</span>
+              <div className="w-2 h-2 rounded-full bg-white/80" />
+              数据安全加密
             </div>
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="py-12 bg-background border-t border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              © 2024 Health Butler. 让健康管理更简单。
+            </div>
+            <div className="flex gap-6 text-sm text-muted-foreground">
+              <Link href="#" className="hover:text-foreground transition-colors">隐私政策</Link>
+              <Link href="#" className="hover:text-foreground transition-colors">服务条款</Link>
+              <Link href="#" className="hover:text-foreground transition-colors">联系我们</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

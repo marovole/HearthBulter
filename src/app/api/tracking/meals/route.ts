@@ -3,7 +3,6 @@ import { auth } from '@/lib/auth';
 import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
 import { z } from 'zod';
 
-
 // Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 const createMealLogSchema = z.object({

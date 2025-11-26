@@ -4,7 +4,6 @@ import { prisma } from '@/lib/db';
 import { CartAggregator } from '@/lib/services/cart-aggregator';
 import { PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types';
 
-
 // Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {

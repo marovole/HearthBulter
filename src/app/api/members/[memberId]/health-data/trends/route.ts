@@ -259,13 +259,13 @@ export async function GET(
         change:
           bloodPressureData.length > 1
             ? {
-                systolic:
+              systolic:
                   bloodPressureData[bloodPressureData.length - 1].systolic -
                   bloodPressureData[0].systolic,
-                diastolic:
+              diastolic:
                   bloodPressureData[bloodPressureData.length - 1].diastolic -
                   bloodPressureData[0].diastolic,
-              }
+            }
             : null,
       };
     }

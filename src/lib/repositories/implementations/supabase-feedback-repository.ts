@@ -232,9 +232,9 @@ export class SupabaseFeedbackRepository implements FeedbackRepository {
     // 映射 top_categories
     const topCategories: FeedbackCategoryStat[] = Array.isArray(row.top_categories)
       ? row.top_categories.map((entry) => ({
-          category: entry.category,
-          count: Number(entry.count ?? 0),
-        }))
+        category: entry.category,
+        count: Number(entry.count ?? 0),
+      }))
       : [];
 
     // 映射 by_type

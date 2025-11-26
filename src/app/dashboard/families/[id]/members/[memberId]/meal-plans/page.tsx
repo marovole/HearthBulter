@@ -8,7 +8,6 @@ import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
-
 export default async function MealPlansPage({
   params,
 }: {
