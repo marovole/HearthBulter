@@ -3,6 +3,7 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { auth } from '@/lib/auth';
 import { ReportType } from '@prisma/client';
 import { createReport } from '@/lib/services/analytics/report-generator';
+import { requireMemberDataAccess } from '@/lib/middleware/authorization';
 
 /**
  * GET /api/analytics/reports
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -30,6 +31,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: '缺少必要参数：memberId' },
         { status: 400 }
+      );
+    }
+
+    // 验证用户对该成员数据的访问权限
+    const accessResult = await requireMemberDataAccess(session.user.id, memberId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此成员数据' },
+        { status: 403 }
       );
     }
 
@@ -98,7 +108,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -109,6 +119,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '缺少必要参数：memberId, reportType' },
         { status: 400 }
+      );
+    }
+
+    // 验证用户对该成员数据的访问权限
+    const accessResult = await requireMemberDataAccess(session.user.id, memberId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此成员数据' },
+        { status: 403 }
       );
     }
 

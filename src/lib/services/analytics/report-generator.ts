@@ -7,6 +7,11 @@ import { PrismaClient, ReportType, FamilyMember } from '@prisma/client';
 import { analyzeTrend, TimeSeriesPoint } from './trend-analyzer';
 import { calculateHealthScore, getAverageScore } from './health-scorer';
 import { getPendingAnomalies } from './anomaly-detector';
+import {
+  generateSecureShareToken,
+  verifyShareToken,
+} from '@/lib/security/token-generator';
+import { logger } from '@/lib/logger';
 
 const prisma = new PrismaClient();
 
@@ -328,12 +333,32 @@ export async function createReport(
 
 /**
  * 生成分享token
+ * 使用安全的 JWT Token 替代不安全的 Math.random()
  */
 export async function generateShareToken(reportId: string, expiryDays: number = 7) {
-  const token = generateRandomToken();
+  // 获取报告信息以确认存在并获取所有者 ID
+  const report = await prisma.healthReport.findUnique({
+    where: { id: reportId },
+    select: { id: true, memberId: true },
+  });
+
+  if (!report) {
+    throw new Error('Report not found');
+  }
+
+  // 生成安全的 JWT Token
+  const token = await generateSecureShareToken(
+    reportId,
+    'health_report',
+    report.memberId,
+    expiryDays,
+    ['read']
+  );
+
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expiryDays);
 
+  // 更新数据库记录
   await prisma.healthReport.update({
     where: { id: reportId },
     data: {
@@ -342,24 +367,60 @@ export async function generateShareToken(reportId: string, expiryDays: number = 
     },
   });
 
+  logger.info('生成报告分享Token', {
+    reportId,
+    expiryDays,
+  });
+
   return token;
 }
 
 /**
  * 通过分享token获取报告
+ * 使用 JWT 验证替代简单的数据库查询
  */
 export async function getReportByShareToken(token: string) {
+  // 首先验证 Token 的有效性
+  const verificationResult = await verifyShareToken(token);
+
+  if (!verificationResult.valid) {
+    logger.warn('无效的分享Token', {
+      error: verificationResult.error,
+    });
+    return null;
+  }
+
+  const payload = verificationResult.payload;
+
+  // 验证资源类型
+  if (payload?.resourceType !== 'health_report') {
+    logger.warn('Token资源类型不匹配', {
+      expected: 'health_report',
+      actual: payload?.resourceType,
+    });
+    return null;
+  }
+
+  // 从 Token 中获取报告 ID
+  const reportId = payload.resourceId;
+
+  // 查询报告
   const report = await prisma.healthReport.findUnique({
-    where: { shareToken: token },
+    where: { id: reportId },
     include: { member: true },
   });
 
   if (!report) {
+    logger.warn('Token对应的报告不存在', { reportId });
     return null;
   }
 
-  // 检查是否过期
-  if (report.shareExpiresAt && report.shareExpiresAt < new Date()) {
+  // 验证所有权（Token 中的 ownerId 应该与报告的 memberId 匹配）
+  if (payload.ownerId !== report.memberId) {
+    logger.warn('Token所有权验证失败', {
+      tokenOwnerId: payload.ownerId,
+      reportMemberId: report.memberId,
+    });
     return null;
   }
 
@@ -592,10 +653,4 @@ async function generateRecommendations(
   return recommendations;
 }
 
-/**
- * 生成随机token
- */
-function generateRandomToken(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
 

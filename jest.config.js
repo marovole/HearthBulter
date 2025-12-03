@@ -102,7 +102,7 @@ const customJestConfig = {
     '<rootDir>/src/__tests__/debug/',
   ],
   transformIgnorePatterns: [
-    '/node_modules/(?!(next-auth|@auth|@panva|oauth4webapi|.*\\.mjs$))',
+    '/node_modules/(?!(next-auth|@auth|@panva|oauth4webapi|jose|.*\\.mjs$))',
     '^.+\\.module\\.(css|sass|scss)$',
   ],
   // Add test environment variables

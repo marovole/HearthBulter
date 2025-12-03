@@ -1,28 +1,41 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdapter, testDatabaseConnection } from '@/lib/db/supabase-adapter';
+import { testDatabaseConnection } from '@/lib/db/supabase-adapter';
+import { getCurrentUser } from '@/lib/auth';
+import { requireAdmin } from '@/lib/middleware/authorization';
 
-// 使用 Supabase HTTP 客户端 - 完全兼容 Cloudflare Workers
-// 不依赖文件系统，不需要 Prisma 二进制文件
+/**
+ * 数据库连接测试 API
+ * 安全限制:
+ * - 生产环境需要管理员权限
+ * - 不暴露敏感配置信息
+ */
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
-    // 检查环境变量配置
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json({
-        status: 'error',
-        error: 'Supabase configuration missing',
-        details: {
-          hasUrl: !!supabaseUrl,
-          hasKey: !!supabaseKey,
-          availableEnvKeys: Object.keys(process.env)
-            .filter(k => k.includes('SUPABASE') && !k.includes('SECRET')),
-        },
-      }, { status: 500 });
+    // 生产环境需要管理员权限
+    if (isProduction) {
+      const user = await getCurrentUser();
+
+      if (!user?.id) {
+        return NextResponse.json(
+          { status: 'error', error: '未授权访问' },
+          { status: 401 }
+        );
+      }
+
+      const authResult = await requireAdmin(user.id);
+
+      if (!authResult.authorized) {
+        return NextResponse.json(
+          { status: 'error', error: '需要管理员权限' },
+          { status: 403 }
+        );
+      }
     }
 
     // 测试数据库连接
@@ -32,28 +45,17 @@ export async function GET() {
       return NextResponse.json({
         status: 'error',
         error: 'Database connection test failed',
-        config: {
-          url: supabaseUrl,
-          adapter: 'Supabase HTTP Client',
-        },
       }, { status: 500 });
     }
 
-    // 执行一个简单的查询来验证 Supabase 适配器
-    const userCount = await supabaseAdapter.user.count();
-
+    // 返回简化的状态信息（不暴露敏感配置）
     return NextResponse.json({
       status: 'success',
-      message: 'Supabase HTTP adapter works! ✅',
+      message: 'Database connection is healthy',
       timestamp: new Date().toISOString(),
       connection: {
-        adapter: 'Supabase JS Client (HTTP)',
-        runtime: 'Cloudflare Workers compatible',
-        url: supabaseUrl,
-      },
-      stats: {
-        userCount,
-        method: 'Supabase Adapter API',
+        adapter: 'Supabase',
+        healthy: true,
       },
     });
   } catch (error) {
@@ -61,7 +63,6 @@ export async function GET() {
       {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
