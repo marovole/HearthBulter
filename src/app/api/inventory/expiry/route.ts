@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { inventoryRepository } from '@/lib/repositories/inventory-repository-singleton';
 import { getCurrentUser } from '@/lib/auth';
+import { requireMemberDataAccess, requireOwnership } from '@/lib/middleware/authorization';
 import type { WasteRecordCreateDTO } from '@/lib/repositories/types/inventory';
 
 // GET - 获取即将过期的物品
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -21,6 +22,15 @@ export async function GET(request: NextRequest) {
 
     if (!memberId) {
       return NextResponse.json({ error: '缺少成员ID' }, { status: 400 });
+    }
+
+    // 验证用户对该成员数据的访问权限
+    const accessResult = await requireMemberDataAccess(user.id, memberId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此成员数据' },
+        { status: 403 }
+      );
     }
 
     // 使用 Repository 获取即将过期的物品
@@ -52,7 +62,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -75,6 +85,13 @@ export async function POST(request: NextRequest) {
 
     for (const itemId of body.itemIds) {
       try {
+        // 验证用户对该库存项的访问权限
+        const accessResult = await requireOwnership(user.id, 'inventory_item', itemId);
+        if (!accessResult.authorized) {
+          errors.push(`物品 ${itemId}: ${accessResult.reason || '无权访问'}`);
+          continue;
+        }
+
         // 1. 获取物品信息
         const item = await inventoryRepository.getInventoryItemById(itemId);
 

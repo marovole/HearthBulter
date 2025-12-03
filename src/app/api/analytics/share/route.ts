@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { generateShareToken } from '@/lib/services/analytics/report-generator';
+import { requireOwnership } from '@/lib/middleware/authorization';
 
 /**
  * POST /api/analytics/share
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -23,6 +24,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '缺少必要参数：reportId' },
         { status: 400 }
+      );
+    }
+
+    // 验证用户对该报告的访问权限
+    const accessResult = await requireOwnership(session.user.id, 'health_report', reportId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此报告' },
+        { status: 403 }
       );
     }
 

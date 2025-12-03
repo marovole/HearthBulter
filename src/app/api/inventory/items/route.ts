@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { getCurrentUser } from '@/lib/auth';
 import { inventoryRepository } from '@/lib/repositories/inventory-repository-singleton';
+import { requireMemberDataAccess } from '@/lib/middleware/authorization';
 import type { InventoryItemCreateDTO, InventoryItemFilterDTO } from '@/lib/repositories/types/inventory';
 
 /**
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -25,6 +26,15 @@ export async function GET(request: NextRequest) {
 
     if (!memberId) {
       return NextResponse.json({ error: '缺少成员ID' }, { status: 400 });
+    }
+
+    // 验证用户对该成员数据的访问权限
+    const accessResult = await requireMemberDataAccess(user.id, memberId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此成员数据' },
+        { status: 403 }
+      );
     }
 
     // 构建过滤器
@@ -91,7 +101,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -102,6 +112,15 @@ export async function POST(request: NextRequest) {
       if (!body[field]) {
         return NextResponse.json({ error: `缺少必需字段: ${field}` }, { status: 400 });
       }
+    }
+
+    // 验证用户对该成员数据的访问权限
+    const accessResult = await requireMemberDataAccess(user.id, body.memberId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此成员数据' },
+        { status: 403 }
+      );
     }
 
     const supabase = SupabaseClientManager.getInstance();

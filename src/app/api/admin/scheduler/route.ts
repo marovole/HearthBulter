@@ -1,23 +1,58 @@
 /**
  * 调度器管理API
+ * 需要管理员权限
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { scheduler } from '@/lib/services/scheduler';
-
-// GET - 获取调度器状态
+import { getCurrentUser } from '@/lib/auth';
+import { requireAdmin } from '@/lib/middleware/authorization';
+import { logger } from '@/lib/logger';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
+
+/**
+ * 验证管理员权限
+ */
+async function checkAdminAccess(): Promise<{ authorized: boolean; userId?: string; error?: string }> {
+  const user = await getCurrentUser();
+
+  if (!user?.id) {
+    return { authorized: false, error: '未授权访问' };
+  }
+
+  const authResult = await requireAdmin(user.id);
+
+  if (!authResult.authorized) {
+    logger.warn('非管理员尝试访问调度器API', { userId: user.id });
+    return { authorized: false, userId: user.id, error: authResult.reason };
+  }
+
+  return { authorized: true, userId: user.id };
+}
+
+// GET - 获取调度器状态
 export async function GET() {
   try {
+    const access = await checkAdminAccess();
+    if (!access.authorized) {
+      return NextResponse.json(
+        { success: false, error: access.error || '需要管理员权限' },
+        { status: 403 }
+      );
+    }
+
     const status = scheduler.getStatus();
+
+    logger.info('管理员查看调度器状态', { userId: access.userId });
+
     return NextResponse.json({
       success: true,
       data: status,
     });
   } catch (error) {
-    console.error('Failed to get scheduler status:', error);
+    logger.error('获取调度器状态失败', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to get scheduler status' },
       { status: 500 }
@@ -28,8 +63,24 @@ export async function GET() {
 // POST - 启动/停止调度器或手动执行任务
 export async function POST(request: NextRequest) {
   try {
+    // 验证管理员权限
+    const access = await checkAdminAccess();
+    if (!access.authorized) {
+      return NextResponse.json(
+        { success: false, error: access.error || '需要管理员权限' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { action, taskName } = body;
+
+    // 记录操作日志
+    logger.info('管理员调度器操作', {
+      userId: access.userId,
+      action,
+      taskName,
+    });
 
     switch (action) {
     case 'start':
@@ -79,7 +130,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Scheduler operation failed:', error);
+    logger.error('调度器操作失败', { error });
     return NextResponse.json(
       { success: false, error: 'Scheduler operation failed' },
       { status: 500 }

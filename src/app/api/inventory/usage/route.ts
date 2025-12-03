@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { inventoryRepository } from '@/lib/repositories/inventory-repository-singleton';
 import { getCurrentUser } from '@/lib/auth';
+import { requireOwnership } from '@/lib/middleware/authorization';
 import type { UseInventoryInputDTO } from '@/lib/repositories/types/inventory';
 
 // POST - 使用库存
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -22,6 +23,15 @@ export async function POST(request: NextRequest) {
       if (!body[field]) {
         return NextResponse.json({ error: `缺少必需字段: ${field}` }, { status: 400 });
       }
+    }
+
+    // 验证用户对该库存项的访问权限
+    const accessResult = await requireOwnership(user.id, 'inventory_item', body.inventoryItemId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此库存项' },
+        { status: 403 }
+      );
     }
 
     // 构建 UseInventoryInputDTO
@@ -70,7 +80,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -81,6 +91,15 @@ export async function GET(request: NextRequest) {
 
     if (!inventoryItemId) {
       return NextResponse.json({ error: '缺少库存条目ID' }, { status: 400 });
+    }
+
+    // 验证用户对该库存项的访问权限
+    const accessResult = await requireOwnership(user.id, 'inventory_item', inventoryItemId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此库存项' },
+        { status: 403 }
+      );
     }
 
     // 使用 Repository 获取使用记录

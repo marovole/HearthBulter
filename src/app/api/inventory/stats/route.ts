@@ -3,6 +3,7 @@ import { inventoryRepository } from '@/lib/repositories/inventory-repository-sin
 import { inventoryAnalyzer } from '@/services/inventory-analyzer';
 import { expiryMonitor } from '@/services/expiry-monitor';
 import { getCurrentUser } from '@/lib/auth';
+import { requireMemberDataAccess } from '@/lib/middleware/authorization';
 
 // GET - 获取库存统计信息
 
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
@@ -21,6 +22,15 @@ export async function GET(request: NextRequest) {
     
     if (!memberId) {
       return NextResponse.json({ error: '缺少成员ID' }, { status: 400 });
+    }
+
+    // 验证用户对该成员数据的访问权限
+    const accessResult = await requireMemberDataAccess(user.id, memberId);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此成员数据' },
+        { status: 403 }
+      );
     }
 
     let data: any = {};

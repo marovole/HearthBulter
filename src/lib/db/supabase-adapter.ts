@@ -443,6 +443,62 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
 }
 
 /**
+ * 转义 PostgREST 查询值，防止注入攻击
+ * 
+ * 需要转义的特殊字符：
+ * - 逗号(,) - 用于分隔 OR 条件和 IN 列表
+ * - 句点(.) - 用于分隔操作符
+ * - 括号() - 用于 IN 操作符
+ * - 百分号(%) - 用于 LIKE 通配符
+ * - 引号 - 字符串定界符
+ */
+function escapeFilterValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return 'null';
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  const str = String(value);
+  
+  // 检测潜在的注入尝试
+  const dangerousPatterns = [
+    /\.\s*(eq|neq|gt|gte|lt|lte|like|ilike|in|is)\s*\./i,
+    /,\s*(or|and)\s*\(/i,
+    /;\s*(select|insert|update|delete|drop)/i,
+  ];
+
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(str)) {
+      throw new Error(`Potentially malicious filter value detected: ${str.substring(0, 50)}`);
+    }
+  }
+
+  // 转义特殊字符：将双引号包裹字符串以保护特殊字符
+  // PostgREST 对引号内的内容不做特殊解析
+  if (str.includes(',') || str.includes('.') || str.includes('(') || str.includes(')') || str.includes('%')) {
+    // 使用双引号包裹，内部双引号需要转义
+    return `"${str.replace(/"/g, '\\"')}"`;
+  }
+
+  return str;
+}
+
+/**
+ * 验证过滤器键名是否安全
+ */
+function validateFilterKey(key: string): boolean {
+  // 只允许字母、数字、下划线
+  return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key);
+}
+
+/**
  * 构建 OR 表达式数组
  * 将 Prisma where 对象转换为 Supabase or() 接受的表达式格式
  *
@@ -454,6 +510,11 @@ function buildFilterExpressions(where: any): string[] {
   const expressions: string[] = [];
 
   Object.entries(where).forEach(([key, value]) => {
+    // 验证键名安全性
+    if (!validateFilterKey(key)) {
+      throw new Error(`Invalid filter key: ${key}`);
+    }
+
     const snakeKey = toSnakeCase(key);
 
     if (value === null) {
@@ -461,34 +522,40 @@ function buildFilterExpressions(where: any): string[] {
     } else if (typeof value === 'object' && !Array.isArray(value)) {
       // 处理运算符对象
       Object.entries(value).forEach(([operator, operatorValue]) => {
+        const escapedValue = escapeFilterValue(operatorValue);
+
         if (operator === 'equals') {
-          expressions.push(`${snakeKey}.eq.${operatorValue}`);
+          expressions.push(`${snakeKey}.eq.${escapedValue}`);
         } else if (operator === 'not') {
-          expressions.push(`${snakeKey}.neq.${operatorValue}`);
+          expressions.push(`${snakeKey}.neq.${escapedValue}`);
         } else if (operator === 'in') {
           const values = Array.isArray(operatorValue)
-            ? operatorValue.join(',')
-            : operatorValue;
+            ? operatorValue.map(v => escapeFilterValue(v)).join(',')
+            : escapedValue;
           expressions.push(`${snakeKey}.in.(${values})`);
         } else if (operator === 'lt') {
-          expressions.push(`${snakeKey}.lt.${operatorValue}`);
+          expressions.push(`${snakeKey}.lt.${escapedValue}`);
         } else if (operator === 'lte') {
-          expressions.push(`${snakeKey}.lte.${operatorValue}`);
+          expressions.push(`${snakeKey}.lte.${escapedValue}`);
         } else if (operator === 'gt') {
-          expressions.push(`${snakeKey}.gt.${operatorValue}`);
+          expressions.push(`${snakeKey}.gt.${escapedValue}`);
         } else if (operator === 'gte') {
-          expressions.push(`${snakeKey}.gte.${operatorValue}`);
+          expressions.push(`${snakeKey}.gte.${escapedValue}`);
         } else if (operator === 'contains') {
-          expressions.push(`${snakeKey}.ilike.%${operatorValue}%`);
+          // 对于 LIKE 操作，需要额外转义 % 字符
+          const likeValue = String(operatorValue).replace(/%/g, '\\%');
+          expressions.push(`${snakeKey}.ilike.%${likeValue}%`);
         } else if (operator === 'startsWith') {
-          expressions.push(`${snakeKey}.ilike.${operatorValue}%`);
+          const likeValue = String(operatorValue).replace(/%/g, '\\%');
+          expressions.push(`${snakeKey}.ilike.${likeValue}%`);
         } else if (operator === 'endsWith') {
-          expressions.push(`${snakeKey}.ilike.%${operatorValue}`);
+          const likeValue = String(operatorValue).replace(/%/g, '\\%');
+          expressions.push(`${snakeKey}.ilike.%${likeValue}`);
         }
       });
     } else {
       // 简单相等
-      expressions.push(`${snakeKey}.eq.${value}`);
+      expressions.push(`${snakeKey}.eq.${escapeFilterValue(value)}`);
     }
   });
 

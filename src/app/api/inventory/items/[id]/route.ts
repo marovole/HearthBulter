@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { inventoryRepository } from '@/lib/repositories/inventory-repository-singleton';
+import { requireOwnership } from '@/lib/middleware/authorization';
 import type { InventoryItemUpdateDTO } from '@/lib/repositories/types/inventory';
 
 /**
@@ -19,8 +20,17 @@ export async function GET(
   try {
     const { id } = await params;
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
+    }
+
+    // 验证用户对该库存项的访问权限
+    const accessResult = await requireOwnership(user.id, 'inventory_item', id);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此库存项' },
+        { status: 403 }
+      );
     }
 
     // 使用 Repository 获取库存物品（含使用记录和浪费记录）
@@ -58,8 +68,17 @@ export async function PUT(
   try {
     const { id } = await params;
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
+    }
+
+    // 验证用户对该库存项的访问权限
+    const accessResult = await requireOwnership(user.id, 'inventory_item', id);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此库存项' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -120,8 +139,17 @@ export async function DELETE(
   try {
     const { id } = await params;
     const user = await getCurrentUser();
-    if (!user) {
+    if (!user?.id) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
+    }
+
+    // 验证用户对该库存项的访问权限
+    const accessResult = await requireOwnership(user.id, 'inventory_item', id);
+    if (!accessResult.authorized) {
+      return NextResponse.json(
+        { error: accessResult.reason || '无权访问此库存项' },
+        { status: 403 }
+      );
     }
 
     // 使用 Repository 软删除库存物品
