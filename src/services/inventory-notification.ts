@@ -42,6 +42,19 @@ export interface NotificationConfig {
   };
 }
 
+export interface InventoryNotificationData {
+  itemId?: string;
+  itemName?: string;
+  expiryDate?: Date | string;
+  quantity?: number;
+  threshold?: number;
+  category?: string;
+  daysToExpiry?: number;
+  estimatedValue?: number;
+  wasteReason?: string;
+  [key: string]: string | number | boolean | Date | undefined;
+}
+
 export interface InventoryNotification {
   id: string;
   memberId: string;
@@ -49,7 +62,7 @@ export interface InventoryNotification {
   title: string;
   message: string;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
-  data?: any;
+  data?: InventoryNotificationData;
   isRead: boolean;
   createdAt: Date;
   scheduledFor?: Date;

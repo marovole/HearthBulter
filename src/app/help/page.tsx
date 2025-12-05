@@ -206,7 +206,7 @@ export default function HelpCenterPage() {
                   showSearch={false}
                   showCategories={true}
                   onFeedback={(itemId, isHelpful) => {
-                    console.log(`Feedback for ${itemId}: ${isHelpful ? 'helpful' : 'not helpful'}`);
+                    logger.debug('FAQ反馈', { itemId, isHelpful });
                   }}
                   onContactSupport={handleContactSupport}
                 />
@@ -231,7 +231,7 @@ export default function HelpCenterPage() {
                         key={index}
                         video={video}
                         onComplete={() => {
-                          console.log(`Tutorial ${video.title} completed`);
+                          logger.debug('教程完成', { title: video.title });
                         }}
                       />
                     ))}

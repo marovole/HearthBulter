@@ -99,18 +99,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // 如果数据库不可用，创建临时用户
-      return NextResponse.json({
-        success: true,
-        message: '注册成功（临时模式）',
-        user: {
-          id: `temp-${Date.now()}`,
-          name,
-          email,
-          role: 'USER',
-        },
-        warning: '当前为临时注册模式，重启后数据可能丢失',
-      });
+      // 数据库不可用时返回服务不可用错误，不再创建临时用户
+      return NextResponse.json(
+        { error: '注册服务暂时不可用，请稍后重试' },
+        { status: 503 }
+      );
     }
 
   } catch (error) {

@@ -9,6 +9,13 @@ import { GET, POST } from '@/app/api/devices/route';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { optimizedQuery } from '@/lib/middleware/query-optimization';
+import {
+  createMockSession,
+  createMockDeviceWithMember,
+  createMockMember,
+  createMockDevice,
+  type MockDeviceWithMember,
+} from '@/__tests__/mocks/typed-mocks';
 
 jest.mock('@/lib/auth', () => ({
   auth: jest.fn(),
@@ -33,8 +40,22 @@ jest.mock('@/lib/middleware/query-optimization', () => ({
   },
 }));
 
-const mockDevices = [
-  {
+// 类型安全的Mock设置
+const mockAuth = jest.mocked(auth);
+const mockOptimizedQuery = {
+  findMany: jest.mocked(optimizedQuery.findMany),
+  count: jest.mocked(optimizedQuery.count),
+};
+const mockPrismaFamilyMember = {
+  findFirst: jest.mocked(prisma.familyMember.findFirst),
+};
+const mockPrismaDeviceConnection = {
+  findFirst: jest.mocked(prisma.deviceConnection.findFirst),
+  create: jest.mocked(prisma.deviceConnection.create),
+};
+
+const mockDevices: MockDeviceWithMember[] = [
+  createMockDeviceWithMember({
     id: 'device-1',
     deviceId: 'apple-watch-123',
     deviceName: 'Apple Watch',
@@ -46,12 +67,8 @@ const mockDevices = [
     syncStatus: 'SUCCESS',
     lastSyncAt: new Date('2024-01-15'),
     connectionDate: new Date('2024-01-01'),
-    member: {
-      id: 'member-1',
-      name: '张三',
-    },
-  },
-  {
+  }),
+  createMockDeviceWithMember({
     id: 'device-2',
     deviceId: 'fitbit-456',
     deviceName: 'Fitbit Versa',
@@ -63,11 +80,7 @@ const mockDevices = [
     syncStatus: 'PENDING',
     lastSyncAt: new Date('2024-01-14'),
     connectionDate: new Date('2024-01-02'),
-    member: {
-      id: 'member-1',
-      name: '张三',
-    },
-  },
+  }),
 ];
 
 describe('/api/devices', () => {
@@ -78,9 +91,9 @@ describe('/api/devices', () => {
 
   describe('GET - Get Device List', () => {
     beforeEach(() => {
-      (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (optimizedQuery.findMany as jest.Mock).mockResolvedValue(mockDevices);
-      (optimizedQuery.count as jest.Mock).mockResolvedValue(2);
+      mockAuth.mockResolvedValue(createMockSession({ user: { id: 'user-1', email: 'test@example.com', name: 'Test', role: 'USER' } }));
+      mockOptimizedQuery.findMany.mockResolvedValue(mockDevices);
+      mockOptimizedQuery.count.mockResolvedValue(2);
     });
 
     it('should return device list with pagination', async () => {
@@ -148,8 +161,8 @@ describe('/api/devices', () => {
     });
 
     it('should handle empty device list', async () => {
-      (optimizedQuery.findMany as jest.Mock).mockResolvedValue([]);
-      (optimizedQuery.count as jest.Mock).mockResolvedValue(0);
+      mockOptimizedQuery.findMany.mockResolvedValue([]);
+      mockOptimizedQuery.count.mockResolvedValue(0);
 
       const request = new NextRequest('http://localhost:3000/api/devices');
       const response = await GET(request);
@@ -191,10 +204,10 @@ describe('/api/devices', () => {
     };
 
     beforeEach(() => {
-      (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({ id: 'member-1', name: '张三' });
-      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.deviceConnection.create as jest.Mock).mockResolvedValue(mockConnectedDevice);
+      mockAuth.mockResolvedValue(createMockSession({ user: { id: 'user-1', email: 'test@example.com', name: 'Test', role: 'USER' } }));
+      mockPrismaFamilyMember.findFirst.mockResolvedValue(createMockMember({ id: 'member-1', name: '张三' }) as any);
+      mockPrismaDeviceConnection.findFirst.mockResolvedValue(null);
+      mockPrismaDeviceConnection.create.mockResolvedValue(mockConnectedDevice as any);
     });
 
     it('should connect Apple HealthKit device successfully', async () => {
@@ -238,11 +251,11 @@ describe('/api/devices', () => {
         platform: 'GOOGLE_FIT',
       };
 
-      (prisma.deviceConnection.create as jest.Mock).mockResolvedValue({
+      mockPrismaDeviceConnection.create.mockResolvedValue({
         ...mockConnectedDevice,
         platform: 'GOOGLE_FIT',
         syncStatus: 'PENDING',
-      });
+      } as any);
 
       const request = new NextRequest('http://localhost:3000/api/devices', {
         method: 'POST',
@@ -270,7 +283,7 @@ describe('/api/devices', () => {
       });
       await POST(request);
 
-      expect(prisma.deviceConnection.create).toHaveBeenCalledWith(
+      expect(mockPrismaDeviceConnection.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ syncInterval: 1800 }),
         })
@@ -280,7 +293,7 @@ describe('/api/devices', () => {
 
   describe('Authorization', () => {
     it('POST: should return 401 when user is not authenticated', async () => {
-      (auth as jest.Mock).mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/devices', {
         method: 'POST',
@@ -294,8 +307,8 @@ describe('/api/devices', () => {
     });
 
     it('POST: should return 403 when user has no access to member', async () => {
-      (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue(null);
+      mockAuth.mockResolvedValue(createMockSession({ user: { id: 'user-1', email: 'test@example.com', name: 'Test', role: 'USER' } }));
+      mockPrismaFamilyMember.findFirst.mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost:3000/api/devices', {
         method: 'POST',
@@ -320,15 +333,14 @@ describe('/api/devices', () => {
 
   describe('Validation', () => {
     beforeEach(() => {
-      (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({ id: 'member-1' });
+      mockAuth.mockResolvedValue(createMockSession({ user: { id: 'user-1', email: 'test@example.com', name: 'Test', role: 'USER' } }));
+      mockPrismaFamilyMember.findFirst.mockResolvedValue(createMockMember({ id: 'member-1' }) as any);
     });
 
     it('POST: should return 409 when device already exists', async () => {
-      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue({
-        id: 'existing-device',
-        isActive: true,
-      });
+      mockPrismaDeviceConnection.findFirst.mockResolvedValue(
+        createMockDevice({ id: 'existing-device', isActive: true }) as any
+      );
 
       const request = new NextRequest('http://localhost:3000/api/devices', {
         method: 'POST',
@@ -410,11 +422,11 @@ describe('/api/devices', () => {
 
   describe('Error Handling', () => {
     beforeEach(() => {
-      (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      mockAuth.mockResolvedValue(createMockSession({ user: { id: 'user-1', email: 'test@example.com', name: 'Test', role: 'USER' } }));
     });
 
     it('GET: should handle database errors gracefully', async () => {
-      (optimizedQuery.findMany as jest.Mock).mockRejectedValue(new Error('Database connection failed'));
+      mockOptimizedQuery.findMany.mockRejectedValue(new Error('Database connection failed'));
 
       const request = new NextRequest('http://localhost:3000/api/devices');
       const response = await GET(request);
@@ -425,7 +437,7 @@ describe('/api/devices', () => {
     });
 
     it('POST: should handle database errors gracefully', async () => {
-      (prisma.familyMember.findFirst as jest.Mock).mockRejectedValue(new Error('Database error'));
+      mockPrismaFamilyMember.findFirst.mockRejectedValue(new Error('Database error'));
 
       const request = new NextRequest('http://localhost:3000/api/devices', {
         method: 'POST',
