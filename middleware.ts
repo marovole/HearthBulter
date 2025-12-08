@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { rateLimiter } from "@/lib/middleware/rate-limit-middleware";
 
 /**
  * 优化的轻量级中间件
@@ -197,64 +198,29 @@ async function handleApiRoutes(
     };
   }
 
-  // 基本的速率限制检查 (简化版)
-  const clientIP = getClientIP(req);
-  if (await isRateLimited(clientIP, pathname)) {
+  const limit = await rateLimiter.checkLimit(req, {
+    windowMs: 60_000,
+    maxRequests: pathname.startsWith("/api/auth") ? 20 : 100,
+    identifier: "ip",
+    message: "请求过于频繁",
+  });
+
+  if (!limit.allowed) {
+    const retryAfter = limit.retryAfter ?? 60;
     return {
       success: false,
-      response: NextResponse.json({ error: "请求过于频繁" }, { status: 429 }),
+      response: new NextResponse(JSON.stringify({ error: "请求过于频繁" }), {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": String(retryAfter),
+        },
+      }),
     };
   }
 
   return { success: true };
 }
-
-/**
- * 获取客户端 IP
- */
-function getClientIP(req: NextRequest): string {
-  return (
-    req.headers.get("x-real-ip") ||
-    req.headers.get("x-forwarded-for")?.split(",")[0] ||
-    "unknown"
-  );
-}
-
-/**
- * 简化的速率限制检查 (内存存储，适合 Cloudflare Workers)
- */
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-async function isRateLimited(
-  clientIP: string,
-  pathname: string,
-): Promise<boolean> {
-  const key = `${clientIP}:${pathname}`;
-  const now = Date.now();
-  const windowMs = 60000; // 1分钟
-  const maxRequests = 100; // 每分钟最多100次请求
-
-  const current = rateLimitMap.get(key);
-
-  if (!current || now > current.resetTime) {
-    // 重置或创建新的计数
-    rateLimitMap.set(key, {
-      count: 1,
-      resetTime: now + windowMs,
-    });
-    return false;
-  }
-
-  if (current.count >= maxRequests) {
-    return true;
-  }
-
-  current.count++;
-  return false;
-}
-
-// 注意：在Serverless环境中不使用setInterval，清理会在每次请求时自动发生
-// 当创建新的速率限制记录时，旧的记录会在检查时被忽略
 
 /**
  * 中间件匹配配置
