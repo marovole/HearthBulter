@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 /**
  * 优化的轻量级中间件
@@ -12,17 +12,32 @@ export async function middleware(req: NextRequest) {
   const startTime = Date.now();
   const { pathname } = req.nextUrl;
   const method = req.method;
+  const cors = resolveCors(req);
 
   // 基本路径过滤 - 跳过静态资源
   if (shouldSkipMiddleware(pathname)) {
     return NextResponse.next();
   }
 
+  // 处理预检请求，减少不必要的后端负载
+  if (method === "OPTIONS") {
+    if (!cors.allowed) {
+      return NextResponse.json(
+        { error: "Origin not allowed" },
+        { status: 403 },
+      );
+    }
+
+    const preflight = NextResponse.json({}, { status: 200 });
+    applyBasicSecurityHeaders(req, preflight, cors);
+    return preflight;
+  }
+
   try {
     let response = NextResponse.next();
 
     // 1. 基本安全头设置 (轻量级)
-    response = applyBasicSecurityHeaders(req, response);
+    response = applyBasicSecurityHeaders(req, response, cors);
 
     // 2. 认证检查 (使用 NextAuth，不直接依赖 Prisma)
     const authResult = await handleAuthentication(req, pathname);
@@ -31,26 +46,30 @@ export async function middleware(req: NextRequest) {
     }
 
     // 3. API 路由保护
-    if (pathname.startsWith('/api/')) {
-      const apiResult = await handleApiRoutes(req, pathname, authResult.session);
+    if (pathname.startsWith("/api/")) {
+      const apiResult = await handleApiRoutes(
+        req,
+        pathname,
+        authResult.session,
+      );
       if (!apiResult.success) {
         return apiResult.response;
       }
     }
 
     // 4. 性能监控头
-    response.headers.set('X-Response-Time', `${Date.now() - startTime}ms`);
-    response.headers.set('X-Middleware-Version', 'optimized-v2');
+    response.headers.set("X-Response-Time", `${Date.now() - startTime}ms`);
+    response.headers.set("X-Middleware-Version", "optimized-v2");
 
     return response;
   } catch (error) {
     // 简化的错误处理
-    console.error('Middleware error:', error instanceof Error ? error.message : 'Unknown error');
-
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
+    console.error(
+      "Middleware error:",
+      error instanceof Error ? error.message : "Unknown error",
     );
+
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -59,42 +78,42 @@ export async function middleware(req: NextRequest) {
  */
 function shouldSkipMiddleware(pathname: string): boolean {
   const skipPatterns = [
-    '/_next',
-    '/api/health',
-    '/api/debug',  // Debug 端点
-    '/favicon.ico',
-    '/robots.txt',
-    '/sitemap.xml',
-    '/api/auth', // NextAuth 路由
+    "/_next",
+    "/api/health",
+    "/api/debug", // Debug 端点
+    "/favicon.ico",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/api/auth", // NextAuth 路由
   ];
 
-  return skipPatterns.some(pattern => pathname.startsWith(pattern));
+  return skipPatterns.some((pattern) => pathname.startsWith(pattern));
 }
 
 /**
  * 应用基本安全头 (不依赖外部库)
  */
-function applyBasicSecurityHeaders(req: NextRequest, response: NextResponse): NextResponse {
+function applyBasicSecurityHeaders(
+  req: NextRequest,
+  response: NextResponse,
+  cors: ReturnType<typeof resolveCors>,
+): NextResponse {
   // 基本安全头
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
   // CORS 头设置
-  const origin = req.headers.get('origin');
-  if (process.env.NODE_ENV === 'production') {
-    const allowedOrigins = process.env.NEXT_PUBLIC_ALLOWED_ORIGINS || process.env.NEXTAUTH_URL || '';
-    if (allowedOrigins && origin && allowedOrigins.includes(origin)) {
-      response.headers.set('Access-Control-Allow-Origin', origin);
+  if (cors.allowed) {
+    response.headers.set("Access-Control-Allow-Origin", cors.origin ?? "*");
+    response.headers.set("Access-Control-Allow-Methods", cors.allowMethods);
+    response.headers.set("Access-Control-Allow-Headers", cors.allowHeaders);
+    if (cors.allowCredentials) {
+      response.headers.set("Access-Control-Allow-Credentials", "true");
     }
-  } else {
-    // 开发环境允许所有源
-    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.append("Vary", "Origin");
   }
-
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   return response;
 }
@@ -102,48 +121,53 @@ function applyBasicSecurityHeaders(req: NextRequest, response: NextResponse): Ne
 /**
  * 处理认证检查
  */
-async function handleAuthentication(req: NextRequest, pathname: string): Promise<{
+async function handleAuthentication(
+  req: NextRequest,
+  pathname: string,
+): Promise<{
   success: boolean;
   session: any;
   response?: NextResponse;
 }> {
   try {
     // 使用 getToken 而不是 auth() 来避免中间件中的复杂查询
-    const token = await getToken({ 
-      req, 
-      secret: process.env.NEXTAUTH_SECRET 
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
     });
 
     // 受保护的页面路由
     const protectedRoutes = [
-      '/dashboard',
-      '/families',
-      '/profile',
-      '/settings',
-      '/health-data',      // 健康数据页面
-      '/meal-planning',    // 饮食规划页面
-      '/shopping-list',    // 购物清单页面
-      '/api/protected',    // API 保护
+      "/dashboard",
+      "/families",
+      "/profile",
+      "/settings",
+      "/health-data", // 健康数据页面
+      "/meal-planning", // 饮食规划页面
+      "/shopping-list", // 购物清单页面
+      "/api/protected", // API 保护
     ];
 
-    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+    const isProtectedRoute = protectedRoutes.some((route) =>
+      pathname.startsWith(route),
+    );
 
     if (isProtectedRoute && !token) {
-      const signInUrl = new URL('/auth/signin', req.url);
-      signInUrl.searchParams.set('callbackUrl', pathname);
+      const signInUrl = new URL("/auth/signin", req.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
       return {
         success: false,
         session: null,
-        response: NextResponse.redirect(signInUrl)
+        response: NextResponse.redirect(signInUrl),
       };
     }
 
-    return { 
-      success: true, 
-      session: token ? { user: token } : null 
+    return {
+      success: true,
+      session: token ? { user: token } : null,
     };
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    console.error("Auth middleware error:", error);
     return { success: true, session: null };
   }
 }
@@ -154,27 +178,22 @@ async function handleAuthentication(req: NextRequest, pathname: string): Promise
 async function handleApiRoutes(
   req: NextRequest,
   pathname: string,
-  session: any
+  session: any,
 ): Promise<{
   success: boolean;
   response?: NextResponse;
 }> {
   // 公开的 API 路由
-  const publicApiRoutes = [
-    '/api/auth',
-    '/api/health',
-    '/api/webhooks',
-  ];
+  const publicApiRoutes = ["/api/auth", "/api/health", "/api/webhooks"];
 
-  const isPublicApi = publicApiRoutes.some(route => pathname.startsWith(route));
+  const isPublicApi = publicApiRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
 
   if (!isPublicApi && !session) {
     return {
       success: false,
-      response: NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      )
+      response: NextResponse.json({ error: "未授权访问" }, { status: 401 }),
     };
   }
 
@@ -183,10 +202,7 @@ async function handleApiRoutes(
   if (await isRateLimited(clientIP, pathname)) {
     return {
       success: false,
-      response: NextResponse.json(
-        { error: '请求过于频繁' },
-        { status: 429 }
-      )
+      response: NextResponse.json({ error: "请求过于频繁" }, { status: 429 }),
     };
   }
 
@@ -198,9 +214,9 @@ async function handleApiRoutes(
  */
 function getClientIP(req: NextRequest): string {
   return (
-    req.headers.get('x-real-ip') ||
-    req.headers.get('x-forwarded-for')?.split(',')[0] ||
-    'unknown'
+    req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0] ||
+    "unknown"
   );
 }
 
@@ -209,7 +225,10 @@ function getClientIP(req: NextRequest): string {
  */
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-async function isRateLimited(clientIP: string, pathname: string): Promise<boolean> {
+async function isRateLimited(
+  clientIP: string,
+  pathname: string,
+): Promise<boolean> {
   const key = `${clientIP}:${pathname}`;
   const now = Date.now();
   const windowMs = 60000; // 1分钟
@@ -221,7 +240,7 @@ async function isRateLimited(clientIP: string, pathname: string): Promise<boolea
     // 重置或创建新的计数
     rateLimitMap.set(key, {
       count: 1,
-      resetTime: now + windowMs
+      resetTime: now + windowMs,
     });
     return false;
   }
@@ -249,6 +268,48 @@ export const config = {
      * - favicon.ico
      * - public 文件夹
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
 };
+
+function resolveCors(req: NextRequest): {
+  allowed: boolean;
+  origin: string | null;
+  allowCredentials: boolean;
+  allowMethods: string;
+  allowHeaders: string;
+} {
+  const origin = req.headers.get("origin");
+  const allowMethods = "GET, POST, PUT, DELETE, OPTIONS";
+  const allowHeaders = "Content-Type, Authorization";
+
+  // 开发环境放宽限制
+  if (process.env.NODE_ENV !== "production") {
+    return {
+      allowed: true,
+      origin: "*",
+      allowCredentials: false,
+      allowMethods,
+      allowHeaders,
+    };
+  }
+
+  const whitelist = (
+    process.env.NEXT_PUBLIC_ALLOWED_ORIGINS ||
+    process.env.NEXTAUTH_URL ||
+    ""
+  )
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const matched = origin && whitelist.includes(origin);
+
+  return {
+    allowed: Boolean(matched),
+    origin: matched ? origin : null,
+    allowCredentials: Boolean(matched),
+    allowMethods,
+    allowHeaders,
+  };
+}
