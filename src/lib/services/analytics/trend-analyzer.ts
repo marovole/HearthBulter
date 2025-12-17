@@ -12,6 +12,13 @@
 import type { AnalyticsRepository } from '@/lib/repositories/interfaces/analytics-repository';
 import { SupabaseAnalyticsRepository } from '@/lib/repositories/implementations/supabase-analytics-repository';
 import type { TrendDataType } from '@/lib/types/analytics';
+import {
+  TREND_SLOPE_THRESHOLD,
+  MOVING_AVERAGE_WINDOW,
+  DEFAULT_PREDICTION_DAYS,
+  CHANGE_PERCENT_THRESHOLD,
+  MS_PER_DAY,
+} from '@/lib/constants/analytics';
 
 export interface TimeSeriesPoint {
   date: Date;
@@ -135,13 +142,13 @@ export class TrendAnalyzer {
     const statistics = this.calculateStatistics(dataPoints);
 
     // 计算移动平均
-    const movingAverage = this.calculateMovingAverage(dataPoints, 7);
+    const movingAverage = this.calculateMovingAverage(dataPoints, MOVING_AVERAGE_WINDOW);
 
     // 计算趋势
     const trend = this.calculateLinearRegression(dataPoints);
 
-    // 预测未来7天
-    const predictions = this.predictFutureTrend(dataPoints, 7);
+    // 预测未来趋势
+    const predictions = this.predictFutureTrend(dataPoints, DEFAULT_PREDICTION_DAYS);
 
     // 计算同比（上一个相同时长的时期）
     const periodLength = endDate.getTime() - startDate.getTime();
@@ -227,7 +234,7 @@ export class TrendAnalyzer {
    */
   private calculateMovingAverage(
     dataPoints: TimeSeriesPoint[],
-    windowSize: number = 7
+    windowSize: number = MOVING_AVERAGE_WINDOW
   ): TimeSeriesPoint[] {
     if (dataPoints.length < windowSize) {
       return dataPoints; // 数据点不足，返回原始数据
@@ -288,7 +295,7 @@ export class TrendAnalyzer {
 
     // 判断趋势方向
     let direction: 'UP' | 'DOWN' | 'STABLE';
-    if (Math.abs(slope) < 0.01) {
+    if (Math.abs(slope) < TREND_SLOPE_THRESHOLD) {
       direction = 'STABLE';
     } else if (slope > 0) {
       direction = 'UP';
@@ -306,7 +313,7 @@ export class TrendAnalyzer {
    */
   private predictFutureTrend(
     dataPoints: TimeSeriesPoint[],
-    daysAhead: number = 7
+    daysAhead: number = DEFAULT_PREDICTION_DAYS
   ): TimeSeriesPoint[] {
     if (dataPoints.length < 2) {
       return [];
@@ -363,7 +370,7 @@ export class TrendAnalyzer {
     const changePercent = ((currentAvg - previousAvg) / previousAvg) * 100;
 
     let changeType: 'INCREASE' | 'DECREASE' | 'STABLE';
-    if (Math.abs(changePercent) < 1) {
+    if (Math.abs(changePercent) < CHANGE_PERCENT_THRESHOLD) {
       changeType = 'STABLE';
     } else if (changePercent > 0) {
       changeType = 'INCREASE';
@@ -539,7 +546,7 @@ export function calculateStatistics(dataPoints: TimeSeriesPoint[]) {
  */
 export function calculateMovingAverage(
   dataPoints: TimeSeriesPoint[],
-  windowSize: number = 7
+  windowSize: number = MOVING_AVERAGE_WINDOW
 ): TimeSeriesPoint[] {
   if (dataPoints.length < windowSize) {
     return dataPoints;
@@ -594,7 +601,7 @@ export function calculateLinearRegression(dataPoints: TimeSeriesPoint[]) {
   const rSquared = 1 - (ssResidual / ssTotal);
 
   let direction: 'UP' | 'DOWN' | 'STABLE';
-  if (Math.abs(slope) < 0.01) {
+  if (Math.abs(slope) < TREND_SLOPE_THRESHOLD) {
     direction = 'STABLE';
   } else if (slope > 0) {
     direction = 'UP';
@@ -611,7 +618,7 @@ export function calculateLinearRegression(dataPoints: TimeSeriesPoint[]) {
  */
 export function predictFutureTrend(
   dataPoints: TimeSeriesPoint[],
-  daysAhead: number = 7
+  daysAhead: number = DEFAULT_PREDICTION_DAYS
 ): TimeSeriesPoint[] {
   if (dataPoints.length < 2) {
     return [];
@@ -667,7 +674,7 @@ export function calculatePeriodComparison(
   const changePercent = ((currentAvg - previousAvg) / previousAvg) * 100;
 
   let changeType: 'INCREASE' | 'DECREASE' | 'STABLE';
-  if (Math.abs(changePercent) < 1) {
+  if (Math.abs(changePercent) < CHANGE_PERCENT_THRESHOLD) {
     changeType = 'STABLE';
   } else if (changePercent > 0) {
     changeType = 'INCREASE';
