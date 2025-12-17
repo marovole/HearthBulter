@@ -1,50 +1,357 @@
 /**
- * 服务层类型定义
- * 用于替换服务层中的 any 类型，提供类型安全
+ * Service Layer Type Definitions
+ *
+ * 服务层类型定义，用于替代 any 类型
+ * @module service-types
  */
 
-import type {
-  FoodCategory,
-  InventoryStatus,
-  WasteReason,
-  TaskStatus,
-  NotificationType,
-  NotificationPriority,
-} from '@prisma/client';
+import type { TaskStatus, TaskCategory, TaskPriority } from '@prisma/client';
 
-// ============ 库存相关类型 ============
+// ==================== Task Management Types ====================
 
-export interface InventoryItemBase {
+/**
+ * 任务查询条件
+ */
+export interface TaskWhereCondition {
+  familyId: string;
+  deletedAt: null;
+  status?: TaskStatus;
+  category?: TaskCategory;
+  assigneeId?: string;
+  priority?: TaskPriority;
+  dueDate?: {
+    gte?: Date;
+    lte?: Date;
+  };
+}
+
+/**
+ * 任务更新数据
+ */
+export interface TaskUpdateData {
+  status?: TaskStatus;
+  startedAt?: Date;
+  completedAt?: Date;
+  title?: string;
+  description?: string;
+  category?: TaskCategory;
+  priority?: TaskPriority;
+  dueDate?: Date;
+  updatedAt?: Date;
+}
+
+/**
+ * 任务活动元数据 - 创建任务
+ */
+export interface TaskCreatedMetadata {
+  taskId: string;
+  taskTitle: string;
+  category: TaskCategory;
+  assigneeId?: string;
+}
+
+/**
+ * 任务活动元数据 - 更新任务
+ */
+export interface TaskUpdatedMetadata {
+  taskId: string;
+  taskTitle: string;
+  action: 'ASSIGNED' | 'STATUS_CHANGED' | 'DETAILS_CHANGED' | 'DELETED';
+  assigneeName?: string;
+  newStatus?: TaskStatus;
+  note?: string;
+  changes?: Partial<{
+    title: string;
+    description: string;
+    category: TaskCategory;
+    priority: TaskPriority;
+    dueDate: Date;
+  }>;
+}
+
+/**
+ * 任务活动元数据 - 完成任务
+ */
+export interface TaskCompletedMetadata {
+  taskId: string;
+  taskTitle: string;
+}
+
+/**
+ * 任务活动元数据联合类型
+ */
+export type TaskActivityMetadata =
+  | TaskCreatedMetadata
+  | TaskUpdatedMetadata
+  | TaskCompletedMetadata;
+
+// ==================== Shopping List Types ====================
+
+/**
+ * 购物清单活动元数据
+ */
+export interface ShoppingActivityMetadata {
+  action: 'ADD_ITEM' | 'ASSIGN_ITEM' | 'PURCHASE_ITEM' | 'UPDATE_ITEM' | 'DELETE_ITEM';
+  itemId?: string;
+  foodName?: string;
+  assigneeName?: string;
+  actualPrice?: number;
+  quantity?: number;
+  changes?: Record<string, unknown>;
+}
+
+// ==================== Inventory Types ====================
+
+/**
+ * 库存物品（含关联数据）
+ */
+export interface InventoryItemWithRelations {
   id: string;
   memberId: string;
   foodId: string;
   quantity: number;
-  unit: string;
   originalQuantity: number;
-  purchaseDate: Date;
-  purchasePrice?: number | null;
-  purchaseSource?: string | null;
-  expiryDate?: Date | null;
-  productionDate?: Date | null;
-  daysToExpiry?: number | null;
-  storageLocation: string;
-  storageNotes?: string | null;
-  status: InventoryStatus;
-  minStockThreshold?: number | null;
-  isLowStock: boolean;
-  barcode?: string | null;
-  brand?: string | null;
-  packageInfo?: string | null;
+  unit: string;
+  purchasePrice: number | null;
+  purchaseSource: string | null;
+  expiryDate: Date | null;
+  productionDate: Date | null;
+  storageLocation: string | null;
+  status: string;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date | null;
-}
-
-export interface InventoryItemWithFood extends InventoryItemBase {
   food: {
     id: string;
     name: string;
-    category: FoodCategory;
+    category: string;
+  };
+}
+
+/**
+ * 使用记录（含关联数据）
+ */
+export interface UsageRecordWithRelations {
+  id: string;
+  inventoryItemId: string;
+  usedQuantity: number;
+  usedAt: Date;
+  usageType: string;
+  inventoryItem: {
+    id: string;
+    food: {
+      name: string;
+      category: string;
+    };
+  };
+}
+
+/**
+ * 浪费记录（含关联数据）
+ */
+export interface WasteRecordWithRelations {
+  id: string;
+  inventoryItemId: string;
+  wastedQuantity: number;
+  wasteReason: string;
+  wastedAt: Date;
+  inventoryItem: {
+    id: string;
+    food: {
+      name: string;
+      category: string;
+    };
+  };
+}
+
+/**
+ * 库存分析摘要
+ */
+export interface InventorySummary {
+  totalItems: number;
+  totalValue: number;
+  usedItems: number;
+  wastedItems: number;
+  wasteRate: number;
+  usageRate: number;
+}
+
+/**
+ * 分类分析结果
+ */
+export interface CategoryAnalysis {
+  category: string;
+  itemCount: number;
+  totalValue: number;
+  usedQuantity: number;
+  wastedQuantity: number;
+  wasteRate: number;
+  efficiency: number;
+}
+
+/**
+ * 浪费分析结果
+ */
+export interface WasteAnalysis {
+  totalWastedItems: number;
+  totalWastedValue: number;
+  wasteByReason: Record<string, number>;
+  wasteByCategory: Record<string, number>;
+}
+
+/**
+ * 库存通知数据
+ */
+export interface InventoryNotificationData {
+  itemId?: string;
+  itemName?: string;
+  expiryDate?: Date;
+  daysUntilExpiry?: number;
+  quantity?: number;
+  threshold?: number;
+  wasteReason?: string;
+  wastedQuantity?: number;
+  [key: string]: unknown;
+}
+
+// ==================== Notification Types ====================
+
+/**
+ * 通知频率枚举
+ */
+export type NotificationFrequency = 'IMMEDIATE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+
+/**
+ * 通知配置
+ */
+export interface NotificationConfig {
+  expiryEnabled: boolean;
+  expiryFrequency: NotificationFrequency;
+  lowStockEnabled: boolean;
+  lowStockFrequency: NotificationFrequency;
+  wasteEnabled: boolean;
+  wasteFrequency: NotificationFrequency;
+  usageEnabled: boolean;
+  usageFrequency: NotificationFrequency;
+  purchaseEnabled: boolean;
+  purchaseFrequency: NotificationFrequency;
+}
+
+/**
+ * 通知查询条件
+ */
+export interface NotificationWhereClause {
+  memberId: string;
+  type?: string;
+  isRead?: boolean;
+  createdAt?: {
+    gte?: Date;
+    lte?: Date;
+  };
+}
+
+// ==================== Activity Types ====================
+
+/**
+ * 活动类型枚举
+ */
+export type ActivityType =
+  | 'TASK_CREATED'
+  | 'TASK_UPDATED'
+  | 'TASK_COMPLETED'
+  | 'SHOPPING_UPDATED'
+  | 'INVENTORY_UPDATED'
+  | 'HEALTH_DATA_ADDED'
+  | 'MEAL_LOGGED';
+
+/**
+ * 活动元数据联合类型
+ */
+export type ActivityMetadata =
+  | TaskActivityMetadata
+  | ShoppingActivityMetadata
+  | InventoryNotificationData
+  | Record<string, unknown>;
+
+// ==================== Recipe Types ====================
+
+/**
+ * 食谱查询条件
+ */
+export interface RecipeWhereClause {
+  memberId?: string;
+  category?: string;
+  difficulty?: string;
+  cookingTime?: {
+    lte?: number;
+  };
+  ingredients?: {
+    some?: {
+      foodId?: {
+        in?: string[];
+      };
+    };
+  };
+}
+
+/**
+ * 食谱（含关联数据）
+ */
+export interface RecipeWithIngredients {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  difficulty: string;
+  cookingTime: number;
+  servings: number;
+  instructions: string[];
+  ingredients: Array<{
+    id: string;
+    foodId: string;
+    quantity: number;
+    unit: string;
+    food: {
+      id: string;
+      name: string;
+      category: string;
+    };
+  }>;
+}
+
+// ==================== Budget & Price Types ====================
+
+/**
+ * 营养信息
+ */
+export interface NutritionInfo {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+/**
+ * 每餐营养目标
+ */
+export interface MealNutritionTargets {
+  breakfast: NutritionInfo;
+  lunch: NutritionInfo;
+  dinner: NutritionInfo;
+}
+
+/**
+ * 平价食材（含价格和营养信息）
+ */
+export interface AffordableFood {
+  id: string;
+  name: string;
+  category: string;
+  unitPrice: number;
+  platform: string;
+  nutrition: NutritionInfo;
+  food?: {
+    name: string;
+    category: string;
     calories: number;
     protein: number;
     carbs: number;
@@ -52,303 +359,206 @@ export interface InventoryItemWithFood extends InventoryItemBase {
   };
 }
 
-export interface InventoryUsageRecord {
-  id: string;
-  inventoryItemId: string;
-  memberId: string;
-  usedQuantity: number;
-  usedAt: Date;
-  usageType: string;
-  relatedId?: string | null;
-  relatedType?: string | null;
-  notes?: string | null;
-  recipeName?: string | null;
+/**
+ * 购物车商品
+ */
+export interface CartItem {
+  foodId: string;
+  foodName?: string;
+  quantity: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  platform?: string;
 }
 
-export interface WasteRecord {
-  id: string;
-  inventoryItemId: string;
-  memberId: string;
-  wastedQuantity: number;
-  wasteReason: WasteReason;
-  wastedAt: Date;
-  estimatedCost?: number | null;
-  notes?: string | null;
-  preventable: boolean;
-  preventionTip?: string | null;
+/**
+ * 平台配置
+ */
+export interface PlatformConfig {
+  shippingCost: number;
+  freeShippingThreshold: number;
+  discountInfo?: {
+    type: 'PERCENTAGE' | 'FIXED' | 'THRESHOLD';
+    value: number;
+    description: string;
+  };
 }
 
-// ============ 购物相关类型 ============
+/**
+ * 平台价格信息
+ */
+export interface PlatformPriceInfo {
+  platform: string;
+  unitPrice: number;
+  totalCost?: number;
+  price?: number;
+  savings?: number;
+}
 
-export interface ShoppingSuggestion {
+/**
+ * 食物平台价格映射
+ */
+export interface FoodPlatformMapping {
   foodId: string;
   foodName: string;
-  category: FoodCategory;
-  suggestedQuantity: number;
-  unit: string;
-  reason: string;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
-  estimatedPrice?: number;
+  platforms: PlatformPriceInfo[];
 }
 
-export interface ShoppingItemBase {
-  id: string;
-  listId: string;
+/**
+ * 平台分组明细
+ */
+export interface PlatformBreakdownItem {
   foodId: string;
-  amount: number;
-  category: FoodCategory;
-  purchased: boolean;
-  estimatedPrice?: number | null;
-  assigneeId?: string | null;
-  addedBy?: string | null;
-  purchasedBy?: string | null;
-  purchasedAt?: Date | null;
+  foodName: string;
+  quantity: number;
+  unitPrice: number;
+  itemCost: number;
 }
 
-// ============ 任务相关类型 ============
-
-export interface TaskBase {
-  id: string;
-  familyId: string;
-  title: string;
-  description?: string | null;
-  category: string;
-  assigneeId?: string | null;
-  creatorId: string;
-  status: TaskStatus;
-  dueDate?: Date | null;
-  completedAt?: Date | null;
-  startedAt?: Date | null;
-  priority: string;
-  reminderSent: boolean;
-  remindedAt?: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
+/**
+ * 平台分组
+ */
+export interface PlatformBreakdownGroup {
+  platform: string;
+  items: PlatformBreakdownItem[];
+  cost: number;
+  shippingCost: number;
+  freeShippingThreshold: number;
+  totalCost?: number;
 }
 
-export interface TaskWithRelations extends TaskBase {
-  assignee?: {
-    id: string;
-    name: string;
-    avatar?: string | null;
-  } | null;
-  creator: {
-    id: string;
-    name: string;
-    avatar?: string | null;
-  };
+/**
+ * 跨平台组合方案
+ */
+export interface MixedPlatformOption {
+  platforms: string[];
+  totalCost: number;
+  savings: number;
+  breakdown: PlatformBreakdownGroup[];
 }
 
-// ============ 活动类型 ============
-
-export type ActivityType =
-  | 'TASK_CREATED'
-  | 'TASK_COMPLETED'
-  | 'TASK_ASSIGNED'
-  | 'TASK_UPDATED'
-  | 'TASK_DELETED'
-  | 'SHOPPING_ITEM_ADDED'
-  | 'SHOPPING_ITEM_PURCHASED'
-  | 'SHOPPING_ITEM_ASSIGNED'
-  | 'SHOPPING_ITEM_DELETED'
-  | 'MEAL_LOGGED'
-  | 'HEALTH_DATA_ADDED'
-  | 'GOAL_CREATED'
-  | 'GOAL_COMPLETED'
-  | 'MEMBER_JOINED'
-  | 'MEMBER_LEFT';
-
-export interface ActivityMetadata {
-  taskId?: string;
-  taskTitle?: string;
-  itemId?: string;
-  itemName?: string;
-  memberId?: string;
-  memberName?: string;
-  oldStatus?: string;
-  newStatus?: string;
-  [key: string]: string | number | boolean | undefined;
-}
-
-// ============ 通知相关类型 ============
-
-export interface NotificationData {
-  itemId?: string;
-  itemName?: string;
-  expiryDate?: Date | string;
-  quantity?: number;
-  threshold?: number;
-  category?: FoodCategory;
-  daysToExpiry?: number;
-  estimatedValue?: number;
-  wasteReason?: WasteReason;
-  taskId?: string;
-  taskTitle?: string;
-  memberId?: string;
-  memberName?: string;
-  achievementId?: string;
-  achievementName?: string;
-  relatedId?: string;
-  shareToken?: string;
-  [key: string]: string | number | boolean | Date | undefined;
-}
-
-export interface NotificationBase {
-  id: string;
-  memberId: string;
-  type: NotificationType;
-  title: string;
-  content: string;
-  priority: NotificationPriority;
-  channels: string[];
-  isRead: boolean;
-  createdAt: Date;
-  data?: NotificationData;
-  actionUrl?: string | null;
-  actionText?: string | null;
-  scheduledFor?: Date | null;
-  expiresAt?: Date | null;
-}
-
-// ============ 分析相关类型 ============
-
-export interface AnalysisSummary {
-  totalItems: number;
-  totalValue: number;
-  averageLifespan: number;
-  expiringCount: number;
-  lowStockCount: number;
-  categoryCounts: Record<string, number>;
-}
-
-export interface CategoryAnalysis {
-  category: FoodCategory;
-  itemCount: number;
-  totalQuantity: number;
-  totalValue: number;
-  expiringCount: number;
-  averageDaysToExpiry: number;
-}
-
-export interface WasteAnalysis {
-  totalWasteCount: number;
-  totalWasteValue: number;
-  wasteByReason: Record<WasteReason, number>;
-  preventableWastePercent: number;
-  topWastedItems: Array<{
-    foodId: string;
-    foodName: string;
-    wasteCount: number;
-    totalValue: number;
-  }>;
-}
-
-export interface RecommendationItem {
-  type: 'PURCHASE' | 'CONSUME' | 'REDUCE_WASTE' | 'OPTIMIZE_STORAGE';
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
-  title: string;
-  description: string;
-  actionItems: string[];
-  estimatedSavings?: number;
-  relatedFoodIds?: string[];
-}
-
-// ============ 食谱相关类型 ============
-
-export interface RecipeIngredientInfo {
-  id: string;
-  foodId: string;
-  amount: number;
-  unit: string;
-  notes?: string | null;
-  optional: boolean;
-  isSubstitutable: boolean;
-  food: {
-    id: string;
-    name: string;
-    category: FoodCategory;
-  };
-}
-
-export interface RecipeWithIngredients {
-  id: string;
+/**
+ * 食谱（经济版）
+ */
+export interface MealRecipe {
   name: string;
-  description?: string | null;
-  cuisine?: string | null;
-  difficulty: string;
-  prepTime: number;
-  cookTime: number;
-  totalTime: number;
-  servings: number;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
+  ingredients: Array<{
+    foodName: string;
+    amount: number;
+    cost: number;
+  }>;
+  totalCost: number;
+  nutrition: NutritionInfo;
+  savings: number;
+}
+
+/**
+ * 日期范围
+ */
+export interface DateRange {
+  start: Date;
+  end: Date;
+  type?: string;
+  days?: number;
+}
+
+/**
+ * 分类支出数据
+ */
+export interface CategorySpendingData {
   category: string;
-  ingredients: RecipeIngredientInfo[];
+  amount: number;
+  percentage: number;
+  count?: number;
+  averagePerTransaction?: number;
+  trend?: 'UP' | 'DOWN' | 'STABLE';
 }
 
-export interface IngredientAvailability {
-  ingredientId: string;
-  foodId: string;
-  foodName: string;
-  requiredAmount: number;
-  availableAmount: number;
-  unit: string;
-  isAvailable: boolean;
-  shortfall: number;
+/**
+ * 趋势分析结果
+ */
+export interface TrendAnalysis {
+  direction: 'UP' | 'DOWN' | 'STABLE';
+  monthlyChange?: number;
+  projectedSavings?: number;
+  slope?: number;
+  confidence?: number;
 }
 
-// ============ 查询条件类型 ============
-
-export interface WhereCondition<T = unknown> {
-  equals?: T;
-  not?: T | WhereCondition<T>;
-  in?: T[];
-  notIn?: T[];
-  lt?: T;
-  lte?: T;
-  gt?: T;
-  gte?: T;
-  contains?: string;
-  startsWith?: string;
-  endsWith?: string;
-  mode?: 'default' | 'insensitive';
+/**
+ * 预算利用率
+ */
+export interface BudgetUtilization {
+  budgetId: string;
+  budgetName: string;
+  totalAmount: number;
+  totalBudget?: number; // 向后兼容
+  used: number;
+  remaining: number;
+  utilizationRate: number;
+  status: 'NORMAL' | 'WARNING' | 'OVER_BUDGET' | 'HEALTHY';
 }
 
-export interface DateRangeCondition {
-  gte?: Date;
-  lte?: Date;
-  gt?: Date;
-  lt?: Date;
+/**
+ * 食材替换建议
+ */
+export interface FoodSubstitution {
+  original: {
+    food: { id: string; name: string; category: string };
+    cost: number;
+    nutrition: NutritionInfo;
+  };
+  substitute: {
+    food: { id: string; name: string; category: string };
+    cost: number;
+    nutrition: NutritionInfo;
+  };
+  savings: number;
+  reason: string;
 }
 
-export interface PaginationParams {
-  page: number;
-  limit: number;
-  skip?: number;
-  take?: number;
+/**
+ * 预算项目
+ */
+export interface BudgetItem {
+  id?: string;
+  foodId?: string;
+  foodName?: string;
+  category?: string;
+  amount?: number;
+  quantity?: number;
+  unitPrice?: number;
 }
 
-export interface SortParams {
-  field: string;
-  direction: 'asc' | 'desc';
+/**
+ * 价格趋势预测
+ */
+export interface PricePrediction {
+  next7Days: number[];
+  next30Days?: number[];
+  expectedMin?: number;
+  expectedMax?: number;
+  confidence: number;
 }
 
-// ============ 通用响应类型 ============
+// ==================== Utility Types ====================
 
-export interface ServiceResult<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
+/**
+ * Prisma 兼容的 JSON 值类型
+ */
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
+/**
+ * 通用分页结果
+ */
 export interface PaginatedResult<T> {
-  data: T[];
+  items: T[];
   total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
   hasMore: boolean;
 }

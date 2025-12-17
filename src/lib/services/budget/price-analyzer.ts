@@ -1,5 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import { Food, PriceHistory, PriceSource } from '@prisma/client';
+import type {
+  PlatformConfig,
+  PlatformPriceInfo,
+  FoodPlatformMapping,
+  PlatformBreakdownGroup,
+  PlatformBreakdownItem,
+  MixedPlatformOption,
+  TrendAnalysis,
+  PricePrediction,
+} from '@/types/service-types';
 
 const prisma = new PrismaClient();
 
@@ -270,7 +280,7 @@ export class PriceAnalyzer {
       platform: string
       totalCost: number
       savings: number
-      items: any[]
+      items: PlatformBreakdownItem[]
     }
     mixedPlatformOption?: {
       platforms: string[]
@@ -278,7 +288,7 @@ export class PriceAnalyzer {
       savings: number
       breakdown: Array<{
         platform: string
-        items: any[]
+        items: PlatformBreakdownItem[]
         cost: number
       }>
     }
@@ -341,7 +351,7 @@ export class PriceAnalyzer {
     }
   }> {
     // 模拟平台配置数据（实际应用中从配置或API获取）
-    const platformConfigs: { [key: string]: any } = {
+    const platformConfigs: Record<string, PlatformConfig> = {
       '山姆会员商店': {
         shippingCost: 15,
         freeShippingThreshold: 299,
@@ -400,22 +410,36 @@ export class PriceAnalyzer {
   /**
    * 生成单平台购买方案
    */
-  private async generateSinglePlatformOptions(foodPlatforms: any[]): Promise<any[]> {
+  private async generateSinglePlatformOptions(foodPlatforms: FoodPlatformMapping[]): Promise<Array<{
+    platform: string;
+    items: PlatformBreakdownItem[];
+    subtotal: number;
+    shippingCost: number;
+    totalCost: number;
+    savings?: number;
+  }>> {
     // 获取所有涉及的平台
     const allPlatforms = new Set<string>();
     foodPlatforms.forEach(fp => {
-      fp.platforms.forEach((p: any) => allPlatforms.add(p.platform));
+      fp.platforms.forEach((p: PlatformPriceInfo) => allPlatforms.add(p.platform));
     });
 
-    const options = [];
+    const options: Array<{
+      platform: string;
+      items: PlatformBreakdownItem[];
+      subtotal: number;
+      shippingCost: number;
+      totalCost: number;
+      savings?: number;
+    }> = [];
 
     // 为每个平台生成购买方案
     for (const platform of allPlatforms) {
-      const items = [];
+      const items: PlatformBreakdownItem[] = [];
       let subtotal = 0;
 
       for (const fp of foodPlatforms) {
-        const platformInfo = fp.platforms.find((p: any) => p.platform === platform);
+        const platformInfo = fp.platforms.find((p: PlatformPriceInfo) => p.platform === platform);
         if (platformInfo) {
           const item = {
             foodId: fp.foodId,
@@ -450,19 +474,19 @@ export class PriceAnalyzer {
   /**
    * 生成跨平台组合方案
    */
-  private async generateMixedPlatformOption(foodPlatforms: any[]): Promise<any> {
-    const breakdown = [];
+  private async generateMixedPlatformOption(foodPlatforms: FoodPlatformMapping[]): Promise<MixedPlatformOption | null> {
+    const breakdown: PlatformBreakdownGroup[] = [];
     let totalCost = 0;
 
     for (const fp of foodPlatforms) {
       // 找出该食物最便宜的平台
-      const sortedPlatforms = fp.platforms.sort((a: any, b: any) => a.unitPrice - b.unitPrice);
+      const sortedPlatforms = [...fp.platforms].sort((a: PlatformPriceInfo, b: PlatformPriceInfo) => a.unitPrice - b.unitPrice);
       const cheapestPlatform = sortedPlatforms[0];
 
       if (!cheapestPlatform) continue;
 
       // 查找是否已有该平台的分组
-      let platformGroup = breakdown.find((b: any) => b.platform === cheapestPlatform.platform);
+      let platformGroup = breakdown.find((b: PlatformBreakdownGroup) => b.platform === cheapestPlatform.platform);
       
       if (!platformGroup) {
         const platformData = await this.getPlatformInfo(cheapestPlatform.platform);
@@ -476,7 +500,7 @@ export class PriceAnalyzer {
         breakdown.push(platformGroup);
       }
 
-      const item = {
+      const item: PlatformBreakdownItem = {
         foodId: fp.foodId,
         foodName: fp.foodName,
         quantity: 1,
@@ -502,7 +526,7 @@ export class PriceAnalyzer {
     if (breakdown.length === 0) return null;
 
     return {
-      platforms: breakdown.map((b: any) => b.platform),
+      platforms: breakdown.map((b: PlatformBreakdownGroup) => b.platform),
       totalCost,
       savings: 0, // 需要与单平台方案比较计算
       breakdown,
@@ -729,8 +753,8 @@ export class PriceAnalyzer {
   private generateRecommendations(
     currentPrice: number,
     averagePrice: number,
-    trend: any,
-    prediction: any
+    trend: TrendAnalysis,
+    prediction: PricePrediction
   ): string[] {
     const recommendations: string[] = [];
 
@@ -763,8 +787,8 @@ export class PriceAnalyzer {
    * 生成平台推荐
    */
   private generatePlatformRecommendation(
-    platforms: any[],
-    bestPlatform: any
+    platforms: PlatformPriceInfo[],
+    bestPlatform: PlatformPriceInfo | null
   ): string {
     if (!bestPlatform || platforms.length < 2) {
       return '需要更多平台数据来生成推荐';

@@ -1,4 +1,4 @@
-import { PrismaClient, CheckInType, InventoryStatus } from '@prisma/client';
+import { PrismaClient, CheckInType, InventoryStatus, WasteReason } from '@prisma/client';
 import { inventoryTracker } from './inventory-tracker';
 
 const prisma = new PrismaClient();
@@ -293,7 +293,7 @@ export class InventoryCheckInIntegration {
                 inventoryItemId: inventoryItem.id,
                 memberId,
                 wastedQuantity: wastedItem.quantity,
-                wasteReason: wastedItem.reason as any,
+                wasteReason: wastedItem.reason as WasteReason,
                 estimatedCost: (inventoryItem.purchasePrice || 0) * (wastedItem.quantity / inventoryItem.quantity),
               },
             });

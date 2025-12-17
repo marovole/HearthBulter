@@ -3,6 +3,40 @@ import { inventoryTracker } from './inventory-tracker';
 
 const prisma = new PrismaClient();
 
+/**
+ * 食谱含食材数据
+ */
+interface RecipeWithIngredientsData {
+  id: string;
+  name: string;
+  description: string | null;
+  category: RecipeCategory;
+  difficulty: string;
+  prepTime: number;
+  cookTime: number;
+  servings: number;
+  ingredients: Array<{
+    foodId: string;
+    quantity: number;
+    unit: string;
+    food: {
+      name: string;
+    };
+  }>;
+}
+
+/**
+ * 库存数据
+ */
+interface InventoryData {
+  quantity: number;
+  unit: string;
+  food: {
+    name: string;
+    category: string;
+  };
+}
+
 export interface RecipeIngredient {
   foodId: string
   foodName: string
@@ -91,7 +125,13 @@ export class InventoryRecipeIntegration {
     );
 
     // 构建查询条件
-    const whereClause: any = {
+    const whereClause: {
+      status: string;
+      category?: string;
+      difficulty?: string;
+      prepTime?: { lte: number };
+      servings?: { gte?: number; lte?: number };
+    } = {
       status: 'APPROVED',
     };
 
@@ -189,8 +229,8 @@ export class InventoryRecipeIntegration {
    * 分析食谱的可用性
    */
   private async analyzeRecipeAvailability(
-    recipe: any,
-    inventoryMap: Map<string, any>
+    recipe: RecipeWithIngredientsData,
+    inventoryMap: Map<string, InventoryData>
   ): Promise<InventoryBasedRecipe> {
     const ingredients: RecipeIngredient[] = [];
     let availableCount = 0;

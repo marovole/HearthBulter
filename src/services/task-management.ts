@@ -1,6 +1,15 @@
 import { prisma } from '@/lib/db';
 import { TaskCategory, TaskStatus, TaskPriority } from '@prisma/client';
-import { hasPermission, Permission, FamilyMemberRole } from '@/lib/permissions';
+import { hasPermission, Permission } from '@/lib/permissions';
+import type {
+  TaskWhereCondition,
+  TaskUpdateData,
+  TaskCreatedMetadata,
+  TaskUpdatedMetadata,
+  TaskCompletedMetadata,
+  TaskActivityMetadata,
+  ActivityType,
+} from '@/types/service-types';
 
 // 任务管理服务
 export class TaskManagementService {
@@ -38,7 +47,7 @@ export class TaskManagementService {
       }
 
       // 构建查询条件
-      const whereCondition: any = {
+      const whereCondition: TaskWhereCondition = {
         familyId,
         deletedAt: null,
       };
@@ -365,7 +374,7 @@ export class TaskManagementService {
       }
 
       // 准备更新数据
-      const updateData: any = { status };
+      const updateData: TaskUpdateData = { status };
       
       // 根据状态更新时间字段
       const now = new Date();
@@ -718,7 +727,7 @@ export class TaskManagementService {
       }
 
       // 获取分配给我的任务
-      const whereCondition: any = {
+      const whereCondition: TaskWhereCondition = {
         familyId,
         assigneeId: member.id,
         deletedAt: null,
@@ -777,15 +786,15 @@ export class TaskManagementService {
   private static async logActivity(
     familyId: string,
     memberId: string,
-    activityType: string,
-    metadata: any
+    activityType: ActivityType,
+    metadata: TaskActivityMetadata
   ) {
     try {
       await prisma.activity.create({
         data: {
           familyId,
           memberId,
-          activityType: activityType as any,
+          activityType: activityType,
           title: this.getActivityTitle(activityType, metadata),
           description: this.getActivityDescription(activityType, metadata),
           metadata,
@@ -797,23 +806,26 @@ export class TaskManagementService {
     }
   }
 
-  private static getActivityTitle(activityType: string, metadata: any): string {
+  private static getActivityTitle(activityType: ActivityType, metadata: TaskActivityMetadata): string {
     switch (activityType) {
     case 'TASK_CREATED':
       return '创建了任务';
     case 'TASK_UPDATED':
-      switch (metadata.action) {
-      case 'ASSIGNED':
-        return '分配了任务';
-      case 'STATUS_CHANGED':
-        return '更新了任务状态';
-      case 'DETAILS_CHANGED':
-        return '更新了任务详情';
-      case 'DELETED':
-        return '删除了任务';
-      default:
-        return '更新了任务';
+      if ('action' in metadata) {
+        switch (metadata.action) {
+        case 'ASSIGNED':
+          return '分配了任务';
+        case 'STATUS_CHANGED':
+          return '更新了任务状态';
+        case 'DETAILS_CHANGED':
+          return '更新了任务详情';
+        case 'DELETED':
+          return '删除了任务';
+        default:
+          return '更新了任务';
+        }
       }
+      return '更新了任务';
     case 'TASK_COMPLETED':
       return '完成了任务';
     default:
@@ -821,7 +833,7 @@ export class TaskManagementService {
     }
   }
 
-  private static getActivityDescription(activityType: string, metadata: any): string {
+  private static getActivityDescription(activityType: ActivityType, metadata: TaskActivityMetadata): string {
     switch (activityType) {
     case 'TASK_CREATED':
     case 'TASK_UPDATED':
