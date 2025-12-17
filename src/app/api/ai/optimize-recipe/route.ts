@@ -1,42 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { recipeOptimizer } from '@/lib/services/ai/recipe-optimizer';
-import { prisma } from '@/lib/db';
-import { rateLimiter } from '@/lib/services/ai/rate-limiter';
-import { sensitiveFilter } from '@/lib/services/sensitive-filter';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/middleware/api-auth";
+import { checkAIRateLimit } from "@/lib/middleware/api-rate-limit";
+import { recipeOptimizer } from "@/lib/services/ai/recipe-optimizer";
+import { prisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
-// Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth();
+    if (!authResult.success) return authResult.response;
+    const { userId } = authResult.context;
 
-    // 速率限制检查
-    const rateLimitResult = await rateLimiter.checkLimit(
-      session.user.id,
-      'ai_optimize_recipe',
+    const rateLimitResult = await checkAIRateLimit(
+      userId,
+      "ai_optimize_recipe",
     );
-
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        {
-          error: 'Rate limit exceeded',
-          retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime,
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
-          },
-        },
-      );
-    }
+    if (!rateLimitResult.success) return rateLimitResult.response;
 
     const body = await request.json();
     const {
@@ -45,12 +25,12 @@ export async function POST(request: NextRequest) {
       targetNutrition,
       preferences,
       season,
-      optimizationLevel = 'moderate',
+      optimizationLevel = "moderate",
     } = body;
 
     if (!recipeId || !memberId) {
       return NextResponse.json(
-        { error: 'Recipe ID and Member ID are required' },
+        { error: "Recipe ID and Member ID are required" },
         { status: 400 },
       );
     }
@@ -60,13 +40,13 @@ export async function POST(request: NextRequest) {
       where: {
         id: memberId,
         OR: [
-          { userId: session.user.id },
+          { userId },
           {
             family: {
               members: {
                 some: {
-                  userId: session.user.id,
-                  role: 'ADMIN',
+                  userId,
+                  role: "ADMIN",
                 },
               },
             },
@@ -81,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     if (!member) {
       return NextResponse.json(
-        { error: 'Member not found or access denied' },
+        { error: "Member not found or access denied" },
         { status: 404 },
       );
     }
@@ -105,18 +85,18 @@ export async function POST(request: NextRequest) {
     });
 
     if (!recipe) {
-      return NextResponse.json({ error: 'Recipe not found' }, { status: 404 });
+      return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
     }
 
     // 转换食谱数据为优化器格式
     const recipeData = {
       id: recipe.id,
-      name: `Meal ${recipe.date.toISOString().split('T')[0]} ${recipe.mealType}`,
+      name: `Meal ${recipe.date.toISOString().split("T")[0]} ${recipe.mealType}`,
       ingredients: recipe.ingredients.map((ing: any) => ({
         id: ing.id,
         name: ing.food.name,
         amount: ing.amount,
-        unit: 'g',
+        unit: "g",
       })),
       nutrition: {
         calories: recipe.calories,
@@ -132,8 +112,8 @@ export async function POST(request: NextRequest) {
       allergies: member.allergies.map((a: any) => a.allergenName),
       disliked_ingredients: [],
       preferred_cuisines: [],
-      budget_level: 'medium' as const,
-      cooking_skill: 'intermediate' as const,
+      budget_level: "medium" as const,
+      cooking_skill: "intermediate" as const,
       ...preferences,
     };
 
@@ -141,10 +121,10 @@ export async function POST(request: NextRequest) {
     if (member.dietaryPreference) {
       const pref = member.dietaryPreference;
       if (pref.isVegetarian)
-        userPreferences.dietary_restrictions.push('vegetarian');
-      if (pref.isVegan) userPreferences.dietary_restrictions.push('vegan');
-      if (pref.isKeto) userPreferences.dietary_restrictions.push('keto');
-      if (pref.isLowCarb) userPreferences.dietary_restrictions.push('low_carb');
+        userPreferences.dietary_restrictions.push("vegetarian");
+      if (pref.isVegan) userPreferences.dietary_restrictions.push("vegan");
+      if (pref.isKeto) userPreferences.dietary_restrictions.push("keto");
+      if (pref.isLowCarb) userPreferences.dietary_restrictions.push("low_carb");
     }
 
     // 设置默认营养目标
@@ -167,7 +147,7 @@ export async function POST(request: NextRequest) {
     const aiAdvice = await prisma.aiAdvice.create({
       data: {
         memberId,
-        type: 'RECIPE_OPTIMIZATION',
+        type: "RECIPE_OPTIMIZATION",
         content: {
           originalRecipe: recipeData,
           optimization: optimizationResult,
@@ -185,9 +165,9 @@ export async function POST(request: NextRequest) {
       generatedAt: aiAdvice.generatedAt,
     });
   } catch (error) {
-    console.error('Recipe optimization API error:', error);
+    logger.error("Recipe optimization API error", { error });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }
@@ -196,19 +176,18 @@ export async function POST(request: NextRequest) {
 // GET 方法用于获取食材替代建议
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth();
+    if (!authResult.success) return authResult.response;
+    const { userId } = authResult.context;
 
     const { searchParams } = new URL(request.url);
-    const ingredient = searchParams.get('ingredient');
-    const reason = searchParams.get('reason') || 'general_optimization';
-    const memberId = searchParams.get('memberId');
+    const ingredient = searchParams.get("ingredient");
+    const reason = searchParams.get("reason") || "general_optimization";
+    const memberId = searchParams.get("memberId");
 
     if (!ingredient || !memberId) {
       return NextResponse.json(
-        { error: 'Ingredient and memberId are required' },
+        { error: "Ingredient and memberId are required" },
         { status: 400 },
       );
     }
@@ -218,13 +197,13 @@ export async function GET(request: NextRequest) {
       where: {
         id: memberId,
         OR: [
-          { userId: session.user.id },
+          { userId },
           {
             family: {
               members: {
                 some: {
-                  userId: session.user.id,
-                  role: 'ADMIN',
+                  userId,
+                  role: "ADMIN",
                 },
               },
             },
@@ -239,7 +218,7 @@ export async function GET(request: NextRequest) {
 
     if (!member) {
       return NextResponse.json(
-        { error: 'Member not found or access denied' },
+        { error: "Member not found or access denied" },
         { status: 404 },
       );
     }
@@ -250,8 +229,8 @@ export async function GET(request: NextRequest) {
       allergies: member.allergies.map((a: any) => a.allergenName),
       disliked_ingredients: [],
       preferred_cuisines: [],
-      budget_level: 'medium' as const,
-      cooking_skill: 'intermediate' as const,
+      budget_level: "medium" as const,
+      cooking_skill: "intermediate" as const,
     };
 
     // 生成替代建议
@@ -259,15 +238,15 @@ export async function GET(request: NextRequest) {
       ingredient,
       reason,
       [], // 可用食材列表
-      ['营养均衡', '健康饮食'], // 营养要求
+      ["营养均衡", "健康饮食"], // 营养要求
       userPreferences,
     );
 
     return NextResponse.json({ substitutions });
   } catch (error) {
-    console.error('Ingredient substitution API error:', error);
+    logger.error("Ingredient substitution API error", { error });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }
