@@ -16,6 +16,7 @@ import { expiryMonitor } from './expiry-monitor';
 import { inventoryAnalyzer } from './inventory-analyzer';
 import type { InventoryRepository } from '@/lib/repositories/interfaces/inventory-repository';
 import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+import type { NotificationFrequency, NotificationWhereClause, InventoryNotificationData as ServiceNotificationData } from '@/types/service-types';
 
 export interface NotificationConfig {
   expiryAlerts: {
@@ -143,24 +144,24 @@ export class InventoryNotificationService {
         expiryAlerts: {
           enabled: config.expiryAlerts,
           advanceDays: config.expiryAdvanceDays || [3, 7],
-          frequency: (config.expiryFrequency as any) || 'DAILY',
+          frequency: (config.expiryFrequency as NotificationFrequency) || 'DAILY',
         },
         lowStockAlerts: {
           enabled: config.lowStockAlerts,
           threshold: config.lowStockThreshold || 1,
-          frequency: (config.lowStockFrequency as any) || 'IMMEDIATE',
+          frequency: (config.lowStockFrequency as NotificationFrequency) || 'IMMEDIATE',
         },
         wasteReports: {
           enabled: config.wasteReports,
-          frequency: (config.wasteFrequency as any) || 'WEEKLY',
+          frequency: (config.wasteFrequency as NotificationFrequency) || 'WEEKLY',
         },
         usageReminders: {
           enabled: config.usageReminders,
-          frequency: (config.usageFrequency as any) || 'DAILY',
+          frequency: (config.usageFrequency as NotificationFrequency) || 'DAILY',
         },
         purchaseSuggestions: {
           enabled: config.purchaseSuggestions,
-          frequency: (config.purchaseFrequency as any) || 'WEEKLY',
+          frequency: (config.purchaseFrequency as NotificationFrequency) || 'WEEKLY',
         },
       };
     }
@@ -494,10 +495,10 @@ export class InventoryNotificationService {
       offset?: number;
     }
   ): Promise<NotificationSummary> {
-    const whereClause: any = { memberId };
+    const whereClause: NotificationWhereClause = { memberId };
 
-    if (filters?.type) whereClause.type = filters.type;
-    if (filters?.priority) whereClause.priority = filters.priority;
+    if (filters?.type) (whereClause as NotificationWhereClause & { type: NotificationType }).type = filters.type;
+    if (filters?.priority) (whereClause as NotificationWhereClause & { priority: string }).priority = filters.priority;
     if (filters?.isRead !== undefined) whereClause.isRead = filters.isRead;
 
     // TODO: 使用 NotificationRepository 替代 Prisma
@@ -533,7 +534,7 @@ export class InventoryNotificationService {
       lowPriorityCount,
       notifications: notifications.map((n) => ({
         ...n,
-        data: n.data as any,
+        data: n.data as ServiceNotificationData,
       })),
     };
   }
@@ -683,13 +684,14 @@ function getInventoryNotificationServiceSingleton(): InventoryNotificationServic
 
     // 注意：这里使用 lazy loading，因为 getPrismaClient 是异步的
     // 实际使用时会在第一次调用 service 方法时初始化
-    const prismaProxy = new Proxy({} as any, {
-      get: (_target, prop) => {
-        return async (...args: any[]) => {
+    // 使用 Proxy 动态代理 Prisma 客户端，类型安全需要在调用端保证
+    const prismaProxy = new Proxy({} as PrismaClient, {
+      get: (_target, prop: string) => {
+        return async (...args: unknown[]) => {
           const prisma = await getPrismaClient();
-          const method = (prisma as any)[prop];
+          const method = (prisma as Record<string, unknown>)[prop];
           if (typeof method === 'function') {
-            return method.apply(prisma, args);
+            return (method as (...a: unknown[]) => unknown).apply(prisma, args);
           }
           return method;
         };

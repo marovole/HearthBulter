@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Food, FoodCategory, PriceHistory } from '@prisma/client';
+import type { NutritionInfo } from '@/types/service-types';
 
 const prisma = new PrismaClient();
 
@@ -322,7 +323,7 @@ export class CostOptimizer {
    * 计算营养相似性
    */
   private calculateNutritionSimilarity(food1: FoodOption, food2: FoodOption): number {
-    const normalizeNutrition = (nutrition: any) => {
+    const normalizeNutrition = (nutrition: NutritionInfo) => {
       const total = nutrition.calories + nutrition.protein + nutrition.carbs + nutrition.fat;
       return {
         calories: nutrition.calories / total,
@@ -387,7 +388,12 @@ export class CostOptimizer {
     savings: number
     reason: string
   }> {
-    const substitutions: any[] = [];
+    const substitutions: Array<{
+      original: FoodOption;
+      substitute: FoodOption;
+      savings: number;
+      reason: string;
+    }> = [];
 
     // 简单的替换检测逻辑
     for (const origFood of original) {
@@ -647,7 +653,7 @@ export class CostOptimizer {
     }
 
     // 按平台分组价格
-    const platformPrices: { [key: string]: any } = {};
+    const platformPrices: Record<string, PriceHistory> = {};
     
     for (const price of food.priceHistories) {
       if (!platformPrices[price.platform] || 
@@ -656,7 +662,7 @@ export class CostOptimizer {
       }
     }
 
-    const prices = Object.values(platformPrices).map((price: any) => ({
+    const prices = Object.values(platformPrices).map((price: PriceHistory) => ({
       platform: price.platform,
       price: price.price,
       unitPrice: price.unitPrice,

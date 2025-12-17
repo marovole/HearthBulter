@@ -3,11 +3,22 @@ import type { BudgetRepository } from '@/lib/repositories/interfaces/budget-repo
 import type { NotificationPriority } from '@/lib/repositories/types/notification';
 
 /**
+ * 通知数据接口
+ */
+interface NotificationData {
+  userId: string;
+  type: string;
+  templateData: Record<string, string | number>;
+  priority: NotificationPriority;
+  channels: string[];
+}
+
+/**
  * 通知管理器接口（避免循环依赖）
  */
 interface INotificationManager {
-  sendNotification(data: any): Promise<any>;
-  sendBulkNotifications(notifications: any[]): Promise<any>;
+  sendNotification(data: NotificationData): Promise<void>;
+  sendBulkNotifications(notifications: NotificationData[]): Promise<void>;
 }
 
 /**

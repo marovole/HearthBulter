@@ -11,6 +11,7 @@ import type {
   CategoryBudgets,
 } from '@/lib/repositories/types/budget';
 import type { BudgetNotificationService } from './budget-notification-service';
+import type { BudgetItem } from '@/types/service-types';
 
 // Type aliases for backward compatibility
 type Budget = BudgetDTO;
@@ -63,7 +64,7 @@ export interface SpendingCreateInput {
   description: string
   transactionId?: string
   platform?: string
-  items?: any[]
+  items?: BudgetItem[]
   purchaseDate?: Date
 }
 
