@@ -1,8 +1,26 @@
 /** @type {import('next').NextConfig} */
+// Cloudflare Pages preview builds may not have all secrets configured.
+// Provide safe defaults so `next build` can complete; production env vars override these.
+const defaultEnv = {
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
+  SUPABASE_SERVICE_KEY: 'test-service-key',
+  NEXTAUTH_SECRET: 'test-secret-key-for-pages-preview',
+  NEXTAUTH_URL: 'https://hearthbulter.pages.dev',
+  SKIP_ENV_VALIDATION: 'true',
+};
+
+for (const [key, value] of Object.entries(defaultEnv)) {
+  if (!process.env[key]) {
+    process.env[key] = value;
+  }
+}
+
 const nextConfig = {
   // Cloudflare Pages 部署配置
   // 使用 standalone 模式（OpenNext 要求）
-  output: "standalone",
+  output: 'standalone',
   trailingSlash: false,
 
   eslint: {
@@ -25,13 +43,13 @@ const nextConfig = {
   images: {
     unoptimized: true, // Cloudflare Pages 静态导出必需
     domains: [
-      "images.unsplash.com",
-      "avatars.githubusercontent.com",
-      "api.dicebear.com",
-      "supabase.co",
-      "imagedelivery.net", // Cloudflare Images CDN
+      'images.unsplash.com',
+      'avatars.githubusercontent.com',
+      'api.dicebear.com',
+      'supabase.co',
+      'imagedelivery.net', // Cloudflare Images CDN
     ],
-    formats: ["image/webp", "image/avif"],
+    formats: ['image/webp', 'image/avif'],
   },
 
   // 优化配置
@@ -42,30 +60,30 @@ const nextConfig = {
     scrollRestoration: true,
     // 输出文件追踪配置
     outputFileTracingExcludes: {
-      "*": [
+      '*': [
         // 排除 Prisma 的本地二进制文件
-        "**/node_modules/@prisma/engines/**",
-        "**/node_modules/.prisma/client/libquery_engine-*",
+        '**/node_modules/@prisma/engines/**',
+        '**/node_modules/.prisma/client/libquery_engine-*',
         // 排除 Puppeteer 和 Chromium
-        "**/node_modules/puppeteer/**",
-        "**/node_modules/puppeteer-core/**",
-        "**/node_modules/@sparticuz/chromium/**",
-        "**/node_modules/chrome-aws-lambda/**",
+        '**/node_modules/puppeteer/**',
+        '**/node_modules/puppeteer-core/**',
+        '**/node_modules/@sparticuz/chromium/**',
+        '**/node_modules/chrome-aws-lambda/**',
         // 排除其他大型依赖
-        "**/node_modules/sharp/build/**",
-        "**/node_modules/@swc/**/*.node",
+        '**/node_modules/sharp/build/**',
+        '**/node_modules/@swc/**/*.node',
         // 排除 source maps
-        "**/*.map",
+        '**/*.map',
         // 排除测试文件
-        "**/*.test.*",
-        "**/*.spec.*",
-        "**/test/**",
-        "**/tests/**",
+        '**/*.test.*',
+        '**/*.spec.*',
+        '**/test/**',
+        '**/tests/**',
         // 排除文档
-        "**/docs/**",
-        "**/README*",
-        "**/CHANGELOG*",
-        "**/HISTORY*",
+        '**/docs/**',
+        '**/README*',
+        '**/CHANGELOG*',
+        '**/HISTORY*',
       ],
     },
   },
@@ -75,55 +93,55 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/health",
-        destination: "/api/health",
+        source: '/api/health',
+        destination: '/api/health',
       },
     ];
   },
   async headers() {
     // CORS 配置
-    let corsOrigin = "http://localhost:3000";
-    if (process.env.NODE_ENV === "production") {
+    let corsOrigin = 'http://localhost:3000';
+    if (process.env.NODE_ENV === 'production') {
       // Cloudflare Pages 环境变量优先级
       const cfPagesUrl = process.env.CF_PAGES_URL
         ? process.env.CF_PAGES_URL.trim()
-        : "";
+        : '';
       const cfPagesCustomDomain = process.env.CF_PAGES_CUSTOM_DOMAIN
         ? `https://${process.env.CF_PAGES_CUSTOM_DOMAIN.trim()}`
-        : "";
+        : '';
 
       corsOrigin = (
         process.env.NEXT_PUBLIC_ALLOWED_ORIGINS ||
         cfPagesCustomDomain ||
         cfPagesUrl ||
-        "https://hearthbulter.pages.dev"
+        'https://hearthbulter.pages.dev'
       ).trim();
 
       if (!process.env.NEXT_PUBLIC_ALLOWED_ORIGINS) {
         console.warn(
-          "⚠️  警告：未设置 NEXT_PUBLIC_ALLOWED_ORIGINS，使用默认值",
+          '⚠️  警告：未设置 NEXT_PUBLIC_ALLOWED_ORIGINS，使用默认值',
         );
       }
     }
 
     return [
       {
-        source: "/api/:path*",
+        source: '/api/:path*',
         headers: [
           {
-            key: "Access-Control-Allow-Origin",
+            key: 'Access-Control-Allow-Origin',
             value: corsOrigin,
           },
           {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, PUT, DELETE, OPTIONS",
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
           },
           {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization",
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
           },
           {
-            key: "Content-Security-Policy",
+            key: 'Content-Security-Policy',
             value:
               "default-src 'self'; " +
               "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; " +
@@ -136,20 +154,20 @@ const nextConfig = {
               "form-action 'self'",
           },
           {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
           },
           {
-            key: "X-Frame-Options",
-            value: "DENY",
+            key: 'X-Frame-Options',
+            value: 'DENY',
           },
           {
-            key: "X-XSS-Protection",
-            value: "1; mode=block",
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
           },
           {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
         ],
       },
