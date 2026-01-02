@@ -4,6 +4,9 @@
 # 构建配置
 build:
   command: |
+    corepack enable
+    corepack prepare pnpm@10 --activate
+
     # Provide safe defaults for preview builds where Cloudflare env vars may be missing.
     # Production values (set in Cloudflare Pages) will override these.
     export SKIP_ENV_VALIDATION="${SKIP_ENV_VALIDATION:-true}"
