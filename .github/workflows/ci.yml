@@ -176,26 +176,70 @@ jobs:
     steps:
       - name: 📥 Checkout 代码
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 检测需要运行测试的变更
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+            CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" || true)"
+          else
+            CHANGED_FILES="$(git diff --name-only HEAD~1 HEAD || true)"
+          fi
+
+          # 仅在测试相关的变更出现时才运行（增量门禁）
+          if echo "$CHANGED_FILES" | grep -Eq '^(src/.*\.(ts|tsx|js|jsx)|src/__tests__/|tests/|jest\.config\.js|jest\.setup\.js|package\.json|pnpm-lock\.yaml|tsconfig\.json)$'; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          TEST_TARGETS="$(echo "$CHANGED_FILES" | grep -E '^(src/.*\.(ts|tsx|js|jsx)|src/__tests__/.*\.(ts|tsx|js|jsx)|tests/.*\.(ts|tsx|js|jsx))$' || true)"
+          {
+            echo "test_targets<<EOF"
+            echo "$TEST_TARGETS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: 📦 安装 pnpm
         uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
+        if: steps.changes.outputs.should_run == 'true'
 
       - name: 🔧 设置 Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+        if: steps.changes.outputs.should_run == 'true'
 
       - name: 📚 安装依赖
         run: pnpm install --frozen-lockfile
+        if: steps.changes.outputs.should_run == 'true'
 
       - name: 🏗️ 生成 Prisma Client
         run: pnpm db:generate
+        if: steps.changes.outputs.should_run == 'true'
 
-      - name: 🧪 运行单元测试
-        run: pnpm test:coverage
+      - name: ⏭️ 跳过单元测试（无相关变更）
+        if: steps.changes.outputs.should_run == 'false'
+        run: echo "No test-relevant changes detected; skipping unit tests."
+
+      - name: 🧪 运行相关单元测试（增量）
+        if: steps.changes.outputs.should_run == 'true'
+        run: |
+          if [ "${{ steps.changes.outputs.test_targets }}" = "" ]; then
+            pnpm exec jest --coverage --passWithNoTests
+          else
+            echo "${{ steps.changes.outputs.test_targets }}" | tr '\n' '\0' | xargs -0 pnpm exec jest --coverage --findRelatedTests --passWithNoTests
+          fi
         env:
           # 测试环境变量（使用 mock 值）
           DATABASE_URL: "postgresql://test:test@localhost:5432/test"
@@ -206,7 +250,7 @@ jobs:
 
       - name: 📊 上传测试覆盖率报告
         uses: codecov/codecov-action@v4
-        if: always()
+        if: always() && steps.changes.outputs.should_run == 'true' && hashFiles('coverage/lcov.info') != ''
         with:
           files: ./coverage/lcov.info
           flags: unittests
