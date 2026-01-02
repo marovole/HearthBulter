@@ -3,16 +3,27 @@
  * 使用 Web Crypto API 和 jose 库生成安全的分享 Token
  */
 
-import { webcrypto as nodeCrypto } from "crypto";
-import type { JWTPayload } from "jose";
-import { logger } from "@/lib/logger";
+import { webcrypto as nodeCrypto } from 'crypto';
+import type { JWTPayload } from 'jose';
+import { logger } from '@/lib/logger';
 
 // Prefer the runtime-provided Web Crypto (Cloudflare Workers / Node 20+).
 // Do NOT overwrite `globalThis.crypto` in Node 20+, as it may be non-writable.
-const cryptoApi: Crypto = (globalThis.crypto ?? nodeCrypto) as Crypto;
+// In some test environments (e.g. JSDOM), `globalThis.crypto` can exist without `subtle`.
+const cryptoApi: Crypto = (() => {
+  const globalCrypto = globalThis.crypto;
+  if (
+    globalCrypto &&
+    typeof globalCrypto.getRandomValues === 'function' &&
+    globalCrypto.subtle
+  ) {
+    return globalCrypto;
+  }
+  return nodeCrypto;
+})();
 
-const TOKEN_ISSUER = "health-butler";
-const TOKEN_AUDIENCE = "share-token";
+const TOKEN_ISSUER = 'health-butler';
+const TOKEN_AUDIENCE = 'share-token';
 
 export interface ShareTokenPayload extends JWTPayload {
   resourceId: string;
@@ -34,15 +45,15 @@ function getSecretKey(): Uint8Array {
   const secret = process.env.TOKEN_SECRET_KEY;
 
   if (!secret) {
-    throw new Error("TOKEN_SECRET_KEY 环境变量未设置");
+    throw new Error('TOKEN_SECRET_KEY 环境变量未设置');
   }
 
   const keyBytes =
-    typeof Buffer !== "undefined"
+    typeof Buffer !== 'undefined'
       ? Buffer.from(secret)
       : new TextEncoder().encode(secret);
   if (keyBytes.byteLength < 32) {
-    throw new Error("TOKEN_SECRET_KEY 长度不足，至少需要 32 字节");
+    throw new Error('TOKEN_SECRET_KEY 长度不足，至少需要 32 字节');
   }
 
   return keyBytes;
@@ -50,20 +61,20 @@ function getSecretKey(): Uint8Array {
 
 function base64UrlEncode(input: Uint8Array | string): string {
   const bytes =
-    typeof input === "string" ? new TextEncoder().encode(input) : input;
+    typeof input === 'string' ? new TextEncoder().encode(input) : input;
   const base64 =
-    typeof Buffer !== "undefined"
-      ? Buffer.from(bytes).toString("base64")
+    typeof Buffer !== 'undefined'
+      ? Buffer.from(bytes).toString('base64')
       : btoa(String.fromCharCode(...bytes));
 
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 function base64UrlDecode(input: string): Uint8Array {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized + "===".slice((normalized.length + 3) % 4);
-  if (typeof Buffer !== "undefined") {
-    const buf = Buffer.from(padded, "base64");
+  const normalized = input.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '==='.slice((normalized.length + 3) % 4);
+  if (typeof Buffer !== 'undefined') {
+    const buf = Buffer.from(padded, 'base64');
     return new Uint8Array(
       buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
     );
@@ -81,7 +92,7 @@ async function signJwt(
   secretKey: Uint8Array,
   options: { expiresAt: Date; audience: string; issuer: string; jti: string },
 ): Promise<string> {
-  const header = { alg: "HS256", typ: "JWT" };
+  const header = { alg: 'HS256', typ: 'JWT' };
   const fullPayload = {
     ...payload,
     aud: options.audience,
@@ -96,15 +107,15 @@ async function signJwt(
   const signingInput = `${encodedHeader}.${encodedPayload}`;
 
   const key = await cryptoApi.subtle.importKey(
-    "raw",
+    'raw',
     secretKey,
-    { name: "HMAC", hash: "SHA-256" },
+    { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ["sign"],
+    ['sign'],
   );
 
   const signatureBuffer = await cryptoApi.subtle.sign(
-    "HMAC",
+    'HMAC',
     key,
     new TextEncoder().encode(signingInput),
   );
@@ -118,31 +129,31 @@ async function verifyJwt(
   secretKey: Uint8Array,
   options: { audience: string; issuer: string },
 ): Promise<JWTPayload & Record<string, unknown>> {
-  const parts = token.split(".");
+  const parts = token.split('.');
   if (parts.length !== 3) {
-    throw new Error("Token格式无效");
+    throw new Error('Token格式无效');
   }
 
   const [encodedHeader, encodedPayload, signature] = parts;
   const signingInput = `${encodedHeader}.${encodedPayload}`;
 
   const key = await cryptoApi.subtle.importKey(
-    "raw",
+    'raw',
     secretKey,
-    { name: "HMAC", hash: "SHA-256" },
+    { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ["sign"],
+    ['sign'],
   );
 
   const expectedSignature = await cryptoApi.subtle.sign(
-    "HMAC",
+    'HMAC',
     key,
     new TextEncoder().encode(signingInput),
   );
 
   const expected = base64UrlEncode(new Uint8Array(expectedSignature));
   if (!timingSafeEqualString(expected, signature)) {
-    throw new Error("Token签名无效");
+    throw new Error('Token签名无效');
   }
 
   const payloadBytes = base64UrlDecode(encodedPayload);
@@ -151,11 +162,11 @@ async function verifyJwt(
     Record<string, unknown>;
 
   if (payload.iss !== options.issuer || payload.aud !== options.audience) {
-    throw new Error("Token颁发者或受众无效");
+    throw new Error('Token颁发者或受众无效');
   }
 
   if (payload.exp && payload.exp * 1000 < Date.now()) {
-    throw new Error("Token 已过期");
+    throw new Error('Token 已过期');
   }
 
   return payload;
@@ -183,7 +194,7 @@ export async function generateSecureShareToken(
   resourceType: string,
   ownerId: string,
   expiryDays: number = 7,
-  permissions: string[] = ["read"],
+  permissions: string[] = ['read'],
 ): Promise<string> {
   const secretKey = getSecretKey();
   const expiresAt = new Date();
@@ -205,7 +216,7 @@ export async function generateSecureShareToken(
     },
   );
 
-  logger.info("生成分享Token", {
+  logger.info('生成分享Token', {
     resourceId,
     resourceType,
     ownerId,
@@ -241,11 +252,11 @@ export async function verifyShareToken(
     ) {
       return {
         valid: false,
-        error: "Token 缺少必要字段",
+        error: 'Token 缺少必要字段',
       };
     }
 
-    logger.info("验证分享Token成功", {
+    logger.info('验证分享Token成功', {
       resourceId: sharePayload.resourceId,
       resourceType: sharePayload.resourceType,
     });
@@ -256,26 +267,26 @@ export async function verifyShareToken(
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : "Token验证失败";
+      error instanceof Error ? error.message : 'Token验证失败';
 
     // 区分不同类型的错误
-    if (errorMessage.includes("expired")) {
-      logger.warn("分享Token已过期", { error: errorMessage });
+    if (errorMessage.includes('expired')) {
+      logger.warn('分享Token已过期', { error: errorMessage });
       return {
         valid: false,
-        error: "Token 已过期",
+        error: 'Token 已过期',
       };
     }
 
-    if (errorMessage.includes("signature")) {
-      logger.warn("分享Token签名无效", { error: errorMessage });
+    if (errorMessage.includes('signature')) {
+      logger.warn('分享Token签名无效', { error: errorMessage });
       return {
         valid: false,
-        error: "Token 签名无效",
+        error: 'Token 签名无效',
       };
     }
 
-    logger.error("验证分享Token失败", { error });
+    logger.error('验证分享Token失败', { error });
     return {
       valid: false,
       error: errorMessage,
@@ -289,8 +300,8 @@ export async function verifyShareToken(
 function generateRandomId(): string {
   const array = new Uint8Array(16);
   cryptoApi.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join(
+    '',
   );
 }
 
@@ -302,8 +313,8 @@ function generateRandomId(): string {
 export function generateSecureRandomToken(length: number = 32): string {
   const array = new Uint8Array(length);
   cryptoApi.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join(
+    '',
   );
 }
 
@@ -315,11 +326,11 @@ export function generateUrlSafeToken(length: number = 32): string {
   const array = new Uint8Array(length);
   cryptoApi.getRandomValues(array);
   const base =
-    typeof Buffer !== "undefined"
-      ? Buffer.from(array).toString("base64")
+    typeof Buffer !== 'undefined'
+      ? Buffer.from(array).toString('base64')
       : btoa(String.fromCharCode(...array));
 
-  return base.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return base.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**
@@ -371,7 +382,7 @@ export async function verifyOneTimeToken(
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : "Token验证失败";
+      error instanceof Error ? error.message : 'Token验证失败';
     return {
       valid: false,
       error: errorMessage,
