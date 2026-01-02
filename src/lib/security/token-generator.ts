@@ -7,9 +7,9 @@ import { webcrypto as nodeCrypto } from "crypto";
 import type { JWTPayload } from "jose";
 import { logger } from "@/lib/logger";
 
-const cryptoApi = nodeCrypto;
-// 为 jose 提供 WebCrypto
-(globalThis as any).crypto = cryptoApi;
+// Prefer the runtime-provided Web Crypto (Cloudflare Workers / Node 20+).
+// Do NOT overwrite `globalThis.crypto` in Node 20+, as it may be non-writable.
+const cryptoApi: Crypto = (globalThis.crypto ?? nodeCrypto) as Crypto;
 
 const TOKEN_ISSUER = "health-butler";
 const TOKEN_AUDIENCE = "share-token";
