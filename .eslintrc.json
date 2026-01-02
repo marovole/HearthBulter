@@ -27,12 +27,26 @@
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
     "indent": ["error", 2],
-    "max-len": ["warn", { "code": 120, "ignoreUrls": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }],
+    "max-len": [
+      "warn",
+      {
+        "code": 120,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true
+      }
+    ],
     "complexity": ["warn", 15],
     "max-depth": ["warn", 4],
     "max-params": ["warn", 4]
   },
   "overrides": [
+    {
+      "files": ["src/lib/security/token-generator.ts"],
+      "rules": {
+        "max-params": ["warn", 5]
+      }
+    },
     {
       "files": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
       "rules": {
@@ -45,6 +59,7 @@
     {
       "files": ["*.config.js", "*.config.ts"],
       "rules": {
+        "@typescript-eslint/no-require-imports": "off",
         "@typescript-eslint/no-var-requires": "off",
         "no-console": "off"
       }
