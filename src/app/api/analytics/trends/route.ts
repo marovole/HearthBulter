@@ -42,10 +42,12 @@ export async function GET(request: NextRequest) {
     const { getMultiLayerCache } = await import('@/lib/cache/multi-layer-cache');
 
     // 使用多层缓存获取数据
+    // 🔒 环境保护：非生产环境自动禁用 KV（节省配额）
     const cache = getMultiLayerCache({
       l1Ttl: 60,   // L1 (KV): 60 秒
       l2Ttl: 300,  // L2 (trend_data): 5 分钟
       debug: process.env.NODE_ENV === 'development',
+      // disableL1 默认值：非生产环境禁用
     });
 
     const result = await cache.getTrendData(
