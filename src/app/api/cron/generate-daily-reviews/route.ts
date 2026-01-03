@@ -63,6 +63,45 @@ export async function GET(request: NextRequest) {
     errors: [],
   };
 
+  // 辅助函数：处理单个成员的复盘
+  async function processMemberReview(
+    member: { id: string; name: string; familyId: string },
+    reviewDate: Date,
+  ): Promise<{ updated: boolean; generated: boolean; error: string | null }> {
+    try {
+      const existingReview = await dailyReviewService.getLatestReview(
+        member.id,
+      );
+      const shouldGenerate =
+        !existingReview ||
+        new Date(existingReview.reviewDate).toDateString() !==
+          reviewDate.toDateString();
+
+      if (!shouldGenerate) {
+        return { updated: false, generated: false, error: null };
+      }
+
+      await dailyReviewService.generateDailyReview(
+        member.familyId,
+        member.id,
+        reviewDate,
+      );
+
+      return {
+        updated: !!existingReview,
+        generated: !existingReview,
+        error: null,
+      };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      return {
+        updated: false,
+        generated: false,
+        error: `Member ${member.id}: ${errorMsg}`,
+      };
+    }
+  }
+
   try {
     // 获取所有活跃家庭成员（30 天内有活动）
     const activeThreshold = new Date();
@@ -86,36 +125,10 @@ export async function GET(request: NextRequest) {
 
     // 为每个成员生成复盘
     for (const member of activeMembers) {
-      try {
-        // 检查是否已存在复盘
-        const existingReview = await dailyReviewService.getLatestReview(
-          member.id,
-        );
-
-        // 如果最新复盘不是昨天的，则生成新的
-        const shouldGenerate =
-          !existingReview ||
-          new Date(existingReview.reviewDate).toDateString() !==
-            yesterday.toDateString();
-
-        if (shouldGenerate) {
-          await dailyReviewService.generateDailyReview(
-            member.familyId,
-            member.id,
-            yesterday,
-          );
-
-          if (existingReview) {
-            results.reviewsUpdated++;
-          } else {
-            results.reviewsGenerated++;
-          }
-        }
-      } catch (error) {
-        const errorMsg =
-          error instanceof Error ? error.message : 'Unknown error';
-        results.errors.push(`Member ${member.id}: ${errorMsg}`);
-      }
+      const memberResult = await processMemberReview(member, yesterday);
+      if (memberResult.updated) results.reviewsUpdated++;
+      if (memberResult.generated) results.reviewsGenerated++;
+      if (memberResult.error) results.errors.push(memberResult.error);
     }
 
     const duration = Date.now() - startTime;

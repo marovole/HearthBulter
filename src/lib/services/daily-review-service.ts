@@ -35,6 +35,7 @@ export interface DailyReviewData {
  */
 interface TomorrowActions {
   actions: string[];
+  priority: string;
 }
 
 /**
@@ -113,8 +114,8 @@ export class DailyReviewService {
           overdueTasks: taskStats.overdue,
           summary,
           keyAchievements,
-          deviations: deviations as any,
-          tomorrowActions: tomorrowActions as any,
+          deviations: deviations as DeviationAnalysis,
+          tomorrowActions: tomorrowActions as TomorrowActions,
         },
       })) as DailyReviewData;
     }
@@ -131,8 +132,8 @@ export class DailyReviewService {
         overdueTasks: taskStats.overdue,
         summary,
         keyAchievements,
-        deviations: deviations as any,
-        tomorrowActions: tomorrowActions as any,
+        deviations: deviations as DeviationAnalysis,
+        tomorrowActions: tomorrowActions as TomorrowActions,
       },
     });
 
@@ -318,7 +319,7 @@ export class DailyReviewService {
   private generateTomorrowActions(
     stats: TaskStatistics,
     deviations: DeviationAnalysis,
-  ): any {
+  ): TomorrowActions {
     const actions: string[] = [];
 
     // 根据完成率给出建议
@@ -393,9 +394,9 @@ export class DailyReviewService {
    * @returns 错过次数
    */
   private async countMissedHealthCheckIns(
-    memberId: string,
-    startDate: Date,
-    endDate: Date,
+    _memberId: string,
+    _startDate: Date,
+    _endDate: Date,
   ): Promise<number> {
     // TODO: 实现健康打卡检查逻辑
     // 这里简化为返回 0，实际应该查询健康数据记录

@@ -86,6 +86,62 @@ function extractMetadataFields(metadata: Record<string, unknown>): {
   };
 }
 
+interface TaskActionsProps {
+  isSkipping: boolean | undefined;
+  isCompleting: boolean | undefined;
+  onSkip: () => void;
+  onComplete: () => void;
+}
+
+function TaskActions({
+  isSkipping,
+  isCompleting,
+  onSkip,
+  onComplete,
+}: TaskActionsProps) {
+  return (
+    <div className='flex items-center gap-2'>
+      <Button
+        size='sm'
+        variant='outline'
+        className='h-8'
+        onClick={onSkip}
+        disabled={isSkipping || isCompleting}
+      >
+        {isSkipping ? (
+          <>
+            <X className='h-3 w-3 mr-1 animate-pulse' />
+            跳过中
+          </>
+        ) : (
+          <>
+            <X className='h-3 w-3 mr-1' />
+            跳过
+          </>
+        )}
+      </Button>
+      <Button
+        size='sm'
+        className='h-8'
+        onClick={onComplete}
+        disabled={isCompleting || isSkipping}
+      >
+        {isCompleting ? (
+          <>
+            <Check className='h-3 w-3 mr-1 animate-pulse' />
+            完成中
+          </>
+        ) : (
+          <>
+            <Check className='h-3 w-3 mr-1' />
+            完成
+          </>
+        )}
+      </Button>
+    </div>
+  );
+}
+
 export function TaskCard({
   task,
   onComplete,
@@ -189,45 +245,12 @@ export function TaskCard({
             )}
           </div>
 
-          <div className='flex items-center gap-2'>
-            <Button
-              size='sm'
-              variant='outline'
-              className='h-8'
-              onClick={() => onSkip()}
-              disabled={isSkipping || isCompleting}
-            >
-              {isSkipping ? (
-                <>
-                  <X className='h-3 w-3 mr-1 animate-pulse' />
-                  跳过中
-                </>
-              ) : (
-                <>
-                  <X className='h-3 w-3 mr-1' />
-                  跳过
-                </>
-              )}
-            </Button>
-            <Button
-              size='sm'
-              className='h-8'
-              onClick={() => onComplete()}
-              disabled={isCompleting || isSkipping}
-            >
-              {isCompleting ? (
-                <>
-                  <Check className='h-3 w-3 mr-1 animate-pulse' />
-                  完成中
-                </>
-              ) : (
-                <>
-                  <Check className='h-3 w-3 mr-1' />
-                  完成
-                </>
-              )}
-            </Button>
-          </div>
+          <TaskActions
+            isSkipping={isSkipping}
+            isCompleting={isCompleting}
+            onSkip={onSkip}
+            onComplete={onComplete}
+          />
         </div>
       </div>
     </Card>
