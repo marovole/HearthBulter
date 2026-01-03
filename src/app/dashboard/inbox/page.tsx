@@ -46,8 +46,7 @@ export default function ButlerInboxPage() {
           setMemberId(memberData.data.id);
           setFamilyId(memberData.data.familyId);
         }
-      } catch (error) {
-        console.error('Error fetching member info:', error);
+      } catch {
         // 如果获取失败，可以显示错误或重定向
       } finally {
         setLoading(false);

@@ -9,8 +9,21 @@
 
 import { prisma } from '@/lib/db';
 import { taskService } from './task-service';
-import { TaskCategory, TaskPriority } from '@prisma/client';
+import { TaskCategory, TaskPriority, type Task } from '@prisma/client';
 import { addDays, differenceInDays } from 'date-fns';
+
+/**
+ * 任务类型定义
+ */
+interface GeneratedTask {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  priority: string;
+  dueDate: Date | null;
+  metadata: Record<string, unknown>;
+}
 
 /**
  * 任务生成规则配置
@@ -52,12 +65,12 @@ export class TaskGeneratorService {
    * @param familyId 家庭ID
    * @returns 生成的任务列表
    */
-  async generateTasks(familyId: string): Promise<any[]> {
+  async generateTasks(familyId: string): Promise<GeneratedTask[]> {
     if (!this.config.enabled) {
       return [];
     }
 
-    const generatedTasks: any[] = [];
+    const generatedTasks: GeneratedTask[] = [];
 
     try {
       // 1. 检查库存临期
@@ -74,7 +87,6 @@ export class TaskGeneratorService {
 
       return generatedTasks;
     } catch (error) {
-      console.error('Error generating tasks:', error);
       return [];
     }
   }
@@ -85,8 +97,8 @@ export class TaskGeneratorService {
    * @param familyId 家庭ID
    * @returns 生成的任务列表
    */
-  async checkExpiringInventory(familyId: string): Promise<any[]> {
-    const tasks: any[] = [];
+  async checkExpiringInventory(familyId: string): Promise<GeneratedTask[]> {
+    const tasks: GeneratedTask[] = [];
 
     try {
       // 查询即将过期的库存项
@@ -160,9 +172,7 @@ export class TaskGeneratorService {
 
         tasks.push(task);
       }
-    } catch (error) {
-      console.error('Error checking expiring inventory:', error);
-    }
+    } catch (error) {}
 
     return tasks;
   }
@@ -173,8 +183,8 @@ export class TaskGeneratorService {
    * @param familyId 家庭ID
    * @returns 生成的任务列表
    */
-  async generateHealthCheckInTasks(familyId: string): Promise<any[]> {
-    const tasks: any[] = [];
+  async generateHealthCheckInTasks(familyId: string): Promise<GeneratedTask[]> {
+    const tasks: GeneratedTask[] = [];
 
     try {
       // 获取家庭成员
@@ -229,9 +239,7 @@ export class TaskGeneratorService {
 
         tasks.push(task);
       }
-    } catch (error) {
-      console.error('Error generating health check-in tasks:', error);
-    }
+    } catch (error) {}
 
     return tasks;
   }
@@ -242,8 +250,8 @@ export class TaskGeneratorService {
    * @param familyId 家庭ID
    * @returns 生成的任务列表
    */
-  async checkNutritionDeviations(familyId: string): Promise<any[]> {
-    const tasks: any[] = [];
+  async checkNutritionDeviations(familyId: string): Promise<GeneratedTask[]> {
+    const tasks: GeneratedTask[] = [];
 
     try {
       // TODO: 实现营养偏差检查逻辑
@@ -254,9 +262,7 @@ export class TaskGeneratorService {
       // 4. 如果偏差超过阈值，生成调整任务
       // 简化版：暂时返回空数组
       // 实际实现需要营养分析服务的支持
-    } catch (error) {
-      console.error('Error checking nutrition deviations:', error);
-    }
+    } catch (error) {}
 
     return tasks;
   }

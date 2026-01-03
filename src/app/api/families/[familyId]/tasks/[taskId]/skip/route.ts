@@ -17,7 +17,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string; taskId: string }> },
 ) {
-  return withApiPermissions(async (req, context) => {
+  return withApiPermissions(async (req) => {
     try {
       const { familyId, taskId } = await params;
       const userId = req.user!.id;
@@ -50,7 +50,6 @@ export async function POST(
         data: task,
       });
     } catch (error) {
-      console.error('Error skipping task:', error);
       return NextResponse.json(
         {
           success: false,
@@ -59,5 +58,5 @@ export async function POST(
         { status: 500 },
       );
     }
-  }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request as any, { params });
+  }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request, { params } as never);
 }

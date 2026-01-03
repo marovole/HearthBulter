@@ -19,7 +19,7 @@ interface TaskCardProps {
       name: string;
       avatar: string | null;
     } | null;
-    metadata: any;
+    metadata: Record<string, unknown>;
     actionUrl: string | null;
   };
   onComplete: () => void;
@@ -28,14 +28,24 @@ interface TaskCardProps {
   isSkipping?: boolean;
 }
 
-const priorityConfig = {
+interface PriorityConfig {
+  color: string;
+  label: string;
+  icon: string;
+}
+
+interface CategoryConfig {
+  [key: string]: string;
+}
+
+const priorityConfig: Record<string, PriorityConfig> = {
   URGENT: { color: 'bg-red-500 text-white', label: 'URGENT', icon: '🔴' },
   HIGH: { color: 'bg-orange-500 text-white', label: 'HIGH', icon: '🟠' },
   MEDIUM: { color: 'bg-yellow-500 text-white', label: 'MEDIUM', icon: '🟡' },
   LOW: { color: 'bg-green-500 text-white', label: 'LOW', icon: '🟢' },
 };
 
-const categoryConfig = {
+const categoryConfig: CategoryConfig = {
   SHOPPING: '购物',
   COOKING: '烹饪',
   CLEANING: '清洁',
@@ -44,6 +54,38 @@ const categoryConfig = {
   OTHER: '其他',
 };
 
+function formatDueDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isTomorrow = tomorrow.toDateString() === date.toDateString();
+
+  if (isToday) {
+    return `今天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  if (isTomorrow) {
+    return `明天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  return date.toLocaleString('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function extractMetadataFields(metadata: Record<string, unknown>): {
+  reason: string | undefined;
+  evidence: Record<string, unknown> | undefined;
+} {
+  return {
+    reason: metadata.reason as string | undefined,
+    evidence: metadata.evidence as Record<string, unknown> | undefined,
+  };
+}
+
 export function TaskCard({
   task,
   onComplete,
@@ -51,38 +93,17 @@ export function TaskCard({
   isCompleting,
   isSkipping,
 }: TaskCardProps) {
-  const priorityInfo =
-    priorityConfig[task.priority as keyof typeof priorityConfig] ||
-    priorityConfig.MEDIUM;
-  const categoryLabel =
-    categoryConfig[task.category as keyof typeof categoryConfig] ||
-    task.category;
+  const priorityInfo = priorityConfig[task.priority] || priorityConfig.MEDIUM;
+  const categoryLabel = categoryConfig[task.category] || task.category;
 
-  // 格式化截止时间
-  const formatDueDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-    const isTomorrow =
-      new Date(now.setDate(now.getDate() + 1)).toDateString() ===
-      date.toDateString();
+  const { reason, evidence } = extractMetadataFields(task.metadata);
 
-    if (isToday) {
-      return `今天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
-    } else if (isTomorrow) {
-      return `明天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+  const handleActionClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (task.actionUrl) {
+      window.location.href = task.actionUrl;
     }
-    return date.toLocaleString('zh-CN', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
-
-  // 提取任务依据
-  const reason = task.metadata?.reason;
-  const evidence = task.metadata?.evidence;
 
   return (
     <Card
@@ -142,10 +163,7 @@ export function TaskCard({
               variant='ghost'
               size='sm'
               className='h-8 text-xs'
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = task.actionUrl!;
-              }}
+              onClick={handleActionClick}
             >
               查看详情 <ArrowRight className='h-3 w-3 ml-1' />
             </Button>

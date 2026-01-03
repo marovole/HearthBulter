@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
             yesterday.toDateString();
 
         if (shouldGenerate) {
-          const review = await dailyReviewService.generateDailyReview(
+          await dailyReviewService.generateDailyReview(
             member.familyId,
             member.id,
             yesterday,
@@ -107,37 +107,14 @@ export async function GET(request: NextRequest) {
 
           if (existingReview) {
             results.reviewsUpdated++;
-            console.log(
-              `[Cron] Updated daily review for member ${member.name} (${member.id})`,
-            );
           } else {
             results.reviewsGenerated++;
-            console.log(
-              `[Cron] Generated daily review for member ${member.name} (${member.id})`,
-            );
           }
-
-          // 记录统计信息
-          const completionRate =
-            review.totalTasks > 0
-              ? Math.round((review.completedTasks / review.totalTasks) * 100)
-              : 0;
-          console.log(
-            `[Cron] Review stats: ${review.totalTasks} total, ${review.completedTasks} completed, ${completionRate}% rate`,
-          );
-        } else {
-          console.log(
-            `[Cron] Review already exists for ${member.name} (${member.id}), skipping`,
-          );
         }
       } catch (error) {
         const errorMsg =
           error instanceof Error ? error.message : 'Unknown error';
         results.errors.push(`Member ${member.id}: ${errorMsg}`);
-        console.error(
-          `[Cron] Error generating review for member ${member.id}:`,
-          error,
-        );
       }
     }
 
@@ -153,7 +130,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Cron] Fatal error in generate-daily-reviews:', error);
     return NextResponse.json(
       {
         success: false,
@@ -168,18 +144,4 @@ export async function GET(request: NextRequest) {
 // 支持 POST 方法用于手动触发（开发测试用）
 export async function POST(request: NextRequest) {
   return GET(request);
-}
-
-// Cloudflare Pages Scheduled Handler 类型声明
-// 在实际部署时，Cloudflare 会调用此 handler
-export const scheduled = async (event: ScheduledEvent) => {
-  // 这里是 Cloudflare Workers 的 scheduled event handler
-  // 在 Cloudflare Pages 环境中，GET 请求会被 Cloudflare Cron 调用
-  return null;
-};
-
-// 类型定义
-interface ScheduledEvent {
-  scheduledTime: number;
-  cron: string;
 }
