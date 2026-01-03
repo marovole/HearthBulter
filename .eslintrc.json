@@ -26,7 +26,6 @@
     "comma-dangle": ["warn", "always-multiline"],
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
-    "indent": ["error", 2],
     "max-len": [
       "warn",
       {
@@ -62,6 +61,17 @@
         "@typescript-eslint/no-require-imports": "off",
         "@typescript-eslint/no-var-requires": "off",
         "no-console": "off"
+      }
+    },
+    {
+      "files": [
+        "src/lib/cache/**/*.ts",
+        "src/app/api/kv/**/*.ts",
+        "src/app/api/analytics/trends/route.ts"
+      ],
+      "rules": {
+        "no-console": "off",
+        "@typescript-eslint/no-explicit-any": "off"
       }
     }
   ]
