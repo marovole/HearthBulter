@@ -9,7 +9,7 @@
 
 import { prisma } from '@/lib/db';
 import { taskService } from './task-service';
-import { TaskCategory, TaskPriority, type Task } from '@prisma/client';
+import { TaskCategory, TaskPriority } from '@prisma/client';
 import { addDays, differenceInDays } from 'date-fns';
 
 /**
@@ -86,7 +86,7 @@ export class TaskGeneratorService {
       generatedTasks.push(...nutritionTasks);
 
       return generatedTasks;
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -172,7 +172,7 @@ export class TaskGeneratorService {
 
         tasks.push(task);
       }
-    } catch (error) {}
+    } catch {}
 
     return tasks;
   }
@@ -239,7 +239,7 @@ export class TaskGeneratorService {
 
         tasks.push(task);
       }
-    } catch (error) {}
+    } catch {}
 
     return tasks;
   }
@@ -250,7 +250,7 @@ export class TaskGeneratorService {
    * @param familyId 家庭ID
    * @returns 生成的任务列表
    */
-  async checkNutritionDeviations(familyId: string): Promise<GeneratedTask[]> {
+  async checkNutritionDeviations(_familyId: string): Promise<GeneratedTask[]> {
     const tasks: GeneratedTask[] = [];
 
     try {
@@ -262,7 +262,7 @@ export class TaskGeneratorService {
       // 4. 如果偏差超过阈值，生成调整任务
       // 简化版：暂时返回空数组
       // 实际实现需要营养分析服务的支持
-    } catch (error) {}
+    } catch {}
 
     return tasks;
   }

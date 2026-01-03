@@ -16,13 +16,13 @@ import type {
   UpdateTaskDTO,
   TaskStatus,
 } from '@/lib/repositories/types/task';
-import { TaskCategory, TaskPriority } from '@prisma/client';
+import type { TaskCategory, TaskPriority } from '@prisma/client';
 
 /**
  * 任务创建时的扩展选项
  */
 export interface CreateTaskOptions extends CreateTaskDTO {
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   actionUrl?: string;
   estimatedMinutes?: number;
   relatedItemId?: string;
@@ -72,7 +72,7 @@ export class TaskService {
       estimatedMinutes,
       relatedItemId,
       relatedItemType,
-    } as any);
+    } as Prisma.TaskCreateInput);
 
     // 记录活动日志
     await this.logActivity(familyId, creatorId, 'TASK_CREATED', {
@@ -158,7 +158,7 @@ export class TaskService {
       skipReason: reason,
       skippedAt: now,
       completedAt: now, // 跳过也记录完成时间
-    } as any);
+    } as Prisma.TaskCreateInput);
 
     // 记录活动日志
     await this.logActivity(task.familyId, memberId, 'TASK_SKIPPED', {
@@ -378,7 +378,7 @@ export class TaskService {
       return {
         ...task,
         metadata: {
-          ...((task.metadata as any) || {}),
+          ...((task.metadata as Record<string, unknown>) || {}),
           score,
           scoredAt: now,
         },
@@ -387,8 +387,8 @@ export class TaskService {
 
     // 按评分降序排序
     return scoredTasks.sort((a, b) => {
-      const scoreA = (a.metadata as any)?.score || 0;
-      const scoreB = (b.metadata as any)?.score || 0;
+      const scoreA = (a.metadata as Record<string, unknown>)?.score || 0;
+      const scoreB = (b.metadata as Record<string, unknown>)?.score || 0;
       return scoreB - scoreA;
     });
   }
@@ -405,20 +405,20 @@ export class TaskService {
     familyId: string,
     memberId: string,
     activityType: string,
-    metadata: Record<string, any>,
+    metadata: Record<string, unknown>,
   ): Promise<void> {
     try {
       await prisma.activity.create({
         data: {
           familyId,
           memberId,
-          activityType: activityType as any,
+          activityType,
           title: this.getActivityTitle(activityType),
           description: metadata.taskTitle || '',
           metadata,
         },
       });
-    } catch (error) {
+    } catch {
       // 不抛出错误，避免影响主要操作
     }
   }
