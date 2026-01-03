@@ -214,18 +214,20 @@ export class InventoryTracker {
    *
    * 优化：添加 usageType 验证和 memberId 权限验证
    */
-  async useInventory(
-    inventoryItemId: string,
-    usedQuantity: number,
-    usageType: string,
-    memberId: string,
+  async useInventory(params: {
+    inventoryItemId: string;
+    usedQuantity: number;
+    usageType: string;
+    memberId: string;
     options?: {
       relatedId?: string;
       relatedType?: string;
       notes?: string;
       recipeName?: string;
-    },
-  ): Promise<InventoryItemWithRelations> {
+    };
+  }): Promise<InventoryItemWithRelations> {
+    const { inventoryItemId, usedQuantity, usageType, memberId, options } =
+      params;
     // 验证 usageType 是否为有效的枚举值
     const parsedUsage = usageReasonSchema.safeParse(usageType);
     if (!parsedUsage.success) {
@@ -312,17 +314,17 @@ export class InventoryTracker {
       if (matchingItems.length > 0) {
         const inventoryItem = matchingItems[0];
 
-        const updatedItem = await this.useInventory(
-          inventoryItem.id,
-          ingredient.quantity,
-          'COOKING',
+        const updatedItem = await this.useInventory({
+          inventoryItemId: inventoryItem.id,
+          usedQuantity: ingredient.quantity,
+          usageType: 'COOKING',
           memberId,
-          {
+          options: {
             recipeName,
             notes: `食谱：${recipeName}`,
             relatedType: 'RECIPE',
           },
-        );
+        });
 
         results.push(updatedItem);
       }
@@ -390,7 +392,6 @@ export class InventoryTracker {
     }
 
     if (expiryDate) {
-      const now = new Date();
       const daysToExpiry = this.calculateDaysToExpiry(expiryDate);
 
       if (daysToExpiry < 0) {

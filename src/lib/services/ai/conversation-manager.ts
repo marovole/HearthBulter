@@ -6,6 +6,7 @@ import {
 } from './prompt-templates';
 import { aiResponseCache, AICacheKeys } from './response-cache';
 import { createHash } from 'crypto';
+import { logger } from '@/lib/logger';
 import {
   recognizeIntentFromMessage,
   formatConversationHistory,
@@ -40,8 +41,8 @@ export interface ConversationSession {
   updatedAt: Date;
   lastActivityAt: Date;
   context: {
-    userProfile?: any;
-    healthData?: any;
+    userProfile?: Record<string, unknown>;
+    healthData?: Record<string, unknown>;
     conversationGoals?: string[];
     preferences?: {
       language: 'zh' | 'en';
@@ -93,6 +94,11 @@ export interface PresetQuestion {
 export class ConversationManager {
   private static instance: ConversationManager;
   private activeSessions: Map<string, ConversationSession> = new Map();
+  private readonly defaultPreferences = {
+    language: 'zh' as const,
+    detailLevel: 'detailed' as const,
+    tone: 'friendly' as const,
+  };
 
   static getInstance(): ConversationManager {
     if (!ConversationManager.instance) {
@@ -117,11 +123,7 @@ export class ConversationManager {
       updatedAt: new Date(),
       lastActivityAt: new Date(),
       context: {
-        preferences: {
-          language: 'zh',
-          detailLevel: 'detailed',
-          tone: 'friendly',
-        },
+        preferences: this.defaultPreferences,
         ...context,
       },
     };
@@ -180,8 +182,9 @@ export class ConversationManager {
    */
   async recognizeIntent(
     message: string,
-    context?: any,
+    _context?: unknown,
   ): Promise<IntentRecognition> {
+    void _context;
     return recognizeIntentFromMessage(message);
   }
 
@@ -199,19 +202,19 @@ export class ConversationManager {
     }
 
     // 生成缓存键
+    const userProfileName =
+      typeof session.context.userProfile?.name === 'string'
+        ? session.context.userProfile.name
+        : '';
     const messageHash = createHash('md5')
-      .update(
-        userMessage +
-          JSON.stringify(intent) +
-          session.context.userProfile?.name || '',
-      )
+      .update(`${userMessage}${JSON.stringify(intent)}${userProfileName}`)
       .digest('hex');
     const cacheKey = AICacheKeys.chatResponse(sessionId, messageHash);
 
     // 尝试从缓存获取响应
     const cachedResponse = await aiResponseCache.get<string>(cacheKey);
     if (cachedResponse) {
-      console.log('使用缓存的AI响应:', userMessage);
+      logger.debug('AI response cache hit', { sessionId, userMessage });
       return cachedResponse;
     }
 
@@ -267,7 +270,10 @@ export class ConversationManager {
 
       return response.content;
     } catch (error) {
-      console.error('AI response generation failed:', error);
+      logger.error('AI response generation failed', {
+        sessionId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return this.generateFallbackResponse(intent);
     }
   }
@@ -281,7 +287,7 @@ export class ConversationManager {
   ): {
     recentMessages: ConversationMessage[];
     keyTopics: string[];
-    userPreferences: any;
+    userPreferences: ConversationSession['context']['preferences'] | null;
     healthConcerns: string[];
   } {
     const session = this.activeSessions.get(sessionId);
@@ -289,7 +295,7 @@ export class ConversationManager {
       return {
         recentMessages: [],
         keyTopics: [],
-        userPreferences: {},
+        userPreferences: null,
         healthConcerns: [],
       };
     }
@@ -301,7 +307,7 @@ export class ConversationManager {
     return {
       recentMessages,
       keyTopics,
-      userPreferences: session.context.preferences,
+      userPreferences: session.context.preferences ?? this.defaultPreferences,
       healthConcerns,
     };
   }

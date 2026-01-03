@@ -17,6 +17,9 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^next-auth/react$': '<rootDir>/src/__tests__/mocks/next-auth.ts',
     '^next-auth$': '<rootDir>/src/__tests__/mocks/next-auth.ts',
+    '^next-auth/next$': '<rootDir>/src/__tests__/mocks/next-auth-next.ts',
+    '^next-auth/providers/credentials$':
+      '<rootDir>/src/__tests__/mocks/next-auth-credentials.ts',
     '^next$': '<rootDir>/node_modules/next',
   },
   transform: {

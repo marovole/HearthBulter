@@ -2,10 +2,10 @@ import {
   PrismaClient,
   Order,
   OrderStatus,
-  MealLog,
   StorageLocation,
 } from '@prisma/client';
 import { inventoryTracker } from './inventory-tracker';
+import { logger } from '@/lib/logger';
 
 const prisma = new PrismaClient();
 
@@ -211,17 +211,17 @@ export class InventorySync {
           });
 
           if (inventoryItem) {
-            await inventoryTracker.useInventory(
-              inventoryItem.id,
-              mealFood.amount,
-              'MEAL_LOG',
+            await inventoryTracker.useInventory({
+              inventoryItemId: inventoryItem.id,
+              usedQuantity: mealFood.amount,
+              usageType: 'MEAL_LOG',
               memberId,
-              {
+              options: {
                 relatedId: mealLogId,
                 relatedType: 'MEAL_LOG',
                 notes: `${mealLog.mealType} - ${mealLog.date.toISOString().split('T')[0]}`,
               },
-            );
+            });
             result.usedItems++;
           } else {
             result.errors.push(`库存中没有足够的 ${mealFood.food.name}`);
@@ -367,14 +367,14 @@ export class InventorySync {
       const items = JSON.parse(order.items as string);
 
       if (!Array.isArray(items)) {
-        console.warn('订单商品解析结果不是数组:', order.id);
+        logger.warn('订单商品解析结果不是数组', { orderId: order.id });
         return [];
       }
 
       return items.flatMap((item: ParsedOrderItem) => {
         const name = item.name ?? item.productName;
         if (!name) {
-          console.warn('订单商品缺少名称，已跳过:', item);
+          logger.warn('订单商品缺少名称，已跳过', { orderId: order.id, item });
           return [];
         }
 
@@ -389,7 +389,10 @@ export class InventorySync {
         ];
       });
     } catch (error) {
-      console.error('解析订单商品失败:', error);
+      logger.error('解析订单商品失败', {
+        orderId: order.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return [];
     }
   }

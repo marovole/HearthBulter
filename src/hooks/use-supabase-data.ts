@@ -1,11 +1,34 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { supabase, type User } from '@/lib/supabase-client';
 import { DataFetcher } from '@/lib/data-fetching';
+import { logger } from '@/lib/logger';
+
+const dependencySignature = (dependencies: readonly unknown[]): string => {
+  return dependencies
+    .map((dependency) => {
+      if (dependency === null || dependency === undefined) {
+        return String(dependency);
+      }
+      if (
+        typeof dependency === 'string' ||
+        typeof dependency === 'number' ||
+        typeof dependency === 'boolean'
+      ) {
+        return String(dependency);
+      }
+      try {
+        return JSON.stringify(dependency);
+      } catch {
+        return Object.prototype.toString.call(dependency);
+      }
+    })
+    .join('|');
+};
 
 // 通用数据获取 Hook
 export function useSupabaseData<T>(
   query: string,
-  dependencies: any[] = [],
+  dependencies: readonly unknown[] = [],
   options: {
     enabled?: boolean;
     refetchInterval?: number;
@@ -30,6 +53,8 @@ export function useSupabaseData<T>(
     refetchInterval,
     staleTime = 5 * 60 * 1000,
   } = options;
+
+  const dependenciesKey = dependencySignature(dependencies);
 
   const fetchData = useCallback(
     async (force = false) => {
@@ -71,8 +96,12 @@ export function useSupabaseData<T>(
           return; // 请求被取消，不处理错误
         }
 
-        setError(err instanceof Error ? err : new Error('Unknown error'));
-        console.error('Data fetch error:', err);
+        const error = err instanceof Error ? err : new Error('Unknown error');
+        setError(error);
+        logger.error('Data fetch error', {
+          query,
+          error: error.message,
+        });
       } finally {
         setLoading(false);
       }
@@ -109,7 +138,7 @@ export function useSupabaseData<T>(
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchData, ...dependencies]);
+  }, [fetchData, dependenciesKey]);
 
   return {
     data,
@@ -348,29 +377,62 @@ export function useShoppingLists(
 export function useRealtimeData<T>(
   channel: string,
   table: string,
-  filter: Record<string, any> = {},
+  filter: Record<string, unknown> = {},
   enabled = true,
 ) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const filterKey = useMemo(() => JSON.stringify(filter), [filter]);
+  const stableFilter = useMemo<Record<string, unknown>>(() => {
+    try {
+      const parsed = JSON.parse(filterKey) as Record<string, unknown>;
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+      return {};
+    } catch {
+      return {};
+    }
+  }, [filterKey]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    let subscription: any = null;
+    type RealtimePayload<TPayload> = {
+      eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+      new: TPayload;
+      old: Partial<TPayload>;
+    };
+
+    const resolveItemId = (item: T | Partial<T>): string | number | null => {
+      if (typeof item !== 'object' || item === null) {
+        return null;
+      }
+      const candidate = (item as { id?: unknown }).id;
+      if (typeof candidate === 'string' || typeof candidate === 'number') {
+        return candidate;
+      }
+      return null;
+    };
+
+    let subscription: ReturnType<typeof supabase.channel> | null = null;
 
     const setupSubscription = async () => {
       try {
         // 首先获取初始数据
         const initialData = await DataFetcher.getHealthData(
-          filter.memberId || '',
-          filter,
+          (stableFilter.memberId as string) || '',
+          stableFilter,
         );
         setData(initialData.data || []);
         setLoading(false);
 
         // 设置实时订阅
+        const filterExpression = Object.entries(stableFilter)
+          .map(([key, value]) => `${key}=eq.${String(value)}`)
+          .join('&');
+
         subscription = supabase
           .channel(channel)
           .on(
@@ -379,28 +441,32 @@ export function useRealtimeData<T>(
               event: '*',
               schema: 'public',
               table,
-              filter: Object.entries(filter)
-                .map(([key, value]) => `${key}=eq.${value}`)
-                .join('&'),
+              filter: filterExpression,
             },
             (payload) => {
-              console.log('Real-time update:', payload);
+              const typedPayload = payload as RealtimePayload<T>;
+              logger.debug('Real-time update', {
+                channel,
+                table,
+                eventType: typedPayload.eventType,
+              });
 
-              if (payload.eventType === 'INSERT') {
-                setData((prev) => [...prev, payload.new as T]);
-              } else if (payload.eventType === 'UPDATE') {
+              if (typedPayload.eventType === 'INSERT') {
+                setData((prev) => [...prev, typedPayload.new]);
+              } else if (typedPayload.eventType === 'UPDATE') {
                 setData((prev) =>
                   prev.map((item) =>
                     // 根据ID或其他唯一标识符更新
-                    (item as any).id === (payload.new as any).id
-                      ? (payload.new as T)
+                    resolveItemId(item) === resolveItemId(typedPayload.new)
+                      ? typedPayload.new
                       : item,
                   ),
                 );
-              } else if (payload.eventType === 'DELETE') {
+              } else if (typedPayload.eventType === 'DELETE') {
                 setData((prev) =>
                   prev.filter(
-                    (item) => (item as any).id !== (payload.old as any).id,
+                    (item) =>
+                      resolveItemId(item) !== resolveItemId(typedPayload.old),
                   ),
                 );
               }
@@ -420,7 +486,7 @@ export function useRealtimeData<T>(
         supabase.removeChannel(subscription);
       }
     };
-  }, [channel, table, JSON.stringify(filter), enabled]);
+  }, [channel, table, filterKey, enabled, stableFilter]);
 
   return {
     data,
@@ -431,7 +497,7 @@ export function useRealtimeData<T>(
 
 // 认证 Hook
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

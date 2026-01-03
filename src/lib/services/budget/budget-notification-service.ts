@@ -6,6 +6,7 @@ import {
   BUDGET_NOTIFICATION_PRIORITY,
   BUDGET_NOTIFICATION_CHANNELS,
 } from '@/lib/constants/budget';
+import { logger } from '@/lib/logger';
 
 /**
  * 通知数据接口
@@ -82,7 +83,11 @@ export class BudgetNotificationService {
         dedupKey: `budget_alert_${memberId}_${alertData.budgetName}`,
       });
     } catch (error) {
-      console.error('Failed to send budget alert:', error);
+      logger.error('Failed to send budget alert', {
+        memberId,
+        budgetName: alertData.budgetName,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -117,7 +122,11 @@ export class BudgetNotificationService {
         dedupKey: `budget_overspend_${memberId}_${overspendData.budgetName}`,
       });
     } catch (error) {
-      console.error('Failed to send budget overspend notification:', error);
+      logger.error('Failed to send budget overspend notification', {
+        memberId,
+        budgetName: overspendData.budgetName,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -152,7 +161,11 @@ export class BudgetNotificationService {
         actionText: '查看建议',
       });
     } catch (error) {
-      console.error('Failed to send budget optimization tip:', error);
+      logger.error('Failed to send budget optimization tip', {
+        memberId,
+        budgetName: tipData.budgetName,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -198,7 +211,12 @@ export class BudgetNotificationService {
         actionText: '查看详细报告',
       });
     } catch (error) {
-      console.error('Failed to send budget period summary:', error);
+      logger.error('Failed to send budget period summary', {
+        memberId,
+        budgetName: summaryData.budgetName,
+        period: summaryData.period,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -242,7 +260,12 @@ export class BudgetNotificationService {
         dedupKey: `category_alert_${memberId}_${alertData.budgetName}_${alertData.category}`,
       });
     } catch (error) {
-      console.error('Failed to send category budget alert:', error);
+      logger.error('Failed to send category budget alert', {
+        memberId,
+        budgetName: alertData.budgetName,
+        category: alertData.category,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -284,7 +307,11 @@ export class BudgetNotificationService {
       // 使用注入的 notificationManager
       await this.notificationManager.sendBulkNotifications(notifications);
     } catch (error) {
-      console.error('Failed to send family budget alerts:', error);
+      logger.error('Failed to send family budget alerts', {
+        familyId,
+        budgetName: alertData.budgetName,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -323,10 +350,10 @@ export class BudgetNotificationService {
         return member.name.trim();
       }
     } catch (error) {
-      console.error(
-        'Failed to resolve member name for budget notification:',
-        error,
-      );
+      logger.error('Failed to resolve member name for budget notification', {
+        memberId,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
     return '用户';
   }
@@ -339,10 +366,10 @@ export class BudgetNotificationService {
       const members = await this.familyRepo.listFamilyMembers(familyId, false);
       return members.map((member) => member.id);
     } catch (error) {
-      console.error(
-        'Failed to resolve family members for budget notification:',
-        error,
-      );
+      logger.error('Failed to resolve family members for budget notification', {
+        familyId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return [];
     }
   }

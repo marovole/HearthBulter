@@ -1,64 +1,73 @@
-import { PrismaClient, CheckInType, InventoryStatus, WasteReason } from '@prisma/client';
+import {
+  PrismaClient,
+  CheckInType,
+  InventoryStatus,
+  WasteReason,
+} from '@prisma/client';
 import { inventoryTracker } from './inventory-tracker';
 
 const prisma = new PrismaClient();
 
 export interface InventoryCheckInStats {
-  memberId: string
+  memberId: string;
   period: {
-    startDate: Date
-    endDate: Date
-  }
+    startDate: Date;
+    endDate: Date;
+  };
   inventoryStats: {
-    totalItems: number
-    freshItems: number
-    expiringItems: number
-    expiredItems: number
-    wasteRate: number
-    usageRate: number
-  }
+    totalItems: number;
+    freshItems: number;
+    expiringItems: number;
+    expiredItems: number;
+    wasteRate: number;
+    usageRate: number;
+  };
   checkInImpact: {
-    totalCheckIns: number
-    inventoryRelatedCheckIns: number
-    wasteReductionRate: number
-    improvedTracking: boolean
-  }
+    totalCheckIns: number;
+    inventoryRelatedCheckIns: number;
+    wasteReductionRate: number;
+    improvedTracking: boolean;
+  };
   achievements: Array<{
-    type: 'LOW_WASTE' | 'EFFICIENT_USAGE' | 'GOOD_PLANNING' | 'FRESH_KEEPING'
-    title: string
-    description: string
-    points: number
-    unlockedAt: Date
-  }>
+    type: 'LOW_WASTE' | 'EFFICIENT_USAGE' | 'GOOD_PLANNING' | 'FRESH_KEEPING';
+    title: string;
+    description: string;
+    points: number;
+    unlockedAt: Date;
+  }>;
   suggestions: Array<{
-    type: 'IMPROVE_TRACKING' | 'REDUCE_WASTE' | 'BETTER_PLANNING' | 'EXPIRY_MANAGEMENT'
-    title: string
-    description: string
-    actionItems: string[]
-  }>
+    type:
+      | 'IMPROVE_TRACKING'
+      | 'REDUCE_WASTE'
+      | 'BETTER_PLANNING'
+      | 'EXPIRY_MANAGEMENT';
+    title: string;
+    description: string;
+    actionItems: string[];
+  }>;
 }
 
 export interface CheckInInventoryData {
   usedItems: Array<{
-    foodId: string
-    quantity: number
-    unit: string
-    mealType?: string
-  }>
+    foodId: string;
+    quantity: number;
+    unit: string;
+    mealType?: string;
+  }>;
   wastedItems: Array<{
-    foodId: string
-    quantity: number
-    unit: string
-    reason: string
-  }>
+    foodId: string;
+    quantity: number;
+    unit: string;
+    reason: string;
+  }>;
   purchasedItems: Array<{
-    foodId: string
-    quantity: number
-    unit: string
-    purchasePrice?: number
-    purchaseSource?: string
-  }>
-  inventoryNotes?: string
+    foodId: string;
+    quantity: number;
+    unit: string;
+    purchasePrice?: number;
+    purchaseSource?: string;
+  }>;
+  inventoryNotes?: string;
 }
 
 export class InventoryCheckInIntegration {
@@ -67,18 +76,18 @@ export class InventoryCheckInIntegration {
    */
   async generateCheckInSuggestions(memberId: string): Promise<{
     suggestedActions: Array<{
-      type: 'USE_EXPIRING' | 'CHECK_STOCK' | 'PLAN_PURCHASE' | 'REDUCE_WASTE'
-      priority: 'HIGH' | 'MEDIUM' | 'LOW'
-      title: string
-      description: string
-      estimatedPoints: number
-    }>
+      type: 'USE_EXPIRING' | 'CHECK_STOCK' | 'PLAN_PURCHASE' | 'REDUCE_WASTE';
+      priority: 'HIGH' | 'MEDIUM' | 'LOW';
+      title: string;
+      description: string;
+      estimatedPoints: number;
+    }>;
     currentInventoryStatus: {
-      expiringSoonCount: number
-      expiredCount: number
-      lowStockCount: number
-      totalValue: number
-    }
+      expiringSoonCount: number;
+      expiredCount: number;
+      lowStockCount: number;
+      totalValue: number;
+    };
   }> {
     // 获取当前库存状态
     const currentInventory = await prisma.inventoryItem.findMany({
@@ -97,20 +106,21 @@ export class InventoryCheckInIntegration {
       },
     });
 
-    const expiringSoonCount = currentInventory.filter(item => 
-      item.status === InventoryStatus.EXPIRING
+    const expiringSoonCount = currentInventory.filter(
+      (item) => item.status === InventoryStatus.EXPIRING,
     ).length;
 
-    const expiredCount = currentInventory.filter(item => 
-      item.status === InventoryStatus.EXPIRED
+    const expiredCount = currentInventory.filter(
+      (item) => item.status === InventoryStatus.EXPIRED,
     ).length;
 
-    const lowStockCount = currentInventory.filter(item => 
-      item.isLowStock
+    const lowStockCount = currentInventory.filter(
+      (item) => item.isLowStock,
     ).length;
 
-    const totalValue = currentInventory.reduce((sum, item) => 
-      sum + (item.purchasePrice || 0), 0
+    const totalValue = currentInventory.reduce(
+      (sum, item) => sum + (item.purchasePrice || 0),
+      0,
     );
 
     const suggestedActions = [];
@@ -131,7 +141,8 @@ export class InventoryCheckInIntegration {
       suggestedActions.push({
         type: 'USE_EXPIRING' as const,
         priority: 'HIGH' as const,
-        priority: expiringSoonCount > 5 ? 'HIGH' as const : 'MEDIUM' as const,
+        priority:
+          expiringSoonCount > 5 ? ('HIGH' as const) : ('MEDIUM' as const),
         title: '优先使用临期食材',
         description: `您有 ${expiringSoonCount} 件即将过期的食材，建议在打卡中记录使用情况`,
         estimatedPoints: 15,
@@ -191,17 +202,17 @@ export class InventoryCheckInIntegration {
   async processInventoryCheckIn(
     memberId: string,
     checkInType: CheckInType,
-    inventoryData: CheckInInventoryData
+    inventoryData: CheckInInventoryData,
   ): Promise<{
-    success: boolean
+    success: boolean;
     processedActions: {
-      usedItems: number
-      wastedItems: number
-      addedItems: number
-    }
-    earnedPoints: number
-    achievements: string[]
-    errors: string[]
+      usedItems: number;
+      wastedItems: number;
+      addedItems: number;
+    };
+    earnedPoints: number;
+    achievements: string[];
+    errors: string[];
   }> {
     const result = {
       success: true,
@@ -229,23 +240,20 @@ export class InventoryCheckInIntegration {
             include: {
               food: true,
             },
-            orderBy: [
-              { expiryDate: 'asc' },
-              { createdAt: 'asc' },
-            ],
+            orderBy: [{ expiryDate: 'asc' }, { createdAt: 'asc' }],
           });
 
           if (inventoryItem) {
-            await inventoryTracker.useInventory(
-              inventoryItem.id,
-              usedItem.quantity,
-              'MEAL_LOG',
+            await inventoryTracker.useInventory({
+              inventoryItemId: inventoryItem.id,
+              usedQuantity: usedItem.quantity,
+              usageType: 'MEAL_LOG',
               memberId,
-              {
+              options: {
                 notes: `打卡记录: ${usedItem.mealType || '日常'}`,
                 relatedType: 'CHECK_IN',
-              }
-            );
+              },
+            });
             result.processedActions.usedItems++;
             result.earnedPoints += 2;
           } else {
@@ -269,23 +277,20 @@ export class InventoryCheckInIntegration {
             include: {
               food: true,
             },
-            orderBy: [
-              { expiryDate: 'asc' },
-              { createdAt: 'asc' },
-            ],
+            orderBy: [{ expiryDate: 'asc' }, { createdAt: 'asc' }],
           });
 
           if (inventoryItem) {
-            await inventoryTracker.useInventory(
-              inventoryItem.id,
-              wastedItem.quantity,
-              'WASTE',
+            await inventoryTracker.useInventory({
+              inventoryItemId: inventoryItem.id,
+              usedQuantity: wastedItem.quantity,
+              usageType: 'WASTE',
               memberId,
-              {
+              options: {
                 notes: `打卡记录浪费: ${wastedItem.reason}`,
                 relatedType: 'CHECK_IN',
-              }
-            );
+              },
+            });
 
             // 创建浪费记录
             await prisma.wasteLog.create({
@@ -294,7 +299,9 @@ export class InventoryCheckInIntegration {
                 memberId,
                 wastedQuantity: wastedItem.quantity,
                 wasteReason: wastedItem.reason as WasteReason,
-                estimatedCost: (inventoryItem.purchasePrice || 0) * (wastedItem.quantity / inventoryItem.quantity),
+                estimatedCost:
+                  (inventoryItem.purchasePrice || 0) *
+                  (wastedItem.quantity / inventoryItem.quantity),
               },
             });
 
@@ -328,8 +335,11 @@ export class InventoryCheckInIntegration {
       }
 
       // 检查成就
-      const achievements = await this.checkInventoryAchievements(memberId, result.processedActions);
-      result.achievements = achievements.map(a => a.title);
+      const achievements = await this.checkInventoryAchievements(
+        memberId,
+        result.processedActions,
+      );
+      result.achievements = achievements.map((a) => a.title);
       result.earnedPoints += achievements.reduce((sum, a) => sum + a.points, 0);
 
       // 创建库存相关的打卡记录
@@ -345,7 +355,6 @@ export class InventoryCheckInIntegration {
           },
         });
       }
-
     } catch (error) {
       result.success = false;
       result.errors.push(`处理库存打卡失败: ${error}`);
@@ -357,7 +366,9 @@ export class InventoryCheckInIntegration {
   /**
    * 获取库存相关的打卡统计
    */
-  async getInventoryCheckInStats(memberId: string): Promise<InventoryCheckInStats> {
+  async getInventoryCheckInStats(
+    memberId: string,
+  ): Promise<InventoryCheckInStats> {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     // 获取库存统计
@@ -368,9 +379,15 @@ export class InventoryCheckInIntegration {
       },
     });
 
-    const freshItems = currentInventory.filter(item => item.status === InventoryStatus.FRESH).length;
-    const expiringItems = currentInventory.filter(item => item.status === InventoryStatus.EXPIRING).length;
-    const expiredItems = currentInventory.filter(item => item.status === InventoryStatus.EXPIRED).length;
+    const freshItems = currentInventory.filter(
+      (item) => item.status === InventoryStatus.FRESH,
+    ).length;
+    const expiringItems = currentInventory.filter(
+      (item) => item.status === InventoryStatus.EXPIRING,
+    ).length;
+    const expiredItems = currentInventory.filter(
+      (item) => item.status === InventoryStatus.EXPIRED,
+    ).length;
 
     // 获取使用和浪费记录
     const [usageRecords, wasteRecords] = await Promise.all([
@@ -388,9 +405,18 @@ export class InventoryCheckInIntegration {
       }),
     ]);
 
-    const totalUsage = usageRecords.reduce((sum, record) => sum + record.usedQuantity, 0);
-    const totalWaste = wasteRecords.reduce((sum, record) => sum + record.wastedQuantity, 0);
-    const totalInitial = currentInventory.reduce((sum, item) => sum + item.originalQuantity, 0);
+    const totalUsage = usageRecords.reduce(
+      (sum, record) => sum + record.usedQuantity,
+      0,
+    );
+    const totalWaste = wasteRecords.reduce(
+      (sum, record) => sum + record.wastedQuantity,
+      0,
+    );
+    const totalInitial = currentInventory.reduce(
+      (sum, item) => sum + item.originalQuantity,
+      0,
+    );
 
     // 获取打卡统计
     const checkIns = await prisma.checkIn.findMany({
@@ -400,8 +426,8 @@ export class InventoryCheckInIntegration {
       },
     });
 
-    const inventoryRelatedCheckIns = checkIns.filter(checkIn => 
-      checkIn.inventoryData || checkIn.type === CheckInType.MEAL
+    const inventoryRelatedCheckIns = checkIns.filter(
+      (checkIn) => checkIn.inventoryData || checkIn.type === CheckInType.MEAL,
     ).length;
 
     // 获取成就
@@ -433,8 +459,10 @@ export class InventoryCheckInIntegration {
       checkInImpact: {
         totalCheckIns: checkIns.length,
         inventoryRelatedCheckIns,
-        wasteReductionRate: inventoryRelatedCheckIns > 0 ? 
-          Math.max(0, 100 - (totalWaste / Math.max(1, totalUsage)) * 100) : 0,
+        wasteReductionRate:
+          inventoryRelatedCheckIns > 0
+            ? Math.max(0, 100 - (totalWaste / Math.max(1, totalUsage)) * 100)
+            : 0,
         improvedTracking: inventoryRelatedCheckIns >= 10,
       },
       achievements,
@@ -446,16 +474,20 @@ export class InventoryCheckInIntegration {
    * 生成库存优化建议
    */
   private generateInventorySuggestions(stats: {
-    wasteRate: number
-    usageRate: number
-    expiredCount: number
-    expiringCount: number
-    checkInFrequency: number
+    wasteRate: number;
+    usageRate: number;
+    expiredCount: number;
+    expiringCount: number;
+    checkInFrequency: number;
   }): Array<{
-    type: 'IMPROVE_TRACKING' | 'REDUCE_WASTE' | 'BETTER_PLANNING' | 'EXPIRY_MANAGEMENT'
-    title: string
-    description: string
-    actionItems: string[]
+    type:
+      | 'IMPROVE_TRACKING'
+      | 'REDUCE_WASTE'
+      | 'BETTER_PLANNING'
+      | 'EXPIRY_MANAGEMENT';
+    title: string;
+    description: string;
+    actionItems: string[];
   }> {
     const suggestions = [];
 
@@ -477,11 +509,7 @@ export class InventoryCheckInIntegration {
         type: 'EXPIRY_MANAGEMENT' as const,
         title: '改善保质期管理',
         description: `您有 ${stats.expiredCount} 件过期物品`,
-        actionItems: [
-          '定期检查库存保质期',
-          '设置过期提醒',
-          '改善存储条件',
-        ],
+        actionItems: ['定期检查库存保质期', '设置过期提醒', '改善存储条件'],
       });
     }
 
@@ -490,11 +518,7 @@ export class InventoryCheckInIntegration {
         type: 'BETTER_PLANNING' as const,
         title: '优化采购规划',
         description: `您有 ${stats.expiringCount} 件即将过期的物品`,
-        actionItems: [
-          '减少单次采购量',
-          '制定周度用餐计划',
-          '优先使用现有库存',
-        ],
+        actionItems: ['减少单次采购量', '制定周度用餐计划', '优先使用现有库存'],
       });
     }
 
@@ -518,10 +542,13 @@ export class InventoryCheckInIntegration {
    * 检查库存相关成就
    */
   private async checkInventoryAchievements(
-    memberId: string, 
-    actions: { usedItems: number; wastedItems: number; addedItems: number }
-  ): Promise<Array<{ type: string; title: string; description: string; points: number }>> {
+    memberId: string,
+    actions: { usedItems: number; wastedItems: number; addedItems: number },
+  ): Promise<
+    Array<{ type: string; title: string; description: string; points: number }>
+  > {
     const achievements = [];
+    void memberId;
 
     // 低浪费成就
     if (actions.wastedItems === 0 && actions.usedItems > 0) {
@@ -559,19 +586,23 @@ export class InventoryCheckInIntegration {
   /**
    * 获取用户已获得的库存成就
    */
-  private async getInventoryAchievements(memberId: string): Promise<Array<{
-    type: 'LOW_WASTE' | 'EFFICIENT_USAGE' | 'GOOD_PLANNING' | 'FRESH_KEEPING'
-    title: string
-    description: string
-    points: number
-    unlockedAt: Date
-  }>> {
+  private async getInventoryAchievements(memberId: string): Promise<
+    Array<{
+      type: 'LOW_WASTE' | 'EFFICIENT_USAGE' | 'GOOD_PLANNING' | 'FRESH_KEEPING';
+      title: string;
+      description: string;
+      points: number;
+      unlockedAt: Date;
+    }>
+  > {
+    void memberId;
     // 这里应该从成就表中查询，暂时返回模拟数据
     return [];
   }
 
   private estimateExpiryDate(foodId: string): Date {
     const now = new Date();
+    void foodId;
     return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 默认7天后过期
   }
 }

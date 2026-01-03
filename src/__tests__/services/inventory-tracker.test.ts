@@ -500,16 +500,16 @@ describe('InventoryTracker', () => {
     });
 
     it('should use inventory successfully', async () => {
-      const updatedItem = await inventoryTracker.useInventory(
-        testInventoryItemId,
-        3,
-        'COOKING',
-        testMemberId,
-        {
+      const updatedItem = await inventoryTracker.useInventory({
+        inventoryItemId: testInventoryItemId,
+        usedQuantity: 3,
+        usageType: 'COOKING',
+        memberId: testMemberId,
+        options: {
           notes: 'Test usage',
           recipeName: 'Test Recipe',
         },
-      );
+      });
 
       expect(updatedItem).toBeDefined();
       expect(updatedItem.quantity).toBe(7);
@@ -523,12 +523,12 @@ describe('InventoryTracker', () => {
 
     it('should throw error for insufficient quantity', async () => {
       await expect(
-        inventoryTracker.useInventory(
-          testInventoryItemId,
-          11,
-          'COOKING',
-          testMemberId,
-        ),
+        inventoryTracker.useInventory({
+          inventoryItemId: testInventoryItemId,
+          usedQuantity: 11,
+          usageType: 'COOKING',
+          memberId: testMemberId,
+        }),
       ).rejects.toThrow();
     });
   });

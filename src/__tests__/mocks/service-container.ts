@@ -92,7 +92,9 @@ export function getDefaultContainer(): ServiceContainer {
   return mockContainer;
 }
 
-export default {
+const serviceContainerMock = {
   ServiceContainer,
   getDefaultContainer,
 };
+
+export default serviceContainerMock;
