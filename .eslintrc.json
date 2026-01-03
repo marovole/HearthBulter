@@ -26,7 +26,6 @@
     "comma-dangle": ["warn", "always-multiline"],
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
-    "indent": ["error", 2],
     "max-len": [
       "warn",
       {
