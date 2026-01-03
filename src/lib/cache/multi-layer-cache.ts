@@ -95,11 +95,15 @@ export class MultiLayerCache {
   private readonly options: Required<MultiLayerCacheOptions>;
 
   constructor(options: MultiLayerCacheOptions = {}) {
+    // 🔒 环境保护：非生产环境默认禁用 KV 以节省配额
+    const isProduction = process.env.NODE_ENV === 'production';
+    const shouldDisableL1 = options.disableL1 ?? !isProduction;
+
     this.options = {
       l1Ttl: options.l1Ttl ?? 60,
       l2Ttl: options.l2Ttl ?? 300,
       debug: options.debug ?? false,
-      disableL1: options.disableL1 ?? false,
+      disableL1: shouldDisableL1,
       disableL2: options.disableL2 ?? false,
     };
 
@@ -107,9 +111,22 @@ export class MultiLayerCache {
       defaultTtl: this.options.l1Ttl,
       debug: this.options.debug,
       keyPrefix: 'cache:',
+      maxDeletePerBatch: 100, // 限制批量删除数量
+      enableMetrics: true, // 启用指标追踪
     });
 
     this.trendCache = new SupabaseTrendCache();
+
+    // 记录配置状态
+    if (this.options.debug || !isProduction) {
+      console.log('[MultiLayerCache] 初始化配置:', {
+        环境: process.env.NODE_ENV,
+        L1_KV已启用: !this.options.disableL1,
+        L2_TrendData已启用: !this.options.disableL2,
+        L1_TTL: this.options.l1Ttl,
+        L2_TTL: this.options.l2Ttl,
+      });
+    }
   }
 
   /**
