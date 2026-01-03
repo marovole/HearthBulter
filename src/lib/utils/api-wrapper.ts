@@ -25,8 +25,84 @@ export interface ApiContext {
 
 export type ApiHandler<T = NextResponse> = (
   request: NextRequest,
-  context?: ApiContext
+  context?: ApiContext,
 ) => Promise<T>;
+
+type LogContext = Record<string, unknown>;
+
+async function handleApiRequest<T>(
+  request: NextRequest,
+  options: ApiHandlerOptions,
+  handler: () => Promise<T>,
+  logContext?: LogContext,
+): Promise<T> {
+  const startTime = Date.now();
+  const url = request.url;
+  const method = request.method;
+  const {
+    requireAuth = true,
+    logLevel = 'error',
+    logRequest = false,
+    errorMessage = '服务器内部错误',
+  } = options;
+
+  try {
+    if (logRequest) {
+      logger.info('API请求', { method, url, ...logContext });
+    }
+
+    if (requireAuth) {
+      const session = await auth();
+      if (!session?.user?.id) {
+        throw APIError.unauthorized('未授权访问');
+      }
+    }
+
+    const response = await handler();
+
+    const duration = Date.now() - startTime;
+    if (logRequest) {
+      logger.debug('API响应', {
+        method,
+        url,
+        duration,
+        status: 'success',
+        ...logContext,
+      });
+    }
+
+    return response;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+
+    if (error instanceof APIError) {
+      if (logLevel === 'warn' || logLevel === 'info') {
+        logger.warn('API业务错误', {
+          method,
+          url,
+          duration,
+          code: error.code,
+          message: error.message,
+          statusCode: error.statusCode,
+          ...logContext,
+        });
+      }
+      return createErrorResponse(error) as T;
+    }
+
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.error('API未处理错误', {
+      method,
+      url,
+      duration,
+      error: errorMsg,
+      stack: error instanceof Error ? error.stack : undefined,
+      ...logContext,
+    });
+
+    return createErrorResponse(APIError.internal(errorMessage)) as T;
+  }
+}
 
 /**
  * API 处理包装器
@@ -47,74 +123,16 @@ export type ApiHandler<T = NextResponse> = (
  */
 export function withApiHandler(
   handler: ApiHandler,
-  options: ApiHandlerOptions = {}
+  options: ApiHandlerOptions = {},
 ): ApiHandler {
-  const {
-    requireAuth = true,
-    logLevel = 'error',
-    logRequest = false,
-    errorMessage = '服务器内部错误',
-  } = options;
-
-  return async (request: NextRequest, context?: ApiContext) => {
-    const startTime = Date.now();
-    const url = request.url;
-    const method = request.method;
-
-    try {
-      // 记录请求
-      if (logRequest) {
-        logger.info('API请求', { method, url });
-      }
-
-      // 认证检查
-      if (requireAuth) {
-        const session = await auth();
-        if (!session?.user?.id) {
-          throw APIError.unauthorized('未授权访问');
-        }
-      }
-
-      // 执行处理器
-      const response = await handler(request, context);
-
-      // 记录成功响应时间
-      const duration = Date.now() - startTime;
-      if (logRequest) {
-        logger.debug('API响应', { method, url, duration, status: 'success' });
-      }
-
-      return response;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-
-      // 处理已知API错误
-      if (error instanceof APIError) {
-        if (logLevel === 'warn' || logLevel === 'info') {
-          logger.warn('API业务错误', {
-            method,
-            url,
-            duration,
-            code: error.code,
-            message: error.message,
-            statusCode: error.statusCode,
-          });
-        }
-        return createErrorResponse(error);
-      }
-
-      // 处理未知错误
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      logger.error('API未处理错误', {
-        method,
-        url,
-        duration,
-        error: errorMsg,
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-
-      return createErrorResponse(APIError.internal(errorMessage));
-    }
+  return (request: NextRequest, context?: ApiContext) => {
+    const logContext = context?.params ? { params: context.params } : undefined;
+    return handleApiRequest(
+      request,
+      options,
+      () => handler(request, context),
+      logContext,
+    );
   };
 }
 
@@ -123,81 +141,17 @@ export function withApiHandler(
  * 用于动态路由 [id] 等场景
  */
 export function withApiHandlerParams<P extends Record<string, string>>(
-  handler: (
-    request: NextRequest,
-    params: P
-  ) => Promise<NextResponse>,
-  options: ApiHandlerOptions = {}
+  handler: (request: NextRequest, params: P) => Promise<NextResponse>,
+  options: ApiHandlerOptions = {},
 ): (
   request: NextRequest,
-  context: { params: Promise<P> }
+  context: { params: Promise<P> },
 ) => Promise<NextResponse> {
-  const {
-    requireAuth = true,
-    logLevel = 'error',
-    logRequest = false,
-    errorMessage = '服务器内部错误',
-  } = options;
-
-  return async (
-    request: NextRequest,
-    context: { params: Promise<P> }
-  ) => {
-    const startTime = Date.now();
-    const url = request.url;
-    const method = request.method;
-
-    try {
-      // 解析路由参数
-      const params = await context.params;
-
-      if (logRequest) {
-        logger.info('API请求', { method, url, params });
-      }
-
-      // 认证检查
-      if (requireAuth) {
-        const session = await auth();
-        if (!session?.user?.id) {
-          throw APIError.unauthorized('未授权访问');
-        }
-      }
-
-      // 执行处理器
-      const response = await handler(request, params);
-
-      const duration = Date.now() - startTime;
-      if (logRequest) {
-        logger.debug('API响应', { method, url, duration, status: 'success' });
-      }
-
-      return response;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-
-      if (error instanceof APIError) {
-        if (logLevel === 'warn' || logLevel === 'info') {
-          logger.warn('API业务错误', {
-            method,
-            url,
-            duration,
-            code: error.code,
-            message: error.message,
-          });
-        }
-        return createErrorResponse(error);
-      }
-
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      logger.error('API未处理错误', {
-        method,
-        url,
-        duration,
-        error: errorMsg,
-      });
-
-      return createErrorResponse(APIError.internal(errorMessage));
-    }
+  return async (request: NextRequest, context: { params: Promise<P> }) => {
+    const params = await context.params;
+    return handleApiRequest(request, options, () => handler(request, params), {
+      params,
+    });
   };
 }
 
@@ -217,10 +171,11 @@ export async function parseRequestBody<T>(request: NextRequest): Promise<T> {
  */
 export function validateRequired(
   data: Record<string, unknown>,
-  fields: string[]
+  fields: string[],
 ): void {
   const missing = fields.filter(
-    (field) => data[field] === undefined || data[field] === null || data[field] === ''
+    (field) =>
+      data[field] === undefined || data[field] === null || data[field] === '',
   );
   if (missing.length > 0) {
     throw APIError.badRequest(`缺少必填字段: ${missing.join(', ')}`);
@@ -244,7 +199,10 @@ export function getPaginationParams(request: NextRequest): {
 } {
   const params = getQueryParams(request);
   const page = Math.max(1, parseInt(params.get('page') || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(params.get('limit') || '20', 10)));
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(params.get('limit') || '20', 10)),
+  );
   const skip = (page - 1) * limit;
 
   return { page, limit, skip };

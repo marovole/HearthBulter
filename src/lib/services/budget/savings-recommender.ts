@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Food, FoodCategory, PriceHistory, SavingsType, SavingsRecommendation } from '@prisma/client';
+import type { AffordableFood, MealRecipe, BudgetItem } from '@/types/service-types';
 
 const prisma = new PrismaClient();
 
@@ -480,15 +481,15 @@ export class SavingsRecommender {
   /**
    * 生成早餐食谱
    */
-  private generateBreakfastRecipe(affordableFoods: any[], budget: number): any {
+  private generateBreakfastRecipe(affordableFoods: AffordableFood[], budget: number): MealRecipe | null {
     const breakfastFoods = affordableFoods.filter(f => 
-      f.food.category === 'GRAINS' || f.food.category === 'DAIRY' || f.food.category === 'FRUITS'
+      f.food?.category === 'GRAINS' || f.food?.category === 'DAIRY' || f.food?.category === 'FRUITS'
     ).slice(0, 3);
 
     if (breakfastFoods.length < 2) return null;
 
     const ingredients = breakfastFoods.map(food => ({
-      foodName: food.food.name,
+      foodName: food.food?.name || food.name,
       amount: 100,
       cost: food.unitPrice * 0.1,
     }));
@@ -500,10 +501,10 @@ export class SavingsRecommender {
       ingredients,
       totalCost,
       nutrition: {
-        calories: breakfastFoods.reduce((sum, f) => sum + f.food.calories, 0),
-        protein: breakfastFoods.reduce((sum, f) => sum + f.food.protein, 0),
-        carbs: breakfastFoods.reduce((sum, f) => sum + f.food.carbs, 0),
-        fat: breakfastFoods.reduce((sum, f) => sum + f.food.fat, 0),
+        calories: breakfastFoods.reduce((sum, f) => sum + (f.food?.calories || f.nutrition.calories), 0),
+        protein: breakfastFoods.reduce((sum, f) => sum + (f.food?.protein || f.nutrition.protein), 0),
+        carbs: breakfastFoods.reduce((sum, f) => sum + (f.food?.carbs || f.nutrition.carbs), 0),
+        fat: breakfastFoods.reduce((sum, f) => sum + (f.food?.fat || f.nutrition.fat), 0),
       },
       savings: Math.max(0, budget - totalCost),
     };
@@ -512,15 +513,15 @@ export class SavingsRecommender {
   /**
    * 生成午餐食谱
    */
-  private generateLunchRecipe(affordableFoods: any[], budget: number): any {
+  private generateLunchRecipe(affordableFoods: AffordableFood[], budget: number): MealRecipe | null {
     const lunchFoods = affordableFoods.filter(f => 
-      f.food.category === 'PROTEIN' || f.food.category === 'VEGETABLES' || f.food.category === 'GRAINS'
+      f.food?.category === 'PROTEIN' || f.food?.category === 'VEGETABLES' || f.food?.category === 'GRAINS'
     ).slice(0, 4);
 
     if (lunchFoods.length < 3) return null;
 
     const ingredients = lunchFoods.map(food => ({
-      foodName: food.food.name,
+      foodName: food.food?.name || food.name,
       amount: 150,
       cost: food.unitPrice * 0.15,
     }));
@@ -532,10 +533,10 @@ export class SavingsRecommender {
       ingredients,
       totalCost,
       nutrition: {
-        calories: lunchFoods.reduce((sum, f) => sum + f.food.calories * 1.5, 0),
-        protein: lunchFoods.reduce((sum, f) => sum + f.food.protein * 1.5, 0),
-        carbs: lunchFoods.reduce((sum, f) => sum + f.food.carbs * 1.5, 0),
-        fat: lunchFoods.reduce((sum, f) => sum + f.food.fat * 1.5, 0),
+        calories: lunchFoods.reduce((sum, f) => sum + (f.food?.calories || f.nutrition.calories) * 1.5, 0),
+        protein: lunchFoods.reduce((sum, f) => sum + (f.food?.protein || f.nutrition.protein) * 1.5, 0),
+        carbs: lunchFoods.reduce((sum, f) => sum + (f.food?.carbs || f.nutrition.carbs) * 1.5, 0),
+        fat: lunchFoods.reduce((sum, f) => sum + (f.food?.fat || f.nutrition.fat) * 1.5, 0),
       },
       savings: Math.max(0, budget - totalCost),
     };
@@ -544,15 +545,15 @@ export class SavingsRecommender {
   /**
    * 生成晚餐食谱
    */
-  private generateDinnerRecipe(affordableFoods: any[], budget: number): any {
+  private generateDinnerRecipe(affordableFoods: AffordableFood[], budget: number): MealRecipe | null {
     const dinnerFoods = affordableFoods.filter(f => 
-      f.food.category === 'PROTEIN' || f.food.category === 'VEGETABLES'
+      f.food?.category === 'PROTEIN' || f.food?.category === 'VEGETABLES'
     ).slice(0, 3);
 
     if (dinnerFoods.length < 2) return null;
 
     const ingredients = dinnerFoods.map(food => ({
-      foodName: food.food.name,
+      foodName: food.food?.name || food.name,
       amount: 120,
       cost: food.unitPrice * 0.12,
     }));
@@ -564,10 +565,10 @@ export class SavingsRecommender {
       ingredients,
       totalCost,
       nutrition: {
-        calories: dinnerFoods.reduce((sum, f) => sum + f.food.calories * 1.2, 0),
-        protein: dinnerFoods.reduce((sum, f) => sum + f.food.protein * 1.2, 0),
-        carbs: dinnerFoods.reduce((sum, f) => sum + f.food.carbs * 1.2, 0),
-        fat: dinnerFoods.reduce((sum, f) => sum + f.food.fat * 1.2, 0),
+        calories: dinnerFoods.reduce((sum, f) => sum + (f.food?.calories || f.nutrition.calories) * 1.2, 0),
+        protein: dinnerFoods.reduce((sum, f) => sum + (f.food?.protein || f.nutrition.protein) * 1.2, 0),
+        carbs: dinnerFoods.reduce((sum, f) => sum + (f.food?.carbs || f.nutrition.carbs) * 1.2, 0),
+        fat: dinnerFoods.reduce((sum, f) => sum + (f.food?.fat || f.nutrition.fat) * 1.2, 0),
       },
       savings: Math.max(0, budget - totalCost),
     };
@@ -605,7 +606,7 @@ export class SavingsRecommender {
     originalPrice?: number
     discountedPrice?: number
     platform?: string
-    foodItems?: any[]
+    foodItems?: BudgetItem[]
     validUntil?: Date
   }): Promise<SavingsRecommendation> {
     return await prisma.savingsRecommendation.create({

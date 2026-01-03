@@ -1,4 +1,4 @@
-import { PrismaClient, InventoryItem, InventoryStatus, NotificationType } from '@prisma/client';
+import { PrismaClient, InventoryItem, InventoryStatus, NotificationType, WasteReason } from '@prisma/client';
 import { inventoryTracker } from './inventory-tracker';
 
 const prisma = new PrismaClient();
@@ -187,11 +187,8 @@ export class ExpiryMonitor {
           inventoryItemId: itemId,
           memberId,
           wastedQuantity: item.quantity,
-          wasteReason: wasteReason as any,
-          estimatedCost: this.estimateItemValue({
-            ...item,
-            food: { name: 'Unknown' },
-          }),
+          wasteReason: wasteReason,
+          estimatedCost: this.estimateItemValue(item),
           notes: '自动处理过期物品',
           preventable: true,
           preventionTip: this.generatePreventionTip(item),
@@ -328,7 +325,7 @@ export class ExpiryMonitor {
   /**
    * 估算物品价值
    */
-  private estimateItemValue(item: any): number {
+  private estimateItemValue(item: InventoryItem): number {
     // 这里可以根据物品的购买价格、数量等信息估算
     // 简单实现：如果有购买价格就使用购买价格，否则返回默认值
     return item.purchasePrice || 0;
@@ -402,7 +399,7 @@ export class ExpiryMonitor {
         type: type === 'expired' ? NotificationType.EXPIRY_ALERT : NotificationType.EXPIRY_ALERT,
         title,
         content,
-        priority: type === 'expired' ? 'HIGH' : 'MEDIUM' as any,
+        priority: type === 'expired' ? 'HIGH' : 'MEDIUM',
         metadata: {
           type,
           itemCount: items.length,

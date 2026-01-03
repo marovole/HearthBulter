@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Budget, Spending, FoodCategory, BudgetAlert, AlertType, AlertStatus } from '@prisma/client';
+import type { CategorySpendingData, BudgetUtilization, DateRange } from '@/types/service-types';
 
 const prisma = new PrismaClient();
 
@@ -506,6 +507,7 @@ export class SpendingAnalyzer {
       return {
         budgetId: budget.id,
         budgetName: budget.name,
+        totalAmount: budget.totalAmount,
         totalBudget: budget.totalAmount,
         used,
         remaining: budget.totalAmount - used,
@@ -520,9 +522,9 @@ export class SpendingAnalyzer {
    */
   private generateRecommendations(
     totalSpending: number,
-    categorySpending: any[],
+    categorySpending: CategorySpendingData[],
     dailyAverage: number,
-    budgetUtilization: any[]
+    budgetUtilization: BudgetUtilization[]
   ): string[] {
     const recommendations: string[] = [];
 
@@ -687,7 +689,7 @@ export class SpendingAnalyzer {
     return { start, end: now, type };
   }
 
-  private getPreviousPeriod(current: any, type: string) {
+  private getPreviousPeriod(current: DateRange, type: string): { start: Date; end: Date } {
     const start = new Date(current.start);
     const end = new Date(current.end);
 
@@ -744,7 +746,7 @@ export class SpendingAnalyzer {
     return 'STABLE';
   }
 
-  private generateCategoryRecommendations(category: FoodCategory, data: any): string[] {
+  private generateCategoryRecommendations(category: FoodCategory, data: CategorySpendingData): string[] {
     const recommendations: string[] = [];
 
     if (data.averagePerTransaction > 100) {

@@ -5,6 +5,7 @@
  */
 
 import { createHash } from 'crypto';
+import { logger } from '@/lib/logger';
 
 interface AIResponseCacheConfig {
   defaultTTL: number; // 默认缓存时间（秒）
@@ -36,7 +37,11 @@ export class AICacheKeys {
     return `ai:health-analysis:${memberId}:${dataHash}`;
   }
 
-  static recipeOptimization(recipeId: string, memberId: string, preferences: string): string {
+  static recipeOptimization(
+    recipeId: string,
+    memberId: string,
+    preferences: string,
+  ): string {
     return `ai:recipe-optimization:${recipeId}:${memberId}:${preferences}`;
   }
 
@@ -44,14 +49,19 @@ export class AICacheKeys {
     return `ai:chat:${sessionId}:${messageHash}`;
   }
 
-  static healthReport(memberId: string, reportType: string, startDate: string, endDate: string): string {
+  static healthReport(
+    memberId: string,
+    reportType: string,
+    startDate: string,
+    endDate: string,
+  ): string {
     return `ai:health-report:${memberId}:${reportType}:${startDate}:${endDate}`;
   }
 
-  static generateKey(prefix: string, params: Record<string, any>): string {
+  static generateKey(prefix: string, params: Record<string, unknown>): string {
     const sortedParams = Object.keys(params)
       .sort()
-      .map(key => `${key}:${params[key]}`)
+      .map((key) => `${key}:${String(params[key])}`)
       .join('|');
     return `${prefix}:${sortedParams}`;
   }
@@ -61,7 +71,7 @@ export class AICacheKeys {
  * AI响应缓存服务
  */
 export class AIResponseCacheService {
-  private cache: Map<string, CacheEntry<any>>;
+  private cache: Map<string, CacheEntry<unknown>>;
   private config: AIResponseCacheConfig;
   private stats: CacheStats;
 
@@ -122,7 +132,7 @@ export class AIResponseCacheService {
     this.stats.hits++;
     this.updateHitRate();
 
-    console.log(`AI缓存命中: ${key} (命中次数: ${entry.hitCount})`);
+    logger.debug('AI缓存命中', { key, hitCount: entry.hitCount });
     return entry.data as T;
   }
 
@@ -133,9 +143,13 @@ export class AIResponseCacheService {
     const hashedKey = this.hashKey(key);
     const now = Date.now();
     const ttlSeconds = ttl ?? this.config.defaultTTL;
+    const hadKey = this.cache.has(hashedKey);
 
     // 检查是否需要驱逐
-    if (this.cache.size >= this.config.maxCacheSize && !this.cache.has(hashedKey)) {
+    if (
+      this.cache.size >= this.config.maxCacheSize &&
+      !this.cache.has(hashedKey)
+    ) {
       this.evictLeastRecentlyUsed();
     }
 
@@ -148,11 +162,11 @@ export class AIResponseCacheService {
 
     this.cache.set(hashedKey, entry);
     this.stats.sets++;
-    if (!this.cache.has(hashedKey)) {
+    if (!hadKey) {
       this.stats.totalSize++;
     }
 
-    console.log(`AI缓存设置: ${key} (TTL: ${ttlSeconds}秒)`);
+    logger.debug('AI缓存设置', { key, ttlSeconds });
   }
 
   /**
@@ -163,7 +177,7 @@ export class AIResponseCacheService {
     const deleted = this.cache.delete(hashedKey);
     if (deleted) {
       this.stats.totalSize--;
-      console.log(`AI缓存删除: ${key}`);
+      logger.debug('AI缓存删除', { key });
     }
     return deleted;
   }
@@ -175,7 +189,7 @@ export class AIResponseCacheService {
     const size = this.cache.size;
     this.cache.clear();
     this.stats.totalSize = 0;
-    console.log(`AI缓存清空: 删除了 ${size} 个条目`);
+    logger.info('AI缓存清空', { deleted: size });
   }
 
   /**
@@ -188,8 +202,10 @@ export class AIResponseCacheService {
 
     for (const [key, entry] of this.cache.entries()) {
       // 优先驱逐命中次数少的，如果命中次数相同则驱逐最老的
-      if (entry.hitCount < lowestHitCount ||
-          (entry.hitCount === lowestHitCount && entry.cachedAt < oldestTime)) {
+      if (
+        entry.hitCount < lowestHitCount ||
+        (entry.hitCount === lowestHitCount && entry.cachedAt < oldestTime)
+      ) {
         oldestKey = key;
         oldestTime = entry.cachedAt;
         lowestHitCount = entry.hitCount;
@@ -200,7 +216,10 @@ export class AIResponseCacheService {
       this.cache.delete(oldestKey);
       this.stats.evictions++;
       this.stats.totalSize--;
-      console.log(`AI缓存驱逐: ${oldestKey} (命中次数: ${lowestHitCount})`);
+      logger.warn('AI缓存驱逐', {
+        key: oldestKey,
+        hitCount: lowestHitCount,
+      });
     }
   }
 
@@ -220,7 +239,7 @@ export class AIResponseCacheService {
     }
 
     if (cleaned > 0) {
-      console.log(`AI缓存清理: 删除了 ${cleaned} 个过期条目`);
+      logger.info('AI缓存清理', { cleaned });
     }
   }
 
@@ -229,7 +248,8 @@ export class AIResponseCacheService {
    */
   private updateHitRate(): void {
     const total = this.stats.hits + this.stats.misses;
-    this.stats.hitRate = total > 0 ? Math.round((this.stats.hits / total) * 10000) / 100 : 0;
+    this.stats.hitRate =
+      total > 0 ? Math.round((this.stats.hits / total) * 10000) / 100 : 0;
   }
 
   /**
@@ -280,14 +300,16 @@ export class AIResponseCacheService {
   /**
    * 预热缓存（可选）
    */
-  async warmup(items: Array<{ key: string; value: any; ttl?: number }>): Promise<void> {
-    console.log(`开始AI缓存预热: ${items.length} 个条目`);
+  async warmup(
+    items: Array<{ key: string; value: unknown; ttl?: number }>,
+  ): Promise<void> {
+    logger.info('开始AI缓存预热', { count: items.length });
 
     for (const item of items) {
       await this.set(item.key, item.value, item.ttl);
     }
 
-    console.log('AI缓存预热完成');
+    logger.info('AI缓存预热完成', { count: items.length });
   }
 }
 

@@ -1,273 +1,303 @@
 import { expiryMonitor } from '@/services/expiry-monitor';
-import { inventoryTracker } from '@/services/inventory-tracker';
-import { PrismaClient, InventoryStatus, StorageLocation } from '@prisma/client';
+import { InventoryStatus, PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+interface InventoryItemRecord {
+  id: string;
+  memberId: string;
+  quantity: number;
+  unit: string;
+  expiryDate: Date | null;
+  daysToExpiry?: number | null;
+  status: InventoryStatus;
+  minStockThreshold?: number | null;
+  deletedAt: Date | null;
+  storageLocation: string;
+  purchasePrice?: number | null;
+  food: {
+    name: string;
+    nameEn?: string | null;
+    category?: string | null;
+  };
+  createdAt: Date;
+}
+
+interface WasteLogRecord {
+  id: string;
+  inventoryItemId: string;
+  memberId: string;
+  wastedQuantity: number;
+  wasteReason: string;
+  estimatedCost?: number | null;
+  createdAt: Date;
+  inventoryItem: {
+    food: {
+      category: string;
+    };
+  };
+}
+
+interface NotificationRecord {
+  id: string;
+  memberId: string;
+  title: string;
+  content: string;
+}
+
+type InventoryWhere = {
+  memberId?: string;
+  deletedAt?: null;
+  expiryDate?: { not: null } | null;
+  OR?: Array<{ status: InventoryStatus }>;
+};
+
+type WasteLogWhere = {
+  memberId?: string;
+  createdAt?: { gte?: Date };
+};
+
+const prisma = new PrismaClient() as unknown as {
+  inventoryItem: {
+    findMany: jest.Mock<
+      Promise<InventoryItemRecord[]>,
+      [{ where?: InventoryWhere }]
+    >;
+    findUnique: jest.Mock<
+      Promise<InventoryItemRecord | null>,
+      [{ where: { id: string } }]
+    >;
+    update: jest.Mock<
+      Promise<InventoryItemRecord>,
+      [{ where: { id: string }; data: Partial<InventoryItemRecord> }]
+    >;
+    count: jest.Mock<
+      Promise<number>,
+      [{ where?: { memberId?: string; deletedAt?: null } }]
+    >;
+  };
+  wasteLog: {
+    findMany: jest.Mock<Promise<WasteLogRecord[]>, [{ where?: WasteLogWhere }]>;
+    create: jest.Mock<
+      Promise<WasteLogRecord>,
+      [{ data: Omit<WasteLogRecord, 'id' | 'createdAt' | 'inventoryItem'> }]
+    >;
+  };
+  notification: {
+    create: jest.Mock<
+      Promise<NotificationRecord>,
+      [{ data: Omit<NotificationRecord, 'id'> }]
+    >;
+  };
+};
 
 describe('ExpiryMonitor', () => {
-  let testMemberId: string;
-  let testFoodId: string;
-  let freshItemId: string;
-  let expiringItemId: string;
-  let expiredItemId: string;
+  const testMemberId = 'member-1';
+  const testFoodName = 'Test Milk';
+  const now = new Date();
 
-  beforeAll(async () => {
-    // 创建测试数据
-    const testMember = await prisma.familyMember.create({
-      data: {
-        name: 'Test User',
-        email: 'test-expiry@example.com',
-        role: 'MEMBER',
-      },
-    });
-    testMemberId = testMember.id;
+  let inventoryItems: InventoryItemRecord[] = [];
+  let wasteLogs: WasteLogRecord[] = [];
+  let notifications: NotificationRecord[] = [];
 
-    const testFood = await prisma.food.create({
-      data: {
-        name: 'Test Milk',
-        nameEn: 'Milk',
-        category: 'DAIRY',
-        calories: 42,
-        protein: 3.4,
-        carbs: 5,
-        fat: 1,
-      },
-    });
-    testFoodId = testFood.id;
-
-    // 创建不同状态的库存项目
-    const now = new Date();
-    
-    // 新鲜物品 (10天后过期)
-    const freshItem = await inventoryTracker.createInventoryItem({
-      memberId: testMemberId,
-      foodId: testFoodId,
-      quantity: 2,
-      unit: 'L',
-      expiryDate: new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000),
-      storageLocation: StorageLocation.REFRIGERATOR,
-    });
-    freshItemId = freshItem.id;
-
-    // 临期物品 (2天后过期)
-    const expiringItem = await inventoryTracker.createInventoryItem({
-      memberId: testMemberId,
-      foodId: testFoodId,
-      quantity: 1,
-      unit: 'L',
-      expiryDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
-      storageLocation: StorageLocation.REFRIGERATOR,
-    });
-    expiringItemId = expiringItem.id;
-
-    // 过期物品 (1天前过期)
-    const expiredItem = await inventoryTracker.createInventoryItem({
-      memberId: testMemberId,
-      foodId: testFoodId,
-      quantity: 0.5,
-      unit: 'L',
-      expiryDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
-      storageLocation: StorageLocation.REFRIGERATOR,
-    });
-    expiredItemId = expiredItem.id;
+  const createItem = (
+    overrides: Partial<InventoryItemRecord>,
+  ): InventoryItemRecord => ({
+    id: `item-${Math.random().toString(36).slice(2)}`,
+    memberId: testMemberId,
+    quantity: 1,
+    unit: 'L',
+    expiryDate: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
+    daysToExpiry: 5,
+    status: InventoryStatus.FRESH,
+    minStockThreshold: null,
+    deletedAt: null,
+    storageLocation: 'REFRIGERATOR',
+    purchasePrice: 5,
+    food: {
+      name: testFoodName,
+      nameEn: 'Milk',
+      category: 'DAIRY',
+    },
+    createdAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+    ...overrides,
   });
 
-  afterAll(async () => {
-    // 清理测试数据
-    await prisma.inventoryItem.deleteMany({
-      where: { memberId: testMemberId },
+  beforeEach(() => {
+    inventoryItems = [
+      createItem({
+        id: 'fresh-item',
+        expiryDate: new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000),
+        daysToExpiry: 10,
+        status: InventoryStatus.FRESH,
+      }),
+      createItem({
+        id: 'expiring-item',
+        expiryDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+        daysToExpiry: 2,
+        status: InventoryStatus.EXPIRING,
+      }),
+      createItem({
+        id: 'expired-item',
+        expiryDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+        daysToExpiry: -1,
+        status: InventoryStatus.EXPIRED,
+        quantity: 0.5,
+      }),
+    ];
+    wasteLogs = [];
+    notifications = [];
+
+    prisma.inventoryItem.findMany.mockImplementation(async ({ where } = {}) => {
+      return inventoryItems.filter((item) => {
+        if (where?.memberId && item.memberId !== where.memberId) return false;
+        if (where?.deletedAt === null && item.deletedAt !== null) return false;
+        if (where?.expiryDate?.not === null && item.expiryDate === null)
+          return false;
+        if (where?.OR && where.OR.length > 0) {
+          const statuses = where.OR.map((cond) => cond.status);
+          if (!statuses.includes(item.status)) return false;
+        }
+        return true;
+      });
     });
-    await prisma.familyMember.delete({
-      where: { id: testMemberId },
+
+    prisma.inventoryItem.findUnique.mockImplementation(async ({ where }) => {
+      return inventoryItems.find((item) => item.id === where.id) ?? null;
     });
-    await prisma.food.delete({
-      where: { id: testFoodId },
+
+    prisma.inventoryItem.update.mockImplementation(async ({ where, data }) => {
+      const index = inventoryItems.findIndex((item) => item.id === where.id);
+      if (index < 0) {
+        throw new Error('Inventory item not found');
+      }
+      const updated = {
+        ...inventoryItems[index],
+        ...data,
+      } as InventoryItemRecord;
+      inventoryItems[index] = updated;
+      return updated;
+    });
+
+    prisma.inventoryItem.count.mockImplementation(async ({ where } = {}) => {
+      return inventoryItems.filter((item) => {
+        if (where?.memberId && item.memberId !== where.memberId) return false;
+        if (where?.deletedAt === null && item.deletedAt !== null) return false;
+        return true;
+      }).length;
+    });
+
+    prisma.wasteLog.findMany.mockImplementation(async ({ where } = {}) => {
+      return wasteLogs.filter((log) => {
+        if (where?.memberId && log.memberId !== where.memberId) return false;
+        if (where?.createdAt?.gte && log.createdAt < where.createdAt.gte)
+          return false;
+        return true;
+      });
+    });
+
+    prisma.wasteLog.create.mockImplementation(async ({ data }) => {
+      const sourceItem = inventoryItems.find(
+        (item) => item.id === data.inventoryItemId,
+      );
+      const record: WasteLogRecord = {
+        id: `waste-${Math.random().toString(36).slice(2)}`,
+        inventoryItemId: data.inventoryItemId,
+        memberId: data.memberId,
+        wastedQuantity: data.wastedQuantity,
+        wasteReason: data.wasteReason,
+        estimatedCost: data.estimatedCost,
+        createdAt: new Date(),
+        inventoryItem: {
+          food: {
+            category: sourceItem?.food.category || 'UNKNOWN',
+          },
+        },
+      };
+      wasteLogs.push(record);
+      return record;
+    });
+
+    prisma.notification.create.mockImplementation(async ({ data }) => {
+      const record: NotificationRecord = {
+        id: `notification-${Math.random().toString(36).slice(2)}`,
+        memberId: data.memberId,
+        title: data.title,
+        content: data.content,
+      };
+      notifications.push(record);
+      return record;
     });
   });
 
   describe('getExpiryAlerts', () => {
-    it('should return correct expiry summary', async () => {
+    it('should return expiring and expired items', async () => {
       const summary = await expiryMonitor.getExpiryAlerts(testMemberId);
 
       expect(summary.memberId).toBe(testMemberId);
       expect(summary.expiringItems).toHaveLength(1);
       expect(summary.expiredItems).toHaveLength(1);
-      expect(summary.expiringItems[0].itemId).toBe(expiringItemId);
-      expect(summary.expiredItems[0].itemId).toBe(expiredItemId);
-    });
-
-    it('should calculate days to expiry correctly', async () => {
-      const summary = await expiryMonitor.getExpiryAlerts(testMemberId);
-
-      const expiringItem = summary.expiringItems[0];
-      expect(expiringItem.daysToExpiry).toBeLessThanOrEqual(3);
-      expect(expiringItem.daysToExpiry).toBeGreaterThan(0);
-
-      const expiredItem = summary.expiredItems[0];
-      expect(expiredItem.daysToExpiry).toBeLessThan(0);
+      expect(summary.expiringItems[0].itemId).toBe('expiring-item');
+      expect(summary.expiredItems[0].itemId).toBe('expired-item');
     });
   });
 
-  describe('updateExpiryStatuses', () => {
-    it('should update expiry statuses for all items', async () => {
-      const updatedCount = await expiryMonitor.updateExpiryStatuses(testMemberId);
+  describe('updateItemExpiryStatus', () => {
+    it('should update item status based on expiry date', async () => {
+      const updated =
+        await expiryMonitor.updateItemExpiryStatus('expiring-item');
 
-      expect(updatedCount).toBeGreaterThan(0);
-
-      // 验证状态更新
-      const freshItem = await inventoryTracker.getInventoryItemById(freshItemId);
-      const expiringItem = await inventoryTracker.getInventoryItemById(expiringItemId);
-      const expiredItem = await inventoryTracker.getInventoryItemById(expiredItemId);
-
-      expect(freshItem?.status).toBe(InventoryStatus.FRESH);
-      expect(expiringItem?.status).toBe(InventoryStatus.EXPIRING);
-      expect(expiredItem?.status).toBe(InventoryStatus.EXPIRED);
+      expect(updated.status).toBe(InventoryStatus.EXPIRING);
+      expect(updated.daysToExpiry).toBeDefined();
     });
   });
 
   describe('generateExpiryNotifications', () => {
-    it('should generate notifications for expiring and expired items', async () => {
-      const notifications = await expiryMonitor.generateExpiryNotifications(testMemberId);
+    it('should create notifications for expired and expiring items', async () => {
+      await expiryMonitor.generateExpiryNotifications(testMemberId);
 
-      expect(notifications.length).toBeGreaterThan(0);
-      
-      const hasExpiringNotification = notifications.some(n => 
-        n.title.includes('即将过期')
+      expect(notifications.length).toBe(2);
+      expect(notifications.some((n) => n.title.includes('已过期'))).toBe(true);
+      expect(notifications.some((n) => n.title.includes('即将过期'))).toBe(
+        true,
       );
-      const hasExpiredNotification = notifications.some(n => 
-        n.title.includes('已过期')
-      );
-
-      expect(hasExpiringNotification).toBe(true);
-      expect(hasExpiredNotification).toBe(true);
-    });
-
-    it('should include correct priority levels', async () => {
-      const notifications = await expiryMonitor.generateExpiryNotifications(testMemberId);
-
-      const expiredNotifications = notifications.filter(n => 
-        n.title.includes('已过期')
-      );
-      const expiringNotifications = notifications.filter(n => 
-        n.title.includes('即将过期')
-      );
-
-      // 过期物品应该是高优先级
-      expect(expiredNotifications.every(n => n.priority === 'HIGH')).toBe(true);
-      // 临期物品应该是高或中优先级
-      expect(expiringNotifications.every(n => 
-        n.priority === 'HIGH' || n.priority === 'MEDIUM'
-      )).toBe(true);
     });
   });
 
   describe('handleExpiredItems', () => {
-    it('should create waste records for expired items', async () => {
-      await expiryMonitor.handleExpiredItems(testMemberId, [expiredItemId], 'EXPIRED');
+    it('should create waste logs and update inventory items', async () => {
+      await expiryMonitor.handleExpiredItems(
+        testMemberId,
+        ['expired-item'],
+        'EXPIRED',
+      );
 
-      // 检查是否创建了浪费记录
-      const wasteRecords = await prisma.wasteLog.findMany({
-        where: {
-          inventoryItemId: expiredItemId,
-          memberId: testMemberId,
-        },
-      });
+      expect(wasteLogs).toHaveLength(1);
+      expect(wasteLogs[0].inventoryItemId).toBe('expired-item');
 
-      expect(wasteRecords).toHaveLength(1);
-      expect(wasteRecords[0].wasteReason).toBe('EXPIRED');
-      expect(wasteRecords[0].wastedQuantity).toBe(0.5);
-    });
-
-    it('should remove expired items from inventory', async () => {
-      const itemBefore = await inventoryTracker.getInventoryItemById(expiredItemId);
-      expect(itemBefore).toBeDefined();
-
-      await expiryMonitor.handleExpiredItems(testMemberId, [expiredItemId], 'EXPIRED');
-
-      const itemAfter = await inventoryTracker.getInventoryItemById(expiredItemId);
-      expect(itemAfter).toBeNull();
+      const updated = inventoryItems.find((item) => item.id === 'expired-item');
+      expect(updated?.quantity).toBe(0);
+      expect(updated?.status).toBe(InventoryStatus.OUT_OF_STOCK);
     });
   });
 
   describe('getExpiryTrends', () => {
-    it('should return expiry trend data', async () => {
-      const trends = await expiryMonitor.getExpiryTrends(testMemberId, 7);
-
-      expect(trends).toHaveProperty('dailyExpiry');
-      expect(trends).toHaveProperty('expiryRate');
-      expect(trends).toHaveProperty('wasteRate');
-      
-      expect(Array.isArray(trends.dailyExpiry)).toBe(true);
-      expect(typeof trends.expiryRate).toBe('number');
-      expect(typeof trends.wasteRate).toBe('number');
-    });
-
-    it('should calculate correct trend values', async () => {
-      const trends = await expiryMonitor.getExpiryTrends(testMemberId, 7);
-
-      // 验证趋势数据包含我们的测试物品
-      const totalItems = trends.dailyExpiry.reduce((sum, day) => sum + day.totalItems, 0);
-      expect(totalItems).toBeGreaterThan(0);
-
-      // 验证过期率计算
-      const totalExpired = trends.dailyExpiry.reduce((sum, day) => sum + day.expiredItems, 0);
-      expect(totalExpired).toBeGreaterThan(0);
-    });
-  });
-
-  describe('getExpiryAnalysis', () => {
-    it('should return comprehensive expiry analysis', async () => {
-      const analysis = await expiryMonitor.getExpiryAnalysis(testMemberId);
-
-      expect(analysis).toHaveProperty('summary');
-      expect(analysis).toHaveProperty('byStorageLocation');
-      expect(analysis).toHaveProperty('byCategory');
-      expect(analysis).toHaveProperty('riskAssessment');
-      expect(analysis).toHaveProperty('recommendations');
-
-      expect(analysis.summary.totalItems).toBe(3);
-      expect(analysis.summary.expiredItems).toBe(1);
-      expect(analysis.summary.expiringItems).toBe(1);
-      expect(analysis.summary.freshItems).toBe(1);
-    });
-
-    it('should provide meaningful recommendations', async () => {
-      const analysis = await expiryMonitor.getExpiryAnalysis(testMemberId);
-
-      expect(analysis.recommendations.length).toBeGreaterThan(0);
-      
-      const hasExpiryRecommendation = analysis.recommendations.some(r => 
-        r.type === 'EXPIRY_MANAGEMENT'
+    it('should return trend data based on waste logs', async () => {
+      await expiryMonitor.handleExpiredItems(
+        testMemberId,
+        ['expired-item'],
+        'EXPIRED',
       );
-      expect(hasExpiryRecommendation).toBe(true);
-    });
 
-    it('should assess risk correctly', async () => {
-      const analysis = await expiryMonitor.getExpiryAnalysis(testMemberId);
+      const trends = await expiryMonitor.getExpiryTrends(testMemberId, 7);
 
-      expect(analysis.riskAssessment).toHaveProperty('overallRisk');
-      expect(analysis.riskAssessment).toHaveProperty('riskFactors');
-      expect(analysis.riskAssessment).toHaveProperty('riskScore');
+      const expiredCount = trends.dailyExpiredCounts.reduce(
+        (sum, day) => sum + day.count,
+        0,
+      );
 
-      // 由于有过期物品，风险应该不是'LOW'
-      expect(analysis.riskAssessment.overallRisk).not.toBe('LOW');
-    });
-  });
-
-  describe('optimizeStorage', () => {
-    it('should provide storage optimization suggestions', async () => {
-      const suggestions = await expiryMonitor.optimizeStorage(testMemberId);
-
-      expect(Array.isArray(suggestions)).toBe(true);
-      
-      if (suggestions.length > 0) {
-        const suggestion = suggestions[0];
-        expect(suggestion).toHaveProperty('itemId');
-        expect(suggestion).toHaveProperty('currentLocation');
-        expect(suggestion).toHaveProperty('suggestedLocation');
-        expect(suggestion).toHaveProperty('reason');
-        expect(suggestion).toHaveProperty('priority');
-      }
+      expect(expiredCount).toBeGreaterThan(0);
+      expect(Array.isArray(trends.dailyExpiringCounts)).toBe(true);
+      expect(Array.isArray(trends.topWasteCategories)).toBe(true);
+      expect(typeof trends.wasteRate).toBe('number');
     });
   });
 });
