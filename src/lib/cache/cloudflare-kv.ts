@@ -141,7 +141,9 @@ export class KvCache {
 
     try {
       this.trackMetric('reads');
-      const result = await this.kv!.getWithMetadata<KvMetadata>(fullKey, { type: 'json' });
+      const result = await this.kv!.getWithMetadata<KvMetadata>(fullKey, {
+        type: 'json',
+      });
 
       if (result.value === null) {
         this.log(`KV miss: ${key}`);
@@ -153,11 +155,14 @@ export class KvCache {
       }
 
       // 检查是否过期（客户端验证）
-      if (result.metadata?.expiresAt && result.metadata.expiresAt < Date.now() / 1000) {
+      if (
+        result.metadata?.expiresAt &&
+        result.metadata.expiresAt < Date.now() / 1000
+      ) {
         this.log(`KV expired: ${key}`);
         // 异步删除过期键
         this.kv!.delete(fullKey).catch((err: Error) =>
-          console.error('[KvCache] Failed to delete expired key:', err)
+          console.error('[KvCache] Failed to delete expired key:', err),
         );
         return {
           success: false,
@@ -279,7 +284,7 @@ export class KvCache {
       limit?: number;
       /** 是否强制执行（忽略限制），默认 false */
       force?: boolean;
-    }
+    },
   ): Promise<number> {
     if (!this.isAvailable()) {
       return 0;
@@ -295,7 +300,11 @@ export class KvCache {
 
       do {
         this.trackMetric('lists');
-        const result = await this.kv!.list({ prefix: fullPrefix, cursor, limit: 100 });
+        const result = await this.kv!.list({
+          prefix: fullPrefix,
+          cursor,
+          limit: 100,
+        });
 
         // 检查是否超过限制
         if (!force && count + result.keys.length > maxDelete) {
@@ -313,8 +322,8 @@ export class KvCache {
 
           console.warn(
             `[KvCache] deleteByPrefix reached limit: ${maxDelete} keys. ` +
-            `Set force:true or increase maxDeletePerBatch to delete more. ` +
-            `Prefix: ${prefix}`
+              'Set force:true or increase maxDeletePerBatch to delete more. ' +
+              `Prefix: ${prefix}`,
           );
           break;
         }
@@ -332,7 +341,7 @@ export class KvCache {
         if (!force && count >= maxDelete * 0.8) {
           console.warn(
             `[KvCache] deleteByPrefix approaching limit: ${count}/${maxDelete}. ` +
-            `Prefix: ${prefix}`
+              `Prefix: ${prefix}`,
           );
         }
       } while (cursor && (force || count < maxDelete));
@@ -365,7 +374,9 @@ export class KvCache {
 
     // 开发环境或不支持 KV
     if (this.options.debug) {
-      console.warn('[KvCache] KV binding not available (development mode or not deployed to Cloudflare)');
+      console.warn(
+        '[KvCache] KV binding not available (development mode or not deployed to Cloudflare)',
+      );
     }
 
     return null;
@@ -445,32 +456,40 @@ export class KvCache {
 
     // 计算预估每日用量
     const estimatedDaily = {
-      reads: hoursElapsed > 0 ? Math.round((metrics.reads / hoursElapsed) * 24) : 0,
-      writes: hoursElapsed > 0 ? Math.round((metrics.writes / hoursElapsed) * 24) : 0,
-      deletes: hoursElapsed > 0 ? Math.round((metrics.deletes / hoursElapsed) * 24) : 0,
-      lists: hoursElapsed > 0 ? Math.round((metrics.lists / hoursElapsed) * 24) : 0,
+      reads:
+        hoursElapsed > 0 ? Math.round((metrics.reads / hoursElapsed) * 24) : 0,
+      writes:
+        hoursElapsed > 0 ? Math.round((metrics.writes / hoursElapsed) * 24) : 0,
+      deletes:
+        hoursElapsed > 0
+          ? Math.round((metrics.deletes / hoursElapsed) * 24)
+          : 0,
+      lists:
+        hoursElapsed > 0 ? Math.round((metrics.lists / hoursElapsed) * 24) : 0,
     };
 
     // 检查是否超过 50% 限额
     const warnings: string[] = [];
-    (Object.keys(dailyLimits) as Array<keyof typeof dailyLimits>).forEach((key) => {
-      const usage = estimatedDaily[key];
-      const limit = dailyLimits[key];
-      const percentage = (usage / limit) * 100;
+    (Object.keys(dailyLimits) as Array<keyof typeof dailyLimits>).forEach(
+      (key) => {
+        const usage = estimatedDaily[key];
+        const limit = dailyLimits[key];
+        const percentage = (usage / limit) * 100;
 
-      if (percentage >= 50) {
-        warnings.push(
-          `${key}: ${usage.toLocaleString()}/${limit.toLocaleString()} (${percentage.toFixed(1)}%)`
-        );
-      }
-    });
+        if (percentage >= 50) {
+          warnings.push(
+            `${key}: ${usage.toLocaleString()}/${limit.toLocaleString()} (${percentage.toFixed(1)}%)`,
+          );
+        }
+      },
+    );
 
     if (warnings.length > 0) {
       console.warn(
-        '[KvCache] ⚠️ API 用量警告 - 预估每日用量接近或超过限额:\n' +
-        warnings.map((w) => `  - ${w}`).join('\n') +
-        `\n已运行 ${hoursElapsed.toFixed(1)} 小时，当前累计: ` +
-        `reads=${metrics.reads}, writes=${metrics.writes}, deletes=${metrics.deletes}, lists=${metrics.lists}`
+        `[KvCache] ⚠️ API 用量警告 - 预估每日用量接近或超过限额:\n${warnings
+          .map((w) => `  - ${w}`)
+          .join('\n')}\n已运行 ${hoursElapsed.toFixed(1)} 小时，当前累计: ` +
+          `reads=${metrics.reads}, writes=${metrics.writes}, deletes=${metrics.deletes}, lists=${metrics.lists}`,
       );
     }
   }

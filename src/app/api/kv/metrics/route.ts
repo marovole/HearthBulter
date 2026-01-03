@@ -35,10 +35,16 @@ export async function GET() {
 
     // 计算预估每日用量
     const estimatedDaily = {
-      reads: hoursElapsed > 0 ? Math.round((metrics.reads / hoursElapsed) * 24) : 0,
-      writes: hoursElapsed > 0 ? Math.round((metrics.writes / hoursElapsed) * 24) : 0,
-      deletes: hoursElapsed > 0 ? Math.round((metrics.deletes / hoursElapsed) * 24) : 0,
-      lists: hoursElapsed > 0 ? Math.round((metrics.lists / hoursElapsed) * 24) : 0,
+      reads:
+        hoursElapsed > 0 ? Math.round((metrics.reads / hoursElapsed) * 24) : 0,
+      writes:
+        hoursElapsed > 0 ? Math.round((metrics.writes / hoursElapsed) * 24) : 0,
+      deletes:
+        hoursElapsed > 0
+          ? Math.round((metrics.deletes / hoursElapsed) * 24)
+          : 0,
+      lists:
+        hoursElapsed > 0 ? Math.round((metrics.lists / hoursElapsed) * 24) : 0,
     };
 
     // 计算使用率
@@ -72,24 +78,25 @@ export async function GET() {
         estimatedDaily,
         limits: dailyLimits,
         usagePercentage: {
-          reads: usagePercentage.reads.toFixed(1) + '%',
-          writes: usagePercentage.writes.toFixed(1) + '%',
-          deletes: usagePercentage.deletes.toFixed(1) + '%',
-          lists: usagePercentage.lists.toFixed(1) + '%',
+          reads: `${usagePercentage.reads.toFixed(1)}%`,
+          writes: `${usagePercentage.writes.toFixed(1)}%`,
+          deletes: `${usagePercentage.deletes.toFixed(1)}%`,
+          lists: `${usagePercentage.lists.toFixed(1)}%`,
         },
       },
       runtime: {
         hoursElapsed: hoursElapsed.toFixed(2),
         lastReset: metrics.lastReset.toISOString(),
       },
-      recommendations: generateRecommendations(status, usagePercentage, metrics),
+      recommendations: generateRecommendations(
+        status,
+        usagePercentage,
+        metrics,
+      ),
     });
   } catch (error) {
     console.error('Failed to get KV metrics:', error);
-    return NextResponse.json(
-      { error: '获取 KV 指标失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取 KV 指标失败' }, { status: 500 });
   }
 }
 
@@ -114,10 +121,7 @@ export async function POST() {
     });
   } catch (error) {
     console.error('Failed to reset KV metrics:', error);
-    return NextResponse.json(
-      { error: '重置 KV 指标失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '重置 KV 指标失败' }, { status: 500 });
   }
 }
 
@@ -127,7 +131,7 @@ export async function POST() {
 function generateRecommendations(
   status: string,
   usagePercentage: Record<string, number>,
-  metrics: any
+  metrics: any,
 ): string[] {
   const recommendations: string[] = [];
 
@@ -154,34 +158,34 @@ function generateRecommendations(
   if (reads >= 50) {
     recommendations.push(
       `📖 Read 操作用量高（${reads.toFixed(1)}%）` +
-      ' - 考虑增加 TTL 或禁用非生产环境的 KV'
+        ' - 考虑增加 TTL 或禁用非生产环境的 KV',
     );
   }
 
   if (writes >= 50) {
     recommendations.push(
       `✍️ Write 操作用量高（${writes.toFixed(1)}%）` +
-      ' - 检查是否有不必要的重复写入'
+        ' - 检查是否有不必要的重复写入',
     );
   }
 
   if (deletes >= 50) {
     recommendations.push(
       `🗑️ Delete 操作用量高（${deletes.toFixed(1)}%）` +
-      ' - 避免使用 deleteByPrefix，优先使用 TTL 自动过期'
+        ' - 避免使用 deleteByPrefix，优先使用 TTL 自动过期',
     );
   }
 
   if (lists >= 50) {
     recommendations.push(
       `📋 List 操作用量高（${lists.toFixed(1)}%）` +
-      ' - List 操作非常昂贵，检查是否调用了 deleteByPrefix'
+        ' - List 操作非常昂贵，检查是否调用了 deleteByPrefix',
     );
   }
 
   if (metrics.errors > 10) {
     recommendations.push(
-      `❌ 检测到 ${metrics.errors} 个错误 - 检查 KV 绑定配置和网络连接`
+      `❌ 检测到 ${metrics.errors} 个错误 - 检查 KV 绑定配置和网络连接`,
     );
   }
 
