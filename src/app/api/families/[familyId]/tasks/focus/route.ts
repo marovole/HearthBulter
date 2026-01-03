@@ -17,7 +17,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ familyId: string }> },
 ) {
-  return withApiPermissions(async (req, context) => {
+  return withApiPermissions(async (req) => {
     try {
       const { familyId } = await params;
       const userId = req.user!.id;
@@ -53,7 +53,6 @@ export async function GET(
         data: focusTasks,
       });
     } catch (error) {
-      console.error('Error getting today focus:', error);
       return NextResponse.json(
         {
           success: false,
@@ -65,5 +64,5 @@ export async function GET(
         { status: 500 },
       );
     }
-  }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request as any, { params });
+  }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request, { params } as never);
 }

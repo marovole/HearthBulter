@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, TrendingUp, Award, Lightbulb } from 'lucide-react';
+import { Calendar, Award, Lightbulb } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
@@ -15,7 +15,9 @@ interface DailyReviewCardProps {
     overdueTasks: number;
     summary: string | null;
     keyAchievements: string | null;
-    tomorrowActions: any;
+    tomorrowActions: {
+      actions: string[];
+    } | null;
   };
 }
 
@@ -35,12 +37,6 @@ export function DailyReviewCard({ review }: DailyReviewCardProps) {
       return '昨天';
     }
     return format(date, 'M月d日 EEEE', { locale: zhCN });
-  };
-
-  const getCompletionColor = (rate: number) => {
-    if (rate >= 80) return 'text-green-500';
-    if (rate >= 60) return 'text-yellow-500';
-    return 'text-orange-500';
   };
 
   const getCompletionEmoji = (rate: number) => {

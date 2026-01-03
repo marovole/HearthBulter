@@ -419,7 +419,6 @@ export class TaskService {
         },
       });
     } catch (error) {
-      console.error('Error logging activity:', error);
       // 不抛出错误，避免影响主要操作
     }
   }

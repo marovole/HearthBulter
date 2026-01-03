@@ -85,18 +85,10 @@ export async function GET(request: NextRequest) {
           family.id,
         );
         results.tasksGenerated += generatedTasks.length;
-
-        console.log(
-          `[Cron] Generated ${generatedTasks.length} tasks for family ${family.name} (${family.id})`,
-        );
       } catch (error) {
         const errorMsg =
           error instanceof Error ? error.message : 'Unknown error';
         results.errors.push(`Family ${family.id}: ${errorMsg}`);
-        console.error(
-          `[Cron] Error generating tasks for family ${family.id}:`,
-          error,
-        );
       }
     }
 
@@ -111,7 +103,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[Cron] Fatal error in generate-tasks:', error);
     return NextResponse.json(
       {
         success: false,
@@ -126,18 +117,4 @@ export async function GET(request: NextRequest) {
 // 支持 POST 方法用于手动触发（开发测试用）
 export async function POST(request: NextRequest) {
   return GET(request);
-}
-
-// Cloudflare Pages Scheduled Handler 类型声明
-// 在实际部署时，Cloudflare 会调用此 handler
-export const scheduled = async (event: ScheduledEvent) => {
-  // 这里是 Cloudflare Workers 的 scheduled event handler
-  // 在 Cloudflare Pages 环境中，GET 请求会被 Cloudflare Cron 调用
-  return null;
-};
-
-// 类型定义
-interface ScheduledEvent {
-  scheduledTime: number;
-  cron: string;
 }

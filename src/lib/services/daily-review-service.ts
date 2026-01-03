@@ -24,10 +24,17 @@ export interface DailyReviewData {
   overdueTasks: number;
   summary: string | null;
   keyAchievements: string | null;
-  deviations: any;
-  tomorrowActions: any;
+  deviations: DeviationAnalysis | null;
+  tomorrowActions: TomorrowActions | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * 明日行动建议
+ */
+interface TomorrowActions {
+  actions: string[];
 }
 
 /**

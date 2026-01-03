@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { TaskCard } from '@/components/butler/TaskCard';
 import { DailyReviewCard } from '@/components/butler/DailyReviewCard';
-import { cn } from '@/lib/utils';
 
 type TabValue = 'my-tasks' | 'family' | 'notifications';
 
@@ -30,8 +29,8 @@ interface TaskDTO {
     name: string;
     avatar: string | null;
   } | null;
-  metadata: any;
   actionUrl: string | null;
+  metadata: Record<string, unknown>;
 }
 
 interface FocusTasks {
@@ -53,16 +52,17 @@ export function ButlerInbox({ memberId, familyId }: ButlerInboxProps) {
     normal: [],
     overdue: [],
   });
-  const [dailyReview, setDailyReview] = useState<any>(null);
+  const [dailyReview, setDailyReview] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [loading, setLoading] = useState(true);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [skippingTaskId, setSkippingTaskId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [memberId]);
+  const loadData = useCallback(async () => {
+    if (!memberId || !familyId) return;
 
-  const loadData = async () => {
     try {
       setLoading(true);
 
@@ -83,12 +83,14 @@ export function ButlerInbox({ memberId, familyId }: ButlerInboxProps) {
         const reviewData = await reviewResponse.json();
         setDailyReview(reviewData.data);
       }
-    } catch (error) {
-      console.error('Error loading inbox data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [memberId, familyId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleCompleteTask = async (taskId: string) => {
     try {
@@ -109,11 +111,7 @@ export function ButlerInbox({ memberId, familyId }: ButlerInboxProps) {
           normal: prev.normal.filter((t) => t.id !== taskId),
           overdue: prev.overdue.filter((t) => t.id !== taskId),
         }));
-      } else {
-        console.error('Failed to complete task');
       }
-    } catch (error) {
-      console.error('Error completing task:', error);
     } finally {
       setCompletingTaskId(null);
     }
@@ -138,11 +136,7 @@ export function ButlerInbox({ memberId, familyId }: ButlerInboxProps) {
           normal: prev.normal.filter((t) => t.id !== taskId),
           overdue: prev.overdue.filter((t) => t.id !== taskId),
         }));
-      } else {
-        console.error('Failed to skip task');
       }
-    } catch (error) {
-      console.error('Error skipping task:', error);
     } finally {
       setSkippingTaskId(null);
     }
