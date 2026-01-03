@@ -82,7 +82,7 @@ export class TaskGeneratorService {
       generatedTasks.push(...healthTasks);
 
       // 3. 检查营养偏差
-      const nutritionTasks = await this.checkNutritionDeviations(familyId);
+      const nutritionTasks = await this.checkNutritionDeviations();
       generatedTasks.push(...nutritionTasks);
 
       return generatedTasks;
@@ -247,10 +247,10 @@ export class TaskGeneratorService {
   /**
    * 检查营养偏差并生成调整任务
    *
-   * @param familyId 家庭ID
+   * TODO: 实现营养偏差检查逻辑
    * @returns 生成的任务列表
    */
-  async checkNutritionDeviations(_familyId: string): Promise<GeneratedTask[]> {
+  async checkNutritionDeviations(): Promise<GeneratedTask[]> {
     const tasks: GeneratedTask[] = [];
 
     try {
