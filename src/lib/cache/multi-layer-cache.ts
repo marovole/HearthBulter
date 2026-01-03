@@ -23,7 +23,6 @@ import {
   type TrendCacheQuery,
   type TrendCacheData,
 } from './supabase-trend-cache';
-import { buildCacheKey } from './edge-cache-helpers';
 
 /**
  * 缓存层枚举

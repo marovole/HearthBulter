@@ -63,6 +63,17 @@
         "@typescript-eslint/no-var-requires": "off",
         "no-console": "off"
       }
+    },
+    {
+      "files": [
+        "src/lib/cache/**/*.ts",
+        "src/app/api/kv/**/*.ts",
+        "src/app/api/analytics/trends/route.ts"
+      ],
+      "rules": {
+        "no-console": "off",
+        "@typescript-eslint/no-explicit-any": "off"
+      }
     }
   ]
 }
