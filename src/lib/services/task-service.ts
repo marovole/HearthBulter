@@ -16,7 +16,6 @@ import type {
   UpdateTaskDTO,
   TaskStatus,
 } from '@/lib/repositories/types/task';
-import type { TaskCategory, TaskPriority } from '@prisma/client';
 
 /**
  * 任务创建时的扩展选项

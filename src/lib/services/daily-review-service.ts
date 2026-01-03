@@ -245,11 +245,7 @@ export class DailyReviewService {
     const nutritionDeviations = 0; // TODO: 实现营养偏差检查
 
     // 2. 检查是否错过了健康打卡
-    const missedHealthCheckIns = await this.countMissedHealthCheckIns(
-      memberId,
-      startDate,
-      endDate,
-    );
+    const missedHealthCheckIns = await this.countMissedHealthCheckIns();
 
     // 3. 统计任务完成延迟情况
     const tasksCompletedLate = await this.countTasksCompletedLate(
@@ -388,17 +384,10 @@ export class DailyReviewService {
   /**
    * 统计错过的健康打卡次数
    *
-   * @param memberId 成员ID
-   * @param startDate 开始日期
-   * @param endDate 结束日期
+   * TODO: 实现健康打卡检查逻辑
    * @returns 错过次数
    */
-  private async countMissedHealthCheckIns(
-    _memberId: string,
-    _startDate: Date,
-    _endDate: Date,
-  ): Promise<number> {
-    // TODO: 实现健康打卡检查逻辑
+  private async countMissedHealthCheckIns(): Promise<number> {
     // 这里简化为返回 0，实际应该查询健康数据记录
     return 0;
   }
