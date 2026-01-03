@@ -1,4 +1,4 @@
-import { PrismaClient, ShoppingItem, ListStatus, InventoryStatus } from '@prisma/client';
+import { PrismaClient, ShoppingItem, ListStatus, InventoryStatus, FoodCategory } from '@prisma/client';
 import { inventoryTracker } from './inventory-tracker';
 
 const prisma = new PrismaClient();
@@ -144,7 +144,7 @@ export class InventoryShoppingIntegration {
           listId: shoppingList.id,
           foodId: suggestion.foodId,
           amount: suggestion.suggestedQuantity,
-          category: suggestion.category as any,
+          category: suggestion.category as FoodCategory,
           estimatedPrice: suggestion.estimatedPrice,
           addedBy: memberId,
         },
@@ -391,7 +391,7 @@ export class InventoryShoppingIntegration {
 
   // 私有方法
 
-  private calculateSuggestedQuantity(item: any): number {
+  private calculateSuggestedQuantity(item: { quantity: number; minStockThreshold?: number | null }): number {
     const threshold = item.minStockThreshold || 1;
     const currentQuantity = item.quantity;
     

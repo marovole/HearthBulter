@@ -18,8 +18,11 @@
  */
 
 import { KvCache, type KvResult } from './cloudflare-kv';
-import { SupabaseTrendCache, type TrendCacheQuery, type TrendCacheData } from './supabase-trend-cache';
-import { buildCacheKey } from './edge-cache-helpers';
+import {
+  SupabaseTrendCache,
+  type TrendCacheQuery,
+  type TrendCacheData,
+} from './supabase-trend-cache';
 
 /**
  * 缓存层枚举
@@ -95,11 +98,15 @@ export class MultiLayerCache {
   private readonly options: Required<MultiLayerCacheOptions>;
 
   constructor(options: MultiLayerCacheOptions = {}) {
+    // 🔒 环境保护：非生产环境默认禁用 KV 以节省配额
+    const isProduction = process.env.NODE_ENV === 'production';
+    const shouldDisableL1 = options.disableL1 ?? !isProduction;
+
     this.options = {
       l1Ttl: options.l1Ttl ?? 60,
       l2Ttl: options.l2Ttl ?? 300,
       debug: options.debug ?? false,
-      disableL1: options.disableL1 ?? false,
+      disableL1: shouldDisableL1,
       disableL2: options.disableL2 ?? false,
     };
 
@@ -107,9 +114,22 @@ export class MultiLayerCache {
       defaultTtl: this.options.l1Ttl,
       debug: this.options.debug,
       keyPrefix: 'cache:',
+      maxDeletePerBatch: 100, // 限制批量删除数量
+      enableMetrics: true, // 启用指标追踪
     });
 
     this.trendCache = new SupabaseTrendCache();
+
+    // 记录配置状态
+    if (this.options.debug || !isProduction) {
+      console.log('[MultiLayerCache] 初始化配置:', {
+        环境: process.env.NODE_ENV,
+        L1_KV已启用: !this.options.disableL1,
+        L2_TrendData已启用: !this.options.disableL2,
+        L1_TTL: this.options.l1Ttl,
+        L2_TTL: this.options.l2Ttl,
+      });
+    }
   }
 
   /**
@@ -139,12 +159,16 @@ export class MultiLayerCache {
       skipL1?: boolean;
       /** 跳过 L2 */
       skipL2?: boolean;
-    }
+    },
   ): Promise<CacheResult<T>> {
     const startTime = Date.now();
 
     // L1: Cloudflare KV
-    if (!this.options.disableL1 && !options?.skipL1 && this.kvCache.isAvailable()) {
+    if (
+      !this.options.disableL1 &&
+      !options?.skipL1 &&
+      this.kvCache.isAvailable()
+    ) {
       const l1Result = await this.kvCache.get<T>(cacheKey);
       if (l1Result.success && l1Result.data !== undefined) {
         this.log(`Cache hit: L1 (KV), key=${cacheKey}`);
@@ -156,7 +180,9 @@ export class MultiLayerCache {
           metadata: { l1: l1Result },
         };
       }
-      this.log(`Cache miss: L1 (KV), key=${cacheKey}, source=${l1Result.source}`);
+      this.log(
+        `Cache miss: L1 (KV), key=${cacheKey}, source=${l1Result.source}`,
+      );
     }
 
     // L2: Supabase trend_data (需要解析缓存键)
@@ -170,7 +196,9 @@ export class MultiLayerCache {
     // 写回 L1
     if (!this.options.disableL1 && this.kvCache.isAvailable()) {
       await this.kvCache.set(cacheKey, data, this.options.l1Ttl);
-      this.log(`Cache set: L1 (KV), key=${cacheKey}, ttl=${this.options.l1Ttl}s`);
+      this.log(
+        `Cache set: L1 (KV), key=${cacheKey}, ttl=${this.options.l1Ttl}s`,
+      );
     }
 
     return {
@@ -198,7 +226,7 @@ export class MultiLayerCache {
    */
   async getTrendData<T = any>(
     query: TrendCacheQuery,
-    fallback: () => Promise<T>
+    fallback: () => Promise<T>,
   ): Promise<CacheResult<T>> {
     const startTime = Date.now();
 
@@ -234,7 +262,11 @@ export class MultiLayerCache {
 
         // 写回 L1
         if (!this.options.disableL1 && this.kvCache.isAvailable()) {
-          await this.kvCache.set(cacheKey, l2Result.aggregatedData, this.options.l1Ttl);
+          await this.kvCache.set(
+            cacheKey,
+            l2Result.aggregatedData,
+            this.options.l1Ttl,
+          );
           this.log(`Trend cache backfill: L1 (KV) ← L2, key=${cacheKey}`);
         }
 
@@ -250,7 +282,9 @@ export class MultiLayerCache {
     }
 
     // Fallback: 实时查询
-    this.log(`Trend cache miss: All layers, executing fallback, key=${cacheKey}`);
+    this.log(
+      `Trend cache miss: All layers, executing fallback, key=${cacheKey}`,
+    );
     const data = await fallback();
 
     // 写回 L2 和 L1
@@ -276,7 +310,7 @@ export class MultiLayerCache {
   async setTrendData(
     query: TrendCacheQuery,
     data: any,
-    trendStats?: Partial<TrendCacheData>
+    trendStats?: Partial<TrendCacheData>,
   ): Promise<void> {
     const cacheKey = this.buildTrendCacheKey({
       memberId: query.memberId,
@@ -293,15 +327,19 @@ export class MultiLayerCache {
           aggregatedData: data,
           ...trendStats,
         },
-        this.options.l2Ttl
+        this.options.l2Ttl,
       );
-      this.log(`Trend cache set: L2 (trend_data), key=${cacheKey}, ttl=${this.options.l2Ttl}s`);
+      this.log(
+        `Trend cache set: L2 (trend_data), key=${cacheKey}, ttl=${this.options.l2Ttl}s`,
+      );
     }
 
     // 写入 L1
     if (!this.options.disableL1 && this.kvCache.isAvailable()) {
       await this.kvCache.set(cacheKey, data, this.options.l1Ttl);
-      this.log(`Trend cache set: L1 (KV), key=${cacheKey}, ttl=${this.options.l1Ttl}s`);
+      this.log(
+        `Trend cache set: L1 (KV), key=${cacheKey}, ttl=${this.options.l1Ttl}s`,
+      );
     }
   }
 
@@ -365,7 +403,9 @@ export class MultiLayerCache {
     // 删除 L2
     if (!this.options.disableL2) {
       await this.trendCache.deleteByMember(memberId);
-      this.log(`Cache invalidated by member: L2 (trend_data), memberId=${memberId}`);
+      this.log(
+        `Cache invalidated by member: L2 (trend_data), memberId=${memberId}`,
+      );
     }
   }
 
@@ -402,7 +442,9 @@ export class MultiLayerCache {
  */
 let multiLayerCacheInstance: MultiLayerCache | null = null;
 
-export function getMultiLayerCache(options?: MultiLayerCacheOptions): MultiLayerCache {
+export function getMultiLayerCache(
+  options?: MultiLayerCacheOptions,
+): MultiLayerCache {
   if (!multiLayerCacheInstance) {
     multiLayerCacheInstance = new MultiLayerCache(options);
   }

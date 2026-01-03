@@ -11,6 +11,11 @@ import type {
   CategoryBudgets,
 } from '@/lib/repositories/types/budget';
 import type { BudgetNotificationService } from './budget-notification-service';
+import type { BudgetItem } from '@/types/service-types';
+import {
+  BUDGET_ALERT_THRESHOLDS,
+  DAILY_BUDGET_EXCESS_FACTOR,
+} from '@/lib/constants/budget';
 
 // Type aliases for backward compatibility
 type Budget = BudgetDTO;
@@ -63,7 +68,7 @@ export interface SpendingCreateInput {
   description: string
   transactionId?: string
   platform?: string
-  items?: any[]
+  items?: BudgetItem[]
   purchaseDate?: Date
 }
 
@@ -254,31 +259,31 @@ export class BudgetTracker {
     if (!budget) return;
 
     // 检查80%预警
-    if (budget.alertThreshold80 && budget.usagePercentage >= 80 && budget.usagePercentage < 100) {
+    if (budget.alertThreshold80 && budget.usagePercentage >= BUDGET_ALERT_THRESHOLDS.WARNING_80 && budget.usagePercentage < BUDGET_ALERT_THRESHOLDS.WARNING_100) {
       // 发送80%预算预警通知
       await this.budgetNotificationService.sendBudgetAlert(budget.memberId, {
         budgetName: budget.name,
         usagePercentage: budget.usagePercentage,
-        threshold: 80,
+        threshold: BUDGET_ALERT_THRESHOLDS.WARNING_80,
         remainingBudget: budget.remainingAmount,
         totalBudget: budget.totalAmount,
       });
     }
 
     // 检查100%预警
-    if (budget.alertThreshold100 && budget.usagePercentage >= 100 && budget.usagePercentage < 110) {
+    if (budget.alertThreshold100 && budget.usagePercentage >= BUDGET_ALERT_THRESHOLDS.WARNING_100 && budget.usagePercentage < BUDGET_ALERT_THRESHOLDS.OVERSPEND_110) {
       // 发送100%预算预警通知
       await this.budgetNotificationService.sendBudgetAlert(budget.memberId, {
         budgetName: budget.name,
         usagePercentage: budget.usagePercentage,
-        threshold: 100,
+        threshold: BUDGET_ALERT_THRESHOLDS.WARNING_100,
         remainingBudget: budget.remainingAmount,
         totalBudget: budget.totalAmount,
       });
     }
 
     // 检查110%超支预警
-    if (budget.alertThreshold110 && budget.usagePercentage >= 110) {
+    if (budget.alertThreshold110 && budget.usagePercentage >= BUDGET_ALERT_THRESHOLDS.OVERSPEND_110) {
       // 发送预算超支通知
       await this.budgetNotificationService.sendBudgetOverspend(budget.memberId, {
         budgetName: budget.name,
@@ -329,12 +334,12 @@ export class BudgetTracker {
       const usedAmount = categorySpendings.items.reduce((sum, spending) => sum + spending.amount, 0);
       const usagePercentage = (usedAmount / categoryBudget) * 100;
 
-      if (usagePercentage >= 100) {
+      if (usagePercentage >= BUDGET_ALERT_THRESHOLDS.WARNING_100) {
         await this.budgetRepository.createBudgetAlert({
           id: '', // Repository will generate
           budgetId,
           type: 'CATEGORY_BUDGET_ALERT',
-          threshold: 100,
+          threshold: BUDGET_ALERT_THRESHOLDS.WARNING_100,
           currentValue: usagePercentage,
           message: `${categoryName}分类预算已超支！当前使用${usagePercentage.toFixed(1)}%`,
           category: category,
@@ -367,12 +372,12 @@ export class BudgetTracker {
     const dailyBudget = budget.totalAmount / totalDays;
     const currentDailyAverage = budget.usedAmount / daysElapsed;
 
-    if (currentDailyAverage > dailyBudget * 1.2) { // 超过日均预算20%
+    if (currentDailyAverage > dailyBudget * DAILY_BUDGET_EXCESS_FACTOR) { // 超过日均预算20%
       await this.budgetRepository.createBudgetAlert({
         id: '', // Repository will generate
         budgetId: budget.id,
         type: 'DAILY_EXCESS',
-        threshold: dailyBudget * 1.2,
+        threshold: dailyBudget * DAILY_BUDGET_EXCESS_FACTOR,
         currentValue: currentDailyAverage,
         message: `当前日均支出${currentDailyAverage.toFixed(2)}元超过预算${dailyBudget.toFixed(2)}元`,
         status: 'ACTIVE',

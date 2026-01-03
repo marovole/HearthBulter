@@ -1,7 +1,17 @@
 import { PrismaClient } from '@prisma/client';
-import { Food, FoodCategory, PriceHistory } from '@prisma/client';
+import { Food, FoodCategory, PriceHistory, Spending } from '@prisma/client';
 import { costOptimizer, OptimizationConstraints, OptimizationResult } from './cost-optimizer';
 import { savingsRecommender } from './savings-recommender';
+import type {
+  NutritionInfo,
+  MealNutritionTargets,
+  AffordableFood,
+  CartItem,
+  DateRange,
+  TrendAnalysis,
+  CategorySpendingData,
+  MealRecipe,
+} from '@/types/service-types';
 
 const prisma = new PrismaClient();
 
@@ -56,7 +66,7 @@ export interface EconomicMealPlan {
   recommendations: string[]
   alternativeOptions: Array<{
     mealType: string
-    alternative: any
+    alternative: MealRecipe | null
     additionalSavings: number
   }>
 }
@@ -314,8 +324,8 @@ export class EconomicMode {
    * 私有方法实现
    */
   private async generateDailyMealPlan(
-    nutritionTargets: any,
-    affordableFoods: any[],
+    nutritionTargets: MealNutritionTargets,
+    affordableFoods: AffordableFood[],
     config: EconomicModeConfig,
     budgetLimit: number
   ): Promise<EconomicMealPlan> {
@@ -383,11 +393,11 @@ export class EconomicMode {
 
   private async generateMeal(
     mealType: string,
-    nutritionTargets: any,
-    availableFoods: any[],
+    nutritionTargets: NutritionInfo,
+    availableFoods: AffordableFood[],
     budgetLimit: number,
     config: EconomicModeConfig
-  ): Promise<any> {
+  ): Promise<EconomicMealPlan['meals'][0]> {
     // 使用成本优化器生成最优食材组合
     const constraints: OptimizationConstraints = {
       nutritionTargets,
@@ -417,7 +427,7 @@ export class EconomicMode {
     };
   }
 
-  private async getAffordableFoodPool(config: EconomicModeConfig): Promise<any[]> {
+  private async getAffordableFoodPool(config: EconomicModeConfig): Promise<AffordableFood[]> {
     // 获取价格较低的食材池
     const priceHistories = await prisma.priceHistory.findMany({
       where: {
@@ -459,7 +469,7 @@ export class EconomicMode {
     return foods;
   }
 
-  private async getUserNutritionTargets(memberId: string): Promise<any> {
+  private async getUserNutritionTargets(memberId: string): Promise<MealNutritionTargets> {
     // 获取用户营养需求（简化处理）
     return {
       breakfast: {
@@ -483,27 +493,27 @@ export class EconomicMode {
     };
   }
 
-  private async getMealPlanIngredients(mealPlanIds: string[]): Promise<any[]> {
+  private async getMealPlanIngredients(mealPlanIds: string[]): Promise<CartItem[]> {
     // 获取食谱食材（简化实现）
     return [];
   }
 
-  private async optimizeIngredientSelection(ingredients: any[], config: EconomicModeConfig): Promise<any[]> {
+  private async optimizeIngredientSelection(ingredients: CartItem[], config: EconomicModeConfig): Promise<EconomicShoppingList['items']> {
     // 优化食材选择
     return [];
   }
 
-  private async optimizePlatformSelection(ingredients: any[]): Promise<any[]> {
+  private async optimizePlatformSelection(ingredients: EconomicShoppingList['items']): Promise<EconomicShoppingList['platformOptimizations']> {
     // 平台选择优化
     return [];
   }
 
-  private async calculateOriginalCost(ingredients: any[]): Promise<number> {
+  private async calculateOriginalCost(ingredients: CartItem[]): Promise<number> {
     // 计算原始成本
     return 0;
   }
 
-  private async checkBudgetCompliance(totalCost: number, config: EconomicModeConfig, memberId: string): Promise<any> {
+  private async checkBudgetCompliance(totalCost: number, config: EconomicModeConfig, memberId: string): Promise<EconomicShoppingList['budgetCompliance']> {
     // 预算合规性检查
     return {
       withinBudget: true,
@@ -512,27 +522,27 @@ export class EconomicMode {
     };
   }
 
-  private async applySeasonalSubstitutions(cart: any[]): Promise<any[]> {
+  private async applySeasonalSubstitutions(cart: CartItem[]): Promise<CartItem[]> {
     // 季节性替换
     return [];
   }
 
-  private async applyBulkPurchaseOptimization(cart: any[]): Promise<any[]> {
+  private async applyBulkPurchaseOptimization(cart: CartItem[]): Promise<CartItem[]> {
     // 批量采购优化
     return [];
   }
 
-  private async applyPlatformSwitchOptimization(cart: any[]): Promise<any[]> {
+  private async applyPlatformSwitchOptimization(cart: CartItem[]): Promise<CartItem[]> {
     // 平台切换优化
     return [];
   }
 
-  private async applyCouponOptimization(cart: any[]): Promise<any[]> {
+  private async applyCouponOptimization(cart: CartItem[]): Promise<CartItem[]> {
     // 优惠券优化
     return [];
   }
 
-  private getPeriodData(period: string): any {
+  private getPeriodData(period: string): DateRange {
     const now = new Date();
     let start: Date;
     let days: number;
@@ -579,22 +589,22 @@ export class EconomicMode {
     return budget?.totalAmount || 1500; // 默认月预算
   }
 
-  private async estimateOriginalCost(spendings: any[]): Promise<number> {
+  private async estimateOriginalCost(spendings: Spending[]): Promise<number> {
     // 估算原始成本（未优化前的成本）
     return spendings.reduce((sum, s) => sum + s.amount * 1.2, 0); // 假设优化后节省20%
   }
 
-  private async getDailySpending(memberId: string, start: Date, end: Date): Promise<any[]> {
+  private async getDailySpending(memberId: string, start: Date, end: Date): Promise<Spending[]> {
     // 获取每日支出
     return [];
   }
 
-  private async getCategoryBreakdown(spendings: any[], totalBudget: number): Promise<any[]> {
+  private async getCategoryBreakdown(spendings: Spending[], totalBudget: number): Promise<CategorySpendingData[]> {
     // 分类支出分析
     return [];
   }
 
-  private async analyzeSpendingTrend(memberId: string, period: string): Promise<any> {
+  private async analyzeSpendingTrend(memberId: string, period: string): Promise<TrendAnalysis> {
     // 支出趋势分析
     return {
       direction: 'STABLE' as const,
@@ -606,8 +616,8 @@ export class EconomicMode {
   private async generateEconomicRecommendations(
     totalSpending: number,
     budgetLimit: number,
-    categoryBreakdown: any[],
-    trendAnalysis: any
+    categoryBreakdown: CategorySpendingData[],
+    trendAnalysis: TrendAnalysis
   ): Promise<string[]> {
     const recommendations: string[] = [];
 

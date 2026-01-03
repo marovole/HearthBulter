@@ -3,14 +3,26 @@
  * 使用 Web Crypto API 实现，兼容 Cloudflare Workers
  */
 
-import { webcrypto as nodeCrypto } from "crypto";
-import { logger } from "@/lib/logger";
+import { webcrypto as nodeCrypto } from 'crypto';
+import { logger } from '@/lib/logger';
 
-const cryptoApi = nodeCrypto;
-(globalThis as any).crypto = cryptoApi;
+// Prefer the runtime-provided Web Crypto (Cloudflare Workers / Node 20+).
+// Do NOT overwrite `globalThis.crypto` in Node 20+, as it may be non-writable.
+// In some test environments (e.g. JSDOM), `globalThis.crypto` can exist without `subtle`.
+const cryptoApi: Crypto = (() => {
+  const globalCrypto = globalThis.crypto;
+  if (
+    globalCrypto &&
+    typeof globalCrypto.getRandomValues === 'function' &&
+    globalCrypto.subtle
+  ) {
+    return globalCrypto;
+  }
+  return nodeCrypto;
+})();
 
-const ENCRYPTION_VERSION = "v1";
-const ALGORITHM = "AES-GCM";
+const ENCRYPTION_VERSION = 'v1';
+const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 const IV_LENGTH = 12; // GCM 推荐的 IV 长度
 const TAG_LENGTH = 128; // 认证标签长度（bits）
@@ -29,7 +41,7 @@ async function getEncryptionKey(): Promise<CryptoKey> {
   const keyString = process.env.ENCRYPTION_KEY;
 
   if (!keyString) {
-    throw new Error("ENCRYPTION_KEY 环境变量未设置");
+    throw new Error('ENCRYPTION_KEY 环境变量未设置');
   }
 
   // 将 Base64 编码的密钥转换为 ArrayBuffer
@@ -43,11 +55,11 @@ async function getEncryptionKey(): Promise<CryptoKey> {
   }
 
   return cryptoApi.subtle.importKey(
-    "raw",
+    'raw',
     keyData,
     { name: ALGORITHM, length: KEY_LENGTH },
     false,
-    ["encrypt", "decrypt"],
+    ['encrypt', 'decrypt'],
   );
 }
 
@@ -96,13 +108,13 @@ export async function encrypt(plaintext: string): Promise<string> {
   } catch (error) {
     if (
       error instanceof Error &&
-      (error.message.includes("ENCRYPTION_KEY") ||
-        error.message.includes("密钥长度无效"))
+      (error.message.includes('ENCRYPTION_KEY') ||
+        error.message.includes('密钥长度无效'))
     ) {
       throw error;
     }
-    logger.error("数据加密失败", { error });
-    throw new Error("加密失败");
+    logger.error('数据加密失败', { error });
+    throw new Error('加密失败');
   }
 }
 
@@ -114,9 +126,9 @@ export async function encrypt(plaintext: string): Promise<string> {
 export async function decrypt(encryptedString: string): Promise<string> {
   try {
     // 解析加密数据
-    const parts = encryptedString.split("$");
+    const parts = encryptedString.split('$');
     if (parts.length !== 4) {
-      throw new Error("加密数据格式无效");
+      throw new Error('加密数据格式无效');
     }
 
     const [version, ivBase64, ciphertextBase64, tagBase64] = parts as [
@@ -128,7 +140,7 @@ export async function decrypt(encryptedString: string): Promise<string> {
 
     // 版本检查
     if (version !== ENCRYPTION_VERSION) {
-      logger.warn("加密数据版本不匹配", {
+      logger.warn('加密数据版本不匹配', {
         expected: ENCRYPTION_VERSION,
         actual: version,
       });
@@ -160,8 +172,8 @@ export async function decrypt(encryptedString: string): Promise<string> {
     const decoder = new TextDecoder();
     return decoder.decode(decryptedBuffer);
   } catch (error) {
-    logger.error("数据解密失败", { error });
-    throw new Error("解密失败：数据可能已被篡改或密钥不匹配");
+    logger.error('数据解密失败', { error });
+    throw new Error('解密失败：数据可能已被篡改或密钥不匹配');
   }
 }
 
@@ -196,10 +208,10 @@ export async function generateEncryptionKey(): Promise<string> {
       length: KEY_LENGTH,
     },
     true,
-    ["encrypt", "decrypt"],
+    ['encrypt', 'decrypt'],
   );
 
-  const exportedKey = await cryptoApi.subtle.exportKey("raw", key);
+  const exportedKey = await cryptoApi.subtle.exportKey('raw', key);
   return arrayBufferToBase64(exportedKey);
 }
 
@@ -208,11 +220,11 @@ export async function generateEncryptionKey(): Promise<string> {
  * @param data 待验证的数据
  */
 export function isEncryptedFormat(data: string): boolean {
-  if (!data || typeof data !== "string") {
+  if (!data || typeof data !== 'string') {
     return false;
   }
 
-  const parts = data.split("$");
+  const parts = data.split('$');
   if (parts.length !== 4) {
     return false;
   }
@@ -228,7 +240,7 @@ export function isEncryptedFormat(data: string): boolean {
 export async function hashData(data: string): Promise<string> {
   const encoder = new TextEncoder();
   const dataBuffer = encoder.encode(data);
-  const hashBuffer = await cryptoApi.subtle.digest("SHA-256", dataBuffer);
+  const hashBuffer = await cryptoApi.subtle.digest('SHA-256', dataBuffer);
   return arrayBufferToBase64(hashBuffer);
 }
 
@@ -261,11 +273,11 @@ export function secureCompare(a: string, b: string): boolean {
 
 function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  if (typeof Buffer !== "undefined") {
-    return Buffer.from(bytes).toString("base64");
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(bytes).toString('base64');
   }
 
-  let binary = "";
+  let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) {
     const byte = bytes[i];
     if (byte !== undefined) {
@@ -276,8 +288,8 @@ function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  if (typeof Buffer !== "undefined") {
-    const buf = Buffer.from(base64, "base64");
+  if (typeof Buffer !== 'undefined') {
+    const buf = Buffer.from(base64, 'base64');
     return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
   }
 

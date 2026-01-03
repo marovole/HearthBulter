@@ -1,4 +1,12 @@
-import { PrismaClient, InventoryItem, InventoryUsage, WasteLog, FoodCategory, WasteReason } from '@prisma/client';
+import { PrismaClient, FoodCategory, WasteReason } from '@prisma/client';
+import type {
+  InventoryItemWithRelations,
+  UsageRecordWithRelations,
+  WasteRecordWithRelations,
+  InventorySummary,
+  CategoryAnalysis,
+  WasteAnalysis,
+} from '@/types/service-types';
 
 const prisma = new PrismaClient();
 
@@ -437,7 +445,11 @@ export class InventoryAnalyzer {
     });
   }
 
-  private generateSummary(items: any[], usageRecords: any[], wasteRecords: any[]) {
+  private generateSummary(
+    items: InventoryItemWithRelations[],
+    usageRecords: UsageRecordWithRelations[],
+    wasteRecords: WasteRecordWithRelations[]
+  ): InventorySummary {
     const totalItems = items.length;
     const totalValue = items.reduce((sum, item) => sum + (item.purchasePrice || 0), 0);
     const usedItems = usageRecords.length;
@@ -595,7 +607,11 @@ export class InventoryAnalyzer {
     };
   }
 
-  private generateRecommendations(summary: any, categoryAnalysis: any[], wasteAnalysis: any) {
+  private generateRecommendations(
+    summary: InventorySummary,
+    categoryAnalysis: CategoryAnalysis[],
+    wasteAnalysis: WasteAnalysis
+  ) {
     const recommendations = [];
 
     // 基于浪费率的建议
@@ -605,7 +621,7 @@ export class InventoryAnalyzer {
         priority: 'HIGH' as const,
         title: '减少食物浪费',
         description: `您的食物浪费率为${summary.wasteRate.toFixed(1)}%，建议优化采购量和存储方式`,
-        potentialSavings: wasteAnalysis.totalWasteValue * 0.5,
+        potentialSavings: wasteAnalysis.totalWastedValue * 0.5,
       });
     }
 
@@ -727,7 +743,7 @@ export class InventoryAnalyzer {
     wasteReduction: number,
     storageOptimization: number,
     purchasePlanning: number,
-    data: any
+    _data: unknown
   ) {
     const strengths: string[] = [];
     const weaknesses: string[] = [];

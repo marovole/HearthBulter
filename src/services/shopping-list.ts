@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/db';
 import { FoodCategory, ListStatus } from '@prisma/client';
-import { hasPermission, Permission, FamilyMemberRole } from '@/lib/permissions';
+import { hasPermission, Permission } from '@/lib/permissions';
+import type {
+  ShoppingActivityMetadata,
+  ActivityType,
+} from '@/types/service-types';
 
 // 购物清单服务
 export class ShoppingListService {
@@ -795,15 +799,15 @@ export class ShoppingListService {
   private static async logActivity(
     familyId: string,
     memberId: string,
-    activityType: string,
-    metadata: any
+    activityType: ActivityType,
+    metadata: ShoppingActivityMetadata
   ) {
     try {
       await prisma.activity.create({
         data: {
           familyId,
           memberId,
-          activityType: activityType as any,
+          activityType: activityType,
           title: this.getActivityTitle(activityType, metadata),
           description: this.getActivityDescription(activityType, metadata),
           metadata,
@@ -815,7 +819,7 @@ export class ShoppingListService {
     }
   }
 
-  private static getActivityTitle(activityType: string, metadata: any): string {
+  private static getActivityTitle(activityType: ActivityType, metadata: ShoppingActivityMetadata): string {
     switch (activityType) {
     case 'SHOPPING_UPDATED':
       switch (metadata.action) {
@@ -837,9 +841,9 @@ export class ShoppingListService {
     }
   }
 
-  private static getActivityDescription(activityType: string, metadata: any): string {
+  private static getActivityDescription(activityType: ActivityType, metadata: ShoppingActivityMetadata): string {
     switch (activityType) {
-    case 'SHOPPING_UPDATED':
+    case 'SHOPPING_UPDATED': {
       let description = '';
       if (metadata.foodName) {
         description += `${metadata.foodName}`;
@@ -851,6 +855,7 @@ export class ShoppingListService {
         description += ` 实际价格: ¥${metadata.actualPrice}`;
       }
       return description;
+    }
     default:
       return '';
     }

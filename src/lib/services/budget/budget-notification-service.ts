@@ -1,13 +1,28 @@
 import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
 import type { BudgetRepository } from '@/lib/repositories/interfaces/budget-repository';
 import type { NotificationPriority } from '@/lib/repositories/types/notification';
+import {
+  BUDGET_NOTIFICATION_PRIORITY,
+  BUDGET_NOTIFICATION_CHANNELS,
+} from '@/lib/constants/budget';
+
+/**
+ * 通知数据接口
+ */
+interface NotificationData {
+  userId: string;
+  type: string;
+  templateData: Record<string, string | number>;
+  priority: NotificationPriority;
+  channels: string[];
+}
 
 /**
  * 通知管理器接口（避免循环依赖）
  */
 interface INotificationManager {
-  sendNotification(data: any): Promise<any>;
-  sendBulkNotifications(notifications: any[]): Promise<any>;
+  sendNotification(data: NotificationData): Promise<void>;
+  sendBulkNotifications(notifications: NotificationData[]): Promise<void>;
 }
 
 /**
@@ -251,9 +266,9 @@ export class BudgetNotificationService {
    * 根据阈值获取通知优先级
    */
   private getAlertPriority(threshold: number): 'low' | 'medium' | 'high' | 'urgent' {
-    if (threshold >= 110) return 'urgent';
-    if (threshold >= 100) return 'high';
-    if (threshold >= 80) return 'medium';
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.URGENT_THRESHOLD) return 'urgent';
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.HIGH_THRESHOLD) return 'high';
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.MEDIUM_THRESHOLD) return 'medium';
     return 'low';
   }
 
@@ -261,9 +276,9 @@ export class BudgetNotificationService {
    * 根据阈值获取通知渠道
    */
   private getAlertChannels(threshold: number): string[] {
-    if (threshold >= 110) return ['in_app', 'email', 'sms'];
-    if (threshold >= 100) return ['in_app', 'email'];
-    return ['in_app', 'email'];
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.URGENT_THRESHOLD) return [...BUDGET_NOTIFICATION_CHANNELS.URGENT];
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.HIGH_THRESHOLD) return [...BUDGET_NOTIFICATION_CHANNELS.HIGH];
+    return [...BUDGET_NOTIFICATION_CHANNELS.NORMAL];
   }
 
   /**
