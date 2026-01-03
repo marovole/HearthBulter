@@ -1,40 +1,46 @@
-import { PrismaClient, Order, OrderStatus, MealLog, StorageLocation } from '@prisma/client';
+import {
+  PrismaClient,
+  Order,
+  OrderStatus,
+  MealLog,
+  StorageLocation,
+} from '@prisma/client';
 import { inventoryTracker } from './inventory-tracker';
 
 const prisma = new PrismaClient();
 
 export interface OrderItem {
-  name: string
-  quantity: number
-  unit: string
-  price?: number
-  category?: string
+  name: string;
+  quantity: number;
+  unit: string;
+  price?: number;
+  category?: string;
 }
 
 export interface ParsedOrderItem {
-  name?: string
-  productName?: string
-  quantity?: number
-  amount?: number
-  unit?: string
-  price?: number
-  unitPrice?: number
-  category?: string
+  name?: string;
+  productName?: string;
+  quantity?: number;
+  amount?: number;
+  unit?: string;
+  price?: number;
+  unitPrice?: number;
+  category?: string;
 }
 
 export interface SyncResult {
-  success: boolean
-  processedItems: number
-  addedItems: number
-  updatedItems: number
-  errors: string[]
-  warnings: string[]
+  success: boolean;
+  processedItems: number;
+  addedItems: number;
+  updatedItems: number;
+  errors: string[];
+  warnings: string[];
 }
 
 export interface MealSyncResult {
-  success: boolean
-  usedItems: number
-  errors: string[]
+  success: boolean;
+  usedItems: number;
+  errors: string[];
 }
 
 export class InventorySync {
@@ -74,14 +80,14 @@ export class InventorySync {
 
       // 解析订单商品
       const orderItems = this.parseOrderItems(order);
-      
+
       for (const orderItem of orderItems) {
         try {
           result.processedItems++;
-          
+
           // 查找匹配的食物
           const food = await this.findMatchingFood(orderItem);
-          
+
           if (!food) {
             result.warnings.push(`未找到匹配的食物：${orderItem.name}`);
             continue;
@@ -113,12 +119,14 @@ export class InventorySync {
               unit: orderItem.unit,
               purchasePrice: orderItem.price,
               purchaseSource: `${order.account.platform} - 订单${order.platformOrderId}`,
-              expiryDate: this.estimateExpiryDate(food.category, orderItem.name),
+              expiryDate: this.estimateExpiryDate(
+                food.category,
+                orderItem.name,
+              ),
               storageLocation: this.getDefaultStorageLocation(food.category),
             });
             result.addedItems++;
           }
-
         } catch (error) {
           result.errors.push(`处理商品 ${orderItem.name} 时出错：${error}`);
         }
@@ -131,7 +139,6 @@ export class InventorySync {
           lastSyncAt: new Date(),
         },
       });
-
     } catch (error) {
       result.success = false;
       result.errors.push(`同步失败：${error}`);
@@ -143,7 +150,10 @@ export class InventorySync {
   /**
    * 从餐食记录同步使用量
    */
-  async syncFromMealLog(mealLogId: string, memberId: string): Promise<MealSyncResult> {
+  async syncFromMealLog(
+    mealLogId: string,
+    memberId: string,
+  ): Promise<MealSyncResult> {
     const result: MealSyncResult = {
       success: true,
       usedItems: 0,
@@ -197,10 +207,7 @@ export class InventorySync {
             include: {
               food: true,
             },
-            orderBy: [
-              { expiryDate: 'asc' },
-              { createdAt: 'asc' },
-            ],
+            orderBy: [{ expiryDate: 'asc' }, { createdAt: 'asc' }],
           });
 
           if (inventoryItem) {
@@ -213,7 +220,7 @@ export class InventorySync {
                 relatedId: mealLogId,
                 relatedType: 'MEAL_LOG',
                 notes: `${mealLog.mealType} - ${mealLog.date.toISOString().split('T')[0]}`,
-              }
+              },
             );
             result.usedItems++;
           } else {
@@ -223,7 +230,6 @@ export class InventorySync {
           result.errors.push(`处理食材 ${mealFood.food.name} 时出错：${error}`);
         }
       }
-
     } catch (error) {
       result.success = false;
       result.errors.push(`同步失败：${error}`);
@@ -235,7 +241,10 @@ export class InventorySync {
   /**
    * 批量同步多个订单
    */
-  async syncMultipleOrders(orderIds: string[], memberId: string): Promise<SyncResult[]> {
+  async syncMultipleOrders(
+    orderIds: string[],
+    memberId: string,
+  ): Promise<SyncResult[]> {
     const results: SyncResult[] = [];
 
     for (const orderId of orderIds) {
@@ -269,8 +278,8 @@ export class InventorySync {
           status: OrderStatus.DELIVERED,
           OR: [
             { lastSyncAt: null },
-            { 
-              lastSyncAt: { 
+            {
+              lastSyncAt: {
                 lt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24小时前同步过
               },
             },
@@ -298,33 +307,35 @@ export class InventorySync {
 
     // 根据食物分类估算保质期
     const expiryMap: { [key: string]: number } = {
-      'VEGETABLES': 5,
-      'FRUITS': 7,
-      'PROTEIN': 3,
-      'SEAFOOD': 2,
-      'DAIRY': 10,
-      'GRAINS': 30,
-      'OILS': 180,
-      'SNACKS': 90,
-      'BEVERAGES': 60,
+      VEGETABLES: 5,
+      FRUITS: 7,
+      PROTEIN: 3,
+      SEAFOOD: 2,
+      DAIRY: 10,
+      GRAINS: 30,
+      OILS: 180,
+      SNACKS: 90,
+      BEVERAGES: 60,
     };
 
     daysToAdd = expiryMap[category] || 7;
 
     // 特殊食物的处理
     const specialItems: { [key: string]: number } = {
-      '牛奶': 7,
-      '鸡蛋': 21,
-      '面包': 3,
-      '酸奶': 14,
-      '奶酪': 30,
+      牛奶: 7,
+      鸡蛋: 21,
+      面包: 3,
+      酸奶: 14,
+      奶酪: 30,
     };
 
     if (specialItems[foodName]) {
       daysToAdd = specialItems[foodName];
     }
 
-    const expiryDate = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    const expiryDate = new Date(
+      now.getTime() + daysToAdd * 24 * 60 * 60 * 1000,
+    );
     return expiryDate;
   }
 
@@ -333,15 +344,15 @@ export class InventorySync {
    */
   private getDefaultStorageLocation(category: string): StorageLocation {
     const storageMap: { [key: string]: StorageLocation } = {
-      'VEGETABLES': StorageLocation.REFRIGERATOR,
-      'FRUITS': StorageLocation.REFRIGERATOR,
-      'PROTEIN': StorageLocation.REFRIGERATOR,
-      'SEAFOOD': StorageLocation.REFRIGERATOR,
-      'DAIRY': StorageLocation.REFRIGERATOR,
-      'GRAINS': StorageLocation.PANTRY,
-      'OILS': StorageLocation.PANTRY,
-      'SNACKS': StorageLocation.PANTRY,
-      'BEVERAGES': StorageLocation.PANTRY,
+      VEGETABLES: StorageLocation.REFRIGERATOR,
+      FRUITS: StorageLocation.REFRIGERATOR,
+      PROTEIN: StorageLocation.REFRIGERATOR,
+      SEAFOOD: StorageLocation.REFRIGERATOR,
+      DAIRY: StorageLocation.REFRIGERATOR,
+      GRAINS: StorageLocation.PANTRY,
+      OILS: StorageLocation.PANTRY,
+      SNACKS: StorageLocation.PANTRY,
+      BEVERAGES: StorageLocation.PANTRY,
     };
 
     return storageMap[category] || StorageLocation.PANTRY;
@@ -354,14 +365,29 @@ export class InventorySync {
     try {
       // 假设订单商品信息存储在items字段中，格式为JSON
       const items = JSON.parse(order.items as string);
-      
-      return items.map((item: ParsedOrderItem) => ({
-        name: item.name || item.productName,
-        quantity: item.quantity || item.amount || 1,
-        unit: item.unit || '个',
-        price: item.price || item.unitPrice,
-        category: item.category,
-      }));
+
+      if (!Array.isArray(items)) {
+        console.warn('订单商品解析结果不是数组:', order.id);
+        return [];
+      }
+
+      return items.flatMap((item: ParsedOrderItem) => {
+        const name = item.name ?? item.productName;
+        if (!name) {
+          console.warn('订单商品缺少名称，已跳过:', item);
+          return [];
+        }
+
+        return [
+          {
+            name,
+            quantity: item.quantity ?? item.amount ?? 1,
+            unit: item.unit ?? '个',
+            price: item.price ?? item.unitPrice,
+            category: item.category,
+          },
+        ];
+      });
     } catch (error) {
       console.error('解析订单商品失败:', error);
       return [];
@@ -417,14 +443,14 @@ export class InventorySync {
   async manualAddInventory(
     memberId: string,
     items: Array<{
-      foodName: string
-      quantity: number
-      unit: string
-      purchasePrice?: number
-      purchaseSource?: string
-      expiryDate?: Date
-      storageLocation?: StorageLocation
-    }>
+      foodName: string;
+      quantity: number;
+      unit: string;
+      purchasePrice?: number;
+      purchaseSource?: string;
+      expiryDate?: Date;
+      storageLocation?: StorageLocation;
+    }>,
   ): Promise<SyncResult> {
     const result: SyncResult = {
       success: true,
@@ -495,7 +521,6 @@ export class InventorySync {
           });
           result.addedItems++;
         }
-
       } catch (error) {
         result.errors.push(`处理 ${item.foodName} 时出错：${error}`);
       }
@@ -534,14 +559,14 @@ export class InventorySync {
     ]);
 
     return {
-      orderSyncs: orderHistory.map(order => ({
+      orderSyncs: orderHistory.map((order) => ({
         id: order.id,
         platformOrderId: order.platformOrderId,
         platform: order.account.platform,
         syncTime: order.lastSyncAt,
         status: order.status,
       })),
-      mealSyncs: mealHistory.map(usage => ({
+      mealSyncs: mealHistory.map((usage) => ({
         id: usage.id,
         relatedId: usage.relatedId,
         syncTime: usage.createdAt,
