@@ -1,5 +1,6 @@
 import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
 import type { BudgetRepository } from '@/lib/repositories/interfaces/budget-repository';
+import type { FamilyRepository } from '@/lib/repositories/interfaces/family-repository';
 import type { NotificationPriority } from '@/lib/repositories/types/notification';
 import {
   BUDGET_NOTIFICATION_PRIORITY,
@@ -36,19 +37,23 @@ export class BudgetNotificationService {
   constructor(
     private readonly notificationRepo: NotificationRepository,
     private readonly budgetRepo: BudgetRepository,
+    private readonly familyRepo: FamilyRepository,
     private readonly notificationManager: INotificationManager,
   ) {}
 
   /**
    * 发送预算预警通知
    */
-  async sendBudgetAlert(memberId: string, alertData: {
-    budgetName: string;
-    usagePercentage: number;
-    threshold: number;
-    remainingBudget?: number;
-    totalBudget: number;
-  }): Promise<void> {
+  async sendBudgetAlert(
+    memberId: string,
+    alertData: {
+      budgetName: string;
+      usagePercentage: number;
+      threshold: number;
+      remainingBudget?: number;
+      totalBudget: number;
+    },
+  ): Promise<void> {
     try {
       const priority = this.getAlertPriority(alertData.threshold);
       const channels = this.getAlertChannels(alertData.threshold);
@@ -84,12 +89,15 @@ export class BudgetNotificationService {
   /**
    * 发送预算超支通知
    */
-  async sendBudgetOverspend(memberId: string, overspendData: {
-    budgetName: string;
-    overspendAmount: number;
-    totalSpent: number;
-    budgetLimit: number;
-  }): Promise<void> {
+  async sendBudgetOverspend(
+    memberId: string,
+    overspendData: {
+      budgetName: string;
+      overspendAmount: number;
+      totalSpent: number;
+      budgetLimit: number;
+    },
+  ): Promise<void> {
     try {
       // 使用注入的 notificationManager
       await this.notificationManager.sendNotification({
@@ -116,12 +124,15 @@ export class BudgetNotificationService {
   /**
    * 发送预算优化建议
    */
-  async sendBudgetOptimizationTip(memberId: string, tipData: {
-    budgetName: string;
-    tip: string;
-    potentialSavings: number;
-    category?: string;
-  }): Promise<void> {
+  async sendBudgetOptimizationTip(
+    memberId: string,
+    tipData: {
+      budgetName: string;
+      tip: string;
+      potentialSavings: number;
+      category?: string;
+    },
+  ): Promise<void> {
     try {
       // 使用注入的 notificationManager
       await this.notificationManager.sendNotification({
@@ -148,14 +159,21 @@ export class BudgetNotificationService {
   /**
    * 发送预算周期结束通知
    */
-  async sendBudgetPeriodSummary(memberId: string, summaryData: {
-    budgetName: string;
-    period: string;
-    totalSpent: number;
-    budgetLimit: number;
-    savings: number;
-    topCategories: Array<{ category: string; amount: number; percentage: number }>;
-  }): Promise<void> {
+  async sendBudgetPeriodSummary(
+    memberId: string,
+    summaryData: {
+      budgetName: string;
+      period: string;
+      totalSpent: number;
+      budgetLimit: number;
+      savings: number;
+      topCategories: Array<{
+        category: string;
+        amount: number;
+        percentage: number;
+      }>;
+    },
+  ): Promise<void> {
     try {
       const isUnderBudget = summaryData.totalSpent <= summaryData.budgetLimit;
       const priority = isUnderBudget ? 'medium' : 'high';
@@ -187,13 +205,16 @@ export class BudgetNotificationService {
   /**
    * 发送分类预算预警
    */
-  async sendCategoryBudgetAlert(memberId: string, alertData: {
-    budgetName: string;
-    category: string;
-    spent: number;
-    budget: number;
-    percentage: number;
-  }): Promise<void> {
+  async sendCategoryBudgetAlert(
+    memberId: string,
+    alertData: {
+      budgetName: string;
+      category: string;
+      spent: number;
+      budget: number;
+      percentage: number;
+    },
+  ): Promise<void> {
     try {
       // 使用注入的 notificationManager
       await this.notificationManager.sendNotification({
@@ -228,32 +249,37 @@ export class BudgetNotificationService {
   /**
    * 批量发送预算预警（家庭所有成员）
    */
-  async sendFamilyBudgetAlerts(familyId: string, alertData: {
-    budgetName: string;
-    usagePercentage: number;
-    threshold: number;
-  }): Promise<void> {
+  async sendFamilyBudgetAlerts(
+    familyId: string,
+    alertData: {
+      budgetName: string;
+      usagePercentage: number;
+      threshold: number;
+    },
+  ): Promise<void> {
     try {
       const familyMembers = await this.getFamilyMembers(familyId);
-      
-      const notifications = await Promise.all(familyMembers.map(async memberId => ({
-        userId: memberId,
-        type: 'BUDGET_WARNING',
-        templateData: {
-          userName: await this.getUserName(memberId),
-          budgetName: alertData.budgetName,
-          usagePercentage: alertData.usagePercentage.toFixed(1),
-        },
-        priority: this.getAlertPriority(alertData.threshold),
-        channels: ['IN_APP'],
-        metadata: {
-          budgetName: alertData.budgetName,
-          usagePercentage: alertData.usagePercentage,
-          alertType: 'FAMILY_BUDGET_ALERT',
-        },
-        actionUrl: '/family/budget',
-        actionText: '查看家庭预算',
-      })));
+
+      const notifications = await Promise.all(
+        familyMembers.map(async (memberId) => ({
+          userId: memberId,
+          type: 'BUDGET_WARNING',
+          templateData: {
+            userName: await this.getUserName(memberId),
+            budgetName: alertData.budgetName,
+            usagePercentage: alertData.usagePercentage.toFixed(1),
+          },
+          priority: this.getAlertPriority(alertData.threshold),
+          channels: ['IN_APP'],
+          metadata: {
+            budgetName: alertData.budgetName,
+            usagePercentage: alertData.usagePercentage,
+            alertType: 'FAMILY_BUDGET_ALERT',
+          },
+          actionUrl: '/family/budget',
+          actionText: '查看家庭预算',
+        })),
+      );
 
       // 使用注入的 notificationManager
       await this.notificationManager.sendBulkNotifications(notifications);
@@ -265,10 +291,14 @@ export class BudgetNotificationService {
   /**
    * 根据阈值获取通知优先级
    */
-  private getAlertPriority(threshold: number): 'low' | 'medium' | 'high' | 'urgent' {
-    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.URGENT_THRESHOLD) return 'urgent';
+  private getAlertPriority(
+    threshold: number,
+  ): 'low' | 'medium' | 'high' | 'urgent' {
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.URGENT_THRESHOLD)
+      return 'urgent';
     if (threshold >= BUDGET_NOTIFICATION_PRIORITY.HIGH_THRESHOLD) return 'high';
-    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.MEDIUM_THRESHOLD) return 'medium';
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.MEDIUM_THRESHOLD)
+      return 'medium';
     return 'low';
   }
 
@@ -276,8 +306,10 @@ export class BudgetNotificationService {
    * 根据阈值获取通知渠道
    */
   private getAlertChannels(threshold: number): string[] {
-    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.URGENT_THRESHOLD) return [...BUDGET_NOTIFICATION_CHANNELS.URGENT];
-    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.HIGH_THRESHOLD) return [...BUDGET_NOTIFICATION_CHANNELS.HIGH];
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.URGENT_THRESHOLD)
+      return [...BUDGET_NOTIFICATION_CHANNELS.URGENT];
+    if (threshold >= BUDGET_NOTIFICATION_PRIORITY.HIGH_THRESHOLD)
+      return [...BUDGET_NOTIFICATION_CHANNELS.HIGH];
     return [...BUDGET_NOTIFICATION_CHANNELS.NORMAL];
   }
 
@@ -285,15 +317,33 @@ export class BudgetNotificationService {
    * 获取用户名称
    */
   private async getUserName(memberId: string): Promise<string> {
-    const recipient = await this.notificationRepo.getNotificationRecipient(memberId);
-    return recipient?.memberId ? '用户' : '用户'; // TODO: 从预算 repository 获取用户名
+    try {
+      const member = await this.familyRepo.getFamilyMemberById(memberId);
+      if (member?.name?.trim()) {
+        return member.name.trim();
+      }
+    } catch (error) {
+      console.error(
+        'Failed to resolve member name for budget notification:',
+        error,
+      );
+    }
+    return '用户';
   }
 
   /**
    * 获取家庭成员列表
    */
   private async getFamilyMembers(familyId: string): Promise<string[]> {
-    // TODO: 从 BudgetRepository 获取家庭成员列表
-    return [];
+    try {
+      const members = await this.familyRepo.listFamilyMembers(familyId, false);
+      return members.map((member) => member.id);
+    } catch (error) {
+      console.error(
+        'Failed to resolve family members for budget notification:',
+        error,
+      );
+      return [];
+    }
   }
 }

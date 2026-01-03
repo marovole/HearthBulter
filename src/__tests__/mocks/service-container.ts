@@ -79,6 +79,10 @@ export class ServiceContainer {
   getBudgetRepository() {
     return {};
   }
+
+  getFamilyRepository() {
+    return {};
+  }
 }
 
 // Mock singleton container instance
