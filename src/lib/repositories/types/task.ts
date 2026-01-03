@@ -12,7 +12,12 @@ import type { SortInput } from './common';
 /**
  * 任务状态枚举
  */
-export const taskStatusSchema = z.enum(['TODO', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']);
+export const taskStatusSchema = z.enum([
+  'TODO',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+]);
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
 
 /**
@@ -79,6 +84,14 @@ export const taskSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   deletedAt: z.coerce.date().optional().nullable(),
+  // vNext 新增字段
+  metadata: z.any().optional().nullable(),
+  actionUrl: z.string().url().optional().nullable(),
+  estimatedMinutes: z.number().int().optional().nullable(),
+  skipReason: z.string().optional().nullable(),
+  skippedAt: z.coerce.date().optional().nullable(),
+  relatedItemId: z.string().uuid().optional().nullable(),
+  relatedItemType: z.string().optional().nullable(),
   // 关联数据
   assignee: taskMemberSchema.optional().nullable(),
   creator: taskMemberSchema.optional().nullable(),
