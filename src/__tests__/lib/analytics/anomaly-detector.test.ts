@@ -6,7 +6,7 @@ describe('Anomaly Detector', () => {
       // 模拟历史数据：平均值70，标准差5
       const mean = 70;
       const stdDev = 5;
-      
+
       const lowerBound = mean - 3 * stdDev; // 55
       const upperBound = mean + 3 * stdDev; // 85
 
@@ -30,10 +30,10 @@ describe('Anomaly Detector', () => {
 
     test('should determine severity based on deviation', () => {
       const testCases = [
-        { deviation: 5, expectedSeverity: 'CRITICAL' },  // >=4σ
-        { deviation: 3.7, expectedSeverity: 'HIGH' },    // >=3.5σ
-        { deviation: 3.2, expectedSeverity: 'MEDIUM' },  // >=3σ
-        { deviation: 2.5, expectedSeverity: 'LOW' },     // <3σ
+        { deviation: 5, expectedSeverity: 'CRITICAL' }, // >=4σ
+        { deviation: 3.7, expectedSeverity: 'HIGH' }, // >=3.5σ
+        { deviation: 3.2, expectedSeverity: 'MEDIUM' }, // >=3σ
+        { deviation: 2.5, expectedSeverity: 'LOW' }, // <3σ
       ];
 
       testCases.forEach(({ deviation, expectedSeverity }) => {
@@ -80,7 +80,7 @@ describe('Anomaly Detector', () => {
       ];
 
       const proteinDeficient = targets.every(
-        t => t.actualProtein < t.targetProtein * 0.5
+        (t) => t.actualProtein < t.targetProtein * 0.5,
       );
 
       expect(proteinDeficient).toBe(true);
@@ -94,7 +94,7 @@ describe('Anomaly Detector', () => {
       ];
 
       const caloriesExcessive = targets.every(
-        t => t.actualCalories > t.targetCalories * 1.3
+        (t) => t.actualCalories > t.targetCalories * 1.3,
       );
 
       expect(caloriesExcessive).toBe(true);
@@ -142,4 +142,3 @@ describe('Anomaly Detector', () => {
     });
   });
 });
-

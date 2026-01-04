@@ -78,9 +78,9 @@ describe('Health Data Validator', () => {
 
       const result = validateHealthData(invalidData);
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('至少需要录入一个健康指标'))).toBe(
-        true
-      );
+      expect(
+        result.errors.some((e) => e.includes('至少需要录入一个健康指标')),
+      ).toBe(true);
     });
 
     it('should validate heart rate range', () => {
@@ -110,7 +110,7 @@ describe('Health Data Validator', () => {
     });
 
     it('should return no anomaly when no previous record exists', async () => {
-      ;(prisma.healthData.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.healthData.findFirst as jest.Mock).mockResolvedValue(null);
 
       const newData: HealthDataInput = {
         weight: 75,
@@ -123,9 +123,8 @@ describe('Health Data Validator', () => {
 
     it('should detect weight anomaly (large change)', async () => {
       const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1)
-
-      ;(prisma.healthData.findFirst as jest.Mock).mockResolvedValue({
+      yesterday.setDate(yesterday.getDate() - 1);
+      (prisma.healthData.findFirst as jest.Mock).mockResolvedValue({
         id: 'previous-id',
         weight: 75,
         measuredAt: yesterday,
@@ -143,9 +142,8 @@ describe('Health Data Validator', () => {
 
     it('should detect weight warning (moderate change)', async () => {
       const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1)
-
-      ;(prisma.healthData.findFirst as jest.Mock).mockResolvedValue({
+      yesterday.setDate(yesterday.getDate() - 1);
+      (prisma.healthData.findFirst as jest.Mock).mockResolvedValue({
         id: 'previous-id',
         weight: 75,
         measuredAt: yesterday,
@@ -163,9 +161,8 @@ describe('Health Data Validator', () => {
 
     it('should not detect anomaly for normal weight change', async () => {
       const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1)
-
-      ;(prisma.healthData.findFirst as jest.Mock).mockResolvedValue({
+      yesterday.setDate(yesterday.getDate() - 1);
+      (prisma.healthData.findFirst as jest.Mock).mockResolvedValue({
         id: 'previous-id',
         weight: 75,
         measuredAt: yesterday,
@@ -181,8 +178,8 @@ describe('Health Data Validator', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      ;(prisma.healthData.findFirst as jest.Mock).mockRejectedValue(
-        new Error('Database error')
+      (prisma.healthData.findFirst as jest.Mock).mockRejectedValue(
+        new Error('Database error'),
       );
 
       const newData: HealthDataInput = {
@@ -214,9 +211,8 @@ describe('Health Data Validator', () => {
 
     it('should include anomaly warnings in result', async () => {
       const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1)
-
-      ;(prisma.healthData.findFirst as jest.Mock).mockResolvedValue({
+      yesterday.setDate(yesterday.getDate() - 1);
+      (prisma.healthData.findFirst as jest.Mock).mockResolvedValue({
         id: 'previous-id',
         weight: 75,
         measuredAt: yesterday,
@@ -234,7 +230,7 @@ describe('Health Data Validator', () => {
     });
 
     it('should return valid result with no warnings for normal data', async () => {
-      ;(prisma.healthData.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.healthData.findFirst as jest.Mock).mockResolvedValue(null);
 
       const validData: HealthDataInput = {
         weight: 75,

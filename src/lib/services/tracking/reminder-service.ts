@@ -1,7 +1,11 @@
 import { prisma } from '@/lib/db';
 
 export interface ReminderConfig {
-  type: 'MEAL_TIME' | 'MISSING_MEAL' | 'NUTRITION_DEFICIENCY' | 'STREAK_WARNING';
+  type:
+    | 'MEAL_TIME'
+    | 'MISSING_MEAL'
+    | 'NUTRITION_DEFICIENCY'
+    | 'STREAK_WARNING';
   enabled: boolean;
   hour: number;
   minute: number;
@@ -12,7 +16,11 @@ export interface ReminderConfig {
 export interface NutritionReminder {
   id: string;
   memberId: string;
-  type: 'MEAL_TIME' | 'MISSING_MEAL' | 'NUTRITION_DEFICIENCY' | 'STREAK_WARNING';
+  type:
+    | 'MEAL_TIME'
+    | 'MISSING_MEAL'
+    | 'NUTRITION_DEFICIENCY'
+    | 'STREAK_WARNING';
   enabled: boolean;
   hour: number;
   minute: number;
@@ -42,7 +50,7 @@ class ReminderService {
       orderBy: { createdAt: 'asc' },
     });
 
-    return reminders.map(reminder => ({
+    return reminders.map((reminder) => ({
       ...reminder,
       daysOfWeek: JSON.parse(reminder.daysOfWeek || '[]'),
     }));
@@ -53,7 +61,7 @@ class ReminderService {
    */
   async upsertReminderConfig(
     memberId: string,
-    config: Omit<ReminderConfig, 'enabled'> & { enabled?: boolean }
+    config: Omit<ReminderConfig, 'enabled'> & { enabled?: boolean },
   ): Promise<NutritionReminder> {
     const { type, enabled = true, hour, minute, daysOfWeek, message } = config;
 
@@ -121,7 +129,7 @@ class ReminderService {
 
     for (const reminder of activeReminders) {
       const daysOfWeek = JSON.parse(reminder.daysOfWeek || '[]');
-      
+
       // 检查今天是否应该触发提醒
       if (!daysOfWeek.includes(currentDayOfWeek)) {
         continue;
@@ -130,7 +138,7 @@ class ReminderService {
       // 检查时间是否匹配（允许5分钟的误差）
       const reminderTime = reminder.hour * 60 + reminder.minute;
       const currentTime = currentHour * 60 + currentMinute;
-      
+
       if (Math.abs(currentTime - reminderTime) > 5) {
         continue;
       }
@@ -145,7 +153,7 @@ class ReminderService {
       const trigger = await this.generateReminderTrigger(reminder, now);
       if (trigger) {
         triggers.push(trigger);
-        
+
         // 更新最后触发时间
         await prisma.nutritionReminder.update({
           where: { id: reminder.id },
@@ -162,25 +170,41 @@ class ReminderService {
    */
   private async generateReminderTrigger(
     reminder: any,
-    scheduledTime: Date
+    scheduledTime: Date,
   ): Promise<ReminderTrigger | null> {
     const { memberId, type, message } = reminder;
 
     switch (type) {
-    case 'MEAL_TIME':
-      return await this.generateMealTimeReminder(memberId, scheduledTime, message);
-      
-    case 'MISSING_MEAL':
-      return await this.generateMissingMealReminder(memberId, scheduledTime, message);
-      
-    case 'NUTRITION_DEFICIENCY':
-      return await this.generateNutritionDeficiencyReminder(memberId, scheduledTime, message);
-      
-    case 'STREAK_WARNING':
-      return await this.generateStreakWarningReminder(memberId, scheduledTime, message);
-      
-    default:
-      return null;
+      case 'MEAL_TIME':
+        return await this.generateMealTimeReminder(
+          memberId,
+          scheduledTime,
+          message,
+        );
+
+      case 'MISSING_MEAL':
+        return await this.generateMissingMealReminder(
+          memberId,
+          scheduledTime,
+          message,
+        );
+
+      case 'NUTRITION_DEFICIENCY':
+        return await this.generateNutritionDeficiencyReminder(
+          memberId,
+          scheduledTime,
+          message,
+        );
+
+      case 'STREAK_WARNING':
+        return await this.generateStreakWarningReminder(
+          memberId,
+          scheduledTime,
+          message,
+        );
+
+      default:
+        return null;
     }
   }
 
@@ -190,13 +214,13 @@ class ReminderService {
   private async generateMealTimeReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string
+    customMessage?: string,
   ): Promise<ReminderTrigger> {
     const hour = scheduledTime.getHours();
-    
+
     let mealType = '';
     let defaultMessage = '';
-    
+
     if (hour >= 7 && hour < 10) {
       mealType = '早餐';
       defaultMessage = '该记录早餐啦！美好的一天从营养早餐开始～';
@@ -227,7 +251,7 @@ class ReminderService {
   private async generateMissingMealReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string
+    customMessage?: string,
   ): Promise<ReminderTrigger | null> {
     const hour = scheduledTime.getHours();
     const today = new Date();
@@ -236,7 +260,7 @@ class ReminderService {
     // 检查今天是否已经记录了相应的餐食
     let mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
     let mealName: string;
-    
+
     if (hour >= 10 && hour < 13) {
       mealType = 'BREAKFAST';
       mealName = '早餐';
@@ -267,7 +291,8 @@ class ReminderService {
     return {
       memberId,
       type: 'MISSING_MEAL',
-      message: customMessage || `还没记录${mealName}哦！点击记录，保持打卡连续性～`,
+      message:
+        customMessage || `还没记录${mealName}哦！点击记录，保持打卡连续性～`,
       scheduledTime,
       priority: 'HIGH',
       metadata: { mealType, mealName },
@@ -280,10 +305,10 @@ class ReminderService {
   private async generateNutritionDeficiencyReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string
+    customMessage?: string,
   ): Promise<ReminderTrigger | null> {
     const hour = scheduledTime.getHours();
-    
+
     // 只在晚餐前生成营养不足提醒
     if (hour < 16 || hour > 19) {
       return null;
@@ -310,17 +335,20 @@ class ReminderService {
     });
 
     // 计算今日营养摄入
-    const totalNutrition = todayMeals.reduce((total, meal) => {
-      return meal.foods.reduce((mealTotal, mealFood) => {
-        const ratio = mealFood.amount / 100;
-        return {
-          calories: mealTotal.calories + mealFood.food.calories * ratio,
-          protein: mealTotal.protein + mealFood.food.protein * ratio,
-          carbs: mealTotal.carbs + mealFood.food.carbs * ratio,
-          fat: mealTotal.fat + mealFood.food.fat * ratio,
-        };
-      }, total);
-    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+    const totalNutrition = todayMeals.reduce(
+      (total, meal) => {
+        return meal.foods.reduce((mealTotal, mealFood) => {
+          const ratio = mealFood.amount / 100;
+          return {
+            calories: mealTotal.calories + mealFood.food.calories * ratio,
+            protein: mealTotal.protein + mealFood.food.protein * ratio,
+            carbs: mealTotal.carbs + mealFood.food.carbs * ratio,
+            fat: mealTotal.fat + mealFood.food.fat * ratio,
+          };
+        }, total);
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    );
 
     // 获取用户的营养目标
     const member = await prisma.familyMember.findUnique({
@@ -344,20 +372,27 @@ class ReminderService {
 
     // 检查各种营养素是否严重不足（低于目标值的60%）
     if (totalNutrition.protein < goals.protein * 0.6) {
-      deficiencies.push(`蛋白质还差${Math.round(goals.protein - totalNutrition.protein)}g`);
+      deficiencies.push(
+        `蛋白质还差${Math.round(goals.protein - totalNutrition.protein)}g`,
+      );
     }
     if (totalNutrition.carbs < goals.carbs * 0.6) {
-      deficiencies.push(`碳水还差${Math.round(goals.carbs - totalNutrition.carbs)}g`);
+      deficiencies.push(
+        `碳水还差${Math.round(goals.carbs - totalNutrition.carbs)}g`,
+      );
     }
     if (totalNutrition.calories < goals.calories * 0.6) {
-      deficiencies.push(`热量还差${Math.round(goals.calories - totalNutrition.calories)}kcal`);
+      deficiencies.push(
+        `热量还差${Math.round(goals.calories - totalNutrition.calories)}kcal`,
+      );
     }
 
     if (deficiencies.length === 0) {
       return null; // 没有明显不足
     }
 
-    const message = customMessage || 
+    const message =
+      customMessage ||
       `今日营养摄入不足：${deficiencies.join('，')}。晚餐建议多吃一些富含这些营养的食物～`;
 
     return {
@@ -376,10 +411,10 @@ class ReminderService {
   private async generateStreakWarningReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string
+    customMessage?: string,
   ): Promise<ReminderTrigger | null> {
     const hour = scheduledTime.getHours();
-    
+
     // 只在晚上9点到10点之间生成连续打卡提醒
     if (hour < 21 || hour > 22) {
       return null;
@@ -411,7 +446,8 @@ class ReminderService {
       return null; // 连续天数不足7天，不需要特殊提醒
     }
 
-    const message = customMessage || 
+    const message =
+      customMessage ||
       `别让连续打卡中断哦！你已经连续打卡${streakData.currentStreak}天了，今天还没有记录～`;
 
     return {
@@ -461,7 +497,9 @@ class ReminderService {
   /**
    * 批量发送提醒
    */
-  async sendReminders(triggers: ReminderTrigger[]): Promise<{ success: number; failed: number }> {
+  async sendReminders(
+    triggers: ReminderTrigger[],
+  ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
 

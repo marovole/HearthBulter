@@ -100,14 +100,17 @@ export class ShoppingListService {
       });
 
       // 计算统计信息
-      const listWithStats = shoppingLists.map(list => ({
+      const listWithStats = shoppingLists.map((list) => ({
         ...list,
         stats: {
           totalItems: list.items.length,
-          purchasedItems: list.items.filter(item => item.purchased).length,
-          pendingItems: list.items.filter(item => !item.purchased).length,
-          assignedItems: list.items.filter(item => item.assigneeId).length,
-          totalEstimatedCost: list.items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0),
+          purchasedItems: list.items.filter((item) => item.purchased).length,
+          pendingItems: list.items.filter((item) => !item.purchased).length,
+          assignedItems: list.items.filter((item) => item.assigneeId).length,
+          totalEstimatedCost: list.items.reduce(
+            (sum, item) => sum + (item.estimatedPrice || 0),
+            0,
+          ),
         },
       }));
 
@@ -123,12 +126,12 @@ export class ShoppingListService {
     familyId: string,
     userId: string,
     data: {
-      listId: string
-      foodId: string
-      amount: number
-      estimatedPrice?: number
-      assigneeId?: string
-    }
+      listId: string;
+      foodId: string;
+      amount: number;
+      estimatedPrice?: number;
+      assigneeId?: string;
+    },
   ) {
     try {
       // 验证权限
@@ -249,7 +252,7 @@ export class ShoppingListService {
     familyId: string,
     userId: string,
     itemId: string,
-    assigneeId: string
+    assigneeId: string,
   ) {
     try {
       // 验证权限
@@ -368,7 +371,7 @@ export class ShoppingListService {
     familyId: string,
     userId: string,
     itemId: string,
-    actualPrice?: number
+    actualPrice?: number,
   ) {
     try {
       // 验证权限
@@ -483,10 +486,10 @@ export class ShoppingListService {
     userId: string,
     itemId: string,
     data: {
-      amount?: number
-      estimatedPrice?: number
-      assigneeId?: string
-    }
+      amount?: number;
+      estimatedPrice?: number;
+      assigneeId?: string;
+    },
   ) {
     try {
       // 验证权限
@@ -532,7 +535,14 @@ export class ShoppingListService {
       }
 
       // 检查更新权限
-      if (!hasPermission(member.role, Permission.UPDATE_SHOPPING_ITEM, item.addedBy, member.id)) {
+      if (
+        !hasPermission(
+          member.role,
+          Permission.UPDATE_SHOPPING_ITEM,
+          item.addedBy,
+          member.id,
+        )
+      ) {
         throw new Error('Insufficient permissions to update this item');
       }
 
@@ -610,7 +620,11 @@ export class ShoppingListService {
   }
 
   // 删除购物项
-  static async deleteShoppingItem(familyId: string, userId: string, itemId: string) {
+  static async deleteShoppingItem(
+    familyId: string,
+    userId: string,
+    itemId: string,
+  ) {
     try {
       // 验证权限
       const member = await prisma.familyMember.findFirst({
@@ -655,7 +669,14 @@ export class ShoppingListService {
       }
 
       // 检查删除权限
-      if (!hasPermission(member.role, Permission.DELETE_SHOPPING_ITEM, item.addedBy, member.id)) {
+      if (
+        !hasPermission(
+          member.role,
+          Permission.DELETE_SHOPPING_ITEM,
+          item.addedBy,
+          member.id,
+        )
+      ) {
         throw new Error('Insufficient permissions to delete this item');
       }
 
@@ -729,22 +750,32 @@ export class ShoppingListService {
 
       const stats = {
         totalItems: items.length,
-        purchasedItems: items.filter(item => item.purchased).length,
-        pendingItems: items.filter(item => !item.purchased).length,
-        assignedItems: items.filter(item => item.assigneeId).length,
-        totalEstimatedCost: items.reduce((sum, item) => sum + (item.estimatedPrice || 0), 0),
+        purchasedItems: items.filter((item) => item.purchased).length,
+        pendingItems: items.filter((item) => !item.purchased).length,
+        assignedItems: items.filter((item) => item.assigneeId).length,
+        totalEstimatedCost: items.reduce(
+          (sum, item) => sum + (item.estimatedPrice || 0),
+          0,
+        ),
         categoryStats: {} as Record<FoodCategory, number>,
-        assigneeStats: {} as Record<string, { name: string; count: number; avatar?: string }>,
-        addedByStats: {} as Record<string, { name: string; count: number; avatar?: string }>,
+        assigneeStats: {} as Record<
+          string,
+          { name: string; count: number; avatar?: string }
+        >,
+        addedByStats: {} as Record<
+          string,
+          { name: string; count: number; avatar?: string }
+        >,
       };
 
       // 按分类统计
-      items.forEach(item => {
-        stats.categoryStats[item.category] = (stats.categoryStats[item.category] || 0) + 1;
+      items.forEach((item) => {
+        stats.categoryStats[item.category] =
+          (stats.categoryStats[item.category] || 0) + 1;
       });
 
       // 按分配人统计
-      items.forEach(item => {
+      items.forEach((item) => {
         if (item.assignee) {
           const key = item.assignee.id;
           if (!stats.assigneeStats[key]) {
@@ -759,7 +790,7 @@ export class ShoppingListService {
       });
 
       // 按添加人统计
-      items.forEach(item => {
+      items.forEach((item) => {
         if (item.addedByMember) {
           const key = item.addedByMember.id;
           if (!stats.addedByStats[key]) {
@@ -792,7 +823,7 @@ export class ShoppingListService {
       },
     });
 
-    return members.map(member => member.id);
+    return members.map((member) => member.id);
   }
 
   // 辅助方法：记录活动
@@ -800,7 +831,7 @@ export class ShoppingListService {
     familyId: string,
     memberId: string,
     activityType: ActivityType,
-    metadata: ShoppingActivityMetadata
+    metadata: ShoppingActivityMetadata,
   ) {
     try {
       await prisma.activity.create({
@@ -819,45 +850,51 @@ export class ShoppingListService {
     }
   }
 
-  private static getActivityTitle(activityType: ActivityType, metadata: ShoppingActivityMetadata): string {
+  private static getActivityTitle(
+    activityType: ActivityType,
+    metadata: ShoppingActivityMetadata,
+  ): string {
     switch (activityType) {
-    case 'SHOPPING_UPDATED':
-      switch (metadata.action) {
-      case 'ADD_ITEM':
-        return '添加了购物项';
-      case 'ASSIGN_ITEM':
-        return '分配了购物项';
-      case 'PURCHASE_ITEM':
-        return '购买了物品';
-      case 'UPDATE_ITEM':
-        return '更新了购物项';
-      case 'DELETE_ITEM':
-        return '删除了购物项';
+      case 'SHOPPING_UPDATED':
+        switch (metadata.action) {
+          case 'ADD_ITEM':
+            return '添加了购物项';
+          case 'ASSIGN_ITEM':
+            return '分配了购物项';
+          case 'PURCHASE_ITEM':
+            return '购买了物品';
+          case 'UPDATE_ITEM':
+            return '更新了购物项';
+          case 'DELETE_ITEM':
+            return '删除了购物项';
+          default:
+            return '更新了购物清单';
+        }
       default:
-        return '更新了购物清单';
-      }
-    default:
-      return '购物清单更新';
+        return '购物清单更新';
     }
   }
 
-  private static getActivityDescription(activityType: ActivityType, metadata: ShoppingActivityMetadata): string {
+  private static getActivityDescription(
+    activityType: ActivityType,
+    metadata: ShoppingActivityMetadata,
+  ): string {
     switch (activityType) {
-    case 'SHOPPING_UPDATED': {
-      let description = '';
-      if (metadata.foodName) {
-        description += `${metadata.foodName}`;
+      case 'SHOPPING_UPDATED': {
+        let description = '';
+        if (metadata.foodName) {
+          description += `${metadata.foodName}`;
+        }
+        if (metadata.assigneeName) {
+          description += ` 分配给 ${metadata.assigneeName}`;
+        }
+        if (metadata.actualPrice) {
+          description += ` 实际价格: ¥${metadata.actualPrice}`;
+        }
+        return description;
       }
-      if (metadata.assigneeName) {
-        description += ` 分配给 ${metadata.assigneeName}`;
-      }
-      if (metadata.actualPrice) {
-        description += ` 实际价格: ¥${metadata.actualPrice}`;
-      }
-      return description;
-    }
-    default:
-      return '';
+      default:
+        return '';
     }
   }
 }

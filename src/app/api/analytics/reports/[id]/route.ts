@@ -13,7 +13,7 @@ import { auth } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -27,31 +27,27 @@ export async function GET(
     // 查询报告详情（使用Supabase）
     const { data: report, error } = await supabase
       .from('health_reports')
-      .select(`
+      .select(
+        `
         *,
         member:family_members!inner(
           id,
           name,
           avatar
         )
-      `)
+      `,
+      )
       .eq('id', id)
       .is('deletedAt', null)
       .maybeSingle();
 
     if (error) {
       console.error('查询报告失败:', error);
-      return NextResponse.json(
-        { error: '获取报告失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '获取报告失败' }, { status: 500 });
     }
 
     if (!report) {
-      return NextResponse.json(
-        { error: '报告不存在' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '报告不存在' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -60,10 +56,7 @@ export async function GET(
     });
   } catch (error) {
     console.error('Failed to get report:', error);
-    return NextResponse.json(
-      { error: '获取报告失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取报告失败' }, { status: 500 });
   }
 }
 
@@ -75,7 +68,7 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -94,10 +87,7 @@ export async function DELETE(
 
     if (error) {
       console.error('删除报告失败:', error);
-      return NextResponse.json(
-        { error: '删除报告失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '删除报告失败' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -106,10 +96,6 @@ export async function DELETE(
     });
   } catch (error) {
     console.error('Failed to delete report:', error);
-    return NextResponse.json(
-      { error: '删除报告失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '删除报告失败' }, { status: 500 });
   }
 }
-

@@ -14,7 +14,7 @@ const emailShareSchema = z.object({
 // POST /api/shopping-lists/:id/share/email - 邮件分享
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: listId } = await params;
@@ -55,14 +55,13 @@ export async function POST(
     const isCreator =
       shoppingList.plan.member.family.creatorId === session.user.id;
     const isAdmin =
-      shoppingList.plan.member.family.members[0]?.role === 'ADMIN' ||
-      isCreator;
+      shoppingList.plan.member.family.members[0]?.role === 'ADMIN' || isCreator;
     const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限分享该购物清单' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -95,21 +94,18 @@ export async function POST(
       console.error('邮件发送失败:', emailError);
       return NextResponse.json(
         { error: '邮件发送失败，请稍后重试' },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '请求参数验证失败', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error('邮件分享失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

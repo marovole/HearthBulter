@@ -56,9 +56,11 @@ export class RecommendationEngine {
   async getRecommendations(
     context: RecommendationContext,
     limit = 10,
-    weights?: Partial<RecommendationWeights>
+    weights?: Partial<RecommendationWeights>,
   ): Promise<RecipeRecommendation[]> {
-    const userPreference = await this.repository.getUserPreference(context.memberId);
+    const userPreference = await this.repository.getUserPreference(
+      context.memberId,
+    );
     const defaultWeights: RecommendationWeights = {
       inventory: 0.3,
       price: 0.2,
@@ -79,7 +81,9 @@ export class RecommendationEngine {
       this.content.getRecommendations(context, limit * 2),
     ]);
 
-    const merged = Array.from(this.mergeCandidates([ruleBased, collaborative, content]).values());
+    const merged = Array.from(
+      this.mergeCandidates([ruleBased, collaborative, content]).values(),
+    );
     const ranked = await this.ranker.rankRecipes(merged, context, finalWeights);
     return this.generateExplanations(ranked.slice(0, limit), finalWeights);
   }
@@ -87,59 +91,79 @@ export class RecommendationEngine {
   async refreshRecommendations(
     context: RecommendationContext,
     excludeRecipeIds: string[],
-    limit = 10
+    limit = 10,
   ): Promise<RecipeRecommendation[]> {
     return this.getRecommendations({ ...context, excludeRecipeIds }, limit);
   }
 
-  async getSimilarRecipes(recipeId: string, limit = 5): Promise<RecipeRecommendation[]> {
+  async getSimilarRecipes(
+    recipeId: string,
+    limit = 5,
+  ): Promise<RecipeRecommendation[]> {
     const recipe = await this.repository.getRecipeById(recipeId);
     if (!recipe) throw new Error('Recipe not found');
     return this.content.getSimilarRecipes(recipe, limit);
   }
 
-  async getPopularRecipes(limit = 10, category?: string): Promise<RecipeRecommendation[]> {
+  async getPopularRecipes(
+    limit = 10,
+    category?: string,
+  ): Promise<RecipeRecommendation[]> {
     const recipes = await this.repository.listPopularRecipes(limit, category);
-    return recipes.map(recipe => ({
+    return recipes.map((recipe) => ({
       recipeId: recipe.id,
       score: recipe.averageRating ?? 0,
       reasons: ['热门推荐', '高评分'],
       explanation: `此食谱评分${recipe.averageRating ?? 0}分，已有${recipe.ratingCount ?? 0}人评价。`,
-      metadata: { inventoryMatch: 0, priceMatch: 0, nutritionMatch: 0, preferenceMatch: 0, seasonalMatch: 0 },
+      metadata: {
+        inventoryMatch: 0,
+        priceMatch: 0,
+        nutritionMatch: 0,
+        preferenceMatch: 0,
+        seasonalMatch: 0,
+      },
     }));
   }
 
   async updateUserPreferences(memberId: string): Promise<void> {
-    const behavior = await this.repository.getDetailedRecipeBehavior(memberId, { limit: 100 });
+    const behavior = await this.repository.getDetailedRecipeBehavior(memberId, {
+      limit: 100,
+    });
     const insights = this.analyzeUserBehavior(behavior);
     await this.repository.upsertLearnedUserPreferences(memberId, insights);
   }
 
-  private mergeCandidates(candidates: RecipeRecommendation[][]): Map<string, RecipeRecommendation> {
+  private mergeCandidates(
+    candidates: RecipeRecommendation[][],
+  ): Map<string, RecipeRecommendation> {
     const merged = new Map<string, RecipeRecommendation>();
-    candidates.forEach(list =>
-      list.forEach(candidate => {
+    candidates.forEach((list) =>
+      list.forEach((candidate) => {
         const existing = merged.get(candidate.recipeId);
-        if (!existing || candidate.score > existing.score) merged.set(candidate.recipeId, candidate);
-      })
+        if (!existing || candidate.score > existing.score)
+          merged.set(candidate.recipeId, candidate);
+      }),
     );
     return merged;
   }
 
   private async generateExplanations(
     recommendations: RecipeRecommendation[],
-    weights: RecommendationWeights
+    weights: RecommendationWeights,
   ): Promise<RecipeRecommendation[]> {
-    return recommendations.map(rec => {
+    return recommendations.map((rec) => {
       const reasons = [...rec.reasons];
       if (!reasons.length) reasons.push('综合推荐');
 
       const explanationParts: string[] = [];
-      if (rec.metadata.inventoryMatch > 0.7) explanationParts.push('匹配现有食材');
+      if (rec.metadata.inventoryMatch > 0.7)
+        explanationParts.push('匹配现有食材');
       if (rec.metadata.priceMatch > 0.7) explanationParts.push('符合预算');
-      if (rec.metadata.nutritionMatch > 0.7) explanationParts.push('满足健康目标');
+      if (rec.metadata.nutritionMatch > 0.7)
+        explanationParts.push('满足健康目标');
       if (rec.metadata.preferenceMatch > 0.7) explanationParts.push('符合口味');
-      if (rec.metadata.seasonalMatch > 0.7) explanationParts.push('使用当季食材');
+      if (rec.metadata.seasonalMatch > 0.7)
+        explanationParts.push('使用当季食材');
 
       const topWeight = Object.entries(weights).sort((a, b) => b[1] - a[1])[0];
       if (topWeight?.[1] >= 0.3) {
@@ -156,21 +180,28 @@ export class RecommendationEngine {
       return {
         ...rec,
         reasons,
-        explanation: explanationParts.length ? `${explanationParts.join('，')}。` : rec.explanation,
+        explanation: explanationParts.length
+          ? `${explanationParts.join('，')}。`
+          : rec.explanation,
       };
     });
   }
 
-  private analyzeUserBehavior(behavior: RecommendationBehaviorWithDetailsDTO): LearnedPreferenceInsightsDTO {
-    const ratedRecipes = behavior.ratings.filter(r => r.rating >= 4).map(r => r.recipe);
-    const favoriteRecipes = behavior.favorites.map(f => f.recipe);
+  private analyzeUserBehavior(
+    behavior: RecommendationBehaviorWithDetailsDTO,
+  ): LearnedPreferenceInsightsDTO {
+    const ratedRecipes = behavior.ratings
+      .filter((r) => r.rating >= 4)
+      .map((r) => r.recipe);
+    const favoriteRecipes = behavior.favorites.map((f) => f.recipe);
     const sample = [...ratedRecipes, ...favoriteRecipes];
 
     const preferredCuisines = this.extractCuisines(sample);
     const preferredIngredients = this.extractIngredients(sample);
 
     const avgRating =
-      behavior.ratings.reduce((sum, r) => sum + r.rating, 0) / (behavior.ratings.length || 1);
+      behavior.ratings.reduce((sum, r) => sum + r.rating, 0) /
+      (behavior.ratings.length || 1);
 
     return {
       preferences: {
@@ -186,7 +217,7 @@ export class RecommendationEngine {
 
   private extractCuisines(recipes: RecipeDetailDTO[]): string[] {
     const counts = new Map<string, number>();
-    recipes.forEach(recipe => {
+    recipes.forEach((recipe) => {
       if (!recipe.cuisine) return;
       counts.set(recipe.cuisine, (counts.get(recipe.cuisine) || 0) + 1);
     });
@@ -198,10 +229,13 @@ export class RecommendationEngine {
 
   private extractIngredients(recipes: RecipeDetailDTO[]): string[] {
     const counts = new Map<string, number>();
-    recipes.forEach(recipe =>
-      recipe.ingredientsDetailed?.forEach(ingredient => {
-        counts.set(ingredient.food.name, (counts.get(ingredient.food.name) || 0) + 1);
-      })
+    recipes.forEach((recipe) =>
+      recipe.ingredientsDetailed?.forEach((ingredient) => {
+        counts.set(
+          ingredient.food.name,
+          (counts.get(ingredient.food.name) || 0) + 1,
+        );
+      }),
     );
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])

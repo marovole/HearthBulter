@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/middleware/api-auth";
-import { checkAIRateLimit } from "@/lib/middleware/api-rate-limit";
-import { checkMultipleConsents } from "@/lib/middleware/api-consent";
-import { healthAnalyzer } from "@/lib/services/ai/health-analyzer";
-import { healthRepository } from "@/lib/repositories/health-repository-singleton";
-import { SupabaseFamilyRepository } from "@/lib/repositories/implementations/supabase-family-repository";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import { aiFallbackService } from "@/lib/services/ai/fallback-service";
-import { medicalReportFilter } from "@/lib/middleware/ai-sensitive-filter";
-import { logger } from "@/lib/logger";
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/middleware/api-auth';
+import { checkAIRateLimit } from '@/lib/middleware/api-rate-limit';
+import { checkMultipleConsents } from '@/lib/middleware/api-consent';
+import { healthAnalyzer } from '@/lib/services/ai/health-analyzer';
+import { healthRepository } from '@/lib/repositories/health-repository-singleton';
+import { SupabaseFamilyRepository } from '@/lib/repositories/implementations/supabase-family-repository';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { aiFallbackService } from '@/lib/services/ai/fallback-service';
+import { medicalReportFilter } from '@/lib/middleware/ai-sensitive-filter';
+import { logger } from '@/lib/logger';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 const familyRepo = new SupabaseFamilyRepository(
   SupabaseClientManager.getInstance(),
@@ -26,12 +26,12 @@ export async function POST(request: NextRequest) {
     if (!authResult.success) return authResult.response;
     const { userId } = authResult.context;
 
-    const rateLimitResult = await checkAIRateLimit(userId, "ai_analyze_health");
+    const rateLimitResult = await checkAIRateLimit(userId, 'ai_analyze_health');
     if (!rateLimitResult.success) return rateLimitResult.response;
 
     const consentResult = await checkMultipleConsents(userId, [
-      "ai_health_analysis",
-      "medical_data_processing",
+      'ai_health_analysis',
+      'medical_data_processing',
     ]);
     if (!consentResult.success) return consentResult.response;
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     if (!memberId) {
       return NextResponse.json(
-        { error: "Member ID is required" },
+        { error: 'Member ID is required' },
         { status: 400 },
       );
     }
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     if (!memberContext) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -65,12 +65,12 @@ export async function POST(request: NextRequest) {
         memberContext.member.familyId,
         userId,
       );
-      isAdmin = role === "ADMIN";
+      isAdmin = role === 'ADMIN';
     }
 
     if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         (Date.now() - new Date(member.birthDate).getTime()) /
           (365.25 * 24 * 60 * 60 * 1000),
       ),
-      gender: member.gender.toLowerCase() as "male" | "female",
+      gender: member.gender.toLowerCase() as 'male' | 'female',
       height: member.height || 170,
       weight: member.weight || 70,
       bmi: member.bmi || 24,
@@ -110,12 +110,12 @@ export async function POST(request: NextRequest) {
       dietary_preferences: member.dietaryPreference
         ? [
             member.dietaryPreference.dietType,
-            ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
-            ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
+            ...(member.dietaryPreference.isVegetarian ? ['vegetarian'] : []),
+            ...(member.dietaryPreference.isVegan ? ['vegan'] : []),
           ].filter((pref): pref is string => pref !== null)
         : [],
       allergies: member.allergies.map((a) => a.allergenName),
-      activity_level: "moderate" as const, // 可以从健康数据推断
+      activity_level: 'moderate' as const, // 可以从健康数据推断
     };
 
     // 执行健康分析（带降级策略）
@@ -149,26 +149,26 @@ export async function POST(request: NextRequest) {
     } else {
       // 使用降级方案，生成基础建议
       nutritionTargets = {
-        daily_calories: userProfile.gender === "male" ? 2000 : 1800,
+        daily_calories: userProfile.gender === 'male' ? 2000 : 1800,
         macros: {
           carbs_percent: 50,
           protein_percent: 20,
           fat_percent: 30,
         },
-        micronutrients: ["需要专业医生详细分析"],
+        micronutrients: ['需要专业医生详细分析'],
       };
 
       dietaryAdjustments = [
-        "AI服务暂时不可用，请咨询专业营养师",
-        "保持均衡饮食，适量运动",
-        "定期监测健康指标",
+        'AI服务暂时不可用，请咨询专业营养师',
+        '保持均衡饮食，适量运动',
+        '定期监测健康指标',
       ];
     }
 
     // 使用 HealthRepository 保存建议到数据库
     const aiAdvice = await healthRepository.saveHealthAdvice({
       memberId,
-      type: "HEALTH_ANALYSIS",
+      type: 'HEALTH_ANALYSIS',
       content: {
         analysis: analysisResult.data,
         nutritionTargets,
@@ -178,12 +178,12 @@ export async function POST(request: NextRequest) {
         fallbackUsed: analysisResult.fallbackUsed,
         fallbackReason: analysisResult.reason,
       },
-      prompt: "Comprehensive health analysis with personalized recommendations",
+      prompt: 'Comprehensive health analysis with personalized recommendations',
       tokens: 0,
     });
 
     if (!aiAdvice) {
-      logger.error("保存AI建议失败", { memberId });
+      logger.error('保存AI建议失败', { memberId });
     }
 
     const result = {
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
       dietaryAdjustments,
       prioritizedConcerns: !analysisResult.fallbackUsed
         ? healthAnalyzer.prioritizeHealthConcerns(analysisResult.data)
-        : ["AI服务不可用，请咨询专业医生"],
+        : ['AI服务不可用，请咨询专业医生'],
       generatedAt: aiAdvice?.generatedAt || new Date(),
       fallbackUsed: analysisResult.fallbackUsed,
       message: analysisResult.message,
@@ -201,9 +201,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    logger.error("Health analysis API error", { error });
+    logger.error('Health analysis API error', { error });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }
@@ -220,12 +220,12 @@ export async function GET(request: NextRequest) {
     const { userId } = authResult.context;
 
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get("memberId");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const memberId = searchParams.get('memberId');
+    const limit = parseInt(searchParams.get('limit') || '10');
 
     if (!memberId) {
       return NextResponse.json(
-        { error: "Member ID is required" },
+        { error: 'Member ID is required' },
         { status: 400 },
       );
     }
@@ -235,7 +235,7 @@ export async function GET(request: NextRequest) {
 
     if (!memberData) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -249,12 +249,12 @@ export async function GET(request: NextRequest) {
         memberData.familyId,
         userId,
       );
-      isAdmin = role === "ADMIN";
+      isAdmin = role === 'ADMIN';
     }
 
     if (!isOwnMember && !isAdmin) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -267,9 +267,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ history });
   } catch (error) {
-    logger.error("Health analysis history API error", { error });
+    logger.error('Health analysis history API error', { error });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

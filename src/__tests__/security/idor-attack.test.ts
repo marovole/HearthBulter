@@ -1,6 +1,6 @@
 /**
  * IDOR (Insecure Direct Object Reference) 攻击测试
- * 
+ *
  * 验证用户无法访问其他用户的资源
  */
 
@@ -41,8 +41,13 @@ import {
 } from '@/lib/middleware/authorization';
 
 const mockAuth = auth as jest.MockedFunction<typeof auth>;
-const mockRequireMemberDataAccess = requireMemberDataAccess as jest.MockedFunction<typeof requireMemberDataAccess>;
-const mockRequireOwnership = requireOwnership as jest.MockedFunction<typeof requireOwnership>;
+const mockRequireMemberDataAccess =
+  requireMemberDataAccess as jest.MockedFunction<
+    typeof requireMemberDataAccess
+  >;
+const mockRequireOwnership = requireOwnership as jest.MockedFunction<
+  typeof requireOwnership
+>;
 
 describe('IDOR 攻击防护测试', () => {
   const attackerUserId = 'attacker-user-id';
@@ -51,7 +56,7 @@ describe('IDOR 攻击防护测试', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // 攻击者已认证
     mockAuth.mockResolvedValue({
       user: { id: attackerUserId, email: 'attacker@example.com' },
@@ -141,8 +146,11 @@ describe('IDOR 攻击防护测试', () => {
         reason: '此成员不属于您的家庭',
       });
 
-      const result = await requireMemberDataAccess(attackerUserId, victimMemberId);
-      
+      const result = await requireMemberDataAccess(
+        attackerUserId,
+        victimMemberId,
+      );
+
       expect(result.authorized).toBe(false);
       expect(result.reason).toContain('不属于');
     });
@@ -153,8 +161,12 @@ describe('IDOR 攻击防护测试', () => {
         reason: '您不是此资源的所有者',
       });
 
-      const result = await requireOwnership(attackerUserId, 'inventory_item', victimResourceId);
-      
+      const result = await requireOwnership(
+        attackerUserId,
+        'inventory_item',
+        victimResourceId,
+      );
+
       expect(result.authorized).toBe(false);
     });
   });
@@ -179,8 +191,16 @@ describe('IDOR 攻击防护测试', () => {
         reason: '资源不存在或无权访问',
       });
 
-      const result1 = await requireOwnership(attackerUserId, 'inventory_item', 'non-existent-1');
-      const result2 = await requireOwnership(attackerUserId, 'inventory_item', victimResourceId);
+      const result1 = await requireOwnership(
+        attackerUserId,
+        'inventory_item',
+        'non-existent-1',
+      );
+      const result2 = await requireOwnership(
+        attackerUserId,
+        'inventory_item',
+        victimResourceId,
+      );
 
       // 错误信息应该相同，不泄露资源是否存在
       expect(result1.reason).toBe(result2.reason);
@@ -209,7 +229,10 @@ describe('授权中间件集成测试', () => {
         memberId: 'valid-member-id',
       });
 
-      const result = await requireMemberDataAccess('user-id', 'valid-member-id');
+      const result = await requireMemberDataAccess(
+        'user-id',
+        'valid-member-id',
+      );
       expect(result.authorized).toBe(true);
     });
 
@@ -219,7 +242,10 @@ describe('授权中间件集成测试', () => {
         reason: '无权访问此成员数据',
       });
 
-      const result = await requireMemberDataAccess('user-id', 'other-member-id');
+      const result = await requireMemberDataAccess(
+        'user-id',
+        'other-member-id',
+      );
       expect(result.authorized).toBe(false);
     });
   });
@@ -231,7 +257,11 @@ describe('授权中间件集成测试', () => {
         resourceId: 'resource-id',
       });
 
-      const result = await requireOwnership('user-id', 'inventory_item', 'resource-id');
+      const result = await requireOwnership(
+        'user-id',
+        'inventory_item',
+        'resource-id',
+      );
       expect(result.authorized).toBe(true);
     });
 
@@ -241,7 +271,11 @@ describe('授权中间件集成测试', () => {
         reason: '您不是此资源的所有者',
       });
 
-      const result = await requireOwnership('user-id', 'inventory_item', 'other-resource');
+      const result = await requireOwnership(
+        'user-id',
+        'inventory_item',
+        'other-resource',
+      );
       expect(result.authorized).toBe(false);
     });
   });

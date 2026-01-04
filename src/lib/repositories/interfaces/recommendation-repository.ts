@@ -12,7 +12,11 @@
  * @module recommendation-repository
  */
 
-import type { DateRangeFilter, PaginatedResult, PaginationInput } from '../types/common';
+import type {
+  DateRangeFilter,
+  PaginatedResult,
+  PaginationInput,
+} from '../types/common';
 import type {
   RecommendationBehaviorDTO,
   RecommendationLogDTO,
@@ -147,7 +151,7 @@ export interface RecommendationRepository {
    */
   listCandidateRecipes(
     filters: RecommendationRecipeFilter,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<RecipeSummaryDTO>>;
 
   /**
@@ -162,7 +166,10 @@ export interface RecommendationRepository {
    * @param range - 时间范围（可选）
    * @returns 用户行为数据
    */
-  getRecipeBehavior(memberId: string, range?: DateRangeFilter): Promise<RecommendationBehaviorDTO>;
+  getRecipeBehavior(
+    memberId: string,
+    range?: DateRangeFilter,
+  ): Promise<RecommendationBehaviorDTO>;
 
   /**
    * 获取带有食谱详情的用户行为数据
@@ -175,7 +182,7 @@ export interface RecommendationRepository {
    */
   getDetailedRecipeBehavior(
     memberId: string,
-    options?: BehaviorDetailQueryOptions
+    options?: BehaviorDetailQueryOptions,
   ): Promise<RecommendationBehaviorWithDetailsDTO>;
 
   /**
@@ -188,7 +195,10 @@ export interface RecommendationRepository {
    * @param limit - 返回数量限制
    * @returns 相似食谱列表
    */
-  getSimilarRecipes(recipeId: string, limit?: number): Promise<RecipeSummaryDTO[]>;
+  getSimilarRecipes(
+    recipeId: string,
+    limit?: number,
+  ): Promise<RecipeSummaryDTO[]>;
 
   /**
    * 获取单个食谱的完整详情
@@ -205,7 +215,10 @@ export interface RecommendationRepository {
    * @param category - 可选的分类过滤
    * @returns 热门食谱列表
    */
-  listPopularRecipes(limit?: number, category?: string): Promise<RecipeDetailDTO[]>;
+  listPopularRecipes(
+    limit?: number,
+    category?: string,
+  ): Promise<RecipeDetailDTO[]>;
 
   /**
    * 查询用户当前生效的健康目标
@@ -247,7 +260,10 @@ export interface RecommendationRepository {
    * @param memberId - 成员ID
    * @param weights - 推荐权重配置
    */
-  upsertRecommendationWeights(memberId: string, weights: RecommendationWeightsDTO): Promise<void>;
+  upsertRecommendationWeights(
+    memberId: string,
+    weights: RecommendationWeightsDTO,
+  ): Promise<void>;
 
   /**
    * 更新 AI 学习到的用户偏好模型
@@ -257,7 +273,7 @@ export interface RecommendationRepository {
    */
   upsertLearnedUserPreferences(
     memberId: string,
-    payload: LearnedPreferenceInsightsDTO
+    payload: LearnedPreferenceInsightsDTO,
   ): Promise<void>;
 
   /**
@@ -286,7 +302,10 @@ export interface RecommendationRepository {
    * @param limit - 返回数量限制
    * @returns 共现食谱列表
    */
-  getRecipeCooccurrence(recipeId: string, limit?: number): Promise<Array<{ recipeId: string; count: number }>>;
+  getRecipeCooccurrence(
+    recipeId: string,
+    limit?: number,
+  ): Promise<Array<{ recipeId: string; count: number }>>;
 
   /**
    * 获取详细的候选食谱列表
@@ -297,6 +316,6 @@ export interface RecommendationRepository {
    */
   listDetailedCandidateRecipes(
     filters: RecommendationRecipeFilter,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<RecipeDetailDTO>>;
 }

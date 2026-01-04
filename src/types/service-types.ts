@@ -91,7 +91,12 @@ export type TaskActivityMetadata =
  * 购物清单活动元数据
  */
 export interface ShoppingActivityMetadata {
-  action: 'ADD_ITEM' | 'ASSIGN_ITEM' | 'PURCHASE_ITEM' | 'UPDATE_ITEM' | 'DELETE_ITEM';
+  action:
+    | 'ADD_ITEM'
+    | 'ASSIGN_ITEM'
+    | 'PURCHASE_ITEM'
+    | 'UPDATE_ITEM'
+    | 'DELETE_ITEM';
   itemId?: string;
   foodName?: string;
   assigneeName?: string;
@@ -218,7 +223,11 @@ export interface InventoryNotificationData {
 /**
  * 通知频率枚举
  */
-export type NotificationFrequency = 'IMMEDIATE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+export type NotificationFrequency =
+  | 'IMMEDIATE'
+  | 'DAILY'
+  | 'WEEKLY'
+  | 'MONTHLY';
 
 /**
  * 通知配置

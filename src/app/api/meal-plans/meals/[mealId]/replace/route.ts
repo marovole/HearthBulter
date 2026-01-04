@@ -14,7 +14,7 @@ import { mealPlanner } from '@/lib/services/meal-planner';
 export const dynamic = 'force-dynamic';
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise<{ mealId: string }> }
+  { params }: { params: Promise<{ mealId: string }> },
 ) {
   try {
     const { mealId } = await params;
@@ -52,14 +52,18 @@ export async function POST(
     }
 
     const isCreator = meal.plan.member.family.creatorId === session.user.id;
-    const isAdmin = meal.plan.member.family.members[0]?.role === 'ADMIN' || isCreator;
+    const isAdmin =
+      meal.plan.member.family.members[0]?.role === 'ADMIN' || isCreator;
     const isSelf = meal.plan.member.userId === session.user.id;
     if (!isAdmin && !isSelf) {
       return NextResponse.json({ error: '无权限操作' }, { status: 403 });
     }
 
     const replaced = await mealPlanner.replaceMeal(mealId, meal.plan.memberId);
-    return NextResponse.json({ message: '替换成功', meal: replaced }, { status: 200 });
+    return NextResponse.json(
+      { message: '替换成功', meal: replaced },
+      { status: 200 },
+    );
   } catch (error) {
     console.error('替换餐食失败:', error);
     return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });

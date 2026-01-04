@@ -68,7 +68,7 @@ export interface BudgetRepository {
   listBudgets(
     memberId: string,
     filter?: { status?: BudgetDTO['status'] },
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<BudgetDTO>>;
 
   /**
@@ -92,7 +92,7 @@ export interface BudgetRepository {
    */
   listSpendings(
     filter: SpendingFilterDTO,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<SpendingDTO>>;
 
   /**

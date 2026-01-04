@@ -3,13 +3,13 @@
  * 提供统一的用户同意验证逻辑
  */
 
-import { NextResponse } from "next/server";
-import { consentManager } from "@/lib/services/consent-manager";
+import { NextResponse } from 'next/server';
+import { consentManager } from '@/lib/services/consent-manager';
 
 export type ConsentType =
-  | "ai_health_analysis"
-  | "medical_data_processing"
-  | "data_sharing";
+  | 'ai_health_analysis'
+  | 'medical_data_processing'
+  | 'data_sharing';
 
 export interface ConsentContext {
   grantedConsents: string[];
@@ -36,7 +36,7 @@ export async function checkConsent(
       success: false,
       response: NextResponse.json(
         {
-          error: "Required consent not granted",
+          error: 'Required consent not granted',
           requiredConsent: consentTypeInfo
             ? {
                 id: consentTypeInfo.id,
@@ -86,7 +86,7 @@ export async function checkMultipleConsents(
       success: false,
       response: NextResponse.json(
         {
-          error: "Required consents not granted",
+          error: 'Required consents not granted',
           requiredConsents: consentTypeInfos.map((type) => ({
             id: type?.id,
             name: type?.name,

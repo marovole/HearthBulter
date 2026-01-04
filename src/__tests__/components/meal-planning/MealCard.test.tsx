@@ -79,7 +79,7 @@ describe('MealCard', () => {
   it('should display ingredients list', () => {
     render(<MealCard meal={mockMeal} />);
 
-    mockMeal.ingredients.forEach(ingredient => {
+    mockMeal.ingredients.forEach((ingredient) => {
       expect(screen.getByText(ingredient.food.name)).toBeInTheDocument();
     });
   });
@@ -141,7 +141,9 @@ describe('MealCard', () => {
     render(<MealCard meal={breakfastMeal} />);
     expect(screen.getByText('早餐')).toBeInTheDocument();
 
-    const { unmount } = render(<MealCard meal={{ ...mockMeal, mealType: 'DINNER' as const }} />);
+    const { unmount } = render(
+      <MealCard meal={{ ...mockMeal, mealType: 'DINNER' as const }} />,
+    );
     expect(screen.getByText('晚餐')).toBeInTheDocument();
     unmount();
 

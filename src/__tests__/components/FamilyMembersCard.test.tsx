@@ -47,7 +47,7 @@ describe('FamilyMembersCard', () => {
     mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     expect(screen.getByText('加载家庭成员中...')).toBeInTheDocument();
   });
 
@@ -55,7 +55,7 @@ describe('FamilyMembersCard', () => {
     mockFetch.mockRejectedValueOnce(new Error('API Error'));
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('API Error')).toBeInTheDocument();
     });
@@ -93,11 +93,11 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('家庭成员')).toBeInTheDocument();
     });
-    
+
     expect(screen.getByText('张爸爸')).toBeInTheDocument();
     expect(screen.getByText('李妈妈')).toBeInTheDocument();
     expect(screen.getByText('85')).toBeInTheDocument();
@@ -126,15 +126,15 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('家庭成员')).toBeInTheDocument();
     });
-    
+
     // Find and click the list view button
     const listViewButton = screen.getByLabelText('列表视图');
     fireEvent.click(listViewButton);
-    
+
     // Verify the view changed (list view should have different layout)
     expect(screen.getByText('张爸爸')).toBeInTheDocument();
   });
@@ -161,15 +161,15 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('张爸爸')).toBeInTheDocument();
     });
-    
+
     // Click on the member card
     const memberCard = screen.getByText('张爸爸').closest('div');
     fireEvent.click(memberCard!);
-    
+
     expect(defaultProps.onMemberSelect).toHaveBeenCalledWith('1');
   });
 
@@ -204,7 +204,7 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('管理员')).toBeInTheDocument();
       expect(screen.getByText('儿童')).toBeInTheDocument();
@@ -233,7 +233,7 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('减重5kg')).toBeInTheDocument();
       expect(screen.getByText('血压控制')).toBeInTheDocument();
@@ -249,7 +249,7 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('暂无家庭成员')).toBeInTheDocument();
     });
@@ -285,11 +285,11 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('家庭统计')).toBeInTheDocument();
     });
-    
+
     expect(screen.getByText('2')).toBeInTheDocument(); // Total members
     expect(screen.getByText('86.5')).toBeInTheDocument(); // Average health score
   });
@@ -324,16 +324,16 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('张爸爸')).toBeInTheDocument();
       expect(screen.getByText('李妈妈')).toBeInTheDocument();
     });
-    
+
     // Type in search box
     const searchInput = screen.getByPlaceholderText('搜索成员...');
     fireEvent.change(searchInput, { target: { value: '张爸爸' } });
-    
+
     // Should only show 张爸爸
     expect(screen.getByText('张爸爸')).toBeInTheDocument();
     expect(screen.queryByText('李妈妈')).not.toBeInTheDocument();
@@ -346,10 +346,10 @@ describe('FamilyMembersCard', () => {
     });
 
     render(<FamilyMembersCard {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/dashboard/family-members?familyId=test-family-1'
+        '/api/dashboard/family-members?familyId=test-family-1',
       );
     });
   });

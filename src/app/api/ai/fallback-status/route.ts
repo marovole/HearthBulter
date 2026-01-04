@@ -16,10 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // 检查管理员权限
@@ -27,14 +24,14 @@ export async function GET(request: NextRequest) {
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Admin permission required' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 速率限制检查
     const rateLimitResult = await rateLimiter.checkLimit(
       session.user.id,
-      'ai_general'
+      'ai_general',
     );
 
     if (!rateLimitResult.allowed) {
@@ -51,7 +48,7 @@ export async function GET(request: NextRequest) {
             'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
             'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
           },
-        }
+        },
       );
     }
 
@@ -61,7 +58,11 @@ export async function GET(request: NextRequest) {
     const rateLimitStats = await rateLimiter.getStats();
 
     // 系统健康度评估
-    const healthScore = calculateSystemHealthScore(fallbackStats, cacheStats, rateLimitStats);
+    const healthScore = calculateSystemHealthScore(
+      fallbackStats,
+      cacheStats,
+      rateLimitStats,
+    );
 
     // 生成系统状态报告
     const statusReport = {
@@ -82,22 +83,28 @@ export async function GET(request: NextRequest) {
           misses: cacheStats.misses,
         },
         rateLimit: {
-          status: rateLimitStats.activeRecords < rateLimitStats.totalRecords * 0.8 ? 'healthy' : 'high_load',
+          status:
+            rateLimitStats.activeRecords < rateLimitStats.totalRecords * 0.8
+              ? 'healthy'
+              : 'high_load',
           activeRecords: rateLimitStats.activeRecords,
           totalRecords: rateLimitStats.totalRecords,
         },
       },
-      recommendations: generateHealthRecommendations(fallbackStats, cacheStats, rateLimitStats),
+      recommendations: generateHealthRecommendations(
+        fallbackStats,
+        cacheStats,
+        rateLimitStats,
+      ),
       alerts: generateAlerts(fallbackStats, cacheStats, rateLimitStats),
     };
 
     return NextResponse.json(statusReport);
-
   } catch (error) {
     console.error('Fallback status API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -106,10 +113,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // 检查管理员权限
@@ -117,7 +121,7 @@ export async function POST(request: NextRequest) {
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Admin permission required' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -139,17 +143,13 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ message: 'Cache stats reset successfully' });
     } else {
-      return NextResponse.json(
-        { error: 'Invalid action' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-
   } catch (error) {
     console.error('Fallback management API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
 function calculateSystemHealthScore(
   fallbackStats: any,
   cacheStats: any,
-  rateLimitStats: any
+  rateLimitStats: any,
 ): number {
   let score = 100;
 
@@ -170,9 +170,9 @@ function calculateSystemHealthScore(
   }
 
   // 熔断器影响 (-40分如果有熔断器开启)
-  const openCircuitBreakers = Object.values(fallbackStats.circuitBreakerStatus).filter(
-    (status: any) => status === true
-  ).length;
+  const openCircuitBreakers = Object.values(
+    fallbackStats.circuitBreakerStatus,
+  ).filter((status: any) => status === true).length;
   if (openCircuitBreakers > 0) {
     score -= openCircuitBreakers * 40;
   }
@@ -199,7 +199,7 @@ function calculateSystemHealthScore(
 function generateHealthRecommendations(
   fallbackStats: any,
   cacheStats: any,
-  rateLimitStats: any
+  rateLimitStats: any,
 ): string[] {
   const recommendations: string[] = [];
 
@@ -208,7 +208,11 @@ function generateHealthRecommendations(
     recommendations.push('检测到AI服务失败，建议检查API配置和连接状态');
   }
 
-  if (Object.values(fallbackStats.circuitBreakerStatus).some((status: any) => status)) {
+  if (
+    Object.values(fallbackStats.circuitBreakerStatus).some(
+      (status: any) => status,
+    )
+  ) {
     recommendations.push('熔断器已激活，建议检查服务状态并等待恢复');
   }
 
@@ -234,7 +238,7 @@ function generateHealthRecommendations(
 function generateAlerts(
   fallbackStats: any,
   cacheStats: any,
-  rateLimitStats: any
+  rateLimitStats: any,
 ): Array<{
   level: 'info' | 'warning' | 'error' | 'critical';
   message: string;

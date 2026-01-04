@@ -24,7 +24,7 @@ export async function GET() {
       if (!user?.id) {
         return NextResponse.json(
           { status: 'error', error: '未授权访问' },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -33,7 +33,7 @@ export async function GET() {
       if (!authResult.authorized) {
         return NextResponse.json(
           { status: 'error', error: '需要管理员权限' },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -42,10 +42,13 @@ export async function GET() {
     const isConnected = await testDatabaseConnection();
 
     if (!isConnected) {
-      return NextResponse.json({
-        status: 'error',
-        error: 'Database connection test failed',
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          status: 'error',
+          error: 'Database connection test failed',
+        },
+        { status: 500 },
+      );
     }
 
     // 返回简化的状态信息（不暴露敏感配置）
@@ -64,7 +67,7 @@ export async function GET() {
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

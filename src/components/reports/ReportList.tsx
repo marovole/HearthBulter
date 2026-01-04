@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import type { MedicalReport, MedicalIndicator } from '@prisma/client';
 
 interface ReportListProps {
-  memberId: string
-  familyId?: string
-  onReportSelect?: (reportId: string) => void
+  memberId: string;
+  familyId?: string;
+  onReportSelect?: (reportId: string) => void;
 }
 
 interface ReportWithIndicators extends MedicalReport {
-  indicators: MedicalIndicator[]
+  indicators: MedicalIndicator[];
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -42,7 +42,10 @@ export function ReportList({
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const url = new URL(`/api/members/${memberId}/reports`, window.location.origin);
+      const url = new URL(
+        `/api/members/${memberId}/reports`,
+        window.location.origin,
+      );
       if (filter !== 'all') {
         url.searchParams.set('status', filter.toUpperCase());
       }
@@ -92,7 +95,7 @@ export function ReportList({
         `/api/members/${memberId}/reports/${reportId}`,
         {
           method: 'DELETE',
-        }
+        },
       );
 
       if (!response.ok) {
@@ -110,10 +113,10 @@ export function ReportList({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-600">加载中...</p>
+      <div className='flex items-center justify-center p-8'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4' />
+          <p className='text-sm text-gray-600'>加载中...</p>
         </div>
       </div>
     );
@@ -121,16 +124,16 @@ export function ReportList({
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-sm text-red-800">{error}</p>
+      <div className='p-4 bg-red-50 border border-red-200 rounded-md'>
+        <p className='text-sm text-red-800'>{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* 筛选器 */}
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <button
           onClick={() => setFilter('all')}
           className={`px-3 py-1 text-sm rounded-md ${
@@ -175,26 +178,26 @@ export function ReportList({
 
       {/* 报告列表 */}
       {reports.length === 0 ? (
-        <div className="p-8 text-center text-gray-500">
+        <div className='p-8 text-center text-gray-500'>
           <p>暂无报告</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className='space-y-3'>
           {reports.map((report) => {
             const abnormalCount = report.indicators.filter(
-              (ind) => ind.isAbnormal
+              (ind) => ind.isAbnormal,
             ).length;
 
             return (
               <div
                 key={report.id}
                 onClick={() => handleReportClick(report.id)}
-                className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                className='bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer'
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-medium text-gray-900">
+                <div className='flex items-center justify-between'>
+                  <div className='flex-1'>
+                    <div className='flex items-center space-x-3 mb-2'>
+                      <h3 className='font-medium text-gray-900'>
                         {report.fileName}
                       </h3>
                       <span
@@ -206,12 +209,12 @@ export function ReportList({
                       </span>
                     </div>
 
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className='flex items-center space-x-4 text-sm text-gray-600'>
                       {report.reportDate && (
                         <span>
                           报告日期:{' '}
                           {new Date(report.reportDate).toLocaleDateString(
-                            'zh-CN'
+                            'zh-CN',
                           )}
                         </span>
                       )}
@@ -222,7 +225,7 @@ export function ReportList({
                         <span>
                           识别到 {report.indicators.length} 项指标
                           {abnormalCount > 0 && (
-                            <span className="text-red-600 ml-1">
+                            <span className='text-red-600 ml-1'>
                               （{abnormalCount} 项异常）
                             </span>
                           )}
@@ -230,43 +233,43 @@ export function ReportList({
                       )}
                     </div>
 
-                    <div className="mt-2 text-xs text-gray-500">
+                    <div className='mt-2 text-xs text-gray-500'>
                       上传时间:{' '}
                       {new Date(report.createdAt).toLocaleString('zh-CN')}
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className='flex items-center space-x-2'>
                     <button
                       onClick={(e) => handleDelete(report.id, e)}
-                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                      title="删除报告"
+                      className='p-2 text-gray-400 hover:text-red-600 transition-colors'
+                      title='删除报告'
                     >
                       <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                        className='h-5 w-5'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
                       >
                         <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
                           strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
                         />
                       </svg>
                     </button>
                     <svg
-                      className="h-5 w-5 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      className='h-5 w-5 text-gray-400'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
                     >
                       <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
                         strokeWidth={2}
-                        d="M9 5l7 7-7 7"
+                        d='M9 5l7 7-7 7'
                       />
                     </svg>
                   </div>
@@ -279,4 +282,3 @@ export function ReportList({
     </div>
   );
 }
-

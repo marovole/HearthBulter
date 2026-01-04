@@ -8,8 +8,8 @@ export { HemaAdapter } from './hema-adapter';
 export { DingdongAdapter } from './dingdong-adapter';
 
 // 导出工厂类和便捷函数
-export { 
-  PlatformAdapterFactory, 
+export {
+  PlatformAdapterFactory,
   platformAdapterFactory,
   createPlatformAdapter,
   getSupportedPlatforms,

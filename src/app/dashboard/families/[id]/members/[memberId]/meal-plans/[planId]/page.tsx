@@ -8,10 +8,10 @@ import { MealPlanDetailClient } from './MealPlanDetailClient';
 
 interface MealPlanDetailPageProps {
   params: Promise<{
-    id: string
-    memberId: string
-    planId: string
-  }>
+    id: string;
+    memberId: string;
+    planId: string;
+  }>;
 }
 
 export default async function MealPlanDetailPage({
@@ -56,10 +56,7 @@ export default async function MealPlanDetailPage({
             },
           },
         },
-        orderBy: [
-          { date: 'asc' },
-          { mealType: 'asc' },
-        ],
+        orderBy: [{ date: 'asc' }, { mealType: 'asc' }],
       },
     },
   });
@@ -70,7 +67,8 @@ export default async function MealPlanDetailPage({
 
   // 验证权限
   const isCreator = mealPlan.member.family.creatorId === session.user.id;
-  const isAdmin = mealPlan.member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isAdmin =
+    mealPlan.member.family.members[0]?.role === 'ADMIN' || isCreator;
   const isSelf = mealPlan.member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
@@ -91,4 +89,3 @@ export default async function MealPlanDetailPage({
     />
   );
 }
-

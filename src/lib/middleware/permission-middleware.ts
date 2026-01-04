@@ -11,26 +11,26 @@ import { APIError, createErrorResponse } from '@/lib/errors/api-error';
 import { logger } from '@/lib/logger';
 
 export interface PermissionRequirement {
-  permissions: Permission[]
-  requireOwnership?: boolean
-  requireFamilyMembership?: boolean
-  customValidator?: (context: PermissionContext) => Promise<boolean>
+  permissions: Permission[];
+  requireOwnership?: boolean;
+  requireFamilyMembership?: boolean;
+  customValidator?: (context: PermissionContext) => Promise<boolean>;
 }
 
 export interface PermissionContext {
-  userId: string
-  familyId?: string
-  memberId?: string
-  userRole?: FamilyMemberRole
-  resourceOwnerId?: string
-  request: NextRequest
-  params?: Record<string, string>
+  userId: string;
+  familyId?: string;
+  memberId?: string;
+  userRole?: FamilyMemberRole;
+  resourceOwnerId?: string;
+  request: NextRequest;
+  params?: Record<string, string>;
 }
 
 export interface PermissionCheckResult {
-  allowed: boolean
-  reason?: string
-  context: PermissionContext
+  allowed: boolean;
+  reason?: string;
+  context: PermissionContext;
 }
 
 /**
@@ -38,7 +38,10 @@ export interface PermissionCheckResult {
  */
 export class PermissionMiddleware {
   private static instance: PermissionMiddleware;
-  private permissionCache = new Map<string, { role: FamilyMemberRole; timestamp: number }>();
+  private permissionCache = new Map<
+    string,
+    { role: FamilyMemberRole; timestamp: number }
+  >();
   private cacheTimeout = 5 * 60 * 1000; // 5分钟缓存
 
   static getInstance(): PermissionMiddleware {
@@ -55,11 +58,11 @@ export class PermissionMiddleware {
     request: NextRequest,
     requirements: PermissionRequirement[],
     context?: {
-      familyId?: string
-      memberId?: string
-      resourceOwnerId?: string
-      params?: Record<string, string>
-    }
+      familyId?: string;
+      memberId?: string;
+      resourceOwnerId?: string;
+      params?: Record<string, string>;
+    },
   ): Promise<PermissionCheckResult> {
     const requestId = this.generateRequestId();
     const startTime = Date.now();
@@ -81,11 +84,11 @@ export class PermissionMiddleware {
       const permissionContext = await this.buildPermissionContext(
         request,
         userId,
-        context
+        context,
       );
 
       // 3. 检查家庭成员权限（如果需要）
-      if (requirements.some(req => req.requireFamilyMembership)) {
+      if (requirements.some((req) => req.requireFamilyMembership)) {
         if (!permissionContext.familyId) {
           return {
             allowed: false,
@@ -107,7 +110,7 @@ export class PermissionMiddleware {
       for (const requirement of requirements) {
         const checkResult = await this.checkRequirement(
           permissionContext,
-          requirement
+          requirement,
         );
 
         if (!checkResult) {
@@ -122,7 +125,8 @@ export class PermissionMiddleware {
       // 5. 检查自定义验证器
       for (const requirement of requirements) {
         if (requirement.customValidator) {
-          const customResult = await requirement.customValidator(permissionContext);
+          const customResult =
+            await requirement.customValidator(permissionContext);
           if (!customResult) {
             return {
               allowed: false,
@@ -141,7 +145,7 @@ export class PermissionMiddleware {
         familyId: permissionContext.familyId,
         role: permissionContext.userRole,
         duration,
-        permissions: requirements.flatMap(req => req.permissions),
+        permissions: requirements.flatMap((req) => req.permissions),
       });
 
       return {
@@ -172,11 +176,11 @@ export class PermissionMiddleware {
     request: NextRequest,
     userId: string,
     context?: {
-      familyId?: string
-      memberId?: string
-      resourceOwnerId?: string
-      params?: Record<string, string>
-    }
+      familyId?: string;
+      memberId?: string;
+      resourceOwnerId?: string;
+      params?: Record<string, string>;
+    },
   ): Promise<PermissionContext> {
     const permissionContext: PermissionContext = {
       userId,
@@ -205,7 +209,7 @@ export class PermissionMiddleware {
     if (permissionContext.familyId) {
       permissionContext.userRole = await this.getUserRole(
         userId,
-        permissionContext.familyId
+        permissionContext.familyId,
       );
     }
 
@@ -217,7 +221,7 @@ export class PermissionMiddleware {
    */
   private async getUserRole(
     userId: string,
-    familyId: string
+    familyId: string,
   ): Promise<FamilyMemberRole | null> {
     const cacheKey = `${userId}:${familyId}`;
     const cached = this.permissionCache.get(cacheKey);
@@ -263,7 +267,7 @@ export class PermissionMiddleware {
    */
   private async checkRequirement(
     context: PermissionContext,
-    requirement: PermissionRequirement
+    requirement: PermissionRequirement,
   ): Promise<boolean> {
     // 检查角色权限
     if (!context.userRole) {
@@ -276,7 +280,7 @@ export class PermissionMiddleware {
         context.userRole,
         permission,
         context.resourceOwnerId,
-        context.userId
+        context.userId,
       );
 
       if (!hasPermit) {
@@ -360,14 +364,14 @@ export const requireAnyPermission = (permissions: Permission[]) => ({
   requireFamilyMembership: true,
   customValidator: async (context: PermissionContext) => {
     if (!context.userRole) return false;
-    
-    return permissions.some(permission => 
+
+    return permissions.some((permission) =>
       hasPermission(
         context.userRole!,
         permission,
         context.resourceOwnerId,
-        context.userId
-      )
+        context.userId,
+      ),
     );
   },
 });
@@ -377,16 +381,19 @@ export function withPermissions(
   requirements: PermissionRequirement[],
   handler: (
     request: NextRequest,
-    context: PermissionContext
-  ) => Promise<NextResponse>
+    context: PermissionContext,
+  ) => Promise<NextResponse>,
 ) {
-  return async (request: NextRequest, context?: { params?: Record<string, string> }) => {
+  return async (
+    request: NextRequest,
+    context?: { params?: Record<string, string> },
+  ) => {
     const result = await permissionMiddleware.checkPermissions(
       request,
       requirements,
       {
         params: context?.params,
-      }
+      },
     );
 
     if (!result.allowed) {
@@ -405,30 +412,33 @@ export const withAdminPermission = (handler: Function) =>
 export const withMemberPermission = (handler: Function) =>
   withPermissions(requirePermissions([Permission.VIEW_FAMILY_DATA]), handler);
 
-export const withTaskPermission = (action: 'create' | 'read' | 'update' | 'delete') => 
-  (handler: Function) => {
+export const withTaskPermission =
+  (action: 'create' | 'read' | 'update' | 'delete') => (handler: Function) => {
     const permissions = {
       create: [Permission.CREATE_TASK],
       read: [Permission.READ_TASK],
       update: [Permission.UPDATE_TASK],
       delete: [Permission.DELETE_TASK],
     };
-    
+
     return withPermissions(requirePermissions(permissions[action]!), handler);
   };
 
-export const withOwnershipPermission = (
-  permissions: Permission[],
-  resourceOwnerId: string
-) => (handler: Function) =>
-  withPermissions([
-    {
-      permissions,
-      requireOwnership: true,
-      requireFamilyMembership: true,
-      customValidator: async (context: PermissionContext) => {
-        return context.resourceOwnerId === resourceOwnerId ||
-               context.userRole === FamilyMemberRole.ADMIN;
-      },
-    },
-  ], handler);
+export const withOwnershipPermission =
+  (permissions: Permission[], resourceOwnerId: string) => (handler: Function) =>
+    withPermissions(
+      [
+        {
+          permissions,
+          requireOwnership: true,
+          requireFamilyMembership: true,
+          customValidator: async (context: PermissionContext) => {
+            return (
+              context.resourceOwnerId === resourceOwnerId ||
+              context.userRole === FamilyMemberRole.ADMIN
+            );
+          },
+        },
+      ],
+      handler,
+    );

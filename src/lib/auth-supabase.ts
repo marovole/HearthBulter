@@ -1,11 +1,16 @@
 /**
  * Supabase Authentication Adapter
- * 
+ *
  * 从 NextAuth.js 迁移到 Supabase Auth
  * 保持与原有认证 API 的兼容性
  */
 
-import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
+import {
+  createClient,
+  SupabaseClient,
+  User,
+  Session,
+} from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase-database';
 
 // Supabase 客户端配置
@@ -63,7 +68,9 @@ export class SupabaseAuthService {
   private supabase: SupabaseClient<Database>;
 
   constructor(isServer = false) {
-    this.supabase = isServer ? getSupabaseServiceClient() : getSupabaseAuthClient();
+    this.supabase = isServer
+      ? getSupabaseServiceClient()
+      : getSupabaseAuthClient();
   }
 
   /**
@@ -202,7 +209,10 @@ export class SupabaseAuthService {
   /**
    * 刷新会话
    */
-  async refreshSession(): Promise<{ session: Session | null; error: Error | null }> {
+  async refreshSession(): Promise<{
+    session: Session | null;
+    error: Error | null;
+  }> {
     try {
       const { data, error } = await this.supabase.auth.refreshSession();
 
@@ -286,7 +296,9 @@ export class SupabaseAuthService {
   /**
    * OAuth 登录 (Google, GitHub 等)
    */
-  async signInWithOAuth(provider: 'google' | 'github' | 'facebook'): Promise<{ error: Error | null }> {
+  async signInWithOAuth(
+    provider: 'google' | 'github' | 'facebook',
+  ): Promise<{ error: Error | null }> {
     try {
       const { error } = await this.supabase.auth.signInWithOAuth({
         provider,

@@ -3,9 +3,9 @@
  * 提供统一的认证检查逻辑
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { Session } from "next-auth";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from 'next/server';
+import { Session } from 'next-auth';
+import { auth } from '@/lib/auth';
 
 export interface AuthenticatedRequest extends NextRequest {
   session: Session;
@@ -30,7 +30,7 @@ export async function requireAuth(): Promise<AuthResult> {
   if (!session?.user?.id) {
     return {
       success: false,
-      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
     };
   }
 

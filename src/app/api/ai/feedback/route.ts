@@ -11,7 +11,9 @@ export const dynamic = 'force-static';
 export const revalidate = false;
 
 // 创建专门用于权限检查的 FamilyRepository 实例（不需要双写）
-const familyRepo = new SupabaseFamilyRepository(SupabaseClientManager.getInstance());
+const familyRepo = new SupabaseFamilyRepository(
+  SupabaseClientManager.getInstance(),
+);
 
 const DEFAULT_STATS_DAYS = 30;
 
@@ -25,10 +27,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -46,7 +45,7 @@ export async function POST(request: NextRequest) {
     if (!adviceId || !feedbackType) {
       return NextResponse.json(
         { error: 'Advice ID and feedback type are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -64,20 +63,24 @@ export async function POST(request: NextRequest) {
     // 根据反馈类型处理
     if (feedbackType === 'advice') {
       // 获取 AI 建议记录
-      const advice = await feedbackRepository.getAdviceByIdWithFeedback(adviceId);
+      const advice =
+        await feedbackRepository.getAdviceByIdWithFeedback(adviceId);
       if (!advice) {
         return NextResponse.json(
           { error: 'Feedback target not found' },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
       // 验证用户权限（是成员本人或家庭管理员）
-      const hasAccess = await verifyFamilyAccess(advice.memberId, session.user.id);
+      const hasAccess = await verifyFamilyAccess(
+        advice.memberId,
+        session.user.id,
+      );
       if (!hasAccess) {
         return NextResponse.json(
           { error: 'Member not found or access denied' },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -95,7 +98,7 @@ export async function POST(request: NextRequest) {
               liked_changes: liked ? ['整体优化'] : [],
               disliked_changes: disliked ? ['特定调整'] : [],
               comments: comments ?? '',
-            }
+            },
           );
         } catch (error) {
           console.warn('Recipe learning feedback failed:', error);
@@ -104,29 +107,36 @@ export async function POST(request: NextRequest) {
       }
     } else if (feedbackType === 'conversation') {
       // 获取 AI 对话记录
-      const conversation = await feedbackRepository.getConversationByIdWithFeedback(adviceId);
+      const conversation =
+        await feedbackRepository.getConversationByIdWithFeedback(adviceId);
       if (!conversation) {
         return NextResponse.json(
           { error: 'Feedback target not found' },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
       // 验证用户权限
-      const hasAccess = await verifyFamilyAccess(conversation.memberId, session.user.id);
+      const hasAccess = await verifyFamilyAccess(
+        conversation.memberId,
+        session.user.id,
+      );
       if (!hasAccess) {
         return NextResponse.json(
           { error: 'Member not found or access denied' },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
       // 追加反馈到 AI 对话（在最后一条消息上）
-      await feedbackRepository.appendConversationFeedback(adviceId, feedbackData);
+      await feedbackRepository.appendConversationFeedback(
+        adviceId,
+        feedbackData,
+      );
     } else {
       return NextResponse.json(
         { error: 'Unsupported feedback type' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -138,12 +148,11 @@ export async function POST(request: NextRequest) {
       message: 'Feedback submitted successfully',
       feedbackId: `${adviceId}_${Date.now()}`,
     });
-
   } catch (error) {
     console.error('Feedback API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -158,10 +167,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -171,7 +177,7 @@ export async function GET(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: 'Member ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -180,7 +186,7 @@ export async function GET(request: NextRequest) {
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'Member not found or access denied' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -188,7 +194,7 @@ export async function GET(request: NextRequest) {
     const feedbackStats = await feedbackRepository.fetchFeedbackStats(
       memberId,
       adviceType,
-      DEFAULT_STATS_DAYS
+      DEFAULT_STATS_DAYS,
     );
 
     return NextResponse.json({
@@ -197,12 +203,11 @@ export async function GET(request: NextRequest) {
       stats: feedbackStats,
       period: `last_${feedbackStats.periodDays}_days`,
     });
-
   } catch (error) {
     console.error('Feedback stats API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -216,7 +221,10 @@ export async function GET(request: NextRequest) {
  * @param userId - 用户 ID
  * @returns 是否有访问权限
  */
-async function verifyFamilyAccess(memberId: string, userId: string): Promise<boolean> {
+async function verifyFamilyAccess(
+  memberId: string,
+  userId: string,
+): Promise<boolean> {
   try {
     // 使用 FamilyRepository 获取成员信息
     const member = await familyRepo.getFamilyMemberById(memberId);
@@ -250,7 +258,7 @@ async function verifyFamilyAccess(memberId: string, userId: string): Promise<boo
 async function logFeedbackAnalytics(
   adviceId: string,
   feedbackType: string,
-  feedbackData: FeedbackData
+  feedbackData: FeedbackData,
 ) {
   console.log('Feedback analytics logged:', {
     adviceId,

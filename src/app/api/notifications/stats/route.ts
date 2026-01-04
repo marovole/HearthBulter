@@ -25,14 +25,14 @@ export async function GET(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: 'Member ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (days < 1 || days > 365) {
       return NextResponse.json(
         { error: 'Days must be between 1 and 365' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching notification stats:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notification stats' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -112,16 +112,16 @@ async function getSummaryStats(memberId: string, startDate: Date) {
   notifications?.forEach((notif: any) => {
     // 统计状态
     switch (notif.status) {
-    case 'SENT':
-      summary.sent++;
-      break;
-    case 'FAILED':
-      summary.failed++;
-      break;
-    case 'PENDING':
-    case 'SENDING':
-      summary.pending++;
-      break;
+      case 'SENT':
+        summary.sent++;
+        break;
+      case 'FAILED':
+        summary.failed++;
+        break;
+      case 'PENDING':
+      case 'SENDING':
+        summary.pending++;
+        break;
     }
 
     // 统计已读/未读
@@ -159,13 +159,16 @@ async function getDailyStats(memberId: string, days: number) {
   }
 
   // 初始化每日统计容器
-  const dailyStatsMap: Record<string, {
-    date: string;
-    total: number;
-    sent: number;
-    failed: number;
-    pending: number;
-  }> = {};
+  const dailyStatsMap: Record<
+    string,
+    {
+      date: string;
+      total: number;
+      sent: number;
+      failed: number;
+      pending: number;
+    }
+  > = {};
 
   for (let i = 0; i < days; i++) {
     const date = new Date();
@@ -191,23 +194,24 @@ async function getDailyStats(memberId: string, days: number) {
       stats.total++;
 
       switch (notif.status) {
-      case 'SENT':
-        stats.sent++;
-        break;
-      case 'FAILED':
-        stats.failed++;
-        break;
-      case 'PENDING':
-      case 'SENDING':
-        stats.pending++;
-        break;
+        case 'SENT':
+          stats.sent++;
+          break;
+        case 'FAILED':
+          stats.failed++;
+          break;
+        case 'PENDING':
+        case 'SENDING':
+          stats.pending++;
+          break;
       }
     }
   });
 
   // 转换为数组并按日期正序排列
-  return Object.values(dailyStatsMap)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  return Object.values(dailyStatsMap).sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
 }
 
 /**
@@ -244,12 +248,15 @@ async function getChannelStats(memberId: string, startDate: Date) {
   }
 
   // 内存中分组统计
-  const channelStats: Record<string, {
-    total: number;
-    sent: number;
-    failed: number;
-    successRate: number;
-  }> = {};
+  const channelStats: Record<
+    string,
+    {
+      total: number;
+      sent: number;
+      failed: number;
+      successRate: number;
+    }
+  > = {};
 
   logs?.forEach((log: any) => {
     const channel = log.channel;
@@ -273,10 +280,11 @@ async function getChannelStats(memberId: string, startDate: Date) {
   });
 
   // 计算成功率
-  Object.values(channelStats).forEach(stats => {
-    stats.successRate = stats.total > 0
-      ? Math.round((stats.sent / stats.total) * 100 * 100) / 100 // 保留2位小数
-      : 0;
+  Object.values(channelStats).forEach((stats) => {
+    stats.successRate =
+      stats.total > 0
+        ? Math.round((stats.sent / stats.total) * 100 * 100) / 100 // 保留2位小数
+        : 0;
   });
 
   return channelStats;

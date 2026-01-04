@@ -11,7 +11,7 @@ import { reportGenerator } from '@/lib/services/report-generator';
 export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean; member: any }> {
   const member = await prisma.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },
@@ -60,22 +60,19 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || 'weekly'; // weekly 或 monthly
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少成员ID参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少成员ID参数' }, { status: 400 });
     }
 
     // 验证权限
     const { hasAccess, member } = await verifyMemberAccess(
       memberId,
-      session.user.id
+      session.user.id,
     );
 
     if (!hasAccess || !member) {
       return NextResponse.json(
         { error: '无权限访问该成员的报告数据' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -88,10 +85,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: report }, { status: 200 });
   } catch (error) {
     console.error('生成报告失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

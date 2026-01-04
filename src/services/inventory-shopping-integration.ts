@@ -1,36 +1,44 @@
-import { PrismaClient, ShoppingItem, ListStatus, InventoryStatus, FoodCategory } from '@prisma/client';
+import {
+  PrismaClient,
+  ShoppingItem,
+  ListStatus,
+  InventoryStatus,
+  FoodCategory,
+} from '@prisma/client';
 import { inventoryTracker } from './inventory-tracker';
 
 const prisma = new PrismaClient();
 
 export interface ShoppingSuggestion {
-  foodId: string
-  foodName: string
-  category: string
-  suggestedQuantity: number
-  unit: string
-  reason: string
-  priority: 'HIGH' | 'MEDIUM' | 'LOW'
-  estimatedPrice?: number
-  currentStock?: number
-  minStockThreshold?: number
+  foodId: string;
+  foodName: string;
+  category: string;
+  suggestedQuantity: number;
+  unit: string;
+  reason: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  estimatedPrice?: number;
+  currentStock?: number;
+  minStockThreshold?: number;
 }
 
 export interface InventoryBasedShoppingList {
-  id: string
-  name: string
-  suggestions: ShoppingSuggestion[]
-  totalEstimatedCost: number
-  highPriorityCount: number
-  mediumPriorityCount: number
-  lowPriorityCount: number
+  id: string;
+  name: string;
+  suggestions: ShoppingSuggestion[];
+  totalEstimatedCost: number;
+  highPriorityCount: number;
+  mediumPriorityCount: number;
+  lowPriorityCount: number;
 }
 
 export class InventoryShoppingIntegration {
   /**
    * 基于库存状态生成购物建议
    */
-  async generateShoppingSuggestions(memberId: string): Promise<ShoppingSuggestion[]> {
+  async generateShoppingSuggestions(
+    memberId: string,
+  ): Promise<ShoppingSuggestion[]> {
     const suggestions: ShoppingSuggestion[] = [];
 
     // 1. 基于库存不足的物品
@@ -80,7 +88,8 @@ export class InventoryShoppingIntegration {
       });
 
       const weeklyUsage = item.averageUsage * 7;
-      const shouldRestock = !currentStock || currentStock.quantity < weeklyUsage;
+      const shouldRestock =
+        !currentStock || currentStock.quantity < weeklyUsage;
 
       if (shouldRestock) {
         const suggestedQuantity = weeklyUsage * 2; // 建议采购2周用量
@@ -114,7 +123,7 @@ export class InventoryShoppingIntegration {
    */
   async createInventoryBasedShoppingList(
     memberId: string,
-    listName: string = '智能购物清单'
+    listName: string = '智能购物清单',
   ): Promise<InventoryBasedShoppingList> {
     const suggestions = await this.generateShoppingSuggestions(memberId);
 
@@ -122,9 +131,15 @@ export class InventoryShoppingIntegration {
     const totalEstimatedCost = await this.calculateEstimatedCost(suggestions);
 
     // 统计优先级分布
-    const highPriorityCount = suggestions.filter(s => s.priority === 'HIGH').length;
-    const mediumPriorityCount = suggestions.filter(s => s.priority === 'MEDIUM').length;
-    const lowPriorityCount = suggestions.filter(s => s.priority === 'LOW').length;
+    const highPriorityCount = suggestions.filter(
+      (s) => s.priority === 'HIGH',
+    ).length;
+    const mediumPriorityCount = suggestions.filter(
+      (s) => s.priority === 'MEDIUM',
+    ).length;
+    const lowPriorityCount = suggestions.filter(
+      (s) => s.priority === 'LOW',
+    ).length;
 
     // 创建购物清单
     const shoppingList = await prisma.shoppingList.create({
@@ -169,15 +184,15 @@ export class InventoryShoppingIntegration {
     listId: string,
     memberId: string,
     purchasedItems: Array<{
-      shoppingItemId: string
-      actualQuantity: number
-      actualPrice?: number
-    }>
+      shoppingItemId: string;
+      actualQuantity: number;
+      actualPrice?: number;
+    }>,
   ): Promise<{
-    success: boolean
-    addedItems: number
-    updatedItems: number
-    errors: string[]
+    success: boolean;
+    addedItems: number;
+    updatedItems: number;
+    errors: string[];
   }> {
     const result = {
       success: true,
@@ -205,9 +220,13 @@ export class InventoryShoppingIntegration {
 
       for (const purchasedItem of purchasedItems) {
         try {
-          const shoppingItem = shoppingList.items.find(item => item.id === purchasedItem.shoppingItemId);
+          const shoppingItem = shoppingList.items.find(
+            (item) => item.id === purchasedItem.shoppingItemId,
+          );
           if (!shoppingItem) {
-            result.errors.push(`购物项目 ${purchasedItem.shoppingItemId} 不存在`);
+            result.errors.push(
+              `购物项目 ${purchasedItem.shoppingItemId} 不存在`,
+            );
             continue;
           }
 
@@ -223,7 +242,8 @@ export class InventoryShoppingIntegration {
 
           if (existingItem) {
             // 更新现有库存
-            const newQuantity = existingItem.quantity + purchasedItem.actualQuantity;
+            const newQuantity =
+              existingItem.quantity + purchasedItem.actualQuantity;
             await inventoryTracker.updateInventoryItem(existingItem.id, {
               quantity: newQuantity,
               purchasePrice: purchasedItem.actualPrice,
@@ -254,15 +274,18 @@ export class InventoryShoppingIntegration {
               purchasedBy: memberId,
             },
           });
-
         } catch (error) {
-          result.errors.push(`处理购物项目 ${purchasedItem.shoppingItemId} 时出错: ${error}`);
+          result.errors.push(
+            `处理购物项目 ${purchasedItem.shoppingItemId} 时出错: ${error}`,
+          );
         }
       }
 
       // 更新购物清单状态
-      const allPurchased = shoppingList.items.every(item => 
-        purchasedItems.some(purchased => purchased.shoppingItemId === item.id)
+      const allPurchased = shoppingList.items.every((item) =>
+        purchasedItems.some(
+          (purchased) => purchased.shoppingItemId === item.id,
+        ),
       );
 
       if (allPurchased) {
@@ -270,13 +293,13 @@ export class InventoryShoppingIntegration {
           where: { id: listId },
           data: {
             status: ListStatus.COMPLETED,
-            actualCost: purchasedItems.reduce((sum, item) => 
-              sum + (item.actualPrice || 0), 0
+            actualCost: purchasedItems.reduce(
+              (sum, item) => sum + (item.actualPrice || 0),
+              0,
             ),
           },
         });
       }
-
     } catch (error) {
       result.success = false;
       result.errors.push(`同步失败: ${error}`);
@@ -288,11 +311,14 @@ export class InventoryShoppingIntegration {
   /**
    * 基于库存优化购物清单
    */
-  async optimizeShoppingList(listId: string, memberId: string): Promise<{
-    optimizedItems: ShoppingSuggestion[]
-    removedItems: string[]
-    addedItems: ShoppingSuggestion[]
-    savings: number
+  async optimizeShoppingList(
+    listId: string,
+    memberId: string,
+  ): Promise<{
+    optimizedItems: ShoppingSuggestion[];
+    removedItems: string[];
+    addedItems: ShoppingSuggestion[];
+    savings: number;
   }> {
     // 获取当前库存状态
     const currentInventory = await prisma.inventoryItem.findMany({
@@ -327,12 +353,18 @@ export class InventoryShoppingIntegration {
 
     // 检查每个购物项目
     for (const shoppingItem of shoppingList.items) {
-      const inventoryItem = currentInventory.find(item => item.foodId === shoppingItem.foodId);
-      
-      if (inventoryItem && inventoryItem.quantity > inventoryItem.minStockThreshold!) {
+      const inventoryItem = currentInventory.find(
+        (item) => item.foodId === shoppingItem.foodId,
+      );
+
+      if (
+        inventoryItem &&
+        inventoryItem.quantity > inventoryItem.minStockThreshold!
+      ) {
         // 库存充足，可以移除或减少数量
-        const excessQuantity = inventoryItem.quantity - (inventoryItem.minStockThreshold || 0);
-        
+        const excessQuantity =
+          inventoryItem.quantity - (inventoryItem.minStockThreshold || 0);
+
         if (excessQuantity >= shoppingItem.amount) {
           // 完全不需要购买
           removedItems.push(shoppingItem.id);
@@ -364,20 +396,24 @@ export class InventoryShoppingIntegration {
     }
 
     // 添加基于库存的额外建议
-    const additionalSuggestions = await this.generateShoppingSuggestions(memberId);
-    const newSuggestions = additionalSuggestions.filter(suggestion => 
-      !shoppingList.items.some(item => item.foodId === suggestion.foodId) &&
-      !optimizedItems.some(item => item.foodId === suggestion.foodId)
+    const additionalSuggestions =
+      await this.generateShoppingSuggestions(memberId);
+    const newSuggestions = additionalSuggestions.filter(
+      (suggestion) =>
+        !shoppingList.items.some((item) => item.foodId === suggestion.foodId) &&
+        !optimizedItems.some((item) => item.foodId === suggestion.foodId),
     );
 
     addedItems.push(...newSuggestions.slice(0, 5)); // 最多添加5个新建议
 
     // 计算节省金额
-    const originalCost = shoppingList.items.reduce((sum, item) => 
-      sum + (item.estimatedPrice || 0), 0
+    const originalCost = shoppingList.items.reduce(
+      (sum, item) => sum + (item.estimatedPrice || 0),
+      0,
     );
-    const optimizedCost = optimizedItems.reduce((sum, item) => 
-      sum + (item.estimatedPrice || 0), 0
+    const optimizedCost = optimizedItems.reduce(
+      (sum, item) => sum + (item.estimatedPrice || 0),
+      0,
     );
     const savings = originalCost - optimizedCost;
 
@@ -391,10 +427,13 @@ export class InventoryShoppingIntegration {
 
   // 私有方法
 
-  private calculateSuggestedQuantity(item: { quantity: number; minStockThreshold?: number | null }): number {
+  private calculateSuggestedQuantity(item: {
+    quantity: number;
+    minStockThreshold?: number | null;
+  }): number {
     const threshold = item.minStockThreshold || 1;
     const currentQuantity = item.quantity;
-    
+
     if (currentQuantity <= 0) {
       return threshold * 2; // 如果没有库存，建议采购2倍阈值
     } else {
@@ -404,53 +443,57 @@ export class InventoryShoppingIntegration {
 
   private async getFrequentUsageItems(memberId: string) {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
-    return prisma.inventoryUsage.groupBy({
-      by: ['inventoryItemId'],
-      where: {
-        memberId,
-        createdAt: { gte: thirtyDaysAgo },
-      },
-      _count: { id: true },
-      _sum: { usedQuantity: true },
-      orderBy: { _count: { id: 'desc' } },
-      take: 20,
-    }).then(async (results) => {
-      const items = await Promise.all(
-        results.map(async (result) => {
-          const item = await prisma.inventoryItem.findUnique({
-            where: { id: result.inventoryItemId },
-            include: {
-              food: {
-                select: {
-                  id: true,
-                  name: true,
-                  category: true,
+
+    return prisma.inventoryUsage
+      .groupBy({
+        by: ['inventoryItemId'],
+        where: {
+          memberId,
+          createdAt: { gte: thirtyDaysAgo },
+        },
+        _count: { id: true },
+        _sum: { usedQuantity: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 20,
+      })
+      .then(async (results) => {
+        const items = await Promise.all(
+          results.map(async (result) => {
+            const item = await prisma.inventoryItem.findUnique({
+              where: { id: result.inventoryItemId },
+              include: {
+                food: {
+                  select: {
+                    id: true,
+                    name: true,
+                    category: true,
+                  },
                 },
               },
-            },
-          });
-          return {
-            foodId: item!.foodId,
-            foodName: item!.food.name,
-            category: item!.food.category,
-            unit: item!.unit,
-            usageFrequency: result._count.id,
-            totalUsage: result._sum.usedQuantity || 0,
-            averageUsage: (result._sum.usedQuantity || 0) / result._count.id,
-          };
-        })
-      );
-      return items;
-    });
+            });
+            return {
+              foodId: item!.foodId,
+              foodName: item!.food.name,
+              category: item!.food.category,
+              unit: item!.unit,
+              usageFrequency: result._count.id,
+              totalUsage: result._sum.usedQuantity || 0,
+              averageUsage: (result._sum.usedQuantity || 0) / result._count.id,
+            };
+          }),
+        );
+        return items;
+      });
   }
 
-  private async getSeasonalSuggestions(memberId: string): Promise<ShoppingSuggestion[]> {
+  private async getSeasonalSuggestions(
+    memberId: string,
+  ): Promise<ShoppingSuggestion[]> {
     const currentMonth = new Date().getMonth();
     const seasonalItems = this.getSeasonalItems(currentMonth);
 
     const suggestions: ShoppingSuggestion[] = [];
-    
+
     for (const seasonalItem of seasonalItems) {
       const existingStock = await prisma.inventoryItem.findFirst({
         where: {
@@ -460,7 +503,10 @@ export class InventoryShoppingIntegration {
         },
       });
 
-      if (!existingStock || existingStock.quantity < seasonalItem.suggestedQuantity) {
+      if (
+        !existingStock ||
+        existingStock.quantity < seasonalItem.suggestedQuantity
+      ) {
         suggestions.push({
           foodId: seasonalItem.foodId,
           foodName: seasonalItem.name,
@@ -478,12 +524,32 @@ export class InventoryShoppingIntegration {
 
   private getSeasonalItems(month: number) {
     const seasonalMap = {
-      0: [ // 一月
-        { name: '白菜', category: 'VEGETABLES', suggestedQuantity: 2, unit: '颗', reason: '冬季蔬菜，适合储存' },
-        { name: '萝卜', category: 'VEGETABLES', suggestedQuantity: 3, unit: '根', reason: '冬季根茎类蔬菜' },
+      0: [
+        // 一月
+        {
+          name: '白菜',
+          category: 'VEGETABLES',
+          suggestedQuantity: 2,
+          unit: '颗',
+          reason: '冬季蔬菜，适合储存',
+        },
+        {
+          name: '萝卜',
+          category: 'VEGETABLES',
+          suggestedQuantity: 3,
+          unit: '根',
+          reason: '冬季根茎类蔬菜',
+        },
       ],
-      1: [ // 二月
-        { name: '土豆', category: 'VEGETABLES', suggestedQuantity: 5, unit: '斤', reason: '耐储存的根茎类' },
+      1: [
+        // 二月
+        {
+          name: '土豆',
+          category: 'VEGETABLES',
+          suggestedQuantity: 5,
+          unit: '斤',
+          reason: '耐储存的根茎类',
+        },
       ],
       // ... 其他月份的季节性建议
     };
@@ -491,14 +557,19 @@ export class InventoryShoppingIntegration {
     return seasonalMap[month as keyof typeof seasonalMap] || [];
   }
 
-  private deduplicateSuggestions(suggestions: ShoppingSuggestion[]): ShoppingSuggestion[] {
+  private deduplicateSuggestions(
+    suggestions: ShoppingSuggestion[],
+  ): ShoppingSuggestion[] {
     const uniqueMap = new Map<string, ShoppingSuggestion>();
 
     for (const suggestion of suggestions) {
       const existing = uniqueMap.get(suggestion.foodId);
-      
-      if (!existing || suggestion.priority === 'HIGH' || 
-          (suggestion.priority === 'MEDIUM' && existing.priority === 'LOW')) {
+
+      if (
+        !existing ||
+        suggestion.priority === 'HIGH' ||
+        (suggestion.priority === 'MEDIUM' && existing.priority === 'LOW')
+      ) {
         uniqueMap.set(suggestion.foodId, suggestion);
       }
     }
@@ -506,10 +577,13 @@ export class InventoryShoppingIntegration {
     return Array.from(uniqueMap.values());
   }
 
-  private async calculateEstimatedCost(suggestions: ShoppingSuggestion[]): Promise<number> {
+  private async calculateEstimatedCost(
+    suggestions: ShoppingSuggestion[],
+  ): Promise<number> {
     // 简化的成本估算，实际应该基于历史价格数据
-    return suggestions.reduce((sum, suggestion) => 
-      sum + (suggestion.estimatedPrice || 0), 0
+    return suggestions.reduce(
+      (sum, suggestion) => sum + (suggestion.estimatedPrice || 0),
+      0,
     );
   }
 
@@ -518,12 +592,12 @@ export class InventoryShoppingIntegration {
     let daysToAdd = 7;
 
     const expiryMap: { [key: string]: number } = {
-      'VEGETABLES': 5,
-      'FRUITS': 7,
-      'PROTEIN': 3,
-      'SEAFOOD': 2,
-      'DAIRY': 10,
-      'GRAINS': 30,
+      VEGETABLES: 5,
+      FRUITS: 7,
+      PROTEIN: 3,
+      SEAFOOD: 2,
+      DAIRY: 10,
+      GRAINS: 30,
     };
 
     daysToAdd = expiryMap[category] || 7;

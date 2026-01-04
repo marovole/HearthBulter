@@ -17,7 +17,7 @@ import type { FoodRecord } from '@/lib/repositories/interfaces/food-repository';
 export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -88,10 +88,7 @@ export async function GET(
     return NextResponse.json({ error: '食物不存在' }, { status: 404 });
   } catch (error) {
     console.error('获取食物详情失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -103,7 +100,9 @@ function parseFoodResponse(food: FoodRecord | any) {
     id: food.id,
     name: food.name,
     nameEn: food.nameEn,
-    aliases: Array.isArray(food.aliases) ? food.aliases : JSON.parse(food.aliases || '[]'),
+    aliases: Array.isArray(food.aliases)
+      ? food.aliases
+      : JSON.parse(food.aliases || '[]'),
     calories: food.calories,
     protein: food.protein,
     carbs: food.carbs,
@@ -124,4 +123,3 @@ function parseFoodResponse(food: FoodRecord | any) {
     updatedAt: food.updatedAt,
   };
 }
-

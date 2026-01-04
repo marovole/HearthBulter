@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { calculateHealthScore, saveHealthScore, getScoreTrend } from '@/lib/services/analytics/health-scorer';
+import {
+  calculateHealthScore,
+  saveHealthScore,
+  getScoreTrend,
+} from '@/lib/services/analytics/health-scorer';
 
 /**
  * GET /api/analytics/health-score
@@ -24,7 +28,7 @@ export async function GET(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: '缺少必要参数：memberId' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -47,10 +51,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to get health score:', error);
-    return NextResponse.json(
-      { error: '获取健康评分失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取健康评分失败' }, { status: 500 });
   }
 }
 
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: '缺少必要参数：memberId' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -85,10 +86,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to calculate health score:', error);
-    return NextResponse.json(
-      { error: '计算健康评分失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '计算健康评分失败' }, { status: 500 });
   }
 }
-

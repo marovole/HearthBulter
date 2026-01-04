@@ -3,10 +3,21 @@
  * 全面测试RBAC权限控制、权限验证中间件、权限缓存等
  */
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import { NextRequest } from 'next/server';
 import { Permission, FamilyMemberRole, hasPermission } from '@/lib/permissions';
-import { permissionMiddleware, PermissionRequirement, withPermissions } from '@/lib/middleware/permission-middleware';
+import {
+  permissionMiddleware,
+  PermissionRequirement,
+  withPermissions,
+} from '@/lib/middleware/permission-middleware';
 import { prisma } from '@/lib/db';
 
 describe('权限系统测试', () => {
@@ -97,13 +108,13 @@ describe('权限系统测试', () => {
         familyId: testFamilyId,
       },
     });
-    
+
     await prisma.family.delete({
       where: {
         id: testFamilyId,
       },
     });
-    
+
     permissionMiddleware.clearCache();
   });
 
@@ -115,8 +126,8 @@ describe('权限系统测试', () => {
   describe('基础权限验证测试', () => {
     test('管理员应该拥有所有权限', () => {
       const allPermissions = Object.values(Permission);
-      
-      allPermissions.forEach(permission => {
+
+      allPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.ADMIN, permission);
         expect(hasAccess).toBe(true);
       });
@@ -141,13 +152,13 @@ describe('权限系统测试', () => {
       ];
 
       // 测试成员拥有的权限
-      memberPermissions.forEach(permission => {
+      memberPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.MEMBER, permission);
         expect(hasAccess).toBe(true);
       });
 
       // 测试成员不拥有的权限
-      adminOnlyPermissions.forEach(permission => {
+      adminOnlyPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.MEMBER, permission);
         expect(hasAccess).toBe(false);
       });
@@ -172,13 +183,13 @@ describe('权限系统测试', () => {
       ];
 
       // 测试访客拥有的只读权限
-      guestPermissions.forEach(permission => {
+      guestPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.GUEST, permission);
         expect(hasAccess).toBe(true);
       });
 
       // 测试访客不拥有的读写权限
-      readWritePermissions.forEach(permission => {
+      readWritePermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.GUEST, permission);
         expect(hasAccess).toBe(false);
       });
@@ -189,7 +200,7 @@ describe('权限系统测试', () => {
     test('用户应该能更新自己创建的资源', () => {
       const resourceOwnerId = 'user-123';
       const currentUserId = 'user-123';
-      
+
       const permissions = [
         Permission.UPDATE_TASK,
         Permission.DELETE_TASK,
@@ -197,12 +208,12 @@ describe('权限系统测试', () => {
         Permission.DELETE_ACTIVITY,
       ];
 
-      permissions.forEach(permission => {
+      permissions.forEach((permission) => {
         const hasAccess = hasPermission(
           FamilyMemberRole.MEMBER,
           permission,
           resourceOwnerId,
-          currentUserId
+          currentUserId,
         );
         expect(hasAccess).toBe(true);
       });
@@ -211,7 +222,7 @@ describe('权限系统测试', () => {
     test('用户不应该能更新他人创建的资源', () => {
       const resourceOwnerId = 'user-123';
       const currentUserId = 'user-456';
-      
+
       const permissions = [
         Permission.UPDATE_TASK,
         Permission.DELETE_TASK,
@@ -219,12 +230,12 @@ describe('权限系统测试', () => {
         Permission.DELETE_ACTIVITY,
       ];
 
-      permissions.forEach(permission => {
+      permissions.forEach((permission) => {
         const hasAccess = hasPermission(
           FamilyMemberRole.MEMBER,
           permission,
           resourceOwnerId,
-          currentUserId
+          currentUserId,
         );
         expect(hasAccess).toBe(false);
       });
@@ -233,7 +244,7 @@ describe('权限系统测试', () => {
     test('管理员应该能更新任何资源', () => {
       const resourceOwnerId = 'user-123';
       const currentUserId = 'admin-user-456';
-      
+
       const permissions = [
         Permission.UPDATE_TASK,
         Permission.DELETE_TASK,
@@ -241,12 +252,12 @@ describe('权限系统测试', () => {
         Permission.DELETE_ACTIVITY,
       ];
 
-      permissions.forEach(permission => {
+      permissions.forEach((permission) => {
         const hasAccess = hasPermission(
           FamilyMemberRole.ADMIN,
           permission,
           resourceOwnerId,
-          currentUserId
+          currentUserId,
         );
         expect(hasAccess).toBe(true);
       });
@@ -262,9 +273,12 @@ describe('权限系统测试', () => {
         },
       ];
 
-      const mockRequest = new NextRequest('http://localhost:3000/api/families', {
-        method: 'GET',
-      });
+      const mockRequest = new NextRequest(
+        'http://localhost:3000/api/families',
+        {
+          method: 'GET',
+        },
+      );
 
       // 测试管理员权限
       const adminResult = await permissionMiddleware.checkPermissions(
@@ -273,7 +287,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testAdminId,
-        }
+        },
       );
 
       expect(adminResult.allowed).toBe(true);
@@ -286,7 +300,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testMemberId,
-        }
+        },
       );
 
       expect(memberResult.allowed).toBe(true);
@@ -299,7 +313,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testGuestId,
-        }
+        },
       );
 
       expect(guestResult.allowed).toBe(true);
@@ -314,9 +328,12 @@ describe('权限系统测试', () => {
         },
       ];
 
-      const mockRequest = new NextRequest('http://localhost:3000/api/families/manage', {
-        method: 'POST',
-      });
+      const mockRequest = new NextRequest(
+        'http://localhost:3000/api/families/manage',
+        {
+          method: 'POST',
+        },
+      );
 
       // 测试成员访问管理权限（应该被拒绝）
       const memberResult = await permissionMiddleware.checkPermissions(
@@ -325,7 +342,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testMemberId,
-        }
+        },
       );
 
       expect(memberResult.allowed).toBe(false);
@@ -338,7 +355,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testGuestId,
-        }
+        },
       );
 
       expect(guestResult.allowed).toBe(false);
@@ -353,9 +370,12 @@ describe('权限系统测试', () => {
         },
       ];
 
-      const mockRequest = new NextRequest('http://localhost:3000/api/families', {
-        method: 'GET',
-      });
+      const mockRequest = new NextRequest(
+        'http://localhost:3000/api/families',
+        {
+          method: 'GET',
+        },
+      );
 
       // 测试非家庭成员访问
       const result = await permissionMiddleware.checkPermissions(
@@ -364,7 +384,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: 'non-member-id',
-        }
+        },
       );
 
       expect(result.allowed).toBe(false);
@@ -395,7 +415,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testAdminId,
-        }
+        },
       );
 
       expect(adminResult.allowed).toBe(true);
@@ -407,7 +427,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testMemberId,
-        }
+        },
       );
 
       expect(memberResult.allowed).toBe(false);
@@ -424,9 +444,12 @@ describe('权限系统测试', () => {
         },
       ];
 
-      const mockRequest = new NextRequest('http://localhost:3000/api/families', {
-        method: 'GET',
-      });
+      const mockRequest = new NextRequest(
+        'http://localhost:3000/api/families',
+        {
+          method: 'GET',
+        },
+      );
 
       // 第一次请求（应该查询数据库）
       const startTime1 = performance.now();
@@ -436,7 +459,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testAdminId,
-        }
+        },
       );
       const duration1 = performance.now() - startTime1;
 
@@ -450,7 +473,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testAdminId,
-        }
+        },
       );
       const duration2 = performance.now() - startTime2;
 
@@ -497,7 +520,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testMember.id,
-        }
+        },
       );
 
       // 验证缓存存在
@@ -522,9 +545,9 @@ describe('权限系统测试', () => {
 
   describe('权限装饰器测试', () => {
     test('withPermissions装饰器应该正常工作', async () => {
-      const mockHandler = jest.fn().mockResolvedValue(
-        new Response('Success', { status: 200 })
-      );
+      const mockHandler = jest
+        .fn()
+        .mockResolvedValue(new Response('Success', { status: 200 }));
 
       const requirements = [
         {
@@ -537,7 +560,7 @@ describe('权限系统测试', () => {
 
       const mockRequest = new NextRequest('http://localhost:3000/api/test', {
         headers: {
-          'cookie': 'session=test-session',
+          cookie: 'session=test-session',
         },
       });
 
@@ -548,9 +571,9 @@ describe('权限系统测试', () => {
     });
 
     test('权限验证失败时应该返回错误响应', async () => {
-      const mockHandler = jest.fn().mockResolvedValue(
-        new Response('Success', { status: 200 })
-      );
+      const mockHandler = jest
+        .fn()
+        .mockResolvedValue(new Response('Success', { status: 200 }));
 
       const requirements = [
         {
@@ -576,9 +599,9 @@ describe('权限系统测试', () => {
         FamilyMemberRole.MEMBER,
         Permission.READ_TASK as any, // 使用any来测试边界情况
         undefined,
-        undefined
+        undefined,
       );
-      
+
       // 这里的测试需要根据实际的权限验证逻辑调整
       expect(typeof hasAccess).toBe('boolean');
     });
@@ -586,9 +609,9 @@ describe('权限系统测试', () => {
     test('应该正确处理无效角色', () => {
       const hasAccess = hasPermission(
         'INVALID_ROLE' as FamilyMemberRole,
-        Permission.READ_TASK
+        Permission.READ_TASK,
       );
-      
+
       expect(typeof hasAccess).toBe('boolean');
     });
 
@@ -608,10 +631,17 @@ describe('权限系统测试', () => {
         },
       ];
 
-      boundaryCases.forEach(({ role, permission, resourceOwnerId, currentUserId }) => {
-        const hasAccess = hasPermission(role, permission, resourceOwnerId, currentUserId);
-        expect(typeof hasAccess).toBe('boolean');
-      });
+      boundaryCases.forEach(
+        ({ role, permission, resourceOwnerId, currentUserId }) => {
+          const hasAccess = hasPermission(
+            role,
+            permission,
+            resourceOwnerId,
+            currentUserId,
+          );
+          expect(typeof hasAccess).toBe('boolean');
+        },
+      );
     });
   });
 
@@ -626,7 +656,7 @@ describe('权限系统测试', () => {
       for (let i = 0; i < iterations; i++) {
         const permission = permissions[i % permissions.length];
         const role = roles[i % roles.length];
-        
+
         hasPermission(role, permission);
       }
 
@@ -654,14 +684,10 @@ describe('权限系统测试', () => {
       const startTime = performance.now();
 
       for (let i = 0; i < iterations; i++) {
-        await permissionMiddleware.checkPermissions(
-          mockRequest,
-          requirements,
-          {
-            familyId: testFamilyId,
-            memberId: testAdminId,
-          }
-        );
+        await permissionMiddleware.checkPermissions(mockRequest, requirements, {
+          familyId: testFamilyId,
+          memberId: testAdminId,
+        });
       }
 
       const endTime = performance.now();
@@ -669,7 +695,9 @@ describe('权限系统测试', () => {
 
       // 100次中间件权限检查应该在合理时间内完成
       expect(duration).toBeLessThan(1000); // 1秒
-      console.log(`${iterations}次中间件权限检查耗时: ${duration.toFixed(2)}ms`);
+      console.log(
+        `${iterations}次中间件权限检查耗时: ${duration.toFixed(2)}ms`,
+      );
     });
   });
 
@@ -694,7 +722,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testAdminId,
-        }
+        },
       );
 
       // 验证日志是否被调用
@@ -721,7 +749,7 @@ describe('权限系统测试', () => {
         {
           familyId: testFamilyId,
           memberId: testMemberId, // 普通成员没有管理权限
-        }
+        },
       );
 
       // 验证错误日志是否被记录

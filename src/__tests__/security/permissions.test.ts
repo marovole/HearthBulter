@@ -3,7 +3,7 @@
  * Tests for role-based access control and authorization
  */
 
-type UserRole = 'ADMIN' | 'MEMBER'
+type UserRole = 'ADMIN' | 'MEMBER';
 type Action =
   | 'family.create'
   | 'family.read'
@@ -18,14 +18,14 @@ type Action =
   | 'healthGoal.create'
   | 'healthGoal.read'
   | 'healthGoal.update'
-  | 'healthGoal.delete'
+  | 'healthGoal.delete';
 
 interface PermissionContext {
-  userId: string
-  role: UserRole
-  familyId: string
-  resourceOwnerId?: string
-  isCreator?: boolean
+  userId: string;
+  role: UserRole;
+  familyId: string;
+  resourceOwnerId?: string;
+  isCreator?: boolean;
 }
 
 /**
@@ -87,7 +87,11 @@ function hasPermission(context: PermissionContext, action: Action): boolean {
 /**
  * Check if user belongs to family
  */
-function belongsToFamily(userId: string, familyId: string, memberIds: string[]): boolean {
+function belongsToFamily(
+  userId: string,
+  familyId: string,
+  memberIds: string[],
+): boolean {
   return memberIds.includes(userId);
 }
 
@@ -96,7 +100,7 @@ function belongsToFamily(userId: string, familyId: string, memberIds: string[]):
  */
 function canAccessCrossFamily(
   userFamilyId: string,
-  resourceFamilyId: string
+  resourceFamilyId: string,
 ): boolean {
   return userFamilyId === resourceFamilyId;
 }
@@ -211,9 +215,15 @@ describe('Permission Control System', () => {
           resourceOwnerId: 'member-1', // Same as userId
         };
 
-        expect(hasPermission(ownResourceContext, 'healthGoal.create')).toBe(false); // Still need ADMIN
-        expect(hasPermission(ownResourceContext, 'healthGoal.update')).toBe(true); // Can update own
-        expect(hasPermission(ownResourceContext, 'healthGoal.delete')).toBe(true); // Can delete own
+        expect(hasPermission(ownResourceContext, 'healthGoal.create')).toBe(
+          false,
+        ); // Still need ADMIN
+        expect(hasPermission(ownResourceContext, 'healthGoal.update')).toBe(
+          true,
+        ); // Can update own
+        expect(hasPermission(ownResourceContext, 'healthGoal.delete')).toBe(
+          true,
+        ); // Can delete own
       });
 
       it('should NOT be able to modify others health goals', () => {
@@ -223,10 +233,10 @@ describe('Permission Control System', () => {
         };
 
         expect(hasPermission(othersResourceContext, 'healthGoal.update')).toBe(
-          false
+          false,
         );
         expect(hasPermission(othersResourceContext, 'healthGoal.delete')).toBe(
-          false
+          false,
         );
       });
     });

@@ -3,7 +3,10 @@
  * Unit tests for nutrition calculation service
  */
 
-import { NutritionCalculator, UnitConverter } from '@/lib/services/nutrition-calculator';
+import {
+  NutritionCalculator,
+  UnitConverter,
+} from '@/lib/services/nutrition-calculator';
 import { prisma } from '@/lib/db';
 
 // Mock Prisma
@@ -39,9 +42,9 @@ describe('Nutrition Calculator', () => {
         vitaminC: null,
         calcium: null,
         iron: null,
-      }
+      };
 
-      ;(prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
+      (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
       const result = await calculator.calculateSingleFood('food-1', 100);
 
@@ -70,9 +73,9 @@ describe('Nutrition Calculator', () => {
         vitaminC: null,
         calcium: null,
         iron: null,
-      }
+      };
 
-      ;(prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
+      (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
       const result = await calculator.calculateSingleFood('food-1', 200);
 
@@ -83,7 +86,7 @@ describe('Nutrition Calculator', () => {
     });
 
     it('should return null for non-existent food', async () => {
-      ;(prisma.food.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.food.findUnique as jest.Mock).mockResolvedValue(null);
 
       const result = await calculator.calculateSingleFood('non-existent', 100);
 
@@ -105,9 +108,9 @@ describe('Nutrition Calculator', () => {
         vitaminC: 89.2,
         calcium: 47,
         iron: 0.7,
-      }
+      };
 
-      ;(prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
+      (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
       const result = await calculator.calculateSingleFood('food-1', 100);
 
@@ -155,9 +158,9 @@ describe('Nutrition Calculator', () => {
           calcium: null,
           iron: null,
         },
-      ]
+      ];
 
-      ;(prisma.food.findMany as jest.Mock).mockResolvedValue(mockFoods);
+      (prisma.food.findMany as jest.Mock).mockResolvedValue(mockFoods);
 
       const inputs = [
         { foodId: 'food-1', amount: 100 },
@@ -190,9 +193,9 @@ describe('Nutrition Calculator', () => {
           calcium: null,
           iron: null,
         },
-      ]
+      ];
 
-      ;(prisma.food.findMany as jest.Mock).mockResolvedValue(mockFoods);
+      (prisma.food.findMany as jest.Mock).mockResolvedValue(mockFoods);
 
       const inputs = [
         { foodId: 'food-1', amount: 100 },
@@ -222,9 +225,9 @@ describe('Nutrition Calculator', () => {
           calcium: 47,
           iron: 0.7,
         },
-      ]
+      ];
 
-      ;(prisma.food.findMany as jest.Mock).mockResolvedValue(mockFoods);
+      (prisma.food.findMany as jest.Mock).mockResolvedValue(mockFoods);
 
       const inputs = [{ foodId: 'food-1', amount: 100 }];
 
@@ -279,4 +282,3 @@ describe('Unit Converter', () => {
     });
   });
 });
-

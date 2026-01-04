@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/middleware/api-auth";
-import { checkAIRateLimit } from "@/lib/middleware/api-rate-limit";
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/middleware/api-auth';
+import { checkAIRateLimit } from '@/lib/middleware/api-rate-limit';
 import {
   healthReportGenerator,
   ReportType,
-} from "@/lib/services/ai/health-report-generator";
-import { prisma } from "@/lib/db";
-import { logger } from "@/lib/logger";
+} from '@/lib/services/ai/health-report-generator';
+import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const authResult = await requireAuth();
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     const rateLimitResult = await checkAIRateLimit(
       userId,
-      "ai_generate_report",
+      'ai_generate_report',
     );
     if (!rateLimitResult.success) return rateLimitResult.response;
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     if (!memberId || !startDate || !endDate) {
       return NextResponse.json(
-        { error: "Member ID, start date, and end date are required" },
+        { error: 'Member ID, start date, and end date are required' },
         { status: 400 },
       );
     }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
               members: {
                 some: {
                   userId,
-                  role: "ADMIN",
+                  role: 'ADMIN',
                 },
               },
             },
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (!member) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         dataSnapshot: JSON.stringify(reportData),
         insights: report.insights.length > 0 ? report.insights : null,
         overallScore:
-          report.sections.find((s) => s.id === "executive_summary")?.data
+          report.sections.find((s) => s.id === 'executive_summary')?.data
             ?.overall_score || null,
         htmlContent: report.htmlContent,
         status: report.status,
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       await prisma.aiAdvice.create({
         data: {
           memberId,
-          type: "REPORT_GENERATION",
+          type: 'REPORT_GENERATION',
           content: {
             reportId: savedReport.id,
             insights: report.insights,
@@ -124,9 +124,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error("Report generation API error", { error });
+    logger.error('Report generation API error', { error });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }
@@ -140,13 +140,13 @@ export async function GET(request: NextRequest) {
     const { userId } = authResult.context;
 
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get("memberId");
-    const reportType = searchParams.get("type") as ReportType;
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const memberId = searchParams.get('memberId');
+    const reportType = searchParams.get('type') as ReportType;
+    const limit = parseInt(searchParams.get('limit') || '10');
 
     if (!memberId) {
       return NextResponse.json(
-        { error: "Member ID is required" },
+        { error: 'Member ID is required' },
         { status: 400 },
       );
     }
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
               members: {
                 some: {
                   userId,
-                  role: "ADMIN",
+                  role: 'ADMIN',
                 },
               },
             },
@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
 
     if (!member) {
       return NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       );
     }
@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
         memberId,
         ...(reportType && { reportType: reportType.toUpperCase() as any }),
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: limit,
       select: {
         id: true,
@@ -202,9 +202,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ reports });
   } catch (error) {
-    logger.error("Report history API error", { error });
+    logger.error('Report history API error', { error });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }
@@ -226,7 +226,7 @@ async function collectReportData(
         lte: endDate,
       },
     },
-    orderBy: { date: "asc" },
+    orderBy: { date: 'asc' },
     select: {
       date: true,
       overallScore: true,
@@ -242,7 +242,7 @@ async function collectReportData(
         lte: endDate,
       },
     },
-    orderBy: { date: "asc" },
+    orderBy: { date: 'asc' },
     select: {
       date: true,
       targetCalories: true,
@@ -265,7 +265,7 @@ async function collectReportData(
         lte: endDate,
       },
     },
-    orderBy: { date: "asc" },
+    orderBy: { date: 'asc' },
     select: {
       date: true,
       exerciseMinutes: true,
@@ -282,7 +282,7 @@ async function collectReportData(
         lte: endDate,
       },
     },
-    orderBy: { measuredAt: "asc" },
+    orderBy: { measuredAt: 'asc' },
     select: {
       measuredAt: true,
       weight: true,
@@ -301,7 +301,7 @@ async function collectReportData(
         lte: endDate,
       },
     },
-    orderBy: { date: "asc" },
+    orderBy: { date: 'asc' },
     select: {
       date: true,
       mealType: true,
@@ -318,35 +318,35 @@ async function collectReportData(
     endDate,
     data: {
       health_scores: healthScores.map((h) => ({
-        date: h.date.toISOString().split("T")[0],
+        date: h.date.toISOString().split('T')[0],
         score: h.overallScore,
       })),
       nutrition_data: {
         calories: nutritionTargets.map((n) => ({
-          date: n.date.toISOString().split("T")[0],
+          date: n.date.toISOString().split('T')[0],
           actual: n.actualCalories,
           target: n.targetCalories,
         })),
         macros: {
           protein: nutritionTargets.map((n) => ({
-            date: n.date.toISOString().split("T")[0],
+            date: n.date.toISOString().split('T')[0],
             actual: n.actualProtein,
             target: n.targetProtein,
           })),
           carbs: nutritionTargets.map((n) => ({
-            date: n.date.toISOString().split("T")[0],
+            date: n.date.toISOString().split('T')[0],
             actual: n.actualCarbs,
             target: n.targetCarbs,
           })),
           fat: nutritionTargets.map((n) => ({
-            date: n.date.toISOString().split("T")[0],
+            date: n.date.toISOString().split('T')[0],
             actual: n.actualFat,
             target: n.targetFat,
           })),
         },
       },
       activity_data: auxiliaryTrackings.map((a) => ({
-        date: a.date.toISOString().split("T")[0],
+        date: a.date.toISOString().split('T')[0],
         exercise_minutes: a.exerciseMinutes || 0,
         water_intake: a.waterIntake || 0,
       })),
@@ -354,25 +354,25 @@ async function collectReportData(
         weight: healthMetrics
           .filter((h) => h.weight)
           .map((h) => ({
-            date: h.measuredAt.toISOString().split("T")[0],
+            date: h.measuredAt.toISOString().split('T')[0],
             value: h.weight!,
           })),
         blood_pressure: healthMetrics
           .filter((h) => h.bloodPressureSystolic && h.bloodPressureDiastolic)
           .map((h) => ({
-            date: h.measuredAt.toISOString().split("T")[0],
+            date: h.measuredAt.toISOString().split('T')[0],
             systolic: h.bloodPressureSystolic!,
             diastolic: h.bloodPressureDiastolic!,
           })),
         heart_rate: healthMetrics
           .filter((h) => h.heartRate)
           .map((h) => ({
-            date: h.measuredAt.toISOString().split("T")[0],
+            date: h.measuredAt.toISOString().split('T')[0],
             value: h.heartRate!,
           })),
       },
       meal_logs: mealLogs.reduce((acc, log) => {
-        const dateKey = log.date.toISOString().split("T")[0];
+        const dateKey = log.date.toISOString().split('T')[0];
         if (!acc[dateKey]) {
           acc[dateKey] = { date: dateKey, meals: [] };
         }

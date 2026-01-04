@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import { getCurrentUser } from "@/lib/auth";
-import { inventoryRepository } from "@/lib/repositories/inventory-repository-singleton";
-import { requireMemberDataAccess } from "@/lib/middleware/authorization";
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { getCurrentUser } from '@/lib/auth';
+import { inventoryRepository } from '@/lib/repositories/inventory-repository-singleton';
+import { requireMemberDataAccess } from '@/lib/middleware/authorization';
 import type {
   InventoryItemCreateDTO,
   InventoryItemFilterDTO,
-} from "@/lib/repositories/types/inventory";
+} from '@/lib/repositories/types/inventory';
 import {
   validateBody,
   validationErrorResponse,
-} from "@/lib/validation/api-validator";
+} from '@/lib/validation/api-validator';
 
 /**
  * GET /api/inventory/items
@@ -21,26 +21,26 @@ import {
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user?.id) {
-      return NextResponse.json({ error: "未授权" }, { status: 401 });
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get("memberId");
+    const memberId = searchParams.get('memberId');
 
     if (!memberId) {
-      return NextResponse.json({ error: "缺少成员ID" }, { status: 400 });
+      return NextResponse.json({ error: '缺少成员ID' }, { status: 400 });
     }
 
     // 验证用户对该成员数据的访问权限
     const accessResult = await requireMemberDataAccess(user.id, memberId);
     if (!accessResult.authorized) {
       return NextResponse.json(
-        { error: accessResult.reason || "无权访问此成员数据" },
+        { error: accessResult.reason || '无权访问此成员数据' },
         { status: 403 },
       );
     }
@@ -48,33 +48,33 @@ export async function GET(request: NextRequest) {
     // 构建过滤器
     const filter: InventoryItemFilterDTO = {};
 
-    const status = searchParams.get("status");
+    const status = searchParams.get('status');
     if (status) {
-      filter.status = status as InventoryItemFilterDTO["status"];
+      filter.status = status as InventoryItemFilterDTO['status'];
     }
 
-    const storageLocation = searchParams.get("storageLocation");
+    const storageLocation = searchParams.get('storageLocation');
     if (storageLocation) {
       filter.storageLocation =
-        storageLocation as InventoryItemFilterDTO["storageLocation"];
+        storageLocation as InventoryItemFilterDTO['storageLocation'];
     }
 
-    const category = searchParams.get("category");
+    const category = searchParams.get('category');
     if (category) {
       filter.category = category;
     }
 
-    const isExpiring = searchParams.get("isExpiring") === "true";
+    const isExpiring = searchParams.get('isExpiring') === 'true';
     if (isExpiring) {
       filter.isExpiring = true;
     }
 
-    const isExpired = searchParams.get("isExpired") === "true";
+    const isExpired = searchParams.get('isExpired') === 'true';
     if (isExpired) {
       filter.isExpired = true;
     }
 
-    const isLowStock = searchParams.get("isLowStock") === "true";
+    const isLowStock = searchParams.get('isLowStock') === 'true';
     if (isLowStock) {
       filter.isLowStock = true;
     }
@@ -92,9 +92,9 @@ export async function GET(request: NextRequest) {
       count: result.items?.length || 0,
     });
   } catch (error) {
-    console.error("获取库存列表失败:", error);
+    console.error('获取库存列表失败:', error);
     return NextResponse.json(
-      { error: "获取库存列表失败", details: error },
+      { error: '获取库存列表失败', details: error },
       { status: 500 },
     );
   }
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user?.id) {
-      return NextResponse.json({ error: "未授权" }, { status: 401 });
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const validation = await validateBody(request, inventoryCreateSchema);
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     }
     const body = validation.data;
 
-    const requiredFields = ["memberId", "foodId", "quantity", "unit"];
+    const requiredFields = ['memberId', 'foodId', 'quantity', 'unit'];
     for (const field of requiredFields) {
       if (!body[field]) {
         return NextResponse.json(
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     const accessResult = await requireMemberDataAccess(user.id, body.memberId);
     if (!accessResult.authorized) {
       return NextResponse.json(
-        { error: accessResult.reason || "无权访问此成员数据" },
+        { error: accessResult.reason || '无权访问此成员数据' },
         { status: 403 },
       );
     }
@@ -142,24 +142,24 @@ export async function POST(request: NextRequest) {
 
     // Verify member exists
     const { data: member, error: memberError } = await supabase
-      .from("family_members")
-      .select("id")
-      .eq("id", body.memberId)
+      .from('family_members')
+      .select('id')
+      .eq('id', body.memberId)
       .single();
 
     if (memberError || !member) {
-      return NextResponse.json({ error: "成员不存在" }, { status: 404 });
+      return NextResponse.json({ error: '成员不存在' }, { status: 404 });
     }
 
     // Verify food exists
     const { data: food, error: foodError } = await supabase
-      .from("foods")
-      .select("id, category")
-      .eq("id", body.foodId)
+      .from('foods')
+      .select('id, category')
+      .eq('id', body.foodId)
       .single();
 
     if (foodError || !food) {
-      return NextResponse.json({ error: "食物不存在" }, { status: 404 });
+      return NextResponse.json({ error: '食物不存在' }, { status: 404 });
     }
 
     // 构建 InventoryItemCreateDTO
@@ -193,12 +193,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: item,
-      message: "库存条目创建成功",
+      message: '库存条目创建成功',
     });
   } catch (error) {
-    console.error("创建库存条目失败:", error);
+    console.error('创建库存条目失败:', error);
     return NextResponse.json(
-      { error: "创建库存条目失败", details: error },
+      { error: '创建库存条目失败', details: error },
       { status: 500 },
     );
   }
@@ -211,7 +211,7 @@ const inventoryCreateSchema = z.object({
     .union([z.string(), z.number()])
     .transform((val) => Number(val))
     .refine((val) => Number.isFinite(val) && val > 0, {
-      message: "数量必须为正数",
+      message: '数量必须为正数',
     }),
   unit: z.string().min(1),
   purchasePrice: z
@@ -219,7 +219,7 @@ const inventoryCreateSchema = z.object({
     .optional()
     .transform((val) => (val === undefined ? undefined : Number(val)))
     .refine((val) => val === undefined || Number.isFinite(val), {
-      message: "价格必须为数字",
+      message: '价格必须为数字',
     }),
   purchaseSource: z.string().optional(),
   expiryDate: z.string().datetime().optional(),
@@ -231,7 +231,7 @@ const inventoryCreateSchema = z.object({
     .optional()
     .transform((val) => (val === undefined ? undefined : Number(val)))
     .refine((val) => val === undefined || Number.isFinite(val), {
-      message: "库存阈值必须为数字",
+      message: '库存阈值必须为数字',
     }),
   barcode: z.string().optional(),
   brand: z.string().optional(),

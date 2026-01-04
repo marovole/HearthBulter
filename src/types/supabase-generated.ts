@@ -25,7 +25,9 @@ export interface Database {
       family_invitations: {
         Row: FamilyInvitation;
         Insert: Omit<FamilyInvitation, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<FamilyInvitation, 'id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<
+          Omit<FamilyInvitation, 'id' | 'created_at' | 'updated_at'>
+        >;
       };
       budget: {
         Row: Budget;
@@ -50,7 +52,9 @@ export interface Database {
       inventory_items: {
         Row: InventoryItem;
         Insert: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<
+          Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>
+        >;
       };
       foods: {
         Row: Food;
@@ -112,9 +116,12 @@ export interface Database {
 }
 
 // 基础类型
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
-export type InsertTables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
-export type UpdateTables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row'];
+export type InsertTables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Insert'];
+export type UpdateTables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Update'];
 
 // 核心表类型
 export type User = {

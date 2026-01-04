@@ -15,103 +15,103 @@ import type {
  * 设备连接输入类型
  */
 export interface DeviceConnectionInput {
-  memberId: string
-  deviceId: string
-  deviceType: DeviceType
-  deviceName: string
-  manufacturer: string
-  model?: string
-  firmwareVersion?: string
-  platform: PlatformType
-  accessToken?: string
-  refreshToken?: string
-  permissions: DevicePermission[]
-  dataTypes: HealthDataType[]
-  syncInterval?: number
+  memberId: string;
+  deviceId: string;
+  deviceType: DeviceType;
+  deviceName: string;
+  manufacturer: string;
+  model?: string;
+  firmwareVersion?: string;
+  platform: PlatformType;
+  accessToken?: string;
+  refreshToken?: string;
+  permissions: DevicePermission[];
+  dataTypes: HealthDataType[];
+  syncInterval?: number;
 }
 
 /**
  * 设备连接信息类型
  */
 export interface DeviceConnectionInfo {
-  id: string
-  memberId: string
-  deviceId: string
-  deviceType: DeviceType
-  deviceName: string
-  manufacturer: string
-  model?: string
-  firmwareVersion?: string
-  platform: PlatformType
-  lastSyncAt?: Date
-  syncStatus: SyncStatus
-  syncInterval: number
-  permissions: DevicePermission[]
-  dataTypes: HealthDataType[]
-  isActive: boolean
-  isAutoSync: boolean
-  connectionDate: Date
-  lastError?: string
-  errorCount: number
-  retryCount: number
+  id: string;
+  memberId: string;
+  deviceId: string;
+  deviceType: DeviceType;
+  deviceName: string;
+  manufacturer: string;
+  model?: string;
+  firmwareVersion?: string;
+  platform: PlatformType;
+  lastSyncAt?: Date;
+  syncStatus: SyncStatus;
+  syncInterval: number;
+  permissions: DevicePermission[];
+  dataTypes: HealthDataType[];
+  isActive: boolean;
+  isAutoSync: boolean;
+  connectionDate: Date;
+  lastError?: string;
+  errorCount: number;
+  retryCount: number;
 }
 
 /**
  * 健康数据输入类型
  */
 export interface HealthDataInput {
-  memberId: string
-  deviceConnectionId?: string
-  weight?: number
-  bodyFat?: number
-  muscleMass?: number
-  bloodPressureSystolic?: number
-  bloodPressureDiastolic?: number
-  heartRate?: number
-  measuredAt: Date
-  source: HealthDataSource
-  notes?: string
+  memberId: string;
+  deviceConnectionId?: string;
+  weight?: number;
+  bodyFat?: number;
+  muscleMass?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  measuredAt: Date;
+  source: HealthDataSource;
+  notes?: string;
 }
 
 /**
  * Apple HealthKit 数据类型
  */
 export interface AppleHealthData {
-  steps?: number
-  heartRate?: number
-  caloriesBurned?: number
-  distance?: number
-  activeMinutes?: number
-  exerciseType?: string
-  exerciseDuration?: number
-  date: Date
+  steps?: number;
+  heartRate?: number;
+  caloriesBurned?: number;
+  distance?: number;
+  activeMinutes?: number;
+  exerciseType?: string;
+  exerciseDuration?: number;
+  date: Date;
 }
 
 /**
  * 华为Health 数据类型
  */
 export interface HuaweiHealthData {
-  steps?: number
-  heartRate?: number
-  caloriesBurned?: number
-  sleepDuration?: number
-  sleepQuality?: number
-  weight?: number
-  bodyFat?: number
-  bloodPressureSystolic?: number
-  bloodPressureDiastolic?: number
-  date: Date
+  steps?: number;
+  heartRate?: number;
+  caloriesBurned?: number;
+  sleepDuration?: number;
+  sleepQuality?: number;
+  weight?: number;
+  bodyFat?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  date: Date;
 }
 
 /**
  * 同步结果类型
  */
 export interface SyncResult {
-  success: boolean
-  syncedCount: number
-  skippedCount: number
-  errors: string[]
-  lastSyncDate: Date
+  success: boolean;
+  syncedCount: number;
+  skippedCount: number;
+  errors: string[];
+  lastSyncDate: Date;
 }
 
 /**

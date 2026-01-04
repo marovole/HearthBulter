@@ -113,7 +113,9 @@ describe('RecommendationEngine', () => {
 
       // Setup mocks
       mockPrisma.recipe.findMany.mockResolvedValue(mockRecipes);
-      mockPrisma.userPreference.findUnique.mockResolvedValue(mockUserPreference);
+      mockPrisma.userPreference.findUnique.mockResolvedValue(
+        mockUserPreference,
+      );
       mockPrisma.healthGoal.findFirst.mockResolvedValue(mockHealthGoal);
       mockPrisma.recipeRating.findMany.mockResolvedValue([]);
       mockPrisma.recipeFavorite.findMany.mockResolvedValue([]);
@@ -141,7 +143,10 @@ describe('RecommendationEngine', () => {
       };
 
       // Execute
-      const recommendations = await recommendationEngine.getRecommendations(context, 5);
+      const recommendations = await recommendationEngine.getRecommendations(
+        context,
+        5,
+      );
 
       // Assertions
       expect(recommendations).toHaveLength(2);
@@ -150,9 +155,11 @@ describe('RecommendationEngine', () => {
       expect(recommendations[0]).toHaveProperty('reasons');
       expect(recommendations[0]).toHaveProperty('explanation');
       expect(recommendations[0]).toHaveProperty('metadata');
-      
+
       // Verify scores are in descending order
-      expect(recommendations[0].score).toBeGreaterThanOrEqual(recommendations[1].score);
+      expect(recommendations[0].score).toBeGreaterThanOrEqual(
+        recommendations[1].score,
+      );
     });
 
     it('should handle empty recipe list gracefully', async () => {
@@ -177,7 +184,10 @@ describe('RecommendationEngine', () => {
         season: '春',
       };
 
-      const recommendations = await recommendationEngine.getRecommendations(context, 5);
+      const recommendations = await recommendationEngine.getRecommendations(
+        context,
+        5,
+      );
 
       expect(recommendations).toHaveLength(0);
     });
@@ -224,7 +234,11 @@ describe('RecommendationEngine', () => {
       mockPrisma.recipe.findUnique.mockResolvedValue(mockRecipe);
       mockPrisma.recipe.findMany.mockResolvedValue(mockSimilarRecipes);
 
-      const similarRecipes = await recommendationEngine.getSimilarRecipes('recipe1', 'user1', 3);
+      const similarRecipes = await recommendationEngine.getSimilarRecipes(
+        'recipe1',
+        'user1',
+        3,
+      );
 
       expect(similarRecipes).toHaveLength(1);
       expect(similarRecipes[0].recipeId).toBe('recipe2');
@@ -288,7 +302,9 @@ describe('RecommendationEngine', () => {
         preferenceScore: 0,
       };
 
-      mockPrisma.userPreference.findUnique.mockResolvedValue(mockUserPreference);
+      mockPrisma.userPreference.findUnique.mockResolvedValue(
+        mockUserPreference,
+      );
       mockPrisma.userPreference.update.mockResolvedValue({
         ...mockUserPreference,
         learnedPreferences: JSON.stringify({
@@ -313,7 +329,9 @@ describe('RecommendationEngine', () => {
 
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
-      mockPrisma.recipe.findMany.mockRejectedValue(new Error('Database connection failed'));
+      mockPrisma.recipe.findMany.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
 
       const context = {
         memberId: 'user1',
@@ -327,8 +345,9 @@ describe('RecommendationEngine', () => {
         season: '春',
       };
 
-      await expect(recommendationEngine.getRecommendations(context, 5))
-        .rejects.toThrow('Database connection failed');
+      await expect(
+        recommendationEngine.getRecommendations(context, 5),
+      ).rejects.toThrow('Database connection failed');
     });
   });
 });

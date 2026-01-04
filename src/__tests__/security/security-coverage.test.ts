@@ -5,25 +5,34 @@
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { NextRequest } from 'next/server';
-import { SQLInjectionDetector, XSSDetector } from '@/lib/security/security-middleware';
+import {
+  SQLInjectionDetector,
+  XSSDetector,
+} from '@/lib/security/security-middleware';
 import { Permission, FamilyMemberRole, hasPermission } from '@/lib/permissions';
 import { checkSecurity } from '@/lib/middleware/security-middleware';
-import { withPermissions, requirePermissions } from '@/lib/middleware/permission-middleware';
+import {
+  withPermissions,
+  requirePermissions,
+} from '@/lib/middleware/permission-middleware';
 import { CSRFProtection } from '@/lib/security/security-middleware';
-import { rateLimiter, commonRateLimits } from '@/lib/middleware/rate-limit-middleware';
+import {
+  rateLimiter,
+  commonRateLimits,
+} from '@/lib/middleware/rate-limit-middleware';
 
 describe('安全性测试', () => {
   describe('SQL注入防护测试', () => {
     test('应该检测基本SQL注入模式', () => {
       const sqlInjectionAttempts = [
-        '\'; DROP TABLE users; --',
-        '\' OR \'1\'=\'1',
-        'admin\'--',
-        '\' UNION SELECT * FROM users --',
+        "'; DROP TABLE users; --",
+        "' OR '1'='1",
+        "admin'--",
+        "' UNION SELECT * FROM users --",
         '1; DELETE FROM users WHERE 1=1; --',
       ];
 
-      sqlInjectionAttempts.forEach(attempt => {
+      sqlInjectionAttempts.forEach((attempt) => {
         const result = SQLInjectionDetector.detect(attempt);
         expect(result.detected).toBe(true);
         expect(result.pattern).toBeDefined();
@@ -31,10 +40,10 @@ describe('安全性测试', () => {
     });
 
     test('应该清理SQL注入字符', () => {
-      const maliciousInput = 'admin\'; DROP TABLE users; --';
+      const maliciousInput = "admin'; DROP TABLE users; --";
       const sanitized = SQLInjectionDetector.sanitize(maliciousInput);
-      
-      expect(sanitized).not.toContain('\'');
+
+      expect(sanitized).not.toContain("'");
       expect(sanitized).not.toContain(';');
       expect(sanitized).not.toContain('DROP');
       expect(sanitized).not.toContain('TABLE');
@@ -42,23 +51,20 @@ describe('安全性测试', () => {
 
     test('应该清理包含SQL注入的复杂对象', () => {
       const maliciousObject = {
-        name: 'admin\'; DROP TABLE users; --',
+        name: "admin'; DROP TABLE users; --",
         query: {
-          filter: '\' OR \'1\'=\'1',
+          filter: "' OR '1'='1",
           order: 'id; DELETE FROM users; --',
         },
-        array: [
-          'normal',
-          '\'; SELECT * FROM passwords --',
-        ],
+        array: ['normal', "'; SELECT * FROM passwords --"],
       };
 
       const sanitized = SQLInjectionDetector.sanitize(maliciousObject);
-      
-      expect(sanitized.name).not.toContain('\'');
-      expect(sanitized.query.filter).not.toContain('\'');
+
+      expect(sanitized.name).not.toContain("'");
+      expect(sanitized.query.filter).not.toContain("'");
       expect(sanitized.query.order).not.toContain(';');
-      expect(sanitized.array[1]).not.toContain('\'');
+      expect(sanitized.array[1]).not.toContain("'");
     });
 
     test('应该允许合法的安全输入', () => {
@@ -70,7 +76,7 @@ describe('安全性测试', () => {
         '正常中文',
       ];
 
-      safeInputs.forEach(input => {
+      safeInputs.forEach((input) => {
         const result = SQLInjectionDetector.detect(input);
         expect(result.detected).toBe(false);
       });
@@ -79,7 +85,7 @@ describe('安全性测试', () => {
     test('应该检测自定义SQL注入模式', () => {
       const customPattern = /custom_injection/g;
       const maliciousInput = 'custom_injection_attack';
-      
+
       const result = SQLInjectionDetector.detect(maliciousInput);
       // 默认检测器可能不包含自定义模式
       // 但应该能通过自定义配置添加
@@ -90,14 +96,14 @@ describe('安全性测试', () => {
   describe('XSS防护测试', () => {
     test('应该检测基本XSS攻击', () => {
       const xssAttempts = [
-        '<script>alert(\'XSS\')</script>',
-        '<img src=x onerror=alert(\'XSS\')>',
-        'javascript:alert(\'XSS\')',
-        '<svg onload=alert(\'XSS\')>',
-        'expression(alert(\'XSS\'))',
+        "<script>alert('XSS')</script>",
+        "<img src=x onerror=alert('XSS')>",
+        "javascript:alert('XSS')",
+        "<svg onload=alert('XSS')>",
+        "expression(alert('XSS'))",
       ];
 
-      xssAttempts.forEach(attempt => {
+      xssAttempts.forEach((attempt) => {
         const result = XSSDetector.detect(attempt);
         expect(result.detected).toBe(true);
         expect(result.pattern).toBeDefined();
@@ -105,25 +111,25 @@ describe('安全性测试', () => {
     });
 
     test('应该清理XSS攻击字符', () => {
-      const maliciousInput = '<script>alert(\'XSS\')</script>';
+      const maliciousInput = "<script>alert('XSS')</script>";
       const sanitized = XSSDetector.sanitize(maliciousInput);
-      
+
       expect(sanitized).not.toContain('<script>');
       expect(sanitized).toContain('&lt;script&gt;');
     });
 
     test('应该处理复杂的XSS攻击对象', () => {
       const maliciousObject = {
-        name: '<script>alert(\'XSS\')</script>',
-        description: '<img src=x onerror=alert(\'XSS\')>',
+        name: "<script>alert('XSS')</script>",
+        description: "<img src=x onerror=alert('XSS')>",
         metadata: {
-          html: '<div onclick=alert(\'XSS\')>Click me</div>',
-          style: 'background-image: url(javascript:alert(\'XSS\'))',
+          html: "<div onclick=alert('XSS')>Click me</div>",
+          style: "background-image: url(javascript:alert('XSS'))",
         },
       };
 
       const sanitized = XSSDetector.sanitize(maliciousObject);
-      
+
       expect(sanitized.name).toContain('&lt;script&gt;');
       expect(sanitized.description).toContain('&lt;img');
       expect(sanitized.metadata.html).toContain('&lt;div');
@@ -135,10 +141,10 @@ describe('安全性测试', () => {
         '<p>正常段落</p>',
         '<strong>粗体文本</strong>',
         '<em>斜体文本</em>',
-        '<a href=\'https://example.com\'>安全链接</a>',
+        "<a href='https://example.com'>安全链接</a>",
       ];
 
-      safeInputs.forEach(input => {
+      safeInputs.forEach((input) => {
         const result = XSSDetector.detect(input);
         expect(result.detected).toBe(false);
       });
@@ -149,7 +155,7 @@ describe('安全性测试', () => {
     test('应该生成有效的CSRF令牌', () => {
       const sessionId = 'test-session-123';
       const token = CSRFProtection.generateToken(sessionId);
-      
+
       expect(token).toBeDefined();
       expect(typeof token).toBe('string');
       expect(token.length).toBeGreaterThan(0);
@@ -158,7 +164,7 @@ describe('安全性测试', () => {
     test('应该验证有效的CSRF令牌', () => {
       const sessionId = 'test-session-456';
       const token = CSRFProtection.generateToken(sessionId);
-      
+
       const isValid = CSRFProtection.validateToken(sessionId, token);
       expect(isValid).toBe(true);
     });
@@ -166,9 +172,11 @@ describe('安全性测试', () => {
     test('应该拒绝无效的CSRF令牌', () => {
       const sessionId = 'test-session-789';
       const token = CSRFProtection.generateToken(sessionId);
-      
+
       // 测试错误令牌
-      expect(CSRFProtection.validateToken(sessionId, 'invalid-token')).toBe(false);
+      expect(CSRFProtection.validateToken(sessionId, 'invalid-token')).toBe(
+        false,
+      );
       expect(CSRFProtection.validateToken('other-session', token)).toBe(false);
       expect(CSRFProtection.validateToken(sessionId, '')).toBe(false);
     });
@@ -176,10 +184,10 @@ describe('安全性测试', () => {
     test('应该处理令牌过期', async () => {
       // 创建一个会过期的令牌配置
       const shortExpiryTime = 100; // 100ms
-      
+
       // 模拟时间流逝
-      await new Promise(resolve => setTimeout(resolve, shortExpiryTime + 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, shortExpiryTime + 10));
+
       // 验证令牌是否过期（这里需要根据实际实现调整）
       // 由于令牌过期检查在validateToken中，这里只是展示测试结构
     });
@@ -188,8 +196,8 @@ describe('安全性测试', () => {
   describe('权限控制系统测试', () => {
     test('管理员应该拥有所有权限', () => {
       const adminPermissions = Object.values(Permission);
-      
-      adminPermissions.forEach(permission => {
+
+      adminPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.ADMIN, permission);
         expect(hasAccess).toBe(true);
       });
@@ -209,12 +217,12 @@ describe('安全性测试', () => {
         Permission.REMOVE_MEMBERS,
       ];
 
-      memberPermissions.forEach(permission => {
+      memberPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.MEMBER, permission);
         expect(hasAccess).toBe(true);
       });
 
-      nonMemberPermissions.forEach(permission => {
+      nonMemberPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.MEMBER, permission);
         expect(hasAccess).toBe(false);
       });
@@ -235,12 +243,12 @@ describe('安全性测试', () => {
         Permission.MANAGE_FAMILY,
       ];
 
-      guestPermissions.forEach(permission => {
+      guestPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.GUEST, permission);
         expect(hasAccess).toBe(true);
       });
 
-      nonGuestPermissions.forEach(permission => {
+      nonGuestPermissions.forEach((permission) => {
         const hasAccess = hasPermission(FamilyMemberRole.GUEST, permission);
         expect(hasAccess).toBe(false);
       });
@@ -256,7 +264,7 @@ describe('安全性测试', () => {
         FamilyMemberRole.MEMBER,
         Permission.UPDATE_TASK,
         resourceOwnerId,
-        currentUserId
+        currentUserId,
       );
       expect(ownResource).toBe(false); // 不是自己的资源
 
@@ -264,7 +272,7 @@ describe('安全性测试', () => {
         FamilyMemberRole.MEMBER,
         Permission.UPDATE_TASK,
         currentUserId,
-        currentUserId
+        currentUserId,
       );
       expect(actualOwnResource).toBe(true); // 是自己的资源
 
@@ -273,7 +281,7 @@ describe('安全性测试', () => {
         FamilyMemberRole.ADMIN,
         Permission.UPDATE_TASK,
         resourceOwnerId,
-        anotherUserId
+        anotherUserId,
       );
       expect(adminAccess).toBe(true);
     });
@@ -283,7 +291,7 @@ describe('安全性测试', () => {
     test('应该检测和清理恶意输入', async () => {
       const maliciousRequests = [
         {
-          url: 'http://localhost:3000/api/users?id=1\'; DROP TABLE users; --',
+          url: "http://localhost:3000/api/users?id=1'; DROP TABLE users; --",
           method: 'GET',
           headers: { 'content-type': 'application/json' },
         },
@@ -291,7 +299,10 @@ describe('安全性测试', () => {
           url: 'http://localhost:3000/api/users',
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: { name: '<script>alert(\'XSS\')</script>', email: 'test@example.com' },
+          body: {
+            name: "<script>alert('XSS')</script>",
+            email: 'test@example.com',
+          },
         },
       ];
 
@@ -305,11 +316,13 @@ describe('安全性测试', () => {
         const request = new NextRequest(maliciousRequest.url, {
           method: maliciousRequest.method,
           headers: maliciousRequest.headers,
-          body: maliciousRequest.body ? JSON.stringify(maliciousRequest.body) : undefined,
+          body: maliciousRequest.body
+            ? JSON.stringify(maliciousRequest.body)
+            : undefined,
         });
 
         const result = await checkSecurity(request, securityOptions);
-        
+
         // 安全检查应该检测到威胁
         expect(result.safe).toBe(false);
         expect(result.threats).toBeDefined();
@@ -347,7 +360,7 @@ describe('安全性测试', () => {
         });
 
         const result = await checkSecurity(request, securityOptions);
-        
+
         // 安全检查应该通过
         expect(result.safe).toBe(true);
       }
@@ -405,7 +418,7 @@ describe('安全性测试', () => {
       }
 
       // 等待窗口重置
-      await new Promise(resolve => setTimeout(resolve, limit.windowMs + 10));
+      await new Promise((resolve) => setTimeout(resolve, limit.windowMs + 10));
 
       // 再次发送请求应该被允许
       const mockRequest = {
@@ -456,7 +469,7 @@ describe('安全性测试', () => {
   describe('安全审计测试', () => {
     test('应该记录安全事件', async () => {
       const maliciousRequest = {
-        url: 'http://localhost:3000/api/users?id=1\'; DROP TABLE users; --',
+        url: "http://localhost:3000/api/users?id=1'; DROP TABLE users; --",
         method: 'GET',
         headers: { 'content-type': 'application/json' },
       };
@@ -473,7 +486,7 @@ describe('安全性测试', () => {
       });
 
       const result = await checkSecurity(request, securityOptions);
-      
+
       expect(result.audit).toBeDefined();
       expect(result.audit!.threats.length).toBeGreaterThan(0);
       expect(result.audit!.blocked).toBe(true);
@@ -482,7 +495,7 @@ describe('安全性测试', () => {
 
     test('应该记录IP地址和User-Agent', async () => {
       const maliciousRequest = {
-        url: 'http://localhost:3000/api/users?id=1\'; DROP TABLE users; --',
+        url: "http://localhost:3000/api/users?id=1'; DROP TABLE users; --",
         method: 'GET',
         headers: {
           'content-type': 'application/json',
@@ -502,7 +515,7 @@ describe('安全性测试', () => {
       });
 
       const result = await checkSecurity(request, securityOptions);
-      
+
       expect(result.audit).toBeDefined();
       expect(result.audit!.ip).toBe('192.168.1.100');
       expect(result.audit!.userAgent).toBe('Mozilla/5.0 (Test Browser)');
@@ -529,7 +542,7 @@ describe('安全性测试', () => {
       });
 
       const result = await checkSecurity(request, securityOptions);
-      
+
       // 安全检查通过，可以设置响应头
       expect(result.safe).toBe(true);
       // 这里可以测试实际的安全头部设置
@@ -542,11 +555,11 @@ describe('安全性测试', () => {
       // 这个测试依赖于实际的密码哈希实现
       // 这里只是展示测试结构
       const plainPassword = 'testPassword123';
-      
+
       // 假设有一个密码哈希函数
       // const hashedPassword = await hashPassword(plainPassword)
       // const isValid = await verifyPassword(plainPassword, hashedPassword)
-      
+
       // expect(isValid).toBe(true)
       // expect(hashedPassword).not.toBe(plainPassword)
       // expect(hashedPassword.length).toBeGreaterThan(50) // 典型的哈希长度
@@ -555,11 +568,11 @@ describe('安全性测试', () => {
     test('敏感数据应该正确加密', () => {
       // 测试敏感数据加密
       const sensitiveData = 'secret-information-123';
-      
+
       // 假设有一个加密函数
       // const encryptedData = encryptData(sensitiveData)
       // const decryptedData = decryptData(encryptedData)
-      
+
       // expect(encryptedData).not.toBe(sensitiveData)
       // expect(decryptedData).toBe(sensitiveData)
     });

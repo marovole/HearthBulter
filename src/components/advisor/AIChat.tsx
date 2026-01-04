@@ -9,7 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send, Bot, User, Lightbulb } from 'lucide-react';
 import { AIThinkingIndicator } from '@/components/ui/loading-indicator';
-import { FeedbackButtons, FeedbackData } from '@/components/ui/feedback-buttons';
+import {
+  FeedbackButtons,
+  FeedbackData,
+} from '@/components/ui/feedback-buttons';
 
 interface ChatMessage {
   id: string;
@@ -21,7 +24,12 @@ interface ChatMessage {
 
 interface PresetQuestion {
   id: string;
-  category: 'general' | 'nutrition' | 'health' | 'meal_planning' | 'weight_management';
+  category:
+    | 'general'
+    | 'nutrition'
+    | 'health'
+    | 'meal_planning'
+    | 'weight_management';
   question: string;
   description: string;
   tags: string[];
@@ -33,7 +41,11 @@ interface AIChatProps {
   onMessageSent?: (message: ChatMessage) => void;
 }
 
-export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChatProps) {
+export function AIChat({
+  memberId,
+  initialMessages = [],
+  onMessageSent,
+}: AIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -97,7 +109,7 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
 
@@ -129,7 +141,7 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
         intent: data.intent,
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
       setSessionId(data.sessionId);
       onMessageSent?.(aiMessage);
     } catch (error) {
@@ -140,7 +152,7 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
         content: '抱歉，我遇到了一些问题。请稍后重试。',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -167,25 +179,25 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
+    <Card className='h-[600px] flex flex-col'>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Bot className="w-5 h-5 mr-2" />
+        <CardTitle className='flex items-center'>
+          <Bot className='w-5 h-5 mr-2' />
           AI营养顾问
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className='flex-1 flex flex-col p-0'>
         {/* 消息区域 */}
-        <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+        <ScrollArea className='flex-1 p-4' ref={scrollAreaRef}>
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <div className='text-center text-muted-foreground py-8'>
+              <Bot className='w-12 h-12 mx-auto mb-4 opacity-50' />
               <p>我是您的AI营养顾问</p>
-              <p className="text-sm">可以询问健康、营养、饮食相关的问题</p>
+              <p className='text-sm'>可以询问健康、营养、饮食相关的问题</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -196,12 +208,16 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
                       message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
-                    <Avatar className="w-8 h-8">
+                    <Avatar className='w-8 h-8'>
                       <AvatarFallback>
-                        {message.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                        {message.role === 'user' ? (
+                          <User className='w-4 h-4' />
+                        ) : (
+                          <Bot className='w-4 h-4' />
+                        )}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
+                    <div className='flex flex-col'>
                       <div
                         className={`mx-2 px-3 py-2 rounded-lg ${
                           message.role === 'user'
@@ -209,21 +225,23 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
                             : 'bg-muted'
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className='text-sm whitespace-pre-wrap'>
+                          {message.content}
+                        </p>
                         {message.intent && (
-                          <Badge variant="outline" className="text-xs mt-1">
+                          <Badge variant='outline' className='text-xs mt-1'>
                             {message.intent}
                           </Badge>
                         )}
                       </div>
                       {message.role === 'assistant' && (
-                        <div className="mx-2 mt-1">
+                        <div className='mx-2 mt-1'>
                           <FeedbackButtons
                             sessionId={sessionId}
                             onFeedback={handleFeedback}
-                            size="sm"
-                            variant="compact"
-                            className="opacity-60 hover:opacity-100 transition-opacity"
+                            size='sm'
+                            variant='compact'
+                            className='opacity-60 hover:opacity-100 transition-opacity'
                           />
                         </div>
                       )}
@@ -235,18 +253,18 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
           )}
 
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="flex max-w-[80%]">
-                <Avatar className="w-8 h-8">
+            <div className='flex justify-start'>
+              <div className='flex max-w-[80%]'>
+                <Avatar className='w-8 h-8'>
                   <AvatarFallback>
-                    <Bot className="w-4 h-4" />
+                    <Bot className='w-4 h-4' />
                   </AvatarFallback>
                 </Avatar>
-                <div className="ml-2">
+                <div className='ml-2'>
                   <AIThinkingIndicator
-                    size="sm"
-                    message="AI正在分析您的问题..."
-                    className="bg-background border rounded-lg shadow-sm"
+                    size='sm'
+                    message='AI正在分析您的问题...'
+                    className='bg-background border rounded-lg shadow-sm'
                   />
                 </div>
               </div>
@@ -256,28 +274,37 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
 
         {/* 预设问题 */}
         {messages.length === 0 && presetQuestions.length > 0 && (
-          <div className="p-4 border-t">
-            <div className="flex items-center mb-3">
-              <Lightbulb className="w-4 h-4 mr-2 text-yellow-500" />
-              <span className="text-sm font-medium">常用问题</span>
+          <div className='p-4 border-t'>
+            <div className='flex items-center mb-3'>
+              <Lightbulb className='w-4 h-4 mr-2 text-yellow-500' />
+              <span className='text-sm font-medium'>常用问题</span>
             </div>
-            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+            <div className='grid grid-cols-1 gap-2 max-h-32 overflow-y-auto'>
               {presetQuestions.slice(0, 4).map((question) => (
                 <Button
                   key={question.id}
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={() => handlePresetQuestion(question)}
-                  className="justify-start text-left h-auto py-2 px-3"
+                  className='justify-start text-left h-auto py-2 px-3'
                   disabled={isLoading}
                 >
                   <div>
-                    <div className="text-sm font-medium">{question.question}</div>
-                    <Badge className={`text-xs mt-1 ${getCategoryColor(question.category)}`}>
-                      {question.category === 'general' ? '通用' :
-                        question.category === 'nutrition' ? '营养' :
-                          question.category === 'health' ? '健康' :
-                            question.category === 'meal_planning' ? '饮食规划' : '体重管理'}
+                    <div className='text-sm font-medium'>
+                      {question.question}
+                    </div>
+                    <Badge
+                      className={`text-xs mt-1 ${getCategoryColor(question.category)}`}
+                    >
+                      {question.category === 'general'
+                        ? '通用'
+                        : question.category === 'nutrition'
+                          ? '营养'
+                          : question.category === 'health'
+                            ? '健康'
+                            : question.category === 'meal_planning'
+                              ? '饮食规划'
+                              : '体重管理'}
                     </Badge>
                   </div>
                 </Button>
@@ -287,17 +314,17 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
         )}
 
         {/* 输入区域 */}
-        <div className="p-4 border-t">
-          <form onSubmit={handleSubmit} className="flex space-x-2">
+        <div className='p-4 border-t'>
+          <form onSubmit={handleSubmit} className='flex space-x-2'>
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="输入您的问题..."
+              placeholder='输入您的问题...'
               disabled={isLoading}
-              className="flex-1"
+              className='flex-1'
             />
-            <Button type="submit" disabled={isLoading || !inputMessage.trim()}>
-              <Send className="w-4 h-4" />
+            <Button type='submit' disabled={isLoading || !inputMessage.trim()}>
+              <Send className='w-4 h-4' />
             </Button>
           </form>
         </div>

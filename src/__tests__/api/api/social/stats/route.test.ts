@@ -59,10 +59,13 @@ describe('/api/social/stats', () => {
     it('POST: should return 401 when user is not authenticated', async () => {
       (auth as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/social/stats', {
-        method: 'POST',
-        body: JSON.stringify({ memberId: 'member-1' }),
-      });
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/stats',
+        {
+          method: 'POST',
+          body: JSON.stringify({ memberId: 'member-1' }),
+        },
+      );
       const response = await POST(request);
 
       expect(response.status).toBe(401);
@@ -86,7 +89,9 @@ describe('/api/social/stats', () => {
         conversionRate: 20,
       };
 
-      (shareTrackingService.getShareStatistics as jest.Mock).mockResolvedValue(mockStats);
+      (shareTrackingService.getShareStatistics as jest.Mock).mockResolvedValue(
+        mockStats,
+      );
       (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue({
         id: 'share-1',
         privacyLevel: 'PUBLIC',
@@ -96,7 +101,7 @@ describe('/api/social/stats', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/stats?token=share-token-123'
+        'http://localhost:3000/api/social/stats?token=share-token-123',
       );
       const response = await GET(request);
 
@@ -107,14 +112,16 @@ describe('/api/social/stats', () => {
       expect(data.data.type).toBe('share');
       expect(data.data.token).toBe('share-token-123');
       expect(data.data.stats).toEqual(mockStats);
-      expect(shareTrackingService.getShareStatistics).toHaveBeenCalledWith('share-token-123');
+      expect(shareTrackingService.getShareStatistics).toHaveBeenCalledWith(
+        'share-token-123',
+      );
     });
 
     it('should return 404 when share content does not exist', async () => {
       (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(null);
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/stats?token=invalid-token'
+        'http://localhost:3000/api/social/stats?token=invalid-token',
       );
       const response = await GET(request);
 
@@ -133,7 +140,7 @@ describe('/api/social/stats', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/stats?token=private-token'
+        'http://localhost:3000/api/social/stats?token=private-token',
       );
       const response = await GET(request);
 
@@ -159,14 +166,18 @@ describe('/api/social/stats', () => {
 
     beforeEach(() => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (shareTrackingService.getUserShareAnalytics as jest.Mock).mockResolvedValue(mockUserAnalytics);
+      (
+        shareTrackingService.getUserShareAnalytics as jest.Mock
+      ).mockResolvedValue(mockUserAnalytics);
     });
 
     it('should return user analytics with memberId', async () => {
-      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({ id: 'member-1' });
+      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({
+        id: 'member-1',
+      });
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/stats?memberId=member-1&type=user&period=7d'
+        'http://localhost:3000/api/social/stats?memberId=member-1&type=user&period=7d',
       );
       const response = await GET(request);
 
@@ -183,7 +194,7 @@ describe('/api/social/stats', () => {
       (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue(null);
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/stats?memberId=member-2'
+        'http://localhost:3000/api/social/stats?memberId=member-2',
       );
       const response = await GET(request);
 
@@ -193,10 +204,12 @@ describe('/api/social/stats', () => {
     });
 
     it('should use default period (30d) when not provided', async () => {
-      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({ id: 'member-1' });
+      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({
+        id: 'member-1',
+      });
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/stats?memberId=member-1'
+        'http://localhost:3000/api/social/stats?memberId=member-1',
       );
       const response = await GET(request);
 
@@ -224,12 +237,14 @@ describe('/api/social/stats', () => {
 
     beforeEach(() => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (shareTrackingService.getGlobalShareAnalytics as jest.Mock).mockResolvedValue(mockGlobalAnalytics);
+      (
+        shareTrackingService.getGlobalShareAnalytics as jest.Mock
+      ).mockResolvedValue(mockGlobalAnalytics);
     });
 
     it('should return global analytics', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/social/stats?type=global&period=30d'
+        'http://localhost:3000/api/social/stats?type=global&period=30d',
       );
       const response = await GET(request);
 
@@ -242,9 +257,7 @@ describe('/api/social/stats', () => {
     });
 
     it('should use default type (user) when not provided', async () => {
-      const request = new NextRequest(
-        'http://localhost:3000/api/social/stats'
-      );
+      const request = new NextRequest('http://localhost:3000/api/social/stats');
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -273,18 +286,23 @@ describe('/api/social/stats', () => {
 
     beforeEach(() => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (shareTrackingService.generateShareTrackingReport as jest.Mock).mockResolvedValue(mockReport);
+      (
+        shareTrackingService.generateShareTrackingReport as jest.Mock
+      ).mockResolvedValue(mockReport);
     });
 
     it('should generate JSON report for admin', async () => {
-      const request = new NextRequest('http://localhost:3000/api/social/stats', {
-        method: 'POST',
-        body: JSON.stringify({
-          adminCode: 'ADMIN123',
-          period: '30d',
-          format: 'json',
-        }),
-      });
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/stats',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            adminCode: 'ADMIN123',
+            period: '30d',
+            format: 'json',
+          }),
+        },
+      );
 
       const response = await POST(request);
 
@@ -293,37 +311,46 @@ describe('/api/social/stats', () => {
 
       expect(data.success).toBe(true);
       expect(data.data).toEqual(mockReport);
-      expect(shareTrackingService.generateShareTrackingReport).toHaveBeenCalledWith(
-        undefined,
-        '30d'
-      );
+      expect(
+        shareTrackingService.generateShareTrackingReport,
+      ).toHaveBeenCalledWith(undefined, '30d');
     });
 
     it('should generate CSV report', async () => {
-      const request = new NextRequest('http://localhost:3000/api/social/stats', {
-        method: 'POST',
-        body: JSON.stringify({
-          adminCode: 'ADMIN123',
-          period: '30d',
-          format: 'csv',
-        }),
-      });
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/stats',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            adminCode: 'ADMIN123',
+            period: '30d',
+            format: 'csv',
+          }),
+        },
+      );
 
       const response = await POST(request);
 
       expect(response.status).toBe(200);
       expect(response.headers.get('Content-Type')).toBe('text/csv');
-      expect(response.headers.get('Content-Disposition')).toContain('attachment');
-      expect(response.headers.get('Content-Disposition')).toContain('share-report-30d.csv');
+      expect(response.headers.get('Content-Disposition')).toContain(
+        'attachment',
+      );
+      expect(response.headers.get('Content-Disposition')).toContain(
+        'share-report-30d.csv',
+      );
     });
 
     it('should return 403 for invalid admin code', async () => {
-      const request = new NextRequest('http://localhost:3000/api/social/stats', {
-        method: 'POST',
-        body: JSON.stringify({
-          adminCode: 'INVALID_CODE',
-        }),
-      });
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/stats',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            adminCode: 'INVALID_CODE',
+          }),
+        },
+      );
 
       const response = await POST(request);
 
@@ -353,20 +380,27 @@ describe('/api/social/stats', () => {
 
     beforeEach(() => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (shareTrackingService.generateShareTrackingReport as jest.Mock).mockResolvedValue(mockReport);
+      (
+        shareTrackingService.generateShareTrackingReport as jest.Mock
+      ).mockResolvedValue(mockReport);
     });
 
     it('should generate report for specific member', async () => {
-      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({ id: 'member-1' });
-
-      const request = new NextRequest('http://localhost:3000/api/social/stats', {
-        method: 'POST',
-        body: JSON.stringify({
-          memberId: 'member-1',
-          period: '30d',
-          format: 'json',
-        }),
+      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({
+        id: 'member-1',
       });
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/stats',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            memberId: 'member-1',
+            period: '30d',
+            format: 'json',
+          }),
+        },
+      );
 
       const response = await POST(request);
 
@@ -375,21 +409,23 @@ describe('/api/social/stats', () => {
 
       expect(data.success).toBe(true);
       expect(data.data).toEqual(mockReport);
-      expect(shareTrackingService.generateShareTrackingReport).toHaveBeenCalledWith(
-        'member-1',
-        '30d'
-      );
+      expect(
+        shareTrackingService.generateShareTrackingReport,
+      ).toHaveBeenCalledWith('member-1', '30d');
     });
 
     it('should return 403 when user has no access to member', async () => {
       (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/social/stats', {
-        method: 'POST',
-        body: JSON.stringify({
-          memberId: 'member-2',
-        }),
-      });
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/stats',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            memberId: 'member-2',
+          }),
+        },
+      );
 
       const response = await POST(request);
 
@@ -399,12 +435,15 @@ describe('/api/social/stats', () => {
     });
 
     it('should use default format (json) when not provided', async () => {
-      const request = new NextRequest('http://localhost:3000/api/social/stats', {
-        method: 'POST',
-        body: JSON.stringify({
-          adminCode: 'ADMIN123',
-        }),
-      });
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/stats',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            adminCode: 'ADMIN123',
+          }),
+        },
+      );
 
       const response = await POST(request);
 
@@ -420,12 +459,12 @@ describe('/api/social/stats', () => {
     });
 
     it('GET: should handle service errors gracefully', async () => {
-      (shareTrackingService.getUserShareAnalytics as jest.Mock).mockRejectedValue(
-        new Error('Service error')
-      );
+      (
+        shareTrackingService.getUserShareAnalytics as jest.Mock
+      ).mockRejectedValue(new Error('Service error'));
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/stats?memberId=member-1'
+        'http://localhost:3000/api/social/stats?memberId=member-1',
       );
       const response = await GET(request);
 
@@ -435,16 +474,19 @@ describe('/api/social/stats', () => {
     });
 
     it('POST: should handle service errors gracefully', async () => {
-      (shareTrackingService.generateShareTrackingReport as jest.Mock).mockRejectedValue(
-        new Error('Service error')
-      );
+      (
+        shareTrackingService.generateShareTrackingReport as jest.Mock
+      ).mockRejectedValue(new Error('Service error'));
 
-      const request = new NextRequest('http://localhost:3000/api/social/stats', {
-        method: 'POST',
-        body: JSON.stringify({
-          adminCode: 'ADMIN123',
-        }),
-      });
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/stats',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            adminCode: 'ADMIN123',
+          }),
+        },
+      );
 
       const response = await POST(request);
 

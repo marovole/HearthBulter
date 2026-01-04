@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { taskRepository } from '@/lib/repositories/task-repository-singleton';
-import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions';
+import {
+  withApiPermissions,
+  PERMISSION_CONFIGS,
+} from '@/middleware/permissions';
 import { hasPermission, Permission } from '@/lib/permissions';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { prisma } from '@/lib/db';
-import type { TaskStatus, TaskCategory, TaskPriority } from '@/lib/repositories/types/task';
+import type {
+  TaskStatus,
+  TaskCategory,
+  TaskPriority,
+} from '@/lib/repositories/types/task';
 
 /**
  * GET /api/families/:familyId/tasks
@@ -17,7 +24,7 @@ import type { TaskStatus, TaskCategory, TaskPriority } from '@/lib/repositories/
 export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> }
+  { params }: { params: Promise<{ familyId: string }> },
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -38,7 +45,7 @@ export async function GET(
       if (!member) {
         return NextResponse.json(
           { success: false, error: 'Not a family member' },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
@@ -51,8 +58,12 @@ export async function GET(
         assigneeId: searchParams.get('assigneeId') || undefined,
         priority: searchParams.get('priority') as TaskPriority | undefined,
         dueDate: {
-          from: searchParams.get('dueFrom') ? new Date(searchParams.get('dueFrom')!) : undefined,
-          to: searchParams.get('dueTo') ? new Date(searchParams.get('dueTo')!) : undefined,
+          from: searchParams.get('dueFrom')
+            ? new Date(searchParams.get('dueFrom')!)
+            : undefined,
+          to: searchParams.get('dueTo')
+            ? new Date(searchParams.get('dueTo')!)
+            : undefined,
         },
         includeAssignee: true,
         includeCreator: true,
@@ -63,13 +74,26 @@ export async function GET(
       const result = await taskRepository.listTasks(filters);
 
       // 添加权限信息到每个任务
-      const tasksWithPermissions = result.items.map(task => ({
+      const tasksWithPermissions = result.items.map((task) => ({
         ...task,
         permissions: {
-          canUpdate: hasPermission(member.role as any, Permission.UPDATE_TASK, task.creatorId, member.id),
-          canDelete: hasPermission(member.role as any, Permission.DELETE_TASK, task.creatorId, member.id),
+          canUpdate: hasPermission(
+            member.role as any,
+            Permission.UPDATE_TASK,
+            task.creatorId,
+            member.id,
+          ),
+          canDelete: hasPermission(
+            member.role as any,
+            Permission.DELETE_TASK,
+            task.creatorId,
+            member.id,
+          ),
           canAssign: hasPermission(member.role as any, Permission.ASSIGN_TASK),
-          canComment: hasPermission(member.role as any, Permission.CREATE_COMMENT),
+          canComment: hasPermission(
+            member.role as any,
+            Permission.CREATE_COMMENT,
+          ),
         },
       }));
 
@@ -84,7 +108,7 @@ export async function GET(
           success: false,
           error: error instanceof Error ? error.message : 'Failed to get tasks',
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request as any, { params });
@@ -98,7 +122,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> }
+  { params }: { params: Promise<{ familyId: string }> },
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -106,13 +130,14 @@ export async function POST(
       const userId = req.user!.id;
       const body = await request.json();
 
-      const { title, description, category, assigneeId, priority, dueDate } = body;
+      const { title, description, category, assigneeId, priority, dueDate } =
+        body;
 
       // 验证必需字段
       if (!title || !category) {
         return NextResponse.json(
           { success: false, error: 'Missing required fields: title, category' },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -130,14 +155,14 @@ export async function POST(
       if (!member) {
         return NextResponse.json(
           { success: false, error: 'Not a family member' },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
       if (!hasPermission(member.role as any, Permission.CREATE_TASK)) {
         return NextResponse.json(
           { success: false, error: 'Insufficient permissions' },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
@@ -154,7 +179,7 @@ export async function POST(
         if (!assignee) {
           return NextResponse.json(
             { success: false, error: 'Assignee is not a family member' },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -170,24 +195,26 @@ export async function POST(
       });
 
       // 记录活动日志
-      await prisma.activity.create({
-        data: {
-          familyId,
-          memberId: member.id,
-          activityType: 'TASK_CREATED',
-          title: '创建了任务',
-          description: task.title,
-          metadata: {
-            taskId: task.id,
-            taskTitle: task.title,
-            category: task.category,
-            assigneeId,
+      await prisma.activity
+        .create({
+          data: {
+            familyId,
+            memberId: member.id,
+            activityType: 'TASK_CREATED',
+            title: '创建了任务',
+            description: task.title,
+            metadata: {
+              taskId: task.id,
+              taskTitle: task.title,
+              category: task.category,
+              assigneeId,
+            },
           },
-        },
-      }).catch(err => {
-        console.error('Error logging activity:', err);
-        // 不抛出错误，避免影响主要操作
-      });
+        })
+        .catch((err) => {
+          console.error('Error logging activity:', err);
+          // 不抛出错误，避免影响主要操作
+        });
 
       return NextResponse.json({
         success: true,
@@ -198,9 +225,10 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to create task',
+          error:
+            error instanceof Error ? error.message : 'Failed to create task',
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }, PERMISSION_CONFIGS.CREATE_TASK)(request as any, { params });

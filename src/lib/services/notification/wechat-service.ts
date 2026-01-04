@@ -14,10 +14,13 @@ export interface WeChatTemplateMessage {
   touser: string;
   template_id: string;
   url?: string;
-  data: Record<string, {
-    value: string;
-    color?: string;
-  }>;
+  data: Record<
+    string,
+    {
+      value: string;
+      color?: string;
+    }
+  >;
 }
 
 export interface WeChatSendResult {
@@ -57,7 +60,7 @@ export class WeChatService {
     type: string,
     title: string,
     content: string,
-    url?: string
+    url?: string,
   ): Promise<string> {
     if (!this.isConfigured) {
       throw new Error('WeChat service is not configured');
@@ -76,13 +79,15 @@ export class WeChatService {
 
       const response = await axios.post(
         `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${accessToken}`,
-        message
+        message,
       );
 
       if (response.data.errcode === 0) {
         return response.data.msgid;
       } else {
-        throw new Error(`WeChat API error: ${response.data.errcode} - ${response.data.errmsg}`);
+        throw new Error(
+          `WeChat API error: ${response.data.errcode} - ${response.data.errmsg}`,
+        );
       }
     } catch (error) {
       console.error('Failed to send WeChat template message:', error);
@@ -96,7 +101,7 @@ export class WeChatService {
   async sendMessage(
     openId: string,
     content: string,
-    type: 'text' | 'image' | 'news' = 'text'
+    type: 'text' | 'image' | 'news' = 'text',
   ): Promise<string> {
     if (!this.isConfigured) {
       throw new Error('WeChat service is not configured');
@@ -111,26 +116,28 @@ export class WeChatService {
       };
 
       switch (type) {
-      case 'text':
-        message.text = { content };
-        break;
-      case 'image':
-        message.image = { media_id: content };
-        break;
-      case 'news':
-        message.news = { articles: content };
-        break;
+        case 'text':
+          message.text = { content };
+          break;
+        case 'image':
+          message.image = { media_id: content };
+          break;
+        case 'news':
+          message.news = { articles: content };
+          break;
       }
 
       const response = await axios.post(
         `https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=${accessToken}`,
-        message
+        message,
       );
 
       if (response.data.errcode === 0) {
         return `msg_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
       } else {
-        throw new Error(`WeChat API error: ${response.data.errcode} - ${response.data.errmsg}`);
+        throw new Error(
+          `WeChat API error: ${response.data.errcode} - ${response.data.errmsg}`,
+        );
       }
     } catch (error) {
       console.error('Failed to send WeChat message:', error);
@@ -148,7 +155,7 @@ export class WeChatService {
       title: string;
       content: string;
       url?: string;
-    }>
+    }>,
   ): Promise<WeChatSendResult[]> {
     const results: WeChatSendResult[] = [];
 
@@ -156,7 +163,7 @@ export class WeChatService {
     const batchSize = 10;
     for (let i = 0; i < messages.length; i += batchSize) {
       const batch = messages.slice(i, i + batchSize);
-      
+
       const batchResults = await Promise.allSettled(
         batch.map(async (msg) => {
           try {
@@ -165,9 +172,9 @@ export class WeChatService {
               msg.type,
               msg.title,
               msg.content,
-              msg.url
+              msg.url,
             );
-            
+
             return {
               messageId,
               status: 'sent' as const,
@@ -180,7 +187,7 @@ export class WeChatService {
               error: error instanceof Error ? error.message : 'Unknown error',
             };
           }
-        })
+        }),
       );
 
       batchResults.forEach((result) => {
@@ -219,12 +226,14 @@ export class WeChatService {
 
     try {
       const response = await axios.get(
-        `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.config.appId}&secret=${this.config.appSecret}`
+        `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.config.appId}&secret=${this.config.appSecret}`,
       );
 
       if (response.data.access_token) {
         this.config.accessToken = response.data.access_token;
-        this.config.accessTokenExpiresAt = new Date(Date.now() + response.data.expires_in * 1000 - 60000); // 提前1分钟过期
+        this.config.accessTokenExpiresAt = new Date(
+          Date.now() + response.data.expires_in * 1000 - 60000,
+        ); // 提前1分钟过期
         return this.config.accessToken;
       } else {
         throw new Error(`Failed to get access token: ${response.data.errmsg}`);
@@ -240,16 +249,21 @@ export class WeChatService {
    */
   private async getTemplateId(type: string): Promise<string> {
     const templateMap: Record<string, string> = {
-      'CHECK_IN_REMINDER': process.env.WECHAT_TEMPLATE_CHECK_IN || 'TEMPLATE_CHECK_IN_ID',
-      'TASK_NOTIFICATION': process.env.WECHAT_TEMPLATE_TASK || 'TEMPLATE_TASK_ID',
-      'EXPIRY_ALERT': process.env.WECHAT_TEMPLATE_EXPIRY || 'TEMPLATE_EXPIRY_ID',
-      'BUDGET_WARNING': process.env.WECHAT_TEMPLATE_BUDGET || 'TEMPLATE_BUDGET_ID',
-      'HEALTH_ALERT': process.env.WECHAT_TEMPLATE_HEALTH || 'TEMPLATE_HEALTH_ID',
-      'GOAL_ACHIEVEMENT': process.env.WECHAT_TEMPLATE_GOAL || 'TEMPLATE_GOAL_ID',
-      'FAMILY_ACTIVITY': process.env.WECHAT_TEMPLATE_FAMILY || 'TEMPLATE_FAMILY_ID',
-      'SYSTEM_ANNOUNCEMENT': process.env.WECHAT_TEMPLATE_SYSTEM || 'TEMPLATE_SYSTEM_ID',
-      'MARKETING': process.env.WECHAT_TEMPLATE_MARKETING || 'TEMPLATE_MARKETING_ID',
-      'OTHER': process.env.WECHAT_TEMPLATE_OTHER || 'TEMPLATE_OTHER_ID',
+      CHECK_IN_REMINDER:
+        process.env.WECHAT_TEMPLATE_CHECK_IN || 'TEMPLATE_CHECK_IN_ID',
+      TASK_NOTIFICATION: process.env.WECHAT_TEMPLATE_TASK || 'TEMPLATE_TASK_ID',
+      EXPIRY_ALERT: process.env.WECHAT_TEMPLATE_EXPIRY || 'TEMPLATE_EXPIRY_ID',
+      BUDGET_WARNING:
+        process.env.WECHAT_TEMPLATE_BUDGET || 'TEMPLATE_BUDGET_ID',
+      HEALTH_ALERT: process.env.WECHAT_TEMPLATE_HEALTH || 'TEMPLATE_HEALTH_ID',
+      GOAL_ACHIEVEMENT: process.env.WECHAT_TEMPLATE_GOAL || 'TEMPLATE_GOAL_ID',
+      FAMILY_ACTIVITY:
+        process.env.WECHAT_TEMPLATE_FAMILY || 'TEMPLATE_FAMILY_ID',
+      SYSTEM_ANNOUNCEMENT:
+        process.env.WECHAT_TEMPLATE_SYSTEM || 'TEMPLATE_SYSTEM_ID',
+      MARKETING:
+        process.env.WECHAT_TEMPLATE_MARKETING || 'TEMPLATE_MARKETING_ID',
+      OTHER: process.env.WECHAT_TEMPLATE_OTHER || 'TEMPLATE_OTHER_ID',
     };
 
     const templateId = templateMap[type];
@@ -263,7 +277,10 @@ export class WeChatService {
   /**
    * 格式化模板数据
    */
-  private formatTemplateData(title: string, content: string): Record<string, { value: string; color?: string }> {
+  private formatTemplateData(
+    title: string,
+    content: string,
+  ): Record<string, { value: string; color?: string }> {
     return {
       first: {
         value: title,
@@ -287,7 +304,11 @@ export class WeChatService {
   /**
    * 验证服务器签名
    */
-  verifySignature(signature: string, timestamp: string, nonce: string): boolean {
+  verifySignature(
+    signature: string,
+    timestamp: string,
+    nonce: string,
+  ): boolean {
     if (!this.config.token) {
       return false;
     }
@@ -302,7 +323,12 @@ export class WeChatService {
   /**
    * 解密微信消息
    */
-  decryptMessage(encryptedMsg: string, msgSignature: string, timestamp: string, nonce: string): any {
+  decryptMessage(
+    encryptedMsg: string,
+    msgSignature: string,
+    timestamp: string,
+    nonce: string,
+  ): any {
     if (!this.config.encodingAESKey) {
       throw new Error('Encoding AES key not configured');
     }
@@ -338,7 +364,7 @@ export class WeChatService {
     // 暂时返回模拟数据
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const encrypted = `encrypted_${message}_${nonce}_${timestamp}`;
-    
+
     return encrypted;
   }
 
@@ -359,7 +385,7 @@ export class WeChatService {
     try {
       const accessToken = await this.getAccessToken();
       const response = await axios.get(
-        `https://api.weixin.qq.com/cgi-bin/user/info?access_token=${accessToken}&openid=${openId}&lang=zh_CN`
+        `https://api.weixin.qq.com/cgi-bin/user/info?access_token=${accessToken}&openid=${openId}&lang=zh_CN`,
       );
 
       if (response.data.errcode === 0) {
@@ -420,7 +446,7 @@ export class WeChatService {
    * 延迟函数
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -452,9 +478,11 @@ export class WeChatService {
     try {
       const token = await this.getAccessToken();
       status.hasValidToken = !!token;
-      
+
       // 测试API访问
-      await axios.get(`https://api.weixin.qq.com/cgi-bin/getcallbackip?access_token=${token}`);
+      await axios.get(
+        `https://api.weixin.qq.com/cgi-bin/getcallbackip?access_token=${token}`,
+      );
       status.apiAccessible = true;
     } catch (error) {
       console.error('WeChat service status check failed:', error);
@@ -469,10 +497,10 @@ export class WeChatService {
   async createMenu(menu: any): Promise<void> {
     try {
       const accessToken = await this.getAccessToken();
-      
+
       const response = await axios.post(
         `https://api.weixin.qq.com/cgi-bin/menu/create?access_token=${accessToken}`,
-        menu
+        menu,
       );
 
       if (response.data.errcode !== 0) {
@@ -490,9 +518,9 @@ export class WeChatService {
   async getMenu(): Promise<any> {
     try {
       const accessToken = await this.getAccessToken();
-      
+
       const response = await axios.get(
-        `https://api.weixin.qq.com/cgi-bin/menu/get?access_token=${accessToken}`
+        `https://api.weixin.qq.com/cgi-bin/menu/get?access_token=${accessToken}`,
       );
 
       if (response.data.errcode === 0) {
@@ -514,7 +542,7 @@ export class WeChatService {
       const accessToken = await this.getAccessToken();
 
       const response = await axios.get(
-        `https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=${accessToken}`
+        `https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=${accessToken}`,
       );
 
       if (response.data.errcode !== 0) {

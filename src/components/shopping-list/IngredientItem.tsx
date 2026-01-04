@@ -3,24 +3,24 @@
 import { useState } from 'react';
 
 interface Food {
-  id: string
-  name: string
-  category: string
-  image?: string
-  description?: string
+  id: string;
+  name: string;
+  category: string;
+  image?: string;
+  description?: string;
 }
 
 interface IngredientItemProps {
-  id: string
-  food: Food
-  amount: number
-  category: string
-  purchased: boolean
-  estimatedPrice: number | null
-  onToggle: (itemId: string, purchased: boolean) => void
-  onAmountChange?: (itemId: string, newAmount: number) => void
-  showEcommerce?: boolean
-  onEcommerceClick?: (foodId: string) => void
+  id: string;
+  food: Food;
+  amount: number;
+  category: string;
+  purchased: boolean;
+  estimatedPrice: number | null;
+  onToggle: (itemId: string, purchased: boolean) => void;
+  onAmountChange?: (itemId: string, newAmount: number) => void;
+  showEcommerce?: boolean;
+  onEcommerceClick?: (foodId: string) => void;
 }
 
 export function IngredientItem({
@@ -91,11 +91,13 @@ export function IngredientItem({
   };
 
   return (
-    <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-all ${
-      purchased 
-        ? 'bg-gray-50 border-gray-200 opacity-75' 
-        : 'bg-white border-gray-300 hover:border-blue-300'
-    }`}>
+    <div
+      className={`flex items-center space-x-3 p-3 rounded-lg border transition-all ${
+        purchased
+          ? 'bg-gray-50 border-gray-200 opacity-75'
+          : 'bg-white border-gray-300 hover:border-blue-300'
+      }`}
+    >
       {/* Checkbox */}
       <button
         onClick={() => onToggle(id, !purchased)}
@@ -106,67 +108,79 @@ export function IngredientItem({
         }`}
       >
         {purchased && (
-          <svg className="w-3 h-3 text-white mx-auto" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          <svg
+            className='w-3 h-3 text-white mx-auto'
+            fill='currentColor'
+            viewBox='0 0 20 20'
+          >
+            <path
+              fillRule='evenodd'
+              d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+              clipRule='evenodd'
+            />
           </svg>
         )}
       </button>
 
       {/* Food Image */}
-      <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
+      <div className='flex-shrink-0 w-12 h-12 bg-gray-100 rounded-lg overflow-hidden'>
         {food.image ? (
-          <img 
-            src={food.image} 
+          <img
+            src={food.image}
             alt={food.name}
-            className="w-full h-full object-cover"
+            className='w-full h-full object-cover'
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <div className='w-full h-full flex items-center justify-center text-gray-400'>
             🛒
           </div>
         )}
       </div>
 
       {/* Food Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-2 mb-1">
-          <h3 className={`font-medium truncate ${
-            purchased ? 'text-gray-500 line-through' : 'text-gray-900'
-          }`}>
+      <div className='flex-1 min-w-0'>
+        <div className='flex items-center space-x-2 mb-1'>
+          <h3
+            className={`font-medium truncate ${
+              purchased ? 'text-gray-500 line-through' : 'text-gray-900'
+            }`}
+          >
             {food.name}
           </h3>
-          <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryColor(category)}`}>
+          <span
+            className={`px-2 py-0.5 text-xs rounded-full ${getCategoryColor(category)}`}
+          >
             {getCategoryLabel(category)}
           </span>
         </div>
-        
+
         {food.description && (
-          <p className="text-sm text-gray-500 mb-1">{food.description}</p>
+          <p className='text-sm text-gray-500 mb-1'>{food.description}</p>
         )}
 
-        <div className="flex items-center space-x-4 text-sm">
+        <div className='flex items-center space-x-4 text-sm'>
           {/* Amount */}
-          <div className="flex items-center space-x-1">
+          <div className='flex items-center space-x-1'>
             {isEditingAmount && onAmountChange ? (
-              <div className="flex items-center space-x-1">
+              <div className='flex items-center space-x-1'>
                 <input
-                  type="number"
+                  type='number'
                   value={tempAmount}
                   onChange={(e) => setTempAmount(e.target.value)}
-                  className="w-16 px-1 py-0.5 text-xs border border-gray-300 rounded"
-                  step="10"
-                  min="1"
+                  className='w-16 px-1 py-0.5 text-xs border border-gray-300 rounded'
+                  step='10'
+                  min='1'
                 />
-                <span className="text-gray-500">g</span>
+                <span className='text-gray-500'>g</span>
                 <button
                   onClick={handleAmountSubmit}
-                  className="text-green-600 hover:text-green-800"
+                  className='text-green-600 hover:text-green-800'
                 >
                   ✓
                 </button>
                 <button
                   onClick={handleAmountCancel}
-                  className="text-red-600 hover:text-red-800"
+                  className='text-red-600 hover:text-red-800'
                 >
                   ✕
                 </button>
@@ -182,8 +196,12 @@ export function IngredientItem({
                   {formatAmount(amount)}
                 </span>
                 {onAmountChange && (
-                  <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  <svg
+                    className='w-3 h-3 text-gray-400'
+                    fill='currentColor'
+                    viewBox='0 0 20 20'
+                  >
+                    <path d='M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z' />
                   </svg>
                 )}
               </button>
@@ -192,19 +210,17 @@ export function IngredientItem({
 
           {/* Estimated Price */}
           {estimatedPrice !== null && (
-            <span className="text-gray-500">
-              ¥{estimatedPrice.toFixed(2)}
-            </span>
+            <span className='text-gray-500'>¥{estimatedPrice.toFixed(2)}</span>
           )}
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         {showEcommerce && onEcommerceClick && !purchased && (
           <button
             onClick={() => onEcommerceClick(food.id)}
-            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className='px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors'
           >
             购买
           </button>

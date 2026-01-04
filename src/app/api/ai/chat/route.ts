@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/middleware/api-auth";
-import { checkAIRateLimit } from "@/lib/middleware/api-rate-limit";
-import { checkConsent } from "@/lib/middleware/api-consent";
-import { conversationManager } from "@/lib/services/ai/conversation-manager";
-import { logger } from "@/lib/logger";
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/middleware/api-auth';
+import { checkAIRateLimit } from '@/lib/middleware/api-rate-limit';
+import { checkConsent } from '@/lib/middleware/api-consent';
+import { conversationManager } from '@/lib/services/ai/conversation-manager';
+import { logger } from '@/lib/logger';
 import {
   validateChatRequest,
   buildMemberContext,
   getOrCreateChatSession,
   handleStreamResponse,
   handleNormalResponse,
-} from "./handlers";
+} from './handlers';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/ai/chat
@@ -24,10 +24,10 @@ export async function POST(request: NextRequest) {
     if (!authResult.success) return authResult.response;
     const { userId } = authResult.context;
 
-    const rateLimitResult = await checkAIRateLimit(userId, "ai_chat");
+    const rateLimitResult = await checkAIRateLimit(userId, 'ai_chat');
     if (!rateLimitResult.success) return rateLimitResult.response;
 
-    const consentResult = await checkConsent(userId, "ai_health_analysis");
+    const consentResult = await checkConsent(userId, 'ai_health_analysis');
     if (!consentResult.success) return consentResult.response;
 
     const body = await request.json();
@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
       conversationSession,
     );
   } catch (error) {
-    logger.error("AI chat API error", { error });
+    logger.error('AI chat API error', { error });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }
@@ -77,8 +77,8 @@ export async function GET(request: NextRequest) {
     if (!authResult.success) return authResult.response;
 
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category") as string | null;
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const category = searchParams.get('category') as string | null;
+    const limit = parseInt(searchParams.get('limit') || '10');
 
     const presetQuestions = conversationManager.getPresetQuestions();
     const filteredQuestions = category
@@ -87,9 +87,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ questions: filteredQuestions.slice(0, limit) });
   } catch (error) {
-    logger.error("Preset questions API error", { error });
+    logger.error('Preset questions API error', { error });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

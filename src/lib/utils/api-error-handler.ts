@@ -6,21 +6,21 @@
 import { useState, useCallback } from 'react';
 
 export interface ApiError extends Error {
-  status?: number
-  code?: string
-  details?: any
+  status?: number;
+  code?: string;
+  details?: any;
 }
 
 export interface RetryOptions {
-  maxAttempts?: number
-  delay?: number
-  backoff?: 'linear' | 'exponential'
-  retryCondition?: (error: ApiError) => boolean
+  maxAttempts?: number;
+  delay?: number;
+  backoff?: 'linear' | 'exponential';
+  retryCondition?: (error: ApiError) => boolean;
 }
 
 export interface RequestOptions extends RequestInit {
-  timeout?: number
-  retries?: RetryOptions
+  timeout?: number;
+  retries?: RetryOptions;
 }
 
 /**
@@ -45,7 +45,7 @@ export class CustomApiError extends Error implements ApiError {
  */
 export async function fetchWithRetry(
   url: string,
-  options: RequestOptions = {}
+  options: RequestOptions = {},
 ): Promise<Response> {
   const {
     timeout = 10000,
@@ -65,35 +65,49 @@ export async function fetchWithRetry(
 
   for (let attempt = 1; attempt <= (retries.maxAttempts || 3); attempt++) {
     try {
-      const response = await fetchWithTimeout(url, { ...fetchOptions, timeout });
-      
+      const response = await fetchWithTimeout(url, {
+        ...fetchOptions,
+        timeout,
+      });
+
       // 如果响应不成功，创建错误对象
       if (!response.ok) {
-        const errorData = await response.clone().json().catch(() => ({}));
+        const errorData = await response
+          .clone()
+          .json()
+          .catch(() => ({}));
         throw new CustomApiError(
-          errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+          errorData.message ||
+            `HTTP ${response.status}: ${response.statusText}`,
           response.status,
           errorData.code,
-          errorData
+          errorData,
         );
       }
 
       return response;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       // 检查是否应该重试
       if (attempt === (retries.maxAttempts || 3)) {
         break;
       }
-      
-      if (retries.retryCondition && !retries.retryCondition(lastError as ApiError)) {
+
+      if (
+        retries.retryCondition &&
+        !retries.retryCondition(lastError as ApiError)
+      ) {
         break;
       }
 
       // 计算延迟时间
-      const delay = calculateDelay(attempt, retries.delay || 1000, retries.backoff || 'exponential');
-      await new Promise(resolve => setTimeout(resolve, delay));
+      const delay = calculateDelay(
+        attempt,
+        retries.delay || 1000,
+        retries.backoff || 'exponential',
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
@@ -105,7 +119,7 @@ export async function fetchWithRetry(
  */
 export async function fetchWithTimeout(
   url: string,
-  options: RequestOptions = {}
+  options: RequestOptions = {},
 ): Promise<Response> {
   const { timeout = 10000, ...fetchOptions } = options;
 
@@ -131,14 +145,18 @@ export async function fetchWithTimeout(
 /**
  * 计算重试延迟时间
  */
-function calculateDelay(attempt: number, baseDelay: number, backoff: 'linear' | 'exponential'): number {
+function calculateDelay(
+  attempt: number,
+  baseDelay: number,
+  backoff: 'linear' | 'exponential',
+): number {
   switch (backoff) {
-  case 'linear':
-    return baseDelay * attempt;
-  case 'exponential':
-    return baseDelay * Math.pow(2, attempt - 1);
-  default:
-    return baseDelay;
+    case 'linear':
+      return baseDelay * attempt;
+    case 'exponential':
+      return baseDelay * Math.pow(2, attempt - 1);
+    default:
+      return baseDelay;
   }
 }
 
@@ -147,11 +165,11 @@ function calculateDelay(attempt: number, baseDelay: number, backoff: 'linear' | 
  */
 export async function handleApiResponse<T>(
   response: Response,
-  errorMessage: string = 'API请求失败'
+  errorMessage: string = 'API请求失败',
 ): Promise<T> {
   if (!response.ok) {
     let errorData: any = {};
-    
+
     try {
       errorData = await response.json();
     } catch {
@@ -162,7 +180,7 @@ export async function handleApiResponse<T>(
       errorData.message || errorMessage,
       response.status,
       errorData.code,
-      errorData
+      errorData,
     );
   }
 
@@ -195,7 +213,10 @@ export class DashboardApiClient {
   /**
    * 获取营养分析数据
    */
-  async getNutritionAnalysis(memberId: string, period: 'daily' | 'weekly' | 'monthly' = 'daily') {
+  async getNutritionAnalysis(
+    memberId: string,
+    period: 'daily' | 'weekly' | 'monthly' = 'daily',
+  ) {
     const url = `${this.baseUrl}/nutrition-analysis?memberId=${memberId}&period=${period}`;
     const response = await fetchWithRetry(url);
     return handleApiResponse(response);
@@ -222,7 +243,10 @@ export class DashboardApiClient {
   /**
    * 获取周报数据
    */
-  async getWeeklyReport(memberId: string, type: 'weekly' | 'monthly' = 'weekly') {
+  async getWeeklyReport(
+    memberId: string,
+    type: 'weekly' | 'monthly' = 'weekly',
+  ) {
     const url = `${this.baseUrl}/weekly-report?memberId=${memberId}&type=${type}`;
     const response = await fetchWithRetry(url);
     return handleApiResponse(response);
@@ -243,18 +267,18 @@ export class DashboardApiClient {
   async exportData(memberId: string, format: 'json' | 'csv' = 'json') {
     const url = `${this.baseUrl}/data?memberId=${memberId}&format=${format}`;
     const response = await fetchWithRetry(url);
-    
+
     if (!response.ok) {
       let errorData: any = {};
       try {
         errorData = await response.json();
       } catch {}
-      
+
       throw new CustomApiError(
         errorData.message || '导出失败',
         response.status,
         errorData.code,
-        errorData
+        errorData,
       );
     }
 
@@ -301,33 +325,36 @@ export const dashboardApiClient = new DashboardApiClient();
 export function useApiCall<T, Args extends any[]>(
   apiFunction: (...args: Args) => Promise<T>,
   options: {
-    onSuccess?: (data: T) => void
-    onError?: (error: ApiError) => void
-    retryAttempts?: number
-  } = {}
+    onSuccess?: (data: T) => void;
+    onError?: (error: ApiError) => void;
+    retryAttempts?: number;
+  } = {},
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const execute = useCallback(async (...args: Args) => {
-    setLoading(true);
-    setError(null);
+  const execute = useCallback(
+    async (...args: Args) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const result = await apiFunction(...args);
-      setData(result);
-      options.onSuccess?.(result);
-      return result;
-    } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError);
-      options.onError?.(apiError);
-      throw apiError;
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFunction, options]);
+      try {
+        const result = await apiFunction(...args);
+        setData(result);
+        options.onSuccess?.(result);
+        return result;
+      } catch (err) {
+        const apiError = err as ApiError;
+        setError(apiError);
+        options.onError?.(apiError);
+        throw apiError;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiFunction, options],
+  );
 
   return {
     data,

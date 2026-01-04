@@ -41,13 +41,16 @@ export async function GET(request: NextRequest) {
         memberId,
         new Date(startDateParam),
         new Date(endDateParam),
-        { page: 1, limit: 1 }
+        { page: 1, limit: 1 },
       );
 
       const mealPlan = result.data[0] || null;
 
       if (!mealPlan) {
-        return NextResponse.json({ message: '暂无食谱计划', plan: null }, { status: 200 });
+        return NextResponse.json(
+          { message: '暂无食谱计划', plan: null },
+          { status: 200 },
+        );
       }
 
       // 保持原有响应格式
@@ -77,14 +80,17 @@ export async function GET(request: NextRequest) {
           })),
           nutritionSummary: null,
         },
-        { status: 200 }
+        { status: 200 },
       );
     } else {
       // 获取当前活跃计划
       const mealPlan = await mealPlanRepository.getActivePlanByMember(memberId);
 
       if (!mealPlan) {
-        return NextResponse.json({ message: '暂无食谱计划', plan: null }, { status: 200 });
+        return NextResponse.json(
+          { message: '暂无食谱计划', plan: null },
+          { status: 200 },
+        );
       }
 
       return NextResponse.json(
@@ -113,7 +119,7 @@ export async function GET(request: NextRequest) {
           })),
           nutritionSummary: null,
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
   } catch (error) {

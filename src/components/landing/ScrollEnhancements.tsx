@@ -35,13 +35,13 @@ export default function ScrollEnhancements() {
     <>
       {/* Scroll progress bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-primary z-50 origin-left"
+        className='fixed top-0 left-0 right-0 h-1 bg-gradient-primary z-50 origin-left'
         style={{ scaleX }}
       />
 
       {/* Back to top button */}
       <motion.div
-        className="fixed bottom-8 right-8 z-40"
+        className='fixed bottom-8 right-8 z-40'
         initial={{ opacity: 0, y: 20 }}
         animate={{
           opacity: showScrollTop ? 1 : 0,
@@ -50,13 +50,13 @@ export default function ScrollEnhancements() {
         transition={{ duration: 0.3 }}
       >
         <Button
-          size="icon"
-          variant="glow"
-          className="h-12 w-12 rounded-full shadow-soft-lg group"
+          size='icon'
+          variant='glow'
+          className='h-12 w-12 rounded-full shadow-soft-lg group'
           onClick={scrollToTop}
-          aria-label="返回顶部"
+          aria-label='返回顶部'
         >
-          <ArrowUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+          <ArrowUp className='w-5 h-5 group-hover:-translate-y-1 transition-transform' />
         </Button>
       </motion.div>
     </>

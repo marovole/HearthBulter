@@ -99,9 +99,12 @@ export class ReactPerformanceMonitor {
     }, 60 * 1000); // 每分钟清理一次
 
     // 定期报告性能
-    setInterval(() => {
-      this.reportPerformance();
-    }, 5 * 60 * 1000); // 每5分钟报告一次
+    setInterval(
+      () => {
+        this.reportPerformance();
+      },
+      5 * 60 * 1000,
+    ); // 每5分钟报告一次
   }
 
   /**
@@ -125,12 +128,17 @@ export class ReactPerformanceMonitor {
   /**
    * 记录渲染结束
    */
-  endRender(componentName: string, eventId: string, metadata?: Record<string, any>): void {
+  endRender(
+    componentName: string,
+    eventId: string,
+    metadata?: Record<string, any>,
+  ): void {
     const endTime = performance.now();
-    const startEvent = this.events.find(e =>
-      e.type === 'render_start' &&
-      e.componentName === componentName &&
-      this.getEventId(e) === eventId
+    const startEvent = this.events.find(
+      (e) =>
+        e.type === 'render_start' &&
+        e.componentName === componentName &&
+        this.getEventId(e) === eventId,
     );
 
     if (!startEvent) {
@@ -215,7 +223,11 @@ export class ReactPerformanceMonitor {
   /**
    * 更新组件指标
    */
-  private updateMetrics(componentName: string, duration: number, metadata?: Record<string, any>): void {
+  private updateMetrics(
+    componentName: string,
+    duration: number,
+    metadata?: Record<string, any>,
+  ): void {
     let metrics = this.metrics.get(componentName);
 
     if (!metrics) {
@@ -251,57 +263,79 @@ export class ReactPerformanceMonitor {
   /**
    * 检查性能阈值
    */
-  private checkThresholds(componentName: string, duration: number, metadata?: Record<string, any>): void {
+  private checkThresholds(
+    componentName: string,
+    duration: number,
+    metadata?: Record<string, any>,
+  ): void {
     const metrics = this.metrics.get(componentName);
     if (!metrics) return;
 
     // 检查渲染时间
     if (duration > this.thresholds.renderTime.error) {
-      console.error(`[PERF-CRITICAL] 组件 ${componentName} 渲染时间过长: ${duration.toFixed(2)}ms`, {
-        componentName,
-        duration,
-        threshold: this.thresholds.renderTime.error,
-        renderCount: metrics.renderCount,
-      });
+      console.error(
+        `[PERF-CRITICAL] 组件 ${componentName} 渲染时间过长: ${duration.toFixed(2)}ms`,
+        {
+          componentName,
+          duration,
+          threshold: this.thresholds.renderTime.error,
+          renderCount: metrics.renderCount,
+        },
+      );
     } else if (duration > this.thresholds.renderTime.warning) {
-      console.warn(`[PERF-WARNING] 组件 ${componentName} 渲染时间偏长: ${duration.toFixed(2)}ms`, {
-        componentName,
-        duration,
-        threshold: this.thresholds.renderTime.warning,
-        renderCount: metrics.renderCount,
-      });
+      console.warn(
+        `[PERF-WARNING] 组件 ${componentName} 渲染时间偏长: ${duration.toFixed(2)}ms`,
+        {
+          componentName,
+          duration,
+          threshold: this.thresholds.renderTime.warning,
+          renderCount: metrics.renderCount,
+        },
+      );
     }
 
     // 检查内存使用
     if (metadata?.memoryUsage) {
       if (metadata.memoryUsage > this.thresholds.memoryUsage.error) {
-        console.error(`[PERF-CRITICAL] 组件 ${componentName} 内存使用过高: ${(metadata.memoryUsage / 1024 / 1024).toFixed(2)}MB`, {
-          componentName,
-          memoryUsage: metadata.memoryUsage,
-          threshold: this.thresholds.memoryUsage.error,
-        });
+        console.error(
+          `[PERF-CRITICAL] 组件 ${componentName} 内存使用过高: ${(metadata.memoryUsage / 1024 / 1024).toFixed(2)}MB`,
+          {
+            componentName,
+            memoryUsage: metadata.memoryUsage,
+            threshold: this.thresholds.memoryUsage.error,
+          },
+        );
       } else if (metadata.memoryUsage > this.thresholds.memoryUsage.warning) {
-        console.warn(`[PERF-WARNING] 组件 ${componentName} 内存使用偏高: ${(metadata.memoryUsage / 1024 / 1024).toFixed(2)}MB`, {
-          componentName,
-          memoryUsage: metadata.memoryUsage,
-          threshold: this.thresholds.memoryUsage.warning,
-        });
+        console.warn(
+          `[PERF-WARNING] 组件 ${componentName} 内存使用偏高: ${(metadata.memoryUsage / 1024 / 1024).toFixed(2)}MB`,
+          {
+            componentName,
+            memoryUsage: metadata.memoryUsage,
+            threshold: this.thresholds.memoryUsage.warning,
+          },
+        );
       }
     }
 
     // 检查渲染次数
     if (metrics.renderCount > this.thresholds.renderCount.error) {
-      console.error(`[PERF-CRITICAL] 组件 ${componentName} 渲染次数过多: ${metrics.renderCount}`, {
-        componentName,
-        renderCount: metrics.renderCount,
-        threshold: this.thresholds.renderCount.error,
-      });
+      console.error(
+        `[PERF-CRITICAL] 组件 ${componentName} 渲染次数过多: ${metrics.renderCount}`,
+        {
+          componentName,
+          renderCount: metrics.renderCount,
+          threshold: this.thresholds.renderCount.error,
+        },
+      );
     } else if (metrics.renderCount > this.thresholds.renderCount.warning) {
-      console.warn(`[PERF-WARNING] 组件 ${componentName} 渲染次数偏多: ${metrics.renderCount}`, {
-        componentName,
-        renderCount: metrics.renderCount,
-        threshold: this.thresholds.renderCount.warning,
-      });
+      console.warn(
+        `[PERF-WARNING] 组件 ${componentName} 渲染次数偏多: ${metrics.renderCount}`,
+        {
+          componentName,
+          renderCount: metrics.renderCount,
+          threshold: this.thresholds.renderCount.warning,
+        },
+      );
     }
   }
 
@@ -311,7 +345,7 @@ export class ReactPerformanceMonitor {
   private cleanupEvents(): void {
     const cutoffTime = performance.now() - 60 * 1000; // 保留最近1分钟的事件
 
-    this.events = this.events.filter(event => event.timestamp > cutoffTime);
+    this.events = this.events.filter((event) => event.timestamp > cutoffTime);
 
     if (this.events.length > this.maxEvents) {
       this.events = this.events.slice(-this.maxEvents);
@@ -329,11 +363,17 @@ export class ReactPerformanceMonitor {
     }
 
     if (report.highMemoryComponents.length > 0) {
-      console.warn('[PERF-REPORT] 检测到高内存使用组件:', report.highMemoryComponents);
+      console.warn(
+        '[PERF-REPORT] 检测到高内存使用组件:',
+        report.highMemoryComponents,
+      );
     }
 
     if (report.frequentRenderComponents.length > 0) {
-      console.warn('[PERF-REPORT] 检测到频繁渲染组件:', report.frequentRenderComponents);
+      console.warn(
+        '[PERF-REPORT] 检测到频繁渲染组件:',
+        report.frequentRenderComponents,
+      );
     }
 
     // 记录到日志（如果有日志系统）
@@ -351,30 +391,39 @@ export class ReactPerformanceMonitor {
   generatePerformanceReport() {
     const allMetrics = Array.from(this.metrics.values());
 
-    const slowComponents = allMetrics.filter(m => m.averageTime > this.thresholds.renderTime.warning);
-    const highMemoryComponents = allMetrics.filter(m => m.memoryUsage && m.memoryUsage > this.thresholds.memoryUsage.warning);
-    const frequentRenderComponents = allMetrics.filter(m => m.renderCount > this.thresholds.renderCount.warning);
+    const slowComponents = allMetrics.filter(
+      (m) => m.averageTime > this.thresholds.renderTime.warning,
+    );
+    const highMemoryComponents = allMetrics.filter(
+      (m) =>
+        m.memoryUsage && m.memoryUsage > this.thresholds.memoryUsage.warning,
+    );
+    const frequentRenderComponents = allMetrics.filter(
+      (m) => m.renderCount > this.thresholds.renderCount.warning,
+    );
 
     const totalComponents = allMetrics.length;
-    const averageRenderTime = allMetrics.length > 0
-      ? allMetrics.reduce((sum, m) => sum + m.averageTime, 0) / allMetrics.length
-      : 0;
+    const averageRenderTime =
+      allMetrics.length > 0
+        ? allMetrics.reduce((sum, m) => sum + m.averageTime, 0) /
+          allMetrics.length
+        : 0;
 
     return {
       totalComponents,
       averageRenderTime,
-      slowComponents: slowComponents.map(m => ({
+      slowComponents: slowComponents.map((m) => ({
         name: m.name,
         averageTime: m.averageTime,
         maxTime: m.maxTime,
         renderCount: m.renderCount,
       })),
-      highMemoryComponents: highMemoryComponents.map(m => ({
+      highMemoryComponents: highMemoryComponents.map((m) => ({
         name: m.name,
         memoryUsage: m.memoryUsage!,
         renderCount: m.renderCount,
       })),
-      frequentRenderComponents: frequentRenderComponents.map(m => ({
+      frequentRenderComponents: frequentRenderComponents.map((m) => ({
         name: m.name,
         renderCount: m.renderCount,
         averageTime: m.averageTime,
@@ -452,8 +501,11 @@ export class ReactPerformanceMonitor {
 export const reactPerformanceMonitor = ReactPerformanceMonitor.getInstance();
 
 // React Hook for performance monitoring
-export function useReactPerformance(componentName: string, metadata?: Record<string, any>) {
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+export function useReactPerformance(
+  componentName: string,
+  metadata?: Record<string, any>,
+) {
+  const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
   const eventIdRef = React.useRef<string>();
 
   React.useEffect(() => {
@@ -465,11 +517,18 @@ export function useReactPerformance(componentName: string, metadata?: Record<str
   }, [componentName]);
 
   React.useLayoutEffect(() => {
-    eventIdRef.current = reactPerformanceMonitor.startRender(componentName, metadata);
+    eventIdRef.current = reactPerformanceMonitor.startRender(
+      componentName,
+      metadata,
+    );
 
     return () => {
       if (eventIdRef.current) {
-        reactPerformanceMonitor.endRender(componentName, eventIdRef.current, metadata);
+        reactPerformanceMonitor.endRender(
+          componentName,
+          eventIdRef.current,
+          metadata,
+        );
       }
     };
   });
@@ -492,12 +551,19 @@ export function useReactPerformance(componentName: string, metadata?: Record<str
 export function withPerformanceMonitoring<P extends object>(
   WrappedComponent: React.ComponentType<P>,
   componentName?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ) {
-  const displayName = componentName || WrappedComponent.displayName || WrappedComponent.name || 'Component';
+  const displayName =
+    componentName ||
+    WrappedComponent.displayName ||
+    WrappedComponent.name ||
+    'Component';
 
   const PerformanceWrappedComponent = React.forwardRef<any, P>((props, ref) => {
-    useReactPerformance(displayName, { ...metadata, props: Object.keys(props).length });
+    useReactPerformance(displayName, {
+      ...metadata,
+      props: Object.keys(props).length,
+    });
 
     return <WrappedComponent {...props} ref={ref} />;
   });

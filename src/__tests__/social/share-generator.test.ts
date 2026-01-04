@@ -68,13 +68,25 @@ jest.mock('@prisma/client', () => ({
 
 // Mock 模板生成函数
 jest.mock('@/lib/services/social/image-generator', () => ({
-  generateHealthReportCard: jest.fn().mockResolvedValue('data:image/png;base64,test'),
-  generateGoalAchievementCard: jest.fn().mockResolvedValue('data:image/png;base64,test'),
-  generateMealLogCard: jest.fn().mockResolvedValue('data:image/png;base64,test'),
+  generateHealthReportCard: jest
+    .fn()
+    .mockResolvedValue('data:image/png;base64,test'),
+  generateGoalAchievementCard: jest
+    .fn()
+    .mockResolvedValue('data:image/png;base64,test'),
+  generateMealLogCard: jest
+    .fn()
+    .mockResolvedValue('data:image/png;base64,test'),
   generateRecipeCard: jest.fn().mockResolvedValue('data:image/png;base64,test'),
-  generateAchievementCard: jest.fn().mockResolvedValue('data:image/png;base64,test'),
-  generateCheckInStreakCard: jest.fn().mockResolvedValue('data:image/png;base64,test'),
-  generateWeightMilestoneCard: jest.fn().mockResolvedValue('data:image/png;base64,test'),
+  generateAchievementCard: jest
+    .fn()
+    .mockResolvedValue('data:image/png;base64,test'),
+  generateCheckInStreakCard: jest
+    .fn()
+    .mockResolvedValue('data:image/png;base64,test'),
+  generateWeightMilestoneCard: jest
+    .fn()
+    .mockResolvedValue('data:image/png;base64,test'),
 }));
 
 describe('ShareGenerator', () => {
@@ -102,7 +114,7 @@ describe('ShareGenerator', () => {
 
     it('应该成功生成健康报告分享内容', async () => {
       mockPrisma.familyMember.findUnique.mockResolvedValue(mockMember);
-      
+
       const mockReport = {
         id: 'report-1',
         memberId: 'member-1',
@@ -113,7 +125,7 @@ describe('ShareGenerator', () => {
         summary: '健康状况良好',
         overallScore: 85,
       };
-      
+
       mockPrisma.healthReport.findFirst.mockResolvedValue(mockReport);
 
       const result = await generateShareContent(mockShareData);
@@ -137,14 +149,18 @@ describe('ShareGenerator', () => {
     it('应该在成员不存在时抛出错误', async () => {
       mockPrisma.familyMember.findUnique.mockResolvedValue(null);
 
-      await expect(generateShareContent(mockShareData)).rejects.toThrow('成员不存在');
+      await expect(generateShareContent(mockShareData)).rejects.toThrow(
+        '成员不存在',
+      );
     });
 
     it('应该在内容不存在时抛出错误', async () => {
       mockPrisma.familyMember.findUnique.mockResolvedValue(mockMember);
       mockPrisma.healthReport.findFirst.mockResolvedValue(null);
 
-      await expect(generateShareContent(mockShareData)).rejects.toThrow('健康报告不存在');
+      await expect(generateShareContent(mockShareData)).rejects.toThrow(
+        '健康报告不存在',
+      );
     });
 
     it('应该支持自定义标题和描述', async () => {
@@ -240,11 +256,13 @@ describe('ShareGenerator', () => {
     });
 
     it('应该在不支持的内容类型时抛出错误', async () => {
-      await expect(generateShareContent({
-        memberId: 'member-1',
-        contentType: 'INVALID_TYPE' as ShareContentType,
-        contentId: 'test-1',
-      })).rejects.toThrow('不支持的分享内容类型');
+      await expect(
+        generateShareContent({
+          memberId: 'member-1',
+          contentType: 'INVALID_TYPE' as ShareContentType,
+          contentId: 'test-1',
+        }),
+      ).rejects.toThrow('不支持的分享内容类型');
     });
   });
 });

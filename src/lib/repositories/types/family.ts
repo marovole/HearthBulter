@@ -11,7 +11,12 @@ import { z } from 'zod';
 /**
  * 家庭成员角色枚举
  */
-export const familyMemberRoleSchema = z.enum(['OWNER', 'ADMIN', 'MEMBER', 'GUEST']);
+export const familyMemberRoleSchema = z.enum([
+  'OWNER',
+  'ADMIN',
+  'MEMBER',
+  'GUEST',
+]);
 export type FamilyMemberRole = z.infer<typeof familyMemberRoleSchema>;
 
 /**
@@ -59,7 +64,13 @@ export type Gender = z.infer<typeof genderSchema>;
 /**
  * 年龄段枚举
  */
-export const ageGroupSchema = z.enum(['INFANT', 'CHILD', 'TEEN', 'ADULT', 'SENIOR']);
+export const ageGroupSchema = z.enum([
+  'INFANT',
+  'CHILD',
+  'TEEN',
+  'ADULT',
+  'SENIOR',
+]);
 export type AgeGroup = z.infer<typeof ageGroupSchema>;
 
 /**
@@ -104,18 +115,20 @@ export type FamilyMemberDTO = z.infer<typeof familyMemberSchema>;
 /**
  * 创建家庭成员 DTO
  */
-export const createFamilyMemberSchema = familyMemberSchema.omit({
-  id: true,
-  joinedAt: true,
-  createdAt: true,
-  updatedAt: true,
-  deletedAt: true,
-}).extend({
-  // userId 可选，允许创建不关联系统用户的成员（如儿童档案）
-  userId: z.string().uuid().optional(),
-  gender: genderSchema.optional(),
-  birthDate: z.coerce.date().optional(),
-});
+export const createFamilyMemberSchema = familyMemberSchema
+  .omit({
+    id: true,
+    joinedAt: true,
+    createdAt: true,
+    updatedAt: true,
+    deletedAt: true,
+  })
+  .extend({
+    // userId 可选，允许创建不关联系统用户的成员（如儿童档案）
+    userId: z.string().uuid().optional(),
+    gender: genderSchema.optional(),
+    birthDate: z.coerce.date().optional(),
+  });
 
 export type CreateFamilyMemberDTO = z.infer<typeof createFamilyMemberSchema>;
 
@@ -135,9 +148,11 @@ export type UpdateFamilyMemberDTO = z.infer<typeof updateFamilyMemberSchema>;
  */
 export const familyWithMembersSchema = familySchema.extend({
   members: z.array(familyMemberSchema).default([]),
-  _count: z.object({
-    members: z.number().int().nonnegative(),
-  }).optional(),
+  _count: z
+    .object({
+      members: z.number().int().nonnegative(),
+    })
+    .optional(),
 });
 
 export type FamilyWithMembersDTO = z.infer<typeof familyWithMembersSchema>;

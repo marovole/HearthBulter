@@ -3,15 +3,15 @@
  * 替换console.log，提供结构化日志记录
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogEntry {
-  level: LogLevel
-  message: string
-  timestamp: Date
-  context?: Record<string, any>
-  userId?: string
-  sessionId?: string
+  level: LogLevel;
+  message: string;
+  timestamp: Date;
+  context?: Record<string, any>;
+  userId?: string;
+  sessionId?: string;
 }
 
 /**
@@ -50,7 +50,11 @@ class Logger {
   /**
    * 格式化日志条目
    */
-  private formatLog(level: LogLevel, message: string, context?: Record<string, any>): LogEntry {
+  private formatLog(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, any>,
+  ): LogEntry {
     return {
       level,
       message,
@@ -64,27 +68,31 @@ class Logger {
   /**
    * 输出日志
    */
-  private log(level: LogLevel, message: string, context?: Record<string, any>): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, any>,
+  ): void {
     const entry = this.formatLog(level, message, context);
-    
+
     // 开发环境输出到控制台
     if (process.env.NODE_ENV === 'development') {
       const prefix = `[${entry.timestamp.toISOString()}] [${level.toUpperCase()}]`;
       const contextStr = context ? ` ${JSON.stringify(context)}` : '';
       switch (level) {
-      case 'debug':
-      case 'info':
-        console.log(`${prefix} ${message}${contextStr}`);
-        break;
-      case 'warn':
-        console.warn(`${prefix} ${message}${contextStr}`);
-        break;
-      case 'error':
-        console.error(`${prefix} ${message}${contextStr}`);
-        break;
+        case 'debug':
+        case 'info':
+          console.log(`${prefix} ${message}${contextStr}`);
+          break;
+        case 'warn':
+          console.warn(`${prefix} ${message}${contextStr}`);
+          break;
+        case 'error':
+          console.error(`${prefix} ${message}${contextStr}`);
+          break;
       }
     }
-    
+
     // 生产环境可以发送到日志服务
     if (process.env.NODE_ENV === 'production') {
       this.sendToLogService(entry);
@@ -132,7 +140,11 @@ class Logger {
   /**
    * 性能日志
    */
-  performance(operation: string, duration: number, context?: Record<string, any>): void {
+  performance(
+    operation: string,
+    duration: number,
+    context?: Record<string, any>,
+  ): void {
     this.info(`Performance: ${operation} completed in ${duration}ms`, {
       operation,
       duration,
@@ -155,7 +167,13 @@ class Logger {
   /**
    * API请求日志
    */
-  apiRequest(method: string, url: string, status: number, duration: number, context?: Record<string, any>): void {
+  apiRequest(
+    method: string,
+    url: string,
+    status: number,
+    duration: number,
+    context?: Record<string, any>,
+  ): void {
     this.info(`API: ${method} ${url} - ${status} (${duration}ms)`, {
       method,
       url,

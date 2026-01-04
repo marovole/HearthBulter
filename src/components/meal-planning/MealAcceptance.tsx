@@ -20,28 +20,36 @@ import { PortionAdjuster } from './PortionAdjuster';
 import { Ingredient, NutritionData } from '@/types/components';
 
 interface MealAcceptanceProps {
-  mealId: string
-  planId: string
-  isAccepted?: boolean
-  acceptanceDate?: Date
-  rejectionReason?: string
-  customizations?: MealCustomization[]
-  originalServings?: number
-  originalIngredients?: Ingredient[]
-  originalNutrition?: NutritionData
-  onAccept?: (customizations?: MealCustomization[]) => void
-  onReject?: (reason: string) => void
-  onCustomize?: (customizations: MealCustomization[]) => void
-  onPortionAdjust?: (servings: number, ingredients: Ingredient[], nutrition: NutritionData) => void
+  mealId: string;
+  planId: string;
+  isAccepted?: boolean;
+  acceptanceDate?: Date;
+  rejectionReason?: string;
+  customizations?: MealCustomization[];
+  originalServings?: number;
+  originalIngredients?: Ingredient[];
+  originalNutrition?: NutritionData;
+  onAccept?: (customizations?: MealCustomization[]) => void;
+  onReject?: (reason: string) => void;
+  onCustomize?: (customizations: MealCustomization[]) => void;
+  onPortionAdjust?: (
+    servings: number,
+    ingredients: Ingredient[],
+    nutrition: NutritionData,
+  ) => void;
 }
 
 interface MealCustomization {
-  id: string
-  type: 'INGREDIENT_REPLACE' | 'PORTION_ADJUST' | 'COOKING_METHOD' | 'TIME_ADJUST'
-  description: string
-  originalValue: string
-  newValue: string
-  createdAt: Date
+  id: string;
+  type:
+    | 'INGREDIENT_REPLACE'
+    | 'PORTION_ADJUST'
+    | 'COOKING_METHOD'
+    | 'TIME_ADJUST';
+  description: string;
+  originalValue: string;
+  newValue: string;
+  createdAt: Date;
 }
 
 const REJECTION_REASONS = [
@@ -68,15 +76,16 @@ export function MealAcceptance({
   onCustomize,
   onPortionAdjust,
 }: MealAcceptanceProps) {
-  const [status, setStatus] = useState<'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CUSTOMIZED'>(
-    isAccepted ? 'ACCEPTED' : 'PENDING'
-  );
+  const [status, setStatus] = useState<
+    'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CUSTOMIZED'
+  >(isAccepted ? 'ACCEPTED' : 'PENDING');
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [showCustomizePanel, setShowCustomizePanel] = useState(false);
   const [showPortionAdjuster, setShowPortionAdjuster] = useState(false);
-  const [customizationsList, setCustomizationsList] = useState<MealCustomization[]>(customizations);
+  const [customizationsList, setCustomizationsList] =
+    useState<MealCustomization[]>(customizations);
 
   useEffect(() => {
     if (customizations.length > 0) {
@@ -110,7 +119,11 @@ export function MealAcceptance({
     toast.success('已添加自定义修改');
   };
 
-  const handlePortionAdjust = (servings: number, ingredients: Ingredient[], nutrition: NutritionData) => {
+  const handlePortionAdjust = (
+    servings: number,
+    ingredients: Ingredient[],
+    nutrition: NutritionData,
+  ) => {
     const customization: MealCustomization = {
       id: Date.now().toString(),
       type: 'PORTION_ADJUST',
@@ -119,7 +132,7 @@ export function MealAcceptance({
       newValue: `${servings} 人份`,
       createdAt: new Date(),
     };
-    
+
     handleCustomize(customization);
     onPortionAdjust?.(servings, ingredients, nutrition);
     setShowPortionAdjuster(false);
@@ -127,7 +140,7 @@ export function MealAcceptance({
   };
 
   const removeCustomization = (id: string) => {
-    const updated = customizationsList.filter(c => c.id !== id);
+    const updated = customizationsList.filter((c) => c.id !== id);
     setCustomizationsList(updated);
     onCustomize?.(updated);
     toast.info('已移除自定义修改');
@@ -135,36 +148,36 @@ export function MealAcceptance({
 
   const getStatusDisplay = () => {
     switch (status) {
-    case 'ACCEPTED':
-      return {
-        icon: <CheckCircle className="h-5 w-5 text-green-600" />,
-        text: '已接受',
-        color: 'bg-green-100 text-green-800 border-green-200',
-        description: acceptanceDate 
-          ? `于 ${acceptanceDate.toLocaleDateString()} 接受` 
-          : '已接受此食谱',
-      };
-    case 'REJECTED':
-      return {
-        icon: <XCircle className="h-5 w-5 text-red-600" />,
-        text: '已拒绝',
-        color: 'bg-red-100 text-red-800 border-red-200',
-        description: rejectionReason || '已拒绝此食谱',
-      };
-    case 'CUSTOMIZED':
-      return {
-        icon: <Edit3 className="h-5 w-5 text-blue-600" />,
-        text: '已自定义',
-        color: 'bg-blue-100 text-blue-800 border-blue-200',
-        description: `已进行 ${customizationsList.length} 项自定义修改`,
-      };
-    default:
-      return {
-        icon: <Clock className="h-5 w-5 text-yellow-600" />,
-        text: '待处理',
-        color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-        description: '请决定是否接受此食谱',
-      };
+      case 'ACCEPTED':
+        return {
+          icon: <CheckCircle className='h-5 w-5 text-green-600' />,
+          text: '已接受',
+          color: 'bg-green-100 text-green-800 border-green-200',
+          description: acceptanceDate
+            ? `于 ${acceptanceDate.toLocaleDateString()} 接受`
+            : '已接受此食谱',
+        };
+      case 'REJECTED':
+        return {
+          icon: <XCircle className='h-5 w-5 text-red-600' />,
+          text: '已拒绝',
+          color: 'bg-red-100 text-red-800 border-red-200',
+          description: rejectionReason || '已拒绝此食谱',
+        };
+      case 'CUSTOMIZED':
+        return {
+          icon: <Edit3 className='h-5 w-5 text-blue-600' />,
+          text: '已自定义',
+          color: 'bg-blue-100 text-blue-800 border-blue-200',
+          description: `已进行 ${customizationsList.length} 项自定义修改`,
+        };
+      default:
+        return {
+          icon: <Clock className='h-5 w-5 text-yellow-600' />,
+          text: '待处理',
+          color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+          description: '请决定是否接受此食谱',
+        };
     }
   };
 
@@ -174,50 +187,51 @@ export function MealAcceptance({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ChefHat className="h-5 w-5" />
-            食谱确认
+          <CardTitle className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <ChefHat className='h-5 w-5' />
+              食谱确认
             </div>
-            <Badge variant="outline" className={statusDisplay.color}>
+            <Badge variant='outline' className={statusDisplay.color}>
               {statusDisplay.icon}
-              <span className="ml-2">{statusDisplay.text}</span>
+              <span className='ml-2'>{statusDisplay.text}</span>
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className='space-y-4'>
           {/* 状态描述 */}
           <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {statusDisplay.description}
-            </AlertDescription>
+            <AlertTriangle className='h-4 w-4' />
+            <AlertDescription>{statusDisplay.description}</AlertDescription>
           </Alert>
 
           {/* 自定义修改列表 */}
           {customizationsList.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                <Edit3 className="h-4 w-4" />
-              自定义修改 ({customizationsList.length})
+            <div className='space-y-2'>
+              <h4 className='font-medium text-gray-900 flex items-center gap-2'>
+                <Edit3 className='h-4 w-4' />
+                自定义修改 ({customizationsList.length})
               </h4>
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 {customizationsList.map((customization) => (
-                  <div key={customization.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium text-blue-900">
+                  <div
+                    key={customization.id}
+                    className='flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg'
+                  >
+                    <div className='flex-1'>
+                      <div className='font-medium text-blue-900'>
                         {customization.description}
                       </div>
-                      <div className="text-sm text-blue-700">
+                      <div className='text-sm text-blue-700'>
                         {customization.originalValue} → {customization.newValue}
                       </div>
                     </div>
                     <Button
-                      variant="ghost"
-                      size="sm"
+                      variant='ghost'
+                      size='sm'
                       onClick={() => removeCustomization(customization.id)}
                     >
-                      <XCircle className="h-4 w-4" />
+                      <XCircle className='h-4 w-4' />
                     </Button>
                   </div>
                 ))}
@@ -227,83 +241,80 @@ export function MealAcceptance({
 
           {/* 操作按钮 */}
           {status === 'PENDING' && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={handleAccept}
-                className="flex-1"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-              接受食谱
+            <div className='flex flex-col sm:flex-row gap-3'>
+              <Button onClick={handleAccept} className='flex-1'>
+                <CheckCircle className='h-4 w-4 mr-2' />
+                接受食谱
               </Button>
-            
+
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => setShowCustomizePanel(true)}
-                className="flex-1"
+                className='flex-1'
               >
-                <Edit3 className="h-4 w-4 mr-2" />
-              自定义修改
+                <Edit3 className='h-4 w-4 mr-2' />
+                自定义修改
               </Button>
-            
+
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => setShowRejectForm(true)}
-                className="flex-1"
+                className='flex-1'
               >
-                <XCircle className="h-4 w-4 mr-2" />
-              拒绝食谱
+                <XCircle className='h-4 w-4 mr-2' />
+                拒绝食谱
               </Button>
             </div>
           )}
 
           {/* 拒绝表单 */}
           {showRejectForm && (
-            <div className="space-y-4 p-4 border border-red-200 rounded-lg bg-red-50">
-              <h4 className="font-medium text-red-900 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-              请选择拒绝原因
+            <div className='space-y-4 p-4 border border-red-200 rounded-lg bg-red-50'>
+              <h4 className='font-medium text-red-900 flex items-center gap-2'>
+                <MessageSquare className='h-4 w-4' />
+                请选择拒绝原因
               </h4>
-            
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
                 {REJECTION_REASONS.map((reason) => (
-                  <label key={reason} className="flex items-center space-x-2 cursor-pointer">
+                  <label
+                    key={reason}
+                    className='flex items-center space-x-2 cursor-pointer'
+                  >
                     <input
-                      type="radio"
-                      name="rejectReason"
+                      type='radio'
+                      name='rejectReason'
                       value={reason}
                       checked={rejectReason === reason}
                       onChange={(e) => setRejectReason(e.target.value)}
-                      className="text-red-600"
+                      className='text-red-600'
                     />
-                    <span className="text-sm text-red-800">{reason}</span>
+                    <span className='text-sm text-red-800'>{reason}</span>
                   </label>
                 ))}
               </div>
-            
+
               <textarea
-                placeholder="请详细说明原因（可选）"
+                placeholder='请详细说明原因（可选）'
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
-                className="w-full p-3 border border-red-200 rounded-lg text-sm"
+                className='w-full p-3 border border-red-200 rounded-lg text-sm'
                 rows={3}
               />
-            
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleReject}
-                  className="flex-1"
-                >
-                确认拒绝
+
+              <div className='flex gap-2'>
+                <Button onClick={handleReject} className='flex-1'>
+                  确认拒绝
                 </Button>
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={() => {
                     setShowRejectForm(false);
                     setRejectReason('');
                     setCustomReason('');
                   }}
                 >
-                取消
+                  取消
                 </Button>
               </div>
             </div>
@@ -311,85 +322,82 @@ export function MealAcceptance({
 
           {/* 自定义面板 */}
           {showCustomizePanel && (
-            <div className="space-y-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
-              <h4 className="font-medium text-blue-900 flex items-center gap-2">
-                <Edit3 className="h-4 w-4" />
-              自定义修改
+            <div className='space-y-4 p-4 border border-blue-200 rounded-lg bg-blue-50'>
+              <h4 className='font-medium text-blue-900 flex items-center gap-2'>
+                <Edit3 className='h-4 w-4' />
+                自定义修改
               </h4>
-            
-              <div className="space-y-3">
+
+              <div className='space-y-3'>
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={() => {
-                  // 这里可以打开食材替换对话框
+                    // 这里可以打开食材替换对话框
                     setShowCustomizePanel(false);
                   }}
-                  className="w-full justify-start"
+                  className='w-full justify-start'
                 >
-                替换食材
+                  替换食材
                 </Button>
-              
+
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={() => {
                     setShowPortionAdjuster(true);
                     setShowCustomizePanel(false);
                   }}
-                  className="w-full justify-start"
+                  className='w-full justify-start'
                 >
-                调整份量
+                  调整份量
                 </Button>
-              
+
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={() => {
-                  // 这里可以打开烹饪方法调整对话框
+                    // 这里可以打开烹饪方法调整对话框
                     setShowCustomizePanel(false);
                   }}
-                  className="w-full justify-start"
+                  className='w-full justify-start'
                 >
-                修改烹饪方法
+                  修改烹饪方法
                 </Button>
-              
+
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={() => {
-                  // 这里可以打开时间调整对话框
+                    // 这里可以打开时间调整对话框
                     setShowCustomizePanel(false);
                   }}
-                  className="w-full justify-start"
+                  className='w-full justify-start'
                 >
-                调整烹饪时间
+                  调整烹饪时间
                 </Button>
               </div>
-            
+
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => setShowCustomizePanel(false)}
               >
-              关闭
+                关闭
               </Button>
             </div>
           )}
 
           {/* 已接受/拒绝后的额外操作 */}
           {(status === 'ACCEPTED' || status === 'REJECTED') && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setStatus('PENDING')}
-              >
-                <Clock className="h-4 w-4 mr-2" />
-              重新考虑
+            <div className='flex gap-2'>
+              <Button variant='outline' onClick={() => setStatus('PENDING')}>
+                <Clock className='h-4 w-4 mr-2' />
+                重新考虑
               </Button>
-            
+
               {status === 'ACCEPTED' && (
                 <Button
-                  variant="outline"
+                  variant='outline'
                   onClick={() => setShowCustomizePanel(true)}
                 >
-                  <Edit3 className="h-4 w-4 mr-2" />
-                添加修改
+                  <Edit3 className='h-4 w-4 mr-2' />
+                  添加修改
                 </Button>
               )}
             </div>
@@ -399,20 +407,20 @@ export function MealAcceptance({
 
       {/* 份量调整弹窗 */}
       {showPortionAdjuster && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">调整份量</h3>
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
+          <div className='bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
+            <div className='p-6'>
+              <div className='flex items-center justify-between mb-4'>
+                <h3 className='text-lg font-semibold'>调整份量</h3>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={() => setShowPortionAdjuster(false)}
                 >
-                  <XCircle className="h-4 w-4" />
+                  <XCircle className='h-4 w-4' />
                 </Button>
               </div>
-            
+
               <PortionAdjuster
                 mealId={mealId}
                 originalServings={originalServings}

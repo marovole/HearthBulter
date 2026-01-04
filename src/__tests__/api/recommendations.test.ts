@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 // Create a mock Prisma client
@@ -79,7 +86,9 @@ describe('/api/recommendations', () => {
 
   describe('GET /api/recommendations', () => {
     it('should return recommendations successfully', async () => {
-      const url = new URL('http://localhost:3000/api/recommendations?memberId=test-user&limit=10');
+      const url = new URL(
+        'http://localhost:3000/api/recommendations?memberId=test-user&limit=10',
+      );
       const request = { url: url.toString() } as NextRequest;
 
       // Mock Prisma recipe response
@@ -124,7 +133,9 @@ describe('/api/recommendations', () => {
     });
 
     it('should handle invalid limit parameter', async () => {
-      const url = new URL('http://localhost:3000/api/recommendations?memberId=test-user&limit=invalid');
+      const url = new URL(
+        'http://localhost:3000/api/recommendations?memberId=test-user&limit=invalid',
+      );
       const request = { url: url.toString() } as NextRequest;
 
       const response = await GET(request);
@@ -135,11 +146,15 @@ describe('/api/recommendations', () => {
     });
 
     it('should handle recommendation engine errors', async () => {
-      const url = new URL('http://localhost:3000/api/recommendations?memberId=test-user');
+      const url = new URL(
+        'http://localhost:3000/api/recommendations?memberId=test-user',
+      );
       const request = { url: url.toString() } as NextRequest;
 
       // Mock the recipe search to fail
-      mockPrismaClient.recipe.findMany.mockRejectedValue(new Error('Recipe search failed'));
+      mockPrismaClient.recipe.findMany.mockRejectedValue(
+        new Error('Recipe search failed'),
+      );
 
       const response = await GET(request);
       const data = await response.json();
@@ -151,9 +166,9 @@ describe('/api/recommendations', () => {
     it('should parse all query parameters correctly', async () => {
       const url = new URL(
         'http://localhost:3000/api/recommendations?' +
-        'memberId=test-user&mealType=DINNER&servings=4&maxCookTime=90&' +
-        'budgetLimit=80&dietaryRestrictions=low-sugar,gluten-free&' +
-        'excludedIngredients=garlic,onion&preferredCuisines=Italian,Chinese&season=SUMMER&limit=5'
+          'memberId=test-user&mealType=DINNER&servings=4&maxCookTime=90&' +
+          'budgetLimit=80&dietaryRestrictions=low-sugar,gluten-free&' +
+          'excludedIngredients=garlic,onion&preferredCuisines=Italian,Chinese&season=SUMMER&limit=5',
       );
       const request = { url: url.toString() } as NextRequest;
 
@@ -291,7 +306,9 @@ describe('/api/recommendations', () => {
     });
 
     it('should handle database errors during interaction recording', async () => {
-      mockPrismaClient.recipeRating.create.mockRejectedValue(new Error('Database error'));
+      mockPrismaClient.recipeRating.create.mockRejectedValue(
+        new Error('Database error'),
+      );
 
       mockRequest.json.mockResolvedValue({
         type: 'rating',
@@ -313,7 +330,9 @@ describe('/api/recommendations', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty results gracefully', async () => {
-      const url = new URL('http://localhost:3000/api/recommendations?memberId=test-user');
+      const url = new URL(
+        'http://localhost:3000/api/recommendations?memberId=test-user',
+      );
       const request = { url: url.toString() } as NextRequest;
 
       mockPrismaClient.recipe.findMany.mockResolvedValue([]);
@@ -327,7 +346,9 @@ describe('/api/recommendations', () => {
     });
 
     it('should handle malformed query parameters', async () => {
-      const url = new URL('http://localhost:3000/api/recommendations?memberId=test-user&servings=abc&budgetLimit=def');
+      const url = new URL(
+        'http://localhost:3000/api/recommendations?memberId=test-user&servings=abc&budgetLimit=def',
+      );
       const request = { url: url.toString() } as NextRequest;
 
       mockPrismaClient.recipe.findMany.mockResolvedValue([]);

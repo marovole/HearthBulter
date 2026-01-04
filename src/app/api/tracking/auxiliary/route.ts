@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import {
-
   trackWater,
   trackExercise,
   trackSleep,
@@ -54,10 +53,7 @@ export async function POST(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -66,56 +62,53 @@ export async function POST(req: NextRequest) {
     let result;
 
     switch (type) {
-    case 'water':
-      {
-        const data = waterSchema.parse(body);
-        result = await trackWater(data.memberId, data.amount);
-      }
-      break;
+      case 'water':
+        {
+          const data = waterSchema.parse(body);
+          result = await trackWater(data.memberId, data.amount);
+        }
+        break;
 
-    case 'exercise':
-      {
-        const data = exerciseSchema.parse(body);
-        result = await trackExercise(data.memberId, {
-          minutes: data.minutes,
-          caloriesBurned: data.caloriesBurned,
-          exerciseType: data.exerciseType,
-        });
-      }
-      break;
+      case 'exercise':
+        {
+          const data = exerciseSchema.parse(body);
+          result = await trackExercise(data.memberId, {
+            minutes: data.minutes,
+            caloriesBurned: data.caloriesBurned,
+            exerciseType: data.exerciseType,
+          });
+        }
+        break;
 
-    case 'sleep':
-      {
-        const data = sleepSchema.parse(body);
-        result = await trackSleep(data.memberId, {
-          hours: data.hours,
-          quality: data.quality,
-        });
-      }
-      break;
+      case 'sleep':
+        {
+          const data = sleepSchema.parse(body);
+          result = await trackSleep(data.memberId, {
+            hours: data.hours,
+            quality: data.quality,
+          });
+        }
+        break;
 
-    case 'weight':
-      {
-        const data = weightSchema.parse(body);
-        result = await trackWeight(data.memberId, {
-          weight: data.weight,
-          bodyFat: data.bodyFat,
-        });
-      }
-      break;
+      case 'weight':
+        {
+          const data = weightSchema.parse(body);
+          result = await trackWeight(data.memberId, {
+            weight: data.weight,
+            bodyFat: data.bodyFat,
+          });
+        }
+        break;
 
-    case 'water_target':
-      {
-        const { memberId, target } = body;
-        result = await setWaterTarget(memberId, target);
-      }
-      break;
+      case 'water_target':
+        {
+          const { memberId, target } = body;
+          result = await setWaterTarget(memberId, target);
+        }
+        break;
 
-    default:
-      return NextResponse.json(
-        { error: '无效的打卡类型' },
-        { status: 400 }
-      );
+      default:
+        return NextResponse.json({ error: '无效的打卡类型' }, { status: 400 });
     }
 
     return NextResponse.json(result);
@@ -125,14 +118,11 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '无效的请求数据', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: '创建辅助打卡失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '创建辅助打卡失败' }, { status: 500 });
   }
 }
 
@@ -145,20 +135,14 @@ export async function GET(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
     const memberId = searchParams.get('memberId');
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少memberId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少memberId参数' }, { status: 400 });
     }
 
     const tracking = await getOrCreateTodayTracking(memberId);
@@ -169,8 +153,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       { error: '获取辅助打卡数据失败' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

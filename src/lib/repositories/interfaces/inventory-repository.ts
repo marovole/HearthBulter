@@ -47,7 +47,9 @@ export interface InventoryRepository {
    * @param payload - 库存物品创建参数
    * @returns 创建的库存物品对象（含关联食品信息）
    */
-  createInventoryItem(payload: InventoryItemCreateDTO): Promise<InventoryItemDTO>;
+  createInventoryItem(
+    payload: InventoryItemCreateDTO,
+  ): Promise<InventoryItemDTO>;
 
   /**
    * 更新库存物品
@@ -58,7 +60,10 @@ export interface InventoryRepository {
    * @param payload - 更新参数
    * @returns 更新后的库存物品对象
    */
-  updateInventoryItem(id: string, payload: InventoryItemUpdateDTO): Promise<InventoryItemDTO>;
+  updateInventoryItem(
+    id: string,
+    payload: InventoryItemUpdateDTO,
+  ): Promise<InventoryItemDTO>;
 
   /**
    * 获取库存物品详情
@@ -71,7 +76,9 @@ export interface InventoryRepository {
    * @param id - 库存物品ID
    * @returns 库存物品对象（含关联数据），不存在时返回 null
    */
-  getInventoryItemById(id: string): Promise<InventoryItemWithRelationsDTO | null>;
+  getInventoryItemById(
+    id: string,
+  ): Promise<InventoryItemWithRelationsDTO | null>;
 
   /**
    * 查询成员的库存物品列表
@@ -93,7 +100,7 @@ export interface InventoryRepository {
     memberId: string,
     filter?: InventoryItemFilterDTO,
     pagination?: PaginationInput,
-    options?: { includeRelations?: boolean }
+    options?: { includeRelations?: boolean },
   ): Promise<PaginatedResult<InventoryItemDTO>>;
 
   /**
@@ -134,7 +141,9 @@ export interface InventoryRepository {
    * @returns 更新后的库存物品列表
    * @throws 任一物品库存不足时整体回滚
    */
-  batchUseInventory(payload: BatchUseInventoryInputDTO): Promise<InventoryItemDTO[]>;
+  batchUseInventory(
+    payload: BatchUseInventoryInputDTO,
+  ): Promise<InventoryItemDTO[]>;
 
   /**
    * 查询库存使用记录
@@ -147,7 +156,7 @@ export interface InventoryRepository {
    */
   listInventoryUsages(
     inventoryItemId: string,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<InventoryUsageDTO>>;
 
   // ==================== 浪费记录管理 ====================
@@ -183,7 +192,7 @@ export interface InventoryRepository {
       endDate?: Date;
       reason?: WasteRecordDTO['reason'];
     },
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<WasteRecordDTO>>;
 
   // ==================== 统计和聚合 ====================
@@ -214,7 +223,10 @@ export interface InventoryRepository {
    * @param daysThreshold - 天数阈值（默认7天）
    * @returns 即将过期的物品列表
    */
-  getExpiringItems(memberId: string, daysThreshold?: number): Promise<InventoryItemDTO[]>;
+  getExpiringItems(
+    memberId: string,
+    daysThreshold?: number,
+  ): Promise<InventoryItemDTO[]>;
 
   /**
    * 获取低库存物品
@@ -239,7 +251,7 @@ export interface InventoryRepository {
   getInventoryValueTrend(
     memberId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<Array<{ date: Date; totalValue: number; itemCount: number }>>;
 
   // ==================== 批量操作 ====================
@@ -266,5 +278,8 @@ export interface InventoryRepository {
    * @param expiredDaysThreshold - 过期天数阈值（默认30天）
    * @returns 删除的物品数量
    */
-  batchDeleteExpiredItems(memberId: string, expiredDaysThreshold?: number): Promise<number>;
+  batchDeleteExpiredItems(
+    memberId: string,
+    expiredDaysThreshold?: number,
+  ): Promise<number>;
 }

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const memberId = searchParams.get('memberId');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    
+
     if (!memberId) {
       return NextResponse.json({ error: '缺少成员ID' }, { status: 400 });
     }
@@ -28,26 +28,25 @@ export async function GET(request: NextRequest) {
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || '无权访问此成员数据' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     const analysis = await inventoryAnalyzer.generateInventoryAnalysis(
       memberId,
       startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined
+      endDate ? new Date(endDate) : undefined,
     );
 
     return NextResponse.json({
       success: true,
       data: analysis,
     });
-
   } catch (error) {
     console.error('获取库存分析失败:', error);
     return NextResponse.json(
       { error: '获取库存分析失败', details: error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

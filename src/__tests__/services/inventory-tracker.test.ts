@@ -82,8 +82,9 @@ describe('InventoryTracker', () => {
         unit: '个',
       };
 
-      await expect(inventoryTracker.createInventoryItem(itemData))
-        .rejects.toThrow();
+      await expect(
+        inventoryTracker.createInventoryItem(itemData),
+      ).rejects.toThrow();
     });
 
     it('should throw error for negative quantity', async () => {
@@ -94,8 +95,9 @@ describe('InventoryTracker', () => {
         unit: '个',
       };
 
-      await expect(inventoryTracker.createInventoryItem(itemData))
-        .rejects.toThrow();
+      await expect(
+        inventoryTracker.createInventoryItem(itemData),
+      ).rejects.toThrow();
     });
   });
 
@@ -134,7 +136,10 @@ describe('InventoryTracker', () => {
         purchasePrice: 12.0,
       };
 
-      const result = await inventoryTracker.updateInventoryItem(testInventoryItemId, updateData);
+      const result = await inventoryTracker.updateInventoryItem(
+        testInventoryItemId,
+        updateData,
+      );
 
       expect(result.quantity).toBe(8);
       expect(result.purchasePrice).toBe(12.0);
@@ -142,8 +147,9 @@ describe('InventoryTracker', () => {
     });
 
     it('should throw error for non-existent item', async () => {
-      await expect(inventoryTracker.updateInventoryItem('invalid-id', { quantity: 5 }))
-        .rejects.toThrow();
+      await expect(
+        inventoryTracker.updateInventoryItem('invalid-id', { quantity: 5 }),
+      ).rejects.toThrow();
     });
   });
 
@@ -157,7 +163,7 @@ describe('InventoryTracker', () => {
         {
           notes: 'Test usage',
           recipeName: 'Test Recipe',
-        }
+        },
       );
 
       expect(usageRecord).toBeDefined();
@@ -165,13 +171,20 @@ describe('InventoryTracker', () => {
       expect(usageRecord.usageType).toBe('COOKING');
 
       // 检查库存是否更新
-      const updatedItem = await inventoryTracker.getInventoryItemById(testInventoryItemId);
+      const updatedItem =
+        await inventoryTracker.getInventoryItemById(testInventoryItemId);
       expect(updatedItem?.quantity).toBe(5);
     });
 
     it('should throw error for insufficient quantity', async () => {
-      await expect(inventoryTracker.useInventory(testInventoryItemId, 10, 'COOKING', testMemberId))
-        .rejects.toThrow();
+      await expect(
+        inventoryTracker.useInventory(
+          testInventoryItemId,
+          10,
+          'COOKING',
+          testMemberId,
+        ),
+      ).rejects.toThrow();
     });
   });
 
@@ -199,13 +212,15 @@ describe('InventoryTracker', () => {
     it('should delete inventory item successfully', async () => {
       await inventoryTracker.deleteInventoryItem(testInventoryItemId);
 
-      const item = await inventoryTracker.getInventoryItemById(testInventoryItemId);
+      const item =
+        await inventoryTracker.getInventoryItemById(testInventoryItemId);
       expect(item).toBeNull();
     });
 
     it('should throw error for non-existent item', async () => {
-      await expect(inventoryTracker.deleteInventoryItem('invalid-id'))
-        .rejects.toThrow();
+      await expect(
+        inventoryTracker.deleteInventoryItem('invalid-id'),
+      ).rejects.toThrow();
     });
   });
 
@@ -244,7 +259,7 @@ describe('InventoryTracker', () => {
       const updatedItems = await inventoryTracker.useInventoryForRecipe(
         testMemberId,
         ingredients,
-        'Fruit Salad'
+        'Fruit Salad',
       );
 
       expect(updatedItems).toHaveLength(2);

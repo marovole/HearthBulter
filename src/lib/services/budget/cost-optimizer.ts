@@ -5,54 +5,54 @@ import type { NutritionInfo } from '@/types/service-types';
 const prisma = new PrismaClient();
 
 export interface NutritionTarget {
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
 export interface FoodOption {
-  food: Food
-  amount: number // 克数
-  cost: number
+  food: Food;
+  amount: number; // 克数
+  cost: number;
   nutrition: {
-    calories: number
-    protein: number
-    carbs: number
-    fat: number
-  }
-  unitPrice: number // 元/kg
-  platform: string
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  unitPrice: number; // 元/kg
+  platform: string;
 }
 
 export interface OptimizationResult {
-  originalCost: number
-  optimizedCost: number
-  savings: number
-  savingsPercentage: number
-  originalFoods: FoodOption[]
-  optimizedFoods: FoodOption[]
+  originalCost: number;
+  optimizedCost: number;
+  savings: number;
+  savingsPercentage: number;
+  originalFoods: FoodOption[];
+  optimizedFoods: FoodOption[];
   substitutions: {
-    original: FoodOption
-    substitute: FoodOption
-    savings: number
-    reason: string
-  }[]
+    original: FoodOption;
+    substitute: FoodOption;
+    savings: number;
+    reason: string;
+  }[];
   nutritionComparison: {
-    original: NutritionTarget
-    optimized: NutritionTarget
-    meetsRequirements: boolean
-  }
+    original: NutritionTarget;
+    optimized: NutritionTarget;
+    meetsRequirements: boolean;
+  };
 }
 
 export interface OptimizationConstraints {
-  nutritionTargets: NutritionTarget
-  maxCost?: number
-  minSavings?: number
-  allowedCategories?: FoodCategory[]
-  excludedFoodIds?: string[]
-  preferSeasonal?: boolean
-  economyMode?: boolean
+  nutritionTargets: NutritionTarget;
+  maxCost?: number;
+  minSavings?: number;
+  allowedCategories?: FoodCategory[];
+  excludedFoodIds?: string[];
+  preferSeasonal?: boolean;
+  economyMode?: boolean;
 }
 
 export class CostOptimizer {
@@ -60,35 +60,48 @@ export class CostOptimizer {
    * 优化购物清单成本
    */
   async optimizeShoppingList(
-    foodIds: string[], 
-    constraints: OptimizationConstraints
+    foodIds: string[],
+    constraints: OptimizationConstraints,
   ): Promise<OptimizationResult> {
     // 获取原始食物选项
     const originalFoods = await this.getFoodOptions(foodIds);
-    
+
     // 计算原始成本和营养
-    const originalCost = originalFoods.reduce((sum, food) => sum + food.cost, 0);
+    const originalCost = originalFoods.reduce(
+      (sum, food) => sum + food.cost,
+      0,
+    );
     const originalNutrition = this.calculateTotalNutrition(originalFoods);
 
     // 获取可替换的食物选项
-    const substituteOptions = await this.findSubstituteOptions(originalFoods, constraints);
+    const substituteOptions = await this.findSubstituteOptions(
+      originalFoods,
+      constraints,
+    );
 
     // 运行优化算法
     const optimizedFoods = await this.runOptimization(
       originalFoods,
       substituteOptions,
-      constraints
+      constraints,
     );
 
     // 计算优化后成本和营养
-    const optimizedCost = optimizedFoods.reduce((sum, food) => sum + food.cost, 0);
+    const optimizedCost = optimizedFoods.reduce(
+      (sum, food) => sum + food.cost,
+      0,
+    );
     const optimizedNutrition = this.calculateTotalNutrition(optimizedFoods);
 
     // 生成替换建议
-    const substitutions = this.generateSubstitutions(originalFoods, optimizedFoods);
+    const substitutions = this.generateSubstitutions(
+      originalFoods,
+      optimizedFoods,
+    );
 
     const savings = originalCost - optimizedCost;
-    const savingsPercentage = originalCost > 0 ? (savings / originalCost) * 100 : 0;
+    const savingsPercentage =
+      originalCost > 0 ? (savings / originalCost) * 100 : 0;
 
     return {
       originalCost,
@@ -101,7 +114,10 @@ export class CostOptimizer {
       nutritionComparison: {
         original: originalNutrition,
         optimized: optimizedNutrition,
-        meetsRequirements: this.meetsNutritionRequirements(optimizedNutrition, constraints.nutritionTargets),
+        meetsRequirements: this.meetsNutritionRequirements(
+          optimizedNutrition,
+          constraints.nutritionTargets,
+        ),
       },
     };
   }
@@ -156,8 +172,8 @@ export class CostOptimizer {
    * 查找可替换的食物选项
    */
   private async findSubstituteOptions(
-    originalFoods: FoodOption[], 
-    constraints: OptimizationConstraints
+    originalFoods: FoodOption[],
+    constraints: OptimizationConstraints,
   ): Promise<FoodOption[]> {
     const substitutes: FoodOption[] = [];
 
@@ -167,8 +183,8 @@ export class CostOptimizer {
         where: {
           category: original.food.category,
           id: { not: original.food.id },
-          ...(constraints.excludedFoodIds && { 
-            id: { notIn: constraints.excludedFoodIds }, 
+          ...(constraints.excludedFoodIds && {
+            id: { notIn: constraints.excludedFoodIds },
           }),
         },
         include: {
@@ -217,10 +233,14 @@ export class CostOptimizer {
   private async runOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Promise<FoodOption[]> {
     if (constraints.economyMode) {
-      return this.economyModeOptimization(originalFoods, substitutes, constraints);
+      return this.economyModeOptimization(
+        originalFoods,
+        substitutes,
+        constraints,
+      );
     } else {
       return this.balancedOptimization(originalFoods, substitutes, constraints);
     }
@@ -232,14 +252,15 @@ export class CostOptimizer {
   private economyModeOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Promise<FoodOption[]> {
     const result: FoodOption[] = [];
     const targetNutrition = constraints.nutritionTargets;
 
     // 贪心算法：优先选择性价比最高的食物
-    const sortedOptions = [...originalFoods, ...substitutes]
-      .sort((a, b) => (a.cost / a.nutrition.calories) - (b.cost / b.nutrition.calories));
+    const sortedOptions = [...originalFoods, ...substitutes].sort(
+      (a, b) => a.cost / a.nutrition.calories - b.cost / b.nutrition.calories,
+    );
 
     const currentNutrition = { calories: 0, protein: 0, carbs: 0, fat: 0 };
     let currentCost = 0;
@@ -248,10 +269,11 @@ export class CostOptimizer {
       if (currentNutrition.calories >= targetNutrition.calories) break;
 
       // 计算需要多少量来满足营养目标
-      const remainingCalories = targetNutrition.calories - currentNutrition.calories;
+      const remainingCalories =
+        targetNutrition.calories - currentNutrition.calories;
       const neededAmount = Math.min(
         (remainingCalories / option.nutrition.calories) * option.amount,
-        option.amount * 2 // 最多2倍量
+        option.amount * 2, // 最多2倍量
       );
 
       const scaledOption = {
@@ -267,7 +289,7 @@ export class CostOptimizer {
       };
 
       result.push(scaledOption);
-      
+
       currentNutrition.calories += scaledOption.nutrition.calories;
       currentNutrition.protein += scaledOption.nutrition.protein;
       currentNutrition.carbs += scaledOption.nutrition.carbs;
@@ -289,28 +311,32 @@ export class CostOptimizer {
   private balancedOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Promise<FoodOption[]> {
     const result = [...originalFoods];
 
     // 尝试替换部分高成本食物
     for (let i = 0; i < result.length; i++) {
       const original = result[i];
-      
+
       // 查找同类别的更便宜替代品
-      const cheaperSubstitutes = substitutes.filter(s => 
-        s.food.category === original.food.category && 
-        s.cost < original.cost
+      const cheaperSubstitutes = substitutes.filter(
+        (s) =>
+          s.food.category === original.food.category && s.cost < original.cost,
       );
 
       if (cheaperSubstitutes.length > 0) {
         // 选择最便宜的替代品
         const bestSubstitute = cheaperSubstitutes[0];
-        
+
         // 检查营养相似性
-        const nutritionSimilarity = this.calculateNutritionSimilarity(original, bestSubstitute);
-        
-        if (nutritionSimilarity > 0.7) { // 70%相似度阈值
+        const nutritionSimilarity = this.calculateNutritionSimilarity(
+          original,
+          bestSubstitute,
+        );
+
+        if (nutritionSimilarity > 0.7) {
+          // 70%相似度阈值
           result[i] = bestSubstitute;
         }
       }
@@ -322,9 +348,16 @@ export class CostOptimizer {
   /**
    * 计算营养相似性
    */
-  private calculateNutritionSimilarity(food1: FoodOption, food2: FoodOption): number {
+  private calculateNutritionSimilarity(
+    food1: FoodOption,
+    food2: FoodOption,
+  ): number {
     const normalizeNutrition = (nutrition: NutritionInfo) => {
-      const total = nutrition.calories + nutrition.protein + nutrition.carbs + nutrition.fat;
+      const total =
+        nutrition.calories +
+        nutrition.protein +
+        nutrition.carbs +
+        nutrition.fat;
       return {
         calories: nutrition.calories / total,
         protein: nutrition.protein / total,
@@ -339,9 +372,9 @@ export class CostOptimizer {
     // 计算欧几里得距离的相似度
     const distance = Math.sqrt(
       Math.pow(norm1.calories - norm2.calories, 2) +
-      Math.pow(norm1.protein - norm2.protein, 2) +
-      Math.pow(norm1.carbs - norm2.carbs, 2) +
-      Math.pow(norm1.fat - norm2.fat, 2)
+        Math.pow(norm1.protein - norm2.protein, 2) +
+        Math.pow(norm1.carbs - norm2.carbs, 2) +
+        Math.pow(norm1.fat - norm2.fat, 2),
     );
 
     return 1 - distance;
@@ -351,20 +384,23 @@ export class CostOptimizer {
    * 计算总营养
    */
   private calculateTotalNutrition(foods: FoodOption[]): NutritionTarget {
-    return foods.reduce((total, food) => ({
-      calories: total.calories + food.nutrition.calories,
-      protein: total.protein + food.nutrition.protein,
-      carbs: total.carbs + food.nutrition.carbs,
-      fat: total.fat + food.nutrition.fat,
-    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+    return foods.reduce(
+      (total, food) => ({
+        calories: total.calories + food.nutrition.calories,
+        protein: total.protein + food.nutrition.protein,
+        carbs: total.carbs + food.nutrition.carbs,
+        fat: total.fat + food.nutrition.fat,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    );
   }
 
   /**
    * 检查是否满足营养要求
    */
   private meetsNutritionRequirements(
-    actual: NutritionTarget, 
-    targets: NutritionTarget
+    actual: NutritionTarget,
+    targets: NutritionTarget,
   ): boolean {
     const tolerance = 0.1; // 10%容差
 
@@ -380,13 +416,13 @@ export class CostOptimizer {
    * 生成替换建议
    */
   private generateSubstitutions(
-    original: FoodOption[], 
-    optimized: FoodOption[]
+    original: FoodOption[],
+    optimized: FoodOption[],
   ): Array<{
-    original: FoodOption
-    substitute: FoodOption
-    savings: number
-    reason: string
+    original: FoodOption;
+    substitute: FoodOption;
+    savings: number;
+    reason: string;
   }> {
     const substitutions: Array<{
       original: FoodOption;
@@ -397,9 +433,10 @@ export class CostOptimizer {
 
     // 简单的替换检测逻辑
     for (const origFood of original) {
-      const replacement = optimized.find(opt => 
-        opt.food.category === origFood.food.category && 
-        opt.food.id !== origFood.food.id
+      const replacement = optimized.find(
+        (opt) =>
+          opt.food.category === origFood.food.category &&
+          opt.food.id !== origFood.food.id,
       );
 
       if (replacement && replacement.cost < origFood.cost) {
@@ -421,7 +458,7 @@ export class CostOptimizer {
   async multiObjectiveOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Promise<OptimizationResult> {
     // 定义权重
     const weights = {
@@ -432,50 +469,75 @@ export class CostOptimizer {
 
     // 生成多个候选方案
     const candidates = await this.generateCandidateSolutions(
-      originalFoods, 
-      substitutes, 
-      constraints
+      originalFoods,
+      substitutes,
+      constraints,
     );
 
     // 评估每个候选方案
-    const scoredCandidates = candidates.map(candidate => {
+    const scoredCandidates = candidates.map((candidate) => {
       const costScore = this.calculateCostScore(candidate, constraints);
-      const nutritionScore = this.calculateNutritionScore(candidate, constraints);
+      const nutritionScore = this.calculateNutritionScore(
+        candidate,
+        constraints,
+      );
       const varietyScore = this.calculateVarietyScore(candidate);
-      
-      const totalScore = costScore * weights.cost + 
-                       nutritionScore * weights.nutrition + 
-                       varietyScore * weights.variety;
+
+      const totalScore =
+        costScore * weights.cost +
+        nutritionScore * weights.nutrition +
+        varietyScore * weights.variety;
 
       return {
         candidate,
-        scores: { cost: costScore, nutrition: nutritionScore, variety: varietyScore },
+        scores: {
+          cost: costScore,
+          nutrition: nutritionScore,
+          variety: varietyScore,
+        },
         totalScore,
       };
     });
 
     // 选择得分最高的方案
-    const bestSolution = scoredCandidates.reduce((best, current) => 
-      current.totalScore > best.totalScore ? current : best
+    const bestSolution = scoredCandidates.reduce((best, current) =>
+      current.totalScore > best.totalScore ? current : best,
     );
 
-    const originalCost = originalFoods.reduce((sum, food) => sum + food.cost, 0);
+    const originalCost = originalFoods.reduce(
+      (sum, food) => sum + food.cost,
+      0,
+    );
     const originalNutrition = this.calculateTotalNutrition(originalFoods);
-    const optimizedNutrition = this.calculateTotalNutrition(bestSolution.candidate);
-    const optimizedCost = bestSolution.candidate.reduce((sum, food) => sum + food.cost, 0);
+    const optimizedNutrition = this.calculateTotalNutrition(
+      bestSolution.candidate,
+    );
+    const optimizedCost = bestSolution.candidate.reduce(
+      (sum, food) => sum + food.cost,
+      0,
+    );
 
     return {
       originalCost,
       optimizedCost,
       savings: originalCost - optimizedCost,
-      savingsPercentage: originalCost > 0 ? ((originalCost - optimizedCost) / originalCost) * 100 : 0,
+      savingsPercentage:
+        originalCost > 0
+          ? ((originalCost - optimizedCost) / originalCost) * 100
+          : 0,
       originalFoods,
       optimizedFoods: bestSolution.candidate,
-      substitutions: this.generateSubstitutions(originalFoods, bestSolution.candidate),
+      substitutions: this.generateSubstitutions(
+        originalFoods,
+        bestSolution.candidate,
+      ),
       nutritionComparison: {
         original: originalNutrition,
         optimized: optimizedNutrition,
-        meetsRequirements: this.meetsNutritionRequirements(optimizedNutrition, constraints.nutritionTargets),
+        meetsRequirements: this.meetsNutritionRequirements(
+          optimizedNutrition,
+          constraints.nutritionTargets,
+        ),
       },
     };
   }
@@ -486,7 +548,7 @@ export class CostOptimizer {
   private async generateCandidateSolutions(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Promise<FoodOption[][]> {
     const candidates: FoodOption[][] = [];
 
@@ -494,18 +556,38 @@ export class CostOptimizer {
     candidates.push([...originalFoods]);
 
     // 方案2：经济模式
-    candidates.push(await this.economyModeOptimization(originalFoods, substitutes, constraints));
+    candidates.push(
+      await this.economyModeOptimization(
+        originalFoods,
+        substitutes,
+        constraints,
+      ),
+    );
 
     // 方案3：平衡模式
-    candidates.push(await this.balancedOptimization(originalFoods, substitutes, constraints));
+    candidates.push(
+      await this.balancedOptimization(originalFoods, substitutes, constraints),
+    );
 
     // 方案4：营养优先模式
-    candidates.push(await this.nutritionFirstOptimization(originalFoods, substitutes, constraints));
+    candidates.push(
+      await this.nutritionFirstOptimization(
+        originalFoods,
+        substitutes,
+        constraints,
+      ),
+    );
 
     // 方案5：多样性优先模式
-    candidates.push(await this.varietyFirstOptimization(originalFoods, substitutes, constraints));
+    candidates.push(
+      await this.varietyFirstOptimization(
+        originalFoods,
+        substitutes,
+        constraints,
+      ),
+    );
 
-    return candidates.filter(candidate => candidate.length > 0);
+    return candidates.filter((candidate) => candidate.length > 0);
   }
 
   /**
@@ -514,18 +596,19 @@ export class CostOptimizer {
   private async nutritionFirstOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Promise<FoodOption[]> {
     const result: FoodOption[] = [];
     const targetNutrition = constraints.nutritionTargets;
 
     // 按营养密度排序
-    const sortedOptions = [...originalFoods, ...substitutes]
-      .sort((a, b) => {
-        const nutritionDensityA = (a.nutrition.protein + a.nutrition.carbs + a.nutrition.fat) / a.cost;
-        const nutritionDensityB = (b.nutrition.protein + b.nutrition.carbs + b.nutrition.fat) / b.cost;
-        return nutritionDensityB - nutritionDensityA;
-      });
+    const sortedOptions = [...originalFoods, ...substitutes].sort((a, b) => {
+      const nutritionDensityA =
+        (a.nutrition.protein + a.nutrition.carbs + a.nutrition.fat) / a.cost;
+      const nutritionDensityB =
+        (b.nutrition.protein + b.nutrition.carbs + b.nutrition.fat) / b.cost;
+      return nutritionDensityB - nutritionDensityA;
+    });
 
     const currentNutrition = { calories: 0, protein: 0, carbs: 0, fat: 0 };
 
@@ -561,15 +644,19 @@ export class CostOptimizer {
   private async varietyFirstOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Promise<FoodOption[]> {
     // 确保每个食物类别都有代表
-    const categories = [...new Set([...originalFoods, ...substitutes].map(f => f.food.category))];
+    const categories = [
+      ...new Set(
+        [...originalFoods, ...substitutes].map((f) => f.food.category),
+      ),
+    ];
     const result: FoodOption[] = [];
 
     for (const category of categories) {
       const categoryOptions = [...originalFoods, ...substitutes]
-        .filter(f => f.food.category === category)
+        .filter((f) => f.food.category === category)
         .sort((a, b) => a.cost - b.cost);
 
       if (categoryOptions.length > 0) {
@@ -583,30 +670,37 @@ export class CostOptimizer {
   /**
    * 计算成本得分
    */
-  private calculateCostScore(foods: FoodOption[], constraints: OptimizationConstraints): number {
+  private calculateCostScore(
+    foods: FoodOption[],
+    constraints: OptimizationConstraints,
+  ): number {
     const totalCost = foods.reduce((sum, food) => sum + food.cost, 0);
-    
+
     if (constraints.maxCost) {
-      return Math.max(0, 1 - (totalCost / constraints.maxCost));
+      return Math.max(0, 1 - totalCost / constraints.maxCost);
     }
-    
+
     // 相对成本得分（越低越好）
-    const avgCost = foods.reduce((sum, food) => sum + food.cost, 0) / foods.length;
-    return Math.max(0, 1 - (avgCost / 50)); // 假设50元为基准
+    const avgCost =
+      foods.reduce((sum, food) => sum + food.cost, 0) / foods.length;
+    return Math.max(0, 1 - avgCost / 50); // 假设50元为基准
   }
 
   /**
    * 计算营养得分
    */
-  private calculateNutritionScore(foods: FoodOption[], constraints: OptimizationConstraints): number {
+  private calculateNutritionScore(
+    foods: FoodOption[],
+    constraints: OptimizationConstraints,
+  ): number {
     const nutrition = this.calculateTotalNutrition(foods);
     const targets = constraints.nutritionTargets;
-    
+
     const calorieScore = Math.min(1, nutrition.calories / targets.calories);
     const proteinScore = Math.min(1, nutrition.protein / targets.protein);
     const carbsScore = Math.min(1, nutrition.carbs / targets.carbs);
     const fatScore = Math.min(1, nutrition.fat / targets.fat);
-    
+
     return (calorieScore + proteinScore + carbsScore + fatScore) / 4;
   }
 
@@ -614,7 +708,7 @@ export class CostOptimizer {
    * 计算多样性得分
    */
   private calculateVarietyScore(foods: FoodOption[]): number {
-    const categories = new Set(foods.map(f => f.food.category));
+    const categories = new Set(foods.map((f) => f.food.category));
     const idealVariety = 5; // 理想的食物类别数量
     return Math.min(1, categories.size / idealVariety);
   }
@@ -623,19 +717,19 @@ export class CostOptimizer {
    * 获取平台价格比较
    */
   async getPlatformPriceComparison(foodId: string): Promise<{
-    food: Food
+    food: Food;
     prices: Array<{
-      platform: string
-      price: number
-      unitPrice: number
-      unit: string
-      recordedAt: Date
-    }>
+      platform: string;
+      price: number;
+      unitPrice: number;
+      unit: string;
+      recordedAt: Date;
+    }>;
     bestPrice: {
-      platform: string
-      unitPrice: number
-      savings: number
-    }
+      platform: string;
+      unitPrice: number;
+      savings: number;
+    };
   }> {
     const food = await prisma.food.findUnique({
       where: { id: foodId },
@@ -654,10 +748,12 @@ export class CostOptimizer {
 
     // 按平台分组价格
     const platformPrices: Record<string, PriceHistory> = {};
-    
+
     for (const price of food.priceHistories) {
-      if (!platformPrices[price.platform] || 
-          price.recordedAt > platformPrices[price.platform].recordedAt) {
+      if (
+        !platformPrices[price.platform] ||
+        price.recordedAt > platformPrices[price.platform].recordedAt
+      ) {
         platformPrices[price.platform] = price;
       }
     }
@@ -673,9 +769,11 @@ export class CostOptimizer {
     // 找出最优价格
     const sortedPrices = prices.sort((a, b) => a.unitPrice - b.unitPrice);
     const bestPrice = sortedPrices[0];
-    
+
     if (sortedPrices.length > 1) {
-      const avgPrice = sortedPrices.reduce((sum, p) => sum + p.unitPrice, 0) / sortedPrices.length;
+      const avgPrice =
+        sortedPrices.reduce((sum, p) => sum + p.unitPrice, 0) /
+        sortedPrices.length;
       bestPrice.savings = ((avgPrice - bestPrice.unitPrice) / avgPrice) * 100;
     } else {
       bestPrice.savings = 0;

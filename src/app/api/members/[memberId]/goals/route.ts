@@ -7,7 +7,12 @@ import { z } from 'zod';
 
 // Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
-function calculateBMR(weight: number, height: number, age: number, gender: string): number {
+function calculateBMR(
+  weight: number,
+  height: number,
+  age: number,
+  gender: string,
+): number {
   if (gender === 'MALE') {
     return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
   } else {
@@ -22,19 +27,26 @@ function calculateTDEE(bmr: number, activityFactor: number): number {
 
 // 活动系数映射
 const ACTIVITY_FACTORS = {
-  SEDENTARY: 1.2,       // 久坐
-  LIGHT: 1.375,         // 轻度活动
-  MODERATE: 1.55,       // 中度活动
-  ACTIVE: 1.725,        // 高度活动
-  VERY_ACTIVE: 1.9,     // 非常活跃
+  SEDENTARY: 1.2, // 久坐
+  LIGHT: 1.375, // 轻度活动
+  MODERATE: 1.55, // 中度活动
+  ACTIVE: 1.725, // 高度活动
+  VERY_ACTIVE: 1.9, // 非常活跃
 };
 
 // 创建健康目标的验证 schema
 const createGoalSchema = z.object({
-  goalType: z.enum(['LOSE_WEIGHT', 'GAIN_MUSCLE', 'MAINTAIN', 'IMPROVE_HEALTH']),
+  goalType: z.enum([
+    'LOSE_WEIGHT',
+    'GAIN_MUSCLE',
+    'MAINTAIN',
+    'IMPROVE_HEALTH',
+  ]),
   targetWeight: z.number().min(20).max(300).optional(),
   targetWeeks: z.number().min(1).max(52).optional(),
-  activityLevel: z.enum(['SEDENTARY', 'LIGHT', 'MODERATE', 'ACTIVE', 'VERY_ACTIVE']).default('MODERATE'),
+  activityLevel: z
+    .enum(['SEDENTARY', 'LIGHT', 'MODERATE', 'ACTIVE', 'VERY_ACTIVE'])
+    .default('MODERATE'),
   carbRatio: z.number().min(0).max(1).optional().default(0.5),
   proteinRatio: z.number().min(0).max(1).optional().default(0.2),
   fatRatio: z.number().min(0).max(1).optional().default(0.3),
@@ -48,7 +60,7 @@ const createGoalSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
@@ -60,29 +72,26 @@ export async function GET(
     // 使用 Repository 验证权限
     const { hasAccess } = await memberRepository.verifyMemberAccess(
       memberId,
-      session.user.id
+      session.user.id,
     );
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限访问该成员的健康目标' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 使用 Repository 获取健康目标列表（包含所有状态）
     const healthGoals = await memberRepository.getHealthGoals(
       memberId,
-      true // includeInactive
+      true, // includeInactive
     );
 
     return NextResponse.json({ goals: healthGoals }, { status: 200 });
   } catch (error) {
     console.error('获取健康目标失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -94,7 +103,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
@@ -110,20 +119,20 @@ export async function POST(
     if (!validation.success) {
       return NextResponse.json(
         { error: '输入数据无效', details: validation.error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 使用 Repository 验证权限
     const { hasAccess, member } = await memberRepository.verifyMemberAccess(
       memberId,
-      session.user.id
+      session.user.id,
     );
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限为该成员创建健康目标' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -131,7 +140,15 @@ export async function POST(
       return NextResponse.json({ error: '成员不存在' }, { status: 404 });
     }
 
-    const { goalType, targetWeight, targetWeeks, activityLevel, carbRatio, proteinRatio, fatRatio } = validation.data;
+    const {
+      goalType,
+      targetWeight,
+      targetWeeks,
+      activityLevel,
+      carbRatio,
+      proteinRatio,
+      fatRatio,
+    } = validation.data;
 
     // 为了计算 BMR/TDEE，需要获取成员的详细信息
     // 注意：verifyMemberAccess 返回的 member 对象不包含这些字段
@@ -146,7 +163,10 @@ export async function POST(
       .single();
 
     if (!memberDetails) {
-      return NextResponse.json({ error: '无法获取成员详细信息' }, { status: 500 });
+      return NextResponse.json(
+        { error: '无法获取成员详细信息' },
+        { status: 500 },
+      );
     }
 
     // 计算年龄（业务逻辑）
@@ -155,9 +175,15 @@ export async function POST(
     const age = today.getFullYear() - birthDate.getFullYear();
 
     // 计算 BMR 和 TDEE（业务逻辑）
-    const bmr = memberDetails.weight && memberDetails.height
-      ? calculateBMR(memberDetails.weight, memberDetails.height, age, memberDetails.gender)
-      : undefined;
+    const bmr =
+      memberDetails.weight && memberDetails.height
+        ? calculateBMR(
+            memberDetails.weight,
+            memberDetails.height,
+            age,
+            memberDetails.gender,
+          )
+        : undefined;
 
     const activityFactor = ACTIVITY_FACTORS[activityLevel];
     const tdee = bmr ? calculateTDEE(bmr, activityFactor) : undefined;
@@ -190,13 +216,10 @@ export async function POST(
         message: '健康目标创建成功',
         goal,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error('创建健康目标失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

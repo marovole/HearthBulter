@@ -4,7 +4,16 @@
  */
 
 export interface SensitiveInfoPattern {
-  type: 'id_card' | 'phone' | 'email' | 'address' | 'bank_account' | 'medical_record' | 'name' | 'age' | 'custom';
+  type:
+    | 'id_card'
+    | 'phone'
+    | 'email'
+    | 'address'
+    | 'bank_account'
+    | 'medical_record'
+    | 'name'
+    | 'age'
+    | 'custom';
   pattern: RegExp;
   replacement: string;
   description: string;
@@ -136,9 +145,9 @@ class SensitiveFilterService {
 
     // 过滤模式
     if (includeTypes && includeTypes.length > 0) {
-      patterns = patterns.filter(p => includeTypes.includes(p.type));
+      patterns = patterns.filter((p) => includeTypes.includes(p.type));
     } else if (excludeTypes.length > 0) {
-      patterns = patterns.filter(p => !excludeTypes.includes(p.type));
+      patterns = patterns.filter((p) => !excludeTypes.includes(p.type));
     }
 
     let filteredText = text;
@@ -247,7 +256,10 @@ class SensitiveFilterService {
 
       // 如果需要保持结构，使用更简洁的替换
       if (preserveStructure) {
-        replacement = this.generateStructuredReplacement(matchedText, pattern.type);
+        replacement = this.generateStructuredReplacement(
+          matchedText,
+          pattern.type,
+        );
       }
 
       // 记录检测到的项目
@@ -261,9 +273,10 @@ class SensitiveFilterService {
 
       // 执行替换，考虑偏移
       const actualPosition = position + offset;
-      filteredText = filteredText.slice(0, actualPosition) +
-                    replacement +
-                    filteredText.slice(actualPosition + matchedText.length);
+      filteredText =
+        filteredText.slice(0, actualPosition) +
+        replacement +
+        filteredText.slice(actualPosition + matchedText.length);
 
       // 更新偏移
       offset += replacement.length - matchedText.length;
@@ -285,13 +298,16 @@ class SensitiveFilterService {
    * 批量过滤多个文本
    */
   filterBatch(texts: string[], options: FilterOptions = {}): FilterResult[] {
-    return texts.map(text => this.filter(text, options));
+    return texts.map((text) => this.filter(text, options));
   }
 
   /**
    * 检查文本是否包含敏感信息（不执行过滤）
    */
-  detect(text: string, options: FilterOptions = {}): Omit<FilterResult, 'filteredText'> {
+  detect(
+    text: string,
+    options: FilterOptions = {},
+  ): Omit<FilterResult, 'filteredText'> {
     const result = this.filter(text, { ...options, maskMode: 'redact' });
     return {
       originalText: result.originalText,
@@ -321,7 +337,7 @@ class SensitiveFilterService {
    * 移除过滤规则
    */
   removePattern(type: SensitiveInfoPattern['type']): void {
-    this.defaultPatterns = this.defaultPatterns.filter(p => p.type !== type);
+    this.defaultPatterns = this.defaultPatterns.filter((p) => p.type !== type);
   }
 
   /**
@@ -334,62 +350,81 @@ class SensitiveFilterService {
   /**
    * 生成部分掩码
    */
-  private generatePartialMask(text: string, type: SensitiveInfoPattern['type']): string {
+  private generatePartialMask(
+    text: string,
+    type: SensitiveInfoPattern['type'],
+  ): string {
     switch (type) {
-    case 'id_card':
-      // 身份证：显示前6位和后4位
-      return text.length >= 10 ? `${text.slice(0, 6)}****${text.slice(-4)}` : '***身份证***';
-    case 'phone':
-      // 手机号：显示前3位和后4位
-      return text.length >= 11 ? `${text.slice(0, 3)}****${text.slice(-4)}` : '***电话***';
-    case 'email':
-      // 邮箱：显示@前2个字符和域名
-      const [local, domain] = text.split('@');
-      return local && domain ? `${local.slice(0, 2)}***@${domain}` : '***邮箱***';
-    case 'bank_account':
-      // 银行卡：显示前6位和后4位
-      return text.length >= 10 ? `${text.slice(0, 6)}****${text.slice(-4)}` : '***卡号***';
-    default:
-      return '***已隐藏***';
+      case 'id_card':
+        // 身份证：显示前6位和后4位
+        return text.length >= 10
+          ? `${text.slice(0, 6)}****${text.slice(-4)}`
+          : '***身份证***';
+      case 'phone':
+        // 手机号：显示前3位和后4位
+        return text.length >= 11
+          ? `${text.slice(0, 3)}****${text.slice(-4)}`
+          : '***电话***';
+      case 'email':
+        // 邮箱：显示@前2个字符和域名
+        const [local, domain] = text.split('@');
+        return local && domain
+          ? `${local.slice(0, 2)}***@${domain}`
+          : '***邮箱***';
+      case 'bank_account':
+        // 银行卡：显示前6位和后4位
+        return text.length >= 10
+          ? `${text.slice(0, 6)}****${text.slice(-4)}`
+          : '***卡号***';
+      default:
+        return '***已隐藏***';
     }
   }
 
   /**
    * 生成结构化替换（保持文档格式）
    */
-  private generateStructuredReplacement(text: string, type: SensitiveInfoPattern['type']): string {
+  private generateStructuredReplacement(
+    text: string,
+    type: SensitiveInfoPattern['type'],
+  ): string {
     switch (type) {
-    case 'id_card':
-      return '[身份证号]';
-    case 'phone':
-      return '[联系电话]';
-    case 'email':
-      return '[电子邮箱]';
-    case 'address':
-      return '[地址信息]';
-    case 'medical_record':
-      return '[病历编号]';
-    case 'name':
-      return '[患者姓名]';
-    case 'age':
-      return '[年龄]';
-    case 'bank_account':
-      return '[银行卡号]';
-    default:
-      return '[敏感信息]';
+      case 'id_card':
+        return '[身份证号]';
+      case 'phone':
+        return '[联系电话]';
+      case 'email':
+        return '[电子邮箱]';
+      case 'address':
+        return '[地址信息]';
+      case 'medical_record':
+        return '[病历编号]';
+      case 'name':
+        return '[患者姓名]';
+      case 'age':
+        return '[年龄]';
+      case 'bank_account':
+        return '[银行卡号]';
+      default:
+        return '[敏感信息]';
     }
   }
 
   /**
    * 计算风险等级
    */
-  private calculateRiskLevel(detectedItems: FilterResult['detectedItems']): FilterResult['riskLevel'] {
+  private calculateRiskLevel(
+    detectedItems: FilterResult['detectedItems'],
+  ): FilterResult['riskLevel'] {
     if (detectedItems.length === 0) return 'none';
 
-    const severityCounts = detectedItems.reduce((acc, item) => {
-      acc[item.severity] = (acc[item.severity] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const severityCounts = detectedItems.reduce(
+      (acc, item) => {
+        acc[item.severity] = (acc[item.severity] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     if (severityCounts.critical > 0) return 'critical';
     if (severityCounts.high > 0) return 'high';
@@ -402,14 +437,23 @@ class SensitiveFilterService {
 export const sensitiveFilter = new SensitiveFilterService();
 
 // 导出工具函数
-export function filterSensitiveInfo(text: string, options?: FilterOptions): string {
+export function filterSensitiveInfo(
+  text: string,
+  options?: FilterOptions,
+): string {
   return sensitiveFilter.filter(text, options).filteredText;
 }
 
-export function hasSensitiveInfo(text: string, options?: FilterOptions): boolean {
+export function hasSensitiveInfo(
+  text: string,
+  options?: FilterOptions,
+): boolean {
   return sensitiveFilter.detect(text, options).hasSensitiveInfo;
 }
 
-export function getSensitiveInfoRisk(text: string, options?: FilterOptions): FilterResult['riskLevel'] {
+export function getSensitiveInfoRisk(
+  text: string,
+  options?: FilterOptions,
+): FilterResult['riskLevel'] {
   return sensitiveFilter.detect(text, options).riskLevel;
 }

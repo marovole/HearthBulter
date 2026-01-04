@@ -69,7 +69,12 @@ export class StructuredLogger {
   /**
    * 记录日志
    */
-  log(level: LogLevel, message: string, context?: LogContext, metadata?: Record<string, any>): void {
+  log(
+    level: LogLevel,
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ): void {
     const logEntry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
@@ -91,55 +96,95 @@ export class StructuredLogger {
   /**
    * TRACE 级别日志
    */
-  trace(message: string, context?: LogContext, metadata?: Record<string, any>): void {
+  trace(
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ): void {
     this.log(LogLevel.TRACE, message, context, metadata);
   }
 
   /**
    * DEBUG 级别日志
    */
-  debug(message: string, context?: LogContext, metadata?: Record<string, any>): void {
+  debug(
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ): void {
     this.log(LogLevel.DEBUG, message, context, metadata);
   }
 
   /**
    * INFO 级别日志
    */
-  info(message: string, context?: LogContext, metadata?: Record<string, any>): void {
+  info(
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ): void {
     this.log(LogLevel.INFO, message, context, metadata);
   }
 
   /**
    * WARN 级别日志
    */
-  warn(message: string, context?: LogContext, metadata?: Record<string, any>): void {
+  warn(
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ): void {
     this.log(LogLevel.WARN, message, context, metadata);
   }
 
   /**
    * ERROR 级别日志
    */
-  error(message: string, error?: Error, context?: LogContext, metadata?: Record<string, any>): void {
-    const errorData = error ? {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    } : undefined;
+  error(
+    message: string,
+    error?: Error,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ): void {
+    const errorData = error
+      ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        }
+      : undefined;
 
-    this.log(LogLevel.ERROR, message, { ...context, error: errorData }, metadata);
+    this.log(
+      LogLevel.ERROR,
+      message,
+      { ...context, error: errorData },
+      metadata,
+    );
   }
 
   /**
    * FATAL 级别日志
    */
-  fatal(message: string, error?: Error, context?: LogContext, metadata?: Record<string, any>): void {
-    const errorData = error ? {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    } : undefined;
+  fatal(
+    message: string,
+    error?: Error,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ): void {
+    const errorData = error
+      ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        }
+      : undefined;
 
-    this.log(LogLevel.FATAL, message, { ...context, error: errorData }, metadata);
+    this.log(
+      LogLevel.FATAL,
+      message,
+      { ...context, error: errorData },
+      metadata,
+    );
 
     // 致命错误应该立即退出进程
     process.exit(1);
@@ -154,18 +199,23 @@ export class StructuredLogger {
     statusCode: number,
     duration: number,
     context?: LogContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     const level = this.getLogLevelFromStatus(statusCode);
     const message = `${method} ${url} - ${statusCode} (${duration}ms)`;
 
-    this.log(level, message, {
-      ...context,
-      method,
-      url,
-      statusCode,
-      duration,
-    }, metadata);
+    this.log(
+      level,
+      message,
+      {
+        ...context,
+        method,
+        url,
+        statusCode,
+        duration,
+      },
+      metadata,
+    );
   }
 
   /**
@@ -176,7 +226,7 @@ export class StructuredLogger {
     table: string,
     duration: number,
     context?: LogContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     const level = duration > 1000 ? LogLevel.WARN : LogLevel.INFO;
     const message = `DB ${operation} on ${table} (${duration}ms)`;
@@ -198,7 +248,7 @@ export class StructuredLogger {
     key: string,
     duration?: number,
     context?: LogContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     const level = operation === 'miss' ? LogLevel.INFO : LogLevel.DEBUG;
     const message = `Cache ${operation}: ${key}${duration ? ` (${duration}ms)` : ''}`;
@@ -219,7 +269,7 @@ export class StructuredLogger {
     event: string,
     level: LogLevel = LogLevel.WARN,
     context?: LogContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     const message = `Security Event: ${event}`;
 
@@ -238,7 +288,7 @@ export class StructuredLogger {
     value: number,
     unit: string,
     context?: LogContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     const level = this.getPerformanceLogLevel(metric, value);
     const message = `Performance ${metric}: ${value} ${unit}`;
@@ -258,7 +308,7 @@ export class StructuredLogger {
   logBusiness(
     event: string,
     context?: LogContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
     this.log(LogLevel.INFO, `Business Event: ${event}`, context, {
       ...metadata,
@@ -274,16 +324,21 @@ export class StructuredLogger {
     action: string,
     userId: string,
     context?: LogContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
-    this.log(LogLevel.INFO, `User Action: ${action}`, {
-      ...context,
-      userId,
-    }, {
-      ...metadata,
-      action,
-      type: 'user_action',
-    });
+    this.log(
+      LogLevel.INFO,
+      `User Action: ${action}`,
+      {
+        ...context,
+        userId,
+      },
+      {
+        ...metadata,
+        action,
+        type: 'user_action',
+      },
+    );
   }
 
   /**
@@ -291,25 +346,56 @@ export class StructuredLogger {
    */
   child(context: LogContext): StructuredLogger {
     return {
-      trace: (message: string, metadata?: Record<string, any>) => this.trace(message, context, metadata),
-      debug: (message: string, metadata?: Record<string, any>) => this.debug(message, context, metadata),
-      info: (message: string, metadata?: Record<string, any>) => this.info(message, context, metadata),
-      warn: (message: string, metadata?: Record<string, any>) => this.warn(message, context, metadata),
-      error: (message: string, error?: Error, metadata?: Record<string, any>) => this.error(message, error, context, metadata),
-      fatal: (message: string, error?: Error, metadata?: Record<string, any>) => this.fatal(message, error, context, metadata),
-      logRequest: (method: string, url: string, statusCode: number, duration: number, metadata?: Record<string, any>) =>
+      trace: (message: string, metadata?: Record<string, any>) =>
+        this.trace(message, context, metadata),
+      debug: (message: string, metadata?: Record<string, any>) =>
+        this.debug(message, context, metadata),
+      info: (message: string, metadata?: Record<string, any>) =>
+        this.info(message, context, metadata),
+      warn: (message: string, metadata?: Record<string, any>) =>
+        this.warn(message, context, metadata),
+      error: (message: string, error?: Error, metadata?: Record<string, any>) =>
+        this.error(message, error, context, metadata),
+      fatal: (message: string, error?: Error, metadata?: Record<string, any>) =>
+        this.fatal(message, error, context, metadata),
+      logRequest: (
+        method: string,
+        url: string,
+        statusCode: number,
+        duration: number,
+        metadata?: Record<string, any>,
+      ) =>
         this.logRequest(method, url, statusCode, duration, context, metadata),
-      logDatabase: (operation: string, table: string, duration: number, metadata?: Record<string, any>) =>
-        this.logDatabase(operation, table, duration, context, metadata),
-      logCache: (operation: 'hit' | 'miss' | 'set' | 'delete', key: string, duration?: number, metadata?: Record<string, any>) =>
-        this.logCache(operation, key, duration, context, metadata),
-      logSecurity: (event: string, level?: LogLevel, metadata?: Record<string, any>) =>
-        this.logSecurity(event, level, context, metadata),
-      logPerformance: (metric: string, value: number, unit: string, metadata?: Record<string, any>) =>
-        this.logPerformance(metric, value, unit, context, metadata),
-      logBusiness: (event: string, metadata?: Record<string, any>) => this.logBusiness(event, context, metadata),
-      logUserAction: (action: string, userId: string, metadata?: Record<string, any>) =>
-        this.logUserAction(action, userId, context, metadata),
+      logDatabase: (
+        operation: string,
+        table: string,
+        duration: number,
+        metadata?: Record<string, any>,
+      ) => this.logDatabase(operation, table, duration, context, metadata),
+      logCache: (
+        operation: 'hit' | 'miss' | 'set' | 'delete',
+        key: string,
+        duration?: number,
+        metadata?: Record<string, any>,
+      ) => this.logCache(operation, key, duration, context, metadata),
+      logSecurity: (
+        event: string,
+        level?: LogLevel,
+        metadata?: Record<string, any>,
+      ) => this.logSecurity(event, level, context, metadata),
+      logPerformance: (
+        metric: string,
+        value: number,
+        unit: string,
+        metadata?: Record<string, any>,
+      ) => this.logPerformance(metric, value, unit, context, metadata),
+      logBusiness: (event: string, metadata?: Record<string, any>) =>
+        this.logBusiness(event, context, metadata),
+      logUserAction: (
+        action: string,
+        userId: string,
+        metadata?: Record<string, any>,
+      ) => this.logUserAction(action, userId, context, metadata),
     } as StructuredLogger;
   }
 
@@ -322,24 +408,24 @@ export class StructuredLogger {
 
     // 根据级别选择控制台方法
     switch (level) {
-    case LogLevel.TRACE:
-      console.trace(logData);
-      break;
-    case LogLevel.DEBUG:
-      console.debug(logData);
-      break;
-    case LogLevel.INFO:
-      console.info(logData);
-      break;
-    case LogLevel.WARN:
-      console.warn(logData);
-      break;
-    case LogLevel.ERROR:
-    case LogLevel.FATAL:
-      console.error(logData);
-      break;
-    default:
-      console.log(logData);
+      case LogLevel.TRACE:
+        console.trace(logData);
+        break;
+      case LogLevel.DEBUG:
+        console.debug(logData);
+        break;
+      case LogLevel.INFO:
+        console.info(logData);
+        break;
+      case LogLevel.WARN:
+        console.warn(logData);
+        break;
+      case LogLevel.ERROR:
+      case LogLevel.FATAL:
+        console.error(logData);
+        break;
+      default:
+        console.log(logData);
     }
   }
 
@@ -478,20 +564,20 @@ export class StructuredLogger {
   private getPerformanceLogLevel(metric: string, value: number): LogLevel {
     // 根据不同指标设置不同阈值
     switch (metric) {
-    case 'response_time':
-      if (value > 2000) return LogLevel.ERROR;
-      if (value > 1000) return LogLevel.WARN;
-      return LogLevel.INFO;
-    case 'memory_usage':
-      if (value > 90) return LogLevel.ERROR;
-      if (value > 70) return LogLevel.WARN;
-      return LogLevel.INFO;
-    case 'cpu_usage':
-      if (value > 90) return LogLevel.ERROR;
-      if (value > 70) return LogLevel.WARN;
-      return LogLevel.INFO;
-    default:
-      return LogLevel.INFO;
+      case 'response_time':
+        if (value > 2000) return LogLevel.ERROR;
+        if (value > 1000) return LogLevel.WARN;
+        return LogLevel.INFO;
+      case 'memory_usage':
+        if (value > 90) return LogLevel.ERROR;
+        if (value > 70) return LogLevel.WARN;
+        return LogLevel.INFO;
+      case 'cpu_usage':
+        if (value > 90) return LogLevel.ERROR;
+        if (value > 70) return LogLevel.WARN;
+        return LogLevel.INFO;
+      default:
+        return LogLevel.INFO;
     }
   }
 
@@ -541,12 +627,38 @@ export const logger = StructuredLogger.getInstance();
 
 // 导出常用便捷方法
 export const log = {
-  trace: (message: string, context?: LogContext, metadata?: Record<string, any>) => logger.trace(message, context, metadata),
-  debug: (message: string, context?: LogContext, metadata?: Record<string, any>) => logger.debug(message, context, metadata),
-  info: (message: string, context?: LogContext, metadata?: Record<string, any>) => logger.info(message, context, metadata),
-  warn: (message: string, context?: LogContext, metadata?: Record<string, any>) => logger.warn(message, context, metadata),
-  error: (message: string, error?: Error, context?: LogContext, metadata?: Record<string, any>) => logger.error(message, error, context, metadata),
-  fatal: (message: string, error?: Error, context?: LogContext, metadata?: Record<string, any>) => logger.fatal(message, error, context, metadata),
+  trace: (
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ) => logger.trace(message, context, metadata),
+  debug: (
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ) => logger.debug(message, context, metadata),
+  info: (
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ) => logger.info(message, context, metadata),
+  warn: (
+    message: string,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ) => logger.warn(message, context, metadata),
+  error: (
+    message: string,
+    error?: Error,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ) => logger.error(message, error, context, metadata),
+  fatal: (
+    message: string,
+    error?: Error,
+    context?: LogContext,
+    metadata?: Record<string, any>,
+  ) => logger.fatal(message, error, context, metadata),
 };
 
 export default logger;

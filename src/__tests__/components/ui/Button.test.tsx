@@ -27,36 +27,36 @@ describe('Button Component', () => {
   });
 
   it('should render different variants', () => {
-    const { rerender } = render(<Button variant="default">Default</Button>);
+    const { rerender } = render(<Button variant='default'>Default</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    rerender(<Button variant="destructive">Destructive</Button>);
+    rerender(<Button variant='destructive'>Destructive</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    rerender(<Button variant="outline">Outline</Button>);
+    rerender(<Button variant='outline'>Outline</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    rerender(<Button variant="secondary">Secondary</Button>);
+    rerender(<Button variant='secondary'>Secondary</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    rerender(<Button variant="ghost">Ghost</Button>);
+    rerender(<Button variant='ghost'>Ghost</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    rerender(<Button variant="link">Link</Button>);
+    rerender(<Button variant='link'>Link</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
   it('should render different sizes', () => {
-    const { rerender } = render(<Button size="default">Default</Button>);
+    const { rerender } = render(<Button size='default'>Default</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    rerender(<Button size="sm">Small</Button>);
+    rerender(<Button size='sm'>Small</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    rerender(<Button size="lg">Large</Button>);
+    rerender(<Button size='lg'>Large</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    rerender(<Button size="icon">Icon</Button>);
+    rerender(<Button size='icon'>Icon</Button>);
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
@@ -66,7 +66,7 @@ describe('Button Component', () => {
     render(
       <Button disabled onClick={handleClick}>
         Disabled Button
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByRole('button', { name: /disabled button/i });
@@ -79,8 +79,8 @@ describe('Button Component', () => {
   it('should render as different element when asChild prop is provided', () => {
     render(
       <Button asChild>
-        <a href="/test">Link Button</a>
-      </Button>
+        <a href='/test'>Link Button</a>
+      </Button>,
     );
 
     const link = screen.getByRole('link', { name: /link button/i });
@@ -89,7 +89,7 @@ describe('Button Component', () => {
   });
 
   it('should apply custom className', () => {
-    render(<Button className="custom-class">Button</Button>);
+    render(<Button className='custom-class'>Button</Button>);
 
     const button = screen.getByRole('button', { name: /button/i });
     expect(button).toHaveClass('custom-class');
@@ -97,9 +97,9 @@ describe('Button Component', () => {
 
   it('should pass through additional props', () => {
     render(
-      <Button data-testid="test-button" type="submit">
+      <Button data-testid='test-button' type='submit'>
         Submit
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByTestId('test-button');
@@ -115,17 +115,19 @@ describe('Button Component', () => {
   });
 
   it('should render with icon', () => {
-    const MockIcon = () => <span data-testid="mock-icon">Icon</span>;
+    const MockIcon = () => <span data-testid='mock-icon'>Icon</span>;
 
     render(
       <Button>
         <MockIcon />
         Button with Icon
-      </Button>
+      </Button>,
     );
 
     expect(screen.getByTestId('mock-icon')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /button with icon/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /button with icon/i }),
+    ).toBeInTheDocument();
   });
 
   it('should handle keyboard navigation', () => {
@@ -146,11 +148,7 @@ describe('Button Component', () => {
   });
 
   it('should be accessible', () => {
-    render(
-      <Button aria-label="Custom label">
-        Button
-      </Button>
-    );
+    render(<Button aria-label='Custom label'>Button</Button>);
 
     const button = screen.getByRole('button', { name: /custom label/i });
     expect(button).toBeInTheDocument();
@@ -169,8 +167,8 @@ describe('Button Component', () => {
 
     render(
       <form onSubmit={handleSubmit}>
-        <Button type="submit">Submit</Button>
-      </form>
+        <Button type='submit'>Submit</Button>
+      </form>,
     );
 
     const button = screen.getByRole('button', { name: /submit/i });
@@ -184,7 +182,7 @@ describe('Button Component', () => {
       <Button>
         <span>Complex</span>
         <span>Content</span>
-      </Button>
+      </Button>,
     );
 
     expect(screen.getByText('Complex')).toBeInTheDocument();

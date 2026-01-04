@@ -4,7 +4,11 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import type { AnomalyType, AnomalySeverity, TrendDataType } from '@/lib/types/analytics';
+import type {
+  AnomalyType,
+  AnomalySeverity,
+  TrendDataType,
+} from '@/lib/types/analytics';
 import { aggregateTimeSeriesData, calculateStatistics } from './trend-analyzer';
 
 const prisma = new PrismaClient();
@@ -28,7 +32,7 @@ export async function detectSuddenChange(
   memberId: string,
   dataType: TrendDataType,
   newValue: number,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult | null> {
   // 获取过去30天的数据
   const endDate = new Date(date);
@@ -36,21 +40,26 @@ export async function detectSuddenChange(
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - 30);
 
-  const historicalData = await aggregateTimeSeriesData(memberId, dataType, startDate, endDate);
+  const historicalData = await aggregateTimeSeriesData(
+    memberId,
+    dataType,
+    startDate,
+    endDate,
+  );
 
   if (historicalData.length < 7) {
     return null; // 数据不足，无法检测
   }
 
   const stats = calculateStatistics(historicalData);
-  
+
   // 使用3σ原则：超出均值±3倍标准差视为异常
   const lowerBound = stats.mean - 3 * stats.stdDev;
   const upperBound = stats.mean + 3 * stats.stdDev;
-  
+
   if (newValue < lowerBound || newValue > upperBound) {
     const deviation = Math.abs((newValue - stats.mean) / stats.stdDev);
-    
+
     let severity: AnomalySeverity;
     if (deviation >= 4) {
       severity = 'CRITICAL';
@@ -87,7 +96,7 @@ export async function detectSuddenChange(
 export async function detectWeightAnomaly(
   memberId: string,
   newWeight: number,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult | null> {
   // 获取前一天的体重
   const yesterday = new Date(date);
@@ -141,7 +150,7 @@ export async function detectWeightAnomaly(
  */
 export async function detectNutritionImbalance(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
@@ -165,10 +174,14 @@ export async function detectNutritionImbalance(
   }
 
   // 检查连续3天蛋白质摄入是否低于目标值的50%
-  const proteinDeficient = targets.every(t => t.actualProtein < t.targetProtein * 0.5);
+  const proteinDeficient = targets.every(
+    (t) => t.actualProtein < t.targetProtein * 0.5,
+  );
   if (proteinDeficient) {
-    const avgProtein = targets.reduce((sum, t) => sum + t.actualProtein, 0) / targets.length;
-    const avgTarget = targets.reduce((sum, t) => sum + t.targetProtein, 0) / targets.length;
+    const avgProtein =
+      targets.reduce((sum, t) => sum + t.actualProtein, 0) / targets.length;
+    const avgTarget =
+      targets.reduce((sum, t) => sum + t.targetProtein, 0) / targets.length;
 
     anomalies.push({
       detected: true,
@@ -183,10 +196,14 @@ export async function detectNutritionImbalance(
   }
 
   // 检查卡路里是否连续超标
-  const caloriesExcessive = targets.every(t => t.actualCalories > t.targetCalories * 1.3);
+  const caloriesExcessive = targets.every(
+    (t) => t.actualCalories > t.targetCalories * 1.3,
+  );
   if (caloriesExcessive) {
-    const avgCalories = targets.reduce((sum, t) => sum + t.actualCalories, 0) / targets.length;
-    const avgTarget = targets.reduce((sum, t) => sum + t.targetCalories, 0) / targets.length;
+    const avgCalories =
+      targets.reduce((sum, t) => sum + t.actualCalories, 0) / targets.length;
+    const avgTarget =
+      targets.reduce((sum, t) => sum + t.targetCalories, 0) / targets.length;
 
     anomalies.push({
       detected: true,
@@ -208,7 +225,7 @@ export async function detectNutritionImbalance(
  */
 export async function detectGoalDeviation(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult | null> {
   // 获取活跃的健康目标
   const goal = await prisma.healthGoal.findFirst({
@@ -240,7 +257,7 @@ export async function detectGoalDeviation(
 
   const currentWeight = latestWeight.weight;
   const isLosing = goal.goalType === 'LOSE_WEIGHT';
-  
+
   // 检查趋势是否与目标一致
   let isDeviated = false;
   if (isLosing && currentWeight > goal.startWeight) {
@@ -270,7 +287,7 @@ export async function detectGoalDeviation(
  */
 export async function detectMissingData(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
@@ -330,7 +347,7 @@ export async function detectMissingData(
  */
 export async function detectAllAnomalies(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
@@ -357,7 +374,7 @@ export async function detectAllAnomalies(
 export async function saveAnomaly(
   memberId: string,
   anomaly: AnomalyDetectionResult,
-  dataType: TrendDataType
+  dataType: TrendDataType,
 ) {
   await prisma.healthAnomaly.create({
     data: {
@@ -380,7 +397,7 @@ export async function saveAnomaly(
  */
 export async function getPendingAnomalies(
   memberId: string,
-  limit: number = 10
+  limit: number = 10,
 ) {
   return await prisma.healthAnomaly.findMany({
     where: {
@@ -409,10 +426,7 @@ export async function acknowledgeAnomaly(anomalyId: string) {
 /**
  * 解决异常
  */
-export async function resolveAnomaly(
-  anomalyId: string,
-  resolution: string
-) {
+export async function resolveAnomaly(anomalyId: string, resolution: string) {
   await prisma.healthAnomaly.update({
     where: { id: anomalyId },
     data: {
@@ -478,7 +492,8 @@ function getDataTypeUnit(dataType: TrendDataType): string {
 /**
  * 快捷函数：检测所有异常（使用当前日期）
  */
-export async function detectAnomalies(memberId: string): Promise<AnomalyDetectionResult[]> {
+export async function detectAnomalies(
+  memberId: string,
+): Promise<AnomalyDetectionResult[]> {
   return await detectAllAnomalies(memberId, new Date());
 }
-

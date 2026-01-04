@@ -32,9 +32,9 @@ describe('Price Estimator', () => {
         id: 'food-1',
         name: '西兰花',
         category: 'VEGETABLES' as FoodCategory,
-      }
+      };
 
-      ;(prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
+      (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
       const result = await estimator.estimatePrice('food-1', 500);
 
@@ -50,9 +50,9 @@ describe('Price Estimator', () => {
         id: 'food-2',
         name: '鸡胸肉',
         category: 'PROTEIN' as FoodCategory,
-      }
+      };
 
-      ;(prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
+      (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
       const result = await estimator.estimatePrice('food-2', 300);
 
@@ -61,11 +61,11 @@ describe('Price Estimator', () => {
     });
 
     it('should throw error when food does not exist', async () => {
-      ;(prisma.food.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.food.findUnique as jest.Mock).mockResolvedValue(null);
 
-      await expect(estimator.estimatePrice('non-existent', 100)).rejects.toThrow(
-        '食物不存在'
-      );
+      await expect(
+        estimator.estimatePrice('non-existent', 100),
+      ).rejects.toThrow('食物不存在');
     });
 
     it('should round price to 2 decimal places', async () => {
@@ -73,9 +73,9 @@ describe('Price Estimator', () => {
         id: 'food-1',
         name: '西兰花',
         category: 'VEGETABLES' as FoodCategory,
-      }
+      };
 
-      ;(prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
+      (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
       const result = await estimator.estimatePrice('food-1', 333);
 
@@ -97,9 +97,9 @@ describe('Price Estimator', () => {
           name: '鸡胸肉',
           category: 'PROTEIN' as FoodCategory,
         },
-      ]
+      ];
 
-      ;(prisma.food.findUnique as jest.Mock)
+      (prisma.food.findUnique as jest.Mock)
         .mockResolvedValueOnce(mockFoods[0])
         .mockResolvedValueOnce(mockFoods[1]);
 
@@ -179,7 +179,7 @@ describe('Price Estimator', () => {
 
   describe('updateActualCost', () => {
     it('should update actual cost in database', async () => {
-      ;(prisma.shoppingList.update as jest.Mock).mockResolvedValue({
+      (prisma.shoppingList.update as jest.Mock).mockResolvedValue({
         id: 'list-1',
         actualCost: 58.5,
       });
@@ -210,4 +210,3 @@ describe('Price Estimator', () => {
     });
   });
 });
-

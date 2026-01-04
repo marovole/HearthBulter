@@ -10,7 +10,7 @@ import { getReportByShareToken } from '@/lib/services/analytics/report-generator
 export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: Promise<{ token: string }> },
 ) {
   try {
     const { token } = await params;
@@ -19,7 +19,7 @@ export async function GET(
     if (!report) {
       return NextResponse.json(
         { error: '报告不存在或已过期' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -29,9 +29,6 @@ export async function GET(
     });
   } catch (error) {
     console.error('Failed to get shared report:', error);
-    return NextResponse.json(
-      { error: '获取报告失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取报告失败' }, { status: 500 });
   }
 }

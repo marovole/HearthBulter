@@ -27,14 +27,18 @@ export const createMockUser = (overrides?: Partial<MockUser>): MockUser => ({
   ...overrides,
 });
 
-export const createMockSession = (overrides?: Partial<MockSession>): MockSession => ({
+export const createMockSession = (
+  overrides?: Partial<MockSession>,
+): MockSession => ({
   user: createMockUser(overrides?.user),
   expires: new Date(Date.now() + 86400000).toISOString(),
   ...overrides,
 });
 
 export const createMockAuth = () => {
-  return jest.fn<Promise<MockSession | null>, []>().mockResolvedValue(createMockSession());
+  return jest
+    .fn<Promise<MockSession | null>, []>()
+    .mockResolvedValue(createMockSession());
 };
 
 export const createMockAuthNull = () => {
@@ -76,7 +80,9 @@ export interface MockDeviceWithMember extends MockDevice {
   };
 }
 
-export const createMockDevice = (overrides?: Partial<MockDevice>): MockDevice => ({
+export const createMockDevice = (
+  overrides?: Partial<MockDevice>,
+): MockDevice => ({
   id: 'device-1',
   deviceId: 'apple-watch-123',
   deviceName: 'Apple Watch',
@@ -103,7 +109,9 @@ export const createMockDevice = (overrides?: Partial<MockDevice>): MockDevice =>
   ...overrides,
 });
 
-export const createMockDeviceWithMember = (overrides?: Partial<MockDeviceWithMember>): MockDeviceWithMember => ({
+export const createMockDeviceWithMember = (
+  overrides?: Partial<MockDeviceWithMember>,
+): MockDeviceWithMember => ({
   ...createMockDevice(overrides),
   member: {
     id: 'member-1',
@@ -122,7 +130,9 @@ export interface MockMember {
   userId: string | null;
 }
 
-export const createMockMember = (overrides?: Partial<MockMember>): MockMember => ({
+export const createMockMember = (
+  overrides?: Partial<MockMember>,
+): MockMember => ({
   id: 'member-1',
   name: '张三',
   avatar: null,
@@ -150,7 +160,8 @@ export const NotificationType = {
   FAMILY_UPDATE: 'FAMILY_UPDATE',
 } as const;
 
-export type NotificationTypeValue = typeof NotificationType[keyof typeof NotificationType];
+export type NotificationTypeValue =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 export interface MockNotification {
   id: string;
@@ -167,7 +178,9 @@ export interface MockNotification {
   actionText?: string;
 }
 
-export const createMockNotification = (overrides?: Partial<MockNotification>): MockNotification => ({
+export const createMockNotification = (
+  overrides?: Partial<MockNotification>,
+): MockNotification => ({
   id: 'notification-1',
   memberId: 'member-1',
   type: NotificationType.HEALTH_ALERT,
@@ -199,7 +212,9 @@ export interface MockAchievement {
   };
 }
 
-export const createMockAchievement = (overrides?: Partial<MockAchievement>): MockAchievement => ({
+export const createMockAchievement = (
+  overrides?: Partial<MockAchievement>,
+): MockAchievement => ({
   id: 'achievement-1',
   type: 'STREAK',
   name: '坚持7天',
@@ -227,7 +242,9 @@ export interface MockSyncResult {
   lastSyncDate?: Date;
 }
 
-export const createMockSyncResult = (overrides?: Partial<MockSyncResult>): MockSyncResult => ({
+export const createMockSyncResult = (
+  overrides?: Partial<MockSyncResult>,
+): MockSyncResult => ({
   success: true,
   syncedCount: 1,
   skippedCount: 0,
@@ -245,7 +262,10 @@ export interface MockQueryResult<T> {
   limit: number;
 }
 
-export const createMockQueryResult = <T>(data: T, overrides?: Partial<MockQueryResult<T>>): MockQueryResult<T> => ({
+export const createMockQueryResult = <T>(
+  data: T,
+  overrides?: Partial<MockQueryResult<T>>,
+): MockQueryResult<T> => ({
   data,
   total: Array.isArray(data) ? data.length : 1,
   page: 1,
@@ -296,7 +316,9 @@ export const createMockError = (message: string = 'Test error'): Error => {
   return new Error(message);
 };
 
-export const createMockDatabaseError = (code: string = 'P2002'): Error & { code: string } => {
+export const createMockDatabaseError = (
+  code: string = 'P2002',
+): Error & { code: string } => {
   const error = new Error('Database error') as Error & { code: string };
   error.code = code;
   return error;

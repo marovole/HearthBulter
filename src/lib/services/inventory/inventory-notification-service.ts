@@ -15,22 +15,27 @@ export class InventoryNotificationService {
   /**
    * 发送食材过期提醒
    */
-  async sendExpiryAlert(memberId: string, itemData: {
-    foodName: string;
-    expiryDate: string;
-    daysUntilExpiry: number;
-    location: string;
-  }): Promise<void> {
+  async sendExpiryAlert(
+    memberId: string,
+    itemData: {
+      foodName: string;
+      expiryDate: string;
+      daysUntilExpiry: number;
+      location: string;
+    },
+  ): Promise<void> {
     try {
-      const priority = itemData.daysUntilExpiry <= 1 
-        ? NotificationPriority.URGENT 
-        : itemData.daysUntilExpiry <= 3 
-          ? NotificationPriority.HIGH 
-          : NotificationPriority.MEDIUM;
+      const priority =
+        itemData.daysUntilExpiry <= 1
+          ? NotificationPriority.URGENT
+          : itemData.daysUntilExpiry <= 3
+            ? NotificationPriority.HIGH
+            : NotificationPriority.MEDIUM;
 
-      const channels = itemData.daysUntilExpiry <= 1 
-        ? ['IN_APP', 'EMAIL', 'SMS'] 
-        : ['IN_APP', 'EMAIL'];
+      const channels =
+        itemData.daysUntilExpiry <= 1
+          ? ['IN_APP', 'EMAIL', 'SMS']
+          : ['IN_APP', 'EMAIL'];
 
       let urgencyText = '';
       if (itemData.daysUntilExpiry <= 1) {
@@ -68,12 +73,15 @@ export class InventoryNotificationService {
   /**
    * 发送库存不足提醒
    */
-  async sendLowStockAlert(memberId: string, itemData: {
-    foodName: string;
-    currentStock: number;
-    minStock: number;
-    unit: string;
-  }): Promise<void> {
+  async sendLowStockAlert(
+    memberId: string,
+    itemData: {
+      foodName: string;
+      currentStock: number;
+      minStock: number;
+      unit: string;
+    },
+  ): Promise<void> {
     try {
       await this.notificationManager.createNotification({
         memberId,
@@ -99,16 +107,22 @@ export class InventoryNotificationService {
   /**
    * 发送采购建议通知
    */
-  async sendPurchaseRecommendation(memberId: string, recommendations: Array<{
-    foodName: string;
-    suggestedQuantity: number;
-    unit: string;
-    estimatedPrice: number;
-    reason: string;
-  }>): Promise<void> {
+  async sendPurchaseRecommendation(
+    memberId: string,
+    recommendations: Array<{
+      foodName: string;
+      suggestedQuantity: number;
+      unit: string;
+      estimatedPrice: number;
+      reason: string;
+    }>,
+  ): Promise<void> {
     try {
       const recommendationText = recommendations
-        .map(rec => `${rec.foodName}: ${rec.suggestedQuantity}${rec.unit} (约¥${rec.estimatedPrice})`)
+        .map(
+          (rec) =>
+            `${rec.foodName}: ${rec.suggestedQuantity}${rec.unit} (约¥${rec.estimatedPrice})`,
+        )
         .join('、');
 
       await this.notificationManager.createNotification({
@@ -133,20 +147,23 @@ export class InventoryNotificationService {
   /**
    * 发送浪费分析报告
    */
-  async sendWasteAnalysisReport(memberId: string, reportData: {
-    totalWastedItems: number;
-    totalWastedValue: number;
-    topWastedItems: Array<{
-      foodName: string;
-      wastedQuantity: number;
-      estimatedValue: number;
-    }>;
-    period: string;
-  }): Promise<void> {
+  async sendWasteAnalysisReport(
+    memberId: string,
+    reportData: {
+      totalWastedItems: number;
+      totalWastedValue: number;
+      topWastedItems: Array<{
+        foodName: string;
+        wastedQuantity: number;
+        estimatedValue: number;
+      }>;
+      period: string;
+    },
+  ): Promise<void> {
     try {
       const topWastedText = reportData.topWastedItems
         .slice(0, 3)
-        .map(item => `${item.foodName}(¥${item.estimatedValue})`)
+        .map((item) => `${item.foodName}(¥${item.estimatedValue})`)
         .join('、');
 
       await this.notificationManager.createNotification({
@@ -171,25 +188,28 @@ export class InventoryNotificationService {
   /**
    * 发送库存更新通知
    */
-  async sendInventoryUpdateNotification(memberId: string, updateData: {
-    operation: 'added' | 'consumed' | 'removed';
-    foodName: string;
-    quantity: number;
-    unit: string;
-    newStock: number;
-  }): Promise<void> {
+  async sendInventoryUpdateNotification(
+    memberId: string,
+    updateData: {
+      operation: 'added' | 'consumed' | 'removed';
+      foodName: string;
+      quantity: number;
+      unit: string;
+      newStock: number;
+    },
+  ): Promise<void> {
     try {
       let operationText = '';
       switch (updateData.operation) {
-      case 'added':
-        operationText = `新增了${updateData.quantity}${updateData.unit}`;
-        break;
-      case 'consumed':
-        operationText = `消耗了${updateData.quantity}${updateData.unit}`;
-        break;
-      case 'removed':
-        operationText = `移除了${updateData.quantity}${updateData.unit}`;
-        break;
+        case 'added':
+          operationText = `新增了${updateData.quantity}${updateData.unit}`;
+          break;
+        case 'consumed':
+          operationText = `消耗了${updateData.quantity}${updateData.unit}`;
+          break;
+        case 'removed':
+          operationText = `移除了${updateData.quantity}${updateData.unit}`;
+          break;
       }
 
       await this.notificationManager.createNotification({
@@ -214,16 +234,19 @@ export class InventoryNotificationService {
   /**
    * 批量发送家庭库存通知
    */
-  async sendFamilyInventoryNotification(familyId: string, notificationData: {
-    type: 'EXPIRY_ALERT' | 'LOW_STOCK' | 'PURCHASE_RECOMMENDATION';
-    title: string;
-    content: string;
-    priority: NotificationPriority;
-  }): Promise<void> {
+  async sendFamilyInventoryNotification(
+    familyId: string,
+    notificationData: {
+      type: 'EXPIRY_ALERT' | 'LOW_STOCK' | 'PURCHASE_RECOMMENDATION';
+      title: string;
+      content: string;
+      priority: NotificationPriority;
+    },
+  ): Promise<void> {
     try {
       const familyMembers = await this.getFamilyMembers(familyId);
-      
-      const notifications = familyMembers.map(memberId => ({
+
+      const notifications = familyMembers.map((memberId) => ({
         memberId,
         type: NotificationType.FAMILY_ACTIVITY,
         title: notificationData.title,
@@ -267,7 +290,7 @@ export class InventoryNotificationService {
       where: { familyId },
       select: { id: true },
     });
-    return members.map(member => member.id);
+    return members.map((member) => member.id);
   }
 }
 

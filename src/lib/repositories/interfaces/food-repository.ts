@@ -87,7 +87,11 @@ export interface FoodRepository {
    * @param to - 结束索引
    * @returns 食材列表
    */
-  listByCategory(category: FoodCategory, from: number, to: number): Promise<FoodRecord[]>;
+  listByCategory(
+    category: FoodCategory,
+    from: number,
+    to: number,
+  ): Promise<FoodRecord[]>;
 
   /**
    * 统计指定分类的食材数量

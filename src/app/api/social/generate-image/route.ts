@@ -13,10 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -24,17 +21,11 @@ export async function POST(request: NextRequest) {
 
     // 验证模板类型
     if (!template || !Object.values(ShareTemplate).includes(template)) {
-      return NextResponse.json(
-        { error: '无效的模板类型' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '无效的模板类型' }, { status: 400 });
     }
 
     if (!data) {
-      return NextResponse.json(
-        { error: '缺少数据参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少数据参数' }, { status: 400 });
     }
 
     // 验证数据格式（根据模板类型）
@@ -42,12 +33,16 @@ export async function POST(request: NextRequest) {
     if (!validationResult.isValid) {
       return NextResponse.json(
         { error: `数据验证失败: ${validationResult.error}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 生成图片
-    const imageUrl = await shareImageGenerator.generateShareImage(template, data, config);
+    const imageUrl = await shareImageGenerator.generateShareImage(
+      template,
+      data,
+      config,
+    );
 
     return NextResponse.json({
       success: true,
@@ -58,12 +53,11 @@ export async function POST(request: NextRequest) {
       },
       message: '图片生成成功',
     });
-
   } catch (error) {
     console.error('生成分享图片失败:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '服务器内部错误' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -71,45 +65,54 @@ export async function POST(request: NextRequest) {
 /**
  * 验证模板数据
  */
-function validateTemplateData(template: ShareTemplate, data: any): { isValid: boolean; error?: string } {
+function validateTemplateData(
+  template: ShareTemplate,
+  data: any,
+): { isValid: boolean; error?: string } {
   try {
     switch (template) {
-    case ShareTemplate.HEALTH_REPORT:
-      return validateHealthReportData(data);
+      case ShareTemplate.HEALTH_REPORT:
+        return validateHealthReportData(data);
 
-    case ShareTemplate.GOAL_ACHIEVED:
-      return validateGoalAchievedData(data);
+      case ShareTemplate.GOAL_ACHIEVED:
+        return validateGoalAchievedData(data);
 
-    case ShareTemplate.ACHIEVEMENT_UNLOCKED:
-      return validateAchievementUnlockedData(data);
+      case ShareTemplate.ACHIEVEMENT_UNLOCKED:
+        return validateAchievementUnlockedData(data);
 
-    case ShareTemplate.WEIGHT_LOSS:
-      return validateWeightLossData(data);
+      case ShareTemplate.WEIGHT_LOSS:
+        return validateWeightLossData(data);
 
-    case ShareTemplate.STREAK_CELEBRATION:
-      return validateStreakCelebrationData(data);
+      case ShareTemplate.STREAK_CELEBRATION:
+        return validateStreakCelebrationData(data);
 
-    case ShareTemplate.RECIPE_CARD:
-      return validateRecipeCardData(data);
+      case ShareTemplate.RECIPE_CARD:
+        return validateRecipeCardData(data);
 
-    case ShareTemplate.PERSONAL_RECORD:
-      return validatePersonalRecordData(data);
+      case ShareTemplate.PERSONAL_RECORD:
+        return validatePersonalRecordData(data);
 
-    case ShareTemplate.COMMUNITY_POST:
-      return validateCommunityPostData(data);
+      case ShareTemplate.COMMUNITY_POST:
+        return validateCommunityPostData(data);
 
-    default:
-      return { isValid: false, error: '不支持的模板类型' };
+      default:
+        return { isValid: false, error: '不支持的模板类型' };
     }
   } catch (error) {
-    return { isValid: false, error: error instanceof Error ? error.message : '验证失败' };
+    return {
+      isValid: false,
+      error: error instanceof Error ? error.message : '验证失败',
+    };
   }
 }
 
 /**
  * 验证健康报告数据
  */
-function validateHealthReportData(data: any): { isValid: boolean; error?: string } {
+function validateHealthReportData(data: any): {
+  isValid: boolean;
+  error?: string;
+} {
   const requiredFields = ['memberName', 'healthScore'];
 
   for (const field of requiredFields) {
@@ -118,7 +121,11 @@ function validateHealthReportData(data: any): { isValid: boolean; error?: string
     }
   }
 
-  if (typeof data.healthScore !== 'number' || data.healthScore < 0 || data.healthScore > 100) {
+  if (
+    typeof data.healthScore !== 'number' ||
+    data.healthScore < 0 ||
+    data.healthScore > 100
+  ) {
     return { isValid: false, error: 'healthScore必须是0-100之间的数字' };
   }
 
@@ -128,7 +135,10 @@ function validateHealthReportData(data: any): { isValid: boolean; error?: string
 /**
  * 验证目标达成数据
  */
-function validateGoalAchievedData(data: any): { isValid: boolean; error?: string } {
+function validateGoalAchievedData(data: any): {
+  isValid: boolean;
+  error?: string;
+} {
   const requiredFields = ['memberName', 'goalTitle', 'progress'];
 
   for (const field of requiredFields) {
@@ -137,7 +147,11 @@ function validateGoalAchievedData(data: any): { isValid: boolean; error?: string
     }
   }
 
-  if (typeof data.progress !== 'number' || data.progress < 0 || data.progress > 100) {
+  if (
+    typeof data.progress !== 'number' ||
+    data.progress < 0 ||
+    data.progress > 100
+  ) {
     return { isValid: false, error: 'progress必须是0-100之间的数字' };
   }
 
@@ -147,8 +161,16 @@ function validateGoalAchievedData(data: any): { isValid: boolean; error?: string
 /**
  * 验证成就解锁数据
  */
-function validateAchievementUnlockedData(data: any): { isValid: boolean; error?: string } {
-  const requiredFields = ['memberName', 'achievementType', 'achievementTitle', 'points'];
+function validateAchievementUnlockedData(data: any): {
+  isValid: boolean;
+  error?: string;
+} {
+  const requiredFields = [
+    'memberName',
+    'achievementType',
+    'achievementTitle',
+    'points',
+  ];
 
   for (const field of requiredFields) {
     if (!data[field]) {
@@ -166,7 +188,10 @@ function validateAchievementUnlockedData(data: any): { isValid: boolean; error?:
 /**
  * 验证减重数据
  */
-function validateWeightLossData(data: any): { isValid: boolean; error?: string } {
+function validateWeightLossData(data: any): {
+  isValid: boolean;
+  error?: string;
+} {
   const requiredFields = ['memberName', 'initialWeight', 'currentWeight'];
 
   for (const field of requiredFields) {
@@ -175,11 +200,19 @@ function validateWeightLossData(data: any): { isValid: boolean; error?: string }
     }
   }
 
-  if (typeof data.initialWeight !== 'number' || data.initialWeight <= 0 || data.initialWeight > 300) {
+  if (
+    typeof data.initialWeight !== 'number' ||
+    data.initialWeight <= 0 ||
+    data.initialWeight > 300
+  ) {
     return { isValid: false, error: 'initialWeight必须是有效的体重值' };
   }
 
-  if (typeof data.currentWeight !== 'number' || data.currentWeight <= 0 || data.currentWeight > 300) {
+  if (
+    typeof data.currentWeight !== 'number' ||
+    data.currentWeight <= 0 ||
+    data.currentWeight > 300
+  ) {
     return { isValid: false, error: 'currentWeight必须是有效的体重值' };
   }
 
@@ -189,7 +222,10 @@ function validateWeightLossData(data: any): { isValid: boolean; error?: string }
 /**
  * 验证连续打卡数据
  */
-function validateStreakCelebrationData(data: any): { isValid: boolean; error?: string } {
+function validateStreakCelebrationData(data: any): {
+  isValid: boolean;
+  error?: string;
+} {
   const requiredFields = ['memberName', 'streakDays'];
 
   for (const field of requiredFields) {
@@ -198,7 +234,11 @@ function validateStreakCelebrationData(data: any): { isValid: boolean; error?: s
     }
   }
 
-  if (typeof data.streakDays !== 'number' || data.streakDays < 1 || data.streakDays > 365) {
+  if (
+    typeof data.streakDays !== 'number' ||
+    data.streakDays < 1 ||
+    data.streakDays > 365
+  ) {
     return { isValid: false, error: 'streakDays必须是1-365之间的整数' };
   }
 
@@ -208,7 +248,10 @@ function validateStreakCelebrationData(data: any): { isValid: boolean; error?: s
 /**
  * 验证食谱卡片数据
  */
-function validateRecipeCardData(data: any): { isValid: boolean; error?: string } {
+function validateRecipeCardData(data: any): {
+  isValid: boolean;
+  error?: string;
+} {
   const requiredFields = ['memberName', 'recipeName'];
 
   for (const field of requiredFields) {
@@ -217,7 +260,10 @@ function validateRecipeCardData(data: any): { isValid: boolean; error?: string }
     }
   }
 
-  if (data.calories && (typeof data.calories !== 'number' || data.calories < 0)) {
+  if (
+    data.calories &&
+    (typeof data.calories !== 'number' || data.calories < 0)
+  ) {
     return { isValid: false, error: 'calories必须是大于等于0的数字' };
   }
 
@@ -231,7 +277,10 @@ function validateRecipeCardData(data: any): { isValid: boolean; error?: string }
 /**
  * 验证个人记录数据
  */
-function validatePersonalRecordData(data: any): { isValid: boolean; error?: string } {
+function validatePersonalRecordData(data: any): {
+  isValid: boolean;
+  error?: string;
+} {
   const requiredFields = ['memberName', 'title', 'description'];
 
   for (const field of requiredFields) {
@@ -250,7 +299,10 @@ function validatePersonalRecordData(data: any): { isValid: boolean; error?: stri
 /**
  * 验证社区帖子数据
  */
-function validateCommunityPostData(data: any): { isValid: boolean; error?: string } {
+function validateCommunityPostData(data: any): {
+  isValid: boolean;
+  error?: string;
+} {
   const requiredFields = ['title', 'content'];
 
   for (const field of requiredFields) {
@@ -277,10 +329,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -308,24 +357,24 @@ export async function GET(request: NextRequest) {
       ];
 
       switch (category) {
-      case 'health':
-        templates = healthTemplates;
-        break;
-      case 'achievement':
-        templates = achievementTemplates;
-        break;
-      case 'social':
-        templates = socialTemplates;
-        break;
-      default:
-        templates = [];
+        case 'health':
+          templates = healthTemplates;
+          break;
+        case 'achievement':
+          templates = achievementTemplates;
+          break;
+        case 'social':
+          templates = socialTemplates;
+          break;
+        default:
+          templates = [];
       }
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        templates: templates.map(template => ({
+        templates: templates.map((template) => ({
           id: template,
           name: getTemplateName(template),
           description: getTemplateDescription(template),
@@ -334,13 +383,9 @@ export async function GET(request: NextRequest) {
         })),
       },
     });
-
   } catch (error) {
     console.error('获取模板列表失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -405,8 +450,17 @@ function getTemplateRequiredFields(template: ShareTemplate): string[] {
   const fields: Record<ShareTemplate, string[]> = {
     [ShareTemplate.HEALTH_REPORT]: ['memberName', 'healthScore'],
     [ShareTemplate.GOAL_ACHIEVED]: ['memberName', 'goalTitle', 'progress'],
-    [ShareTemplate.ACHIEVEMENT_UNLOCKED]: ['memberName', 'achievementType', 'achievementTitle', 'points'],
-    [ShareTemplate.WEIGHT_LOSS]: ['memberName', 'initialWeight', 'currentWeight'],
+    [ShareTemplate.ACHIEVEMENT_UNLOCKED]: [
+      'memberName',
+      'achievementType',
+      'achievementTitle',
+      'points',
+    ],
+    [ShareTemplate.WEIGHT_LOSS]: [
+      'memberName',
+      'initialWeight',
+      'currentWeight',
+    ],
     [ShareTemplate.STREAK_CELEBRATION]: ['memberName', 'streakDays'],
     [ShareTemplate.RECIPE_CARD]: ['memberName', 'recipeName'],
     [ShareTemplate.PERSONAL_RECORD]: ['memberName', 'title', 'description'],

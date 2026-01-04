@@ -13,7 +13,13 @@ interface StatItemProps {
   icon: React.ElementType;
 }
 
-function StatItem({ end, label, suffix = '', duration = 2000, icon: Icon }: StatItemProps) {
+function StatItem({
+  end,
+  label,
+  suffix = '',
+  duration = 2000,
+  icon: Icon,
+}: StatItemProps) {
   const [count, setCount] = useState(0);
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -65,17 +71,16 @@ function StatItem({ end, label, suffix = '', duration = 2000, icon: Icon }: Stat
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-      className="text-center"
+      className='text-center'
     >
-      <div className="inline-flex p-4 rounded-2xl bg-primary/10 mb-6">
-        <Icon className="w-8 h-8 text-primary" />
+      <div className='inline-flex p-4 rounded-2xl bg-primary/10 mb-6'>
+        <Icon className='w-8 h-8 text-primary' />
       </div>
-      <div className="font-mono text-5xl sm:text-6xl font-bold text-foreground mb-2">
-        {formatNumber(count)}{suffix}
+      <div className='font-mono text-5xl sm:text-6xl font-bold text-foreground mb-2'>
+        {formatNumber(count)}
+        {suffix}
       </div>
-      <div className="text-muted-foreground font-medium">
-        {label}
-      </div>
+      <div className='text-muted-foreground font-medium'>{label}</div>
     </motion.div>
   );
 }
@@ -93,12 +98,12 @@ export default function StatsCounter() {
   });
 
   return (
-    <section className="py-24 md:py-32 bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className='py-24 md:py-32 bg-background'>
+      <div className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8'>
         <motion.div
           ref={ref}
-          className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8"
-          initial="hidden"
+          className='grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8'
+          initial='hidden'
           animate={inView ? 'visible' : 'hidden'}
           variants={{
             hidden: { opacity: 0 },

@@ -25,7 +25,7 @@ export interface ApiContext {
 
 export type ApiHandler<T = NextResponse> = (
   request: NextRequest,
-  context?: ApiContext
+  context?: ApiContext,
 ) => Promise<T>;
 
 /**
@@ -47,7 +47,7 @@ export type ApiHandler<T = NextResponse> = (
  */
 export function withApiHandler(
   handler: ApiHandler,
-  options: ApiHandlerOptions = {}
+  options: ApiHandlerOptions = {},
 ): ApiHandler {
   const {
     requireAuth = true,
@@ -123,14 +123,11 @@ export function withApiHandler(
  * 用于动态路由 [id] 等场景
  */
 export function withApiHandlerParams<P extends Record<string, string>>(
-  handler: (
-    request: NextRequest,
-    params: P
-  ) => Promise<NextResponse>,
-  options: ApiHandlerOptions = {}
+  handler: (request: NextRequest, params: P) => Promise<NextResponse>,
+  options: ApiHandlerOptions = {},
 ): (
   request: NextRequest,
-  context: { params: Promise<P> }
+  context: { params: Promise<P> },
 ) => Promise<NextResponse> {
   const {
     requireAuth = true,
@@ -139,10 +136,7 @@ export function withApiHandlerParams<P extends Record<string, string>>(
     errorMessage = '服务器内部错误',
   } = options;
 
-  return async (
-    request: NextRequest,
-    context: { params: Promise<P> }
-  ) => {
+  return async (request: NextRequest, context: { params: Promise<P> }) => {
     const startTime = Date.now();
     const url = request.url;
     const method = request.method;
@@ -217,10 +211,11 @@ export async function parseRequestBody<T>(request: NextRequest): Promise<T> {
  */
 export function validateRequired(
   data: Record<string, unknown>,
-  fields: string[]
+  fields: string[],
 ): void {
   const missing = fields.filter(
-    (field) => data[field] === undefined || data[field] === null || data[field] === ''
+    (field) =>
+      data[field] === undefined || data[field] === null || data[field] === '',
   );
   if (missing.length > 0) {
     throw APIError.badRequest(`缺少必填字段: ${missing.join(', ')}`);
@@ -244,7 +239,10 @@ export function getPaginationParams(request: NextRequest): {
 } {
   const params = getQueryParams(request);
   const page = Math.max(1, parseInt(params.get('page') || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(params.get('limit') || '20', 10)));
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(params.get('limit') || '20', 10)),
+  );
   const skip = (page - 1) * limit;
 
   return { page, limit, skip };

@@ -3,18 +3,18 @@
  * 将主路由逻辑拆分为独立的小函数
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 import {
   conversationManager,
   IntentRecognition,
   ConversationSession,
-} from "@/lib/services/ai/conversation-manager";
-import { healthRepository } from "@/lib/repositories/health-repository-singleton";
-import { SupabaseFamilyRepository } from "@/lib/repositories/implementations/supabase-family-repository";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import { aiFallbackService } from "@/lib/services/ai/fallback-service";
-import { defaultSensitiveFilter } from "@/lib/middleware/ai-sensitive-filter";
-import { logger } from "@/lib/logger";
+} from '@/lib/services/ai/conversation-manager';
+import { healthRepository } from '@/lib/repositories/health-repository-singleton';
+import { SupabaseFamilyRepository } from '@/lib/repositories/implementations/supabase-family-repository';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { aiFallbackService } from '@/lib/services/ai/fallback-service';
+import { defaultSensitiveFilter } from '@/lib/middleware/ai-sensitive-filter';
+import { logger } from '@/lib/logger';
 
 const familyRepo = new SupabaseFamilyRepository(
   SupabaseClientManager.getInstance(),
@@ -34,7 +34,7 @@ export interface MemberContext {
     familyId: string;
     name: string;
     birthDate: string;
-    gender: "MALE" | "FEMALE";
+    gender: 'MALE' | 'FEMALE';
     height?: number | null;
     weight?: number | null;
     bmi?: number | null;
@@ -75,7 +75,7 @@ export function validateChatRequest(
     return {
       valid: false,
       response: NextResponse.json(
-        { error: "Message and memberId are required" },
+        { error: 'Message and memberId are required' },
         { status: 400 },
       ),
     };
@@ -109,7 +109,7 @@ export async function buildMemberContext(
     return {
       success: false,
       response: NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       ),
     };
@@ -123,20 +123,20 @@ export async function buildMemberContext(
       memberContext.member.familyId,
       userId,
     );
-    isAdmin = role === "ADMIN";
+    isAdmin = role === 'ADMIN';
   }
 
   if (!isOwnMember && !isAdmin) {
     return {
       success: false,
       response: NextResponse.json(
-        { error: "Member not found or access denied" },
+        { error: 'Member not found or access denied' },
         { status: 404 },
       ),
     };
   }
 
-  const member: MemberContext["member"] = {
+  const member: MemberContext['member'] = {
     id: memberContext.member.id,
     userId: memberContext.member.userId,
     familyId: memberContext.member.familyId,
@@ -162,7 +162,7 @@ export async function buildMemberContext(
     healthData: memberContext.healthData.map((h) => ({
       dataType: h.dataType,
       value: h.value,
-      unit: h.unit ?? "",
+      unit: h.unit ?? '',
       measuredAt: h.measuredAt?.toISOString(),
     })),
   };
@@ -179,7 +179,7 @@ export async function buildMemberContext(
 export function getOrCreateChatSession(
   sessionId: string | undefined,
   memberId: string,
-  member: MemberContext["member"],
+  member: MemberContext['member'],
 ) {
   if (sessionId) {
     return conversationManager.getOrCreateSession(sessionId, memberId);
@@ -198,17 +198,17 @@ export function getOrCreateChatSession(
         ? {
             dietType: member.dietaryPreference.dietType,
             restrictions: [
-              ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
-              ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
+              ...(member.dietaryPreference.isVegetarian ? ['vegetarian'] : []),
+              ...(member.dietaryPreference.isVegan ? ['vegan'] : []),
             ],
           }
         : null,
       allergies: member.allergies.map((a) => a.allergenName),
     },
     preferences: {
-      language: "zh",
-      detailLevel: "detailed",
-      tone: "friendly",
+      language: 'zh',
+      detailLevel: 'detailed',
+      tone: 'friendly',
     },
   });
 }
@@ -242,7 +242,7 @@ export async function handleStreamResponse(
               setTimeout(resolve, STREAM_DELAY_MS),
             );
           }
-          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
         } catch (error) {
           controller.error(error);
@@ -252,17 +252,17 @@ export async function handleStreamResponse(
 
     return new Response(stream, {
       headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
       },
     });
   } catch {
     return NextResponse.json(
       {
-        error: "AI服务暂时不可用，请稍后重试",
+        error: 'AI服务暂时不可用，请稍后重试',
         fallback: true,
-        message: "很抱歉，AI助手暂时离线。请稍后重试或咨询专业医生。",
+        message: '很抱歉，AI助手暂时离线。请稍后重试或咨询专业医生。',
       },
       { status: 503 },
     ) as Response;
@@ -283,7 +283,7 @@ export async function handleNormalResponse(
 
   await conversationManager.addMessage(
     sessionId,
-    "user",
+    'user',
     filterResult.filtered,
     {
       intent: intent.intent,
@@ -306,12 +306,12 @@ export async function handleNormalResponse(
 
   await conversationManager.addMessage(
     sessionId,
-    "assistant",
+    'assistant',
     aiFilterResult.filtered,
     {
       intent: intent.intent,
       confidence: intent.confidence,
-      model: chatResult.fallbackUsed ? "fallback" : "openrouter-mixed",
+      model: chatResult.fallbackUsed ? 'fallback' : 'openrouter-mixed',
     },
   );
 
@@ -339,7 +339,7 @@ async function saveConversation(
   const now = new Date();
   try {
     const normalizedStatus =
-      conversationSession.status === "archived" ? "ARCHIVED" : "ACTIVE";
+      conversationSession.status === 'archived' ? 'ARCHIVED' : 'ACTIVE';
 
     await healthRepository.saveConversation({
       id: sessionId,
@@ -351,6 +351,6 @@ async function saveConversation(
       lastMessageAt: now,
     });
   } catch (error) {
-    logger.error("保存对话失败", { error, sessionId });
+    logger.error('保存对话失败', { error, sessionId });
   }
 }

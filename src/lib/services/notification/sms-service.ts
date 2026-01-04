@@ -68,20 +68,20 @@ export class SMSService {
       let messageId: string;
 
       switch (this.config.provider) {
-      case 'aliyun':
-        messageId = await this.sendAliyunSMS(phone, content);
-        break;
-      case 'tencent':
-        messageId = await this.sendTencentSMS(phone, content);
-        break;
-      case 'huawei':
-        messageId = await this.sendHuaweiSMS(phone, content);
-        break;
-      case 'mock':
-        messageId = await this.sendMockSMS(phone, content);
-        break;
-      default:
-        throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
+        case 'aliyun':
+          messageId = await this.sendAliyunSMS(phone, content);
+          break;
+        case 'tencent':
+          messageId = await this.sendTencentSMS(phone, content);
+          break;
+        case 'huawei':
+          messageId = await this.sendHuaweiSMS(phone, content);
+          break;
+        case 'mock':
+          messageId = await this.sendMockSMS(phone, content);
+          break;
+        default:
+          throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
       }
 
       return messageId;
@@ -97,7 +97,7 @@ export class SMSService {
   async sendTemplate(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>
+    templateParams: Record<string, string>,
   ): Promise<string> {
     if (!this.isConfigured) {
       throw new Error('SMS service is not configured');
@@ -107,20 +107,36 @@ export class SMSService {
       let messageId: string;
 
       switch (this.config.provider) {
-      case 'aliyun':
-        messageId = await this.sendAliyunTemplateSMS(phone, templateCode, templateParams);
-        break;
-      case 'tencent':
-        messageId = await this.sendTencentTemplateSMS(phone, templateCode, templateParams);
-        break;
-      case 'huawei':
-        messageId = await this.sendHuaweiTemplateSMS(phone, templateCode, templateParams);
-        break;
-      case 'mock':
-        messageId = await this.sendMockTemplateSMS(phone, templateCode, templateParams);
-        break;
-      default:
-        throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
+        case 'aliyun':
+          messageId = await this.sendAliyunTemplateSMS(
+            phone,
+            templateCode,
+            templateParams,
+          );
+          break;
+        case 'tencent':
+          messageId = await this.sendTencentTemplateSMS(
+            phone,
+            templateCode,
+            templateParams,
+          );
+          break;
+        case 'huawei':
+          messageId = await this.sendHuaweiTemplateSMS(
+            phone,
+            templateCode,
+            templateParams,
+          );
+          break;
+        case 'mock':
+          messageId = await this.sendMockTemplateSMS(
+            phone,
+            templateCode,
+            templateParams,
+          );
+          break;
+        default:
+          throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
       }
 
       return messageId;
@@ -140,14 +156,18 @@ export class SMSService {
     const batchSize = 50;
     for (let i = 0; i < messages.length; i += batchSize) {
       const batch = messages.slice(i, i + batchSize);
-      
+
       const batchResults = await Promise.allSettled(
         batch.map(async (message) => {
           try {
             const messageId = message.templateCode
-              ? await this.sendTemplate(message.phone, message.templateCode, message.templateParams || {})
+              ? await this.sendTemplate(
+                  message.phone,
+                  message.templateCode,
+                  message.templateParams || {},
+                )
               : await this.send(message.phone, message.content);
-            
+
             return {
               messageId,
               status: 'sent' as const,
@@ -162,7 +182,7 @@ export class SMSService {
               provider: this.config.provider,
             };
           }
-        })
+        }),
       );
 
       batchResults.forEach((result) => {
@@ -226,8 +246,12 @@ export class SMSService {
    */
   private async sendAliyunSMS(phone: string, content: string): Promise<string> {
     // 这里应该集成阿里云短信SDK
-    console.log('Aliyun SMS:', { phone, content, signName: this.config.signName });
-    
+    console.log('Aliyun SMS:', {
+      phone,
+      content,
+      signName: this.config.signName,
+    });
+
     // 模拟发送
     const messageId = `aliyun_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     return messageId;
@@ -236,10 +260,17 @@ export class SMSService {
   /**
    * 腾讯云短信发送
    */
-  private async sendTencentSMS(phone: string, content: string): Promise<string> {
+  private async sendTencentSMS(
+    phone: string,
+    content: string,
+  ): Promise<string> {
     // 这里应该集成腾讯云短信SDK
-    console.log('Tencent SMS:', { phone, content, signName: this.config.signName });
-    
+    console.log('Tencent SMS:', {
+      phone,
+      content,
+      signName: this.config.signName,
+    });
+
     // 模拟发送
     const messageId = `tencent_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     return messageId;
@@ -250,8 +281,12 @@ export class SMSService {
    */
   private async sendHuaweiSMS(phone: string, content: string): Promise<string> {
     // 这里应该集成华为云短信SDK
-    console.log('Huawei SMS:', { phone, content, signName: this.config.signName });
-    
+    console.log('Huawei SMS:', {
+      phone,
+      content,
+      signName: this.config.signName,
+    });
+
     // 模拟发送
     const messageId = `huawei_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     return messageId;
@@ -261,11 +296,15 @@ export class SMSService {
    * 模拟短信发送
    */
   private async sendMockSMS(phone: string, content: string): Promise<string> {
-    console.log('Mock SMS:', { phone, content, signName: this.config.signName });
-    
+    console.log('Mock SMS:', {
+      phone,
+      content,
+      signName: this.config.signName,
+    });
+
     // 模拟延迟
     await this.delay(100);
-    
+
     const messageId = `mock_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     return messageId;
   }
@@ -276,10 +315,14 @@ export class SMSService {
   private async sendAliyunTemplateSMS(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>
+    templateParams: Record<string, string>,
   ): Promise<string> {
-    console.log('Aliyun Template SMS:', { phone, templateCode, templateParams });
-    
+    console.log('Aliyun Template SMS:', {
+      phone,
+      templateCode,
+      templateParams,
+    });
+
     const messageId = `aliyun_tpl_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     return messageId;
   }
@@ -290,10 +333,14 @@ export class SMSService {
   private async sendTencentTemplateSMS(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>
+    templateParams: Record<string, string>,
   ): Promise<string> {
-    console.log('Tencent Template SMS:', { phone, templateCode, templateParams });
-    
+    console.log('Tencent Template SMS:', {
+      phone,
+      templateCode,
+      templateParams,
+    });
+
     const messageId = `tencent_tpl_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     return messageId;
   }
@@ -304,10 +351,14 @@ export class SMSService {
   private async sendHuaweiTemplateSMS(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>
+    templateParams: Record<string, string>,
   ): Promise<string> {
-    console.log('Huawei Template SMS:', { phone, templateCode, templateParams });
-    
+    console.log('Huawei Template SMS:', {
+      phone,
+      templateCode,
+      templateParams,
+    });
+
     const messageId = `huawei_tpl_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     return messageId;
   }
@@ -318,12 +369,12 @@ export class SMSService {
   private async sendMockTemplateSMS(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>
+    templateParams: Record<string, string>,
   ): Promise<string> {
     console.log('Mock Template SMS:', { phone, templateCode, templateParams });
-    
+
     await this.delay(100);
-    
+
     const messageId = `mock_tpl_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     return messageId;
   }
@@ -362,7 +413,7 @@ export class SMSService {
    * 延迟函数
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -379,7 +430,7 @@ export class SMSService {
   getStatus(): {
     isConfigured: boolean;
     provider: string;
-    } {
+  } {
     return {
       isConfigured: this.isConfigured,
       provider: this.config.provider,
@@ -389,12 +440,14 @@ export class SMSService {
   /**
    * 获取支持的模板列表
    */
-  async getTemplates(): Promise<Array<{
-    code: string;
-    name: string;
-    content: string;
-    variables: string[];
-  }>> {
+  async getTemplates(): Promise<
+    Array<{
+      code: string;
+      name: string;
+      content: string;
+      variables: string[];
+    }>
+  > {
     // 这里应该调用提供商API获取模板列表
     // 暂时返回模拟数据
     return [

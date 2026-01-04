@@ -18,7 +18,7 @@ export async function GET() {
         ...stats,
         hitRate: `${stats.hitRate.toFixed(2)}%`,
       },
-      recentLogs: logs.map(log => ({
+      recentLogs: logs.map((log) => ({
         ...log,
         duration: `${log.duration}ms`,
         timestamp: log.timestamp.toISOString(),
@@ -27,17 +27,15 @@ export async function GET() {
         totalRequests: stats.totalRequests,
         cacheHits: stats.hits,
         cacheMisses: stats.misses,
-        averageResponseTime: logs.length > 0
-          ? `${(logs.reduce((sum, log) => sum + log.duration, 0) / logs.length).toFixed(2)}ms`
-          : 'N/A',
+        averageResponseTime:
+          logs.length > 0
+            ? `${(logs.reduce((sum, log) => sum + log.duration, 0) / logs.length).toFixed(2)}ms`
+            : 'N/A',
       },
     });
   } catch (error) {
     console.error('获取缓存统计失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -55,9 +53,6 @@ export async function POST() {
     });
   } catch (error) {
     console.error('重置缓存统计失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

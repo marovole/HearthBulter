@@ -20,13 +20,18 @@ import type {
   TrendQueryDTO,
   TrendSeriesDTO,
 } from '../types/analytics';
-import type { DateRangeFilter, PaginatedResult, PaginationInput } from '../types/common';
+import type {
+  DateRangeFilter,
+  PaginatedResult,
+  PaginationInput,
+} from '../types/common';
 
 type FamilyMemberRow = Database['public']['Tables']['family_members']['Row'];
 type MealRecordRow = Database['public']['Tables']['meal_records']['Row'];
 type HealthDataRow = Database['public']['Tables']['health_data']['Row'];
 type HealthAnomalyRow = Database['public']['Tables']['health_anomalies']['Row'];
-type ReportSnapshotRow = Database['public']['Tables']['report_snapshots']['Row'];
+type ReportSnapshotRow =
+  Database['public']['Tables']['report_snapshots']['Row'];
 
 /**
  * Supabase 分析 Repository 实现
@@ -41,7 +46,9 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = '[SupabaseAnalyticsRepository]';
 
-  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
+  constructor(
+    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
+  ) {
     this.client = client;
   }
 
@@ -49,8 +56,13 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
    * 获取成员档案
    */
   async getMemberProfile(memberId: string): Promise<MemberProfileDTO | null> {
-    const { data, error } = await this.client.from('family_members').select('*').eq('id', memberId).maybeSingle();
-    if (error && error.code !== 'PGRST116') this.handleError('getMemberProfile', error);
+    const { data, error } = await this.client
+      .from('family_members')
+      .select('*')
+      .eq('id', memberId)
+      .maybeSingle();
+    if (error && error.code !== 'PGRST116')
+      this.handleError('getMemberProfile', error);
     return data ? this.mapMemberRow(data) : null;
   }
 
@@ -61,22 +73,31 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
    */
   async aggregateMealLogs(
     memberId: string,
-    range: DateRangeFilter
+    range: DateRangeFilter,
   ): Promise<{ totalDays: number; dataCompleteDays: number }> {
-    let query = this.client.from('meal_records').select('recorded_at').eq('member_id', memberId);
+    let query = this.client
+      .from('meal_records')
+      .select('recorded_at')
+      .eq('member_id', memberId);
 
-    if (range.start) query = query.gte('recorded_at', range.start.toISOString());
+    if (range.start)
+      query = query.gte('recorded_at', range.start.toISOString());
     if (range.end) query = query.lte('recorded_at', range.end.toISOString());
 
     const { data, error } = await query;
     if (error) this.handleError('aggregateMealLogs', error);
 
     // 计算唯一日期数
-    const uniqueDays = new Set((data || []).map((row) => row.recorded_at?.split('T')[0]));
+    const uniqueDays = new Set(
+      (data || []).map((row) => row.recorded_at?.split('T')[0]),
+    );
 
     const totalDays =
       range.start && range.end
-        ? Math.ceil((range.end.getTime() - range.start.getTime()) / (1000 * 60 * 60 * 24))
+        ? Math.ceil(
+            (range.end.getTime() - range.start.getTime()) /
+              (1000 * 60 * 60 * 24),
+          )
         : uniqueDays.size;
 
     return {
@@ -104,7 +125,11 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
   /**
    * 列出指定时间范围内的异常
    */
-  async listAnomalies(memberId: string, range: DateRangeFilter, limit = 10): Promise<AnomalyDTO[]> {
+  async listAnomalies(
+    memberId: string,
+    range: DateRangeFilter,
+    limit = 10,
+  ): Promise<AnomalyDTO[]> {
     let query = this.client
       .from('health_anomalies')
       .select('*')
@@ -112,7 +137,8 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
       .order('detected_at', { ascending: false })
       .limit(limit);
 
-    if (range.start) query = query.gte('detected_at', range.start.toISOString());
+    if (range.start)
+      query = query.gte('detected_at', range.start.toISOString());
     if (range.end) query = query.lte('detected_at', range.end.toISOString());
 
     const { data, error } = await query;
@@ -126,7 +152,10 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
    *
    * 整合多个数据源，生成完整的报告摘要
    */
-  async getReportSummary(memberId: string, period: ReportSummaryDTO['period']): Promise<ReportSummaryDTO> {
+  async getReportSummary(
+    memberId: string,
+    period: ReportSummaryDTO['period'],
+  ): Promise<ReportSummaryDTO> {
     const member = await this.getMemberProfile(memberId);
     if (!member) {
       throw new Error(`Member ${memberId} not found`);
@@ -177,7 +206,7 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
    */
   async listReportSnapshots(
     memberId: string,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<ReportSnapshotDTO>> {
     let query = this.client
       .from('report_snapshots')
@@ -198,39 +227,55 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
+      hasMore: pagination?.limit
+        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
+        : false,
     };
   }
 
   /**
    * 根据指标类型获取趋势点数据
    */
-  private async fetchTrendPoints(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
+  private async fetchTrendPoints(
+    query: TrendQueryDTO,
+  ): Promise<TimeSeriesPointDTO[]> {
     switch (query.metric) {
-    case 'CALORIES':
-    case 'PROTEIN':
-    case 'CARBS':
-    case 'FAT':
-      return this.fetchNutritionTrend(query);
-    case 'HEALTH_SCORE':
-      return this.fetchScoreTrend(query);
-    default:
-      return this.fetchHealthMetricTrend(query);
+      case 'CALORIES':
+      case 'PROTEIN':
+      case 'CARBS':
+      case 'FAT':
+        return this.fetchNutritionTrend(query);
+      case 'HEALTH_SCORE':
+        return this.fetchScoreTrend(query);
+      default:
+        return this.fetchHealthMetricTrend(query);
     }
   }
 
   /**
    * 获取营养相关趋势（从膳食日志）
    */
-  private async fetchNutritionTrend(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
+  private async fetchNutritionTrend(
+    query: TrendQueryDTO,
+  ): Promise<TimeSeriesPointDTO[]> {
     let supabaseQuery = this.client
       .from('meal_records')
-      .select('recorded_at, total_calories, total_protein, total_carbs, total_fat')
+      .select(
+        'recorded_at, total_calories, total_protein, total_carbs, total_fat',
+      )
       .eq('member_id', query.memberId)
       .order('recorded_at', { ascending: true });
 
-    if (query.range.start) supabaseQuery = supabaseQuery.gte('recorded_at', query.range.start.toISOString());
-    if (query.range.end) supabaseQuery = supabaseQuery.lte('recorded_at', query.range.end.toISOString());
+    if (query.range.start)
+      supabaseQuery = supabaseQuery.gte(
+        'recorded_at',
+        query.range.start.toISOString(),
+      );
+    if (query.range.end)
+      supabaseQuery = supabaseQuery.lte(
+        'recorded_at',
+        query.range.end.toISOString(),
+      );
 
     const { data, error } = await supabaseQuery;
     if (error) this.handleError('fetchNutritionTrend', error);
@@ -263,15 +308,22 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
   /**
    * 获取健康评分趋势
    */
-  private async fetchScoreTrend(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
+  private async fetchScoreTrend(
+    query: TrendQueryDTO,
+  ): Promise<TimeSeriesPointDTO[]> {
     let supabaseQuery = this.client
       .from('health_scores')
       .select('date, overall_score')
       .eq('member_id', query.memberId)
       .order('date', { ascending: true });
 
-    if (query.range.start) supabaseQuery = supabaseQuery.gte('date', query.range.start.toISOString());
-    if (query.range.end) supabaseQuery = supabaseQuery.lte('date', query.range.end.toISOString());
+    if (query.range.start)
+      supabaseQuery = supabaseQuery.gte(
+        'date',
+        query.range.start.toISOString(),
+      );
+    if (query.range.end)
+      supabaseQuery = supabaseQuery.lte('date', query.range.end.toISOString());
 
     const { data, error } = await supabaseQuery;
     if (error) this.handleError('fetchScoreTrend', error);
@@ -285,15 +337,27 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
   /**
    * 获取健康指标趋势（从健康数据）
    */
-  private async fetchHealthMetricTrend(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
+  private async fetchHealthMetricTrend(
+    query: TrendQueryDTO,
+  ): Promise<TimeSeriesPointDTO[]> {
     let supabaseQuery = this.client
       .from('health_data')
-      .select('measured_at, weight, body_fat, muscle_mass, blood_pressure_systolic, heart_rate')
+      .select(
+        'measured_at, weight, body_fat, muscle_mass, blood_pressure_systolic, heart_rate',
+      )
       .eq('member_id', query.memberId)
       .order('measured_at', { ascending: true });
 
-    if (query.range.start) supabaseQuery = supabaseQuery.gte('measured_at', query.range.start.toISOString());
-    if (query.range.end) supabaseQuery = supabaseQuery.lte('measured_at', query.range.end.toISOString());
+    if (query.range.start)
+      supabaseQuery = supabaseQuery.gte(
+        'measured_at',
+        query.range.start.toISOString(),
+      );
+    if (query.range.end)
+      supabaseQuery = supabaseQuery.lte(
+        'measured_at',
+        query.range.end.toISOString(),
+      );
 
     const { data, error } = await supabaseQuery;
     if (error) this.handleError('fetchHealthMetricTrend', error);
@@ -333,7 +397,8 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
         : values[Math.floor(values.length / 2)];
     const min = values[0];
     const max = values[values.length - 1];
-    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const variance =
+      values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
     const stdDev = Math.sqrt(variance);
 
     return { mean, median, min, max, stdDev };
@@ -357,7 +422,9 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
   private deriveConcerns(points: TimeSeriesPointDTO[]): string[] {
     if (!points.length) return [];
     const trend = points.slice(-5);
-    const falling = trend.every((point, index, arr) => index === 0 || point.value <= arr[index - 1].value);
+    const falling = trend.every(
+      (point, index, arr) => index === 0 || point.value <= arr[index - 1].value,
+    );
     if (falling) {
       return ['近期健康评分持续下降，请关注饮食与运动平衡'];
     }

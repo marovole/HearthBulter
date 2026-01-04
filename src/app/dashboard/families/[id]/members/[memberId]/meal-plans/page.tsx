@@ -11,7 +11,7 @@ import { zhCN } from 'date-fns/locale';
 export default async function MealPlansPage({
   params,
 }: {
-  params: Promise<{ id: string; memberId: string }>
+  params: Promise<{ id: string; memberId: string }>;
 }) {
   const { id, memberId } = await params;
   const session = await auth();
@@ -80,36 +80,36 @@ export default async function MealPlansPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+    <div className='min-h-screen bg-gray-50'>
+      <div className='max-w-7xl mx-auto py-6 sm:px-6 lg:px-8'>
+        <div className='px-4 py-6 sm:px-0'>
           {/* 面包屑导航 */}
-          <nav className="mb-6">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <nav className='mb-6'>
+            <div className='flex items-center space-x-2 text-sm text-gray-600'>
               <Link
                 href={`/dashboard/families/${id}`}
-                className="hover:text-gray-900"
+                className='hover:text-gray-900'
               >
                 家庭
               </Link>
               <span>/</span>
               <Link
                 href={`/dashboard/families/${id}/members/${memberId}`}
-                className="hover:text-gray-900"
+                className='hover:text-gray-900'
               >
                 {member.name || '成员'}
               </Link>
               <span>/</span>
-              <span className="text-gray-900">食谱规划</span>
+              <span className='text-gray-900'>食谱规划</span>
             </div>
           </nav>
 
           {/* 标题和操作 */}
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">食谱计划</h1>
+          <div className='mb-6 flex items-center justify-between'>
+            <h1 className='text-2xl font-bold text-gray-900'>食谱计划</h1>
             <Link
               href={`/dashboard/families/${id}/members/${memberId}/meal-plans/new`}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className='px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors'
             >
               新建食谱计划
             </Link>
@@ -117,33 +117,34 @@ export default async function MealPlansPage({
 
           {/* 食谱列表 */}
           {member.mealPlans.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <p className="text-gray-600 mb-4">还没有创建任何食谱计划</p>
+            <div className='bg-white rounded-lg shadow-md p-12 text-center'>
+              <p className='text-gray-600 mb-4'>还没有创建任何食谱计划</p>
               <Link
                 href={`/dashboard/families/${id}/members/${memberId}/meal-plans/new`}
-                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className='inline-block px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors'
               >
                 创建第一个食谱计划
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {member.mealPlans.map((plan) => {
-                const days = Math.ceil(
-                  (plan.endDate.getTime() - plan.startDate.getTime()) /
-                    (1000 * 60 * 60 * 24)
-                ) + 1;
+                const days =
+                  Math.ceil(
+                    (plan.endDate.getTime() - plan.startDate.getTime()) /
+                      (1000 * 60 * 60 * 24),
+                  ) + 1;
 
                 return (
                   <Link
                     key={plan.id}
                     href={`/dashboard/families/${id}/members/${memberId}/meal-plans/${plan.id}`}
-                    className="block bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+                    className='block bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow'
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                    <div className='flex items-center justify-between'>
+                      <div className='flex-1'>
+                        <div className='flex items-center gap-3 mb-2'>
+                          <h3 className='text-lg font-semibold text-gray-900'>
                             {format(plan.startDate, 'yyyy年M月d日', {
                               locale: zhCN,
                             })}{' '}
@@ -158,22 +159,19 @@ export default async function MealPlansPage({
                             {STATUS_LABELS[plan.status]}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className='flex items-center gap-4 text-sm text-gray-600'>
+                          <span>时长: {days}天</span>
                           <span>
-                            时长: {days}天
-                          </span>
-                          <span>
-                            目标: {GOAL_TYPE_LABELS[plan.goalType] || plan.goalType}
+                            目标:{' '}
+                            {GOAL_TYPE_LABELS[plan.goalType] || plan.goalType}
                           </span>
                           <span>
                             目标热量: {plan.targetCalories.toFixed(0)} kcal/天
                           </span>
-                          <span>
-                            餐食数: {plan.meals.length}
-                          </span>
+                          <span>餐食数: {plan.meals.length}</span>
                         </div>
                       </div>
-                      <div className="text-gray-400">→</div>
+                      <div className='text-gray-400'>→</div>
                     </div>
                   </Link>
                 );
@@ -185,4 +183,3 @@ export default async function MealPlansPage({
     </div>
   );
 }
-

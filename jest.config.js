@@ -104,6 +104,9 @@ const customJestConfig = {
     '<rootDir>/src/__tests__/lib/ai/response-cache.test.ts',
     // Debug test - temporary
     '<rootDir>/src/__tests__/debug/',
+    // Database integration tests - require real database connection
+    '<rootDir>/src/__tests__/services/expiry-monitor.test.ts',
+    '<rootDir>/src/__tests__/services/inventory-tracker.test.ts',
   ],
   transformIgnorePatterns: [
     '/node_modules/(?!(next-auth|@auth|@panva|oauth4webapi|jose|.*\\.mjs$))',

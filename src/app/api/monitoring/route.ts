@@ -26,7 +26,7 @@ export async function GET() {
           timestamp: new Date().toISOString(),
           error: 'Failed to fetch user statistics',
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -51,7 +51,7 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         error: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

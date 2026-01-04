@@ -16,13 +16,14 @@ import { fileStorageService } from '@/lib/services/file-storage-service';
 export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean; member: any }> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
     .from('family_members')
-    .select(`
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -30,7 +31,8 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `)
+    `,
+    )
     .eq('id', memberId)
     .is('deletedAt', null)
     .single();
@@ -71,7 +73,7 @@ async function verifyMemberAccess(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
@@ -87,7 +89,7 @@ export async function POST(
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限为该成员上传报告' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -98,7 +100,7 @@ export async function POST(
     if (!file) {
       return NextResponse.json(
         { error: '请选择要上传的文件' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -110,7 +112,7 @@ export async function POST(
           error: '不支持的文件类型',
           supportedTypes: ['application/pdf', 'image/jpeg', 'image/png'],
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -118,7 +120,7 @@ export async function POST(
     if (!ocrService.validateFileSize(file.size)) {
       return NextResponse.json(
         { error: '文件大小超过限制（最大10MB）' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -153,7 +155,7 @@ export async function POST(
         memberId,
         {
           contentType: mimeType,
-        }
+        },
       );
 
       // 更新报告记录，保存文件URL
@@ -167,10 +169,7 @@ export async function POST(
       if (updateError) {
         console.error('更新文件URL失败:', updateError);
         // 回滚：删除报告记录
-        await supabase
-          .from('medical_reports')
-          .delete()
-          .eq('id', report.id);
+        await supabase.from('medical_reports').delete().eq('id', report.id);
 
         throw updateError;
       }
@@ -187,14 +186,11 @@ export async function POST(
           reportId: report.id,
           status: 'PROCESSING',
         },
-        { status: 202 } // Accepted - 异步处理中
+        { status: 202 }, // Accepted - 异步处理中
       );
     } catch (error) {
       // 如果上传失败，删除报告记录
-      await supabase
-        .from('medical_reports')
-        .delete()
-        .eq('id', report.id);
+      await supabase.from('medical_reports').delete().eq('id', report.id);
 
       throw error;
     }
@@ -205,7 +201,7 @@ export async function POST(
         error: '服务器内部错误',
         details: error instanceof Error ? error.message : '未知错误',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -218,7 +214,7 @@ export async function POST(
 async function processOCR(
   reportId: string,
   fileBuffer: Buffer,
-  mimeType: SupportedMimeType
+  mimeType: SupportedMimeType,
 ) {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -287,8 +283,7 @@ async function processOCR(
       .from('medical_reports')
       .update({
         ocrStatus: 'FAILED',
-        ocrError:
-          error instanceof Error ? error.message : 'OCR处理失败',
+        ocrError: error instanceof Error ? error.message : 'OCR处理失败',
       })
       .eq('id', reportId);
   }
@@ -302,7 +297,7 @@ async function processOCR(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
@@ -318,7 +313,7 @@ export async function GET(
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限查看该成员的报告' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -342,16 +337,17 @@ export async function GET(
     }
 
     // 查询报告列表（带分页）
-    const { data: reports, error: reportsError, count } = await query
+    const {
+      data: reports,
+      error: reportsError,
+      count,
+    } = await query
       .order('createdAt', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (reportsError) {
       console.error('查询报告列表失败:', reportsError);
-      return NextResponse.json(
-        { error: '查询报告列表失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询报告列表失败' }, { status: 500 });
     }
 
     if (!reports || reports.length === 0) {
@@ -362,35 +358,34 @@ export async function GET(
           limit,
           offset,
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
     // 查询所有报告的指标
-    const reportIds = reports.map(r => r.id);
+    const reportIds = reports.map((r) => r.id);
     const { data: indicators, error: indicatorsError } = await supabase
       .from('medical_indicators')
-      .select('id, reportId, indicatorType, name, value, unit, isAbnormal, status')
+      .select(
+        'id, reportId, indicatorType, name, value, unit, isAbnormal, status',
+      )
       .in('reportId', reportIds);
 
     if (indicatorsError) {
       console.error('查询指标失败:', indicatorsError);
-      return NextResponse.json(
-        { error: '查询指标失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询指标失败' }, { status: 500 });
     }
 
     // 手动组装数据
     const indicatorsMap = new Map<string, any[]>();
-    indicators?.forEach(indicator => {
+    indicators?.forEach((indicator) => {
       if (!indicatorsMap.has(indicator.reportId)) {
         indicatorsMap.set(indicator.reportId, []);
       }
       indicatorsMap.get(indicator.reportId)!.push(indicator);
     });
 
-    const assembledReports = reports.map(report => ({
+    const assembledReports = reports.map((report) => ({
       ...report,
       indicators: indicatorsMap.get(report.id) || [],
     }));
@@ -402,14 +397,10 @@ export async function GET(
         limit,
         offset,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('查询报告列表失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

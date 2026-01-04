@@ -18,7 +18,18 @@ export async function GET(request: NextRequest) {
 
     // 验证分类参数（如果提供）
     if (category) {
-      const validCategories = ['MAIN_DISH', 'SIDE_DISH', 'SOUP', 'SALAD', 'DESSERT', 'SNACK', 'BREAKFAST', 'BEVERAGE', 'SAUCE', 'OTHER'];
+      const validCategories = [
+        'MAIN_DISH',
+        'SIDE_DISH',
+        'SOUP',
+        'SALAD',
+        'DESSERT',
+        'SNACK',
+        'BREAKFAST',
+        'BEVERAGE',
+        'SAUCE',
+        'OTHER',
+      ];
       if (!validCategories.includes(category)) {
         return NextResponse.json(
           {
@@ -26,13 +37,16 @@ export async function GET(request: NextRequest) {
             error: 'Invalid category',
             details: `Category must be one of: ${validCategories.join(', ')}`,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     // 获取热门食谱推荐
-    const recommendations = await recommendationEngine.getPopularRecipes(limit, category || undefined);
+    const recommendations = await recommendationEngine.getPopularRecipes(
+      limit,
+      category || undefined,
+    );
 
     if (recommendations.length === 0) {
       return NextResponse.json({
@@ -46,7 +60,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取推荐的食谱详细信息（使用Supabase）
-    const recipeIds = recommendations.map(rec => rec.recipeId);
+    const recipeIds = recommendations.map((rec) => rec.recipeId);
     const recipes = await supabaseAdapter.recipe.findMany({
       where: {
         id: { in: recipeIds },
@@ -61,7 +75,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    type RecipeWithRelations = Awaited<ReturnType<typeof supabaseAdapter.recipe.findMany>>[number];
+    type RecipeWithRelations = Awaited<
+      ReturnType<typeof supabaseAdapter.recipe.findMany>
+    >[number];
     const recipeMap = new Map<string, RecipeWithRelations>();
     for (const recipe of recipes) {
       recipeMap.set(recipe.id, recipe);
@@ -94,7 +110,7 @@ export async function GET(request: NextRequest) {
         error: 'Failed to get popular recipes',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

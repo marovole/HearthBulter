@@ -3,9 +3,23 @@
  * 提供Apple Health数据的读取和同步功能
  */
 
-import { addHours, startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns';
-import type { AppleHealthData, DeviceConnectionInput, SyncResult } from '@/types/wearable-devices';
-import type { DeviceConnection, HealthData, HealthDataType } from '@prisma/client';
+import {
+  addHours,
+  startOfDay,
+  endOfDay,
+  subDays,
+  isWithinInterval,
+} from 'date-fns';
+import type {
+  AppleHealthData,
+  DeviceConnectionInput,
+  SyncResult,
+} from '@/types/wearable-devices';
+import type {
+  DeviceConnection,
+  HealthData,
+  HealthDataType,
+} from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { checkDataDuplication, batchDeduplicate } from './data-deduplication';
 
@@ -30,7 +44,7 @@ export class HealthKitService {
     try {
       // 在实际实现中，这里会调用react-native-health的API
       // 由于这是Next.js环境，我们模拟权限请求
-      
+
       // 模拟的权限请求结果
       const mockPermissions = {
         steps: true,
@@ -41,7 +55,7 @@ export class HealthKitService {
         activeMinutes: true,
       };
 
-      return Object.values(mockPermissions).every(permission => permission);
+      return Object.values(mockPermissions).every((permission) => permission);
     } catch (error) {
       console.error('HealthKit权限请求失败:', error);
       return false;
@@ -98,13 +112,13 @@ export class HealthKitService {
   async syncStepsData(
     memberId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<HealthData[]> {
     const stepsData = [];
-    
+
     // 在实际实现中，这里会调用HealthKit API获取步数数据
     const mockStepsData = this.generateMockStepsData(startDate, endDate);
-    
+
     for (const dayData of mockStepsData) {
       const healthInput = {
         memberId,
@@ -114,8 +128,11 @@ export class HealthKitService {
       };
 
       // 检查去重
-      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
-      
+      const deduplicationResult = await checkDataDuplication(
+        healthInput,
+        memberId,
+      );
+
       if (deduplicationResult.shouldInsert) {
         const healthRecord = await prisma.healthData.create({
           data: healthInput,
@@ -133,12 +150,15 @@ export class HealthKitService {
   async syncHeartRateData(
     memberId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<HealthData[]> {
     const heartRateData = [];
-    
-    const mockHeartRateData = this.generateMockHeartRateData(startDate, endDate);
-    
+
+    const mockHeartRateData = this.generateMockHeartRateData(
+      startDate,
+      endDate,
+    );
+
     for (const record of mockHeartRateData) {
       const healthInput = {
         memberId,
@@ -148,8 +168,11 @@ export class HealthKitService {
         notes: `心率: ${record.value} bpm`,
       };
 
-      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
-      
+      const deduplicationResult = await checkDataDuplication(
+        healthInput,
+        memberId,
+      );
+
       if (deduplicationResult.shouldInsert) {
         const healthRecord = await prisma.healthData.create({
           data: healthInput,
@@ -167,12 +190,12 @@ export class HealthKitService {
   async syncSleepData(
     memberId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<HealthData[]> {
     const sleepData = [];
-    
+
     const mockSleepData = this.generateMockSleepData(startDate, endDate);
-    
+
     for (const record of mockSleepData) {
       const healthInput = {
         memberId,
@@ -181,8 +204,11 @@ export class HealthKitService {
         notes: `睡眠时长: ${record.duration}小时, 质量: ${record.quality}`,
       };
 
-      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
-      
+      const deduplicationResult = await checkDataDuplication(
+        healthInput,
+        memberId,
+      );
+
       if (deduplicationResult.shouldInsert) {
         const healthRecord = await prisma.healthData.create({
           data: healthInput,
@@ -200,11 +226,11 @@ export class HealthKitService {
   async syncAllData(
     memberId: string,
     deviceConnectionId: string,
-    lastSyncDate?: Date
+    lastSyncDate?: Date,
   ): Promise<SyncResult> {
     const startDate = lastSyncDate || subDays(new Date(), 7); // 如果没有上次同步日期，同步最近7天
     const endDate = new Date();
-    
+
     const errors: string[] = [];
     let totalSynced = 0;
 
@@ -214,7 +240,11 @@ export class HealthKitService {
       totalSynced += stepsData.length;
 
       // 同步心率数据
-      const heartRateData = await this.syncHeartRateData(memberId, startDate, endDate);
+      const heartRateData = await this.syncHeartRateData(
+        memberId,
+        startDate,
+        endDate,
+      );
       totalSynced += heartRateData.length;
 
       // 同步睡眠数据
@@ -232,10 +262,11 @@ export class HealthKitService {
           retryCount: 0,
         },
       });
-
     } catch (error) {
-      errors.push(`HealthKit同步失败: ${error instanceof Error ? error.message : '未知错误'}`);
-      
+      errors.push(
+        `HealthKit同步失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
+
       // 更新错误状态
       await prisma.deviceConnection.update({
         where: { id: deviceConnectionId },
@@ -259,7 +290,10 @@ export class HealthKitService {
   /**
    * 生成模拟步数数据
    */
-  private generateMockStepsData(startDate: Date, endDate: Date): AppleHealthData[] {
+  private generateMockStepsData(
+    startDate: Date,
+    endDate: Date,
+  ): AppleHealthData[] {
     const data: AppleHealthData[] = [];
     const currentDate = new Date(startDate);
 
@@ -268,7 +302,7 @@ export class HealthKitService {
         steps: Math.floor(Math.random() * 8000) + 4000, // 4000-12000步
         date: new Date(currentDate),
       });
-      
+
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
@@ -278,8 +312,11 @@ export class HealthKitService {
   /**
    * 生成模拟心率数据
    */
-  private generateMockHeartRateData(startDate: Date, endDate: Date): Array<{timestamp: Date, value: number}> {
-    const data: Array<{timestamp: Date, value: number}> = [];
+  private generateMockHeartRateData(
+    startDate: Date,
+    endDate: Date,
+  ): Array<{ timestamp: Date; value: number }> {
+    const data: Array<{ timestamp: Date; value: number }> = [];
     const currentTimestamp = new Date(startDate);
 
     while (currentTimestamp <= endDate) {
@@ -287,13 +324,13 @@ export class HealthKitService {
       for (let hour = 0; hour < 24; hour++) {
         const timestamp = new Date(currentTimestamp);
         timestamp.setHours(hour, 0, 0, 0);
-        
+
         data.push({
           timestamp,
           value: Math.floor(Math.random() * 30) + 60, // 60-90 bpm
         });
       }
-      
+
       currentTimestamp.setDate(currentTimestamp.getDate() + 1);
     }
 
@@ -303,8 +340,11 @@ export class HealthKitService {
   /**
    * 生成模拟睡眠数据
    */
-  private generateMockSleepData(startDate: Date, endDate: Date): Array<{date: Date, duration: number, quality: number}> {
-    const data: Array<{date: Date, duration: number, quality: number}> = [];
+  private generateMockSleepData(
+    startDate: Date,
+    endDate: Date,
+  ): Array<{ date: Date; duration: number; quality: number }> {
+    const data: Array<{ date: Date; duration: number; quality: number }> = [];
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
@@ -313,7 +353,7 @@ export class HealthKitService {
         duration: Math.random() * 3 + 5, // 5-8小时
         quality: Math.random() * 30 + 60, // 60-90分
       });
-      
+
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
@@ -346,7 +386,7 @@ export class HealthKitService {
   getSupportedPermissions(): string[] {
     return [
       'READ_STEPS',
-      'READ_HEART_RATE', 
+      'READ_HEART_RATE',
       'READ_CALORIES',
       'READ_SLEEP',
       'READ_DISTANCE',
@@ -384,10 +424,10 @@ export const healthKitService = HealthKitService.getInstance();
 // 导出工具函数
 export async function connectHealthKitDevice(
   memberId: string,
-  deviceInfo: Partial<DeviceConnectionInput>
+  deviceInfo: Partial<DeviceConnectionInput>,
 ): Promise<DeviceConnection> {
   const service = HealthKitService.getInstance();
-  
+
   // 测试连接
   const isConnected = await service.testConnection();
   if (!isConnected) {
@@ -413,7 +453,9 @@ export async function connectHealthKitDevice(
   return deviceConnection;
 }
 
-export async function disconnectHealthKitDevice(deviceId: string): Promise<void> {
+export async function disconnectHealthKitDevice(
+  deviceId: string,
+): Promise<void> {
   await prisma.deviceConnection.update({
     where: { deviceId },
     data: {

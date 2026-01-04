@@ -51,18 +51,18 @@ describe('OcrService', () => {
 
     it('应该拒绝不支持的文件类型', async () => {
       const buffer = Buffer.from('test');
-      
+
       await expect(
-        OcrService.recognize(buffer, 'text/plain' as any)
+        OcrService.recognize(buffer, 'text/plain' as any),
       ).rejects.toThrow('不支持的文件类型');
     });
 
     it('应该处理空缓冲区', async () => {
       const emptyBuffer = Buffer.from('');
-      
+
       // PDF为空时应抛出错误
       await expect(
-        OcrService.recognize(emptyBuffer, 'application/pdf')
+        OcrService.recognize(emptyBuffer, 'application/pdf'),
       ).rejects.toThrow();
     });
   });
@@ -76,4 +76,3 @@ describe('OcrService', () => {
     });
   });
 });
-

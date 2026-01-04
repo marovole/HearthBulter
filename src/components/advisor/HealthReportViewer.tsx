@@ -1,11 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   FileText,
@@ -18,7 +30,10 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { AIThinkingIndicator } from '@/components/ui/loading-indicator';
-import { FeedbackButtons, FeedbackData } from '@/components/ui/feedback-buttons';
+import {
+  FeedbackButtons,
+  FeedbackData,
+} from '@/components/ui/feedback-buttons';
 
 interface HealthReport {
   id: string;
@@ -54,11 +69,18 @@ interface HealthReportViewerProps {
   onReportGenerated?: (report: HealthReport) => void;
 }
 
-export function HealthReportViewer({ memberId, onReportGenerated }: HealthReportViewerProps) {
+export function HealthReportViewer({
+  memberId,
+  onReportGenerated,
+}: HealthReportViewerProps) {
   const [reports, setReports] = useState<HealthReport[]>([]);
-  const [selectedReport, setSelectedReport] = useState<HealthReport | null>(null);
+  const [selectedReport, setSelectedReport] = useState<HealthReport | null>(
+    null,
+  );
   const [isGenerating, setIsGenerating] = useState(false);
-  const [reportType, setReportType] = useState<'weekly' | 'monthly' | 'quarterly'>('weekly');
+  const [reportType, setReportType] = useState<
+    'weekly' | 'monthly' | 'quarterly'
+  >('weekly');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentAdviceId, setCurrentAdviceId] = useState<string | null>(null);
@@ -70,7 +92,9 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
   const loadReports = async () => {
     try {
-      const response = await fetch(`/api/ai/generate-report?memberId=${memberId}&limit=10`);
+      const response = await fetch(
+        `/api/ai/generate-report?memberId=${memberId}&limit=10`,
+      );
       if (response.ok) {
         const data = await response.json();
         setReports(data.reports || []);
@@ -92,15 +116,15 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
       // 根据报告类型设置日期范围
       switch (reportType) {
-      case 'weekly':
-        startDate.setDate(startDate.getDate() - 7);
-        break;
-      case 'monthly':
-        startDate.setMonth(startDate.getMonth() - 1);
-        break;
-      case 'quarterly':
-        startDate.setMonth(startDate.getMonth() - 3);
-        break;
+        case 'weekly':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case 'monthly':
+          startDate.setMonth(startDate.getMonth() - 1);
+          break;
+        case 'quarterly':
+          startDate.setMonth(startDate.getMonth() - 3);
+          break;
       }
 
       const response = await fetch('/api/ai/generate-report', {
@@ -124,7 +148,7 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
       const data = await response.json();
       const newReport: HealthReport = data.report;
 
-      setReports(prev => [newReport, ...prev]);
+      setReports((prev) => [newReport, ...prev]);
       setSelectedReport(newReport);
       setCurrentAdviceId(data.adviceId || null);
       onReportGenerated?.(newReport);
@@ -135,7 +159,10 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
     }
   };
 
-  const exportReport = async (report: HealthReport, format: 'html' | 'pdf' = 'html') => {
+  const exportReport = async (
+    report: HealthReport,
+    format: 'html' | 'pdf' = 'html',
+  ) => {
     if (format === 'html' && report.htmlContent) {
       // 创建下载链接
       const blob = new Blob([report.htmlContent], { type: 'text/html' });
@@ -155,19 +182,27 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-    case 'high': return 'text-red-600';
-    case 'medium': return 'text-yellow-600';
-    case 'low': return 'text-green-600';
-    default: return 'text-gray-600';
+      case 'high':
+        return 'text-red-600';
+      case 'medium':
+        return 'text-yellow-600';
+      case 'low':
+        return 'text-green-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-    case 'completed': return <CheckCircle className="w-4 h-4 text-green-600" />;
-    case 'generating': return <AIThinkingIndicator size="sm" />;
-    case 'failed': return <AlertCircle className="w-4 h-4 text-red-600" />;
-    default: return <FileText className="w-4 h-4" />;
+      case 'completed':
+        return <CheckCircle className='w-4 h-4 text-green-600' />;
+      case 'generating':
+        return <AIThinkingIndicator size='sm' />;
+      case 'failed':
+        return <AlertCircle className='w-4 h-4 text-red-600' />;
+      default:
+        return <FileText className='w-4 h-4' />;
     }
   };
 
@@ -186,7 +221,12 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
           feedbackType: 'advice',
           liked: feedback.type === 'positive',
           disliked: feedback.type === 'negative',
-          rating: feedback.type === 'positive' ? 5 : feedback.type === 'negative' ? 2 : 3,
+          rating:
+            feedback.type === 'positive'
+              ? 5
+              : feedback.type === 'negative'
+                ? 2
+                : 3,
           comments: feedback.comment,
           categories: ['helpfulness', 'accuracy', 'completeness'],
         }),
@@ -203,11 +243,11 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
   if (loading) {
     return (
       <Card>
-        <CardContent className="p-8">
+        <CardContent className='p-8'>
           <AIThinkingIndicator
-            size="lg"
-            message="正在加载健康报告..."
-            className="w-full max-w-2xl mx-auto"
+            size='lg'
+            message='正在加载健康报告...'
+            className='w-full max-w-2xl mx-auto'
           />
         </CardContent>
       </Card>
@@ -215,41 +255,39 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* 报告生成器 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="w-5 h-5 mr-2" />
+          <CardTitle className='flex items-center'>
+            <FileText className='w-5 h-5 mr-2' />
             生成健康报告
           </CardTitle>
-          <CardDescription>
-            根据您的健康数据生成个性化报告
-          </CardDescription>
+          <CardDescription>根据您的健康数据生成个性化报告</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">报告类型</label>
-              <Select value={reportType} onValueChange={(value: any) => setReportType(value)}>
+          <div className='flex items-center space-x-4 mb-4'>
+            <div className='flex-1'>
+              <label className='text-sm font-medium mb-2 block'>报告类型</label>
+              <Select
+                value={reportType}
+                onValueChange={(value: any) => setReportType(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="weekly">周报</SelectItem>
-                  <SelectItem value="monthly">月报</SelectItem>
-                  <SelectItem value="quarterly">季报</SelectItem>
+                  <SelectItem value='weekly'>周报</SelectItem>
+                  <SelectItem value='monthly'>月报</SelectItem>
+                  <SelectItem value='quarterly'>季报</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end">
-              <Button
-                onClick={generateReport}
-                disabled={isGenerating}
-              >
+            <div className='flex items-end'>
+              <Button onClick={generateReport} disabled={isGenerating}>
                 {isGenerating ? (
                   <>
-                    <AIThinkingIndicator size="sm" />
+                    <AIThinkingIndicator size='sm' />
                     生成中...
                   </>
                 ) : (
@@ -260,8 +298,8 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
           </div>
 
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
+            <Alert variant='destructive'>
+              <AlertCircle className='h-4 w-4' />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -272,24 +310,24 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
       <Card>
         <CardHeader>
           <CardTitle>报告历史</CardTitle>
-          <CardDescription>
-            查看之前生成的健康报告
-          </CardDescription>
+          <CardDescription>查看之前生成的健康报告</CardDescription>
         </CardHeader>
         <CardContent>
           {reports.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <div className='text-center text-muted-foreground py-8'>
+              <FileText className='w-12 h-12 mx-auto mb-4 opacity-50' />
               <p>暂无报告历史</p>
-              <p className="text-sm">生成第一个健康报告开始</p>
+              <p className='text-sm'>生成第一个健康报告开始</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className='space-y-3'>
               {reports.map((report) => (
                 <div
                   key={report.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedReport?.id === report.id ? 'border-primary bg-primary/5' : 'hover:bg-muted'
+                    selectedReport?.id === report.id
+                      ? 'border-primary bg-primary/5'
+                      : 'hover:bg-muted'
                   }`}
                   onClick={() => {
                     setSelectedReport(report);
@@ -297,25 +335,30 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
                     setCurrentAdviceId((report as any).adviceId || report.id);
                   }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center space-x-3'>
                       {getStatusIcon(report.status)}
                       <div>
-                        <h3 className="font-medium">{report.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          生成时间：{new Date(report.generatedAt).toLocaleString('zh-CN')}
+                        <h3 className='font-medium'>{report.title}</h3>
+                        <p className='text-sm text-muted-foreground'>
+                          生成时间：
+                          {new Date(report.generatedAt).toLocaleString('zh-CN')}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">{report.status === 'completed' ? '已完成' : '生成中'}</Badge>
+                    <div className='flex items-center space-x-2'>
+                      <Badge variant='outline'>
+                        {report.status === 'completed' ? '已完成' : '生成中'}
+                      </Badge>
                       {report.shareToken && (
                         <Button
-                          size="sm"
-                          variant="outline"
+                          size='sm'
+                          variant='outline'
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigator.clipboard.writeText(`${window.location.origin}/share/report/${report.shareToken}`);
+                            navigator.clipboard.writeText(
+                              `${window.location.origin}/share/report/${report.shareToken}`,
+                            );
                             alert('分享链接已复制到剪贴板');
                           }}
                         >
@@ -335,50 +378,53 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
       {selectedReport && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className='flex items-center justify-between'>
               <span>{selectedReport.title}</span>
-              <div className="flex items-center space-x-2">
+              <div className='flex items-center space-x-2'>
                 <Button
-                  size="sm"
-                  variant="outline"
+                  size='sm'
+                  variant='outline'
                   onClick={() => exportReport(selectedReport, 'html')}
                 >
-                  <Download className="w-4 h-4 mr-2" />
+                  <Download className='w-4 h-4 mr-2' />
                   导出HTML
                 </Button>
               </div>
             </CardTitle>
             <CardDescription>
-              生成时间：{new Date(selectedReport.generatedAt).toLocaleString('zh-CN')}
+              生成时间：
+              {new Date(selectedReport.generatedAt).toLocaleString('zh-CN')}
             </CardDescription>
           </CardHeader>
 
           <CardContent>
-            <Tabs defaultValue="summary">
+            <Tabs defaultValue='summary'>
               <TabsList>
-                <TabsTrigger value="summary">报告摘要</TabsTrigger>
-                <TabsTrigger value="insights">AI洞察</TabsTrigger>
-                <TabsTrigger value="recommendations">建议行动</TabsTrigger>
-                <TabsTrigger value="details">详细内容</TabsTrigger>
+                <TabsTrigger value='summary'>报告摘要</TabsTrigger>
+                <TabsTrigger value='insights'>AI洞察</TabsTrigger>
+                <TabsTrigger value='recommendations'>建议行动</TabsTrigger>
+                <TabsTrigger value='details'>详细内容</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="summary" className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg">
-                  <h3 className="font-medium mb-2">报告概述</h3>
-                  <p className="text-sm">{selectedReport.summary}</p>
+              <TabsContent value='summary' className='space-y-4'>
+                <div className='p-4 bg-muted rounded-lg'>
+                  <h3 className='font-medium mb-2'>报告概述</h3>
+                  <p className='text-sm'>{selectedReport.summary}</p>
                 </div>
 
                 {/* 图表预览 */}
                 {selectedReport.charts.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     {selectedReport.charts.slice(0, 2).map((chart) => (
                       <Card key={chart.id}>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">{chart.title}</CardTitle>
+                        <CardHeader className='pb-2'>
+                          <CardTitle className='text-sm'>
+                            {chart.title}
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="h-32 bg-muted rounded flex items-center justify-center">
-                            <span className="text-sm text-muted-foreground">
+                          <div className='h-32 bg-muted rounded flex items-center justify-center'>
+                            <span className='text-sm text-muted-foreground'>
                               图表预览（开发中）
                             </span>
                           </div>
@@ -389,59 +435,69 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
                 )}
               </TabsContent>
 
-              <TabsContent value="insights" className="space-y-4">
+              <TabsContent value='insights' className='space-y-4'>
                 {selectedReport.insights.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className='space-y-3'>
                     {selectedReport.insights.map((insight, index) => (
                       <Alert key={index}>
-                        <Activity className="h-4 w-4" />
+                        <Activity className='h-4 w-4' />
                         <AlertDescription>{insight}</AlertDescription>
                       </Alert>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <div className='text-center text-muted-foreground py-8'>
+                    <Activity className='w-12 h-12 mx-auto mb-4 opacity-50' />
                     <p>暂无AI洞察</p>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="recommendations" className="space-y-4">
+              <TabsContent value='recommendations' className='space-y-4'>
                 {selectedReport.recommendations.length > 0 ? (
-                  <div className="space-y-3">
-                    {selectedReport.recommendations.map((recommendation, index) => (
-                      <div key={index} className="flex items-start">
-                        <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
-                        <p className="text-sm">{recommendation}</p>
-                      </div>
-                    ))}
+                  <div className='space-y-3'>
+                    {selectedReport.recommendations.map(
+                      (recommendation, index) => (
+                        <div key={index} className='flex items-start'>
+                          <CheckCircle className='w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0' />
+                          <p className='text-sm'>{recommendation}</p>
+                        </div>
+                      ),
+                    )}
                   </div>
                 ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    <CheckCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <div className='text-center text-muted-foreground py-8'>
+                    <CheckCircle className='w-12 h-12 mx-auto mb-4 opacity-50' />
                     <p>暂无具体建议</p>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="details" className="space-y-4">
+              <TabsContent value='details' className='space-y-4'>
                 {selectedReport.sections.map((section) => (
                   <Card key={section.id}>
                     <CardHeader>
-                      <CardTitle className={`text-lg flex items-center ${
-                        section.priority === 'high' ? 'text-red-600' :
-                          section.priority === 'medium' ? 'text-yellow-600' : 'text-green-600'
-                      }`}>
+                      <CardTitle
+                        className={`text-lg flex items-center ${
+                          section.priority === 'high'
+                            ? 'text-red-600'
+                            : section.priority === 'medium'
+                              ? 'text-yellow-600'
+                              : 'text-green-600'
+                        }`}
+                      >
                         {section.title}
-                        <Badge variant="outline" className="ml-2">
-                          {section.priority === 'high' ? '重要' :
-                            section.priority === 'medium' ? '一般' : '参考'}
+                        <Badge variant='outline' className='ml-2'>
+                          {section.priority === 'high'
+                            ? '重要'
+                            : section.priority === 'medium'
+                              ? '一般'
+                              : '参考'}
                         </Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="whitespace-pre-wrap">{section.content}</p>
+                      <p className='whitespace-pre-wrap'>{section.content}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -454,16 +510,16 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
       {/* 反馈区域 */}
       {selectedReport && selectedReport.status === 'completed' && (
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">
+          <CardContent className='pt-6'>
+            <div className='text-center space-y-4'>
+              <p className='text-sm text-muted-foreground'>
                 这份健康报告对您有帮助吗？您的反馈将帮助我们改进AI分析质量。
               </p>
               <FeedbackButtons
                 adviceId={currentAdviceId || undefined}
                 onFeedback={handleFeedback}
-                variant="detailed"
-                className="justify-center"
+                variant='detailed'
+                className='justify-center'
               />
             </div>
           </CardContent>

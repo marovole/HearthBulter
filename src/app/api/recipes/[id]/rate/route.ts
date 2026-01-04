@@ -13,7 +13,7 @@ import { updateRecipeAverageRating } from '@/lib/db/supabase-rpc-helpers';
 export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: recipeId } = await params;
@@ -23,7 +23,7 @@ export async function POST(
     if (!memberId || !rating) {
       return NextResponse.json(
         { error: 'Missing required parameters: memberId and rating' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -31,21 +31,18 @@ export async function POST(
     if (rating < 1 || rating > 5) {
       return NextResponse.json(
         { error: 'Rating must be between 1 and 5' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 检查食谱是否存在
-    const recipeExists = await recipeRepository.recipeExists( recipeId);
+    const recipeExists = await recipeRepository.recipeExists(recipeId);
     if (!recipeExists) {
-      return NextResponse.json(
-        { error: 'Recipe not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Recipe not found' }, { status: 404 });
     }
 
     // 使用 Repository 添加或更新评分
-    const recipeRating = await recipeRepository.addOrUpdateRating( {
+    const recipeRating = await recipeRepository.addOrUpdateRating({
       recipeId,
       memberId,
       rating,
@@ -65,12 +62,11 @@ export async function POST(
       success: true,
       rating: recipeRating,
     });
-
   } catch (error) {
     console.error('Error rating recipe:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -83,7 +79,7 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: recipeId } = await params;
@@ -93,23 +89,22 @@ export async function GET(
     if (!memberId) {
       return NextResponse.json(
         { error: 'memberId is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 使用 Repository 获取评分
-    const rating = await recipeRepository.getRating( recipeId, memberId);
+    const rating = await recipeRepository.getRating(recipeId, memberId);
 
     return NextResponse.json({
       success: true,
       rating,
     });
-
   } catch (error) {
     console.error('Error getting recipe rating:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

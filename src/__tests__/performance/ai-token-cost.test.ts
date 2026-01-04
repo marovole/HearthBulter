@@ -59,8 +59,8 @@ import { aiReviewService } from '@/lib/services/ai-review-service';
 // Token pricing (example for GPT-4)
 const TOKEN_PRICING = {
   'gpt-4': {
-    input: 0.03,  // $0.03 per 1K tokens
-    output: 0.06,  // $0.06 per 1K tokens
+    input: 0.03, // $0.03 per 1K tokens
+    output: 0.06, // $0.06 per 1K tokens
   },
   'gpt-4-turbo': {
     input: 0.01,
@@ -84,7 +84,7 @@ describe('AI Token Cost Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     tokenUsageLog = [];
-    
+
     // Setup default mocks
     (prisma.userConsent.findUnique as jest.Mock).mockResolvedValue({
       userId: 'test-user',
@@ -92,31 +92,39 @@ describe('AI Token Cost Tests', () => {
       consentedAt: new Date(),
     });
 
-    (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async (params) => {
-      const mockUsage = {
-        prompt_tokens: params.messages.reduce((sum: number, msg: any) => sum + msg.content.split(' ').length, 0),
-        completion_tokens: Math.floor(Math.random() * 200) + 50,
-        total_tokens: 0,
-      };
-      mockUsage.total_tokens = mockUsage.prompt_tokens + mockUsage.completion_tokens;
+    (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
+      async (params) => {
+        const mockUsage = {
+          prompt_tokens: params.messages.reduce(
+            (sum: number, msg: any) => sum + msg.content.split(' ').length,
+            0,
+          ),
+          completion_tokens: Math.floor(Math.random() * 200) + 50,
+          total_tokens: 0,
+        };
+        mockUsage.total_tokens =
+          mockUsage.prompt_tokens + mockUsage.completion_tokens;
 
-      tokenUsageLog.push({
-        model: params.model || 'gpt-4',
-        promptTokens: mockUsage.prompt_tokens,
-        completionTokens: mockUsage.completion_tokens,
-        totalTokens: mockUsage.total_tokens,
-        timestamp: new Date(),
-      });
+        tokenUsageLog.push({
+          model: params.model || 'gpt-4',
+          promptTokens: mockUsage.prompt_tokens,
+          completionTokens: mockUsage.completion_tokens,
+          totalTokens: mockUsage.total_tokens,
+          timestamp: new Date(),
+        });
 
-      return {
-        choices: [{
-          message: {
-            content: 'AI生成的响应内容，用于测试Token消耗统计。',
-          },
-        }],
-        usage: mockUsage,
-      };
-    });
+        return {
+          choices: [
+            {
+              message: {
+                content: 'AI生成的响应内容，用于测试Token消耗统计。',
+              },
+            },
+          ],
+          usage: mockUsage,
+        };
+      },
+    );
 
     (aiReviewService.reviewContent as jest.Mock).mockResolvedValue({
       approved: true,
@@ -154,7 +162,8 @@ describe('AI Token Cost Tests', () => {
   describe('Token使用统计', () => {
     it('应该正确统计单次请求的Token使用量', async () => {
       const requestData = {
-        message: '请分析我的胆固醇水平并给出饮食建议，我的总胆固醇是6.2mmol/L，低密度脂蛋白是4.1mmol/L，高密度脂蛋白是1.2mmol/L，甘油三酯是1.8mmol/L。我今年35岁，男性，有轻度脂肪肝，平时运动较少，饮食偏油腻。请根据这些数据给我具体的饮食调整建议。',
+        message:
+          '请分析我的胆固醇水平并给出饮食建议，我的总胆固醇是6.2mmol/L，低密度脂蛋白是4.1mmol/L，高密度脂蛋白是1.2mmol/L，甘油三酯是1.8mmol/L。我今年35岁，男性，有轻度脂肪肝，平时运动较少，饮食偏油腻。请根据这些数据给我具体的饮食调整建议。',
         userId: 'test-user',
         sessionId: 'test-session',
       };
@@ -203,38 +212,44 @@ describe('AI Token Cost Tests', () => {
       });
 
       // Health analysis API request
-      const healthRequest = new NextRequest('http://localhost/api/ai/analyze-health', {
-        method: 'POST',
-        body: JSON.stringify({
-          healthData: {
-            cholesterol: 6.2,
-            bloodSugar: 5.5,
-            age: 35,
-            gender: 'male',
-          },
-          userId: 'test-user',
-        }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const healthRequest = new NextRequest(
+        'http://localhost/api/ai/analyze-health',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            healthData: {
+              cholesterol: 6.2,
+              bloodSugar: 5.5,
+              age: 35,
+              gender: 'male',
+            },
+            userId: 'test-user',
+          }),
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
 
       // Recipe optimization API request
-      const recipeRequest = new NextRequest('http://localhost/api/ai/optimize-recipe', {
-        method: 'POST',
-        body: JSON.stringify({
-          recipe: {
-            name: '测试食谱',
-            ingredients: [
-              { name: '米饭', amount: 100 },
-              { name: '鸡肉', amount: 50 },
-            ],
-          },
-          healthGoals: {
-            targetCalories: 2000,
-          },
-          userId: 'test-user',
-        }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const recipeRequest = new NextRequest(
+        'http://localhost/api/ai/optimize-recipe',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            recipe: {
+              name: '测试食谱',
+              ingredients: [
+                { name: '米饭', amount: 100 },
+                { name: '鸡肉', amount: 50 },
+              ],
+            },
+            healthGoals: {
+              targetCalories: 2000,
+            },
+            userId: 'test-user',
+          }),
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
 
       await POST(chatRequest);
       await AnalyzeHealthPOST(healthRequest);
@@ -242,10 +257,10 @@ describe('AI Token Cost Tests', () => {
 
       // Verify token usage was tracked for all APIs
       expect(prisma.tokenUsage.create).toHaveBeenCalledTimes(3);
-      
+
       const calls = (prisma.tokenUsage.create as jest.Mock).mock.calls;
-      const endpoints = calls.map(call => call[0].data.apiEndpoint);
-      
+      const endpoints = calls.map((call) => call[0].data.apiEndpoint);
+
       expect(endpoints).toContain('/api/ai/chat');
       expect(endpoints).toContain('/api/ai/analyze-health');
       expect(endpoints).toContain('/api/ai/optimize-recipe');
@@ -276,10 +291,14 @@ describe('AI Token Cost Tests', () => {
       expect(result.tokenUsage.estimatedCost).toBeGreaterThan(0);
 
       // Verify cost calculation
-      const expectedCost = (result.tokenUsage.promptTokens / 1000) * TOKEN_PRICING['gpt-4'].input +
-                          (result.tokenUsage.completionTokens / 1000) * TOKEN_PRICING['gpt-4'].output;
-      
-      expect(Math.abs(result.tokenUsage.estimatedCost - expectedCost)).toBeLessThan(0.01);
+      const expectedCost =
+        (result.tokenUsage.promptTokens / 1000) * TOKEN_PRICING['gpt-4'].input +
+        (result.tokenUsage.completionTokens / 1000) *
+          TOKEN_PRICING['gpt-4'].output;
+
+      expect(
+        Math.abs(result.tokenUsage.estimatedCost - expectedCost),
+      ).toBeLessThan(0.01);
     });
 
     it('应该根据不同模型计算成本', async () => {
@@ -287,19 +306,21 @@ describe('AI Token Cost Tests', () => {
       const costs: { [key: string]: number } = {};
 
       for (const model of models) {
-        (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async (params) => {
-          const mockUsage = {
-            prompt_tokens: 100,
-            completion_tokens: 50,
-            total_tokens: 150,
-          };
+        (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
+          async (params) => {
+            const mockUsage = {
+              prompt_tokens: 100,
+              completion_tokens: 50,
+              total_tokens: 150,
+            };
 
-          return {
-            choices: [{ message: { content: 'Response' } }],
-            usage: mockUsage,
-            model: model,
-          };
-        });
+            return {
+              choices: [{ message: { content: 'Response' } }],
+              usage: mockUsage,
+              model: model,
+            };
+          },
+        );
 
         const requestData = {
           message: '测试不同模型的成本',
@@ -316,7 +337,7 @@ describe('AI Token Cost Tests', () => {
 
         const response = await POST(request);
         const result = await response.json();
-        
+
         costs[model] = result.tokenUsage.estimatedCost;
       }
 
@@ -369,7 +390,7 @@ describe('AI Token Cost Tests', () => {
           promptTokens: 50000,
           completionTokens: 25000,
           totalTokens: 75000,
-          estimatedCost: 1500.00,
+          estimatedCost: 1500.0,
         },
         _count: { id: 500 },
       });
@@ -377,14 +398,14 @@ describe('AI Token Cost Tests', () => {
       // This would typically be called by an admin endpoint
       const globalStats = {
         totalTokens: 75000,
-        totalCost: 1500.00,
+        totalCost: 1500.0,
         totalRequests: 500,
         averageTokensPerRequest: 150,
-        averageCostPerRequest: 3.00,
+        averageCostPerRequest: 3.0,
       };
 
       expect(globalStats.totalTokens).toBe(75000);
-      expect(globalStats.totalCost).toBe(1500.00);
+      expect(globalStats.totalCost).toBe(1500.0);
       expect(globalStats.averageTokensPerRequest).toBe(150);
     });
   });
@@ -394,7 +415,7 @@ describe('AI Token Cost Tests', () => {
       // Mock user has exceeded daily budget
       (prisma.tokenUsage.aggregate as jest.Mock).mockResolvedValue({
         _sum: {
-          estimatedCost: 10.00, // $10 daily budget exceeded
+          estimatedCost: 10.0, // $10 daily budget exceeded
         },
         _count: { id: 50 },
       });
@@ -420,8 +441,8 @@ describe('AI Token Cost Tests', () => {
       expect(result.success).toBe(true);
       expect(result.budgetWarning).toBeDefined();
       expect(result.budgetWarning.exceeded).toBe(true);
-      expect(result.budgetWarning.dailyLimit).toBe(5.00);
-      expect(result.budgetWarning.currentUsage).toBe(10.00);
+      expect(result.budgetWarning.dailyLimit).toBe(5.0);
+      expect(result.budgetWarning.currentUsage).toBe(10.0);
     });
 
     it('应该在高成本操作前要求确认', async () => {
@@ -444,11 +465,12 @@ describe('AI Token Cost Tests', () => {
       const result = await response.json();
 
       expect(response.status).toBe(200);
-      
-      if (result.tokenUsage.estimatedCost > 1.00) { // If cost > $1
+
+      if (result.tokenUsage.estimatedCost > 1.0) {
+        // If cost > $1
         expect(result.costConfirmation).toBeDefined();
         expect(result.costConfirmation.required).toBe(true);
-        expect(result.costConfirmation.estimatedCost).toBeGreaterThan(1.00);
+        expect(result.costConfirmation.estimatedCost).toBeGreaterThan(1.0);
       }
     });
   });
@@ -457,9 +479,27 @@ describe('AI Token Cost Tests', () => {
     it('应该提供Token使用优化建议', async () => {
       // Mock inefficient usage patterns
       tokenUsageLog = [
-        { model: 'gpt-4', promptTokens: 2000, completionTokens: 1000, totalTokens: 3000, timestamp: new Date() },
-        { model: 'gpt-4', promptTokens: 1800, completionTokens: 900, totalTokens: 2700, timestamp: new Date() },
-        { model: 'gpt-4', promptTokens: 2200, completionTokens: 1100, totalTokens: 3300, timestamp: new Date() },
+        {
+          model: 'gpt-4',
+          promptTokens: 2000,
+          completionTokens: 1000,
+          totalTokens: 3000,
+          timestamp: new Date(),
+        },
+        {
+          model: 'gpt-4',
+          promptTokens: 1800,
+          completionTokens: 900,
+          totalTokens: 2700,
+          timestamp: new Date(),
+        },
+        {
+          model: 'gpt-4',
+          promptTokens: 2200,
+          completionTokens: 1100,
+          totalTokens: 3300,
+          timestamp: new Date(),
+        },
       ];
 
       const requestData = {
@@ -481,13 +521,17 @@ describe('AI Token Cost Tests', () => {
 
       expect(response.status).toBe(200);
       expect(result.optimizationSuggestions).toBeDefined();
-      
+
       const suggestions = result.optimizationSuggestions;
       expect(suggestions.length).toBeGreaterThan(0);
-      
+
       // Should include suggestions like:
-      expect(suggestions.some((s: any) => s.type === 'model_switch')).toBe(true);
-      expect(suggestions.some((s: any) => s.type === 'prompt_optimization')).toBe(true);
+      expect(suggestions.some((s: any) => s.type === 'model_switch')).toBe(
+        true,
+      );
+      expect(
+        suggestions.some((s: any) => s.type === 'prompt_optimization'),
+      ).toBe(true);
       expect(suggestions.some((s: any) => s.type === 'caching')).toBe(true);
     });
 
@@ -511,7 +555,7 @@ describe('AI Token Cost Tests', () => {
       const result = await response.json();
 
       expect(response.status).toBe(200);
-      
+
       if (result.tokenUsage.totalTokens > 1000) {
         expect(result.costAnalysis).toBeDefined();
         expect(result.costAnalysis.isExpensive).toBe(true);
@@ -570,7 +614,7 @@ describe('AI Token Cost Tests', () => {
           promptTokens: 800,
           completionTokens: 400,
           totalTokens: 1200,
-          estimatedCost: 0.60,
+          estimatedCost: 0.6,
           createdAt: new Date('2024-01-02'),
         },
       ]);
@@ -585,12 +629,12 @@ describe('AI Token Cost Tests', () => {
         averageCostPerRequest: 0.335,
         topEndpoints: [
           { endpoint: '/api/ai/chat', usage: 60, cost: 30.15 },
-          { endpoint: '/api/ai/analyze-health', usage: 45, cost: 15.10 },
-          { endpoint: '/api/ai/optimize-recipe', usage: 45, cost: 5.00 },
+          { endpoint: '/api/ai/analyze-health', usage: 45, cost: 15.1 },
+          { endpoint: '/api/ai/optimize-recipe', usage: 45, cost: 5.0 },
         ],
         topUsers: [
-          { userId: 'user1', usage: 50, cost: 25.00 },
-          { userId: 'user2', usage: 30, cost: 15.00 },
+          { userId: 'user1', usage: 50, cost: 25.0 },
+          { userId: 'user2', usage: 30, cost: 15.0 },
         ],
       };
 

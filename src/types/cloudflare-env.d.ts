@@ -24,7 +24,10 @@ interface KVNamespace {
    */
   get(key: string, options?: { type: 'text' }): Promise<string | null>;
   get(key: string, options: { type: 'json' }): Promise<any>;
-  get(key: string, options: { type: 'arrayBuffer' }): Promise<ArrayBuffer | null>;
+  get(
+    key: string,
+    options: { type: 'arrayBuffer' },
+  ): Promise<ArrayBuffer | null>;
   get(key: string, options: { type: 'stream' }): Promise<ReadableStream | null>;
 
   /**
@@ -44,7 +47,7 @@ interface KVNamespace {
       expiration?: number;
       /** 元数据（JSON 序列化，最大 1024 字节） */
       metadata?: any;
-    }
+    },
   ): Promise<void>;
 
   /**
@@ -80,7 +83,7 @@ interface KVNamespace {
    */
   getWithMetadata<Metadata = unknown>(
     key: string,
-    options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' }
+    options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' },
   ): Promise<{
     value: string | any | ArrayBuffer | ReadableStream | null;
     metadata: Metadata | null;

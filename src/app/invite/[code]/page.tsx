@@ -5,10 +5,10 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 
 interface FamilyInfo {
-  id: string
-  name: string
-  description: string | null
-  memberCount: number
+  id: string;
+  name: string;
+  description: string | null;
+  memberCount: number;
 }
 
 export default function AcceptInvitePage() {
@@ -103,33 +103,33 @@ export default function AcceptInvitePage() {
   // 成功页面
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mb-6">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center px-4'>
+        <div className='max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center'>
+          <div className='mb-6'>
+            <div className='mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center'>
               <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className='w-8 h-8 text-green-600'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M5 13l4 4L19 7"
+                  d='M5 13l4 4L19 7'
                 />
               </svg>
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className='text-2xl font-bold text-gray-900 mb-2'>
             成功加入家庭!
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className='text-gray-600 mb-6'>
             欢迎加入{family?.name}，正在跳转到家庭页面...
           </p>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className='flex justify-center'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
           </div>
         </div>
       </div>
@@ -139,8 +139,8 @@ export default function AcceptInvitePage() {
   // 加载中
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">加载中...</div>
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+        <div className='text-gray-600'>加载中...</div>
       </div>
     );
   }
@@ -148,32 +148,32 @@ export default function AcceptInvitePage() {
   // 错误页面
   if (error && !family) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mb-6">
-            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center px-4'>
+        <div className='max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center'>
+          <div className='mb-6'>
+            <div className='mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center'>
               <svg
-                className="w-8 h-8 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className='w-8 h-8 text-red-600'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d='M6 18L18 6M6 6l12 12'
                 />
               </svg>
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className='text-2xl font-bold text-gray-900 mb-2'>
             无法加载邀请信息
           </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <p className='text-gray-600 mb-6'>{error}</p>
           <Link
-            href="/dashboard"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+            href='/dashboard'
+            className='inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700'
           >
             返回首页
           </Link>
@@ -184,38 +184,36 @@ export default function AcceptInvitePage() {
 
   // 邀请信息展示和接受表单
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <div className='min-h-screen bg-gray-50 flex items-center justify-center px-4'>
+      <div className='max-w-md w-full bg-white rounded-lg shadow-lg p-8'>
+        <div className='text-center mb-8'>
+          <h1 className='text-3xl font-bold text-gray-900 mb-2'>
             您收到了一个家庭邀请
           </h1>
-          <p className="text-gray-600">
-            接受邀请后，您将成为该家庭的成员
-          </p>
+          <p className='text-gray-600'>接受邀请后，您将成为该家庭的成员</p>
         </div>
 
         {/* 家庭信息卡片 */}
         {family && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+          <div className='bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6'>
+            <h2 className='text-xl font-bold text-gray-900 mb-2'>
               {family.name}
             </h2>
             {family.description && (
-              <p className="text-gray-700 mb-3">{family.description}</p>
+              <p className='text-gray-700 mb-3'>{family.description}</p>
             )}
-            <div className="flex items-center text-sm text-gray-600">
+            <div className='flex items-center text-sm text-gray-600'>
               <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className='w-5 h-5 mr-2'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
                 />
               </svg>
               <span>{family.memberCount} 位成员</span>
@@ -225,57 +223,57 @@ export default function AcceptInvitePage() {
 
         {/* 接受邀请表单 */}
         <form onSubmit={handleAcceptInvite}>
-          <div className="mb-6">
+          <div className='mb-6'>
             <label
-              htmlFor="memberName"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              htmlFor='memberName'
+              className='block text-sm font-medium text-gray-700 mb-2'
             >
-              您在家庭中的名称 <span className="text-red-500">*</span>
+              您在家庭中的名称 <span className='text-red-500'>*</span>
             </label>
             <input
-              type="text"
-              id="memberName"
+              type='text'
+              id='memberName'
               value={memberName}
               onChange={(e) => setMemberName(e.target.value)}
-              placeholder="例如：爸爸、妈妈、张三"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder='例如：爸爸、妈妈、张三'
+              className='w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
               required
               maxLength={50}
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className='mt-1 text-xs text-gray-500'>
               这个名称将显示在家庭成员列表中
             </p>
           </div>
 
           {/* 错误提示 */}
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-3">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className='mb-4 bg-red-50 border border-red-200 rounded-md p-3'>
+              <p className='text-sm text-red-800'>{error}</p>
             </div>
           )}
 
           {/* 提交按钮 */}
           <button
-            type="submit"
+            type='submit'
             disabled={joining || !memberName.trim()}
-            className="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
+            className='w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium'
           >
             {joining ? '加入中...' : '接受邀请并加入家庭'}
           </button>
         </form>
 
         {/* 说明 */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
+        <div className='mt-6 text-center'>
+          <p className='text-xs text-gray-500'>
             加入家庭后，您可以在个人资料中完善更多健康信息
           </p>
         </div>
 
         {/* 返回链接 */}
-        <div className="mt-6 text-center">
+        <div className='mt-6 text-center'>
           <Link
-            href="/dashboard"
-            className="text-sm text-blue-600 hover:text-blue-800"
+            href='/dashboard'
+            className='text-sm text-blue-600 hover:text-blue-800'
           >
             返回首页
           </Link>

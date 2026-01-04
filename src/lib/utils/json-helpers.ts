@@ -59,7 +59,7 @@ export function safeParseArray(value: any, fallback: any[] = []): any[] {
  */
 export function safeParseObject(
   value: any,
-  fallback: Record<string, unknown> = {}
+  fallback: Record<string, unknown> = {},
 ): Record<string, unknown> {
   // 如果已经是对象（且不是数组），直接返回
   if (value && typeof value === 'object' && !Array.isArray(value)) {

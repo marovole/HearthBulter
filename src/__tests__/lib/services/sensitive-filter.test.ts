@@ -4,7 +4,12 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { sensitiveFilter, type FilterResult, type SensitiveInfoPattern, type FilterOptions } from '@/lib/services/sensitive-filter';
+import {
+  sensitiveFilter,
+  type FilterResult,
+  type SensitiveInfoPattern,
+  type FilterOptions,
+} from '@/lib/services/sensitive-filter';
 
 describe('SensitiveFilterService', () => {
   beforeEach(() => {
@@ -19,7 +24,9 @@ describe('SensitiveFilterService', () => {
       expect(result.hasSensitiveInfo).toBe(true);
       expect(result.filteredText).toContain('***身份证号已隐藏***');
       expect(result.filteredText).not.toContain('11010519491231002X');
-      expect(result.detectedItems.some(item => item.type === 'id_card')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'id_card')).toBe(
+        true,
+      );
     });
 
     it('should filter multiple ID card numbers', () => {
@@ -27,7 +34,9 @@ describe('SensitiveFilterService', () => {
       const result = sensitiveFilter.filter(text);
 
       expect(result.detectedItems.length).toBe(2);
-      expect(result.filteredText.split('***').length - 1).toBeGreaterThanOrEqual(2);
+      expect(
+        result.filteredText.split('***').length - 1,
+      ).toBeGreaterThanOrEqual(2);
     });
 
     it('should filter 15-digit ID cards', () => {
@@ -35,7 +44,9 @@ describe('SensitiveFilterService', () => {
       const result = sensitiveFilter.filter(text);
 
       expect(result.hasSensitiveInfo).toBe(true);
-      expect(result.detectedItems.some(item => item.type === 'id_card')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'id_card')).toBe(
+        true,
+      );
     });
 
     it('should filter Chinese mobile phones', () => {
@@ -44,7 +55,9 @@ describe('SensitiveFilterService', () => {
 
       expect(result.hasSensitiveInfo).toBe(true);
       expect(result.filteredText).toContain('***手机号已隐藏***');
-      expect(result.detectedItems.some(item => item.type === 'phone')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'phone')).toBe(
+        true,
+      );
     });
 
     it('should filter landline numbers', () => {
@@ -61,7 +74,9 @@ describe('SensitiveFilterService', () => {
 
       expect(result.hasSensitiveInfo).toBe(true);
       expect(result.filteredText).toContain('***邮箱已隐藏***');
-      expect(result.detectedItems.some(item => item.type === 'email')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'email')).toBe(
+        true,
+      );
     });
 
     it('should filter addresses', () => {
@@ -70,7 +85,9 @@ describe('SensitiveFilterService', () => {
 
       expect(result.hasSensitiveInfo).toBe(true);
       expect(result.filteredText).toContain('***地址信息已隐藏***');
-      expect(result.detectedItems.some(item => item.type === 'address')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'address')).toBe(
+        true,
+      );
     });
 
     it('should filter medical record numbers', () => {
@@ -79,7 +96,9 @@ describe('SensitiveFilterService', () => {
 
       expect(result.hasSensitiveInfo).toBe(true);
       expect(result.filteredText).toContain('***病历号已隐藏***');
-      expect(result.detectedItems.some(item => item.type === 'medical_record')).toBe(true);
+      expect(
+        result.detectedItems.some((item) => item.type === 'medical_record'),
+      ).toBe(true);
     });
 
     it('should filter ages', () => {
@@ -161,7 +180,8 @@ describe('SensitiveFilterService', () => {
   });
 
   describe('filter - Filtering Options', () => {
-    const text = '身份证号11010519491231002X，电话13812345678，邮箱zhangsan@example.com。';
+    const text =
+      '身份证号11010519491231002X，电话13812345678，邮箱zhangsan@example.com。';
 
     it('should filter only included types', () => {
       const result = sensitiveFilter.filter(text, {
@@ -169,7 +189,9 @@ describe('SensitiveFilterService', () => {
       });
 
       expect(result.hasSensitiveInfo).toBe(true);
-      expect(result.detectedItems.every(item => item.type === 'id_card')).toBe(true);
+      expect(
+        result.detectedItems.every((item) => item.type === 'id_card'),
+      ).toBe(true);
       expect(result.filteredText).not.toContain('11010519491231002X');
       expect(result.filteredText).toContain('138');
     });
@@ -179,8 +201,12 @@ describe('SensitiveFilterService', () => {
         excludeTypes: ['phone', 'email'],
       });
 
-      expect(result.detectedItems.every(item => item.type === 'id_card')).toBe(true);
-      const phoneItem = result.detectedItems.find(item => item.type === 'phone');
+      expect(
+        result.detectedItems.every((item) => item.type === 'id_card'),
+      ).toBe(true);
+      const phoneItem = result.detectedItems.find(
+        (item) => item.type === 'phone',
+      );
       expect(phoneItem).toBeUndefined();
     });
 
@@ -199,7 +225,9 @@ describe('SensitiveFilterService', () => {
 
       expect(result.hasSensitiveInfo).toBe(true);
       expect(result.filteredText).toContain('***VIP隐藏***');
-      const customItem = result.detectedItems.find(item => item.type === 'custom');
+      const customItem = result.detectedItems.find(
+        (item) => item.type === 'custom',
+      );
       expect(customItem).toBeDefined();
       expect(customItem?.severity).toBe('medium');
     });
@@ -242,7 +270,9 @@ describe('SensitiveFilterService', () => {
     });
 
     it('should prioritize critical over others', () => {
-      const result = sensitiveFilter.filter('身份证号11010519491231002X，邮箱test@example.com');
+      const result = sensitiveFilter.filter(
+        '身份证号11010519491231002X，邮箱test@example.com',
+      );
       expect(result.riskLevel).toBe('critical');
     });
   });
@@ -280,7 +310,10 @@ describe('SensitiveFilterService', () => {
 
     it('should return false for invalid filtered text', () => {
       const original = '身份证号11010519491231002X';
-      const isValid = sensitiveFilter.validateFilter(original, '身份证号11010519491231002X');
+      const isValid = sensitiveFilter.validateFilter(
+        original,
+        '身份证号11010519491231002X',
+      );
 
       expect(isValid).toBe(false);
     });
@@ -320,7 +353,7 @@ describe('SensitiveFilterService', () => {
     it('should get all patterns', () => {
       const patterns = sensitiveFilter.getPatterns();
       expect(patterns.length).toBeGreaterThan(0);
-      expect(patterns.some(p => p.type === 'id_card')).toBe(true);
+      expect(patterns.some((p) => p.type === 'id_card')).toBe(true);
     });
   });
 
@@ -330,14 +363,18 @@ describe('SensitiveFilterService', () => {
       const result = sensitiveFilter.filter(text);
 
       // Should only detect as ID card, not bank account
-      expect(result.detectedItems.filter(item => item.type === 'id_card').length).toBe(1);
+      expect(
+        result.detectedItems.filter((item) => item.type === 'id_card').length,
+      ).toBe(1);
     });
 
     it('should handle multiple matches of same type', () => {
       const text = '电话1：13812345678，电话2：13987654321';
       const result = sensitiveFilter.filter(text);
 
-      expect(result.detectedItems.filter(item => item.type === 'phone').length).toBe(2);
+      expect(
+        result.detectedItems.filter((item) => item.type === 'phone').length,
+      ).toBe(2);
     });
   });
 
@@ -368,7 +405,9 @@ describe('SensitiveFilterService', () => {
         AI：已记录您的联系方式。
       `;
 
-      const result = sensitiveFilter.filter(conversation, { maskMode: 'partial' });
+      const result = sensitiveFilter.filter(conversation, {
+        maskMode: 'partial',
+      });
 
       expect(result.hasSensitiveInfo).toBe(true);
       expect(result.filteredText).not.toContain('李四');

@@ -59,7 +59,7 @@ class TaskScheduler {
     }
 
     this.logger.info('Starting task scheduler...');
-    
+
     for (const taskDef of this.taskDefinitions) {
       if (taskDef.enabled) {
         await this.scheduleTask(taskDef);
@@ -80,7 +80,7 @@ class TaskScheduler {
     }
 
     this.logger.info('Stopping task scheduler...');
-    
+
     for (const [name, task] of this.tasks) {
       task.stop();
       this.logger.info(`Stopped task: ${name}`);
@@ -104,13 +104,15 @@ class TaskScheduler {
         {
           scheduled: false,
           timezone: 'Asia/Shanghai',
-        }
+        },
       );
 
       this.tasks.set(taskDef.name, scheduledTask);
       scheduledTask.start();
-      
-      this.logger.info(`Scheduled task: ${taskDef.name} (${taskDef.cronExpression}) - ${taskDef.description}`);
+
+      this.logger.info(
+        `Scheduled task: ${taskDef.name} (${taskDef.cronExpression}) - ${taskDef.description}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to schedule task ${taskDef.name}:`, error);
     }
@@ -137,7 +139,7 @@ class TaskScheduler {
    * 手动执行任务
    */
   async executeTaskManually(taskName: string): Promise<void> {
-    const taskDef = this.taskDefinitions.find(t => t.name === taskName);
+    const taskDef = this.taskDefinitions.find((t) => t.name === taskName);
     if (!taskDef) {
       throw new Error(`Task not found: ${taskName}`);
     }
@@ -156,7 +158,7 @@ class TaskScheduler {
     enabled: boolean;
     running: boolean;
   }> {
-    return this.taskDefinitions.map(taskDef => ({
+    return this.taskDefinitions.map((taskDef) => ({
       name: taskDef.name,
       cronExpression: taskDef.cronExpression,
       description: taskDef.description,
@@ -169,7 +171,7 @@ class TaskScheduler {
    * 启用/禁用任务
    */
   async toggleTask(taskName: string, enabled: boolean): Promise<void> {
-    const taskDef = this.taskDefinitions.find(t => t.name === taskName);
+    const taskDef = this.taskDefinitions.find((t) => t.name === taskName);
     if (!taskDef) {
       throw new Error(`Task not found: ${taskName}`);
     }
@@ -181,7 +183,7 @@ class TaskScheduler {
     }
 
     taskDef.enabled = enabled;
-    
+
     if (enabled) {
       await this.scheduleTask(taskDef);
       this.logger.info(`Enabled task: ${taskName}`);

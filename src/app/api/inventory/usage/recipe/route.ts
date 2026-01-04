@@ -14,11 +14,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     const requiredFields = ['memberId', 'ingredients', 'recipeName'];
     for (const field of requiredFields) {
       if (!body[field]) {
-        return NextResponse.json({ error: `缺少必需字段: ${field}` }, { status: 400 });
+        return NextResponse.json(
+          { error: `缺少必需字段: ${field}` },
+          { status: 400 },
+        );
       }
     }
 
@@ -29,7 +32,10 @@ export async function POST(request: NextRequest) {
     // 验证食材格式
     for (const ingredient of body.ingredients) {
       if (!ingredient.foodId || !ingredient.quantity || !ingredient.unit) {
-        return NextResponse.json({ error: '食材格式不正确，需要包含foodId、quantity和unit' }, { status: 400 });
+        return NextResponse.json(
+          { error: '食材格式不正确，需要包含foodId、quantity和unit' },
+          { status: 400 },
+        );
       }
     }
 
@@ -40,7 +46,7 @@ export async function POST(request: NextRequest) {
         quantity: parseFloat(ing.quantity),
         unit: ing.unit,
       })),
-      body.recipeName
+      body.recipeName,
     );
 
     return NextResponse.json({
@@ -53,12 +59,11 @@ export async function POST(request: NextRequest) {
         skippedIngredients: body.ingredients.length - updatedItems.length,
       },
     });
-
   } catch (error) {
     console.error('食谱使用库存失败:', error);
     return NextResponse.json(
       { error: '食谱使用库存失败', details: error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -41,7 +41,9 @@ jest.mock('@/lib/db', () => ({
 
 // Mock JWT verification
 jest.mock('jose', () => ({
-  jwtVerify: jest.fn().mockResolvedValue({ sub: 'user-123', email: 'test@example.com' }),
+  jwtVerify: jest
+    .fn()
+    .mockResolvedValue({ sub: 'user-123', email: 'test@example.com' }),
 }));
 
 // Mock notification service
@@ -53,7 +55,6 @@ jest.mock('@/lib/services/notification/notification-manager', () => ({
 }));
 
 describe('/api/shopping-lists API', () => {
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -81,7 +82,7 @@ describe('/api/shopping-lists API', () => {
               category: 'DAIRY',
               status: 'PENDING',
               priority: 'NORMAL',
-              estimatedPrice: 12.00,
+              estimatedPrice: 12.0,
               notes: '全脂牛奶',
               addedBy: 'user-123',
               addedAt: new Date('2025-01-01'),
@@ -94,7 +95,7 @@ describe('/api/shopping-lists API', () => {
               category: 'BAKERY',
               status: 'COMPLETED',
               priority: 'HIGH',
-              estimatedPrice: 8.50,
+              estimatedPrice: 8.5,
               notes: '全麦面包',
               addedBy: 'user-456',
               addedAt: new Date('2025-01-02'),
@@ -102,7 +103,7 @@ describe('/api/shopping-lists API', () => {
           ],
           totalItems: 2,
           completedItems: 1,
-          estimatedTotalPrice: 20.50,
+          estimatedTotalPrice: 20.5,
         },
         {
           id: 'list-2',
@@ -127,12 +128,15 @@ describe('/api/shopping-lists API', () => {
       prisma.shoppingList.findMany.mockResolvedValue(mockShoppingLists);
       prisma.shoppingList.count.mockResolvedValue(mockTotal);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists?limit=2&page=1', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists?limit=2&page=1',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/shopping-lists/route');
@@ -159,12 +163,15 @@ describe('/api/shopping-lists API', () => {
       prisma.shoppingList.findMany.mockResolvedValue([]);
       prisma.shoppingList.count.mockResolvedValue(0);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists?status=ACTIVE', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists?status=ACTIVE',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/shopping-lists/route');
@@ -177,7 +184,7 @@ describe('/api/shopping-lists API', () => {
             where: expect.objectContaining({
               status: 'ACTIVE',
             }),
-          })
+          }),
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -188,12 +195,15 @@ describe('/api/shopping-lists API', () => {
       prisma.shoppingList.findMany.mockResolvedValue([]);
       prisma.shoppingList.count.mockResolvedValue(0);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists?priority=HIGH', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists?priority=HIGH',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/shopping-lists/route');
@@ -206,7 +216,7 @@ describe('/api/shopping-lists API', () => {
             where: expect.objectContaining({
               priority: 'HIGH',
             }),
-          })
+          }),
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -214,9 +224,12 @@ describe('/api/shopping-lists API', () => {
     });
 
     it('should require authentication', async () => {
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists', {
-        method: 'GET',
-      });
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists',
+        {
+          method: 'GET',
+        },
+      );
 
       try {
         const { GET } = await import('@/app/api/shopping-lists/route');
@@ -256,14 +269,17 @@ describe('/api/shopping-lists API', () => {
 
       prisma.shoppingList.create.mockResolvedValue(createdList);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify(newList),
         },
-        body: JSON.stringify(newList),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/shopping-lists/route');
@@ -296,14 +312,17 @@ describe('/api/shopping-lists API', () => {
         // Missing required name field
       };
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify(incompleteList),
         },
-        body: JSON.stringify(incompleteList),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/shopping-lists/route');
@@ -325,14 +344,17 @@ describe('/api/shopping-lists API', () => {
         priority: 'NORMAL',
       };
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify(invalidList),
         },
-        body: JSON.stringify(invalidList),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/shopping-lists/route');
@@ -369,7 +391,7 @@ describe('/api/shopping-lists API', () => {
             category: 'DAIRY',
             status: 'PENDING',
             priority: 'NORMAL',
-            estimatedPrice: 12.00,
+            estimatedPrice: 12.0,
             notes: '全脂牛奶',
             addedBy: 'user-123',
             addedAt: new Date('2025-01-01'),
@@ -384,33 +406,38 @@ describe('/api/shopping-lists API', () => {
             category: 'BAKERY',
             status: 'COMPLETED',
             priority: 'HIGH',
-            estimatedPrice: 8.50,
+            estimatedPrice: 8.5,
             notes: '全麦面包',
             addedBy: 'user-456',
             addedAt: new Date('2025-01-02'),
             purchasedAt: new Date('2025-01-05'),
-            actualPrice: 9.20,
+            actualPrice: 9.2,
           },
         ],
         totalItems: 2,
         completedItems: 1,
-        estimatedTotalPrice: 20.50,
-        actualTotalPrice: 9.20,
+        estimatedTotalPrice: 20.5,
+        actualTotalPrice: 9.2,
         completionPercentage: 50,
       };
 
       prisma.shoppingList.findUnique.mockResolvedValue(mockShoppingList);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/shopping-lists/[id]/route');
-        const response = await GET(request, { params: Promise.resolve({ id: 'list-1' }) });
+        const response = await GET(request, {
+          params: Promise.resolve({ id: 'list-1' }),
+        });
 
         expect(response.status).toBe(200);
         const data = await response.json();
@@ -427,16 +454,21 @@ describe('/api/shopping-lists API', () => {
     it('should return 404 for non-existent list', async () => {
       prisma.shoppingList.findUnique.mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/nonexistent', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/nonexistent',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/shopping-lists/[id]/route');
-        const response = await GET(request, { params: Promise.resolve({ id: 'nonexistent' }) });
+        const response = await GET(request, {
+          params: Promise.resolve({ id: 'nonexistent' }),
+        });
 
         expect(response.status).toBe(404);
         const data = await response.json();
@@ -472,23 +504,28 @@ describe('/api/shopping-lists API', () => {
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
       prisma.shoppingList.update.mockResolvedValue(updatedList);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            name: '更新后的购物清单',
+            description: '更新后的描述',
+            status: 'ACTIVE',
+            priority: 'HIGH',
+          }),
         },
-        body: JSON.stringify({
-          name: '更新后的购物清单',
-          description: '更新后的描述',
-          status: 'ACTIVE',
-          priority: 'HIGH',
-        }),
-      });
+      );
 
       try {
         const { PUT } = await import('@/app/api/shopping-lists/[id]/route');
-        const response = await PUT(request, { params: Promise.resolve({ id: 'list-1' }) });
+        const response = await PUT(request, {
+          params: Promise.resolve({ id: 'list-1' }),
+        });
 
         expect(response.status).toBe(200);
         const data = await response.json();
@@ -516,7 +553,7 @@ describe('/api/shopping-lists API', () => {
         unit: '个',
         category: 'EGG',
         priority: 'NORMAL',
-        estimatedPrice: 15.00,
+        estimatedPrice: 15.0,
         notes: '有机鸡蛋',
       };
 
@@ -529,7 +566,7 @@ describe('/api/shopping-lists API', () => {
         category: 'EGG',
         status: 'PENDING',
         priority: 'NORMAL',
-        estimatedPrice: 15.00,
+        estimatedPrice: 15.0,
         notes: '有机鸡蛋',
         addedBy: 'user-123',
         addedAt: new Date(),
@@ -540,18 +577,25 @@ describe('/api/shopping-lists API', () => {
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
       prisma.shoppingListItem.create.mockResolvedValue(createdItem);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1/items',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify(newItem),
         },
-        body: JSON.stringify(newItem),
-      });
+      );
 
       try {
-        const { POST } = await import('@/app/api/shopping-lists/[id]/items/route');
-        const response = await POST(request, { params: Promise.resolve({ id: 'list-1' }) });
+        const { POST } = await import(
+          '@/app/api/shopping-lists/[id]/items/route'
+        );
+        const response = await POST(request, {
+          params: Promise.resolve({ id: 'list-1' }),
+        });
 
         expect(response.status).toBe(201);
         const data = await response.json();
@@ -592,18 +636,25 @@ describe('/api/shopping-lists API', () => {
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1/items',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify(invalidItem),
         },
-        body: JSON.stringify(invalidItem),
-      });
+      );
 
       try {
-        const { POST } = await import('@/app/api/shopping-lists/[id]/items/route');
-        const response = await POST(request, { params: Promise.resolve({ id: 'list-1' }) });
+        const { POST } = await import(
+          '@/app/api/shopping-lists/[id]/items/route'
+        );
+        const response = await POST(request, {
+          params: Promise.resolve({ id: 'list-1' }),
+        });
 
         expect(response.status).toBe(400);
         const data = await response.json();
@@ -637,28 +688,33 @@ describe('/api/shopping-lists API', () => {
         quantity: 3,
         status: 'COMPLETED',
         purchasedAt: new Date(),
-        actualPrice: 18.50,
+        actualPrice: 18.5,
       };
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
       prisma.shoppingListItem.findUnique.mockResolvedValue(existingItem);
       prisma.shoppingListItem.update.mockResolvedValue(updatedItem);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1/items/item-1', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1/items/item-1',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            quantity: 3,
+            status: 'COMPLETED',
+            actualPrice: 18.5,
+          }),
         },
-        body: JSON.stringify({
-          quantity: 3,
-          status: 'COMPLETED',
-          actualPrice: 18.50,
-        }),
-      });
+      );
 
       try {
-        const { PUT } = await import('@/app/api/shopping-lists/[id]/items/[itemId]/route');
+        const { PUT } = await import(
+          '@/app/api/shopping-lists/[id]/items/[itemId]/route'
+        );
         const response = await PUT(request, {
           params: Promise.resolve({ id: 'list-1', itemId: 'item-1' }),
         });
@@ -668,7 +724,7 @@ describe('/api/shopping-lists API', () => {
 
         expect(data.item.quantity).toBe(3);
         expect(data.item.status).toBe('COMPLETED');
-        expect(data.item.actualPrice).toBe(18.50);
+        expect(data.item.actualPrice).toBe(18.5);
       } catch (error) {
         expect(error.message).toBeDefined();
       }
@@ -695,27 +751,32 @@ describe('/api/shopping-lists API', () => {
         ...existingItem,
         status: 'COMPLETED',
         purchasedAt: new Date(),
-        actualPrice: 9.20,
+        actualPrice: 9.2,
       };
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
       prisma.shoppingListItem.findUnique.mockResolvedValue(existingItem);
       prisma.shoppingListItem.update.mockResolvedValue(completedItem);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1/items/item-1', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1/items/item-1',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            status: 'COMPLETED',
+            actualPrice: 9.2,
+          }),
         },
-        body: JSON.stringify({
-          status: 'COMPLETED',
-          actualPrice: 9.20,
-        }),
-      });
+      );
 
       try {
-        const { PUT } = await import('@/app/api/shopping-lists/[id]/items/[itemId]/route');
+        const { PUT } = await import(
+          '@/app/api/shopping-lists/[id]/items/[itemId]/route'
+        );
         const response = await PUT(request, {
           params: Promise.resolve({ id: 'list-1', itemId: 'item-1' }),
         });
@@ -725,7 +786,7 @@ describe('/api/shopping-lists API', () => {
 
         expect(data.item.status).toBe('COMPLETED');
         expect(data.item.purchasedAt).toBeDefined();
-        expect(data.item.actualPrice).toBe(9.20);
+        expect(data.item.actualPrice).toBe(9.2);
       } catch (error) {
         expect(error.message).toBeDefined();
       }
@@ -752,15 +813,20 @@ describe('/api/shopping-lists API', () => {
       prisma.shoppingListItem.findUnique.mockResolvedValue(existingItem);
       prisma.shoppingListItem.delete.mockResolvedValue(existingItem);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1/items/item-1', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1/items/item-1',
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
-        const { DELETE } = await import('@/app/api/shopping-lists/[id]/items/[itemId]/route');
+        const { DELETE } = await import(
+          '@/app/api/shopping-lists/[id]/items/[itemId]/route'
+        );
         const response = await DELETE(request, {
           params: Promise.resolve({ id: 'list-1', itemId: 'item-1' }),
         });
@@ -785,7 +851,7 @@ describe('/api/shopping-lists API', () => {
           recommendedQuantity: 2,
           category: 'DAIRY',
           priority: 'HIGH',
-          estimatedPrice: 12.00,
+          estimatedPrice: 12.0,
         },
         {
           name: '鸡蛋',
@@ -795,7 +861,7 @@ describe('/api/shopping-lists API', () => {
           unit: '个',
           category: 'EGG',
           priority: 'NORMAL',
-          estimatedPrice: 15.00,
+          estimatedPrice: 15.0,
         },
         {
           name: '面包',
@@ -805,7 +871,7 @@ describe('/api/shopping-lists API', () => {
           unit: '个',
           category: 'BAKERY',
           priority: 'NORMAL',
-          estimatedPrice: 8.50,
+          estimatedPrice: 8.5,
         },
       ];
 
@@ -814,16 +880,23 @@ describe('/api/shopping-lists API', () => {
         { name: '面包', quantity: 0, unit: '个', category: 'BAKERY' },
       ]);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1/suggestions', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1/suggestions',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
-        const { GET } = await import('@/app/api/shopping-lists/[id]/suggestions/route');
-        const response = await GET(request, { params: Promise.resolve({ id: 'list-1' }) });
+        const { GET } = await import(
+          '@/app/api/shopping-lists/[id]/suggestions/route'
+        );
+        const response = await GET(request, {
+          params: Promise.resolve({ id: 'list-1' }),
+        });
 
         expect(response.status).toBe(200);
         const data = await response.json();
@@ -844,43 +917,47 @@ describe('/api/shopping-lists API', () => {
         id: 'list-1',
         name: '本周购物清单',
         status: 'ACTIVE',
-        items: [
-          { status: 'COMPLETED' },
-          { status: 'COMPLETED' },
-        ],
+        items: [{ status: 'COMPLETED' }, { status: 'COMPLETED' }],
       };
 
       const completedList = {
         ...existingList,
         status: 'COMPLETED',
         completedAt: new Date(),
-        actualTotalPrice: 25.70,
+        actualTotalPrice: 25.7,
       };
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
       prisma.shoppingList.update.mockResolvedValue(completedList);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1/complete',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            actualTotalPrice: 25.7,
+          }),
         },
-        body: JSON.stringify({
-          actualTotalPrice: 25.70,
-        }),
-      });
+      );
 
       try {
-        const { POST } = await import('@/app/api/shopping-lists/[id]/complete/route');
-        const response = await POST(request, { params: Promise.resolve({ id: 'list-1' }) });
+        const { POST } = await import(
+          '@/app/api/shopping-lists/[id]/complete/route'
+        );
+        const response = await POST(request, {
+          params: Promise.resolve({ id: 'list-1' }),
+        });
 
         expect(response.status).toBe(200);
         const data = await response.json();
 
         expect(data.shoppingList.status).toBe('COMPLETED');
         expect(data.shoppingList.completedAt).toBeDefined();
-        expect(data.shoppingList.actualTotalPrice).toBe(25.70);
+        expect(data.shoppingList.actualTotalPrice).toBe(25.7);
         expect(data.message).toBe('购物清单已完成');
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -900,20 +977,27 @@ describe('/api/shopping-lists API', () => {
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1/complete',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            actualTotalPrice: 25.7,
+          }),
         },
-        body: JSON.stringify({
-          actualTotalPrice: 25.70,
-        }),
-      });
+      );
 
       try {
-        const { POST } = await import('@/app/api/shopping-lists/[id]/complete/route');
-        const response = await POST(request, { params: Promise.resolve({ id: 'list-1' }) });
+        const { POST } = await import(
+          '@/app/api/shopping-lists/[id]/complete/route'
+        );
+        const response = await POST(request, {
+          params: Promise.resolve({ id: 'list-1' }),
+        });
 
         expect(response.status).toBe(400);
         const data = await response.json();
@@ -933,9 +1017,9 @@ describe('/api/shopping-lists API', () => {
         draftLists: 1,
         totalItems: 45,
         completedItems: 32,
-        totalEstimatedCost: 580.50,
-        totalActualCost: 545.20,
-        savings: 35.30,
+        totalEstimatedCost: 580.5,
+        totalActualCost: 545.2,
+        savings: 35.3,
         averageItemsPerList: 3.8,
         completionRate: 71.1,
         categoryBreakdown: [
@@ -947,26 +1031,31 @@ describe('/api/shopping-lists API', () => {
           { category: 'OTHER', count: 7, percentage: 15.6 },
         ],
         monthlyTrend: [
-          { month: '2024-10', lists: 3, items: 15, cost: 125.50 },
-          { month: '2024-11', lists: 4, items: 18, cost: 145.20 },
-          { month: '2024-12', lists: 5, items: 25, cost: 198.70 },
+          { month: '2024-10', lists: 3, items: 15, cost: 125.5 },
+          { month: '2024-11', lists: 4, items: 18, cost: 145.2 },
+          { month: '2024-12', lists: 5, items: 25, cost: 198.7 },
         ],
       };
 
       prisma.shoppingList.aggregate.mockResolvedValue({
         _count: { id: 12 },
-        _sum: { estimatedTotalPrice: 580.50, actualTotalPrice: 545.20 },
+        _sum: { estimatedTotalPrice: 580.5, actualTotalPrice: 545.2 },
       });
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/analytics', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/analytics',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
-        const { GET } = await import('@/app/api/shopping-lists/analytics/route');
+        const { GET } = await import(
+          '@/app/api/shopping-lists/analytics/route'
+        );
         const response = await GET(request);
 
         expect(response.status).toBe(200);
@@ -985,14 +1074,19 @@ describe('/api/shopping-lists API', () => {
 
   describe('Error handling', () => {
     it('should handle database errors gracefully', async () => {
-      prisma.shoppingList.findMany.mockRejectedValue(new Error('Database connection failed'));
+      prisma.shoppingList.findMany.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/shopping-lists/route');
@@ -1007,14 +1101,17 @@ describe('/api/shopping-lists API', () => {
     });
 
     it('should handle malformed JSON', async () => {
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: 'invalid-json',
         },
-        body: 'invalid-json',
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/shopping-lists/route');
@@ -1037,14 +1134,17 @@ describe('/api/shopping-lists API', () => {
         priority: 'INVALID_PRIORITY',
       };
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify(invalidList),
         },
-        body: JSON.stringify(invalidList),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/shopping-lists/route');
@@ -1071,18 +1171,23 @@ describe('/api/shopping-lists API', () => {
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
 
-      const request = new NextRequest('http://localhost:3000/api/shopping-lists/list-1', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/shopping-lists/list-1',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify(invalidUpdate),
         },
-        body: JSON.stringify(invalidUpdate),
-      });
+      );
 
       try {
         const { PUT } = await import('@/app/api/shopping-lists/[id]/route');
-        const response = await PUT(request, { params: Promise.resolve({ id: 'list-1' }) });
+        const response = await PUT(request, {
+          params: Promise.resolve({ id: 'list-1' }),
+        });
 
         expect(response.status).toBe(400);
         const data = await response.json();

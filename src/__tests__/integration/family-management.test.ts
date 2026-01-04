@@ -32,7 +32,7 @@ const updateFamilySchema = z.object({
 // 权限检查辅助函数
 function checkPermission(
   userRole: 'ADMIN' | 'MEMBER',
-  action: 'create' | 'read' | 'update' | 'delete' | 'invite'
+  action: 'create' | 'read' | 'update' | 'delete' | 'invite',
 ): boolean {
   const permissions: Record<string, string[]> = {
     ADMIN: ['create', 'read', 'update', 'delete', 'invite'],

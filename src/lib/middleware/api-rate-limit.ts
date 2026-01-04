@@ -3,14 +3,14 @@
  * 提供 AI 服务的速率限制检查
  */
 
-import { NextResponse } from "next/server";
-import { rateLimiter, RateLimitConfig } from "@/lib/services/ai/rate-limiter";
+import { NextResponse } from 'next/server';
+import { rateLimiter, RateLimitConfig } from '@/lib/services/ai/rate-limiter';
 
 export type RateLimitType =
-  | "ai_chat"
-  | "ai_analyze_health"
-  | "ai_generate_report"
-  | "ai_optimize_recipe";
+  | 'ai_chat'
+  | 'ai_analyze_health'
+  | 'ai_generate_report'
+  | 'ai_optimize_recipe';
 
 const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   ai_chat: {
@@ -62,16 +62,16 @@ export async function checkAIRateLimit(
       success: false,
       response: NextResponse.json(
         {
-          error: "Rate limit exceeded",
+          error: 'Rate limit exceeded',
           retryAfter: rateLimitResult.retryAfter,
           resetTime: resetTimestamp,
         },
         {
           status: 429,
           headers: {
-            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-            "X-RateLimit-Reset": resetTimestamp.toString(),
-            "Retry-After": rateLimitResult.retryAfter?.toString() || "60",
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': resetTimestamp.toString(),
+            'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
           },
         },
       ),

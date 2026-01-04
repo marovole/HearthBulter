@@ -52,46 +52,61 @@ async function testNotificationSystem() {
       },
     ];
 
-    const batchResults = await notificationManager.createBulkNotifications(batchNotifications);
+    const batchResults =
+      await notificationManager.createBulkNotifications(batchNotifications);
     console.log('✅ 批量通知创建成功:', batchResults.summary);
 
     // 测试4: 获取用户通知列表
     console.log('\n📄 测试4: 获取用户通知列表');
-    const userNotifications = await notificationManager.getUserNotifications('test-user-123', {
-      limit: 10,
-      includeRead: true,
-    });
+    const userNotifications = await notificationManager.getUserNotifications(
+      'test-user-123',
+      {
+        limit: 10,
+        includeRead: true,
+      },
+    );
     console.log('✅ 用户通知列表获取成功:', userNotifications.total, '条通知');
 
     // 测试5: 标记通知为已读
     console.log('\n✅ 测试5: 标记通知为已读');
-    await notificationManager.markAsRead(simpleNotification.id, 'test-user-123');
+    await notificationManager.markAsRead(
+      simpleNotification.id,
+      'test-user-123',
+    );
     console.log('✅ 通知标记为已读成功');
 
     // 测试6: 获取未读数量
     console.log('\n🔢 测试6: 获取未读数量');
-    const unreadCount = await notificationManager.getUnreadCount('test-user-123');
+    const unreadCount =
+      await notificationManager.getUnreadCount('test-user-123');
     console.log('✅ 未读通知数量:', unreadCount);
 
     // 测试7: 获取通知统计
     console.log('\n📊 测试7: 获取通知统计');
-    const stats = await notificationManager.getUserNotificationStats('test-user-123', 7);
+    const stats = await notificationManager.getUserNotificationStats(
+      'test-user-123',
+      7,
+    );
     console.log('✅ 通知统计获取成功:', stats.summary);
 
     // 测试8: 删除通知
     console.log('\n🗑️ 测试8: 删除通知');
-    await notificationManager.deleteNotification(simpleNotification.id, 'test-user-123');
+    await notificationManager.deleteNotification(
+      simpleNotification.id,
+      'test-user-123',
+    );
     console.log('✅ 通知删除成功');
 
     console.log('\n🎉 所有测试通过！通知系统运行正常。');
 
     // 输出系统信息
     console.log('\n📋 系统信息:');
-    console.log('- 支持的通知类型: CHECK_IN_REMINDER, TASK_NOTIFICATION, EXPIRY_ALERT, BUDGET_WARNING, HEALTH_ALERT, GOAL_ACHIEVEMENT, FAMILY_ACTIVITY, SYSTEM_ANNOUNCEMENT, MARKETING, OTHER');
+    console.log(
+      '- 支持的通知类型: CHECK_IN_REMINDER, TASK_NOTIFICATION, EXPIRY_ALERT, BUDGET_WARNING, HEALTH_ALERT, GOAL_ACHIEVEMENT, FAMILY_ACTIVITY, SYSTEM_ANNOUNCEMENT, MARKETING, OTHER',
+    );
     console.log('- 支持的通知渠道: IN_APP, EMAIL, SMS, WECHAT, PUSH');
     console.log('- 支持的优先级: LOW, MEDIUM, HIGH, URGENT');
     console.log('- 支持的状态: PENDING, SENDING, SENT, FAILED, CANCELLED');
-
   } catch (error) {
     console.error('❌ 测试失败:', error);
   } finally {

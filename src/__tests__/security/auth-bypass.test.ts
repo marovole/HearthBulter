@@ -1,6 +1,6 @@
 /**
  * 认证绕过安全测试
- * 
+ *
  * 验证所有受保护的 API 端点都正确要求认证
  */
 
@@ -59,24 +59,24 @@ describe('认证绕过测试', () => {
       async ({ path, method }) => {
         // 动态导入路由处理器
         const routePath = path.replace('/api/', '').replace(/\//g, '/');
-        
+
         try {
           const routeModule = await import(`@/app/api/${routePath}/route`);
           const handler = routeModule[method];
-          
+
           if (handler) {
             const request = new NextRequest(`http://localhost${path}`, {
               method,
             });
-            
+
             const response = await handler(request);
-            
+
             expect(response.status).toBe(401);
           }
         } catch {
           // 路由不存在或无法导入，跳过
         }
-      }
+      },
     );
   });
 

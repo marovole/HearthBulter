@@ -11,7 +11,7 @@ import { analyticsService } from '@/lib/services/analytics-service';
 export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const member = await prisma.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },
@@ -56,13 +56,11 @@ export async function GET(request: NextRequest) {
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
     const memberId = searchParams.get('memberId');
-    const period = searchParams.get('period') as 'daily' | 'weekly' | 'monthly' || 'daily';
+    const period =
+      (searchParams.get('period') as 'daily' | 'weekly' | 'monthly') || 'daily';
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少成员ID参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少成员ID参数' }, { status: 400 });
     }
 
     // 验证权限
@@ -71,14 +69,14 @@ export async function GET(request: NextRequest) {
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限访问该成员的营养分析数据' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 获取营养汇总
     const nutritionSummary = await analyticsService.summarizeNutrition(
       memberId,
-      period
+      period,
     );
 
     // 生成实际营养数据（用于演示）
@@ -87,10 +85,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: mockActualData }, { status: 200 });
   } catch (error) {
     console.error('获取营养分析失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -101,29 +96,38 @@ export async function GET(request: NextRequest) {
 function generateMockNutritionData(summary: any) {
   // 基于目标生成一些合理的实际数据
   const variance = 0.8 + Math.random() * 0.4; // 80%-120%的波动
-  
+
   const actual = {
     carbs: summary.targetCarbs ? Math.round(summary.targetCarbs * variance) : 0,
-    protein: summary.targetProtein ? Math.round(summary.targetProtein * variance) : 0,
+    protein: summary.targetProtein
+      ? Math.round(summary.targetProtein * variance)
+      : 0,
     fat: summary.targetFat ? Math.round(summary.targetFat * variance) : 0,
-    calories: summary.targetCalories ? Math.round(summary.targetCalories * variance) : 0,
+    calories: summary.targetCalories
+      ? Math.round(summary.targetCalories * variance)
+      : 0,
   };
 
   // 计算达标率
   const adherenceRates = [];
   if (summary.targetCarbs) {
-    adherenceRates.push(Math.min(100, (actual.carbs / summary.targetCarbs) * 100));
+    adherenceRates.push(
+      Math.min(100, (actual.carbs / summary.targetCarbs) * 100),
+    );
   }
   if (summary.targetProtein) {
-    adherenceRates.push(Math.min(100, (actual.protein / summary.targetProtein) * 100));
+    adherenceRates.push(
+      Math.min(100, (actual.protein / summary.targetProtein) * 100),
+    );
   }
   if (summary.targetFat) {
     adherenceRates.push(Math.min(100, (actual.fat / summary.targetFat) * 100));
   }
-  
-  const adherenceRate = adherenceRates.length > 0 
-    ? adherenceRates.reduce((a, b) => a + b, 0) / adherenceRates.length 
-    : 0;
+
+  const adherenceRate =
+    adherenceRates.length > 0
+      ? adherenceRates.reduce((a, b) => a + b, 0) / adherenceRates.length
+      : 0;
 
   return {
     ...summary,
@@ -131,4 +135,3 @@ function generateMockNutritionData(summary: any) {
     adherenceRate: Math.round(adherenceRate * 10) / 10,
   };
 }
-

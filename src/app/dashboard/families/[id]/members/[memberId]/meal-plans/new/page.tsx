@@ -10,7 +10,7 @@ import { MealPlanGenerator } from '@/components/meal-planning/MealPlanGenerator'
 export default async function NewMealPlanPage({
   params,
 }: {
-  params: Promise<{ id: string; memberId: string }>
+  params: Promise<{ id: string; memberId: string }>;
 }) {
   const { id, memberId } = await params;
   const session = await auth();
@@ -55,34 +55,34 @@ export default async function NewMealPlanPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+    <div className='min-h-screen bg-gray-50'>
+      <div className='max-w-4xl mx-auto py-6 sm:px-6 lg:px-8'>
+        <div className='px-4 py-6 sm:px-0'>
           {/* 面包屑导航 */}
-          <nav className="mb-6">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <nav className='mb-6'>
+            <div className='flex items-center space-x-2 text-sm text-gray-600'>
               <Link
                 href={`/dashboard/families/${id}`}
-                className="hover:text-gray-900"
+                className='hover:text-gray-900'
               >
                 家庭
               </Link>
               <span>/</span>
               <Link
                 href={`/dashboard/families/${id}/members/${memberId}`}
-                className="hover:text-gray-900"
+                className='hover:text-gray-900'
               >
                 {member.name || '成员'}
               </Link>
               <span>/</span>
               <Link
                 href={`/dashboard/families/${id}/members/${memberId}/meal-plans`}
-                className="hover:text-gray-900"
+                className='hover:text-gray-900'
               >
                 食谱规划
               </Link>
               <span>/</span>
-              <span className="text-gray-900">新建</span>
+              <span className='text-gray-900'>新建</span>
             </div>
           </nav>
 
@@ -101,12 +101,12 @@ export default async function NewMealPlanPage({
             }}
             onSuccess={(planId) => {
               redirect(
-                `/dashboard/families/${id}/members/${memberId}/meal-plans/${planId}`
+                `/dashboard/families/${id}/members/${memberId}/meal-plans/${planId}`,
               );
             }}
             onCancel={() => {
               redirect(
-                `/dashboard/families/${id}/members/${memberId}/meal-plans`
+                `/dashboard/families/${id}/members/${memberId}/meal-plans`,
               );
             }}
           />
@@ -115,4 +115,3 @@ export default async function NewMealPlanPage({
     </div>
   );
 }
-

@@ -101,9 +101,7 @@ describe('Tracking Workflow Integration', () => {
       const dinner = await mealTracker.logMeal({
         memberId: testMember.id,
         mealType: 'DINNER',
-        foods: [
-          { foodId: 'test-food-5', amount: 200 },
-        ],
+        foods: [{ foodId: 'test-food-5', amount: 200 }],
       });
 
       expect(dinner).toBeDefined();
@@ -111,7 +109,7 @@ describe('Tracking Workflow Integration', () => {
       // Get daily nutrition
       const dailyNutrition = await mealTracker.getDailyNutrition(
         testMember.id,
-        new Date()
+        new Date(),
       );
 
       expect(dailyNutrition.mealsCount).toBe(3);
@@ -192,7 +190,7 @@ describe('Tracking Workflow Integration', () => {
       // Get templates for the member
       const templates = await templateManager.getMemberTemplates(
         testMember.id,
-        'BREAKFAST'
+        'BREAKFAST',
       );
 
       expect(templates).toHaveLength(1);
@@ -201,7 +199,7 @@ describe('Tracking Workflow Integration', () => {
       // Use template to log a meal
       const meal = await mealTracker.logMealFromTemplate(
         testMember.id,
-        template.id
+        template.id,
       );
 
       expect(meal).toBeDefined();
@@ -238,7 +236,7 @@ describe('Tracking Workflow Integration', () => {
       // Get recommended templates
       const recommendations = await templateManager.getRecommendedTemplates(
         testMember.id,
-        'LUNCH'
+        'LUNCH',
       );
 
       expect(recommendations.length).toBeGreaterThan(0);
@@ -269,7 +267,7 @@ describe('Tracking Workflow Integration', () => {
       const deviations = await deviationAnalyzer.analyzeWeeklyDeviations(
         testMember.id,
         startDate,
-        endDate
+        endDate,
       );
 
       expect(deviations.length).toBeGreaterThan(0);
@@ -298,7 +296,7 @@ describe('Tracking Workflow Integration', () => {
       const report = await deviationAnalyzer.generateWeeklyReport(
         testMember.id,
         startDate,
-        new Date()
+        new Date(),
       );
 
       expect(report).toHaveProperty('summary');
@@ -315,7 +313,7 @@ describe('Tracking Workflow Integration', () => {
           memberId: testMember.id,
           mealType: 'BREAKFAST',
           foods: [{ foodId: 'invalid-food', amount: 100 }],
-        })
+        }),
       ).rejects.toThrow('Food not found');
     });
 
@@ -380,7 +378,7 @@ describe('Tracking Workflow Integration', () => {
       // Get updated nutrition progress
       const progress = await mealTracker.getNutritionProgress(
         testMember.id,
-        new Date()
+        new Date(),
       );
 
       expect(progress.calories.target).toBe(2500);
@@ -400,7 +398,7 @@ describe('Tracking Workflow Integration', () => {
             memberId: testMember.id,
             mealType: 'BREAKFAST',
             foods: [{ foodId: 'test-food-1', amount: 100 }],
-          })
+          }),
         );
       }
 
@@ -425,7 +423,7 @@ describe('Tracking Workflow Integration', () => {
             name: `Template ${i}`,
             mealType: 'BREAKFAST',
             foods: [{ foodId: 'test-food-1', amount: 100 }],
-          })
+          }),
         );
       }
 

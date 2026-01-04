@@ -22,13 +22,10 @@ export async function GET(request: NextRequest) {
         foods,
         total: foods.length,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('获取热门食材失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

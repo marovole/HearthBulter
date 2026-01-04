@@ -1,5 +1,9 @@
 import { callOpenAIJSON, RECOMMENDED_MODELS } from './openai-client';
-import { getActivePrompt, renderPrompt, validatePromptParameters } from './prompt-templates';
+import {
+  getActivePrompt,
+  renderPrompt,
+  validatePromptParameters,
+} from './prompt-templates';
 
 // 报告类型枚举
 export enum ReportType {
@@ -32,10 +36,18 @@ export interface ReportData {
         fat: Array<{ date: string; actual: number; target: number }>;
       };
     };
-    activity_data?: Array<{ date: string; exercise_minutes: number; water_intake: number }>;
+    activity_data?: Array<{
+      date: string;
+      exercise_minutes: number;
+      water_intake: number;
+    }>;
     health_metrics?: {
       weight?: Array<{ date: string; value: number }>;
-      blood_pressure?: Array<{ date: string; systolic: number; diastolic: number }>;
+      blood_pressure?: Array<{
+        date: string;
+        systolic: number;
+        diastolic: number;
+      }>;
       heart_rate?: Array<{ date: string; value: number }>;
     };
     meal_logs?: Array<{
@@ -119,7 +131,7 @@ export class HealthReportGenerator {
    */
   async generateReport(
     reportData: ReportData,
-    includeAIInsights: boolean = true
+    includeAIInsights: boolean = true,
   ): Promise<GeneratedReport> {
     const reportId = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -131,17 +143,30 @@ export class HealthReportGenerator {
       // 2. 生成AI洞察（如果启用）
       let aiInsights: string[] = [];
       if (includeAIInsights) {
-        aiInsights = await this.generateAIInsights(reportData, dataSummary, trendAnalysis);
+        aiInsights = await this.generateAIInsights(
+          reportData,
+          dataSummary,
+          trendAnalysis,
+        );
       }
 
       // 3. 创建报告章节
-      const sections = this.createReportSections(reportData, dataSummary, trendAnalysis, aiInsights);
+      const sections = this.createReportSections(
+        reportData,
+        dataSummary,
+        trendAnalysis,
+        aiInsights,
+      );
 
       // 4. 生成图表数据
       const charts = this.generateCharts(reportData, trendAnalysis);
 
       // 5. 生成推荐
-      const recommendations = this.generateRecommendations(dataSummary, trendAnalysis, aiInsights);
+      const recommendations = this.generateRecommendations(
+        dataSummary,
+        trendAnalysis,
+        aiInsights,
+      );
 
       // 6. 创建HTML内容
       const htmlContent = this.generateHTMLContent({
@@ -168,7 +193,6 @@ export class HealthReportGenerator {
         status: ReportStatus.COMPLETED,
         htmlContent,
       };
-
     } catch (error) {
       console.error('Report generation failed:', error);
       return {
@@ -202,12 +226,14 @@ export class HealthReportGenerator {
 
     // 健康评分平均值
     if (data.health_scores && data.health_scores.length > 0) {
-      const scores = data.health_scores.map(s => s.score);
+      const scores = data.health_scores.map((s) => s.score);
       averages.health_score = scores.reduce((a, b) => a + b, 0) / scores.length;
       totals.days_tracked = scores.length;
 
       // 最好和最坏的一天
-      const sortedScores = [...data.health_scores].sort((a, b) => b.score - a.score);
+      const sortedScores = [...data.health_scores].sort(
+        (a, b) => b.score - a.score,
+      );
       const best = sortedScores[0];
       const worst = sortedScores[sortedScores.length - 1];
 
@@ -244,7 +270,7 @@ export class HealthReportGenerator {
 
     // 分析健康评分趋势
     if (data.health_scores && data.health_scores.length >= 7) {
-      const scores = data.health_scores.map(s => s.score);
+      const scores = data.health_scores.map((s) => s.score);
       const trend = this.calculateLinearTrend(scores);
 
       if (Math.abs(trend.slope) > 1) {
@@ -255,7 +281,12 @@ export class HealthReportGenerator {
       trends.key_changes.push({
         metric: 'health_score',
         change: trend.slope * scores.length,
-        significance: Math.abs(trend.slope) > 2 ? 'major' : Math.abs(trend.slope) > 1 ? 'moderate' : 'minor',
+        significance:
+          Math.abs(trend.slope) > 2
+            ? 'major'
+            : Math.abs(trend.slope) > 1
+              ? 'moderate'
+              : 'minor',
       });
 
       // 预测下个周期
@@ -263,7 +294,8 @@ export class HealthReportGenerator {
       trends.predictions.push({
         metric: 'health_score',
         predicted_value: Math.max(0, Math.min(100, nextValue)),
-        timeframe: reportData.reportType === ReportType.WEEKLY ? '下周' : '下月',
+        timeframe:
+          reportData.reportType === ReportType.WEEKLY ? '下周' : '下月',
       });
     }
 
@@ -276,7 +308,7 @@ export class HealthReportGenerator {
   private async generateAIInsights(
     reportData: ReportData,
     dataSummary: any,
-    trendAnalysis: TrendAnalysis
+    trendAnalysis: TrendAnalysis,
   ): Promise<string[]> {
     const prompt = getActivePrompt('report_generation', 'weekly_health_report');
     if (!prompt) {
@@ -303,7 +335,7 @@ export class HealthReportGenerator {
       const result = await callOpenAIJSON(
         renderedPrompt,
         RECOMMENDED_MODELS.PAID[1], // 使用付费模型获得更好洞察
-        1500
+        1500,
       );
 
       return result.insights || ['暂无特殊洞察，保持当前健康管理方案'];
@@ -320,7 +352,7 @@ export class HealthReportGenerator {
     reportData: ReportData,
     dataSummary: any,
     trendAnalysis: TrendAnalysis,
-    aiInsights: string[]
+    aiInsights: string[],
   ): ReportSection[] {
     const sections: ReportSection[] = [];
 
@@ -337,7 +369,10 @@ export class HealthReportGenerator {
       sections.push({
         id: 'health_score_analysis',
         title: '健康评分分析',
-        content: this.generateHealthScoreAnalysis(reportData.data.health_scores, trendAnalysis),
+        content: this.generateHealthScoreAnalysis(
+          reportData.data.health_scores,
+          trendAnalysis,
+        ),
         priority: 'high',
         data: reportData.data.health_scores,
       });
@@ -389,7 +424,10 @@ export class HealthReportGenerator {
   /**
    * 生成图表数据
    */
-  private generateCharts(reportData: ReportData, trendAnalysis: TrendAnalysis): ChartData[] {
+  private generateCharts(
+    reportData: ReportData,
+    trendAnalysis: TrendAnalysis,
+  ): ChartData[] {
     const charts: ChartData[] = [];
 
     // 健康评分趋势图
@@ -398,7 +436,7 @@ export class HealthReportGenerator {
         id: 'health_score_trend',
         type: 'line',
         title: '健康评分趋势',
-        data: reportData.data.health_scores.map(item => ({
+        data: reportData.data.health_scores.map((item) => ({
           date: item.date,
           score: item.score,
         })),
@@ -416,7 +454,7 @@ export class HealthReportGenerator {
         id: 'nutrition_balance',
         type: 'bar',
         title: '营养摄入达成率',
-        data: reportData.data.nutrition_data.calories.map(item => ({
+        data: reportData.data.nutrition_data.calories.map((item) => ({
           date: item.date,
           actual: item.actual,
           target: item.target,
@@ -439,7 +477,7 @@ export class HealthReportGenerator {
   private generateRecommendations(
     dataSummary: any,
     trendAnalysis: TrendAnalysis,
-    aiInsights: string[]
+    aiInsights: string[],
   ): string[] {
     const recommendations: string[] = [];
 
@@ -457,15 +495,17 @@ export class HealthReportGenerator {
     }
 
     // AI洞察驱动的推荐
-    if (aiInsights.some(insight => insight.includes('营养'))) {
+    if (aiInsights.some((insight) => insight.includes('营养'))) {
       recommendations.push('关注营养均衡，适当调整宏量营养素比例');
     }
 
-    if (aiInsights.some(insight => insight.includes('运动'))) {
+    if (aiInsights.some((insight) => insight.includes('运动'))) {
       recommendations.push('增加适量运动，有助于改善整体健康状况');
     }
 
-    return recommendations.length > 0 ? recommendations : ['继续保持当前健康生活方式'];
+    return recommendations.length > 0
+      ? recommendations
+      : ['继续保持当前健康生活方式'];
   }
 
   /**
@@ -501,26 +541,38 @@ export class HealthReportGenerator {
         <p>${report.summary}</p>
     </div>
 
-    ${report.sections.map(section => `
+    ${report.sections
+      .map(
+        (section) => `
         <div class="section">
             <h2>${section.title}</h2>
             <p>${section.content.replace(/\n/g, '<br>')}</p>
         </div>
-    `).join('')}
+    `,
+      )
+      .join('')}
 
-    ${report.insights.length > 0 ? `
+    ${
+      report.insights.length > 0
+        ? `
         <div class="insights">
             <h2>AI健康洞察</h2>
-            ${report.insights.map(insight => `<p>• ${insight}</p>`).join('')}
+            ${report.insights.map((insight) => `<p>• ${insight}</p>`).join('')}
         </div>
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${report.recommendations.length > 0 ? `
+    ${
+      report.recommendations.length > 0
+        ? `
         <div class="recommendations">
             <h2>建议与行动计划</h2>
-            ${report.recommendations.map(rec => `<p>• ${rec}</p>`).join('')}
+            ${report.recommendations.map((rec) => `<p>• ${rec}</p>`).join('')}
         </div>
-    ` : ''}
+    `
+        : ''
+    }
 
     <div class="footer">
         <p>此报告由AI生成，仅供参考。如有健康问题，请咨询专业医生。</p>
@@ -536,18 +588,21 @@ export class HealthReportGenerator {
     const dateRange = `${reportData.startDate.toLocaleDateString('zh-CN')} - ${reportData.endDate.toLocaleDateString('zh-CN')}`;
 
     switch (reportData.reportType) {
-    case ReportType.WEEKLY:
-      return `健康周报 (${dateRange})`;
-    case ReportType.MONTHLY:
-      return `健康月报 (${dateRange})`;
-    case ReportType.QUARTERLY:
-      return `健康季报 (${dateRange})`;
-    default:
-      return `健康报告 (${dateRange})`;
+      case ReportType.WEEKLY:
+        return `健康周报 (${dateRange})`;
+      case ReportType.MONTHLY:
+        return `健康月报 (${dateRange})`;
+      case ReportType.QUARTERLY:
+        return `健康季报 (${dateRange})`;
+      default:
+        return `健康报告 (${dateRange})`;
     }
   }
 
-  private generateReportSummary(dataSummary: any, trendAnalysis: TrendAnalysis): string {
+  private generateReportSummary(
+    dataSummary: any,
+    trendAnalysis: TrendAnalysis,
+  ): string {
     let summary = '';
 
     if (dataSummary.averages.health_score) {
@@ -555,25 +610,33 @@ export class HealthReportGenerator {
     }
 
     switch (trendAnalysis.direction) {
-    case 'improving':
-      summary += '整体健康状况呈上升趋势，请继续保持。';
-      break;
-    case 'declining':
-      summary += '整体健康状况有所下降，建议调整健康管理策略。';
-      break;
-    default:
-      summary += '整体健康状况保持稳定。';
+      case 'improving':
+        summary += '整体健康状况呈上升趋势，请继续保持。';
+        break;
+      case 'declining':
+        summary += '整体健康状况有所下降，建议调整健康管理策略。';
+        break;
+      default:
+        summary += '整体健康状况保持稳定。';
     }
 
     return summary;
   }
 
-  private generateExecutiveSummary(dataSummary: any, trendAnalysis: TrendAnalysis): string {
+  private generateExecutiveSummary(
+    dataSummary: any,
+    trendAnalysis: TrendAnalysis,
+  ): string {
     return `在本报告周期内，您${dataSummary.totals.days_tracked ? `共记录了 ${dataSummary.totals.days_tracked} 天的健康数据` : '的健康管理表现良好'}。${trendAnalysis.direction === 'improving' ? '健康状况稳步改善' : trendAnalysis.direction === 'declining' ? '需要加强健康管理' : '健康状况保持稳定'}。`;
   }
 
-  private generateHealthScoreAnalysis(healthScores: any[], trendAnalysis: TrendAnalysis): string {
-    const avgScore = healthScores.reduce((sum, item) => sum + item.score, 0) / healthScores.length;
+  private generateHealthScoreAnalysis(
+    healthScores: any[],
+    trendAnalysis: TrendAnalysis,
+  ): string {
+    const avgScore =
+      healthScores.reduce((sum, item) => sum + item.score, 0) /
+      healthScores.length;
 
     return `报告期内平均健康评分为 ${Math.round(avgScore)} 分。${trendAnalysis.direction === 'improving' ? '健康评分呈上升趋势，说明健康管理措施效果良好。' : trendAnalysis.direction === 'declining' ? '健康评分有所下降，可能需要调整生活方式或饮食习惯。' : '健康评分保持相对稳定。'}`;
   }
@@ -584,8 +647,12 @@ export class HealthReportGenerator {
   }
 
   private generateActivityAnalysis(activityData: any[]): string {
-    const avgExercise = activityData.reduce((sum, item) => sum + item.exercise_minutes, 0) / activityData.length;
-    const avgWater = activityData.reduce((sum, item) => sum + item.water_intake, 0) / activityData.length;
+    const avgExercise =
+      activityData.reduce((sum, item) => sum + item.exercise_minutes, 0) /
+      activityData.length;
+    const avgWater =
+      activityData.reduce((sum, item) => sum + item.water_intake, 0) /
+      activityData.length;
 
     return `平均每日运动时长为 ${Math.round(avgExercise)} 分钟，饮水量为 ${Math.round(avgWater)} ml。建议保持规律运动和充足饮水。`;
   }
@@ -595,16 +662,21 @@ export class HealthReportGenerator {
       return '暂无明确的趋势预测数据。';
     }
 
-    return trendAnalysis.predictions.map(pred =>
-      `预计${pred.timeframe}的${pred.metric}约为 ${Math.round(pred.predicted_value)}。`
-    ).join(' ');
+    return trendAnalysis.predictions
+      .map(
+        (pred) =>
+          `预计${pred.timeframe}的${pred.metric}约为 ${Math.round(pred.predicted_value)}。`,
+      )
+      .join(' ');
   }
 
   private calculateConsistencyScore(scores: number[]): number {
     if (scores.length < 2) return 100;
 
     const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
+    const variance =
+      scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) /
+      scores.length;
     const stdDev = Math.sqrt(variance);
 
     // 一致性评分：标准差越小评分越高
@@ -612,7 +684,11 @@ export class HealthReportGenerator {
     return Math.min(100, consistencyScore);
   }
 
-  private calculateLinearTrend(values: number[]): { slope: number; intercept: number; rSquared: number } {
+  private calculateLinearTrend(values: number[]): {
+    slope: number;
+    intercept: number;
+    rSquared: number;
+  } {
     const n = values.length;
     const sumX = (n * (n - 1)) / 2;
     const sumY = values.reduce((a, b) => a + b, 0);
@@ -624,9 +700,12 @@ export class HealthReportGenerator {
 
     // 计算R²
     const yMean = sumY / n;
-    const ssRes = values.reduce((sum, y, x) => sum + Math.pow(y - (slope * x + intercept), 2), 0);
+    const ssRes = values.reduce(
+      (sum, y, x) => sum + Math.pow(y - (slope * x + intercept), 2),
+      0,
+    );
     const ssTot = values.reduce((sum, y) => sum + Math.pow(y - yMean, 2), 0);
-    const rSquared = 1 - (ssRes / ssTot);
+    const rSquared = 1 - ssRes / ssTot;
 
     return { slope, intercept, rSquared: isNaN(rSquared) ? 0 : rSquared };
   }

@@ -32,7 +32,7 @@ describe('EnhancedDashboard Integration Tests', () => {
 
   beforeEach(() => {
     mockFetch.mockClear();
-    
+
     // Setup default mock responses
     mockFetch.mockImplementation((url) => {
       if (url.includes('/family-members')) {
@@ -54,7 +54,7 @@ describe('EnhancedDashboard Integration Tests', () => {
           }),
         });
       }
-      
+
       if (url.includes('/health-metrics')) {
         return Promise.resolve({
           ok: true,
@@ -71,7 +71,7 @@ describe('EnhancedDashboard Integration Tests', () => {
           }),
         });
       }
-      
+
       if (url.includes('/health-score')) {
         return Promise.resolve({
           ok: true,
@@ -89,7 +89,7 @@ describe('EnhancedDashboard Integration Tests', () => {
           }),
         });
       }
-      
+
       if (url.includes('/nutrition-trends')) {
         return Promise.resolve({
           ok: true,
@@ -106,7 +106,7 @@ describe('EnhancedDashboard Integration Tests', () => {
           }),
         });
       }
-      
+
       if (url.includes('/overview-cards')) {
         return Promise.resolve({
           ok: true,
@@ -122,7 +122,7 @@ describe('EnhancedDashboard Integration Tests', () => {
           }),
         });
       }
-      
+
       if (url.includes('/weight-trend')) {
         return Promise.resolve({
           ok: true,
@@ -138,7 +138,7 @@ describe('EnhancedDashboard Integration Tests', () => {
           }),
         });
       }
-      
+
       return Promise.resolve({
         ok: true,
         json: async () => ({ data: {} }),
@@ -148,28 +148,28 @@ describe('EnhancedDashboard Integration Tests', () => {
 
   it('renders complete dashboard with all components', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     // Wait for all components to load
     await waitFor(() => {
       expect(screen.getByText('健康数据趋势')).toBeInTheDocument();
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText('家庭成员')).toBeInTheDocument();
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText('营养趋势')).toBeInTheDocument();
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康评分')).toBeInTheDocument();
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText('快速操作')).toBeInTheDocument();
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康洞察')).toBeInTheDocument();
     });
@@ -177,34 +177,36 @@ describe('EnhancedDashboard Integration Tests', () => {
 
   it('handles member selection across all components', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('张爸爸')).toBeInTheDocument();
     });
-    
+
     // Click on family member
     const memberCard = screen.getByText('张爸爸').closest('div');
     fireEvent.click(memberCard!);
-    
+
     // Verify that health metrics are updated for selected member
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining(`/api/dashboard/health-metrics?memberId=${mockMemberId}`)
+        expect.stringContaining(
+          `/api/dashboard/health-metrics?memberId=${mockMemberId}`,
+        ),
       );
     });
   });
 
   it('displays health data correctly across components', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('70.5')).toBeInTheDocument(); // Weight
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText('85')).toBeInTheDocument(); // Health score
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText('张爸爸')).toBeInTheDocument(); // Member name
     });
@@ -212,19 +214,19 @@ describe('EnhancedDashboard Integration Tests', () => {
 
   it('handles time range selection', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康数据趋势')).toBeInTheDocument();
     });
-    
+
     // Find and click time range selector
     const timeRangeButton = screen.getByText('30天');
     fireEvent.click(timeRangeButton);
-    
+
     // Check if API is called with new time range
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('days=30')
+        expect.stringContaining('days=30'),
       );
     });
   });
@@ -232,9 +234,9 @@ describe('EnhancedDashboard Integration Tests', () => {
   it('displays error states gracefully', async () => {
     // Mock API failure
     mockFetch.mockRejectedValueOnce(new Error('Network Error'));
-    
+
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Network Error')).toBeInTheDocument();
     });
@@ -243,9 +245,9 @@ describe('EnhancedDashboard Integration Tests', () => {
   it('handles loading states across all components', async () => {
     // Mock slow API responses
     mockFetch.mockImplementation(() => new Promise(() => {}));
-    
+
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     // Should show loading states
     expect(screen.getByText('加载健康数据中...')).toBeInTheDocument();
     expect(screen.getByText('加载家庭成员中...')).toBeInTheDocument();
@@ -253,26 +255,26 @@ describe('EnhancedDashboard Integration Tests', () => {
 
   it('integrates quick actions with dashboard functionality', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('快速操作')).toBeInTheDocument();
     });
-    
+
     // Test quick action buttons
     const recordWeightButton = screen.getByText('记录体重');
     fireEvent.click(recordWeightButton);
-    
+
     // Should trigger appropriate action (mocked)
     expect(recordWeightButton).toBeInTheDocument();
   });
 
   it('displays health insights based on data', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康洞察')).toBeInTheDocument();
     });
-    
+
     // Should display insights based on health data
     await waitFor(() => {
       expect(screen.getByText(/增加运动量/)).toBeInTheDocument();
@@ -286,31 +288,33 @@ describe('EnhancedDashboard Integration Tests', () => {
       configurable: true,
       value: 375,
     });
-    
+
     Object.defineProperty(window, 'innerHeight', {
       writable: true,
       configurable: true,
       value: 667,
     });
-    
+
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康数据趋势')).toBeInTheDocument();
     });
-    
+
     // Should render mobile-friendly layout
-    const dashboard = screen.getByTestId('dashboard') || screen.getByText('健康数据趋势').closest('div');
+    const dashboard =
+      screen.getByTestId('dashboard') ||
+      screen.getByText('健康数据趋势').closest('div');
     expect(dashboard).toBeInTheDocument();
   });
 
   it('maintains data consistency across components', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('85')).toBeInTheDocument();
     });
-    
+
     // Health score should be consistent across different components
     const healthScoreElements = screen.getAllByText('85');
     expect(healthScoreElements.length).toBeGreaterThan(0);
@@ -318,38 +322,38 @@ describe('EnhancedDashboard Integration Tests', () => {
 
   it('handles component interactions correctly', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康数据趋势')).toBeInTheDocument();
     });
-    
+
     // Test metric selection in health chart
     const bodyFatButton = screen.getByText('体脂率');
     fireEvent.click(bodyFatButton);
-    
+
     // Should update chart display
     expect(bodyFatButton.closest('button')).toHaveClass('bg-blue-100');
   });
 
   it('calls all necessary APIs on component mount', async () => {
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        `/api/dashboard/family-members?familyId=${mockFamilyId}`
+        `/api/dashboard/family-members?familyId=${mockFamilyId}`,
       );
     });
-    
+
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/health-metrics')
+      expect.stringContaining('/health-metrics'),
     );
-    
+
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/health-score')
+      expect.stringContaining('/health-score'),
     );
-    
+
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/nutrition-trends')
+      expect.stringContaining('/nutrition-trends'),
     );
   });
 
@@ -362,15 +366,15 @@ describe('EnhancedDashboard Integration Tests', () => {
           json: async () => ({ data: [] }),
         });
       }
-      
+
       return Promise.resolve({
         ok: true,
         json: async () => ({ data: [] }),
       });
     });
-    
+
     render(<EnhancedDashboard familyId={mockFamilyId} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('暂无家庭成员')).toBeInTheDocument();
     });

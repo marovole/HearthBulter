@@ -79,23 +79,27 @@ describe('Nutrition Calculator Service', () => {
     });
 
     it('should handle invalid input gracefully', () => {
-      expect(() => calculateDailyMacros({
-        weight: 0,
-        height: 175,
-        age: 30,
-        gender: 'male',
-        activityLevel: 'moderate',
-        goal: 'maintain',
-      })).toThrow();
+      expect(() =>
+        calculateDailyMacros({
+          weight: 0,
+          height: 175,
+          age: 30,
+          gender: 'male',
+          activityLevel: 'moderate',
+          goal: 'maintain',
+        }),
+      ).toThrow();
 
-      expect(() => calculateDailyMacros({
-        weight: 70,
-        height: 0,
-        age: 30,
-        gender: 'male',
-        activityLevel: 'moderate',
-        goal: 'maintain',
-      })).toThrow();
+      expect(() =>
+        calculateDailyMacros({
+          weight: 70,
+          height: 0,
+          age: 30,
+          gender: 'male',
+          activityLevel: 'moderate',
+          goal: 'maintain',
+        }),
+      ).toThrow();
     });
   });
 
@@ -241,8 +245,14 @@ describe('Nutrition Calculator Service', () => {
       expect(mealPlan).toHaveLength(3);
 
       // Check that totals match daily targets
-      const totalCalories = mealPlan.reduce((sum, meal) => sum + meal.calories, 0);
-      const totalProtein = mealPlan.reduce((sum, meal) => sum + meal.protein, 0);
+      const totalCalories = mealPlan.reduce(
+        (sum, meal) => sum + meal.calories,
+        0,
+      );
+      const totalProtein = mealPlan.reduce(
+        (sum, meal) => sum + meal.protein,
+        0,
+      );
       const totalCarbs = mealPlan.reduce((sum, meal) => sum + meal.carbs, 0);
       const totalFat = mealPlan.reduce((sum, meal) => sum + meal.fat, 0);
 

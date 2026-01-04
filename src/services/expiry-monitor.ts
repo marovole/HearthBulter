@@ -1,27 +1,33 @@
-import { PrismaClient, InventoryItem, InventoryStatus, NotificationType, WasteReason } from '@prisma/client';
+import {
+  PrismaClient,
+  InventoryItem,
+  InventoryStatus,
+  NotificationType,
+  WasteReason,
+} from '@prisma/client';
 import { inventoryTracker } from './inventory-tracker';
 
 const prisma = new PrismaClient();
 
 export interface ExpiryAlert {
-  id: string
-  itemId: string
-  foodName: string
-  expiryDate: Date
-  daysToExpiry: number
-  status: InventoryStatus
-  quantity: number
-  unit: string
-  storageLocation: string
+  id: string;
+  itemId: string;
+  foodName: string;
+  expiryDate: Date;
+  daysToExpiry: number;
+  status: InventoryStatus;
+  quantity: number;
+  unit: string;
+  storageLocation: string;
 }
 
 export interface ExpirySummary {
-  memberId: string
-  expiredItems: ExpiryAlert[]
-  expiringItems: ExpiryAlert[]
-  totalExpiredValue: number
-  totalExpiringValue: number
-  recommendations: string[]
+  memberId: string;
+  expiredItems: ExpiryAlert[];
+  expiringItems: ExpiryAlert[];
+  totalExpiredValue: number;
+  totalExpiringValue: number;
+  recommendations: string[];
 }
 
 export class ExpiryMonitor {
@@ -54,14 +60,20 @@ export class ExpiryMonitor {
     }
 
     const daysToExpiry = this.calculateDaysToExpiry(item.expiryDate);
-    const newStatus = this.calculateInventoryStatus(item.quantity, item.expiryDate, item.minStockThreshold);
+    const newStatus = this.calculateInventoryStatus(
+      item.quantity,
+      item.expiryDate,
+      item.minStockThreshold,
+    );
 
     const updatedItem = await prisma.inventoryItem.update({
       where: { id: itemId },
       data: {
         daysToExpiry,
         status: newStatus,
-        isLowStock: item.minStockThreshold ? item.quantity <= item.minStockThreshold : false,
+        isLowStock: item.minStockThreshold
+          ? item.quantity <= item.minStockThreshold
+          : false,
       },
     });
 
@@ -102,7 +114,9 @@ export class ExpiryMonitor {
       const alert: ExpiryAlert = {
         id: item.id,
         itemId: item.id,
-        foodName: item.food.nameEn ? `${item.food.name} (${item.food.nameEn})` : item.food.name,
+        foodName: item.food.nameEn
+          ? `${item.food.name} (${item.food.nameEn})`
+          : item.food.name,
         expiryDate: item.expiryDate!,
         daysToExpiry: item.daysToExpiry || 0,
         status: item.status,
@@ -126,7 +140,10 @@ export class ExpiryMonitor {
       return sum + (this.estimateItemValue(item) || 0);
     }, 0);
 
-    const recommendations = this.generateRecommendations(expiredItems, expiringItems);
+    const recommendations = this.generateRecommendations(
+      expiredItems,
+      expiringItems,
+    );
 
     return {
       memberId,
@@ -151,19 +168,21 @@ export class ExpiryMonitor {
         'expired',
         `您有 ${summary.expiredItems.length} 件食材已过期`,
         this.buildExpiryMessage(summary.expiredItems, '已过期'),
-        summary.expiredItems
+        summary.expiredItems,
       );
     }
 
     // 临期物品通知（3天内过期）
-    const criticalExpiring = summary.expiringItems.filter(item => item.daysToExpiry <= 3);
+    const criticalExpiring = summary.expiringItems.filter(
+      (item) => item.daysToExpiry <= 3,
+    );
     if (criticalExpiring.length > 0) {
       await this.createExpiryNotification(
         memberId,
         'expiring',
         `您有 ${criticalExpiring.length} 件食材即将过期`,
         this.buildExpiryMessage(criticalExpiring, '即将过期'),
-        criticalExpiring
+        criticalExpiring,
       );
     }
   }
@@ -171,7 +190,11 @@ export class ExpiryMonitor {
   /**
    * 批量处理过期物品
    */
-  async handleExpiredItems(memberId: string, itemIds: string[], wasteReason: string = 'EXPIRED'): Promise<void> {
+  async handleExpiredItems(
+    memberId: string,
+    itemIds: string[],
+    wasteReason: string = 'EXPIRED',
+  ): Promise<void> {
     for (const itemId of itemIds) {
       const item = await prisma.inventoryItem.findUnique({
         where: { id: itemId },
@@ -209,11 +232,18 @@ export class ExpiryMonitor {
   /**
    * 获取保质期趋势分析
    */
-  async getExpiryTrends(memberId: string, days: number = 30): Promise<{
-    dailyExpiredCounts: Array<{ date: string; count: number }>
-    dailyExpiringCounts: Array<{ date: string; count: number }>
-    topWasteCategories: Array<{ category: string; count: number; value: number }>
-    wasteRate: number
+  async getExpiryTrends(
+    memberId: string,
+    days: number = 30,
+  ): Promise<{
+    dailyExpiredCounts: Array<{ date: string; count: number }>;
+    dailyExpiringCounts: Array<{ date: string; count: number }>;
+    topWasteCategories: Array<{
+      category: string;
+      count: number;
+      value: number;
+    }>;
+    wasteRate: number;
   }> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -247,7 +277,7 @@ export class ExpiryMonitor {
       dailyExpiringCounts[dateStr] = 0;
     }
 
-    wasteLogs.forEach(log => {
+    wasteLogs.forEach((log) => {
       const dateStr = log.createdAt.toISOString().split('T')[0];
       if (log.wasteReason === 'EXPIRED') {
         dailyExpiredCounts[dateStr] = (dailyExpiredCounts[dateStr] || 0) + 1;
@@ -256,8 +286,9 @@ export class ExpiryMonitor {
     });
 
     // 统计浪费最多的分类
-    const categoryStats: { [key: string]: { count: number; value: number } } = {};
-    wasteLogs.forEach(log => {
+    const categoryStats: { [key: string]: { count: number; value: number } } =
+      {};
+    wasteLogs.forEach((log) => {
       const category = log.inventoryItem.food.category;
       if (!categoryStats[category]) {
         categoryStats[category] = { count: 0, value: 0 };
@@ -275,11 +306,16 @@ export class ExpiryMonitor {
     const totalItems = await prisma.inventoryItem.count({
       where: { memberId, deletedAt: null },
     });
-    const wasteRate = totalItems > 0 ? (wasteLogs.length / totalItems) * 100 : 0;
+    const wasteRate =
+      totalItems > 0 ? (wasteLogs.length / totalItems) * 100 : 0;
 
     return {
-      dailyExpiredCounts: Object.entries(dailyExpiredCounts).map(([date, count]) => ({ date, count })),
-      dailyExpiringCounts: Object.entries(dailyExpiringCounts).map(([date, count]) => ({ date, count })),
+      dailyExpiredCounts: Object.entries(dailyExpiredCounts).map(
+        ([date, count]) => ({ date, count }),
+      ),
+      dailyExpiringCounts: Object.entries(dailyExpiringCounts).map(
+        ([date, count]) => ({ date, count }),
+      ),
       topWasteCategories,
       wasteRate,
     };
@@ -301,7 +337,7 @@ export class ExpiryMonitor {
   private calculateInventoryStatus(
     quantity: number,
     expiryDate: Date,
-    minStockThreshold?: number
+    minStockThreshold?: number,
   ): InventoryStatus {
     if (quantity <= 0) {
       return InventoryStatus.OUT_OF_STOCK;
@@ -334,7 +370,10 @@ export class ExpiryMonitor {
   /**
    * 生成建议
    */
-  private generateRecommendations(expiredItems: ExpiryAlert[], expiringItems: ExpiryAlert[]): string[] {
+  private generateRecommendations(
+    expiredItems: ExpiryAlert[],
+    expiringItems: ExpiryAlert[],
+  ): string[] {
     const recommendations: string[] = [];
 
     if (expiredItems.length > 0) {
@@ -349,8 +388,8 @@ export class ExpiryMonitor {
 
     // 根据存储位置给出建议
     const storageLocations = new Set([
-      ...expiredItems.map(item => item.storageLocation),
-      ...expiringItems.map(item => item.storageLocation),
+      ...expiredItems.map((item) => item.storageLocation),
+      ...expiringItems.map((item) => item.storageLocation),
     ]);
 
     if (storageLocations.has('REFRIGERATOR')) {
@@ -368,9 +407,13 @@ export class ExpiryMonitor {
    * 构建过期提醒消息
    */
   private buildExpiryMessage(items: ExpiryAlert[], type: string): string {
-    const itemList = items.slice(0, 5).map(item => 
-      `• ${item.foodName} (${item.quantity}${item.unit}) - ${item.daysToExpiry}天`
-    ).join('\n');
+    const itemList = items
+      .slice(0, 5)
+      .map(
+        (item) =>
+          `• ${item.foodName} (${item.quantity}${item.unit}) - ${item.daysToExpiry}天`,
+      )
+      .join('\n');
 
     let message = `以下食材${type}：\n\n${itemList}`;
 
@@ -391,19 +434,22 @@ export class ExpiryMonitor {
     type: 'expired' | 'expiring',
     title: string,
     content: string,
-    items: ExpiryAlert[]
+    items: ExpiryAlert[],
   ): Promise<void> {
     await prisma.notification.create({
       data: {
         memberId,
-        type: type === 'expired' ? NotificationType.EXPIRY_ALERT : NotificationType.EXPIRY_ALERT,
+        type:
+          type === 'expired'
+            ? NotificationType.EXPIRY_ALERT
+            : NotificationType.EXPIRY_ALERT,
         title,
         content,
         priority: type === 'expired' ? 'HIGH' : 'MEDIUM',
         metadata: {
           type,
           itemCount: items.length,
-          items: items.map(item => ({
+          items: items.map((item) => ({
             itemId: item.itemId,
             foodName: item.foodName,
             expiryDate: item.expiryDate,
@@ -426,15 +472,15 @@ export class ExpiryMonitor {
 
     // 根据存储位置给出特定建议
     switch (item.storageLocation) {
-    case 'REFRIGERATOR':
-      tips.push('确保冰箱温度在4°C以下');
-      break;
-    case 'FREEZER':
-      tips.push('冷冻可大幅延长保质期');
-      break;
-    case 'PANTRY':
-      tips.push('保持干燥通风环境');
-      break;
+      case 'REFRIGERATOR':
+        tips.push('确保冰箱温度在4°C以下');
+        break;
+      case 'FREEZER':
+        tips.push('冷冻可大幅延长保质期');
+        break;
+      case 'PANTRY':
+        tips.push('保持干燥通风环境');
+        break;
     }
 
     return tips[Math.floor(Math.random() * tips.length)];

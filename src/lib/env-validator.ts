@@ -4,8 +4,8 @@
  */
 
 interface EnvValidationError {
-  variable: string
-  message: string
+  variable: string;
+  message: string;
 }
 
 /**
@@ -17,11 +17,7 @@ export function validateEnvironmentVariables(): void {
   const isProduction = process.env.NODE_ENV === 'production';
 
   // 必需的环境变量
-  const requiredVars = [
-    'DATABASE_URL',
-    'NEXTAUTH_SECRET',
-    'NEXTAUTH_URL',
-  ];
+  const requiredVars = ['DATABASE_URL', 'NEXTAUTH_SECRET', 'NEXTAUTH_URL'];
 
   // 检查必需的环境变量
   for (const varName of requiredVars) {
@@ -44,7 +40,11 @@ export function validateEnvironmentVariables(): void {
           message: 'NEXTAUTH_SECRET 在生产环境中必须至少32个字符',
         });
       }
-      if (secret.includes('please-change') || secret.includes('example') || secret.includes('your-')) {
+      if (
+        secret.includes('please-change') ||
+        secret.includes('example') ||
+        secret.includes('your-')
+      ) {
         errors.push({
           variable: 'NEXTAUTH_SECRET',
           message: 'NEXTAUTH_SECRET 使用了示例值，请在生产环境中设置安全的密钥',
@@ -67,7 +67,7 @@ export function validateEnvironmentVariables(): void {
     const errorMessage = [
       '❌ 环境变量验证失败:',
       '',
-      ...errors.map(e => `  • ${e.variable}: ${e.message}`),
+      ...errors.map((e) => `  • ${e.variable}: ${e.message}`),
       '',
       '请检查您的 .env 文件并确保所有必需的环境变量都已正确设置。',
       '参考 .env.example 文件了解所需的环境变量。',
@@ -105,7 +105,7 @@ export function validateOptionalEnvironmentVariables(): void {
 
   if (warnings.length > 0) {
     console.warn('\n可选环境变量警告:');
-    warnings.forEach(w => console.warn(w));
+    warnings.forEach((w) => console.warn(w));
     console.warn('');
   }
 }

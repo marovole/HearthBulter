@@ -15,7 +15,7 @@ describe('accept_family_invite RPC', () => {
   beforeAll(async () => {
     supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
+      process.env.SUPABASE_SERVICE_KEY!,
     );
   });
 
@@ -222,10 +222,18 @@ describe('accept_family_invite RPC', () => {
     it('should return error if user is in another family', async () => {
       // Arrange
       const otherFamilyId = 'family-other-999';
-      
+
       await supabase.from('family').insert([
-        { id: testData.familyId, name: 'Test Family', creatorId: 'user-creator-123' },
-        { id: otherFamilyId, name: 'Other Family', creatorId: 'user-creator-456' },
+        {
+          id: testData.familyId,
+          name: 'Test Family',
+          creatorId: 'user-creator-123',
+        },
+        {
+          id: otherFamilyId,
+          name: 'Other Family',
+          creatorId: 'user-creator-456',
+        },
       ]);
 
       // User is already in another family
@@ -276,21 +284,25 @@ describe('accept_family_invite RPC', () => {
       });
 
       // Act: Simulate concurrent calls
-      const promises = Array(3).fill(null).map(() =>
-        supabase.rpc('accept_family_invite', {
-          p_invitation_id: testData.invitationId,
-          p_user_id: testData.userId,
-          p_member_name: 'Test User',
-        })
-      );
+      const promises = Array(3)
+        .fill(null)
+        .map(() =>
+          supabase.rpc('accept_family_invite', {
+            p_invitation_id: testData.invitationId,
+            p_user_id: testData.userId,
+            p_member_name: 'Test User',
+          }),
+        );
 
       const results = await Promise.all(promises);
 
       // Assert: Only one should succeed
-      const successCount = results.filter(r => r.data?.success).length;
+      const successCount = results.filter((r) => r.data?.success).length;
       expect(successCount).toBe(1);
 
-      const errorCount = results.filter(r => r.data?.success === false).length;
+      const errorCount = results.filter(
+        (r) => r.data?.success === false,
+      ).length;
       expect(errorCount).toBe(2);
     });
   });

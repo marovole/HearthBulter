@@ -41,10 +41,7 @@ describe('Supabase Adapter Enhancements', () => {
     });
 
     it('should support orderBy as array', () => {
-      const orderByConfig = [
-        { rarity: 'desc' },
-        { unlockedAt: 'desc' },
-      ];
+      const orderByConfig = [{ rarity: 'desc' }, { unlockedAt: 'desc' }];
       expect(orderByConfig).toBeDefined();
       expect(Array.isArray(orderByConfig)).toBe(true);
     });
@@ -93,10 +90,7 @@ describe('Supabase Adapter Enhancements', () => {
           },
           instructions: true,
         },
-        orderBy: [
-          { averageRating: 'desc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ averageRating: 'desc' }, { createdAt: 'desc' }],
         take: 10,
       };
 

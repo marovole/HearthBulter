@@ -225,7 +225,9 @@ export const updateInventoryItemSchema = z.object({
   expiry_date: stringSchema.optional(),
   purchase_date: stringSchema.optional(),
   location: stringSchema.optional(),
-  status: z.enum(['IN_STOCK', 'LOW_STOCK', 'EXPIRED', 'OUT_OF_STOCK']).optional(),
+  status: z
+    .enum(['IN_STOCK', 'LOW_STOCK', 'EXPIRED', 'OUT_OF_STOCK'])
+    .optional(),
 });
 
 // 购物清单相关模式
@@ -370,16 +372,18 @@ export const updateRecipeSchema = z.object({
 export const createInventoryNotificationsSchema = z.object({
   p_family_id: uuidSchema,
   p_notification_type: nonEmptyStringSchema,
-  p_items: z.array(z.object({
-    item_id: uuidSchema,
-    item_name: nonEmptyStringSchema,
-    current_quantity: numberSchema,
-    threshold_quantity: numberSchema,
-    expiry_date: stringSchema.optional(),
-    title: stringSchema.optional(),
-    message: stringSchema.optional(),
-    priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).default('MEDIUM'),
-  })),
+  p_items: z.array(
+    z.object({
+      item_id: uuidSchema,
+      item_name: nonEmptyStringSchema,
+      current_quantity: numberSchema,
+      threshold_quantity: numberSchema,
+      expiry_date: stringSchema.optional(),
+      title: stringSchema.optional(),
+      message: stringSchema.optional(),
+      priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).default('MEDIUM'),
+    }),
+  ),
 });
 
 // 接受邀请模式

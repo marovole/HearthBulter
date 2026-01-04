@@ -1,7 +1,7 @@
 /**
  * Price Estimator Service
  * 价格估算服务
- * 
+ *
  * 提供成本估算、预算检查和实际花费记录功能
  */
 
@@ -12,22 +12,22 @@ import type { FoodCategory } from '@prisma/client';
  * 价格估算结果
  */
 export interface PriceEstimate {
-  foodId: string
-  foodName: string
-  amount: number // 重量（g）
-  estimatedPrice: number // 估算价格（元）
-  unitPrice: number // 单价（元/100g）
+  foodId: string;
+  foodName: string;
+  amount: number; // 重量（g）
+  estimatedPrice: number; // 估算价格（元）
+  unitPrice: number; // 单价（元/100g）
 }
 
 /**
  * 预算检查结果
  */
 export interface BudgetCheckResult {
-  totalEstimatedCost: number
-  budget: number | null
-  isOverBudget: boolean
-  overBudgetAmount: number // 超预算金额（如果超预算）
-  recommendation?: string // 建议（如果超预算）
+  totalEstimatedCost: number;
+  budget: number | null;
+  isOverBudget: boolean;
+  overBudgetAmount: number; // 超预算金额（如果超预算）
+  recommendation?: string; // 建议（如果超预算）
 }
 
 /**
@@ -57,10 +57,7 @@ export class PriceEstimator {
    * @param amount 重量（g）
    * @returns 价格估算结果
    */
-  async estimatePrice(
-    foodId: string,
-    amount: number
-  ): Promise<PriceEstimate> {
+  async estimatePrice(foodId: string, amount: number): Promise<PriceEstimate> {
     // 查询食物信息
     const food = await prisma.food.findUnique({
       where: { id: foodId },
@@ -91,10 +88,10 @@ export class PriceEstimator {
    * @returns 价格估算结果列表
    */
   async estimatePrices(
-    items: Array<{ foodId: string; amount: number }>
+    items: Array<{ foodId: string; amount: number }>,
   ): Promise<PriceEstimate[]> {
     const estimates = await Promise.all(
-      items.map((item) => this.estimatePrice(item.foodId, item.amount))
+      items.map((item) => this.estimatePrice(item.foodId, item.amount)),
     );
 
     return estimates;
@@ -118,10 +115,7 @@ export class PriceEstimator {
    * @param budget 预算金额
    * @returns 预算检查结果
    */
-  checkBudget(
-    estimatedCost: number,
-    budget: number | null
-  ): BudgetCheckResult {
+  checkBudget(estimatedCost: number, budget: number | null): BudgetCheckResult {
     if (budget === null) {
       return {
         totalEstimatedCost: estimatedCost,
@@ -156,7 +150,7 @@ export class PriceEstimator {
   calculateTotalCost(estimates: PriceEstimate[]): number {
     return estimates.reduce(
       (total, estimate) => total + estimate.estimatedPrice,
-      0
+      0,
     );
   }
 
@@ -167,7 +161,7 @@ export class PriceEstimator {
    */
   async updateActualCost(
     shoppingListId: string,
-    actualCost: number
+    actualCost: number,
   ): Promise<void> {
     await prisma.shoppingList.update({
       where: { id: shoppingListId },
@@ -182,10 +176,7 @@ export class PriceEstimator {
    * @param actualCost 实际成本
    * @returns 建议文本
    */
-  getPriceTrendAdvice(
-    estimatedCost: number,
-    actualCost: number
-  ): string {
+  getPriceTrendAdvice(estimatedCost: number, actualCost: number): string {
     const diff = actualCost - estimatedCost;
     const diffPercent = (diff / estimatedCost) * 100;
 
@@ -201,4 +192,3 @@ export class PriceEstimator {
 
 // 导出单例实例
 export const priceEstimator = new PriceEstimator();
-

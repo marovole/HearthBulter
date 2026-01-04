@@ -22,10 +22,10 @@ export default function AnalyticsPage() {
 
     try {
       const response = await fetch(
-        `/api/analytics/health-score?memberId=${selectedMember}&days=7`
+        `/api/analytics/health-score?memberId=${selectedMember}&days=7`,
       );
       const data = await response.json();
-      
+
       if (data.success) {
         // 计算最新评分
         const trend = data.data;
@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
           const latest = trend[trend.length - 1];
           // 需要获取完整的评分详情
           const scoreResponse = await fetch(
-            `/api/analytics/health-score?memberId=${selectedMember}`
+            `/api/analytics/health-score?memberId=${selectedMember}`,
           );
           const scoreData = await scoreResponse.json();
           if (scoreData.success) {
@@ -57,10 +57,10 @@ export default function AnalyticsPage() {
 
     try {
       const response = await fetch(
-        `/api/analytics/trends?memberId=${selectedMember}&dataType=${dataType}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+        `/api/analytics/trends?memberId=${selectedMember}&dataType=${dataType}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
       );
       const data = await response.json();
-      
+
       if (data.success) {
         return data.data;
       }
@@ -76,10 +76,10 @@ export default function AnalyticsPage() {
 
     try {
       const response = await fetch(
-        `/api/analytics/anomalies?memberId=${selectedMember}&status=PENDING&limit=5`
+        `/api/analytics/anomalies?memberId=${selectedMember}&status=PENDING&limit=5`,
       );
       const data = await response.json();
-      
+
       if (data.success) {
         setAnomalies(data.data);
       }
@@ -89,7 +89,11 @@ export default function AnalyticsPage() {
   };
 
   // 处理异常操作
-  const handleAnomalyAction = async (anomalyId: string, action: string, resolution?: string) => {
+  const handleAnomalyAction = async (
+    anomalyId: string,
+    action: string,
+    resolution?: string,
+  ) => {
     try {
       const response = await fetch('/api/analytics/anomalies', {
         method: 'PATCH',
@@ -111,10 +115,7 @@ export default function AnalyticsPage() {
     const init = async () => {
       setLoading(true);
       if (selectedMember) {
-        await Promise.all([
-          loadHealthScore(),
-          loadAnomalies(),
-        ]);
+        await Promise.all([loadHealthScore(), loadAnomalies()]);
       }
       setLoading(false);
     };
@@ -124,7 +125,7 @@ export default function AnalyticsPage() {
   // 加载体重趋势（示例）
   useEffect(() => {
     if (selectedMember) {
-      loadTrendData('WEIGHT').then(data => {
+      loadTrendData('WEIGHT').then((data) => {
         if (data) {
           setTrendData(data);
         }
@@ -134,43 +135,43 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto'></div>
+          <p className='mt-4 text-gray-600'>加载中...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className='container mx-auto px-4 py-8'>
       {/* 页面标题 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">健康分析</h1>
-        <p className="text-gray-600">查看您的健康数据趋势和分析报告</p>
+      <div className='mb-8'>
+        <h1 className='text-3xl font-bold text-gray-900 mb-2'>健康分析</h1>
+        <p className='text-gray-600'>查看您的健康数据趋势和分析报告</p>
       </div>
 
       {/* 筛选器 */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 flex gap-4">
+      <div className='bg-white rounded-lg shadow-sm p-4 mb-6 flex gap-4'>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className='block text-sm font-medium text-gray-700 mb-2'>
             选择成员
           </label>
           <select
             value={selectedMember}
             onChange={(e) => setSelectedMember(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
+            className='border border-gray-300 rounded-md px-3 py-2'
           >
-            <option value="">请选择...</option>
+            <option value=''>请选择...</option>
             {/* 这里应该从API加载家庭成员列表 */}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className='block text-sm font-medium text-gray-700 mb-2'>
             时间范围
           </label>
-          <div className="flex gap-2">
+          <div className='flex gap-2'>
             {(['7d', '30d', '90d'] as const).map((range) => (
               <button
                 key={range}
@@ -189,14 +190,14 @@ export default function AnalyticsPage() {
       </div>
 
       {!selectedMember ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
-          <p className="text-blue-700">请先选择一个家庭成员查看分析数据</p>
+        <div className='bg-blue-50 border border-blue-200 rounded-lg p-8 text-center'>
+          <p className='text-blue-700'>请先选择一个家庭成员查看分析数据</p>
         </div>
       ) : (
         <>
           {/* 健康评分卡片 */}
           {healthScore && (
-            <div className="mb-6">
+            <div className='mb-6'>
               <HealthScoreCard
                 score={healthScore.overallScore}
                 grade={healthScore.grade}
@@ -208,14 +209,16 @@ export default function AnalyticsPage() {
 
           {/* 异常警报 */}
           {anomalies.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">需要关注的异常</h2>
+            <div className='mb-6'>
+              <h2 className='text-xl font-semibold mb-4'>需要关注的异常</h2>
               {anomalies.map((anomaly) => (
                 <AnomalyAlert
                   key={anomaly.id}
                   anomaly={anomaly}
                   onAcknowledge={(id) => handleAnomalyAction(id, 'acknowledge')}
-                  onResolve={(id, resolution) => handleAnomalyAction(id, 'resolve', resolution)}
+                  onResolve={(id, resolution) =>
+                    handleAnomalyAction(id, 'resolve', resolution)
+                  }
                   onIgnore={(id) => handleAnomalyAction(id, 'ignore')}
                 />
               ))}
@@ -223,13 +226,13 @@ export default function AnalyticsPage() {
           )}
 
           {/* 趋势图表 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6'>
             {trendData && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className='bg-white rounded-lg shadow-sm p-6'>
                 <TrendChart
                   data={trendData.dataPoints}
-                  title="体重趋势"
-                  unit="kg"
+                  title='体重趋势'
+                  unit='kg'
                   showPredictions={true}
                   predictions={trendData.predictions}
                 />
@@ -238,18 +241,22 @@ export default function AnalyticsPage() {
           </div>
 
           {/* 快速操作 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">快速操作</h2>
-            <div className="flex gap-4">
+          <div className='bg-white rounded-lg shadow-sm p-6'>
+            <h2 className='text-xl font-semibold mb-4'>快速操作</h2>
+            <div className='flex gap-4'>
               <button
-                onClick={() => window.location.href = '/dashboard/analytics/reports'}
-                className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                onClick={() =>
+                  (window.location.href = '/dashboard/analytics/reports')
+                }
+                className='px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors'
               >
                 查看报告历史
               </button>
               <button
-                onClick={() => window.location.href = '/dashboard/analytics/generate'}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                onClick={() =>
+                  (window.location.href = '/dashboard/analytics/generate')
+                }
+                className='px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors'
               >
                 生成新报告
               </button>
@@ -260,4 +267,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-

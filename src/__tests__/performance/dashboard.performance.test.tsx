@@ -19,8 +19,8 @@ const MockHeavyComponent: React.FC<HeavyComponentProps> = ({ dataCount }) => {
   }));
 
   return (
-    <div data-testid="heavy-component">
-      {data.map(item => (
+    <div data-testid='heavy-component'>
+      {data.map((item) => (
         <div key={item.id} data-testid={`item-${item.id}`}>
           {item.value.toFixed(2)}
         </div>
@@ -38,9 +38,9 @@ describe('Dashboard Performance Tests', () => {
 
   it('renders large datasets efficiently', async () => {
     const startTime = performance.now();
-    
+
     render(<MockHeavyComponent dataCount={1000} />);
-    
+
     const endTime = performance.now();
     const renderTime = endTime - startTime;
 
@@ -61,11 +61,11 @@ describe('Dashboard Performance Tests', () => {
     // Render and unrender multiple times
     for (let i = 0; i < 10; i++) {
       const { unmount } = render(<MockHeavyComponent dataCount={500} />);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('heavy-component')).toBeInTheDocument();
       });
-      
+
       unmount();
     }
 
@@ -83,15 +83,17 @@ describe('Dashboard Performance Tests', () => {
 
   it('performs well with concurrent updates', async () => {
     const startTime = performance.now();
-    
+
     // Simulate concurrent data updates
-    const promises = Array.from({ length: 5 }, (_, i) =>
-      new Promise<void>(resolve => {
-        setTimeout(() => {
-          render(<MockHeavyComponent dataCount={200} />);
-          resolve();
-        }, i * 10);
-      })
+    const promises = Array.from(
+      { length: 5 },
+      (_, i) =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            render(<MockHeavyComponent dataCount={200} />);
+            resolve();
+          }, i * 10);
+        }),
     );
 
     await Promise.all(promises);
@@ -110,7 +112,7 @@ describe('Dashboard Performance Tests', () => {
 
     const MemoizedComponent = React.memo(({ data }: { data: MemoizedData }) => {
       renderCount++;
-      return <div data-testid="memoized-component">{data.length} items</div>;
+      return <div data-testid='memoized-component'>{data.length} items</div>;
     });
 
     MemoizedComponent.displayName = 'MemoizedComponent';
@@ -146,16 +148,19 @@ describe('Dashboard Performance Tests', () => {
       y: number;
     }
 
-    const optimizeChartData = (data: ChartPoint[], maxPoints: number): ChartPoint[] => {
+    const optimizeChartData = (
+      data: ChartPoint[],
+      maxPoints: number,
+    ): ChartPoint[] => {
       if (data.length <= maxPoints) return data;
-      
+
       const step = Math.ceil(data.length / maxPoints);
       const optimized = [];
-      
+
       for (let i = 0; i < data.length; i += step) {
         optimized.push(data[i]);
       }
-      
+
       return optimized;
     };
 
@@ -165,9 +170,9 @@ describe('Dashboard Performance Tests', () => {
     }));
 
     const startTime = performance.now();
-    
+
     const optimizedData = optimizeChartData(largeData, 1000);
-    
+
     const endTime = performance.now();
     const optimizationTime = endTime - startTime;
 
@@ -189,24 +194,30 @@ describe('Dashboard Performance Tests', () => {
       containerHeight: number;
     }
 
-    const VirtualList: React.FC<VirtualListProps> = ({ items, itemHeight, containerHeight }) => {
+    const VirtualList: React.FC<VirtualListProps> = ({
+      items,
+      itemHeight,
+      containerHeight,
+    }) => {
       const [scrollTop, setScrollTop] = React.useState(0);
-      
+
       const startIndex = Math.floor(scrollTop / itemHeight);
       const endIndex = Math.min(
         startIndex + Math.ceil(containerHeight / itemHeight) + 1,
-        items.length
+        items.length,
       );
-      
+
       const visibleItems = items.slice(startIndex, endIndex);
-      
+
       return (
         <div
-          data-testid="virtual-list"
+          data-testid='virtual-list'
           style={{ height: containerHeight, overflow: 'auto' }}
           onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
         >
-          <div style={{ height: items.length * itemHeight, position: 'relative' }}>
+          <div
+            style={{ height: items.length * itemHeight, position: 'relative' }}
+          >
             {visibleItems.map((item, index) => (
               <div
                 key={item.id}
@@ -227,21 +238,20 @@ describe('Dashboard Performance Tests', () => {
 
     VirtualList.displayName = 'VirtualList';
 
-    const largeItems: VirtualListItem[] = Array.from({ length: 10000 }, (_, i) => ({
-      id: i,
-      value: `Item ${i}`,
-    }));
+    const largeItems: VirtualListItem[] = Array.from(
+      { length: 10000 },
+      (_, i) => ({
+        id: i,
+        value: `Item ${i}`,
+      }),
+    );
 
     const startTime = performance.now();
-    
+
     render(
-      <VirtualList 
-        items={largeItems} 
-        itemHeight={40} 
-        containerHeight={400} 
-      />
+      <VirtualList items={largeItems} itemHeight={40} containerHeight={400} />,
     );
-    
+
     const endTime = performance.now();
     const renderTime = endTime - startTime;
 
@@ -258,9 +268,12 @@ describe('Dashboard Performance Tests', () => {
 
   it('optimizes API calls with debouncing', async () => {
     const mockApiCall = jest.fn().mockResolvedValue({ data: [] });
-    
+
     // Mock debounce implementation
-    const debounce = <Args extends unknown[]>(fn: (...args: Args) => void | Promise<unknown>, delay: number) => {
+    const debounce = <Args extends unknown[]>(
+      fn: (...args: Args) => void | Promise<unknown>,
+      delay: number,
+    ) => {
       let timeoutId: ReturnType<typeof setTimeout>;
       return (...args: Args) => {
         clearTimeout(timeoutId);
@@ -276,7 +289,7 @@ describe('Dashboard Performance Tests', () => {
     debouncedApiCall('test3');
 
     // Wait for debounce
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Should only call API once
     expect(mockApiCall).toHaveBeenCalledTimes(1);
@@ -284,22 +297,25 @@ describe('Dashboard Performance Tests', () => {
   });
 
   it('measures component performance correctly', async () => {
-    const performanceMetrics: Array<{ componentName: string; renderTime: number }> = [];
+    const performanceMetrics: Array<{
+      componentName: string;
+      renderTime: number;
+    }> = [];
 
     const withPerformanceMeasurement = <P extends Record<string, unknown>>(
       WrappedComponent: React.ComponentType<P>,
-      name: string
+      name: string,
     ) => {
       const ComponentWithMeasurement: React.FC<P> = (props) => {
         const startTime = performance.now();
         const result = <WrappedComponent {...props} />;
         const endTime = performance.now();
-        
+
         performanceMetrics.push({
           componentName: name,
           renderTime: endTime - startTime,
         });
-        
+
         return result;
       };
 
@@ -307,9 +323,14 @@ describe('Dashboard Performance Tests', () => {
       return ComponentWithMeasurement;
     };
 
-    const TestComponent: React.FC = () => <div data-testid="test-component">Test</div>;
+    const TestComponent: React.FC = () => (
+      <div data-testid='test-component'>Test</div>
+    );
     TestComponent.displayName = 'TestComponent';
-    const MeasuredComponent = withPerformanceMeasurement(TestComponent, 'TestComponent');
+    const MeasuredComponent = withPerformanceMeasurement(
+      TestComponent,
+      'TestComponent',
+    );
     MeasuredComponent.displayName = 'MeasuredComponent';
 
     render(<MeasuredComponent />);
@@ -318,7 +339,9 @@ describe('Dashboard Performance Tests', () => {
       expect(screen.getByTestId('test-component')).toBeInTheDocument();
     });
 
-    const metric = performanceMetrics.find(m => m.componentName === 'TestComponent');
+    const metric = performanceMetrics.find(
+      (m) => m.componentName === 'TestComponent',
+    );
     expect(metric).toBeDefined();
     expect(metric!.renderTime).toBeGreaterThan(0);
   });

@@ -33,10 +33,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -55,7 +52,7 @@ export async function POST(request: NextRequest) {
       if (!member) {
         return NextResponse.json(
           { error: '无权限访问该家庭成员' },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
@@ -71,7 +68,7 @@ export async function POST(request: NextRequest) {
       if (!sameFamilyCheck) {
         return NextResponse.json(
           { error: '无权限访问该家庭成员' },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -89,15 +86,15 @@ export async function POST(request: NextRequest) {
       });
 
       if (!devicesResult.success || !devicesResult.data) {
-        console.error('RPC fetch_devices_for_sync failed:', devicesResult.error);
-        return NextResponse.json(
-          { error: '查询设备失败' },
-          { status: 500 }
+        console.error(
+          'RPC fetch_devices_for_sync failed:',
+          devicesResult.error,
         );
+        return NextResponse.json({ error: '查询设备失败' }, { status: 500 });
       }
 
       // 映射 RPC 数据结构到原有格式
-      devicesToSync = devicesResult.data.devices.map(d => ({
+      devicesToSync = devicesResult.data.devices.map((d) => ({
         id: d.id,
         deviceId: d.deviceId,
         deviceName: d.deviceName,
@@ -150,12 +147,13 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      const memberIds = userMembers.map(m => m.id);
+      const memberIds = userMembers.map((m) => m.id);
 
       // 手动查询设备
       let devicesQuery = supabase
         .from('device_connections')
-        .select(`
+        .select(
+          `
           id,
           deviceId,
           deviceName,
@@ -163,7 +161,8 @@ export async function POST(request: NextRequest) {
           memberId,
           syncStatus,
           member:family_members!inner(id, name)
-        `)
+        `,
+        )
         .eq('isActive', true)
         .eq('isAutoSync', true)
         .neq('syncStatus', 'DISABLED')
@@ -177,10 +176,7 @@ export async function POST(request: NextRequest) {
 
       if (devicesError) {
         console.error('查询设备失败:', devicesError);
-        return NextResponse.json(
-          { error: '查询设备失败' },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: '查询设备失败' }, { status: 500 });
       }
 
       if (!devices || devices.length === 0) {
@@ -207,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     // 更新设备状态
     const deviceUpdatePromises = syncResults.results.map(async (result) => {
-      const device = devicesToSync.find(d => d.deviceId === result.deviceId);
+      const device = devicesToSync.find((d) => d.deviceId === result.deviceId);
       if (!device) return null;
 
       try {
@@ -254,15 +250,16 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    const updatedResults = (await Promise.all(deviceUpdatePromises))
-      .filter(result => result !== null);
+    const updatedResults = (await Promise.all(deviceUpdatePromises)).filter(
+      (result) => result !== null,
+    );
 
     // 统计结果
     const summary = {
       total: devicesToSync.length,
-      success: updatedResults.filter(r => r.success && !r.skipped).length,
-      failed: updatedResults.filter(r => !r.success).length,
-      skipped: updatedResults.filter(r => r.skipped).length,
+      success: updatedResults.filter((r) => r.success && !r.skipped).length,
+      failed: updatedResults.filter((r) => !r.success).length,
+      skipped: updatedResults.filter((r) => r.skipped).length,
     };
 
     return NextResponse.json({
@@ -274,21 +271,17 @@ export async function POST(request: NextRequest) {
         duration: syncResults.duration,
       },
     });
-
   } catch (error) {
     console.error('批量设备同步失败:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '参数错误', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -302,10 +295,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -338,12 +328,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const memberIds = userMembers.map(m => m.id);
+    const memberIds = userMembers.map((m) => m.id);
 
     // 构建查询条件
     let syncQuery = supabase
       .from('health_data')
-      .select(`
+      .select(
+        `
         id,
         dataType,
         value,
@@ -355,7 +346,9 @@ export async function GET(request: NextRequest) {
         deviceConnectionId,
         member:family_members!inner(id, name),
         deviceConnection:device_connections(id, deviceId, deviceName, platform)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' },
+      )
       .in('memberId', memberIds)
       .in('source', ['APPLE_HEALTHKIT', 'HUAWEI_HEALTH', 'GOOGLE_FIT'])
       .order('createdAt', { ascending: false })
@@ -365,14 +358,15 @@ export async function GET(request: NextRequest) {
       syncQuery = syncQuery.eq('memberId', memberId);
     }
 
-    const { data: syncHistory, error: syncError, count: total } = await syncQuery;
+    const {
+      data: syncHistory,
+      error: syncError,
+      count: total,
+    } = await syncQuery;
 
     if (syncError) {
       console.error('获取同步历史失败:', syncError);
-      return NextResponse.json(
-        { error: '获取同步历史失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '获取同步历史失败' }, { status: 500 });
     }
 
     // 获取最近30天的日统计数据
@@ -387,7 +381,7 @@ export async function GET(request: NextRequest) {
 
     // 客户端分组统计
     const dailyStatsMap: Record<string, number> = {};
-    (recentData || []).forEach(record => {
+    (recentData || []).forEach((record) => {
       const date = new Date(record.createdAt).toISOString().split('T')[0];
       dailyStatsMap[date] = (dailyStatsMap[date] || 0) + 1;
     });
@@ -412,12 +406,8 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
   } catch (error) {
     console.error('获取同步历史失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

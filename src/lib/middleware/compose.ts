@@ -3,7 +3,7 @@
  * 支持链式调用多个中间件
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
 export type MiddlewareResult<T> =
   | { success: true; context: T }

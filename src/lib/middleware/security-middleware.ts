@@ -14,7 +14,15 @@ interface SecurityHeadersConfig {
   xFrameOptions?: 'DENY' | 'SAMEORIGIN' | 'ALLOW-FROM';
   xContentTypeOptions?: boolean;
   xXssProtection?: boolean;
-  referrerPolicy?: 'no-referrer' | 'no-referrer-when-downgrade' | 'origin' | 'origin-when-cross-origin' | 'same-origin' | 'strict-origin' | 'strict-origin-when-cross-origin' | 'unsafe-url';
+  referrerPolicy?:
+    | 'no-referrer'
+    | 'no-referrer-when-downgrade'
+    | 'origin'
+    | 'origin-when-cross-origin'
+    | 'same-origin'
+    | 'strict-origin'
+    | 'strict-origin-when-cross-origin'
+    | 'unsafe-url';
   permissionsPolicy?: Record<string, boolean>;
   crossOriginEmbedderPolicy?: boolean;
   crossOriginOpenerPolicy?: boolean;
@@ -30,17 +38,36 @@ const DEFAULT_SECURITY_CONFIG: SecurityHeadersConfig = {
   },
   contentSecurityPolicy: {
     directives: {
-      'default-src': ['\'self\''],
-      'script-src': ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\'', 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
-      'style-src': ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
-      'font-src': ['\'self\'', 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
-      'img-src': ['\'self\'', 'data:', 'https:', 'blob:'],
-      'connect-src': ['\'self\'', 'https://api.nal.usda.gov', 'https://*.upstash.io'],
-      'frame-src': ['\'none\''],
-      'object-src': ['\'none\''],
-      'base-uri': ['\'self\''],
-      'form-action': ['\'self\''],
-      'frame-ancestors': ['\'none\''],
+      'default-src': ["'self'"],
+      'script-src': [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        'https://cdn.jsdelivr.net',
+        'https://cdnjs.cloudflare.com',
+      ],
+      'style-src': [
+        "'self'",
+        "'unsafe-inline'",
+        'https://fonts.googleapis.com',
+        'https://cdn.jsdelivr.net',
+      ],
+      'font-src': [
+        "'self'",
+        'https://fonts.gstatic.com',
+        'https://cdn.jsdelivr.net',
+      ],
+      'img-src': ["'self'", 'data:', 'https:', 'blob:'],
+      'connect-src': [
+        "'self'",
+        'https://api.nal.usda.gov',
+        'https://*.upstash.io',
+      ],
+      'frame-src': ["'none'"],
+      'object-src': ["'none'"],
+      'base-uri': ["'self'"],
+      'form-action': ["'self'"],
+      'frame-ancestors': ["'none'"],
       'upgrade-insecure-requests': [],
     },
   },
@@ -49,14 +76,14 @@ const DEFAULT_SECURITY_CONFIG: SecurityHeadersConfig = {
   xXssProtection: true,
   referrerPolicy: 'strict-origin-when-cross-origin',
   permissionsPolicy: {
-    'camera': false,
-    'microphone': false,
-    'geolocation': false,
-    'payment': false,
-    'usb': false,
-    'magnetometer': false,
-    'gyroscope': false,
-    'accelerometer': false,
+    camera: false,
+    microphone: false,
+    geolocation: false,
+    payment: false,
+    usb: false,
+    magnetometer: false,
+    gyroscope: false,
+    accelerometer: false,
   },
   crossOriginEmbedderPolicy: false, // 根据实际需求启用
   crossOriginOpenerPolicy: true,
@@ -69,8 +96,24 @@ const DEVELOPMENT_SECURITY_CONFIG: SecurityHeadersConfig = {
   contentSecurityPolicy: {
     directives: {
       ...DEFAULT_SECURITY_CONFIG.contentSecurityPolicy!.directives,
-      'script-src': ['\'self\'', '\'unsafe-inline\'', '\'unsafe-eval\'', 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com', 'ws:', 'wss:'],
-      'connect-src': ['\'self\'', 'https://api.nal.usda.gov', 'https://*.upstash.io', 'ws:', 'wss:', 'http://localhost:*', 'https://localhost:*'],
+      'script-src': [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        'https://cdn.jsdelivr.net',
+        'https://cdnjs.cloudflare.com',
+        'ws:',
+        'wss:',
+      ],
+      'connect-src': [
+        "'self'",
+        'https://api.nal.usda.gov',
+        'https://*.upstash.io',
+        'ws:',
+        'wss:',
+        'http://localhost:*',
+        'https://localhost:*',
+      ],
     },
   },
   strictTransportSecurity: undefined, // 开发环境不启用HSTS
@@ -121,7 +164,7 @@ export class SecurityMiddleware {
   private generateCSPHeader(directives: Record<string, string[]>): string {
     return Object.entries(directives)
       .map(([key, values]) => {
-        const value = values.length > 0 ? values.join(' ') : '\'none\'';
+        const value = values.length > 0 ? values.join(' ') : "'none'";
         return `${key} ${value}`;
       })
       .join('; ');
@@ -130,14 +173,20 @@ export class SecurityMiddleware {
   /**
    * 应用安全头
    */
-  applySecurityHeaders(request: NextRequest, response: NextResponse): NextResponse {
+  applySecurityHeaders(
+    request: NextRequest,
+    response: NextResponse,
+  ): NextResponse {
     const pathname = request.nextUrl.pathname;
     const isApiRoute = pathname.startsWith('/api/');
     const config = isApiRoute ? API_SECURITY_CONFIG : this.config;
 
     try {
       // Strict-Transport-Security (HSTS)
-      if (config.strictTransportSecurity && process.env.NODE_ENV === 'production') {
+      if (
+        config.strictTransportSecurity &&
+        process.env.NODE_ENV === 'production'
+      ) {
         const hsts = config.strictTransportSecurity;
         let hstsValue = `max-age=${hsts.maxAge}`;
 
@@ -154,7 +203,9 @@ export class SecurityMiddleware {
 
       // Content-Security-Policy
       if (config.contentSecurityPolicy) {
-        const cspValue = this.generateCSPHeader(config.contentSecurityPolicy.directives);
+        const cspValue = this.generateCSPHeader(
+          config.contentSecurityPolicy.directives,
+        );
         response.headers.set('Content-Security-Policy', cspValue);
       }
 
@@ -202,7 +253,10 @@ export class SecurityMiddleware {
 
       // Cross-Origin Resource Policy
       if (config.crossOriginResourcePolicy) {
-        response.headers.set('Cross-Origin-Resource-Policy', config.crossOriginResourcePolicy);
+        response.headers.set(
+          'Cross-Origin-Resource-Policy',
+          config.crossOriginResourcePolicy,
+        );
       }
 
       // 额外的安全头
@@ -218,12 +272,13 @@ export class SecurityMiddleware {
       logger.debug('安全头已应用', {
         type: 'security',
         pathname,
-        headersCount: Array.from(response.headers.keys()).filter(key =>
-          key.includes('Security') ||
-          key.includes('X-') ||
-          key.includes('Content-Security') ||
-          key.includes('Permissions') ||
-          key.includes('Cross-Origin')
+        headersCount: Array.from(response.headers.keys()).filter(
+          (key) =>
+            key.includes('Security') ||
+            key.includes('X-') ||
+            key.includes('Content-Security') ||
+            key.includes('Permissions') ||
+            key.includes('Cross-Origin'),
         ).length,
       });
 
@@ -270,7 +325,7 @@ export class SecurityMiddleware {
       /java/i,
     ];
 
-    if (suspiciousPatterns.some(pattern => pattern.test(userAgent))) {
+    if (suspiciousPatterns.some((pattern) => pattern.test(userAgent))) {
       reasons.push('可疑的User-Agent');
       riskLevel = 'medium';
     }
@@ -282,7 +337,11 @@ export class SecurityMiddleware {
     }
 
     // 检查Origin头（对于API请求）
-    if (request.nextUrl.pathname.startsWith('/api/') && origin && !this.isValidOrigin(origin)) {
+    if (
+      request.nextUrl.pathname.startsWith('/api/') &&
+      origin &&
+      !this.isValidOrigin(origin)
+    ) {
       reasons.push('无效的Origin头');
       riskLevel = 'high';
     }
@@ -296,7 +355,15 @@ export class SecurityMiddleware {
 
     // 检查请求方法
     const method = request.method;
-    const allowedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'];
+    const allowedMethods = [
+      'GET',
+      'POST',
+      'PUT',
+      'DELETE',
+      'PATCH',
+      'OPTIONS',
+      'HEAD',
+    ];
     if (!allowedMethods.includes(method)) {
       reasons.push(`不支持的HTTP方法: ${method}`);
       riskLevel = 'high';
@@ -304,7 +371,8 @@ export class SecurityMiddleware {
 
     // 检查请求大小（对于POST/PUT请求）
     const contentLength = request.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) { // 50MB
+    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
+      // 50MB
       reasons.push('请求体过大');
       riskLevel = 'medium';
     }
@@ -346,7 +414,9 @@ export class SecurityMiddleware {
         process.env.NEXTAUTH_URL?.split('/')[2],
       ].filter(Boolean);
 
-      return allowedReferers.some(allowed => refererUrl.hostname.includes(allowed));
+      return allowedReferers.some((allowed) =>
+        refererUrl.hostname.includes(allowed),
+      );
     } catch {
       return false;
     }
@@ -365,7 +435,7 @@ export class SecurityMiddleware {
         process.env.ALLOWED_ORIGIN,
       ].filter(Boolean);
 
-      return allowedOrigins.some(allowed => {
+      return allowedOrigins.some((allowed) => {
         if (!allowed) return false;
         const allowedUrl = new URL(allowed);
         return allowedUrl.hostname === originUrl.hostname;
@@ -381,11 +451,11 @@ export class SecurityMiddleware {
   private isSuspiciousIp(ip: string): boolean {
     // 这里可以集成IP黑名单服务
     const suspiciousRanges = [
-      '10.0.0.',      // 示例：私有网络
-      '192.168.',     // 示例：私有网络
+      '10.0.0.', // 示例：私有网络
+      '192.168.', // 示例：私有网络
     ];
 
-    return suspiciousRanges.some(range => ip.startsWith(range));
+    return suspiciousRanges.some((range) => ip.startsWith(range));
   }
 
   /**
@@ -426,10 +496,7 @@ export function middleware(request: NextRequest) {
       reasons: validation.reasons,
     });
 
-    return NextResponse.json(
-      { error: '请求被安全策略拒绝' },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: '请求被安全策略拒绝' }, { status: 403 });
   }
 
   // 应用安全头

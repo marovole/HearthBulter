@@ -144,7 +144,6 @@ export class AssetOptimizer {
 
       longTaskObserver.observe({ entryTypes: ['longtask'] });
       this.observers.push(longTaskObserver);
-
     } catch (error) {
       console.warn('性能观察器初始化失败:', error);
     }
@@ -158,7 +157,8 @@ export class AssetOptimizer {
       return;
     }
 
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker
+      .register('/sw.js')
       .then((registration) => {
         console.log('Service Worker 注册成功:', registration);
       })
@@ -212,13 +212,17 @@ export class AssetOptimizer {
   /**
    * 创建资源指标
    */
-  private createAssetMetrics(resource: PerformanceResourceTiming): AssetMetrics {
+  private createAssetMetrics(
+    resource: PerformanceResourceTiming,
+  ): AssetMetrics {
     const url = new URL(resource.name);
     const fileName = url.pathname.split('/').pop() || 'unknown';
     const extension = fileName.split('.').pop()?.toLowerCase() || '';
 
     let type: AssetMetrics['type'] = 'other';
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'avif'].includes(extension)) {
+    if (
+      ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'avif'].includes(extension)
+    ) {
       type = 'image';
     } else if (['js', 'mjs'].includes(extension)) {
       type = 'script';
@@ -250,18 +254,21 @@ export class AssetOptimizer {
   /**
    * 检查资源是否已优化
    */
-  private isAssetOptimized(fileName: string, type: AssetMetrics['type']): boolean {
+  private isAssetOptimized(
+    fileName: string,
+    type: AssetMetrics['type'],
+  ): boolean {
     const extension = fileName.split('.').pop()?.toLowerCase() || '';
 
     switch (type) {
-    case 'image':
-      return ['webp', 'avif'].includes(extension);
-    case 'script':
-      return fileName.includes('.min.') || fileName.includes('.bundle.');
-    case 'style':
-      return fileName.includes('.min.') || fileName.includes('.critical.');
-    default:
-      return false;
+      case 'image':
+        return ['webp', 'avif'].includes(extension);
+      case 'script':
+        return fileName.includes('.min.') || fileName.includes('.bundle.');
+      case 'style':
+        return fileName.includes('.min.') || fileName.includes('.critical.');
+      default:
+        return false;
     }
   }
 
@@ -328,28 +335,28 @@ export class AssetOptimizer {
     };
 
     switch (type) {
-    case 'image':
-      return {
-        loadTime: { warning: 500, error: 1500 },
-        size: { warning: 500 * 1024, error: 2 * 1024 * 1024 }, // 500KB / 2MB
-      };
-    case 'script':
-      return {
-        loadTime: { warning: 300, error: 1000 },
-        size: { warning: 200 * 1024, error: 1024 * 1024 }, // 200KB / 1MB
-      };
-    case 'style':
-      return {
-        loadTime: { warning: 200, error: 800 },
-        size: { warning: 100 * 1024, error: 500 * 1024 }, // 100KB / 500KB
-      };
-    case 'font':
-      return {
-        loadTime: { warning: 300, error: 1000 },
-        size: { warning: 150 * 1024, error: 500 * 1024 }, // 150KB / 500KB
-      };
-    default:
-      return baseThresholds;
+      case 'image':
+        return {
+          loadTime: { warning: 500, error: 1500 },
+          size: { warning: 500 * 1024, error: 2 * 1024 * 1024 }, // 500KB / 2MB
+        };
+      case 'script':
+        return {
+          loadTime: { warning: 300, error: 1000 },
+          size: { warning: 200 * 1024, error: 1024 * 1024 }, // 200KB / 1MB
+        };
+      case 'style':
+        return {
+          loadTime: { warning: 200, error: 800 },
+          size: { warning: 100 * 1024, error: 500 * 1024 }, // 100KB / 500KB
+        };
+      case 'font':
+        return {
+          loadTime: { warning: 300, error: 1000 },
+          size: { warning: 150 * 1024, error: 500 * 1024 }, // 150KB / 500KB
+        };
+      default:
+        return baseThresholds;
     }
   }
 
@@ -360,29 +367,29 @@ export class AssetOptimizer {
     const recommendations: string[] = [];
 
     switch (metrics.type) {
-    case 'image':
-      recommendations.push('使用WebP或AVIF格式');
-      recommendations.push('启用图片懒加载');
-      recommendations.push('使用响应式图片');
-      recommendations.push('压缩图片质量');
-      break;
-    case 'script':
-      recommendations.push('压缩JavaScript代码');
-      recommendations.push('启用代码分割');
-      recommendations.push('移除未使用的代码');
-      recommendations.push('使用Tree Shaking');
-      break;
-    case 'style':
-      recommendations.push('压缩CSS代码');
-      recommendations.push('内联关键CSS');
-      recommendations.push('移除未使用的样式');
-      recommendations.push('使用CSS Purging');
-      break;
-    case 'font':
-      recommendations.push('使用字体子集');
-      recommendations.push('启用字体预加载');
-      recommendations.push('使用字体显示策略');
-      break;
+      case 'image':
+        recommendations.push('使用WebP或AVIF格式');
+        recommendations.push('启用图片懒加载');
+        recommendations.push('使用响应式图片');
+        recommendations.push('压缩图片质量');
+        break;
+      case 'script':
+        recommendations.push('压缩JavaScript代码');
+        recommendations.push('启用代码分割');
+        recommendations.push('移除未使用的代码');
+        recommendations.push('使用Tree Shaking');
+        break;
+      case 'style':
+        recommendations.push('压缩CSS代码');
+        recommendations.push('内联关键CSS');
+        recommendations.push('移除未使用的样式');
+        recommendations.push('使用CSS Purging');
+        break;
+      case 'font':
+        recommendations.push('使用字体子集');
+        recommendations.push('启用字体预加载');
+        recommendations.push('使用字体显示策略');
+        break;
     }
 
     recommendations.push('启用资源缓存');
@@ -394,11 +401,15 @@ export class AssetOptimizer {
   /**
    * 分析页面加载性能
    */
-  private analyzePageLoadPerformance(navigation: PerformanceNavigationTiming): void {
+  private analyzePageLoadPerformance(
+    navigation: PerformanceNavigationTiming,
+  ): void {
     const loadTime = navigation.loadEventEnd - navigation.startTime;
-    const domContentLoaded = navigation.domContentLoadedEventEnd - navigation.startTime;
+    const domContentLoaded =
+      navigation.domContentLoadedEventEnd - navigation.startTime;
     const firstPaint = this.getMetricByName('first-paint')?.startTime || 0;
-    const firstContentfulPaint = this.getMetricByName('first-contentful-paint')?.startTime || 0;
+    const firstContentfulPaint =
+      this.getMetricByName('first-contentful-paint')?.startTime || 0;
 
     const vitals = {
       loadTime,
@@ -476,12 +487,15 @@ export class AssetOptimizer {
   /**
    * 优化图片URL
    */
-  optimizeImageUrl(url: string, options?: {
-    width?: number;
-    height?: number;
-    quality?: number;
-    format?: 'webp' | 'avif' | 'auto';
-  }): string {
+  optimizeImageUrl(
+    url: string,
+    options?: {
+      width?: number;
+      height?: number;
+      quality?: number;
+      format?: 'webp' | 'avif' | 'auto';
+    },
+  ): string {
     if (!this.config.imageCompression.enabled) {
       return url;
     }
@@ -498,7 +512,10 @@ export class AssetOptimizer {
       params.set('f', this.config.imageCompression.format);
     }
 
-    params.set('q', (options?.quality || this.config.imageCompression.quality).toString());
+    params.set(
+      'q',
+      (options?.quality || this.config.imageCompression.quality).toString(),
+    );
 
     optimizedUrl.search = params.toString();
     return optimizedUrl.toString();
@@ -507,7 +524,10 @@ export class AssetOptimizer {
   /**
    * 预加载资源
    */
-  preloadResource(url: string, type: 'script' | 'style' | 'image' | 'font'): void {
+  preloadResource(
+    url: string,
+    type: 'script' | 'style' | 'image' | 'font',
+  ): void {
     if (typeof document === 'undefined') return;
 
     const link = document.createElement('link');
@@ -515,20 +535,20 @@ export class AssetOptimizer {
     link.href = url;
 
     switch (type) {
-    case 'script':
-      link.as = 'script';
-      break;
-    case 'style':
-      link.as = 'style';
-      break;
-    case 'image':
-      link.as = 'image';
-      break;
-    case 'font':
-      link.as = 'font';
-      link.type = 'font/woff2';
-      link.crossOrigin = 'anonymous';
-      break;
+      case 'script':
+        link.as = 'script';
+        break;
+      case 'style':
+        link.as = 'style';
+        break;
+      case 'image':
+        link.as = 'image';
+        break;
+      case 'font':
+        link.as = 'font';
+        link.type = 'font/woff2';
+        link.crossOrigin = 'anonymous';
+        break;
     }
 
     document.head.appendChild(link);
@@ -541,16 +561,16 @@ export class AssetOptimizer {
     const allMetrics = Array.from(this.metrics.values());
 
     const totalSize = allMetrics.reduce((sum, m) => sum + m.size, 0);
-    const totalLoadTime = Math.max(...allMetrics.map(m => m.loadTime));
-    const cachedCount = allMetrics.filter(m => m.cached).length;
-    const optimizedCount = allMetrics.filter(m => m.optimized).length;
+    const totalLoadTime = Math.max(...allMetrics.map((m) => m.loadTime));
+    const cachedCount = allMetrics.filter((m) => m.cached).length;
+    const optimizedCount = allMetrics.filter((m) => m.optimized).length;
 
     const metricsByType = {
-      image: allMetrics.filter(m => m.type === 'image'),
-      script: allMetrics.filter(m => m.type === 'script'),
-      style: allMetrics.filter(m => m.type === 'style'),
-      font: allMetrics.filter(m => m.type === 'font'),
-      other: allMetrics.filter(m => m.type === 'other'),
+      image: allMetrics.filter((m) => m.type === 'image'),
+      script: allMetrics.filter((m) => m.type === 'script'),
+      style: allMetrics.filter((m) => m.type === 'style'),
+      font: allMetrics.filter((m) => m.type === 'font'),
+      other: allMetrics.filter((m) => m.type === 'other'),
     };
 
     return {
@@ -562,9 +582,9 @@ export class AssetOptimizer {
       cacheHitRate: (cachedCount / allMetrics.length) * 100,
       optimizationRate: (optimizedCount / allMetrics.length) * 100,
       metricsByType,
-      slowAssets: allMetrics.filter(m => m.loadTime > 1000),
-      largeAssets: allMetrics.filter(m => m.size > 1024 * 1024),
-      unoptimizedAssets: allMetrics.filter(m => !m.optimized && !m.cached),
+      slowAssets: allMetrics.filter((m) => m.loadTime > 1000),
+      largeAssets: allMetrics.filter((m) => m.size > 1024 * 1024),
+      unoptimizedAssets: allMetrics.filter((m) => !m.optimized && !m.cached),
     };
   }
 
@@ -596,7 +616,9 @@ export const assetOptimizer = AssetOptimizer.getInstance();
 
 // React Hook for asset optimization
 export function useAssetOptimization() {
-  const [report, setReport] = React.useState(() => assetOptimizer.getPerformanceReport());
+  const [report, setReport] = React.useState(() =>
+    assetOptimizer.getPerformanceReport(),
+  );
 
   React.useEffect(() => {
     const interval = setInterval(() => {
