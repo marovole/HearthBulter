@@ -41,28 +41,29 @@ export class DataFetcher {
   static subscribeToData(
     channel: string,
     table: string,
-    callback: (data: any) => void
+    callback: (data: any) => void,
   ) {
     return supabase
       .channel(channel)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table },
-        callback
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table }, callback)
       .subscribe();
   }
 
   // 获取健康数据
-  static async getHealthData(userId: string, options?: { limit?: number; offset?: number; type?: string }) {
+  static async getHealthData(
+    userId: string,
+    options?: { limit?: number; offset?: number; type?: string },
+  ) {
     const { limit = 20, offset = 0, type } = options || {};
-    
+
     let query = supabase
       .from('health_data')
-      .select(`
+      .select(
+        `
         *,
         user:users!user_id(id, name, email)
-      `)
+      `,
+      )
       .eq('user_id', userId)
       .order('recorded_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -88,13 +89,16 @@ export class DataFetcher {
   }
 
   // 创建健康数据
-  static async createHealthData(userId: string, data: {
-    data_type: string
-    value: number
-    unit?: string
-    recorded_at?: string
-    metadata?: Record<string, any>
-  }) {
+  static async createHealthData(
+    userId: string,
+    data: {
+      data_type: string;
+      value: number;
+      unit?: string;
+      recorded_at?: string;
+      metadata?: Record<string, any>;
+    },
+  ) {
     const { data_type, value, unit, recorded_at, metadata = {} } = data;
 
     if (!data_type || !value) {

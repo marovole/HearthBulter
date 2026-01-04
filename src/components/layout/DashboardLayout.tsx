@@ -19,22 +19,20 @@ export function DashboardLayout({
   return (
     <div className={cn('min-h-screen bg-background', className)}>
       {header && (
-        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className='border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
           {header}
         </header>
       )}
 
-      <div className="flex">
+      <div className='flex'>
         {sidebar && (
-          <aside className="w-64 border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <aside className='w-64 border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
             {sidebar}
           </aside>
         )}
 
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
+        <main className='flex-1 p-6'>
+          <div className='max-w-7xl mx-auto'>{children}</div>
         </main>
       </div>
     </div>

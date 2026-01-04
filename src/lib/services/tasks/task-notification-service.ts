@@ -15,12 +15,15 @@ export class TaskNotificationService {
   /**
    * 发送任务分配通知
    */
-  async sendTaskAssignment(memberId: string, taskData: {
-    taskTitle: string;
-    description: string;
-    dueDate: string;
-    assignerName: string;
-  }): Promise<void> {
+  async sendTaskAssignment(
+    memberId: string,
+    taskData: {
+      taskTitle: string;
+      description: string;
+      dueDate: string;
+      assignerName: string;
+    },
+  ): Promise<void> {
     try {
       await this.notificationManager.createNotification({
         memberId,
@@ -48,19 +51,24 @@ export class TaskNotificationService {
   /**
    * 发送任务截止提醒
    */
-  async sendTaskDueReminder(memberId: string, taskData: {
-    taskTitle: string;
-    dueDate: string;
-    hoursRemaining: number;
-  }): Promise<void> {
+  async sendTaskDueReminder(
+    memberId: string,
+    taskData: {
+      taskTitle: string;
+      dueDate: string;
+      hoursRemaining: number;
+    },
+  ): Promise<void> {
     try {
-      const priority = taskData.hoursRemaining <= 24 
-        ? NotificationPriority.HIGH 
-        : NotificationPriority.MEDIUM;
+      const priority =
+        taskData.hoursRemaining <= 24
+          ? NotificationPriority.HIGH
+          : NotificationPriority.MEDIUM;
 
-      const channels = taskData.hoursRemaining <= 24 
-        ? ['IN_APP', 'EMAIL', 'SMS'] 
-        : ['IN_APP', 'EMAIL'];
+      const channels =
+        taskData.hoursRemaining <= 24
+          ? ['IN_APP', 'EMAIL', 'SMS']
+          : ['IN_APP', 'EMAIL'];
 
       await this.notificationManager.createNotification({
         memberId,
@@ -85,11 +93,14 @@ export class TaskNotificationService {
   /**
    * 发送任务完成通知
    */
-  async sendTaskCompletion(memberId: string, taskData: {
-    taskTitle: string;
-    completedAt: string;
-    pointsEarned?: number;
-  }): Promise<void> {
+  async sendTaskCompletion(
+    memberId: string,
+    taskData: {
+      taskTitle: string;
+      completedAt: string;
+      pointsEarned?: number;
+    },
+  ): Promise<void> {
     try {
       let content = `恭喜！您已完成任务"${taskData.taskTitle}"。`;
       if (taskData.pointsEarned) {
@@ -119,16 +130,19 @@ export class TaskNotificationService {
   /**
    * 批量发送团队任务通知
    */
-  async sendTeamTaskNotification(familyId: string, taskData: {
-    taskTitle: string;
-    description: string;
-    dueDate: string;
-    creatorName: string;
-  }): Promise<void> {
+  async sendTeamTaskNotification(
+    familyId: string,
+    taskData: {
+      taskTitle: string;
+      description: string;
+      dueDate: string;
+      creatorName: string;
+    },
+  ): Promise<void> {
     try {
       const familyMembers = await this.getFamilyMembers(familyId);
-      
-      const notifications = familyMembers.map(memberId => ({
+
+      const notifications = familyMembers.map((memberId) => ({
         memberId,
         type: NotificationType.TASK_NOTIFICATION,
         templateData: {
@@ -156,10 +170,13 @@ export class TaskNotificationService {
   /**
    * 发送任务超期通知
    */
-  async sendTaskOverdueNotification(memberId: string, taskData: {
-    taskTitle: string;
-    overdueDays: number;
-  }): Promise<void> {
+  async sendTaskOverdueNotification(
+    memberId: string,
+    taskData: {
+      taskTitle: string;
+      overdueDays: number;
+    },
+  ): Promise<void> {
     try {
       await this.notificationManager.createNotification({
         memberId,
@@ -204,7 +221,7 @@ export class TaskNotificationService {
       where: { familyId },
       select: { id: true },
     });
-    return members.map(member => member.id);
+    return members.map((member) => member.id);
   }
 }
 

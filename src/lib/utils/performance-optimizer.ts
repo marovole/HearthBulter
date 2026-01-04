@@ -1,7 +1,7 @@
 /**
  * Performance Optimizer
  * 性能优化工具
- * 
+ *
  * 提供图表渲染优化、数据懒加载、缓存管理等功能
  */
 
@@ -57,11 +57,11 @@ export class ChartDataOptimizer {
    */
   static aggregateDataByTime(
     data: Array<{ date: Date; value: number }>,
-    interval: 'hour' | 'day' | 'week' | 'month'
+    interval: 'hour' | 'day' | 'week' | 'month',
   ): Array<{ date: Date; value: number; count: number }> {
     const grouped = new Map<string, number[]>();
 
-    data.forEach(item => {
+    data.forEach((item) => {
       const key = this.getTimeKey(item.date, interval);
       if (!grouped.has(key)) {
         grouped.set(key, []);
@@ -78,18 +78,18 @@ export class ChartDataOptimizer {
 
   private static getTimeKey(date: Date, interval: string): string {
     switch (interval) {
-    case 'hour':
-      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
-    case 'day':
-      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-    case 'week':
-      const weekStart = new Date(date);
-      weekStart.setDate(date.getDate() - date.getDay());
-      return `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`;
-    case 'month':
-      return `${date.getFullYear()}-${date.getMonth()}`;
-    default:
-      return date.toISOString();
+      case 'hour':
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
+      case 'day':
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      case 'week':
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        return `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`;
+      case 'month':
+        return `${date.getFullYear()}-${date.getMonth()}`;
+      default:
+        return date.toISOString();
     }
   }
 }
@@ -99,7 +99,7 @@ export class ChartDataOptimizer {
  */
 export function useLazyLoad<T>(
   loader: () => Promise<T>,
-  dependencies: any[] = []
+  dependencies: any[] = [],
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
@@ -113,11 +113,11 @@ export function useLazyLoad<T>(
     setError(null);
 
     loader()
-      .then(result => {
+      .then((result) => {
         setData(result);
         loadedRef.current = true;
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err instanceof Error ? err : new Error(String(err)));
       })
       .finally(() => {
@@ -131,11 +131,11 @@ export function useLazyLoad<T>(
     setError(null);
 
     loader()
-      .then(result => {
+      .then((result) => {
         setData(result);
         loadedRef.current = true;
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err instanceof Error ? err : new Error(String(err)));
       })
       .finally(() => {
@@ -152,7 +152,7 @@ export function useLazyLoad<T>(
 export function useVirtualList<T>(
   items: T[],
   itemHeight: number,
-  containerHeight: number
+  containerHeight: number,
 ) {
   const [scrollTop, setScrollTop] = useState(0);
 
@@ -160,7 +160,7 @@ export function useVirtualList<T>(
     const startIndex = Math.floor(scrollTop / itemHeight);
     const endIndex = Math.min(
       startIndex + Math.ceil(containerHeight / itemHeight) + 1,
-      items.length
+      items.length,
     );
 
     return items.slice(startIndex, endIndex).map((item, index) => ({
@@ -197,24 +197,28 @@ export function usePerformanceMonitor(name: string) {
     return () => {
       if (startTimeRef.current) {
         const duration = performance.now() - startTimeRef.current;
-        console.log(`[Performance] ${name} render #${renderCountRef.current}: ${duration.toFixed(2)}ms`);
+        console.log(
+          `[Performance] ${name} render #${renderCountRef.current}: ${duration.toFixed(2)}ms`,
+        );
       }
     };
   });
 
-  const measureFunction = useCallback(<T extends any[], R>(
-    fn: (...args: T) => R,
-    fnName?: string
-  ) => {
-    return (...args: T): R => {
-      const start = performance.now();
-      const result = fn(...args);
-      const end = performance.now();
-      
-      console.log(`[Performance] ${fnName || name}: ${(end - start).toFixed(2)}ms`);
-      return result;
-    };
-  }, [name]);
+  const measureFunction = useCallback(
+    <T extends any[], R>(fn: (...args: T) => R, fnName?: string) => {
+      return (...args: T): R => {
+        const start = performance.now();
+        const result = fn(...args);
+        const end = performance.now();
+
+        console.log(
+          `[Performance] ${fnName || name}: ${(end - start).toFixed(2)}ms`,
+        );
+        return result;
+      };
+    },
+    [name],
+  );
 
   return { measureFunction };
 }
@@ -223,7 +227,10 @@ export function usePerformanceMonitor(name: string) {
  * 内存缓存管理器
  */
 export class MemoryCacheManager {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  private cache = new Map<
+    string,
+    { data: any; timestamp: number; ttl: number }
+  >();
   private maxSize: number;
   private cleanupInterval: NodeJS.Timeout;
 
@@ -234,7 +241,8 @@ export class MemoryCacheManager {
     }, cleanupIntervalMs);
   }
 
-  set(key: string, data: any, ttl: number = 300000) { // 默认5分钟TTL
+  set(key: string, data: any, ttl: number = 300000) {
+    // 默认5分钟TTL
     // 如果缓存已满，删除最旧的项
     if (this.cache.size >= this.maxSize) {
       const oldestKey = this.cache.keys().next().value;
@@ -337,12 +345,15 @@ export function useThrottle<T>(value: T, delay: number): T {
   const lastExecuted = useRef<number>(Date.now());
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      if (Date.now() - lastExecuted.current >= delay) {
-        setThrottledValue(value);
-        lastExecuted.current = Date.now();
-      }
-    }, delay - (Date.now() - lastExecuted.current));
+    const handler = setTimeout(
+      () => {
+        if (Date.now() - lastExecuted.current >= delay) {
+          setThrottledValue(value);
+          lastExecuted.current = Date.now();
+        }
+      },
+      delay - (Date.now() - lastExecuted.current),
+    );
 
     return () => {
       clearTimeout(handler);
@@ -401,8 +412,10 @@ export class ResourcePreloader {
   /**
    * 预加载多个资源
    */
-  async preloadResources(resources: Array<{ type: 'image' | 'script'; src: string }>) {
-    const promises = resources.map(resource => {
+  async preloadResources(
+    resources: Array<{ type: 'image' | 'script'; src: string }>,
+  ) {
+    const promises = resources.map((resource) => {
       if (resource.type === 'image') {
         return this.preloadImage(resource.src);
       } else if (resource.type === 'script') {

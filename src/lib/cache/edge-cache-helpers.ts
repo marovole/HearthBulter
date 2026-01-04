@@ -54,17 +54,16 @@ export interface EdgeCacheOptions {
  * const cacheControl = buildCacheControlHeader({ maxAge: 60, staleWhileRevalidate: 30 });
  * // "public, s-maxage=60, stale-while-revalidate=30"
  */
-export function buildCacheControlHeader(options: EdgeCacheOptions = {}): string {
+export function buildCacheControlHeader(
+  options: EdgeCacheOptions = {},
+): string {
   const {
     maxAge = 60,
     staleWhileRevalidate = 30,
     private: isPrivate = false,
   } = options;
 
-  const directives = [
-    isPrivate ? 'private' : 'public',
-    `s-maxage=${maxAge}`,
-  ];
+  const directives = [isPrivate ? 'private' : 'public', `s-maxage=${maxAge}`];
 
   if (staleWhileRevalidate > 0) {
     directives.push(`stale-while-revalidate=${staleWhileRevalidate}`);
@@ -107,7 +106,7 @@ export function buildVaryHeader(varyBy: string[] = []): string {
 export function buildCacheKey(
   path: string,
   userId: string,
-  params: Record<string, string | number | boolean | null | undefined> = {}
+  params: Record<string, string | number | boolean | null | undefined> = {},
 ): string {
   const cleanPath = path.replace(/^\//, '');
 
@@ -186,7 +185,7 @@ export const EDGE_CACHE_PRESETS = {
  */
 export function addCacheHeaders(
   headers: Headers,
-  options: EdgeCacheOptions = {}
+  options: EdgeCacheOptions = {},
 ): void {
   headers.set('Cache-Control', buildCacheControlHeader(options));
 

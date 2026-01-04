@@ -15,14 +15,14 @@ export const formatDate = (dateString: string): string => {
 
 export const getSourceLabel = (source: string): string => {
   switch (source) {
-  case 'MANUAL':
-    return '手动录入';
-  case 'WEARABLE':
-    return '可穿戴设备';
-  case 'MEDICAL_REPORT':
-    return '体检报告';
-  default:
-    return source;
+    case 'MANUAL':
+      return '手动录入';
+    case 'WEARABLE':
+      return '可穿戴设备';
+    case 'MEDICAL_REPORT':
+      return '体检报告';
+    default:
+      return source;
   }
 };
 
@@ -32,6 +32,6 @@ export const getSourceBadgeClass = (source: string): string => {
     WEARABLE: 'bg-green-100 text-green-800',
     MEDICAL_REPORT: 'bg-purple-100 text-purple-800',
   };
-  
+
   return styles[source as keyof typeof styles] || 'bg-gray-100 text-gray-800';
 };

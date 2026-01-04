@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -21,7 +18,10 @@ export async function GET(request: NextRequest) {
 
     if (consentId) {
       // 获取特定同意状态
-      const hasConsent = await consentManager.checkConsent(session.user.id, consentId);
+      const hasConsent = await consentManager.checkConsent(
+        session.user.id,
+        consentId,
+      );
       const consentType = getConsentType(consentId);
 
       return NextResponse.json({
@@ -39,8 +39,11 @@ export async function GET(request: NextRequest) {
           description: type.description,
           required: type.required,
           category: type.category,
-          hasConsent: await consentManager.checkConsent(session.user.id, type.id),
-        }))
+          hasConsent: await consentManager.checkConsent(
+            session.user.id,
+            type.id,
+          ),
+        })),
       );
 
       return NextResponse.json({
@@ -51,7 +54,7 @@ export async function GET(request: NextRequest) {
     console.error('Consent GET error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -61,10 +64,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     if (!consentId) {
       return NextResponse.json(
         { error: 'Consent ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     if (!consentType) {
       return NextResponse.json(
         { error: 'Invalid consent ID' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         {
           ipAddress: request.ip,
           userAgent: request.headers.get('user-agent') || undefined,
-        }
+        },
       );
 
       return NextResponse.json({
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
         {
           ipAddress: request.ip,
           userAgent: request.headers.get('user-agent') || undefined,
-        }
+        },
       );
 
       return NextResponse.json({
@@ -130,14 +130,14 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json(
         { error: 'Invalid action. Use "request" or "grant".' },
-        { status: 400 }
+        { status: 400 },
       );
     }
   } catch (error) {
     console.error('Consent POST error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -147,10 +147,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -159,7 +156,7 @@ export async function DELETE(request: NextRequest) {
     if (!consentId) {
       return NextResponse.json(
         { error: 'Consent ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -173,7 +170,7 @@ export async function DELETE(request: NextRequest) {
     console.error('Consent DELETE error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

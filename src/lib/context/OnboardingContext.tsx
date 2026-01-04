@@ -1,17 +1,25 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 
 interface OnboardingContextType {
-  isOnboardingCompleted: boolean
-  currentStep: number
-  loading: boolean
-  completeOnboarding: () => void
-  saveProgress: (step: number) => void
-  resetOnboarding: () => void
+  isOnboardingCompleted: boolean;
+  currentStep: number;
+  loading: boolean;
+  completeOnboarding: () => void;
+  saveProgress: (step: number) => void;
+  resetOnboarding: () => void;
 }
 
-const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
+const OnboardingContext = createContext<OnboardingContextType | undefined>(
+  undefined,
+);
 
 export function useOnboarding() {
   const context = useContext(OnboardingContext);
@@ -22,7 +30,7 @@ export function useOnboarding() {
 }
 
 interface OnboardingProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
@@ -36,7 +44,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       try {
         const savedStatus = localStorage.getItem('onboarding-completed');
         const savedStep = localStorage.getItem('onboarding-current-step');
-        
+
         setIsOnboardingCompleted(savedStatus === 'true');
         setCurrentStep(savedStep ? parseInt(savedStep, 10) : 0);
       } catch (error) {

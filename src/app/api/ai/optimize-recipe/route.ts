@@ -1,42 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireAuth } from '@/lib/middleware/api-auth';
+import { checkAIRateLimit } from '@/lib/middleware/api-rate-limit';
 import { recipeOptimizer } from '@/lib/services/ai/recipe-optimizer';
 import { prisma } from '@/lib/db';
-import { rateLimiter } from '@/lib/services/ai/rate-limiter';
-import { sensitiveFilter } from '@/lib/services/sensitive-filter';
+import { logger } from '@/lib/logger';
 
-// Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth();
+    if (!authResult.success) return authResult.response;
+    const { userId } = authResult.context;
 
-    // 速率限制检查
-    const rateLimitResult = await rateLimiter.checkLimit(
-      session.user.id,
+    const rateLimitResult = await checkAIRateLimit(
+      userId,
       'ai_optimize_recipe',
     );
-
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        {
-          error: 'Rate limit exceeded',
-          retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime,
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
-          },
-        },
-      );
-    }
+    if (!rateLimitResult.success) return rateLimitResult.response;
 
     const body = await request.json();
     const {
@@ -60,12 +40,12 @@ export async function POST(request: NextRequest) {
       where: {
         id: memberId,
         OR: [
-          { userId: session.user.id },
+          { userId },
           {
             family: {
               members: {
                 some: {
-                  userId: session.user.id,
+                  userId,
                   role: 'ADMIN',
                 },
               },
@@ -185,7 +165,7 @@ export async function POST(request: NextRequest) {
       generatedAt: aiAdvice.generatedAt,
     });
   } catch (error) {
-    console.error('Recipe optimization API error:', error);
+    logger.error('Recipe optimization API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },
@@ -196,10 +176,9 @@ export async function POST(request: NextRequest) {
 // GET 方法用于获取食材替代建议
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth();
+    if (!authResult.success) return authResult.response;
+    const { userId } = authResult.context;
 
     const { searchParams } = new URL(request.url);
     const ingredient = searchParams.get('ingredient');
@@ -218,12 +197,12 @@ export async function GET(request: NextRequest) {
       where: {
         id: memberId,
         OR: [
-          { userId: session.user.id },
+          { userId },
           {
             family: {
               members: {
                 some: {
-                  userId: session.user.id,
+                  userId,
                   role: 'ADMIN',
                 },
               },
@@ -265,7 +244,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ substitutions });
   } catch (error) {
-    console.error('Ingredient substitution API error:', error);
+    logger.error('Ingredient substitution API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

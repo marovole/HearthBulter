@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: 'memberId is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       console.error('Error getting user preferences:', error);
       return NextResponse.json(
         { error: 'Failed to fetch user preferences' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -85,12 +85,11 @@ export async function GET(request: NextRequest) {
       success: true,
       preferences: normalizedPreferences,
     });
-
   } catch (error) {
     console.error('Error getting user preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -109,7 +108,7 @@ export async function POST(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: 'memberId is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -152,7 +151,7 @@ export async function POST(request: NextRequest) {
       console.error('Error updating user preferences:', error);
       return NextResponse.json(
         { error: 'Failed to update user preferences' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -168,12 +167,11 @@ export async function POST(request: NextRequest) {
       success: true,
       preferences: normalizedPreference,
     });
-
   } catch (error) {
     console.error('Error updating user preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

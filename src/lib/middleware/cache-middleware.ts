@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from '@/lib/cache/redis-client';
+import {
+  CacheService,
+  CacheKeyBuilder,
+  CACHE_CONFIG,
+} from '@/lib/cache/redis-client';
 
 // 缓存中间件配置
 interface CacheMiddlewareOptions {
@@ -22,10 +26,7 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
 
   return async (request: NextRequest): Promise<NextResponse | null> => {
     // 跳过缓存的条件
-    if (
-      request.method !== 'GET' ||
-      skipCache(request)
-    ) {
+    if (request.method !== 'GET' || skipCache(request)) {
       return null;
     }
 
@@ -51,9 +52,13 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
       if (cachedResponse) {
         // 检查 Vary 头部
         const cachedVary = cachedResponse.headers['vary'];
-        const shouldVary = cachedVary && varyHeaders.some(header =>
-          request.headers.get(header) !== cachedResponse.headers[`x-${header}`]
-        );
+        const shouldVary =
+          cachedVary &&
+          varyHeaders.some(
+            (header) =>
+              request.headers.get(header) !==
+              cachedResponse.headers[`x-${header}`],
+          );
 
         if (!shouldVary) {
           // 返回缓存响应
@@ -64,7 +69,13 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
 
           // 添加缓存标识
           response.headers.set('X-Cache', 'HIT');
-          response.headers.set('Age', String(Math.floor(Date.now() / 1000) - parseInt(cachedResponse.headers['x-cached-at'] || '0')));
+          response.headers.set(
+            'Age',
+            String(
+              Math.floor(Date.now() / 1000) -
+                parseInt(cachedResponse.headers['x-cached-at'] || '0'),
+            ),
+          );
 
           return response;
         }
@@ -83,7 +94,7 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
 export function wrapResponseWithCache(
   response: NextResponse,
   request: NextRequest,
-  options: CacheMiddlewareOptions = {}
+  options: CacheMiddlewareOptions = {},
 ): NextResponse {
   const {
     ttl = CACHE_CONFIG.TTL.API_RESPONSE,
@@ -119,7 +130,7 @@ export function wrapResponseWithCache(
       // 添加 Vary 相关信息
       if (varyHeaders.length > 0) {
         headers['vary'] = varyHeaders.join(', ');
-        varyHeaders.forEach(header => {
+        varyHeaders.forEach((header) => {
           const value = request.headers.get(header);
           if (value) {
             headers[`x-${header}`] = value;
@@ -134,11 +145,15 @@ export function wrapResponseWithCache(
       const body = await response.text();
 
       // 缓存响应数据
-      await CacheService.set(cacheKey, {
-        status: response.status,
-        headers,
-        body,
-      }, ttl);
+      await CacheService.set(
+        cacheKey,
+        {
+          status: response.status,
+          headers,
+          body,
+        },
+        ttl,
+      );
     } catch (error) {
       console.error('Response caching error:', error);
     }
@@ -171,7 +186,7 @@ export const defaultCacheMiddlewareOptions: CacheMiddlewareOptions = {
         '/api/realtime',
       ];
 
-      return skipPatterns.some(pattern => pathname.includes(pattern));
+      return skipPatterns.some((pattern) => pathname.includes(pattern));
     }
 
     return false;
@@ -181,7 +196,9 @@ export const defaultCacheMiddlewareOptions: CacheMiddlewareOptions = {
 /**
  * 预定义的缓存中间件
  */
-export const cacheMiddleware = createCacheMiddleware(defaultCacheMiddlewareOptions);
+export const cacheMiddleware = createCacheMiddleware(
+  defaultCacheMiddlewareOptions,
+);
 
 /**
  * 静态资源缓存中间件
@@ -209,6 +226,6 @@ export const userDataCacheMiddleware = createCacheMiddleware({
       '/api/families/members',
     ];
 
-    return sensitivePatterns.some(pattern => pathname.includes(pattern));
+    return sensitivePatterns.some((pattern) => pathname.includes(pattern));
   },
 });

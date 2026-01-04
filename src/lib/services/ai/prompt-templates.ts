@@ -5,7 +5,11 @@ export interface PromptTemplate {
   id: string;
   name: string;
   version: string;
-  category: 'health_analysis' | 'recipe_optimization' | 'nutrition_consultation' | 'report_generation';
+  category:
+    | 'health_analysis'
+    | 'recipe_optimization'
+    | 'nutrition_consultation'
+    | 'report_generation';
   template: string;
   parameters: string[];
   outputFormat: 'text' | 'json';
@@ -42,7 +46,16 @@ export const HEALTH_ANALYSIS_PROMPTS: Record<string, PromptTemplate> = {
 5. 建议检查的项目
 
 请用中文回答，保持专业性和易懂性。`,
-    parameters: ['medical_data', 'age', 'gender', 'height', 'weight', 'health_goals', 'dietary_preferences', 'allergies'],
+    parameters: [
+      'medical_data',
+      'age',
+      'gender',
+      'height',
+      'weight',
+      'health_goals',
+      'dietary_preferences',
+      'allergies',
+    ],
     outputFormat: 'json',
     isActive: true,
     createdAt: new Date().toISOString(),
@@ -145,7 +158,12 @@ export const RECIPE_OPTIMIZATION_PROMPTS: Record<string, PromptTemplate> = {
 4. 成本和季节性
 
 提供3-5个替代选项，按优先级排序。`,
-    parameters: ['original_ingredient', 'reason', 'available_ingredients', 'nutrition_requirements'],
+    parameters: [
+      'original_ingredient',
+      'reason',
+      'available_ingredients',
+      'nutrition_requirements',
+    ],
     outputFormat: 'json',
     isActive: true,
     createdAt: new Date().toISOString(),
@@ -260,31 +278,39 @@ export const REPORT_GENERATION_PROMPTS: Record<string, PromptTemplate> = {
 };
 
 // Prompt模板管理函数
-export function getActivePrompt(category: PromptTemplate['category'], name?: string): PromptTemplate | null {
+export function getActivePrompt(
+  category: PromptTemplate['category'],
+  name?: string,
+): PromptTemplate | null {
   const categoryPrompts = getPromptsByCategory(category);
   if (name) {
     return categoryPrompts[name] || null;
   }
   // 返回第一个活跃的模板
-  return Object.values(categoryPrompts).find(p => p.isActive) || null;
+  return Object.values(categoryPrompts).find((p) => p.isActive) || null;
 }
 
-export function getPromptsByCategory(category: PromptTemplate['category']): Record<string, PromptTemplate> {
+export function getPromptsByCategory(
+  category: PromptTemplate['category'],
+): Record<string, PromptTemplate> {
   switch (category) {
-  case 'health_analysis':
-    return HEALTH_ANALYSIS_PROMPTS;
-  case 'recipe_optimization':
-    return RECIPE_OPTIMIZATION_PROMPTS;
-  case 'nutrition_consultation':
-    return NUTRITION_CONSULTATION_PROMPTS;
-  case 'report_generation':
-    return REPORT_GENERATION_PROMPTS;
-  default:
-    return {};
+    case 'health_analysis':
+      return HEALTH_ANALYSIS_PROMPTS;
+    case 'recipe_optimization':
+      return RECIPE_OPTIMIZATION_PROMPTS;
+    case 'nutrition_consultation':
+      return NUTRITION_CONSULTATION_PROMPTS;
+    case 'report_generation':
+      return REPORT_GENERATION_PROMPTS;
+    default:
+      return {};
   }
 }
 
-export function renderPrompt(template: PromptTemplate, variables: Record<string, any>): string {
+export function renderPrompt(
+  template: PromptTemplate,
+  variables: Record<string, any>,
+): string {
   let rendered = template.template;
 
   // 替换变量
@@ -297,8 +323,13 @@ export function renderPrompt(template: PromptTemplate, variables: Record<string,
 }
 
 // 验证Prompt参数
-export function validatePromptParameters(template: PromptTemplate, providedParams: Record<string, any>): { valid: boolean; missing: string[] } {
-  const missing = template.parameters.filter(param => !(param in providedParams));
+export function validatePromptParameters(
+  template: PromptTemplate,
+  providedParams: Record<string, any>,
+): { valid: boolean; missing: string[] } {
+  const missing = template.parameters.filter(
+    (param) => !(param in providedParams),
+  );
   return {
     valid: missing.length === 0,
     missing,

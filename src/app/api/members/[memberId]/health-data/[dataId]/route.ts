@@ -12,13 +12,14 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
     .from('family_members')
-    .select(`
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -26,7 +27,8 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `)
+    `,
+    )
     .eq('id', memberId)
     .is('deletedAt', null)
     .single();
@@ -69,7 +71,7 @@ async function verifyMemberAccess(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; dataId: string }> }
+  { params }: { params: Promise<{ memberId: string; dataId: string }> },
 ) {
   try {
     const { memberId, dataId } = await params;
@@ -85,7 +87,7 @@ export async function DELETE(
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限删除该成员的健康数据' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -102,7 +104,7 @@ export async function DELETE(
     if (!healthData) {
       return NextResponse.json(
         { error: '健康数据记录不存在' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -114,23 +116,17 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('删除健康数据失败:', deleteError);
-      return NextResponse.json(
-        { error: '删除健康数据失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '删除健康数据失败' }, { status: 500 });
     }
 
     return NextResponse.json(
       {
         message: '健康数据删除成功',
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('删除健康数据失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

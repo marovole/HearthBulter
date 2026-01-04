@@ -10,7 +10,7 @@ import { ReportUploader } from '@/components/reports/ReportUploader';
 export default async function NewReportPage({
   params,
 }: {
-  params: Promise<{ id: string; memberId: string }>
+  params: Promise<{ id: string; memberId: string }>;
 }) {
   const { id, memberId } = await params;
   const session = await auth();
@@ -51,34 +51,34 @@ export default async function NewReportPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+    <div className='min-h-screen bg-gray-50'>
+      <div className='max-w-4xl mx-auto py-6 sm:px-6 lg:px-8'>
+        <div className='px-4 py-6 sm:px-0'>
           {/* 面包屑导航 */}
-          <nav className="mb-6">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <nav className='mb-6'>
+            <div className='flex items-center space-x-2 text-sm text-gray-600'>
               <Link
                 href={`/dashboard/families/${id}`}
-                className="hover:text-gray-900"
+                className='hover:text-gray-900'
               >
                 家庭
               </Link>
               <span>/</span>
               <Link
                 href={`/dashboard/families/${id}/members/${memberId}`}
-                className="hover:text-gray-900"
+                className='hover:text-gray-900'
               >
                 {member.name || '成员'}
               </Link>
               <span>/</span>
               <Link
                 href={`/dashboard/families/${id}/members/${memberId}/reports`}
-                className="hover:text-gray-900"
+                className='hover:text-gray-900'
               >
                 体检报告
               </Link>
               <span>/</span>
-              <span className="text-gray-900">上传</span>
+              <span className='text-gray-900'>上传</span>
             </div>
           </nav>
 
@@ -87,13 +87,11 @@ export default async function NewReportPage({
             memberId={memberId}
             onSuccess={(reportId) => {
               redirect(
-                `/dashboard/families/${id}/members/${memberId}/reports/${reportId}`
+                `/dashboard/families/${id}/members/${memberId}/reports/${reportId}`,
               );
             }}
             onCancel={() => {
-              redirect(
-                `/dashboard/families/${id}/members/${memberId}/reports`
-              );
+              redirect(`/dashboard/families/${id}/members/${memberId}/reports`);
             }}
           />
         </div>
@@ -101,4 +99,3 @@ export default async function NewReportPage({
     </div>
   );
 }
-

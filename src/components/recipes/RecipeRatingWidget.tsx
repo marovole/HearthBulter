@@ -21,8 +21,20 @@ interface RecipeRatingWidgetProps {
 }
 
 const QUICK_TAGS = [
-  '好吃', '简单', '耗时', '难做', '太咸', '太淡', '太辣', '营养丰富',
-  '适合减肥', '适合增肌', '适合老年人', '适合小孩', '创意十足', '传统经典',
+  '好吃',
+  '简单',
+  '耗时',
+  '难做',
+  '太咸',
+  '太淡',
+  '太辣',
+  '营养丰富',
+  '适合减肥',
+  '适合增肌',
+  '适合老年人',
+  '适合小孩',
+  '创意十足',
+  '传统经典',
 ];
 
 export function RecipeRatingWidget({
@@ -45,7 +57,9 @@ export function RecipeRatingWidget({
 
   const loadUserRating = async () => {
     try {
-      const response = await fetch(`/api/recipes/${recipeId}/rate?memberId=${memberId}`);
+      const response = await fetch(
+        `/api/recipes/${recipeId}/rate?memberId=${memberId}`,
+      );
       const data = await response.json();
 
       if (data.success && data.rating) {
@@ -115,35 +129,33 @@ export function RecipeRatingWidget({
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   };
 
   return (
-    <div className="space-y-3">
+    <div className='space-y-3'>
       {/* 评分统计 */}
-      <div className="flex items-center gap-2 text-sm">
-        <div className="flex items-center gap-1">
-          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          <span className="font-medium">{currentRating.toFixed(1)}</span>
+      <div className='flex items-center gap-2 text-sm'>
+        <div className='flex items-center gap-1'>
+          <Star className='h-4 w-4 fill-yellow-400 text-yellow-400' />
+          <span className='font-medium'>{currentRating.toFixed(1)}</span>
         </div>
-        <span className="text-muted-foreground">({ratingCount}人评价)</span>
+        <span className='text-muted-foreground'>({ratingCount}人评价)</span>
       </div>
 
       {/* 用户评分 */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">您的评分：</span>
-          <div className="flex gap-1">
+      <div className='space-y-2'>
+        <div className='flex items-center gap-2'>
+          <span className='text-sm font-medium'>您的评分：</span>
+          <div className='flex gap-1'>
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 onClick={() => handleRating(star)}
                 disabled={loading}
-                className="focus:outline-none"
+                className='focus:outline-none'
               >
                 <Star
                   className={`h-5 w-5 ${
@@ -158,24 +170,23 @@ export function RecipeRatingWidget({
         </div>
 
         {userRating && (
-          <div className="text-xs text-muted-foreground">
-            您已评分 {userRating.rating} 星
-            {userRating.comment && ' • 已写评价'}
+          <div className='text-xs text-muted-foreground'>
+            您已评分 {userRating.rating} 星{userRating.comment && ' • 已写评价'}
           </div>
         )}
       </div>
 
       {/* 评分表单 */}
       {showForm && (
-        <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
+        <div className='space-y-3 p-3 border rounded-lg bg-muted/50'>
           <div>
-            <label className="text-sm font-medium block mb-2">快速标签</label>
-            <div className="flex flex-wrap gap-1">
+            <label className='text-sm font-medium block mb-2'>快速标签</label>
+            <div className='flex flex-wrap gap-1'>
               {QUICK_TAGS.map((tag) => (
                 <Badge
                   key={tag}
                   variant={selectedTags.includes(tag) ? 'default' : 'outline'}
-                  className="cursor-pointer text-xs"
+                  className='cursor-pointer text-xs'
                   onClick={() => toggleTag(tag)}
                 >
                   {tag}
@@ -185,27 +196,27 @@ export function RecipeRatingWidget({
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-2">评价内容</label>
+            <label className='text-sm font-medium block mb-2'>评价内容</label>
             <Textarea
-              placeholder="分享您的制作体验和建议..."
+              placeholder='分享您的制作体验和建议...'
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className='flex gap-2'>
             <Button
               onClick={handleSubmitRating}
               disabled={loading || rating === 0}
-              size="sm"
+              size='sm'
             >
               {loading ? '提交中...' : '提交评价'}
             </Button>
             <Button
               onClick={() => setShowForm(false)}
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
             >
               收起
             </Button>
@@ -217,11 +228,11 @@ export function RecipeRatingWidget({
       {!showForm && !userRating && (
         <Button
           onClick={() => setShowForm(true)}
-          variant="outline"
-          size="sm"
-          className="w-full"
+          variant='outline'
+          size='sm'
+          className='w-full'
         >
-          <MessageSquare className="h-4 w-4 mr-2" />
+          <MessageSquare className='h-4 w-4 mr-2' />
           写评价
         </Button>
       )}

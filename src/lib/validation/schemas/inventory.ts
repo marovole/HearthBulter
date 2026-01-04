@@ -45,7 +45,9 @@ export const inventoryQuerySchema = z.object({
   status: z.enum(['AVAILABLE', 'LOW', 'EXPIRED', 'CONSUMED']).optional(),
   location: z.string().optional(),
   search: z.string().max(100).optional(),
-  sortBy: z.enum(['name', 'expiryDate', 'quantity', 'createdAt']).default('createdAt'),
+  sortBy: z
+    .enum(['name', 'expiryDate', 'quantity', 'createdAt'])
+    .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
 
@@ -53,7 +55,9 @@ export const inventoryQuerySchema = z.object({
 export const inventoryUsageSchema = z.object({
   itemId: idSchema,
   quantity: z.number().positive('使用数量必须大于 0'),
-  usageType: z.enum(['CONSUMED', 'DISCARDED', 'GIFTED', 'OTHER']).default('CONSUMED'),
+  usageType: z
+    .enum(['CONSUMED', 'DISCARDED', 'GIFTED', 'OTHER'])
+    .default('CONSUMED'),
   notes: z.string().max(200).optional(),
 });
 
@@ -71,9 +75,15 @@ export const expiryQuerySchema = z.object({
 });
 
 // 类型导出
-export type CreateInventoryItemInput = z.infer<typeof createInventoryItemSchema>;
-export type UpdateInventoryItemInput = z.infer<typeof updateInventoryItemSchema>;
+export type CreateInventoryItemInput = z.infer<
+  typeof createInventoryItemSchema
+>;
+export type UpdateInventoryItemInput = z.infer<
+  typeof updateInventoryItemSchema
+>;
 export type InventoryQueryInput = z.infer<typeof inventoryQuerySchema>;
 export type InventoryUsageInput = z.infer<typeof inventoryUsageSchema>;
-export type InventoryStatsQueryInput = z.infer<typeof inventoryStatsQuerySchema>;
+export type InventoryStatsQueryInput = z.infer<
+  typeof inventoryStatsQuerySchema
+>;
 export type ExpiryQueryInput = z.infer<typeof expiryQuerySchema>;

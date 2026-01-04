@@ -71,7 +71,9 @@ describe('/api/social/leaderboard', () => {
     it('should return 401 when user is not authenticated', async () => {
       (auth as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/social/leaderboard');
+      const request = new NextRequest(
+        'http://localhost:3000/api/social/leaderboard',
+      );
       const response = await GET(request);
 
       expect(response.status).toBe(401);
@@ -81,10 +83,12 @@ describe('/api/social/leaderboard', () => {
 
     it('should proceed when user is authenticated', async () => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(mockLeaderboardResult);
+      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(
+        mockLeaderboardResult,
+      );
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE'
+        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE',
       );
       const response = await GET(request);
 
@@ -99,7 +103,7 @@ describe('/api/social/leaderboard', () => {
 
     it('should return 400 when type is missing', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard'
+        'http://localhost:3000/api/social/leaderboard',
       );
       const response = await GET(request);
 
@@ -110,7 +114,7 @@ describe('/api/social/leaderboard', () => {
 
     it('should return 400 for invalid type', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=INVALID_TYPE'
+        'http://localhost:3000/api/social/leaderboard?type=INVALID_TYPE',
       );
       const response = await GET(request);
 
@@ -121,7 +125,7 @@ describe('/api/social/leaderboard', () => {
 
     it('should return 400 for invalid timeframe', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&timeframe=invalid'
+        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&timeframe=invalid',
       );
       const response = await GET(request);
 
@@ -134,14 +138,16 @@ describe('/api/social/leaderboard', () => {
   describe('Authorization', () => {
     beforeEach(() => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(mockLeaderboardResult);
+      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(
+        mockLeaderboardResult,
+      );
     });
 
     it('should return 403 when memberId is provided but user has no access', async () => {
       (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue(null);
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&memberId=member-2'
+        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&memberId=member-2',
       );
       const response = await GET(request);
 
@@ -151,11 +157,15 @@ describe('/api/social/leaderboard', () => {
     });
 
     it('should proceed when user has access to member', async () => {
-      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({ id: 'member-2' });
-      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(mockLeaderboardResult);
+      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({
+        id: 'member-2',
+      });
+      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(
+        mockLeaderboardResult,
+      );
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&memberId=member-2'
+        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&memberId=member-2',
       );
       const response = await GET(request);
 
@@ -169,10 +179,12 @@ describe('/api/social/leaderboard', () => {
     });
 
     it('should return leaderboard data with correct parameters', async () => {
-      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(mockLeaderboardResult);
+      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(
+        mockLeaderboardResult,
+      );
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&timeframe=weekly&limit=10'
+        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&timeframe=weekly&limit=10',
       );
       const response = await GET(request);
 
@@ -183,20 +195,22 @@ describe('/api/social/leaderboard', () => {
         'HEALTH_SCORE',
         undefined,
         'weekly',
-        10
+        10,
       );
       expect(data.data).toEqual(mockLeaderboardResult);
     });
 
     it('should handle ranking history request', async () => {
-      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({ id: 'member-1' });
+      (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({
+        id: 'member-1',
+      });
       (leaderboardService.getRankingHistory as jest.Mock).mockResolvedValue([
         { date: '2024-01-01', rank: 1, value: 95 },
         { date: '2024-01-02', rank: 2, value: 90 },
       ]);
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&memberId=member-1&history=true'
+        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE&memberId=member-1&history=true',
       );
       const response = await GET(request);
 
@@ -205,10 +219,12 @@ describe('/api/social/leaderboard', () => {
     });
 
     it('should use default limit when not provided', async () => {
-      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(mockLeaderboardResult);
+      (leaderboardService.getLeaderboard as jest.Mock).mockResolvedValue(
+        mockLeaderboardResult,
+      );
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE'
+        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE',
       );
       await GET(request);
 
@@ -216,7 +232,7 @@ describe('/api/social/leaderboard', () => {
         'HEALTH_SCORE',
         undefined,
         undefined,
-        50  // default limit
+        50, // default limit
       );
     });
   });
@@ -228,11 +244,11 @@ describe('/api/social/leaderboard', () => {
 
     it('should handle service errors gracefully', async () => {
       (leaderboardService.getLeaderboard as jest.Mock).mockRejectedValue(
-        new Error('Service error')
+        new Error('Service error'),
       );
 
       const request = new NextRequest(
-        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE'
+        'http://localhost:3000/api/social/leaderboard?type=HEALTH_SCORE',
       );
       const response = await GET(request);
 

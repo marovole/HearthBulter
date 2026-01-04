@@ -11,13 +11,24 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
-    const { originalIngredientId, substituteFoodId, substitutionType, reason, nutritionDelta, costDelta, tasteSimilarity } = await request.json();
+    const {
+      originalIngredientId,
+      substituteFoodId,
+      substitutionType,
+      reason,
+      nutritionDelta,
+      costDelta,
+      tasteSimilarity,
+    } = await request.json();
 
     // 验证必需参数
     if (!originalIngredientId || !substituteFoodId || !substitutionType) {
       return NextResponse.json(
-        { error: 'Missing required parameters: originalIngredientId, substituteFoodId, substitutionType' },
-        { status: 400 }
+        {
+          error:
+            'Missing required parameters: originalIngredientId, substituteFoodId, substitutionType',
+        },
+        { status: 400 },
       );
     }
 
@@ -34,14 +45,14 @@ export async function POST(request: NextRequest) {
       console.error('查询原始食材失败:', originalError);
       return NextResponse.json(
         { error: 'Failed to check original ingredient' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (!originalIngredient) {
       return NextResponse.json(
         { error: 'Original ingredient not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -55,14 +66,14 @@ export async function POST(request: NextRequest) {
       console.error('查询替代食物失败:', substituteFoodError);
       return NextResponse.json(
         { error: 'Failed to check substitute food' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (!substituteFood) {
       return NextResponse.json(
         { error: 'Substitute food not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -86,14 +97,15 @@ export async function POST(request: NextRequest) {
       console.error('创建食材替换记录失败:', createError);
       return NextResponse.json(
         { error: 'Failed to create substitution' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // 查询关联的食材和食物信息
     const { data: originalWithFood } = await supabase
       .from('recipe_ingredients')
-      .select(`
+      .select(
+        `
         id,
         amount,
         unit,
@@ -106,7 +118,8 @@ export async function POST(request: NextRequest) {
           carbs,
           fat
         )
-      `)
+      `,
+      )
       .eq('id', originalIngredientId)
       .single();
 
@@ -125,12 +138,11 @@ export async function POST(request: NextRequest) {
         nutritionDelta: nutritionDelta || null,
       },
     });
-
   } catch (error) {
     console.error('Error creating ingredient substitution:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -150,7 +162,7 @@ export async function GET(request: NextRequest) {
     if (!originalIngredientId) {
       return NextResponse.json(
         { error: 'originalIngredientId is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -159,7 +171,8 @@ export async function GET(request: NextRequest) {
     // 获取替换建议
     let query = supabase
       .from('ingredient_substitutions')
-      .select(`
+      .select(
+        `
         id,
         originalIngredientId,
         substituteFoodId,
@@ -182,7 +195,8 @@ export async function GET(request: NextRequest) {
           fat,
           category
         )
-      `)
+      `,
+      )
       .eq('originalIngredientId', originalIngredientId)
       .eq('isValid', true);
 
@@ -199,14 +213,15 @@ export async function GET(request: NextRequest) {
       console.error('查询食材替换建议失败:', error);
       return NextResponse.json(
         { error: 'Failed to fetch substitutions' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // 查询原始食材信息
     const { data: originalIngredient } = await supabase
       .from('recipe_ingredients')
-      .select(`
+      .select(
+        `
         id,
         amount,
         unit,
@@ -219,7 +234,8 @@ export async function GET(request: NextRequest) {
           carbs,
           fat
         )
-      `)
+      `,
+      )
       .eq('id', originalIngredientId)
       .maybeSingle();
 
@@ -228,16 +244,17 @@ export async function GET(request: NextRequest) {
       substitutions: (substitutions || []).map((sub: any) => ({
         ...sub,
         originalIngredient,
-        nutritionDelta: sub.nutritionDelta ? JSON.parse(sub.nutritionDelta) : null,
+        nutritionDelta: sub.nutritionDelta
+          ? JSON.parse(sub.nutritionDelta)
+          : null,
         conditions: JSON.parse(sub.conditions || '[]'),
       })),
     });
-
   } catch (error) {
     console.error('Error getting ingredient substitutions:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

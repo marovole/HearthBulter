@@ -6,7 +6,10 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { DeviceSyncService } from '@/lib/services/device-sync-service';
 import { healthKitService } from '@/lib/services/healthkit-service';
 import { huaweiHealthService } from '@/lib/services/huawei-health-service';
-import { checkDataDuplication, cleanupDuplicateData } from '@/lib/services/data-deduplication';
+import {
+  checkDataDuplication,
+  cleanupDuplicateData,
+} from '@/lib/services/data-deduplication';
 import { prisma } from '@/lib/db';
 
 // Mock dependencies
@@ -40,16 +43,18 @@ describe('DeviceSyncService', () => {
 
   describe('Background Sync', () => {
     it('should start and stop background sync', async () => {
-      const mockInterval = jest.spyOn(global, 'setInterval').mockImplementation();
-      
+      const mockInterval = jest
+        .spyOn(global, 'setInterval')
+        .mockImplementation();
+
       syncService.startBackgroundSync(1); // 1分钟间隔
-      
+
       expect(mockInterval).toHaveBeenCalled();
       expect(syncService.getServiceStatus().isRunning).toBe(true);
-      
+
       syncService.stopBackgroundSync();
       expect(syncService.getServiceStatus().isRunning).toBe(false);
-      
+
       mockInterval.mockRestore();
     });
 
@@ -67,17 +72,21 @@ describe('DeviceSyncService', () => {
           syncStatus: 'PENDING' as const,
           member: { id: 'member1', name: 'Test User', user: { id: 'user1' } },
         },
-      ]
+      ];
 
-      ;(prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue(mockDevices)
-      ;(prisma.deviceConnection.update as jest.Mock).mockResolvedValue({});
+      (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue(
+        mockDevices,
+      );
+      (prisma.deviceConnection.update as jest.Mock).mockResolvedValue({});
 
       // Mock health data
       const mockHealthData = [
         { id: 'health1', memberId: 'member1', measuredAt: new Date() },
-      ]
+      ];
 
-      ;(prisma.healthData.findMany as jest.Mock).mockResolvedValue(mockHealthData);
+      (prisma.healthData.findMany as jest.Mock).mockResolvedValue(
+        mockHealthData,
+      );
 
       const result = await syncService.syncAllDevices();
 
@@ -99,11 +108,13 @@ describe('DeviceSyncService', () => {
           syncStatus: 'PENDING' as const,
           member: { id: 'member1', name: 'Test User', user: { id: 'user1' } },
         },
-      ]
+      ];
 
-      ;(prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue(mockDevices)
-      ;(prisma.deviceConnection.update as jest.Mock).mockRejectedValue(
-        new Error('Sync failed')
+      (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue(
+        mockDevices,
+      );
+      (prisma.deviceConnection.update as jest.Mock).mockRejectedValue(
+        new Error('Sync failed'),
       );
 
       const result = await syncService.syncAllDevices();
@@ -123,10 +134,12 @@ describe('DeviceSyncService', () => {
           isActive: true,
           lastSyncAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4天前
         },
-      ]
+      ];
 
-      ;(prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue(mockStaleDevices)
-      ;(prisma.deviceConnection.update as jest.Mock).mockResolvedValue({});
+      (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue(
+        mockStaleDevices,
+      );
+      (prisma.deviceConnection.update as jest.Mock).mockResolvedValue({});
 
       const result = await syncService.cleanupStaleDevices();
 
@@ -139,7 +152,7 @@ describe('DeviceSyncService', () => {
             isActive: false,
             syncStatus: 'DISABLED',
           }),
-        })
+        }),
       );
     });
   });
@@ -167,7 +180,7 @@ describe('HealthKitService', () => {
 
   it('should get platform info', () => {
     const info = healthKitService.getPlatformInfo();
-    
+
     expect(info.name).toBe('Apple HealthKit');
     expect(info.supportedOS).toContain('iOS');
     expect(info.features).toContain('步数追踪');
@@ -176,7 +189,7 @@ describe('HealthKitService', () => {
 
   it('should get device info', async () => {
     const deviceInfo = await healthKitService.getDeviceInfo();
-    
+
     expect(deviceInfo.deviceId).toBe('apple-healthkit');
     expect(deviceInfo.platform).toBe('APPLE_HEALTHKIT');
     expect(deviceInfo.permissions).toContain('READ_STEPS');
@@ -187,11 +200,11 @@ describe('HealthKitService', () => {
     const mockDevice = {
       id: 'device1',
       memberId: 'member1',
-    }
+    };
 
-    ;(prisma.deviceConnection.update as jest.Mock).mockResolvedValue({})
-    ;(prisma.healthData.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.healthData.create as jest.Mock).mockResolvedValue({});
+    (prisma.deviceConnection.update as jest.Mock).mockResolvedValue({});
+    (prisma.healthData.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.healthData.create as jest.Mock).mockResolvedValue({});
 
     const result = await healthKitService.syncAllData('member1', mockDevice.id);
 
@@ -207,30 +220,34 @@ describe('HuaweiHealthService', () => {
   });
 
   it('should initialize Huawei Health SDK', async () => {
-    const service = (await import('@/lib/services/huawei-health-service')).huaweiHealthService;
+    const service = (await import('@/lib/services/huawei-health-service'))
+      .huaweiHealthService;
     const isInitialized = await service.initialize();
-    
+
     expect(isInitialized).toBe(true);
   });
 
   it('should request permissions', async () => {
-    const service = (await import('@/lib/services/huawei-health-service')).huaweiHealthService;
+    const service = (await import('@/lib/services/huawei-health-service'))
+      .huaweiHealthService;
     const hasPermissions = await service.requestPermissions();
-    
+
     expect(hasPermissions).toBe(true);
   });
 
   it('should check Huawei Health availability', async () => {
-    const service = (await import('@/lib/services/huawei-health-service')).huaweiHealthService;
+    const service = (await import('@/lib/services/huawei-health-service'))
+      .huaweiHealthService;
     const isAvailable = await service.isHuaweiHealthAvailable();
-    
+
     expect(isAvailable).toBe(true);
   });
 
   it('should get platform info', async () => {
-    const service = (await import('@/lib/services/huawei-health-service')).huaweiHealthService;
+    const service = (await import('@/lib/services/huawei-health-service'))
+      .huaweiHealthService;
     const info = service.getPlatformInfo();
-    
+
     expect(info.name).toBe('华为Health');
     expect(info.supportedOS).toContain('Android');
     expect(info.features).toContain('步数追踪');
@@ -238,15 +255,16 @@ describe('HuaweiHealthService', () => {
   });
 
   it('should sync data successfully', async () => {
-    const service = (await import('@/lib/services/huawei-health-service')).huaweiHealthService;
+    const service = (await import('@/lib/services/huawei-health-service'))
+      .huaweiHealthService;
     const mockDevice = {
       id: 'device1',
       memberId: 'member1',
-    }
+    };
 
-    ;(prisma.deviceConnection.update as jest.Mock).mockResolvedValue({})
-    ;(prisma.healthData.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.healthData.create as jest.Mock).mockResolvedValue({});
+    (prisma.deviceConnection.update as jest.Mock).mockResolvedValue({});
+    (prisma.healthData.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.healthData.create as jest.Mock).mockResolvedValue({});
 
     const result = await service.syncAllData('member1', mockDevice.id);
 
@@ -267,9 +285,9 @@ describe('Data Deduplication', () => {
       weight: 70.5,
       measuredAt: new Date(),
       source: 'WEARABLE' as const,
-    }
+    };
 
-    ;(prisma.healthData.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.healthData.findMany as jest.Mock).mockResolvedValue([]);
 
     const result = await checkDataDuplication(inputData, 'member1');
 
@@ -292,9 +310,11 @@ describe('Data Deduplication', () => {
       weight: 70.0,
       measuredAt: new Date(),
       source: 'MANUAL' as const,
-    }
+    };
 
-    ;(prisma.healthData.findMany as jest.Mock).mockResolvedValue([existingRecord]);
+    (prisma.healthData.findMany as jest.Mock).mockResolvedValue([
+      existingRecord,
+    ]);
 
     const result = await checkDataDuplication(inputData, 'member1');
 
@@ -317,9 +337,11 @@ describe('Data Deduplication', () => {
       weight: 70.5,
       measuredAt: new Date(Date.now() + 60 * 60 * 1000), // 1小时后
       source: 'APPLE_HEALTHKIT' as const,
-    }
+    };
 
-    ;(prisma.healthData.findMany as jest.Mock).mockResolvedValue([existingRecord]);
+    (prisma.healthData.findMany as jest.Mock).mockResolvedValue([
+      existingRecord,
+    ]);
 
     const result = await checkDataDuplication(inputData, 'member1');
 
@@ -344,10 +366,10 @@ describe('Data Deduplication', () => {
         measuredAt: new Date(),
         source: 'APPLE_HEALTHKIT' as const,
       },
-    ]
+    ];
 
-    ;(prisma.healthData.findMany as jest.Mock).mockResolvedValue(mockData)
-    ;(prisma.healthData.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+    (prisma.healthData.findMany as jest.Mock).mockResolvedValue(mockData);
+    (prisma.healthData.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
 
     const result = await cleanupDuplicateData('member1');
 
@@ -371,10 +393,12 @@ describe('Integration Tests', () => {
       deviceType: 'SMARTWATCH' as const,
       deviceName: 'Test Watch',
       manufacturer: 'Test Inc.',
-    }
+    };
 
-    ;(prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({ id: 'member1' })
-    ;(prisma.deviceConnection.create as jest.Mock).mockResolvedValue({
+    (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({
+      id: 'member1',
+    });
+    (prisma.deviceConnection.create as jest.Mock).mockResolvedValue({
       id: 'device1',
       ...mockDeviceData,
     });
@@ -385,31 +409,32 @@ describe('Integration Tests', () => {
     // 2. 同步数据
     const mockHealthData = [
       { id: 'health1', memberId: 'member1', measuredAt: new Date() },
-    ]
+    ];
 
-    ;(prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue([{
-      id: 'device1',
-      deviceId: 'test-device',
-      memberId: 'member1',
-      platform: 'APPLE_HEALTHKIT',
-      lastSyncAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      isActive: true,
-      isAutoSync: true,
-      syncStatus: 'PENDING' as const,
-      member: { id: 'member1', name: 'Test User', user: { id: 'user1' } },
-    }])
-
-    ;(prisma.healthData.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.healthData.create as jest.Mock).mockResolvedValue({});
+    (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue([
+      {
+        id: 'device1',
+        deviceId: 'test-device',
+        memberId: 'member1',
+        platform: 'APPLE_HEALTHKIT',
+        lastSyncAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        isActive: true,
+        isAutoSync: true,
+        syncStatus: 'PENDING' as const,
+        member: { id: 'member1', name: 'Test User', user: { id: 'user1' } },
+      },
+    ]);
+    (prisma.healthData.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.healthData.create as jest.Mock).mockResolvedValue({});
 
     const syncService = DeviceSyncService.getInstance();
     const syncResult = await syncService.syncAllDevices();
 
     expect(syncResult.success).toBe(true);
-    expect(syncResult.totalCount).toBe(1)
+    expect(syncResult.totalCount).toBe(1);
 
     // 3. 断开连接
-    ;(prisma.deviceConnection.update as jest.Mock).mockResolvedValue({});
+    (prisma.deviceConnection.update as jest.Mock).mockResolvedValue({});
 
     // 在实际测试中，我们会调用断开连接的API
     expect(prisma.deviceConnection.update).toHaveBeenCalled();

@@ -14,9 +14,7 @@ import { shoppingListRepository } from '@/lib/repositories/shopping-list-reposit
 export const dynamic = 'force-dynamic';
 export async function PATCH(
   request: NextRequest,
-  {
-    params,
-  }: { params: Promise<{ id: string; itemId: string }> }
+  { params }: { params: Promise<{ id: string; itemId: string }> },
 ) {
   try {
     const { id: listId, itemId } = await params;
@@ -34,7 +32,8 @@ export async function PATCH(
     // 查询购物清单并验证权限
     const { data: shoppingList, error: listError } = await supabase
       .from('shopping_lists')
-      .select(`
+      .select(
+        `
         id,
         status,
         planId,
@@ -51,7 +50,8 @@ export async function PATCH(
             )
           )
         )
-      `)
+      `,
+      )
       .eq('id', listId)
       .single();
 
@@ -69,14 +69,15 @@ export async function PATCH(
       .maybeSingle();
 
     // 验证权限
-    const isCreator = shoppingList.plan.member.family.creatorId === session.user.id;
+    const isCreator =
+      shoppingList.plan.member.family.creatorId === session.user.id;
     const isAdmin = userMember?.role === 'ADMIN' || isCreator;
     const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限修改该购物清单' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -84,7 +85,7 @@ export async function PATCH(
     const updatedItem = await shoppingListRepository.updateShoppingListItem(
       listId,
       itemId,
-      { purchased }
+      { purchased },
     );
 
     // 智能状态更新：检查是否所有项都已购买，如果是则更新清单状态
@@ -97,15 +98,13 @@ export async function PATCH(
       const allPurchased = allItems.every((item) => item.purchased);
 
       if (allPurchased && shoppingList.status !== 'COMPLETED') {
-        await shoppingListRepository.updateShoppingList(
-          listId,
-          { status: 'COMPLETED' }
-        );
+        await shoppingListRepository.updateShoppingList(listId, {
+          status: 'COMPLETED',
+        });
       } else if (!allPurchased && shoppingList.status === 'DRAFT') {
-        await shoppingListRepository.updateShoppingList(
-          listId,
-          { status: 'ACTIVE' }
-        );
+        await shoppingListRepository.updateShoppingList(listId, {
+          status: 'ACTIVE',
+        });
       }
     }
 
@@ -114,14 +113,10 @@ export async function PATCH(
         message: '清单项更新成功',
         item: updatedItem,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('更新清单项失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

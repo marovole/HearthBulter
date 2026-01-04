@@ -8,9 +8,13 @@ import { z } from 'zod';
 // Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 const updateAllergySchema = z.object({
-  allergenType: z.enum(['FOOD', 'ENVIRONMENTAL', 'MEDICATION', 'OTHER']).optional(),
+  allergenType: z
+    .enum(['FOOD', 'ENVIRONMENTAL', 'MEDICATION', 'OTHER'])
+    .optional(),
   allergenName: z.string().min(1).optional(),
-  severity: z.enum(['MILD', 'MODERATE', 'SEVERE', 'LIFE_THREATENING']).optional(),
+  severity: z
+    .enum(['MILD', 'MODERATE', 'SEVERE', 'LIFE_THREATENING'])
+    .optional(),
   description: z.string().optional(),
 });
 
@@ -22,14 +26,15 @@ const updateAllergySchema = z.object({
 async function verifyAllergyAccess(
   allergyId: string,
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean; allergy: any }> {
   const supabase = SupabaseClientManager.getInstance();
 
   // 获取过敏记录及其成员信息
   const { data: allergy } = await supabase
     .from('allergies')
-    .select(`
+    .select(
+      `
       *,
       member:family_members!inner(
         id,
@@ -40,7 +45,8 @@ async function verifyAllergyAccess(
           creatorId
         )
       )
-    `)
+    `,
+    )
     .eq('id', allergyId)
     .eq('memberId', memberId)
     .is('deletedAt', null)
@@ -85,7 +91,7 @@ async function verifyAllergyAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; allergyId: string }> }
+  { params }: { params: Promise<{ memberId: string; allergyId: string }> },
 ) {
   try {
     const { memberId, allergyId } = await params;
@@ -98,7 +104,7 @@ export async function GET(
     const { hasAccess, allergy } = await verifyAllergyAccess(
       allergyId,
       memberId,
-      session.user.id
+      session.user.id,
     );
 
     if (!hasAccess || !allergy) {
@@ -108,10 +114,7 @@ export async function GET(
     return NextResponse.json({ allergy }, { status: 200 });
   } catch (error) {
     console.error('获取过敏记录失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -123,7 +126,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; allergyId: string }> }
+  { params }: { params: Promise<{ memberId: string; allergyId: string }> },
 ) {
   try {
     const { memberId, allergyId } = await params;
@@ -139,7 +142,7 @@ export async function PATCH(
     if (!validation.success) {
       return NextResponse.json(
         { error: '输入数据无效', details: validation.error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -147,7 +150,7 @@ export async function PATCH(
     const { hasAccess, allergy } = await verifyAllergyAccess(
       allergyId,
       memberId,
-      session.user.id
+      session.user.id,
     );
 
     if (!hasAccess || !allergy) {
@@ -170,10 +173,7 @@ export async function PATCH(
 
     if (updateError) {
       console.error('更新过敏记录失败:', updateError);
-      return NextResponse.json(
-        { error: '更新过敏记录失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '更新过敏记录失败' }, { status: 500 });
     }
 
     return NextResponse.json(
@@ -181,14 +181,11 @@ export async function PATCH(
         message: '过敏记录更新成功',
         allergy: updatedAllergy,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('更新过敏记录失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -200,7 +197,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; allergyId: string }> }
+  { params }: { params: Promise<{ memberId: string; allergyId: string }> },
 ) {
   try {
     const { memberId, allergyId } = await params;
@@ -213,7 +210,7 @@ export async function DELETE(
     const { hasAccess, allergy } = await verifyAllergyAccess(
       allergyId,
       memberId,
-      session.user.id
+      session.user.id,
     );
 
     if (!hasAccess || !allergy) {
@@ -231,18 +228,12 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('删除过敏记录失败:', deleteError);
-      return NextResponse.json(
-        { error: '删除过敏记录失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '删除过敏记录失败' }, { status: 500 });
     }
 
     return NextResponse.json({ message: '过敏记录删除成功' }, { status: 200 });
   } catch (error) {
     console.error('删除过敏记录失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

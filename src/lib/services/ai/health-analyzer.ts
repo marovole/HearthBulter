@@ -1,5 +1,13 @@
-import { callOpenAI, callOpenAIJSON, RECOMMENDED_MODELS } from './openai-client';
-import { getActivePrompt, renderPrompt, validatePromptParameters } from './prompt-templates';
+import {
+  callOpenAI,
+  callOpenAIJSON,
+  RECOMMENDED_MODELS,
+} from './openai-client';
+import {
+  getActivePrompt,
+  renderPrompt,
+  validatePromptParameters,
+} from './prompt-templates';
 import { MedicalIndicator, IndicatorType } from '@/lib/types/medical';
 import { aiResponseCache, AICacheKeys } from './response-cache';
 import { createHash } from 'crypto';
@@ -103,7 +111,9 @@ export class HealthAnalyzer {
   /**
    * 结构化体检数据 - 将原始体检指标转换为AI可理解的格式
    */
-  async structureMedicalData(rawIndicators: MedicalIndicator[]): Promise<StructuredMedicalData> {
+  async structureMedicalData(
+    rawIndicators: MedicalIndicator[],
+  ): Promise<StructuredMedicalData> {
     const structured: StructuredMedicalData = {
       blood_tests: {},
       liver_function: {},
@@ -113,54 +123,54 @@ export class HealthAnalyzer {
     };
 
     // 根据指标类型分类整理数据
-    rawIndicators.forEach(indicator => {
+    rawIndicators.forEach((indicator) => {
       const value = indicator.value;
 
       switch (indicator.indicatorType) {
-      case IndicatorType.TOTAL_CHOLESTEROL:
-        structured.blood_tests.total_cholesterol = value;
-        break;
-      case IndicatorType.LDL_CHOLESTEROL:
-        structured.blood_tests.ldl_cholesterol = value;
-        break;
-      case IndicatorType.HDL_CHOLESTEROL:
-        structured.blood_tests.hdl_cholesterol = value;
-        break;
-      case IndicatorType.TRIGLYCERIDES:
-        structured.blood_tests.triglycerides = value;
-        break;
-      case IndicatorType.FASTING_GLUCOSE:
-        structured.blood_tests.fasting_glucose = value;
-        break;
-      case IndicatorType.GLYCATED_HEMOGLOBIN:
-        structured.blood_tests.hba1c = value;
-        break;
-      case IndicatorType.ALT:
-        structured.liver_function.alt = value;
-        break;
-      case IndicatorType.AST:
-        structured.liver_function.ast = value;
-        break;
-      case IndicatorType.CREATININE:
-        structured.kidney_function.creatinine = value;
-        break;
-      case IndicatorType.UREA_NITROGEN:
-        structured.kidney_function.bun = value;
-        break;
-      case IndicatorType.URIC_ACID:
-        structured.kidney_function.uric_acid = value;
-        break;
-      case IndicatorType.HEMOGLOBIN:
-        structured.complete_blood_count.hemoglobin = value;
-        break;
-      case IndicatorType.WHITE_BLOOD_CELL:
-        structured.complete_blood_count.white_blood_cell = value;
-        break;
-      case IndicatorType.PLATELET:
-        structured.complete_blood_count.platelet = value;
-        break;
-      default:
-        structured.other_indicators[indicator.name] = value;
+        case IndicatorType.TOTAL_CHOLESTEROL:
+          structured.blood_tests.total_cholesterol = value;
+          break;
+        case IndicatorType.LDL_CHOLESTEROL:
+          structured.blood_tests.ldl_cholesterol = value;
+          break;
+        case IndicatorType.HDL_CHOLESTEROL:
+          structured.blood_tests.hdl_cholesterol = value;
+          break;
+        case IndicatorType.TRIGLYCERIDES:
+          structured.blood_tests.triglycerides = value;
+          break;
+        case IndicatorType.FASTING_GLUCOSE:
+          structured.blood_tests.fasting_glucose = value;
+          break;
+        case IndicatorType.GLYCATED_HEMOGLOBIN:
+          structured.blood_tests.hba1c = value;
+          break;
+        case IndicatorType.ALT:
+          structured.liver_function.alt = value;
+          break;
+        case IndicatorType.AST:
+          structured.liver_function.ast = value;
+          break;
+        case IndicatorType.CREATININE:
+          structured.kidney_function.creatinine = value;
+          break;
+        case IndicatorType.UREA_NITROGEN:
+          structured.kidney_function.bun = value;
+          break;
+        case IndicatorType.URIC_ACID:
+          structured.kidney_function.uric_acid = value;
+          break;
+        case IndicatorType.HEMOGLOBIN:
+          structured.complete_blood_count.hemoglobin = value;
+          break;
+        case IndicatorType.WHITE_BLOOD_CELL:
+          structured.complete_blood_count.white_blood_cell = value;
+          break;
+        case IndicatorType.PLATELET:
+          structured.complete_blood_count.platelet = value;
+          break;
+        default:
+          structured.other_indicators[indicator.name] = value;
       }
     });
 
@@ -173,22 +183,29 @@ export class HealthAnalyzer {
   async analyzeHealth(
     medicalData: StructuredMedicalData,
     userProfile: UserHealthProfile,
-    mealHistory?: any[]
+    mealHistory?: any[],
   ): Promise<HealthAnalysisResult> {
     // 生成缓存键
     const dataHash = createHash('md5')
       .update(JSON.stringify(medicalData) + JSON.stringify(userProfile))
       .digest('hex');
-    const cacheKey = AICacheKeys.healthAnalysis(userProfile.id || 'unknown', dataHash);
+    const cacheKey = AICacheKeys.healthAnalysis(
+      userProfile.id || 'unknown',
+      dataHash,
+    );
 
     // 尝试从缓存获取结果
-    const cachedResult = await aiResponseCache.get<HealthAnalysisResult>(cacheKey);
+    const cachedResult =
+      await aiResponseCache.get<HealthAnalysisResult>(cacheKey);
     if (cachedResult) {
       console.log('使用缓存的健康分析结果');
       return cachedResult;
     }
 
-    const prompt = getActivePrompt('health_analysis', 'detailed_health_analysis');
+    const prompt = getActivePrompt(
+      'health_analysis',
+      'detailed_health_analysis',
+    );
     if (!prompt) {
       throw new Error('Health analysis prompt template not found');
     }
@@ -197,13 +214,17 @@ export class HealthAnalyzer {
     const variables = {
       medical_report_json: JSON.stringify(medicalData, null, 2),
       user_profile: JSON.stringify(userProfile, null, 2),
-      meal_history: mealHistory ? JSON.stringify(mealHistory.slice(-30), null, 2) : '[]', // 最近30餐
+      meal_history: mealHistory
+        ? JSON.stringify(mealHistory.slice(-30), null, 2)
+        : '[]', // 最近30餐
     };
 
     // 验证参数
     const validation = validatePromptParameters(prompt, variables);
     if (!validation.valid) {
-      throw new Error(`Missing prompt parameters: ${validation.missing.join(', ')}`);
+      throw new Error(
+        `Missing prompt parameters: ${validation.missing.join(', ')}`,
+      );
     }
 
     // 渲染Prompt
@@ -218,17 +239,20 @@ export class HealthAnalyzer {
           renderedPrompt,
           RECOMMENDED_MODELS.PAID[0], // 使用付费模型获得更好分析
           2000, // 增加token限制以获得详细分析
-          true
+          true,
         );
       } catch (paidError) {
-        console.warn('Paid model failed, falling back to free model:', paidError);
+        console.warn(
+          'Paid model failed, falling back to free model:',
+          paidError,
+        );
         // 回退到免费模型
         const response = await callOpenAI(
           renderedPrompt,
           RECOMMENDED_MODELS.FREE[0],
           2000,
           0.3, // 降低温度以获得更结构化的输出
-          true
+          true,
         );
 
         // 尝试手动解析JSON响应
@@ -254,7 +278,7 @@ export class HealthAnalyzer {
   async generateNutritionTargets(
     userProfile: UserHealthProfile,
     healthAnalysis: HealthAnalysisResult,
-    healthGoals: string[]
+    healthGoals: string[],
   ): Promise<NutritionTargets> {
     // 计算基础代谢率 (BMR) - Mifflin-St Jeor公式
     const bmr = this.calculateBMR(userProfile);
@@ -280,7 +304,11 @@ export class HealthAnalyzer {
     }
 
     // 根据健康分析调整宏量营养素比例
-    const macros = this.calculateMacros(dailyCalories, userProfile, healthAnalysis);
+    const macros = this.calculateMacros(
+      dailyCalories,
+      userProfile,
+      healthAnalysis,
+    );
 
     return {
       daily_calories: Math.round(dailyCalories),
@@ -301,18 +329,27 @@ export class HealthAnalyzer {
     const urgent_actions: string[] = [];
 
     // 血脂异常检查
-    if (medicalData.blood_tests.total_cholesterol && medicalData.blood_tests.total_cholesterol > 5.2) {
+    if (
+      medicalData.blood_tests.total_cholesterol &&
+      medicalData.blood_tests.total_cholesterol > 5.2
+    ) {
       concerns.push('总胆固醇偏高');
       urgent_actions.push('建议3个月后复查血脂');
     }
 
-    if (medicalData.blood_tests.ldl_cholesterol && medicalData.blood_tests.ldl_cholesterol > 3.4) {
+    if (
+      medicalData.blood_tests.ldl_cholesterol &&
+      medicalData.blood_tests.ldl_cholesterol > 3.4
+    ) {
       concerns.push('LDL胆固醇偏高');
       urgent_actions.push('控制动物脂肪摄入，增加蔬菜水果');
     }
 
     // 血糖异常检查
-    if (medicalData.blood_tests.fasting_glucose && medicalData.blood_tests.fasting_glucose > 6.1) {
+    if (
+      medicalData.blood_tests.fasting_glucose &&
+      medicalData.blood_tests.fasting_glucose > 6.1
+    ) {
       concerns.push('空腹血糖偏高');
       urgent_actions.push('立即咨询内分泌科医生');
     }
@@ -339,12 +376,13 @@ export class HealthAnalyzer {
    */
   generateDietaryAdjustments(
     healthAnalysis: HealthAnalysisResult,
-    currentDiet?: any
+    currentDiet?: any,
   ): string[] {
     const adjustments: string[] = [];
 
     // 根据宏量营养素推荐调整饮食
-    const macros = healthAnalysis.nutritional_recommendations.macro_distribution;
+    const macros =
+      healthAnalysis.nutritional_recommendations.macro_distribution;
 
     if (macros.carbs_percent < 40) {
       adjustments.push('减少精制碳水化合物摄入，增加粗粮和蔬菜');
@@ -357,12 +395,16 @@ export class HealthAnalyzer {
     }
 
     // 根据健康风险添加具体建议
-    if (healthAnalysis.risk_assessment.concerns.some(c => c.includes('胆固醇'))) {
+    if (
+      healthAnalysis.risk_assessment.concerns.some((c) => c.includes('胆固醇'))
+    ) {
       adjustments.push('减少红肉摄入，增加鱼类和植物蛋白');
       adjustments.push('选择低脂乳制品，限制蛋黄摄入');
     }
 
-    if (healthAnalysis.risk_assessment.concerns.some(c => c.includes('血糖'))) {
+    if (
+      healthAnalysis.risk_assessment.concerns.some((c) => c.includes('血糖'))
+    ) {
       adjustments.push('规律三餐，避免暴饮暴食');
       adjustments.push('增加膳食纤维摄入，选择粗粮');
     }
@@ -378,17 +420,25 @@ export class HealthAnalyzer {
     priority: 'high' | 'medium' | 'low';
     reason: string;
   }> {
-    const prioritized = healthAnalysis.key_findings.map(finding => {
+    const prioritized = healthAnalysis.key_findings.map((finding) => {
       let priority: 'high' | 'medium' | 'low' = 'low';
       let reason = '';
 
       // 高优先级指标
-      if (finding.includes('血糖') || finding.includes('血压') || finding.includes('严重')) {
+      if (
+        finding.includes('血糖') ||
+        finding.includes('血压') ||
+        finding.includes('严重')
+      ) {
         priority = 'high';
         reason = '可能影响生命质量，需要立即干预';
       }
       // 中优先级指标
-      else if (finding.includes('胆固醇') || finding.includes('体重') || finding.includes('BMI')) {
+      else if (
+        finding.includes('胆固醇') ||
+        finding.includes('体重') ||
+        finding.includes('BMI')
+      ) {
         priority = 'medium';
         reason = '重要健康指标，需要逐步改善';
       }
@@ -423,14 +473,21 @@ export class HealthAnalyzer {
   private calculateMacros(
     dailyCalories: number,
     profile: UserHealthProfile,
-    analysis: HealthAnalysisResult
+    analysis: HealthAnalysisResult,
   ) {
-    const macroPercents = analysis.nutritional_recommendations.macro_distribution;
+    const macroPercents =
+      analysis.nutritional_recommendations.macro_distribution;
 
     return {
-      carbs_grams: Math.round((dailyCalories * macroPercents.carbs_percent / 100) / 4),
-      protein_grams: Math.round((dailyCalories * macroPercents.protein_percent / 100) / 4),
-      fat_grams: Math.round((dailyCalories * macroPercents.fat_percent / 100) / 9),
+      carbs_grams: Math.round(
+        (dailyCalories * macroPercents.carbs_percent) / 100 / 4,
+      ),
+      protein_grams: Math.round(
+        (dailyCalories * macroPercents.protein_percent) / 100 / 4,
+      ),
+      fat_grams: Math.round(
+        (dailyCalories * macroPercents.fat_percent) / 100 / 9,
+      ),
       carbs_percent: macroPercents.carbs_percent,
       protein_percent: macroPercents.protein_percent,
       fat_percent: macroPercents.fat_percent,
@@ -439,20 +496,20 @@ export class HealthAnalyzer {
 
   private calculateMicronutrients(
     profile: UserHealthProfile,
-    analysis: HealthAnalysisResult
+    analysis: HealthAnalysisResult,
   ) {
     // 基础微量营养素推荐值（可根据具体情况调整）
     const base = {
       vitamin_a: 800, // μg
-      vitamin_c: 90,  // mg
-      vitamin_d: 15,  // μg
-      calcium: 1000,  // mg
+      vitamin_c: 90, // mg
+      vitamin_d: 15, // μg
+      calcium: 1000, // mg
       iron: profile.gender === 'female' ? 18 : 10, // mg
       zinc: profile.gender === 'male' ? 16 : 11, // mg
     };
 
     // 根据健康状况调整
-    if (analysis.risk_assessment.concerns.some(c => c.includes('贫血'))) {
+    if (analysis.risk_assessment.concerns.some((c) => c.includes('贫血'))) {
       base.iron += 10;
     }
 
@@ -514,27 +571,44 @@ export class HealthAnalyzer {
   private validateAndNormalizeAnalysis(result: any): HealthAnalysisResult {
     // 确保返回的数据结构正确
     return {
-      overall_score: Math.min(100, Math.max(0, result.overall_health_score || 50)),
+      overall_score: Math.min(
+        100,
+        Math.max(0, result.overall_health_score || 50),
+      ),
       risk_level: result.risk_assessment?.level || 'medium',
-      key_findings: Array.isArray(result.key_findings) ? result.key_findings : ['健康状况评估完成'],
+      key_findings: Array.isArray(result.key_findings)
+        ? result.key_findings
+        : ['健康状况评估完成'],
       risk_assessment: {
         level: result.risk_assessment?.level || 'medium',
-        concerns: Array.isArray(result.risk_assessment?.concerns) ? result.risk_assessment.concerns : [],
-        urgent_actions: Array.isArray(result.risk_assessment?.urgent_actions) ? result.risk_assessment.urgent_actions : [],
+        concerns: Array.isArray(result.risk_assessment?.concerns)
+          ? result.risk_assessment.concerns
+          : [],
+        urgent_actions: Array.isArray(result.risk_assessment?.urgent_actions)
+          ? result.risk_assessment.urgent_actions
+          : [],
       },
       nutritional_recommendations: {
-        macro_distribution: result.nutritional_recommendations?.macro_distribution || {
+        macro_distribution: result.nutritional_recommendations
+          ?.macro_distribution || {
           carbs_percent: 50,
           protein_percent: 20,
           fat_percent: 30,
         },
-        daily_calories: result.nutritional_recommendations?.daily_calories || 2000,
-        micronutrients: Array.isArray(result.nutritional_recommendations?.micronutrients)
+        daily_calories:
+          result.nutritional_recommendations?.daily_calories || 2000,
+        micronutrients: Array.isArray(
+          result.nutritional_recommendations?.micronutrients,
+        )
           ? result.nutritional_recommendations.micronutrients
           : [],
       },
-      lifestyle_modifications: Array.isArray(result.lifestyle_modifications) ? result.lifestyle_modifications : [],
-      follow_up_suggestions: Array.isArray(result.follow_up_suggestions) ? result.follow_up_suggestions : [],
+      lifestyle_modifications: Array.isArray(result.lifestyle_modifications)
+        ? result.lifestyle_modifications
+        : [],
+      follow_up_suggestions: Array.isArray(result.follow_up_suggestions)
+        ? result.follow_up_suggestions
+        : [],
     };
   }
 }

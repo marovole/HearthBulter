@@ -71,33 +71,33 @@ const PRINT_STYLES = `
 `;
 
 interface ShoppingItem {
-  id: string
-  foodId: string
-  amount: number
-  category: string
-  purchased: boolean
-  estimatedPrice: number | null
+  id: string;
+  foodId: string;
+  amount: number;
+  category: string;
+  purchased: boolean;
+  estimatedPrice: number | null;
   food: {
-    id: string
-    name: string
-    category: string
-  }
+    id: string;
+    name: string;
+    category: string;
+  };
 }
 
 interface ShoppingList {
-  id: string
-  planId: string
-  budget: number | null
-  estimatedCost: number | null
-  actualCost: number | null
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
-  items: ShoppingItem[]
-  createdAt: string
+  id: string;
+  planId: string;
+  budget: number | null;
+  estimatedCost: number | null;
+  actualCost: number | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  items: ShoppingItem[];
+  createdAt: string;
 }
 
 interface ShoppingListViewProps {
-  shoppingListId: string
-  planId?: string
+  shoppingListId: string;
+  planId?: string;
 }
 
 export function ShoppingListView({
@@ -138,7 +138,7 @@ export function ShoppingListView({
 
       const data = await response.json();
       const list = data.shoppingLists.find(
-        (l: ShoppingList) => l.id === shoppingListId
+        (l: ShoppingList) => l.id === shoppingListId,
       );
 
       if (!list) {
@@ -163,7 +163,7 @@ export function ShoppingListView({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ purchased }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -187,7 +187,7 @@ export function ShoppingListView({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ actualCost }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -224,7 +224,7 @@ export function ShoppingListView({
 
     let text = '📋 购物清单\n';
     text += `生成日期: ${new Date(shoppingList.createdAt).toLocaleDateString('zh-CN')}\n`;
-    
+
     if (shoppingList.budget || shoppingList.estimatedCost) {
       text += '\n💰 预算信息:\n';
       if (shoppingList.budget) {
@@ -247,7 +247,7 @@ export function ShoppingListView({
         acc[category].push(item);
         return acc;
       },
-      {} as Record<string, typeof shoppingList.items>
+      {} as Record<string, typeof shoppingList.items>,
     );
 
     const categoryOrder = [
@@ -269,9 +269,10 @@ export function ShoppingListView({
         text += `\n【${CATEGORY_LABELS[category] || category}】\n`;
         items.forEach((item) => {
           const checkbox = item.purchased ? '☑' : '☐';
-          const amount = item.amount >= 1000 
-            ? `${(item.amount / 1000).toFixed(1)}kg` 
-            : `${item.amount.toFixed(0)}g`;
+          const amount =
+            item.amount >= 1000
+              ? `${(item.amount / 1000).toFixed(1)}kg`
+              : `${item.amount.toFixed(0)}g`;
           text += `  ${checkbox} ${item.food.name} - ${amount}\n`;
         });
       }
@@ -318,54 +319,55 @@ export function ShoppingListView({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-gray-600">加载中...</div>
+      <div className='flex items-center justify-center p-8'>
+        <div className='text-gray-600'>加载中...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">{error}</p>
+      <div className='bg-red-50 border border-red-200 rounded-lg p-4'>
+        <p className='text-red-800'>{error}</p>
       </div>
     );
   }
 
   if (!shoppingList) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <p className="text-gray-600">购物清单不存在</p>
+      <div className='bg-gray-50 border border-gray-200 rounded-lg p-4'>
+        <p className='text-gray-600'>购物清单不存在</p>
       </div>
     );
   }
 
-  const purchasedCount = shoppingList.items.filter((item) => item.purchased)
-    .length;
+  const purchasedCount = shoppingList.items.filter(
+    (item) => item.purchased,
+  ).length;
   const totalItems = shoppingList.items.length;
   const progress = totalItems > 0 ? (purchasedCount / totalItems) * 100 : 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 shopping-list-print">
+    <div className='bg-white rounded-lg shadow-md p-6 shopping-list-print'>
       {/* 标题和状态 */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">购物清单</h2>
-          <div className="flex items-center gap-3">
+      <div className='mb-6'>
+        <div className='flex items-center justify-between mb-4'>
+          <h2 className='text-2xl font-bold text-gray-900'>购物清单</h2>
+          <div className='flex items-center gap-3'>
             {/* 打印和分享按钮（仅在屏幕显示） */}
-            <div className="flex gap-2 no-print">
+            <div className='flex gap-2 no-print'>
               <button
                 onClick={handlePrint}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
-                title="打印购物清单"
+                className='px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5'
+                title='打印购物清单'
               >
                 <span>🖨️</span>
                 <span>打印</span>
               </button>
               <button
                 onClick={handleShare}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
-                title="分享购物清单"
+                className='px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5'
+                title='分享购物清单'
               >
                 {copySuccess ? (
                   <>
@@ -399,30 +401,29 @@ export function ShoppingListView({
         </div>
 
         {/* 进度条 */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">采购进度</span>
-            <span className="text-sm font-medium text-gray-900">
+        <div className='mb-4'>
+          <div className='flex items-center justify-between mb-2'>
+            <span className='text-sm text-gray-600'>采购进度</span>
+            <span className='text-sm font-medium text-gray-900'>
               {purchasedCount} / {totalItems}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className='w-full bg-gray-200 rounded-full h-2'>
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className='bg-blue-600 h-2 rounded-full transition-all duration-300'
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
         {/* 预算追踪 */}
-        {shoppingList.budget !== null ||
-        shoppingList.estimatedCost !== null ? (
-            <BudgetTracker
-              budget={shoppingList.budget}
-              estimatedCost={shoppingList.estimatedCost}
-              actualCost={shoppingList.actualCost}
-            />
-          ) : null}
+        {shoppingList.budget !== null || shoppingList.estimatedCost !== null ? (
+          <BudgetTracker
+            budget={shoppingList.budget}
+            estimatedCost={shoppingList.estimatedCost}
+            actualCost={shoppingList.actualCost}
+          />
+        ) : null}
       </div>
 
       {/* 分类列表 */}
@@ -433,7 +434,7 @@ export function ShoppingListView({
 
       {/* 操作按钮 */}
       {shoppingList.status !== 'COMPLETED' && (
-        <div className="mt-6 flex gap-4 no-print">
+        <div className='mt-6 flex gap-4 no-print'>
           <button
             onClick={() => handleComplete()}
             disabled={purchasedCount < totalItems}
@@ -450,4 +451,3 @@ export function ShoppingListView({
     </div>
   );
 }
-

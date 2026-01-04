@@ -3,22 +3,22 @@
  * 生成各种类型的分享内容和描述
  */
 
-import { format } from "date-fns";
-import { zhCN } from "date-fns/locale";
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import type {
   ShareContentInput,
   ShareContentResult,
   ShareMetadata,
   OpenGraphMetadata,
   TwitterCardMetadata,
-} from "@/types/social-sharing";
+} from '@/types/social-sharing';
 import {
   ShareContentType,
   SHARE_CONTENT_TYPE_LABELS,
   SHARE_TEMPLATE_CONFIGS,
   ShareTemplate,
-} from "@/types/social-sharing";
-import { prisma } from "@/lib/db";
+} from '@/types/social-sharing';
+import { prisma } from '@/lib/db';
 
 /**
  * 分享内容生成器类
@@ -44,7 +44,7 @@ export class ShareContentGenerator {
     const baseUrl =
       options.baseUrl ||
       process.env.NEXT_PUBLIC_APP_URL ||
-      "https://health-butler.com";
+      'https://health-butler.com';
     const shareUrl = options.shareUrl || `${baseUrl}/share/${shareToken}`;
 
     // 根据类型生成内容
@@ -103,18 +103,18 @@ export class ShareContentGenerator {
       where: { id: input.memberId },
       include: {
         healthData: {
-          orderBy: { measuredAt: "desc" },
+          orderBy: { measuredAt: 'desc' },
           take: 30,
         },
         healthGoals: {
-          where: { status: "ACTIVE" },
+          where: { status: 'ACTIVE' },
           take: 1,
         },
       },
     });
 
     if (!member) {
-      throw new Error("用户未找到");
+      throw new Error('用户未找到');
     }
 
     // 计算健康指标
@@ -122,7 +122,7 @@ export class ShareContentGenerator {
     const healthScore = this.calculateHealthScore(member.healthData);
     const weightChange = this.calculateWeightChange(member.healthData);
 
-    const title = "我的健康报告";
+    const title = '我的健康报告';
     const description = this.generateHealthDescription(
       healthScore,
       weightChange,
@@ -134,12 +134,12 @@ export class ShareContentGenerator {
       weightChange,
       dataPoints: member.healthData.length,
       latestData,
-      period: "最近30天",
+      period: '最近30天',
     });
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -161,7 +161,7 @@ export class ShareContentGenerator {
     shareUrl: string,
   ) {
     if (!input.targetId) {
-      throw new Error("目标ID不能为空");
+      throw new Error('目标ID不能为空');
     }
 
     const healthGoal = await prisma.healthGoal.findUnique({
@@ -174,7 +174,7 @@ export class ShareContentGenerator {
     });
 
     if (!healthGoal) {
-      throw new Error("健康目标未找到");
+      throw new Error('健康目标未找到');
     }
 
     const title = `🎯 ${healthGoal.title} 目标达成！`;
@@ -189,7 +189,7 @@ export class ShareContentGenerator {
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -211,7 +211,7 @@ export class ShareContentGenerator {
     shareUrl: string,
   ) {
     if (!input.targetId) {
-      throw new Error("食谱ID不能为空");
+      throw new Error('食谱ID不能为空');
     }
 
     const recipe = await prisma.recipe.findUnique({
@@ -231,7 +231,7 @@ export class ShareContentGenerator {
     });
 
     if (!recipe) {
-      throw new Error("食谱未找到");
+      throw new Error('食谱未找到');
     }
 
     const title = `🍽️ 我创建的健康食谱：${recipe.name}`;
@@ -247,7 +247,7 @@ export class ShareContentGenerator {
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -269,7 +269,7 @@ export class ShareContentGenerator {
     shareUrl: string,
   ) {
     if (!input.targetId) {
-      throw new Error("成就ID不能为空");
+      throw new Error('成就ID不能为空');
     }
 
     const achievement = await prisma.achievement.findUnique({
@@ -282,10 +282,10 @@ export class ShareContentGenerator {
     });
 
     if (!achievement) {
-      throw new Error("成就未找到");
+      throw new Error('成就未找到');
     }
 
-    const { ACHIEVEMENT_TYPE_CONFIGS } = await import("@/types/social-sharing");
+    const { ACHIEVEMENT_TYPE_CONFIGS } = await import('@/types/social-sharing');
     const config = ACHIEVEMENT_TYPE_CONFIGS[achievement.type];
 
     const title = `🏆 解锁成就：${config.label}`;
@@ -304,7 +304,7 @@ export class ShareContentGenerator {
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -334,13 +334,13 @@ export class ShareContentGenerator {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 最近30天
             },
           },
-          orderBy: { measuredAt: "desc" },
+          orderBy: { measuredAt: 'desc' },
         },
       },
     });
 
     if (!member) {
-      throw new Error("用户未找到");
+      throw new Error('用户未找到');
     }
 
     const streakDays = this.calculateStreakDays(member.healthData);
@@ -351,13 +351,13 @@ export class ShareContentGenerator {
       streakDays,
       currentStreak: streakDays,
       bestStreak: streakDays,
-      period: "当前",
-      icon: "🔥",
+      period: '当前',
+      icon: '🔥',
     });
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -382,19 +382,19 @@ export class ShareContentGenerator {
       include: {
         healthData: {
           where: { weight: { not: null } },
-          orderBy: { measuredAt: "desc" },
+          orderBy: { measuredAt: 'desc' },
           take: 100,
         },
       },
     });
 
     if (!member) {
-      throw new Error("用户未找到");
+      throw new Error('用户未找到');
     }
 
     const weightData = member.healthData.filter((d) => d.weight !== null);
     if (weightData.length < 2) {
-      throw new Error("体重数据不足");
+      throw new Error('体重数据不足');
     }
 
     const currentWeight = weightData[0].weight!;
@@ -410,13 +410,13 @@ export class ShareContentGenerator {
       currentWeight,
       weightLoss,
       weightLossPercent,
-      period: "累计",
-      icon: "📉",
+      period: '累计',
+      icon: '📉',
     });
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -444,23 +444,23 @@ export class ShareContentGenerator {
     });
 
     if (!member) {
-      throw new Error("用户未找到");
+      throw new Error('用户未找到');
     }
 
-    const title = "⭐ 创造个人新纪录！";
+    const title = '⭐ 创造个人新纪录！';
     const description =
-      input.customMessage || "在健康管理的道路上又迈出了重要一步";
+      input.customMessage || '在健康管理的道路上又迈出了重要一步';
     const imageUrl = await this.generatePersonalRecordImage({
       memberName: member.name,
       title,
       description,
       recordDate: new Date(),
-      icon: "⭐",
+      icon: '⭐',
     });
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -481,13 +481,13 @@ export class ShareContentGenerator {
     shareUrl: string,
   ) {
     // 社区帖子通常已经有完整内容，这里主要是生成分享卡片
-    const title = input.title || "分享到社区";
-    const description = input.customMessage || "分享我的健康生活";
-    const imageUrl = input.imageUrl || "/images/default-community-share.jpg";
+    const title = input.title || '分享到社区';
+    const description = input.customMessage || '分享我的健康生活';
+    const imageUrl = input.imageUrl || '/images/default-community-share.jpg';
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -508,13 +508,13 @@ export class ShareContentGenerator {
     input: ShareContentInput,
     shareUrl: string,
   ) {
-    const title = input.title || "健康生活分享";
-    const description = input.customMessage || "分享我的健康数据";
-    const imageUrl = input.imageUrl || "/images/default-share.jpg";
+    const title = input.title || '健康生活分享';
+    const description = input.customMessage || '分享我的健康数据';
+    const imageUrl = input.imageUrl || '/images/default-share.jpg';
 
     return {
       content: {
-        id: "", // 会在API中生成
+        id: '', // 会在API中生成
         memberId: input.memberId,
         type: input.type,
         title,
@@ -561,10 +561,10 @@ export class ShareContentGenerator {
       description:
         input.description ||
         `Health Butler - ${SHARE_CONTENT_TYPE_LABELS[input.type]}`,
-      image: input.imageUrl || "/images/og-default.jpg",
+      image: input.imageUrl || '/images/og-default.jpg',
       url: shareUrl,
-      type: "website",
-      siteName: "Health Butler",
+      type: 'website',
+      siteName: 'Health Butler',
     };
   }
 
@@ -576,13 +576,13 @@ export class ShareContentGenerator {
     shareUrl: string,
   ): TwitterCardMetadata {
     return {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title: input.title,
       description:
         input.description ||
         `Health Butler - ${SHARE_CONTENT_TYPE_LABELS[input.type]}`,
-      image: input.imageUrl || "/images/og-default.jpg",
-      site: "@healthbutler",
+      image: input.imageUrl || '/images/og-default.jpg',
+      site: '@healthbutler',
     };
   }
 
@@ -653,7 +653,7 @@ export class ShareContentGenerator {
     period: string;
   } {
     const weightData = healthData.filter((d) => d.weight !== null);
-    if (weightData.length < 2) return { lost: 0, period: "暂无数据" };
+    if (weightData.length < 2) return { lost: 0, period: '暂无数据' };
 
     const currentWeight = weightData[0].weight;
     const initialWeight = weightData[weightData.length - 1].weight;
@@ -691,7 +691,7 @@ export class ShareContentGenerator {
 
     descriptions.push(`记录健康数据${dataPoints}次`);
 
-    return `${descriptions.join("，")}。`;
+    return `${descriptions.join('，')}。`;
   }
 
   /**
@@ -699,7 +699,7 @@ export class ShareContentGenerator {
    */
   private generateGoalAchievementDescription(goal: any): string {
     const achievedDate = goal.endDate || new Date();
-    const dateStr = format(achievedDate, "yyyy年MM月dd日", { locale: zhCN });
+    const dateStr = format(achievedDate, 'yyyy年MM月dd日', { locale: zhCN });
 
     return `在${dateStr}成功达成了"${goal.title}"目标，为我的健康管理增添了动力！`;
   }
@@ -715,7 +715,7 @@ export class ShareContentGenerator {
     if (recipe.carbs) nutrition.push(`${Math.round(recipe.carbs)}g碳水`);
     if (recipe.fat) nutrition.push(`${Math.round(recipe.fat)}g脂肪`);
 
-    const nutritionText = nutrition.join("，");
+    const nutritionText = nutrition.join('，');
     const ingredientsCount = recipe.ingredients.length;
 
     return `营养丰富的${recipe.name}，${ingredientsCount}种食材，${nutritionText}。快来试试这道健康美食吧！`;
@@ -757,31 +757,31 @@ export class ShareContentGenerator {
   // 图片生成方法（简化版本，实际实现中会调用图片生成服务）
   private async generateHealthReportImage(data: any): Promise<string> {
     // 临时返回默认图片URL，实际会生成个性化图片
-    return "/images/share/health-report.jpg";
+    return '/images/share/health-report.jpg';
   }
 
   private async generateGoalAchievedImage(data: any): Promise<string> {
-    return "/images/share/goal-achieved.jpg";
+    return '/images/share/goal-achieved.jpg';
   }
 
   private async generateRecipeImage(data: any): Promise<string> {
-    return "/images/share/recipe-card.jpg";
+    return '/images/share/recipe-card.jpg';
   }
 
   private async generateAchievementImage(data: any): Promise<string> {
-    return "/images/share/achievement-unlocked.jpg";
+    return '/images/share/achievement-unlocked.jpg';
   }
 
   private async generateStreakImage(data: any): Promise<string> {
-    return "/images/share/checkin-streak.jpg";
+    return '/images/share/checkin-streak.jpg';
   }
 
   private async generateWeightMilestoneImage(data: any): Promise<string> {
-    return "/images/share/weight-milestone.jpg";
+    return '/images/share/weight-milestone.jpg';
   }
 
   private async generatePersonalRecordImage(data: any): Promise<string> {
-    return "/images/share/personal-record.jpg";
+    return '/images/share/personal-record.jpg';
   }
 }
 
@@ -805,12 +805,12 @@ export async function generateSharePreview(
 ): Promise<any> {
   const generator = ShareContentGenerator.getInstance();
   const fullInput: ShareContentInput = {
-    memberId: input.memberId || "preview",
+    memberId: input.memberId || 'preview',
     type: input.type || ShareContentType.HEALTH_REPORT,
-    title: input.title || "预览标题",
+    title: input.title || '预览标题',
     description: input.description,
-    privacyLevel: input.privacyLevel || "PUBLIC",
-    platforms: input.platforms || ["COPY_LINK"],
+    privacyLevel: input.privacyLevel || 'PUBLIC',
+    platforms: input.platforms || ['COPY_LINK'],
     ...input,
   };
 

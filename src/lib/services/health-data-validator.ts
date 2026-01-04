@@ -1,6 +1,6 @@
 /**
  * Health Data Validation Service
- * 
+ *
  * 提供健康数据验证和异常检测功能
  */
 
@@ -13,32 +13,32 @@ import type { HealthDataSource } from '@prisma/client';
  * 健康数据输入类型
  */
 export interface HealthDataInput {
-  weight?: number | null
-  bodyFat?: number | null
-  muscleMass?: number | null
-  bloodPressureSystolic?: number | null
-  bloodPressureDiastolic?: number | null
-  heartRate?: number | null
-  measuredAt?: Date | string
-  source?: HealthDataSource
-  notes?: string | null
+  weight?: number | null;
+  bodyFat?: number | null;
+  muscleMass?: number | null;
+  bloodPressureSystolic?: number | null;
+  bloodPressureDiastolic?: number | null;
+  heartRate?: number | null;
+  measuredAt?: Date | string;
+  source?: HealthDataSource;
+  notes?: string | null;
 }
 
 /**
  * 验证结果类型
  */
 export interface ValidationResult {
-  valid: boolean
-  errors: string[]
-  warnings?: string[]
+  valid: boolean;
+  errors: string[];
+  warnings?: string[];
 }
 
 /**
  * 异常检测结果类型
  */
 export interface AnomalyDetectionResult {
-  isAnomaly: boolean
-  message?: string
+  isAnomaly: boolean;
+  message?: string;
 }
 
 /**
@@ -92,9 +92,7 @@ export const healthDataSchema = z.object({
 /**
  * 验证健康数据
  */
-export function validateHealthData(
-  data: HealthDataInput
-): ValidationResult {
+export function validateHealthData(data: HealthDataInput): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -116,16 +114,12 @@ export function validateHealthData(
 
   // 验证是否有至少一个健康指标
   const hasAnyData =
-    data.weight !== null &&
-    data.weight !== undefined ||
-    data.bodyFat !== null &&
-    data.bodyFat !== undefined ||
-    data.muscleMass !== null &&
-    data.muscleMass !== undefined ||
-    data.bloodPressureSystolic !== null &&
-    data.bloodPressureSystolic !== undefined ||
-    data.heartRate !== null &&
-    data.heartRate !== undefined;
+    (data.weight !== null && data.weight !== undefined) ||
+    (data.bodyFat !== null && data.bodyFat !== undefined) ||
+    (data.muscleMass !== null && data.muscleMass !== undefined) ||
+    (data.bloodPressureSystolic !== null &&
+      data.bloodPressureSystolic !== undefined) ||
+    (data.heartRate !== null && data.heartRate !== undefined);
 
   if (!hasAnyData) {
     errors.push('至少需要录入一个健康指标');
@@ -140,7 +134,7 @@ export function validateHealthData(
  */
 export async function detectAnomaly(
   memberId: string,
-  newData: HealthDataInput
+  newData: HealthDataInput,
 ): Promise<AnomalyDetectionResult> {
   try {
     // 查找最近一条记录
@@ -158,21 +152,22 @@ export async function detectAnomaly(
       ? new Date(newData.measuredAt)
       : new Date();
     const daysDiff = Math.abs(
-      differenceInDays(measuredAt, lastRecord.measuredAt)
+      differenceInDays(measuredAt, lastRecord.measuredAt),
     );
 
     // 检测体重异常变化（>5kg/天）
     if (newData.weight && lastRecord.weight) {
       const weightChange = Math.abs(newData.weight - lastRecord.weight);
-      const weightChangePerDay = daysDiff > 0 ? weightChange / daysDiff : weightChange;
+      const weightChangePerDay =
+        daysDiff > 0 ? weightChange / daysDiff : weightChange;
 
       if (weightChangePerDay > 5) {
         warnings.push(
-          `体重变化异常：${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)}kg，请确认数据准确性`
+          `体重变化异常：${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)}kg，请确认数据准确性`,
         );
       } else if (weightChangePerDay > 3) {
         warnings.push(
-          `体重变化较大：${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)}kg，请确认是否正常`
+          `体重变化较大：${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)}kg，请确认是否正常`,
         );
       }
     }
@@ -180,27 +175,23 @@ export async function detectAnomaly(
     // 检测体脂率异常变化（>5%/天）
     if (newData.bodyFat && lastRecord.bodyFat) {
       const bodyFatChange = Math.abs(newData.bodyFat - lastRecord.bodyFat);
-      const bodyFatChangePerDay = daysDiff > 0 ? bodyFatChange / daysDiff : bodyFatChange;
+      const bodyFatChangePerDay =
+        daysDiff > 0 ? bodyFatChange / daysDiff : bodyFatChange;
 
       if (bodyFatChangePerDay > 5) {
         warnings.push(
-          `体脂率变化异常：${bodyFatChange > 0 ? '+' : ''}${bodyFatChange.toFixed(1)}%，请确认数据准确性`
+          `体脂率变化异常：${bodyFatChange > 0 ? '+' : ''}${bodyFatChange.toFixed(1)}%，请确认数据准确性`,
         );
       }
     }
 
     // 检测血压异常变化
-    if (
-      newData.bloodPressureSystolic &&
-      lastRecord.bloodPressureSystolic
-    ) {
+    if (newData.bloodPressureSystolic && lastRecord.bloodPressureSystolic) {
       const bpChange = Math.abs(
-        newData.bloodPressureSystolic - lastRecord.bloodPressureSystolic
+        newData.bloodPressureSystolic - lastRecord.bloodPressureSystolic,
       );
       if (bpChange > 30) {
-        warnings.push(
-          `收缩压变化较大：${bpChange}mmHg，请确认数据准确性`
-        );
+        warnings.push(`收缩压变化较大：${bpChange}mmHg，请确认数据准确性`);
       }
     }
 
@@ -208,9 +199,7 @@ export async function detectAnomaly(
     if (newData.heartRate && lastRecord.heartRate) {
       const hrChange = Math.abs(newData.heartRate - lastRecord.heartRate);
       if (hrChange > 50) {
-        warnings.push(
-          `心率变化较大：${hrChange}bpm，请确认数据准确性`
-        );
+        warnings.push(`心率变化较大：${hrChange}bpm，请确认数据准确性`);
       }
     }
 
@@ -235,7 +224,7 @@ export async function detectAnomaly(
  */
 export async function validateAndDetectAnomaly(
   memberId: string,
-  data: HealthDataInput
+  data: HealthDataInput,
 ): Promise<ValidationResult & { anomaly?: AnomalyDetectionResult }> {
   const validation = validateHealthData(data);
 

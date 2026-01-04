@@ -11,7 +11,11 @@
  * @module analytics-repository
  */
 
-import type { DateRangeFilter, PaginatedResult, PaginationInput } from '../types/common';
+import type {
+  DateRangeFilter,
+  PaginatedResult,
+  PaginationInput,
+} from '../types/common';
 import type {
   AnomalyDTO,
   MemberProfileDTO,
@@ -52,7 +56,7 @@ export interface AnalyticsRepository {
    */
   aggregateMealLogs(
     memberId: string,
-    range: DateRangeFilter
+    range: DateRangeFilter,
   ): Promise<{
     totalDays: number;
     dataCompleteDays: number;
@@ -83,7 +87,11 @@ export interface AnalyticsRepository {
    * @param limit - 返回数量限制
    * @returns 异常列表
    */
-  listAnomalies(memberId: string, range: DateRangeFilter, limit?: number): Promise<AnomalyDTO[]>;
+  listAnomalies(
+    memberId: string,
+    range: DateRangeFilter,
+    limit?: number,
+  ): Promise<AnomalyDTO[]>;
 
   /**
    * 生成报告所需的综合数据
@@ -100,7 +108,10 @@ export interface AnalyticsRepository {
    * @param period - 报告周期
    * @returns 报告摘要数据
    */
-  getReportSummary(memberId: string, period: ReportSummaryDTO['period']): Promise<ReportSummaryDTO>;
+  getReportSummary(
+    memberId: string,
+    period: ReportSummaryDTO['period'],
+  ): Promise<ReportSummaryDTO>;
 
   /**
    * 保存报告快照
@@ -120,6 +131,6 @@ export interface AnalyticsRepository {
    */
   listReportSnapshots(
     memberId: string,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<ReportSnapshotDTO>>;
 }

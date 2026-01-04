@@ -41,8 +41,11 @@ describe('device-sync-service', () => {
     it('should have required methods defined', () => {
       // Check that service has the expected methods
       // TODO: Update based on actual service implementation
-      const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(service))
-        .filter(name => typeof service[name] === 'function' && name !== 'constructor');
+      const methods = Object.getOwnPropertyNames(
+        Object.getPrototypeOf(service),
+      ).filter(
+        (name) => typeof service[name] === 'function' && name !== 'constructor',
+      );
 
       expect(methods.length).toBeGreaterThan(0);
     });

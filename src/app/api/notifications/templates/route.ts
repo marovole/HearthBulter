@@ -42,7 +42,11 @@ export async function GET(request: NextRequest) {
     }
 
     // 分页查询
-    const { data: templates, error, count } = await query
+    const {
+      data: templates,
+      error,
+      count,
+    } = await query
       .order('createdAt', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -50,7 +54,7 @@ export async function GET(request: NextRequest) {
       console.error('查询通知模板失败:', error);
       return NextResponse.json(
         { error: 'Failed to fetch notification templates' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -67,7 +71,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching notification templates:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notification templates' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -97,7 +101,7 @@ export async function POST(request: NextRequest) {
     if (!type || !titleTemplate || !contentTemplate) {
       return NextResponse.json(
         { error: 'Type, title template, and content template are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -106,7 +110,7 @@ export async function POST(request: NextRequest) {
     if (!validation.isValid) {
       return NextResponse.json(
         { error: 'Invalid template content', details: validation.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -117,7 +121,9 @@ export async function POST(request: NextRequest) {
       type,
       titleTemplate,
       contentTemplate,
-      channelTemplates: channelTemplates ? JSON.stringify(channelTemplates) : null,
+      channelTemplates: channelTemplates
+        ? JSON.stringify(channelTemplates)
+        : null,
       variables: variables ? JSON.stringify(variables) : null,
       isActive: isActive !== undefined ? isActive : true,
       version: version || '1.0',
@@ -141,7 +147,7 @@ export async function POST(request: NextRequest) {
       console.error('保存通知模板失败:', upsertError);
       return NextResponse.json(
         { error: 'Failed to save notification template' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -154,7 +160,7 @@ export async function POST(request: NextRequest) {
     console.error('Error saving notification template:', error);
     return NextResponse.json(
       { error: 'Failed to save notification template' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -170,7 +176,7 @@ export async function PUT(request: NextRequest) {
     if (!type) {
       return NextResponse.json(
         { error: 'Template type is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -187,14 +193,14 @@ export async function PUT(request: NextRequest) {
       console.error('查询模板失败:', error);
       return NextResponse.json(
         { error: 'Failed to fetch template' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (!template) {
       return NextResponse.json(
         { error: 'Template not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -214,7 +220,7 @@ export async function PUT(request: NextRequest) {
     console.error('Error previewing template:', error);
     return NextResponse.json(
       { error: 'Failed to preview template' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -237,7 +243,7 @@ function renderTemplate(template: string, data: Record<string, any>): string {
  */
 function validateTemplateContent(
   titleTemplate: string,
-  contentTemplate: string
+  contentTemplate: string,
 ): {
   isValid: boolean;
   errors: string[];

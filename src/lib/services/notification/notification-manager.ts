@@ -1,5 +1,8 @@
 import { randomUUID } from 'crypto';
-import type { NotificationRepository, NotificationRecipientDTO } from '@/lib/repositories/interfaces/notification-repository';
+import type {
+  NotificationRepository,
+  NotificationRecipientDTO,
+} from '@/lib/repositories/interfaces/notification-repository';
 import type {
   CreateNotificationDTO,
   NotificationChannel,
@@ -104,42 +107,56 @@ export class NotificationManager {
     let notificationId: string | undefined;
 
     try {
-      const recipient = await this.repository.getNotificationRecipient(memberId);
+      const recipient =
+        await this.repository.getNotificationRecipient(memberId);
       if (!recipient) {
         return { success: false, error: 'User not found' };
       }
 
       const preferences =
-        recipient.preferences ?? (await this.repository.getNotificationPreferences(memberId)) ?? undefined;
+        recipient.preferences ??
+        (await this.repository.getNotificationPreferences(memberId)) ??
+        undefined;
 
       const resolvedChannels = this.resolveChannels(data.channels);
-      const enabledChannels = this.filterEnabledChannels(resolvedChannels, recipient, preferences);
+      const enabledChannels = this.filterEnabledChannels(
+        resolvedChannels,
+        recipient,
+        preferences,
+      );
 
       if (!enabledChannels.length) {
         return { success: false, error: 'No enabled channels available' };
       }
 
-      const payload = this.buildNotificationPayload(memberId, data, enabledChannels);
+      const payload = this.buildNotificationPayload(
+        memberId,
+        data,
+        enabledChannels,
+      );
       const notification = await this.repository.createNotification(payload);
       notificationId = notification.id;
 
       const deliveryResults = await Promise.all(
-        enabledChannels.map(channel =>
+        enabledChannels.map((channel) =>
           channel === 'IN_APP'
             ? Promise.resolve<ChannelDispatchResult>({
-              channel,
-              success: true,
-              sentAt: new Date(),
-            })
+                channel,
+                success: true,
+                sentAt: new Date(),
+              })
             : this.dispatchChannel(channel, recipient, data),
         ),
       );
 
-      const hasFailure = deliveryResults.some(result => !result.success);
-      await this.repository.updateStatus(notificationId, hasFailure ? 'FAILED' : 'SENT');
+      const hasFailure = deliveryResults.some((result) => !result.success);
+      await this.repository.updateStatus(
+        notificationId,
+        hasFailure ? 'FAILED' : 'SENT',
+      );
 
       await Promise.all(
-        deliveryResults.map(result =>
+        deliveryResults.map((result) =>
           this.repository.appendDeliveryLog({
             notificationId: notificationId!,
             channel: result.channel,
@@ -153,7 +170,8 @@ export class NotificationManager {
       return {
         success: !hasFailure,
         notificationId,
-        messageId: deliveryResults.find(r => r.success && r.messageId)?.messageId,
+        messageId: deliveryResults.find((r) => r.success && r.messageId)
+          ?.messageId,
         error: hasFailure ? 'One or more channels failed' : undefined,
       };
     } catch (error) {
@@ -168,40 +186,52 @@ export class NotificationManager {
     }
   }
 
-  async sendBulkNotifications(dataList: NotificationData[]): Promise<BulkNotificationResult> {
-    const results = await Promise.allSettled(dataList.map(data => this.sendNotification(data)));
+  async sendBulkNotifications(
+    dataList: NotificationData[],
+  ): Promise<BulkNotificationResult> {
+    const results = await Promise.allSettled(
+      dataList.map((data) => this.sendNotification(data)),
+    );
 
-    const normalized = results.map(result =>
+    const normalized = results.map((result) =>
       result.status === 'fulfilled'
         ? result.value
         : { success: false, error: result.reason?.message ?? 'Unknown error' },
     );
 
     return {
-      success: normalized.every(r => r.success),
+      success: normalized.every((r) => r.success),
       results: normalized,
       summary: {
         total: normalized.length,
-        successful: normalized.filter(r => r.success).length,
-        failed: normalized.filter(r => !r.success).length,
+        successful: normalized.filter((r) => r.success).length,
+        failed: normalized.filter((r) => !r.success).length,
       },
     };
   }
 
-  async scheduleNotification(data: ScheduledNotificationData): Promise<ScheduleResult> {
+  async scheduleNotification(
+    data: ScheduledNotificationData,
+  ): Promise<ScheduleResult> {
     if (data.scheduledTime <= new Date()) {
-      return { success: false, error: 'Cannot schedule notification in the past' };
+      return {
+        success: false,
+        error: 'Cannot schedule notification in the past',
+      };
     }
 
     try {
       const memberId = data.userId;
-      const recipient = await this.repository.getNotificationRecipient(memberId);
+      const recipient =
+        await this.repository.getNotificationRecipient(memberId);
       if (!recipient) {
         return { success: false, error: 'User not found' };
       }
 
       const preferences =
-        recipient.preferences ?? (await this.repository.getNotificationPreferences(memberId)) ?? undefined;
+        recipient.preferences ??
+        (await this.repository.getNotificationPreferences(memberId)) ??
+        undefined;
 
       const channels = this.filterEnabledChannels(
         this.resolveChannels(data.channels),
@@ -223,7 +253,8 @@ export class NotificationManager {
         retryCount: 0,
       };
 
-      const schedule = await this.repository.createScheduledNotification(schedulePayload);
+      const schedule =
+        await this.repository.createScheduledNotification(schedulePayload);
       return { success: true, scheduleId: schedule.id };
     } catch (error) {
       return {
@@ -235,7 +266,12 @@ export class NotificationManager {
 
   async getUserNotifications(
     userId: string,
-    options: { type?: string; status?: string; limit?: number; offset?: number } = {},
+    options: {
+      type?: string;
+      status?: string;
+      limit?: number;
+      offset?: number;
+    } = {},
   ): Promise<UserNotificationsResult> {
     try {
       const page = await this.repository.listMemberNotifications(
@@ -253,7 +289,7 @@ export class NotificationManager {
 
       return {
         success: true,
-        notifications: page.items.map(item => ({
+        notifications: page.items.map((item) => ({
           id: item.id,
           type: item.type,
           title: item.title,
@@ -272,9 +308,12 @@ export class NotificationManager {
     }
   }
 
-  async markNotificationAsRead(notificationId: string): Promise<NotificationResult> {
+  async markNotificationAsRead(
+    notificationId: string,
+  ): Promise<NotificationResult> {
     try {
-      const notification = await this.repository.getNotificationById(notificationId);
+      const notification =
+        await this.repository.getNotificationById(notificationId);
       if (!notification) {
         return { success: false, error: 'Notification not found' };
       }
@@ -289,7 +328,10 @@ export class NotificationManager {
     }
   }
 
-  async deleteNotification(notificationId: string, userId: string): Promise<NotificationResult> {
+  async deleteNotification(
+    notificationId: string,
+    userId: string,
+  ): Promise<NotificationResult> {
     try {
       await this.repository.deleteNotification(notificationId, userId);
       return { success: true, notificationId };
@@ -312,22 +354,30 @@ export class NotificationManager {
       let messageId: string | undefined;
 
       switch (channel) {
-      case 'EMAIL':
-        messageId = await this.email.send(recipient.memberId ?? data.userId, data.title, data.content, { html: true });
-        break;
-      case 'SMS':
-        if (!recipient.phone) throw new Error('User phone not bound');
-        messageId = await this.sms.send(recipient.phone, data.content);
-        break;
-      case 'WECHAT':
-        if (!recipient.wechatOpenId) throw new Error('User WeChat not bound');
-        messageId = await this.wechat.sendMessage(recipient.wechatOpenId, data.content);
-        break;
-      case 'PUSH':
-        messageId = await this.sendPush(recipient, data);
-        break;
-      default:
-        throw new Error(`Unsupported channel: ${channel}`);
+        case 'EMAIL':
+          messageId = await this.email.send(
+            recipient.memberId ?? data.userId,
+            data.title,
+            data.content,
+            { html: true },
+          );
+          break;
+        case 'SMS':
+          if (!recipient.phone) throw new Error('User phone not bound');
+          messageId = await this.sms.send(recipient.phone, data.content);
+          break;
+        case 'WECHAT':
+          if (!recipient.wechatOpenId) throw new Error('User WeChat not bound');
+          messageId = await this.wechat.sendMessage(
+            recipient.wechatOpenId,
+            data.content,
+          );
+          break;
+        case 'PUSH':
+          messageId = await this.sendPush(recipient, data);
+          break;
+        default:
+          throw new Error(`Unsupported channel: ${channel}`);
       }
 
       return { channel, success: true, messageId, sentAt };
@@ -344,9 +394,9 @@ export class NotificationManager {
   private resolveChannels(
     requested?: Array<NotificationChannel | Lowercase<NotificationChannel>>,
   ): NotificationChannel[] {
-    const normalized = (requested ?? ['push']).map(channel => this.normalizeChannel(channel)).filter(
-      (channel): channel is NotificationChannel => Boolean(channel),
-    );
+    const normalized = (requested ?? ['push'])
+      .map((channel) => this.normalizeChannel(channel))
+      .filter((channel): channel is NotificationChannel => Boolean(channel));
 
     if (!normalized.includes('IN_APP')) {
       normalized.push('IN_APP');
@@ -362,18 +412,18 @@ export class NotificationManager {
 
     const upper = channel.toUpperCase();
     switch (upper) {
-    case 'EMAIL':
-      return 'EMAIL';
-    case 'SMS':
-      return 'SMS';
-    case 'WECHAT':
-      return 'WECHAT';
-    case 'PUSH':
-      return 'PUSH';
-    case 'IN_APP':
-      return 'IN_APP';
-    default:
-      return null;
+      case 'EMAIL':
+        return 'EMAIL';
+      case 'SMS':
+        return 'SMS';
+      case 'WECHAT':
+        return 'WECHAT';
+      case 'PUSH':
+        return 'PUSH';
+      case 'IN_APP':
+        return 'IN_APP';
+      default:
+        return null;
     }
   }
 
@@ -387,22 +437,22 @@ export class NotificationManager {
       ...(preferences?.channelPreferences ?? {}),
     };
 
-    return channels.filter(channel => {
+    return channels.filter((channel) => {
       if (channel === 'IN_APP') return true;
 
       if (!preferenceMap[channel]) return false;
 
       switch (channel) {
-      case 'EMAIL':
-        return Boolean(recipient.email);
-      case 'SMS':
-        return Boolean(recipient.phone);
-      case 'WECHAT':
-        return Boolean(recipient.wechatOpenId);
-      case 'PUSH':
-        return Boolean(recipient.pushTokens?.length);
-      default:
-        return false;
+        case 'EMAIL':
+          return Boolean(recipient.email);
+        case 'SMS':
+          return Boolean(recipient.phone);
+        case 'WECHAT':
+          return Boolean(recipient.wechatOpenId);
+        case 'PUSH':
+          return Boolean(recipient.pushTokens?.length);
+        default:
+          return false;
       }
     });
   }
@@ -425,20 +475,25 @@ export class NotificationManager {
     };
   }
 
-  private mapPriority(priority?: NotificationData['priority']): NotificationPriority {
+  private mapPriority(
+    priority?: NotificationData['priority'],
+  ): NotificationPriority {
     switch (priority) {
-    case 'low':
-      return 'LOW';
-    case 'high':
-      return 'HIGH';
-    case 'urgent':
-      return 'URGENT';
-    default:
-      return 'MEDIUM';
+      case 'low':
+        return 'LOW';
+      case 'high':
+        return 'HIGH';
+      case 'urgent':
+        return 'URGENT';
+      default:
+        return 'MEDIUM';
     }
   }
 
-  private async safeUpdateStatus(notificationId: string, status: NotificationStatus): Promise<void> {
+  private async safeUpdateStatus(
+    notificationId: string,
+    status: NotificationStatus,
+  ): Promise<void> {
     try {
       await this.repository.updateStatus(notificationId, status);
     } catch (error) {
@@ -446,7 +501,10 @@ export class NotificationManager {
     }
   }
 
-  private async sendPush(recipient: NotificationRecipientDTO, data: NotificationData): Promise<string> {
+  private async sendPush(
+    recipient: NotificationRecipientDTO,
+    data: NotificationData,
+  ): Promise<string> {
     if (!recipient.pushTokens?.length) {
       throw new Error('User has no registered push token');
     }

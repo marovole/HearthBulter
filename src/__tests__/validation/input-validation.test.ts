@@ -6,8 +6,14 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { z } from 'zod';
 import { NextRequest } from 'next/server';
-import { validationMiddleware, commonSchemas } from '@/lib/middleware/validation-middleware';
-import { SQLInjectionDetector, XSSDetector } from '@/lib/security/security-middleware';
+import {
+  validationMiddleware,
+  commonSchemas,
+} from '@/lib/middleware/validation-middleware';
+import {
+  SQLInjectionDetector,
+  XSSDetector,
+} from '@/lib/security/security-middleware';
 import { checkSecurity } from '@/lib/security/security-middleware';
 
 describe('输入验证测试', () => {
@@ -32,12 +38,12 @@ describe('输入验证测试', () => {
         { name: 123 },
       ];
 
-      validInputs.forEach(input => {
+      validInputs.forEach((input) => {
         const result = schema.safeParse(input);
         expect(result.success).toBe(true);
       });
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         const result = schema.safeParse(input);
         expect(result.success).toBe(false);
       });
@@ -62,12 +68,12 @@ describe('输入验证测试', () => {
         { age: null, score: undefined },
       ];
 
-      validInputs.forEach(input => {
+      validInputs.forEach((input) => {
         const result = schema.safeParse(input);
         expect(result.success).toBe(true);
       });
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         const result = schema.safeParse(input);
         expect(result.success).toBe(false);
       });
@@ -87,16 +93,31 @@ describe('输入验证测试', () => {
 
       const invalidInputs = [
         { tags: [], scores: [101] },
-        { tags: ['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8', 'tag9', 'tag10', 'tag11'], scores: [] },
+        {
+          tags: [
+            'tag1',
+            'tag2',
+            'tag3',
+            'tag4',
+            'tag5',
+            'tag6',
+            'tag7',
+            'tag8',
+            'tag9',
+            'tag10',
+            'tag11',
+          ],
+          scores: [],
+        },
         { tags: null, scores: [100] },
       ];
 
-      validInputs.forEach(input => {
+      validInputs.forEach((input) => {
         const result = schema.safeParse(input);
         expect(result.success).toBe(true);
       });
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         const result = schema.safeParse(input);
         expect(result.success).toBe(false);
       });
@@ -110,7 +131,10 @@ describe('输入验证测试', () => {
 
       const validInputs = [
         { birthDate: '1990-01-01T00:00:00.000Z' },
-        { birthDate: '2024-12-31T23:59:59.999Z', appointmentDate: '2024-01-15T10:00:00.000Z' },
+        {
+          birthDate: '2024-12-31T23:59:59.999Z',
+          appointmentDate: '2024-01-15T10:00:00.000Z',
+        },
       ];
 
       const invalidInputs = [
@@ -120,12 +144,12 @@ describe('输入验证测试', () => {
         { birthDate: 1234567890 },
       ];
 
-      validInputs.forEach(input => {
+      validInputs.forEach((input) => {
         const result = schema.safeParse(input);
         expect(result.success).toBe(true);
       });
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         const result = schema.safeParse(input);
         expect(result.success).toBe(false);
       });
@@ -148,9 +172,9 @@ describe('输入验证测试', () => {
       testCases.forEach(({ query, valid }) => {
         const url = new URL(`http://localhost:3000/api/test?${query}`);
         const queryParams = Object.fromEntries(url.searchParams);
-        
+
         const result = commonSchemas.pagination.safeParse(queryParams);
-        
+
         if (valid) {
           expect(result.success).toBe(true);
           expect(result.data.page).toBeGreaterThan(0);
@@ -174,9 +198,9 @@ describe('输入验证测试', () => {
       testCases.forEach(({ query, valid }) => {
         const url = new URL(`http://localhost:3000/api/test?${query}`);
         const queryParams = Object.fromEntries(url.searchParams);
-        
+
         const result = commonSchemas.search.safeParse(queryParams);
-        
+
         if (valid) {
           expect(result.success).toBe(true);
         } else {
@@ -196,9 +220,9 @@ describe('输入验证测试', () => {
       testCases.forEach(({ query, valid }) => {
         const url = new URL(`http://localhost:3000/api/test?${query}`);
         const queryParams = Object.fromEntries(url.searchParams);
-        
+
         const result = commonSchemas.sort.safeParse(queryParams);
-        
+
         if (valid) {
           expect(result.success).toBe(true);
           expect(['asc', 'desc']).toContain(result.data.order);
@@ -270,15 +294,45 @@ describe('输入验证测试', () => {
       });
 
       const validFiles = [
-        { name: 'image.jpg', type: 'image/jpeg', size: 1024, content: Buffer.from('fake-image-data') },
-        { name: 'document.pdf', type: 'application/pdf', size: 2048, content: Buffer.from('fake-pdf-data') },
-        { name: 'notes.txt', type: 'text/plain', size: 512, content: Buffer.from('fake-text-data') },
+        {
+          name: 'image.jpg',
+          type: 'image/jpeg',
+          size: 1024,
+          content: Buffer.from('fake-image-data'),
+        },
+        {
+          name: 'document.pdf',
+          type: 'application/pdf',
+          size: 2048,
+          content: Buffer.from('fake-pdf-data'),
+        },
+        {
+          name: 'notes.txt',
+          type: 'text/plain',
+          size: 512,
+          content: Buffer.from('fake-text-data'),
+        },
       ];
 
       const invalidFiles = [
-        { name: 'script.js', type: 'application/javascript', size: 1024, content: Buffer.from('fake-js-data') },
-        { name: 'large.jpg', type: 'image/jpeg', size: 100 * 1024 * 1024, content: Buffer.from('fake-large-data') },
-        { name: '', type: 'image/jpeg', size: 1024, content: Buffer.from('fake-data') },
+        {
+          name: 'script.js',
+          type: 'application/javascript',
+          size: 1024,
+          content: Buffer.from('fake-js-data'),
+        },
+        {
+          name: 'large.jpg',
+          type: 'image/jpeg',
+          size: 100 * 1024 * 1024,
+          content: Buffer.from('fake-large-data'),
+        },
+        {
+          name: '',
+          type: 'image/jpeg',
+          size: 1024,
+          content: Buffer.from('fake-data'),
+        },
       ];
 
       for (const file of validFiles) {
@@ -296,17 +350,17 @@ describe('输入验证测试', () => {
   describe('数据清理测试', () => {
     test('应该清理SQL注入字符', () => {
       const maliciousInputs = [
-        '\'; DROP TABLE users; --',
-        '\' OR \'1\'=\'1',
-        'admin\'--',
-        '\' UNION SELECT * FROM users --',
+        "'; DROP TABLE users; --",
+        "' OR '1'='1",
+        "admin'--",
+        "' UNION SELECT * FROM users --",
         '1; DELETE FROM users WHERE 1=1; --',
       ];
 
-      maliciousInputs.forEach(input => {
+      maliciousInputs.forEach((input) => {
         const sanitized = SQLInjectionDetector.sanitize(input);
-        
-        expect(sanitized).not.toContain('\'');
+
+        expect(sanitized).not.toContain("'");
         expect(sanitized).not.toContain(';');
         expect(sanitized).not.toContain('--');
         expect(sanitized).not.toContain('DROP');
@@ -318,16 +372,16 @@ describe('输入验证测试', () => {
 
     test('应该清理XSS字符', () => {
       const maliciousInputs = [
-        '<script>alert(\'XSS\')</script>',
-        '<img src=x onerror=alert(\'XSS\')>',
-        'javascript:alert(\'XSS\')',
-        '<svg onload=alert(\'XSS\')>',
-        'expression(alert(\'XSS\'))',
+        "<script>alert('XSS')</script>",
+        "<img src=x onerror=alert('XSS')>",
+        "javascript:alert('XSS')",
+        "<svg onload=alert('XSS')>",
+        "expression(alert('XSS'))",
       ];
 
-      maliciousInputs.forEach(input => {
+      maliciousInputs.forEach((input) => {
         const sanitized = XSSDetector.sanitize(input);
-        
+
         expect(sanitized).not.toContain('<script>');
         expect(sanitized).not.toContain('</script>');
         expect(sanitized).not.toContain('onerror=');
@@ -339,21 +393,21 @@ describe('输入验证测试', () => {
 
     test('应该清理复杂对象', () => {
       const maliciousObject = {
-        name: 'admin\'; DROP TABLE users; --',
+        name: "admin'; DROP TABLE users; --",
         email: 'test@example.com',
         profile: {
-          bio: '<script>alert(\'XSS\')</script>',
-          tags: ['tag1', 'tag2<script>alert(\'XSS\')</script>'],
+          bio: "<script>alert('XSS')</script>",
+          tags: ['tag1', "tag2<script>alert('XSS')</script>"],
           metadata: {
-            sql: '\'; DROP TABLE users; --',
-            xss: '<img src=x onerror=alert(\'XSS\')>',
+            sql: "'; DROP TABLE users; --",
+            xss: "<img src=x onerror=alert('XSS')>",
           },
         },
         array: [
           'normal',
-          '\'; SELECT * FROM users --',
-          '<script>alert(\'XSS\')</script>',
-          { nested: '\'; DROP TABLE users; --' },
+          "'; SELECT * FROM users --",
+          "<script>alert('XSS')</script>",
+          { nested: "'; DROP TABLE users; --" },
         ],
       };
 
@@ -361,16 +415,20 @@ describe('输入验证测试', () => {
       const xssSanitized = XSSDetector.sanitize(maliciousObject);
 
       // 检查SQL注入清理
-      expect(sqlSanitized.name).not.toContain('\'');
+      expect(sqlSanitized.name).not.toContain("'");
       expect(sqlSanitized.name).not.toContain(';');
       expect(sqlSanitized.name).not.toContain('DROP');
-      expect((sqlSanitized.profile as any).bio).not.toContain('\'');
-      expect(((sqlSanitized.profile as any).metadata as any).sql).not.toContain('\'');
+      expect((sqlSanitized.profile as any).bio).not.toContain("'");
+      expect(((sqlSanitized.profile as any).metadata as any).sql).not.toContain(
+        "'",
+      );
 
       // 检查XSS清理
       expect(xssSanitized.name).not.toContain('<script>');
       expect((xssSanitized.profile as any).bio).not.toContain('<script>');
-      expect(((xssSanitized.profile as any).metadata as any).xss).not.toContain('<script>');
+      expect(((xssSanitized.profile as any).metadata as any).xss).not.toContain(
+        '<script>',
+      );
       expect((xssSanitized.array as string[])[2]).not.toContain('<script>');
     });
   });
@@ -418,9 +476,12 @@ describe('输入验证测试', () => {
         }),
       });
 
-      const result = await validationMiddleware.validateRequest(invalidRequest, {
-        body: schema,
-      });
+      const result = await validationMiddleware.validateRequest(
+        invalidRequest,
+        {
+          body: schema,
+        },
+      );
 
       expect(result.success).toBe(false);
       expect(result.errors?.body).toBeDefined();
@@ -433,15 +494,21 @@ describe('输入验证测试', () => {
         email: z.string().email(),
       });
 
-      const invalidJsonRequest = new NextRequest('http://localhost:3000/api/test', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: 'invalid json',
-      });
+      const invalidJsonRequest = new NextRequest(
+        'http://localhost:3000/api/test',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: 'invalid json',
+        },
+      );
 
-      const result = await validationMiddleware.validateRequest(invalidJsonRequest, {
-        body: schema,
-      });
+      const result = await validationMiddleware.validateRequest(
+        invalidJsonRequest,
+        {
+          body: schema,
+        },
+      );
 
       expect(result.success).toBe(false);
       expect(result.errors?.body).toBeDefined();
@@ -451,11 +518,11 @@ describe('输入验证测试', () => {
   describe('安全验证集成测试', () => {
     test('应该检测和阻止SQL注入', async () => {
       const maliciousRequest = new NextRequest(
-        'http://localhost:3000/api/users?id=1\'; DROP TABLE users; --',
+        "http://localhost:3000/api/users?id=1'; DROP TABLE users; --",
         {
           method: 'GET',
           headers: { 'content-type': 'application/json' },
-        }
+        },
       );
 
       const securityResult = await checkSecurity(maliciousRequest, {
@@ -465,20 +532,25 @@ describe('输入验证测试', () => {
 
       expect(securityResult.safe).toBe(false);
       expect(securityResult.threats).toBeDefined();
-      expect(securityResult.threats!.some(t => t.includes('SQL注入'))).toBe(true);
+      expect(securityResult.threats!.some((t) => t.includes('SQL注入'))).toBe(
+        true,
+      );
       expect(securityResult.audit).toBeDefined();
       expect(securityResult.audit!.blocked).toBe(true);
     });
 
     test('应该检测和阻止XSS攻击', async () => {
-      const maliciousRequest = new NextRequest('http://localhost:3000/api/profile', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          name: '<script>alert(\'XSS\')</script>',
-          bio: '<img src=x onerror=alert(\'XSS\')>',
-        }),
-      });
+      const maliciousRequest = new NextRequest(
+        'http://localhost:3000/api/profile',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            name: "<script>alert('XSS')</script>",
+            bio: "<img src=x onerror=alert('XSS')>",
+          }),
+        },
+      );
 
       const securityResult = await checkSecurity(maliciousRequest, {
         preventXSS: true,
@@ -487,7 +559,7 @@ describe('输入验证测试', () => {
 
       expect(securityResult.safe).toBe(false);
       expect(securityResult.threats).toBeDefined();
-      expect(securityResult.threats!.some(t => t.includes('XSS'))).toBe(true);
+      expect(securityResult.threats!.some((t) => t.includes('XSS'))).toBe(true);
       expect(securityResult.audit).toBeDefined();
       expect(securityResult.audit!.blocked).toBe(true);
     });
@@ -541,14 +613,14 @@ describe('输入验证测试', () => {
 
       expect(result.success).toBe(false);
       expect(result.errors?.body).toBeDefined();
-      
+
       const errors = result.errors!.body;
       expect(errors).toHaveLength(3);
-      
+
       // 检查错误消息格式
-      expect(errors.some(e => e.includes('name'))).toBe(true);
-      expect(errors.some(e => e.includes('email'))).toBe(true);
-      expect(errors.some(e => e.includes('age'))).toBe(true);
+      expect(errors.some((e) => e.includes('name'))).toBe(true);
+      expect(errors.some((e) => e.includes('email'))).toBe(true);
+      expect(errors.some((e) => e.includes('age'))).toBe(true);
     });
 
     test('应该处理类型错误', async () => {
@@ -572,9 +644,9 @@ describe('输入验证测试', () => {
 
       expect(result.success).toBe(false);
       expect(result.errors?.body).toBeDefined();
-      
+
       const errors = result.errors!.body;
-      expect(errors.some(e => e.includes('类型错误'))).toBe(true);
+      expect(errors.some((e) => e.includes('类型错误'))).toBe(true);
     });
 
     test('应该处理枚举错误', async () => {
@@ -598,11 +670,11 @@ describe('输入验证测试', () => {
 
       expect(result.success).toBe(false);
       expect(result.errors?.body).toBeDefined();
-      
+
       const errors = result.errors!.body;
-      expect(errors.some(e => e.includes('无效的值'))).toBe(true);
-      expect(errors.some(e => e.includes('status'))).toBe(true);
-      expect(errors.some(e => e.includes('priority'))).toBe(true);
+      expect(errors.some((e) => e.includes('无效的值'))).toBe(true);
+      expect(errors.some((e) => e.includes('status'))).toBe(true);
+      expect(errors.some((e) => e.includes('priority'))).toBe(true);
     });
   });
 
@@ -641,13 +713,16 @@ describe('输入验证测试', () => {
         expect(result.success).toBe(true);
       }
 
-      const avgTime = validationTimes.reduce((a, b) => a + b, 0) / validationTimes.length;
+      const avgTime =
+        validationTimes.reduce((a, b) => a + b, 0) / validationTimes.length;
       const maxTime = Math.max(...validationTimes);
 
       expect(avgTime).toBeLessThan(50); // 平均验证时间应小于50ms
       expect(maxTime).toBeLessThan(100); // 最大验证时间应小于100ms
 
-      console.log(`输入验证平均时间: ${avgTime.toFixed(2)}ms, 最大时间: ${maxTime.toFixed(2)}ms`);
+      console.log(
+        `输入验证平均时间: ${avgTime.toFixed(2)}ms, 最大时间: ${maxTime.toFixed(2)}ms`,
+      );
     });
   });
 

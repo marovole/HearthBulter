@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       // 获取热门食物价格趋势
       const limit = parseInt(searchParams.get('limit') || '20');
       const trends = await priceAnalyzer.getPopularFoodsPrices(limit);
-      
+
       return NextResponse.json({
         type: 'popular',
         data: trends,
@@ -24,16 +24,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (!foodId) {
-      return NextResponse.json(
-        { error: '缺少foodId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少foodId参数' }, { status: 400 });
     }
 
     // 获取特定食物的价格趋势
     const trend = await priceAnalyzer.getPriceTrend(
       foodId,
-      days ? parseInt(days) : undefined
+      days ? parseInt(days) : undefined,
     );
 
     return NextResponse.json({
@@ -41,21 +38,14 @@ export async function GET(request: NextRequest) {
       foodId,
       data: trend,
     });
-
   } catch (error) {
     console.error('获取价格趋势失败:', error);
-    
+
     if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: '获取价格趋势失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取价格趋势失败' }, { status: 500 });
   }
 }
 
@@ -65,10 +55,7 @@ export async function POST(request: NextRequest) {
     const { foodIds, memberId, alertConfig } = body;
 
     if (!foodIds || !Array.isArray(foodIds)) {
-      return NextResponse.json(
-        { error: '缺少foodIds参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少foodIds参数' }, { status: 400 });
     }
 
     // 批量获取价格趋势
@@ -78,9 +65,13 @@ export async function POST(request: NextRequest) {
           const trend = await priceAnalyzer.getPriceTrend(foodId);
           return { foodId, success: true, data: trend };
         } catch (error) {
-          return { foodId, success: false, error: error instanceof Error ? error.message : '未知错误' };
+          return {
+            foodId,
+            success: false,
+            error: error instanceof Error ? error.message : '未知错误',
+          };
         }
-      })
+      }),
     );
 
     // 生成价格预警
@@ -98,24 +89,20 @@ export async function POST(request: NextRequest) {
       alerts,
       summary: {
         total: foodIds.length,
-        successful: trends.filter(t => t.success).length,
-        failed: trends.filter(t => !t.success).length,
+        successful: trends.filter((t) => t.success).length,
+        failed: trends.filter((t) => !t.success).length,
       },
     });
-
   } catch (error) {
     console.error('批量获取价格趋势失败:', error);
-    
+
     if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     return NextResponse.json(
       { error: '批量获取价格趋势失败' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

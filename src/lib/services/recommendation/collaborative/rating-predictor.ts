@@ -43,7 +43,7 @@ export class RatingPredictor {
     matrix: UserItemMatrix,
     userId: string,
     itemId: string,
-    customConfig?: Partial<PredictionConfig>
+    customConfig?: Partial<PredictionConfig>,
   ): Promise<PredictionResult> {
     const config = { ...this.config, ...customConfig };
 
@@ -62,24 +62,32 @@ export class RatingPredictor {
     let prediction: PredictionResult;
 
     switch (config.method) {
-    case 'user_based':
-      prediction = this.predictUserBased(matrix, userId, itemId, config);
-      break;
-    case 'item_based':
-      prediction = this.predictItemBased(matrix, userId, itemId, config);
-      break;
-    case 'hybrid':
-      prediction = await this.predictHybrid(matrix, userId, itemId, config);
-      break;
-    case 'matrix_factorization':
-      prediction = await this.predictMatrixFactorization(matrix, userId, itemId, config);
-      break;
-    default:
-      prediction = this.predictUserBased(matrix, userId, itemId, config);
+      case 'user_based':
+        prediction = this.predictUserBased(matrix, userId, itemId, config);
+        break;
+      case 'item_based':
+        prediction = this.predictItemBased(matrix, userId, itemId, config);
+        break;
+      case 'hybrid':
+        prediction = await this.predictHybrid(matrix, userId, itemId, config);
+        break;
+      case 'matrix_factorization':
+        prediction = await this.predictMatrixFactorization(
+          matrix,
+          userId,
+          itemId,
+          config,
+        );
+        break;
+      default:
+        prediction = this.predictUserBased(matrix, userId, itemId, config);
     }
 
     // 如果置信度太低，使用全局平均分作为后备
-    if (prediction.confidence < config.confidenceThreshold && config.fallbackToGlobal) {
+    if (
+      prediction.confidence < config.confidenceThreshold &&
+      config.fallbackToGlobal
+    ) {
       prediction = this.fallbackToGlobalAverage(matrix, itemId, prediction);
     }
 
@@ -93,7 +101,7 @@ export class RatingPredictor {
     matrix: UserItemMatrix,
     userId: string,
     itemIds: string[],
-    customConfig?: Partial<PredictionConfig>
+    customConfig?: Partial<PredictionConfig>,
   ): Promise<PredictionResult[]> {
     const config = { ...this.config, ...customConfig };
     const predictions: PredictionResult[] = [];
@@ -101,24 +109,37 @@ export class RatingPredictor {
     // 根据方法选择批量预测策略
     if (config.method === 'user_based' || config.method === 'item_based') {
       // 预计算邻居，提高效率
-      const neighbors = config.method === 'user_based'
-        ? this.neighborSelector.selectUserNeighbors(matrix, userId, {
-          maxNeighbors: config.maxNeighbors,
-          minCommonItems: config.minNeighbors,
-        })
-        : [];
+      const neighbors =
+        config.method === 'user_based'
+          ? this.neighborSelector.selectUserNeighbors(matrix, userId, {
+              maxNeighbors: config.maxNeighbors,
+              minCommonItems: config.minNeighbors,
+            })
+          : [];
 
       for (const itemId of itemIds) {
-        const prediction = config.method === 'user_based'
-          ? this.predictUserBasedWithNeighbors(matrix, userId, itemId, neighbors, config)
-          : this.predictItemBased(matrix, userId, itemId, config);
-        
+        const prediction =
+          config.method === 'user_based'
+            ? this.predictUserBasedWithNeighbors(
+                matrix,
+                userId,
+                itemId,
+                neighbors,
+                config,
+              )
+            : this.predictItemBased(matrix, userId, itemId, config);
+
         predictions.push(prediction);
       }
     } else {
       // 其他方法逐个预测
       for (const itemId of itemIds) {
-        const prediction = await this.predictRating(matrix, userId, itemId, config);
+        const prediction = await this.predictRating(
+          matrix,
+          userId,
+          itemId,
+          config,
+        );
         predictions.push(prediction);
       }
     }
@@ -133,14 +154,24 @@ export class RatingPredictor {
     matrix: UserItemMatrix,
     userId: string,
     itemId: string,
-    config: PredictionConfig
+    config: PredictionConfig,
   ): PredictionResult {
-    const neighbors = this.neighborSelector.selectUserNeighbors(matrix, userId, {
-      maxNeighbors: config.maxNeighbors,
-      minCommonItems: config.minNeighbors,
-    });
+    const neighbors = this.neighborSelector.selectUserNeighbors(
+      matrix,
+      userId,
+      {
+        maxNeighbors: config.maxNeighbors,
+        minCommonItems: config.minNeighbors,
+      },
+    );
 
-    return this.predictUserBasedWithNeighbors(matrix, userId, itemId, neighbors, config);
+    return this.predictUserBasedWithNeighbors(
+      matrix,
+      userId,
+      itemId,
+      neighbors,
+      config,
+    );
   }
 
   /**
@@ -151,7 +182,7 @@ export class RatingPredictor {
     userId: string,
     itemId: string,
     neighbors: Neighbor[],
-    config: PredictionConfig
+    config: PredictionConfig,
   ): PredictionResult {
     if (neighbors.length < config.minNeighbors) {
       return this.fallbackToGlobalAverage(matrix, itemId, {
@@ -168,13 +199,14 @@ export class RatingPredictor {
     let denominator = 0;
     let validNeighbors = 0;
 
-    neighbors.forEach(neighbor => {
+    neighbors.forEach((neighbor) => {
       const neighborRatings = matrix.ratings.get(neighbor.id);
       if (!neighborRatings || !neighborRatings.has(itemId)) {
         return;
       }
 
-      const neighborAvg = matrix.userAverages.get(neighbor.id) || matrix.globalAverage;
+      const neighborAvg =
+        matrix.userAverages.get(neighbor.id) || matrix.globalAverage;
       const neighborRating = neighborRatings.get(itemId)!;
       const ratingDiff = neighborRating - neighborAvg;
 
@@ -193,8 +225,11 @@ export class RatingPredictor {
       });
     }
 
-    const predictedRating = userAvg + (numerator / denominator);
-    const confidence = this.calculatePredictionConfidence(validNeighbors, neighbors.length);
+    const predictedRating = userAvg + numerator / denominator;
+    const confidence = this.calculatePredictionConfidence(
+      validNeighbors,
+      neighbors.length,
+    );
 
     return {
       itemId,
@@ -212,7 +247,7 @@ export class RatingPredictor {
     matrix: UserItemMatrix,
     userId: string,
     itemId: string,
-    config: PredictionConfig
+    config: PredictionConfig,
   ): PredictionResult {
     const userRatings = matrix.ratings.get(userId);
     if (!userRatings || userRatings.size === 0) {
@@ -226,10 +261,14 @@ export class RatingPredictor {
     }
 
     // 找到与目标物品相似的物品
-    const similarItems = this.neighborSelector.selectItemNeighbors(matrix, itemId, {
-      maxNeighbors: config.maxNeighbors,
-      minCommonItems: config.minNeighbors,
-    });
+    const similarItems = this.neighborSelector.selectItemNeighbors(
+      matrix,
+      itemId,
+      {
+        maxNeighbors: config.maxNeighbors,
+        minCommonItems: config.minNeighbors,
+      },
+    );
 
     if (similarItems.length < config.minNeighbors) {
       return this.fallbackToGlobalAverage(matrix, itemId, {
@@ -246,13 +285,14 @@ export class RatingPredictor {
     let denominator = 0;
     let validItems = 0;
 
-    similarItems.forEach(similarItem => {
+    similarItems.forEach((similarItem) => {
       if (!userRatings.has(similarItem.id)) {
         return;
       }
 
       const userRating = userRatings.get(similarItem.id)!;
-      const similarItemAvg = matrix.itemAverages.get(similarItem.id) || matrix.globalAverage;
+      const similarItemAvg =
+        matrix.itemAverages.get(similarItem.id) || matrix.globalAverage;
       const ratingDiff = userRating - similarItemAvg;
 
       numerator += similarItem.weight * ratingDiff;
@@ -270,8 +310,11 @@ export class RatingPredictor {
       });
     }
 
-    const predictedRating = itemAvg + (numerator / denominator);
-    const confidence = this.calculatePredictionConfidence(validItems, similarItems.length);
+    const predictedRating = itemAvg + numerator / denominator;
+    const confidence = this.calculatePredictionConfidence(
+      validItems,
+      similarItems.length,
+    );
 
     return {
       itemId,
@@ -289,14 +332,14 @@ export class RatingPredictor {
     matrix: UserItemMatrix,
     userId: string,
     itemId: string,
-    config: PredictionConfig
+    config: PredictionConfig,
   ): Promise<PredictionResult> {
     const userBased = this.predictUserBased(matrix, userId, itemId, config);
     const itemBased = this.predictItemBased(matrix, userId, itemId, config);
 
     // 根据置信度加权平均
     const totalWeight = userBased.confidence + itemBased.confidence;
-    
+
     if (totalWeight === 0) {
       return this.fallbackToGlobalAverage(matrix, itemId, {
         itemId,
@@ -310,7 +353,9 @@ export class RatingPredictor {
     const userWeight = userBased.confidence / totalWeight;
     const itemWeight = itemBased.confidence / totalWeight;
 
-    const predictedRating = userBased.predictedRating * userWeight + itemBased.predictedRating * itemWeight;
+    const predictedRating =
+      userBased.predictedRating * userWeight +
+      itemBased.predictedRating * itemWeight;
     const confidence = Math.max(userBased.confidence, itemBased.confidence);
 
     return {
@@ -329,7 +374,7 @@ export class RatingPredictor {
     matrix: UserItemMatrix,
     userId: string,
     itemId: string,
-    config: PredictionConfig
+    config: PredictionConfig,
   ): Promise<PredictionResult> {
     // 这里应该使用预计算的矩阵分解结果
     // 简化实现：返回基于物品平均分的预测
@@ -359,7 +404,7 @@ export class RatingPredictor {
   private fallbackToGlobalAverage(
     matrix: UserItemMatrix,
     itemId: string,
-    originalPrediction: PredictionResult
+    originalPrediction: PredictionResult,
   ): PredictionResult {
     const itemAvg = matrix.itemAverages.get(itemId) || matrix.globalAverage;
 
@@ -376,16 +421,16 @@ export class RatingPredictor {
    */
   private calculatePredictionConfidence(
     validNeighbors: number,
-    totalNeighbors: number
+    totalNeighbors: number,
   ): number {
     // 基于有效邻居比例计算置信度
     const neighborRatio = validNeighbors / Math.max(totalNeighbors, 1);
-    
+
     // 基于邻居数量计算置信度
     const countConfidence = Math.min(validNeighbors / 20, 1.0);
-    
+
     // 综合置信度
-    return (neighborRatio * 0.4 + countConfidence * 0.6);
+    return neighborRatio * 0.4 + countConfidence * 0.6;
   }
 
   /**
@@ -393,7 +438,7 @@ export class RatingPredictor {
    */
   private getItemRatingCount(matrix: UserItemMatrix, itemId: string): number {
     let count = 0;
-    matrix.ratings.forEach(userRatings => {
+    matrix.ratings.forEach((userRatings) => {
       if (userRatings.has(itemId)) {
         count++;
       }
@@ -409,10 +454,15 @@ export class RatingPredictor {
     userId: string,
     candidateItemIds: string[],
     n: number = 10,
-    customConfig?: Partial<PredictionConfig>
+    customConfig?: Partial<PredictionConfig>,
   ): Promise<PredictionResult[]> {
-    const predictions = await this.predictRatingsBatch(matrix, userId, candidateItemIds, customConfig);
-    
+    const predictions = await this.predictRatingsBatch(
+      matrix,
+      userId,
+      candidateItemIds,
+      customConfig,
+    );
+
     return predictions
       .sort((a, b) => {
         // 首先按预测评分排序，然后按置信度排序
@@ -431,7 +481,7 @@ export class RatingPredictor {
     matrix: UserItemMatrix,
     userId: string,
     testRatings: Map<string, number>,
-    customConfig?: Partial<PredictionConfig>
+    customConfig?: Partial<PredictionConfig>,
   ): {
     mae: number; // Mean Absolute Error
     rmse: number; // Root Mean Square Error
@@ -440,13 +490,18 @@ export class RatingPredictor {
     recall: number; // 召回率（Top-5）
   } {
     const testItemIds = Array.from(testRatings.keys());
-    const predictions = this.predictRatingsBatchSync(matrix, userId, testItemIds, customConfig);
-    
+    const predictions = this.predictRatingsBatchSync(
+      matrix,
+      userId,
+      testItemIds,
+      customConfig,
+    );
+
     let absoluteErrorSum = 0;
     let squaredErrorSum = 0;
     let validPredictions = 0;
 
-    predictions.forEach(prediction => {
+    predictions.forEach((prediction) => {
       const actualRating = testRatings.get(prediction.itemId);
       if (actualRating !== undefined && prediction.confidence > 0) {
         const error = Math.abs(prediction.predictedRating - actualRating);
@@ -457,21 +512,28 @@ export class RatingPredictor {
     });
 
     const mae = validPredictions > 0 ? absoluteErrorSum / validPredictions : 0;
-    const rmse = validPredictions > 0 ? Math.sqrt(squaredErrorSum / validPredictions) : 0;
+    const rmse =
+      validPredictions > 0 ? Math.sqrt(squaredErrorSum / validPredictions) : 0;
     const coverage = validPredictions / testItemIds.length;
 
     // 计算Top-5精确率和召回率
     const top5Predictions = predictions
-      .filter(p => p.confidence > 0)
+      .filter((p) => p.confidence > 0)
       .sort((a, b) => b.predictedRating - a.predictedRating)
       .slice(0, 5);
 
-    const top5Items = new Set(top5Predictions.map(p => p.itemId));
-    const relevantItems = new Set(testItemIds.filter(id => (testRatings.get(id) || 0) >= 4));
-    const top5Relevant = new Set(Array.from(top5Items).filter(id => relevantItems.has(id)));
+    const top5Items = new Set(top5Predictions.map((p) => p.itemId));
+    const relevantItems = new Set(
+      testItemIds.filter((id) => (testRatings.get(id) || 0) >= 4),
+    );
+    const top5Relevant = new Set(
+      Array.from(top5Items).filter((id) => relevantItems.has(id)),
+    );
 
-    const precision = top5Items.size > 0 ? top5Relevant.size / top5Items.size : 0;
-    const recall = relevantItems.size > 0 ? top5Relevant.size / relevantItems.size : 0;
+    const precision =
+      top5Items.size > 0 ? top5Relevant.size / top5Items.size : 0;
+    const recall =
+      relevantItems.size > 0 ? top5Relevant.size / relevantItems.size : 0;
 
     return { mae, rmse, coverage, precision, recall };
   }
@@ -483,12 +545,15 @@ export class RatingPredictor {
     matrix: UserItemMatrix,
     userId: string,
     itemIds: string[],
-    customConfig?: Partial<PredictionConfig>
+    customConfig?: Partial<PredictionConfig>,
   ): PredictionResult[] {
     const predictions: PredictionResult[] = [];
-    
+
     for (const itemId of itemIds) {
-      const prediction = this.predictUserBased(matrix, userId, itemId, { ...this.config, ...customConfig });
+      const prediction = this.predictUserBased(matrix, userId, itemId, {
+        ...this.config,
+        ...customConfig,
+      });
       predictions.push(prediction);
     }
 

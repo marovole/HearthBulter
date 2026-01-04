@@ -138,7 +138,9 @@ export class ServiceContainer {
       if (this.config.repositoryType === 'mock') {
         throw new Error('Mock repositories not yet implemented');
       }
-      this.recommendationRepository = new SupabaseRecommendationRepository(this.supabaseClient);
+      this.recommendationRepository = new SupabaseRecommendationRepository(
+        this.supabaseClient,
+      );
     }
 
     return this.recommendationRepository;
@@ -156,7 +158,9 @@ export class ServiceContainer {
       if (this.config.repositoryType === 'mock') {
         throw new Error('Mock repositories not yet implemented');
       }
-      this.notificationRepository = new SupabaseNotificationRepository(this.supabaseClient);
+      this.notificationRepository = new SupabaseNotificationRepository(
+        this.supabaseClient,
+      );
     }
 
     return this.notificationRepository;
@@ -174,7 +178,9 @@ export class ServiceContainer {
       if (this.config.repositoryType === 'mock') {
         throw new Error('Mock repositories not yet implemented');
       }
-      this.analyticsRepository = new SupabaseAnalyticsRepository(this.supabaseClient);
+      this.analyticsRepository = new SupabaseAnalyticsRepository(
+        this.supabaseClient,
+      );
     }
 
     return this.analyticsRepository;
@@ -205,7 +211,9 @@ export class ServiceContainer {
    */
   getRecommendationEngine(): RecommendationEngine {
     if (!this.recommendationEngine) {
-      this.recommendationEngine = new RecommendationEngine(this.getRecommendationRepository());
+      this.recommendationEngine = new RecommendationEngine(
+        this.getRecommendationRepository(),
+      );
     }
     return this.recommendationEngine;
   }
@@ -217,7 +225,9 @@ export class ServiceContainer {
    */
   getNotificationManager(): NotificationManager {
     if (!this.notificationManager) {
-      this.notificationManager = new NotificationManager(this.getNotificationRepository());
+      this.notificationManager = new NotificationManager(
+        this.getNotificationRepository(),
+      );
     }
     return this.notificationManager;
   }
@@ -229,7 +239,9 @@ export class ServiceContainer {
    */
   getAnalyticsService(): AnalyticsService {
     if (!this.analyticsService) {
-      this.analyticsService = new AnalyticsService(this.getAnalyticsRepository());
+      this.analyticsService = new AnalyticsService(
+        this.getAnalyticsRepository(),
+      );
     }
     return this.analyticsService;
   }
@@ -251,13 +263,13 @@ export class ServiceContainer {
       const budgetNotificationService = new BudgetNotificationService(
         this.getNotificationRepository(),
         this.getBudgetRepository(),
-        notificationManager
+        notificationManager,
       );
 
       // 创建 BudgetTracker
       this.budgetTracker = new BudgetTracker(
         this.getBudgetRepository(),
-        budgetNotificationService
+        budgetNotificationService,
       );
     }
     return this.budgetTracker;
@@ -282,7 +294,9 @@ export class ServiceContainer {
  * 注意：通常应使用 getDefaultContainer() 获取单例实例，
  * 此函数仅用于测试场景需要独立容器实例时
  */
-export function createServiceContainer(config: ServiceContainerConfig = {}): ServiceContainer {
+export function createServiceContainer(
+  config: ServiceContainerConfig = {},
+): ServiceContainer {
   // 直接调用 getInstance，不创建新实例
   return ServiceContainer.getInstance(config);
 }

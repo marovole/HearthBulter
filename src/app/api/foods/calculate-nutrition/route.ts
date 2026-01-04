@@ -14,7 +14,7 @@ const calculateNutritionSchema = z.object({
       z.object({
         foodId: z.string(),
         amount: z.number().positive('重量必须大于0'),
-      })
+      }),
     )
     .min(1, '至少需要一个食物'),
 });
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
           error: '输入数据无效',
           details: validation.error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -48,14 +48,10 @@ export async function POST(request: NextRequest) {
       {
         summary,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('计算营养失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

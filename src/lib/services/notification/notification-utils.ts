@@ -1,4 +1,8 @@
-import { NotificationType, NotificationPriority, NotificationStatus } from '@prisma/client';
+import {
+  NotificationType,
+  NotificationPriority,
+  NotificationStatus,
+} from '@prisma/client';
 
 export class NotificationUtils {
   /**
@@ -7,11 +11,11 @@ export class NotificationUtils {
   static formatTime(date: Date): string {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
+
     if (minutes < 1) {
       return '刚刚';
     } else if (minutes < 60) {
@@ -41,7 +45,7 @@ export class NotificationUtils {
       [NotificationType.MARKETING]: '🎯',
       [NotificationType.OTHER]: '📄',
     };
-    
+
     return iconMap[type] || '📄';
   }
 
@@ -61,7 +65,7 @@ export class NotificationUtils {
       [NotificationType.MARKETING]: '营销通知',
       [NotificationType.OTHER]: '其他',
     };
-    
+
     return nameMap[type] || '其他';
   }
 
@@ -75,7 +79,7 @@ export class NotificationUtils {
       [NotificationPriority.HIGH]: '#ffc107', // 黄色
       [NotificationPriority.URGENT]: '#dc3545', // 红色
     };
-    
+
     return colorMap[priority] || '#6c757d';
   }
 
@@ -89,7 +93,7 @@ export class NotificationUtils {
       [NotificationPriority.HIGH]: '高优先级',
       [NotificationPriority.URGENT]: '紧急',
     };
-    
+
     return nameMap[priority] || '中优先级';
   }
 
@@ -98,51 +102,54 @@ export class NotificationUtils {
    */
   static formatContent(content: string, maxLength: number = 100): string {
     if (!content) return '';
-    
+
     // 移除多余的空白字符
     const formatted = content.replace(/\s+/g, ' ').trim();
-    
+
     // 截断长内容
     if (formatted.length > maxLength) {
       return `${formatted.substring(0, maxLength)}...`;
     }
-    
+
     return formatted;
   }
 
   /**
    * 验证通知内容
    */
-  static validateNotificationContent(title: string, content: string): {
+  static validateNotificationContent(
+    title: string,
+    content: string,
+  ): {
     isValid: boolean;
     errors: string[];
   } {
     const errors: string[] = [];
-    
+
     // 验证标题
     if (!title || title.trim().length === 0) {
       errors.push('标题不能为空');
     } else if (title.length > 200) {
       errors.push('标题长度不能超过200字符');
     }
-    
+
     // 验证内容
     if (!content || content.trim().length === 0) {
       errors.push('内容不能为空');
     } else if (content.length > 2000) {
       errors.push('内容长度不能超过2000字符');
     }
-    
+
     // 检查是否包含敏感词（简单实现）
     const sensitiveWords = ['测试', 'test'];
-    const combinedText = (`${title} ${content}`).toLowerCase();
-    
+    const combinedText = `${title} ${content}`.toLowerCase();
+
     for (const word of sensitiveWords) {
       if (combinedText.includes(word.toLowerCase())) {
         errors.push(`内容包含敏感词: ${word}`);
       }
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
@@ -160,7 +167,7 @@ export class NotificationUtils {
       [NotificationStatus.FAILED]: '发送失败',
       [NotificationStatus.CANCELLED]: '已取消',
     };
-    
+
     return nameMap[status] || '未知';
   }
 
@@ -175,7 +182,7 @@ export class NotificationUtils {
       [NotificationStatus.FAILED]: '#dc3545', // 红色
       [NotificationStatus.CANCELLED]: '#6c757d', // 灰色
     };
-    
+
     return colorMap[status] || '#6c757d';
   }
 
@@ -194,7 +201,7 @@ export class NotificationUtils {
     const sent = stats.sent || 0;
     const failed = stats.failed || 0;
     const pending = stats.pending || 0;
-    
+
     return {
       total,
       sent,
@@ -237,22 +244,25 @@ export class NotificationUtils {
    * 过滤未读通知
    */
   static filterUnread(notifications: any[]): any[] {
-    return notifications.filter(notification => !notification.readAt);
+    return notifications.filter((notification) => !notification.readAt);
   }
 
   /**
    * 过滤紧急通知
    */
   static filterUrgent(notifications: any[]): any[] {
-    return notifications.filter(notification => 
-      notification.priority === NotificationPriority.URGENT
+    return notifications.filter(
+      (notification) => notification.priority === NotificationPriority.URGENT,
     );
   }
 
   /**
    * 生成通知预览
    */
-  static generatePreview(type: NotificationType, data: any = {}): {
+  static generatePreview(
+    type: NotificationType,
+    data: any = {},
+  ): {
     title: string;
     content: string;
     icon: string;
@@ -320,7 +330,7 @@ export class NotificationUtils {
         priority: NotificationPriority.MEDIUM,
       },
     };
-    
+
     return previews[type] || previews[NotificationType.OTHER];
   }
 
@@ -329,7 +339,7 @@ export class NotificationUtils {
    */
   static calculateNotificationScore(notification: any): number {
     let score = 0;
-    
+
     // 基于优先级
     const priorityScores = {
       [NotificationPriority.URGENT]: 100,
@@ -338,47 +348,55 @@ export class NotificationUtils {
       [NotificationPriority.LOW]: 25,
     };
     score += priorityScores[notification.priority] || 0;
-    
+
     // 基于时间（越新越重要）
-    const hoursSinceCreation = (Date.now() - notification.createdAt.getTime()) / (1000 * 60 * 60);
+    const hoursSinceCreation =
+      (Date.now() - notification.createdAt.getTime()) / (1000 * 60 * 60);
     score += Math.max(0, 50 - hoursSinceCreation);
-    
+
     // 基于未读状态
     if (!notification.readAt) {
       score += 30;
     }
-    
+
     return score;
   }
 
   /**
    * 排序通知
    */
-  static sortNotifications(notifications: any[], sortBy: 'priority' | 'time' | 'score' = 'score'): any[] {
+  static sortNotifications(
+    notifications: any[],
+    sortBy: 'priority' | 'time' | 'score' = 'score',
+  ): any[] {
     const sortedNotifications = [...notifications];
-    
+
     switch (sortBy) {
-    case 'priority':
-      return sortedNotifications.sort((a, b) => {
-        const priorityOrder = {
-          [NotificationPriority.URGENT]: 4,
-          [NotificationPriority.HIGH]: 3,
-          [NotificationPriority.MEDIUM]: 2,
-          [NotificationPriority.LOW]: 1,
-        };
-        return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
-      });
-        
-    case 'time':
-      return sortedNotifications.sort((a, b) => 
-        b.createdAt.getTime() - a.createdAt.getTime()
-      );
-        
-    case 'score':
-    default:
-      return sortedNotifications.sort((a, b) => 
-        this.calculateNotificationScore(b) - this.calculateNotificationScore(a)
-      );
+      case 'priority':
+        return sortedNotifications.sort((a, b) => {
+          const priorityOrder = {
+            [NotificationPriority.URGENT]: 4,
+            [NotificationPriority.HIGH]: 3,
+            [NotificationPriority.MEDIUM]: 2,
+            [NotificationPriority.LOW]: 1,
+          };
+          return (
+            (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
+          );
+        });
+
+      case 'time':
+        return sortedNotifications.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+        );
+
+      case 'score':
+      default:
+        return sortedNotifications.sort(
+          (a, b) =>
+            this.calculateNotificationScore(b) -
+            this.calculateNotificationScore(a),
+        );
     }
   }
 }

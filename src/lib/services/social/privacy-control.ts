@@ -35,7 +35,9 @@ export interface SharePrivacyRule {
 /**
  * 获取用户隐私设置
  */
-export async function getUserPrivacySettings(memberId: string): Promise<PrivacySettings | null> {
+export async function getUserPrivacySettings(
+  memberId: string,
+): Promise<PrivacySettings | null> {
   try {
     const settings = await prisma.privacySetting.findUnique({
       where: { memberId },
@@ -78,7 +80,7 @@ export async function getUserPrivacySettings(memberId: string): Promise<PrivacyS
  */
 export async function updateUserPrivacySettings(
   memberId: string,
-  settings: Partial<PrivacySettings>
+  settings: Partial<PrivacySettings>,
 ): Promise<boolean> {
   try {
     const currentSettings = await getUserPrivacySettings(memberId);
@@ -125,7 +127,7 @@ export async function updateUserPrivacySettings(
  */
 export async function checkShareAccess(
   shareToken: string,
-  viewerId?: string
+  viewerId?: string,
 ): Promise<{
   hasAccess: boolean;
   reason?: string;
@@ -167,43 +169,43 @@ export async function checkShareAccess(
 
     // 根据隐私级别检查访问权限
     switch (share.privacyLevel) {
-    case 'PUBLIC':
-      // 公开分享，所有人可访问
-      if (!privacySettings.allowStrangerView && !viewerId) {
-        return { hasAccess: false, reason: '不允许陌生人访问' };
-      }
-      break;
+      case 'PUBLIC':
+        // 公开分享，所有人可访问
+        if (!privacySettings.allowStrangerView && !viewerId) {
+          return { hasAccess: false, reason: '不允许陌生人访问' };
+        }
+        break;
 
-    case 'FRIENDS':
-      // 好友可见
-      if (!viewerId) {
-        return { hasAccess: false, reason: '需要登录才能查看' };
-      }
-        
-      // 检查是否为好友（这里需要根据实际的好友关系来判断）
-      const isFriend = await checkFriendship(share.memberId, viewerId);
-      if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
-        return { hasAccess: false, reason: '仅好友可见' };
-      }
-      break;
+      case 'FRIENDS':
+        // 好友可见
+        if (!viewerId) {
+          return { hasAccess: false, reason: '需要登录才能查看' };
+        }
 
-    case 'PRIVATE':
-      // 私密分享，只有特定用户可访问
-      if (!viewerId) {
-        return { hasAccess: false, reason: '需要授权才能查看' };
-      }
-        
-      // 检查是否在允许列表中
-      const privacyRule = await getSharePrivacyRule(share.id);
-      if (privacyRule && !privacyRule.allowedUsers.includes(viewerId)) {
-        return { hasAccess: false, reason: '无权访问此分享' };
-      }
-      break;
+        // 检查是否为好友（这里需要根据实际的好友关系来判断）
+        const isFriend = await checkFriendship(share.memberId, viewerId);
+        if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
+          return { hasAccess: false, reason: '仅好友可见' };
+        }
+        break;
+
+      case 'PRIVATE':
+        // 私密分享，只有特定用户可访问
+        if (!viewerId) {
+          return { hasAccess: false, reason: '需要授权才能查看' };
+        }
+
+        // 检查是否在允许列表中
+        const privacyRule = await getSharePrivacyRule(share.id);
+        if (privacyRule && !privacyRule.allowedUsers.includes(viewerId)) {
+          return { hasAccess: false, reason: '无权访问此分享' };
+        }
+        break;
     }
 
-    return { 
-      hasAccess: true, 
-      privacyLevel: share.privacyLevel, 
+    return {
+      hasAccess: true,
+      privacyLevel: share.privacyLevel,
     };
   } catch (error) {
     console.error('检查分享访问权限失败:', error);
@@ -214,7 +216,10 @@ export async function checkShareAccess(
 /**
  * 检查两个用户是否为好友
  */
-async function checkFriendship(memberId1: string, memberId2: string): Promise<boolean> {
+async function checkFriendship(
+  memberId1: string,
+  memberId2: string,
+): Promise<boolean> {
   try {
     // 这里需要根据实际的好友关系表来实现
     // 暂时返回false，表示不是好友
@@ -228,7 +233,9 @@ async function checkFriendship(memberId1: string, memberId2: string): Promise<bo
 /**
  * 获取分享隐私规则
  */
-async function getSharePrivacyRule(shareId: string): Promise<SharePrivacyRule | null> {
+async function getSharePrivacyRule(
+  shareId: string,
+): Promise<SharePrivacyRule | null> {
   try {
     const rule = await prisma.sharePrivacyRule.findUnique({
       where: { shareId },
@@ -261,7 +268,7 @@ async function getSharePrivacyRule(shareId: string): Promise<SharePrivacyRule | 
  */
 export async function setSharePrivacyRule(
   shareId: string,
-  rule: Omit<SharePrivacyRule, 'id' | 'memberId' | 'contentType'>
+  rule: Omit<SharePrivacyRule, 'id' | 'memberId' | 'contentType'>,
 ): Promise<boolean> {
   try {
     // 获取分享信息
@@ -318,7 +325,10 @@ export async function setSharePrivacyRule(
 /**
  * 屏蔽用户
  */
-export async function blockUser(memberId: string, blockedUserId: string): Promise<boolean> {
+export async function blockUser(
+  memberId: string,
+  blockedUserId: string,
+): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -342,7 +352,10 @@ export async function blockUser(memberId: string, blockedUserId: string): Promis
 /**
  * 取消屏蔽用户
  */
-export async function unblockUser(memberId: string, blockedUserId: string): Promise<boolean> {
+export async function unblockUser(
+  memberId: string,
+  blockedUserId: string,
+): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -367,7 +380,10 @@ export async function unblockUser(memberId: string, blockedUserId: string): Prom
 /**
  * 添加信任好友
  */
-export async function addTrustedFriend(memberId: string, friendId: string): Promise<boolean> {
+export async function addTrustedFriend(
+  memberId: string,
+  friendId: string,
+): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -391,7 +407,10 @@ export async function addTrustedFriend(memberId: string, friendId: string): Prom
 /**
  * 移除信任好友
  */
-export async function removeTrustedFriend(memberId: string, friendId: string): Promise<boolean> {
+export async function removeTrustedFriend(
+  memberId: string,
+  friendId: string,
+): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -418,7 +437,7 @@ export async function removeTrustedFriend(memberId: string, friendId: string): P
  */
 export async function setShareExpiration(
   memberId: string,
-  days: number
+  days: number,
 ): Promise<boolean> {
   try {
     // 更新用户设置
@@ -501,7 +520,7 @@ export async function getSharePrivacyStats(memberId: string): Promise<{
       expiredShares: 0,
     };
 
-    stats.forEach(stat => {
+    stats.forEach((stat) => {
       const count = stat._count;
       result.totalShares += count;
 

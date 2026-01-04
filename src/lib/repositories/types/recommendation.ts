@@ -70,7 +70,9 @@ export const recommendationRecipeFilterSchema = z.object({
   budgetLimit: z.number().positive().optional(),
 });
 
-export type RecommendationRecipeFilter = z.infer<typeof recommendationRecipeFilterSchema>;
+export type RecommendationRecipeFilter = z.infer<
+  typeof recommendationRecipeFilterSchema
+>;
 
 /**
  * 用户偏好 Schema
@@ -117,7 +119,9 @@ export const recommendationBehaviorSchema = z.object({
   views: z.array(behaviorEventSchema).default([]),
 });
 
-export type RecommendationBehaviorDTO = z.infer<typeof recommendationBehaviorSchema>;
+export type RecommendationBehaviorDTO = z.infer<
+  typeof recommendationBehaviorSchema
+>;
 
 /**
  * 健康目标 Schema
@@ -173,7 +177,9 @@ export const recommendationWeightsSchema = z.object({
   seasonal: z.number().min(0).max(1),
 });
 
-export type RecommendationWeightsDTO = z.infer<typeof recommendationWeightsSchema>;
+export type RecommendationWeightsDTO = z.infer<
+  typeof recommendationWeightsSchema
+>;
 
 /**
  * 推荐日志 Schema

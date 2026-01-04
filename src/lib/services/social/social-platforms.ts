@@ -34,7 +34,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     shareUrl: (url: string) => url, // 微信需要二维码
     isAvailable: true,
   },
-  
+
   wechatMoments: {
     name: 'wechatMoments',
     displayName: '朋友圈',
@@ -43,7 +43,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     shareUrl: (url: string) => url, // 朋友圈需要二维码
     isAvailable: true,
   },
-  
+
   weibo: {
     name: 'weibo',
     displayName: '微博',
@@ -55,7 +55,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     },
     isAvailable: true,
   },
-  
+
   qq: {
     name: 'qq',
     displayName: 'QQ',
@@ -66,7 +66,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     },
     isAvailable: true,
   },
-  
+
   qzone: {
     name: 'qzone',
     displayName: 'QQ空间',
@@ -77,7 +77,7 @@ export const SOCIAL_PLATFORMS: Record<string, SocialPlatform> = {
     },
     isAvailable: true,
   },
-  
+
   copy: {
     name: 'copy',
     displayName: '复制链接',
@@ -96,7 +96,7 @@ export function generateShareUrl(platform: string, data: ShareData): string {
   if (!socialPlatform || !socialPlatform.isAvailable) {
     throw new Error(`不支持的平台: ${platform}`);
   }
-  
+
   return socialPlatform.shareUrl(data.url, data.title, data.description);
 }
 
@@ -105,24 +105,24 @@ export function generateShareUrl(platform: string, data: ShareData): string {
  */
 export async function shareToPlatform(
   platform: string,
-  data: ShareData
+  data: ShareData,
 ): Promise<boolean> {
   try {
     const shareUrl = generateShareUrl(platform, data);
-    
+
     switch (platform) {
-    case 'wechat':
-    case 'wechatMoments':
-      // 微信分享需要生成二维码
-      return await shareToWechat(shareUrl, data);
-      
-    case 'copy':
-      return await copyToClipboard(shareUrl);
-      
-    default:
-      // 其他平台直接打开链接
-      window.open(shareUrl, '_blank', 'width=600,height=400');
-      return true;
+      case 'wechat':
+      case 'wechatMoments':
+        // 微信分享需要生成二维码
+        return await shareToWechat(shareUrl, data);
+
+      case 'copy':
+        return await copyToClipboard(shareUrl);
+
+      default:
+        // 其他平台直接打开链接
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+        return true;
     }
   } catch (error) {
     console.error(`分享到${platform}失败:`, error);
@@ -137,10 +137,10 @@ async function shareToWechat(url: string, data: ShareData): Promise<boolean> {
   try {
     // 生成二维码
     const qrCodeUrl = await generateQRCode(url);
-    
+
     // 显示二维码弹窗
     showWechatQRCode(qrCodeUrl, data);
-    
+
     return true;
   } catch (error) {
     console.error('生成微信二维码失败:', error);
@@ -163,7 +163,8 @@ async function generateQRCode(url: string): Promise<string> {
 function showWechatQRCode(qrCodeUrl: string, data: ShareData): void {
   // 创建弹窗显示二维码
   const modal = document.createElement('div');
-  modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+  modal.className =
+    'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
   modal.innerHTML = `
     <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
       <h3 class="text-lg font-semibold mb-4">分享到微信</h3>
@@ -180,9 +181,9 @@ function showWechatQRCode(qrCodeUrl: string, data: ShareData): void {
       </div>
     </div>
   `;
-  
+
   document.body.appendChild(modal);
-  
+
   // 点击背景关闭
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
@@ -222,7 +223,9 @@ export function isPlatformAvailable(platform: string): boolean {
  * 获取可用平台列表
  */
 export function getAvailablePlatforms(): SocialPlatform[] {
-  return Object.values(SOCIAL_PLATFORMS).filter(platform => platform.isAvailable);
+  return Object.values(SOCIAL_PLATFORMS).filter(
+    (platform) => platform.isAvailable,
+  );
 }
 
 /**
@@ -231,14 +234,14 @@ export function getAvailablePlatforms(): SocialPlatform[] {
 export class WechatSDK {
   private static instance: WechatSDK;
   private isInitialized = false;
-  
+
   static getInstance(): WechatSDK {
     if (!WechatSDK.instance) {
       WechatSDK.instance = new WechatSDK();
     }
     return WechatSDK.instance;
   }
-  
+
   /**
    * 初始化微信SDK
    */
@@ -254,10 +257,10 @@ export class WechatSDK {
         console.warn('当前不在微信浏览器环境中');
         return false;
       }
-      
+
       // 加载微信JS-SDK
       await this.loadWechatSDK();
-      
+
       // 初始化配置
       await new Promise<void>((resolve, reject) => {
         if (typeof window !== 'undefined' && (window as any).wx) {
@@ -274,12 +277,12 @@ export class WechatSDK {
               'onMenuShareAppMessage',
             ],
           });
-          
+
           (window as any).wx.ready(() => {
             this.isInitialized = true;
             resolve();
           });
-          
+
           (window as any).wx.error((err: any) => {
             console.error('微信SDK初始化失败:', err);
             reject(err);
@@ -288,22 +291,26 @@ export class WechatSDK {
           reject(new Error('微信SDK未加载'));
         }
       });
-      
+
       return true;
     } catch (error) {
       console.error('微信SDK初始化失败:', error);
       return false;
     }
   }
-  
+
   /**
    * 分享到微信好友
    */
   shareToFriend(data: ShareData): void {
-    if (!this.isInitialized || typeof window === 'undefined' || !(window as any).wx) {
+    if (
+      !this.isInitialized ||
+      typeof window === 'undefined' ||
+      !(window as any).wx
+    ) {
       throw new Error('微信SDK未初始化');
     }
-    
+
     (window as any).wx.updateAppMessageShareData({
       title: data.title,
       desc: data.description,
@@ -317,15 +324,19 @@ export class WechatSDK {
       },
     });
   }
-  
+
   /**
    * 分享到朋友圈
    */
   shareToTimeline(data: ShareData): void {
-    if (!this.isInitialized || typeof window === 'undefined' || !(window as any).wx) {
+    if (
+      !this.isInitialized ||
+      typeof window === 'undefined' ||
+      !(window as any).wx
+    ) {
       throw new Error('微信SDK未初始化');
     }
-    
+
     (window as any).wx.updateTimelineShareData({
       title: data.title,
       link: data.url,
@@ -338,7 +349,7 @@ export class WechatSDK {
       },
     });
   }
-  
+
   /**
    * 检查是否在微信浏览器中
    */
@@ -347,7 +358,7 @@ export class WechatSDK {
     const ua = window.navigator.userAgent.toLowerCase();
     return ua.includes('micromessenger');
   }
-  
+
   /**
    * 加载微信JS-SDK
    */
@@ -357,12 +368,12 @@ export class WechatSDK {
         reject(new Error('不在浏览器环境中'));
         return;
       }
-      
+
       if ((window as any).wx) {
         resolve();
         return;
       }
-      
+
       const script = document.createElement('script');
       script.src = 'https://res.wx.qq.com/open/js/jweixin-1.6.0.js';
       script.onload = () => resolve();
@@ -382,7 +393,7 @@ export class ShareAnalytics {
   static async trackShare(
     shareToken: string,
     platform: string,
-    action: 'share' | 'click' | 'conversion' = 'share'
+    action: 'share' | 'click' | 'conversion' = 'share',
   ): Promise<void> {
     try {
       await fetch(`/api/social/share/${shareToken}`, {
@@ -400,7 +411,7 @@ export class ShareAnalytics {
       console.error('记录分享统计失败:', error);
     }
   }
-  
+
   /**
    * 记录分享页面访问
    */

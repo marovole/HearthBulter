@@ -9,12 +9,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { z } from 'zod';
-import { APIError, handleAPIError, createErrorResponse, createAPIResponse } from '@/lib/errors/api-error';
+import {
+  APIError,
+  handleAPIError,
+  createErrorResponse,
+  createAPIResponse,
+} from '@/lib/errors/api-error';
 
 // Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 interface RouteParams {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 const DELETEBodySchema = z.object({
@@ -27,14 +32,15 @@ const DELETEBodySchema = z.object({
  */
 async function verifyDeviceAccess(
   deviceId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean; device: any }> {
   const supabase = SupabaseClientManager.getInstance();
 
   // 查询设备及其成员的家庭信息
   const { data: device, error } = await supabase
     .from('device_connections')
-    .select(`
+    .select(
+      `
       id,
       deviceId,
       deviceName,
@@ -56,7 +62,8 @@ async function verifyDeviceAccess(
           )
         )
       )
-    `)
+    `,
+    )
     .eq('id', deviceId)
     .maybeSingle();
 
@@ -71,10 +78,7 @@ async function verifyDeviceAccess(
   return { hasAccess, device };
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -88,22 +92,23 @@ export async function DELETE(
     // 验证设备访问权限
     const { hasAccess, device: deviceConnection } = await verifyDeviceAccess(
       id,
-      session.user.id
+      session.user.id,
     );
 
     if (!hasAccess || !deviceConnection) {
-      return NextResponse.json(
-        { error: '设备未找到' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '设备未找到' }, { status: 404 });
     }
 
     // 根据平台调用相应的断开连接服务
     if (deviceConnection.platform === 'APPLE_HEALTHKIT') {
-      const { disconnectHealthKitDevice } = await import('@/lib/services/healthkit-service');
+      const { disconnectHealthKitDevice } = await import(
+        '@/lib/services/healthkit-service'
+      );
       await disconnectHealthKitDevice(deviceConnection.deviceId);
     } else if (deviceConnection.platform === 'HUAWEI_HEALTH') {
-      const { disconnectHuaweiHealthDevice } = await import('@/lib/services/huawei-health-service');
+      const { disconnectHuaweiHealthDevice } = await import(
+        '@/lib/services/huawei-health-service'
+      );
       await disconnectHuaweiHealthDevice(deviceConnection.deviceId);
     }
 
@@ -122,10 +127,7 @@ export async function DELETE(
 
     if (updateError) {
       console.error('更新设备连接状态失败:', updateError);
-      return NextResponse.json(
-        { error: '更新设备状态失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '更新设备状态失败' }, { status: 500 });
     }
 
     // 如果有断开原因，记录到设备记录中（需要schema支持disconnectReason字段）
@@ -146,35 +148,25 @@ export async function DELETE(
       success: true,
       message: '设备断开连接成功',
     });
-
   } catch (error) {
     console.error('断开设备连接失败:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '参数错误', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const { id } = await params;
@@ -183,7 +175,8 @@ export async function GET(
     // 查询设备连接详情及其成员信息
     const { data: deviceConnection, error: deviceError } = await supabase
       .from('device_connections')
-      .select(`
+      .select(
+        `
         id,
         deviceId,
         deviceName,
@@ -212,40 +205,35 @@ export async function GET(
             )
           )
         )
-      `)
+      `,
+      )
       .eq('id', id)
       .maybeSingle();
 
     if (deviceError) {
       console.error('查询设备连接失败:', deviceError);
-      return NextResponse.json(
-        { error: '查询设备失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询设备失败' }, { status: 500 });
     }
 
     if (!deviceConnection) {
-      return NextResponse.json(
-        { error: '设备未找到' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '设备未找到' }, { status: 404 });
     }
 
     // 验证访问权限
     const familyMembers = deviceConnection.member?.family?.members || [];
-    const hasAccess = familyMembers.some((m: any) => m.userId === session.user.id);
+    const hasAccess = familyMembers.some(
+      (m: any) => m.userId === session.user.id,
+    );
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: '设备未找到' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '设备未找到' }, { status: 404 });
     }
 
     // 查询最近10条健康数据
     const { data: healthData, error: healthError } = await supabase
       .from('health_data')
-      .select(`
+      .select(
+        `
         id,
         measuredAt,
         source,
@@ -253,17 +241,15 @@ export async function GET(
         heartRate,
         bloodPressureSystolic,
         notes
-      `)
+      `,
+      )
       .eq('deviceConnectionId', id)
       .order('measuredAt', { ascending: false })
       .limit(10);
 
     if (healthError) {
       console.error('查询健康数据失败:', healthError);
-      return NextResponse.json(
-        { error: '查询健康数据失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询健康数据失败' }, { status: 500 });
     }
 
     // 简化member数据，移除嵌套的family信息
@@ -280,12 +266,8 @@ export async function GET(
       success: true,
       data: simplifiedDevice,
     });
-
   } catch (error) {
     console.error('获取设备详情失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

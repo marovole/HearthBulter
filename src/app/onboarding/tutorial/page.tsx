@@ -2,23 +2,29 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, Play, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface TutorialStep {
-  id: string
-  title: string
-  description: string
-  duration: string
-  completed: boolean
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  completed: boolean;
   content: {
-    overview: string
-    steps: string[]
-    tips: string[]
-  }
+    overview: string;
+    steps: string[];
+    tips: string[];
+  };
 }
 
 const tutorialSteps: TutorialStep[] = [
@@ -29,7 +35,8 @@ const tutorialSteps: TutorialStep[] = [
     duration: '3分钟',
     completed: false,
     content: {
-      overview: '健康数据录入是 Health Butler 的核心功能，帮助您追踪重要的健康指标。',
+      overview:
+        '健康数据录入是 Health Butler 的核心功能，帮助您追踪重要的健康指标。',
       steps: [
         '进入"健康数据"页面',
         '点击"添加数据"按钮',
@@ -134,7 +141,7 @@ export default function TutorialPage() {
   };
 
   const markStepComplete = (stepId: string) => {
-    setCompletedSteps(prev => new Set(prev).add(stepId));
+    setCompletedSteps((prev) => new Set(prev).add(stepId));
   };
 
   const completeAllTutorials = () => {
@@ -155,36 +162,34 @@ export default function TutorialPage() {
   const progress = (completedSteps.size / tutorialSteps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4'>
+      <div className='max-w-4xl mx-auto'>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className='flex items-center justify-between mb-8'>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              功能教程
-            </h1>
-            <p className="text-gray-600">
+            <h1 className='text-3xl font-bold text-gray-900 mb-2'>功能教程</h1>
+            <p className='text-gray-600'>
               学习如何使用 Health Butler 的核心功能
             </p>
           </div>
-          <Button variant="ghost" onClick={skipTutorial}>
+          <Button variant='ghost' onClick={skipTutorial}>
             跳过教程
           </Button>
         </div>
 
         {/* Progress */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">教程进度</span>
-            <span className="text-sm text-gray-600">
+        <div className='mb-8'>
+          <div className='flex items-center justify-between mb-2'>
+            <span className='text-sm text-gray-600'>教程进度</span>
+            <span className='text-sm text-gray-600'>
               {completedSteps.size} / {tutorialSteps.length} 完成
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className='h-2' />
         </div>
 
         {/* Tutorial Navigation */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className='flex flex-wrap gap-2 mb-8'>
           {tutorialSteps.map((tutorial, index) => (
             <button
               key={tutorial.id}
@@ -197,61 +202,63 @@ export default function TutorialPage() {
                     : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <div className="flex items-center space-x-2">
+              <div className='flex items-center space-x-2'>
                 {completedSteps.has(tutorial.id) && (
-                  <CheckCircle className="h-4 w-4" />
+                  <CheckCircle className='h-4 w-4' />
                 )}
-                <span>{index + 1}. {tutorial.title}</span>
+                <span>
+                  {index + 1}. {tutorial.title}
+                </span>
               </div>
             </button>
           ))}
         </div>
 
         {/* Current Tutorial Content */}
-        <Card className="mb-8">
+        <Card className='mb-8'>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className='flex items-center justify-between'>
               <div>
-                <CardTitle className="text-2xl mb-2">
+                <CardTitle className='text-2xl mb-2'>
                   {currentTutorial.title}
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className='text-base'>
                   {currentTutorial.description}
                 </CardDescription>
               </div>
-              <div className="text-right">
-                <Badge variant="outline" className="mb-2">
-                  <Play className="h-3 w-3 mr-1" />
+              <div className='text-right'>
+                <Badge variant='outline' className='mb-2'>
+                  <Play className='h-3 w-3 mr-1' />
                   {currentTutorial.duration}
                 </Badge>
                 {completedSteps.has(currentTutorial.id) && (
-                  <Badge className="bg-green-100 text-green-800">
-                    <CheckCircle className="h-3 w-3 mr-1" />
+                  <Badge className='bg-green-100 text-green-800'>
+                    <CheckCircle className='h-3 w-3 mr-1' />
                     已完成
                   </Badge>
                 )}
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className='space-y-6'>
             {/* Overview */}
             <div>
-              <h3 className="font-semibold text-lg mb-3">功能概述</h3>
-              <p className="text-gray-700 leading-relaxed">
+              <h3 className='font-semibold text-lg mb-3'>功能概述</h3>
+              <p className='text-gray-700 leading-relaxed'>
                 {currentTutorial.content.overview}
               </p>
             </div>
 
             {/* Steps */}
             <div>
-              <h3 className="font-semibold text-lg mb-3">操作步骤</h3>
-              <div className="space-y-3">
+              <h3 className='font-semibold text-lg mb-3'>操作步骤</h3>
+              <div className='space-y-3'>
                 {currentTutorial.content.steps.map((step, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0 mt-0.5">
+                  <div key={index} className='flex items-start space-x-3'>
+                    <div className='w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0 mt-0.5'>
                       {index + 1}
                     </div>
-                    <p className="text-gray-700">{step}</p>
+                    <p className='text-gray-700'>{step}</p>
                   </div>
                 ))}
               </div>
@@ -259,13 +266,13 @@ export default function TutorialPage() {
 
             {/* Tips */}
             <div>
-              <h3 className="font-semibold text-lg mb-3">使用技巧</h3>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <ul className="space-y-2">
+              <h3 className='font-semibold text-lg mb-3'>使用技巧</h3>
+              <div className='bg-blue-50 p-4 rounded-lg'>
+                <ul className='space-y-2'>
                   {currentTutorial.content.tips.map((tip, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <span className="text-blue-600 mt-1">•</span>
-                      <span className="text-gray-700">{tip}</span>
+                    <li key={index} className='flex items-start space-x-2'>
+                      <span className='text-blue-600 mt-1'>•</span>
+                      <span className='text-gray-700'>{tip}</span>
                     </li>
                   ))}
                 </ul>
@@ -273,12 +280,12 @@ export default function TutorialPage() {
             </div>
 
             {/* Practice Area */}
-            <div className="bg-gray-50 p-6 rounded-lg text-center">
-              <h4 className="font-medium mb-2">实践练习</h4>
-              <p className="text-gray-600 mb-4">
+            <div className='bg-gray-50 p-6 rounded-lg text-center'>
+              <h4 className='font-medium mb-2'>实践练习</h4>
+              <p className='text-gray-600 mb-4'>
                 现在您已经了解了基本操作，让我们实际体验一下这个功能。
               </p>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className='bg-blue-600 hover:bg-blue-700'>
                 开始实践
               </Button>
             </div>
@@ -286,19 +293,24 @@ export default function TutorialPage() {
         </Card>
 
         {/* Navigation */}
-        <div className="flex justify-between">
+        <div className='flex justify-between'>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={handlePrevious}
             disabled={currentStep === 0}
           >
-            <ChevronLeft className="h-4 w-4 mr-2" />
+            <ChevronLeft className='h-4 w-4 mr-2' />
             上一个教程
           </Button>
 
-          <Button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700">
-            {currentStep === tutorialSteps.length - 1 ? '完成所有教程' : '下一个教程'}
-            <ChevronRight className="h-4 w-4 ml-2" />
+          <Button
+            onClick={handleNext}
+            className='bg-blue-600 hover:bg-blue-700'
+          >
+            {currentStep === tutorialSteps.length - 1
+              ? '完成所有教程'
+              : '下一个教程'}
+            <ChevronRight className='h-4 w-4 ml-2' />
           </Button>
         </div>
       </div>

@@ -15,19 +15,36 @@ import { z } from 'zod';
 /**
  * 通知渠道枚举
  */
-export const notificationChannelSchema = z.enum(['IN_APP', 'EMAIL', 'SMS', 'WECHAT', 'PUSH']);
+export const notificationChannelSchema = z.enum([
+  'IN_APP',
+  'EMAIL',
+  'SMS',
+  'WECHAT',
+  'PUSH',
+]);
 export type NotificationChannel = z.infer<typeof notificationChannelSchema>;
 
 /**
  * 通知优先级枚举
  */
-export const notificationPrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
+export const notificationPrioritySchema = z.enum([
+  'LOW',
+  'MEDIUM',
+  'HIGH',
+  'URGENT',
+]);
 export type NotificationPriority = z.infer<typeof notificationPrioritySchema>;
 
 /**
  * 通知状态枚举
  */
-export const notificationStatusSchema = z.enum(['PENDING', 'SENDING', 'SENT', 'FAILED', 'CANCELLED']);
+export const notificationStatusSchema = z.enum([
+  'PENDING',
+  'SENDING',
+  'SENT',
+  'FAILED',
+  'CANCELLED',
+]);
 export type NotificationStatus = z.infer<typeof notificationStatusSchema>;
 
 /**
@@ -99,7 +116,9 @@ export type NotificationLogDTO = z.infer<typeof notificationLogSchema>;
  */
 export const notificationPreferenceSchema = z.object({
   memberId: z.string().uuid(),
-  channelPreferences: z.record(notificationChannelSchema, z.boolean()).optional(),
+  channelPreferences: z
+    .record(notificationChannelSchema, z.boolean())
+    .optional(),
   quietHours: z
     .object({
       start: z.string().regex(/^\d{2}:\d{2}$/),
@@ -111,7 +130,9 @@ export const notificationPreferenceSchema = z.object({
   lastUpdatedAt: z.coerce.date(),
 });
 
-export type NotificationPreferenceDTO = z.infer<typeof notificationPreferenceSchema>;
+export type NotificationPreferenceDTO = z.infer<
+  typeof notificationPreferenceSchema
+>;
 
 /**
  * 通知列表查询 Schema
@@ -135,11 +156,15 @@ export const scheduledNotificationSchema = z.object({
   memberId: z.string().uuid(),
   payload: createNotificationSchema,
   scheduledTime: z.coerce.date(),
-  status: z.enum(['SCHEDULED', 'PROCESSING', 'DISPATCHED', 'FAILED']).default('SCHEDULED'),
+  status: z
+    .enum(['SCHEDULED', 'PROCESSING', 'DISPATCHED', 'FAILED'])
+    .default('SCHEDULED'),
   retryCount: z.number().int().nonnegative().default(0),
 });
 
-export type ScheduledNotificationDTO = z.infer<typeof scheduledNotificationSchema>;
+export type ScheduledNotificationDTO = z.infer<
+  typeof scheduledNotificationSchema
+>;
 
 /**
  * 通知接收者信息 Schema
@@ -153,4 +178,6 @@ export const notificationRecipientSchema = z.object({
   preferences: notificationPreferenceSchema.optional(),
 });
 
-export type NotificationRecipientDTO = z.infer<typeof notificationRecipientSchema>;
+export type NotificationRecipientDTO = z.infer<
+  typeof notificationRecipientSchema
+>;

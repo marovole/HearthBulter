@@ -58,7 +58,9 @@ jest.mock('@/lib/db', () => ({
 
 // Mock JWT verification
 jest.mock('jose', () => ({
-  jwtVerify: jest.fn().mockResolvedValue({ sub: 'user-123', email: 'test@example.com' }),
+  jwtVerify: jest
+    .fn()
+    .mockResolvedValue({ sub: 'user-123', email: 'test@example.com' }),
 }));
 
 // Mock notification service
@@ -71,12 +73,13 @@ jest.mock('@/lib/services/notification/notification-manager', () => ({
 
 // Mock file storage service
 jest.mock('@/lib/services/file-storage-service', () => ({
-  uploadFamilyAvatar: jest.fn().mockResolvedValue({ url: 'https://example.com/avatar.jpg' }),
+  uploadFamilyAvatar: jest
+    .fn()
+    .mockResolvedValue({ url: 'https://example.com/avatar.jpg' }),
   deleteFamilyAvatar: jest.fn().mockResolvedValue(true),
 }));
 
 describe('/api/families API', () => {
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -144,7 +147,7 @@ describe('/api/families API', () => {
       const request = new NextRequest('http://localhost:3000/api/families', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+          Authorization: 'Bearer valid-jwt-token',
         },
       });
 
@@ -216,7 +219,7 @@ describe('/api/families API', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+          Authorization: 'Bearer valid-jwt-token',
         },
         body: JSON.stringify(newFamily),
       });
@@ -253,7 +256,7 @@ describe('/api/families API', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+          Authorization: 'Bearer valid-jwt-token',
         },
         body: JSON.stringify(incompleteFamily),
       });
@@ -280,7 +283,7 @@ describe('/api/families API', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+          Authorization: 'Bearer valid-jwt-token',
         },
         body: JSON.stringify(longNameFamily),
       });
@@ -341,16 +344,21 @@ describe('/api/families API', () => {
 
       prisma.family.findUnique.mockResolvedValue(mockFamily);
 
-      const request = new NextRequest('http://localhost:3000/api/families/family-1', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/family-1',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/families/[id]/route');
-        const response = await GET(request, { params: Promise.resolve({ id: 'family-1' }) });
+        const response = await GET(request, {
+          params: Promise.resolve({ id: 'family-1' }),
+        });
 
         expect(response.status).toBe(200);
         const data = await response.json();
@@ -368,16 +376,21 @@ describe('/api/families API', () => {
     it('should return 404 for non-existent family', async () => {
       prisma.family.findUnique.mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/families/nonexistent', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/nonexistent',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/families/[id]/route');
-        const response = await GET(request, { params: Promise.resolve({ id: 'nonexistent' }) });
+        const response = await GET(request, {
+          params: Promise.resolve({ id: 'nonexistent' }),
+        });
 
         expect(response.status).toBe(404);
         const data = await response.json();
@@ -410,21 +423,26 @@ describe('/api/families API', () => {
       prisma.family.findUnique.mockResolvedValue(existingFamily);
       prisma.family.update.mockResolvedValue(updatedFamily);
 
-      const request = new NextRequest('http://localhost:3000/api/families/family-1', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/family-1',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            name: '张三和李四的家庭',
+            description: '更新后的家庭描述',
+          }),
         },
-        body: JSON.stringify({
-          name: '张三和李四的家庭',
-          description: '更新后的家庭描述',
-        }),
-      });
+      );
 
       try {
         const { PUT } = await import('@/app/api/families/[id]/route');
-        const response = await PUT(request, { params: Promise.resolve({ id: 'family-1' }) });
+        const response = await PUT(request, {
+          params: Promise.resolve({ id: 'family-1' }),
+        });
 
         expect(response.status).toBe(200);
         const data = await response.json();
@@ -450,20 +468,25 @@ describe('/api/families API', () => {
 
       prisma.family.findUnique.mockResolvedValue(existingFamily);
 
-      const request = new NextRequest('http://localhost:3000/api/families/family-1', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/family-1',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            name: '尝试修改',
+          }),
         },
-        body: JSON.stringify({
-          name: '尝试修改',
-        }),
-      });
+      );
 
       try {
         const { PUT } = await import('@/app/api/families/[id]/route');
-        const response = await PUT(request, { params: Promise.resolve({ id: 'family-1' }) });
+        const response = await PUT(request, {
+          params: Promise.resolve({ id: 'family-1' }),
+        });
 
         expect(response.status).toBe(403);
         const data = await response.json();
@@ -496,16 +519,21 @@ describe('/api/families API', () => {
       prisma.family.findUnique.mockResolvedValue(existingFamily);
       prisma.family.update.mockResolvedValue(updatedFamily);
 
-      const request = new NextRequest('http://localhost:3000/api/families/family-1/invite', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/family-1/invite',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/families/[id]/invite/route');
-        const response = await POST(request, { params: Promise.resolve({ id: 'family-1' }) });
+        const response = await POST(request, {
+          params: Promise.resolve({ id: 'family-1' }),
+        });
 
         expect(response.status).toBe(200);
         const data = await response.json();
@@ -539,16 +567,19 @@ describe('/api/families API', () => {
       prisma.family.findUnique.mockResolvedValue(familyWithInvite);
       prisma.familyMember.create.mockResolvedValue(newMembership);
 
-      const request = new NextRequest('http://localhost:3000/api/families/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/join',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            inviteCode: 'FAMILY123',
+          }),
         },
-        body: JSON.stringify({
-          inviteCode: 'FAMILY123',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/families/join/route');
@@ -568,16 +599,19 @@ describe('/api/families API', () => {
     it('should reject invalid invite code', async () => {
       prisma.family.findUnique.mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/families/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/join',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            inviteCode: 'INVALID123',
+          }),
         },
-        body: JSON.stringify({
-          inviteCode: 'INVALID123',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/families/join/route');
@@ -606,16 +640,19 @@ describe('/api/families API', () => {
 
       prisma.family.findUnique.mockResolvedValue(familyWithUser);
 
-      const request = new NextRequest('http://localhost:3000/api/families/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/join',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-jwt-token',
+          },
+          body: JSON.stringify({
+            inviteCode: 'FAMILY123',
+          }),
         },
-        body: JSON.stringify({
-          inviteCode: 'FAMILY123',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/families/join/route');
@@ -670,16 +707,21 @@ describe('/api/families API', () => {
 
       prisma.familyMember.findMany.mockResolvedValue(mockMembers);
 
-      const request = new NextRequest('http://localhost:3000/api/families/family-1/members', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/family-1/members',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/families/[id]/members/route');
-        const response = await GET(request, { params: Promise.resolve({ id: 'family-1' }) });
+        const response = await GET(request, {
+          params: Promise.resolve({ id: 'family-1' }),
+        });
 
         expect(response.status).toBe(200);
         const data = await response.json();
@@ -707,15 +749,20 @@ describe('/api/families API', () => {
       prisma.familyMember.findUnique.mockResolvedValue(existingMember);
       prisma.familyMember.delete.mockResolvedValue(existingMember);
 
-      const request = new NextRequest('http://localhost:3000/api/families/family-1/members/member-2', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/family-1/members/member-2',
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
-        const { DELETE } = await import('@/app/api/families/[id]/members/[memberId]/route');
+        const { DELETE } = await import(
+          '@/app/api/families/[id]/members/[memberId]/route'
+        );
         const response = await DELETE(request, {
           params: Promise.resolve({ id: 'family-1', memberId: 'member-2' }),
         });
@@ -739,15 +786,20 @@ describe('/api/families API', () => {
 
       prisma.familyMember.findUnique.mockResolvedValue(adminMember);
 
-      const request = new NextRequest('http://localhost:3000/api/families/family-1/members/member-1', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/family-1/members/member-1',
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
-        const { DELETE } = await import('@/app/api/families/[id]/members/[memberId]/route');
+        const { DELETE } = await import(
+          '@/app/api/families/[id]/members/[memberId]/route'
+        );
         const response = await DELETE(request, {
           params: Promise.resolve({ id: 'family-1', memberId: 'member-1' }),
         });
@@ -763,12 +815,14 @@ describe('/api/families API', () => {
 
   describe('Error handling', () => {
     it('should handle database errors gracefully', async () => {
-      prisma.family.findMany.mockRejectedValue(new Error('Database connection failed'));
+      prisma.family.findMany.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
 
       const request = new NextRequest('http://localhost:3000/api/families', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+          Authorization: 'Bearer valid-jwt-token',
         },
       });
 
@@ -789,7 +843,7 @@ describe('/api/families API', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer valid-jwt-token',
+          Authorization: 'Bearer valid-jwt-token',
         },
         body: 'invalid-json',
       });
@@ -809,16 +863,21 @@ describe('/api/families API', () => {
 
   describe('Security considerations', () => {
     it('should prevent unauthorized access to family data', async () => {
-      const request = new NextRequest('http://localhost:3000/api/families/family-999', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+      const request = new NextRequest(
+        'http://localhost:3000/api/families/family-999',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer valid-jwt-token',
+          },
         },
-      });
+      );
 
       try {
         const { GET } = await import('@/app/api/families/[id]/route');
-        const response = await GET(request, { params: Promise.resolve({ id: 'family-999' }) });
+        const response = await GET(request, {
+          params: Promise.resolve({ id: 'family-999' }),
+        });
 
         expect(response.status).toBe(404);
         const data = await response.json();
@@ -837,16 +896,19 @@ describe('/api/families API', () => {
       ];
 
       for (const invalidCode of invalidInviteCodes) {
-        const request = new NextRequest('http://localhost:3000/api/families/join', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer valid-jwt-token',
+        const request = new NextRequest(
+          'http://localhost:3000/api/families/join',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer valid-jwt-token',
+            },
+            body: JSON.stringify({
+              inviteCode: invalidCode,
+            }),
           },
-          body: JSON.stringify({
-            inviteCode: invalidCode,
-          }),
-        });
+        );
 
         try {
           const { POST } = await import('@/app/api/families/join/route');

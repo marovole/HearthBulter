@@ -23,7 +23,7 @@ export const registerSchema = z.object({
     .min(8, '密码至少需要8个字符')
     .regex(
       /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
-      '密码必须包含字母和数字'
+      '密码必须包含字母和数字',
     ),
 });
 
@@ -84,7 +84,12 @@ export const memberSchema = z.object({
  * Validate health goal data
  */
 export const healthGoalSchema = z.object({
-  goalType: z.enum(['LOSE_WEIGHT', 'GAIN_MUSCLE', 'MAINTAIN', 'IMPROVE_HEALTH']),
+  goalType: z.enum([
+    'LOSE_WEIGHT',
+    'GAIN_MUSCLE',
+    'MAINTAIN',
+    'IMPROVE_HEALTH',
+  ]),
   targetWeight: z.number().min(20).max(300).optional(),
   targetWeeks: z.number().min(1).max(52).optional(),
   activityLevel: z.enum([
@@ -115,7 +120,7 @@ export const allergySchema = z.object({
 export function formatValidationError(error: z.ZodError) {
   return {
     error: '输入验证失败',
-    details: error.errors.map(e => ({
+    details: error.errors.map((e) => ({
       field: e.path.join('.'),
       message: e.message,
       code: e.code,
@@ -126,8 +131,10 @@ export function formatValidationError(error: z.ZodError) {
 // 通用验证函数
 export async function validateRequestBody<T>(
   request: NextRequest,
-  schema: z.ZodSchema<T>
-): Promise<{ success: true; data: T } | { success: false; response: NextResponse }> {
+  schema: z.ZodSchema<T>,
+): Promise<
+  { success: true; data: T } | { success: false; response: NextResponse }
+> {
   try {
     const body = await request.json();
     const result = schema.safeParse(body);
@@ -135,10 +142,9 @@ export async function validateRequestBody<T>(
     if (!result.success) {
       return {
         success: false,
-        response: NextResponse.json(
-          formatValidationError(result.error),
-          { status: 400 }
-        ),
+        response: NextResponse.json(formatValidationError(result.error), {
+          status: 400,
+        }),
       };
     }
 
@@ -146,10 +152,7 @@ export async function validateRequestBody<T>(
   } catch (error) {
     return {
       success: false,
-      response: NextResponse.json(
-        { error: '请求体格式错误' },
-        { status: 400 }
-      ),
+      response: NextResponse.json({ error: '请求体格式错误' }, { status: 400 }),
     };
   }
 }
@@ -159,10 +162,7 @@ export function handleApiError(error: unknown, context: string) {
   console.error(`${context}失败:`, error);
 
   if (error instanceof z.ZodError) {
-    return NextResponse.json(
-      formatValidationError(error),
-      { status: 400 }
-    );
+    return NextResponse.json(formatValidationError(error), { status: 400 });
   }
 
   if (error instanceof Error) {
@@ -174,16 +174,10 @@ export function handleApiError(error: unknown, context: string) {
     });
 
     // 返回用户友好的错误信息
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 
-  return NextResponse.json(
-    { error: '服务器内部错误' },
-    { status: 500 }
-  );
+  return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
 }
 
 // 常用验证schemas
@@ -201,7 +195,8 @@ export const commonSchemas = {
   email: z.string().email('请输入有效的邮箱地址'),
 
   // 姓名
-  name: z.string()
+  name: z
+    .string()
     .min(1, '姓名不能为空')
     .max(50, '姓名不能超过50个字符')
     .trim(),
@@ -215,24 +210,28 @@ export const commonSchemas = {
   date: z.string().datetime('请输入有效的日期时间'),
 
   // 正数
-  positiveNumber: z.number()
+  positiveNumber: z
+    .number()
     .positive('必须是正数')
     .max(10000, '数值不能超过10000'),
 
   // 体重 (kg)
-  weight: z.number()
+  weight: z
+    .number()
     .positive('体重必须是正数')
     .min(1, '体重不能小于1kg')
     .max(500, '体重不能大于500kg'),
 
   // 身高 (cm)
-  height: z.number()
+  height: z
+    .number()
     .positive('身高必须是正数')
     .min(20, '身高不能小于20cm')
     .max(250, '身高不能大于250cm'),
 
   // 年龄
-  age: z.number()
+  age: z
+    .number()
     .int('年龄必须是整数')
     .min(0, '年龄不能小于0')
     .max(150, '年龄不能大于150'),
@@ -240,17 +239,11 @@ export const commonSchemas = {
 
 // API响应格式化函数
 export function formatApiSuccess<T>(data: T, message?: string) {
-  return NextResponse.json(
-    { success: true, data, message },
-    { status: 200 }
-  );
+  return NextResponse.json({ success: true, data, message }, { status: 200 });
 }
 
 export function formatApiCreated<T>(data: T, message = '创建成功') {
-  return NextResponse.json(
-    { success: true, data, message },
-    { status: 201 }
-  );
+  return NextResponse.json({ success: true, data, message }, { status: 201 });
 }
 
 // 输入清理函数 (增强版本)
@@ -313,7 +306,7 @@ export const healthDataSchemas = {
 export function validatePermission(
   userRole: string,
   requiredRole: string,
-  isCreator: boolean = false
+  isCreator: boolean = false,
 ): boolean {
   if (isCreator) return true;
   if (requiredRole === 'ADMIN' && userRole === 'ADMIN') return true;

@@ -1,6 +1,6 @@
 /**
  * 文件存储服务
- * 
+ *
  * 集成 Supabase Storage，实现文件上传、下载和删除功能
  * 用于存储体检报告文件（PDF/图片）
  */
@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 // 初始化 Supabase 客户端
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_KEY!,
 );
 
 // Supabase Storage Bucket 名称
@@ -20,10 +20,10 @@ const STORAGE_BUCKET = 'medical-reports';
  * 上传文件结果
  */
 export interface UploadResult {
-  url: string
-  pathname: string
-  size: number
-  uploadedAt: Date
+  url: string;
+  pathname: string;
+  size: number;
+  uploadedAt: Date;
 }
 
 /**
@@ -33,10 +33,7 @@ export class FileStorageService {
   /**
    * 验证文件类型
    */
-  static validateFileType(
-    mimeType: string,
-    allowedTypes: string[]
-  ): boolean {
+  static validateFileType(mimeType: string, allowedTypes: string[]): boolean {
     return allowedTypes.includes(mimeType);
   }
 
@@ -54,12 +51,12 @@ export class FileStorageService {
   private static generateFilePath(
     memberId: string,
     fileName: string,
-    timestamp?: Date
+    timestamp?: Date,
   ): string {
     const ts = timestamp || new Date();
     const dateStr = ts.toISOString().split('T')[0]; // YYYY-MM-DD
     const timestampStr = ts.getTime().toString();
-    
+
     // 清理文件名，移除特殊字符
     const safeFileName = fileName
       .replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -76,9 +73,9 @@ export class FileStorageService {
     fileName: string,
     memberId: string,
     options?: {
-      contentType?: string
-      addRandomSuffix?: boolean
-    }
+      contentType?: string;
+      addRandomSuffix?: boolean;
+    },
   ): Promise<UploadResult> {
     try {
       // 生成文件路径
@@ -126,7 +123,7 @@ export class FileStorageService {
     } catch (error) {
       console.error('文件上传失败:', error);
       throw new Error(
-        `文件上传失败: ${error instanceof Error ? error.message : '未知错误'}`
+        `文件上传失败: ${error instanceof Error ? error.message : '未知错误'}`,
       );
     }
   }
@@ -141,7 +138,7 @@ export class FileStorageService {
         .list(pathname.substring(0, pathname.lastIndexOf('/')), {
           search: pathname.substring(pathname.lastIndexOf('/') + 1),
         });
-      
+
       return !error && data && data.length > 0;
     } catch (error) {
       return false;
@@ -156,14 +153,14 @@ export class FileStorageService {
       const { error } = await supabase.storage
         .from(STORAGE_BUCKET)
         .remove([pathname]);
-      
+
       if (error) {
         throw new Error(error.message);
       }
     } catch (error) {
       console.error('文件删除失败:', error);
       throw new Error(
-        `文件删除失败: ${error instanceof Error ? error.message : '未知错误'}`
+        `文件删除失败: ${error instanceof Error ? error.message : '未知错误'}`,
       );
     }
   }
@@ -177,7 +174,7 @@ export class FileStorageService {
     } catch (error) {
       console.error('批量删除文件失败:', error);
       throw new Error(
-        `批量删除文件失败: ${error instanceof Error ? error.message : '未知错误'}`
+        `批量删除文件失败: ${error instanceof Error ? error.message : '未知错误'}`,
       );
     }
   }
@@ -189,33 +186,38 @@ export class FileStorageService {
     try {
       const urlObj = new URL(url);
       // Supabase Storage URL 格式: https://[project-ref].supabase.co/storage/v1/object/public/[bucket]/[pathname]
-      const match = urlObj.pathname.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/);
+      const match = urlObj.pathname.match(
+        /\/storage\/v1\/object\/public\/[^/]+\/(.+)$/,
+      );
       return match ? match[1] : null;
     } catch {
       return null;
     }
   }
-  
+
   /**
    * 生成签名 URL（用于私有文件访问）
    * @param pathname 文件路径
    * @param expiresIn 过期时间（秒），默认 1 小时
    */
-  static async createSignedUrl(pathname: string, expiresIn: number = 3600): Promise<string> {
+  static async createSignedUrl(
+    pathname: string,
+    expiresIn: number = 3600,
+  ): Promise<string> {
     try {
       const { data, error } = await supabase.storage
         .from(STORAGE_BUCKET)
         .createSignedUrl(pathname, expiresIn);
-      
+
       if (error) {
         throw new Error(error.message);
       }
-      
+
       return data.signedUrl;
     } catch (error) {
       console.error('生成签名 URL 失败:', error);
       throw new Error(
-        `生成签名 URL 失败: ${error instanceof Error ? error.message : '未知错误'}`
+        `生成签名 URL 失败: ${error instanceof Error ? error.message : '未知错误'}`,
       );
     }
   }
@@ -223,4 +225,3 @@ export class FileStorageService {
 
 // 导出单例实例
 export const fileStorageService = new FileStorageService();
-

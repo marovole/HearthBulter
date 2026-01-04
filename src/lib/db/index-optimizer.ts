@@ -203,7 +203,7 @@ export class IndexOptimizer {
       },
     ];
 
-    indexes.forEach(index => {
+    indexes.forEach((index) => {
       this.indexDefinitions.set(index.name, index);
     });
 
@@ -219,14 +219,20 @@ export class IndexOptimizer {
    */
   private startPeriodicAnalysis(): void {
     // 每小时分析一次索引使用情况
-    setInterval(async () => {
-      await this.analyzeIndexUsage();
-    }, 60 * 60 * 1000);
+    setInterval(
+      async () => {
+        await this.analyzeIndexUsage();
+      },
+      60 * 60 * 1000,
+    );
 
     // 每天检查一次索引建议
-    setInterval(async () => {
-      await this.checkIndexRecommendations();
-    }, 24 * 60 * 60 * 1000);
+    setInterval(
+      async () => {
+        await this.checkIndexRecommendations();
+      },
+      24 * 60 * 60 * 1000,
+    );
   }
 
   /**
@@ -275,7 +281,6 @@ export class IndexOptimizer {
         component: 'index_optimizer',
         analyzedIndexes: results.length,
       });
-
     } catch (error) {
       logger.error('索引使用情况分析失败', error as Error, {
         type: 'database',
@@ -294,11 +299,11 @@ export class IndexOptimizer {
 
     if (scans === 0) return 'low';
 
-    const efficiency = tuplesFetched > 0 ? (tuplesRead / tuplesFetched) : 0;
+    const efficiency = tuplesFetched > 0 ? tuplesRead / tuplesFetched : 0;
 
-    if (efficiency < 0.1) return 'high';      // 读取的数据很少，效率高
-    if (efficiency < 0.5) return 'medium';    // 中等效率
-    return 'low';                              // 读取了大量数据，效率低
+    if (efficiency < 0.1) return 'high'; // 读取的数据很少，效率高
+    if (efficiency < 0.5) return 'medium'; // 中等效率
+    return 'low'; // 读取了大量数据，效率低
   }
 
   /**
@@ -307,14 +312,15 @@ export class IndexOptimizer {
   private async checkIndexRecommendations(): Promise<void> {
     try {
       // 查找未使用的索引
-      const unusedIndexes = Array.from(this.indexStats.values())
-        .filter(stats => stats.scans === 0 && stats.efficiency === 'low');
+      const unusedIndexes = Array.from(this.indexStats.values()).filter(
+        (stats) => stats.scans === 0 && stats.efficiency === 'low',
+      );
 
       if (unusedIndexes.length > 0) {
         logger.info('发现未使用的索引', {
           type: 'database',
           component: 'index_optimizer',
-          unusedIndexes: unusedIndexes.map(idx => idx.name),
+          unusedIndexes: unusedIndexes.map((idx) => idx.name),
         });
 
         securityAudit.logSuspiciousActivity(
@@ -322,27 +328,27 @@ export class IndexOptimizer {
           `发现 ${unusedIndexes.length} 个未使用的索引，建议删除以提升性能`,
           'low',
           {
-            unusedIndexes: unusedIndexes.map(idx => ({
+            unusedIndexes: unusedIndexes.map((idx) => ({
               name: idx.name,
               table: idx.table,
               size: idx.size,
             })),
-          }
+          },
         );
       }
 
       // 查找低效索引
-      const inefficientIndexes = Array.from(this.indexStats.values())
-        .filter(stats => stats.efficiency === 'low' && stats.scans > 0);
+      const inefficientIndexes = Array.from(this.indexStats.values()).filter(
+        (stats) => stats.efficiency === 'low' && stats.scans > 0,
+      );
 
       if (inefficientIndexes.length > 0) {
         logger.info('发现低效索引', {
           type: 'database',
           component: 'index_optimizer',
-          inefficientIndexes: inefficientIndexes.map(idx => idx.name),
+          inefficientIndexes: inefficientIndexes.map((idx) => idx.name),
         });
       }
-
     } catch (error) {
       logger.error('索引建议检查失败', error as Error, {
         type: 'database',
@@ -356,40 +362,41 @@ export class IndexOptimizer {
    */
   async createIndex(indexDefinition: IndexDefinition): Promise<void> {
     try {
-      const { name, table, columns, type, unique, partial, include } = indexDefinition;
+      const { name, table, columns, type, unique, partial, include } =
+        indexDefinition;
 
       let sql = `CREATE ${unique ? 'UNIQUE ' : ''}INDEX "${name}" ON "${table}" `;
 
       // 添加索引类型
       switch (type) {
-      case IndexType.BTREE:
-        sql += 'USING btree ';
-        break;
-      case IndexType.HASH:
-        sql += 'USING hash ';
-        break;
-      case IndexType.GIST:
-        sql += 'USING gist ';
-        break;
-      case IndexType.GIN:
-        sql += 'USING gin ';
-        break;
-      case IndexType.BRIN:
-        sql += 'USING brin ';
-        break;
+        case IndexType.BTREE:
+          sql += 'USING btree ';
+          break;
+        case IndexType.HASH:
+          sql += 'USING hash ';
+          break;
+        case IndexType.GIST:
+          sql += 'USING gist ';
+          break;
+        case IndexType.GIN:
+          sql += 'USING gin ';
+          break;
+        case IndexType.BRIN:
+          sql += 'USING brin ';
+          break;
       }
 
       // 添加列
       if (type === IndexType.GIN) {
         // GIN索引用于全文搜索
-        sql += `((to_tsvector('english', ${columns.map(col => `"${col}"`).join(' || ')})))`;
+        sql += `((to_tsvector('english', ${columns.map((col) => `"${col}"`).join(' || ')})))`;
       } else {
-        sql += `(${columns.map(col => `"${col}"`).join(', ')})`;
+        sql += `(${columns.map((col) => `"${col}"`).join(', ')})`;
       }
 
       // 添加包含列（覆盖索引）
       if (include && include.length > 0) {
-        sql += ` INCLUDE (${include.map(col => `"${col}"`).join(', ')})`;
+        sql += ` INCLUDE (${include.map((col) => `"${col}"`).join(', ')})`;
       }
 
       // 添加部分索引条件
@@ -411,7 +418,6 @@ export class IndexOptimizer {
         type,
         sql,
       });
-
     } catch (error) {
       logger.error('索引创建失败', error as Error, {
         type: 'database',
@@ -438,7 +444,6 @@ export class IndexOptimizer {
         component: 'index_optimizer',
         index: indexName,
       });
-
     } catch (error) {
       logger.error('索引删除失败', error as Error, {
         type: 'database',
@@ -462,7 +467,6 @@ export class IndexOptimizer {
         component: 'index_optimizer',
         index: indexName,
       });
-
     } catch (error) {
       logger.error('索引重建失败', error as Error, {
         type: 'database',
@@ -487,7 +491,8 @@ export class IndexOptimizer {
       const executionPlan = plan.Plan;
 
       // 分析执行计划并推荐索引
-      const recommendedIndexes = this.generateIndexRecommendations(executionPlan);
+      const recommendedIndexes =
+        this.generateIndexRecommendations(executionPlan);
       const existingIndexesUsed = this.extractUsedIndexes(executionPlan);
       const missingIndexes = this.findMissingIndexes(executionPlan);
 
@@ -510,7 +515,6 @@ export class IndexOptimizer {
       });
 
       return analysis;
-
     } catch (error) {
       logger.error('查询分析失败', error as Error, {
         type: 'database',
@@ -556,7 +560,10 @@ export class IndexOptimizer {
   private extractUsedIndexes(plan: any): string[] {
     const indexes: string[] = [];
 
-    if (plan['Node Type'] === 'Index Scan' || plan['Node Type'] === 'Index Only Scan') {
+    if (
+      plan['Node Type'] === 'Index Scan' ||
+      plan['Node Type'] === 'Index Only Scan'
+    ) {
       indexes.push(plan['Index Name']);
     }
 
@@ -629,11 +636,13 @@ export class IndexOptimizer {
   }> {
     await this.analyzeIndexUsage();
 
-    const unusedIndexes = Array.from(this.indexStats.values())
-      .filter(stats => stats.scans === 0 && stats.efficiency === 'low');
+    const unusedIndexes = Array.from(this.indexStats.values()).filter(
+      (stats) => stats.scans === 0 && stats.efficiency === 'low',
+    );
 
-    const inefficientIndexes = Array.from(this.indexStats.values())
-      .filter(stats => stats.efficiency === 'low' && stats.scans > 0);
+    const inefficientIndexes = Array.from(this.indexStats.values()).filter(
+      (stats) => stats.efficiency === 'low' && stats.scans > 0,
+    );
 
     // 这里可以实现缺失索引检测
     const missingIndexes: IndexDefinition[] = [];

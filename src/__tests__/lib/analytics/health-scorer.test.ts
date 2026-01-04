@@ -47,12 +47,12 @@ describe('Health Scorer', () => {
     test('should calculate exercise score based on minutes', () => {
       // 测试运动评分逻辑
       const testCases = [
-        { minutes: 35, expectedScore: 100 },  // >=30分钟满分
-        { minutes: 25, expectedScore: 90 },   // >=22分钟
-        { minutes: 18, expectedScore: 75 },   // >=15分钟
-        { minutes: 12, expectedScore: 60 },   // >=10分钟
-        { minutes: 5, expectedScore: 40 },    // >0分钟
-        { minutes: 0, expectedScore: 0 },     // 没有运动
+        { minutes: 35, expectedScore: 100 }, // >=30分钟满分
+        { minutes: 25, expectedScore: 90 }, // >=22分钟
+        { minutes: 18, expectedScore: 75 }, // >=15分钟
+        { minutes: 12, expectedScore: 60 }, // >=10分钟
+        { minutes: 5, expectedScore: 40 }, // >0分钟
+        { minutes: 0, expectedScore: 0 }, // 没有运动
       ];
 
       testCases.forEach(({ minutes, expectedScore }) => {
@@ -76,11 +76,11 @@ describe('Health Scorer', () => {
     test('should calculate sleep score for optimal duration', () => {
       // 测试睡眠评分逻辑：7-9小时为最佳
       const testCases = [
-        { hours: 8, expectedScore: 100 },   // 最佳睡眠时长
-        { hours: 6.5, expectedScore: 85 },  // 略少
-        { hours: 9.5, expectedScore: 85 },  // 略多
-        { hours: 5.5, expectedScore: 65 },  // 睡眠不足
-        { hours: 4, expectedScore: 40 },    // 严重睡眠不足
+        { hours: 8, expectedScore: 100 }, // 最佳睡眠时长
+        { hours: 6.5, expectedScore: 85 }, // 略少
+        { hours: 9.5, expectedScore: 85 }, // 略多
+        { hours: 5.5, expectedScore: 65 }, // 睡眠不足
+        { hours: 4, expectedScore: 40 }, // 严重睡眠不足
       ];
 
       testCases.forEach(({ hours, expectedScore }) => {
@@ -169,4 +169,3 @@ describe('Health Scorer', () => {
     });
   });
 });
-

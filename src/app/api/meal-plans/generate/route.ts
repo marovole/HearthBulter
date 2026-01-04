@@ -24,8 +24,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const days: number = typeof body?.days === 'number' ? Math.max(1, Math.min(30, body.days)) : 7;
-    const startDate: Date | undefined = body?.startDate ? new Date(body.startDate) : undefined;
+    const days: number =
+      typeof body?.days === 'number' ? Math.max(1, Math.min(30, body.days)) : 7;
+    const startDate: Date | undefined = body?.startDate
+      ? new Date(body.startDate)
+      : undefined;
 
     // 找到当前用户关联的成员（优先本人）
     const member = await prisma.familyMember.findFirst({

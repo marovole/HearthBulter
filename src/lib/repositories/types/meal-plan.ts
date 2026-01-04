@@ -19,10 +19,10 @@ import { z } from 'zod';
  * 定义用户的健康/营养目标
  */
 export const goalTypeSchema = z.enum([
-  'LOSE_WEIGHT',      // 减重
-  'GAIN_MUSCLE',      // 增肌
-  'MAINTAIN',         // 维持
-  'IMPROVE_HEALTH',   // 改善健康
+  'LOSE_WEIGHT', // 减重
+  'GAIN_MUSCLE', // 增肌
+  'MAINTAIN', // 维持
+  'IMPROVE_HEALTH', // 改善健康
 ]);
 export type GoalType = z.infer<typeof goalTypeSchema>;
 
@@ -30,9 +30,9 @@ export type GoalType = z.infer<typeof goalTypeSchema>;
  * 计划状态
  */
 export const planStatusSchema = z.enum([
-  'ACTIVE',      // 进行中
-  'COMPLETED',   // 已完成
-  'CANCELLED',   // 已取消
+  'ACTIVE', // 进行中
+  'COMPLETED', // 已完成
+  'CANCELLED', // 已取消
 ]);
 export type PlanStatus = z.infer<typeof planStatusSchema>;
 
@@ -40,10 +40,10 @@ export type PlanStatus = z.infer<typeof planStatusSchema>;
  * 餐次类型
  */
 export const mealTypeSchema = z.enum([
-  'BREAKFAST',  // 早餐
-  'LUNCH',      // 午餐
-  'DINNER',     // 晚餐
-  'SNACK',      // 加餐
+  'BREAKFAST', // 早餐
+  'LUNCH', // 午餐
+  'DINNER', // 晚餐
+  'SNACK', // 加餐
 ]);
 export type MealType = z.infer<typeof mealTypeSchema>;
 
@@ -67,7 +67,9 @@ export const mealIngredientCreateInputSchema = z.object({
   foodId: z.string().uuid(),
   amount: z.number().positive(),
 });
-export type MealIngredientCreateInputDTO = z.infer<typeof mealIngredientCreateInputSchema>;
+export type MealIngredientCreateInputDTO = z.infer<
+  typeof mealIngredientCreateInputSchema
+>;
 
 // ==================== 餐次 ====================
 

@@ -20,7 +20,7 @@ describe('HealthMetricsChart', () => {
     mockFetch.mockImplementationOnce(() => new Promise(() => {})); // Never resolves
 
     render(<HealthMetricsChart {...defaultProps} />);
-    
+
     expect(screen.getByText('加载健康数据中...')).toBeInTheDocument();
   });
 
@@ -28,7 +28,7 @@ describe('HealthMetricsChart', () => {
     mockFetch.mockRejectedValueOnce(new Error('API Error'));
 
     render(<HealthMetricsChart {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('API Error')).toBeInTheDocument();
     });
@@ -60,11 +60,11 @@ describe('HealthMetricsChart', () => {
     });
 
     render(<HealthMetricsChart {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康数据趋势')).toBeInTheDocument();
     });
-    
+
     expect(screen.getByText('体重')).toBeInTheDocument();
     expect(screen.getByText('体脂率')).toBeInTheDocument();
     expect(screen.getByText('血压')).toBeInTheDocument();
@@ -90,15 +90,15 @@ describe('HealthMetricsChart', () => {
     });
 
     render(<HealthMetricsChart {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康数据趋势')).toBeInTheDocument();
     });
-    
+
     // Click on body fat metric
     const bodyFatButton = screen.getByText('体脂率');
     fireEvent.click(bodyFatButton);
-    
+
     // Verify the metric is selected (button should have active styling)
     expect(bodyFatButton.closest('button')).toHaveClass('bg-blue-100');
   });
@@ -129,11 +129,11 @@ describe('HealthMetricsChart', () => {
     });
 
     render(<HealthMetricsChart {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康数据趋势')).toBeInTheDocument();
     });
-    
+
     // Check if statistics are displayed
     expect(screen.getByText('当前值')).toBeInTheDocument();
     expect(screen.getByText('平均值')).toBeInTheDocument();
@@ -147,7 +147,7 @@ describe('HealthMetricsChart', () => {
     });
 
     render(<HealthMetricsChart {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('暂无健康数据')).toBeInTheDocument();
     });
@@ -160,10 +160,10 @@ describe('HealthMetricsChart', () => {
     });
 
     render(<HealthMetricsChart {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/dashboard/health-metrics?memberId=test-member-1&days=30'
+        '/api/dashboard/health-metrics?memberId=test-member-1&days=30',
       );
     });
   });
@@ -175,10 +175,10 @@ describe('HealthMetricsChart', () => {
     });
 
     render(<HealthMetricsChart {...defaultProps} days={7} />);
-    
+
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/dashboard/health-metrics?memberId=test-member-1&days=7'
+        '/api/dashboard/health-metrics?memberId=test-member-1&days=7',
       );
     });
   });
@@ -202,11 +202,11 @@ describe('HealthMetricsChart', () => {
     });
 
     render(<HealthMetricsChart {...defaultProps} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('健康建议')).toBeInTheDocument();
     });
-    
+
     // Check if advice is displayed
     expect(screen.getByText(/您的体重趋势/)).toBeInTheDocument();
   });

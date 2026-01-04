@@ -10,7 +10,7 @@ import {
 import { useTheme } from 'next-themes';
 import { Toaster as Sonner } from 'sonner';
 
-type ToasterProps = React.ComponentProps<typeof Sonner>
+type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = 'system' } = useTheme();
@@ -18,13 +18,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps['theme']}
-      className="toaster group"
+      className='toaster group'
       icons={{
-        success: <CircleCheck className="h-4 w-4" />,
-        info: <Info className="h-4 w-4" />,
-        warning: <TriangleAlert className="h-4 w-4" />,
-        error: <OctagonX className="h-4 w-4" />,
-        loading: <LoaderCircle className="h-4 w-4 animate-spin" />,
+        success: <CircleCheck className='h-4 w-4' />,
+        info: <Info className='h-4 w-4' />,
+        warning: <TriangleAlert className='h-4 w-4' />,
+        error: <OctagonX className='h-4 w-4' />,
+        loading: <LoaderCircle className='h-4 w-4 animate-spin' />,
       }}
       toastOptions={{
         classNames: {

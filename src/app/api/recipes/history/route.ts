@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: 'memberId is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,9 +30,14 @@ export async function GET(request: NextRequest) {
     const supabase = SupabaseClientManager.getInstance();
 
     // 获取浏览历史
-    const { data: views, error: viewsError, count } = await supabase
+    const {
+      data: views,
+      error: viewsError,
+      count,
+    } = await supabase
       .from('recipe_views')
-      .select(`
+      .select(
+        `
         id,
         viewedAt,
         viewDuration,
@@ -51,7 +56,9 @@ export async function GET(request: NextRequest) {
           createdAt,
           updatedAt
         )
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' },
+      )
       .eq('memberId', memberId)
       .gte('viewedAt', startDate.toISOString())
       .order('viewedAt', { ascending: false })
@@ -61,7 +68,7 @@ export async function GET(request: NextRequest) {
       console.error('查询浏览历史失败:', viewsError);
       return NextResponse.json(
         { error: 'Failed to fetch recipe history' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -75,7 +82,8 @@ export async function GET(request: NextRequest) {
       // 查询所有相关的ingredients
       const { data: ingredients, error: ingredientsError } = await supabase
         .from('recipe_ingredients')
-        .select(`
+        .select(
+          `
           id,
           recipeId,
           amount,
@@ -91,7 +99,8 @@ export async function GET(request: NextRequest) {
             fat,
             category
           )
-        `)
+        `,
+        )
         .in('recipeId', recipeIds);
 
       if (ingredientsError) {
@@ -133,12 +142,11 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-
   } catch (error) {
     console.error('Error getting recipe history:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -156,7 +164,7 @@ export async function POST(request: NextRequest) {
     if (!memberId || !recipeId) {
       return NextResponse.json(
         { error: 'Missing required parameters: memberId and recipeId' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -173,15 +181,12 @@ export async function POST(request: NextRequest) {
       console.error('查询食谱失败:', recipeError);
       return NextResponse.json(
         { error: 'Failed to check recipe' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (!recipe) {
-      return NextResponse.json(
-        { error: 'Recipe not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Recipe not found' }, { status: 404 });
     }
 
     // 创建浏览记录
@@ -200,7 +205,7 @@ export async function POST(request: NextRequest) {
       console.error('创建浏览记录失败:', viewError);
       return NextResponse.json(
         { error: 'Failed to record view' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -211,12 +216,11 @@ export async function POST(request: NextRequest) {
       success: true,
       view,
     });
-
   } catch (error) {
     console.error('Error recording recipe view:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

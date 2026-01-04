@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/db';
 import { FamilyMemberRole } from '@prisma/client';
-import { PermissionError, isFamilyCreator, isFamilyAdmin } from '@/lib/permissions';
+import {
+  PermissionError,
+  isFamilyCreator,
+  isFamilyAdmin,
+} from '@/lib/permissions';
 
 // 角色管理服务
 export class RoleManagementService {
@@ -9,11 +13,15 @@ export class RoleManagementService {
     executorId: string,
     familyId: string,
     memberId: string,
-    newRole: FamilyMemberRole
+    newRole: FamilyMemberRole,
   ) {
     try {
       // 验证执行者权限
-      const executorIsCreator = await isFamilyCreator(executorId, familyId, prisma);
+      const executorIsCreator = await isFamilyCreator(
+        executorId,
+        familyId,
+        prisma,
+      );
       const executorIsAdmin = await isFamilyAdmin(executorId, familyId, prisma);
 
       // 只有家庭创建者可以分配管理员角色
@@ -22,13 +30,25 @@ export class RoleManagementService {
       }
 
       // 只有管理员或创建者可以分配成员角色
-      if (newRole === FamilyMemberRole.MEMBER && !executorIsAdmin && !executorIsCreator) {
-        throw new PermissionError('Only family admin or creator can assign member role');
+      if (
+        newRole === FamilyMemberRole.MEMBER &&
+        !executorIsAdmin &&
+        !executorIsCreator
+      ) {
+        throw new PermissionError(
+          'Only family admin or creator can assign member role',
+        );
       }
 
       // 只有管理员或创建者可以分配访客角色
-      if (newRole === FamilyMemberRole.GUEST && !executorIsAdmin && !executorIsCreator) {
-        throw new PermissionError('Only family admin or creator can assign guest role');
+      if (
+        newRole === FamilyMemberRole.GUEST &&
+        !executorIsAdmin &&
+        !executorIsCreator
+      ) {
+        throw new PermissionError(
+          'Only family admin or creator can assign guest role',
+        );
       }
 
       // 不能修改自己的角色（除非是创建者修改自己的管理员状态）
@@ -56,8 +76,13 @@ export class RoleManagementService {
         throw new Error('Family member not found');
       }
 
-      if (targetMember.family.creatorId === memberId && newRole !== FamilyMemberRole.ADMIN) {
-        throw new PermissionError('Cannot demote family creator from admin role');
+      if (
+        targetMember.family.creatorId === memberId &&
+        newRole !== FamilyMemberRole.ADMIN
+      ) {
+        throw new PermissionError(
+          'Cannot demote family creator from admin role',
+        );
       }
 
       // 更新角色
@@ -136,10 +161,14 @@ export class RoleManagementService {
         },
       });
 
-      const membersWithCreatorInfo = members.map(member => ({
+      const membersWithCreatorInfo = members.map((member) => ({
         ...member,
         isCreator: member.userId === family?.creatorId,
-        canBeManaged: this.canManageMember(executor.role, member.role, member.userId === family?.creatorId),
+        canBeManaged: this.canManageMember(
+          executor.role,
+          member.role,
+          member.userId === family?.creatorId,
+        ),
       }));
 
       return membersWithCreatorInfo;
@@ -153,7 +182,7 @@ export class RoleManagementService {
   static canManageMember(
     executorRole: FamilyMemberRole,
     targetRole: FamilyMemberRole,
-    targetIsCreator: boolean
+    targetIsCreator: boolean,
   ): boolean {
     // 创建者可以管理任何人
     if (executorRole === FamilyMemberRole.ADMIN) {
@@ -167,7 +196,10 @@ export class RoleManagementService {
 
     // 管理员可以管理成员和访客
     if (executorRole === FamilyMemberRole.ADMIN) {
-      return targetRole === FamilyMemberRole.MEMBER || targetRole === FamilyMemberRole.GUEST;
+      return (
+        targetRole === FamilyMemberRole.MEMBER ||
+        targetRole === FamilyMemberRole.GUEST
+      );
     }
 
     // 成员和访客不能管理其他人
@@ -178,15 +210,21 @@ export class RoleManagementService {
   static async removeMember(
     executorId: string,
     familyId: string,
-    memberId: string
+    memberId: string,
   ) {
     try {
       // 验证执行者权限
-      const executorIsCreator = await isFamilyCreator(executorId, familyId, prisma);
+      const executorIsCreator = await isFamilyCreator(
+        executorId,
+        familyId,
+        prisma,
+      );
       const executorIsAdmin = await isFamilyAdmin(executorId, familyId, prisma);
 
       if (!executorIsCreator && !executorIsAdmin) {
-        throw new PermissionError('Only family admin or creator can remove members');
+        throw new PermissionError(
+          'Only family admin or creator can remove members',
+        );
       }
 
       // 不能移除自己
@@ -287,8 +325,9 @@ export class RoleManagementService {
         total: 0,
       };
 
-      stats.forEach(stat => {
-        roleStats[stat.role.toLowerCase() as keyof typeof roleStats] = stat._count.role;
+      stats.forEach((stat) => {
+        roleStats[stat.role.toLowerCase() as keyof typeof roleStats] =
+          stat._count.role;
         roleStats.total += stat._count.role;
       });
 
@@ -302,7 +341,7 @@ export class RoleManagementService {
   // 检查角色分配限制
   static async checkRoleLimits(
     familyId: string,
-    newRole: FamilyMemberRole
+    newRole: FamilyMemberRole,
   ): Promise<{ canAssign: boolean; reason?: string }> {
     try {
       // 获取当前角色统计
@@ -317,8 +356,12 @@ export class RoleManagementService {
         },
       });
 
-      const adminCount = currentStats.find(stat => stat.role === FamilyMemberRole.ADMIN)?._count.role || 0;
-      const memberCount = currentStats.find(stat => stat.role === FamilyMemberRole.MEMBER)?._count.role || 0;
+      const adminCount =
+        currentStats.find((stat) => stat.role === FamilyMemberRole.ADMIN)
+          ?._count.role || 0;
+      const memberCount =
+        currentStats.find((stat) => stat.role === FamilyMemberRole.MEMBER)
+          ?._count.role || 0;
 
       // 检查管理员数量限制（至少需要一个管理员）
       if (newRole !== FamilyMemberRole.ADMIN && adminCount <= 1) {
@@ -340,25 +383,29 @@ export class RoleManagementService {
   static async batchAssignRoles(
     executorId: string,
     familyId: string,
-    assignments: Array<{ memberId: string; role: FamilyMemberRole }>
+    assignments: Array<{ memberId: string; role: FamilyMemberRole }>,
   ) {
     try {
       const results = [];
-      
+
       for (const assignment of assignments) {
         try {
           const result = await this.assignRole(
             executorId,
             familyId,
             assignment.memberId,
-            assignment.role
+            assignment.role,
           );
-          results.push({ success: true, memberId: assignment.memberId, data: result });
+          results.push({
+            success: true,
+            memberId: assignment.memberId,
+            data: result,
+          });
         } catch (error) {
-          results.push({ 
-            success: false, 
-            memberId: assignment.memberId, 
-            error: error instanceof Error ? error.message : 'Unknown error', 
+          results.push({
+            success: false,
+            memberId: assignment.memberId,
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
         }
       }
@@ -374,7 +421,7 @@ export class RoleManagementService {
   static async getAvailableActions(
     executorId: string,
     familyId: string,
-    targetMemberId: string
+    targetMemberId: string,
   ) {
     try {
       const executor = await prisma.familyMember.findFirst({
@@ -411,9 +458,14 @@ export class RoleManagementService {
         throw new Error('Target member not found');
       }
 
-      const executorIsCreator = await isFamilyCreator(executorId, familyId, prisma);
+      const executorIsCreator = await isFamilyCreator(
+        executorId,
+        familyId,
+        prisma,
+      );
       const executorIsAdmin = await isFamilyAdmin(executorId, familyId, prisma);
-      const targetIsCreator = targetMember.family.creatorId === targetMember.userId;
+      const targetIsCreator =
+        targetMember.family.creatorId === targetMember.userId;
       const isSelf = executorId === targetMember.userId;
 
       const actions = {
@@ -425,15 +477,29 @@ export class RoleManagementService {
       // 确定是否可以更改角色
       if (!isSelf && executorIsCreator) {
         actions.canChangeRole = true;
-        actions.availableRoles = [FamilyMemberRole.ADMIN, FamilyMemberRole.MEMBER, FamilyMemberRole.GUEST];
+        actions.availableRoles = [
+          FamilyMemberRole.ADMIN,
+          FamilyMemberRole.MEMBER,
+          FamilyMemberRole.GUEST,
+        ];
       } else if (!isSelf && executorIsAdmin && !targetIsCreator) {
         actions.canChangeRole = true;
-        actions.availableRoles = [FamilyMemberRole.MEMBER, FamilyMemberRole.GUEST];
+        actions.availableRoles = [
+          FamilyMemberRole.MEMBER,
+          FamilyMemberRole.GUEST,
+        ];
       }
 
       // 确定是否可以移除成员
-      if (!isSelf && !targetIsCreator && (executorIsCreator || executorIsAdmin)) {
-        if (executorIsCreator || (executorIsAdmin && targetMember.role !== FamilyMemberRole.ADMIN)) {
+      if (
+        !isSelf &&
+        !targetIsCreator &&
+        (executorIsCreator || executorIsAdmin)
+      ) {
+        if (
+          executorIsCreator ||
+          (executorIsAdmin && targetMember.role !== FamilyMemberRole.ADMIN)
+        ) {
           actions.canRemove = true;
         }
       }

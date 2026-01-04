@@ -25,11 +25,17 @@ import type {
 export class SupabaseDeviceRepository implements DeviceRepository {
   constructor(private client: SupabaseClient) {}
 
-  async createDeviceConnection(_input: DeviceConnectionCreateInputDTO): Promise<DeviceConnectionDTO> {
-    throw new Error('SupabaseDeviceRepository.createDeviceConnection not fully implemented yet');
+  async createDeviceConnection(
+    _input: DeviceConnectionCreateInputDTO,
+  ): Promise<DeviceConnectionDTO> {
+    throw new Error(
+      'SupabaseDeviceRepository.createDeviceConnection not fully implemented yet',
+    );
   }
 
-  async getDeviceConnectionById(id: string): Promise<DeviceConnectionDTO | null> {
+  async getDeviceConnectionById(
+    id: string,
+  ): Promise<DeviceConnectionDTO | null> {
     const { data, error } = await this.client
       .from('device_connections')
       .select('*')
@@ -42,7 +48,9 @@ export class SupabaseDeviceRepository implements DeviceRepository {
     return this.toDeviceConnectionDTO(data);
   }
 
-  async getDeviceConnectionByDeviceId(deviceId: string): Promise<DeviceConnectionDTO | null> {
+  async getDeviceConnectionByDeviceId(
+    deviceId: string,
+  ): Promise<DeviceConnectionDTO | null> {
     const { data, error } = await this.client
       .from('device_connections')
       .select('*')
@@ -57,7 +65,7 @@ export class SupabaseDeviceRepository implements DeviceRepository {
 
   async listDeviceConnections(
     filter?: DeviceConnectionFilterDTO,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<DeviceConnectionDTO>> {
     let query = this.client
       .from('device_connections')
@@ -94,7 +102,7 @@ export class SupabaseDeviceRepository implements DeviceRepository {
     if (error) throw error;
 
     return {
-      data: (data || []).map(device => this.toDeviceConnectionDTO(device)),
+      data: (data || []).map((device) => this.toDeviceConnectionDTO(device)),
       total: count || 0,
       page,
       limit,
@@ -104,28 +112,39 @@ export class SupabaseDeviceRepository implements DeviceRepository {
 
   async updateDeviceConnection(
     id: string,
-    input: DeviceConnectionUpdateInputDTO
+    input: DeviceConnectionUpdateInputDTO,
   ): Promise<DeviceConnectionDTO> {
     const updateData: any = {};
 
-    if (input.deviceName !== undefined) updateData.deviceName = input.deviceName;
+    if (input.deviceName !== undefined)
+      updateData.deviceName = input.deviceName;
     if (input.model !== undefined) updateData.model = input.model;
-    if (input.firmwareVersion !== undefined) updateData.firmwareVersion = input.firmwareVersion;
-    if (input.accessToken !== undefined) updateData.accessToken = input.accessToken;
-    if (input.refreshToken !== undefined) updateData.refreshToken = input.refreshToken;
-    if (input.lastSyncAt !== undefined) updateData.lastSyncAt = input.lastSyncAt?.toISOString();
-    if (input.syncStatus !== undefined) updateData.syncStatus = input.syncStatus;
-    if (input.syncInterval !== undefined) updateData.syncInterval = input.syncInterval;
-    if (input.permissions !== undefined) updateData.permissions = input.permissions;
+    if (input.firmwareVersion !== undefined)
+      updateData.firmwareVersion = input.firmwareVersion;
+    if (input.accessToken !== undefined)
+      updateData.accessToken = input.accessToken;
+    if (input.refreshToken !== undefined)
+      updateData.refreshToken = input.refreshToken;
+    if (input.lastSyncAt !== undefined)
+      updateData.lastSyncAt = input.lastSyncAt?.toISOString();
+    if (input.syncStatus !== undefined)
+      updateData.syncStatus = input.syncStatus;
+    if (input.syncInterval !== undefined)
+      updateData.syncInterval = input.syncInterval;
+    if (input.permissions !== undefined)
+      updateData.permissions = input.permissions;
     if (input.dataTypes !== undefined) updateData.dataTypes = input.dataTypes;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
-    if (input.isAutoSync !== undefined) updateData.isAutoSync = input.isAutoSync;
+    if (input.isAutoSync !== undefined)
+      updateData.isAutoSync = input.isAutoSync;
     if (input.disconnectionDate !== undefined) {
       updateData.disconnectionDate = input.disconnectionDate?.toISOString();
     }
     if (input.lastError !== undefined) updateData.lastError = input.lastError;
-    if (input.errorCount !== undefined) updateData.errorCount = input.errorCount;
-    if (input.retryCount !== undefined) updateData.retryCount = input.retryCount;
+    if (input.errorCount !== undefined)
+      updateData.errorCount = input.errorCount;
+    if (input.retryCount !== undefined)
+      updateData.retryCount = input.retryCount;
 
     updateData.updatedAt = new Date().toISOString();
 
@@ -160,7 +179,7 @@ export class SupabaseDeviceRepository implements DeviceRepository {
     id: string,
     syncStatus: 'PENDING' | 'SYNCING' | 'SUCCESS' | 'FAILED' | 'DISABLED',
     lastSyncAt?: Date,
-    lastError?: string | null
+    lastError?: string | null,
   ): Promise<void> {
     const updateData: any = {
       syncStatus,
@@ -218,7 +237,9 @@ export class SupabaseDeviceRepository implements DeviceRepository {
     if (error) throw error;
   }
 
-  async getActiveDevicesByMember(memberId: string): Promise<DeviceConnectionDTO[]> {
+  async getActiveDevicesByMember(
+    memberId: string,
+  ): Promise<DeviceConnectionDTO[]> {
     const { data, error } = await this.client
       .from('device_connections')
       .select('*')
@@ -228,7 +249,7 @@ export class SupabaseDeviceRepository implements DeviceRepository {
 
     if (error) throw error;
 
-    return (data || []).map(device => this.toDeviceConnectionDTO(device));
+    return (data || []).map((device) => this.toDeviceConnectionDTO(device));
   }
 
   /**
@@ -255,7 +276,9 @@ export class SupabaseDeviceRepository implements DeviceRepository {
       isActive: data.isActive,
       isAutoSync: data.isAutoSync,
       connectionDate: new Date(data.connectionDate),
-      disconnectionDate: data.disconnectionDate ? new Date(data.disconnectionDate) : null,
+      disconnectionDate: data.disconnectionDate
+        ? new Date(data.disconnectionDate)
+        : null,
       lastError: data.lastError,
       errorCount: data.errorCount,
       retryCount: data.retryCount,

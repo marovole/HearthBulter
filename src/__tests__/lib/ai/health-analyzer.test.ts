@@ -85,7 +85,8 @@ describe('Health Analyzer', () => {
         },
       ];
 
-      const structuredData = healthAnalyzer.structureMedicalData(indicatorsWithIssues);
+      const structuredData =
+        healthAnalyzer.structureMedicalData(indicatorsWithIssues);
 
       expect(structuredData.abnormal_indicators).toHaveLength(2);
       expect(structuredData.abnormal_indicators[0].name).toBe('血压');
@@ -100,19 +101,32 @@ describe('Health Analyzer', () => {
           name: '体重',
           values: [75, 74, 73, 72, 71],
           unit: 'kg',
-          dates: ['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01'],
+          dates: [
+            '2024-01-01',
+            '2024-02-01',
+            '2024-03-01',
+            '2024-04-01',
+            '2024-05-01',
+          ],
           category: '体格测量',
         },
         {
           name: 'BMI',
           values: [25.2, 24.8, 24.4, 24.0, 23.6],
           unit: 'kg/m²',
-          dates: ['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01'],
+          dates: [
+            '2024-01-01',
+            '2024-02-01',
+            '2024-03-01',
+            '2024-04-01',
+            '2024-05-01',
+          ],
           category: '体格测量',
         },
       ];
 
-      const structuredData = healthAnalyzer.structureMedicalData(trendIndicators);
+      const structuredData =
+        healthAnalyzer.structureMedicalData(trendIndicators);
 
       expect(structuredData.trends).toBeDefined();
       expect(structuredData.trends.weight.trend).toBe('decreasing');
@@ -143,9 +157,12 @@ describe('Health Analyzer', () => {
         },
       ];
 
-      const structuredData = healthAnalyzer.structureMedicalData(incompleteIndicators);
+      const structuredData =
+        healthAnalyzer.structureMedicalData(incompleteIndicators);
 
-      expect(structuredData.complete_indicators).toBeLessThan(incompleteIndicators.length);
+      expect(structuredData.complete_indicators).toBeLessThan(
+        incompleteIndicators.length,
+      );
       expect(structuredData.missing_data).toContain('血压');
       expect(structuredData.incomplete_data).toContain('体温');
     });
@@ -224,7 +241,8 @@ describe('Health Analyzer', () => {
       ];
 
       // 使用 structureMedicalData 转换数据格式
-      const structuredMedicalData = await healthAnalyzer.structureMedicalData(medicalIndicators);
+      const structuredMedicalData =
+        await healthAnalyzer.structureMedicalData(medicalIndicators);
 
       // 添加缺失的个人信息（血压、家族史等）
       structuredMedicalData.other_indicators = {
@@ -234,13 +252,19 @@ describe('Health Analyzer', () => {
         exercise_frequency: 'rarely',
       };
 
-      const riskAssessment = await healthAnalyzer.assessHealthRisks(structuredMedicalData);
+      const riskAssessment = await healthAnalyzer.assessHealthRisks(
+        structuredMedicalData,
+      );
 
       expect(riskAssessment.cardiovascular_risk).toBeDefined();
       expect(riskAssessment.cardiovascular_risk.level).toBe('high');
       expect(riskAssessment.cardiovascular_risk.score).toBeGreaterThan(0);
-      expect(riskAssessment.cardiovascular_risk.factors).toContain('hypertension');
-      expect(riskAssessment.cardiovascular_risk.factors).toContain('hyperlipidemia');
+      expect(riskAssessment.cardiovascular_risk.factors).toContain(
+        'hypertension',
+      );
+      expect(riskAssessment.cardiovascular_risk.factors).toContain(
+        'hyperlipidemia',
+      );
       expect(riskAssessment.cardiovascular_risk.factors).toContain('obesity');
     });
 
@@ -294,7 +318,8 @@ describe('Health Analyzer', () => {
       ];
 
       // 使用 structureMedicalData 转换数据格式
-      const structuredMedicalData = await healthAnalyzer.structureMedicalData(medicalIndicators);
+      const structuredMedicalData =
+        await healthAnalyzer.structureMedicalData(medicalIndicators);
 
       // 添加缺失的个人信息（腰围、血压等）
       structuredMedicalData.other_indicators = {
@@ -302,11 +327,17 @@ describe('Health Analyzer', () => {
         blood_pressure: '135/85',
       };
 
-      const riskAssessment = await healthAnalyzer.assessHealthRisks(structuredMedicalData);
+      const riskAssessment = await healthAnalyzer.assessHealthRisks(
+        structuredMedicalData,
+      );
 
       expect(riskAssessment.metabolic_syndrome_risk).toBeDefined();
-      expect(riskAssessment.metabolic_syndrome_risk.criteria_met).toBeGreaterThanOrEqual(0);
-      expect(riskAssessment.metabolic_syndrome_risk.diagnosis_risk).toBe('moderate');
+      expect(
+        riskAssessment.metabolic_syndrome_risk.criteria_met,
+      ).toBeGreaterThanOrEqual(0);
+      expect(riskAssessment.metabolic_syndrome_risk.diagnosis_risk).toBe(
+        'moderate',
+      );
     });
 
     it('应该评估营养风险', () => {
@@ -328,7 +359,10 @@ describe('Health Analyzer', () => {
         appetite_level: 'poor',
       };
 
-      const riskAssessment = healthAnalyzer.assessNutritionalRisks(userProfile, nutritionData);
+      const riskAssessment = healthAnalyzer.assessNutritionalRisks(
+        userProfile,
+        nutritionData,
+      );
 
       expect(riskAssessment.malnutrition_risk).toBeDefined();
       expect(riskAssessment.deficiencies).toContain('protein');
@@ -368,10 +402,16 @@ describe('Health Analyzer', () => {
         },
       };
 
-      const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['weight_loss']);
+      const nutritionTargets = healthAnalyzer.generateNutritionTargets(
+        userProfile,
+        healthAnalysis,
+        ['weight_loss'],
+      );
 
       expect(nutritionTargets.daily_calories).toBeLessThan(2000); // 低于维持热量
-      expect(nutritionTargets.macros.protein_percent).toBeGreaterThanOrEqual(25); // 高蛋白
+      expect(nutritionTargets.macros.protein_percent).toBeGreaterThanOrEqual(
+        25,
+      ); // 高蛋白
       expect(nutritionTargets.macros.fat_percent).toBeLessThanOrEqual(30); // 适量脂肪
       expect(nutritionTargets.macros.carbs_percent).toBeGreaterThanOrEqual(35); // 复合碳水
       expect(nutritionTargets.calorie_deficit).toBe(500); // 500卡路里缺口
@@ -407,10 +447,16 @@ describe('Health Analyzer', () => {
         },
       };
 
-      const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['muscle_gain']);
+      const nutritionTargets = healthAnalyzer.generateNutritionTargets(
+        userProfile,
+        healthAnalysis,
+        ['muscle_gain'],
+      );
 
       expect(nutritionTargets.daily_calories).toBeGreaterThan(2500); // 热量盈余
-      expect(nutritionTargets.macros.protein_percent).toBeGreaterThanOrEqual(30); // 很高蛋白
+      expect(nutritionTargets.macros.protein_percent).toBeGreaterThanOrEqual(
+        30,
+      ); // 很高蛋白
       expect(nutritionTargets.protein_grams).toBeGreaterThan(120); // 每公斤体重1.6g以上
       expect(nutritionTargets.calorie_surplus).toBe(300); // 300卡路里盈余
     });
@@ -445,7 +491,11 @@ describe('Health Analyzer', () => {
         },
       };
 
-      const nutritionTargets = healthAnalyzer.generateNutritionTargets(userProfile, healthAnalysis, ['weight_maintenance']);
+      const nutritionTargets = healthAnalyzer.generateNutritionTargets(
+        userProfile,
+        healthAnalysis,
+        ['weight_maintenance'],
+      );
 
       expect(nutritionTargets.daily_calories).toBeGreaterThan(0);
       expect(nutritionTargets.special_considerations).toContain('vegetarian');
@@ -534,7 +584,8 @@ describe('Health Analyzer', () => {
         },
       };
 
-      const prioritizedConcerns = healthAnalyzer.prioritizeHealthConcerns(healthAnalysis);
+      const prioritizedConcerns =
+        healthAnalyzer.prioritizeHealthConcerns(healthAnalysis);
 
       expect(prioritizedConcerns).toHaveLength(4);
       expect(prioritizedConcerns[0].issue).toBe('肥胖'); // 高紧急度
@@ -555,53 +606,58 @@ describe('Health Analyzer', () => {
 
       const userGoals = ['weight_loss', 'muscle_gain'];
 
-      const prioritizedConcerns = healthAnalyzer.prioritizeHealthConcerns(healthAnalysis, userGoals);
+      const prioritizedConcerns = healthAnalyzer.prioritizeHealthConcerns(
+        healthAnalysis,
+        userGoals,
+      );
 
       // 运动不足应该优先级更高，因为与用户目标相关
-      const exerciseIndex = prioritizedConcerns.findIndex(c => c.issue === '运动不足');
-      const sleepIndex = prioritizedConcerns.findIndex(c => c.issue === '睡眠质量差');
+      const exerciseIndex = prioritizedConcerns.findIndex(
+        (c) => c.issue === '运动不足',
+      );
+      const sleepIndex = prioritizedConcerns.findIndex(
+        (c) => c.issue === '睡眠质量差',
+      );
 
       expect(exerciseIndex).toBeLessThan(sleepIndex);
     });
   });
 
   describe('AI分析集成', () => {
-    const mockCreate = (openaiClient.chat.completions.create as jest.Mock);
+    const mockCreate = openaiClient.chat.completions.create as jest.Mock;
 
     beforeEach(() => {
       mockCreate.mockResolvedValue({
-        choices: [{
-          message: {
-            content: JSON.stringify({
-              overall_score: 75,
-              risk_level: 'medium',
-              key_findings: [
-                '体重略超重',
-                '血压偏高',
-                '需要改善饮食结构',
-              ],
-              risk_assessment: {
-                level: 'medium',
-                concerns: ['hypertension_risk', 'metabolic_syndrome_risk'],
-                urgent_actions: ['减重5-10kg', '降低血压至130/80以下'],
-              },
-              nutritional_recommendations: {
-                macro_distribution: {
-                  carbs_percent: 45,
-                  protein_percent: 25,
-                  fat_percent: 30,
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                overall_score: 75,
+                risk_level: 'medium',
+                key_findings: ['体重略超重', '血压偏高', '需要改善饮食结构'],
+                risk_assessment: {
+                  level: 'medium',
+                  concerns: ['hypertension_risk', 'metabolic_syndrome_risk'],
+                  urgent_actions: ['减重5-10kg', '降低血压至130/80以下'],
                 },
-                daily_calories: 1800,
-                micronutrients: ['vitamin_d', 'omega_3', 'magnesium'],
-              },
-              lifestyle_modifications: [
-                '每周至少150分钟中等强度运动',
-                '保证7-8小时睡眠',
-                '学习压力管理技巧',
-              ],
-            }),
+                nutritional_recommendations: {
+                  macro_distribution: {
+                    carbs_percent: 45,
+                    protein_percent: 25,
+                    fat_percent: 30,
+                  },
+                  daily_calories: 1800,
+                  micronutrients: ['vitamin_d', 'omega_3', 'magnesium'],
+                },
+                lifestyle_modifications: [
+                  '每周至少150分钟中等强度运动',
+                  '保证7-8小时睡眠',
+                  '学习压力管理技巧',
+                ],
+              }),
+            },
           },
-        }],
+        ],
       });
     });
 
@@ -626,14 +682,19 @@ describe('Health Analyzer', () => {
         exercise_level: 'low',
       };
 
-      const analysis = await healthAnalyzer.analyzeHealthStatus(userProfile, medicalData);
+      const analysis = await healthAnalyzer.analyzeHealthStatus(
+        userProfile,
+        medicalData,
+      );
 
       expect(analysis).toBeDefined();
       expect(analysis.overall_score).toBe(75);
       expect(analysis.risk_level).toBe('medium');
       expect(analysis.key_findings).toContain('体重略超重');
       expect(analysis.nutritional_recommendations.daily_calories).toBe(1800);
-      expect(analysis.lifestyle_modifications).toContain('每周至少150分钟中等强度运动');
+      expect(analysis.lifestyle_modifications).toContain(
+        '每周至少150分钟中等强度运动',
+      );
     });
 
     it('应该处理AI分析失败', async () => {
@@ -655,7 +716,9 @@ describe('Health Analyzer', () => {
         heart_rate: 72,
       };
 
-      await expect(healthAnalyzer.analyzeHealthStatus(userProfile, medicalData)).rejects.toThrow('AI service unavailable');
+      await expect(
+        healthAnalyzer.analyzeHealthStatus(userProfile, medicalData),
+      ).rejects.toThrow('AI service unavailable');
     });
 
     it('应该缓存分析结果', async () => {
@@ -692,7 +755,11 @@ describe('Health Analyzer', () => {
         risk_level: 'medium',
         key_findings: ['体重略超重', '血压偏高'],
         nutritional_recommendations: {
-          macro_distribution: { carbs_percent: 45, protein_percent: 25, fat_percent: 30 },
+          macro_distribution: {
+            carbs_percent: 45,
+            protein_percent: 25,
+            fat_percent: 30,
+          },
           daily_calories: 1800,
           micronutrients: ['vitamin_d', 'omega_3'],
         },
@@ -714,17 +781,30 @@ describe('Health Analyzer', () => {
     it('应该生成用户友好的建议', () => {
       const technicalResults = {
         risk_factors: ['hypertension_stage_1', 'overweight_class_1'],
-        metabolic_profile: { insulin_resistance: 'mild', lipid_profile: 'borderline_high' },
-        nutritional_deficiencies: ['vitamin_d_insufficient', 'omega_3_deficient'],
+        metabolic_profile: {
+          insulin_resistance: 'mild',
+          lipid_profile: 'borderline_high',
+        },
+        nutritional_deficiencies: [
+          'vitamin_d_insufficient',
+          'omega_3_deficient',
+        ],
       };
 
-      const userFriendlyAdvice = healthAnalyzer.generateUserFriendlyAdvice(technicalResults);
+      const userFriendlyAdvice =
+        healthAnalyzer.generateUserFriendlyAdvice(technicalResults);
 
       expect(userFriendlyAdvice).toBeDefined();
       expect(userFriendlyAdvice.explanation).not.toContain('stage_1');
-      expect(userFriendlyAdvice.explanation).not.toContain('insulin_resistance');
-      expect(userFriendlyAdvice.action_items).toContain('增加户外活动以补充维生素D');
-      expect(userFriendlyAdvice.action_items).toContain('增加富含Omega-3的食物');
+      expect(userFriendlyAdvice.explanation).not.toContain(
+        'insulin_resistance',
+      );
+      expect(userFriendlyAdvice.action_items).toContain(
+        '增加户外活动以补充维生素D',
+      );
+      expect(userFriendlyAdvice.action_items).toContain(
+        '增加富含Omega-3的食物',
+      );
     });
   });
 
@@ -754,7 +834,8 @@ describe('Health Analyzer', () => {
         cholesterol: { value: undefined, last_measured: '2022-12-01' },
       };
 
-      const qualityIssues = healthAnalyzer.identifyDataQualityIssues(poorQualityData);
+      const qualityIssues =
+        healthAnalyzer.identifyDataQualityIssues(poorQualityData);
 
       expect(qualityIssues.missing_data).toContain('blood_pressure');
       expect(qualityIssues.outdated_data).toContain('cholesterol');

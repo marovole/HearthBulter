@@ -152,7 +152,7 @@ describe('Health Calculations', () => {
       const nextMonthBirthDate = new Date(
         today.getFullYear() - 30,
         today.getMonth() + 1,
-        1
+        1,
       );
 
       const age = calculateAge(nextMonthBirthDate);
@@ -254,9 +254,7 @@ describe('Health Calculations', () => {
 
     it('should accept ratios that sum to very close to 1', () => {
       // Allow small floating point errors
-      expect(() =>
-        calculateMacroTargets(2000, 0.5, 0.2, 0.3)
-      ).not.toThrow();
+      expect(() => calculateMacroTargets(2000, 0.5, 0.2, 0.3)).not.toThrow();
     });
   });
 

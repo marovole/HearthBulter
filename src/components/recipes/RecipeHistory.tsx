@@ -1,10 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Clock, Eye, Calendar, Filter } from 'lucide-react';
 import { RecipeCard } from './RecipeCard';
 
@@ -79,11 +91,11 @@ export function RecipeHistory({
       }
 
       const newViews = data.views || [];
-      setViews(prev => reset ? newViews : [...prev, ...newViews]);
+      setViews((prev) => (reset ? newViews : [...prev, ...newViews]));
       setHasMore(newViews.length === limit);
 
       if (!reset) {
-        setPage(prev => prev + 1);
+        setPage((prev) => prev + 1);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -115,7 +127,7 @@ export function RecipeHistory({
   const groupByDate = (views: ViewRecord[]) => {
     const groups: { [key: string]: ViewRecord[] } = {};
 
-    views.forEach(view => {
+    views.forEach((view) => {
       const dateKey = new Date(view.viewedAt).toDateString();
       if (!groups[dateKey]) {
         groups[dateKey] = [];
@@ -129,26 +141,26 @@ export function RecipeHistory({
   const groupedViews = groupByDate(views);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between'>
         <div>
-          <h2 className="text-2xl font-bold">浏览历史</h2>
-          <p className="text-muted-foreground">您最近查看过的食谱</p>
+          <h2 className='text-2xl font-bold'>浏览历史</h2>
+          <p className='text-muted-foreground'>您最近查看过的食谱</p>
         </div>
 
         {showFilters && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+          <div className='flex items-center gap-4'>
+            <div className='flex items-center gap-2'>
+              <Calendar className='h-4 w-4 text-muted-foreground' />
               <Select value={days.toString()} onValueChange={handleDaysChange}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className='w-32'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="7">最近7天</SelectItem>
-                  <SelectItem value="30">最近30天</SelectItem>
-                  <SelectItem value="90">最近90天</SelectItem>
-                  <SelectItem value="365">最近一年</SelectItem>
+                  <SelectItem value='7'>最近7天</SelectItem>
+                  <SelectItem value='30'>最近30天</SelectItem>
+                  <SelectItem value='90'>最近90天</SelectItem>
+                  <SelectItem value='365'>最近一年</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -157,19 +169,19 @@ export function RecipeHistory({
       </div>
 
       {loading && views.length === 0 && (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">正在加载浏览历史...</p>
+        <div className='flex items-center justify-center py-12'>
+          <div className='text-center'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
+            <p className='text-muted-foreground'>正在加载浏览历史...</p>
           </div>
         </div>
       )}
 
       {error && (
-        <Card className="p-6">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={() => loadHistory(true)} variant="outline">
+        <Card className='p-6'>
+          <div className='text-center'>
+            <p className='text-red-600 mb-4'>{error}</p>
+            <Button onClick={() => loadHistory(true)} variant='outline'>
               重新加载
             </Button>
           </div>
@@ -177,10 +189,10 @@ export function RecipeHistory({
       )}
 
       {!loading && !error && views.length === 0 && (
-        <Card className="p-6">
-          <div className="text-center">
-            <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">
+        <Card className='p-6'>
+          <div className='text-center'>
+            <Eye className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
+            <p className='text-muted-foreground mb-4'>
               您还没有浏览过任何食谱，开始探索吧！
             </p>
             <Button>浏览食谱</Button>
@@ -189,27 +201,28 @@ export function RecipeHistory({
       )}
 
       {Object.entries(groupedViews).map(([dateKey, dateViews]) => (
-        <div key={dateKey} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-medium">
+        <div key={dateKey} className='space-y-4'>
+          <div className='flex items-center gap-2'>
+            <h3 className='text-lg font-medium'>
               {formatDate(new Date(dateKey))}
             </h3>
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant='secondary' className='text-xs'>
               {dateViews.length} 个食谱
             </Badge>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
             {dateViews.map((view) => (
-              <Card key={view.id} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-base line-clamp-1">
+              <Card key={view.id} className='overflow-hidden'>
+                <CardHeader className='pb-3'>
+                  <div className='flex items-start justify-between'>
+                    <div className='flex-1'>
+                      <CardTitle className='text-base line-clamp-1'>
                         {view.recipe.name}
                       </CardTitle>
-                      <CardDescription className="text-xs text-muted-foreground mt-1">
-                        {formatDate(view.viewedAt)} {new Date(view.viewedAt).toLocaleTimeString('zh-CN', {
+                      <CardDescription className='text-xs text-muted-foreground mt-1'>
+                        {formatDate(view.viewedAt)}{' '}
+                        {new Date(view.viewedAt).toLocaleTimeString('zh-CN', {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
@@ -218,25 +231,29 @@ export function RecipeHistory({
                   </div>
                 </CardHeader>
 
-                <CardContent className="pt-0">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
+                <CardContent className='pt-0'>
+                  <div className='flex items-center gap-4 text-sm text-muted-foreground mb-3'>
+                    <div className='flex items-center gap-1'>
+                      <Clock className='h-3 w-3' />
                       <span>{view.recipe.totalTime}分钟</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
-                      <span>{view.viewDuration ? `${view.viewDuration}秒` : '未记录'}</span>
+                    <div className='flex items-center gap-1'>
+                      <Eye className='h-3 w-3' />
+                      <span>
+                        {view.viewDuration
+                          ? `${view.viewDuration}秒`
+                          : '未记录'}
+                      </span>
                     </div>
                   </div>
 
                   {view.source && (
-                    <Badge variant="outline" className="text-xs mb-3">
+                    <Badge variant='outline' className='text-xs mb-3'>
                       来自 {view.source}
                     </Badge>
                   )}
 
-                  <Button size="sm" className="w-full">
+                  <Button size='sm' className='w-full'>
                     再次查看
                   </Button>
                 </CardContent>
@@ -247,11 +264,8 @@ export function RecipeHistory({
       ))}
 
       {hasMore && !loading && (
-        <div className="text-center">
-          <Button
-            onClick={() => loadHistory()}
-            variant="outline"
-          >
+        <div className='text-center'>
+          <Button onClick={() => loadHistory()} variant='outline'>
             加载更多
           </Button>
         </div>

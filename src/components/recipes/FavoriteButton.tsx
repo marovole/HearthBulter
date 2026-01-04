@@ -28,7 +28,9 @@ export function FavoriteButton({
 
   const checkFavoriteStatus = async () => {
     try {
-      const response = await fetch(`/api/recipes/${recipeId}/favorite?memberId=${memberId}`);
+      const response = await fetch(
+        `/api/recipes/${recipeId}/favorite?memberId=${memberId}`,
+      );
       const data = await response.json();
 
       if (data.success) {
@@ -61,9 +63,10 @@ export function FavoriteButton({
       setIsFavorited(!isFavorited);
       toast({
         title: isFavorited ? '已取消收藏' : '已收藏',
-        description: isFavorited ? '食谱已从收藏中移除' : '食谱已添加到收藏列表',
+        description: isFavorited
+          ? '食谱已从收藏中移除'
+          : '食谱已添加到收藏列表',
       });
-
     } catch (error) {
       toast({
         title: '操作失败',
@@ -79,7 +82,7 @@ export function FavoriteButton({
     <Button
       onClick={handleToggleFavorite}
       disabled={loading}
-      variant="ghost"
+      variant='ghost'
       size={size}
       className={`${
         isFavorited
@@ -93,7 +96,7 @@ export function FavoriteButton({
         }`}
       />
       {showText && (
-        <span className="ml-2">
+        <span className='ml-2'>
           {loading ? '处理中...' : isFavorited ? '已收藏' : '收藏'}
         </span>
       )}

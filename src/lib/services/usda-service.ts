@@ -1,54 +1,54 @@
 /**
  * USDA FoodData Central API 集成服务
- * 
+ *
  * 提供食物营养成分查询功能，对接USDA API获取权威营养数据
  * 参考: https://fdc.nal.usda.gov/api-guide.html
  */
 
 interface USDAFoodNutrient {
-  nutrientId: number
-  nutrientName: string
-  nutrientNumber: string
-  unitName: string
-  value: number
+  nutrientId: number;
+  nutrientName: string;
+  nutrientNumber: string;
+  unitName: string;
+  value: number;
 }
 
 interface USDAFood {
-  fdcId: number
-  description: string
-  foodNutrients: USDAFoodNutrient[]
-  dataType?: string
-  brandOwner?: string
+  fdcId: number;
+  description: string;
+  foodNutrients: USDAFoodNutrient[];
+  dataType?: string;
+  brandOwner?: string;
 }
 
 interface USDASearchResponse {
-  foods: USDAFood[]
-  totalHits: number
-  currentPage: number
-  totalPages: number
+  foods: USDAFood[];
+  totalHits: number;
+  currentPage: number;
+  totalPages: number;
 }
 
 interface FoodData {
-  id?: string
-  name: string
-  nameEn: string
-  aliases: string[]
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  fiber?: number
-  sugar?: number
-  sodium?: number
-  vitaminA?: number
-  vitaminC?: number
-  calcium?: number
-  iron?: number
-  category: string
-  tags: string[]
-  source: 'USDA' | 'LOCAL' | 'USER_SUBMITTED'
-  usdaId?: string
-  verified: boolean
+  id?: string;
+  name: string;
+  nameEn: string;
+  aliases: string[];
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+  vitaminA?: number;
+  vitaminC?: number;
+  calcium?: number;
+  iron?: number;
+  category: string;
+  tags: string[];
+  source: 'USDA' | 'LOCAL' | 'USER_SUBMITTED';
+  usdaId?: string;
+  verified: boolean;
 }
 
 /**
@@ -82,7 +82,7 @@ const FOOD_TRANSLATIONS: Record<string, string> = {
  */
 function getNutrientValue(
   nutrients: USDAFoodNutrient[],
-  nutrientId: number
+  nutrientId: number,
 ): number | undefined {
   const nutrient = nutrients.find((n) => n.nutrientId === nutrientId);
   return nutrient?.value;
@@ -157,7 +157,7 @@ function mapUSDAToLocal(usdaFood: USDAFood): Omit<FoodData, 'id'> {
 function translateToChinese(englishName: string): string {
   // 反转映射表查找
   const entry = Object.entries(FOOD_TRANSLATIONS).find(
-    ([_, en]) => en.toLowerCase() === englishName.toLowerCase()
+    ([_, en]) => en.toLowerCase() === englishName.toLowerCase(),
   );
   return entry ? entry[0] : englishName;
 }
@@ -174,22 +174,46 @@ function translateToEnglish(chineseName: string): string {
  */
 function inferCategory(description: string): string {
   const desc = description.toLowerCase();
-  if (desc.includes('chicken') || desc.includes('beef') || desc.includes('pork')) {
+  if (
+    desc.includes('chicken') ||
+    desc.includes('beef') ||
+    desc.includes('pork')
+  ) {
     return 'PROTEIN';
   }
-  if (desc.includes('salmon') || desc.includes('shrimp') || desc.includes('fish')) {
+  if (
+    desc.includes('salmon') ||
+    desc.includes('shrimp') ||
+    desc.includes('fish')
+  ) {
     return 'SEAFOOD';
   }
-  if (desc.includes('milk') || desc.includes('cheese') || desc.includes('yogurt')) {
+  if (
+    desc.includes('milk') ||
+    desc.includes('cheese') ||
+    desc.includes('yogurt')
+  ) {
     return 'DAIRY';
   }
-  if (desc.includes('broccoli') || desc.includes('spinach') || desc.includes('lettuce')) {
+  if (
+    desc.includes('broccoli') ||
+    desc.includes('spinach') ||
+    desc.includes('lettuce')
+  ) {
     return 'VEGETABLES';
   }
-  if (desc.includes('apple') || desc.includes('banana') || desc.includes('orange')) {
+  if (
+    desc.includes('apple') ||
+    desc.includes('banana') ||
+    desc.includes('orange')
+  ) {
     return 'FRUITS';
   }
-  if (desc.includes('rice') || desc.includes('wheat') || desc.includes('oats')) {
+  if (
+    desc.includes('rice') ||
+    desc.includes('wheat') ||
+    desc.includes('oats')
+  ) {
     return 'GRAINS';
   }
   return 'OTHER';
@@ -219,7 +243,7 @@ export class USDAService {
     this.apiKey = apiKey || process.env.USDA_API_KEY || '';
     if (!this.apiKey) {
       console.warn(
-        'USDA_API_KEY not configured. USDA features will be limited.'
+        'USDA_API_KEY not configured. USDA features will be limited.',
       );
     }
   }
@@ -233,7 +257,7 @@ export class USDAService {
   async searchFoods(
     query: string,
     pageSize = 50,
-    pageNumber = 1
+    pageNumber = 1,
   ): Promise<USDASearchResponse> {
     if (!this.apiKey) {
       throw new Error('USDA API key is not configured');
@@ -271,7 +295,7 @@ export class USDAService {
           }
 
           throw new Error(
-            `USDA API error: ${response.status} ${response.statusText}`
+            `USDA API error: ${response.status} ${response.statusText}`,
           );
         }
 
@@ -286,7 +310,7 @@ export class USDAService {
     }
 
     throw new Error(
-      `Failed to search USDA API after ${this.maxRetries} attempts: ${lastError?.message}`
+      `Failed to search USDA API after ${this.maxRetries} attempts: ${lastError?.message}`,
     );
   }
 
@@ -322,7 +346,7 @@ export class USDAService {
           }
 
           throw new Error(
-            `USDA API error: ${response.status} ${response.statusText}`
+            `USDA API error: ${response.status} ${response.statusText}`,
           );
         }
 
@@ -336,7 +360,7 @@ export class USDAService {
     }
 
     throw new Error(
-      `Failed to fetch USDA food after ${this.maxRetries} attempts: ${lastError?.message}`
+      `Failed to fetch USDA food after ${this.maxRetries} attempts: ${lastError?.message}`,
     );
   }
 
@@ -345,7 +369,7 @@ export class USDAService {
    */
   async searchAndMapFoods(
     query: string,
-    limit = 10
+    limit = 10,
   ): Promise<Omit<FoodData, 'id'>[]> {
     const response = await this.searchFoods(query, limit, 1);
     return response.foods.map(mapUSDAToLocal);
@@ -354,9 +378,7 @@ export class USDAService {
   /**
    * 根据FDC ID获取食物并映射为本地格式
    */
-  async getFoodByFdcIdAndMap(
-    fdcId: number
-  ): Promise<Omit<FoodData, 'id'>> {
+  async getFoodByFdcIdAndMap(fdcId: number): Promise<Omit<FoodData, 'id'>> {
     const usdaFood = await this.getFoodByFdcId(fdcId);
     return mapUSDAToLocal(usdaFood);
   }
@@ -374,4 +396,3 @@ export const usdaService = new USDAService();
 
 // 导出类型
 export type { FoodData, USDAFood, USDASearchResponse };
-

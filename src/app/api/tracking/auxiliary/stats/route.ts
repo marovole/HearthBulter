@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import {
-
   getWeightTrend,
   getSleepStats,
   getExerciseStats,
@@ -24,10 +23,7 @@ export async function GET(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -36,46 +32,36 @@ export async function GET(req: NextRequest) {
     const days = parseInt(searchParams.get('days') || '7');
 
     if (!memberId || !type) {
-      return NextResponse.json(
-        { error: '缺少必要参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
     }
 
     let result;
 
     switch (type) {
-    case 'weight':
-      result = await getWeightTrend(memberId, days);
-      break;
+      case 'weight':
+        result = await getWeightTrend(memberId, days);
+        break;
 
-    case 'sleep':
-      result = await getSleepStats(memberId, days);
-      break;
+      case 'sleep':
+        result = await getSleepStats(memberId, days);
+        break;
 
-    case 'exercise':
-      result = await getExerciseStats(memberId, days);
-      break;
+      case 'exercise':
+        result = await getExerciseStats(memberId, days);
+        break;
 
-    case 'water':
-      result = await getWaterStats(memberId, days);
-      break;
+      case 'water':
+        result = await getWaterStats(memberId, days);
+        break;
 
-    default:
-      return NextResponse.json(
-        { error: '无效的统计类型' },
-        { status: 400 }
-      );
+      default:
+        return NextResponse.json({ error: '无效的统计类型' }, { status: 400 });
     }
 
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching auxiliary stats:', error);
 
-    return NextResponse.json(
-      { error: '获取统计数据失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取统计数据失败' }, { status: 500 });
   }
 }
-

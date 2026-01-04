@@ -18,10 +18,7 @@ export async function GET(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -29,26 +26,19 @@ export async function GET(req: NextRequest) {
     const limit = searchParams.get('limit');
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少memberId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少memberId参数' }, { status: 400 });
     }
 
     // 使用 Repository 获取最近常用食物
     const recentFoods = await mealTrackingRepository.getRecentFoods(
       memberId,
-      limit ? parseInt(limit) : undefined
+      limit ? parseInt(limit) : undefined,
     );
 
     return NextResponse.json({ recentFoods });
   } catch (error) {
     console.error('Error fetching recent foods:', error);
 
-    return NextResponse.json(
-      { error: '获取最近食物失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取最近食物失败' }, { status: 500 });
   }
 }
-

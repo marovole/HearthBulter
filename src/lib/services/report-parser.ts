@@ -1,49 +1,46 @@
 /**
  * 体检报告解析服务
- * 
+ *
  * 从OCR识别的文本中提取关键健康指标，并进行异常值检测和结构化存储
  */
 
-import type {
-  IndicatorType,
-  IndicatorStatus,
-} from '@prisma/client';
+import type { IndicatorType, IndicatorStatus } from '@prisma/client';
 
 /**
  * 解析出的指标数据
  */
 export interface ParsedIndicator {
-  indicatorType: IndicatorType
-  name: string
-  value: number
-  unit: string
-  referenceRange?: string
-  isAbnormal: boolean
-  status: IndicatorStatus
+  indicatorType: IndicatorType;
+  name: string;
+  value: number;
+  unit: string;
+  referenceRange?: string;
+  isAbnormal: boolean;
+  status: IndicatorStatus;
 }
 
 /**
  * 解析结果
  */
 export interface ParsedReport {
-  indicators: ParsedIndicator[]
-  reportDate?: Date
-  institution?: string
-  reportType?: string
+  indicators: ParsedIndicator[];
+  reportDate?: Date;
+  institution?: string;
+  reportType?: string;
 }
 
 /**
  * 指标定义和参考范围
  */
 interface IndicatorDefinition {
-  type: IndicatorType
-  patterns: RegExp[] // 匹配模式，支持多种表述
-  unit: string
+  type: IndicatorType;
+  patterns: RegExp[]; // 匹配模式，支持多种表述
+  unit: string;
   normalRange: {
-    min?: number
-    max?: number
-  }
-  getStatus: (value: number) => IndicatorStatus
+    min?: number;
+    max?: number;
+  };
+  getStatus: (value: number) => IndicatorStatus;
 }
 
 /**
@@ -221,10 +218,7 @@ const INDICATOR_DEFINITIONS: IndicatorDefinition[] = [
   },
   {
     type: 'ALP',
-    patterns: [
-      /碱性磷酸酶[：:]\s*(\d+)\s*U\/L/gi,
-      /ALP[：:]\s*(\d+)\s*U\/L/gi,
-    ],
+    patterns: [/碱性磷酸酶[：:]\s*(\d+)\s*U\/L/gi, /ALP[：:]\s*(\d+)\s*U\/L/gi],
     unit: 'U/L',
     normalRange: { min: 40, max: 150 },
     getStatus: (value) => {
@@ -526,8 +520,8 @@ export class ReportParser {
    * 验证解析结果
    */
   static validate(parsed: ParsedReport): {
-    valid: boolean
-    errors: string[]
+    valid: boolean;
+    errors: string[];
   } {
     const errors: string[] = [];
 
@@ -550,4 +544,3 @@ export class ReportParser {
 
 // 导出单例实例
 export const reportParser = new ReportParser();
-

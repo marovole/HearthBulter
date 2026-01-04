@@ -109,7 +109,8 @@ export async function recognizeFoodPhoto(photoId: string) {
       where: { id: photoId },
       data: {
         recognitionStatus: RecognitionStatus.FAILED,
-        recognitionError: error instanceof Error ? error.message : 'Unknown error',
+        recognitionError:
+          error instanceof Error ? error.message : 'Unknown error',
       },
     });
 
@@ -134,7 +135,7 @@ async function mockRecognition(imageUrl: string): Promise<{
     { name: '米饭', confidence: 0.92, amount: 150 },
     { name: '鸡蛋', confidence: 0.88, amount: 50 },
     { name: '番茄炒蛋', confidence: 0.85, amount: 200 },
-    { name: '青菜', confidence: 0.80, amount: 100 },
+    { name: '青菜', confidence: 0.8, amount: 100 },
     { name: '鸡胸肉', confidence: 0.87, amount: 120 },
   ];
 
@@ -180,7 +181,9 @@ export async function getRecognitionResult(photoId: string) {
     };
   }
 
-  const result = JSON.parse(photo.recognitionResult || '{}') as RecognitionResult;
+  const result = JSON.parse(
+    photo.recognitionResult || '{}',
+  ) as RecognitionResult;
 
   return {
     status: photo.recognitionStatus,
@@ -195,7 +198,7 @@ export async function getRecognitionResult(photoId: string) {
 export async function correctRecognitionResult(
   photoId: string,
   correctedFoodId: string,
-  amount: number
+  amount: number,
 ) {
   const photo = await db.foodPhoto.findUnique({
     where: { id: photoId },
@@ -213,7 +216,9 @@ export async function correctRecognitionResult(
   }
 
   // 如果餐饮记录中还没有这个食物，添加它
-  const existingFood = photo.mealLog.foods.find((f) => f.foodId === correctedFoodId);
+  const existingFood = photo.mealLog.foods.find(
+    (f) => f.foodId === correctedFoodId,
+  );
 
   if (existingFood) {
     // 更新数量
@@ -276,8 +281,8 @@ export async function uploadMultiplePhotos(data: {
         fileUrl: photo.fileUrl,
         fileName: photo.fileName,
         fileSize: photo.fileSize,
-      })
-    )
+      }),
+    ),
   );
 
   return uploadedPhotos;
@@ -302,4 +307,3 @@ export async function getMealLogPhotos(mealLogId: string) {
     orderBy: { createdAt: 'asc' },
   });
 }
-

@@ -11,85 +11,90 @@ import type {
   CategoryBudgets,
 } from '@/lib/repositories/types/budget';
 import type { BudgetNotificationService } from './budget-notification-service';
+import type { BudgetItem } from '@/types/service-types';
+import {
+  BUDGET_ALERT_THRESHOLDS,
+  DAILY_BUDGET_EXCESS_FACTOR,
+} from '@/lib/constants/budget';
 
 // Type aliases for backward compatibility
 type Budget = BudgetDTO;
 type Spending = SpendingDTO;
 
 export interface BudgetCreateInput {
-  memberId: string
-  name: string
-  period: BudgetPeriod
-  startDate: Date
-  endDate: Date
-  totalAmount: number
-  vegetableBudget?: number
-  meatBudget?: number
-  fruitBudget?: number
-  grainBudget?: number
-  dairyBudget?: number
-  seafoodBudget?: number
-  oilsBudget?: number
-  snacksBudget?: number
-  beveragesBudget?: number
-  otherBudget?: number
-  alertThreshold80?: boolean
-  alertThreshold100?: boolean
-  alertThreshold110?: boolean
+  memberId: string;
+  name: string;
+  period: BudgetPeriod;
+  startDate: Date;
+  endDate: Date;
+  totalAmount: number;
+  vegetableBudget?: number;
+  meatBudget?: number;
+  fruitBudget?: number;
+  grainBudget?: number;
+  dairyBudget?: number;
+  seafoodBudget?: number;
+  oilsBudget?: number;
+  snacksBudget?: number;
+  beveragesBudget?: number;
+  otherBudget?: number;
+  alertThreshold80?: boolean;
+  alertThreshold100?: boolean;
+  alertThreshold110?: boolean;
 }
 
 export interface BudgetUpdateInput {
-  name?: string
-  totalAmount?: number
-  vegetableBudget?: number
-  meatBudget?: number
-  fruitBudget?: number
-  grainBudget?: number
-  dairyBudget?: number
-  seafoodBudget?: number
-  oilsBudget?: number
-  snacksBudget?: number
-  beveragesBudget?: number
-  otherBudget?: number
-  alertThreshold80?: boolean
-  alertThreshold100?: boolean
-  alertThreshold110?: boolean
+  name?: string;
+  totalAmount?: number;
+  vegetableBudget?: number;
+  meatBudget?: number;
+  fruitBudget?: number;
+  grainBudget?: number;
+  dairyBudget?: number;
+  seafoodBudget?: number;
+  oilsBudget?: number;
+  snacksBudget?: number;
+  beveragesBudget?: number;
+  otherBudget?: number;
+  alertThreshold80?: boolean;
+  alertThreshold100?: boolean;
+  alertThreshold110?: boolean;
 }
 
 export interface SpendingCreateInput {
-  budgetId: string
-  amount: number
-  category: FoodCategory
-  description: string
-  transactionId?: string
-  platform?: string
-  items?: any[]
-  purchaseDate?: Date
+  budgetId: string;
+  amount: number;
+  category: FoodCategory;
+  description: string;
+  transactionId?: string;
+  platform?: string;
+  items?: BudgetItem[];
+  purchaseDate?: Date;
 }
 
 export interface BudgetStatusResult {
-  budget: Budget
-  usedAmount: number
-  remainingAmount: number
-  usagePercentage: number
+  budget: Budget;
+  usedAmount: number;
+  remainingAmount: number;
+  usagePercentage: number;
   categoryUsage: {
     [key in FoodCategory]?: {
-      budget: number
-      used: number
-      remaining: number
-      percentage: number
-    }
-  }
-  dailyAverage: number
-  daysRemaining: number
-  projectedSpend: number
-  alerts: string[]
+      budget: number;
+      used: number;
+      remaining: number;
+      percentage: number;
+    };
+  };
+  dailyAverage: number;
+  daysRemaining: number;
+  projectedSpend: number;
+  alerts: string[];
 }
 
 export class BudgetTracker {
   constructor(
     private readonly budgetRepository: BudgetRepository,
-    private readonly budgetNotificationService: BudgetNotificationService
+    private readonly budgetNotificationService: BudgetNotificationService,
   ) {}
 
   /**
@@ -146,21 +151,24 @@ export class BudgetTracker {
     }
 
     // 如果更新了总预算或分类预算，需要验证
-    if (data.totalAmount ||
-        data.vegetableBudget !== undefined ||
-        data.meatBudget !== undefined ||
-        data.fruitBudget !== undefined ||
-        data.grainBudget !== undefined ||
-        data.dairyBudget !== undefined ||
-        data.seafoodBudget !== undefined ||
-        data.oilsBudget !== undefined ||
-        data.snacksBudget !== undefined ||
-        data.beveragesBudget !== undefined ||
-        data.otherBudget !== undefined) {
-
+    if (
+      data.totalAmount ||
+      data.vegetableBudget !== undefined ||
+      data.meatBudget !== undefined ||
+      data.fruitBudget !== undefined ||
+      data.grainBudget !== undefined ||
+      data.dairyBudget !== undefined ||
+      data.seafoodBudget !== undefined ||
+      data.oilsBudget !== undefined ||
+      data.snacksBudget !== undefined ||
+      data.beveragesBudget !== undefined ||
+      data.otherBudget !== undefined
+    ) {
       const newTotalAmount = data.totalAmount || currentBudget.totalAmount;
       const categoryTotal =
-        (data.vegetableBudget ?? currentBudget.categoryBudgets?.VEGETABLES ?? 0) +
+        (data.vegetableBudget ??
+          currentBudget.categoryBudgets?.VEGETABLES ??
+          0) +
         (data.meatBudget ?? currentBudget.categoryBudgets?.PROTEIN ?? 0) +
         (data.fruitBudget ?? currentBudget.categoryBudgets?.FRUITS ?? 0) +
         (data.grainBudget ?? currentBudget.categoryBudgets?.GRAINS ?? 0) +
@@ -168,7 +176,9 @@ export class BudgetTracker {
         (data.seafoodBudget ?? currentBudget.categoryBudgets?.SEAFOOD ?? 0) +
         (data.oilsBudget ?? currentBudget.categoryBudgets?.OILS ?? 0) +
         (data.snacksBudget ?? currentBudget.categoryBudgets?.SNACKS ?? 0) +
-        (data.beveragesBudget ?? currentBudget.categoryBudgets?.BEVERAGES ?? 0) +
+        (data.beveragesBudget ??
+          currentBudget.categoryBudgets?.BEVERAGES ??
+          0) +
         (data.otherBudget ?? currentBudget.categoryBudgets?.OTHER ?? 0);
 
       if (categoryTotal > newTotalAmount) {
@@ -254,38 +264,52 @@ export class BudgetTracker {
     if (!budget) return;
 
     // 检查80%预警
-    if (budget.alertThreshold80 && budget.usagePercentage >= 80 && budget.usagePercentage < 100) {
+    if (
+      budget.alertThreshold80 &&
+      budget.usagePercentage >= BUDGET_ALERT_THRESHOLDS.WARNING_80 &&
+      budget.usagePercentage < BUDGET_ALERT_THRESHOLDS.WARNING_100
+    ) {
       // 发送80%预算预警通知
       await this.budgetNotificationService.sendBudgetAlert(budget.memberId, {
         budgetName: budget.name,
         usagePercentage: budget.usagePercentage,
-        threshold: 80,
+        threshold: BUDGET_ALERT_THRESHOLDS.WARNING_80,
         remainingBudget: budget.remainingAmount,
         totalBudget: budget.totalAmount,
       });
     }
 
     // 检查100%预警
-    if (budget.alertThreshold100 && budget.usagePercentage >= 100 && budget.usagePercentage < 110) {
+    if (
+      budget.alertThreshold100 &&
+      budget.usagePercentage >= BUDGET_ALERT_THRESHOLDS.WARNING_100 &&
+      budget.usagePercentage < BUDGET_ALERT_THRESHOLDS.OVERSPEND_110
+    ) {
       // 发送100%预算预警通知
       await this.budgetNotificationService.sendBudgetAlert(budget.memberId, {
         budgetName: budget.name,
         usagePercentage: budget.usagePercentage,
-        threshold: 100,
+        threshold: BUDGET_ALERT_THRESHOLDS.WARNING_100,
         remainingBudget: budget.remainingAmount,
         totalBudget: budget.totalAmount,
       });
     }
 
     // 检查110%超支预警
-    if (budget.alertThreshold110 && budget.usagePercentage >= 110) {
+    if (
+      budget.alertThreshold110 &&
+      budget.usagePercentage >= BUDGET_ALERT_THRESHOLDS.OVERSPEND_110
+    ) {
       // 发送预算超支通知
-      await this.budgetNotificationService.sendBudgetOverspend(budget.memberId, {
-        budgetName: budget.name,
-        overspendAmount: budget.usedAmount - budget.totalAmount,
-        totalSpent: budget.usedAmount,
-        budgetLimit: budget.totalAmount,
-      });
+      await this.budgetNotificationService.sendBudgetOverspend(
+        budget.memberId,
+        {
+          budgetName: budget.name,
+          overspendAmount: budget.usedAmount - budget.totalAmount,
+          totalSpent: budget.usedAmount,
+          budgetLimit: budget.totalAmount,
+        },
+      );
     }
 
     // 检查分类预算预警
@@ -298,12 +322,20 @@ export class BudgetTracker {
   /**
    * 检查分类预算预警
    */
-  private async checkCategoryAlerts(budgetId: string, budget?: Budget): Promise<void> {
-    const budgetSnapshot = budget ?? await this.budgetRepository.getBudgetById(budgetId);
+  private async checkCategoryAlerts(
+    budgetId: string,
+    budget?: Budget,
+  ): Promise<void> {
+    const budgetSnapshot =
+      budget ?? (await this.budgetRepository.getBudgetById(budgetId));
 
     if (!budgetSnapshot) return;
 
-    const categories: Array<{ key: keyof CategoryBudgets; name: string; category: FoodCategory }> = [
+    const categories: Array<{
+      key: keyof CategoryBudgets;
+      name: string;
+      category: FoodCategory;
+    }> = [
       { key: 'VEGETABLES', name: '蔬菜', category: 'VEGETABLES' },
       { key: 'PROTEIN', name: '肉类', category: 'PROTEIN' },
       { key: 'FRUITS', name: '水果', category: 'FRUITS' },
@@ -326,15 +358,18 @@ export class BudgetTracker {
         category,
       });
 
-      const usedAmount = categorySpendings.items.reduce((sum, spending) => sum + spending.amount, 0);
+      const usedAmount = categorySpendings.items.reduce(
+        (sum, spending) => sum + spending.amount,
+        0,
+      );
       const usagePercentage = (usedAmount / categoryBudget) * 100;
 
-      if (usagePercentage >= 100) {
+      if (usagePercentage >= BUDGET_ALERT_THRESHOLDS.WARNING_100) {
         await this.budgetRepository.createBudgetAlert({
           id: '', // Repository will generate
           budgetId,
           type: 'CATEGORY_BUDGET_ALERT',
-          threshold: 100,
+          threshold: BUDGET_ALERT_THRESHOLDS.WARNING_100,
           currentValue: usagePercentage,
           message: `${categoryName}分类预算已超支！当前使用${usagePercentage.toFixed(1)}%`,
           category: category,
@@ -343,13 +378,16 @@ export class BudgetTracker {
         });
 
         // 发送分类预算预警通知
-        await this.budgetNotificationService.sendCategoryBudgetAlert(budgetSnapshot.memberId, {
-          budgetName: budgetSnapshot.name,
-          category: categoryName,
-          spent: usedAmount,
-          budget: categoryBudget,
-          percentage: usagePercentage,
-        });
+        await this.budgetNotificationService.sendCategoryBudgetAlert(
+          budgetSnapshot.memberId,
+          {
+            budgetName: budgetSnapshot.name,
+            category: categoryName,
+            spent: usedAmount,
+            budget: categoryBudget,
+            percentage: usagePercentage,
+          },
+        );
       }
     }
   }
@@ -359,20 +397,26 @@ export class BudgetTracker {
    */
   private async checkDailyAverageAlert(budget: Budget): Promise<void> {
     const now = new Date();
-    const daysElapsed = Math.ceil((now.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysElapsed = Math.ceil(
+      (now.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
 
     if (daysElapsed <= 0) return;
 
-    const totalDays = Math.ceil((budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil(
+      (budget.endDate.getTime() - budget.startDate.getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
     const dailyBudget = budget.totalAmount / totalDays;
     const currentDailyAverage = budget.usedAmount / daysElapsed;
 
-    if (currentDailyAverage > dailyBudget * 1.2) { // 超过日均预算20%
+    if (currentDailyAverage > dailyBudget * DAILY_BUDGET_EXCESS_FACTOR) {
+      // 超过日均预算20%
       await this.budgetRepository.createBudgetAlert({
         id: '', // Repository will generate
         budgetId: budget.id,
         type: 'DAILY_EXCESS',
-        threshold: dailyBudget * 1.2,
+        threshold: dailyBudget * DAILY_BUDGET_EXCESS_FACTOR,
         currentValue: currentDailyAverage,
         message: `当前日均支出${currentDailyAverage.toFixed(2)}元超过预算${dailyBudget.toFixed(2)}元`,
         status: 'ACTIVE',
@@ -396,17 +440,20 @@ export class BudgetTracker {
       dailyAverage: status.dailyAverage,
       daysRemaining: status.daysRemaining,
       projectedSpend: status.projectedSpend,
-      alerts: status.alerts.map(alert => alert.message),
+      alerts: status.alerts.map((alert) => alert.message),
     };
   }
 
   /**
    * 获取用户的所有预算
    */
-  async getUserBudgets(memberId: string, status?: BudgetStatus): Promise<Budget[]> {
+  async getUserBudgets(
+    memberId: string,
+    status?: BudgetStatus,
+  ): Promise<Budget[]> {
     const result = await this.budgetRepository.listBudgets(
       memberId,
-      status ? { status } : undefined
+      status ? { status } : undefined,
     );
     return result.items;
   }
@@ -421,7 +468,10 @@ export class BudgetTracker {
   /**
    * 获取支出历史
    */
-  async getSpendingHistory(budgetId: string, category?: FoodCategory): Promise<Spending[]> {
+  async getSpendingHistory(
+    budgetId: string,
+    category?: FoodCategory,
+  ): Promise<Spending[]> {
     const result = await this.budgetRepository.listSpendings({
       budgetId,
       category,
@@ -433,7 +483,9 @@ export class BudgetTracker {
   /**
    * 辅助方法：从Input构建CategoryBudgets
    */
-  private buildCategoryBudgets(data: BudgetCreateInput | BudgetUpdateInput): CategoryBudgets {
+  private buildCategoryBudgets(
+    data: BudgetCreateInput | BudgetUpdateInput,
+  ): CategoryBudgets {
     return {
       VEGETABLES: data.vegetableBudget ?? 0,
       FRUITS: data.fruitBudget ?? 0,
@@ -451,18 +503,34 @@ export class BudgetTracker {
   /**
    * 辅助方法：合并现有和新的CategoryBudgets
    */
-  private mergeCategoryBudgets(currentBudget: Budget, updateData: BudgetUpdateInput): CategoryBudgets {
+  private mergeCategoryBudgets(
+    currentBudget: Budget,
+    updateData: BudgetUpdateInput,
+  ): CategoryBudgets {
     return {
-      VEGETABLES: updateData.vegetableBudget ?? currentBudget.categoryBudgets?.VEGETABLES ?? 0,
-      FRUITS: updateData.fruitBudget ?? currentBudget.categoryBudgets?.FRUITS ?? 0,
-      GRAINS: updateData.grainBudget ?? currentBudget.categoryBudgets?.GRAINS ?? 0,
-      PROTEIN: updateData.meatBudget ?? currentBudget.categoryBudgets?.PROTEIN ?? 0,
-      SEAFOOD: updateData.seafoodBudget ?? currentBudget.categoryBudgets?.SEAFOOD ?? 0,
-      DAIRY: updateData.dairyBudget ?? currentBudget.categoryBudgets?.DAIRY ?? 0,
+      VEGETABLES:
+        updateData.vegetableBudget ??
+        currentBudget.categoryBudgets?.VEGETABLES ??
+        0,
+      FRUITS:
+        updateData.fruitBudget ?? currentBudget.categoryBudgets?.FRUITS ?? 0,
+      GRAINS:
+        updateData.grainBudget ?? currentBudget.categoryBudgets?.GRAINS ?? 0,
+      PROTEIN:
+        updateData.meatBudget ?? currentBudget.categoryBudgets?.PROTEIN ?? 0,
+      SEAFOOD:
+        updateData.seafoodBudget ?? currentBudget.categoryBudgets?.SEAFOOD ?? 0,
+      DAIRY:
+        updateData.dairyBudget ?? currentBudget.categoryBudgets?.DAIRY ?? 0,
       OILS: updateData.oilsBudget ?? currentBudget.categoryBudgets?.OILS ?? 0,
-      SNACKS: updateData.snacksBudget ?? currentBudget.categoryBudgets?.SNACKS ?? 0,
-      BEVERAGES: updateData.beveragesBudget ?? currentBudget.categoryBudgets?.BEVERAGES ?? 0,
-      OTHER: updateData.otherBudget ?? currentBudget.categoryBudgets?.OTHER ?? 0,
+      SNACKS:
+        updateData.snacksBudget ?? currentBudget.categoryBudgets?.SNACKS ?? 0,
+      BEVERAGES:
+        updateData.beveragesBudget ??
+        currentBudget.categoryBudgets?.BEVERAGES ??
+        0,
+      OTHER:
+        updateData.otherBudget ?? currentBudget.categoryBudgets?.OTHER ?? 0,
     };
   }
 }

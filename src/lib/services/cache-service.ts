@@ -1,6 +1,6 @@
 /**
  * 缓存服务
- * 
+ *
  * 提供食物数据的缓存功能，支持Redis和内存缓存降级
  */
 
@@ -8,16 +8,16 @@ import { prisma } from '@/lib/db';
 import type { Food } from '@prisma/client';
 
 interface CacheConfig {
-  useRedis: boolean
-  redisUrl?: string
-  defaultTTL: number // 默认TTL（秒）
+  useRedis: boolean;
+  redisUrl?: string;
+  defaultTTL: number; // 默认TTL（秒）
 }
 
 interface CacheStats {
-  hits: number // 缓存命中次数
-  misses: number // 缓存未命中次数
-  sets: number // 设置缓存次数
-  deletes: number // 删除缓存次数
+  hits: number; // 缓存命中次数
+  misses: number; // 缓存未命中次数
+  sets: number; // 设置缓存次数
+  deletes: number; // 删除缓存次数
 }
 
 // 内存缓存（当Redis不可用时使用）
@@ -113,21 +113,13 @@ export class CacheService {
   /**
    * 设置缓存值
    */
-  async set(
-    key: string,
-    value: any,
-    ttl?: number
-  ): Promise<void> {
+  async set(key: string, value: any, ttl?: number): Promise<void> {
     this.stats.sets++;
     const ttlSeconds = ttl ?? this.config.defaultTTL;
 
     if (this.config.useRedis && this.redisClient) {
       try {
-        await this.redisClient.setex(
-          key,
-          ttlSeconds,
-          JSON.stringify(value)
-        );
+        await this.redisClient.setex(key, ttlSeconds, JSON.stringify(value));
         return;
       } catch (error) {
         console.error('Redis set错误:', error);
@@ -264,19 +256,19 @@ export class FoodCacheService {
   private cache: CacheService;
 
   constructor(cacheService?: CacheService) {
-    this.cache = cacheService ?? new CacheService({
-      useRedis: !!process.env.REDIS_URL,
-      defaultTTL: 7776000, // 90天
-    });
+    this.cache =
+      cacheService ??
+      new CacheService({
+        useRedis: !!process.env.REDIS_URL,
+        defaultTTL: 7776000, // 90天
+      });
   }
 
   /**
    * 获取食物缓存
    */
   async getFood(id: string): Promise<Food | null> {
-    const cached = await this.cache.get<Food>(
-      FoodCacheKeys.food(id)
-    );
+    const cached = await this.cache.get<Food>(FoodCacheKeys.food(id));
     return cached;
   }
 
@@ -298,17 +290,12 @@ export class FoodCacheService {
    * 刷新USDA数据（当USDA数据超过90天时）
    */
   async refreshUSDAData(): Promise<void> {
-    const ninetyDaysAgo = new Date(
-      Date.now() - 90 * 24 * 60 * 60 * 1000
-    );
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
     const staleFoods = await prisma.food.findMany({
       where: {
         source: 'USDA',
-        OR: [
-          { cachedAt: null },
-          { cachedAt: { lt: ninetyDaysAgo } },
-        ],
+        OR: [{ cachedAt: null }, { cachedAt: { lt: ninetyDaysAgo } }],
       },
       take: 100, // 每次处理100条
     });
@@ -330,4 +317,3 @@ export const foodCacheService = new FoodCacheService();
 
 // 导出类型
 export type { CacheConfig, CacheStats };
-

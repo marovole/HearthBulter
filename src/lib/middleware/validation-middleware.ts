@@ -9,17 +9,17 @@ import { APIError, createErrorResponse } from '@/lib/errors/api-error';
 import { logger } from '@/lib/logger';
 
 export interface ValidationSchema {
-  body?: z.ZodSchema
-  query?: z.ZodSchema
-  params?: z.ZodSchema
-  files?: z.ZodSchema
+  body?: z.ZodSchema;
+  query?: z.ZodSchema;
+  params?: z.ZodSchema;
+  files?: z.ZodSchema;
 }
 
 export interface ValidationResult<T = any> {
-  success: boolean
-  data?: T
-  errors?: Record<string, string[]>
-  sanitized?: any
+  success: boolean;
+  data?: T;
+  errors?: Record<string, string[]>;
+  sanitized?: any;
 }
 
 /**
@@ -42,10 +42,10 @@ export class ValidationMiddleware {
     request: NextRequest,
     schema: ValidationSchema,
     context?: {
-      params?: Record<string, string>
-      userId?: string
-      sessionId?: string
-    }
+      params?: Record<string, string>;
+      userId?: string;
+      sessionId?: string;
+    },
   ): Promise<ValidationResult<T>> {
     const startTime = Date.now();
     const requestId = this.generateRequestId();
@@ -61,7 +61,10 @@ export class ValidationMiddleware {
           errors.body = bodyResult.errors;
         } else {
           result.body = bodyResult.data;
-          result.sanitized = { ...(result.sanitized || {}), body: bodyResult.sanitized };
+          result.sanitized = {
+            ...(result.sanitized || {}),
+            body: bodyResult.sanitized,
+          };
         }
       }
 
@@ -72,7 +75,10 @@ export class ValidationMiddleware {
           errors.query = queryResult.errors;
         } else {
           result.query = queryResult.data;
-          result.sanitized = { ...(result.sanitized || {}), query: queryResult.sanitized };
+          result.sanitized = {
+            ...(result.sanitized || {}),
+            query: queryResult.sanitized,
+          };
         }
       }
 
@@ -80,13 +86,16 @@ export class ValidationMiddleware {
       if (schema.params) {
         const paramsResult = await this.validateParams(
           context?.params || {},
-          schema.params
+          schema.params,
         );
         if (!paramsResult.success) {
           errors.params = paramsResult.errors;
         } else {
           result.params = paramsResult.data;
-          result.sanitized = { ...(result.sanitized || {}), params: paramsResult.sanitized };
+          result.sanitized = {
+            ...(result.sanitized || {}),
+            params: paramsResult.sanitized,
+          };
         }
       }
 
@@ -97,7 +106,10 @@ export class ValidationMiddleware {
           errors.files = filesResult.errors;
         } else {
           result.files = filesResult.data;
-          result.sanitized = { ...(result.sanitized || {}), files: filesResult.sanitized };
+          result.sanitized = {
+            ...(result.sanitized || {}),
+            files: filesResult.sanitized,
+          };
         }
       }
 
@@ -135,7 +147,7 @@ export class ValidationMiddleware {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       logger.error('请求验证异常', {
         requestId,
         error: error instanceof Error ? error.message : String(error),
@@ -159,16 +171,16 @@ export class ValidationMiddleware {
    */
   private async validateBody<T>(
     request: NextRequest,
-    schema: z.ZodSchema
+    schema: z.ZodSchema,
   ): Promise<ValidationResult<T>> {
     try {
       const body = await request.json();
-      
+
       // 基本安全检查
       const sanitizedBody = this.sanitizeInput(body);
-      
+
       const result = schema.safeParse(sanitizedBody);
-      
+
       if (!result.success) {
         return {
           success: false,
@@ -194,17 +206,17 @@ export class ValidationMiddleware {
    */
   private async validateQuery<T>(
     request: NextRequest,
-    schema: z.ZodSchema
+    schema: z.ZodSchema,
   ): Promise<ValidationResult<T>> {
     try {
       const { searchParams } = new URL(request.url);
       const query = Object.fromEntries(searchParams);
-      
+
       // 基本安全检查
       const sanitizedQuery = this.sanitizeInput(query);
-      
+
       const result = schema.safeParse(sanitizedQuery);
-      
+
       if (!result.success) {
         return {
           success: false,
@@ -230,14 +242,14 @@ export class ValidationMiddleware {
    */
   private async validateParams<T>(
     params: Record<string, string>,
-    schema: z.ZodSchema
+    schema: z.ZodSchema,
   ): Promise<ValidationResult<T>> {
     try {
       // 基本安全检查
       const sanitizedParams = this.sanitizeInput(params);
-      
+
       const result = schema.safeParse(sanitizedParams);
-      
+
       if (!result.success) {
         return {
           success: false,
@@ -263,7 +275,7 @@ export class ValidationMiddleware {
    */
   private async validateFiles<T>(
     request: NextRequest,
-    schema: z.ZodSchema
+    schema: z.ZodSchema,
   ): Promise<ValidationResult<T>> {
     try {
       // 检查是否是multipart/form-data
@@ -294,10 +306,10 @@ export class ValidationMiddleware {
    * 格式化Zod错误
    */
   private formatZodErrors(error: z.ZodError): string[] {
-    return error.errors.map(err => {
+    return error.errors.map((err) => {
       const field = err.path.join('.');
       const message = err.message;
-      
+
       if (err.code === 'invalid_string') {
         return `${field}: ${message}`;
       }
@@ -313,7 +325,7 @@ export class ValidationMiddleware {
       if (err.code === 'invalid_enum_value') {
         return `${field}: 无效的值，必须是${err.options?.join(', ')}之一`;
       }
-      
+
       return `${field}: ${message}`;
     });
   }
@@ -327,14 +339,14 @@ export class ValidationMiddleware {
     }
 
     if (Array.isArray(input)) {
-      return input.map(item => this.sanitizeInput(item));
+      return input.map((item) => this.sanitizeInput(item));
     }
 
     const sanitized: any = {};
     for (const [key, value] of Object.entries(input)) {
       // 清理键名
       const sanitizedKey = this.sanitizeString(key);
-      
+
       // 清理值
       if (typeof value === 'string') {
         sanitized[sanitizedKey] = this.sanitizeString(value);
@@ -356,14 +368,16 @@ export class ValidationMiddleware {
       return str;
     }
 
-    return str
-      // 防止XSS攻击
-      .replace(/[<>]/g, '')
-      // 防止SQL注入
-      .replace(/['"]/g, '')
-      // 限制长度
-      .substring(0, 10000)
-      .trim();
+    return (
+      str
+        // 防止XSS攻击
+        .replace(/[<>]/g, '')
+        // 防止SQL注入
+        .replace(/['"]/g, '')
+        // 限制长度
+        .substring(0, 10000)
+        .trim()
+    );
   }
 
   /**
@@ -381,7 +395,7 @@ export const validationMiddleware = ValidationMiddleware.getInstance();
 export const validateRequest = <T>(
   request: NextRequest,
   schema: ValidationSchema,
-  context?: { params?: Record<string, string>; userId?: string }
+  context?: { params?: Record<string, string>; userId?: string },
 ) => validationMiddleware.validateRequest<T>(request, schema, context);
 
 // 导出预定义的验证模式
@@ -428,13 +442,21 @@ export const commonSchemas = {
 // 创建高阶验证函数
 export function withValidation<T>(
   schema: ValidationSchema,
-  handler: (request: NextRequest, context: { data: T; sanitized: any }) => Promise<NextResponse>
+  handler: (
+    request: NextRequest,
+    context: { data: T; sanitized: any },
+  ) => Promise<NextResponse>,
 ) {
-  return async (request: NextRequest, context?: { params?: Record<string, string>; userId?: string }) => {
+  return async (
+    request: NextRequest,
+    context?: { params?: Record<string, string>; userId?: string },
+  ) => {
     const validationResult = await validateRequest<T>(request, schema, context);
-    
+
     if (!validationResult.success) {
-      const error = APIError.badRequest('请求参数验证失败', { errors: validationResult.errors });
+      const error = APIError.badRequest('请求参数验证失败', {
+        errors: validationResult.errors,
+      });
       return createErrorResponse(error);
     }
 

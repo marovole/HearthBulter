@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Plus, 
-  Utensils, 
-  ShoppingCart, 
+import {
+  Plus,
+  Utensils,
+  ShoppingCart,
   Activity,
   Heart,
   Calendar,
@@ -22,19 +22,19 @@ import {
 } from 'lucide-react';
 
 interface QuickAction {
-  id: string
-  title: string
-  description: string
-  icon: React.ComponentType<any>
-  color: string
-  category: 'data' | 'nutrition' | 'health' | 'device' | 'notification'
-  href?: string
-  onClick?: () => void
-  badge?: number
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  color: string;
+  category: 'data' | 'nutrition' | 'health' | 'device' | 'notification';
+  href?: string;
+  onClick?: () => void;
+  badge?: number;
 }
 
 interface QuickActionsPanelProps {
-  memberId: string
+  memberId: string;
 }
 
 export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
@@ -170,15 +170,21 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
   const categories = [
     { id: 'all', name: '全部', icon: Plus, color: 'bg-gray-500' },
     { id: 'data', name: '数据录入', icon: Activity, color: 'bg-blue-500' },
-    { id: 'nutrition', name: '营养饮食', icon: Utensils, color: 'bg-orange-500' },
+    {
+      id: 'nutrition',
+      name: '营养饮食',
+      icon: Utensils,
+      color: 'bg-orange-500',
+    },
     { id: 'health', name: '健康管理', icon: Heart, color: 'bg-red-500' },
     { id: 'device', name: '设备同步', icon: Smartphone, color: 'bg-gray-600' },
     { id: 'notification', name: '通知提醒', icon: Bell, color: 'bg-red-600' },
   ];
 
-  const filteredActions = selectedCategory === 'all' 
-    ? quickActions 
-    : quickActions.filter(action => action.category === selectedCategory);
+  const filteredActions =
+    selectedCategory === 'all'
+      ? quickActions
+      : quickActions.filter((action) => action.category === selectedCategory);
 
   const recentActions = [
     { id: 'weight-1', title: '记录体重', time: '10分钟前', icon: Scale },
@@ -193,23 +199,23 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className='bg-white rounded-lg shadow p-6'>
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <Activity className="h-6 w-6 text-blue-600" />
+      <div className='flex items-center justify-between mb-6'>
+        <div className='flex items-center space-x-3'>
+          <Activity className='h-6 w-6 text-blue-600' />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">快速操作</h3>
-            <p className="text-sm text-gray-500">常用功能快速访问</p>
+            <h3 className='text-lg font-semibold text-gray-900'>快速操作</h3>
+            <p className='text-sm text-gray-500'>常用功能快速访问</p>
           </div>
         </div>
-        <button className="text-sm text-blue-600 hover:text-blue-700">
+        <button className='text-sm text-blue-600 hover:text-blue-700'>
           查看全部
         </button>
       </div>
 
       {/* 分类选择器 */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className='flex flex-wrap gap-2 mb-6'>
         {categories.map((category) => {
           const Icon = category.icon;
           return (
@@ -222,7 +228,7 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200'
               } border`}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className='h-4 w-4' />
               <span>{category.name}</span>
             </button>
           );
@@ -230,49 +236,60 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       </div>
 
       {/* 快速操作网格 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6'>
         {filteredActions.slice(0, 8).map((action) => {
           const Icon = action.icon;
           return (
             <button
               key={action.id}
               onClick={action.onClick}
-              className="group relative p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all"
+              className='group relative p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all'
             >
               {action.badge && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>
                   {action.badge}
                 </span>
               )}
-              <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                <Icon className="h-6 w-6 text-white" />
+              <div
+                className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
+              >
+                <Icon className='h-6 w-6 text-white' />
               </div>
-              <h4 className="font-medium text-gray-900 text-sm mb-1">{action.title}</h4>
-              <p className="text-xs text-gray-500 line-clamp-2">{action.description}</p>
+              <h4 className='font-medium text-gray-900 text-sm mb-1'>
+                {action.title}
+              </h4>
+              <p className='text-xs text-gray-500 line-clamp-2'>
+                {action.description}
+              </p>
             </button>
           );
         })}
       </div>
 
       {/* 最近操作和提醒 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         {/* 最近操作 */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-            <Clock className="h-4 w-4 mr-2" />
+          <h4 className='text-sm font-medium text-gray-700 mb-3 flex items-center'>
+            <Clock className='h-4 w-4 mr-2' />
             最近操作
           </h4>
-          <div className="space-y-2">
+          <div className='space-y-2'>
             {recentActions.map((action) => {
               const Icon = action.icon;
               return (
-                <div key={action.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
-                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Icon className="h-4 w-4 text-gray-600" />
+                <div
+                  key={action.id}
+                  className='flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg'
+                >
+                  <div className='w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center'>
+                    <Icon className='h-4 w-4 text-gray-600' />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{action.title}</p>
-                    <p className="text-xs text-gray-500">{action.time}</p>
+                  <div className='flex-1'>
+                    <p className='text-sm font-medium text-gray-900'>
+                      {action.title}
+                    </p>
+                    <p className='text-xs text-gray-500'>{action.time}</p>
                   </div>
                 </div>
               );
@@ -282,21 +299,26 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
 
         {/* 即将到来的提醒 */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-            <Bell className="h-4 w-4 mr-2" />
+          <h4 className='text-sm font-medium text-gray-700 mb-3 flex items-center'>
+            <Bell className='h-4 w-4 mr-2' />
             即将到来的提醒
           </h4>
-          <div className="space-y-2">
+          <div className='space-y-2'>
             {upcomingReminders.map((reminder) => {
               const Icon = reminder.icon;
               return (
-                <div key={reminder.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Icon className="h-4 w-4 text-blue-600" />
+                <div
+                  key={reminder.id}
+                  className='flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg'
+                >
+                  <div className='w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center'>
+                    <Icon className='h-4 w-4 text-blue-600' />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{reminder.title}</p>
-                    <p className="text-xs text-gray-500">{reminder.time}</p>
+                  <div className='flex-1'>
+                    <p className='text-sm font-medium text-gray-900'>
+                      {reminder.title}
+                    </p>
+                    <p className='text-xs text-gray-500'>{reminder.time}</p>
                   </div>
                 </div>
               );
@@ -306,12 +328,12 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       </div>
 
       {/* 健康提示 */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <div className="flex items-start space-x-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+      <div className='mt-6 p-4 bg-blue-50 rounded-lg'>
+        <div className='flex items-start space-x-3'>
+          <AlertCircle className='h-5 w-5 text-blue-600 mt-0.5' />
           <div>
-            <h4 className="text-sm font-medium text-blue-900">健康小贴士</h4>
-            <p className="text-sm text-blue-700 mt-1">
+            <h4 className='text-sm font-medium text-blue-900'>健康小贴士</h4>
+            <p className='text-sm text-blue-700 mt-1'>
               定期记录健康数据有助于更好地了解身体状况。建议每天固定时间测量体重和血压，
               每餐后记录饮食情况，保持数据的连续性和准确性。
             </p>

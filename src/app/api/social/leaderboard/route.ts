@@ -20,34 +20,29 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') as LeaderboardType;
     const memberId = searchParams.get('memberId');
-    const timeframe = searchParams.get('timeframe') as 'daily' | 'weekly' | 'monthly' | 'all-time';
+    const timeframe = searchParams.get('timeframe') as
+      | 'daily'
+      | 'weekly'
+      | 'monthly'
+      | 'all-time';
     const limit = parseInt(searchParams.get('limit') || '50');
     const history = searchParams.get('history') === 'true';
 
     // 验证排行榜类型
     if (!type || !Object.values(LeaderboardType).includes(type)) {
-      return NextResponse.json(
-        { error: '无效的排行榜类型' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '无效的排行榜类型' }, { status: 400 });
     }
 
     // 验证时间范围
     const validTimeframes = ['daily', 'weekly', 'monthly', 'all-time'];
     if (timeframe && !validTimeframes.includes(timeframe)) {
-      return NextResponse.json(
-        { error: '无效的时间范围' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '无效的时间范围' }, { status: 400 });
     }
 
     // 验证用户权限（如果指定了memberId）
@@ -64,7 +59,7 @@ export async function GET(request: NextRequest) {
       if (error || !member) {
         return NextResponse.json(
           { error: '无权限访问该家庭成员' },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
@@ -79,7 +74,7 @@ export async function GET(request: NextRequest) {
       if (!userMember) {
         return NextResponse.json(
           { error: '无权限访问该家庭成员' },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -89,7 +84,13 @@ export async function GET(request: NextRequest) {
       const rankingHistory = await leaderboardService.getRankingHistory(
         memberId!,
         type,
-        timeframe === 'daily' ? 7 : timeframe === 'weekly' ? 30 : timeframe === 'monthly' ? 90 : 365
+        timeframe === 'daily'
+          ? 7
+          : timeframe === 'weekly'
+            ? 30
+            : timeframe === 'monthly'
+              ? 90
+              : 365,
       );
 
       return NextResponse.json({
@@ -109,20 +110,16 @@ export async function GET(request: NextRequest) {
       type,
       memberId || undefined,
       timeframe || 'weekly',
-      limit
+      limit,
     );
 
     return NextResponse.json({
       success: true,
       data: leaderboard,
     });
-
   } catch (error) {
     console.error('获取排行榜失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -133,10 +130,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -145,18 +139,12 @@ export async function POST(request: NextRequest) {
     // 验证管理员权限
     const isAdmin = await checkAdminPermission(session.user.id, adminCode);
     if (!isAdmin) {
-      return NextResponse.json(
-        { error: '无管理员权限' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无管理员权限' }, { status: 403 });
     }
 
     // 验证排行榜类型
     if (!type || !Object.values(LeaderboardType).includes(type)) {
-      return NextResponse.json(
-        { error: '无效的排行榜类型' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '无效的排行榜类型' }, { status: 400 });
     }
 
     // 清除缓存
@@ -168,7 +156,7 @@ export async function POST(request: NextRequest) {
       type,
       undefined,
       timeframe || 'weekly',
-      100
+      100,
     );
 
     // 保存排行榜数据到数据库（可选）
@@ -184,12 +172,11 @@ export async function POST(request: NextRequest) {
         message: '排行榜数据刷新成功',
       },
     });
-
   } catch (error) {
     console.error('刷新排行榜失败:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '服务器内部错误' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -201,20 +188,14 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') as LeaderboardType;
 
     if (type && !Object.values(LeaderboardType).includes(type)) {
-      return NextResponse.json(
-        { error: '无效的排行榜类型' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '无效的排行榜类型' }, { status: 400 });
     }
 
     const service = leaderboardService;
@@ -232,7 +213,7 @@ export async function PATCH(request: NextRequest) {
     } else {
       // 获取所有可用排行榜
       const availableTypes = service.getAvailableLeaderboards();
-      const configs = availableTypes.map(type => ({
+      const configs = availableTypes.map((type) => ({
         type,
         config: service.getLeaderboardConfig(type),
       }));
@@ -245,13 +226,9 @@ export async function PATCH(request: NextRequest) {
         },
       });
     }
-
   } catch (error) {
     console.error('获取排行榜配置失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -261,7 +238,7 @@ export async function PATCH(request: NextRequest) {
  */
 async function saveLeaderboardData(
   leaderboard: any,
-  timeframe: string
+  timeframe: string,
 ): Promise<void> {
   try {
     const supabase = SupabaseClientManager.getInstance();
@@ -304,7 +281,10 @@ async function saveLeaderboardData(
 /**
  * 检查管理员权限
  */
-async function checkAdminPermission(userId: string, adminCode?: string): Promise<boolean> {
+async function checkAdminPermission(
+  userId: string,
+  adminCode?: string,
+): Promise<boolean> {
   if (!adminCode) {
     return false;
   }
@@ -318,15 +298,15 @@ async function checkAdminPermission(userId: string, adminCode?: string): Promise
  */
 function getHistoryPeriod(timeframe?: string): string {
   switch (timeframe) {
-  case 'daily':
-    return '最近7天';
-  case 'weekly':
-    return '最近30天';
-  case 'monthly':
-    return '最近90天';
-  case 'all-time':
-    return '最近1年';
-  default:
-    return '最近30天';
+    case 'daily':
+      return '最近7天';
+    case 'weekly':
+      return '最近30天';
+    case 'monthly':
+      return '最近90天';
+    case 'all-time':
+      return '最近1年';
+    default:
+      return '最近30天';
   }
 }

@@ -21,12 +21,18 @@ import type {
   RecipeSummaryDTO,
   UserPreferenceDTO,
 } from '../types/recommendation';
-import type { DateRangeFilter, PaginatedResult, PaginationInput } from '../types/common';
+import type {
+  DateRangeFilter,
+  PaginatedResult,
+  PaginationInput,
+} from '../types/common';
 
 type RecipeRow = Database['public']['Tables']['recipes']['Row'];
-type UserPreferenceRow = Database['public']['Tables']['user_preferences']['Row'];
+type UserPreferenceRow =
+  Database['public']['Tables']['user_preferences']['Row'];
 type RecipeRatingRow = Database['public']['Tables']['recipe_ratings']['Row'];
-type RecipeFavoriteRow = Database['public']['Tables']['recipe_favorites']['Row'];
+type RecipeFavoriteRow =
+  Database['public']['Tables']['recipe_favorites']['Row'];
 type RecipeViewRow = Database['public']['Tables']['recipe_views']['Row'];
 type HealthGoalRow = Database['public']['Tables']['health_goals']['Row'];
 type InventoryItemRow = Database['public']['Tables']['inventory_items']['Row'];
@@ -40,11 +46,15 @@ type InventoryItemRow = Database['public']['Tables']['inventory_items']['Row'];
  * - 批量并发查询
  * - 完善的错误处理
  */
-export class SupabaseRecommendationRepository implements RecommendationRepository {
+export class SupabaseRecommendationRepository
+  implements RecommendationRepository
+{
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = '[SupabaseRecommendationRepository]';
 
-  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
+  constructor(
+    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
+  ) {
     this.client = client;
   }
 
@@ -72,7 +82,7 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    */
   async listCandidateRecipes(
     filters: RecommendationRecipeFilter,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<RecipeSummaryDTO>> {
     let query = this.client
       .from('recipes')
@@ -94,7 +104,7 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
         tags,
         ingredients
       `,
-        { count: 'exact' }
+        { count: 'exact' },
       )
       .eq('status', 'PUBLISHED')
       .eq('is_public', true);
@@ -142,7 +152,9 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
+      hasMore: pagination?.limit
+        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
+        : false,
     };
   }
 
@@ -151,16 +163,22 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    *
    * 并发查询评分、收藏、浏览记录，提升性能
    */
-  async getRecipeBehavior(memberId: string, range?: DateRangeFilter): Promise<RecommendationBehaviorDTO> {
+  async getRecipeBehavior(
+    memberId: string,
+    range?: DateRangeFilter,
+  ): Promise<RecommendationBehaviorDTO> {
     const [ratingsRes, favoritesRes, viewsRes] = await Promise.all([
       this.selectWithRange('recipe_ratings', 'rated_at', memberId, range),
       this.selectWithRange('recipe_favorites', 'favorited_at', memberId, range),
       this.selectWithRange('recipe_views', 'viewed_at', memberId, range),
     ]);
 
-    if (ratingsRes.error) this.handleError('getRecipeBehavior:ratings', ratingsRes.error);
-    if (favoritesRes.error) this.handleError('getRecipeBehavior:favorites', favoritesRes.error);
-    if (viewsRes.error) this.handleError('getRecipeBehavior:views', viewsRes.error);
+    if (ratingsRes.error)
+      this.handleError('getRecipeBehavior:ratings', ratingsRes.error);
+    if (favoritesRes.error)
+      this.handleError('getRecipeBehavior:favorites', favoritesRes.error);
+    if (viewsRes.error)
+      this.handleError('getRecipeBehavior:views', viewsRes.error);
 
     return {
       ratings: (ratingsRes.data || []).map((row: any) => ({
@@ -184,7 +202,10 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    *
    * 基于菜系和标签计算相似度
    */
-  async getSimilarRecipes(recipeId: string, limit = 10): Promise<RecipeSummaryDTO[]> {
+  async getSimilarRecipes(
+    recipeId: string,
+    limit = 10,
+  ): Promise<RecipeSummaryDTO[]> {
     // 1. 获取目标食谱
     const { data: baseRecipe, error } = await this.client
       .from('recipes')
@@ -219,7 +240,7 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
         fat_per_serving,
         tags,
         ingredients
-      `
+      `,
       )
       .neq('id', recipeId)
       .eq('status', 'PUBLISHED')
@@ -241,7 +262,9 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
       this.handleError('getSimilarRecipes:list', listError);
     }
 
-    return (data || []).map((row) => this.mapRecipe(row as RecipeRow)).slice(0, limit);
+    return (data || [])
+      .map((row) => this.mapRecipe(row as RecipeRow))
+      .slice(0, limit);
   }
 
   /**
@@ -313,17 +336,18 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
   /**
    * 更新或创建用户的推荐权重
    */
-  async upsertRecommendationWeights(memberId: string, weights: RecommendationWeightsDTO): Promise<void> {
-    const { error } = await this.client
-      .from('user_preferences')
-      .upsert(
-        {
-          member_id: memberId,
-          recommendation_weight: weights as unknown as Json,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'member_id' }
-      );
+  async upsertRecommendationWeights(
+    memberId: string,
+    weights: RecommendationWeightsDTO,
+  ): Promise<void> {
+    const { error } = await this.client.from('user_preferences').upsert(
+      {
+        member_id: memberId,
+        recommendation_weight: weights as unknown as Json,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'member_id' },
+    );
 
     if (error) {
       this.handleError('upsertRecommendationWeights', error);
@@ -360,7 +384,8 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    * 数据映射：UserPreferenceRow → UserPreferenceDTO
    */
   private mapUserPreference(row: UserPreferenceRow): UserPreferenceDTO {
-    const weights = row.recommendation_weight as RecommendationWeightsDTO | null;
+    const weights =
+      row.recommendation_weight as RecommendationWeightsDTO | null;
     return {
       memberId: row.member_id,
       preferredIngredients: this.parseStringArray(row.preferred_ingredients),
@@ -402,7 +427,9 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
     if (typeof value === 'string') {
       try {
         const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+        return Array.isArray(parsed)
+          ? parsed.filter((item): item is string => typeof item === 'string')
+          : [];
       } catch {
         return [];
       }
@@ -415,15 +442,26 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    */
   private normalizeIngredients(value: Json | null | undefined) {
     if (!value) return [];
-    const array = Array.isArray(value) ? value : typeof value === 'string' ? JSON.parse(value) : [];
+    const array = Array.isArray(value)
+      ? value
+      : typeof value === 'string'
+        ? JSON.parse(value)
+        : [];
     if (!Array.isArray(array)) return [];
     return array
       .map((item) => {
         if (typeof item !== 'object' || !item) return null;
         return {
-          name: 'name' in item && typeof item.name === 'string' ? item.name : '',
-          amount: 'amount' in item && typeof item.amount === 'number' ? item.amount : undefined,
-          unit: 'unit' in item && typeof item.unit === 'string' ? item.unit : undefined,
+          name:
+            'name' in item && typeof item.name === 'string' ? item.name : '',
+          amount:
+            'amount' in item && typeof item.amount === 'number'
+              ? item.amount
+              : undefined,
+          unit:
+            'unit' in item && typeof item.unit === 'string'
+              ? item.unit
+              : undefined,
         };
       })
       .filter((item): item is NonNullable<typeof item> => !!item?.name);
@@ -436,9 +474,12 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
     table: keyof Database['public']['Tables'],
     column: string,
     memberId: string,
-    range?: DateRangeFilter
+    range?: DateRangeFilter,
   ) {
-    let query = this.client.from(table as string).select('*').eq('member_id', memberId);
+    let query = this.client
+      .from(table as string)
+      .select('*')
+      .eq('member_id', memberId);
     if (range?.start) {
       query = query.gte(column, range.start.toISOString());
     }

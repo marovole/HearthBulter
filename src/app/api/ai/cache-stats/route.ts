@@ -17,10 +17,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // 检查管理员权限
@@ -28,14 +25,14 @@ export async function GET(request: NextRequest) {
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Admin permission required' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 速率限制检查
     const rateLimitResult = await rateLimiter.checkLimit(
       session.user.id,
-      'ai_general'
+      'ai_general',
     );
 
     if (!rateLimitResult.allowed) {
@@ -52,7 +49,7 @@ export async function GET(request: NextRequest) {
             'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
             'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
           },
-        }
+        },
       );
     }
 
@@ -75,25 +72,29 @@ export async function GET(request: NextRequest) {
         stats: cacheStats,
         topEntries: cacheInfo.slice(0, 10), // 前10个最常用的缓存条目
         totalSizeKB: Math.round(
-          cacheInfo.reduce((sum, entry) => sum + entry.size, 0) / 1024
+          cacheInfo.reduce((sum, entry) => sum + entry.size, 0) / 1024,
         ),
       },
       rateLimit: rateLimitStats,
       performance: {
         hitRatePercent: cacheStats.hitRate,
         estimatedSavings,
-        cacheEfficiency: cacheStats.hits > 0 ? 'good' : cacheStats.totalSize > 0 ? 'moderate' : 'poor',
+        cacheEfficiency:
+          cacheStats.hits > 0
+            ? 'good'
+            : cacheStats.totalSize > 0
+              ? 'moderate'
+              : 'poor',
       },
       recommendations: generateRecommendations(cacheStats, rateLimitStats),
     };
 
     return NextResponse.json(response);
-
   } catch (error) {
     console.error('Cache stats API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -102,10 +103,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // 检查管理员权限
@@ -113,7 +111,7 @@ export async function DELETE(request: NextRequest) {
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Admin permission required' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -131,15 +129,14 @@ export async function DELETE(request: NextRequest) {
     } else {
       return NextResponse.json(
         { error: 'Invalid action. Use ?action=clear or ?action=reset-stats' },
-        { status: 400 }
+        { status: 400 },
       );
     }
-
   } catch (error) {
     console.error('Cache management API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -149,7 +146,7 @@ export async function DELETE(request: NextRequest) {
  */
 function generateRecommendations(
   cacheStats: any,
-  rateLimitStats: any
+  rateLimitStats: any,
 ): string[] {
   const recommendations: string[] = [];
 

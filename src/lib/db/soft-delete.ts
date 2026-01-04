@@ -1,6 +1,6 @@
 /**
  * 软删除工具函数
- * 
+ *
  * 统一软删除查询过滤和操作
  */
 
@@ -50,7 +50,7 @@ export function supportsSoftDelete(tableName: string): boolean {
  */
 export function addSoftDeleteFilter<T>(
   query: any,
-  includeDeleted: boolean = false
+  includeDeleted: boolean = false,
 ): any {
   if (includeDeleted) {
     return query;
@@ -65,7 +65,7 @@ export function addSoftDeleteFilter<T>(
 export async function softDelete(
   supabase: SupabaseClient<Database>,
   tableName: SoftDeletableTable,
-  id: string
+  id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
@@ -93,7 +93,7 @@ export async function softDelete(
 export async function softDeleteMany(
   supabase: SupabaseClient<Database>,
   tableName: SoftDeletableTable,
-  ids: string[]
+  ids: string[],
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> {
   if (ids.length === 0) {
     return { success: true, deletedCount: 0 };
@@ -127,7 +127,7 @@ export async function softDeleteMany(
 export async function restoreSoftDeleted(
   supabase: SupabaseClient<Database>,
   tableName: SoftDeletableTable,
-  id: string
+  id: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
@@ -155,7 +155,7 @@ export async function restoreSoftDeleted(
 export async function permanentlyDeleteExpired(
   supabase: SupabaseClient<Database>,
   tableName: SoftDeletableTable,
-  retentionDays: number = 30
+  retentionDays: number = 30,
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> {
   try {
     const cutoffDate = new Date();
@@ -175,7 +175,11 @@ export async function permanentlyDeleteExpired(
 
     const deletedCount = data?.length || 0;
     if (deletedCount > 0) {
-      logger.info('永久删除过期记录成功', { tableName, deletedCount, retentionDays });
+      logger.info('永久删除过期记录成功', {
+        tableName,
+        deletedCount,
+        retentionDays,
+      });
     }
     return { success: true, deletedCount };
   } catch (error) {
@@ -196,7 +200,7 @@ export async function findDeleted<T>(
     offset?: number;
     deletedAfter?: Date;
     deletedBefore?: Date;
-  } = {}
+  } = {},
 ): Promise<{ data: T[]; count: number; error?: string }> {
   try {
     let query = supabase
@@ -216,7 +220,7 @@ export async function findDeleted<T>(
       .order(SOFT_DELETE_FIELD, { ascending: false })
       .range(
         options.offset || 0,
-        (options.offset || 0) + (options.limit || 50) - 1
+        (options.offset || 0) + (options.limit || 50) - 1,
       );
 
     const { data, count, error } = await query;
@@ -250,7 +254,7 @@ export function softDeleteWhereClause(includeDeleted: boolean = false): object {
  */
 export function mergeSoftDeleteCondition(
   where: object,
-  includeDeleted: boolean = false
+  includeDeleted: boolean = false,
 ): object {
   if (includeDeleted) {
     return where;

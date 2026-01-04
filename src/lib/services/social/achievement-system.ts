@@ -20,15 +20,15 @@ import { prisma } from '@/lib/db';
  * 成就触发器
  */
 export interface AchievementTrigger {
-  type: AchievementType
-  name: string
-  description: string
-  icon: string
-  color: string
-  rarity: AchievementRarity
-  points: number
-  conditions: AchievementCondition[]
-  checkFunction: (memberId: string, data?: any) => Promise<boolean>
+  type: AchievementType;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  rarity: AchievementRarity;
+  points: number;
+  conditions: AchievementCondition[];
+  checkFunction: (memberId: string, data?: any) => Promise<boolean>;
 }
 
 /**
@@ -36,7 +36,8 @@ export interface AchievementTrigger {
  */
 export class AchievementSystem {
   private static instance: AchievementSystem;
-  private achievementTriggers: Map<AchievementType, AchievementTrigger> = new Map();
+  private achievementTriggers: Map<AchievementType, AchievementTrigger> =
+    new Map();
 
   static getInstance(): AchievementSystem {
     if (!AchievementSystem.instance) {
@@ -60,12 +61,10 @@ export class AchievementSystem {
         color: '#3b82f6',
         rarity: 'COMMON',
         points: 10,
-        conditions: [
-          { metric: 'loginCount', operator: 'gte', value: 1 },
-        ],
+        conditions: [{ metric: 'loginCount', operator: 'gte', value: 1 }],
         checkFunction: this.checkFirstLogin.bind(this),
       },
-      
+
       // 连续打卡7天
       {
         type: AchievementType.SEVEN_DAY_STREAK,
@@ -75,12 +74,10 @@ export class AchievementSystem {
         color: '#ef4444',
         rarity: 'UNCOMMON',
         points: 50,
-        conditions: [
-          { metric: 'checkinStreak', operator: 'gte', value: 7 },
-        ],
+        conditions: [{ metric: 'checkinStreak', operator: 'gte', value: 7 }],
         checkFunction: this.checkSevenDayStreak.bind(this),
       },
-      
+
       // 月度健康达人
       {
         type: AchievementType.MONTHLY_CHAMPION,
@@ -95,7 +92,7 @@ export class AchievementSystem {
         ],
         checkFunction: this.checkMonthlyChampion.bind(this),
       },
-      
+
       // 减重目标达成
       {
         type: AchievementType.WEIGHT_GOAL_ACHIEVED,
@@ -110,7 +107,7 @@ export class AchievementSystem {
         ],
         checkFunction: this.checkWeightGoalAchieved.bind(this),
       },
-      
+
       // 食谱达人
       {
         type: AchievementType.RECIPE_MASTER,
@@ -120,12 +117,10 @@ export class AchievementSystem {
         color: '#8b5cf6',
         rarity: 'RARE',
         points: 150,
-        conditions: [
-          { metric: 'recipeCount', operator: 'gte', value: 10 },
-        ],
+        conditions: [{ metric: 'recipeCount', operator: 'gte', value: 10 }],
         checkFunction: this.checkRecipeMaster.bind(this),
       },
-      
+
       // 社交达人
       {
         type: AchievementType.SOCIAL_BUTTERFLY,
@@ -135,12 +130,10 @@ export class AchievementSystem {
         color: '#ec4899',
         rarity: 'EPIC',
         points: 300,
-        conditions: [
-          { metric: 'shareCount', operator: 'gte', value: 20 },
-        ],
+        conditions: [{ metric: 'shareCount', operator: 'gte', value: 20 }],
         checkFunction: this.checkSocialButterfly.bind(this),
       },
-      
+
       // 完美一周
       {
         type: AchievementType.PERFECT_WEEK,
@@ -150,12 +143,10 @@ export class AchievementSystem {
         color: '#22c55e',
         rarity: 'RARE',
         points: 180,
-        conditions: [
-          { metric: 'weekPerfectScore', operator: 'eq', value: 1 },
-        ],
+        conditions: [{ metric: 'weekPerfectScore', operator: 'eq', value: 1 }],
         checkFunction: this.checkPerfectWeek.bind(this),
       },
-      
+
       // 早起达人
       {
         type: AchievementType.EARLY_BIRD,
@@ -170,7 +161,7 @@ export class AchievementSystem {
         ],
         checkFunction: this.checkEarlyBird.bind(this),
       },
-      
+
       // 卡路里管理大师
       {
         type: AchievementType.CALORIE_CHAMPION,
@@ -185,7 +176,7 @@ export class AchievementSystem {
         ],
         checkFunction: this.checkCalorieChampion.bind(this),
       },
-      
+
       // 邀请达人
       {
         type: AchievementType.INVITE_MASTER,
@@ -195,14 +186,12 @@ export class AchievementSystem {
         color: '#f97316',
         rarity: 'RARE',
         points: 200,
-        conditions: [
-          { metric: 'inviteCount', operator: 'gte', value: 5 },
-        ],
+        conditions: [{ metric: 'inviteCount', operator: 'gte', value: 5 }],
         checkFunction: this.checkInviteMaster.bind(this),
       },
     ];
 
-    triggers.forEach(trigger => {
+    triggers.forEach((trigger) => {
       this.achievementTriggers.set(trigger.type, trigger);
     });
   }
@@ -210,7 +199,11 @@ export class AchievementSystem {
   /**
    * 检查用户成就
    */
-  async checkAchievements(memberId: string, eventType: string, data?: any): Promise<Achievement[]> {
+  async checkAchievements(
+    memberId: string,
+    eventType: string,
+    data?: any,
+  ): Promise<Achievement[]> {
     const unlockedAchievements: Achievement[] = [];
 
     // 获取用户已解锁的成就
@@ -218,10 +211,13 @@ export class AchievementSystem {
       where: { memberId },
       select: { type: true },
     });
-    const unlockedTypes = new Set(existingAchievements.map(a => a.type));
+    const unlockedTypes = new Set(existingAchievements.map((a) => a.type));
 
     // 检查所有成就触发器
-    for (const [achievementType, trigger] of this.achievementTriggers.entries()) {
+    for (const [
+      achievementType,
+      trigger,
+    ] of this.achievementTriggers.entries()) {
       // 跳过已解锁的成就
       if (unlockedTypes.has(achievementType)) {
         continue;
@@ -230,7 +226,12 @@ export class AchievementSystem {
       try {
         const isUnlocked = await trigger.checkFunction(memberId, data);
         if (isUnlocked) {
-          const achievement = await this.unlockAchievement(memberId, trigger, eventType, data);
+          const achievement = await this.unlockAchievement(
+            memberId,
+            trigger,
+            eventType,
+            data,
+          );
           unlockedAchievements.push(achievement);
         }
       } catch (error) {
@@ -245,10 +246,10 @@ export class AchievementSystem {
    * 解锁成就
    */
   async unlockAchievement(
-    memberId: string, 
-    trigger: AchievementTrigger, 
-    eventType: string, 
-    data?: any
+    memberId: string,
+    trigger: AchievementTrigger,
+    eventType: string,
+    data?: any,
   ): Promise<Achievement> {
     const member = await prisma.familyMember.findUnique({
       where: { id: memberId },
@@ -291,35 +292,42 @@ export class AchievementSystem {
   /**
    * 发放成就奖励
    */
-  private async grantReward(memberId: string, reward: AchievementReward): Promise<void> {
+  private async grantReward(
+    memberId: string,
+    reward: AchievementReward,
+  ): Promise<void> {
     switch (reward.type) {
-    case 'points':
-      // 这里可以集成到积分系统
-      console.log(`用户${memberId}获得${reward.value}积分`);
-      break;
-      
-    case 'vip_days':
-      // 这里可以集成到VIP系统
-      console.log(`用户${memberId}获得${reward.value}天VIP`);
-      break;
-      
-    case 'title':
-      // 这里可以集成到称号系统
-      console.log(`用户${memberId}获得称号"${reward.value}"`);
-      break;
-      
-    default:
-      console.log(`未知奖励类型: ${reward.type}`);
+      case 'points':
+        // 这里可以集成到积分系统
+        console.log(`用户${memberId}获得${reward.value}积分`);
+        break;
+
+      case 'vip_days':
+        // 这里可以集成到VIP系统
+        console.log(`用户${memberId}获得${reward.value}天VIP`);
+        break;
+
+      case 'title':
+        // 这里可以集成到称号系统
+        console.log(`用户${memberId}获得称号"${reward.value}"`);
+        break;
+
+      default:
+        console.log(`未知奖励类型: ${reward.type}`);
     }
   }
 
   /**
    * 发送成就通知
    */
-  private async sendAchievementNotification(memberId: string, achievement: Achievement, memberName: string): Promise<void> {
+  private async sendAchievementNotification(
+    memberId: string,
+    achievement: Achievement,
+    memberName: string,
+  ): Promise<void> {
     // 这里可以集成到通知系统
     console.log(`用户${memberName}(${memberId})解锁成就: ${achievement.name}`);
-    
+
     // 可以发送邮件、推送等
     // await notificationService.send({
     //   userId: memberId,
@@ -336,10 +344,7 @@ export class AchievementSystem {
   async getMemberAchievements(memberId: string): Promise<Achievement[]> {
     return await prisma.achievement.findMany({
       where: { memberId },
-      orderBy: [
-        { rarity: 'desc' },
-        { unlockedAt: 'desc' },
-      ],
+      orderBy: [{ rarity: 'desc' }, { unlockedAt: 'desc' }],
     });
   }
 
@@ -364,46 +369,68 @@ export class AchievementSystem {
       byType: {} as Record<AchievementType, number>,
     };
 
-    achievements.forEach(achievement => {
+    achievements.forEach((achievement) => {
       stats.byRarity[achievement.rarity]++;
-      stats.byType[achievement.type] = (stats.byType[achievement.type] || 0) + 1;
+      stats.byType[achievement.type] =
+        (stats.byType[achievement.type] || 0) + 1;
     });
 
     return stats;
   }
 
   // 成就检查函数
-  private async checkFirstLogin(memberId: string, data?: any): Promise<boolean> {
+  private async checkFirstLogin(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.loginCount) return false;
     return data.loginCount === 1;
   }
 
-  private async checkSevenDayStreak(memberId: string, data?: any): Promise<boolean> {
+  private async checkSevenDayStreak(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.checkinStreak) return false;
     return data.checkinStreak >= 7;
   }
 
-  private async checkMonthlyChampion(memberId: string, data?: any): Promise<boolean> {
+  private async checkMonthlyChampion(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.monthlyHealthScore) return false;
     return data.monthlyHealthScore >= 90;
   }
 
-  private async checkWeightGoalAchieved(memberId: string, data?: any): Promise<boolean> {
+  private async checkWeightGoalAchieved(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.weightGoalAchieved) return false;
     return data.weightGoalAchieved === true;
   }
 
-  private async checkRecipeMaster(memberId: string, data?: any): Promise<boolean> {
+  private async checkRecipeMaster(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.recipeCount) return false;
     return data.recipeCount >= 10;
   }
 
-  private async checkSocialButterfly(memberId: string, data?: any): Promise<boolean> {
+  private async checkSocialButterfly(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.shareCount) return false;
     return data.shareCount >= 20;
   }
 
-  private async checkPerfectWeek(memberId: string, data?: any): Promise<boolean> {
+  private async checkPerfectWeek(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.weekPerfectScore) return false;
     return data.weekPerfectScore === true;
   }
@@ -413,12 +440,18 @@ export class AchievementSystem {
     return data.earlyBreakfastStreak >= 30;
   }
 
-  private async checkCalorieChampion(memberId: string, data?: any): Promise<boolean> {
+  private async checkCalorieChampion(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.calorieAccuracyDays) return false;
     return data.calorieAccuracyDays >= 30;
   }
 
-  private async checkInviteMaster(memberId: string, data?: any): Promise<boolean> {
+  private async checkInviteMaster(
+    memberId: string,
+    data?: any,
+  ): Promise<boolean> {
     if (!data?.inviteCount) return false;
     return data.inviteCount >= 5;
   }
@@ -429,7 +462,7 @@ export class AchievementSystem {
   async calculateCheckinStreak(memberId: string): Promise<number> {
     const today = startOfDay(new Date());
     const healthData = await prisma.healthData.findMany({
-      where: { 
+      where: {
         memberId,
         measuredAt: {
           gte: subDays(today, 100), // 查询最近100天的数据
@@ -441,7 +474,7 @@ export class AchievementSystem {
     if (healthData.length === 0) return 0;
 
     const dates = new Set(
-      healthData.map(d => startOfDay(new Date(d.measuredAt)).toISOString())
+      healthData.map((d) => startOfDay(new Date(d.measuredAt)).toISOString()),
     );
 
     let streak = 0;
@@ -458,7 +491,11 @@ export class AchievementSystem {
   /**
    * 触发事件检查
    */
-  async triggerEvent(memberId: string, eventType: string, data?: any): Promise<Achievement[]> {
+  async triggerEvent(
+    memberId: string,
+    eventType: string,
+    data?: any,
+  ): Promise<Achievement[]> {
     return this.checkAchievements(memberId, eventType, data);
   }
 
@@ -481,12 +518,20 @@ export class AchievementSystem {
 export const achievementSystem = AchievementSystem.getInstance();
 
 // 导出工具函数
-export async function checkMemberAchievements(memberId: string, eventType: string, data?: any): Promise<Achievement[]> {
+export async function checkMemberAchievements(
+  memberId: string,
+  eventType: string,
+  data?: any,
+): Promise<Achievement[]> {
   const system = AchievementSystem.getInstance();
   return system.checkAchievements(memberId, eventType, data);
 }
 
-export async function unlockMemberAchievement(memberId: string, type: AchievementType, eventType: string): Promise<Achievement> {
+export async function unlockMemberAchievement(
+  memberId: string,
+  type: AchievementType,
+  eventType: string,
+): Promise<Achievement> {
   const system = AchievementSystem.getInstance();
   const trigger = system.getAchievementConfig(type);
   if (!trigger) {
@@ -495,12 +540,16 @@ export async function unlockMemberAchievement(memberId: string, type: Achievemen
   return system.unlockAchievement(memberId, trigger, eventType);
 }
 
-export async function getMemberAchievementList(memberId: string): Promise<Achievement[]> {
+export async function getMemberAchievementList(
+  memberId: string,
+): Promise<Achievement[]> {
   const system = AchievementSystem.getInstance();
   return system.getMemberAchievements(memberId);
 }
 
-export async function getMemberAchievementStats(memberId: string): Promise<any> {
+export async function getMemberAchievementStats(
+  memberId: string,
+): Promise<any> {
   const system = AchievementSystem.getInstance();
   return system.getAchievementStats(memberId);
 }
@@ -515,7 +564,7 @@ export async function shareAchievement(
   options: {
     customMessage?: string;
     privacyLevel?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
-  } = {}
+  } = {},
 ): Promise<{
   success: boolean;
   shareId?: string;

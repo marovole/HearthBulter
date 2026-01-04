@@ -8,14 +8,16 @@ import { AIResponseCache } from '@/lib/services/ai/response-cache';
 Object.defineProperty(global, 'crypto', {
   value: {
     subtle: {
-      digest: jest.fn().mockImplementation((algorithm: string, data: Uint8Array) => {
-        // Return a predictable hash for testing
-        const hash = new Uint8Array(32);
-        for (let i = 0; i < data.length && i < 32; i++) {
-          hash[i] = data[i] % 256;
-        }
-        return Promise.resolve(hash.buffer);
-      }),
+      digest: jest
+        .fn()
+        .mockImplementation((algorithm: string, data: Uint8Array) => {
+          // Return a predictable hash for testing
+          const hash = new Uint8Array(32);
+          for (let i = 0; i < data.length && i < 32; i++) {
+            hash[i] = data[i] % 256;
+          }
+          return Promise.resolve(hash.buffer);
+        }),
     },
   },
   writable: true,
@@ -402,7 +404,9 @@ describe('AI Response Cache', () => {
       const originalSet = cache.set;
       cache.set = jest.fn().mockRejectedValue(new Error('Out of memory'));
 
-      await expect(cache.set('key', { data: 'value' }, 3600)).rejects.toThrow('Out of memory');
+      await expect(cache.set('key', { data: 'value' }, 3600)).rejects.toThrow(
+        'Out of memory',
+      );
     });
   });
 

@@ -6,17 +6,17 @@ import { HealthDataForm } from '@/components/health/HealthDataForm';
 import { useRouter } from 'next/navigation';
 
 interface AddHealthDataPageProps {
-  userId: string
+  userId: string;
 }
 
 interface FamilyMember {
-  id: string
-  name: string
-  avatar?: string
-  role: string
-  email?: string
-  healthScore?: number
-  lastActive?: Date
+  id: string;
+  name: string;
+  avatar?: string;
+  role: string;
+  email?: string;
+  healthScore?: number;
+  lastActive?: Date;
 }
 
 export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
@@ -48,7 +48,7 @@ export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
             lastActive: new Date(),
           },
         ];
-        
+
         setFamilyMembers(mockMembers);
         if (mockMembers.length > 0) {
           setSelectedMemberId(mockMembers[0].id);
@@ -79,8 +79,8 @@ export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className='flex items-center justify-center h-64'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
         </div>
       </DashboardLayout>
     );
@@ -91,31 +91,41 @@ export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
       currentMember={selectedMemberId || undefined}
       familyMembers={familyMembers}
     >
-      <div className="max-w-4xl mx-auto">
+      <div className='max-w-4xl mx-auto'>
         {!selectedMemberId ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">选择家庭成员</h3>
-            <p className="text-gray-600">请从左侧选择一个家庭成员开始录入健康数据</p>
+          <div className='text-center py-12'>
+            <h3 className='text-lg font-medium text-gray-900 mb-2'>
+              选择家庭成员
+            </h3>
+            <p className='text-gray-600'>
+              请从左侧选择一个家庭成员开始录入健康数据
+            </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className='space-y-6'>
             {/* 页面标题 */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-lg font-semibold text-blue-600">
-                    {familyMembers.find(m => m.id === selectedMemberId)?.name?.charAt(0)}
+            <div className='bg-white p-6 rounded-lg shadow'>
+              <div className='flex items-center space-x-4 mb-6'>
+                <div className='h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center'>
+                  <span className='text-lg font-semibold text-blue-600'>
+                    {familyMembers
+                      .find((m) => m.id === selectedMemberId)
+                      ?.name?.charAt(0)}
                   </span>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">录入健康数据</h1>
-                  <p className="text-gray-500">
-                    为 {familyMembers.find(m => m.id === selectedMemberId)?.name} 录入健康指标
+                  <h1 className='text-2xl font-bold text-gray-900'>
+                    录入健康数据
+                  </h1>
+                  <p className='text-gray-500'>
+                    为{' '}
+                    {familyMembers.find((m) => m.id === selectedMemberId)?.name}{' '}
+                    录入健康指标
                   </p>
                 </div>
               </div>
-              
-              <HealthDataForm 
+
+              <HealthDataForm
                 memberId={selectedMemberId}
                 onSuccess={handleDataAdded}
                 onCancel={handleCancel}

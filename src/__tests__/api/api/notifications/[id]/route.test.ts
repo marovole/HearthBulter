@@ -51,7 +51,6 @@ describe('api_notifications_[id]_route', () => {
     it('should handle POST request', async () => {
       // Import the route handler if POST exists
       // const { POST } = require('@/app/api/notifications/[id]/route');
-
       // TODO: Implement POST test
     });
   });

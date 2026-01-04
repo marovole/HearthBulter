@@ -22,13 +22,12 @@ export async function PUT(request: NextRequest) {
       if (!memberId) {
         return NextResponse.json(
           { error: 'Member ID is required for marking all as read' },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       // 使用双写框架批量标记已读
-      const count = await notificationRepository.markAllAsRead(memberId
-      );
+      const count = await notificationRepository.markAllAsRead(memberId);
 
       return NextResponse.json({
         success: true,
@@ -40,14 +39,12 @@ export async function PUT(request: NextRequest) {
       if (!notificationId || !memberId) {
         return NextResponse.json(
           { error: 'Notification ID and Member ID are required' },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       // 使用双写框架标记单个通知已读
-      await notificationRepository.markAsRead(notificationId,
-        memberId
-      );
+      await notificationRepository.markAsRead(notificationId, memberId);
 
       return NextResponse.json({
         success: true,
@@ -58,7 +55,7 @@ export async function PUT(request: NextRequest) {
     console.error('Error marking notification as read:', error);
     return NextResponse.json(
       { error: 'Failed to mark notification as read' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

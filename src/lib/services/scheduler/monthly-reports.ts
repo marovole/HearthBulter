@@ -14,17 +14,19 @@ const logger = new TaskLogger();
  */
 export async function generateMonthlyReports(): Promise<void> {
   logger.info('Starting monthly report generation...');
-  
+
   try {
     // 获取所有活跃的家庭成员
     const activeMembers = await getActiveMembers();
-    
+
     if (activeMembers.length === 0) {
       logger.info('No active members found for monthly reports');
       return;
     }
 
-    logger.info(`Found ${activeMembers.length} active members for monthly reports`);
+    logger.info(
+      `Found ${activeMembers.length} active members for monthly reports`,
+    );
 
     let successCount = 0;
     let errorCount = 0;
@@ -34,23 +36,30 @@ export async function generateMonthlyReports(): Promise<void> {
         // 检查本月是否已经生成过报告
         const existingReport = await checkExistingReport(member.id, 'MONTHLY');
         if (existingReport) {
-          logger.debug(`Monthly report already exists for member ${member.id}, skipping`);
+          logger.debug(
+            `Monthly report already exists for member ${member.id}, skipping`,
+          );
           continue;
         }
 
         // 生成月报
         const report = await createReport(member.id, 'MONTHLY');
-        logger.info(`Generated monthly report for member ${member.name}: ${report.id}`);
+        logger.info(
+          `Generated monthly report for member ${member.name}: ${report.id}`,
+        );
         successCount++;
-
       } catch (error) {
-        logger.error(`Failed to generate monthly report for member ${member.id}:`, error);
+        logger.error(
+          `Failed to generate monthly report for member ${member.id}:`,
+          error,
+        );
         errorCount++;
       }
     }
 
-    logger.info(`Monthly report generation completed: ${successCount} success, ${errorCount} errors`);
-
+    logger.info(
+      `Monthly report generation completed: ${successCount} success, ${errorCount} errors`,
+    );
   } catch (error) {
     logger.error('Monthly report generation failed:', error);
     throw error;

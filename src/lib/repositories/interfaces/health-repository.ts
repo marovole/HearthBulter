@@ -108,7 +108,7 @@ export interface HealthRepository {
       healthDataLimit?: number;
       /** 体检报告数量限制 */
       medicalReportsLimit?: number;
-    }
+    },
   ): Promise<MemberHealthContext | null>;
 
   /**
@@ -120,7 +120,7 @@ export interface HealthRepository {
    */
   getMemberHealthHistory(
     memberId: string,
-    limit?: number
+    limit?: number,
   ): Promise<AIAdviceHistoryRecord[]>;
 
   /**

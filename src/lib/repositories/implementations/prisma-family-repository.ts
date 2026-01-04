@@ -75,7 +75,7 @@ export class PrismaFamilyRepository implements FamilyRepository {
    */
   async listUserFamilies(
     query: FamilyListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<FamilyWithMembersDTO>> {
     return this.notImplemented('listUserFamilies');
   }
@@ -106,7 +106,9 @@ export class PrismaFamilyRepository implements FamilyRepository {
    * @param payload - 成员创建参数
    * @returns 创建的成员对象
    */
-  async addFamilyMember(payload: CreateFamilyMemberDTO): Promise<FamilyMemberDTO> {
+  async addFamilyMember(
+    payload: CreateFamilyMemberDTO,
+  ): Promise<FamilyMemberDTO> {
     return this.notImplemented('addFamilyMember');
   }
 
@@ -117,7 +119,10 @@ export class PrismaFamilyRepository implements FamilyRepository {
    * @param includeDeleted - 是否包含已删除成员
    * @returns 成员列表
    */
-  async listFamilyMembers(familyId: string, includeDeleted?: boolean): Promise<FamilyMemberDTO[]> {
+  async listFamilyMembers(
+    familyId: string,
+    includeDeleted?: boolean,
+  ): Promise<FamilyMemberDTO[]> {
     return this.notImplemented('listFamilyMembers');
   }
 
@@ -138,7 +143,10 @@ export class PrismaFamilyRepository implements FamilyRepository {
    * @param payload - 更新参数
    * @returns 更新后的成员对象
    */
-  async updateFamilyMember(id: string, payload: UpdateFamilyMemberDTO): Promise<FamilyMemberDTO> {
+  async updateFamilyMember(
+    id: string,
+    payload: UpdateFamilyMemberDTO,
+  ): Promise<FamilyMemberDTO> {
     return this.notImplemented('updateFamilyMember');
   }
 
@@ -169,7 +177,10 @@ export class PrismaFamilyRepository implements FamilyRepository {
    * @param userId - 用户ID
    * @returns 角色,如果不是成员则返回 null
    */
-  async getUserFamilyRole(familyId: string, userId: string): Promise<string | null> {
+  async getUserFamilyRole(
+    familyId: string,
+    userId: string,
+  ): Promise<string | null> {
     return this.notImplemented('getUserFamilyRole');
   }
 

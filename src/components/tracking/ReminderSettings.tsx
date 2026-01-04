@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react';
 import { Bell, Clock, AlertTriangle, Save, RotateCcw } from 'lucide-react';
 
 interface ReminderConfig {
-  type: 'MEAL_TIME' | 'MISSING_MEAL' | 'NUTRITION_DEFICIENCY' | 'STREAK_WARNING';
+  type:
+    | 'MEAL_TIME'
+    | 'MISSING_MEAL'
+    | 'NUTRITION_DEFICIENCY'
+    | 'STREAK_WARNING';
   enabled: boolean;
   hour: number;
   minute: number;
@@ -63,10 +67,30 @@ const DEFAULT_CONFIGS: Omit<ReminderConfig, 'type'>[] = [
 ];
 
 const REMINDER_TYPES = [
-  { value: 'MEAL_TIME', label: '餐时提醒', icon: '🍽️', description: '按时提醒记录三餐' },
-  { value: 'MISSING_MEAL', label: '漏餐提醒', icon: '⚠️', description: '忘记记录餐食时提醒' },
-  { value: 'NUTRITION_DEFICIENCY', label: '营养不足提醒', icon: '📊', description: '晚餐前提醒营养摄入不足' },
-  { value: 'STREAK_WARNING', label: '连续打卡提醒', icon: '🔥', description: '连续打卡即将中断时提醒' },
+  {
+    value: 'MEAL_TIME',
+    label: '餐时提醒',
+    icon: '🍽️',
+    description: '按时提醒记录三餐',
+  },
+  {
+    value: 'MISSING_MEAL',
+    label: '漏餐提醒',
+    icon: '⚠️',
+    description: '忘记记录餐食时提醒',
+  },
+  {
+    value: 'NUTRITION_DEFICIENCY',
+    label: '营养不足提醒',
+    icon: '📊',
+    description: '晚餐前提醒营养摄入不足',
+  },
+  {
+    value: 'STREAK_WARNING',
+    label: '连续打卡提醒',
+    icon: '🔥',
+    description: '连续打卡即将中断时提醒',
+  },
 ] as const;
 
 const DAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -84,7 +108,9 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
   const loadReminderConfigs = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/tracking/reminders?memberId=${memberId}`);
+      const response = await fetch(
+        `/api/tracking/reminders?memberId=${memberId}`,
+      );
       if (response.ok) {
         const data = await response.json();
         setConfigs(data.reminders || []);
@@ -119,9 +145,9 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
   const toggleDay = (configIndex: number, dayIndex: number) => {
     const config = configs[configIndex];
     const newDaysOfWeek = config.daysOfWeek.includes(dayIndex)
-      ? config.daysOfWeek.filter(d => d !== dayIndex)
+      ? config.daysOfWeek.filter((d) => d !== dayIndex)
       : [...config.daysOfWeek, dayIndex];
-    
+
     updateConfig(configIndex, { daysOfWeek: newDaysOfWeek });
   };
 
@@ -172,19 +198,19 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
   };
 
   const getReminderTypeInfo = (type: string) => {
-    return REMINDER_TYPES.find(t => t.value === type) || REMINDER_TYPES[0];
+    return REMINDER_TYPES.find((t) => t.value === type) || REMINDER_TYPES[0];
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium text-gray-900">提醒设置</h3>
-        <div className="space-y-4">
+      <div className='space-y-4'>
+        <h3 className='text-lg font-medium text-gray-900'>提醒设置</h3>
+        <div className='space-y-4'>
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="border rounded-lg p-4 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            <div key={i} className='border rounded-lg p-4 animate-pulse'>
+              <div className='h-4 bg-gray-200 rounded w-1/3 mb-3'></div>
+              <div className='h-3 bg-gray-200 rounded w-2/3 mb-2'></div>
+              <div className='h-3 bg-gray-200 rounded w-1/2'></div>
             </div>
           ))}
         </div>
@@ -193,30 +219,30 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Bell className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-medium text-gray-900">提醒设置</h3>
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center space-x-2'>
+          <Bell className='w-5 h-5 text-gray-600' />
+          <h3 className='text-lg font-medium text-gray-900'>提醒设置</h3>
         </div>
-        
-        <div className="flex items-center space-x-2">
+
+        <div className='flex items-center space-x-2'>
           <button
             onClick={resetToDefaults}
-            className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+            className='flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800'
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className='w-4 h-4' />
             <span>重置默认</span>
           </button>
-          
+
           {hasChanges && (
             <button
               onClick={saveConfigs}
               disabled={isSaving}
-              className="flex items-center space-x-1 px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className='flex items-center space-x-1 px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50'
             >
-              <Save className="w-4 h-4" />
+              <Save className='w-4 h-4' />
               <span>{isSaving ? '保存中...' : '保存设置'}</span>
             </button>
           )}
@@ -224,10 +250,10 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
       </div>
 
       {/* Reminder Configs */}
-      <div className="space-y-4">
+      <div className='space-y-4'>
         {configs.map((config, index) => {
           const typeInfo = getReminderTypeInfo(config.type);
-          
+
           return (
             <div
               key={config.type}
@@ -236,15 +262,19 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
               }`}
             >
               {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{typeInfo.icon}</span>
+              <div className='flex items-start justify-between mb-4'>
+                <div className='flex items-center space-x-3'>
+                  <span className='text-2xl'>{typeInfo.icon}</span>
                   <div>
-                    <h4 className="font-medium text-gray-900">{typeInfo.label}</h4>
-                    <p className="text-sm text-gray-500">{typeInfo.description}</p>
+                    <h4 className='font-medium text-gray-900'>
+                      {typeInfo.label}
+                    </h4>
+                    <p className='text-sm text-gray-500'>
+                      {typeInfo.description}
+                    </p>
                   </div>
                 </div>
-                
+
                 <button
                   onClick={() => toggleConfig(index)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -261,26 +291,32 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
 
               {/* Settings */}
               {config.enabled && (
-                <div className="space-y-4">
+                <div className='space-y-4'>
                   {/* Time Setting */}
-                  <div className="flex items-center space-x-4">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <label className="text-sm font-medium text-gray-700">提醒时间:</label>
+                  <div className='flex items-center space-x-4'>
+                    <Clock className='w-4 h-4 text-gray-400' />
+                    <label className='text-sm font-medium text-gray-700'>
+                      提醒时间:
+                    </label>
                     <input
-                      type="time"
+                      type='time'
                       value={formatTime(config.hour, config.minute)}
                       onChange={(e) => {
-                        const [hour, minute] = e.target.value.split(':').map(Number);
+                        const [hour, minute] = e.target.value
+                          .split(':')
+                          .map(Number);
                         updateConfig(index, { hour, minute });
                       }}
-                      className="px-3 py-1 border rounded text-sm"
+                      className='px-3 py-1 border rounded text-sm'
                     />
                   </div>
 
                   {/* Days of Week */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">重复日期:</label>
-                    <div className="flex flex-wrap gap-2">
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium text-gray-700'>
+                      重复日期:
+                    </label>
+                    <div className='flex flex-wrap gap-2'>
                       {DAY_NAMES.map((day, dayIndex) => (
                         <button
                           key={dayIndex}
@@ -298,17 +334,21 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
                   </div>
 
                   {/* Custom Message */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">自定义消息:</label>
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium text-gray-700'>
+                      自定义消息:
+                    </label>
                     <input
-                      type="text"
+                      type='text'
                       value={config.message || ''}
-                      onChange={(e) => updateConfig(index, { message: e.target.value })}
-                      placeholder="留空使用默认消息"
-                      className="w-full px-3 py-2 border rounded text-sm"
+                      onChange={(e) =>
+                        updateConfig(index, { message: e.target.value })
+                      }
+                      placeholder='留空使用默认消息'
+                      className='w-full px-3 py-2 border rounded text-sm'
                       maxLength={200}
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className='text-xs text-gray-500'>
                       {config.message?.length || 0}/200 字符
                     </p>
                   </div>
@@ -316,21 +356,22 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
               )}
 
               {/* Warning for disabled critical reminders */}
-              {!config.enabled && ['MEAL_TIME', 'MISSING_MEAL'].includes(config.type) && (
-                <div className="flex items-center space-x-2 text-sm text-yellow-600 bg-yellow-50 p-2 rounded">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>关闭此提醒可能影响您的营养追踪连续性</span>
-                </div>
-              )}
+              {!config.enabled &&
+                ['MEAL_TIME', 'MISSING_MEAL'].includes(config.type) && (
+                  <div className='flex items-center space-x-2 text-sm text-yellow-600 bg-yellow-50 p-2 rounded'>
+                    <AlertTriangle className='w-4 h-4' />
+                    <span>关闭此提醒可能影响您的营养追踪连续性</span>
+                  </div>
+                )}
             </div>
           );
         })}
       </div>
 
       {/* Footer Info */}
-      <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg">
-        <p className="mb-2">💡 提醒设置说明:</p>
-        <ul className="space-y-1 text-xs">
+      <div className='text-sm text-gray-500 bg-gray-50 p-4 rounded-lg'>
+        <p className='mb-2'>💡 提醒设置说明:</p>
+        <ul className='space-y-1 text-xs'>
           <li>• 餐时提醒：在设定时间提醒记录三餐</li>
           <li>• 漏餐提醒：餐时2小时后仍未记录时提醒</li>
           <li>• 营养不足提醒：晚餐前检查当日营养摄入</li>

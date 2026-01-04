@@ -37,7 +37,10 @@ export class CheckInNotificationService {
   /**
    * 发送连续打卡成就通知
    */
-  async sendStreakAchievement(memberId: string, streakDays: number): Promise<void> {
+  async sendStreakAchievement(
+    memberId: string,
+    streakDays: number,
+  ): Promise<void> {
     try {
       await this.notificationManager.createNotification({
         memberId,
@@ -61,11 +64,14 @@ export class CheckInNotificationService {
   /**
    * 发送营养异常提醒
    */
-  async sendNutritionAlert(memberId: string, alertData: {
-    metric: string;
-    value: string;
-    recommendation: string;
-  }): Promise<void> {
+  async sendNutritionAlert(
+    memberId: string,
+    alertData: {
+      metric: string;
+      value: string;
+      recommendation: string;
+    },
+  ): Promise<void> {
     try {
       await this.notificationManager.createNotification({
         memberId,
@@ -94,11 +100,14 @@ export class CheckInNotificationService {
   /**
    * 发送目标达成通知
    */
-  async sendGoalCompletion(memberId: string, goalData: {
-    goalTitle: string;
-    completedValue: string;
-    targetValue: string;
-  }): Promise<void> {
+  async sendGoalCompletion(
+    memberId: string,
+    goalData: {
+      goalTitle: string;
+      completedValue: string;
+      targetValue: string;
+    },
+  ): Promise<void> {
     try {
       await this.notificationManager.createNotification({
         memberId,
@@ -126,16 +135,19 @@ export class CheckInNotificationService {
   /**
    * 批量发送家庭成员活动通知
    */
-  async sendFamilyActivityNotifications(familyId: string, activityData: {
-    memberName: string;
-    activity: string;
-    mealType?: string;
-  }): Promise<void> {
+  async sendFamilyActivityNotifications(
+    familyId: string,
+    activityData: {
+      memberName: string;
+      activity: string;
+      mealType?: string;
+    },
+  ): Promise<void> {
     try {
       // 获取家庭成员列表
       const familyMembers = await this.getFamilyMembers(familyId);
-      
-      const notifications = familyMembers.map(memberId => ({
+
+      const notifications = familyMembers.map((memberId) => ({
         memberId,
         type: NotificationType.FAMILY_ACTIVITY,
         templateData: {
@@ -176,7 +188,7 @@ export class CheckInNotificationService {
       where: { familyId },
       select: { id: true },
     });
-    return members.map(member => member.id);
+    return members.map((member) => member.id);
   }
 }
 

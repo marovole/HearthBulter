@@ -16,10 +16,10 @@ import type {
 const ITEMS_PER_PAGE = 10;
 
 interface UseHealthDataTableProps {
-  memberId: string
-  searchTerm?: string
-  dateRange?: DateRange
-  onDataDeleted?: (id: string) => void
+  memberId: string;
+  searchTerm?: string;
+  dateRange?: DateRange;
+  onDataDeleted?: (id: string) => void;
 }
 
 export function useHealthDataTable({
@@ -50,7 +50,7 @@ export function useHealthDataTable({
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: ITEMS_PER_PAGE.toString(),
@@ -59,15 +59,19 @@ export function useHealthDataTable({
         sort: sortField,
         order: sortDirection,
         ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== false && value !== 'all')
+          Object.entries(filters).filter(
+            ([_, value]) => value !== false && value !== 'all',
+          ),
         ),
       });
 
-      const response = await fetch(`/api/members/${memberId}/health-data?${params}`);
+      const response = await fetch(
+        `/api/members/${memberId}/health-data?${params}`,
+      );
       if (!response.ok) {
         throw new Error('加载数据失败');
       }
-      
+
       const result = await response.json();
       setData(result.data || []);
       setTotalPages(Math.ceil((result.total || 0) / ITEMS_PER_PAGE));
@@ -76,7 +80,15 @@ export function useHealthDataTable({
     } finally {
       setLoading(false);
     }
-  }, [memberId, currentPage, searchTerm, dateRange, sortField, sortDirection, filters]);
+  }, [
+    memberId,
+    currentPage,
+    searchTerm,
+    dateRange,
+    sortField,
+    sortDirection,
+    filters,
+  ]);
 
   // 自动加载数据
   useEffect(() => {
@@ -84,58 +96,70 @@ export function useHealthDataTable({
   }, [loadData]);
 
   // 排序处理
-  const handleSort = useCallback((field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  }, [sortField]);
+  const handleSort = useCallback(
+    (field: SortField) => {
+      if (sortField === field) {
+        setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setSortField(field);
+        setSortDirection('desc');
+      }
+    },
+    [sortField],
+  );
 
   // 全选处理
-  const handleSelectAll = useCallback((checked: boolean) => {
-    if (checked) {
-      setSelectedItems(data.map(item => item.id));
-    } else {
-      setSelectedItems([]);
-    }
-  }, [data]);
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedItems(data.map((item) => item.id));
+      } else {
+        setSelectedItems([]);
+      }
+    },
+    [data],
+  );
 
   // 单选处理
   const handleSelectItem = useCallback((id: string, checked: boolean) => {
     if (checked) {
-      setSelectedItems(prev => [...prev, id]);
+      setSelectedItems((prev) => [...prev, id]);
     } else {
-      setSelectedItems(prev => prev.filter(item => item !== id));
+      setSelectedItems((prev) => prev.filter((item) => item !== id));
     }
   }, []);
 
   // 删除单条数据
-  const handleDelete = useCallback(async (id: string) => {
-    if (!confirm('确定要删除这条健康数据吗？')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/members/${memberId}/health-data/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('删除失败');
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (!confirm('确定要删除这条健康数据吗？')) {
+        return;
       }
 
-      setData(prev => prev.filter(item => item.id !== id));
-      setSelectedItems(prev => prev.filter(item => item !== id));
-      
-      if (onDataDeleted) {
-        onDataDeleted(id);
+      try {
+        const response = await fetch(
+          `/api/members/${memberId}/health-data/${id}`,
+          {
+            method: 'DELETE',
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error('删除失败');
+        }
+
+        setData((prev) => prev.filter((item) => item.id !== id));
+        setSelectedItems((prev) => prev.filter((item) => item !== id));
+
+        if (onDataDeleted) {
+          onDataDeleted(id);
+        }
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '删除失败');
       }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : '删除失败');
-    }
-  }, [memberId, onDataDeleted]);
+    },
+    [memberId, onDataDeleted],
+  );
 
   // 批量删除
   const handleBatchDelete = useCallback(async () => {
@@ -144,13 +168,17 @@ export function useHealthDataTable({
     }
 
     try {
-      const deletePromises = selectedItems.map(id =>
-        fetch(`/api/members/${memberId}/health-data/${id}`, { method: 'DELETE' })
+      const deletePromises = selectedItems.map((id) =>
+        fetch(`/api/members/${memberId}/health-data/${id}`, {
+          method: 'DELETE',
+        }),
       );
-      
+
       await Promise.all(deletePromises);
-      
-      setData(prev => prev.filter(item => !selectedItems.includes(item.id)));
+
+      setData((prev) =>
+        prev.filter((item) => !selectedItems.includes(item.id)),
+      );
       setSelectedItems([]);
     } catch (err) {
       alert('批量删除失败');

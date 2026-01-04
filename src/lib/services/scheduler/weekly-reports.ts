@@ -14,17 +14,19 @@ const logger = new TaskLogger();
  */
 export async function generateWeeklyReports(): Promise<void> {
   logger.info('Starting weekly report generation...');
-  
+
   try {
     // 获取所有活跃的家庭成员
     const activeMembers = await getActiveMembers();
-    
+
     if (activeMembers.length === 0) {
       logger.info('No active members found for weekly reports');
       return;
     }
 
-    logger.info(`Found ${activeMembers.length} active members for weekly reports`);
+    logger.info(
+      `Found ${activeMembers.length} active members for weekly reports`,
+    );
 
     let successCount = 0;
     let errorCount = 0;
@@ -34,23 +36,30 @@ export async function generateWeeklyReports(): Promise<void> {
         // 检查本周是否已经生成过报告
         const existingReport = await checkExistingReport(member.id, 'WEEKLY');
         if (existingReport) {
-          logger.debug(`Weekly report already exists for member ${member.id}, skipping`);
+          logger.debug(
+            `Weekly report already exists for member ${member.id}, skipping`,
+          );
           continue;
         }
 
         // 生成周报
         const report = await createReport(member.id, 'WEEKLY');
-        logger.info(`Generated weekly report for member ${member.name}: ${report.id}`);
+        logger.info(
+          `Generated weekly report for member ${member.name}: ${report.id}`,
+        );
         successCount++;
-
       } catch (error) {
-        logger.error(`Failed to generate weekly report for member ${member.id}:`, error);
+        logger.error(
+          `Failed to generate weekly report for member ${member.id}:`,
+          error,
+        );
         errorCount++;
       }
     }
 
-    logger.info(`Weekly report generation completed: ${successCount} success, ${errorCount} errors`);
-
+    logger.info(
+      `Weekly report generation completed: ${successCount} success, ${errorCount} errors`,
+    );
   } catch (error) {
     logger.error('Weekly report generation failed:', error);
     throw error;

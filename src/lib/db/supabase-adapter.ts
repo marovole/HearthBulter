@@ -237,7 +237,7 @@ function buildJsonPathSelector(column: string, path: string[]): string {
   if (!path || path.length === 0) return column;
 
   // 转义单引号
-  const normalized = path.map((segment) => segment.replace(/'/g, '\'\''));
+  const normalized = path.map((segment) => segment.replace(/'/g, "''"));
   const last = normalized.pop()!;
 
   // 中间路径使用 ->，最后一个使用 ->>（返回文本）
@@ -444,7 +444,7 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
 
 /**
  * 转义 PostgREST 查询值，防止注入攻击
- * 
+ *
  * 需要转义的特殊字符：
  * - 逗号(,) - 用于分隔 OR 条件和 IN 列表
  * - 句点(.) - 用于分隔操作符
@@ -466,7 +466,7 @@ function escapeFilterValue(value: unknown): string {
   }
 
   const str = String(value);
-  
+
   // 检测潜在的注入尝试
   const dangerousPatterns = [
     /\.\s*(eq|neq|gt|gte|lt|lte|like|ilike|in|is)\s*\./i,
@@ -476,13 +476,21 @@ function escapeFilterValue(value: unknown): string {
 
   for (const pattern of dangerousPatterns) {
     if (pattern.test(str)) {
-      throw new Error(`Potentially malicious filter value detected: ${str.substring(0, 50)}`);
+      throw new Error(
+        `Potentially malicious filter value detected: ${str.substring(0, 50)}`,
+      );
     }
   }
 
   // 转义特殊字符：将双引号包裹字符串以保护特殊字符
   // PostgREST 对引号内的内容不做特殊解析
-  if (str.includes(',') || str.includes('.') || str.includes('(') || str.includes(')') || str.includes('%')) {
+  if (
+    str.includes(',') ||
+    str.includes('.') ||
+    str.includes('(') ||
+    str.includes(')') ||
+    str.includes('%')
+  ) {
     // 使用双引号包裹，内部双引号需要转义
     return `"${str.replace(/"/g, '\\"')}"`;
   }
@@ -530,7 +538,7 @@ function buildFilterExpressions(where: any): string[] {
           expressions.push(`${snakeKey}.neq.${escapedValue}`);
         } else if (operator === 'in') {
           const values = Array.isArray(operatorValue)
-            ? operatorValue.map(v => escapeFilterValue(v)).join(',')
+            ? operatorValue.map((v) => escapeFilterValue(v)).join(',')
             : escapedValue;
           expressions.push(`${snakeKey}.in.(${values})`);
         } else if (operator === 'lt') {

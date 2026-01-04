@@ -44,7 +44,6 @@ export class SecurityInitializer {
         component: 'initializer',
         timestamp: new Date().toISOString(),
       });
-
     } catch (error) {
       logger.error('安全系统初始化失败', error as Error, {
         type: 'security',
@@ -223,11 +222,11 @@ export class SecurityInitializer {
     ];
 
     const results = await Promise.allSettled(checks);
-    const failures = results.filter(result => result.status === 'rejected');
+    const failures = results.filter((result) => result.status === 'rejected');
 
     if (failures.length > 0) {
-      const errors = failures.map(failure =>
-        failure.status === 'rejected' ? failure.reason.message : '未知错误'
+      const errors = failures.map((failure) =>
+        failure.status === 'rejected' ? failure.reason.message : '未知错误',
       );
 
       securityAudit.logSecurityViolation(
@@ -237,7 +236,7 @@ export class SecurityInitializer {
         {
           failedChecks: failures.length,
           errors,
-        }
+        },
       );
 
       logger.warn('部分安全检查失败', {
@@ -268,7 +267,9 @@ export class SecurityInitializer {
         status: 'passed',
       });
     } catch (error) {
-      throw new Error(`依赖安全检查失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(
+        `依赖安全检查失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
     }
   }
 
@@ -281,12 +282,7 @@ export class SecurityInitializer {
       const path = require('path');
 
       // 检查关键目录的权限
-      const criticalPaths = [
-        process.cwd(),
-        './uploads',
-        './logs',
-        './temp',
-      ];
+      const criticalPaths = [process.cwd(), './uploads', './logs', './temp'];
 
       for (const criticalPath of criticalPaths) {
         try {
@@ -308,7 +304,9 @@ export class SecurityInitializer {
         status: 'passed',
       });
     } catch (error) {
-      throw new Error(`文件系统权限检查失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(
+        `文件系统权限检查失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
     }
   }
 
@@ -329,7 +327,9 @@ export class SecurityInitializer {
         hasSecureHeaders,
       });
     } catch (error) {
-      throw new Error(`网络配置检查失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(
+        `网络配置检查失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
     }
   }
 
@@ -347,7 +347,9 @@ export class SecurityInitializer {
         status: 'passed',
       });
     } catch (error) {
-      throw new Error(`数据库安全检查失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(
+        `数据库安全检查失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
     }
   }
 

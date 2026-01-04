@@ -40,7 +40,7 @@ export interface ShoppingListRepository {
    */
   listShoppingLists(
     query: ShoppingListListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<ShoppingListDTO>>;
 
   /**
@@ -54,7 +54,7 @@ export interface ShoppingListRepository {
    */
   getShoppingListById(
     id: string,
-    options?: ShoppingListGetOptions
+    options?: ShoppingListGetOptions,
   ): Promise<ShoppingListDTO | null>;
 
   /**
@@ -66,7 +66,7 @@ export interface ShoppingListRepository {
    */
   updateShoppingList(
     id: string,
-    payload: UpdateShoppingListDTO
+    payload: UpdateShoppingListDTO,
   ): Promise<ShoppingListDTO>;
 
   /**
@@ -91,7 +91,7 @@ export interface ShoppingListRepository {
   updateShoppingListItem(
     listId: string,
     itemId: string,
-    payload: UpdateShoppingListItemDTO
+    payload: UpdateShoppingListItemDTO,
   ): Promise<ShoppingListItemDTO>;
 
   /**
@@ -105,6 +105,6 @@ export interface ShoppingListRepository {
    */
   completeShoppingList(
     listId: string,
-    payload: CompleteShoppingListDTO
+    payload: CompleteShoppingListDTO,
   ): Promise<ShoppingListDTO>;
 }

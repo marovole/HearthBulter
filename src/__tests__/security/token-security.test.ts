@@ -1,6 +1,6 @@
 /**
  * Token 安全测试
- * 
+ *
  * 验证 Token 生成的安全性和不可预测性
  */
 
@@ -47,21 +47,21 @@ describe('Token 安全测试', () => {
 
     it('Token 应该有足够的熵', () => {
       const token = generateSecureRandomToken(32);
-      
+
       // 32 字节 = 256 位熵，base64 编码后约 43 字符
       expect(token.length).toBeGreaterThanOrEqual(40);
     });
 
     it('Token 不应包含可预测的模式', () => {
       const tokens: string[] = [];
-      
+
       for (let i = 0; i < 10; i++) {
         tokens.push(generateSecureRandomToken(32));
       }
 
       // 检查没有共同前缀
       const prefix = tokens[0].substring(0, 5);
-      const hasCommonPrefix = tokens.every(t => t.startsWith(prefix));
+      const hasCommonPrefix = tokens.every((t) => t.startsWith(prefix));
       expect(hasCommonPrefix).toBe(false);
 
       // 检查没有递增模式
@@ -76,10 +76,10 @@ describe('Token 安全测试', () => {
   describe('Token 格式安全', () => {
     it('Token 应该是 URL 安全的', () => {
       const token = generateSecureRandomToken(32);
-      
+
       // 不应包含 URL 不安全字符
       expect(token).not.toMatch(/[+/=]/);
-      
+
       // 应该可以安全用于 URL
       const encoded = encodeURIComponent(token);
       expect(encoded).toBe(token);
@@ -91,7 +91,7 @@ describe('Token 安全测试', () => {
         'health_report',
         'owner-456',
         7,
-        ['read']
+        ['read'],
       );
 
       // Token 是 JWT，解码 payload 不应直接暴露敏感信息
@@ -115,7 +115,9 @@ describe('Token 安全测试', () => {
     it('应拒绝被篡改的 Token', async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const jose = require('jose');
-      jose.jwtVerify.mockRejectedValueOnce(new Error('signature verification failed'));
+      jose.jwtVerify.mockRejectedValueOnce(
+        new Error('signature verification failed'),
+      );
 
       const result = await verifyShareToken('tampered.jwt.token');
       expect(result.valid).toBe(false);
@@ -147,7 +149,7 @@ describe('Token 安全测试', () => {
         'health_report',
         'owner-456',
         expiryDays,
-        ['read']
+        ['read'],
       );
 
       // Token 应该在指定天数后过期
@@ -157,7 +159,7 @@ describe('Token 安全测试', () => {
     it('不应允许过长的过期时间', async () => {
       // 验证最大过期时间限制
       const maxExpiryDays = 30;
-      
+
       // 实际实现应该限制最大过期时间
       expect(maxExpiryDays).toBeLessThanOrEqual(30);
     });
@@ -166,7 +168,7 @@ describe('Token 安全测试', () => {
 
 describe('加密 Token 存储测试', () => {
   // 这些测试验证 token-storage.ts 中的加密功能
-  
+
   describe('Token 加密', () => {
     it('加密后的 Token 应该与原始 Token 完全不同', async () => {
       // 验证加密确实改变了 Token

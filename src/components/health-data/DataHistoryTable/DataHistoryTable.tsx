@@ -58,7 +58,7 @@ export function DataHistoryTable(props: DataHistoryTableProps) {
   const allSelected = selectedItems.length === data.length && data.length > 0;
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* 批量操作栏 */}
       <BatchActions
         selectedCount={selectedItems.length}
@@ -76,8 +76,8 @@ export function DataHistoryTable(props: DataHistoryTableProps) {
       />
 
       {/* 数据表格 */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className='overflow-x-auto'>
+        <table className='min-w-full divide-y divide-gray-200'>
           <TableHeader
             allSelected={allSelected}
             sortField={sortField}
@@ -86,7 +86,7 @@ export function DataHistoryTable(props: DataHistoryTableProps) {
             onSort={handleSort}
           />
 
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className='bg-white divide-y divide-gray-200'>
             {data.map((item) => (
               <TableRow
                 key={item.id}

@@ -16,10 +16,7 @@ export async function POST(request: NextRequest) {
 
     // 验证管理员权限（仅管理员可执行清理任务）
     if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: '无权限执行此操作' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无权限执行此操作' }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -35,14 +32,13 @@ export async function POST(request: NextRequest) {
 
     if (expiredError) {
       console.error('更新过期邀请失败:', expiredError);
-      return NextResponse.json(
-        { error: '清理过期邀请失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '清理过期邀请失败' }, { status: 500 });
     }
 
     // 软删除超过30天的已过期/已拒绝邀请
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const thirtyDaysAgo = new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
     const { data: deletedInvitations, error: deleteError } = await supabase
       .from('family_invitations')
       .update({ status: 'DELETED' } as any)
@@ -52,10 +48,7 @@ export async function POST(request: NextRequest) {
 
     if (deleteError) {
       console.error('软删除邀请失败:', deleteError);
-      return NextResponse.json(
-        { error: '软删除邀请失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '软删除邀请失败' }, { status: 500 });
     }
 
     return NextResponse.json(
@@ -66,14 +59,11 @@ export async function POST(request: NextRequest) {
           softDeleted: deletedInvitations?.length || 0,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('清理过期邀请失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -88,15 +78,14 @@ export async function GET(request: NextRequest) {
 
     // 验证管理员权限
     if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: '无权限执行此操作' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无权限执行此操作' }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
     const now = new Date().toISOString();
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const thirtyDaysAgo = new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
 
     // 获取过期邀请统计（使用Supabase）
     const [
@@ -143,13 +132,10 @@ export async function GET(request: NextRequest) {
           softDeletable,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('获取过期邀请统计失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 /**
  * 电商平台 Token 加密存储服务
- * 
+ *
  * 使用 AES-256-GCM 加密存储 accessToken 和 refreshToken
  * 防止数据库泄露时 Token 被直接利用
  */
@@ -68,7 +68,9 @@ export async function decryptToken(encryptedToken: string): Promise<string> {
 /**
  * 加密 TokenInfo 对象
  */
-export async function encryptTokenInfo(tokenInfo: TokenInfo): Promise<TokenInfo> {
+export async function encryptTokenInfo(
+  tokenInfo: TokenInfo,
+): Promise<TokenInfo> {
   const encrypted: TokenInfo = {
     ...tokenInfo,
     accessToken: await encryptToken(tokenInfo.accessToken),
@@ -84,7 +86,9 @@ export async function encryptTokenInfo(tokenInfo: TokenInfo): Promise<TokenInfo>
 /**
  * 解密 TokenInfo 对象
  */
-export async function decryptTokenInfo(tokenInfo: TokenInfo): Promise<TokenInfo> {
+export async function decryptTokenInfo(
+  tokenInfo: TokenInfo,
+): Promise<TokenInfo> {
   const decrypted: TokenInfo = {
     ...tokenInfo,
     accessToken: await decryptToken(tokenInfo.accessToken),
@@ -102,7 +106,7 @@ export async function decryptTokenInfo(tokenInfo: TokenInfo): Promise<TokenInfo>
  */
 export async function prepareTokenForStorage(
   accessToken: string,
-  refreshToken?: string | null
+  refreshToken?: string | null,
 ): Promise<{
   accessToken: string;
   refreshToken: string | null;
@@ -118,17 +122,17 @@ export async function prepareTokenForStorage(
  */
 export async function readTokenFromStorage(
   encryptedAccessToken: string | null,
-  encryptedRefreshToken?: string | null
+  encryptedRefreshToken?: string | null,
 ): Promise<{
   accessToken: string | null;
   refreshToken: string | null;
 }> {
   return {
-    accessToken: encryptedAccessToken 
-      ? await decryptToken(encryptedAccessToken) 
+    accessToken: encryptedAccessToken
+      ? await decryptToken(encryptedAccessToken)
       : null,
-    refreshToken: encryptedRefreshToken 
-      ? await decryptToken(encryptedRefreshToken) 
+    refreshToken: encryptedRefreshToken
+      ? await decryptToken(encryptedRefreshToken)
       : null,
   };
 }
@@ -137,10 +141,10 @@ export async function readTokenFromStorage(
  * 检查并迁移未加密的 Token（用于数据迁移）
  */
 export async function migrateUnencryptedToken(
-  token: string | null
+  token: string | null,
 ): Promise<string | null> {
   if (!token) return null;
-  
+
   if (isTokenEncrypted(token)) {
     // 已加密，无需迁移
     return token;

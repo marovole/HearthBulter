@@ -2,10 +2,23 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ThumbsUp, ThumbsDown, MessageCircle, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+  CheckCircle,
+  AlertCircle,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface FeedbackData {
@@ -39,11 +52,17 @@ export function FeedbackButtons({
   showCounts = false,
   initialFeedback,
 }: FeedbackButtonsProps) {
-  const [feedback, setFeedback] = useState<FeedbackData | null>(initialFeedback || null);
+  const [feedback, setFeedback] = useState<FeedbackData | null>(
+    initialFeedback || null,
+  );
   const [showCommentDialog, setShowCommentDialog] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [counts, setCounts] = useState({ positive: 0, negative: 0, comments: 0 });
+  const [counts, setCounts] = useState({
+    positive: 0,
+    negative: 0,
+    comments: 0,
+  });
 
   const sizeClasses = {
     sm: 'h-8 w-8',
@@ -79,9 +98,10 @@ export function FeedbackButtons({
 
       // 更新计数（如果显示计数）
       if (showCounts) {
-        setCounts(prev => ({
+        setCounts((prev) => ({
           ...prev,
-          [type === 'positive' ? 'positive' : 'negative']: prev[type === 'positive' ? 'positive' : 'negative'] + 1,
+          [type === 'positive' ? 'positive' : 'negative']:
+            prev[type === 'positive' ? 'positive' : 'negative'] + 1,
         }));
       }
     } catch (error) {
@@ -111,7 +131,7 @@ export function FeedbackButtons({
 
       // 更新计数
       if (showCounts) {
-        setCounts(prev => ({
+        setCounts((prev) => ({
           ...prev,
           comments: prev.comments + 1,
         }));
@@ -123,7 +143,9 @@ export function FeedbackButtons({
     }
   };
 
-  const getButtonVariant = (buttonType: 'positive' | 'negative' | 'comment') => {
+  const getButtonVariant = (
+    buttonType: 'positive' | 'negative' | 'comment',
+  ) => {
     if (!feedback || feedback.type !== buttonType) return 'outline';
     return 'default';
   };
@@ -132,7 +154,7 @@ export function FeedbackButtons({
     return (
       <div className={cn('flex items-center space-x-1', className)}>
         <Button
-          size="sm"
+          size='sm'
           variant={getButtonVariant('positive')}
           onClick={() => handleFeedback('positive')}
           disabled={disabled || isSubmitting}
@@ -141,7 +163,7 @@ export function FeedbackButtons({
           <ThumbsUp className={iconSizeClasses.sm} />
         </Button>
         <Button
-          size="sm"
+          size='sm'
           variant={getButtonVariant('negative')}
           onClick={() => handleFeedback('negative')}
           disabled={disabled || isSubmitting}
@@ -150,7 +172,7 @@ export function FeedbackButtons({
           <ThumbsDown className={iconSizeClasses.sm} />
         </Button>
         <Button
-          size="sm"
+          size='sm'
           variant={getButtonVariant('comment')}
           onClick={() => handleFeedback('comment')}
           disabled={disabled || isSubmitting}
@@ -165,29 +187,29 @@ export function FeedbackButtons({
   if (variant === 'detailed') {
     return (
       <div className={cn('space-y-3', className)}>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">
+        <div className='flex items-center justify-between'>
+          <span className='text-sm font-medium text-muted-foreground'>
             这个建议对您有帮助吗？
           </span>
           {feedback && (
-            <Badge variant="secondary" className="flex items-center space-x-1">
-              <CheckCircle className="w-3 h-3" />
+            <Badge variant='secondary' className='flex items-center space-x-1'>
+              <CheckCircle className='w-3 h-3' />
               <span>已反馈</span>
             </Badge>
           )}
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className='flex items-center space-x-2'>
           <Button
             variant={getButtonVariant('positive')}
             onClick={() => handleFeedback('positive')}
             disabled={disabled || isSubmitting}
-            className="flex items-center space-x-2"
+            className='flex items-center space-x-2'
           >
-            <ThumbsUp className="w-4 h-4" />
+            <ThumbsUp className='w-4 h-4' />
             <span>有帮助</span>
             {showCounts && counts.positive > 0 && (
-              <Badge variant="secondary" className="ml-1">
+              <Badge variant='secondary' className='ml-1'>
                 {counts.positive}
               </Badge>
             )}
@@ -197,12 +219,12 @@ export function FeedbackButtons({
             variant={getButtonVariant('negative')}
             onClick={() => handleFeedback('negative')}
             disabled={disabled || isSubmitting}
-            className="flex items-center space-x-2"
+            className='flex items-center space-x-2'
           >
-            <ThumbsDown className="w-4 h-4" />
+            <ThumbsDown className='w-4 h-4' />
             <span>没帮助</span>
             {showCounts && counts.negative > 0 && (
-              <Badge variant="secondary" className="ml-1">
+              <Badge variant='secondary' className='ml-1'>
                 {counts.negative}
               </Badge>
             )}
@@ -212,12 +234,12 @@ export function FeedbackButtons({
             variant={getButtonVariant('comment')}
             onClick={() => handleFeedback('comment')}
             disabled={disabled || isSubmitting}
-            className="flex items-center space-x-2"
+            className='flex items-center space-x-2'
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className='w-4 h-4' />
             <span>反馈</span>
             {showCounts && counts.comments > 0 && (
-              <Badge variant="secondary" className="ml-1">
+              <Badge variant='secondary' className='ml-1'>
                 {counts.comments}
               </Badge>
             )}
@@ -226,11 +248,11 @@ export function FeedbackButtons({
 
         {/* 反馈历史显示 */}
         {feedback && (
-          <div className="text-xs text-muted-foreground">
+          <div className='text-xs text-muted-foreground'>
             {feedback.type === 'positive' && '✓ 您觉得这个建议有帮助'}
             {feedback.type === 'negative' && '✗ 您觉得这个建议没有帮助'}
             {feedback.type === 'comment' && feedback.comment && (
-              <div className="mt-1 p-2 bg-muted rounded text-xs">
+              <div className='mt-1 p-2 bg-muted rounded text-xs'>
                 您的反馈: {feedback.comment}
               </div>
             )}
@@ -245,48 +267,48 @@ export function FeedbackButtons({
     <>
       <div className={cn('flex items-center space-x-1', className)}>
         <Button
-          size="sm"
+          size='sm'
           variant={getButtonVariant('positive')}
           onClick={() => handleFeedback('positive')}
           disabled={disabled || isSubmitting}
-          className="flex items-center space-x-1"
+          className='flex items-center space-x-1'
         >
           <ThumbsUp className={iconSizeClasses.sm} />
           {showCounts && counts.positive > 0 && (
-            <span className="text-xs">{counts.positive}</span>
+            <span className='text-xs'>{counts.positive}</span>
           )}
         </Button>
 
         <Button
-          size="sm"
+          size='sm'
           variant={getButtonVariant('negative')}
           onClick={() => handleFeedback('negative')}
           disabled={disabled || isSubmitting}
-          className="flex items-center space-x-1"
+          className='flex items-center space-x-1'
         >
           <ThumbsDown className={iconSizeClasses.sm} />
           {showCounts && counts.negative > 0 && (
-            <span className="text-xs">{counts.negative}</span>
+            <span className='text-xs'>{counts.negative}</span>
           )}
         </Button>
 
         <Button
-          size="sm"
-          variant="ghost"
+          size='sm'
+          variant='ghost'
           onClick={() => handleFeedback('comment')}
           disabled={disabled || isSubmitting}
-          className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
+          className='flex items-center space-x-1 text-muted-foreground hover:text-foreground'
         >
           <MessageCircle className={iconSizeClasses.sm} />
           {showCounts && counts.comments > 0 && (
-            <span className="text-xs">{counts.comments}</span>
+            <span className='text-xs'>{counts.comments}</span>
           )}
         </Button>
       </div>
 
       {/* 评论对话框 */}
       <Dialog open={showCommentDialog} onOpenChange={setShowCommentDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>
             <DialogTitle>提供详细反馈</DialogTitle>
             <DialogDescription>
@@ -294,22 +316,22 @@ export function FeedbackButtons({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
+          <div className='grid gap-4 py-4'>
             <Textarea
-              placeholder="您的反馈内容..."
+              placeholder='您的反馈内容...'
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               rows={4}
               maxLength={500}
             />
-            <div className="text-xs text-muted-foreground text-right">
+            <div className='text-xs text-muted-foreground text-right'>
               {commentText.length}/500
             </div>
           </div>
 
           <DialogFooter>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => setShowCommentDialog(false)}
               disabled={isSubmitting}
             >
@@ -351,22 +373,22 @@ export function QuickFeedback({
   return (
     <div className={cn('flex items-center space-x-1', className)}>
       <Button
-        size="sm"
+        size='sm'
         variant={feedback === 'like' ? 'default' : 'ghost'}
         onClick={() => handleFeedback('like')}
         disabled={disabled}
-        className="h-8 w-8 p-0"
+        className='h-8 w-8 p-0'
       >
-        <ThumbsUp className="w-3 h-3" />
+        <ThumbsUp className='w-3 h-3' />
       </Button>
       <Button
-        size="sm"
+        size='sm'
         variant={feedback === 'dislike' ? 'default' : 'ghost'}
         onClick={() => handleFeedback('dislike')}
         disabled={disabled}
-        className="h-8 w-8 p-0"
+        className='h-8 w-8 p-0'
       >
-        <ThumbsDown className="w-3 h-3" />
+        <ThumbsDown className='w-3 h-3' />
       </Button>
     </div>
   );

@@ -14,7 +14,9 @@ import type {
  * 使用 Supabase Client 访问食材数据
  */
 export class SupabaseFoodRepository implements FoodRepository {
-  constructor(private readonly supabase = SupabaseClientManager.getInstance()) {}
+  constructor(
+    private readonly supabase = SupabaseClientManager.getInstance(),
+  ) {}
 
   /**
    * 规范化 Supabase 返回的 Food 对象
@@ -66,7 +68,7 @@ export class SupabaseFoodRepository implements FoodRepository {
     }
 
     return {
-      foods: (data || []).map(food => this.normalizeFoodRecord(food)),
+      foods: (data || []).map((food) => this.normalizeFoodRecord(food)),
       total: count || 0,
       page,
       limit,
@@ -84,10 +86,14 @@ export class SupabaseFoodRepository implements FoodRepository {
       throw error;
     }
 
-    return (data || []).map(food => this.normalizeFoodRecord(food));
+    return (data || []).map((food) => this.normalizeFoodRecord(food));
   }
 
-  async listByCategory(category: FoodCategory, from: number, to: number): Promise<FoodRecord[]> {
+  async listByCategory(
+    category: FoodCategory,
+    from: number,
+    to: number,
+  ): Promise<FoodRecord[]> {
     const { data, error } = await this.supabase
       .from('foods')
       .select('*')
@@ -99,7 +105,7 @@ export class SupabaseFoodRepository implements FoodRepository {
       throw error;
     }
 
-    return (data || []).map(food => this.normalizeFoodRecord(food));
+    return (data || []).map((food) => this.normalizeFoodRecord(food));
   }
 
   async countByCategory(category: FoodCategory): Promise<number> {

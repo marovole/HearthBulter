@@ -11,7 +11,7 @@ import { analyticsService } from '@/lib/services/analytics-service';
 export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const member = await prisma.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },
@@ -59,10 +59,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30');
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少成员ID参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少成员ID参数' }, { status: 400 });
     }
 
     // 验证权限
@@ -71,23 +68,19 @@ export async function GET(request: NextRequest) {
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限访问该成员的体重趋势数据' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 获取体重趋势分析
     const weightTrend = await analyticsService.analyzeWeightTrend(
       memberId,
-      days
+      days,
     );
 
     return NextResponse.json({ data: weightTrend }, { status: 200 });
   } catch (error) {
     console.error('获取体重趋势失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

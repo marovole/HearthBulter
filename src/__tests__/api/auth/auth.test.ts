@@ -48,7 +48,9 @@ jest.mock('jose', () => ({
     setExpirationTime: jest.fn().mockReturnThis(),
     sign: jest.fn().mockResolvedValue('mock-jwt-token'),
   })),
-  jwtVerify: jest.fn().mockResolvedValue({ sub: 'user-123', email: 'test@example.com' }),
+  jwtVerify: jest
+    .fn()
+    .mockResolvedValue({ sub: 'user-123', email: 'test@example.com' }),
 }));
 
 jest.mock('crypto', () => ({
@@ -58,7 +60,6 @@ jest.mock('crypto', () => ({
 }));
 
 describe('/api/auth API', () => {
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -76,17 +77,20 @@ describe('/api/auth API', () => {
       prisma.user.findUnique.mockResolvedValue(null); // User doesn't exist
       prisma.user.create.mockResolvedValue(mockUser);
 
-      const request = new NextRequest('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            name: 'Test User',
+            password: 'password123',
+          }),
         },
-        body: JSON.stringify({
-          email: 'test@example.com',
-          name: 'Test User',
-          password: 'password123',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/register/route');
@@ -114,17 +118,20 @@ describe('/api/auth API', () => {
 
       prisma.user.findUnique.mockResolvedValue(existingUser);
 
-      const request = new NextRequest('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'existing@example.com',
+            name: 'New User',
+            password: 'password123',
+          }),
         },
-        body: JSON.stringify({
-          email: 'existing@example.com',
-          name: 'New User',
-          password: 'password123',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/register/route');
@@ -139,17 +146,20 @@ describe('/api/auth API', () => {
     });
 
     it('should return 400 for invalid email format', async () => {
-      const request = new NextRequest('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'invalid-email',
+            name: 'Test User',
+            password: 'password123',
+          }),
         },
-        body: JSON.stringify({
-          email: 'invalid-email',
-          name: 'Test User',
-          password: 'password123',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/register/route');
@@ -164,17 +174,20 @@ describe('/api/auth API', () => {
     });
 
     it('should return 400 for weak password', async () => {
-      const request = new NextRequest('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            name: 'Test User',
+            password: '123',
+          }),
         },
-        body: JSON.stringify({
-          email: 'test@example.com',
-          name: 'Test User',
-          password: '123',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/register/route');
@@ -298,7 +311,7 @@ describe('/api/auth API', () => {
       const request = new NextRequest('http://localhost:3000/api/auth/logout', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer valid-jwt-token',
+          Authorization: 'Bearer valid-jwt-token',
         },
       });
 
@@ -342,15 +355,18 @@ describe('/api/auth API', () => {
 
       prisma.user.findUnique.mockResolvedValue(mockUser);
 
-      const request = new NextRequest('http://localhost:3000/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/reset-password',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'test@example.com',
+          }),
         },
-        body: JSON.stringify({
-          email: 'test@example.com',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/reset-password/route');
@@ -367,15 +383,18 @@ describe('/api/auth API', () => {
     it('should return 404 for non-existent email', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/reset-password',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'nonexistent@example.com',
+          }),
         },
-        body: JSON.stringify({
-          email: 'nonexistent@example.com',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/reset-password/route');
@@ -407,15 +426,18 @@ describe('/api/auth API', () => {
       prisma.user.findUnique.mockResolvedValue(mockUser);
       prisma.user.update.mockResolvedValue(updatedUser);
 
-      const request = new NextRequest('http://localhost:3000/api/auth/verify-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/verify-email',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: 'valid-verification-token',
+          }),
         },
-        body: JSON.stringify({
-          token: 'valid-verification-token',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/verify-email/route');
@@ -432,15 +454,18 @@ describe('/api/auth API', () => {
     it('should return 400 for invalid token', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/auth/verify-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/verify-email',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: 'invalid-token',
+          }),
         },
-        body: JSON.stringify({
-          token: 'invalid-token',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/verify-email/route');
@@ -457,7 +482,9 @@ describe('/api/auth API', () => {
 
   describe('Error handling', () => {
     it('should handle database errors gracefully', async () => {
-      prisma.user.findUnique.mockRejectedValue(new Error('Database connection failed'));
+      prisma.user.findUnique.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
 
       const request = new NextRequest('http://localhost:3000/api/auth/login', {
         method: 'POST',
@@ -504,16 +531,19 @@ describe('/api/auth API', () => {
     });
 
     it('should handle missing required fields', async () => {
-      const request = new NextRequest('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            // Missing name and password
+          }),
         },
-        body: JSON.stringify({
-          email: 'test@example.com',
-          // Missing name and password
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/register/route');
@@ -530,17 +560,20 @@ describe('/api/auth API', () => {
 
   describe('Security considerations', () => {
     it('should sanitize input data', async () => {
-      const request = new NextRequest('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const request = new NextRequest(
+        'http://localhost:3000/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            name: '<script>alert("xss")</script>',
+            password: 'password123',
+          }),
         },
-        body: JSON.stringify({
-          email: 'test@example.com',
-          name: '<script>alert("xss")</script>',
-          password: 'password123',
-        }),
-      });
+      );
 
       try {
         const { POST } = await import('@/app/api/auth/register/route');
@@ -555,17 +588,19 @@ describe('/api/auth API', () => {
 
     it('should implement rate limiting', async () => {
       // Simulate multiple rapid requests
-      const requests = Array.from({ length: 10 }, () =>
-        new NextRequest('http://localhost:3000/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: 'test@example.com',
-            password: 'password123',
+      const requests = Array.from(
+        { length: 10 },
+        () =>
+          new NextRequest('http://localhost:3000/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: 'test@example.com',
+              password: 'password123',
+            }),
           }),
-        })
       );
 
       try {

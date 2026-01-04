@@ -10,10 +10,18 @@
 // 枚举类型
 // ============================================================================
 
-export type GoalType = 'LOSE_WEIGHT' | 'GAIN_MUSCLE' | 'MAINTAIN' | 'IMPROVE_HEALTH';
+export type GoalType =
+  | 'LOSE_WEIGHT'
+  | 'GAIN_MUSCLE'
+  | 'MAINTAIN'
+  | 'IMPROVE_HEALTH';
 export type GoalStatus = 'ACTIVE' | 'COMPLETED' | 'PAUSED' | 'CANCELLED';
 export type AllergenType = 'FOOD' | 'ENVIRONMENTAL' | 'MEDICATION' | 'OTHER';
-export type AllergySeverity = 'MILD' | 'MODERATE' | 'SEVERE' | 'LIFE_THREATENING';
+export type AllergySeverity =
+  | 'MILD'
+  | 'MODERATE'
+  | 'SEVERE'
+  | 'LIFE_THREATENING';
 export type HealthDataSource = 'MANUAL' | 'DEVICE' | 'IMPORTED';
 export type FamilyMemberRole = 'ADMIN' | 'MEMBER';
 
@@ -236,7 +244,10 @@ export interface MemberRepository {
    * @param userId - 用户 ID
    * @returns 访问权限结果和成员信息
    */
-  verifyMemberAccess(memberId: string, userId: string): Promise<MemberAccessResult>;
+  verifyMemberAccess(
+    memberId: string,
+    userId: string,
+  ): Promise<MemberAccessResult>;
 
   // ============================================================================
   // 健康目标管理
@@ -249,7 +260,10 @@ export interface MemberRepository {
    * @param includeInactive - 是否包含非活跃目标（默认 false）
    * @returns 健康目标列表
    */
-  getHealthGoals(memberId: string, includeInactive?: boolean): Promise<HealthGoalDTO[]>;
+  getHealthGoals(
+    memberId: string,
+    includeInactive?: boolean,
+  ): Promise<HealthGoalDTO[]>;
 
   /**
    * 根据 ID 获取单个健康目标
@@ -266,7 +280,10 @@ export interface MemberRepository {
    * @param input - 健康目标输入数据
    * @returns 创建的健康目标
    */
-  createHealthGoal(memberId: string, input: CreateHealthGoalInput): Promise<HealthGoalDTO>;
+  createHealthGoal(
+    memberId: string,
+    input: CreateHealthGoalInput,
+  ): Promise<HealthGoalDTO>;
 
   /**
    * 更新健康目标
@@ -275,7 +292,10 @@ export interface MemberRepository {
    * @param input - 更新数据
    * @returns 更新后的健康目标
    */
-  updateHealthGoal(goalId: string, input: UpdateHealthGoalInput): Promise<HealthGoalDTO>;
+  updateHealthGoal(
+    goalId: string,
+    input: UpdateHealthGoalInput,
+  ): Promise<HealthGoalDTO>;
 
   /**
    * 删除健康目标（软删除）
@@ -303,7 +323,10 @@ export interface MemberRepository {
    * @param input - 过敏信息输入数据
    * @returns 创建的过敏记录
    */
-  createAllergy(memberId: string, input: CreateAllergyInput): Promise<AllergyDTO>;
+  createAllergy(
+    memberId: string,
+    input: CreateAllergyInput,
+  ): Promise<AllergyDTO>;
 
   /**
    * 更新过敏记录
@@ -312,7 +335,10 @@ export interface MemberRepository {
    * @param input - 更新数据
    * @returns 更新后的过敏记录
    */
-  updateAllergy(allergyId: string, input: UpdateAllergyInput): Promise<AllergyDTO>;
+  updateAllergy(
+    allergyId: string,
+    input: UpdateAllergyInput,
+  ): Promise<AllergyDTO>;
 
   /**
    * 删除过敏记录（软删除）
@@ -340,7 +366,10 @@ export interface MemberRepository {
    * @param input - 健康数据输入
    * @returns 创建的健康数据记录
    */
-  createHealthData(memberId: string, input: CreateHealthDataInput): Promise<HealthDataDTO>;
+  createHealthData(
+    memberId: string,
+    input: CreateHealthDataInput,
+  ): Promise<HealthDataDTO>;
 
   /**
    * 更新健康数据记录
@@ -349,7 +378,10 @@ export interface MemberRepository {
    * @param input - 更新数据
    * @returns 更新后的健康数据记录
    */
-  updateHealthData(dataId: string, input: UpdateHealthDataInput): Promise<HealthDataDTO>;
+  updateHealthData(
+    dataId: string,
+    input: UpdateHealthDataInput,
+  ): Promise<HealthDataDTO>;
 
   /**
    * 删除健康数据记录

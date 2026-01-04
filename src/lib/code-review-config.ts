@@ -45,9 +45,12 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       name: '高复杂度函数',
       description: '检测复杂度过高的函数',
       condition: (content, filePath) => {
-        const functionMatches = content.match(/function\s+\w+\s*\([^)]*\)\s*{[\s\S]*?}/g) || [];
+        const functionMatches =
+          content.match(/function\s+\w+\s*\([^)]*\)\s*{[\s\S]*?}/g) || [];
         // 简化的复杂度检查 - 实际实现需要更复杂的分析
-        return functionMatches.some(func => (func.match(/\bif\b|\bfor\b|\bwhile\b/g) || []).length > 5);
+        return functionMatches.some(
+          (func) => (func.match(/\bif\b|\bfor\b|\bwhile\b/g) || []).length > 5,
+        );
       },
       severity: 'medium',
       type: 'complexity',
@@ -64,7 +67,9 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       keywords: ['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
       pattern: /\$\{[^}]*(?:req\.|query\.|body\.)/gi,
       condition: (content) => {
-        const hasSQLKeywords = /(?:SELECT|INSERT|UPDATE|DELETE)\s+/i.test(content);
+        const hasSQLKeywords = /(?:SELECT|INSERT|UPDATE|DELETE)\s+/i.test(
+          content,
+        );
         const hasStringInterpolation = /\$\{[^}]*\}/.test(content);
         return hasSQLKeywords && hasStringInterpolation;
       },
@@ -80,7 +85,8 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       name: '使用any类型',
       description: '检测代码中不推荐使用的any类型',
       pattern: /\bany\b/g,
-      condition: (content) => content.includes(': any') || content.includes('<any>'),
+      condition: (content) =>
+        content.includes(': any') || content.includes('<any>'),
       severity: 'medium',
       type: 'typescript',
       recommendation: '使用具体的类型定义替换any类型，提高类型安全性',
@@ -94,7 +100,8 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       name: '大数组操作',
       description: '检测可能影响性能的大数组操作',
       condition: (content) => {
-        const largeArrayOps = content.match(/\w+\.map\(|\w+\.filter\(|\w+\.reduce\(/g) || [];
+        const largeArrayOps =
+          content.match(/\w+\.map\(|\w+\.filter\(|\w+\.reduce\(/g) || [];
         return largeArrayOps.length > 5; // 简单阈值检测
       },
       severity: 'low',
@@ -141,7 +148,10 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
         // 在TypeScript文件中检查interface命名
         if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
           const interfaceMatches = content.match(/interface\s+\w+/g) || [];
-          return interfaceMatches.some(match => !match.includes('I') && !/^[A-Z]/.test(match.split(' ')[1]));
+          return interfaceMatches.some(
+            (match) =>
+              !match.includes('I') && !/^[A-Z]/.test(match.split(' ')[1]),
+          );
         }
         return false;
       },
@@ -162,7 +172,8 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
 
         // 检查是否有useEffect但缺少依赖数组
         const useEffectMatches = content.match(/useEffect\s*\(/g) || [];
-        const dependencyArrays = content.match(/useEffect\s*\([^,]+,\s*\[/g) || [];
+        const dependencyArrays =
+          content.match(/useEffect\s*\([^,]+,\s*\[/g) || [];
 
         return useEffectMatches.length > dependencyArrays.length;
       },
@@ -201,7 +212,8 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
 
         // 检查findMany查询是否有限制
         const findManyQueries = content.match(/\.findMany\s*\(/g) || [];
-        const limitedQueries = content.match(/\.findMany\s*\(\s*\{[\s\S]*?take\s*:/g) || [];
+        const limitedQueries =
+          content.match(/\.findMany\s*\(\s*\{[\s\S]*?take\s*:/g) || [];
 
         return findManyQueries.length > 0 && limitedQueries.length === 0;
       },
@@ -219,23 +231,23 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
     minSecurityScore: 70,
     minMaintainabilityIndex: 60,
     maxCriticalIssues: 0, // 严重问题数量上限
-    maxHighIssues: 3,     // 高风险问题数量上限
-    maxMediumIssues: 10,  // 中风险问题数量上限
+    maxHighIssues: 3, // 高风险问题数量上限
+    maxMediumIssues: 10, // 中风险问题数量上限
     minApprovalRate: 0.8, // 最低通过率
   },
 
   failureConditions: {
     // 立即失败条件
-    criticalIssues: true,  // 发现严重问题立即失败
+    criticalIssues: true, // 发现严重问题立即失败
     highIssueThreshold: 5, // 高风险问题超过此数量失败
 
     // 警告但不失败条件
     mediumIssueThreshold: 15, // 中风险问题超过此数量发出警告
-    lowApprovalRate: 0.6,    // 通过率低于此值发出警告
+    lowApprovalRate: 0.6, // 通过率低于此值发出警告
 
     // 文件级别的失败条件
-    fileMaxComplexity: 15,    // 单文件复杂度超过此值失败
-    fileMaxLines: 300,        // 单文件行数超过此值失败
+    fileMaxComplexity: 15, // 单文件复杂度超过此值失败
+    fileMaxLines: 300, // 单文件行数超过此值失败
     fileMinSecurityScore: 50, // 单文件安全评分低于此值失败
   },
 
@@ -259,8 +271,8 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
 
   severityOverrides: {
     // 可以覆盖特定规则的严重程度
-    'typescript_any_type': 'high', // 将any类型使用升级为高严重性
-    'security_sql_injection': 'critical', // SQL注入保持严重
+    typescript_any_type: 'high', // 将any类型使用升级为高严重性
+    security_sql_injection: 'critical', // SQL注入保持严重
   },
 };
 
@@ -280,7 +292,7 @@ export function loadCodeReviewConfig(): CodeReviewConfig {
 export function applyConfigToService(config: CodeReviewConfig) {
   // 这里将在服务初始化时调用
   // 为每个规则应用严重程度覆盖
-  config.rules.forEach(rule => {
+  config.rules.forEach((rule) => {
     if (config.severityOverrides[rule.id]) {
       rule.severity = config.severityOverrides[rule.id];
     }

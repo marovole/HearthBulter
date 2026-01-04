@@ -18,10 +18,7 @@ export async function GET(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -30,26 +27,19 @@ export async function GET(req: NextRequest) {
     const month = searchParams.get('month');
 
     if (!memberId || !year || !month) {
-      return NextResponse.json(
-        { error: '缺少必要参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
     }
 
     const calendar = await getCheckInCalendar(
       memberId,
       parseInt(year),
-      parseInt(month)
+      parseInt(month),
     );
 
     return NextResponse.json(calendar);
   } catch (error) {
     console.error('Error fetching calendar:', error);
 
-    return NextResponse.json(
-      { error: '获取打卡日历失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取打卡日历失败' }, { status: 500 });
   }
 }
-

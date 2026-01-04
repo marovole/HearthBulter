@@ -37,7 +37,7 @@ export class PrismaTaskRepository implements TaskRepository {
    */
   async listTasks(
     query: TaskListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<TaskDTO>> {
     return this.notImplemented('listTasks');
   }
@@ -48,7 +48,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async getTaskById(
     familyId: string,
     taskId: string,
-    options?: TaskGetOptions
+    options?: TaskGetOptions,
   ): Promise<TaskDTO | null> {
     return this.notImplemented('getTaskById');
   }
@@ -59,7 +59,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async getMyTasks(
     familyId: string,
     memberId: string,
-    status?: TaskStatus
+    status?: TaskStatus,
   ): Promise<TaskDTO[]> {
     return this.notImplemented('getMyTasks');
   }
@@ -70,7 +70,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async createTask(
     familyId: string,
     creatorId: string,
-    payload: CreateTaskDTO
+    payload: CreateTaskDTO,
   ): Promise<TaskDTO> {
     return this.notImplemented('createTask');
   }
@@ -81,7 +81,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async updateTask(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskDTO
+    payload: UpdateTaskDTO,
   ): Promise<TaskDTO> {
     return this.notImplemented('updateTask');
   }
@@ -92,7 +92,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async updateTaskStatus(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskStatusDTO
+    payload: UpdateTaskStatusDTO,
   ): Promise<TaskDTO> {
     return this.notImplemented('updateTaskStatus');
   }
@@ -103,7 +103,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async assignTask(
     familyId: string,
     taskId: string,
-    assigneeId: string
+    assigneeId: string,
   ): Promise<TaskDTO> {
     return this.notImplemented('assignTask');
   }

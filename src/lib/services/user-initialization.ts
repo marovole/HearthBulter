@@ -1,7 +1,7 @@
 /**
  * User Initialization Service
  * 用户初始化服务
- * 
+ *
  * 为新用户自动创建默认的健康数据、营养目标和健康目标
  */
 
@@ -22,7 +22,7 @@ interface InitializationResult {
  * 检查成员是否需要初始化
  */
 export async function checkIfMemberNeedsInitialization(
-  memberId: string
+  memberId: string,
 ): Promise<boolean> {
   const [healthData, healthGoals, nutritionTargets] = await Promise.all([
     prisma.healthData.findFirst({
@@ -47,7 +47,7 @@ function calculateBMR(
   weight: number,
   height: number,
   age: number,
-  gender: 'MALE' | 'FEMALE' | 'OTHER'
+  gender: 'MALE' | 'FEMALE' | 'OTHER',
 ): number {
   if (gender === 'MALE') {
     return 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
@@ -64,13 +64,21 @@ function calculateBMR(
 /**
  * 计算每日总能量消耗（TDEE）
  */
-function calculateTDEE(bmr: number, activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active' = 'moderate'): number {
+function calculateTDEE(
+  bmr: number,
+  activityLevel:
+    | 'sedentary'
+    | 'light'
+    | 'moderate'
+    | 'active'
+    | 'very_active' = 'moderate',
+): number {
   const activityMultipliers = {
-    sedentary: 1.2,    // 久坐，很少运动
-    light: 1.375,      // 轻度活动，每周1-3次
-    moderate: 1.55,    // 中度活动，每周3-5次
-    active: 1.725,     // 高度活动，每周6-7次
-    very_active: 1.9,  // 极高活动，体力劳动或每天两次训练
+    sedentary: 1.2, // 久坐，很少运动
+    light: 1.375, // 轻度活动，每周1-3次
+    moderate: 1.55, // 中度活动，每周3-5次
+    active: 1.725, // 高度活动，每周6-7次
+    very_active: 1.9, // 极高活动，体力劳动或每天两次训练
   };
 
   return bmr * activityMultipliers[activityLevel];
@@ -80,7 +88,7 @@ function calculateTDEE(bmr: number, activityLevel: 'sedentary' | 'light' | 'mode
  * 初始化成员的健康数据
  */
 export async function initializeMemberHealthData(
-  memberId: string
+  memberId: string,
 ): Promise<InitializationResult> {
   try {
     // 获取成员信息
@@ -96,7 +104,8 @@ export async function initializeMemberHealthData(
     }
 
     // 检查是否已经初始化过
-    const alreadyInitialized = !(await checkIfMemberNeedsInitialization(memberId));
+    const alreadyInitialized =
+      !(await checkIfMemberNeedsInitialization(memberId));
     if (alreadyInitialized) {
       return {
         success: true,
@@ -150,7 +159,8 @@ export async function initializeMemberHealthData(
     if (member.weight && member.height && member.birthDate) {
       // 计算年龄
       const age = Math.floor(
-        (now.getTime() - member.birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        (now.getTime() - member.birthDate.getTime()) /
+          (365.25 * 24 * 60 * 60 * 1000),
       );
 
       // 计算 BMR 和 TDEE
@@ -158,7 +168,7 @@ export async function initializeMemberHealthData(
         member.weight,
         member.height,
         age,
-        member.gender
+        member.gender,
       );
       const tdee = calculateTDEE(bmr);
 
@@ -186,9 +196,9 @@ export async function initializeMemberHealthData(
         data: {
           memberId,
           targetCalories: 2000, // 标准成年人推荐值
-          targetProtein: 150,   // 75g
-          targetCarbs: 250,     // 250g
-          targetFat: 67,        // 67g
+          targetProtein: 150, // 75g
+          targetCarbs: 250, // 250g
+          targetFat: 67, // 67g
           startDate: now,
           isActive: true,
         },
@@ -218,14 +228,14 @@ export async function initializeMemberHealthData(
  * 批量初始化家庭的所有成员
  */
 export async function initializeFamilyMembers(
-  familyId: string
+  familyId: string,
 ): Promise<InitializationResult[]> {
   const members = await prisma.familyMember.findMany({
     where: { familyId, deletedAt: null },
   });
 
   const results = await Promise.all(
-    members.map((member) => initializeMemberHealthData(member.id))
+    members.map((member) => initializeMemberHealthData(member.id)),
   );
 
   return results;

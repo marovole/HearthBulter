@@ -8,7 +8,13 @@ interface RefreshButtonProps {
   onRefresh: () => Promise<void>;
   loading?: boolean;
   size?: 'sm' | 'default' | 'lg';
-  variant?: 'default' | 'outline' | 'ghost' | 'link' | 'destructive' | 'secondary';
+  variant?:
+    | 'default'
+    | 'outline'
+    | 'ghost'
+    | 'link'
+    | 'destructive'
+    | 'secondary';
   children?: React.ReactNode;
   disabled?: boolean;
 }
@@ -43,7 +49,9 @@ export function RefreshButton({
       variant={variant}
       size={size}
     >
-      <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+      <RefreshCw
+        className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
+      />
       {children || (isLoading ? '刷新中...' : '换一批')}
     </Button>
   );

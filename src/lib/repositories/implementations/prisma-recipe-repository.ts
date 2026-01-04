@@ -15,8 +15,12 @@ import type {
  * 待后续实现完整的 Prisma 支持
  */
 export class PrismaRecipeRepository implements RecipeRepository {
-  async getFavoritesByMember(_query: GetFavoritesQuery): Promise<FavoritesResult> {
-    throw new Error('PrismaRecipeRepository.getFavoritesByMember not implemented');
+  async getFavoritesByMember(
+    _query: GetFavoritesQuery,
+  ): Promise<FavoritesResult> {
+    throw new Error(
+      'PrismaRecipeRepository.getFavoritesByMember not implemented',
+    );
   }
 
   async addFavorite(_input: AddFavoriteInput): Promise<RecipeFavoriteDTO> {
@@ -27,15 +31,25 @@ export class PrismaRecipeRepository implements RecipeRepository {
     throw new Error('PrismaRecipeRepository.removeFavorite not implemented');
   }
 
-  async checkFavoriteStatus(_recipeId: string, _memberId: string): Promise<RecipeFavoriteDTO | null> {
-    throw new Error('PrismaRecipeRepository.checkFavoriteStatus not implemented');
+  async checkFavoriteStatus(
+    _recipeId: string,
+    _memberId: string,
+  ): Promise<RecipeFavoriteDTO | null> {
+    throw new Error(
+      'PrismaRecipeRepository.checkFavoriteStatus not implemented',
+    );
   }
 
-  async addOrUpdateRating(_input: AddOrUpdateRatingInput): Promise<RecipeRatingDTO> {
+  async addOrUpdateRating(
+    _input: AddOrUpdateRatingInput,
+  ): Promise<RecipeRatingDTO> {
     throw new Error('PrismaRecipeRepository.addOrUpdateRating not implemented');
   }
 
-  async getRating(_recipeId: string, _memberId: string): Promise<RecipeRatingDTO | null> {
+  async getRating(
+    _recipeId: string,
+    _memberId: string,
+  ): Promise<RecipeRatingDTO | null> {
     throw new Error('PrismaRecipeRepository.getRating not implemented');
   }
 

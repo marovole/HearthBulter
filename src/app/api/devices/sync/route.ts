@@ -22,10 +22,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -35,7 +32,8 @@ export async function POST(request: NextRequest) {
     // 验证用户权限：检查该成员是否属于用户有权访问的家庭
     const { data: member, error: memberError } = await supabase
       .from('family_members')
-      .select(`
+      .select(
+        `
         id,
         userId,
         familyId,
@@ -47,34 +45,34 @@ export async function POST(request: NextRequest) {
             userId
           )
         )
-      `)
+      `,
+      )
       .eq('id', validatedData.memberId)
       .is('deletedAt', null)
       .maybeSingle();
 
     if (memberError) {
       console.error('查询家庭成员失败:', memberError);
-      return NextResponse.json(
-        { error: '查询家庭成员失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询家庭成员失败' }, { status: 500 });
     }
 
     if (!member) {
       return NextResponse.json(
         { error: '无权限访问该家庭成员' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 检查用户是否属于该家庭
     const familyMembers = member.family?.members || [];
-    const hasAccess = familyMembers.some((m: any) => m.userId === session.user.id);
+    const hasAccess = familyMembers.some(
+      (m: any) => m.userId === session.user.id,
+    );
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限访问该家庭成员' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -89,16 +87,13 @@ export async function POST(request: NextRequest) {
 
     if (deviceError) {
       console.error('查询设备连接失败:', deviceError);
-      return NextResponse.json(
-        { error: '查询设备失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询设备失败' }, { status: 500 });
     }
 
     if (!deviceConnection) {
       return NextResponse.json(
         { error: '设备未连接或已禁用' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -117,18 +112,22 @@ export async function POST(request: NextRequest) {
     // 根据平台调用相应的同步服务
     let syncResult;
     if (deviceConnection.platform === 'APPLE_HEALTHKIT') {
-      const { healthKitService } = await import('@/lib/services/healthkit-service');
+      const { healthKitService } = await import(
+        '@/lib/services/healthkit-service'
+      );
       syncResult = await healthKitService.syncAllData(
         validatedData.memberId,
         deviceConnection.id,
-        deviceConnection.lastSyncAt || undefined
+        deviceConnection.lastSyncAt || undefined,
       );
     } else if (deviceConnection.platform === 'HUAWEI_HEALTH') {
-      const { huaweiHealthService } = await import('@/lib/services/huawei-health-service');
+      const { huaweiHealthService } = await import(
+        '@/lib/services/huawei-health-service'
+      );
       syncResult = await huaweiHealthService.syncAllData(
         validatedData.memberId,
         deviceConnection.id,
-        deviceConnection.lastSyncAt || undefined
+        deviceConnection.lastSyncAt || undefined,
       );
     } else {
       // 其他平台的通用处理
@@ -168,21 +167,17 @@ export async function POST(request: NextRequest) {
       },
       message: syncResult.success ? '同步完成' : '同步失败',
     });
-
   } catch (error) {
     console.error('设备同步失败:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '参数错误', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -193,10 +188,7 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -204,16 +196,14 @@ export async function PUT(request: NextRequest) {
     const supabase = SupabaseClientManager.getInstance();
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少memberId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少memberId参数' }, { status: 400 });
     }
 
     // 验证用户权限：检查该成员是否属于用户有权访问的家庭
     const { data: member, error: memberError } = await supabase
       .from('family_members')
-      .select(`
+      .select(
+        `
         id,
         userId,
         familyId,
@@ -225,34 +215,34 @@ export async function PUT(request: NextRequest) {
             userId
           )
         )
-      `)
+      `,
+      )
       .eq('id', memberId)
       .is('deletedAt', null)
       .maybeSingle();
 
     if (memberError) {
       console.error('查询家庭成员失败:', memberError);
-      return NextResponse.json(
-        { error: '查询家庭成员失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询家庭成员失败' }, { status: 500 });
     }
 
     if (!member) {
       return NextResponse.json(
         { error: '无权限访问该家庭成员' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 检查用户是否属于该家庭
     const familyMembers = member.family?.members || [];
-    const hasAccess = familyMembers.some((m: any) => m.userId === session.user.id);
+    const hasAccess = familyMembers.some(
+      (m: any) => m.userId === session.user.id,
+    );
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限访问该家庭成员' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -265,10 +255,7 @@ export async function PUT(request: NextRequest) {
 
     if (devicesError) {
       console.error('查询设备列表失败:', devicesError);
-      return NextResponse.json(
-        { error: '查询设备列表失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询设备列表失败' }, { status: 500 });
     }
 
     if (!devices || devices.length === 0) {
@@ -304,18 +291,22 @@ export async function PUT(request: NextRequest) {
         // 调用相应平台的同步服务
         let syncResult;
         if (device.platform === 'APPLE_HEALTHKIT') {
-          const { healthKitService } = await import('@/lib/services/healthkit-service');
+          const { healthKitService } = await import(
+            '@/lib/services/healthkit-service'
+          );
           syncResult = await healthKitService.syncAllData(
             memberId,
             device.id,
-            device.lastSyncAt || undefined
+            device.lastSyncAt || undefined,
           );
         } else if (device.platform === 'HUAWEI_HEALTH') {
-          const { huaweiHealthService } = await import('@/lib/services/huawei-health-service');
+          const { huaweiHealthService } = await import(
+            '@/lib/services/huawei-health-service'
+          );
           syncResult = await huaweiHealthService.syncAllData(
             memberId,
             device.id,
-            device.lastSyncAt || undefined
+            device.lastSyncAt || undefined,
           );
         }
 
@@ -355,7 +346,7 @@ export async function PUT(request: NextRequest) {
     const results = await Promise.all(syncPromises);
 
     // 统计结果
-    results.forEach(result => {
+    results.forEach((result) => {
       if (result.syncResult) {
         totalSynced += result.syncResult.syncedCount;
         syncResults.push(result);
@@ -373,12 +364,8 @@ export async function PUT(request: NextRequest) {
       },
       message: `完成 ${devices.length} 个设备的同步`,
     });
-
   } catch (error) {
     console.error('批量设备同步失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

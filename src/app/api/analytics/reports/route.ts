@@ -30,16 +30,19 @@ export async function GET(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: '缺少必要参数：memberId' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 验证用户对该成员数据的访问权限
-    const accessResult = await requireMemberDataAccess(session.user.id, memberId);
+    const accessResult = await requireMemberDataAccess(
+      session.user.id,
+      memberId,
+    );
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || '无权访问此成员数据' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -48,7 +51,8 @@ export async function GET(request: NextRequest) {
     // 构建查询
     let query = supabase
       .from('health_reports')
-      .select(`
+      .select(
+        `
         id,
         reportType,
         startDate,
@@ -58,7 +62,9 @@ export async function GET(request: NextRequest) {
         overallScore,
         status,
         createdAt
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' },
+      )
       .eq('memberId', memberId)
       .is('deletedAt', null)
       .order('createdAt', { ascending: false })
@@ -72,10 +78,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('查询报告列表失败:', error);
-      return NextResponse.json(
-        { error: '获取报告列表失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '获取报告列表失败' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -92,10 +95,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to get reports:', error);
-    return NextResponse.json(
-      { error: '获取报告列表失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取报告列表失败' }, { status: 500 });
   }
 }
 
@@ -118,23 +118,31 @@ export async function POST(request: NextRequest) {
     if (!memberId || !reportType) {
       return NextResponse.json(
         { error: '缺少必要参数：memberId, reportType' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 验证用户对该成员数据的访问权限
-    const accessResult = await requireMemberDataAccess(session.user.id, memberId);
+    const accessResult = await requireMemberDataAccess(
+      session.user.id,
+      memberId,
+    );
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || '无权访问此成员数据' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
 
-    const report = await createReport(memberId, reportType as ReportType, start, end);
+    const report = await createReport(
+      memberId,
+      reportType as ReportType,
+      start,
+      end,
+    );
 
     return NextResponse.json({
       success: true,
@@ -143,10 +151,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to generate report:', error);
-    return NextResponse.json(
-      { error: '生成报告失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '生成报告失败' }, { status: 500 });
   }
 }
-

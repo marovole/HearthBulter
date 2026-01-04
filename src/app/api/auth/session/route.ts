@@ -15,28 +15,32 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       authenticated: !!session,
-      session: session ? {
-        user: {
-          id: session.user?.id,
-          email: session.user?.email,
-          name: session.user?.name,
-          role: session.user?.role || 'USER',
-        },
-        expires: session.expires,
-      } : null,
+      session: session
+        ? {
+            user: {
+              id: session.user?.id,
+              email: session.user?.email,
+              name: session.user?.name,
+              role: session.user?.role || 'USER',
+            },
+            expires: session.expires,
+          }
+        : null,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Session verification error:', error);
 
     // 返回未认证状态而不是500错误
-    return NextResponse.json({
-      authenticated: false,
-      session: null,
-      error: 'Session verification failed',
-      timestamp: new Date().toISOString(),
-    }, { status: 200 });
+    return NextResponse.json(
+      {
+        authenticated: false,
+        session: null,
+        error: 'Session verification failed',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 200 },
+    );
   }
 }
 

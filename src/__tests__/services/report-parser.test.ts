@@ -46,8 +46,10 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       expect(result.indicators).toHaveLength(3);
-      
-      const fastingGlucose = result.indicators.find(i => i.indicatorType === 'FASTING_GLUCOSE');
+
+      const fastingGlucose = result.indicators.find(
+        (i) => i.indicatorType === 'FASTING_GLUCOSE',
+      );
       expect(fastingGlucose).toMatchObject({
         indicatorType: 'FASTING_GLUCOSE',
         name: '空腹血糖',
@@ -57,7 +59,9 @@ describe('ReportParser', () => {
         status: 'HIGH',
       });
 
-      const hba1c = result.indicators.find(i => i.indicatorType === 'GLYCATED_HEMOGLOBIN');
+      const hba1c = result.indicators.find(
+        (i) => i.indicatorType === 'GLYCATED_HEMOGLOBIN',
+      );
       expect(hba1c).toMatchObject({
         indicatorType: 'GLYCATED_HEMOGLOBIN',
         name: '糖化血红蛋白',
@@ -81,8 +85,8 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       expect(result.indicators).toHaveLength(5);
-      
-      const alt = result.indicators.find(i => i.indicatorType === 'ALT');
+
+      const alt = result.indicators.find((i) => i.indicatorType === 'ALT');
       expect(alt).toMatchObject({
         indicatorType: 'ALT',
         name: '丙氨酸氨基转移酶',
@@ -92,7 +96,7 @@ describe('ReportParser', () => {
         status: 'HIGH',
       });
 
-      const alp = result.indicators.find(i => i.indicatorType === 'ALP');
+      const alp = result.indicators.find((i) => i.indicatorType === 'ALP');
       expect(alp).toMatchObject({
         indicatorType: 'ALP',
         name: '碱性磷酸酶',
@@ -114,8 +118,10 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       expect(result.indicators).toHaveLength(3);
-      
-      const creatinine = result.indicators.find(i => i.indicatorType === 'CREATININE');
+
+      const creatinine = result.indicators.find(
+        (i) => i.indicatorType === 'CREATININE',
+      );
       expect(creatinine).toMatchObject({
         indicatorType: 'CREATININE',
         name: '肌酐',
@@ -138,8 +144,10 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       expect(result.indicators).toHaveLength(4);
-      
-      const wbc = result.indicators.find(i => i.indicatorType === 'WHITE_BLOOD_CELL');
+
+      const wbc = result.indicators.find(
+        (i) => i.indicatorType === 'WHITE_BLOOD_CELL',
+      );
       expect(wbc).toMatchObject({
         indicatorType: 'WHITE_BLOOD_CELL',
         name: '白细胞',
@@ -149,7 +157,9 @@ describe('ReportParser', () => {
         status: 'NORMAL',
       });
 
-      const hb = result.indicators.find(i => i.indicatorType === 'HEMOGLOBIN');
+      const hb = result.indicators.find(
+        (i) => i.indicatorType === 'HEMOGLOBIN',
+      );
       expect(hb).toMatchObject({
         indicatorType: 'HEMOGLOBIN',
         name: '血红蛋白',
@@ -225,12 +235,24 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       expect(result.indicators).toHaveLength(6);
-      expect(result.indicators.map(i => i.indicatorType)).toContain('TOTAL_CHOLESTEROL');
-      expect(result.indicators.map(i => i.indicatorType)).toContain('LDL_CHOLESTEROL');
-      expect(result.indicators.map(i => i.indicatorType)).toContain('HDL_CHOLESTEROL');
-      expect(result.indicators.map(i => i.indicatorType)).toContain('TRIGLYCERIDES');
-      expect(result.indicators.map(i => i.indicatorType)).toContain('FASTING_GLUCOSE');
-      expect(result.indicators.map(i => i.indicatorType)).toContain('GLYCATED_HEMOGLOBIN');
+      expect(result.indicators.map((i) => i.indicatorType)).toContain(
+        'TOTAL_CHOLESTEROL',
+      );
+      expect(result.indicators.map((i) => i.indicatorType)).toContain(
+        'LDL_CHOLESTEROL',
+      );
+      expect(result.indicators.map((i) => i.indicatorType)).toContain(
+        'HDL_CHOLESTEROL',
+      );
+      expect(result.indicators.map((i) => i.indicatorType)).toContain(
+        'TRIGLYCERIDES',
+      );
+      expect(result.indicators.map((i) => i.indicatorType)).toContain(
+        'FASTING_GLUCOSE',
+      );
+      expect(result.indicators.map((i) => i.indicatorType)).toContain(
+        'GLYCATED_HEMOGLOBIN',
+      );
     });
 
     it('应该处理异常值', () => {
@@ -243,16 +265,22 @@ describe('ReportParser', () => {
 
       const result = ReportParser.parse(text);
 
-      const cholesterol = result.indicators.find(i => i.indicatorType === 'TOTAL_CHOLESTEROL');
+      const cholesterol = result.indicators.find(
+        (i) => i.indicatorType === 'TOTAL_CHOLESTEROL',
+      );
       expect(cholesterol?.status).toBe('CRITICAL'); // 6.5 > 6.2, so it's CRITICAL
 
-      const glucose = result.indicators.find(i => i.indicatorType === 'FASTING_GLUCOSE');
+      const glucose = result.indicators.find(
+        (i) => i.indicatorType === 'FASTING_GLUCOSE',
+      );
       expect(glucose?.status).toBe('CRITICAL');
 
-      const alt = result.indicators.find(i => i.indicatorType === 'ALT');
+      const alt = result.indicators.find((i) => i.indicatorType === 'ALT');
       expect(alt?.status).toBe('CRITICAL');
 
-      const hb = result.indicators.find(i => i.indicatorType === 'HEMOGLOBIN');
+      const hb = result.indicators.find(
+        (i) => i.indicatorType === 'HEMOGLOBIN',
+      );
       expect(hb?.status).toBe('CRITICAL');
     });
 
@@ -265,13 +293,19 @@ describe('ReportParser', () => {
 
       const result = ReportParser.parse(text);
 
-      const cholesterol = result.indicators.find(i => i.indicatorType === 'TOTAL_CHOLESTEROL');
+      const cholesterol = result.indicators.find(
+        (i) => i.indicatorType === 'TOTAL_CHOLESTEROL',
+      );
       expect(cholesterol?.status).toBe('NORMAL'); // 边界值
 
-      const glucose = result.indicators.find(i => i.indicatorType === 'FASTING_GLUCOSE');
+      const glucose = result.indicators.find(
+        (i) => i.indicatorType === 'FASTING_GLUCOSE',
+      );
       expect(glucose?.status).toBe('HIGH'); // 边界值
 
-      const hdl = result.indicators.find(i => i.indicatorType === 'HDL_CHOLESTEROL');
+      const hdl = result.indicators.find(
+        (i) => i.indicatorType === 'HDL_CHOLESTEROL',
+      );
       expect(hdl?.status).toBe('NORMAL'); // 边界值
     });
 
@@ -398,7 +432,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(fullReportText);
 
       expect(result.indicators.length).toBeGreaterThan(15);
-      
+
       // Check date components to avoid timezone issues
       const expectedDate = new Date('2024-03-15');
       const actualDate = result.reportDate;
@@ -406,22 +440,26 @@ describe('ReportParser', () => {
       expect(actualDate!.getFullYear()).toBe(expectedDate.getFullYear());
       expect(actualDate!.getMonth()).toBe(expectedDate.getMonth());
       expect(actualDate!.getDate()).toBe(expectedDate.getDate());
-      
+
       expect(result.institution).toBe('北京协和医院');
       expect(result.reportType).toBe('体检报告');
 
       // 检查异常值检测
-      const abnormalIndicators = result.indicators.filter(i => i.isAbnormal);
+      const abnormalIndicators = result.indicators.filter((i) => i.isAbnormal);
       expect(abnormalIndicators.length).toBeGreaterThan(0);
 
       // 验证特定指标
-      const cholesterol = result.indicators.find(i => i.indicatorType === 'TOTAL_CHOLESTEROL');
+      const cholesterol = result.indicators.find(
+        (i) => i.indicatorType === 'TOTAL_CHOLESTEROL',
+      );
       expect(cholesterol?.status).toBe('HIGH'); // 5.8 > 5.2, so it's HIGH
 
-      const glucose = result.indicators.find(i => i.indicatorType === 'FASTING_GLUCOSE');
+      const glucose = result.indicators.find(
+        (i) => i.indicatorType === 'FASTING_GLUCOSE',
+      );
       expect(glucose?.status).toBe('HIGH'); // 6.8 > 6.1, so it's HIGH
 
-      const alt = result.indicators.find(i => i.indicatorType === 'ALT');
+      const alt = result.indicators.find((i) => i.indicatorType === 'ALT');
       expect(alt?.status).toBe('HIGH'); // 58 > 40, so it's HIGH
     });
 
@@ -435,7 +473,7 @@ describe('ReportParser', () => {
         '2024年3月15日',
       ];
 
-      dateFormats.forEach(dateFormat => {
+      dateFormats.forEach((dateFormat) => {
         const text = `${dateFormat}\n总胆固醇：5.2 mmol/L`;
         const result = ReportParser.parse(text);
         // Normalize dates to UTC to avoid timezone issues
@@ -457,7 +495,9 @@ describe('ReportParser', () => {
 
       const result = ReportParser.parse(text);
 
-      const cholesterolIndicators = result.indicators.filter(i => i.indicatorType === 'TOTAL_CHOLESTEROL');
+      const cholesterolIndicators = result.indicators.filter(
+        (i) => i.indicatorType === 'TOTAL_CHOLESTEROL',
+      );
       expect(cholesterolIndicators).toHaveLength(1);
       expect(cholesterolIndicators[0].value).toBe(5.2); // 取第一个值
     });

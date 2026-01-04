@@ -14,13 +14,14 @@ import type { IndicatorType, IndicatorStatus } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
     .from('family_members')
-    .select(`
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -28,7 +29,8 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `)
+    `,
+    )
     .eq('id', memberId)
     .is('deletedAt', null)
     .single();
@@ -68,7 +70,7 @@ async function verifyMemberAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> }
+  { params }: { params: Promise<{ memberId: string; reportId: string }> },
 ) {
   try {
     const { memberId, reportId } = await params;
@@ -82,10 +84,7 @@ export async function GET(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: '无权限查看该报告' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无权限查看该报告' }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -101,17 +100,11 @@ export async function GET(
 
     if (reportError) {
       console.error('查询报告失败:', reportError);
-      return NextResponse.json(
-        { error: '查询报告失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询报告失败' }, { status: 500 });
     }
 
     if (!report) {
-      return NextResponse.json(
-        { error: '报告不存在' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '报告不存在' }, { status: 404 });
     }
 
     // 查询指标数据
@@ -133,14 +126,11 @@ export async function GET(
           indicators: indicators || [],
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('查询报告详情失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -152,7 +142,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> }
+  { params }: { params: Promise<{ memberId: string; reportId: string }> },
 ) {
   try {
     const { memberId, reportId } = await params;
@@ -166,10 +156,7 @@ export async function PATCH(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: '无权限修改该报告' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无权限修改该报告' }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -185,17 +172,11 @@ export async function PATCH(
 
     if (reportError) {
       console.error('查询报告失败:', reportError);
-      return NextResponse.json(
-        { error: '查询报告失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询报告失败' }, { status: 500 });
     }
 
     if (!report) {
-      return NextResponse.json(
-        { error: '报告不存在' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '报告不存在' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -285,10 +266,7 @@ export async function PATCH(
 
       if (updateReportError) {
         console.error('更新报告失败:', updateReportError);
-        return NextResponse.json(
-          { error: '更新报告失败' },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: '更新报告失败' }, { status: 500 });
       }
     }
 
@@ -314,7 +292,7 @@ export async function PATCH(
           indicators: updatedIndicators || [],
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('修正报告失败:', error);
@@ -323,7 +301,7 @@ export async function PATCH(
         error: '服务器内部错误',
         details: error instanceof Error ? error.message : '未知错误',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -336,7 +314,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> }
+  { params }: { params: Promise<{ memberId: string; reportId: string }> },
 ) {
   try {
     const { memberId, reportId } = await params;
@@ -350,10 +328,7 @@ export async function DELETE(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: '无权限删除该报告' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无权限删除该报告' }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -369,22 +344,18 @@ export async function DELETE(
 
     if (reportError) {
       console.error('查询报告失败:', reportError);
-      return NextResponse.json(
-        { error: '查询报告失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询报告失败' }, { status: 500 });
     }
 
     if (!report) {
-      return NextResponse.json(
-        { error: '报告不存在' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '报告不存在' }, { status: 404 });
     }
 
     // 从云存储删除文件
     try {
-      const pathname = fileStorageService.extractPathnameFromUrl(report.fileUrl);
+      const pathname = fileStorageService.extractPathnameFromUrl(
+        report.fileUrl,
+      );
       if (pathname) {
         await fileStorageService.deleteFile(pathname);
       }
@@ -405,10 +376,7 @@ export async function DELETE(
 
     if (deleteReportError) {
       console.error('软删除报告失败:', deleteReportError);
-      return NextResponse.json(
-        { error: '删除报告失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '删除报告失败' }, { status: 500 });
     }
 
     // 删除关联的指标记录（硬删除）
@@ -421,16 +389,9 @@ export async function DELETE(
       console.error('删除指标记录失败:', deleteIndicatorsError);
     }
 
-    return NextResponse.json(
-      { message: '报告删除成功' },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: '报告删除成功' }, { status: 200 });
   } catch (error) {
     console.error('删除报告失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

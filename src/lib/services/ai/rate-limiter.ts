@@ -1,6 +1,6 @@
 /**
  * AI 调用限流器
- * 
+ *
  * 实现基于用户的调用频率限制，防止滥用和成本失控
  */
 
@@ -28,7 +28,12 @@ export interface RateLimitResult {
 }
 
 // AI 调用类型
-export type AICallType = 'chat' | 'analysis' | 'report' | 'recommendation' | 'image';
+export type AICallType =
+  | 'chat'
+  | 'analysis'
+  | 'report'
+  | 'recommendation'
+  | 'image';
 
 // 默认限流配置（每种调用类型）
 const DEFAULT_CONFIGS: Record<AICallType, RateLimitConfig> = {
@@ -78,7 +83,7 @@ function getUserRateLimit(userId: string, callType: AICallType): UserRateLimit {
   }
 
   const userMap = userLimits.get(userId)!;
-  
+
   if (!userMap.has(callType)) {
     userMap.set(callType, {
       requests: [],
@@ -92,10 +97,13 @@ function getUserRateLimit(userId: string, callType: AICallType): UserRateLimit {
 /**
  * 清理过期的请求记录
  */
-function cleanupExpiredRequests(rateLimit: UserRateLimit, windowMs: number): void {
+function cleanupExpiredRequests(
+  rateLimit: UserRateLimit,
+  windowMs: number,
+): void {
   const now = Date.now();
   const windowStart = now - windowMs;
-  rateLimit.requests = rateLimit.requests.filter(ts => ts > windowStart);
+  rateLimit.requests = rateLimit.requests.filter((ts) => ts > windowStart);
 }
 
 /**
@@ -104,7 +112,7 @@ function cleanupExpiredRequests(rateLimit: UserRateLimit, windowMs: number): voi
 export function checkRateLimit(
   userId: string,
   callType: AICallType,
-  config?: Partial<RateLimitConfig>
+  config?: Partial<RateLimitConfig>,
 ): RateLimitResult {
   const finalConfig = { ...DEFAULT_CONFIGS[callType], ...config };
   const rateLimit = getUserRateLimit(userId, callType);
@@ -118,7 +126,7 @@ export function checkRateLimit(
       callType,
       retryAfter,
     });
-    
+
     return {
       allowed: false,
       remaining: 0,
@@ -137,7 +145,7 @@ export function checkRateLimit(
   if (rateLimit.requests.length >= finalConfig.maxRequests) {
     rateLimit.blockedUntil = now + finalConfig.blockDurationMs;
     const retryAfter = Math.ceil(finalConfig.blockDurationMs / 1000);
-    
+
     logger.warn('AI 调用触发限流阻止', {
       userId,
       callType,
@@ -177,7 +185,7 @@ export function recordAICall(userId: string, callType: AICallType): void {
  */
 export function getUserRateLimitStatus(
   userId: string,
-  callType: AICallType
+  callType: AICallType,
 ): {
   requestsInWindow: number;
   isBlocked: boolean;
@@ -185,20 +193,27 @@ export function getUserRateLimitStatus(
 } {
   const config = DEFAULT_CONFIGS[callType];
   const rateLimit = getUserRateLimit(userId, callType);
-  
+
   cleanupExpiredRequests(rateLimit, config.windowMs);
 
   return {
     requestsInWindow: rateLimit.requests.length,
-    isBlocked: rateLimit.blockedUntil ? rateLimit.blockedUntil > Date.now() : false,
-    blockedUntil: rateLimit.blockedUntil ? new Date(rateLimit.blockedUntil) : null,
+    isBlocked: rateLimit.blockedUntil
+      ? rateLimit.blockedUntil > Date.now()
+      : false,
+    blockedUntil: rateLimit.blockedUntil
+      ? new Date(rateLimit.blockedUntil)
+      : null,
   };
 }
 
 /**
  * 重置用户限流状态（管理员功能）
  */
-export function resetUserRateLimit(userId: string, callType?: AICallType): void {
+export function resetUserRateLimit(
+  userId: string,
+  callType?: AICallType,
+): void {
   if (callType) {
     const userMap = userLimits.get(userId);
     if (userMap) {
@@ -207,7 +222,7 @@ export function resetUserRateLimit(userId: string, callType?: AICallType): void 
   } else {
     userLimits.delete(userId);
   }
-  
+
   logger.info('重置用户限流状态', { userId, callType });
 }
 
@@ -223,7 +238,7 @@ export function cleanupAllExpiredRecords(): void {
     for (const [callType, rateLimit] of userMap.entries()) {
       const config = DEFAULT_CONFIGS[callType];
       const originalLength = rateLimit.requests.length;
-      
+
       cleanupExpiredRequests(rateLimit, config.windowMs);
       cleanedRecords += originalLength - rateLimit.requests.length;
 
@@ -256,14 +271,14 @@ export function cleanupAllExpiredRecords(): void {
 export async function withRateLimit<T>(
   userId: string,
   callType: AICallType,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   const result = checkRateLimit(userId, callType);
 
   if (!result.allowed) {
     throw new RateLimitError(
       `AI 调用频率超限，请 ${result.retryAfter} 秒后重试`,
-      result.retryAfter || 60
+      result.retryAfter || 60,
     );
   }
 
@@ -288,7 +303,10 @@ export class RateLimitError extends Error {
  * 类风格的限流器（兼容旧 API）
  */
 export class RateLimiter {
-  private limits = new Map<string, { requests: number[]; blockedUntil: number | null }>();
+  private limits = new Map<
+    string,
+    { requests: number[]; blockedUntil: number | null }
+  >();
 
   private getKey(userId: string, endpoint: string): string {
     return `${userId}:${endpoint}`;
@@ -297,7 +315,7 @@ export class RateLimiter {
   async checkLimit(
     userId: string,
     endpoint: string,
-    config: RateLimitConfig
+    config: RateLimitConfig,
   ): Promise<{
     allowed: boolean;
     remaining: number;
@@ -331,7 +349,7 @@ export class RateLimiter {
 
     // 清理过期请求
     const windowStart = now - windowMs;
-    limit.requests = limit.requests.filter(ts => ts > windowStart);
+    limit.requests = limit.requests.filter((ts) => ts > windowStart);
 
     // 检查是否超过限制
     if (limit.requests.length >= maxRequests) {

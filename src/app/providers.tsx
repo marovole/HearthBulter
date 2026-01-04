@@ -33,8 +33,8 @@ interface ProvidersProps {
 export default function Providers({ children }: ProvidersProps): JSX.Element {
   return (
     <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
+      attribute='class'
+      defaultTheme='system'
       enableSystem
       disableTransitionOnChange
     >
@@ -47,12 +47,7 @@ export default function Providers({ children }: ProvidersProps): JSX.Element {
         {children}
 
         {/* Global toast notification system */}
-        <Toaster
-          position="top-right"
-          expand={false}
-          richColors
-          closeButton
-        />
+        <Toaster position='top-right' expand={false} richColors closeButton />
       </NextAuthSessionProvider>
     </ThemeProvider>
   );

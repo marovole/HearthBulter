@@ -167,7 +167,7 @@ export interface UseAnimateOnViewReturn {
  * ```
  */
 export function useAnimateOnView(
-  options: UseAnimateOnViewOptions = {}
+  options: UseAnimateOnViewOptions = {},
 ): UseAnimateOnViewReturn {
   const {
     threshold = 0.15,

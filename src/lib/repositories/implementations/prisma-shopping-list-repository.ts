@@ -36,7 +36,7 @@ export class PrismaShoppingListRepository implements ShoppingListRepository {
    */
   async listShoppingLists(
     query: ShoppingListListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<ShoppingListDTO>> {
     return this.notImplemented('listShoppingLists');
   }
@@ -46,7 +46,7 @@ export class PrismaShoppingListRepository implements ShoppingListRepository {
    */
   async getShoppingListById(
     id: string,
-    options?: ShoppingListGetOptions
+    options?: ShoppingListGetOptions,
   ): Promise<ShoppingListDTO | null> {
     return this.notImplemented('getShoppingListById');
   }
@@ -56,7 +56,7 @@ export class PrismaShoppingListRepository implements ShoppingListRepository {
    */
   async updateShoppingList(
     id: string,
-    payload: UpdateShoppingListDTO
+    payload: UpdateShoppingListDTO,
   ): Promise<ShoppingListDTO> {
     return this.notImplemented('updateShoppingList');
   }
@@ -74,7 +74,7 @@ export class PrismaShoppingListRepository implements ShoppingListRepository {
   async updateShoppingListItem(
     listId: string,
     itemId: string,
-    payload: UpdateShoppingListItemDTO
+    payload: UpdateShoppingListItemDTO,
   ): Promise<ShoppingListItemDTO> {
     return this.notImplemented('updateShoppingListItem');
   }
@@ -84,7 +84,7 @@ export class PrismaShoppingListRepository implements ShoppingListRepository {
    */
   async completeShoppingList(
     listId: string,
-    payload: CompleteShoppingListDTO
+    payload: CompleteShoppingListDTO,
   ): Promise<ShoppingListDTO> {
     return this.notImplemented('completeShoppingList');
   }
@@ -94,6 +94,8 @@ export class PrismaShoppingListRepository implements ShoppingListRepository {
    */
   private notImplemented(methodName: string): never {
     void this.client;
-    throw new Error(`PrismaShoppingListRepository.${methodName} not implemented`);
+    throw new Error(
+      `PrismaShoppingListRepository.${methodName} not implemented`,
+    );
   }
 }

@@ -4,7 +4,13 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { nutritionCalculator, UnitConverter, type NutritionInput, type NutritionResult, type NutritionSummary } from '@/lib/services/nutrition-calculator';
+import {
+  nutritionCalculator,
+  UnitConverter,
+  type NutritionInput,
+  type NutritionResult,
+  type NutritionSummary,
+} from '@/lib/services/nutrition-calculator';
 import { prisma } from '@/lib/db';
 
 jest.mock('@/lib/db', () => ({
@@ -78,7 +84,10 @@ describe('UnitConverter', () => {
 
     it('should convert teaspoons to grams', () => {
       expect(UnitConverter.volumeToGrams(1, 'tsp', 'default')).toBe(4.2);
-      expect(UnitConverter.volumeToGrams(3, 'tsp', 'default')).toBeCloseTo(12.6, 1);
+      expect(UnitConverter.volumeToGrams(3, 'tsp', 'default')).toBeCloseTo(
+        12.6,
+        1,
+      );
     });
 
     it('should convert milliliters to grams', () => {
@@ -96,7 +105,9 @@ describe('UnitConverter', () => {
     });
 
     it('should return same amount for invalid unit', () => {
-      expect(UnitConverter.volumeToGrams(100, 'invalid' as any, 'default')).toBe(100);
+      expect(
+        UnitConverter.volumeToGrams(100, 'invalid' as any, 'default'),
+      ).toBe(100);
     });
   });
 });
@@ -150,7 +161,10 @@ describe('NutritionCalculator', () => {
     it('should calculate nutrition for a single food correctly', async () => {
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
-      const result = await nutritionCalculator.calculateSingleFood('food-1', 150);
+      const result = await nutritionCalculator.calculateSingleFood(
+        'food-1',
+        150,
+      );
 
       expect(result).toBeDefined();
       expect(result!.foodId).toBe('food-1');
@@ -172,7 +186,10 @@ describe('NutritionCalculator', () => {
     it('should calculate nutrition for 100g serving', async () => {
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
-      const result = await nutritionCalculator.calculateSingleFood('food-1', 100);
+      const result = await nutritionCalculator.calculateSingleFood(
+        'food-1',
+        100,
+      );
 
       expect(result!.calories).toBe(52);
       expect(result!.protein).toBe(0.3);
@@ -184,11 +201,17 @@ describe('NutritionCalculator', () => {
     it('should calculate nutrition for different portion sizes', async () => {
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood2);
 
-      const result50g = await nutritionCalculator.calculateSingleFood('food-2', 50);
+      const result50g = await nutritionCalculator.calculateSingleFood(
+        'food-2',
+        50,
+      );
       expect(result50g!.calories).toBe(82.5); // 165 * 0.5
       expect(result50g!.protein).toBe(15.5); // 31 * 0.5 = 15.5
 
-      const result200g = await nutritionCalculator.calculateSingleFood('food-2', 200);
+      const result200g = await nutritionCalculator.calculateSingleFood(
+        'food-2',
+        200,
+      );
       expect(result200g!.calories).toBe(330); // 165 * 2
       expect(result200g!.protein).toBe(62); // 31 * 2 = 62
     });
@@ -196,7 +219,10 @@ describe('NutritionCalculator', () => {
     it('should handle foods with partial nutrition data', async () => {
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood3);
 
-      const result = await nutritionCalculator.calculateSingleFood('food-3', 100);
+      const result = await nutritionCalculator.calculateSingleFood(
+        'food-3',
+        100,
+      );
 
       expect(result!.calories).toBe(389);
       expect(result!.protein).toBe(16.9);
@@ -214,7 +240,10 @@ describe('NutritionCalculator', () => {
     it('should return null for non-existent food', async () => {
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(null);
 
-      const result = await nutritionCalculator.calculateSingleFood('food-nonexistent', 100);
+      const result = await nutritionCalculator.calculateSingleFood(
+        'food-nonexistent',
+        100,
+      );
 
       expect(result).toBeNull();
     });
@@ -231,7 +260,10 @@ describe('NutritionCalculator', () => {
     it('should handle large portion sizes', async () => {
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
-      const result = await nutritionCalculator.calculateSingleFood('food-1', 1000);
+      const result = await nutritionCalculator.calculateSingleFood(
+        'food-1',
+        1000,
+      );
 
       expect(result!.calories).toBe(520); // 52 * 10
       expect(result!.carbs).toBe(140); // 14 * 10
@@ -251,7 +283,11 @@ describe('NutritionCalculator', () => {
 
   describe('calculateBatch', () => {
     it('should calculate nutrition for multiple foods', async () => {
-      (prisma.food.findMany as jest.Mock).mockResolvedValue([mockFood, mockFood2, mockFood3]);
+      (prisma.food.findMany as jest.Mock).mockResolvedValue([
+        mockFood,
+        mockFood2,
+        mockFood3,
+      ]);
 
       const inputs: NutritionInput[] = [
         { foodId: 'food-1', amount: 150 }, // Apple
@@ -280,7 +316,10 @@ describe('NutritionCalculator', () => {
     });
 
     it('should calculate total nutrition correctly', async () => {
-      (prisma.food.findMany as jest.Mock).mockResolvedValue([mockFood, mockFood2]);
+      (prisma.food.findMany as jest.Mock).mockResolvedValue([
+        mockFood,
+        mockFood2,
+      ]);
 
       const inputs: NutritionInput[] = [
         { foodId: 'food-1', amount: 100 }, // 52 calories
@@ -296,7 +335,10 @@ describe('NutritionCalculator', () => {
     });
 
     it('should include optional nutrients in totals', async () => {
-      (prisma.food.findMany as jest.Mock).mockResolvedValue([mockFood, mockFood3]);
+      (prisma.food.findMany as jest.Mock).mockResolvedValue([
+        mockFood,
+        mockFood3,
+      ]);
 
       const inputs: NutritionInput[] = [
         { foodId: 'food-1', amount: 100 }, // Apple with fiber, sugar
@@ -388,19 +430,25 @@ describe('NutritionCalculator', () => {
 
   describe('Error Handling', () => {
     it('should handle database errors in calculateSingleFood', async () => {
-      (prisma.food.findUnique as jest.Mock).mockRejectedValue(new Error('Database connection failed'));
+      (prisma.food.findUnique as jest.Mock).mockRejectedValue(
+        new Error('Database connection failed'),
+      );
 
       await expect(
-        nutritionCalculator.calculateSingleFood('food-1', 100)
+        nutritionCalculator.calculateSingleFood('food-1', 100),
       ).rejects.toThrow('Database connection failed');
     });
 
     it('should handle database errors in calculateBatch', async () => {
-      (prisma.food.findMany as jest.Mock).mockRejectedValue(new Error('Database query failed'));
+      (prisma.food.findMany as jest.Mock).mockRejectedValue(
+        new Error('Database query failed'),
+      );
 
       const inputs: NutritionInput[] = [{ foodId: 'food-1', amount: 100 }];
 
-      await expect(nutritionCalculator.calculateBatch(inputs)).rejects.toThrow('Database query failed');
+      await expect(nutritionCalculator.calculateBatch(inputs)).rejects.toThrow(
+        'Database query failed',
+      );
     });
   });
 
@@ -417,7 +465,10 @@ describe('NutritionCalculator', () => {
 
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(zeroFood);
 
-      const result = await nutritionCalculator.calculateSingleFood('food-zero', 100);
+      const result = await nutritionCalculator.calculateSingleFood(
+        'food-zero',
+        100,
+      );
 
       expect(result!.calories).toBe(0);
       expect(result!.protein).toBe(0);
@@ -428,7 +479,10 @@ describe('NutritionCalculator', () => {
     it('should handle decimal amounts', async () => {
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(mockFood);
 
-      const result = await nutritionCalculator.calculateSingleFood('food-1', 0.5);
+      const result = await nutritionCalculator.calculateSingleFood(
+        'food-1',
+        0.5,
+      );
 
       expect(result!.calories).toBe(0.3); // 52 * 0.005 = 0.26 → 0.3 (rounded)
     });
