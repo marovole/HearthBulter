@@ -770,18 +770,18 @@ export class SpendingAnalyzer {
     const start = new Date();
 
     switch (type) {
-    case "WEEKLY":
-      start.setDate(now.getDate() - 7);
-      break;
-    case "MONTHLY":
-      start.setMonth(now.getMonth() - 1);
-      break;
-    case "QUARTERLY":
-      start.setMonth(now.getMonth() - 3);
-      break;
-    case "YEARLY":
-      start.setFullYear(now.getFullYear() - 1);
-      break;
+      case "WEEKLY":
+        start.setDate(now.getDate() - 7);
+        break;
+      case "MONTHLY":
+        start.setMonth(now.getMonth() - 1);
+        break;
+      case "QUARTERLY":
+        start.setMonth(now.getMonth() - 3);
+        break;
+      case "YEARLY":
+        start.setFullYear(now.getFullYear() - 1);
+        break;
     }
 
     return { start, end: now, type };
@@ -792,22 +792,22 @@ export class SpendingAnalyzer {
     const end = new Date(current.end);
 
     switch (type) {
-    case "WEEKLY":
-      start.setDate(start.getDate() - 7);
-      end.setDate(end.getDate() - 7);
-      break;
-    case "MONTHLY":
-      start.setMonth(start.getMonth() - 1);
-      end.setMonth(end.getMonth() - 1);
-      break;
-    case "QUARTERLY":
-      start.setMonth(start.getMonth() - 3);
-      end.setMonth(end.getMonth() - 3);
-      break;
-    case "YEARLY":
-      start.setFullYear(start.getFullYear() - 1);
-      end.setFullYear(end.getFullYear() - 1);
-      break;
+      case "WEEKLY":
+        start.setDate(start.getDate() - 7);
+        end.setDate(end.getDate() - 7);
+        break;
+      case "MONTHLY":
+        start.setMonth(start.getMonth() - 1);
+        end.setMonth(end.getMonth() - 1);
+        break;
+      case "QUARTERLY":
+        start.setMonth(start.getMonth() - 3);
+        end.setMonth(end.getMonth() - 3);
+        break;
+      case "YEARLY":
+        start.setFullYear(start.getFullYear() - 1);
+        end.setFullYear(end.getFullYear() - 1);
+        break;
     }
 
     return { start, end };
@@ -872,18 +872,18 @@ export class SpendingAnalyzer {
 
   private getThresholdValue(type: AlertType): number {
     switch (type) {
-    case AlertType.WARNING_80:
-      return 80;
-    case AlertType.WARNING_100:
-      return 100;
-    case AlertType.OVER_BUDGET_110:
-      return 110;
-    case AlertType.CATEGORY_OVER:
-      return 100;
-    case AlertType.DAILY_EXCESS:
-      return 150;
-    default:
-      return 100;
+      case AlertType.WARNING_80:
+        return 80;
+      case AlertType.WARNING_100:
+        return 100;
+      case AlertType.OVER_BUDGET_110:
+        return 110;
+      case AlertType.CATEGORY_OVER:
+        return 100;
+      case AlertType.DAILY_EXCESS:
+        return 150;
+      default:
+        return 100;
     }
   }
 
@@ -894,14 +894,14 @@ export class SpendingAnalyzer {
     usedAmount: number,
   ): string {
     switch (type) {
-    case AlertType.WARNING_80:
-      return `${budgetName}已使用${currentValue.toFixed(1)}%，请注意控制支出`;
-    case AlertType.WARNING_100:
-      return `${budgetName}已用完预算，当前支出${usedAmount.toFixed(2)}元`;
-    case AlertType.OVER_BUDGET_110:
-      return `${budgetName}已超支${(currentValue - 100).toFixed(1)}%，请立即控制支出`;
-    default:
-      return `${budgetName}支出异常`;
+      case AlertType.WARNING_80:
+        return `${budgetName}已使用${currentValue.toFixed(1)}%，请注意控制支出`;
+      case AlertType.WARNING_100:
+        return `${budgetName}已用完预算，当前支出${usedAmount.toFixed(2)}元`;
+      case AlertType.OVER_BUDGET_110:
+        return `${budgetName}已超支${(currentValue - 100).toFixed(1)}%，请立即控制支出`;
+      default:
+        return `${budgetName}支出异常`;
     }
   }
 

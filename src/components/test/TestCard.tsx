@@ -27,11 +27,11 @@ export const TestCard: React.FC<TestCardProps> = ({
         disabled
           ? undefined
           : (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onClick?.();
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick?.();
+              }
             }
-          }
       }
       tabIndex={disabled ? -1 : 0}
       style={{

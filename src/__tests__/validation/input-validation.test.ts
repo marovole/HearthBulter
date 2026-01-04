@@ -189,7 +189,7 @@ describe("输入验证测试", () => {
     test("应该验证搜索参数", () => {
       const testCases = [
         { query: "term=John&filters={}", valid: true },
-        { query: "term=张三&filters={\"status\":\"active\"}", valid: true },
+        { query: 'term=张三&filters={"status":"active"}', valid: true },
         { query: "term=", valid: true },
         { query: `term=${"a".repeat(101)}`, valid: false },
         { query: "filters=invalid-json", valid: false },

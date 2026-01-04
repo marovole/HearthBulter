@@ -70,24 +70,24 @@ export class ShareContentGenerator {
     shareUrl: string,
   ) {
     switch (input.type) {
-    case ShareContentType.HEALTH_REPORT:
-      return this.generateHealthReportContent(input, shareUrl);
-    case ShareContentType.GOAL_ACHIEVED:
-      return this.generateGoalAchievedContent(input, shareUrl);
-    case ShareContentType.RECIPE_CREATED:
-      return this.generateRecipeCreatedContent(input, shareUrl);
-    case ShareContentType.ACHIEVEMENT_UNLOCKED:
-      return this.generateAchievementUnlockedContent(input, shareUrl);
-    case ShareContentType.CHECKIN_STREAK:
-      return this.generateCheckinStreakContent(input, shareUrl);
-    case ShareContentType.WEIGHT_MILESTONE:
-      return this.generateWeightMilestoneContent(input, shareUrl);
-    case ShareContentType.PERSONAL_RECORD:
-      return this.generatePersonalRecordContent(input, shareUrl);
-    case ShareContentType.COMMUNITY_POST:
-      return this.generateCommunityPostContent(input, shareUrl);
-    default:
-      return this.generateDefaultContent(input, shareUrl);
+      case ShareContentType.HEALTH_REPORT:
+        return this.generateHealthReportContent(input, shareUrl);
+      case ShareContentType.GOAL_ACHIEVED:
+        return this.generateGoalAchievedContent(input, shareUrl);
+      case ShareContentType.RECIPE_CREATED:
+        return this.generateRecipeCreatedContent(input, shareUrl);
+      case ShareContentType.ACHIEVEMENT_UNLOCKED:
+        return this.generateAchievementUnlockedContent(input, shareUrl);
+      case ShareContentType.CHECKIN_STREAK:
+        return this.generateCheckinStreakContent(input, shareUrl);
+      case ShareContentType.WEIGHT_MILESTONE:
+        return this.generateWeightMilestoneContent(input, shareUrl);
+      case ShareContentType.PERSONAL_RECORD:
+        return this.generatePersonalRecordContent(input, shareUrl);
+      case ShareContentType.COMMUNITY_POST:
+        return this.generateCommunityPostContent(input, shareUrl);
+      default:
+        return this.generateDefaultContent(input, shareUrl);
     }
   }
 

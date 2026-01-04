@@ -141,10 +141,10 @@ export class NotificationManager {
         enabledChannels.map((channel) =>
           channel === "IN_APP"
             ? Promise.resolve<ChannelDispatchResult>({
-              channel,
-              success: true,
-              sentAt: new Date(),
-            })
+                channel,
+                success: true,
+                sentAt: new Date(),
+              })
             : this.dispatchChannel(channel, recipient, data),
         ),
       );
@@ -354,30 +354,30 @@ export class NotificationManager {
       let messageId: string | undefined;
 
       switch (channel) {
-      case "EMAIL":
-        messageId = await this.email.send(
-          recipient.memberId ?? data.userId,
-          data.title,
-          data.content,
-          { html: true },
-        );
-        break;
-      case "SMS":
-        if (!recipient.phone) throw new Error("User phone not bound");
-        messageId = await this.sms.send(recipient.phone, data.content);
-        break;
-      case "WECHAT":
-        if (!recipient.wechatOpenId) throw new Error("User WeChat not bound");
-        messageId = await this.wechat.sendMessage(
-          recipient.wechatOpenId,
-          data.content,
-        );
-        break;
-      case "PUSH":
-        messageId = await this.sendPush(recipient, data);
-        break;
-      default:
-        throw new Error(`Unsupported channel: ${channel}`);
+        case "EMAIL":
+          messageId = await this.email.send(
+            recipient.memberId ?? data.userId,
+            data.title,
+            data.content,
+            { html: true },
+          );
+          break;
+        case "SMS":
+          if (!recipient.phone) throw new Error("User phone not bound");
+          messageId = await this.sms.send(recipient.phone, data.content);
+          break;
+        case "WECHAT":
+          if (!recipient.wechatOpenId) throw new Error("User WeChat not bound");
+          messageId = await this.wechat.sendMessage(
+            recipient.wechatOpenId,
+            data.content,
+          );
+          break;
+        case "PUSH":
+          messageId = await this.sendPush(recipient, data);
+          break;
+        default:
+          throw new Error(`Unsupported channel: ${channel}`);
       }
 
       return { channel, success: true, messageId, sentAt };
@@ -412,18 +412,18 @@ export class NotificationManager {
 
     const upper = channel.toUpperCase();
     switch (upper) {
-    case "EMAIL":
-      return "EMAIL";
-    case "SMS":
-      return "SMS";
-    case "WECHAT":
-      return "WECHAT";
-    case "PUSH":
-      return "PUSH";
-    case "IN_APP":
-      return "IN_APP";
-    default:
-      return null;
+      case "EMAIL":
+        return "EMAIL";
+      case "SMS":
+        return "SMS";
+      case "WECHAT":
+        return "WECHAT";
+      case "PUSH":
+        return "PUSH";
+      case "IN_APP":
+        return "IN_APP";
+      default:
+        return null;
     }
   }
 
@@ -443,16 +443,16 @@ export class NotificationManager {
       if (!preferenceMap[channel]) return false;
 
       switch (channel) {
-      case "EMAIL":
-        return Boolean(recipient.email);
-      case "SMS":
-        return Boolean(recipient.phone);
-      case "WECHAT":
-        return Boolean(recipient.wechatOpenId);
-      case "PUSH":
-        return Boolean(recipient.pushTokens?.length);
-      default:
-        return false;
+        case "EMAIL":
+          return Boolean(recipient.email);
+        case "SMS":
+          return Boolean(recipient.phone);
+        case "WECHAT":
+          return Boolean(recipient.wechatOpenId);
+        case "PUSH":
+          return Boolean(recipient.pushTokens?.length);
+        default:
+          return false;
       }
     });
   }
@@ -479,14 +479,14 @@ export class NotificationManager {
     priority?: NotificationData["priority"],
   ): NotificationPriority {
     switch (priority) {
-    case "low":
-      return "LOW";
-    case "high":
-      return "HIGH";
-    case "urgent":
-      return "URGENT";
-    default:
-      return "MEDIUM";
+      case "low":
+        return "LOW";
+      case "high":
+        return "HIGH";
+      case "urgent":
+        return "URGENT";
+      default:
+        return "MEDIUM";
     }
   }
 

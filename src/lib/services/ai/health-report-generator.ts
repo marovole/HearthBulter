@@ -542,37 +542,37 @@ export class HealthReportGenerator {
     </div>
 
     ${report.sections
-    .map(
-      (section) => `
+      .map(
+        (section) => `
         <div class="section">
             <h2>${section.title}</h2>
             <p>${section.content.replace(/\n/g, "<br>")}</p>
         </div>
     `,
-    )
-    .join("")}
+      )
+      .join("")}
 
     ${
-  report.insights.length > 0
-    ? `
+      report.insights.length > 0
+        ? `
         <div class="insights">
             <h2>AI健康洞察</h2>
             ${report.insights.map((insight) => `<p>• ${insight}</p>`).join("")}
         </div>
     `
-    : ""
-}
+        : ""
+    }
 
     ${
-  report.recommendations.length > 0
-    ? `
+      report.recommendations.length > 0
+        ? `
         <div class="recommendations">
             <h2>建议与行动计划</h2>
             ${report.recommendations.map((rec) => `<p>• ${rec}</p>`).join("")}
         </div>
     `
-    : ""
-}
+        : ""
+    }
 
     <div class="footer">
         <p>此报告由AI生成，仅供参考。如有健康问题，请咨询专业医生。</p>
@@ -588,14 +588,14 @@ export class HealthReportGenerator {
     const dateRange = `${reportData.startDate.toLocaleDateString("zh-CN")} - ${reportData.endDate.toLocaleDateString("zh-CN")}`;
 
     switch (reportData.reportType) {
-    case ReportType.WEEKLY:
-      return `健康周报 (${dateRange})`;
-    case ReportType.MONTHLY:
-      return `健康月报 (${dateRange})`;
-    case ReportType.QUARTERLY:
-      return `健康季报 (${dateRange})`;
-    default:
-      return `健康报告 (${dateRange})`;
+      case ReportType.WEEKLY:
+        return `健康周报 (${dateRange})`;
+      case ReportType.MONTHLY:
+        return `健康月报 (${dateRange})`;
+      case ReportType.QUARTERLY:
+        return `健康季报 (${dateRange})`;
+      default:
+        return `健康报告 (${dateRange})`;
     }
   }
 
@@ -610,14 +610,14 @@ export class HealthReportGenerator {
     }
 
     switch (trendAnalysis.direction) {
-    case "improving":
-      summary += "整体健康状况呈上升趋势，请继续保持。";
-      break;
-    case "declining":
-      summary += "整体健康状况有所下降，建议调整健康管理策略。";
-      break;
-    default:
-      summary += "整体健康状况保持稳定。";
+      case "improving":
+        summary += "整体健康状况呈上升趋势，请继续保持。";
+        break;
+      case "declining":
+        summary += "整体健康状况有所下降，建议调整健康管理策略。";
+        break;
+      default:
+        summary += "整体健康状况保持稳定。";
     }
 
     return summary;

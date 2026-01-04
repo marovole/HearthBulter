@@ -225,7 +225,7 @@ export function getClientUsageStats(): {
   total: number;
   byType: Record<ClientType, number>;
   serviceReasons: Record<ServiceClientReason, number>;
-  } {
+} {
   const stats = {
     total: clientUsageLogs.length,
     byType: {

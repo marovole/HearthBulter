@@ -55,16 +55,16 @@ export class UnitConverter {
    */
   static toGrams(amount: number, unit: "g" | "kg" | "oz" | "lb"): number {
     switch (unit) {
-    case "g":
-      return amount;
-    case "kg":
-      return amount * 1000;
-    case "oz":
-      return amount * 28.35; // 1 oz = 28.35g
-    case "lb":
-      return amount * 453.592; // 1 lb = 453.592g
-    default:
-      return amount;
+      case "g":
+        return amount;
+      case "kg":
+        return amount * 1000;
+      case "oz":
+        return amount * 28.35; // 1 oz = 28.35g
+      case "lb":
+        return amount * 453.592; // 1 lb = 453.592g
+      default:
+        return amount;
     }
   }
 
@@ -93,18 +93,18 @@ export class UnitConverter {
         : conversionTable.default;
 
     switch (unit) {
-    case "cup":
-      return amount * table.cup;
-    case "tbsp":
-      return amount * table.tbsp;
-    case "tsp":
-      return amount * table.tsp;
-    case "ml":
-      return amount * table.ml;
-    case "l":
-      return amount * table.l;
-    default:
-      return amount;
+      case "cup":
+        return amount * table.cup;
+      case "tbsp":
+        return amount * table.tbsp;
+      case "tsp":
+        return amount * table.tsp;
+      case "ml":
+        return amount * table.ml;
+      case "l":
+        return amount * table.l;
+      default:
+        return amount;
     }
   }
 }

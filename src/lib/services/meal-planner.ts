@@ -327,20 +327,20 @@ export class MealPlanner {
         fat: number;
       };
       switch (mealType) {
-      case "BREAKFAST":
-        target = mealTargets.breakfast;
-        break;
-      case "LUNCH":
-        target = mealTargets.lunch;
-        break;
-      case "DINNER":
-        target = mealTargets.dinner;
-        break;
-      case "SNACK":
-        target = mealTargets.snack;
-        break;
-      default:
-        throw new Error(`未知的餐食类型: ${mealType}`);
+        case "BREAKFAST":
+          target = mealTargets.breakfast;
+          break;
+        case "LUNCH":
+          target = mealTargets.lunch;
+          break;
+        case "DINNER":
+          target = mealTargets.dinner;
+          break;
+        case "SNACK":
+          target = mealTargets.snack;
+          break;
+        default:
+          throw new Error(`未知的餐食类型: ${mealType}`);
       }
 
       // 加载对应类型的模板

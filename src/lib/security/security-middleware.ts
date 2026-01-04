@@ -530,17 +530,17 @@ export class SecurityMiddleware {
     let identifier: string;
 
     switch (rateLimit.identifier) {
-    case "ip":
-      identifier = this.getClientIP(request);
-      break;
-    case "session":
-      identifier = request.headers.get("x-session-id") || "unknown";
-      break;
-    case "userId":
-      identifier = request.headers.get("x-user-id") || "unknown";
-      break;
-    default:
-      identifier = this.getClientIP(request);
+      case "ip":
+        identifier = this.getClientIP(request);
+        break;
+      case "session":
+        identifier = request.headers.get("x-session-id") || "unknown";
+        break;
+      case "userId":
+        identifier = request.headers.get("x-user-id") || "unknown";
+        break;
+      default:
+        identifier = this.getClientIP(request);
     }
 
     const result = RateLimiter.checkLimit(identifier, {

@@ -48,7 +48,7 @@ const mockNotifications = [
     memberId: "member-1",
     type: NotificationType.GOAL_ACHIEVEMENT,
     title: "成就解锁",
-    content: "恭喜获得\"健康达人\"成就",
+    content: '恭喜获得"健康达人"成就',
     priority: NotificationPriority.MEDIUM,
     channels: [NotificationChannel.IN_APP, NotificationChannel.PUSH],
     isRead: false,

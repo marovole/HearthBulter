@@ -92,7 +92,7 @@ class ImageCache {
     totalEntries: number;
     expiredEntries: number;
     size: number;
-    } {
+  } {
     const now = new Date();
     let expiredCount = 0;
 

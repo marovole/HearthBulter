@@ -129,31 +129,31 @@ export function QuickEntryButtons({
       // 根据不同的快速录入类型设置相应的字段
       const item = quickEntryItems.find((i) => i.id === itemId);
       switch (itemId) {
-      case "weight":
-        payload.weight = parseFloat(value);
-        break;
-      case "bloodPressure":
-        const [systolic, diastolic] = value
-          .split("/")
-          .map((v) => parseInt(v.trim()));
-        if (systolic && diastolic) {
-          payload.bloodPressureSystolic = systolic;
-          payload.bloodPressureDiastolic = diastolic;
-        } else {
-          throw new Error("血压格式不正确，请使用 120/80 格式");
-        }
-        break;
-      case "heartRate":
-        payload.heartRate = parseInt(value);
-        break;
-      case "sleep":
-        // 睡眠数据可能需要扩展数据库schema，暂时放在notes中
-        payload.notes = `睡眠时长: ${value}小时`;
-        break;
-      case "exercise":
-        // 运动数据也暂时放在notes中
-        payload.notes = `运动时长: ${value}分钟`;
-        break;
+        case "weight":
+          payload.weight = parseFloat(value);
+          break;
+        case "bloodPressure":
+          const [systolic, diastolic] = value
+            .split("/")
+            .map((v) => parseInt(v.trim()));
+          if (systolic && diastolic) {
+            payload.bloodPressureSystolic = systolic;
+            payload.bloodPressureDiastolic = diastolic;
+          } else {
+            throw new Error("血压格式不正确，请使用 120/80 格式");
+          }
+          break;
+        case "heartRate":
+          payload.heartRate = parseInt(value);
+          break;
+        case "sleep":
+          // 睡眠数据可能需要扩展数据库schema，暂时放在notes中
+          payload.notes = `睡眠时长: ${value}小时`;
+          break;
+        case "exercise":
+          // 运动数据也暂时放在notes中
+          payload.notes = `运动时长: ${value}分钟`;
+          break;
       }
 
       const response = await fetch(`/api/members/${memberId}/health-data`, {

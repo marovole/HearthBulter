@@ -237,42 +237,42 @@ export class CartAggregator {
       let bestMatch = item.matches[0];
 
       switch (config.optimizeFor) {
-      case "price":
-        bestMatch = item.matches.reduce((best, current) => {
-          const currentPrice =
+        case "price":
+          bestMatch = item.matches.reduce((best, current) => {
+            const currentPrice =
               (current.platformProduct as any).totalPrice ||
               current.platformProduct.price;
-          const bestPrice =
+            const bestPrice =
               (best.platformProduct as any).totalPrice ||
               best.platformProduct.price;
-          return currentPrice < bestPrice ? current : best;
-        });
-        break;
+            return currentPrice < bestPrice ? current : best;
+          });
+          break;
 
-      case "speed":
-        bestMatch = item.matches.reduce((best, current) => {
-          const currentDelivery =
+        case "speed":
+          bestMatch = item.matches.reduce((best, current) => {
+            const currentDelivery =
               this.deliveryTimes[
                 current.platformProduct.platform as EcommercePlatform
               ];
-          const bestDelivery =
+            const bestDelivery =
               this.deliveryTimes[
                 best.platformProduct.platform as EcommercePlatform
               ];
-          return currentDelivery < bestDelivery ? current : best;
-        });
-        break;
+            return currentDelivery < bestDelivery ? current : best;
+          });
+          break;
 
-      case "balance":
-      default:
-        // 综合评分（已在PriceComparator中计算）
-        bestMatch = item.matches.reduce((best, current) => {
-          const currentValue =
+        case "balance":
+        default:
+          // 综合评分（已在PriceComparator中计算）
+          bestMatch = item.matches.reduce((best, current) => {
+            const currentValue =
               (current.platformProduct as any).valueScore || 0;
-          const bestValue = (best.platformProduct as any).valueScore || 0;
-          return currentValue > bestValue ? current : best;
-        });
-        break;
+            const bestValue = (best.platformProduct as any).valueScore || 0;
+            return currentValue > bestValue ? current : best;
+          });
+          break;
       }
 
       return {

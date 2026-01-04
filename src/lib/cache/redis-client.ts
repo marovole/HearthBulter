@@ -11,9 +11,9 @@ const isRedisConfigured =
 
 const redis = isRedisConfigured
   ? new Redis({
-    url: redisUrl,
-    token: redisToken,
-  })
+      url: redisUrl,
+      token: redisToken,
+    })
   : null;
 
 export { redis, isRedisConfigured };
@@ -228,7 +228,7 @@ export class CacheService {
     healthy: boolean;
     configured: boolean;
     lastCheck: Date;
-    } {
+  } {
     return {
       healthy: this.connectionHealthy,
       configured: isRedisConfigured,

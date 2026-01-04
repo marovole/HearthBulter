@@ -86,14 +86,14 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
 
   const getSourceLabel = (source: string) => {
     switch (source) {
-    case "MANUAL":
-      return "手动录入";
-    case "WEARABLE":
-      return "可穿戴设备";
-    case "MEDICAL_REPORT":
-      return "体检报告";
-    default:
-      return source;
+      case "MANUAL":
+        return "手动录入";
+      case "WEARABLE":
+        return "可穿戴设备";
+      case "MEDICAL_REPORT":
+        return "体检报告";
+      default:
+        return source;
     }
   };
 
@@ -163,14 +163,14 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
                 )}
                 {item.bloodPressureSystolic !== null &&
                   item.bloodPressureDiastolic !== null && (
-                  <div>
-                    <span className="text-gray-500">血压:</span>
-                    <span className="ml-2 font-medium">
-                      {item.bloodPressureSystolic}/
-                      {item.bloodPressureDiastolic} mmHg
-                    </span>
-                  </div>
-                )}
+                    <div>
+                      <span className="text-gray-500">血压:</span>
+                      <span className="ml-2 font-medium">
+                        {item.bloodPressureSystolic}/
+                        {item.bloodPressureDiastolic} mmHg
+                      </span>
+                    </div>
+                  )}
                 {item.heartRate !== null && (
                   <div>
                     <span className="text-gray-500">心率:</span>

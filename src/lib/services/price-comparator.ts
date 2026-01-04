@@ -224,18 +224,18 @@ export class PriceComparator {
     if (product.priceUnit) {
       // 根据价格单位计算
       switch (product.priceUnit) {
-      case "kg":
-        return price;
-      case "500g":
-        return price * 2;
-      case "100g":
-        return price * 10;
-      case "l":
-        return price;
-      case "ml":
-        return price * 1000;
-      default:
-        return null;
+        case "kg":
+          return price;
+        case "500g":
+          return price * 2;
+        case "100g":
+          return price * 10;
+        case "l":
+          return price;
+        case "ml":
+          return price * 1000;
+        default:
+          return null;
       }
     }
 

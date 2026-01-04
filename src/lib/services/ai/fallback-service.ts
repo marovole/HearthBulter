@@ -410,7 +410,7 @@ export class AIFallbackService {
     totalFailures: number;
     servicesWithFailures: string[];
     circuitBreakerStatus: Record<string, boolean>;
-    } {
+  } {
     let totalFailures = 0;
     const servicesWithFailures: string[] = [];
     const circuitBreakerStatus: Record<string, boolean> = {};
