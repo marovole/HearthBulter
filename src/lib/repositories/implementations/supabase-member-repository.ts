@@ -6,7 +6,7 @@
  * @module supabase-member-repository
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   MemberRepository,
   MemberAccessResult,
@@ -21,7 +21,7 @@ import type {
   UpdateHealthDataInput,
   HealthDataQuery,
   HealthDataResult,
-} from '@/lib/repositories/interfaces/member-repository';
+} from "@/lib/repositories/interfaces/member-repository";
 
 /**
  * SupabaseMemberRepository
@@ -37,13 +37,14 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async verifyMemberAccess(
     memberId: string,
-    userId: string
+    userId: string,
   ): Promise<MemberAccessResult> {
     try {
       // 查询成员信息，包含家庭信息
       const { data: member, error } = await this.supabase
-        .from('family_members')
-        .select(`
+        .from("family_members")
+        .select(
+          `
           id,
           name,
           familyId,
@@ -53,13 +54,14 @@ export class SupabaseMemberRepository implements MemberRepository {
             id,
             creatorId
           )
-        `)
-        .eq('id', memberId)
-        .is('deletedAt', null)
+        `,
+        )
+        .eq("id", memberId)
+        .is("deletedAt", null)
         .single();
 
       if (error) {
-        console.error('Error fetching member for access verification:', error);
+        console.error("Error fetching member for access verification:", error);
         return { hasAccess: false, member: null };
       }
 
@@ -71,7 +73,9 @@ export class SupabaseMemberRepository implements MemberRepository {
       // 1. 用户是家庭创建者
       // 2. 用户是成员本人（member.userId === userId）
       // 3. 用户是管理员成员
-      const family = Array.isArray(member.family) ? member.family[0] : member.family;
+      const family = Array.isArray(member.family)
+        ? member.family[0]
+        : member.family;
       const isCreator = family?.creatorId === userId;
       const isSelf = member.userId === userId;
 
@@ -79,14 +83,14 @@ export class SupabaseMemberRepository implements MemberRepository {
       let isAdmin = false;
       if (!isCreator && !isSelf) {
         const { data: userMember } = await this.supabase
-          .from('family_members')
-          .select('role')
-          .eq('userId', userId)
-          .eq('familyId', member.familyId)
-          .is('deletedAt', null)
+          .from("family_members")
+          .select("role")
+          .eq("userId", userId)
+          .eq("familyId", member.familyId)
+          .is("deletedAt", null)
           .single();
 
-        isAdmin = userMember?.role === 'ADMIN';
+        isAdmin = userMember?.role === "ADMIN";
       }
 
       const hasAccess = isCreator || isSelf || isAdmin;
@@ -106,7 +110,7 @@ export class SupabaseMemberRepository implements MemberRepository {
         },
       };
     } catch (error) {
-      console.error('Unexpected error in verifyMemberAccess:', error);
+      console.error("Unexpected error in verifyMemberAccess:", error);
       return { hasAccess: false, member: null };
     }
   }
@@ -117,24 +121,24 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async getHealthGoals(
     memberId: string,
-    includeInactive: boolean = false
+    includeInactive: boolean = false,
   ): Promise<HealthGoalDTO[]> {
     let query = this.supabase
-      .from('health_goals')
-      .select('*')
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .order('createdAt', { ascending: false });
+      .from("health_goals")
+      .select("*")
+      .eq("memberId", memberId)
+      .is("deletedAt", null)
+      .order("createdAt", { ascending: false });
 
     // 如果不包含非活跃目标，只返回 ACTIVE 状态
     if (!includeInactive) {
-      query = query.eq('status', 'ACTIVE');
+      query = query.eq("status", "ACTIVE");
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching health goals:', error);
+      console.error("Error fetching health goals:", error);
       throw new Error(`Failed to fetch health goals: ${error.message}`);
     }
 
@@ -143,18 +147,18 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async getHealthGoalById(goalId: string): Promise<HealthGoalDTO | null> {
     const { data, error } = await this.supabase
-      .from('health_goals')
-      .select('*')
-      .eq('id', goalId)
-      .is('deletedAt', null)
+      .from("health_goals")
+      .select("*")
+      .eq("id", goalId)
+      .is("deletedAt", null)
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         // Not found
         return null;
       }
-      console.error('Error fetching health goal:', error);
+      console.error("Error fetching health goal:", error);
       throw new Error(`Failed to fetch health goal: ${error.message}`);
     }
 
@@ -163,10 +167,10 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async createHealthGoal(
     memberId: string,
-    input: CreateHealthGoalInput
+    input: CreateHealthGoalInput,
   ): Promise<HealthGoalDTO> {
     const { data, error } = await this.supabase
-      .from('health_goals')
+      .from("health_goals")
       .insert({
         memberId,
         goalType: input.goalType,
@@ -182,14 +186,14 @@ export class SupabaseMemberRepository implements MemberRepository {
         carbRatio: input.carbRatio ?? 0.5,
         proteinRatio: input.proteinRatio ?? 0.2,
         fatRatio: input.fatRatio ?? 0.3,
-        status: 'ACTIVE',
+        status: "ACTIVE",
         progress: 0,
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating health goal:', error);
+      console.error("Error creating health goal:", error);
       throw new Error(`Failed to create health goal: ${error.message}`);
     }
 
@@ -198,36 +202,41 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async updateHealthGoal(
     goalId: string,
-    input: UpdateHealthGoalInput
+    input: UpdateHealthGoalInput,
   ): Promise<HealthGoalDTO> {
     const updateData: any = {};
 
     if (input.goalType !== undefined) updateData.goalType = input.goalType;
-    if (input.targetWeight !== undefined) updateData.targetWeight = input.targetWeight;
-    if (input.currentWeight !== undefined) updateData.currentWeight = input.currentWeight;
-    if (input.targetWeeks !== undefined) updateData.targetWeeks = input.targetWeeks;
+    if (input.targetWeight !== undefined)
+      updateData.targetWeight = input.targetWeight;
+    if (input.currentWeight !== undefined)
+      updateData.currentWeight = input.currentWeight;
+    if (input.targetWeeks !== undefined)
+      updateData.targetWeeks = input.targetWeeks;
     if (input.targetDate !== undefined) {
       updateData.targetDate = input.targetDate.toISOString();
     }
     if (input.tdee !== undefined) updateData.tdee = input.tdee;
     if (input.bmr !== undefined) updateData.bmr = input.bmr;
-    if (input.activityFactor !== undefined) updateData.activityFactor = input.activityFactor;
+    if (input.activityFactor !== undefined)
+      updateData.activityFactor = input.activityFactor;
     if (input.carbRatio !== undefined) updateData.carbRatio = input.carbRatio;
-    if (input.proteinRatio !== undefined) updateData.proteinRatio = input.proteinRatio;
+    if (input.proteinRatio !== undefined)
+      updateData.proteinRatio = input.proteinRatio;
     if (input.fatRatio !== undefined) updateData.fatRatio = input.fatRatio;
     if (input.status !== undefined) updateData.status = input.status;
     if (input.progress !== undefined) updateData.progress = input.progress;
 
     const { data, error } = await this.supabase
-      .from('health_goals')
+      .from("health_goals")
       .update(updateData)
-      .eq('id', goalId)
-      .is('deletedAt', null)
+      .eq("id", goalId)
+      .is("deletedAt", null)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating health goal:', error);
+      console.error("Error updating health goal:", error);
       throw new Error(`Failed to update health goal: ${error.message}`);
     }
 
@@ -236,12 +245,12 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async deleteHealthGoal(goalId: string): Promise<void> {
     const { error } = await this.supabase
-      .from('health_goals')
+      .from("health_goals")
       .update({ deletedAt: new Date().toISOString() })
-      .eq('id', goalId);
+      .eq("id", goalId);
 
     if (error) {
-      console.error('Error deleting health goal:', error);
+      console.error("Error deleting health goal:", error);
       throw new Error(`Failed to delete health goal: ${error.message}`);
     }
   }
@@ -252,14 +261,14 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async getAllergies(memberId: string): Promise<AllergyDTO[]> {
     const { data, error } = await this.supabase
-      .from('allergies')
-      .select('*')
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .order('createdAt', { ascending: false });
+      .from("allergies")
+      .select("*")
+      .eq("memberId", memberId)
+      .is("deletedAt", null)
+      .order("createdAt", { ascending: false });
 
     if (error) {
-      console.error('Error fetching allergies:', error);
+      console.error("Error fetching allergies:", error);
       throw new Error(`Failed to fetch allergies: ${error.message}`);
     }
 
@@ -268,10 +277,10 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async createAllergy(
     memberId: string,
-    input: CreateAllergyInput
+    input: CreateAllergyInput,
   ): Promise<AllergyDTO> {
     const { data, error } = await this.supabase
-      .from('allergies')
+      .from("allergies")
       .insert({
         memberId,
         allergenType: input.allergenType,
@@ -283,7 +292,7 @@ export class SupabaseMemberRepository implements MemberRepository {
       .single();
 
     if (error) {
-      console.error('Error creating allergy:', error);
+      console.error("Error creating allergy:", error);
       throw new Error(`Failed to create allergy: ${error.message}`);
     }
 
@@ -292,25 +301,28 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async updateAllergy(
     allergyId: string,
-    input: UpdateAllergyInput
+    input: UpdateAllergyInput,
   ): Promise<AllergyDTO> {
     const updateData: any = {};
 
-    if (input.allergenType !== undefined) updateData.allergenType = input.allergenType;
-    if (input.allergenName !== undefined) updateData.allergenName = input.allergenName;
+    if (input.allergenType !== undefined)
+      updateData.allergenType = input.allergenType;
+    if (input.allergenName !== undefined)
+      updateData.allergenName = input.allergenName;
     if (input.severity !== undefined) updateData.severity = input.severity;
-    if (input.description !== undefined) updateData.description = input.description;
+    if (input.description !== undefined)
+      updateData.description = input.description;
 
     const { data, error } = await this.supabase
-      .from('allergies')
+      .from("allergies")
       .update(updateData)
-      .eq('id', allergyId)
-      .is('deletedAt', null)
+      .eq("id", allergyId)
+      .is("deletedAt", null)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating allergy:', error);
+      console.error("Error updating allergy:", error);
       throw new Error(`Failed to update allergy: ${error.message}`);
     }
 
@@ -319,12 +331,12 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async deleteAllergy(allergyId: string): Promise<void> {
     const { error } = await this.supabase
-      .from('allergies')
+      .from("allergies")
       .update({ deletedAt: new Date().toISOString() })
-      .eq('id', allergyId);
+      .eq("id", allergyId);
 
     if (error) {
-      console.error('Error deleting allergy:', error);
+      console.error("Error deleting allergy:", error);
       throw new Error(`Failed to delete allergy: ${error.message}`);
     }
   }
@@ -334,20 +346,27 @@ export class SupabaseMemberRepository implements MemberRepository {
   // ============================================================================
 
   async getHealthData(query: HealthDataQuery): Promise<HealthDataResult> {
-    const { memberId, startDate, endDate, page = 1, limit = 10, sortOrder = 'desc' } = query;
+    const {
+      memberId,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sortOrder = "desc",
+    } = query;
 
     let dbQuery = this.supabase
-      .from('health_data')
-      .select('*', { count: 'exact' })
-      .eq('memberId', memberId)
-      .order('measuredAt', { ascending: sortOrder === 'asc' });
+      .from("health_data")
+      .select("*", { count: "exact" })
+      .eq("memberId", memberId)
+      .order("measuredAt", { ascending: sortOrder === "asc" });
 
     // 时间范围过滤
     if (startDate) {
-      dbQuery = dbQuery.gte('measuredAt', startDate);
+      dbQuery = dbQuery.gte("measuredAt", startDate);
     }
     if (endDate) {
-      dbQuery = dbQuery.lte('measuredAt', endDate);
+      dbQuery = dbQuery.lte("measuredAt", endDate);
     }
 
     // 分页
@@ -357,7 +376,7 @@ export class SupabaseMemberRepository implements MemberRepository {
     const { data, error, count } = await dbQuery;
 
     if (error) {
-      console.error('Error fetching health data:', error);
+      console.error("Error fetching health data:", error);
       throw new Error(`Failed to fetch health data: ${error.message}`);
     }
 
@@ -377,10 +396,10 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async createHealthData(
     memberId: string,
-    input: CreateHealthDataInput
+    input: CreateHealthDataInput,
   ): Promise<HealthDataDTO> {
     const { data, error } = await this.supabase
-      .from('health_data')
+      .from("health_data")
       .insert({
         memberId,
         weight: input.weight,
@@ -390,7 +409,7 @@ export class SupabaseMemberRepository implements MemberRepository {
         bloodPressureDiastolic: input.bloodPressureDiastolic,
         heartRate: input.heartRate,
         measuredAt: input.measuredAt?.toISOString() || new Date().toISOString(),
-        source: input.source || 'MANUAL',
+        source: input.source || "MANUAL",
         notes: input.notes,
         deviceConnectionId: input.deviceConnectionId,
       })
@@ -398,7 +417,7 @@ export class SupabaseMemberRepository implements MemberRepository {
       .single();
 
     if (error) {
-      console.error('Error creating health data:', error);
+      console.error("Error creating health data:", error);
       throw new Error(`Failed to create health data: ${error.message}`);
     }
 
@@ -407,13 +426,14 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async updateHealthData(
     dataId: string,
-    input: UpdateHealthDataInput
+    input: UpdateHealthDataInput,
   ): Promise<HealthDataDTO> {
     const updateData: any = {};
 
     if (input.weight !== undefined) updateData.weight = input.weight;
     if (input.bodyFat !== undefined) updateData.bodyFat = input.bodyFat;
-    if (input.muscleMass !== undefined) updateData.muscleMass = input.muscleMass;
+    if (input.muscleMass !== undefined)
+      updateData.muscleMass = input.muscleMass;
     if (input.bloodPressureSystolic !== undefined) {
       updateData.bloodPressureSystolic = input.bloodPressureSystolic;
     }
@@ -427,14 +447,14 @@ export class SupabaseMemberRepository implements MemberRepository {
     if (input.notes !== undefined) updateData.notes = input.notes;
 
     const { data, error } = await this.supabase
-      .from('health_data')
+      .from("health_data")
       .update(updateData)
-      .eq('id', dataId)
+      .eq("id", dataId)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating health data:', error);
+      console.error("Error updating health data:", error);
       throw new Error(`Failed to update health data: ${error.message}`);
     }
 
@@ -444,12 +464,12 @@ export class SupabaseMemberRepository implements MemberRepository {
   async deleteHealthData(dataId: string): Promise<void> {
     // 注意：health_data 表没有 deletedAt 字段，执行硬删除
     const { error } = await this.supabase
-      .from('health_data')
+      .from("health_data")
       .delete()
-      .eq('id', dataId);
+      .eq("id", dataId);
 
     if (error) {
-      console.error('Error deleting health data:', error);
+      console.error("Error deleting health data:", error);
       throw new Error(`Failed to delete health data: ${error.message}`);
     }
   }

@@ -3,7 +3,7 @@
  * 生成时间: 2025-11-09T15:55:00.000Z
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // RPC 函数返回类型
 export interface RPCResponse<T = any> {
@@ -18,8 +18,8 @@ export const AcceptFamilyInviteParams = z.object({
   p_invitation_id: z.string().uuid(),
   p_user_id: z.string().uuid(),
   p_member_name: z.string().min(1),
-  p_gender: z.enum(['MALE', 'FEMALE', 'OTHER']).default('MALE'),
-  p_birth_date: z.string().default('2000-01-01'),
+  p_gender: z.enum(["MALE", "FEMALE", "OTHER"]).default("MALE"),
+  p_birth_date: z.string().default("2000-01-01"),
 });
 
 export type AcceptFamilyInviteParams = z.infer<typeof AcceptFamilyInviteParams>;
@@ -83,19 +83,23 @@ export type RecordSpendingResult = RPCResponse<{
 export const CreateInventoryNotificationsParams = z.object({
   p_family_id: z.string().uuid(),
   p_notification_type: z.string(),
-  p_items: z.array(z.object({
-    item_id: z.string().uuid(),
-    item_name: z.string(),
-    current_quantity: z.number(),
-    threshold_quantity: z.number(),
-    expiry_date: z.string().optional(),
-    title: z.string().optional(),
-    message: z.string().optional(),
-    priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).default('MEDIUM'),
-  })),
+  p_items: z.array(
+    z.object({
+      item_id: z.string().uuid(),
+      item_name: z.string(),
+      current_quantity: z.number(),
+      threshold_quantity: z.number(),
+      expiry_date: z.string().optional(),
+      title: z.string().optional(),
+      message: z.string().optional(),
+      priority: z.enum(["HIGH", "MEDIUM", "LOW"]).default("MEDIUM"),
+    }),
+  ),
 });
 
-export type CreateInventoryNotificationsParams = z.infer<typeof CreateInventoryNotificationsParams>;
+export type CreateInventoryNotificationsParams = z.infer<
+  typeof CreateInventoryNotificationsParams
+>;
 
 export interface CreateInventoryNotificationsResult {
   success: boolean;
@@ -122,7 +126,9 @@ export const UpdateShoppingListItemParams = z.object({
   p_expected_version: z.number().optional(),
 });
 
-export type UpdateShoppingListItemParams = z.infer<typeof UpdateShoppingListItemParams>;
+export type UpdateShoppingListItemParams = z.infer<
+  typeof UpdateShoppingListItemParams
+>;
 
 export interface UpdateShoppingListItemResult {
   success: boolean;

@@ -1,4 +1,9 @@
-import { PrismaClient, Notification, NotificationStatus, NotificationType } from '@prisma/client';
+import {
+  PrismaClient,
+  Notification,
+  NotificationStatus,
+  NotificationType,
+} from "@prisma/client";
 
 export class NotificationService {
   private prisma: PrismaClient;
@@ -65,7 +70,7 @@ export class NotificationService {
       limit?: number;
       offset?: number;
       includeRead?: boolean;
-    } = {}
+    } = {},
   ) {
     const where: any = { memberId };
 
@@ -84,7 +89,7 @@ export class NotificationService {
     const [notifications, total] = await Promise.all([
       this.prisma.notification.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: options.limit || 20,
         skip: options.offset || 0,
         include: {
@@ -119,7 +124,7 @@ export class NotificationService {
     });
 
     if (!notification) {
-      throw new Error('Notification not found or access denied');
+      throw new Error("Notification not found or access denied");
     }
 
     await this.prisma.notification.update({
@@ -157,7 +162,7 @@ export class NotificationService {
     });
 
     if (!notification) {
-      throw new Error('Notification not found or access denied');
+      throw new Error("Notification not found or access denied");
     }
 
     await this.prisma.notification.delete({
@@ -238,7 +243,7 @@ export class NotificationService {
         },
       },
       orderBy: {
-        nextRetryAt: 'asc',
+        nextRetryAt: "asc",
       },
       take: 50, // 限制批次大小
     });
@@ -251,13 +256,10 @@ export class NotificationService {
     return await this.prisma.notification.findMany({
       where: {
         status: NotificationStatus.PENDING,
-        OR: [
-          { nextRetryAt: null },
-          { nextRetryAt: { lte: new Date() } },
-        ],
+        OR: [{ nextRetryAt: null }, { nextRetryAt: { lte: new Date() } }],
       },
       orderBy: {
-        createdAt: 'asc',
+        createdAt: "asc",
       },
       take: limit,
     });
@@ -271,7 +273,7 @@ export class NotificationService {
     startDate.setDate(startDate.getDate() - days);
 
     const stats = await this.prisma.notification.groupBy({
-      by: ['type', 'status'],
+      by: ["type", "status"],
       where: {
         memberId,
         createdAt: {
@@ -291,21 +293,21 @@ export class NotificationService {
       byType: {},
     };
 
-    stats.forEach(stat => {
+    stats.forEach((stat) => {
       const count = stat._count.id;
       result.total += count;
 
       switch (stat.status) {
-      case NotificationStatus.SENT:
-        result.sent += count;
-        break;
-      case NotificationStatus.FAILED:
-        result.failed += count;
-        break;
-      case NotificationStatus.PENDING:
-      case NotificationStatus.SENDING:
-        result.pending += count;
-        break;
+        case NotificationStatus.SENT:
+          result.sent += count;
+          break;
+        case NotificationStatus.FAILED:
+          result.failed += count;
+          break;
+        case NotificationStatus.PENDING:
+        case NotificationStatus.SENDING:
+          result.pending += count;
+          break;
       }
 
       if (!result.byType[stat.type]) {
@@ -337,7 +339,11 @@ export class NotificationService {
           lt: cutoffDate,
         },
         status: {
-          in: [NotificationStatus.SENT, NotificationStatus.FAILED, NotificationStatus.CANCELLED],
+          in: [
+            NotificationStatus.SENT,
+            NotificationStatus.FAILED,
+            NotificationStatus.CANCELLED,
+          ],
         },
       },
     });
@@ -350,7 +356,7 @@ export class NotificationService {
    */
   async batchUpdateStatus(
     notificationIds: string[],
-    status: NotificationStatus
+    status: NotificationStatus,
   ): Promise<number> {
     const result = await this.prisma.notification.updateMany({
       where: {
@@ -378,7 +384,7 @@ export class NotificationService {
       offset?: number;
       dateFrom?: Date;
       dateTo?: Date;
-    } = {}
+    } = {},
   ) {
     const where: any = {
       memberId,
@@ -386,13 +392,13 @@ export class NotificationService {
         {
           title: {
             contains: query,
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         },
         {
           content: {
             contains: query,
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         },
       ],
@@ -415,7 +421,7 @@ export class NotificationService {
     const [notifications, total] = await Promise.all([
       this.prisma.notification.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: options.limit || 20,
         skip: options.offset || 0,
       }),

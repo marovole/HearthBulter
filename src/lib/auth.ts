@@ -1,17 +1,17 @@
-import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
-import { prisma, testDatabaseConnection } from '@/lib/db';
-import { getServerSession } from 'next-auth/next';
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { prisma, testDatabaseConnection } from "@/lib/db";
+import { getServerSession } from "next-auth/next";
 
 // NextAuth v4 配置
 export const authOptions = {
   providers: [
     CredentialsProvider({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: '邮箱', type: 'email' },
-        password: { label: '密码', type: 'password' },
+        email: { label: "邮箱", type: "email" },
+        password: { label: "密码", type: "password" },
       },
       async authorize(credentials) {
         try {
@@ -27,7 +27,7 @@ export const authOptions = {
             // 首先测试数据库连接
             const dbConnected = await testDatabaseConnection();
             if (!dbConnected) {
-              console.error('数据库连接失败');
+              console.error("数据库连接失败");
               return null;
             }
 
@@ -36,7 +36,10 @@ export const authOptions = {
             });
 
             if (user && user.password) {
-              const passwordMatch = await bcrypt.compare(password, user.password);
+              const passwordMatch = await bcrypt.compare(
+                password,
+                user.password,
+              );
               if (passwordMatch) {
                 return {
                   id: user.id,
@@ -47,12 +50,12 @@ export const authOptions = {
               }
             }
           } catch (dbError) {
-            console.error('数据库认证错误:', dbError);
+            console.error("数据库认证错误:", dbError);
           }
 
           return null;
         } catch (error) {
-          console.error('Authorization error:', error);
+          console.error("Authorization error:", error);
           return null;
         }
       },
@@ -60,7 +63,7 @@ export const authOptions = {
   ],
 
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
 
   callbacks: {
@@ -77,15 +80,15 @@ export const authOptions = {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
-        session.user.role = (token.role as string) || 'USER';
+        session.user.role = (token.role as string) || "USER";
       }
       return session;
     },
   },
 
   pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup',
+    signIn: "/auth/signin",
+    signUp: "/auth/signup",
   },
 
   secret: process.env.NEXTAUTH_SECRET,
@@ -100,7 +103,7 @@ export async function getCurrentUser() {
     const session = await getServerSession(authOptions);
     return session?.user || null;
   } catch (error) {
-    console.error('Get current user error:', error);
+    console.error("Get current user error:", error);
     return null;
   }
 }
@@ -137,13 +140,13 @@ export function checkAuthConfiguration() {
 
   // 检查必需的环境变量
   if (!nextAuthSecret) {
-    issues.push('NEXTAUTH_SECRET 未设置');
+    issues.push("NEXTAUTH_SECRET 未设置");
   } else if (nextAuthSecret.length < 32) {
-    issues.push('NEXTAUTH_SECRET 长度不足32字符');
+    issues.push("NEXTAUTH_SECRET 长度不足32字符");
   }
 
   if (!nextAuthUrl) {
-    issues.push('NEXTAUTH_URL 未设置');
+    issues.push("NEXTAUTH_URL 未设置");
   }
 
   return {

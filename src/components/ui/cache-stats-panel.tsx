@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   BarChart,
   Bar,
@@ -21,7 +27,7 @@ import {
   PieChart,
   Pie,
   Cell,
-} from 'recharts';
+} from "recharts";
 import {
   RefreshCw,
   TrendingUp,
@@ -33,7 +39,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Zap,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   cacheStatsService,
   getCacheMetrics,
@@ -42,8 +48,8 @@ import {
   type TimeWindowStats,
   type CacheTypeStats,
   type CacheKeyStats,
-} from '@/lib/services/cache-stats-service';
-import { cn } from '@/lib/utils';
+} from "@/lib/services/cache-stats-service";
+import { cn } from "@/lib/utils";
 
 interface CacheStatsPanelProps {
   autoRefresh?: boolean;
@@ -87,16 +93,16 @@ export function CacheStatsPanel({
       setHotKeys(hotKeysData);
       setLastUpdate(new Date());
     } catch (error) {
-      console.error('Failed to load cache stats:', error);
+      console.error("Failed to load cache stats:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
@@ -116,15 +122,15 @@ export function CacheStatsPanel({
   };
 
   const getHitRateColor = (hitRate: number): string => {
-    if (hitRate >= 80) return 'text-green-600';
-    if (hitRate >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (hitRate >= 80) return "text-green-600";
+    if (hitRate >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getHitRateBadgeVariant = (hitRate: number) => {
-    if (hitRate >= 80) return 'default';
-    if (hitRate >= 60) return 'secondary';
-    return 'destructive';
+    if (hitRate >= 80) return "default";
+    if (hitRate >= 60) return "secondary";
+    return "destructive";
   };
 
   if (isLoading && !metrics) {
@@ -151,22 +157,32 @@ export function CacheStatsPanel({
     );
   }
 
-  const hitRateData = timeWindows.map(window => ({
+  const hitRateData = timeWindows.map((window) => ({
     time: window.window,
     hitRate: window.hitRate,
     hits: window.hits,
     misses: window.misses,
   }));
 
-  const cacheTypeData = cacheTypes.map(type => ({
-    name: type.cacheType === 'redis' ? 'Redis' : type.cacheType === 'memory' ? '内存' : '未命中',
+  const cacheTypeData = cacheTypes.map((type) => ({
+    name:
+      type.cacheType === "redis"
+        ? "Redis"
+        : type.cacheType === "memory"
+          ? "内存"
+          : "未命中",
     value: type.hits + type.misses + type.sets + type.deletes,
     hitRate: type.hitRate,
-    color: type.cacheType === 'redis' ? '#8884d8' : type.cacheType === 'memory' ? '#82ca9d' : '#ffc658',
+    color:
+      type.cacheType === "redis"
+        ? "#8884d8"
+        : type.cacheType === "memory"
+          ? "#82ca9d"
+          : "#ffc658",
   }));
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn("space-y-6", className)}>
       {/* 头部概览 */}
       <Card>
         <CardHeader>
@@ -180,7 +196,7 @@ export function CacheStatsPanel({
                 实时监控缓存命中率和性能指标
                 {lastUpdate && (
                   <span className="ml-2 text-xs">
-                    • 最后更新: {lastUpdate.toLocaleTimeString('zh-CN')}
+                    • 最后更新: {lastUpdate.toLocaleTimeString("zh-CN")}
                   </span>
                 )}
               </CardDescription>
@@ -191,7 +207,9 @@ export function CacheStatsPanel({
               onClick={loadStats}
               disabled={isLoading}
             >
-              <RefreshCw className={cn('w-4 h-4 mr-2', isLoading && 'animate-spin')} />
+              <RefreshCw
+                className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")}
+              />
               刷新
             </Button>
           </div>
@@ -253,29 +271,45 @@ export function CacheStatsPanel({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Alert className={cn(
-                'border-2',
-                metrics.hitRate >= 80 ? 'border-green-200 bg-green-50' :
-                  metrics.hitRate >= 60 ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'
-              )}>
+              <Alert
+                className={cn(
+                  "border-2",
+                  metrics.hitRate >= 80
+                    ? "border-green-200 bg-green-50"
+                    : metrics.hitRate >= 60
+                      ? "border-yellow-200 bg-yellow-50"
+                      : "border-red-200 bg-red-50",
+                )}
+              >
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>缓存效率:</strong>{' '}
-                  {metrics.hitRate >= 80 ? '优秀' :
-                    metrics.hitRate >= 60 ? '良好' : '需要优化'}
+                  <strong>缓存效率:</strong>{" "}
+                  {metrics.hitRate >= 80
+                    ? "优秀"
+                    : metrics.hitRate >= 60
+                      ? "良好"
+                      : "需要优化"}
                 </AlertDescription>
               </Alert>
 
-              <Alert className={cn(
-                'border-2',
-                metrics.averageResponseTime <= 50 ? 'border-green-200 bg-green-50' :
-                  metrics.averageResponseTime <= 200 ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'
-              )}>
+              <Alert
+                className={cn(
+                  "border-2",
+                  metrics.averageResponseTime <= 50
+                    ? "border-green-200 bg-green-50"
+                    : metrics.averageResponseTime <= 200
+                      ? "border-yellow-200 bg-yellow-50"
+                      : "border-red-200 bg-red-50",
+                )}
+              >
                 <Clock className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>响应速度:</strong>{' '}
-                  {metrics.averageResponseTime <= 50 ? '快速' :
-                    metrics.averageResponseTime <= 200 ? '正常' : '较慢'}
+                  <strong>响应速度:</strong>{" "}
+                  {metrics.averageResponseTime <= 50
+                    ? "快速"
+                    : metrics.averageResponseTime <= 200
+                      ? "正常"
+                      : "较慢"}
                 </AlertDescription>
               </Alert>
 
@@ -312,7 +346,12 @@ export function CacheStatsPanel({
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="time" />
                     <YAxis domain={[0, 100]} />
-                    <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, '命中率']} />
+                    <Tooltip
+                      formatter={(value: number) => [
+                        `${value.toFixed(1)}%`,
+                        "命中率",
+                      ]}
+                    />
                     <Line
                       type="monotone"
                       dataKey="hitRate"
@@ -362,20 +401,32 @@ export function CacheStatsPanel({
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{metrics.hits.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {metrics.hits.toLocaleString()}
+                  </div>
                   <div className="text-sm text-muted-foreground">命中次数</div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">{metrics.misses.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">未命中次数</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {metrics.misses.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    未命中次数
+                  </div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{metrics.sets.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {metrics.sets.toLocaleString()}
+                  </div>
                   <div className="text-sm text-muted-foreground">设置次数</div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">{metrics.itemCount.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">缓存项数量</div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {metrics.itemCount.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    缓存项数量
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -393,7 +444,9 @@ export function CacheStatsPanel({
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">平均响应时间</span>
-                  <Badge variant="outline">{metrics.averageResponseTime}ms</Badge>
+                  <Badge variant="outline">
+                    {metrics.averageResponseTime}ms
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">95%响应时间</span>
@@ -419,7 +472,11 @@ export function CacheStatsPanel({
                     <XAxis dataKey="cacheType" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="averageResponseTime" fill="#8884d8" name="平均响应时间(ms)" />
+                    <Bar
+                      dataKey="averageResponseTime"
+                      fill="#8884d8"
+                      name="平均响应时间(ms)"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -437,7 +494,10 @@ export function CacheStatsPanel({
               <ScrollArea className="h-80">
                 <div className="space-y-2">
                   {hotKeys.map((key, index) => (
-                    <div key={key.key} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={key.key}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-1">
                           <Badge variant="outline">#{index + 1}</Badge>
@@ -448,13 +508,22 @@ export function CacheStatsPanel({
                         <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                           <span>命中: {key.hits}</span>
                           <span>未命中: {key.misses}</span>
-                          <span>频率: {key.accessFrequency.toFixed(2)}/分钟</span>
+                          <span>
+                            频率: {key.accessFrequency.toFixed(2)}/分钟
+                          </span>
                           <span>大小: {formatBytes(key.size)}</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge className={getHitRateBadgeVariant((key.hits / (key.hits + key.misses)) * 100)}>
-                          {((key.hits / (key.hits + key.misses)) * 100).toFixed(1)}%
+                        <Badge
+                          className={getHitRateBadgeVariant(
+                            (key.hits / (key.hits + key.misses)) * 100,
+                          )}
+                        >
+                          {((key.hits / (key.hits + key.misses)) * 100).toFixed(
+                            1,
+                          )}
+                          %
                         </Badge>
                       </div>
                     </div>
@@ -496,21 +565,25 @@ export function CacheStatusIndicator({ className }: CacheStatusIndicatorProps) {
   }, []);
 
   return (
-    <div className={cn('flex items-center space-x-2', className)}>
+    <div className={cn("flex items-center space-x-2", className)}>
       <Database className="w-4 h-4" />
       <span className="text-sm">缓存命中率</span>
-      <Badge className={cn(
-        getHitRateColor(hitRate).replace('text-', 'bg-').replace('-600', '-100'),
-        getHitRateColor(hitRate)
-      )}>
+      <Badge
+        className={cn(
+          getHitRateColor(hitRate)
+            .replace("text-", "bg-")
+            .replace("-600", "-100"),
+          getHitRateColor(hitRate),
+        )}
+      >
         {hitRate.toFixed(1)}%
       </Badge>
     </div>
   );
 
   function getHitRateColor(rate: number): string {
-    if (rate >= 80) return 'text-green-600';
-    if (rate >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (rate >= 80) return "text-green-600";
+    if (rate >= 60) return "text-yellow-600";
+    return "text-red-600";
   }
 }

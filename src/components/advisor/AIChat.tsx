@@ -1,19 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, Bot, User, Lightbulb } from 'lucide-react';
-import { AIThinkingIndicator } from '@/components/ui/loading-indicator';
-import { FeedbackButtons, FeedbackData } from '@/components/ui/feedback-buttons';
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Send, Bot, User, Lightbulb } from "lucide-react";
+import { AIThinkingIndicator } from "@/components/ui/loading-indicator";
+import {
+  FeedbackButtons,
+  FeedbackData,
+} from "@/components/ui/feedback-buttons";
 
 interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: Date;
   intent?: string;
@@ -21,7 +24,12 @@ interface ChatMessage {
 
 interface PresetQuestion {
   id: string;
-  category: 'general' | 'nutrition' | 'health' | 'meal_planning' | 'weight_management';
+  category:
+    | "general"
+    | "nutrition"
+    | "health"
+    | "meal_planning"
+    | "weight_management";
   question: string;
   description: string;
   tags: string[];
@@ -33,9 +41,13 @@ interface AIChatProps {
   onMessageSent?: (message: ChatMessage) => void;
 }
 
-export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChatProps) {
+export function AIChat({
+  memberId,
+  initialMessages = [],
+  onMessageSent,
+}: AIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [presetQuestions, setPresetQuestions] = useState<PresetQuestion[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -49,10 +61,10 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
   // 处理反馈
   const handleFeedback = async (feedback: FeedbackData) => {
     try {
-      const response = await fetch('/api/ai/feedback', {
-        method: 'POST',
+      const response = await fetch("/api/ai/feedback", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...feedback,
@@ -61,10 +73,10 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
       });
 
       if (!response.ok) {
-        console.warn('Feedback submission failed');
+        console.warn("Feedback submission failed");
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      console.error("Error submitting feedback:", error);
     }
   };
 
@@ -77,13 +89,13 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
 
   const loadPresetQuestions = async () => {
     try {
-      const response = await fetch('/api/ai/chat');
+      const response = await fetch("/api/ai/chat");
       if (response.ok) {
         const data = await response.json();
         setPresetQuestions(data.questions || []);
       }
     } catch (error) {
-      console.error('Failed to load preset questions:', error);
+      console.error("Failed to load preset questions:", error);
     }
   };
 
@@ -92,20 +104,20 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
 
     const userMessage: ChatMessage = {
       id: `msg_${Date.now()}`,
-      role: 'user',
+      role: "user",
       content: message,
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           message,
@@ -116,31 +128,31 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
       });
 
       if (!response.ok) {
-        throw new Error('发送消息失败');
+        throw new Error("发送消息失败");
       }
 
       const data = await response.json();
 
       const aiMessage: ChatMessage = {
         id: `msg_${Date.now() + 1}`,
-        role: 'assistant',
+        role: "assistant",
         content: data.response,
         timestamp: new Date(),
         intent: data.intent,
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
       setSessionId(data.sessionId);
       onMessageSent?.(aiMessage);
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error("Chat error:", error);
       const errorMessage: ChatMessage = {
         id: `msg_${Date.now() + 2}`,
-        role: 'assistant',
-        content: '抱歉，我遇到了一些问题。请稍后重试。',
+        role: "assistant",
+        content: "抱歉，我遇到了一些问题。请稍后重试。",
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -157,11 +169,11 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      general: 'bg-gray-100 text-gray-800',
-      nutrition: 'bg-green-100 text-green-800',
-      health: 'bg-blue-100 text-blue-800',
-      meal_planning: 'bg-orange-100 text-orange-800',
-      weight_management: 'bg-purple-100 text-purple-800',
+      general: "bg-gray-100 text-gray-800",
+      nutrition: "bg-green-100 text-green-800",
+      health: "bg-blue-100 text-blue-800",
+      meal_planning: "bg-orange-100 text-orange-800",
+      weight_management: "bg-purple-100 text-purple-800",
     };
     return colors[category as keyof typeof colors] || colors.general;
   };
@@ -189,34 +201,40 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
                     className={`flex max-w-[80%] ${
-                      message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                      message.role === "user" ? "flex-row-reverse" : "flex-row"
                     }`}
                   >
                     <Avatar className="w-8 h-8">
                       <AvatarFallback>
-                        {message.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                        {message.role === "user" ? (
+                          <User className="w-4 h-4" />
+                        ) : (
+                          <Bot className="w-4 h-4" />
+                        )}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
                       <div
                         className={`mx-2 px-3 py-2 rounded-lg ${
-                          message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
+                          message.role === "user"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {message.content}
+                        </p>
                         {message.intent && (
                           <Badge variant="outline" className="text-xs mt-1">
                             {message.intent}
                           </Badge>
                         )}
                       </div>
-                      {message.role === 'assistant' && (
+                      {message.role === "assistant" && (
                         <div className="mx-2 mt-1">
                           <FeedbackButtons
                             sessionId={sessionId}
@@ -272,12 +290,21 @@ export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChat
                   disabled={isLoading}
                 >
                   <div>
-                    <div className="text-sm font-medium">{question.question}</div>
-                    <Badge className={`text-xs mt-1 ${getCategoryColor(question.category)}`}>
-                      {question.category === 'general' ? '通用' :
-                        question.category === 'nutrition' ? '营养' :
-                          question.category === 'health' ? '健康' :
-                            question.category === 'meal_planning' ? '饮食规划' : '体重管理'}
+                    <div className="text-sm font-medium">
+                      {question.question}
+                    </div>
+                    <Badge
+                      className={`text-xs mt-1 ${getCategoryColor(question.category)}`}
+                    >
+                      {question.category === "general"
+                        ? "通用"
+                        : question.category === "nutrition"
+                          ? "营养"
+                          : question.category === "health"
+                            ? "健康"
+                            : question.category === "meal_planning"
+                              ? "饮食规划"
+                              : "体重管理"}
                     </Badge>
                   </div>
                 </Button>

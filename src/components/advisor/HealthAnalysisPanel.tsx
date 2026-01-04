@@ -1,18 +1,27 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { AlertCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AIThinkingIndicator } from '@/components/ui/loading-indicator';
-import { FeedbackButtons, FeedbackData } from '@/components/ui/feedback-buttons';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AIThinkingIndicator } from "@/components/ui/loading-indicator";
+import {
+  FeedbackButtons,
+  FeedbackData,
+} from "@/components/ui/feedback-buttons";
 
 interface HealthAnalysisResult {
   overall_score: number;
-  risk_level: 'low' | 'medium' | 'high';
+  risk_level: "low" | "medium" | "high";
   key_findings: string[];
   risk_assessment: {
     level: string;
@@ -37,9 +46,13 @@ interface HealthAnalysisPanelProps {
   onAnalysisComplete?: (result: HealthAnalysisResult) => void;
 }
 
-export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnalysisPanelProps) {
+export function HealthAnalysisPanel({
+  memberId,
+  onAnalysisComplete,
+}: HealthAnalysisPanelProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<HealthAnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] =
+    useState<HealthAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adviceId, setAdviceId] = useState<string | null>(null);
 
@@ -48,10 +61,10 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
     setError(null);
 
     try {
-      const response = await fetch('/api/ai/analyze-health', {
-        method: 'POST',
+      const response = await fetch("/api/ai/analyze-health", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           memberId,
@@ -60,7 +73,7 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
       });
 
       if (!response.ok) {
-        throw new Error('分析请求失败');
+        throw new Error("分析请求失败");
       }
 
       const data = await response.json();
@@ -68,7 +81,7 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
       setAdviceId(data.adviceId);
       onAnalysisComplete?.(data.analysis);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '分析失败，请稍后重试');
+      setError(err instanceof Error ? err.message : "分析失败，请稍后重试");
     } finally {
       setIsAnalyzing(false);
     }
@@ -76,19 +89,27 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
 
   const getRiskBadgeVariant = (level: string) => {
     switch (level) {
-    case 'low': return 'default';
-    case 'medium': return 'secondary';
-    case 'high': return 'destructive';
-    default: return 'outline';
+      case "low":
+        return "default";
+      case "medium":
+        return "secondary";
+      case "high":
+        return "destructive";
+      default:
+        return "outline";
     }
   };
 
   const getRiskIcon = (level: string) => {
     switch (level) {
-    case 'low': return <TrendingDown className="w-4 h-4" />;
-    case 'medium': return <Minus className="w-4 h-4" />;
-    case 'high': return <TrendingUp className="w-4 h-4" />;
-    default: return <AlertCircle className="w-4 h-4" />;
+      case "low":
+        return <TrendingDown className="w-4 h-4" />;
+      case "medium":
+        return <Minus className="w-4 h-4" />;
+      case "high":
+        return <TrendingUp className="w-4 h-4" />;
+      default:
+        return <AlertCircle className="w-4 h-4" />;
     }
   };
 
@@ -97,10 +118,10 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
     if (!adviceId) return;
 
     try {
-      const response = await fetch('/api/ai/feedback', {
-        method: 'POST',
+      const response = await fetch("/api/ai/feedback", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...feedback,
@@ -109,10 +130,10 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
       });
 
       if (!response.ok) {
-        console.warn('Feedback submission failed');
+        console.warn("Feedback submission failed");
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      console.error("Error submitting feedback:", error);
     }
   };
 
@@ -181,8 +202,11 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
             健康综合评分
             <Badge variant={getRiskBadgeVariant(analysisResult.risk_level)}>
               {getRiskIcon(analysisResult.risk_level)}
-              {analysisResult.risk_level === 'low' ? '低风险' :
-                analysisResult.risk_level === 'medium' ? '中等风险' : '高风险'}
+              {analysisResult.risk_level === "low"
+                ? "低风险"
+                : analysisResult.risk_level === "medium"
+                  ? "中等风险"
+                  : "高风险"}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -193,8 +217,12 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
             </div>
             <Progress value={analysisResult.overall_score} className="mb-2" />
             <p className="text-sm text-muted-foreground">
-              满分100分，{analysisResult.overall_score >= 80 ? '健康状况良好' :
-                analysisResult.overall_score >= 60 ? '健康状况一般' : '需要关注健康状况'}
+              满分100分，
+              {analysisResult.overall_score >= 80
+                ? "健康状况良好"
+                : analysisResult.overall_score >= 60
+                  ? "健康状况一般"
+                  : "需要关注健康状况"}
             </p>
           </div>
         </CardContent>
@@ -221,37 +249,57 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
       <Card>
         <CardHeader>
           <CardTitle>营养素分配建议</CardTitle>
-          <CardDescription>每日推荐热量：{analysisResult.nutritional_recommendations.daily_calories} kcal</CardDescription>
+          <CardDescription>
+            每日推荐热量：
+            {analysisResult.nutritional_recommendations.daily_calories} kcal
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {analysisResult.nutritional_recommendations.macro_distribution.carbs_percent}%
+                {
+                  analysisResult.nutritional_recommendations.macro_distribution
+                    .carbs_percent
+                }
+                %
               </div>
               <div className="text-sm text-muted-foreground">碳水化合物</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {analysisResult.nutritional_recommendations.macro_distribution.protein_percent}%
+                {
+                  analysisResult.nutritional_recommendations.macro_distribution
+                    .protein_percent
+                }
+                %
               </div>
               <div className="text-sm text-muted-foreground">蛋白质</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {analysisResult.nutritional_recommendations.macro_distribution.fat_percent}%
+                {
+                  analysisResult.nutritional_recommendations.macro_distribution
+                    .fat_percent
+                }
+                %
               </div>
               <div className="text-sm text-muted-foreground">脂肪</div>
             </div>
           </div>
 
-          {analysisResult.nutritional_recommendations.micronutrients.length > 0 && (
+          {analysisResult.nutritional_recommendations.micronutrients.length >
+            0 && (
             <div>
               <h4 className="font-medium mb-2">重点关注微量营养素：</h4>
               <div className="flex flex-wrap gap-2">
-                {analysisResult.nutritional_recommendations.micronutrients.map((nutrient, index) => (
-                  <Badge key={index} variant="outline">{nutrient}</Badge>
-                ))}
+                {analysisResult.nutritional_recommendations.micronutrients.map(
+                  (nutrient, index) => (
+                    <Badge key={index} variant="outline">
+                      {nutrient}
+                    </Badge>
+                  ),
+                )}
               </div>
             </div>
           )}
@@ -279,16 +327,20 @@ export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnal
       {analysisResult.risk_assessment.urgent_actions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-red-600">⚠️ 需要立即关注的健康风险</CardTitle>
+            <CardTitle className="text-red-600">
+              ⚠️ 需要立即关注的健康风险
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 <ul className="space-y-1 mt-2">
-                  {analysisResult.risk_assessment.urgent_actions.map((action, index) => (
-                    <li key={index}>• {action}</li>
-                  ))}
+                  {analysisResult.risk_assessment.urgent_actions.map(
+                    (action, index) => (
+                      <li key={index}>• {action}</li>
+                    ),
+                  )}
                 </ul>
               </AlertDescription>
             </Alert>

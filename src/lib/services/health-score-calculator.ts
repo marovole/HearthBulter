@@ -1,7 +1,7 @@
 /**
  * Health Score Calculator
  * 健康评分计算服务
- * 
+ *
  * 计算综合健康评分（0-100分），基于：
  * - BMI评分（30分）
  * - 营养达标率评分（30分）
@@ -9,26 +9,26 @@
  * - 数据完整性评分（20分）
  */
 
-import { prisma } from '@/lib/db';
-import { calculateBMI } from '@/lib/health-calculations';
-import { subDays } from 'date-fns';
+import { prisma } from "@/lib/db";
+import { calculateBMI } from "@/lib/health-calculations";
+import { subDays } from "date-fns";
 
 export interface HealthScore {
-  totalScore: number // 总分（0-100）
+  totalScore: number; // 总分（0-100）
   breakdown: {
-    bmiScore: number // BMI评分（0-30）
-    nutritionScore: number // 营养达标率评分（0-30）
-    activityScore: number // 运动频率评分（0-20）
-    dataCompletenessScore: number // 数据完整性评分（0-20）
-  }
+    bmiScore: number; // BMI评分（0-30）
+    nutritionScore: number; // 营养达标率评分（0-30）
+    activityScore: number; // 运动频率评分（0-20）
+    dataCompletenessScore: number; // 数据完整性评分（0-20）
+  };
   details: {
-    bmi: number | null
-    bmiCategory: 'underweight' | 'normal' | 'overweight' | 'obese' | null
-    nutritionAdherenceRate: number // 营养达标率（0-100）
-    activityFrequency: number // 运动频率（过去30天记录天数）
-    dataCompletenessRate: number // 数据完整性（0-100）
-  }
-  recommendations: string[] // 改进建议
+    bmi: number | null;
+    bmiCategory: "underweight" | "normal" | "overweight" | "obese" | null;
+    nutritionAdherenceRate: number; // 营养达标率（0-100）
+    activityFrequency: number; // 运动频率（过去30天记录天数）
+    dataCompletenessRate: number; // 数据完整性（0-100）
+  };
+  recommendations: string[]; // 改进建议
 }
 
 export class HealthScoreCalculator {
@@ -41,8 +41,8 @@ export class HealthScoreCalculator {
       where: { id: memberId },
       include: {
         healthGoals: {
-          where: { status: 'ACTIVE' },
-          orderBy: { createdAt: 'desc' },
+          where: { status: "ACTIVE" },
+          orderBy: { createdAt: "desc" },
           take: 1,
         },
         healthData: {
@@ -51,20 +51,21 @@ export class HealthScoreCalculator {
               gte: subDays(new Date(), 30),
             },
           },
-          orderBy: { measuredAt: 'desc' },
+          orderBy: { measuredAt: "desc" },
         },
       },
     });
 
     if (!member) {
-      throw new Error('成员不存在');
+      throw new Error("成员不存在");
     }
 
     // 1. BMI评分（30分）
     const bmiScore = this.calculateBMIScore(member);
-    const bmi = member.height && member.weight
-      ? calculateBMI(member.weight, member.height)
-      : null;
+    const bmi =
+      member.height && member.weight
+        ? calculateBMI(member.weight, member.height)
+        : null;
 
     // 2. 营养达标率评分（30分）
     const nutritionScore = await this.calculateNutritionScore(memberId);
@@ -74,14 +75,14 @@ export class HealthScoreCalculator {
 
     // 4. 数据完整性评分（20分）
     const dataCompletenessScore = this.calculateDataCompletenessScore(
-      member.healthData
+      member.healthData,
     );
 
     const totalScore = Math.round(
       bmiScore.score +
         nutritionScore.score +
         activityScore.score +
-        dataCompletenessScore.score
+        dataCompletenessScore.score,
     );
 
     // 生成建议
@@ -115,11 +116,11 @@ export class HealthScoreCalculator {
    * 计算BMI评分（30分）
    */
   private calculateBMIScore(member: {
-    height: number | null
-    weight: number | null
+    height: number | null;
+    weight: number | null;
   }): {
-    score: number
-    category: 'underweight' | 'normal' | 'overweight' | 'obese' | null
+    score: number;
+    category: "underweight" | "normal" | "overweight" | "obese" | null;
   } {
     if (!member.height || !member.weight) {
       return { score: 0, category: null };
@@ -127,21 +128,21 @@ export class HealthScoreCalculator {
 
     const bmi = calculateBMI(member.weight, member.height);
     let score = 0;
-    let category: 'underweight' | 'normal' | 'overweight' | 'obese' | null =
+    let category: "underweight" | "normal" | "overweight" | "obese" | null =
       null;
 
     if (bmi < 18.5) {
       score = 15; // 偏瘦
-      category = 'underweight';
+      category = "underweight";
     } else if (bmi >= 18.5 && bmi <= 24.9) {
       score = 30; // 正常范围
-      category = 'normal';
+      category = "normal";
     } else if (bmi >= 25 && bmi <= 29.9) {
       score = 20; // 超重
-      category = 'overweight';
+      category = "overweight";
     } else {
       score = 10; // 肥胖
-      category = 'obese';
+      category = "obese";
     }
 
     return { score, category };
@@ -151,8 +152,8 @@ export class HealthScoreCalculator {
    * 计算营养达标率评分（30分）
    */
   private async calculateNutritionScore(memberId: string): Promise<{
-    score: number
-    adherenceRate: number
+    score: number;
+    adherenceRate: number;
   }> {
     // TODO: 实际营养数据到位后，基于实际摄入计算达标率
     // 暂时基于健康目标返回默认值
@@ -160,8 +161,8 @@ export class HealthScoreCalculator {
       where: { id: memberId },
       include: {
         healthGoals: {
-          where: { status: 'ACTIVE' },
-          orderBy: { createdAt: 'desc' },
+          where: { status: "ACTIVE" },
+          orderBy: { createdAt: "desc" },
           take: 1,
         },
       },
@@ -182,15 +183,13 @@ export class HealthScoreCalculator {
    * 计算运动频率评分（20分）
    * 基于过去30天的健康数据记录频率
    */
-  private calculateActivityScore(
-    healthData: Array<{ measuredAt: Date }>
-  ): {
-    score: number
-    frequency: number
+  private calculateActivityScore(healthData: Array<{ measuredAt: Date }>): {
+    score: number;
+    frequency: number;
   } {
     // 计算过去30天有记录的天数
     const daysWithData = new Set(
-      healthData.map((d) => d.measuredAt.toISOString().split('T')[0])
+      healthData.map((d) => d.measuredAt.toISOString().split("T")[0]),
     ).size;
 
     // 理想情况：每天记录
@@ -208,15 +207,15 @@ export class HealthScoreCalculator {
    */
   private calculateDataCompletenessScore(
     healthData: Array<{
-      weight: number | null
-      bodyFat: number | null
-      muscleMass: number | null
-      bloodPressureSystolic: number | null
-      heartRate: number | null
-    }>
+      weight: number | null;
+      bodyFat: number | null;
+      muscleMass: number | null;
+      bloodPressureSystolic: number | null;
+      heartRate: number | null;
+    }>,
   ): {
-    score: number
-    completenessRate: number
+    score: number;
+    completenessRate: number;
   } {
     if (healthData.length === 0) {
       return { score: 0, completenessRate: 0 };
@@ -244,48 +243,48 @@ export class HealthScoreCalculator {
    * 生成改进建议
    */
   private generateRecommendations(data: {
-    bmiScore: { score: number; category: string | null }
-    nutritionScore: { score: number; adherenceRate: number }
-    activityScore: { score: number; frequency: number }
-    dataCompletenessScore: { score: number; completenessRate: number }
+    bmiScore: { score: number; category: string | null };
+    nutritionScore: { score: number; adherenceRate: number };
+    activityScore: { score: number; frequency: number };
+    dataCompletenessScore: { score: number; completenessRate: number };
   }): string[] {
     const recommendations: string[] = [];
 
     // BMI建议
     if (data.bmiScore.score < 30) {
-      if (data.bmiScore.category === 'underweight') {
-        recommendations.push('BMI偏低，建议增加营养摄入和适度运动');
-      } else if (data.bmiScore.category === 'overweight') {
-        recommendations.push('BMI偏高，建议控制饮食并增加有氧运动');
-      } else if (data.bmiScore.category === 'obese') {
-        recommendations.push('BMI过高，建议制定减重计划并咨询专业医生');
+      if (data.bmiScore.category === "underweight") {
+        recommendations.push("BMI偏低，建议增加营养摄入和适度运动");
+      } else if (data.bmiScore.category === "overweight") {
+        recommendations.push("BMI偏高，建议控制饮食并增加有氧运动");
+      } else if (data.bmiScore.category === "obese") {
+        recommendations.push("BMI过高，建议制定减重计划并咨询专业医生");
       }
     }
 
     // 营养建议
     if (data.nutritionScore.score < 25) {
       recommendations.push(
-        `营养达标率较低（${data.nutritionScore.adherenceRate}%），建议关注每日营养摄入`
+        `营养达标率较低（${data.nutritionScore.adherenceRate}%），建议关注每日营养摄入`,
       );
     }
 
     // 运动建议
     if (data.activityScore.score < 15) {
       recommendations.push(
-        `过去30天仅记录${data.activityScore.frequency}天，建议每天记录健康数据`
+        `过去30天仅记录${data.activityScore.frequency}天，建议每天记录健康数据`,
       );
     }
 
     // 数据完整性建议
     if (data.dataCompletenessScore.score < 15) {
       recommendations.push(
-        `数据完整性较低（${Math.round(data.dataCompletenessScore.completenessRate)}%），建议完善各项健康指标记录`
+        `数据完整性较低（${Math.round(data.dataCompletenessScore.completenessRate)}%），建议完善各项健康指标记录`,
       );
     }
 
     // 如果没有问题，给出正面鼓励
     if (recommendations.length === 0) {
-      recommendations.push('继续保持！您的健康数据表现良好');
+      recommendations.push("继续保持！您的健康数据表现良好");
     }
 
     return recommendations;
@@ -294,4 +293,3 @@ export class HealthScoreCalculator {
 
 // 导出单例
 export const healthScoreCalculator = new HealthScoreCalculator();
-

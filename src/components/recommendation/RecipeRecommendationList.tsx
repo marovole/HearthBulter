@@ -1,10 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Star, Clock, DollarSign, Users, Heart, Eye, ChefHat, RefreshCw } from 'lucide-react';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Star,
+  Clock,
+  DollarSign,
+  Users,
+  Heart,
+  Eye,
+  ChefHat,
+  RefreshCw,
+} from "lucide-react";
 
 interface Recipe {
   id: string;
@@ -68,39 +83,47 @@ export default function RecipeRecommendationList({
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-    case 'EASY': return 'bg-green-100 text-green-800';
-    case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-    case 'HARD': return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
+      case "EASY":
+        return "bg-green-100 text-green-800";
+      case "MEDIUM":
+        return "bg-yellow-100 text-yellow-800";
+      case "HARD":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getDifficultyText = (difficulty: string) => {
     switch (difficulty) {
-    case 'EASY': return '简单';
-    case 'MEDIUM': return '中等';
-    case 'HARD': return '困难';
-    default: return '未知';
+      case "EASY":
+        return "简单";
+      case "MEDIUM":
+        return "中等";
+      case "HARD":
+        return "困难";
+      default:
+        return "未知";
     }
   };
 
   const handleRating = (recipeId: string, rating: number) => {
-    setRatingStates(prev => ({ ...prev, [recipeId]: rating }));
+    setRatingStates((prev) => ({ ...prev, [recipeId]: rating }));
     onRateRecipe?.(recipeId, rating);
   };
 
-  const renderMetadataBars = (metadata: Recommendation['metadata']) => {
+  const renderMetadataBars = (metadata: Recommendation["metadata"]) => {
     const metrics = [
-      { key: 'inventoryMatch', label: '库存匹配', color: 'bg-blue-600' },
-      { key: 'priceMatch', label: '价格匹配', color: 'bg-green-600' },
-      { key: 'nutritionMatch', label: '营养匹配', color: 'bg-purple-600' },
-      { key: 'preferenceMatch', label: '偏好匹配', color: 'bg-orange-600' },
-      { key: 'seasonalMatch', label: '季节匹配', color: 'bg-pink-600' },
+      { key: "inventoryMatch", label: "库存匹配", color: "bg-blue-600" },
+      { key: "priceMatch", label: "价格匹配", color: "bg-green-600" },
+      { key: "nutritionMatch", label: "营养匹配", color: "bg-purple-600" },
+      { key: "preferenceMatch", label: "偏好匹配", color: "bg-orange-600" },
+      { key: "seasonalMatch", label: "季节匹配", color: "bg-pink-600" },
     ];
 
     return (
       <div className="space-y-2">
-        {metrics.map(metric => {
+        {metrics.map((metric) => {
           const value = metadata[metric.key as keyof typeof metadata];
           return (
             <div key={metric.key} className="space-y-1">
@@ -109,8 +132,8 @@ export default function RecipeRecommendationList({
                 <span>{Math.round(value * 100)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div 
-                  className={`${metric.color} h-1.5 rounded-full transition-all duration-300`} 
+                <div
+                  className={`${metric.color} h-1.5 rounded-full transition-all duration-300`}
                   style={{ width: `${value * 100}%` }}
                 />
               </div>
@@ -152,12 +175,14 @@ export default function RecipeRecommendationList({
         <Card key={rec.recipeId} className="hover:shadow-md transition-shadow">
           <CardContent className="p-4">
             <div className="flex justify-between items-start mb-2">
-              <h3 className="font-medium text-sm flex-1 mr-2">{rec.recipe.name}</h3>
+              <h3 className="font-medium text-sm flex-1 mr-2">
+                {rec.recipe.name}
+              </h3>
               <Badge variant="secondary" className="text-xs">
                 {Math.round(rec.score)}分
               </Badge>
             </div>
-            
+
             <div className="flex flex-wrap gap-1 mb-2">
               {rec.reasons.slice(0, 2).map((reason, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
@@ -183,13 +208,28 @@ export default function RecipeRecommendationList({
 
             {showActions && (
               <div className="flex gap-1">
-                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onViewRecipe?.(rec.recipeId)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => onViewRecipe?.(rec.recipeId)}
+                >
                   查看
                 </Button>
-                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onFavoriteRecipe?.(rec.recipeId)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => onFavoriteRecipe?.(rec.recipeId)}
+                >
                   <Heart className="h-3 w-3" />
                 </Button>
-                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onGetSimilar?.(rec.recipeId)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => onGetSimilar?.(rec.recipeId)}
+                >
                   相似
                 </Button>
               </div>
@@ -245,24 +285,24 @@ export default function RecipeRecommendationList({
           {showActions && (
             <div className="space-y-3">
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => onViewRecipe?.(rec.recipeId)}
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   查看
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => onFavoriteRecipe?.(rec.recipeId)}
                 >
                   <Heart className="h-4 w-4 mr-1" />
                   收藏
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => onGetSimilar?.(rec.recipeId)}
                 >
@@ -281,12 +321,15 @@ export default function RecipeRecommendationList({
                       className="p-1 h-8"
                       onClick={() => handleRating(rec.recipeId, star)}
                     >
-                      <Star 
+                      <Star
                         className={`h-4 w-4 ${
-                          star <= (ratingStates[rec.recipeId] || rec.recipe.averageRating || 0) 
-                            ? 'fill-yellow-400 text-yellow-400' 
-                            : 'text-gray-300'
-                        }`} 
+                          star <=
+                          (ratingStates[rec.recipeId] ||
+                            rec.recipe.averageRating ||
+                            0)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
                       />
                     </Button>
                   ))}
@@ -309,7 +352,7 @@ export default function RecipeRecommendationList({
             获取中...
           </Button>
         </div>
-        
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, index) => (
             <Card key={index} className="animate-pulse">
@@ -343,13 +386,15 @@ export default function RecipeRecommendationList({
             </Button>
           )}
         </div>
-        
+
         <Card>
           <CardContent className="flex items-center justify-center h-64">
             <div className="text-center space-y-2">
               <ChefHat className="h-12 w-12 mx-auto text-muted-foreground" />
               <p className="text-muted-foreground">暂无推荐结果</p>
-              <p className="text-sm text-muted-foreground">请调整您的偏好设置后重试</p>
+              <p className="text-sm text-muted-foreground">
+                请调整您的偏好设置后重试
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -371,7 +416,9 @@ export default function RecipeRecommendationList({
         )}
       </div>
 
-      <div className={`grid gap-4 ${compact ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
+      <div
+        className={`grid gap-4 ${compact ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3"}`}
+      >
         {recommendations.map(renderRecipeCard)}
       </div>
     </div>

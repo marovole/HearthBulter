@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React, { useRef, useEffect, useState } from 'react';
-import { useSwipe, useLongPress, usePinchZoom } from '@/lib/hooks/useGestures';
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import React, { useRef, useEffect, useState } from "react";
+import { useSwipe, useLongPress, usePinchZoom } from "@/lib/hooks/useGestures";
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 
 interface GestureEnhancedCardProps {
-  children: React.ReactNode
-  title?: string
-  onSwipeLeft?: () => void
-  onSwipeRight?: () => void
-  onSwipeUp?: () => void
-  onSwipeDown?: () => void
-  onLongPress?: () => void
-  className?: string
-  showGestureHints?: boolean
+  children: React.ReactNode;
+  title?: string;
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
+  onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
+  onLongPress?: () => void;
+  className?: string;
+  showGestureHints?: boolean;
 }
 
 export function GestureEnhancedCard({
@@ -24,7 +24,7 @@ export function GestureEnhancedCard({
   onSwipeUp,
   onSwipeDown,
   onLongPress,
-  className = '',
+  className = "",
   showGestureHints = true,
 }: GestureEnhancedCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -84,9 +84,9 @@ export function GestureEnhancedCard({
       {showGestureHints && showSwipeHint && (
         <div className="absolute -top-8 left-0 right-0 z-10 flex justify-center">
           <div className="bg-black bg-opacity-75 text-white text-xs px-3 py-1 rounded-full">
-            {onSwipeLeft && onSwipeRight && '← 滑动切换 →'}
-            {onSwipeUp && onSwipeDown && '↑ 滑动查看 ↓'}
-            {onLongPress && '长按查看更多'}
+            {onSwipeLeft && onSwipeRight && "← 滑动切换 →"}
+            {onSwipeUp && onSwipeDown && "↑ 滑动查看 ↓"}
+            {onLongPress && "长按查看更多"}
           </div>
         </div>
       )}
@@ -109,7 +109,7 @@ export function GestureEnhancedCard({
         className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-transform duration-300"
         style={{
           transform: `scale(${scale})`,
-          transformOrigin: 'center',
+          transformOrigin: "center",
         }}
         {...longPressHandlers}
       >
@@ -118,10 +118,8 @@ export function GestureEnhancedCard({
             <h3 className="text-sm font-medium text-gray-900">{title}</h3>
           </div>
         )}
-        
-        <div className="p-4">
-          {children}
-        </div>
+
+        <div className="p-4">{children}</div>
 
         {/* 滑动指示器 */}
         {(onSwipeLeft || onSwipeRight) && (
@@ -144,15 +142,15 @@ export function GestureEnhancedCard({
 }
 
 interface SwipeableCarouselProps {
-  items: React.ReactNode[]
-  onIndexChange?: (index: number) => void
-  className?: string
+  items: React.ReactNode[];
+  onIndexChange?: (index: number) => void;
+  className?: string;
 }
 
 export function SwipeableCarousel({
   items,
   onIndexChange,
-  className = '',
+  className = "",
 }: SwipeableCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -206,7 +204,7 @@ export function SwipeableCarousel({
               onIndexChange?.(index);
             }}
             className={`w-2 h-2 rounded-full transition-colors ${
-              index === currentIndex ? 'bg-blue-600' : 'bg-gray-300'
+              index === currentIndex ? "bg-blue-600" : "bg-gray-300"
             }`}
           />
         ))}
@@ -235,13 +233,13 @@ export function SwipeableCarousel({
 
 // 移动端数据录入手势组件
 interface GestureInputProps {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  onSwipeUp?: () => void
-  onSwipeDown?: () => void
-  placeholder?: string
-  type?: 'text' | 'number'
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
+  placeholder?: string;
+  type?: "text" | "number";
 }
 
 export function GestureInput({
@@ -250,8 +248,8 @@ export function GestureInput({
   onChange,
   onSwipeUp,
   onSwipeDown,
-  placeholder = '',
-  type = 'text',
+  placeholder = "",
+  type = "text",
 }: GestureInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 

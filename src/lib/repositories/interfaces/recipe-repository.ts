@@ -77,8 +77,8 @@ export interface GetFavoritesQuery {
   memberId: string;
   page?: number;
   limit?: number;
-  sortBy?: 'favoritedAt' | 'name';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "favoritedAt" | "name";
+  sortOrder?: "asc" | "desc";
 }
 
 /**
@@ -150,7 +150,10 @@ export interface RecipeRepository {
    * @param memberId - 成员 ID
    * @returns 收藏记录（如果存在）
    */
-  checkFavoriteStatus(recipeId: string, memberId: string): Promise<RecipeFavoriteDTO | null>;
+  checkFavoriteStatus(
+    recipeId: string,
+    memberId: string,
+  ): Promise<RecipeFavoriteDTO | null>;
 
   /**
    * 添加或更新评分
@@ -167,7 +170,10 @@ export interface RecipeRepository {
    * @param memberId - 成员 ID
    * @returns 评分记录（如果存在）
    */
-  getRating(recipeId: string, memberId: string): Promise<RecipeRatingDTO | null>;
+  getRating(
+    recipeId: string,
+    memberId: string,
+  ): Promise<RecipeRatingDTO | null>;
 
   /**
    * 检查食谱是否存在

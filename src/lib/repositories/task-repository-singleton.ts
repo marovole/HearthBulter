@@ -6,9 +6,9 @@
  * @module task-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseTaskRepository } from './implementations/supabase-task-repository';
-import type { TaskRepository } from './interfaces/task-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseTaskRepository } from "./implementations/supabase-task-repository";
+import type { TaskRepository } from "./interfaces/task-repository";
 
 let instance: TaskRepository | null = null;
 

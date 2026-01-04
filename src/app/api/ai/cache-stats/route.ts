@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { aiResponseCache } from '@/lib/services/ai/response-cache';
-import { rateLimiter } from '@/lib/services/ai/rate-limiter';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { aiResponseCache } from "@/lib/services/ai/response-cache";
+import { rateLimiter } from "@/lib/services/ai/rate-limiter";
 
 // 管理员权限检查
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 async function checkAdminPermission(userId: string): Promise<boolean> {
   // 这里应该检查用户是否有管理员权限
   // 暂时简化实现，实际项目中应该检查用户角色
@@ -17,42 +17,39 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // 检查管理员权限
     const isAdmin = await checkAdminPermission(session.user.id);
     if (!isAdmin) {
       return NextResponse.json(
-        { error: 'Admin permission required' },
-        { status: 403 }
+        { error: "Admin permission required" },
+        { status: 403 },
       );
     }
 
     // 速率限制检查
     const rateLimitResult = await rateLimiter.checkLimit(
       session.user.id,
-      'ai_general'
+      "ai_general",
     );
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
-          error: 'Rate limit exceeded',
+          error: "Rate limit exceeded",
           retryAfter: rateLimitResult.retryAfter,
           resetTime: rateLimitResult.resetTime,
         },
         {
           status: 429,
           headers: {
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '60',
+            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
+            "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
+            "Retry-After": rateLimitResult.retryAfter?.toString() || "60",
           },
-        }
+        },
       );
     }
 
@@ -75,25 +72,29 @@ export async function GET(request: NextRequest) {
         stats: cacheStats,
         topEntries: cacheInfo.slice(0, 10), // 前10个最常用的缓存条目
         totalSizeKB: Math.round(
-          cacheInfo.reduce((sum, entry) => sum + entry.size, 0) / 1024
+          cacheInfo.reduce((sum, entry) => sum + entry.size, 0) / 1024,
         ),
       },
       rateLimit: rateLimitStats,
       performance: {
         hitRatePercent: cacheStats.hitRate,
         estimatedSavings,
-        cacheEfficiency: cacheStats.hits > 0 ? 'good' : cacheStats.totalSize > 0 ? 'moderate' : 'poor',
+        cacheEfficiency:
+          cacheStats.hits > 0
+            ? "good"
+            : cacheStats.totalSize > 0
+              ? "moderate"
+              : "poor",
       },
       recommendations: generateRecommendations(cacheStats, rateLimitStats),
     };
 
     return NextResponse.json(response);
-
   } catch (error) {
-    console.error('Cache stats API error:', error);
+    console.error("Cache stats API error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -102,44 +103,40 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // 检查管理员权限
     const isAdmin = await checkAdminPermission(session.user.id);
     if (!isAdmin) {
       return NextResponse.json(
-        { error: 'Admin permission required' },
-        { status: 403 }
+        { error: "Admin permission required" },
+        { status: 403 },
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
+    const action = searchParams.get("action");
 
-    if (action === 'clear') {
+    if (action === "clear") {
       // 清空所有缓存
       await aiResponseCache.clear();
-      return NextResponse.json({ message: 'Cache cleared successfully' });
-    } else if (action === 'reset-stats') {
+      return NextResponse.json({ message: "Cache cleared successfully" });
+    } else if (action === "reset-stats") {
       // 重置统计信息
       aiResponseCache.resetStats();
-      return NextResponse.json({ message: 'Cache stats reset successfully' });
+      return NextResponse.json({ message: "Cache stats reset successfully" });
     } else {
       return NextResponse.json(
-        { error: 'Invalid action. Use ?action=clear or ?action=reset-stats' },
-        { status: 400 }
+        { error: "Invalid action. Use ?action=clear or ?action=reset-stats" },
+        { status: 400 },
       );
     }
-
   } catch (error) {
-    console.error('Cache management API error:', error);
+    console.error("Cache management API error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -149,31 +146,31 @@ export async function DELETE(request: NextRequest) {
  */
 function generateRecommendations(
   cacheStats: any,
-  rateLimitStats: any
+  rateLimitStats: any,
 ): string[] {
   const recommendations: string[] = [];
 
   // 缓存命中率建议
   if (cacheStats.hitRate < 20) {
-    recommendations.push('缓存命中率较低，考虑增加缓存时间或优化缓存键策略');
+    recommendations.push("缓存命中率较低，考虑增加缓存时间或优化缓存键策略");
   } else if (cacheStats.hitRate > 80) {
-    recommendations.push('缓存命中率良好，系统性能表现优秀');
+    recommendations.push("缓存命中率良好，系统性能表现优秀");
   }
 
   // 缓存大小建议
   if (cacheStats.totalSize > 800) {
-    recommendations.push('缓存条目数量较多，考虑调整TTL或增加缓存清理频率');
+    recommendations.push("缓存条目数量较多，考虑调整TTL或增加缓存清理频率");
   }
 
   // 驱逐策略建议
   if (cacheStats.evictions > cacheStats.sets * 0.1) {
-    recommendations.push('缓存驱逐频率较高，建议增加最大缓存大小');
+    recommendations.push("缓存驱逐频率较高，建议增加最大缓存大小");
   }
 
   // 速率限制建议
   const activeRate = rateLimitStats.activeRecords / rateLimitStats.totalRecords;
   if (activeRate > 0.8) {
-    recommendations.push('活跃用户比例较高，监控系统负载');
+    recommendations.push("活跃用户比例较高，监控系统负载");
   }
 
   return recommendations;

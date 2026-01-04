@@ -1,15 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, AlertTriangle, Lightbulb, ChefHat } from 'lucide-react';
-import { AIThinkingIndicator } from '@/components/ui/loading-indicator';
-import { FeedbackButtons, FeedbackData } from '@/components/ui/feedback-buttons';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle, AlertTriangle, Lightbulb, ChefHat } from "lucide-react";
+import { AIThinkingIndicator } from "@/components/ui/loading-indicator";
+import {
+  FeedbackButtons,
+  FeedbackData,
+} from "@/components/ui/feedback-buttons";
 
 interface RecipeData {
   id: string;
@@ -51,7 +60,7 @@ interface OptimizationResult {
         potential_drawbacks: string[];
       };
       availability_score: number;
-      cost_difference: 'cheaper' | 'similar' | 'expensive';
+      cost_difference: "cheaper" | "similar" | "expensive";
     }>;
     portion_adjustments: Array<{
       ingredient: string;
@@ -123,9 +132,10 @@ export function SmartRecipeOptimizer({
   onOptimizationComplete,
 }: SmartRecipeOptimizerProps) {
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
+  const [optimizationResult, setOptimizationResult] =
+    useState<OptimizationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('analysis');
+  const [activeTab, setActiveTab] = useState("analysis");
   const [adviceId, setAdviceId] = useState<string | null>(null);
 
   const startOptimization = async () => {
@@ -133,10 +143,10 @@ export function SmartRecipeOptimizer({
     setError(null);
 
     try {
-      const response = await fetch('/api/ai/optimize-recipe', {
-        method: 'POST',
+      const response = await fetch("/api/ai/optimize-recipe", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           recipeId: recipe.id,
@@ -150,17 +160,17 @@ export function SmartRecipeOptimizer({
           preferences: {
             dietary_restrictions: [],
             allergies: [],
-            preferred_cuisines: ['chinese'],
-            budget_level: 'medium',
-            cooking_skill: 'intermediate',
+            preferred_cuisines: ["chinese"],
+            budget_level: "medium",
+            cooking_skill: "intermediate",
           },
-          season: 'autumn', // 可以根据当前日期动态确定
-          optimizationLevel: 'moderate',
+          season: "autumn", // 可以根据当前日期动态确定
+          optimizationLevel: "moderate",
         }),
       });
 
       if (!response.ok) {
-        throw new Error('食谱优化请求失败');
+        throw new Error("食谱优化请求失败");
       }
 
       const data = await response.json();
@@ -168,16 +178,16 @@ export function SmartRecipeOptimizer({
       setAdviceId(data.adviceId || data.optimizationId);
       onOptimizationComplete?.(data.optimization);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '优化失败，请稍后重试');
+      setError(err instanceof Error ? err.message : "优化失败，请稍后重试");
     } finally {
       setIsOptimizing(false);
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getScoreIcon = (score: number) => {
@@ -191,27 +201,32 @@ export function SmartRecipeOptimizer({
     if (!adviceId) return;
 
     try {
-      const response = await fetch('/api/ai/feedback', {
-        method: 'POST',
+      const response = await fetch("/api/ai/feedback", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           adviceId,
-          feedbackType: 'advice',
-          liked: feedback.type === 'positive',
-          disliked: feedback.type === 'negative',
-          rating: feedback.type === 'positive' ? 5 : feedback.type === 'negative' ? 2 : 3,
+          feedbackType: "advice",
+          liked: feedback.type === "positive",
+          disliked: feedback.type === "negative",
+          rating:
+            feedback.type === "positive"
+              ? 5
+              : feedback.type === "negative"
+                ? 2
+                : 3,
           comments: feedback.comment,
-          categories: ['helpfulness', 'accuracy'],
+          categories: ["helpfulness", "accuracy"],
         }),
       });
 
       if (!response.ok) {
-        console.warn('Feedback submission failed');
+        console.warn("Feedback submission failed");
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      console.error("Error submitting feedback:", error);
     }
   };
 
@@ -312,9 +327,7 @@ export function SmartRecipeOptimizer({
             营养评分: {optimizationResult.analysis.nutrition_score.toFixed(1)}
           </Badge>
         </CardTitle>
-        <CardDescription>
-          AI已完成食谱分析和优化建议
-        </CardDescription>
+        <CardDescription>AI已完成食谱分析和优化建议</CardDescription>
       </CardHeader>
 
       <CardContent>
@@ -329,10 +342,15 @@ export function SmartRecipeOptimizer({
           <TabsContent value="analysis" className="space-y-4">
             {/* 营养评分 */}
             <div className="text-center p-4 bg-muted rounded-lg">
-              <div className={`text-3xl font-bold ${getScoreColor(optimizationResult.analysis.nutrition_score)}`}>
+              <div
+                className={`text-3xl font-bold ${getScoreColor(optimizationResult.analysis.nutrition_score)}`}
+              >
                 {optimizationResult.analysis.nutrition_score.toFixed(1)}
               </div>
-              <Progress value={optimizationResult.analysis.nutrition_score} className="mt-2" />
+              <Progress
+                value={optimizationResult.analysis.nutrition_score}
+                className="mt-2"
+              />
               <p className="text-sm text-muted-foreground mt-1">
                 营养均衡评分 (0-100)
               </p>
@@ -342,18 +360,28 @@ export function SmartRecipeOptimizer({
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 border rounded-lg">
                 <div className="text-sm font-medium mb-1">热量差距</div>
-                <div className={`text-lg font-bold ${
-                  optimizationResult.analysis.gap_analysis.calories_gap > 0 ? 'text-red-600' : 'text-green-600'
-                }`}>
-                  {optimizationResult.analysis.gap_analysis.calories_gap > 0 ? '+' : ''}
+                <div
+                  className={`text-lg font-bold ${
+                    optimizationResult.analysis.gap_analysis.calories_gap > 0
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  {optimizationResult.analysis.gap_analysis.calories_gap > 0
+                    ? "+"
+                    : ""}
                   {optimizationResult.analysis.gap_analysis.calories_gap} kcal
                 </div>
               </div>
               <div className="p-3 border rounded-lg">
                 <div className="text-sm font-medium mb-1">蛋白质差距</div>
-                <div className={`text-lg font-bold ${
-                  optimizationResult.analysis.gap_analysis.protein_gap < 0 ? 'text-red-600' : 'text-green-600'
-                }`}>
+                <div
+                  className={`text-lg font-bold ${
+                    optimizationResult.analysis.gap_analysis.protein_gap < 0
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
                   {optimizationResult.analysis.gap_analysis.protein_gap}g
                 </div>
               </div>
@@ -364,56 +392,82 @@ export function SmartRecipeOptimizer({
               <div>
                 <h4 className="font-medium text-green-700 mb-2">✅ 优势</h4>
                 <ul className="space-y-1">
-                  {optimizationResult.analysis.strengths.map((strength, index) => (
-                    <li key={index} className="text-sm text-green-600">• {strength}</li>
-                  ))}
+                  {optimizationResult.analysis.strengths.map(
+                    (strength, index) => (
+                      <li key={index} className="text-sm text-green-600">
+                        • {strength}
+                      </li>
+                    ),
+                  )}
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-medium text-orange-700 mb-2">⚠️ 需要改进</h4>
+                <h4 className="font-medium text-orange-700 mb-2">
+                  ⚠️ 需要改进
+                </h4>
                 <ul className="space-y-1">
-                  {optimizationResult.analysis.weaknesses.map((weakness, index) => (
-                    <li key={index} className="text-sm text-orange-600">• {weakness}</li>
-                  ))}
+                  {optimizationResult.analysis.weaknesses.map(
+                    (weakness, index) => (
+                      <li key={index} className="text-sm text-orange-600">
+                        • {weakness}
+                      </li>
+                    ),
+                  )}
                 </ul>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="substitutions" className="space-y-4">
-            {optimizationResult.optimizations.ingredient_substitutions.length > 0 ? (
+            {optimizationResult.optimizations.ingredient_substitutions.length >
+            0 ? (
               <div className="space-y-3">
-                {optimizationResult.optimizations.ingredient_substitutions.map((sub, index) => (
-                  <Card key={index}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <span className="font-medium">{sub.original_ingredient}</span>
-                          <span className="text-muted-foreground mx-2">→</span>
-                          <span className="font-medium text-green-600">{sub.substitute_ingredient}</span>
+                {optimizationResult.optimizations.ingredient_substitutions.map(
+                  (sub, index) => (
+                    <Card key={index}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="font-medium">
+                              {sub.original_ingredient}
+                            </span>
+                            <span className="text-muted-foreground mx-2">
+                              →
+                            </span>
+                            <span className="font-medium text-green-600">
+                              {sub.substitute_ingredient}
+                            </span>
+                          </div>
+                          <Badge variant="outline">
+                            {sub.cost_difference === "cheaper"
+                              ? "💰更便宜"
+                              : sub.cost_difference === "expensive"
+                                ? "💎更贵"
+                                : "⚖️价格相似"}
+                          </Badge>
                         </div>
-                        <Badge variant="outline">
-                          {sub.cost_difference === 'cheaper' ? '💰更便宜' :
-                            sub.cost_difference === 'expensive' ? '💎更贵' : '⚖️价格相似'}
-                        </Badge>
-                      </div>
 
-                      <p className="text-sm text-muted-foreground mb-2">{sub.reason}</p>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {sub.reason}
+                        </p>
 
-                      <div className="text-xs space-y-1">
-                        <div>
-                          <span className="font-medium">营养相似性：</span>
-                          {sub.nutritional_impact.similar_nutrients.join('、')}
+                        <div className="text-xs space-y-1">
+                          <div>
+                            <span className="font-medium">营养相似性：</span>
+                            {sub.nutritional_impact.similar_nutrients.join(
+                              "、",
+                            )}
+                          </div>
+                          <div>
+                            <span className="font-medium">改善方面：</span>
+                            {sub.nutritional_impact.improved_aspects.join("、")}
+                          </div>
                         </div>
-                        <div>
-                          <span className="font-medium">改善方面：</span>
-                          {sub.nutritional_impact.improved_aspects.join('、')}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ),
+                )}
               </div>
             ) : (
               <div className="text-center text-muted-foreground py-8">
@@ -425,38 +479,57 @@ export function SmartRecipeOptimizer({
           </TabsContent>
 
           <TabsContent value="adjustments" className="space-y-4">
-            {optimizationResult.optimizations.portion_adjustments.length > 0 && (
+            {optimizationResult.optimizations.portion_adjustments.length >
+              0 && (
               <div className="space-y-3">
-                {optimizationResult.optimizations.portion_adjustments.map((adj, index) => (
-                  <Card key={index}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium">{adj.ingredient}</span>
-                        <div className="text-right">
-                          <div className="text-sm text-muted-foreground">
-                            {adj.current_amount}{adj.unit} → {adj.recommended_amount}{adj.unit}
+                {optimizationResult.optimizations.portion_adjustments.map(
+                  (adj, index) => (
+                    <Card key={index}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-medium">{adj.ingredient}</span>
+                          <div className="text-right">
+                            <div className="text-sm text-muted-foreground">
+                              {adj.current_amount}
+                              {adj.unit} → {adj.recommended_amount}
+                              {adj.unit}
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {adj.recommended_amount > adj.current_amount
+                                ? "增加"
+                                : "减少"}
+                              {Math.abs(
+                                adj.recommended_amount - adj.current_amount,
+                              )}
+                              {adj.unit}
+                            </Badge>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {adj.recommended_amount > adj.current_amount ? '增加' : '减少'}
-                            {Math.abs(adj.recommended_amount - adj.current_amount)}{adj.unit}
-                          </Badge>
                         </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{adj.reason}</p>
-                      <p className="text-xs text-green-600 mt-1">{adj.nutritional_impact}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <p className="text-sm text-muted-foreground">
+                          {adj.reason}
+                        </p>
+                        <p className="text-xs text-green-600 mt-1">
+                          {adj.nutritional_impact}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ),
+                )}
               </div>
             )}
 
-            {optimizationResult.optimizations.cooking_method_suggestions.length > 0 && (
+            {optimizationResult.optimizations.cooking_method_suggestions
+              .length > 0 && (
               <div>
                 <h4 className="font-medium mb-2">烹饪方法建议</h4>
                 <ul className="space-y-1">
-                  {optimizationResult.optimizations.cooking_method_suggestions.map((suggestion, index) => (
-                    <li key={index} className="text-sm text-blue-600">• {suggestion}</li>
-                  ))}
+                  {optimizationResult.optimizations.cooking_method_suggestions.map(
+                    (suggestion, index) => (
+                      <li key={index} className="text-sm text-blue-600">
+                        • {suggestion}
+                      </li>
+                    ),
+                  )}
                 </ul>
               </div>
             )}
@@ -473,14 +546,19 @@ export function SmartRecipeOptimizer({
                 <div>
                   <h4 className="font-medium mb-2">食材清单</h4>
                   <div className="grid grid-cols-1 gap-2">
-                    {optimizationResult.improved_recipe.ingredients.map((ingredient, index) => (
-                      <div key={index} className="flex justify-between p-2 bg-muted rounded">
-                        <span>{ingredient.name}</span>
-                        <span className="font-medium">
-                          {ingredient.amount} {ingredient.unit}
-                        </span>
-                      </div>
-                    ))}
+                    {optimizationResult.improved_recipe.ingredients.map(
+                      (ingredient, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between p-2 bg-muted rounded"
+                        >
+                          <span>{ingredient.name}</span>
+                          <span className="font-medium">
+                            {ingredient.amount} {ingredient.unit}
+                          </span>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
 
@@ -488,10 +566,38 @@ export function SmartRecipeOptimizer({
                 <div>
                   <h4 className="font-medium mb-2">营养信息</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>热量: {optimizationResult.improved_recipe.nutrition_facts.calories} kcal</div>
-                    <div>蛋白质: {optimizationResult.improved_recipe.nutrition_facts.macronutrients.protein.amount}g</div>
-                    <div>碳水: {optimizationResult.improved_recipe.nutrition_facts.macronutrients.carbohydrates.amount}g</div>
-                    <div>脂肪: {optimizationResult.improved_recipe.nutrition_facts.macronutrients.fat.amount}g</div>
+                    <div>
+                      热量:{" "}
+                      {
+                        optimizationResult.improved_recipe.nutrition_facts
+                          .calories
+                      }{" "}
+                      kcal
+                    </div>
+                    <div>
+                      蛋白质:{" "}
+                      {
+                        optimizationResult.improved_recipe.nutrition_facts
+                          .macronutrients.protein.amount
+                      }
+                      g
+                    </div>
+                    <div>
+                      碳水:{" "}
+                      {
+                        optimizationResult.improved_recipe.nutrition_facts
+                          .macronutrients.carbohydrates.amount
+                      }
+                      g
+                    </div>
+                    <div>
+                      脂肪:{" "}
+                      {
+                        optimizationResult.improved_recipe.nutrition_facts
+                          .macronutrients.fat.amount
+                      }
+                      g
+                    </div>
                   </div>
                 </div>
 
@@ -500,9 +606,13 @@ export function SmartRecipeOptimizer({
                   <div>
                     <h4 className="font-medium mb-2">制作步骤</h4>
                     <ol className="space-y-1">
-                      {optimizationResult.improved_recipe.instructions.map((step, index) => (
-                        <li key={index} className="text-sm">{index + 1}. {step}</li>
-                      ))}
+                      {optimizationResult.improved_recipe.instructions.map(
+                        (step, index) => (
+                          <li key={index} className="text-sm">
+                            {index + 1}. {step}
+                          </li>
+                        ),
+                      )}
                     </ol>
                   </div>
                 )}
@@ -530,10 +640,13 @@ export function SmartRecipeOptimizer({
 
         {/* 重新优化按钮 */}
         <div className="flex justify-center mt-6">
-          <Button onClick={() => {
-            setOptimizationResult(null);
-            setAdviceId(null);
-          }} variant="outline">
+          <Button
+            onClick={() => {
+              setOptimizationResult(null);
+              setAdviceId(null);
+            }}
+            variant="outline"
+          >
             重新优化
           </Button>
         </div>

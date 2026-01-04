@@ -3,16 +3,16 @@
  * 提供统一的错误处理、日志记录和性能监控
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma, testDatabaseConnection } from '@/lib/db';
-import { CacheService } from '@/lib/cache/redis-client';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma, testDatabaseConnection } from "@/lib/db";
+import { CacheService } from "@/lib/cache/redis-client";
 
 // 错误级别定义
 export enum ErrorLevel {
-  LOW = 'low',       // 不影响核心功能的小错误
-  MEDIUM = 'medium', // 影响部分功能的错误
-  HIGH = 'high',     // 影响核心功能的错误
-  CRITICAL = 'critical', // 系统级严重错误
+  LOW = "low", // 不影响核心功能的小错误
+  MEDIUM = "medium", // 影响部分功能的错误
+  HIGH = "high", // 影响核心功能的错误
+  CRITICAL = "critical", // 系统级严重错误
 }
 
 // API错误类型
@@ -63,14 +63,14 @@ export class ErrorMonitoringService {
 
     // 控制台输出，带有颜色和格式
     const levelColors = {
-      [ErrorLevel.LOW]: '\x1b[36m',    // 青色
-      [ErrorLevel.MEDIUM]: '\x1b[33m',  // 黄色
-      [ErrorLevel.HIGH]: '\x1b[31m',    // 红色
-      [ErrorLevel.CRITICAL]: '\x1b[35m', // 紫色
+      [ErrorLevel.LOW]: "\x1b[36m", // 青色
+      [ErrorLevel.MEDIUM]: "\x1b[33m", // 黄色
+      [ErrorLevel.HIGH]: "\x1b[31m", // 红色
+      [ErrorLevel.CRITICAL]: "\x1b[35m", // 紫色
     };
 
-    const color = levelColors[error.level] || '\x1b[0m';
-    const reset = '\x1b[0m';
+    const color = levelColors[error.level] || "\x1b[0m";
+    const reset = "\x1b[0m";
 
     console.error(
       `${color}[${error.level.toUpperCase()}] API Error:${reset} ${error.code} - ${error.message}`,
@@ -82,11 +82,14 @@ export class ErrorMonitoringService {
         userId: error.userId,
         timestamp: error.timestamp,
         details: error.details,
-      }
+      },
     );
 
     // 高级别错误触发额外的告警机制
-    if (error.level === ErrorLevel.HIGH || error.level === ErrorLevel.CRITICAL) {
+    if (
+      error.level === ErrorLevel.HIGH ||
+      error.level === ErrorLevel.CRITICAL
+    ) {
       this.triggerAlert(error);
     }
   }
@@ -103,11 +106,15 @@ export class ErrorMonitoringService {
 
     // 性能告警
     if (metrics.responseTime > 5000) {
-      console.warn(`\x1b[33m[PERFORMANCE ALERT] Slow response: ${metrics.responseTime}ms - ${metrics.method} ${metrics.endpoint}\x1b[0m`);
+      console.warn(
+        `\x1b[33m[PERFORMANCE ALERT] Slow response: ${metrics.responseTime}ms - ${metrics.method} ${metrics.endpoint}\x1b[0m`,
+      );
     }
 
     if (metrics.statusCode >= 500) {
-      console.warn(`\x1b[31m[ERROR RATE ALERT] Server error: ${metrics.statusCode} - ${metrics.method} ${metrics.endpoint}\x1b[0m`);
+      console.warn(
+        `\x1b[31m[ERROR RATE ALERT] Server error: ${metrics.statusCode} - ${metrics.method} ${metrics.endpoint}\x1b[0m`,
+      );
     }
   }
 
@@ -119,7 +126,7 @@ export class ErrorMonitoringService {
     byLevel: Record<ErrorLevel, number>;
     recent: ApiError[];
     criticalIssues: ApiError[];
-    } {
+  } {
     const byLevel = {
       [ErrorLevel.LOW]: 0,
       [ErrorLevel.MEDIUM]: 0,
@@ -127,14 +134,18 @@ export class ErrorMonitoringService {
       [ErrorLevel.CRITICAL]: 0,
     };
 
-    this.errors.forEach(error => {
+    this.errors.forEach((error) => {
       byLevel[error.level]++;
     });
 
     const recent = this.errors.slice(-10);
-    const criticalIssues = this.errors.filter(
-      error => error.level === ErrorLevel.HIGH || error.level === ErrorLevel.CRITICAL
-    ).slice(-20);
+    const criticalIssues = this.errors
+      .filter(
+        (error) =>
+          error.level === ErrorLevel.HIGH ||
+          error.level === ErrorLevel.CRITICAL,
+      )
+      .slice(-20);
 
     return {
       total: this.errors.length,
@@ -153,7 +164,7 @@ export class ErrorMonitoringService {
     slowestRequests: PerformanceMetrics[];
     errorRate: number;
     recent: PerformanceMetrics[];
-    } {
+  } {
     if (this.performance.length === 0) {
       return {
         total: 0,
@@ -164,9 +175,14 @@ export class ErrorMonitoringService {
       };
     }
 
-    const totalTime = this.performance.reduce((sum, p) => sum + p.responseTime, 0);
+    const totalTime = this.performance.reduce(
+      (sum, p) => sum + p.responseTime,
+      0,
+    );
     const averageResponseTime = totalTime / this.performance.length;
-    const errorCount = this.performance.filter(p => p.statusCode >= 400).length;
+    const errorCount = this.performance.filter(
+      (p) => p.statusCode >= 400,
+    ).length;
     const errorRate = (errorCount / this.performance.length) * 100;
 
     const slowestRequests = this.performance
@@ -191,8 +207,8 @@ export class ErrorMonitoringService {
   private static triggerAlert(error: ApiError): void {
     // 在生产环境中，这里可以集成外部告警系统
     // 例如: Slack, Discord, Email, Sentry等
-    console.error('\x1b[35m🚨 CRITICAL ALERT 🚨\x1b[0m', {
-      message: 'Critical system error detected',
+    console.error("\x1b[35m🚨 CRITICAL ALERT 🚨\x1b[0m", {
+      message: "Critical system error detected",
       error: {
         code: error.code,
         message: error.message,
@@ -237,12 +253,12 @@ export function withApiHandler(
     endpoint?: string;
     requireAuth?: boolean;
     timeout?: number;
-  } = {}
+  } = {},
 ) {
   return async (req: NextRequest, context?: any): Promise<NextResponse> => {
     const startTime = Date.now();
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const endpoint = options.endpoint || req.url || 'unknown';
+    const endpoint = options.endpoint || req.url || "unknown";
     const method = req.method;
 
     try {
@@ -271,45 +287,54 @@ export function withApiHandler(
         statusCode,
         timestamp: new Date().toISOString(),
         requestId,
-        userAgent: req.headers.get('user-agent') || undefined,
-        cacheHit: response.headers?.get('x-cache') === 'HIT',
+        userAgent: req.headers.get("user-agent") || undefined,
+        cacheHit: response.headers?.get("x-cache") === "HIT",
       });
 
       // 添加请求ID到响应头
-      response.headers.set('x-request-id', requestId);
-      response.headers.set('x-response-time', `${responseTime}ms`);
+      response.headers.set("x-request-id", requestId);
+      response.headers.set("x-response-time", `${responseTime}ms`);
 
       return response;
-
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       // 确定错误级别和状态码
       let level: ErrorLevel;
       let statusCode: number;
       let code: string;
 
-      if (errorMessage.includes('timeout')) {
+      if (errorMessage.includes("timeout")) {
         level = ErrorLevel.HIGH;
         statusCode = 504;
-        code = 'API_TIMEOUT';
-      } else if (errorMessage.includes('database') || errorMessage.includes('Database')) {
+        code = "API_TIMEOUT";
+      } else if (
+        errorMessage.includes("database") ||
+        errorMessage.includes("Database")
+      ) {
         level = ErrorLevel.HIGH;
         statusCode = 503;
-        code = 'DATABASE_ERROR';
-      } else if (errorMessage.includes('auth') || errorMessage.includes('Auth')) {
+        code = "DATABASE_ERROR";
+      } else if (
+        errorMessage.includes("auth") ||
+        errorMessage.includes("Auth")
+      ) {
         level = ErrorLevel.MEDIUM;
         statusCode = 401;
-        code = 'AUTHENTICATION_ERROR';
-      } else if (errorMessage.includes('validation') || errorMessage.includes('Invalid')) {
+        code = "AUTHENTICATION_ERROR";
+      } else if (
+        errorMessage.includes("validation") ||
+        errorMessage.includes("Invalid")
+      ) {
         level = ErrorLevel.LOW;
         statusCode = 400;
-        code = 'VALIDATION_ERROR';
+        code = "VALIDATION_ERROR";
       } else {
         level = ErrorLevel.MEDIUM;
         statusCode = 500;
-        code = 'INTERNAL_SERVER_ERROR';
+        code = "INTERNAL_SERVER_ERROR";
       }
 
       // 记录错误
@@ -341,11 +366,11 @@ export function withApiHandler(
       const errorResponse = {
         error: {
           code,
-          message: level === ErrorLevel.LOW ? errorMessage : '服务器内部错误',
+          message: level === ErrorLevel.LOW ? errorMessage : "服务器内部错误",
           requestId,
           timestamp: new Date().toISOString(),
         },
-        ...(process.env.NODE_ENV === 'development' && {
+        ...(process.env.NODE_ENV === "development" && {
           details: error instanceof Error ? error.stack : undefined,
         }),
       };
@@ -353,9 +378,9 @@ export function withApiHandler(
       return NextResponse.json(errorResponse, {
         status: statusCode,
         headers: {
-          'x-request-id': requestId,
-          'x-response-time': `${responseTime}ms`,
-          'x-error-level': level,
+          "x-request-id": requestId,
+          "x-response-time": `${responseTime}ms`,
+          "x-error-level": level,
         },
       });
     }
@@ -368,59 +393,59 @@ export function withApiHandler(
 export const ApiErrors = {
   // 认证错误
   UNAUTHORIZED: {
-    code: 'UNAUTHORIZED',
-    message: '用户未认证',
+    code: "UNAUTHORIZED",
+    message: "用户未认证",
     level: ErrorLevel.MEDIUM,
     statusCode: 401,
   },
 
   FORBIDDEN: {
-    code: 'FORBIDDEN',
-    message: '权限不足',
+    code: "FORBIDDEN",
+    message: "权限不足",
     level: ErrorLevel.MEDIUM,
     statusCode: 403,
   },
 
   // 验证错误
   VALIDATION_ERROR: {
-    code: 'VALIDATION_ERROR',
-    message: '请求参数验证失败',
+    code: "VALIDATION_ERROR",
+    message: "请求参数验证失败",
     level: ErrorLevel.LOW,
     statusCode: 400,
   },
 
   NOT_FOUND: {
-    code: 'NOT_FOUND',
-    message: '请求的资源不存在',
+    code: "NOT_FOUND",
+    message: "请求的资源不存在",
     level: ErrorLevel.LOW,
     statusCode: 404,
   },
 
   // 服务器错误
   DATABASE_ERROR: {
-    code: 'DATABASE_ERROR',
-    message: '数据库连接错误',
+    code: "DATABASE_ERROR",
+    message: "数据库连接错误",
     level: ErrorLevel.HIGH,
     statusCode: 503,
   },
 
   EXTERNAL_API_ERROR: {
-    code: 'EXTERNAL_API_ERROR',
-    message: '外部服务不可用',
+    code: "EXTERNAL_API_ERROR",
+    message: "外部服务不可用",
     level: ErrorLevel.MEDIUM,
     statusCode: 502,
   },
 
   INTERNAL_SERVER_ERROR: {
-    code: 'INTERNAL_SERVER_ERROR',
-    message: '服务器内部错误',
+    code: "INTERNAL_SERVER_ERROR",
+    message: "服务器内部错误",
     level: ErrorLevel.MEDIUM,
     statusCode: 500,
   },
 
   TIMEOUT: {
-    code: 'TIMEOUT',
-    message: '请求超时',
+    code: "TIMEOUT",
+    message: "请求超时",
     level: ErrorLevel.HIGH,
     statusCode: 504,
   },

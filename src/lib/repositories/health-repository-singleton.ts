@@ -4,8 +4,8 @@
  * 提供全局唯一的 HealthRepository 实例
  */
 
-import { SupabaseHealthRepository } from './implementations/supabase-health-repository';
-import type { HealthRepository } from './interfaces/health-repository';
+import { SupabaseHealthRepository } from "./implementations/supabase-health-repository";
+import type { HealthRepository } from "./interfaces/health-repository";
 
 let instance: HealthRepository | null = null;
 

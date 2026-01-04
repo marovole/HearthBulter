@@ -1,11 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Bell, Check, X, Filter, Settings, Trash2, RefreshCw } from 'lucide-react';
-import { NotificationItem } from './notification-item';
-import { NotificationFilters } from './notification-filters';
-import { NotificationSettings } from './notification-settings';
-import { useNotifications } from '@/hooks/use-notifications';
+import React, { useState, useEffect } from "react";
+import {
+  Bell,
+  Check,
+  X,
+  Filter,
+  Settings,
+  Trash2,
+  RefreshCw,
+} from "lucide-react";
+import { NotificationItem } from "./notification-item";
+import { NotificationFilters } from "./notification-filters";
+import { NotificationSettings } from "./notification-settings";
+import { useNotifications } from "@/hooks/use-notifications";
 
 interface Notification {
   id: string;
@@ -47,29 +55,32 @@ export function NotificationList({
   onLoadMore,
   hasMore = false,
   showLoadMore = false,
-  className = '',
+  className = "",
   showActions = true,
   selectable = false,
   onSelectionChange,
 }: NotificationListProps) {
-  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
+  const [selectedNotifications, setSelectedNotifications] = useState<string[]>(
+    [],
+  );
 
   // 切换选择状态
   const toggleSelection = (notificationId: string) => {
     const newSelection = selectedNotifications.includes(notificationId)
-      ? selectedNotifications.filter(id => id !== notificationId)
+      ? selectedNotifications.filter((id) => id !== notificationId)
       : [...selectedNotifications, notificationId];
-    
+
     setSelectedNotifications(newSelection);
     onSelectionChange?.(newSelection);
   };
 
   // 全选/取消全选
   const toggleSelectAll = () => {
-    const newSelection = selectedNotifications.length === notifications.length
-      ? []
-      : notifications.map(n => n.id);
-    
+    const newSelection =
+      selectedNotifications.length === notifications.length
+        ? []
+        : notifications.map((n) => n.id);
+
     setSelectedNotifications(newSelection);
     onSelectionChange?.(newSelection);
   };
@@ -150,7 +161,9 @@ export function NotificationList({
               key={notification.id}
               notification={notification}
               selected={selectedNotifications.includes(notification.id)}
-              onSelect={selectable ? () => toggleSelection(notification.id) : undefined}
+              onSelect={
+                selectable ? () => toggleSelection(notification.id) : undefined
+              }
               showActions={showActions}
             />
           ))
@@ -165,7 +178,7 @@ export function NotificationList({
             disabled={loading}
             className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '加载中...' : '加载更多'}
+            {loading ? "加载中..." : "加载更多"}
           </button>
         </div>
       )}
@@ -177,20 +190,24 @@ export function NotificationList({
             onClick={toggleSelectAll}
             className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-800"
           >
-            <div className={`h-4 w-4 border rounded ${
-              selectedNotifications.length === notifications.length
-                ? 'bg-blue-500 border-blue-500'
-                : 'border-gray-300'
-            }`}>
+            <div
+              className={`h-4 w-4 border rounded ${
+                selectedNotifications.length === notifications.length
+                  ? "bg-blue-500 border-blue-500"
+                  : "border-gray-300"
+              }`}
+            >
               {selectedNotifications.length === notifications.length && (
                 <Check className="h-3 w-3 text-white" />
               )}
             </div>
             <span>
-              {selectedNotifications.length === notifications.length ? '取消全选' : '全选'}
+              {selectedNotifications.length === notifications.length
+                ? "取消全选"
+                : "全选"}
             </span>
           </button>
-          
+
           <span className="text-sm text-gray-500">
             {notifications.length} 条通知
           </span>

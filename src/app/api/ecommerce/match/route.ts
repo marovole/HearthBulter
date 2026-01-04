@@ -1,17 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { SKUMatcher } from '@/lib/services/sku-matcher';
-import { PriceComparator } from '@/lib/services/price-comparator';
-import { PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { SKUMatcher } from "@/lib/services/sku-matcher";
+import { PriceComparator } from "@/lib/services/price-comparator";
+import {
+  PlatformError,
+  PlatformErrorType,
+} from "@/lib/services/ecommerce/types";
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -19,8 +22,8 @@ export async function POST(request: NextRequest) {
 
     if (!foodIds || !Array.isArray(foodIds) || foodIds.length === 0) {
       return NextResponse.json(
-        { error: 'foodIds array is required' },
-        { status: 400 }
+        { error: "foodIds array is required" },
+        { status: 400 },
       );
     }
 
@@ -32,7 +35,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (foods.length === 0) {
-      return NextResponse.json({ error: 'No foods found' }, { status: 404 });
+      return NextResponse.json({ error: "No foods found" }, { status: 404 });
     }
 
     // 初始化服务
@@ -50,51 +53,56 @@ export async function POST(request: NextRequest) {
     const matches = await skuMatcher.matchMultipleFoods(foods, matchConfig);
 
     // 转换结果格式
-    const results = Array.from(matches.entries()).map(([foodId, foodMatches]) => {
-      const food = foods.find(f => f.id === foodId);
-      return {
-        foodId,
-        foodName: food?.name || 'Unknown',
-        matches: foodMatches.map(match => ({
-          platform: match.platformProduct.platform,
-          platformProductId: match.platformProduct.platformProductId,
-          name: match.platformProduct.name,
-          brand: match.platformProduct.brand,
-          price: match.platformProduct.price,
-          originalPrice: match.platformProduct.originalPrice,
-          unitPrice: match.platformProduct.priceUnit,
-          stock: match.platformProduct.stock,
-          isInStock: match.platformProduct.isInStock,
-          imageUrl: match.platformProduct.imageUrl,
-          confidence: match.confidence,
-          matchedKeywords: match.matchedKeywords,
-          matchReasons: match.matchReasons,
-          shippingFee: match.platformProduct.shippingFee,
-          rating: match.platformProduct.rating,
-          salesCount: match.platformProduct.salesCount,
-        })),
-      };
-    });
+    const results = Array.from(matches.entries()).map(
+      ([foodId, foodMatches]) => {
+        const food = foods.find((f) => f.id === foodId);
+        return {
+          foodId,
+          foodName: food?.name || "Unknown",
+          matches: foodMatches.map((match) => ({
+            platform: match.platformProduct.platform,
+            platformProductId: match.platformProduct.platformProductId,
+            name: match.platformProduct.name,
+            brand: match.platformProduct.brand,
+            price: match.platformProduct.price,
+            originalPrice: match.platformProduct.originalPrice,
+            unitPrice: match.platformProduct.priceUnit,
+            stock: match.platformProduct.stock,
+            isInStock: match.platformProduct.isInStock,
+            imageUrl: match.platformProduct.imageUrl,
+            confidence: match.confidence,
+            matchedKeywords: match.matchedKeywords,
+            matchReasons: match.matchReasons,
+            shippingFee: match.platformProduct.shippingFee,
+            rating: match.platformProduct.rating,
+            salesCount: match.platformProduct.salesCount,
+          })),
+        };
+      },
+    );
 
     return NextResponse.json({
       success: true,
       results,
       totalFoods: foods.length,
-      totalMatches: results.reduce((sum, result) => sum + result.matches.length, 0),
+      totalMatches: results.reduce(
+        (sum, result) => sum + result.matches.length,
+        0,
+      ),
     });
   } catch (error) {
-    console.error('SKU match error:', error);
-    
+    console.error("SKU match error:", error);
+
     if (error instanceof PlatformError) {
       return NextResponse.json(
         { error: error.message, type: error.type },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to match SKUs' },
-      { status: 500 }
+      { error: "Failed to match SKUs" },
+      { status: 500 },
     );
   }
 }
@@ -103,14 +111,17 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const foodId = searchParams.get('foodId');
+    const foodId = searchParams.get("foodId");
 
     if (!foodId) {
-      return NextResponse.json({ error: 'foodId is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "foodId is required" },
+        { status: 400 },
+      );
     }
 
     // 获取食材信息
@@ -119,7 +130,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!food) {
-      return NextResponse.json({ error: 'Food not found' }, { status: 404 });
+      return NextResponse.json({ error: "Food not found" }, { status: 404 });
     }
 
     // 初始化服务
@@ -136,7 +147,7 @@ export async function GET(request: NextRequest) {
     const result = {
       foodId: food.id,
       foodName: food.name,
-      matches: matches.map(match => ({
+      matches: matches.map((match) => ({
         platform: match.platformProduct.platform,
         platformProductId: match.platformProduct.platformProductId,
         name: match.platformProduct.name,
@@ -161,18 +172,15 @@ export async function GET(request: NextRequest) {
       result,
     });
   } catch (error) {
-    console.error('Single SKU match error:', error);
-    
+    console.error("Single SKU match error:", error);
+
     if (error instanceof PlatformError) {
       return NextResponse.json(
         { error: error.message, type: error.type },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: 'Failed to match SKU' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to match SKU" }, { status: 500 });
   }
 }

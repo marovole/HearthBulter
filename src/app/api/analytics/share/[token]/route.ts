@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getReportByShareToken } from '@/lib/services/analytics/report-generator';
+import { NextRequest, NextResponse } from "next/server";
+import { getReportByShareToken } from "@/lib/services/analytics/report-generator";
 
 /**
  * GET /api/analytics/share/[token]
@@ -7,10 +7,10 @@ import { getReportByShareToken } from '@/lib/services/analytics/report-generator
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: Promise<{ token: string }> },
 ) {
   try {
     const { token } = await params;
@@ -18,8 +18,8 @@ export async function GET(
 
     if (!report) {
       return NextResponse.json(
-        { error: '报告不存在或已过期' },
-        { status: 404 }
+        { error: "报告不存在或已过期" },
+        { status: 404 },
       );
     }
 
@@ -28,10 +28,7 @@ export async function GET(
       data: report,
     });
   } catch (error) {
-    console.error('Failed to get shared report:', error);
-    return NextResponse.json(
-      { error: '获取报告失败' },
-      { status: 500 }
-    );
+    console.error("Failed to get shared report:", error);
+    return NextResponse.json({ error: "获取报告失败" }, { status: 500 });
   }
 }

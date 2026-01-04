@@ -1,97 +1,99 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface ShoppingListItem {
-  id: string
-  name: string
-  amount: number
-  unit: string
-  checked: boolean
-  price?: number
-  productId?: string
+  id: string;
+  name: string;
+  amount: number;
+  unit: string;
+  checked: boolean;
+  price?: number;
+  productId?: string;
 }
 
 interface ShoppingList {
-  id: string
-  planId: string
-  budget: number | null
-  estimatedCost: number | null
-  actualCost: number | null
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
-  items: ShoppingListItem[]
-  createdAt: string
+  id: string;
+  planId: string;
+  budget: number | null;
+  estimatedCost: number | null;
+  actualCost: number | null;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  items: ShoppingListItem[];
+  createdAt: string;
   plan: {
-    id: string
+    id: string;
     member: {
-      id: string
-      name: string
-    }
-  }
+      id: string;
+      name: string;
+    };
+  };
 }
 
 interface MealPlan {
-  id: string
-  name: string
+  id: string;
+  name: string;
   member: {
-    id: string
-    name: string
-  }
-  startDate: string
-  endDate: string
+    id: string;
+    name: string;
+  };
+  startDate: string;
+  endDate: string;
 }
 
 interface CreateShoppingListButtonProps {
-  onListCreated: (newList: ShoppingList) => void
+  onListCreated: (newList: ShoppingList) => void;
 }
 
-export function CreateShoppingListButton({ onListCreated }: CreateShoppingListButtonProps) {
+export function CreateShoppingListButton({
+  onListCreated,
+}: CreateShoppingListButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState('');
-  const [listName, setListName] = useState('');
-  const [budget, setBudget] = useState('');
-  const [error, setError] = useState('');
+  const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [listName, setListName] = useState("");
+  const [budget, setBudget] = useState("");
+  const [error, setError] = useState("");
 
   const fetchMealPlans = async () => {
     try {
-      const response = await fetch('/api/meal-plans');
+      const response = await fetch("/api/meal-plans");
       if (!response.ok) {
-        throw new Error('获取食谱计划失败');
+        throw new Error("获取食谱计划失败");
       }
       const data = await response.json();
       setMealPlans(data.mealPlans || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取食谱计划失败');
+      setError(err instanceof Error ? err.message : "获取食谱计划失败");
     }
   };
 
   const handleOpen = () => {
     setIsOpen(true);
-    setError('');
-    setSelectedPlanId('');
-    setListName('');
-    setBudget('');
+    setError("");
+    setSelectedPlanId("");
+    setListName("");
+    setBudget("");
     fetchMealPlans();
   };
 
   const handleClose = () => {
     setIsOpen(false);
-    setError('');
+    setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedPlanId) {
-      setError('请选择一个食谱计划');
+      setError("请选择一个食谱计划");
       return;
     }
 
     try {
       setIsLoading(true);
-      setError('');
+      setError("");
 
       const requestBody: any = {};
       if (listName.trim()) {
@@ -100,30 +102,33 @@ export function CreateShoppingListButton({ onListCreated }: CreateShoppingListBu
       if (budget) {
         const budgetValue = parseFloat(budget);
         if (isNaN(budgetValue) || budgetValue < 0) {
-          setError('请输入有效的预算金额');
+          setError("请输入有效的预算金额");
           return;
         }
         requestBody.budget = budgetValue;
       }
 
-      const response = await fetch(`/api/meal-plans/${selectedPlanId}/shopping-list`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/meal-plans/${selectedPlanId}/shopping-list`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || '创建购物清单失败');
+        throw new Error(errorData.error || "创建购物清单失败");
       }
 
       const data = await response.json();
       onListCreated(data.shoppingList);
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建购物清单失败');
+      setError(err instanceof Error ? err.message : "创建购物清单失败");
     } finally {
       setIsLoading(false);
     }
@@ -182,7 +187,9 @@ export function CreateShoppingListButton({ onListCreated }: CreateShoppingListBu
               <option value="">请选择食谱计划</option>
               {mealPlans.map((plan) => (
                 <option key={plan.id} value={plan.id}>
-                  {plan.member?.name || '未知'} - {new Date(plan.startDate).toLocaleDateString('zh-CN')} 至 {new Date(plan.endDate).toLocaleDateString('zh-CN')}
+                  {plan.member?.name || "未知"} -{" "}
+                  {new Date(plan.startDate).toLocaleDateString("zh-CN")} 至{" "}
+                  {new Date(plan.endDate).toLocaleDateString("zh-CN")}
                 </option>
               ))}
             </select>
@@ -225,7 +232,7 @@ export function CreateShoppingListButton({ onListCreated }: CreateShoppingListBu
               disabled={isLoading}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? '创建中...' : '创建'}
+              {isLoading ? "创建中..." : "创建"}
             </button>
           </div>
         </form>

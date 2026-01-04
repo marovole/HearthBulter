@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface RefreshOptions {
-  interval?: number // 自动刷新间隔（毫秒）
-  manual?: boolean // 是否支持手动刷新
-  onError?: (error: Error) => void
+  interval?: number; // 自动刷新间隔（毫秒）
+  manual?: boolean; // 是否支持手动刷新
+  onError?: (error: Error) => void;
 }
 
 interface RefreshState {
-  isRefreshing: boolean
-  lastRefreshTime: Date | null
-  error: Error | null
+  isRefreshing: boolean;
+  lastRefreshTime: Date | null;
+  error: Error | null;
 }
 
 export function useDashboardRefresh<T>(
   fetcher: () => Promise<T>,
-  options: RefreshOptions = {}
+  options: RefreshOptions = {},
 ) {
   const { interval = 30000, manual = true, onError } = options;
   const [data, setData] = useState<T | null>(null);
@@ -32,14 +32,14 @@ export function useDashboardRefresh<T>(
   const refresh = useCallback(async () => {
     if (!mountedRef.current) return;
 
-    setState(prev => ({ ...prev, isRefreshing: true, error: null }));
+    setState((prev) => ({ ...prev, isRefreshing: true, error: null }));
 
     try {
       const result = await fetcher();
-      
+
       if (mountedRef.current) {
         setData(result);
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isRefreshing: false,
           lastRefreshTime: new Date(),
@@ -48,8 +48,8 @@ export function useDashboardRefresh<T>(
       }
     } catch (error) {
       if (mountedRef.current) {
-        const err = error instanceof Error ? error : new Error('Unknown error');
-        setState(prev => ({
+        const err = error instanceof Error ? error : new Error("Unknown error");
+        setState((prev) => ({
           ...prev,
           isRefreshing: false,
           error: err,
@@ -103,7 +103,7 @@ export function useDashboardRefresh<T>(
  */
 export function useMultiDashboardRefresh<T extends Record<string, any>>(
   fetchers: Record<keyof T, () => Promise<T[keyof T]>>,
-  options: RefreshOptions = {}
+  options: RefreshOptions = {},
 ) {
   const { interval = 30000, manual = true, onError } = options;
   const [data, setData] = useState<Partial<T>>({});
@@ -116,52 +116,56 @@ export function useMultiDashboardRefresh<T extends Record<string, any>>(
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
 
-  const refresh = useCallback(async (keys?: Array<keyof T>) => {
-    if (!mountedRef.current) return;
+  const refresh = useCallback(
+    async (keys?: Array<keyof T>) => {
+      if (!mountedRef.current) return;
 
-    setState(prev => ({ ...prev, isRefreshing: true, error: null }));
+      setState((prev) => ({ ...prev, isRefreshing: true, error: null }));
 
-    try {
-      const keysToRefresh = keys || (Object.keys(fetchers) as Array<keyof T>);
-      const results: Partial<T> = {};
+      try {
+        const keysToRefresh = keys || (Object.keys(fetchers) as Array<keyof T>);
+        const results: Partial<T> = {};
 
-      await Promise.all(
-        keysToRefresh.map(async (key) => {
-          try {
-            const result = await fetchers[key]();
-            if (mountedRef.current) {
-              results[key] = result;
+        await Promise.all(
+          keysToRefresh.map(async (key) => {
+            try {
+              const result = await fetchers[key]();
+              if (mountedRef.current) {
+                results[key] = result;
+              }
+            } catch (error) {
+              console.error(`Failed to refresh ${String(key)}:`, error);
+              if (mountedRef.current) {
+                results[key] = data[key]; // 保持旧数据
+              }
             }
-          } catch (error) {
-            console.error(`Failed to refresh ${String(key)}:`, error);
-            if (mountedRef.current) {
-              results[key] = data[key]; // 保持旧数据
-            }
-          }
-        })
-      );
+          }),
+        );
 
-      if (mountedRef.current) {
-        setData(prev => ({ ...prev, ...results }));
-        setState(prev => ({
-          ...prev,
-          isRefreshing: false,
-          lastRefreshTime: new Date(),
-          error: null,
-        }));
+        if (mountedRef.current) {
+          setData((prev) => ({ ...prev, ...results }));
+          setState((prev) => ({
+            ...prev,
+            isRefreshing: false,
+            lastRefreshTime: new Date(),
+            error: null,
+          }));
+        }
+      } catch (error) {
+        if (mountedRef.current) {
+          const err =
+            error instanceof Error ? error : new Error("Unknown error");
+          setState((prev) => ({
+            ...prev,
+            isRefreshing: false,
+            error: err,
+          }));
+          onError?.(err);
+        }
       }
-    } catch (error) {
-      if (mountedRef.current) {
-        const err = error instanceof Error ? error : new Error('Unknown error');
-        setState(prev => ({
-          ...prev,
-          isRefreshing: false,
-          error: err,
-        }));
-        onError?.(err);
-      }
-    }
-  }, [fetchers, data, onError]);
+    },
+    [fetchers, data, onError],
+  );
 
   // 初始加载
   useEffect(() => {
@@ -208,7 +212,7 @@ export function useMultiDashboardRefresh<T extends Record<string, any>>(
 export function useDashboardCache<T>(
   key: string,
   fetcher: () => Promise<T>,
-  ttl: number = 5 * 60 * 1000 // 5分钟缓存
+  ttl: number = 5 * 60 * 1000, // 5分钟缓存
 ) {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -233,41 +237,50 @@ export function useDashboardCache<T>(
     }
   }, [key, ttl]);
 
-  const setCachedData = useCallback((newData: T) => {
-    try {
-      const cacheData = {
-        data: newData,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(`dashboard_cache_${key}`, JSON.stringify(cacheData));
-    } catch (error) {
-      console.warn('Failed to cache data:', error);
-    }
-  }, [key]);
-
-  const refresh = useCallback(async (force: boolean = false) => {
-    if (!force) {
-      const cached = getCachedData();
-      if (cached) {
-        setData(cached);
-        setIsLoading(false);
-        return;
+  const setCachedData = useCallback(
+    (newData: T) => {
+      try {
+        const cacheData = {
+          data: newData,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem(
+          `dashboard_cache_${key}`,
+          JSON.stringify(cacheData),
+        );
+      } catch (error) {
+        console.warn("Failed to cache data:", error);
       }
-    }
+    },
+    [key],
+  );
 
-    setIsLoading(true);
-    setError(null);
+  const refresh = useCallback(
+    async (force: boolean = false) => {
+      if (!force) {
+        const cached = getCachedData();
+        if (cached) {
+          setData(cached);
+          setIsLoading(false);
+          return;
+        }
+      }
 
-    try {
-      const result = await fetcher();
-      setData(result);
-      setCachedData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Unknown error'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetcher, getCachedData, setCachedData]);
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const result = await fetcher();
+        setData(result);
+        setCachedData(result);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("Unknown error"));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetcher, getCachedData, setCachedData],
+  );
 
   useEffect(() => {
     refresh();

@@ -1,19 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Smartphone, 
-  Watch, 
-  Activity, 
-  Scale, 
-  Heart, 
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import {
+  Smartphone,
+  Watch,
+  Activity,
+  Scale,
+  Heart,
   CloudDownload,
   CheckCircle,
   AlertCircle,
@@ -21,21 +27,34 @@ import {
   Settings,
   Wifi,
   WifiOff,
-} from 'lucide-react';
-import type { DeviceConnectionInfo, DeviceType, PlatformType } from '@/types/wearable-devices';
-import { DEVICE_TYPE_LABELS, PLATFORM_TYPE_LABELS, SYNC_STATUS_LABELS } from '@/types/wearable-devices';
+} from "lucide-react";
+import type {
+  DeviceConnectionInfo,
+  DeviceType,
+  PlatformType,
+} from "@/types/wearable-devices";
+import {
+  DEVICE_TYPE_LABELS,
+  PLATFORM_TYPE_LABELS,
+  SYNC_STATUS_LABELS,
+} from "@/types/wearable-devices";
 
 interface DeviceConnectionProps {
   member?: {
-    id: string
-    name: string
-  }
-  onDeviceConnected?: (device: DeviceConnectionInfo) => void
-  onDeviceDisconnected?: (deviceId: string) => void
-  className?: string
+    id: string;
+    name: string;
+  };
+  onDeviceConnected?: (device: DeviceConnectionInfo) => void;
+  onDeviceDisconnected?: (deviceId: string) => void;
+  className?: string;
 }
 
-export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnected, className }: DeviceConnectionProps) {
+export function DeviceConnection({
+  member,
+  onDeviceConnected,
+  onDeviceDisconnected,
+  className,
+}: DeviceConnectionProps) {
   const [devices, setDevices] = useState<DeviceConnectionInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isConnecting, setIsConnecting] = useState<string | null>(null);
@@ -52,12 +71,12 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
     try {
       const response = await fetch(`/api/devices?memberId=${member.id}`);
       const result = await response.json();
-      
+
       if (result.success) {
         setDevices(result.data);
       }
     } catch (error) {
-      console.error('获取设备列表失败:', error);
+      console.error("获取设备列表失败:", error);
     } finally {
       setIsLoading(false);
     }
@@ -65,28 +84,28 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
 
   // 连接Apple Health
   const connectAppleHealth = async () => {
-    setIsConnecting('apple-healthkit');
+    setIsConnecting("apple-healthkit");
     try {
-      const response = await fetch('/api/devices', {
-        method: 'POST',
+      const response = await fetch("/api/devices", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           memberId: member?.id,
-          platform: 'APPLE_HEALTHKIT',
-          deviceType: 'SMARTWATCH',
+          platform: "APPLE_HEALTHKIT",
+          deviceType: "SMARTWATCH",
         }),
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         onDeviceConnected?.(result.data);
         fetchDevices();
       }
     } catch (error) {
-      console.error('连接Apple Health失败:', error);
+      console.error("连接Apple Health失败:", error);
     } finally {
       setIsConnecting(null);
     }
@@ -94,28 +113,28 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
 
   // 连接华为Health
   const connectHuaweiHealth = async () => {
-    setIsConnecting('huawei-health');
+    setIsConnecting("huawei-health");
     try {
-      const response = await fetch('/api/devices', {
-        method: 'POST',
+      const response = await fetch("/api/devices", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           memberId: member?.id,
-          platform: 'HUAWEI_HEALTH',
-          deviceType: 'FITNESS_BAND',
+          platform: "HUAWEI_HEALTH",
+          deviceType: "FITNESS_BAND",
         }),
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         onDeviceConnected?.(result.data);
         fetchDevices();
       }
     } catch (error) {
-      console.error('连接华为Health失败:', error);
+      console.error("连接华为Health失败:", error);
     } finally {
       setIsConnecting(null);
     }
@@ -125,31 +144,31 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
   const disconnectDevice = async (deviceId: string) => {
     try {
       const response = await fetch(`/api/devices/${deviceId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         onDeviceDisconnected?.(deviceId);
         fetchDevices();
       }
     } catch (error) {
-      console.error('断开设备连接失败:', error);
+      console.error("断开设备连接失败:", error);
     }
   };
 
   // 手动同步设备
   const syncDevice = async (deviceId: string) => {
     try {
-      const response = await fetch('/api/devices/sync', {
-        method: 'POST',
+      const response = await fetch("/api/devices/sync", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           deviceId,
@@ -158,56 +177,56 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         fetchDevices();
       }
     } catch (error) {
-      console.error('同步设备失败:', error);
+      console.error("同步设备失败:", error);
     }
   };
 
   // 获取设备图标
   const getDeviceIcon = (deviceType: DeviceType) => {
     switch (deviceType) {
-    case 'SMARTWATCH':
-    case 'FITNESS_BAND':
-      return <Watch className="w-5 h-5" />;
-    case 'SMART_SCALE':
-      return <Scale className="w-5 h-5" />;
-    case 'BLOOD_PRESSURE_MONITOR':
-      return <Heart className="w-5 h-5" />;
-    default:
-      return <Smartphone className="w-5 h-5" />;
+      case "SMARTWATCH":
+      case "FITNESS_BAND":
+        return <Watch className="w-5 h-5" />;
+      case "SMART_SCALE":
+        return <Scale className="w-5 h-5" />;
+      case "BLOOD_PRESSURE_MONITOR":
+        return <Heart className="w-5 h-5" />;
+      default:
+        return <Smartphone className="w-5 h-5" />;
     }
   };
 
   // 获取同步状态图标
   const getSyncStatusIcon = (status: string) => {
     switch (status) {
-    case 'SUCCESS':
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
-    case 'FAILED':
-      return <AlertCircle className="w-4 h-4 text-red-500" />;
-    case 'SYNCING':
-      return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-    default:
-      return <AlertCircle className="w-4 h-4 text-gray-500" />;
+      case "SUCCESS":
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "FAILED":
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case "SYNCING":
+        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-gray-500" />;
     }
   };
 
   // 格式化最后同步时间
   const formatLastSync = (date?: Date) => {
-    if (!date) return '从未同步';
-    
+    if (!date) return "从未同步";
+
     const now = new Date();
     const diff = now.getTime() - new Date(date).getTime();
     const minutes = Math.floor(diff / (1000 * 60));
-    
-    if (minutes < 1) return '刚刚同步';
+
+    if (minutes < 1) return "刚刚同步";
     if (minutes < 60) return `${minutes}分钟前同步`;
     if (minutes < 1440) return `${Math.floor(minutes / 60)}小时前同步`;
-    return new Date(date).toLocaleDateString('zh-CN');
+    return new Date(date).toLocaleDateString("zh-CN");
   };
 
   if (isLoading) {
@@ -254,11 +273,19 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
                       variant="outline"
                       size="sm"
                       onClick={connectAppleHealth}
-                      disabled={isConnecting === 'apple-healthkit' || devices.some(d => d.platform === 'APPLE_HEALTHKIT')}
+                      disabled={
+                        isConnecting === "apple-healthkit" ||
+                        devices.some((d) => d.platform === "APPLE_HEALTHKIT")
+                      }
                     >
-                      {isConnecting === 'apple-healthkit' ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />连接中</>
-                      ) : devices.some(d => d.platform === 'APPLE_HEALTHKIT') ? (
+                      {isConnecting === "apple-healthkit" ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          连接中
+                        </>
+                      ) : devices.some(
+                          (d) => d.platform === "APPLE_HEALTHKIT",
+                        ) ? (
                         <>已连接</>
                       ) : (
                         <>连接</>
@@ -284,11 +311,19 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
                       variant="outline"
                       size="sm"
                       onClick={connectHuaweiHealth}
-                      disabled={isConnecting === 'huawei-health' || devices.some(d => d.platform === 'HUAWEI_HEALTH')}
+                      disabled={
+                        isConnecting === "huawei-health" ||
+                        devices.some((d) => d.platform === "HUAWEI_HEALTH")
+                      }
                     >
-                      {isConnecting === 'huawei-health' ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />连接中</>
-                      ) : devices.some(d => d.platform === 'HUAWEI_HEALTH') ? (
+                      {isConnecting === "huawei-health" ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          连接中
+                        </>
+                      ) : devices.some(
+                          (d) => d.platform === "HUAWEI_HEALTH",
+                        ) ? (
                         <>已连接</>
                       ) : (
                         <>连接</>
@@ -316,7 +351,10 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
             ) : (
               <div className="space-y-3">
                 {devices.map((device) => (
-                  <Card key={device.id} className={device.isActive ? '' : 'opacity-60'}>
+                  <Card
+                    key={device.id}
+                    className={device.isActive ? "" : "opacity-60"}
+                  >
                     <CardContent className="pt-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -326,7 +364,8 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
                           <div>
                             <h4 className="font-medium">{device.deviceName}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {DEVICE_TYPE_LABELS[device.deviceType]} • {PLATFORM_TYPE_LABELS[device.platform]}
+                              {DEVICE_TYPE_LABELS[device.deviceType]} •{" "}
+                              {PLATFORM_TYPE_LABELS[device.platform]}
                             </p>
                             <div className="flex items-center space-x-2 mt-1">
                               {getSyncStatusIcon(device.syncStatus)}
@@ -344,7 +383,7 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
                             variant="outline"
                             size="sm"
                             onClick={() => syncDevice(device.deviceId)}
-                            disabled={device.syncStatus === 'SYNCING'}
+                            disabled={device.syncStatus === "SYNCING"}
                           >
                             <CloudDownload className="w-4 h-4 mr-1" />
                             同步
@@ -358,7 +397,7 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
                           </Button>
                         </div>
                       </div>
-                      
+
                       {/* 错误信息 */}
                       {device.lastError && (
                         <Alert className="mt-3">
@@ -370,7 +409,7 @@ export function DeviceConnection({ member, onDeviceConnected, onDeviceDisconnect
                       )}
 
                       {/* 同步进度 */}
-                      {device.syncStatus === 'SYNCING' && (
+                      {device.syncStatus === "SYNCING" && (
                         <div className="mt-3">
                           <div className="flex items-center justify-between text-sm mb-2">
                             <span>同步中...</span>

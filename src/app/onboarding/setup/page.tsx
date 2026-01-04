@@ -1,54 +1,66 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Plus, X, User, Calendar, Target } from 'lucide-react';
-import Link from 'next/link';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Plus, X, User, Calendar, Target } from "lucide-react";
+import Link from "next/link";
 
 interface FamilyMember {
-  id: string
-  name: string
-  age: string
-  gender: string
-  relationship: string
-  healthGoals: string[]
+  id: string;
+  name: string;
+  age: string;
+  gender: string;
+  relationship: string;
+  healthGoals: string[];
 }
 
 export default function SetupPage() {
   const router = useRouter();
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
     {
-      id: '1',
-      name: '',
-      age: '',
-      gender: '',
-      relationship: '',
+      id: "1",
+      name: "",
+      age: "",
+      gender: "",
+      relationship: "",
       healthGoals: [],
     },
   ]);
   const [currentStep, setCurrentStep] = useState(0);
-  const [healthGoals, setHealthGoals] = useState('');
+  const [healthGoals, setHealthGoals] = useState("");
 
   const steps = [
-    { title: '家庭成员', description: '添加您的家庭成员' },
-    { title: '健康目标', description: '设置家庭的健康目标' },
-    { title: '完成设置', description: '查看并确认您的设置' },
+    { title: "家庭成员", description: "添加您的家庭成员" },
+    { title: "健康目标", description: "设置家庭的健康目标" },
+    { title: "完成设置", description: "查看并确认您的设置" },
   ];
 
   const addFamilyMember = () => {
     const newMember: FamilyMember = {
       id: Date.now().toString(),
-      name: '',
-      age: '',
-      gender: '',
-      relationship: '',
+      name: "",
+      age: "",
+      gender: "",
+      relationship: "",
       healthGoals: [],
     };
     setFamilyMembers([...familyMembers, newMember]);
@@ -56,14 +68,20 @@ export default function SetupPage() {
 
   const removeFamilyMember = (id: string) => {
     if (familyMembers.length > 1) {
-      setFamilyMembers(familyMembers.filter(member => member.id !== id));
+      setFamilyMembers(familyMembers.filter((member) => member.id !== id));
     }
   };
 
-  const updateFamilyMember = (id: string, field: keyof FamilyMember, value: any) => {
-    setFamilyMembers(familyMembers.map(member => 
-      member.id === id ? { ...member, [field]: value } : member
-    ));
+  const updateFamilyMember = (
+    id: string,
+    field: keyof FamilyMember,
+    value: any,
+  ) => {
+    setFamilyMembers(
+      familyMembers.map((member) =>
+        member.id === id ? { ...member, [field]: value } : member,
+      ),
+    );
   };
 
   const handleNext = () => {
@@ -71,10 +89,10 @@ export default function SetupPage() {
       setCurrentStep(currentStep + 1);
     } else {
       // Save setup and redirect to dashboard
-      localStorage.setItem('family-setup', JSON.stringify(familyMembers));
-      localStorage.setItem('health-goals', healthGoals);
-      localStorage.setItem('onboarding-completed', 'true');
-      router.push('/dashboard');
+      localStorage.setItem("family-setup", JSON.stringify(familyMembers));
+      localStorage.setItem("health-goals", healthGoals);
+      localStorage.setItem("onboarding-completed", "true");
+      router.push("/dashboard");
     }
   };
 
@@ -94,15 +112,21 @@ export default function SetupPage() {
           <div className="flex items-center justify-center space-x-2 mb-4">
             {steps.map((step, index) => (
               <div key={index} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  index <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-                }`}>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    index <= currentStep
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-600"
+                  }`}
+                >
                   {index + 1}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-12 h-1 mx-2 ${
-                    index < currentStep ? 'bg-blue-600' : 'bg-gray-200'
-                  }`} />
+                  <div
+                    className={`w-12 h-1 mx-2 ${
+                      index < currentStep ? "bg-blue-600" : "bg-gray-200"
+                    }`}
+                  />
                 )}
               </div>
             ))}
@@ -110,14 +134,12 @@ export default function SetupPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {steps[currentStep].title}
           </h1>
-          <p className="text-gray-600">
-            {steps[currentStep].description}
-          </p>
+          <p className="text-gray-600">{steps[currentStep].description}</p>
         </div>
 
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
-          <div 
+          <div
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
@@ -141,7 +163,10 @@ export default function SetupPage() {
 
                 <div className="space-y-4">
                   {familyMembers.map((member, index) => (
-                    <div key={member.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div
+                      key={member.id}
+                      className="border rounded-lg p-4 bg-gray-50"
+                    >
                       <div className="flex items-center justify-between mb-4">
                         <Badge variant="outline">成员 {index + 1}</Badge>
                         {familyMembers.length > 1 && (
@@ -162,7 +187,13 @@ export default function SetupPage() {
                           <Input
                             id={`name-${member.id}`}
                             value={member.name}
-                            onChange={(e) => updateFamilyMember(member.id, 'name', e.target.value)}
+                            onChange={(e) =>
+                              updateFamilyMember(
+                                member.id,
+                                "name",
+                                e.target.value,
+                              )
+                            }
                             placeholder="请输入姓名"
                           />
                         </div>
@@ -172,7 +203,13 @@ export default function SetupPage() {
                           <Input
                             id={`age-${member.id}`}
                             value={member.age}
-                            onChange={(e) => updateFamilyMember(member.id, 'age', e.target.value)}
+                            onChange={(e) =>
+                              updateFamilyMember(
+                                member.id,
+                                "age",
+                                e.target.value,
+                              )
+                            }
                             placeholder="请输入年龄"
                             type="number"
                           />
@@ -180,7 +217,12 @@ export default function SetupPage() {
 
                         <div>
                           <Label htmlFor={`gender-${member.id}`}>性别 *</Label>
-                          <Select value={member.gender} onValueChange={(value) => updateFamilyMember(member.id, 'gender', value)}>
+                          <Select
+                            value={member.gender}
+                            onValueChange={(value) =>
+                              updateFamilyMember(member.id, "gender", value)
+                            }
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="请选择性别" />
                             </SelectTrigger>
@@ -192,8 +234,19 @@ export default function SetupPage() {
                         </div>
 
                         <div>
-                          <Label htmlFor={`relationship-${member.id}`}>关系 *</Label>
-                          <Select value={member.relationship} onValueChange={(value) => updateFamilyMember(member.id, 'relationship', value)}>
+                          <Label htmlFor={`relationship-${member.id}`}>
+                            关系 *
+                          </Label>
+                          <Select
+                            value={member.relationship}
+                            onValueChange={(value) =>
+                              updateFamilyMember(
+                                member.id,
+                                "relationship",
+                                value,
+                              )
+                            }
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="请选择关系" />
                             </SelectTrigger>
@@ -255,9 +308,7 @@ export default function SetupPage() {
                   <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                     设置完成！
                   </h2>
-                  <p className="text-gray-600">
-                    请确认您的设置信息
-                  </p>
+                  <p className="text-gray-600">请确认您的设置信息</p>
                 </div>
 
                 <div className="space-y-6">
@@ -268,10 +319,17 @@ export default function SetupPage() {
                     </h3>
                     <div className="bg-gray-50 p-4 rounded-lg">
                       {familyMembers.map((member, index) => (
-                        <div key={member.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                          <span className="font-medium">{member.name || `成员${index + 1}`}</span>
+                        <div
+                          key={member.id}
+                          className="flex items-center justify-between py-2 border-b last:border-b-0"
+                        >
+                          <span className="font-medium">
+                            {member.name || `成员${index + 1}`}
+                          </span>
                           <span className="text-sm text-gray-500">
-                            {member.age}岁 • {member.gender === 'male' ? '男' : '女'} • {member.relationship || '未设置'}
+                            {member.age}岁 •{" "}
+                            {member.gender === "male" ? "男" : "女"} •{" "}
+                            {member.relationship || "未设置"}
                           </span>
                         </div>
                       ))}
@@ -292,7 +350,8 @@ export default function SetupPage() {
 
                   <div className="bg-green-50 p-4 rounded-lg">
                     <p className="text-sm text-green-800">
-                      ✅ 设置已完成！您现在可以开始使用 Health Butler 的所有功能了。
+                      ✅ 设置已完成！您现在可以开始使用 Health Butler
+                      的所有功能了。
                     </p>
                   </div>
                 </div>
@@ -311,15 +370,16 @@ export default function SetupPage() {
             )}
             {currentStep === 0 && (
               <Link href="/onboarding/welcome">
-                <Button variant="outline">
-                  返回欢迎页
-                </Button>
+                <Button variant="outline">返回欢迎页</Button>
               </Link>
             )}
           </div>
 
-          <Button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700">
-            {currentStep === steps.length - 1 ? '完成设置' : '下一步'}
+          <Button
+            onClick={handleNext}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {currentStep === steps.length - 1 ? "完成设置" : "下一步"}
           </Button>
         </div>
       </div>

@@ -13,7 +13,7 @@
  * @module meal-plan-repository
  */
 
-import type { PaginatedResult, PaginationInput } from '../types/common';
+import type { PaginatedResult, PaginationInput } from "../types/common";
 import type {
   MealPlanDTO,
   MealPlanCreateInputDTO,
@@ -23,7 +23,7 @@ import type {
   MealCreateInputDTO,
   MealUpdateInputDTO,
   MealIngredientCreateInputDTO,
-} from '../types/meal-plan';
+} from "../types/meal-plan";
 
 /**
  * 膳食计划 Repository 接口
@@ -68,7 +68,7 @@ export interface MealPlanRepository {
    */
   listMealPlans(
     filter?: MealPlanFilterDTO,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<MealPlanDTO>>;
 
   /**
@@ -85,7 +85,10 @@ export interface MealPlanRepository {
    * @param input - 更新参数
    * @returns 更新后的计划对象
    */
-  updateMealPlan(id: string, input: MealPlanUpdateInputDTO): Promise<MealPlanDTO>;
+  updateMealPlan(
+    id: string,
+    input: MealPlanUpdateInputDTO,
+  ): Promise<MealPlanDTO>;
 
   /**
    * 软删除膳食计划
@@ -164,7 +167,7 @@ export interface MealPlanRepository {
    */
   updateMealIngredients(
     mealId: string,
-    ingredients: MealIngredientCreateInputDTO[]
+    ingredients: MealIngredientCreateInputDTO[],
   ): Promise<MealDTO>;
 
   // ==================== 特殊查询 ====================
@@ -197,6 +200,6 @@ export interface MealPlanRepository {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<MealPlanDTO>>;
 }

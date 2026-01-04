@@ -13,7 +13,7 @@ import type {
   FamilyMember,
   LeaderboardEntryData,
   HealthData,
-} from '@prisma/client';
+} from "@prisma/client";
 
 /**
  * 健康数据聚合结果
@@ -89,7 +89,9 @@ export interface LeaderboardRepository {
    * @param filter - 查询过滤器
    * @returns 聚合结果数组
    */
-  aggregateHealthDataByMember(filter: HealthDataFilter): Promise<HealthDataAggregationResult[]>;
+  aggregateHealthDataByMember(
+    filter: HealthDataFilter,
+  ): Promise<HealthDataAggregationResult[]>;
 
   /**
    * 获取成员的健康数据列表
@@ -98,7 +100,10 @@ export interface LeaderboardRepository {
    * @param filter - 可选的查询过滤器
    * @returns 成员健康数据
    */
-  getMemberHealthData(memberId: string, filter?: HealthDataFilter): Promise<MemberHealthData>;
+  getMemberHealthData(
+    memberId: string,
+    filter?: HealthDataFilter,
+  ): Promise<MemberHealthData>;
 
   /**
    * 批量获取多个成员的健康数据
@@ -107,7 +112,10 @@ export interface LeaderboardRepository {
    * @param filter - 可选的查询过滤器
    * @returns 成员健康数据数组
    */
-  getMembersHealthData(memberIds: string[], filter?: HealthDataFilter): Promise<MemberHealthData[]>;
+  getMembersHealthData(
+    memberIds: string[],
+    filter?: HealthDataFilter,
+  ): Promise<MemberHealthData[]>;
 
   // ========================================================================
   // Family Member 查询
@@ -119,7 +127,9 @@ export interface LeaderboardRepository {
    * @param memberId - 成员ID
    * @returns 成员信息（仅包含必要字段）
    */
-  getMemberById(memberId: string): Promise<Pick<FamilyMember, 'id' | 'name' | 'avatar'> | null>;
+  getMemberById(
+    memberId: string,
+  ): Promise<Pick<FamilyMember, "id" | "name" | "avatar"> | null>;
 
   /**
    * 查询有健康数据的成员
@@ -127,7 +137,9 @@ export interface LeaderboardRepository {
    * @param filter - 查询过滤器
    * @returns 成员列表（包含健康数据）
    */
-  getMembersWithHealthData(filter: HealthDataFilter): Promise<MemberHealthData[]>;
+  getMembersWithHealthData(
+    filter: HealthDataFilter,
+  ): Promise<MemberHealthData[]>;
 
   // ========================================================================
   // Leaderboard Entry 操作
@@ -139,7 +151,9 @@ export interface LeaderboardRepository {
    * @param data - 排行榜条目数据
    * @returns 创建的排行榜条目
    */
-  createLeaderboardEntry(data: LeaderboardEntryCreateDTO): Promise<LeaderboardEntry>;
+  createLeaderboardEntry(
+    data: LeaderboardEntryCreateDTO,
+  ): Promise<LeaderboardEntry>;
 
   /**
    * 批量创建排行榜条目
@@ -147,7 +161,9 @@ export interface LeaderboardRepository {
    * @param entries - 排行榜条目数据数组
    * @returns 创建的排行榜条目数组
    */
-  createLeaderboardEntries(entries: LeaderboardEntryCreateDTO[]): Promise<LeaderboardEntry[]>;
+  createLeaderboardEntries(
+    entries: LeaderboardEntryCreateDTO[],
+  ): Promise<LeaderboardEntry[]>;
 
   /**
    * 查询排行榜条目
@@ -155,7 +171,9 @@ export interface LeaderboardRepository {
    * @param query - 查询条件
    * @returns 排行榜条目数组
    */
-  getLeaderboardEntries(query: LeaderboardEntryQuery): Promise<LeaderboardEntry[]>;
+  getLeaderboardEntries(
+    query: LeaderboardEntryQuery,
+  ): Promise<LeaderboardEntry[]>;
 
   /**
    * 获取最新的排行榜条目
@@ -163,7 +181,9 @@ export interface LeaderboardRepository {
    * @param query - 查询条件（不包含日期范围）
    * @returns 最新的排行榜条目或null
    */
-  getLatestLeaderboardEntry(query: Omit<LeaderboardEntryQuery, 'startDate' | 'endDate'>): Promise<LeaderboardEntry | null>;
+  getLatestLeaderboardEntry(
+    query: Omit<LeaderboardEntryQuery, "startDate" | "endDate">,
+  ): Promise<LeaderboardEntry | null>;
 
   /**
    * 获取排行榜历史
@@ -173,7 +193,11 @@ export interface LeaderboardRepository {
    * @param days - 历史天数（默认30天）
    * @returns 历史排行榜条目数组
    */
-  getRankingHistory(memberId: string, type: LeaderboardType, days?: number): Promise<LeaderboardEntry[]>;
+  getRankingHistory(
+    memberId: string,
+    type: LeaderboardType,
+    days?: number,
+  ): Promise<LeaderboardEntry[]>;
 
   // ========================================================================
   // 数据统计
@@ -186,7 +210,10 @@ export interface LeaderboardRepository {
    * @param filter - 可选的查询过滤器
    * @returns 数据点数
    */
-  countMemberHealthData(memberId: string, filter?: HealthDataFilter): Promise<number>;
+  countMemberHealthData(
+    memberId: string,
+    filter?: HealthDataFilter,
+  ): Promise<number>;
 
   /**
    * 计算连续打卡天数

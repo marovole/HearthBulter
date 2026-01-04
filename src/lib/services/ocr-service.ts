@@ -1,34 +1,34 @@
 /**
  * OCR文本识别服务
- * 
+ *
  * 支持PDF和图片文件的OCR识别，提取体检报告中的文本内容
  * MVP阶段使用Tesseract.js（开源免费），后续可升级到Azure OCR（更高精度）
  */
 
-import Tesseract from 'tesseract.js';
-import * as pdfParse from 'pdf-parse';
-import sharp from 'sharp';
+import Tesseract from "tesseract.js";
+import * as pdfParse from "pdf-parse";
+import sharp from "sharp";
 
 /**
  * 支持的MIME类型
  */
 export const SUPPORTED_MIME_TYPES = [
-  'application/pdf',
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
+  "application/pdf",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
 ] as const;
 
-export type SupportedMimeType = (typeof SUPPORTED_MIME_TYPES)[number]
+export type SupportedMimeType = (typeof SUPPORTED_MIME_TYPES)[number];
 
 /**
  * OCR识别结果
  */
 export interface OcrResult {
-  text: string
-  confidence: number
-  processingTime: number
+  text: string;
+  confidence: number;
+  processingTime: number;
 }
 
 /**
@@ -53,9 +53,7 @@ export class OcrService {
   /**
    * 图片预处理：增强对比度和清晰度
    */
-  private static async preprocessImage(
-    imageBuffer: Buffer
-  ): Promise<Buffer> {
+  private static async preprocessImage(imageBuffer: Buffer): Promise<Buffer> {
     try {
       // 使用sharp进行图片预处理
       const processed = await sharp(imageBuffer)
@@ -66,7 +64,7 @@ export class OcrService {
 
       return processed;
     } catch (error) {
-      console.warn('图片预处理失败，使用原始图片:', error);
+      console.warn("图片预处理失败，使用原始图片:", error);
       return imageBuffer;
     }
   }
@@ -76,7 +74,7 @@ export class OcrService {
    */
   private static async recognizeImage(
     imageBuffer: Buffer,
-    language: string = 'chi_sim+eng' // 中文简体+英文
+    language: string = "chi_sim+eng", // 中文简体+英文
   ): Promise<OcrResult> {
     const startTime = Date.now();
 
@@ -90,7 +88,7 @@ export class OcrService {
       } = await Tesseract.recognize(processedBuffer, language, {
         logger: (m) => {
           // 可选：记录OCR进度
-          if (m.status === 'recognizing text') {
+          if (m.status === "recognizing text") {
             console.log(`OCR进度: ${Math.round(m.progress * 100)}%`);
           }
         },
@@ -104,17 +102,17 @@ export class OcrService {
         processingTime,
       };
     } catch (error) {
-      console.error('OCR识别失败:', error);
-      throw new Error(`OCR识别失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      console.error("OCR识别失败:", error);
+      throw new Error(
+        `OCR识别失败: ${error instanceof Error ? error.message : "未知错误"}`,
+      );
     }
   }
 
   /**
    * 识别PDF中的文本
    */
-  private static async recognizePdf(
-    pdfBuffer: Buffer
-  ): Promise<OcrResult> {
+  private static async recognizePdf(pdfBuffer: Buffer): Promise<OcrResult> {
     const startTime = Date.now();
 
     try {
@@ -133,11 +131,13 @@ export class OcrService {
       // 图片型PDF需要先转换为图片，然后OCR识别
       // 这里简化处理，提示需要额外的PDF转换工具
       throw new Error(
-        '图片型PDF需要先转换为图片。建议使用pdf-poppler或pdf2pic等工具'
+        "图片型PDF需要先转换为图片。建议使用pdf-poppler或pdf2pic等工具",
       );
     } catch (error) {
-      console.error('PDF识别失败:', error);
-      throw new Error(`PDF识别失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      console.error("PDF识别失败:", error);
+      throw new Error(
+        `PDF识别失败: ${error instanceof Error ? error.message : "未知错误"}`,
+      );
     }
   }
 
@@ -146,7 +146,7 @@ export class OcrService {
    */
   static async recognize(
     fileBuffer: Buffer,
-    mimeType: SupportedMimeType
+    mimeType: SupportedMimeType,
   ): Promise<OcrResult> {
     // 验证文件类型
     if (!this.isSupportedMimeType(mimeType)) {
@@ -154,7 +154,7 @@ export class OcrService {
     }
 
     // 根据文件类型选择识别方法
-    if (mimeType === 'application/pdf') {
+    if (mimeType === "application/pdf") {
       return await this.recognizePdf(fileBuffer);
     } else {
       // 图片类型
@@ -167,7 +167,7 @@ export class OcrService {
    */
   static async recognizeBatch(
     fileBuffers: Buffer[],
-    mimeType: SupportedMimeType
+    mimeType: SupportedMimeType,
   ): Promise<OcrResult[]> {
     const results: OcrResult[] = [];
 
@@ -182,4 +182,3 @@ export class OcrService {
 
 // 导出单例实例
 export const ocrService = new OcrService();
-

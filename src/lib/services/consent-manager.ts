@@ -3,14 +3,19 @@
  * 处理AI分析、数据处理等操作的用户同意流程
  */
 
-import { supabaseAdapter } from '@/lib/db/supabase-adapter';
+import { supabaseAdapter } from "@/lib/db/supabase-adapter";
 
 export interface ConsentType {
   id: string;
   name: string;
   description: string;
   required: boolean;
-  category: 'data_processing' | 'ai_analysis' | 'health_sharing' | 'marketing' | 'research';
+  category:
+    | "data_processing"
+    | "ai_analysis"
+    | "health_sharing"
+    | "marketing"
+    | "research";
   version: string;
   content: {
     summary: string;
@@ -73,15 +78,16 @@ class ConsentManagerService {
   private initializeDefaultConsents(): void {
     const defaultConsents: ConsentType[] = [
       {
-        id: 'ai_health_analysis',
-        name: 'AI健康数据分析同意',
-        description: '同意使用AI技术分析您的健康数据以提供个性化建议',
+        id: "ai_health_analysis",
+        name: "AI健康数据分析同意",
+        description: "同意使用AI技术分析您的健康数据以提供个性化建议",
         required: true,
-        category: 'ai_analysis',
-        version: '1.0',
+        category: "ai_analysis",
+        version: "1.0",
         validDays: 365, // 一年有效
         content: {
-          summary: '我们将使用AI技术分析您的健康数据，为您提供个性化的营养和健康建议。',
+          summary:
+            "我们将使用AI技术分析您的健康数据，为您提供个性化的营养和健康建议。",
           details: `
             1. 数据处理：您的健康数据将被匿名化处理，仅用于AI分析
             2. AI分析：使用先进的AI模型分析您的健康状况和饮食习惯
@@ -89,71 +95,71 @@ class ConsentManagerService {
             4. 数据安全：所有数据传输和存储均采用加密技术保护
             5. 隐私保护：不会向第三方分享您的个人信息
           `,
-          risks: 'AI分析可能存在一定误差，建议仅作为参考，不替代专业医疗诊断。',
-          benefits: '获得个性化的健康建议，更好地管理饮食和健康状况。',
+          risks: "AI分析可能存在一定误差，建议仅作为参考，不替代专业医疗诊断。",
+          benefits: "获得个性化的健康建议，更好地管理饮食和健康状况。",
         },
       },
       {
-        id: 'medical_data_processing',
-        name: '医疗数据处理同意',
-        description: '同意处理和分析您的医疗报告数据',
+        id: "medical_data_processing",
+        name: "医疗数据处理同意",
+        description: "同意处理和分析您的医疗报告数据",
         required: true,
-        category: 'data_processing',
-        version: '1.0',
+        category: "data_processing",
+        version: "1.0",
         validDays: 365,
         content: {
-          summary: '我们将处理您的医疗报告，为您提供结构化的健康信息。',
+          summary: "我们将处理您的医疗报告，为您提供结构化的健康信息。",
           details: `
             1. 数据提取：从医疗报告中提取关键健康指标
             2. 数据结构化：将非结构化数据转换为结构化格式
             3. 隐私保护：敏感信息将被过滤和匿名化
             4. 存储安全：数据采用加密方式安全存储
           `,
-          risks: '医疗数据处理过程中可能出现信息提取错误。',
-          benefits: '获得清晰的健康数据视图，便于跟踪健康状况变化。',
+          risks: "医疗数据处理过程中可能出现信息提取错误。",
+          benefits: "获得清晰的健康数据视图，便于跟踪健康状况变化。",
         },
       },
       {
-        id: 'health_data_sharing',
-        name: '健康数据分享同意',
-        description: '同意在家庭成员间分享健康数据（可选）',
+        id: "health_data_sharing",
+        name: "健康数据分享同意",
+        description: "同意在家庭成员间分享健康数据（可选）",
         required: false,
-        category: 'health_sharing',
-        version: '1.0',
+        category: "health_sharing",
+        version: "1.0",
         validDays: 180, // 半年有效
         content: {
-          summary: '允许在家庭成员间分享健康数据，便于家庭共同管理健康。',
+          summary: "允许在家庭成员间分享健康数据，便于家庭共同管理健康。",
           details: `
             1. 范围限制：仅在您授权的家庭成员间分享
             2. 数据控制：您可以随时查看、修改或撤销分享权限
             3. 隐私保护：分享的数据不包含敏感个人信息
             4. 目的明确：仅用于家庭健康管理和关怀
           `,
-          benefits: '家庭成员可以相互关心健康状况，提供更好的支持。',
+          benefits: "家庭成员可以相互关心健康状况，提供更好的支持。",
         },
       },
       {
-        id: 'health_research_participation',
-        name: '健康研究参与同意',
-        description: '同意参与匿名健康数据研究（可选）',
+        id: "health_research_participation",
+        name: "健康研究参与同意",
+        description: "同意参与匿名健康数据研究（可选）",
         required: false,
-        category: 'research',
-        version: '1.0',
+        category: "research",
+        version: "1.0",
         validDays: 0, // 每次使用时都需要确认
         content: {
-          summary: '参与匿名健康数据研究，帮助改进健康建议算法。',
+          summary: "参与匿名健康数据研究，帮助改进健康建议算法。",
           details: `
             1. 匿名处理：所有数据将被完全匿名化
             2. 研究目的：用于改进AI健康建议算法
             3. 数据范围：仅包含必要的健康指标数据
             4. 退出机制：您可以随时退出研究项目
           `,
-          benefits: '帮助改进健康建议质量，为更多人提供更好的服务。',
+          benefits: "帮助改进健康建议质量，为更多人提供更好的服务。",
         },
       },
     ];
 
-    defaultConsents.forEach(consent => {
+    defaultConsents.forEach((consent) => {
       this.consentTypes.set(consent.id, consent);
     });
   }
@@ -164,7 +170,7 @@ class ConsentManagerService {
   async requestConsent(
     userId: string,
     request: ConsentRequest,
-    context?: { ipAddress?: string; userAgent?: string }
+    context?: { ipAddress?: string; userAgent?: string },
   ): Promise<ConsentResult> {
     const consentType = request.type;
     const existingConsent = await this.getUserConsent(userId, consentType.id);
@@ -196,7 +202,7 @@ class ConsentManagerService {
     userId: string,
     consentId: string,
     context?: Record<string, any>,
-    clientInfo?: { ipAddress?: string; userAgent?: string }
+    clientInfo?: { ipAddress?: string; userAgent?: string },
   ): Promise<UserConsent> {
     const consentType = this.consentTypes.get(consentId);
     if (!consentType) {
@@ -216,7 +222,9 @@ class ConsentManagerService {
     // 设置过期时间
     if (consentType.validDays > 0) {
       consent.expiresAt = new Date();
-      consent.expiresAt.setDate(consent.expiresAt.getDate() + consentType.validDays);
+      consent.expiresAt.setDate(
+        consent.expiresAt.getDate() + consentType.validDays,
+      );
     }
 
     // 在实际应用中，这里会保存到数据库
@@ -257,7 +265,10 @@ class ConsentManagerService {
   /**
    * 批量检查同意
    */
-  async checkMultipleConsents(userId: string, consentIds: string[]): Promise<Record<string, boolean>> {
+  async checkMultipleConsents(
+    userId: string,
+    consentIds: string[],
+  ): Promise<Record<string, boolean>> {
     const results: Record<string, boolean> = {};
 
     for (const consentId of consentIds) {
@@ -284,9 +295,9 @@ class ConsentManagerService {
   /**
    * 获取特定类别的同意类型
    */
-  getConsentTypesByCategory(category: ConsentType['category']): ConsentType[] {
+  getConsentTypesByCategory(category: ConsentType["category"]): ConsentType[] {
     return Array.from(this.consentTypes.values()).filter(
-      consent => consent.category === category
+      (consent) => consent.category === category,
     );
   }
 
@@ -303,7 +314,10 @@ class ConsentManagerService {
   /**
    * 获取用户同意（数据库操作）
    */
-  private async getUserConsent(userId: string, consentId: string): Promise<UserConsent | null> {
+  private async getUserConsent(
+    userId: string,
+    consentId: string,
+  ): Promise<UserConsent | null> {
     try {
       const dbConsent = await supabaseAdapter.userConsent.findUnique({
         where: {
@@ -328,7 +342,7 @@ class ConsentManagerService {
         context: dbConsent.context,
       };
     } catch (error) {
-      console.error('Failed to get user consent:', error);
+      console.error("Failed to get user consent:", error);
       return null;
     }
   }
@@ -363,15 +377,18 @@ class ConsentManagerService {
         },
       });
     } catch (error) {
-      console.error('Failed to save user consent:', error);
-      throw new Error('保存用户同意失败');
+      console.error("Failed to save user consent:", error);
+      throw new Error("保存用户同意失败");
     }
   }
 
   /**
    * 删除用户同意（数据库操作）
    */
-  private async deleteUserConsent(userId: string, consentId: string): Promise<void> {
+  private async deleteUserConsent(
+    userId: string,
+    consentId: string,
+  ): Promise<void> {
     try {
       await supabaseAdapter.userConsent.delete({
         where: {
@@ -380,8 +397,8 @@ class ConsentManagerService {
         },
       });
     } catch (error) {
-      console.error('Failed to delete user consent:', error);
-      throw new Error('删除用户同意失败');
+      console.error("Failed to delete user consent:", error);
+      throw new Error("删除用户同意失败");
     }
   }
 }
@@ -393,7 +410,7 @@ export const consentManager = new ConsentManagerService();
 export async function requireConsent(
   userId: string,
   consentId: string,
-  context?: Record<string, any>
+  context?: Record<string, any>,
 ): Promise<boolean> {
   const consentType = consentManager.getConsentType(consentId);
   if (!consentType) {
@@ -411,7 +428,7 @@ export async function requireConsent(
 export async function grantUserConsent(
   userId: string,
   consentId: string,
-  context?: Record<string, any>
+  context?: Record<string, any>,
 ): Promise<void> {
   await consentManager.grantConsent(userId, consentId, context);
 }

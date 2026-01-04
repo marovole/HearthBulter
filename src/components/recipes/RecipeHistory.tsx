@@ -1,12 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Eye, Calendar, Filter } from 'lucide-react';
-import { RecipeCard } from './RecipeCard';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Clock, Eye, Calendar, Filter } from "lucide-react";
+import { RecipeCard } from "./RecipeCard";
 
 interface Recipe {
   id: string;
@@ -53,7 +65,7 @@ export function RecipeHistory({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [days, setDays] = useState(30);
-  const [sortBy, setSortBy] = useState('viewedAt');
+  const [sortBy, setSortBy] = useState("viewedAt");
 
   const loadHistory = async (reset = false) => {
     try {
@@ -75,18 +87,18 @@ export function RecipeHistory({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to load recipe history');
+        throw new Error(data.error || "Failed to load recipe history");
       }
 
       const newViews = data.views || [];
-      setViews(prev => reset ? newViews : [...prev, ...newViews]);
+      setViews((prev) => (reset ? newViews : [...prev, ...newViews]));
       setHasMore(newViews.length === limit);
 
       if (!reset) {
-        setPage(prev => prev + 1);
+        setPage((prev) => prev + 1);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
     } finally {
       setLoading(false);
     }
@@ -105,8 +117,8 @@ export function RecipeHistory({
     const diffTime = now.getTime() - new Date(date).getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return '今天';
-    if (diffDays === 1) return '昨天';
+    if (diffDays === 0) return "今天";
+    if (diffDays === 1) return "昨天";
     if (diffDays < 7) return `${diffDays}天前`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)}周前`;
     return `${Math.floor(diffDays / 30)}个月前`;
@@ -115,7 +127,7 @@ export function RecipeHistory({
   const groupByDate = (views: ViewRecord[]) => {
     const groups: { [key: string]: ViewRecord[] } = {};
 
-    views.forEach(view => {
+    views.forEach((view) => {
       const dateKey = new Date(view.viewedAt).toDateString();
       if (!groups[dateKey]) {
         groups[dateKey] = [];
@@ -209,9 +221,10 @@ export function RecipeHistory({
                         {view.recipe.name}
                       </CardTitle>
                       <CardDescription className="text-xs text-muted-foreground mt-1">
-                        {formatDate(view.viewedAt)} {new Date(view.viewedAt).toLocaleTimeString('zh-CN', {
-                          hour: '2-digit',
-                          minute: '2-digit',
+                        {formatDate(view.viewedAt)}{" "}
+                        {new Date(view.viewedAt).toLocaleTimeString("zh-CN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </CardDescription>
                     </div>
@@ -226,7 +239,11 @@ export function RecipeHistory({
                     </div>
                     <div className="flex items-center gap-1">
                       <Eye className="h-3 w-3" />
-                      <span>{view.viewDuration ? `${view.viewDuration}秒` : '未记录'}</span>
+                      <span>
+                        {view.viewDuration
+                          ? `${view.viewDuration}秒`
+                          : "未记录"}
+                      </span>
                     </div>
                   </div>
 
@@ -248,10 +265,7 @@ export function RecipeHistory({
 
       {hasMore && !loading && (
         <div className="text-center">
-          <Button
-            onClick={() => loadHistory()}
-            variant="outline"
-          >
+          <Button onClick={() => loadHistory()} variant="outline">
             加载更多
           </Button>
         </div>

@@ -7,23 +7,23 @@
 export interface MacroGoals {
   calories: number;
   protein: number; // grams
-  carbs: number;   // grams
-  fat: number;     // grams
+  carbs: number; // grams
+  fat: number; // grams
 }
 
 export interface UserProfile {
-  weight: number;      // kg
-  height: number;      // cm
+  weight: number; // kg
+  height: number; // cm
   age: number;
-  gender: 'male' | 'female';
-  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-  goal: 'weight_loss' | 'muscle_gain' | 'maintain';
+  gender: "male" | "female";
+  activityLevel: "sedentary" | "light" | "moderate" | "active" | "very_active";
+  goal: "weight_loss" | "muscle_gain" | "maintain";
 }
 
 export interface NutrientRecommendations extends MacroGoals {
-  fiber: number;    // grams
-  water: number;    // liters
-  sodium?: number;  // mg
+  fiber: number; // grams
+  water: number; // liters
+  sodium?: number; // mg
 }
 
 export interface MealMacro {
@@ -36,10 +36,12 @@ export interface MealMacro {
 /**
  * 计算基础代谢率 (BMR) - Mifflin-St Jeor 公式
  */
-export function calculateBMR(profile: Pick<UserProfile, 'weight' | 'height' | 'age' | 'gender'>): number {
+export function calculateBMR(
+  profile: Pick<UserProfile, "weight" | "height" | "age" | "gender">,
+): number {
   const { weight, height, age, gender } = profile;
 
-  if (gender === 'male') {
+  if (gender === "male") {
     return 10 * weight + 6.25 * height - 5 * age + 5;
   } else {
     return 10 * weight + 6.25 * height - 5 * age - 161;
@@ -49,7 +51,10 @@ export function calculateBMR(profile: Pick<UserProfile, 'weight' | 'height' | 'a
 /**
  * 计算每日总能量消耗 (TDEE)
  */
-export function calculateTDEE(bmr: number, activityLevel: UserProfile['activityLevel']): number {
+export function calculateTDEE(
+  bmr: number,
+  activityLevel: UserProfile["activityLevel"],
+): number {
   const activityMultipliers = {
     sedentary: 1.2,
     light: 1.375,
@@ -66,7 +71,7 @@ export function calculateTDEE(bmr: number, activityLevel: UserProfile['activityL
  */
 export function calculateBMI(weight: number, height: number): number {
   if (weight <= 0 || height <= 0) {
-    throw new Error('Weight and height must be positive numbers');
+    throw new Error("Weight and height must be positive numbers");
   }
 
   const heightInMeters = height / 100;
@@ -76,10 +81,13 @@ export function calculateBMI(weight: number, height: number): number {
 /**
  * 计算理想体重 - Devine 公式
  */
-export function calculateIdealWeight(height: number, gender: 'male' | 'female'): number {
-  const heightInInches = (height * 0.393701) - 60; // Convert to inches and subtract 5 feet
+export function calculateIdealWeight(
+  height: number,
+  gender: "male" | "female",
+): number {
+  const heightInInches = height * 0.393701 - 60; // Convert to inches and subtract 5 feet
 
-  if (gender === 'male') {
+  if (gender === "male") {
     return 50 + 2.3 * heightInInches;
   } else {
     return 45.5 + 2.3 * heightInInches;
@@ -92,7 +100,7 @@ export function calculateIdealWeight(height: number, gender: 'male' | 'female'):
 export function calculateDailyMacros(profile: UserProfile): MacroGoals {
   // Input validation
   if (profile.weight <= 0 || profile.height <= 0 || profile.age <= 0) {
-    throw new Error('Weight, height, and age must be positive numbers');
+    throw new Error("Weight, height, and age must be positive numbers");
   }
 
   const bmr = calculateBMR(profile);
@@ -102,22 +110,22 @@ export function calculateDailyMacros(profile: UserProfile): MacroGoals {
 
   // 根据目标调整卡路里
   switch (profile.goal) {
-  case 'weight_loss':
-    targetCalories = tdee * 0.85; // 15% deficit
-    break;
-  case 'muscle_gain':
-    targetCalories = tdee * 1.1; // 10% surplus
-    break;
-  case 'maintain':
-  default:
-    targetCalories = tdee;
+    case "weight_loss":
+      targetCalories = tdee * 0.85; // 15% deficit
+      break;
+    case "muscle_gain":
+      targetCalories = tdee * 1.1; // 10% surplus
+      break;
+    case "maintain":
+    default:
+      targetCalories = tdee;
   }
 
   // 蛋白质需求 (g/kg body weight)
   let proteinPerKg = 1.2; // maintenance
-  if (profile.goal === 'muscle_gain') {
+  if (profile.goal === "muscle_gain") {
     proteinPerKg = 1.8;
-  } else if (profile.goal === 'weight_loss') {
+  } else if (profile.goal === "weight_loss") {
     proteinPerKg = 1.6;
   }
 
@@ -125,10 +133,10 @@ export function calculateDailyMacros(profile: UserProfile): MacroGoals {
 
   // 脂肪占总卡路里的 20-35%
   let fatPercentage = 0.25;
-  if (profile.goal === 'weight_loss') {
-    fatPercentage = 0.30;
-  } else if (profile.goal === 'muscle_gain') {
-    fatPercentage = 0.20;
+  if (profile.goal === "weight_loss") {
+    fatPercentage = 0.3;
+  } else if (profile.goal === "muscle_gain") {
+    fatPercentage = 0.2;
   }
 
   const fatCalories = targetCalories * fatPercentage;
@@ -150,17 +158,19 @@ export function calculateDailyMacros(profile: UserProfile): MacroGoals {
 /**
  * 获取营养素推荐摄入量
  */
-export function getNutrientRecommendations(profile: UserProfile): NutrientRecommendations {
+export function getNutrientRecommendations(
+  profile: UserProfile,
+): NutrientRecommendations {
   const macros = calculateDailyMacros(profile);
 
   // 纤维推荐 (14g per 1000 calories)
   const fiber = Math.max(25, Math.round((macros.calories / 1000) * 14));
 
   // 水分推荐 (30-35ml per kg body weight)
-  const water = Math.round((profile.weight * 0.032) * 10) / 10; // Round to 1 decimal place
+  const water = Math.round(profile.weight * 0.032 * 10) / 10; // Round to 1 decimal place
 
   // 钠推荐 (WHO: <2000mg per day)
-  const sodium = profile.goal === 'weight_loss' ? 1500 : 2000;
+  const sodium = profile.goal === "weight_loss" ? 1500 : 2000;
 
   return {
     ...macros,
@@ -173,26 +183,29 @@ export function getNutrientRecommendations(profile: UserProfile): NutrientRecomm
 /**
  * 将每日宏量营养素分配到各餐
  */
-export function calculateMealMacros(dailyMacros: MacroGoals, mealCount: number): MealMacro[] {
+export function calculateMealMacros(
+  dailyMacros: MacroGoals,
+  mealCount: number,
+): MealMacro[] {
   const meals: MealMacro[] = [];
 
   // 默认分配比例
   let distributions: number[];
 
   switch (mealCount) {
-  case 3:
-    distributions = [0.35, 0.35, 0.30]; // 早餐、午餐、晚餐
-    break;
-  case 4:
-    distributions = [0.25, 0.30, 0.30, 0.15]; // 早餐、午餐、晚餐、加餐
-    break;
-  case 5:
-    distributions = [0.20, 0.25, 0.30, 0.15, 0.10]; // 早餐、上午加餐、午餐、下午加餐、晚餐
-    break;
-  default:
-    // 平均分配
-    const equalShare = 1 / mealCount;
-    distributions = Array(mealCount).fill(equalShare);
+    case 3:
+      distributions = [0.35, 0.35, 0.3]; // 早餐、午餐、晚餐
+      break;
+    case 4:
+      distributions = [0.25, 0.3, 0.3, 0.15]; // 早餐、午餐、晚餐、加餐
+      break;
+    case 5:
+      distributions = [0.2, 0.25, 0.3, 0.15, 0.1]; // 早餐、上午加餐、午餐、下午加餐、晚餐
+      break;
+    default:
+      // 平均分配
+      const equalShare = 1 / mealCount;
+      distributions = Array(mealCount).fill(equalShare);
   }
 
   for (let i = 0; i < mealCount; i++) {

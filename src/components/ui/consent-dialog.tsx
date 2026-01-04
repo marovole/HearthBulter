@@ -1,17 +1,39 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Shield, AlertTriangle, CheckCircle, Info, Clock, Users, Database, Brain } from 'lucide-react';
-import { ConsentType, consentManager } from '@/lib/services/consent-manager';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  Clock,
+  Users,
+  Database,
+  Brain,
+} from "lucide-react";
+import { ConsentType, consentManager } from "@/lib/services/consent-manager";
+import { cn } from "@/lib/utils";
 
 interface ConsentDialogProps {
   open: boolean;
@@ -53,14 +75,18 @@ export function ConsentDialog({
     setIsSubmitting(true);
     try {
       await consentManager.grantConsent(userId, consentType.id, context, {
-        ipAddress: typeof window !== 'undefined' ? window.location.hostname : undefined,
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+        ipAddress:
+          typeof window !== "undefined" ? window.location.hostname : undefined,
+        userAgent:
+          typeof window !== "undefined"
+            ? window.navigator.userAgent
+            : undefined,
       });
 
       onConsentGranted(consentType.id);
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to grant consent:', error);
+      console.error("Failed to grant consent:", error);
       // 这里可以显示错误提示
     } finally {
       setIsSubmitting(false);
@@ -72,35 +98,35 @@ export function ConsentDialog({
     onOpenChange(false);
   };
 
-  const getCategoryIcon = (category: ConsentType['category']) => {
+  const getCategoryIcon = (category: ConsentType["category"]) => {
     switch (category) {
-    case 'ai_analysis':
-      return <Brain className="w-5 h-5" />;
-    case 'data_processing':
-      return <Database className="w-5 h-5" />;
-    case 'health_sharing':
-      return <Users className="w-5 h-5" />;
-    case 'research':
-      return <Shield className="w-5 h-5" />;
-    default:
-      return <Info className="w-5 h-5" />;
+      case "ai_analysis":
+        return <Brain className="w-5 h-5" />;
+      case "data_processing":
+        return <Database className="w-5 h-5" />;
+      case "health_sharing":
+        return <Users className="w-5 h-5" />;
+      case "research":
+        return <Shield className="w-5 h-5" />;
+      default:
+        return <Info className="w-5 h-5" />;
     }
   };
 
-  const getCategoryColor = (category: ConsentType['category']) => {
+  const getCategoryColor = (category: ConsentType["category"]) => {
     switch (category) {
-    case 'ai_analysis':
-      return 'text-blue-600 bg-blue-50 border-blue-200';
-    case 'data_processing':
-      return 'text-green-600 bg-green-50 border-green-200';
-    case 'health_sharing':
-      return 'text-purple-600 bg-purple-50 border-purple-200';
-    case 'research':
-      return 'text-orange-600 bg-orange-50 border-orange-200';
-    case 'marketing':
-      return 'text-pink-600 bg-pink-50 border-pink-200';
-    default:
-      return 'text-gray-600 bg-gray-50 border-gray-200';
+      case "ai_analysis":
+        return "text-blue-600 bg-blue-50 border-blue-200";
+      case "data_processing":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "health_sharing":
+        return "text-purple-600 bg-purple-50 border-purple-200";
+      case "research":
+        return "text-orange-600 bg-orange-50 border-orange-200";
+      case "marketing":
+        return "text-pink-600 bg-pink-50 border-pink-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 
@@ -129,15 +155,15 @@ export function ConsentDialog({
             <span>{consentType.name}</span>
             {getRequiredBadge()}
           </DialogTitle>
-          <DialogDescription>
-            {consentType.description}
-          </DialogDescription>
+          <DialogDescription>{consentType.description}</DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-4">
             {/* 摘要卡片 */}
-            <Card className={cn('border-2', getCategoryColor(consentType.category))}>
+            <Card
+              className={cn("border-2", getCategoryColor(consentType.category))}
+            >
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center">
                   <Info className="w-4 h-4 mr-2" />
@@ -159,7 +185,7 @@ export function ConsentDialog({
                 onClick={() => setShowDetails(!showDetails)}
                 className="text-sm"
               >
-                {showDetails ? '收起详细信息' : '展开详细信息'}
+                {showDetails ? "收起详细信息" : "展开详细信息"}
               </Button>
               {consentType.validDays > 0 && (
                 <div className="flex items-center text-xs text-muted-foreground">
@@ -184,14 +210,17 @@ export function ConsentDialog({
                 </Card>
 
                 {/* 风险和益处 */}
-                {(consentType.content.risks || consentType.content.benefits) && (
+                {(consentType.content.risks ||
+                  consentType.content.benefits) && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {consentType.content.risks && (
                       <Alert className="border-amber-200 bg-amber-50">
                         <AlertTriangle className="h-4 w-4 text-amber-600" />
                         <AlertDescription className="text-amber-800">
                           <strong className="block mb-1">潜在风险</strong>
-                          <span className="text-sm">{consentType.content.risks}</span>
+                          <span className="text-sm">
+                            {consentType.content.risks}
+                          </span>
                         </AlertDescription>
                       </Alert>
                     )}
@@ -201,7 +230,9 @@ export function ConsentDialog({
                         <CheckCircle className="h-4 w-4 text-green-600" />
                         <AlertDescription className="text-green-800">
                           <strong className="block mb-1">预期益处</strong>
-                          <span className="text-sm">{consentType.content.benefits}</span>
+                          <span className="text-sm">
+                            {consentType.content.benefits}
+                          </span>
                         </AlertDescription>
                       </Alert>
                     )}
@@ -229,9 +260,8 @@ export function ConsentDialog({
                 </label>
                 <p className="text-xs text-muted-foreground mt-1">
                   {consentType.required
-                    ? '这是必需的同意项目，必须同意才能继续使用相关功能。'
-                    : '这是可选的同意项目，您可以选择同意或拒绝。'
-                  }
+                    ? "这是必需的同意项目，必须同意才能继续使用相关功能。"
+                    : "这是可选的同意项目，您可以选择同意或拒绝。"}
                 </p>
               </div>
             </div>
@@ -246,20 +276,20 @@ export function ConsentDialog({
               disabled={isSubmitting}
               className="flex-1"
             >
-              {consentType.required ? '取消' : '拒绝'}
+              {consentType.required ? "取消" : "拒绝"}
             </Button>
             <Button
               onClick={handleAccept}
               disabled={!isAccepted || isSubmitting}
               className="flex-1"
             >
-              {isSubmitting ? '处理中...' : '同意并继续'}
+              {isSubmitting ? "处理中..." : "同意并继续"}
             </Button>
           </div>
 
           <div className="text-xs text-muted-foreground text-center">
-            同意版本：{consentType.version} |
-            最后更新：{new Date().toLocaleDateString('zh-CN')}
+            同意版本：{consentType.version} | 最后更新：
+            {new Date().toLocaleDateString("zh-CN")}
           </div>
         </DialogFooter>
       </DialogContent>
@@ -270,13 +300,15 @@ export function ConsentDialog({
 // 同意管理器 Hook
 export function useConsentManager(userId: string) {
   const [pendingConsents, setPendingConsents] = useState<ConsentType[]>([]);
-  const [currentConsent, setCurrentConsent] = useState<ConsentType | null>(null);
+  const [currentConsent, setCurrentConsent] = useState<ConsentType | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const requestConsent = async (
     consentId: string,
     context?: Record<string, any>,
-    forceRefresh = false
+    forceRefresh = false,
   ): Promise<boolean> => {
     const consentType = consentManager.getConsentType(consentId);
     if (!consentType) {
@@ -303,7 +335,10 @@ export function useConsentManager(userId: string) {
     }
   };
 
-  const grantConsent = async (consentId: string, context?: Record<string, any>) => {
+  const grantConsent = async (
+    consentId: string,
+    context?: Record<string, any>,
+  ) => {
     await consentManager.grantConsent(userId, consentId, context);
     setCurrentConsent(null);
   };
@@ -312,7 +347,9 @@ export function useConsentManager(userId: string) {
     return await consentManager.checkConsent(userId, consentId);
   };
 
-  const checkMultipleConsents = async (consentIds: string[]): Promise<Record<string, boolean>> => {
+  const checkMultipleConsents = async (
+    consentIds: string[],
+  ): Promise<Record<string, boolean>> => {
     return await consentManager.checkMultipleConsents(userId, consentIds);
   };
 
@@ -331,11 +368,19 @@ export function useConsentManager(userId: string) {
 interface ConsentCheckerProps {
   userId: string;
   consentId: string;
-  children: (hasConsent: boolean, requestConsent: () => Promise<boolean>) => React.ReactNode;
+  children: (
+    hasConsent: boolean,
+    requestConsent: () => Promise<boolean>,
+  ) => React.ReactNode;
   context?: Record<string, any>;
 }
 
-export function ConsentChecker({ userId, consentId, children, context }: ConsentCheckerProps) {
+export function ConsentChecker({
+  userId,
+  consentId,
+  children,
+  context,
+}: ConsentCheckerProps) {
   const [hasConsent, setHasConsent] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
@@ -348,7 +393,7 @@ export function ConsentChecker({ userId, consentId, children, context }: Consent
       const consent = await consentManager.checkConsent(userId, consentId);
       setHasConsent(consent);
     } catch (error) {
-      console.error('Failed to check consent:', error);
+      console.error("Failed to check consent:", error);
       setHasConsent(false);
     } finally {
       setIsChecking(false);
@@ -372,13 +417,15 @@ export function ConsentChecker({ userId, consentId, children, context }: Consent
 
       return false;
     } catch (error) {
-      console.error('Failed to request consent:', error);
+      console.error("Failed to request consent:", error);
       return false;
     }
   };
 
   if (isChecking) {
-    return <div className="flex items-center justify-center p-4">检查权限中...</div>;
+    return (
+      <div className="flex items-center justify-center p-4">检查权限中...</div>
+    );
   }
 
   return <>{children(hasConsent || false, requestConsent)}</>;

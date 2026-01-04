@@ -1,47 +1,52 @@
-import { PrismaClient, Recipe, RecipeCategory, InventoryStatus } from '@prisma/client';
-import { inventoryTracker } from './inventory-tracker';
+import {
+  PrismaClient,
+  Recipe,
+  RecipeCategory,
+  InventoryStatus,
+} from "@prisma/client";
+import { inventoryTracker } from "./inventory-tracker";
 
 const prisma = new PrismaClient();
 
 export interface RecipeIngredient {
-  foodId: string
-  foodName: string
-  requiredQuantity: number
-  unit: string
-  availableQuantity: number
-  stockStatus: 'SUFFICIENT' | 'INSUFFICIENT' | 'OUT_OF_STOCK'
-  shortageQuantity: number
+  foodId: string;
+  foodName: string;
+  requiredQuantity: number;
+  unit: string;
+  availableQuantity: number;
+  stockStatus: "SUFFICIENT" | "INSUFFICIENT" | "OUT_OF_STOCK";
+  shortageQuantity: number;
 }
 
 export interface InventoryBasedRecipe {
-  id: string
-  name: string
-  description?: string
-  category: RecipeCategory
-  difficulty: string
-  prepTime: number
-  cookTime: number
-  servings: number
-  matchScore: number
-  ingredients: RecipeIngredient[]
-  canCook: boolean
-  missingIngredients: RecipeIngredient[]
-  availableIngredients: RecipeIngredient[]
-  totalAvailableValue: number
-  estimatedCost: number
+  id: string;
+  name: string;
+  description?: string;
+  category: RecipeCategory;
+  difficulty: string;
+  prepTime: number;
+  cookTime: number;
+  servings: number;
+  matchScore: number;
+  ingredients: RecipeIngredient[];
+  canCook: boolean;
+  missingIngredients: RecipeIngredient[];
+  availableIngredients: RecipeIngredient[];
+  totalAvailableValue: number;
+  estimatedCost: number;
 }
 
 export interface RecipeRecommendation {
-  recipes: InventoryBasedRecipe[]
-  totalRecipes: number
-  canCookCount: number
-  partiallyAvailableCount: number
-  unavailableCount: number
+  recipes: InventoryBasedRecipe[];
+  totalRecipes: number;
+  canCookCount: number;
+  partiallyAvailableCount: number;
+  unavailableCount: number;
   categories: Array<{
-    category: RecipeCategory
-    count: number
-    canCookCount: number
-  }>
+    category: RecipeCategory;
+    count: number;
+    canCookCount: number;
+  }>;
 }
 
 export class InventoryRecipeIntegration {
@@ -51,14 +56,14 @@ export class InventoryRecipeIntegration {
   async recommendRecipes(
     memberId: string,
     filters?: {
-      category?: RecipeCategory
-      difficulty?: string
-      maxPrepTime?: number
-      minServings?: number
-      maxServings?: number
-      requireAllIngredients?: boolean
+      category?: RecipeCategory;
+      difficulty?: string;
+      maxPrepTime?: number;
+      minServings?: number;
+      maxServings?: number;
+      requireAllIngredients?: boolean;
     },
-    limit: number = 20
+    limit: number = 20,
   ): Promise<RecipeRecommendation> {
     // 获取用户当前库存
     const currentInventory = await prisma.inventoryItem.findMany({
@@ -80,19 +85,19 @@ export class InventoryRecipeIntegration {
     });
 
     const inventoryMap = new Map(
-      currentInventory.map(item => [
+      currentInventory.map((item) => [
         item.foodId,
         {
           quantity: item.quantity,
           unit: item.unit,
           food: item.food,
         },
-      ])
+      ]),
     );
 
     // 构建查询条件
     const whereClause: any = {
-      status: 'APPROVED',
+      status: "APPROVED",
     };
 
     if (filters?.category) {
@@ -140,8 +145,11 @@ export class InventoryRecipeIntegration {
     const analyzedRecipes: InventoryBasedRecipe[] = [];
 
     for (const recipe of recipes) {
-      const analysis = await this.analyzeRecipeAvailability(recipe, inventoryMap);
-      
+      const analysis = await this.analyzeRecipeAvailability(
+        recipe,
+        inventoryMap,
+      );
+
       // 根据过滤条件筛选
       if (filters?.requireAllIngredients && !analysis.canCook) {
         continue;
@@ -154,21 +162,27 @@ export class InventoryRecipeIntegration {
     analyzedRecipes.sort((a, b) => b.matchScore - a.matchScore);
 
     // 统计分类信息
-    const categoryStats = new Map<RecipeCategory, { count: number; canCookCount: number }>();
-    
+    const categoryStats = new Map<
+      RecipeCategory,
+      { count: number; canCookCount: number }
+    >();
+
     for (const recipe of analyzedRecipes) {
-      const stats = categoryStats.get(recipe.category) || { count: 0, canCookCount: 0 };
+      const stats = categoryStats.get(recipe.category) || {
+        count: 0,
+        canCookCount: 0,
+      };
       stats.count++;
       if (recipe.canCook) stats.canCookCount++;
       categoryStats.set(recipe.category, stats);
     }
 
-    const canCookCount = analyzedRecipes.filter(r => r.canCook).length;
-    const partiallyAvailableCount = analyzedRecipes.filter(r => 
-      r.availableIngredients.length > 0 && !r.canCook
+    const canCookCount = analyzedRecipes.filter((r) => r.canCook).length;
+    const partiallyAvailableCount = analyzedRecipes.filter(
+      (r) => r.availableIngredients.length > 0 && !r.canCook,
     ).length;
-    const unavailableCount = analyzedRecipes.filter(r => 
-      r.availableIngredients.length === 0
+    const unavailableCount = analyzedRecipes.filter(
+      (r) => r.availableIngredients.length === 0,
     ).length;
 
     return {
@@ -177,11 +191,13 @@ export class InventoryRecipeIntegration {
       canCookCount,
       partiallyAvailableCount,
       unavailableCount,
-      categories: Array.from(categoryStats.entries()).map(([category, stats]) => ({
-        category,
-        count: stats.count,
-        canCookCount: stats.canCookCount,
-      })),
+      categories: Array.from(categoryStats.entries()).map(
+        ([category, stats]) => ({
+          category,
+          count: stats.count,
+          canCookCount: stats.canCookCount,
+        }),
+      ),
     };
   }
 
@@ -190,7 +206,7 @@ export class InventoryRecipeIntegration {
    */
   private async analyzeRecipeAvailability(
     recipe: any,
-    inventoryMap: Map<string, any>
+    inventoryMap: Map<string, any>,
   ): Promise<InventoryBasedRecipe> {
     const ingredients: RecipeIngredient[] = [];
     let availableCount = 0;
@@ -200,7 +216,7 @@ export class InventoryRecipeIntegration {
       const inventory = inventoryMap.get(recipeIngredient.foodId);
       const stockStatus = this.getStockStatus(
         inventory?.quantity || 0,
-        recipeIngredient.quantity
+        recipeIngredient.quantity,
       );
 
       const ingredient: RecipeIngredient = {
@@ -210,22 +226,32 @@ export class InventoryRecipeIntegration {
         unit: recipeIngredient.unit,
         availableQuantity: inventory?.quantity || 0,
         stockStatus,
-        shortageQuantity: Math.max(0, recipeIngredient.quantity - (inventory?.quantity || 0)),
+        shortageQuantity: Math.max(
+          0,
+          recipeIngredient.quantity - (inventory?.quantity || 0),
+        ),
       };
 
       ingredients.push(ingredient);
 
-      if (stockStatus === 'SUFFICIENT') {
+      if (stockStatus === "SUFFICIENT") {
         availableCount++;
         // 简化计算：假设每单位食材价值10元
         totalAvailableValue += recipeIngredient.quantity * 10;
       }
     }
 
-    const availableIngredients = ingredients.filter(i => i.stockStatus === 'SUFFICIENT');
-    const missingIngredients = ingredients.filter(i => i.stockStatus !== 'SUFFICIENT');
+    const availableIngredients = ingredients.filter(
+      (i) => i.stockStatus === "SUFFICIENT",
+    );
+    const missingIngredients = ingredients.filter(
+      (i) => i.stockStatus !== "SUFFICIENT",
+    );
 
-    const matchScore = this.calculateMatchScore(availableCount, ingredients.length);
+    const matchScore = this.calculateMatchScore(
+      availableCount,
+      ingredients.length,
+    );
     const canCook = missingIngredients.length === 0;
 
     // 估算制作成本（简化计算）
@@ -258,20 +284,24 @@ export class InventoryRecipeIntegration {
   async cookRecipe(
     memberId: string,
     recipeId: string,
-    servings: number = 1
+    servings: number = 1,
   ): Promise<{
-    success: boolean
+    success: boolean;
     usedIngredients: Array<{
-      foodName: string
-      usedQuantity: number
-      unit: string
-    }>
-    errors: string[]
-    warnings: string[]
+      foodName: string;
+      usedQuantity: number;
+      unit: string;
+    }>;
+    errors: string[];
+    warnings: string[];
   }> {
     const result = {
       success: true,
-      usedIngredients: [] as Array<{ foodName: string; usedQuantity: number; unit: string }>,
+      usedIngredients: [] as Array<{
+        foodName: string;
+        usedQuantity: number;
+        unit: string;
+      }>,
       errors: [] as string[],
       warnings: [] as string[],
     };
@@ -290,14 +320,14 @@ export class InventoryRecipeIntegration {
       });
 
       if (!recipe) {
-        throw new Error('食谱不存在');
+        throw new Error("食谱不存在");
       }
 
       // 检查库存是否充足
       const inventoryItems = await prisma.inventoryItem.findMany({
         where: {
           memberId,
-          foodId: { in: recipe.ingredients.map(ing => ing.foodId) },
+          foodId: { in: recipe.ingredients.map((ing) => ing.foodId) },
           deletedAt: null,
         },
         include: {
@@ -306,7 +336,7 @@ export class InventoryRecipeIntegration {
       });
 
       const inventoryMap = new Map(
-        inventoryItems.map(item => [item.foodId, item])
+        inventoryItems.map((item) => [item.foodId, item]),
       );
 
       // 验证库存
@@ -338,14 +368,14 @@ export class InventoryRecipeIntegration {
             await inventoryTracker.useInventory(
               inventory.id,
               requiredQuantity,
-              'COOKING',
+              "COOKING",
               memberId,
               {
                 relatedId: recipeId,
-                relatedType: 'RECIPE',
+                relatedType: "RECIPE",
                 notes: `制作食谱: ${recipe.name}`,
                 recipeName: recipe.name,
-              }
+              },
             );
 
             result.usedIngredients.push({
@@ -371,7 +401,6 @@ export class InventoryRecipeIntegration {
           },
         });
       }
-
     } catch (error) {
       result.success = false;
       result.errors.push(`制作失败: ${error}`);
@@ -386,19 +415,19 @@ export class InventoryRecipeIntegration {
   async generateRecipeShoppingList(
     memberId: string,
     recipeIds: string[],
-    servings: number = 1
+    servings: number = 1,
   ): Promise<{
     shoppingList: Array<{
-      foodName: string
-      requiredQuantity: number
-      unit: string
-      currentStock: number
-      needToBuy: number
-      estimatedPrice: number
-    }>
-    totalEstimatedCost: number
-    canCookRecipes: string[]
-    cannotCookRecipes: string[]
+      foodName: string;
+      requiredQuantity: number;
+      unit: string;
+      currentStock: number;
+      needToBuy: number;
+      estimatedPrice: number;
+    }>;
+    totalEstimatedCost: number;
+    canCookRecipes: string[];
+    cannotCookRecipes: string[];
   }> {
     // 获取食谱信息
     const recipes = await prisma.recipe.findMany({
@@ -416,7 +445,9 @@ export class InventoryRecipeIntegration {
     const inventoryItems = await prisma.inventoryItem.findMany({
       where: {
         memberId,
-        foodId: { in: recipes.flatMap(r => r.ingredients.map(i => i.foodId)) },
+        foodId: {
+          in: recipes.flatMap((r) => r.ingredients.map((i) => i.foodId)),
+        },
         deletedAt: null,
       },
       include: {
@@ -425,7 +456,7 @@ export class InventoryRecipeIntegration {
     });
 
     const inventoryMap = new Map(
-      inventoryItems.map(item => [item.foodId, item])
+      inventoryItems.map((item) => [item.foodId, item]),
     );
 
     const shoppingList = new Map<string, any>();
@@ -469,8 +500,10 @@ export class InventoryRecipeIntegration {
       }
     }
 
-    const totalEstimatedCost = Array.from(shoppingList.values())
-      .reduce((sum, item) => sum + item.estimatedPrice, 0);
+    const totalEstimatedCost = Array.from(shoppingList.values()).reduce(
+      (sum, item) => sum + item.estimatedPrice,
+      0,
+    );
 
     return {
       shoppingList: Array.from(shoppingList.values()),
@@ -484,19 +517,19 @@ export class InventoryRecipeIntegration {
    * 获取基于库存的食谱统计
    */
   async getInventoryRecipeStats(memberId: string): Promise<{
-    totalRecipes: number
-    canCookCount: number
-    partiallyAvailableCount: number
+    totalRecipes: number;
+    canCookCount: number;
+    partiallyAvailableCount: number;
     topCategories: Array<{
-      category: RecipeCategory
-      count: number
-      canCookCount: number
-    }>
+      category: RecipeCategory;
+      count: number;
+      canCookCount: number;
+    }>;
     recentCooked: Array<{
-      recipeName: string
-      cookedAt: Date
-      servings: number
-    }>
+      recipeName: string;
+      cookedAt: Date;
+      servings: number;
+    }>;
   }> {
     // 获取库存状态
     const currentInventory = await prisma.inventoryItem.findMany({
@@ -509,12 +542,12 @@ export class InventoryRecipeIntegration {
     });
 
     const inventoryMap = new Map(
-      currentInventory.map(item => [item.foodId, item.quantity])
+      currentInventory.map((item) => [item.foodId, item.quantity]),
     );
 
     // 获取所有食谱
     const allRecipes = await prisma.recipe.findMany({
-      where: { status: 'APPROVED' },
+      where: { status: "APPROVED" },
       include: {
         ingredients: true,
       },
@@ -523,7 +556,10 @@ export class InventoryRecipeIntegration {
     // 分析食谱可用性
     let canCookCount = 0;
     let partiallyAvailableCount = 0;
-    const categoryStats = new Map<RecipeCategory, { count: number; canCookCount: number }>();
+    const categoryStats = new Map<
+      RecipeCategory,
+      { count: number; canCookCount: number }
+    >();
 
     for (const recipe of allRecipes) {
       let availableIngredients = 0;
@@ -536,7 +572,10 @@ export class InventoryRecipeIntegration {
         }
       }
 
-      const stats = categoryStats.get(category) || { count: 0, canCookCount: 0 };
+      const stats = categoryStats.get(category) || {
+        count: 0,
+        canCookCount: 0,
+      };
       stats.count++;
       if (availableIngredients === recipe.ingredients.length) {
         canCookCount++;
@@ -555,7 +594,7 @@ export class InventoryRecipeIntegration {
           select: { name: true },
         },
       },
-      orderBy: { cookedAt: 'desc' },
+      orderBy: { cookedAt: "desc" },
       take: 10,
     });
 
@@ -564,10 +603,14 @@ export class InventoryRecipeIntegration {
       canCookCount,
       partiallyAvailableCount,
       topCategories: Array.from(categoryStats.entries())
-        .map(([category, stats]) => ({ category, count: stats.count, canCookCount: stats.canCookCount }))
+        .map(([category, stats]) => ({
+          category,
+          count: stats.count,
+          canCookCount: stats.canCookCount,
+        }))
         .sort((a, b) => b.canCookCount - a.canCookCount)
         .slice(0, 5),
-      recentCooked: recentCooked.map(record => ({
+      recentCooked: recentCooked.map((record) => ({
         recipeName: record.recipe.name,
         cookedAt: record.cookedAt,
         servings: record.servings,
@@ -577,13 +620,19 @@ export class InventoryRecipeIntegration {
 
   // 私有方法
 
-  private getStockStatus(available: number, required: number): 'SUFFICIENT' | 'INSUFFICIENT' | 'OUT_OF_STOCK' {
-    if (available >= required) return 'SUFFICIENT';
-    if (available > 0) return 'INSUFFICIENT';
-    return 'OUT_OF_STOCK';
+  private getStockStatus(
+    available: number,
+    required: number,
+  ): "SUFFICIENT" | "INSUFFICIENT" | "OUT_OF_STOCK" {
+    if (available >= required) return "SUFFICIENT";
+    if (available > 0) return "INSUFFICIENT";
+    return "OUT_OF_STOCK";
   }
 
-  private calculateMatchScore(availableCount: number, totalCount: number): number {
+  private calculateMatchScore(
+    availableCount: number,
+    totalCount: number,
+  ): number {
     if (totalCount === 0) return 0;
     return Math.round((availableCount / totalCount) * 100);
   }

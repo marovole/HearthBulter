@@ -11,13 +11,13 @@
  * @module recommendation
  */
 
-import { z } from 'zod';
-import type { Database, Json } from '@/types/supabase-database';
-import { dateRangeFilterSchema } from './common';
+import { z } from "zod";
+import type { Database, Json } from "@/types/supabase-database";
+import { dateRangeFilterSchema } from "./common";
 
-type RecipeRow = Database['public']['Tables']['recipes']['Row'];
-type MealRecordRow = Database['public']['Tables']['meal_records']['Row'];
-type FamilyMemberRow = Database['public']['Tables']['family_members']['Row'];
+type RecipeRow = Database["public"]["Tables"]["recipes"]["Row"];
+type MealRecordRow = Database["public"]["Tables"]["meal_records"]["Row"];
+type FamilyMemberRow = Database["public"]["Tables"]["family_members"]["Row"];
 
 /**
  * 食材 Schema
@@ -65,12 +65,14 @@ export const recommendationRecipeFilterSchema = z.object({
   tags: z.array(z.string()).optional(),
   excludeRecipeIds: z.array(z.string().uuid()).optional(),
   maxCookTimeMinutes: z.number().int().positive().optional(),
-  season: z.enum(['SPRING', 'SUMMER', 'AUTUMN', 'WINTER']).optional(),
+  season: z.enum(["SPRING", "SUMMER", "AUTUMN", "WINTER"]).optional(),
   dietaryRestrictions: z.array(z.string()).optional(),
   budgetLimit: z.number().positive().optional(),
 });
 
-export type RecommendationRecipeFilter = z.infer<typeof recommendationRecipeFilterSchema>;
+export type RecommendationRecipeFilter = z.infer<
+  typeof recommendationRecipeFilterSchema
+>;
 
 /**
  * 用户偏好 Schema
@@ -80,7 +82,7 @@ export const userPreferenceSchema = z.object({
   preferredIngredients: z.array(z.string()).default([]),
   avoidedIngredients: z.array(z.string()).default([]),
   maxCookTimeMinutes: z.number().int().positive().nullable(),
-  costLevel: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
+  costLevel: z.enum(["LOW", "MEDIUM", "HIGH"]).default("MEDIUM"),
   preferredCuisines: z.array(z.string()).default([]),
   recommendationWeights: z
     .object({
@@ -117,7 +119,9 @@ export const recommendationBehaviorSchema = z.object({
   views: z.array(behaviorEventSchema).default([]),
 });
 
-export type RecommendationBehaviorDTO = z.infer<typeof recommendationBehaviorSchema>;
+export type RecommendationBehaviorDTO = z.infer<
+  typeof recommendationBehaviorSchema
+>;
 
 /**
  * 健康目标 Schema
@@ -126,7 +130,7 @@ export const healthGoalSchema = z.object({
   id: z.string().uuid(),
   memberId: z.string().uuid(),
   goalType: z.string().min(1),
-  status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETED']).default('ACTIVE'),
+  status: z.enum(["ACTIVE", "PAUSED", "COMPLETED"]).default("ACTIVE"),
   targetCalories: z.number().positive().nullable(),
   macroTargets: z
     .object({
@@ -173,7 +177,9 @@ export const recommendationWeightsSchema = z.object({
   seasonal: z.number().min(0).max(1),
 });
 
-export type RecommendationWeightsDTO = z.infer<typeof recommendationWeightsSchema>;
+export type RecommendationWeightsDTO = z.infer<
+  typeof recommendationWeightsSchema
+>;
 
 /**
  * 推荐日志 Schema

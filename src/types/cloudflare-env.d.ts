@@ -22,10 +22,13 @@ interface KVNamespace {
    * @param options - 可选配置
    * @returns Promise<string | null>
    */
-  get(key: string, options?: { type: 'text' }): Promise<string | null>;
-  get(key: string, options: { type: 'json' }): Promise<any>;
-  get(key: string, options: { type: 'arrayBuffer' }): Promise<ArrayBuffer | null>;
-  get(key: string, options: { type: 'stream' }): Promise<ReadableStream | null>;
+  get(key: string, options?: { type: "text" }): Promise<string | null>;
+  get(key: string, options: { type: "json" }): Promise<any>;
+  get(
+    key: string,
+    options: { type: "arrayBuffer" },
+  ): Promise<ArrayBuffer | null>;
+  get(key: string, options: { type: "stream" }): Promise<ReadableStream | null>;
 
   /**
    * 向 KV 写入值
@@ -44,7 +47,7 @@ interface KVNamespace {
       expiration?: number;
       /** 元数据（JSON 序列化，最大 1024 字节） */
       metadata?: any;
-    }
+    },
   ): Promise<void>;
 
   /**
@@ -80,7 +83,7 @@ interface KVNamespace {
    */
   getWithMetadata<Metadata = unknown>(
     key: string,
-    options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' }
+    options?: { type?: "text" | "json" | "arrayBuffer" | "stream" },
   ): Promise<{
     value: string | any | ArrayBuffer | ReadableStream | null;
     metadata: Metadata | null;
@@ -119,7 +122,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       /** Cloudflare 环境名称 */
-      CF_PAGES_ENV?: 'production' | 'preview';
+      CF_PAGES_ENV?: "production" | "preview";
       /** Cloudflare Pages Commit SHA */
       CF_PAGES_COMMIT_SHA?: string;
       /** Cloudflare Pages Branch */

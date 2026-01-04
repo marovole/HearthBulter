@@ -1,48 +1,48 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import type { MealType } from '@prisma/client';
+import { useState } from "react";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import type { MealType } from "@prisma/client";
 
 interface MealIngredient {
-  id: string
-  amount: number
+  id: string;
+  amount: number;
   food: {
-    id: string
-    name: string
-  }
+    id: string;
+    name: string;
+  };
 }
 
 interface Meal {
-  id: string
-  date: string
-  mealType: MealType
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  ingredients: MealIngredient[]
+  id: string;
+  date: string;
+  mealType: MealType;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  ingredients: MealIngredient[];
 }
 
 interface MealCardProps {
-  meal: Meal
-  onReplace?: () => void
-  showDate?: boolean
+  meal: Meal;
+  onReplace?: () => void;
+  showDate?: boolean;
 }
 
 const MEAL_TYPE_LABELS: Record<MealType, string> = {
-  BREAKFAST: '早餐',
-  LUNCH: '午餐',
-  DINNER: '晚餐',
-  SNACK: '加餐',
+  BREAKFAST: "早餐",
+  LUNCH: "午餐",
+  DINNER: "晚餐",
+  SNACK: "加餐",
 };
 
 const MEAL_TYPE_COLORS: Record<MealType, string> = {
-  BREAKFAST: 'bg-yellow-100 text-yellow-800',
-  LUNCH: 'bg-blue-100 text-blue-800',
-  DINNER: 'bg-purple-100 text-purple-800',
-  SNACK: 'bg-green-100 text-green-800',
+  BREAKFAST: "bg-yellow-100 text-yellow-800",
+  LUNCH: "bg-blue-100 text-blue-800",
+  DINNER: "bg-purple-100 text-purple-800",
+  SNACK: "bg-green-100 text-green-800",
 };
 
 function formatAmount(amount: number): string {
@@ -56,13 +56,16 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
   const [showAllIngredients, setShowAllIngredients] = useState(false);
   const MAX_INGREDIENTS_DISPLAY = 5;
   const hasMoreIngredients = meal.ingredients.length > MAX_INGREDIENTS_DISPLAY;
-  const displayedIngredients = showAllIngredients 
-    ? meal.ingredients 
+  const displayedIngredients = showAllIngredients
+    ? meal.ingredients
     : meal.ingredients.slice(0, MAX_INGREDIENTS_DISPLAY);
 
   // 计算营养成分百分比 (假设每餐目标为 500 kcal)
   const targetCalories = 500;
-  const caloriesPercentage = Math.min((meal.calories / targetCalories) * 100, 100);
+  const caloriesPercentage = Math.min(
+    (meal.calories / targetCalories) * 100,
+    100,
+  );
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200 active:scale-98">
@@ -70,10 +73,10 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
       <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
         <div className="text-center">
           <div className="text-4xl mb-1">
-            {meal.mealType === 'BREAKFAST' && '🍳'}
-            {meal.mealType === 'LUNCH' && '🍱'}
-            {meal.mealType === 'DINNER' && '🍽️'}
-            {meal.mealType === 'SNACK' && '🍎'}
+            {meal.mealType === "BREAKFAST" && "🍳"}
+            {meal.mealType === "LUNCH" && "🍱"}
+            {meal.mealType === "DINNER" && "🍽️"}
+            {meal.mealType === "SNACK" && "🍎"}
           </div>
           <p className="text-xs text-gray-500">图片即将推出</p>
         </div>
@@ -89,7 +92,7 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
           </span>
           {showDate && (
             <span className="text-xs text-gray-600">
-              {format(new Date(meal.date), 'M月d日', { locale: zhCN })}
+              {format(new Date(meal.date), "M月d日", { locale: zhCN })}
             </span>
           )}
         </div>
@@ -110,7 +113,9 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
           <span>📝</span>
           <span>食材</span>
           {meal.ingredients.length > 0 && (
-            <span className="text-xs text-gray-500">({meal.ingredients.length})</span>
+            <span className="text-xs text-gray-500">
+              ({meal.ingredients.length})
+            </span>
           )}
         </h4>
         <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -121,7 +126,9 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
                   key={ingredient.id}
                   className="flex items-center justify-between text-sm text-gray-600 py-1"
                 >
-                  <span className="truncate flex-1">{ingredient.food.name}</span>
+                  <span className="truncate flex-1">
+                    {ingredient.food.name}
+                  </span>
                   <span className="text-gray-500 ml-2 whitespace-nowrap">
                     {formatAmount(ingredient.amount)}
                   </span>
@@ -132,10 +139,9 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
                   onClick={() => setShowAllIngredients(!showAllIngredients)}
                   className="text-xs text-blue-600 hover:text-blue-800 font-medium mt-1 focus:outline-none focus:underline"
                 >
-                  {showAllIngredients 
-                    ? '收起 ▲' 
-                    : `显示更多 (${meal.ingredients.length - MAX_INGREDIENTS_DISPLAY}) ▼`
-                  }
+                  {showAllIngredients
+                    ? "收起 ▲"
+                    : `显示更多 (${meal.ingredients.length - MAX_INGREDIENTS_DISPLAY}) ▼`}
                 </button>
               )}
             </>
@@ -148,7 +154,7 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
       {/* 营养成分 - 带可视化 */}
       <div className="pt-3 border-t border-gray-200">
         <h5 className="text-xs font-medium text-gray-600 mb-2">营养成分</h5>
-        
+
         {/* 热量进度条 */}
         <div className="mb-3">
           <div className="flex items-center justify-between text-xs mb-1">
@@ -193,4 +199,3 @@ export function MealCard({ meal, onReplace, showDate = false }: MealCardProps) {
     </div>
   );
 }
-

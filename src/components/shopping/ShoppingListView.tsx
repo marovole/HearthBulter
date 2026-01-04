@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { CategoryList } from './CategoryList';
-import { BudgetTracker } from './BudgetTracker';
+import { useState, useEffect } from "react";
+import { CategoryList } from "./CategoryList";
+import { BudgetTracker } from "./BudgetTracker";
 
 // 打印样式（仅在打印时应用）
 const PRINT_STYLES = `
@@ -71,33 +71,33 @@ const PRINT_STYLES = `
 `;
 
 interface ShoppingItem {
-  id: string
-  foodId: string
-  amount: number
-  category: string
-  purchased: boolean
-  estimatedPrice: number | null
+  id: string;
+  foodId: string;
+  amount: number;
+  category: string;
+  purchased: boolean;
+  estimatedPrice: number | null;
   food: {
-    id: string
-    name: string
-    category: string
-  }
+    id: string;
+    name: string;
+    category: string;
+  };
 }
 
 interface ShoppingList {
-  id: string
-  planId: string
-  budget: number | null
-  estimatedCost: number | null
-  actualCost: number | null
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
-  items: ShoppingItem[]
-  createdAt: string
+  id: string;
+  planId: string;
+  budget: number | null;
+  estimatedCost: number | null;
+  actualCost: number | null;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  items: ShoppingItem[];
+  createdAt: string;
 }
 
 interface ShoppingListViewProps {
-  shoppingListId: string
-  planId?: string
+  shoppingListId: string;
+  planId?: string;
 }
 
 export function ShoppingListView({
@@ -115,9 +115,9 @@ export function ShoppingListView({
 
   // 注入打印样式
   useEffect(() => {
-    const styleId = 'shopping-list-print-styles';
+    const styleId = "shopping-list-print-styles";
     if (!document.getElementById(styleId)) {
-      const styleElement = document.createElement('style');
+      const styleElement = document.createElement("style");
       styleElement.id = styleId;
       styleElement.textContent = PRINT_STYLES;
       document.head.appendChild(styleElement);
@@ -129,25 +129,25 @@ export function ShoppingListView({
       setLoading(true);
       const url = planId
         ? `/api/shopping-lists?planId=${planId}`
-        : '/api/shopping-lists';
+        : "/api/shopping-lists";
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error('获取购物清单失败');
+        throw new Error("获取购物清单失败");
       }
 
       const data = await response.json();
       const list = data.shoppingLists.find(
-        (l: ShoppingList) => l.id === shoppingListId
+        (l: ShoppingList) => l.id === shoppingListId,
       );
 
       if (!list) {
-        throw new Error('购物清单不存在');
+        throw new Error("购物清单不存在");
       }
 
       setShoppingList(list);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误');
+      setError(err instanceof Error ? err.message : "未知错误");
     } finally {
       setLoading(false);
     }
@@ -158,22 +158,22 @@ export function ShoppingListView({
       const response = await fetch(
         `/api/shopping-lists/${shoppingListId}/items/${itemId}`,
         {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ purchased }),
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error('更新失败');
+        throw new Error("更新失败");
       }
 
       // 重新获取清单
       await fetchShoppingList();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '更新失败');
+      alert(err instanceof Error ? err.message : "更新失败");
     }
   };
 
@@ -182,21 +182,21 @@ export function ShoppingListView({
       const response = await fetch(
         `/api/shopping-lists/${shoppingListId}/complete`,
         {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ actualCost }),
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error('完成采购失败');
+        throw new Error("完成采购失败");
       }
 
       await fetchShoppingList();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '完成失败');
+      alert(err instanceof Error ? err.message : "完成失败");
     }
   };
 
@@ -207,26 +207,26 @@ export function ShoppingListView({
 
   // 生成文本格式的购物清单
   const generateShoppingListText = () => {
-    if (!shoppingList) return '';
+    if (!shoppingList) return "";
 
     const CATEGORY_LABELS: Record<string, string> = {
-      VEGETABLES: '蔬菜',
-      FRUITS: '水果',
-      GRAINS: '谷物',
-      PROTEIN: '肉蛋奶',
-      SEAFOOD: '海鲜',
-      DAIRY: '乳制品',
-      OILS: '油脂',
-      SNACKS: '零食',
-      BEVERAGES: '饮料',
-      OTHER: '其他',
+      VEGETABLES: "蔬菜",
+      FRUITS: "水果",
+      GRAINS: "谷物",
+      PROTEIN: "肉蛋奶",
+      SEAFOOD: "海鲜",
+      DAIRY: "乳制品",
+      OILS: "油脂",
+      SNACKS: "零食",
+      BEVERAGES: "饮料",
+      OTHER: "其他",
     };
 
-    let text = '📋 购物清单\n';
-    text += `生成日期: ${new Date(shoppingList.createdAt).toLocaleDateString('zh-CN')}\n`;
-    
+    let text = "📋 购物清单\n";
+    text += `生成日期: ${new Date(shoppingList.createdAt).toLocaleDateString("zh-CN")}\n`;
+
     if (shoppingList.budget || shoppingList.estimatedCost) {
-      text += '\n💰 预算信息:\n';
+      text += "\n💰 预算信息:\n";
       if (shoppingList.budget) {
         text += `  预算: ¥${shoppingList.budget.toFixed(2)}\n`;
       }
@@ -235,7 +235,7 @@ export function ShoppingListView({
       }
     }
 
-    text += '\n';
+    text += "\n";
 
     // 按分类分组
     const groupedItems = shoppingList.items.reduce(
@@ -247,20 +247,20 @@ export function ShoppingListView({
         acc[category].push(item);
         return acc;
       },
-      {} as Record<string, typeof shoppingList.items>
+      {} as Record<string, typeof shoppingList.items>,
     );
 
     const categoryOrder = [
-      'VEGETABLES',
-      'FRUITS',
-      'SEAFOOD',
-      'PROTEIN',
-      'DAIRY',
-      'GRAINS',
-      'OILS',
-      'SNACKS',
-      'BEVERAGES',
-      'OTHER',
+      "VEGETABLES",
+      "FRUITS",
+      "SEAFOOD",
+      "PROTEIN",
+      "DAIRY",
+      "GRAINS",
+      "OILS",
+      "SNACKS",
+      "BEVERAGES",
+      "OTHER",
     ];
 
     categoryOrder.forEach((category) => {
@@ -268,10 +268,11 @@ export function ShoppingListView({
       if (items && items.length > 0) {
         text += `\n【${CATEGORY_LABELS[category] || category}】\n`;
         items.forEach((item) => {
-          const checkbox = item.purchased ? '☑' : '☐';
-          const amount = item.amount >= 1000 
-            ? `${(item.amount / 1000).toFixed(1)}kg` 
-            : `${item.amount.toFixed(0)}g`;
+          const checkbox = item.purchased ? "☑" : "☐";
+          const amount =
+            item.amount >= 1000
+              ? `${(item.amount / 1000).toFixed(1)}kg`
+              : `${item.amount.toFixed(0)}g`;
           text += `  ${checkbox} ${item.food.name} - ${amount}\n`;
         });
       }
@@ -288,7 +289,7 @@ export function ShoppingListView({
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      alert('复制失败，请手动复制');
+      alert("复制失败，请手动复制");
     }
   };
 
@@ -299,13 +300,13 @@ export function ShoppingListView({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: '购物清单',
+          title: "购物清单",
           text: text,
         });
       } catch (err) {
         // 用户取消分享或分享失败
-        if ((err as Error).name !== 'AbortError') {
-          console.error('分享失败:', err);
+        if ((err as Error).name !== "AbortError") {
+          console.error("分享失败:", err);
           // 降级到复制功能
           handleCopy();
         }
@@ -340,8 +341,9 @@ export function ShoppingListView({
     );
   }
 
-  const purchasedCount = shoppingList.items.filter((item) => item.purchased)
-    .length;
+  const purchasedCount = shoppingList.items.filter(
+    (item) => item.purchased,
+  ).length;
   const totalItems = shoppingList.items.length;
   const progress = totalItems > 0 ? (purchasedCount / totalItems) * 100 : 0;
 
@@ -382,18 +384,18 @@ export function ShoppingListView({
             </div>
             <span
               className={`px-3 py-1 rounded-full text-sm font-medium ${
-                shoppingList.status === 'COMPLETED'
-                  ? 'bg-green-100 text-green-800'
-                  : shoppingList.status === 'IN_PROGRESS'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-gray-100 text-gray-800'
+                shoppingList.status === "COMPLETED"
+                  ? "bg-green-100 text-green-800"
+                  : shoppingList.status === "IN_PROGRESS"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-800"
               }`}
             >
-              {shoppingList.status === 'COMPLETED'
-                ? '已完成'
-                : shoppingList.status === 'IN_PROGRESS'
-                  ? '采购中'
-                  : '待采购'}
+              {shoppingList.status === "COMPLETED"
+                ? "已完成"
+                : shoppingList.status === "IN_PROGRESS"
+                  ? "采购中"
+                  : "待采购"}
             </span>
           </div>
         </div>
@@ -415,14 +417,13 @@ export function ShoppingListView({
         </div>
 
         {/* 预算追踪 */}
-        {shoppingList.budget !== null ||
-        shoppingList.estimatedCost !== null ? (
-            <BudgetTracker
-              budget={shoppingList.budget}
-              estimatedCost={shoppingList.estimatedCost}
-              actualCost={shoppingList.actualCost}
-            />
-          ) : null}
+        {shoppingList.budget !== null || shoppingList.estimatedCost !== null ? (
+          <BudgetTracker
+            budget={shoppingList.budget}
+            estimatedCost={shoppingList.estimatedCost}
+            actualCost={shoppingList.actualCost}
+          />
+        ) : null}
       </div>
 
       {/* 分类列表 */}
@@ -432,15 +433,15 @@ export function ShoppingListView({
       />
 
       {/* 操作按钮 */}
-      {shoppingList.status !== 'COMPLETED' && (
+      {shoppingList.status !== "COMPLETED" && (
         <div className="mt-6 flex gap-4 no-print">
           <button
             onClick={() => handleComplete()}
             disabled={purchasedCount < totalItems}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               purchasedCount < totalItems
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-green-600 text-white hover:bg-green-700'
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >
             完成采购
@@ -450,4 +451,3 @@ export function ShoppingListView({
     </div>
   );
 }
-

@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/db';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { MealPlanGenerator } from '@/components/meal-planning/MealPlanGenerator';
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { MealPlanGenerator } from "@/components/meal-planning/MealPlanGenerator";
 
 export default async function NewMealPlanPage({
   params,
 }: {
-  params: Promise<{ id: string; memberId: string }>
+  params: Promise<{ id: string; memberId: string }>;
 }) {
   const { id, memberId } = await params;
   const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin');
+    redirect("/auth/signin");
   }
 
   // 获取成员信息
@@ -36,7 +36,7 @@ export default async function NewMealPlanPage({
       },
       healthGoals: {
         where: { deletedAt: null },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       },
     },
   });
@@ -47,7 +47,7 @@ export default async function NewMealPlanPage({
 
   // 验证权限
   const isCreator = member.family.creatorId === session.user.id;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
   const isSelf = member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
@@ -72,7 +72,7 @@ export default async function NewMealPlanPage({
                 href={`/dashboard/families/${id}/members/${memberId}`}
                 className="hover:text-gray-900"
               >
-                {member.name || '成员'}
+                {member.name || "成员"}
               </Link>
               <span>/</span>
               <Link
@@ -91,7 +91,7 @@ export default async function NewMealPlanPage({
             memberId={memberId}
             memberInfo={{
               id: member.id,
-              name: member.name || '成员',
+              name: member.name || "成员",
               goals: member.healthGoals.map((goal) => ({
                 id: goal.id,
                 goalType: goal.goalType,
@@ -101,12 +101,12 @@ export default async function NewMealPlanPage({
             }}
             onSuccess={(planId) => {
               redirect(
-                `/dashboard/families/${id}/members/${memberId}/meal-plans/${planId}`
+                `/dashboard/families/${id}/members/${memberId}/meal-plans/${planId}`,
               );
             }}
             onCancel={() => {
               redirect(
-                `/dashboard/families/${id}/members/${memberId}/meal-plans`
+                `/dashboard/families/${id}/members/${memberId}/meal-plans`,
               );
             }}
           />
@@ -115,4 +115,3 @@ export default async function NewMealPlanPage({
     </div>
   );
 }
-

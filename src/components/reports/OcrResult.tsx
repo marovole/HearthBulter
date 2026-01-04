@@ -1,33 +1,33 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import type {
   MedicalReport,
   MedicalIndicator,
   IndicatorStatus,
-} from '@prisma/client';
+} from "@prisma/client";
 
 interface OcrResultProps {
-  reportId: string
-  memberId: string
+  reportId: string;
+  memberId: string;
 }
 
 interface ReportData extends MedicalReport {
-  indicators: MedicalIndicator[]
+  indicators: MedicalIndicator[];
 }
 
 const STATUS_COLORS: Record<IndicatorStatus, string> = {
-  NORMAL: 'bg-green-100 text-green-800 border-green-200',
-  LOW: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  HIGH: 'bg-orange-100 text-orange-800 border-orange-200',
-  CRITICAL: 'bg-red-100 text-red-800 border-red-200',
+  NORMAL: "bg-green-100 text-green-800 border-green-200",
+  LOW: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  HIGH: "bg-orange-100 text-orange-800 border-orange-200",
+  CRITICAL: "bg-red-100 text-red-800 border-red-200",
 };
 
 const STATUS_LABELS: Record<IndicatorStatus, string> = {
-  NORMAL: '正常',
-  LOW: '偏低',
-  HIGH: '偏高',
-  CRITICAL: '严重异常',
+  NORMAL: "正常",
+  LOW: "偏低",
+  HIGH: "偏高",
+  CRITICAL: "严重异常",
 };
 
 export function OcrResult({ reportId, memberId }: OcrResultProps) {
@@ -39,12 +39,12 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
   const fetchReport = async () => {
     try {
       const response = await fetch(
-        `/api/members/${memberId}/reports/${reportId}`
+        `/api/members/${memberId}/reports/${reportId}`,
       );
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || '加载报告失败');
+        setError(data.error || "加载报告失败");
         setLoading(false);
         return;
       }
@@ -52,14 +52,17 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
       setReport(data.data);
 
       // 如果OCR还在处理中，继续轮询
-      if (data.data.ocrStatus === 'PROCESSING' || data.data.ocrStatus === 'PENDING') {
+      if (
+        data.data.ocrStatus === "PROCESSING" ||
+        data.data.ocrStatus === "PENDING"
+      ) {
         setPolling(true);
       } else {
         setPolling(false);
         setLoading(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : "加载失败");
       setLoading(false);
     }
   };
@@ -107,29 +110,25 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
   }
 
   // OCR处理中
-  if (report.ocrStatus === 'PROCESSING' || report.ocrStatus === 'PENDING') {
+  if (report.ocrStatus === "PROCESSING" || report.ocrStatus === "PENDING") {
     return (
       <div className="p-8 text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
         <p className="text-lg font-medium text-gray-900 mb-2">
           正在处理OCR识别...
         </p>
-        <p className="text-sm text-gray-600">
-          这可能需要几分钟时间，请稍候
-        </p>
+        <p className="text-sm text-gray-600">这可能需要几分钟时间，请稍候</p>
       </div>
     );
   }
 
   // OCR处理失败
-  if (report.ocrStatus === 'FAILED') {
+  if (report.ocrStatus === "FAILED") {
     return (
       <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-        <h3 className="text-lg font-medium text-red-900 mb-2">
-          OCR识别失败
-        </h3>
+        <h3 className="text-lg font-medium text-red-900 mb-2">OCR识别失败</h3>
         <p className="text-sm text-red-800 mb-4">
-          {report.ocrError || '无法识别报告内容，请检查文件是否清晰'}
+          {report.ocrError || "无法识别报告内容，请检查文件是否清晰"}
         </p>
         <p className="text-xs text-red-600">
           提示：请确保报告图片清晰，文字完整可见
@@ -151,8 +150,8 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
             <span className="text-gray-500">报告日期：</span>
             <span className="font-medium">
               {report.reportDate
-                ? new Date(report.reportDate).toLocaleDateString('zh-CN')
-                : '未识别'}
+                ? new Date(report.reportDate).toLocaleDateString("zh-CN")
+                : "未识别"}
             </span>
           </div>
           {report.institution && (
@@ -190,9 +189,11 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
                 <span className="text-red-600">
                   {indicator.value} {indicator.unit}
                 </span>
-                <span className={`px-2 py-1 rounded text-xs ${
-                  STATUS_COLORS[indicator.status]
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded text-xs ${
+                    STATUS_COLORS[indicator.status]
+                  }`}
+                >
                   {STATUS_LABELS[indicator.status]}
                 </span>
               </div>
@@ -213,7 +214,7 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
             <div
               key={indicator.id}
               className={`p-4 hover:bg-gray-50 transition-colors ${
-                indicator.isAbnormal ? 'bg-red-50' : ''
+                indicator.isAbnormal ? "bg-red-50" : ""
               }`}
             >
               <div className="flex items-center justify-between">
@@ -222,9 +223,11 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
                     <h4 className="font-medium text-gray-900">
                       {indicator.name}
                     </h4>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      STATUS_COLORS[indicator.status]
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${
+                        STATUS_COLORS[indicator.status]
+                      }`}
+                    >
                       {STATUS_LABELS[indicator.status]}
                     </span>
                   </div>
@@ -269,4 +272,3 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
     </div>
   );
 }
-

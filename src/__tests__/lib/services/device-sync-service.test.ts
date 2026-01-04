@@ -3,21 +3,21 @@
  * 服务层测试 - 核心业务逻辑覆盖
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { deviceSyncService } from '@/lib/services/device-sync-service';
+import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import { deviceSyncService } from "@/lib/services/device-sync-service";
 
 // Mock dependencies
-jest.mock('@/lib/db', () => ({
+jest.mock("@/lib/db", () => ({
   prisma: {
     // Add prisma mock methods as needed
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
+jest.mock("@/lib/auth", () => ({
   auth: jest.fn(),
 }));
 
-describe('device-sync-service', () => {
+describe("device-sync-service", () => {
   let service: deviceSyncService;
 
   beforeEach(() => {
@@ -25,29 +25,32 @@ describe('device-sync-service', () => {
     service = deviceSyncService.getInstance();
   });
 
-  describe('Initialization', () => {
-    it('should create service instance', () => {
+  describe("Initialization", () => {
+    it("should create service instance", () => {
       expect(service).toBeDefined();
       expect(service).toBeInstanceOf(deviceSyncService);
     });
 
-    it('should return same instance (singleton)', () => {
+    it("should return same instance (singleton)", () => {
       const instance2 = deviceSyncService.getInstance();
       expect(service).toBe(instance2);
     });
   });
 
-  describe('Core Methods', () => {
-    it('should have required methods defined', () => {
+  describe("Core Methods", () => {
+    it("should have required methods defined", () => {
       // Check that service has the expected methods
       // TODO: Update based on actual service implementation
-      const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(service))
-        .filter(name => typeof service[name] === 'function' && name !== 'constructor');
+      const methods = Object.getOwnPropertyNames(
+        Object.getPrototypeOf(service),
+      ).filter(
+        (name) => typeof service[name] === "function" && name !== "constructor",
+      );
 
       expect(methods.length).toBeGreaterThan(0);
     });
 
-    it('should handle method calls gracefully', async () => {
+    it("should handle method calls gracefully", async () => {
       // TODO: Implement actual method testing based on service functionality
       // Example:
       // const result = await service.someMethod();
@@ -55,16 +58,16 @@ describe('device-sync-service', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle errors gracefully', async () => {
+  describe("Error Handling", () => {
+    it("should handle errors gracefully", async () => {
       // TODO: Test error scenarios
       // Example:
       // await expect(service.methodWithError()).rejects.toThrow();
     });
   });
 
-  describe('Data Validation', () => {
-    it('should validate input data', async () => {
+  describe("Data Validation", () => {
+    it("should validate input data", async () => {
       // TODO: Test input validation
       // Example:
       // const result = await service.validateInput(invalidData);

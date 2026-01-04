@@ -1,4 +1,4 @@
-import { NextPageContext } from 'next';
+import { NextPageContext } from "next";
 
 /**
  * Custom Error Page for Pages Router
@@ -16,20 +16,20 @@ interface ErrorProps {
 function Error({ statusCode }: ErrorProps) {
   return (
     <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "100vh",
+      fontFamily: "system-ui, -apple-system, sans-serif",
     }}>
-      <h1 style={{ fontSize: '3rem', margin: '0' }}>
-        {statusCode || 'Error'}
+      <h1 style={{ fontSize: "3rem", margin: "0" }}>
+        {statusCode || "Error"}
       </h1>
-      <p style={{ fontSize: '1.5rem', color: '#666' }}>
+      <p style={{ fontSize: "1.5rem", color: "#666" }}>
         {statusCode
           ? `服务器错误 ${statusCode}`
-          : '客户端错误'}
+          : "客户端错误"}
       </p>
     </div>
   );
