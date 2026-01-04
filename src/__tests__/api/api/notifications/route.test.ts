@@ -32,7 +32,7 @@ const mockNotifications = [
   {
     id: "notification-1",
     memberId: "member-1",
-    type: NotificationType.HEALTH_REMINDER,
+    type: NotificationType.HEALTH_ALERT,
     title: "健康提醒",
     content: "记得测量今日血压",
     priority: NotificationPriority.HIGH,
@@ -46,7 +46,7 @@ const mockNotifications = [
   {
     id: "notification-2",
     memberId: "member-1",
-    type: NotificationType.ACHIEVEMENT_UNLOCKED,
+    type: NotificationType.GOAL_ACHIEVEMENT,
     title: "成就解锁",
     content: '恭喜获得"健康达人"成就',
     priority: NotificationPriority.MEDIUM,
@@ -60,7 +60,7 @@ const mockNotifications = [
   {
     id: "notification-3",
     memberId: "member-1",
-    type: NotificationType.SHARE_ACTION,
+    type: NotificationType.FAMILY_ACTIVITY,
     title: "分享成功",
     content: "您的健康报告已分享给家人",
     priority: NotificationPriority.LOW,
@@ -117,7 +117,7 @@ describe("/api/notifications", () => {
       expect(mockNotificationManager.getUserNotifications).toHaveBeenCalledWith(
         "member-1",
         expect.objectContaining({
-          type: NotificationType.HEALTH_REMINDER,
+          type: NotificationType.HEALTH_ALERT,
         }),
       );
     });
@@ -219,7 +219,7 @@ describe("/api/notifications", () => {
   describe("POST - Create Notification", () => {
     const validNotificationData = {
       memberId: "member-1",
-      type: NotificationType.HEALTH_REMINDER,
+      type: NotificationType.HEALTH_ALERT,
       title: "健康提醒",
       content: "记得测量今日血压",
       priority: NotificationPriority.HIGH,
@@ -260,7 +260,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.HEALTH_REMINDER,
+            type: NotificationType.HEALTH_ALERT,
             title: "健康提醒",
             content: "记得测量今日血压",
           }),
@@ -304,7 +304,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.FAMILY_UPDATE,
+            type: NotificationType.FAMILY_ACTIVITY,
             title: "家庭更新",
             content: "家庭成员已更新健康数据",
           }),
@@ -346,7 +346,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.HEALTH_REMINDER,
+            type: NotificationType.HEALTH_ALERT,
             title: "健康提醒",
             content: "测试内容",
             channels: "INVALID_CHANNELS", // Not an array
@@ -374,7 +374,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.HEALTH_REMINDER,
+            type: NotificationType.HEALTH_ALERT,
             title: "健康提醒",
             content: "A".repeat(1001), // Too long
           }),
@@ -395,7 +395,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.ACHIEVEMENT_UNLOCKED,
+            type: NotificationType.GOAL_ACHIEVEMENT,
             title: "成就解锁",
           }),
         },
@@ -414,7 +414,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.SHARE_ACTION,
+            type: NotificationType.FAMILY_ACTIVITY,
             content: "分享成功",
           }),
         },
@@ -432,7 +432,7 @@ describe("/api/notifications", () => {
         {
           method: "POST",
           body: JSON.stringify({
-            type: NotificationType.HEALTH_REMINDER,
+            type: NotificationType.HEALTH_ALERT,
             title: "健康提醒",
             content: "测试内容",
           }),
@@ -471,7 +471,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.FAMILY_UPDATE,
+            type: NotificationType.FAMILY_ACTIVITY,
             title: "批量通知",
             content: "这是批量通知内容",
             batchId: "batch-001",
@@ -501,7 +501,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.ACHIEVEMENT_UNLOCKED,
+            type: NotificationType.GOAL_ACHIEVEMENT,
             title: "恭喜获得成就",
             content: "您获得了{name} - {achievementName}，当前分数: {score}",
             templateData,
@@ -525,7 +525,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.HEALTH_REMINDER,
+            type: NotificationType.HEALTH_ALERT,
             title: "健康提醒",
             content: "测试内容",
           }),
@@ -536,7 +536,7 @@ describe("/api/notifications", () => {
       expect(mockNotificationManager.createNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           memberId: "member-1",
-          type: NotificationType.HEALTH_REMINDER,
+          type: NotificationType.HEALTH_ALERT,
         }),
       );
     });
@@ -576,7 +576,7 @@ describe("/api/notifications", () => {
           method: "POST",
           body: JSON.stringify({
             memberId: "member-1",
-            type: NotificationType.HEALTH_REMINDER,
+            type: NotificationType.HEALTH_ALERT,
             title: "健康提醒",
             content: "测试内容",
           }),
