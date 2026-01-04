@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
           error: 'recipeId is required',
           details: 'Please provide a recipeId parameter',
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           error: 'Recipe not found',
           details: 'The specified recipe does not exist',
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -51,12 +51,15 @@ export async function GET(request: NextRequest) {
           error: 'Recipe not available',
           details: 'The recipe is not published or has been deleted',
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // 获取相似食谱推荐
-    const recommendations = await recommendationEngine.getSimilarRecipes(recipeId, limit);
+    const recommendations = await recommendationEngine.getSimilarRecipes(
+      recipeId,
+      limit,
+    );
 
     if (recommendations.length === 0) {
       return NextResponse.json({
@@ -70,7 +73,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取推荐的食谱详细信息（使用Supabase）
-    const recipeIds = recommendations.map(rec => rec.recipeId);
+    const recipeIds = recommendations.map((rec) => rec.recipeId);
     const recipes = await supabaseAdapter.recipe.findMany({
       where: {
         id: { in: recipeIds },
@@ -85,7 +88,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    type RecipeWithRelations = Awaited<ReturnType<typeof supabaseAdapter.recipe.findMany>>[number];
+    type RecipeWithRelations = Awaited<
+      ReturnType<typeof supabaseAdapter.recipe.findMany>
+    >[number];
     const recipeMap = new Map<string, RecipeWithRelations>();
     for (const recipe of recipes) {
       recipeMap.set(recipe.id, recipe);
@@ -115,7 +120,7 @@ export async function GET(request: NextRequest) {
         error: 'Failed to get similar recipes',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

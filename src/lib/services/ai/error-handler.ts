@@ -1,6 +1,6 @@
 /**
  * AI 服务错误处理器
- * 
+ *
  * 规范化错误响应，不泄露 AI 提供商详情
  */
 
@@ -115,7 +115,10 @@ function isRetryable(errorType: AIErrorType): boolean {
 /**
  * 获取重试等待时间
  */
-function getRetryAfter(error: unknown, errorType: AIErrorType): number | undefined {
+function getRetryAfter(
+  error: unknown,
+  errorType: AIErrorType,
+): number | undefined {
   if (error instanceof RateLimitError) {
     return error.retryAfter;
   }
@@ -139,7 +142,7 @@ export function handleAIError(
     userId?: string;
     operation?: string;
     provider?: string;
-  }
+  },
 ): AIErrorResponse {
   const errorType = analyzeErrorType(error);
   const message = getUserFriendlyMessage(errorType);
@@ -189,7 +192,7 @@ export async function withRetry<T>(
     baseDelay?: number;
     maxDelay?: number;
     onRetry?: (attempt: number, error: unknown) => void;
-  } = {}
+  } = {},
 ): Promise<T> {
   const {
     maxRetries = 3,
@@ -215,7 +218,7 @@ export async function withRetry<T>(
       // 计算延迟时间（指数退避）
       const delay = Math.min(
         baseDelay * Math.pow(2, attempt) + Math.random() * 1000,
-        maxDelay
+        maxDelay,
       );
 
       if (onRetry) {
@@ -229,7 +232,7 @@ export async function withRetry<T>(
         errorType,
       });
 
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
@@ -241,7 +244,7 @@ export async function withRetry<T>(
  */
 export async function withTimeout<T>(
   fn: () => Promise<T>,
-  timeoutMs: number = 30000
+  timeoutMs: number = 30000,
 ): Promise<T> {
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {

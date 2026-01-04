@@ -6,10 +6,7 @@ export interface AIResponse {
 
 // 推荐模型常量
 export const RECOMMENDED_MODELS = {
-  FREE: [
-    'openai/gpt-oss-20b:free',
-    'z-ai/glm-4-9b-chat:free',
-  ],
+  FREE: ['openai/gpt-oss-20b:free', 'z-ai/glm-4-9b-chat:free'],
   PAID: [
     'deepseek/deepseek-v3.2-exp',
     'x-ai/grok-4-fast',
@@ -25,7 +22,7 @@ export async function callOpenAI(
   model: string = 'openai/gpt-oss-20b:free',
   maxTokens: number = 1000,
   temperature: number = 0.7,
-  useOpenRouter: boolean = true
+  useOpenRouter: boolean = true,
 ): Promise<AIResponse> {
   if (!useOpenRouter) {
     throw new Error('Direct OpenAI API not implemented yet');
@@ -37,25 +34,30 @@ export async function callOpenAI(
   }
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://hearthbulter.com',
-        'X-Title': 'Hearth Butler Health App',
+    const response = await fetch(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://hearthbulter.com',
+          'X-Title': 'Hearth Butler Health App',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: maxTokens,
+          temperature,
+        }),
       },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: maxTokens,
-        temperature,
-      }),
-    });
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(
+        `OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`,
+      );
     }
 
     const data = await response.json();
@@ -72,7 +74,9 @@ export async function callOpenAI(
     };
   } catch (error) {
     console.error('OpenRouter API error:', error);
-    throw new Error(`AI API call failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `AI API call failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
@@ -83,9 +87,15 @@ export async function callOpenAIJSON(
   prompt: string,
   model: string = 'openai/gpt-oss-20b:free',
   maxTokens: number = 1000,
-  useOpenRouter: boolean = true
+  useOpenRouter: boolean = true,
 ): Promise<any> {
-  const response = await callOpenAI(prompt, model, maxTokens, 0.7, useOpenRouter);
+  const response = await callOpenAI(
+    prompt,
+    model,
+    maxTokens,
+    0.7,
+    useOpenRouter,
+  );
   try {
     return JSON.parse(response.content);
   } catch {
@@ -105,7 +115,7 @@ export async function getAvailableModels() {
 
     const response = await fetch('https://openrouter.ai/api/v1/models', {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
     });
 

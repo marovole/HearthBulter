@@ -12,6 +12,13 @@
 import type { AnalyticsRepository } from '@/lib/repositories/interfaces/analytics-repository';
 import { SupabaseAnalyticsRepository } from '@/lib/repositories/implementations/supabase-analytics-repository';
 import type { TrendDataType } from '@/lib/types/analytics';
+import {
+  TREND_SLOPE_THRESHOLD,
+  MOVING_AVERAGE_WINDOW,
+  DEFAULT_PREDICTION_DAYS,
+  CHANGE_PERCENT_THRESHOLD,
+  MS_PER_DAY,
+} from '@/lib/constants/analytics';
 
 export interface TimeSeriesPoint {
   date: Date;
@@ -48,19 +55,19 @@ export interface TrendAnalysis {
  * 中心化维护映射关系,避免重复定义
  */
 const TREND_METRIC_MAP: Record<TrendDataType, string> = {
-  'WEIGHT': 'WEIGHT',
-  'BODY_FAT': 'BODY_FAT',
-  'MUSCLE_MASS': 'MUSCLE_MASS',
-  'BLOOD_PRESSURE': 'BLOOD_PRESSURE',
-  'HEART_RATE': 'HEART_RATE',
-  'CALORIES': 'CALORIES',
-  'PROTEIN': 'PROTEIN',
-  'CARBS': 'CARBS',
-  'FAT': 'FAT',
-  'EXERCISE': 'EXERCISE',
-  'SLEEP': 'SLEEP',
-  'WATER': 'WATER',
-  'HEALTH_SCORE': 'HEALTH_SCORE',
+  WEIGHT: 'WEIGHT',
+  BODY_FAT: 'BODY_FAT',
+  MUSCLE_MASS: 'MUSCLE_MASS',
+  BLOOD_PRESSURE: 'BLOOD_PRESSURE',
+  HEART_RATE: 'HEART_RATE',
+  CALORIES: 'CALORIES',
+  PROTEIN: 'PROTEIN',
+  CARBS: 'CARBS',
+  FAT: 'FAT',
+  EXERCISE: 'EXERCISE',
+  SLEEP: 'SLEEP',
+  WATER: 'WATER',
+  HEALTH_SCORE: 'HEALTH_SCORE',
 };
 
 /**
@@ -81,7 +88,7 @@ async function fetchTimeSeriesDataFromRepository(
   memberId: string,
   dataType: TrendDataType,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<TimeSeriesPoint[]> {
   const metric = TREND_METRIC_MAP[dataType];
   if (!metric) {
@@ -98,7 +105,7 @@ async function fetchTimeSeriesDataFromRepository(
   });
 
   // 转换为标准时序数据点格式
-  return trendSeries.points.map(point => ({
+  return trendSeries.points.map((point) => ({
     date: point.date,
     value: point.value,
   }));
@@ -126,22 +133,33 @@ export class TrendAnalyzer {
     memberId: string,
     dataType: TrendDataType,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<TrendAnalysis> {
     // 获取当前时期数据
-    const dataPoints = await this.fetchTimeSeriesData(memberId, dataType, startDate, endDate);
+    const dataPoints = await this.fetchTimeSeriesData(
+      memberId,
+      dataType,
+      startDate,
+      endDate,
+    );
 
     // 计算统计数据
     const statistics = this.calculateStatistics(dataPoints);
 
     // 计算移动平均
-    const movingAverage = this.calculateMovingAverage(dataPoints, 7);
+    const movingAverage = this.calculateMovingAverage(
+      dataPoints,
+      MOVING_AVERAGE_WINDOW,
+    );
 
     // 计算趋势
     const trend = this.calculateLinearRegression(dataPoints);
 
-    // 预测未来7天
-    const predictions = this.predictFutureTrend(dataPoints, 7);
+    // 预测未来趋势
+    const predictions = this.predictFutureTrend(
+      dataPoints,
+      DEFAULT_PREDICTION_DAYS,
+    );
 
     // 计算同比（上一个相同时长的时期）
     const periodLength = endDate.getTime() - startDate.getTime();
@@ -151,10 +169,13 @@ export class TrendAnalyzer {
       memberId,
       dataType,
       previousStartDate,
-      previousEndDate
+      previousEndDate,
     );
 
-    const periodComparison = this.calculatePeriodComparison(dataPoints, previousDataPoints);
+    const periodComparison = this.calculatePeriodComparison(
+      dataPoints,
+      previousDataPoints,
+    );
 
     return {
       dataPoints,
@@ -177,14 +198,14 @@ export class TrendAnalyzer {
     memberId: string,
     dataType: TrendDataType,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<TimeSeriesPoint[]> {
     return fetchTimeSeriesDataFromRepository(
       this.analyticsRepository,
       memberId,
       dataType,
       startDate,
-      endDate
+      endDate,
     );
   }
 
@@ -204,17 +225,20 @@ export class TrendAnalyzer {
       };
     }
 
-    const values = dataPoints.map(p => p.value).sort((a, b) => a - b);
+    const values = dataPoints.map((p) => p.value).sort((a, b) => a - b);
 
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const median = values.length % 2 === 0
-      ? (values[values.length / 2 - 1] + values[values.length / 2]) / 2
-      : values[Math.floor(values.length / 2)];
+    const median =
+      values.length % 2 === 0
+        ? (values[values.length / 2 - 1] + values[values.length / 2]) / 2
+        : values[Math.floor(values.length / 2)];
     const min = values[0];
     const max = values[values.length - 1];
 
     // 计算标准差
-    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    const variance =
+      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      values.length;
     const stdDev = Math.sqrt(variance);
 
     return { mean, median, min, max, stdDev };
@@ -227,7 +251,7 @@ export class TrendAnalyzer {
    */
   private calculateMovingAverage(
     dataPoints: TimeSeriesPoint[],
-    windowSize: number = 7
+    windowSize: number = MOVING_AVERAGE_WINDOW,
   ): TimeSeriesPoint[] {
     if (dataPoints.length < windowSize) {
       return dataPoints; // 数据点不足，返回原始数据
@@ -263,8 +287,10 @@ export class TrendAnalyzer {
 
     // 将日期转换为数值（天数）
     const firstDate = dataPoints[0].date.getTime();
-    const x = dataPoints.map(p => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24));
-    const y = dataPoints.map(p => p.value);
+    const x = dataPoints.map(
+      (p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24),
+    );
+    const y = dataPoints.map((p) => p.value);
 
     const n = x.length;
     const sumX = x.reduce((sum, val) => sum + val, 0);
@@ -284,11 +310,11 @@ export class TrendAnalyzer {
       const predicted = slope * x[i] + intercept;
       return sum + Math.pow(val - predicted, 2);
     }, 0);
-    const rSquared = 1 - (ssResidual / ssTotal);
+    const rSquared = 1 - ssResidual / ssTotal;
 
     // 判断趋势方向
     let direction: 'UP' | 'DOWN' | 'STABLE';
-    if (Math.abs(slope) < 0.01) {
+    if (Math.abs(slope) < TREND_SLOPE_THRESHOLD) {
       direction = 'STABLE';
     } else if (slope > 0) {
       direction = 'UP';
@@ -306,7 +332,7 @@ export class TrendAnalyzer {
    */
   private predictFutureTrend(
     dataPoints: TimeSeriesPoint[],
-    daysAhead: number = 7
+    daysAhead: number = DEFAULT_PREDICTION_DAYS,
   ): TimeSeriesPoint[] {
     if (dataPoints.length < 2) {
       return [];
@@ -315,8 +341,10 @@ export class TrendAnalyzer {
     const firstDate = dataPoints[0].date.getTime();
     const lastDate = dataPoints[dataPoints.length - 1].date.getTime();
 
-    const x = dataPoints.map(p => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24));
-    const y = dataPoints.map(p => p.value);
+    const x = dataPoints.map(
+      (p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24),
+    );
+    const y = dataPoints.map((p) => p.value);
 
     const n = x.length;
     const sumX = x.reduce((sum, val) => sum + val, 0);
@@ -351,19 +379,23 @@ export class TrendAnalyzer {
    */
   private calculatePeriodComparison(
     currentDataPoints: TimeSeriesPoint[],
-    previousDataPoints: TimeSeriesPoint[]
+    previousDataPoints: TimeSeriesPoint[],
   ) {
     if (currentDataPoints.length === 0 || previousDataPoints.length === 0) {
       return null;
     }
 
-    const currentAvg = currentDataPoints.reduce((sum, p) => sum + p.value, 0) / currentDataPoints.length;
-    const previousAvg = previousDataPoints.reduce((sum, p) => sum + p.value, 0) / previousDataPoints.length;
+    const currentAvg =
+      currentDataPoints.reduce((sum, p) => sum + p.value, 0) /
+      currentDataPoints.length;
+    const previousAvg =
+      previousDataPoints.reduce((sum, p) => sum + p.value, 0) /
+      previousDataPoints.length;
 
     const changePercent = ((currentAvg - previousAvg) / previousAvg) * 100;
 
     let changeType: 'INCREASE' | 'DECREASE' | 'STABLE';
-    if (Math.abs(changePercent) < 1) {
+    if (Math.abs(changePercent) < CHANGE_PERCENT_THRESHOLD) {
       changeType = 'STABLE';
     } else if (changePercent > 0) {
       changeType = 'INCREASE';
@@ -455,14 +487,14 @@ export async function aggregateTimeSeriesData(
   memberId: string,
   dataType: TrendDataType,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<TimeSeriesPoint[]> {
   return fetchTimeSeriesDataFromRepository(
     getDefaultAnalyticsRepository(),
     memberId,
     dataType,
     startDate,
-    endDate
+    endDate,
   );
 }
 
@@ -494,9 +526,14 @@ export async function analyzeTrend(
   memberId: string,
   dataType: TrendDataType,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<TrendAnalysis> {
-  return getDefaultTrendAnalyzer().analyzeTrend(memberId, dataType, startDate, endDate);
+  return getDefaultTrendAnalyzer().analyzeTrend(
+    memberId,
+    dataType,
+    startDate,
+    endDate,
+  );
 }
 
 // ============================================================================
@@ -518,16 +555,19 @@ export function calculateStatistics(dataPoints: TimeSeriesPoint[]) {
     };
   }
 
-  const values = dataPoints.map(p => p.value).sort((a, b) => a - b);
+  const values = dataPoints.map((p) => p.value).sort((a, b) => a - b);
 
   const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-  const median = values.length % 2 === 0
-    ? (values[values.length / 2 - 1] + values[values.length / 2]) / 2
-    : values[Math.floor(values.length / 2)];
+  const median =
+    values.length % 2 === 0
+      ? (values[values.length / 2 - 1] + values[values.length / 2]) / 2
+      : values[Math.floor(values.length / 2)];
   const min = values[0];
   const max = values[values.length - 1];
 
-  const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+  const variance =
+    values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+    values.length;
   const stdDev = Math.sqrt(variance);
 
   return { mean, median, min, max, stdDev };
@@ -539,7 +579,7 @@ export function calculateStatistics(dataPoints: TimeSeriesPoint[]) {
  */
 export function calculateMovingAverage(
   dataPoints: TimeSeriesPoint[],
-  windowSize: number = 7
+  windowSize: number = MOVING_AVERAGE_WINDOW,
 ): TimeSeriesPoint[] {
   if (dataPoints.length < windowSize) {
     return dataPoints;
@@ -573,8 +613,10 @@ export function calculateLinearRegression(dataPoints: TimeSeriesPoint[]) {
   }
 
   const firstDate = dataPoints[0].date.getTime();
-  const x = dataPoints.map(p => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24));
-  const y = dataPoints.map(p => p.value);
+  const x = dataPoints.map(
+    (p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24),
+  );
+  const y = dataPoints.map((p) => p.value);
 
   const n = x.length;
   const sumX = x.reduce((sum, val) => sum + val, 0);
@@ -591,10 +633,10 @@ export function calculateLinearRegression(dataPoints: TimeSeriesPoint[]) {
     const predicted = slope * x[i] + intercept;
     return sum + Math.pow(val - predicted, 2);
   }, 0);
-  const rSquared = 1 - (ssResidual / ssTotal);
+  const rSquared = 1 - ssResidual / ssTotal;
 
   let direction: 'UP' | 'DOWN' | 'STABLE';
-  if (Math.abs(slope) < 0.01) {
+  if (Math.abs(slope) < TREND_SLOPE_THRESHOLD) {
     direction = 'STABLE';
   } else if (slope > 0) {
     direction = 'UP';
@@ -611,7 +653,7 @@ export function calculateLinearRegression(dataPoints: TimeSeriesPoint[]) {
  */
 export function predictFutureTrend(
   dataPoints: TimeSeriesPoint[],
-  daysAhead: number = 7
+  daysAhead: number = DEFAULT_PREDICTION_DAYS,
 ): TimeSeriesPoint[] {
   if (dataPoints.length < 2) {
     return [];
@@ -620,8 +662,10 @@ export function predictFutureTrend(
   const firstDate = dataPoints[0].date.getTime();
   const lastDate = dataPoints[dataPoints.length - 1].date.getTime();
 
-  const x = dataPoints.map(p => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24));
-  const y = dataPoints.map(p => p.value);
+  const x = dataPoints.map(
+    (p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24),
+  );
+  const y = dataPoints.map((p) => p.value);
 
   const n = x.length;
   const sumX = x.reduce((sum, val) => sum + val, 0);
@@ -655,19 +699,23 @@ export function predictFutureTrend(
  */
 export function calculatePeriodComparison(
   currentDataPoints: TimeSeriesPoint[],
-  previousDataPoints: TimeSeriesPoint[]
+  previousDataPoints: TimeSeriesPoint[],
 ) {
   if (currentDataPoints.length === 0 || previousDataPoints.length === 0) {
     return null;
   }
 
-  const currentAvg = currentDataPoints.reduce((sum, p) => sum + p.value, 0) / currentDataPoints.length;
-  const previousAvg = previousDataPoints.reduce((sum, p) => sum + p.value, 0) / previousDataPoints.length;
+  const currentAvg =
+    currentDataPoints.reduce((sum, p) => sum + p.value, 0) /
+    currentDataPoints.length;
+  const previousAvg =
+    previousDataPoints.reduce((sum, p) => sum + p.value, 0) /
+    previousDataPoints.length;
 
   const changePercent = ((currentAvg - previousAvg) / previousAvg) * 100;
 
   let changeType: 'INCREASE' | 'DECREASE' | 'STABLE';
-  if (Math.abs(changePercent) < 1) {
+  if (Math.abs(changePercent) < CHANGE_PERCENT_THRESHOLD) {
     changeType = 'STABLE';
   } else if (changePercent > 0) {
     changeType = 'INCREASE';

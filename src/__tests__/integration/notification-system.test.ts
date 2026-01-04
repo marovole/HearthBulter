@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { NotificationManager } from '@/lib/services/notification';
-import { NotificationType, NotificationPriority, NotificationChannel } from '@prisma/client';
+import {
+  NotificationType,
+  NotificationPriority,
+  NotificationChannel,
+} from '@prisma/client';
 
 describe('Notification System Integration', () => {
   let prisma: PrismaClient;
@@ -99,10 +103,11 @@ describe('Notification System Integration', () => {
         },
       ];
 
-      const results = await notificationManager.createBulkNotifications(requests);
+      const results =
+        await notificationManager.createBulkNotifications(requests);
 
       expect(results).toHaveLength(2);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.id).toBeDefined();
         expect(result.status).toBe('PENDING');
       });
@@ -113,7 +118,7 @@ describe('Notification System Integration', () => {
     it('should get user notifications', async () => {
       const notifications = await notificationManager.getUserNotifications(
         testMemberId,
-        { limit: 10, includeRead: false }
+        { limit: 10, includeRead: false },
       );
 
       expect(notifications).toBeDefined();
@@ -145,40 +150,49 @@ describe('Notification System Integration', () => {
 
     it('should mark notification as read', async () => {
       await notificationManager.markAsRead(notificationId, testMemberId);
-      
+
       const notifications = await notificationManager.getUserNotifications(
         testMemberId,
-        { includeRead: true }
+        { includeRead: true },
       );
-      
-      const readNotification = notifications.notifications.find(n => n.id === notificationId);
+
+      const readNotification = notifications.notifications.find(
+        (n) => n.id === notificationId,
+      );
       expect(readNotification?.readAt).toBeDefined();
     });
 
     it('should mark all notifications as read', async () => {
       await notificationManager.markAllAsRead(testMemberId);
-      
+
       const count = await notificationManager.getUnreadCount(testMemberId);
       expect(count).toBe(0);
     });
 
     it('should delete notification', async () => {
-      await notificationManager.deleteNotification(notificationId, testMemberId);
-      
+      await notificationManager.deleteNotification(
+        notificationId,
+        testMemberId,
+      );
+
       const notifications = await notificationManager.getUserNotifications(
         testMemberId,
-        { includeRead: true }
+        { includeRead: true },
       );
-      
-      const deletedNotification = notifications.notifications.find(n => n.id === notificationId);
+
+      const deletedNotification = notifications.notifications.find(
+        (n) => n.id === notificationId,
+      );
       expect(deletedNotification).toBeUndefined();
     });
   });
 
   describe('Notification Preferences', () => {
     it('should create default preferences for new user', async () => {
-      const preferences = await (notificationManager as any).getUserPreferences(testMemberId);
-      
+      const preferences = await (notificationManager as any).getUserPreferences(
+        testMemberId,
+      );
+
       expect(preferences).toBeDefined();
       expect(preferences.enableNotifications).toBe(true);
       expect(preferences.dailyMaxNotifications).toBe(50);

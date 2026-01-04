@@ -1,6 +1,6 @@
 /**
  * 统一 API 验证中间件
- * 
+ *
  * 提供 Zod schema 验证的便捷包装函数
  */
 
@@ -39,21 +39,24 @@ function formatZodError(error: ZodError): ValidationErrorResponse {
  */
 export async function validateBody<T>(
   request: NextRequest,
-  schema: ZodSchema<T>
-): Promise<{ success: true; data: T } | { success: false; error: ValidationErrorResponse }> {
+  schema: ZodSchema<T>,
+): Promise<
+  | { success: true; data: T }
+  | { success: false; error: ValidationErrorResponse }
+> {
   try {
     const body = await request.json();
     const data = schema.parse(body);
     return { success: true, data };
   } catch (error) {
     if (error instanceof ZodError) {
-      logger.warn('API 请求体验证失败', { 
+      logger.warn('API 请求体验证失败', {
         path: request.nextUrl.pathname,
-        errors: error.errors 
+        errors: error.errors,
       });
       return { success: false, error: formatZodError(error) };
     }
-    
+
     if (error instanceof SyntaxError) {
       return {
         success: false,
@@ -64,7 +67,7 @@ export async function validateBody<T>(
         },
       };
     }
-    
+
     throw error;
   }
 }
@@ -74,23 +77,25 @@ export async function validateBody<T>(
  */
 export function validateQuery<T>(
   request: NextRequest,
-  schema: ZodSchema<T>
-): { success: true; data: T } | { success: false; error: ValidationErrorResponse } {
+  schema: ZodSchema<T>,
+):
+  | { success: true; data: T }
+  | { success: false; error: ValidationErrorResponse } {
   try {
     const searchParams = request.nextUrl.searchParams;
     const queryObject: Record<string, string> = {};
-    
+
     searchParams.forEach((value, key) => {
       queryObject[key] = value;
     });
-    
+
     const data = schema.parse(queryObject);
     return { success: true, data };
   } catch (error) {
     if (error instanceof ZodError) {
-      logger.warn('API 查询参数验证失败', { 
+      logger.warn('API 查询参数验证失败', {
         path: request.nextUrl.pathname,
-        errors: error.errors 
+        errors: error.errors,
       });
       return { success: false, error: formatZodError(error) };
     }
@@ -103,8 +108,10 @@ export function validateQuery<T>(
  */
 export function validateParams<T>(
   params: Record<string, string>,
-  schema: ZodSchema<T>
-): { success: true; data: T } | { success: false; error: ValidationErrorResponse } {
+  schema: ZodSchema<T>,
+):
+  | { success: true; data: T }
+  | { success: false; error: ValidationErrorResponse } {
   try {
     const data = schema.parse(params);
     return { success: true, data };
@@ -120,7 +127,9 @@ export function validateParams<T>(
 /**
  * 创建验证错误响应
  */
-export function validationErrorResponse(error: ValidationErrorResponse): NextResponse {
+export function validationErrorResponse(
+  error: ValidationErrorResponse,
+): NextResponse {
   return NextResponse.json(error, { status: 400 });
 }
 
@@ -129,15 +138,15 @@ export function validationErrorResponse(error: ValidationErrorResponse): NextRes
  */
 export function withBodyValidation<T>(
   schema: ZodSchema<T>,
-  handler: (request: NextRequest, data: T) => Promise<NextResponse>
+  handler: (request: NextRequest, data: T) => Promise<NextResponse>,
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     const result = await validateBody(request, schema);
-    
+
     if (!result.success) {
       return validationErrorResponse(result.error);
     }
-    
+
     return handler(request, result.data);
   };
 }
@@ -147,15 +156,15 @@ export function withBodyValidation<T>(
  */
 export function withQueryValidation<T>(
   schema: ZodSchema<T>,
-  handler: (request: NextRequest, query: T) => Promise<NextResponse>
+  handler: (request: NextRequest, query: T) => Promise<NextResponse>,
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     const result = validateQuery(request, schema);
-    
+
     if (!result.success) {
       return validationErrorResponse(result.error);
     }
-    
+
     return handler(request, result.data);
   };
 }

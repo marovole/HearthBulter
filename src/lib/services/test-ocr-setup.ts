@@ -1,6 +1,6 @@
 /**
  * 测试医疗报告OCR功能配置
- * 
+ *
  * 运行方式：npm run test:ocr-setup
  */
 
@@ -15,7 +15,7 @@ async function testOcrSetup() {
     const { OcrService } = await import('./ocr-service');
     const isSupported = OcrService.isSupportedMimeType('image/jpeg');
     const isValidSize = OcrService.validateFileSize(1024 * 1024); // 1MB
-    
+
     console.log('   ✅ OCR服务配置正常');
     console.log(`   - 支持的文件类型验证: ${isSupported}`);
     console.log(`   - 文件大小验证: ${isValidSize}`);
@@ -51,15 +51,17 @@ async function testOcrSetup() {
   console.log('\n4. 检查环境变量...');
   const hasDatabaseUrl = !!process.env.DATABASE_URL;
   const hasBlobToken = !!process.env.BLOB_READ_WRITE_TOKEN;
-  
+
   console.log(`   DATABASE_URL: ${hasDatabaseUrl ? '✅ 已配置' : '❌ 未配置'}`);
-  console.log(`   BLOB_READ_WRITE_TOKEN: ${hasBlobToken ? '✅ 已配置' : '❌ 未配置'}`);
-  
+  console.log(
+    `   BLOB_READ_WRITE_TOKEN: ${hasBlobToken ? '✅ 已配置' : '❌ 未配置'}`,
+  );
+
   if (!hasDatabaseUrl) {
     console.log('\n   ⚠️  请设置 DATABASE_URL 环境变量');
     console.log('   参考: MEDICAL_REPORT_SETUP.md');
   }
-  
+
   if (!hasBlobToken) {
     console.log('\n   ⚠️  请设置 BLOB_READ_WRITE_TOKEN 环境变量');
     console.log('   参考: MEDICAL_REPORT_SETUP.md');
@@ -78,4 +80,3 @@ if (require.main === module) {
 }
 
 export { testOcrSetup };
-

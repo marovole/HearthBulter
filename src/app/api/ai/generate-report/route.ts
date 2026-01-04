@@ -1,45 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireAuth } from '@/lib/middleware/api-auth';
+import { checkAIRateLimit } from '@/lib/middleware/api-rate-limit';
 import {
   healthReportGenerator,
   ReportType,
 } from '@/lib/services/ai/health-report-generator';
 import { prisma } from '@/lib/db';
-import { rateLimiter } from '@/lib/services/ai/rate-limiter';
-import { sensitiveFilter } from '@/lib/services/sensitive-filter';
+import { logger } from '@/lib/logger';
 
-// Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth();
+    if (!authResult.success) return authResult.response;
+    const { userId } = authResult.context;
 
-    // 速率限制检查
-    const rateLimitResult = await rateLimiter.checkLimit(
-      session.user.id,
+    const rateLimitResult = await checkAIRateLimit(
+      userId,
       'ai_generate_report',
     );
-
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        {
-          error: 'Rate limit exceeded',
-          retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime,
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '86400',
-          },
-        },
-      );
-    }
+    if (!rateLimitResult.success) return rateLimitResult.response;
 
     const body = await request.json();
     const {
@@ -62,12 +42,12 @@ export async function POST(request: NextRequest) {
       where: {
         id: memberId,
         OR: [
-          { userId: session.user.id },
+          { userId },
           {
             family: {
               members: {
                 some: {
-                  userId: session.user.id,
+                  userId,
                   role: 'ADMIN',
                 },
               },
@@ -144,7 +124,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Report generation API error:', error);
+    logger.error('Report generation API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },
@@ -155,10 +135,9 @@ export async function POST(request: NextRequest) {
 // GET 方法用于获取报告历史
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth();
+    if (!authResult.success) return authResult.response;
+    const { userId } = authResult.context;
 
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
@@ -177,12 +156,12 @@ export async function GET(request: NextRequest) {
       where: {
         id: memberId,
         OR: [
-          { userId: session.user.id },
+          { userId },
           {
             family: {
               members: {
                 some: {
-                  userId: session.user.id,
+                  userId,
                   role: 'ADMIN',
                 },
               },
@@ -223,7 +202,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ reports });
   } catch (error) {
-    console.error('Report history API error:', error);
+    logger.error('Report history API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

@@ -2,11 +2,11 @@
  * 成就系统服务测试
  */
 
-import { 
-  checkAndUnlockAchievements, 
-  getMemberAchievements, 
+import {
+  checkAndUnlockAchievements,
+  getMemberAchievements,
   getAchievementProgress,
-  getAchievementStats, 
+  getAchievementStats,
 } from '@/lib/services/social/achievement-system';
 import { PrismaClient } from '@prisma/client';
 
@@ -48,7 +48,7 @@ describe('AchievementSystem', () => {
     it('应该解锁连续打卡成就', async () => {
       mockPrisma.familyMember.findUnique.mockResolvedValue(mockMember);
       mockPrisma.achievement.findMany.mockResolvedValue([]); // 没有现有成就
-      
+
       const mockAchievement = {
         id: 'achievement-1',
         type: 'CHECK_IN_STREAK',
@@ -56,13 +56,13 @@ describe('AchievementSystem', () => {
         isUnlocked: true,
         points: 10,
       };
-      
+
       mockPrisma.achievement.upsert.mockResolvedValue(mockAchievement);
 
       const result = await checkAndUnlockAchievements(
         'member-1',
         'CHECK_IN_STREAK',
-        { currentStreak: 3 }
+        { currentStreak: 3 },
       );
 
       expect(result).toHaveLength(1);
@@ -73,7 +73,7 @@ describe('AchievementSystem', () => {
     it('应该解锁减重成就', async () => {
       mockPrisma.familyMember.findUnique.mockResolvedValue(mockMember);
       mockPrisma.achievement.findMany.mockResolvedValue([]);
-      
+
       const mockAchievement = {
         id: 'achievement-2',
         type: 'WEIGHT_LOSS',
@@ -81,13 +81,13 @@ describe('AchievementSystem', () => {
         isUnlocked: true,
         points: 15,
       };
-      
+
       mockPrisma.achievement.upsert.mockResolvedValue(mockAchievement);
 
       const result = await checkAndUnlockAchievements(
         'member-1',
         'WEIGHT_LOSS',
-        { weightLoss: 1.5 }
+        { weightLoss: 1.5 },
       );
 
       expect(result).toHaveLength(1);
@@ -97,20 +97,20 @@ describe('AchievementSystem', () => {
 
     it('应该跳过已解锁的成就', async () => {
       mockPrisma.familyMember.findUnique.mockResolvedValue(mockMember);
-      
+
       const existingAchievement = {
         id: 'achievement-1',
         type: 'CHECK_IN_STREAK',
         title: '初学者',
         isUnlocked: true,
       };
-      
+
       mockPrisma.achievement.findMany.mockResolvedValue([existingAchievement]);
 
       const result = await checkAndUnlockAchievements(
         'member-1',
         'CHECK_IN_STREAK',
-        { currentStreak: 5 }
+        { currentStreak: 5 },
       );
 
       expect(result).toHaveLength(0);
@@ -120,17 +120,17 @@ describe('AchievementSystem', () => {
     it('应该在成员不存在时抛出错误', async () => {
       mockPrisma.familyMember.findUnique.mockResolvedValue(null);
 
-      await expect(checkAndUnlockAchievements(
-        'member-1',
-        'CHECK_IN_STREAK',
-        { currentStreak: 3 }
-      )).rejects.toThrow('成员不存在');
+      await expect(
+        checkAndUnlockAchievements('member-1', 'CHECK_IN_STREAK', {
+          currentStreak: 3,
+        }),
+      ).rejects.toThrow('成员不存在');
     });
 
     it('应该更新未达成成就的进度', async () => {
       mockPrisma.familyMember.findUnique.mockResolvedValue(mockMember);
       mockPrisma.achievement.findMany.mockResolvedValue([]);
-      
+
       // Mock upsert 返回未解锁的成就
       mockPrisma.achievement.upsert.mockResolvedValue({
         id: 'achievement-progress',
@@ -143,7 +143,7 @@ describe('AchievementSystem', () => {
       const result = await checkAndUnlockAchievements(
         'member-1',
         'CHECK_IN_STREAK',
-        { currentStreak: 3.5 } // 未达到7天的目标
+        { currentStreak: 3.5 }, // 未达到7天的目标
       );
 
       expect(result).toHaveLength(0); // 没有解锁新成就
@@ -297,11 +297,11 @@ describe('AchievementSystem', () => {
       const result = await checkAndUnlockAchievements(
         'member-1',
         'CHECK_IN_STREAK',
-        { currentStreak: 7 }
+        { currentStreak: 7 },
       );
 
       expect(result).toHaveLength(2); // 3天和7天成就
-      expect(result.map(a => a.points)).toEqual([10, 25]);
+      expect(result.map((a) => a.points)).toEqual([10, 25]);
     });
 
     it('应该正确计算减重成就', async () => {
@@ -314,11 +314,11 @@ describe('AchievementSystem', () => {
       const result = await checkAndUnlockAchievements(
         'member-1',
         'WEIGHT_LOSS',
-        { weightLoss: 5.2 }
+        { weightLoss: 5.2 },
       );
 
       expect(result).toHaveLength(2); // 1kg和5kg成就
-      expect(result.map(a => a.points)).toEqual([15, 75]);
+      expect(result.map((a) => a.points)).toEqual([15, 75]);
     });
 
     it('应该正确计算营养目标成就', async () => {
@@ -331,7 +331,7 @@ describe('AchievementSystem', () => {
       const result = await checkAndUnlockAchievements(
         'member-1',
         'NUTRITION_GOAL',
-        { consecutiveDays: 7 }
+        { consecutiveDays: 7 },
       );
 
       expect(result).toHaveLength(1);
@@ -348,11 +348,11 @@ describe('AchievementSystem', () => {
       const result = await checkAndUnlockAchievements(
         'member-1',
         'EXERCISE_TARGET',
-        { weeklyMinutes: 180 }
+        { weeklyMinutes: 180 },
       );
 
       expect(result).toHaveLength(2); // 150分钟和300分钟成就
-      expect(result.map(a => a.points)).toEqual([20, 60]);
+      expect(result.map((a) => a.points)).toEqual([20, 60]);
     });
   });
 });

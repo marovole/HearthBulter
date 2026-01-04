@@ -1,6 +1,6 @@
 /**
  * OCR文本识别服务
- * 
+ *
  * 支持PDF和图片文件的OCR识别，提取体检报告中的文本内容
  * MVP阶段使用Tesseract.js（开源免费），后续可升级到Azure OCR（更高精度）
  */
@@ -20,15 +20,15 @@ export const SUPPORTED_MIME_TYPES = [
   'image/webp',
 ] as const;
 
-export type SupportedMimeType = (typeof SUPPORTED_MIME_TYPES)[number]
+export type SupportedMimeType = (typeof SUPPORTED_MIME_TYPES)[number];
 
 /**
  * OCR识别结果
  */
 export interface OcrResult {
-  text: string
-  confidence: number
-  processingTime: number
+  text: string;
+  confidence: number;
+  processingTime: number;
 }
 
 /**
@@ -53,9 +53,7 @@ export class OcrService {
   /**
    * 图片预处理：增强对比度和清晰度
    */
-  private static async preprocessImage(
-    imageBuffer: Buffer
-  ): Promise<Buffer> {
+  private static async preprocessImage(imageBuffer: Buffer): Promise<Buffer> {
     try {
       // 使用sharp进行图片预处理
       const processed = await sharp(imageBuffer)
@@ -76,7 +74,7 @@ export class OcrService {
    */
   private static async recognizeImage(
     imageBuffer: Buffer,
-    language: string = 'chi_sim+eng' // 中文简体+英文
+    language: string = 'chi_sim+eng', // 中文简体+英文
   ): Promise<OcrResult> {
     const startTime = Date.now();
 
@@ -105,16 +103,16 @@ export class OcrService {
       };
     } catch (error) {
       console.error('OCR识别失败:', error);
-      throw new Error(`OCR识别失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(
+        `OCR识别失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
     }
   }
 
   /**
    * 识别PDF中的文本
    */
-  private static async recognizePdf(
-    pdfBuffer: Buffer
-  ): Promise<OcrResult> {
+  private static async recognizePdf(pdfBuffer: Buffer): Promise<OcrResult> {
     const startTime = Date.now();
 
     try {
@@ -133,11 +131,13 @@ export class OcrService {
       // 图片型PDF需要先转换为图片，然后OCR识别
       // 这里简化处理，提示需要额外的PDF转换工具
       throw new Error(
-        '图片型PDF需要先转换为图片。建议使用pdf-poppler或pdf2pic等工具'
+        '图片型PDF需要先转换为图片。建议使用pdf-poppler或pdf2pic等工具',
       );
     } catch (error) {
       console.error('PDF识别失败:', error);
-      throw new Error(`PDF识别失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(
+        `PDF识别失败: ${error instanceof Error ? error.message : '未知错误'}`,
+      );
     }
   }
 
@@ -146,7 +146,7 @@ export class OcrService {
    */
   static async recognize(
     fileBuffer: Buffer,
-    mimeType: SupportedMimeType
+    mimeType: SupportedMimeType,
   ): Promise<OcrResult> {
     // 验证文件类型
     if (!this.isSupportedMimeType(mimeType)) {
@@ -167,7 +167,7 @@ export class OcrService {
    */
   static async recognizeBatch(
     fileBuffers: Buffer[],
-    mimeType: SupportedMimeType
+    mimeType: SupportedMimeType,
   ): Promise<OcrResult[]> {
     const results: OcrResult[] = [];
 
@@ -182,4 +182,3 @@ export class OcrService {
 
 // 导出单例实例
 export const ocrService = new OcrService();
-

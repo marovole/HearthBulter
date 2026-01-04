@@ -8,34 +8,35 @@ import { APIError, createErrorResponse } from '@/lib/errors/api-error';
 import { logger } from '@/lib/logger';
 
 export interface RateLimitConfig {
-  windowMs: number        // 时间窗口（毫秒）
-  maxRequests: number     // 最大请求数
-  identifier: 'ip' | 'userId' | 'session'  // 限制标识符
-  skipSuccessfulRequests?: boolean   // 是否跳过成功请求
-  skipFailedRequests?: boolean       // 是否跳过失败请求
-  customKeyGenerator?: (request: NextRequest) => string  // 自定义键生成器
-  message?: string                   // 自定义错误消息
-  enableRedis?: boolean             // 是否使用Redis存储
-  redis?: {                        // Redis配置
-    host: string
-    port: number
-    password?: string
-    keyPrefix?: string
-  }
+  windowMs: number; // 时间窗口（毫秒）
+  maxRequests: number; // 最大请求数
+  identifier: 'ip' | 'userId' | 'session'; // 限制标识符
+  skipSuccessfulRequests?: boolean; // 是否跳过成功请求
+  skipFailedRequests?: boolean; // 是否跳过失败请求
+  customKeyGenerator?: (request: NextRequest) => string; // 自定义键生成器
+  message?: string; // 自定义错误消息
+  enableRedis?: boolean; // 是否使用Redis存储
+  redis?: {
+    // Redis配置
+    host: string;
+    port: number;
+    password?: string;
+    keyPrefix?: string;
+  };
 }
 
 export interface RateLimitResult {
-  allowed: boolean
-  limit: number
-  remaining: number
-  resetTime: number
-  retryAfter?: number
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetTime: number;
+  retryAfter?: number;
 }
 
 interface RateLimitRecord {
-  count: number
-  resetTime: number
-  lastRequest: number
+  count: number;
+  resetTime: number;
+  lastRequest: number;
 }
 
 /**
@@ -58,15 +59,16 @@ export class RateLimiter {
    */
   async checkLimit(
     request: NextRequest,
-    config: RateLimitConfig
+    config: RateLimitConfig,
   ): Promise<RateLimitResult> {
     const key = this.generateKey(request, config);
     const now = Date.now();
 
     // 使用Redis或内存存储
-    const record = config.enableRedis && this.redis 
-      ? await this.getRedisRecord(key)
-      : this.memoryStore.get(key);
+    const record =
+      config.enableRedis && this.redis
+        ? await this.getRedisRecord(key)
+        : this.memoryStore.get(key);
 
     // 计算重置时间
     const resetTime = record ? record.resetTime : now + config.windowMs;
@@ -80,7 +82,11 @@ export class RateLimiter {
       };
 
       if (config.enableRedis && this.redis) {
-        await this.setRedisRecord(key, newRecord, Math.ceil(config.windowMs / 1000));
+        await this.setRedisRecord(
+          key,
+          newRecord,
+          Math.ceil(config.windowMs / 1000),
+        );
       } else {
         this.memoryStore.set(key, newRecord);
       }
@@ -150,22 +156,22 @@ export class RateLimiter {
     let identifier: string;
 
     switch (config.identifier) {
-    case 'userId':
-      identifier = request.headers.get('x-user-id') || 'anonymous';
-      break;
-    case 'session':
-      identifier = request.headers.get('x-session-id') || 'anonymous';
-      break;
-    case 'ip':
-    default:
-      identifier = this.getClientIP(request);
-      break;
+      case 'userId':
+        identifier = request.headers.get('x-user-id') || 'anonymous';
+        break;
+      case 'session':
+        identifier = request.headers.get('x-session-id') || 'anonymous';
+        break;
+      case 'ip':
+      default:
+        identifier = this.getClientIP(request);
+        break;
     }
 
     // 添加路径前缀以区分不同端点
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+/g, '_').replace(/^_/, '') || 'root';
-    
+
     return `rate_limit:${path}:${identifier}`;
   }
 
@@ -174,11 +180,15 @@ export class RateLimiter {
    */
   private getClientIP(request: NextRequest): string {
     return (
-      request.headers.get('x-forwarded-for') ||
-      request.headers.get('x-real-ip') ||
-      request.headers.get('cf-connecting-ip') || // Cloudflare
-      '127.0.0.1'
-    )?.split(',')[0]?.trim() || '127.0.0.1';
+      (
+        request.headers.get('x-forwarded-for') ||
+        request.headers.get('x-real-ip') ||
+        request.headers.get('cf-connecting-ip') || // Cloudflare
+        '127.0.0.1'
+      )
+        ?.split(',')[0]
+        ?.trim() || '127.0.0.1'
+    );
   }
 
   /**
@@ -208,7 +218,7 @@ export class RateLimiter {
   private async setRedisRecord(
     key: string,
     record: RateLimitRecord,
-    ttlSeconds: number
+    ttlSeconds: number,
   ): Promise<void> {
     if (!this.redis) return;
 
@@ -229,7 +239,7 @@ export class RateLimiter {
    */
   private async incrementRedisCount(
     key: string,
-    ttlSeconds: number
+    ttlSeconds: number,
   ): Promise<void> {
     if (!this.redis) return;
 
@@ -296,44 +306,44 @@ export const rateLimiter = RateLimiter.getInstance();
 export const commonRateLimits = {
   // 通用API限制
   general: {
-    windowMs: 60 * 1000,      // 1分钟
-    maxRequests: 100,           // 100次请求
+    windowMs: 60 * 1000, // 1分钟
+    maxRequests: 100, // 100次请求
     identifier: 'ip' as const,
   },
 
   // 严格限制（敏感操作）
   strict: {
-    windowMs: 60 * 1000,      // 1分钟
-    maxRequests: 10,            // 10次请求
+    windowMs: 60 * 1000, // 1分钟
+    maxRequests: 10, // 10次请求
     identifier: 'userId' as const,
   },
 
   // 登录限制
   auth: {
     windowMs: 15 * 60 * 1000, // 15分钟
-    maxRequests: 5,             // 5次登录尝试
+    maxRequests: 5, // 5次登录尝试
     identifier: 'ip' as const,
     message: '登录尝试过于频繁，请15分钟后再试',
   },
 
   // AI API限制
   ai: {
-    windowMs: 60 * 1000,      // 1分钟
-    maxRequests: 20,            // 20次AI调用
+    windowMs: 60 * 1000, // 1分钟
+    maxRequests: 20, // 20次AI调用
     identifier: 'userId' as const,
   },
 
   // 文件上传限制
   upload: {
-    windowMs: 60 * 1000,      // 1分钟
-    maxRequests: 10,            // 10次上传
+    windowMs: 60 * 1000, // 1分钟
+    maxRequests: 10, // 10次上传
     identifier: 'userId' as const,
   },
 
   // 数据导出限制
   export: {
     windowMs: 24 * 60 * 60 * 1000, // 24小时
-    maxRequests: 3,                  // 3次导出
+    maxRequests: 3, // 3次导出
     identifier: 'userId' as const,
     message: '数据导出次数已达每日限制',
   },
@@ -344,8 +354,8 @@ export function withRateLimit(
   config: RateLimitConfig,
   handler: (
     request: NextRequest,
-    context: { rateLimit?: RateLimitResult }
-  ) => Promise<NextResponse>
+    context: { rateLimit?: RateLimitResult },
+  ) => Promise<NextResponse>,
 ) {
   return async (request: NextRequest) => {
     const rateLimitResult = await rateLimiter.checkLimit(request, config);
@@ -354,7 +364,9 @@ export function withRateLimit(
     const headers: Record<string, string> = {
       'X-RateLimit-Limit': rateLimitResult.limit.toString(),
       'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-      'X-RateLimit-Reset': Math.ceil(rateLimitResult.resetTime / 1000).toString(),
+      'X-RateLimit-Reset': Math.ceil(
+        rateLimitResult.resetTime / 1000,
+      ).toString(),
     };
 
     if (rateLimitResult.retryAfter) {
@@ -364,9 +376,9 @@ export function withRateLimit(
     // 检查是否超过限制
     if (!rateLimitResult.allowed) {
       const error = APIError.tooManyRequests(
-        config.message || '请求过于频繁，请稍后再试'
+        config.message || '请求过于频繁，请稍后再试',
       );
-      
+
       return createErrorResponse(error, { headers });
     }
 

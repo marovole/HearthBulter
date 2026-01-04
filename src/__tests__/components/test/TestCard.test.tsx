@@ -9,12 +9,7 @@ import { TestCard } from '@/components/test/TestCard';
 
 describe('TestCard Component', () => {
   it('should render card with title and content', () => {
-    render(
-      <TestCard
-        title="Test Title"
-        content="Test content"
-      />
-    );
+    render(<TestCard title='Test Title' content='Test content' />);
 
     expect(screen.getByText('Test Title')).toBeInTheDocument();
     expect(screen.getByText('Test content')).toBeInTheDocument();
@@ -25,10 +20,10 @@ describe('TestCard Component', () => {
 
     render(
       <TestCard
-        title="Clickable Card"
-        content="Click me"
+        title='Clickable Card'
+        content='Click me'
         onClick={handleClick}
-      />
+      />,
     );
 
     const card = screen.getByText('Clickable Card').closest('div');
@@ -42,11 +37,11 @@ describe('TestCard Component', () => {
 
     render(
       <TestCard
-        title="Disabled Card"
-        content="Cannot click"
+        title='Disabled Card'
+        content='Cannot click'
         onClick={handleClick}
         disabled={true}
-      />
+      />,
     );
 
     const card = screen.getByText('Disabled Card').closest('div');
@@ -57,28 +52,28 @@ describe('TestCard Component', () => {
 
   it('should render with different variants', () => {
     const { rerender } = render(
-      <TestCard title="Default" content="Default variant" />
+      <TestCard title='Default' content='Default variant' />,
     );
     expect(screen.getByText('Default')).toBeInTheDocument();
 
     rerender(
-      <TestCard title="Primary" content="Primary variant" variant="primary" />
+      <TestCard title='Primary' content='Primary variant' variant='primary' />,
     );
     expect(screen.getByText('Primary')).toBeInTheDocument();
 
     rerender(
-      <TestCard title="Secondary" content="Secondary variant" variant="secondary" />
+      <TestCard
+        title='Secondary'
+        content='Secondary variant'
+        variant='secondary'
+      />,
     );
     expect(screen.getByText('Secondary')).toBeInTheDocument();
   });
 
   it('should have correct CSS classes', () => {
     render(
-      <TestCard
-        title="Styled Card"
-        content="With variant"
-        variant="primary"
-      />
+      <TestCard title='Styled Card' content='With variant' variant='primary' />,
     );
 
     const card = screen.getByText('Styled Card').closest('div');
@@ -87,7 +82,7 @@ describe('TestCard Component', () => {
   });
 
   it('should be accessible', () => {
-    render(<TestCard title="Accessible Card" content="Content" />);
+    render(<TestCard title='Accessible Card' content='Content' />);
 
     const card = screen.getByText('Accessible Card').closest('div');
     expect(card).toBeInTheDocument();
@@ -99,10 +94,10 @@ describe('TestCard Component', () => {
 
     render(
       <TestCard
-        title="Keyboard Card"
-        content="Navigate with keyboard"
+        title='Keyboard Card'
+        content='Navigate with keyboard'
         onClick={handleClick}
-      />
+      />,
     );
 
     const card = screen.getByText('Keyboard Card').closest('div');
@@ -118,10 +113,10 @@ describe('TestCard Component', () => {
   it('should have proper disabled styling', () => {
     render(
       <TestCard
-        title="Disabled Styled Card"
-        content="Should be faded"
+        title='Disabled Styled Card'
+        content='Should be faded'
         disabled={true}
-      />
+      />,
     );
 
     const card = screen.getByText('Disabled Styled Card').closest('div');
@@ -130,14 +125,10 @@ describe('TestCard Component', () => {
   });
 
   it('should handle long content', () => {
-    const longContent = 'This is a very long content that should wrap properly and still be displayed correctly in the card component without any layout issues or overflow problems.';
+    const longContent =
+      'This is a very long content that should wrap properly and still be displayed correctly in the card component without any layout issues or overflow problems.';
 
-    render(
-      <TestCard
-        title="Long Content Card"
-        content={longContent}
-      />
-    );
+    render(<TestCard title='Long Content Card' content={longContent} />);
 
     expect(screen.getByText('Long Content Card')).toBeInTheDocument();
     expect(screen.getByText(longContent)).toBeInTheDocument();
@@ -146,7 +137,7 @@ describe('TestCard Component', () => {
   it('should render with children as complex content', () => {
     render(
       <TestCard
-        title="Complex Card"
+        title='Complex Card'
         content={
           <div>
             <span>Nested content</span>
@@ -156,7 +147,7 @@ describe('TestCard Component', () => {
             </ul>
           </div>
         }
-      />
+      />,
     );
 
     expect(screen.getByText('Complex Card')).toBeInTheDocument();
@@ -168,10 +159,10 @@ describe('TestCard Component', () => {
   it('should support custom styling via inline styles', () => {
     render(
       <TestCard
-        title="Styled Card"
-        content="Custom styles"
-        variant="secondary"
-      />
+        title='Styled Card'
+        content='Custom styles'
+        variant='secondary'
+      />,
     );
 
     const card = screen.getByText('Styled Card').closest('div');
@@ -188,10 +179,10 @@ describe('TestCard Component', () => {
 
     render(
       <TestCard
-        title="Rapid Click Card"
-        content="Click me multiple times"
+        title='Rapid Click Card'
+        content='Click me multiple times'
         onClick={handleClick}
-      />
+      />,
     );
 
     const card = screen.getByText('Rapid Click Card').closest('div');
@@ -206,13 +197,13 @@ describe('TestCard Component', () => {
 
   it('should be responsive to prop changes', () => {
     const { rerender } = render(
-      <TestCard title="Initial" content="Initial content" />
+      <TestCard title='Initial' content='Initial content' />,
     );
 
     expect(screen.getByText('Initial')).toBeInTheDocument();
 
     rerender(
-      <TestCard title="Updated" content="Updated content" variant="primary" />
+      <TestCard title='Updated' content='Updated content' variant='primary' />,
     );
 
     expect(screen.getByText('Updated')).toBeInTheDocument();
@@ -220,27 +211,18 @@ describe('TestCard Component', () => {
   });
 
   it('should preserve component identity during re-renders', () => {
-    const { rerender } = render(
-      <TestCard title="Identity" content="Test" />
-    );
+    const { rerender } = render(<TestCard title='Identity' content='Test' />);
 
     const initialCard = screen.getByText('Identity').closest('div');
 
-    rerender(
-      <TestCard title="Identity" content="Updated content" />
-    );
+    rerender(<TestCard title='Identity' content='Updated content' />);
 
     const updatedCard = screen.getByText('Identity').closest('div');
     expect(initialCard).toBe(updatedCard);
   });
 
   it('should handle edge cases gracefully', () => {
-    render(
-      <TestCard
-        title=""
-        content=""
-      />
-    );
+    render(<TestCard title='' content='' />);
 
     const card = screen.getByRole('heading');
     expect(card).toBeInTheDocument();

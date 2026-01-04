@@ -21,16 +21,23 @@ export async function POST(request: NextRequest) {
     const requiredFields = ['inventoryItemId', 'usedQuantity', 'usageType'];
     for (const field of requiredFields) {
       if (!body[field]) {
-        return NextResponse.json({ error: `缺少必需字段: ${field}` }, { status: 400 });
+        return NextResponse.json(
+          { error: `缺少必需字段: ${field}` },
+          { status: 400 },
+        );
       }
     }
 
     // 验证用户对该库存项的访问权限
-    const accessResult = await requireOwnership(user.id, 'inventory_item', body.inventoryItemId);
+    const accessResult = await requireOwnership(
+      user.id,
+      'inventory_item',
+      body.inventoryItemId,
+    );
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || '无权访问此库存项' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -60,17 +67,19 @@ export async function POST(request: NextRequest) {
       data: item,
       message: '库存使用成功',
     });
-
   } catch (error) {
     console.error('使用库存失败:', error);
 
-    if (error instanceof Error && error.message.includes('Insufficient inventory')) {
+    if (
+      error instanceof Error &&
+      error.message.includes('Insufficient inventory')
+    ) {
       return NextResponse.json({ error: '库存不足' }, { status: 400 });
     }
 
     return NextResponse.json(
       { error: '使用库存失败', details: error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -94,18 +103,22 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证用户对该库存项的访问权限
-    const accessResult = await requireOwnership(user.id, 'inventory_item', inventoryItemId);
+    const accessResult = await requireOwnership(
+      user.id,
+      'inventory_item',
+      inventoryItemId,
+    );
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || '无权访问此库存项' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 使用 Repository 获取使用记录
     const result = await inventoryRepository.listInventoryUsages(
       inventoryItemId,
-      { limit, offset }
+      { limit, offset },
     );
 
     return NextResponse.json({
@@ -114,12 +127,11 @@ export async function GET(request: NextRequest) {
       count: result.total,
       hasMore: result.hasMore,
     });
-
   } catch (error) {
     console.error('获取使用记录失败:', error);
     return NextResponse.json(
       { error: '获取使用记录失败', details: error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

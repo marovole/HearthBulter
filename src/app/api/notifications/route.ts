@@ -80,7 +80,10 @@ const NotificationFormatters = {
     return formatted;
   },
 
-  validateNotificationContent(title: string, content: string): {
+  validateNotificationContent(
+    title: string,
+    content: string,
+  ): {
     isValid: boolean;
     errors: string[];
   } {
@@ -122,7 +125,7 @@ export async function GET(request: NextRequest) {
     if (!memberId) {
       return NextResponse.json(
         { error: 'Member ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -137,11 +140,11 @@ export async function GET(request: NextRequest) {
       {
         limit,
         offset,
-      }
+      },
     );
 
     // 格式化通知列表
-    const formattedNotifications = result.items.map(notification => ({
+    const formattedNotifications = result.items.map((notification) => ({
       id: notification.id,
       type: notification.type,
       title: notification.title,
@@ -159,8 +162,12 @@ export async function GET(request: NextRequest) {
       formattedTime: NotificationFormatters.formatTime(notification.createdAt),
       typeIcon: NotificationFormatters.getTypeIcon(notification.type),
       typeName: NotificationFormatters.getTypeName(notification.type),
-      priorityColor: NotificationFormatters.getPriorityColor(notification.priority),
-      formattedContent: NotificationFormatters.formatContent(notification.content),
+      priorityColor: NotificationFormatters.getPriorityColor(
+        notification.priority,
+      ),
+      formattedContent: NotificationFormatters.formatContent(
+        notification.content,
+      ),
     }));
 
     return NextResponse.json({
@@ -175,7 +182,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching notifications:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -208,7 +215,7 @@ export async function POST(request: NextRequest) {
     if (!memberId || !type) {
       return NextResponse.json(
         { error: 'Member ID and type are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -229,7 +236,7 @@ export async function POST(request: NextRequest) {
     if (!validTypes.includes(type)) {
       return NextResponse.json(
         { error: 'Invalid notification type' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -237,7 +244,7 @@ export async function POST(request: NextRequest) {
     if (channels && !Array.isArray(channels)) {
       return NextResponse.json(
         { error: 'Channels must be an array' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -245,12 +252,12 @@ export async function POST(request: NextRequest) {
     if (title || content) {
       const validation = NotificationFormatters.validateNotificationContent(
         title || '',
-        content || ''
+        content || '',
       );
       if (!validation.isValid) {
         return NextResponse.json(
           { error: 'Invalid content', details: validation.errors },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -271,7 +278,8 @@ export async function POST(request: NextRequest) {
     };
 
     // 创建通知
-    const notification = await notificationRepository.createNotification(notificationPayload);
+    const notification =
+      await notificationRepository.createNotification(notificationPayload);
 
     return NextResponse.json({
       success: true,
@@ -297,7 +305,7 @@ export async function POST(request: NextRequest) {
     console.error('Error creating notification:', error);
     return NextResponse.json(
       { error: 'Failed to create notification' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

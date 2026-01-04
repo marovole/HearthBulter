@@ -75,3 +75,29 @@ UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
 # [[r2_buckets]]
 # binding = "ASSETS"
 # bucket_name = "hearthbutler-assets"
+
+# ============================================
+# Health Butler vNext - Cron Triggers 配置
+# ============================================
+# 每日任务生成: 每天 08:00 UTC (北京时间 16:00)
+# 每日复盘生成: 每天 20:00 UTC (北京时间次日 04:00)
+#
+# 注意: Cloudflare Pages Functions 的 Cron Triggers 配置
+# 需要在 Cloudflare Dashboard 中手动设置，或在部署时通过 wrangler.toml 传递
+#
+# Cron 表达式格式: 分 时 日 月 周
+# 示例:
+# - "0 8 * * *" = 每天 08:00
+# - "0 20 * * *" = 每天 20:00
+# - "0 */6 * * *" = 每 6 小时
+#
+# 设置方式:
+# 1. Cloudflare Dashboard: Pages > Settings > Functions > Cron Triggers
+# 2. 添加以下两条规则:
+#    - cron/generate-tasks: "0 8 * * *"
+#    - cron/generate-daily-reviews: "0 20 * * *"
+#
+# 手动测试 (开发环境):
+# curl -X GET "https://your-domain/api/cron/generate-tasks?secret=YOUR_CRON_SECRET"
+# curl -X GET "https://your-domain/api/cron/generate-daily-reviews?secret=YOUR_CRON_SECRET"
+# ============================================

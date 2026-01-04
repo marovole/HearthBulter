@@ -13,7 +13,7 @@ const createMealLogSchema = z.object({
     z.object({
       foodId: z.string(),
       amount: z.number().positive(),
-    })
+    }),
   ),
   notes: z.string().optional(),
 });
@@ -29,10 +29,7 @@ export async function POST(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -49,14 +46,11 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '无效的请求数据', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: '创建餐饮记录失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '创建餐饮记录失败' }, { status: 500 });
   }
 }
 
@@ -71,10 +65,7 @@ export async function GET(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -86,10 +77,7 @@ export async function GET(req: NextRequest) {
     const offset = searchParams.get('offset');
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少memberId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少memberId参数' }, { status: 400 });
     }
 
     if (period === 'today') {
@@ -109,7 +97,7 @@ export async function GET(req: NextRequest) {
       const result = await mealTrackingRepository.getMealLogHistory(
         memberId,
         Object.keys(filter).length > 0 ? filter : undefined,
-        Object.keys(pagination).length > 0 ? pagination : undefined
+        Object.keys(pagination).length > 0 ? pagination : undefined,
       );
 
       return NextResponse.json(result);
@@ -117,10 +105,6 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error fetching meal logs:', error);
 
-    return NextResponse.json(
-      { error: '获取餐饮记录失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取餐饮记录失败' }, { status: 500 });
   }
 }
-

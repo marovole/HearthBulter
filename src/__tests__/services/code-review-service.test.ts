@@ -1,4 +1,8 @@
-import { codeReviewService, CodeReviewInput, CodeReviewResult } from '@/lib/services/code-review-service';
+import {
+  codeReviewService,
+  CodeReviewInput,
+  CodeReviewResult,
+} from '@/lib/services/code-review-service';
 
 describe('CodeReviewService', () => {
   describe('reviewCode', () => {
@@ -21,7 +25,8 @@ describe('CodeReviewService', () => {
         fileType: 'typescript',
       };
 
-      const result: CodeReviewResult = await codeReviewService.reviewCode(input);
+      const result: CodeReviewResult =
+        await codeReviewService.reviewCode(input);
 
       expect(result).toBeDefined();
       expect(result.approved).toBeDefined();
@@ -41,7 +46,8 @@ describe('CodeReviewService', () => {
       const result = await codeReviewService.reviewCode(input);
 
       const anyTypeIssues = result.issues.filter(
-        issue => issue.type === 'typescript' && issue.description.includes('any')
+        (issue) =>
+          issue.type === 'typescript' && issue.description.includes('any'),
       );
 
       expect(anyTypeIssues.length).toBeGreaterThan(0);
@@ -57,7 +63,8 @@ describe('CodeReviewService', () => {
       const result = await codeReviewService.reviewCode(input);
 
       const consoleIssues = result.issues.filter(
-        issue => issue.type === 'style' && issue.description.includes('console.log')
+        (issue) =>
+          issue.type === 'style' && issue.description.includes('console.log'),
       );
 
       expect(consoleIssues.length).toBeGreaterThan(0);
@@ -156,8 +163,16 @@ describe('CodeReviewService', () => {
           approved: false,
           riskLevel: 'high',
           issues: [
-            { type: 'typescript', severity: 'high', description: 'any type usage' },
-            { type: 'style', severity: 'low', description: 'console.log found' },
+            {
+              type: 'typescript',
+              severity: 'high',
+              description: 'any type usage',
+            },
+            {
+              type: 'style',
+              severity: 'low',
+              description: 'console.log found',
+            },
           ],
           warnings: ['TypeScript issues found'],
           suggestions: ['Use proper types'],
@@ -241,17 +256,19 @@ describe('CodeReviewService', () => {
       codeReviewService.addRule(customRule);
 
       // Initially enabled
-      let rule = codeReviewService.getRules().find(r => r.id === customRule.id);
+      let rule = codeReviewService
+        .getRules()
+        .find((r) => r.id === customRule.id);
       expect(rule?.enabled).toBe(true);
 
       // Toggle to disabled
       codeReviewService.toggleRule(customRule.id, false);
-      rule = codeReviewService.getRules().find(r => r.id === customRule.id);
+      rule = codeReviewService.getRules().find((r) => r.id === customRule.id);
       expect(rule?.enabled).toBe(false);
 
       // Toggle back to enabled
       codeReviewService.toggleRule(customRule.id, true);
-      rule = codeReviewService.getRules().find(r => r.id === customRule.id);
+      rule = codeReviewService.getRules().find((r) => r.id === customRule.id);
       expect(rule?.enabled).toBe(true);
     });
   });

@@ -30,7 +30,10 @@ export class PrismaBudgetRepository implements BudgetRepository {
     throw new Error('PrismaBudgetRepository.createBudget not implemented');
   }
 
-  async updateBudget(_id: string, _payload: BudgetUpdateDTO): Promise<BudgetDTO> {
+  async updateBudget(
+    _id: string,
+    _payload: BudgetUpdateDTO,
+  ): Promise<BudgetDTO> {
     throw new Error('PrismaBudgetRepository.updateBudget not implemented');
   }
 
@@ -41,7 +44,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
   async listBudgets(
     _memberId: string,
     _filter?: { status?: BudgetDTO['status'] },
-    _pagination?: PaginationInput
+    _pagination?: PaginationInput,
   ): Promise<PaginatedResult<BudgetDTO>> {
     throw new Error('PrismaBudgetRepository.listBudgets not implemented');
   }
@@ -52,7 +55,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
 
   async listSpendings(
     _filter: SpendingFilterDTO,
-    _pagination?: PaginationInput
+    _pagination?: PaginationInput,
   ): Promise<PaginatedResult<SpendingDTO>> {
     throw new Error('PrismaBudgetRepository.listSpendings not implemented');
   }
@@ -62,7 +65,9 @@ export class PrismaBudgetRepository implements BudgetRepository {
     remainingAmount: number;
     usagePercentage: number;
   }> {
-    throw new Error('PrismaBudgetRepository.aggregateBudgetUsage not implemented');
+    throw new Error(
+      'PrismaBudgetRepository.aggregateBudgetUsage not implemented',
+    );
   }
 
   async createBudgetAlert(_alert: BudgetAlertDTO): Promise<void> {

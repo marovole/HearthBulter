@@ -19,25 +19,22 @@ export function PageHeader({
   backButton,
 }: PageHeaderProps) {
   return (
-    <div className={cn('flex items-center justify-between space-y-2 pb-4', className)}>
-      <div className="space-y-1">
-        <div className="flex items-center space-x-2">
+    <div
+      className={cn(
+        'flex items-center justify-between space-y-2 pb-4',
+        className,
+      )}
+    >
+      <div className='space-y-1'>
+        <div className='flex items-center space-x-2'>
           {backButton}
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {title}
-          </h1>
+          <h1 className='text-2xl font-semibold tracking-tight'>{title}</h1>
         </div>
         {subtitle && (
-          <p className="text-sm text-muted-foreground">
-            {subtitle}
-          </p>
+          <p className='text-sm text-muted-foreground'>{subtitle}</p>
         )}
       </div>
-      {actions && (
-        <div className="flex items-center space-x-2">
-          {actions}
-        </div>
-      )}
+      {actions && <div className='flex items-center space-x-2'>{actions}</div>}
     </div>
   );
 }

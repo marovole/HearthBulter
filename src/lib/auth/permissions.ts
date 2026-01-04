@@ -31,7 +31,7 @@ export async function verifyFamilyAccess(familyId: string, userId: string) {
 
     const isMember = await familyRepository.isUserFamilyMember(
       familyId,
-      userId
+      userId,
     );
 
     return isMember ? family : null;
@@ -65,10 +65,7 @@ export async function verifyFamilyAdmin(familyId: string, userId: string) {
     }
 
     // 检查用户角色是否是 ADMIN
-    const role = await familyRepository.getUserFamilyRole(
-      familyId,
-      userId
-    );
+    const role = await familyRepository.getUserFamilyRole(familyId, userId);
 
     return role === 'ADMIN' ? family : null;
   } catch (error) {

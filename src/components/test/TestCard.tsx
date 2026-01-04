@@ -23,12 +23,16 @@ export const TestCard: React.FC<TestCardProps> = ({
     <div
       className={`test-card test-card--${variant}`}
       onClick={disabled ? undefined : onClick}
-      onKeyDown={disabled ? undefined : (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.();
-        }
-      }}
+      onKeyDown={
+        disabled
+          ? undefined
+          : (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+      }
       tabIndex={disabled ? -1 : 0}
       style={{
         opacity: disabled ? 0.5 : 1,

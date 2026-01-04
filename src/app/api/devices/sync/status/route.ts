@@ -16,10 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -47,7 +44,8 @@ export async function GET(request: NextRequest) {
     // 获取用户相关的设备统计
     const { data: deviceStats, error } = await supabase
       .from('device_connections')
-      .select(`
+      .select(
+        `
         id,
         deviceName,
         platform,
@@ -60,16 +58,14 @@ export async function GET(request: NextRequest) {
           id,
           name
         )
-      `)
+      `,
+      )
       .in('memberId', memberIds)
       .order('deviceName', { ascending: true });
 
     if (error) {
       console.error('查询设备统计失败:', error);
-      return NextResponse.json(
-        { error: '查询设备统计失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询设备统计失败' }, { status: 500 });
     }
 
     // 获取全局同步统计
@@ -86,12 +82,8 @@ export async function GET(request: NextRequest) {
         serviceStatus,
       },
     });
-
   } catch (error) {
     console.error('获取同步状态失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

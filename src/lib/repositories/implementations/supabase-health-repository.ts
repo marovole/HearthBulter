@@ -25,7 +25,7 @@ export class SupabaseHealthRepository implements HealthRepository {
     options?: {
       healthDataLimit?: number;
       medicalReportsLimit?: number;
-    }
+    },
   ): Promise<MemberHealthContext | null> {
     const healthDataLimit = options?.healthDataLimit ?? 10;
     const medicalReportsLimit = options?.medicalReportsLimit ?? 5;
@@ -43,7 +43,9 @@ export class SupabaseHealthRepository implements HealthRepository {
         // 1. 获取成员基本信息
         this.supabase
           .from('family_members')
-          .select('id, familyId, userId, name, birthDate, gender, height, weight, bmi')
+          .select(
+            'id, familyId, userId, name, birthDate, gender, height, weight, bmi',
+          )
           .eq('id', memberId)
           .is('deletedAt', null)
           .single(),
@@ -100,7 +102,9 @@ export class SupabaseHealthRepository implements HealthRepository {
         const reportIds = medicalReportsResult.data.map((r) => r.id);
         const { data: indicators } = await this.supabase
           .from('medical_report_indicators')
-          .select('id, reportId, indicatorName, value, unit, referenceRange, status')
+          .select(
+            'id, reportId, indicatorName, value, unit, referenceRange, status',
+          )
           .in('reportId', reportIds);
 
         allIndicators = indicators || [];
@@ -135,12 +139,12 @@ export class SupabaseHealthRepository implements HealthRepository {
         })),
         dietaryPreference: dietaryPreferenceResult.data
           ? {
-            dietType: dietaryPreferenceResult.data.dietType,
-            isVegetarian: dietaryPreferenceResult.data.isVegetarian ?? false,
-            isVegan: dietaryPreferenceResult.data.isVegan ?? false,
-            restrictions: dietaryPreferenceResult.data.restrictions,
-            preferences: dietaryPreferenceResult.data.preferences,
-          }
+              dietType: dietaryPreferenceResult.data.dietType,
+              isVegetarian: dietaryPreferenceResult.data.isVegetarian ?? false,
+              isVegan: dietaryPreferenceResult.data.isVegan ?? false,
+              restrictions: dietaryPreferenceResult.data.restrictions,
+              preferences: dietaryPreferenceResult.data.preferences,
+            }
           : null,
         healthData: (healthDataResult.data || []).map((h) => ({
           id: h.id,
@@ -179,7 +183,7 @@ export class SupabaseHealthRepository implements HealthRepository {
    */
   async getMemberHealthHistory(
     memberId: string,
-    limit = 10
+    limit = 10,
   ): Promise<AIAdviceHistoryRecord[]> {
     try {
       const { data, error } = await this.supabase
@@ -276,24 +280,22 @@ export class SupabaseHealthRepository implements HealthRepository {
       // 如果压缩了消息，记录日志（使用 warn 级别避免日志噪音）
       if (data.messages.length > MAX_MESSAGES) {
         console.warn(
-          `[HealthRepository] Compressed conversation ${data.id}: ${data.messages.length} → ${compressedMessages.length} messages`
+          `[HealthRepository] Compressed conversation ${data.id}: ${data.messages.length} → ${compressedMessages.length} messages`,
         );
       }
 
-      const { error } = await this.supabase
-        .from('ai_conversations')
-        .upsert(
-          {
-            id: data.id,
-            memberId: data.memberId,
-            messages: compressedMessages,
-            status: data.status,
-            tokens: data.tokens ?? 0,
-            updatedAt: data.updatedAt.toISOString(),
-            lastMessageAt: data.lastMessageAt.toISOString(),
-          },
-          { onConflict: 'id' }
-        );
+      const { error } = await this.supabase.from('ai_conversations').upsert(
+        {
+          id: data.id,
+          memberId: data.memberId,
+          messages: compressedMessages,
+          status: data.status,
+          tokens: data.tokens ?? 0,
+          updatedAt: data.updatedAt.toISOString(),
+          lastMessageAt: data.lastMessageAt.toISOString(),
+        },
+        { onConflict: 'id' },
+      );
 
       if (error) {
         console.error('Failed to save AI conversation:', error);

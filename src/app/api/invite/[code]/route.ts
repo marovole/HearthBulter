@@ -13,7 +13,7 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 export const dynamic = 'force-dynamic';
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
+  { params }: { params: Promise<{ code: string }> },
 ) {
   try {
     const { code } = await params;
@@ -22,22 +22,21 @@ export async function GET(
     // 查找邀请记录
     const { data: invitation, error: inviteError } = await supabase
       .from('family_invitations')
-      .select(`
+      .select(
+        `
         *,
         family:families!inner(
           id,
           name,
           description
         )
-      `)
+      `,
+      )
       .eq('inviteCode', code)
       .single();
 
     if (inviteError || !invitation) {
-      return NextResponse.json(
-        { error: '邀请码无效' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '邀请码无效' }, { status: 404 });
     }
 
     // 检查邀请是否过期
@@ -48,25 +47,16 @@ export async function GET(
         .update({ status: 'EXPIRED', updatedAt: new Date().toISOString() })
         .eq('id', invitation.id);
 
-      return NextResponse.json(
-        { error: '邀请已过期' },
-        { status: 410 }
-      );
+      return NextResponse.json({ error: '邀请已过期' }, { status: 410 });
     }
 
     // 检查邀请状态
     if (invitation.status === 'ACCEPTED') {
-      return NextResponse.json(
-        { error: '该邀请已被接受' },
-        { status: 410 }
-      );
+      return NextResponse.json({ error: '该邀请已被接受' }, { status: 410 });
     }
 
     if (invitation.status === 'REJECTED') {
-      return NextResponse.json(
-        { error: '该邀请已被拒绝' },
-        { status: 410 }
-      );
+      return NextResponse.json({ error: '该邀请已被拒绝' }, { status: 410 });
     }
 
     // 获取家庭成员数量
@@ -91,14 +81,11 @@ export async function GET(
           memberCount: memberCount || 0,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('获取邀请信息失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -110,7 +97,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
+  { params }: { params: Promise<{ code: string }> },
 ) {
   try {
     const { code } = await params;
@@ -119,18 +106,19 @@ export async function POST(
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: '请先登录后再接受邀请' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     const body = await request.json();
     const { memberName, gender, birthDate } = body;
 
-    if (!memberName || typeof memberName !== 'string' || memberName.trim() === '') {
-      return NextResponse.json(
-        { error: '请提供成员名称' },
-        { status: 400 }
-      );
+    if (
+      !memberName ||
+      typeof memberName !== 'string' ||
+      memberName.trim() === ''
+    ) {
+      return NextResponse.json({ error: '请提供成员名称' }, { status: 400 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -143,10 +131,7 @@ export async function POST(
       .single();
 
     if (inviteError || !invitation) {
-      return NextResponse.json(
-        { error: '邀请码无效' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '邀请码无效' }, { status: 404 });
     }
 
     // 调用 RPC 函数处理邀请接受
@@ -156,20 +141,20 @@ export async function POST(
     // - 用户是否已是成员
     // - 用户是否在其他家庭
     // 并且原子地创建成员和更新邀请状态
-    const { data: result, error: rpcError } = await supabase.rpc('accept_family_invite', {
-      p_invitation_id: invitation.id,
-      p_user_id: session.user.id,
-      p_member_name: memberName.trim(),
-      p_gender: gender || 'MALE',
-      p_birth_date: birthDate || '2000-01-01',
-    });
+    const { data: result, error: rpcError } = await supabase.rpc(
+      'accept_family_invite',
+      {
+        p_invitation_id: invitation.id,
+        p_user_id: session.user.id,
+        p_member_name: memberName.trim(),
+        p_gender: gender || 'MALE',
+        p_birth_date: birthDate || '2000-01-01',
+      },
+    );
 
     if (rpcError) {
       console.error('RPC 调用失败:', rpcError);
-      return NextResponse.json(
-        { error: '加入家庭失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '加入家庭失败' }, { status: 500 });
     }
 
     // 检查 RPC 返回的成功标志
@@ -213,13 +198,10 @@ export async function POST(
         family: result.data.family,
         member: result.data.member,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error('加入家庭失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { supabaseAdapter } from "@/lib/db/supabase-adapter";
-import { auth } from "@/lib/auth";
-import { shareAchievement } from "@/lib/services/social/achievement-system";
-import { shareContentGenerator } from "@/lib/services/social/share-generator";
-import { generateSecureShareToken } from "@/lib/security/token-generator";
-import { ShareContentType, SocialPlatform } from "@/types/social-sharing";
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { supabaseAdapter } from '@/lib/db/supabase-adapter';
+import { auth } from '@/lib/auth';
+import { shareAchievement } from '@/lib/services/social/achievement-system';
+import { shareContentGenerator } from '@/lib/services/social/share-generator';
+import { generateSecureShareToken } from '@/lib/security/token-generator';
+import { ShareContentType, SocialPlatform } from '@/types/social-sharing';
 import {
   validateBody,
   validationErrorResponse,
-} from "@/lib/validation/api-validator";
+} from '@/lib/validation/api-validator';
 
 /**
  * POST /api/social/achievements/[id]/share
@@ -17,7 +17,7 @@ import {
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -25,7 +25,7 @@ export async function POST(
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json({ error: "未授权" }, { status: 401 });
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
     const { id: achievementId } = await params;
@@ -34,15 +34,15 @@ export async function POST(
       return validationErrorResponse(validation.error);
     }
 
-    const { customMessage, privacyLevel = "PUBLIC" } = validation.data;
+    const { customMessage, privacyLevel = 'PUBLIC' } = validation.data;
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.NEXTAUTH_URL ||
-      "http://localhost:3000";
+      'http://localhost:3000';
 
     const memberId = session.user?.id;
     if (!memberId) {
-      return NextResponse.json({ error: "用户ID不存在" }, { status: 400 });
+      return NextResponse.json({ error: '用户ID不存在' }, { status: 400 });
     }
 
     // 验证成就是否存在且属于该用户
@@ -56,7 +56,7 @@ export async function POST(
 
     if (!achievement) {
       return NextResponse.json(
-        { error: "成就不存在或未解锁" },
+        { error: '成就不存在或未解锁' },
         { status: 404 },
       );
     }
@@ -65,12 +65,12 @@ export async function POST(
     const provisional = await supabaseAdapter.sharedContent.create({
       data: {
         memberId,
-        contentType: "ACHIEVEMENT",
-        title: "pending",
-        description: customMessage || "",
+        contentType: 'ACHIEVEMENT',
+        title: 'pending',
+        description: customMessage || '',
         imageUrl: null,
-        shareToken: "pending",
-        shareUrl: "pending",
+        shareToken: 'pending',
+        shareUrl: 'pending',
         privacyLevel,
         metadata: null,
         sharedPlatforms: JSON.stringify([SocialPlatform.COPY_LINK]),
@@ -79,10 +79,10 @@ export async function POST(
 
     const shareToken = await generateSecureShareToken(
       provisional.id,
-      "social_share",
+      'social_share',
       session.user.id,
       7,
-      ["read"],
+      ['read'],
     );
 
     const shareUrl = `${baseUrl}/share/${shareToken}`;
@@ -92,7 +92,7 @@ export async function POST(
         memberId,
         type: ShareContentType.ACHIEVEMENT_UNLOCKED,
         title: achievement.title,
-        description: customMessage || achievement.description || "",
+        description: customMessage || achievement.description || '',
         imageUrl: achievement.imageUrl || undefined,
         targetId: achievementId,
         privacyLevel: privacyLevel as any,
@@ -139,11 +139,11 @@ export async function POST(
           unlockedAt: achievement.unlockedAt,
         },
       },
-      message: "成就分享成功",
+      message: '成就分享成功',
     });
   } catch (error) {
-    console.error("分享成就失败:", error);
-    return NextResponse.json({ error: "分享成就失败" }, { status: 500 });
+    console.error('分享成就失败:', error);
+    return NextResponse.json({ error: '分享成就失败' }, { status: 500 });
   }
 }
 

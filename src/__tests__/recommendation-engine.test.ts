@@ -99,7 +99,9 @@ describe('RecommendationEngine', () => {
         servings: 2,
       };
 
-      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(null);
+      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(
+        null,
+      );
       (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue([]);
 
       const result = await engine.getRecommendations(context, 5);
@@ -138,7 +140,9 @@ describe('RecommendationEngine', () => {
 
       (mockPrisma.recipe.findUnique as jest.Mock).mockResolvedValue(null);
 
-      await expect(engine.getSimilarRecipes(recipeId, 5)).rejects.toThrow('Recipe not found');
+      await expect(engine.getSimilarRecipes(recipeId, 5)).rejects.toThrow(
+        'Recipe not found',
+      );
     });
   });
 
@@ -204,7 +208,9 @@ describe('RecommendationEngine', () => {
       };
       const excludeRecipeIds = ['recipe-1', 'recipe-2'];
 
-      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(null);
+      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(
+        null,
+      );
       (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue([
         {
           id: 'recipe-3',
@@ -215,13 +221,17 @@ describe('RecommendationEngine', () => {
         },
       ]);
 
-      const result = await engine.refreshRecommendations(context, excludeRecipeIds, 5);
+      const result = await engine.refreshRecommendations(
+        context,
+        excludeRecipeIds,
+        5,
+      );
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
-      
+
       // Ensure excluded recipes are not in results
-      const resultIds = result.map(r => r.recipeId);
+      const resultIds = result.map((r) => r.recipeId);
       expect(resultIds).not.toContain('recipe-1');
       expect(resultIds).not.toContain('recipe-2');
     });
@@ -264,7 +274,7 @@ describe('RecommendationEngine', () => {
             learnedPreferences: expect.any(Object),
             lastAnalyzedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
   });
@@ -277,7 +287,7 @@ describe('RecommendationEngine', () => {
       };
 
       (mockPrisma.userPreference.findUnique as jest.Mock).mockRejectedValue(
-        new Error('Database connection failed')
+        new Error('Database connection failed'),
       );
 
       await expect(engine.getRecommendations(context, 5)).rejects.toThrow();
@@ -290,7 +300,9 @@ describe('RecommendationEngine', () => {
       };
 
       // Should not crash, but handle gracefully
-      await expect(engine.getRecommendations(invalidContext, 5)).resolves.toBeDefined();
+      await expect(
+        engine.getRecommendations(invalidContext, 5),
+      ).resolves.toBeDefined();
     });
   });
 
@@ -310,8 +322,12 @@ describe('RecommendationEngine', () => {
         deletedAt: null,
       }));
 
-      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(null);
-      (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue(largeRecipeSet);
+      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(
+        null,
+      );
+      (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue(
+        largeRecipeSet,
+      );
 
       const startTime = Date.now();
       const result = await engine.getRecommendations(context, 50);

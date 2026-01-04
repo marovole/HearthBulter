@@ -22,30 +22,46 @@ import type {
  * 占位符实现，待后续完成 Prisma 数据访问层
  */
 export class PrismaDeviceRepository implements DeviceRepository {
-  async createDeviceConnection(_input: DeviceConnectionCreateInputDTO): Promise<DeviceConnectionDTO> {
-    throw new Error('PrismaDeviceRepository.createDeviceConnection not implemented');
+  async createDeviceConnection(
+    _input: DeviceConnectionCreateInputDTO,
+  ): Promise<DeviceConnectionDTO> {
+    throw new Error(
+      'PrismaDeviceRepository.createDeviceConnection not implemented',
+    );
   }
 
-  async getDeviceConnectionById(_id: string): Promise<DeviceConnectionDTO | null> {
-    throw new Error('PrismaDeviceRepository.getDeviceConnectionById not implemented');
+  async getDeviceConnectionById(
+    _id: string,
+  ): Promise<DeviceConnectionDTO | null> {
+    throw new Error(
+      'PrismaDeviceRepository.getDeviceConnectionById not implemented',
+    );
   }
 
-  async getDeviceConnectionByDeviceId(_deviceId: string): Promise<DeviceConnectionDTO | null> {
-    throw new Error('PrismaDeviceRepository.getDeviceConnectionByDeviceId not implemented');
+  async getDeviceConnectionByDeviceId(
+    _deviceId: string,
+  ): Promise<DeviceConnectionDTO | null> {
+    throw new Error(
+      'PrismaDeviceRepository.getDeviceConnectionByDeviceId not implemented',
+    );
   }
 
   async listDeviceConnections(
     _filter?: DeviceConnectionFilterDTO,
-    _pagination?: PaginationInput
+    _pagination?: PaginationInput,
   ): Promise<PaginatedResult<DeviceConnectionDTO>> {
-    throw new Error('PrismaDeviceRepository.listDeviceConnections not implemented');
+    throw new Error(
+      'PrismaDeviceRepository.listDeviceConnections not implemented',
+    );
   }
 
   async updateDeviceConnection(
     _id: string,
-    _input: DeviceConnectionUpdateInputDTO
+    _input: DeviceConnectionUpdateInputDTO,
   ): Promise<DeviceConnectionDTO> {
-    throw new Error('PrismaDeviceRepository.updateDeviceConnection not implemented');
+    throw new Error(
+      'PrismaDeviceRepository.updateDeviceConnection not implemented',
+    );
   }
 
   async disconnectDevice(_id: string): Promise<void> {
@@ -56,20 +72,26 @@ export class PrismaDeviceRepository implements DeviceRepository {
     _id: string,
     _syncStatus: 'PENDING' | 'SYNCING' | 'SUCCESS' | 'FAILED' | 'DISABLED',
     _lastSyncAt?: Date,
-    _lastError?: string | null
+    _lastError?: string | null,
   ): Promise<void> {
     throw new Error('PrismaDeviceRepository.updateSyncStatus not implemented');
   }
 
   async incrementRetryCount(_id: string): Promise<void> {
-    throw new Error('PrismaDeviceRepository.incrementRetryCount not implemented');
+    throw new Error(
+      'PrismaDeviceRepository.incrementRetryCount not implemented',
+    );
   }
 
   async resetErrorStatus(_id: string): Promise<void> {
     throw new Error('PrismaDeviceRepository.resetErrorStatus not implemented');
   }
 
-  async getActiveDevicesByMember(_memberId: string): Promise<DeviceConnectionDTO[]> {
-    throw new Error('PrismaDeviceRepository.getActiveDevicesByMember not implemented');
+  async getActiveDevicesByMember(
+    _memberId: string,
+  ): Promise<DeviceConnectionDTO[]> {
+    throw new Error(
+      'PrismaDeviceRepository.getActiveDevicesByMember not implemented',
+    );
   }
 }

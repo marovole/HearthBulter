@@ -12,7 +12,7 @@ import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-sing
 export const dynamic = 'force-dynamic';
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ planId: string }> }
+  { params }: { params: Promise<{ planId: string }> },
 ) {
   try {
     const { planId } = await params;
@@ -46,28 +46,23 @@ export async function DELETE(
     }
 
     const isCreator = mealPlan.member.family.creatorId === session.user.id;
-    const isAdmin = mealPlan.member.family.members[0]?.role === 'ADMIN' || isCreator;
+    const isAdmin =
+      mealPlan.member.family.members[0]?.role === 'ADMIN' || isCreator;
     const isSelf = mealPlan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限删除该食谱计划' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 使用 Repository 软删除
     await mealPlanRepository.deleteMealPlan(planId);
 
-    return NextResponse.json(
-      { message: '食谱计划删除成功' },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: '食谱计划删除成功' }, { status: 200 });
   } catch (error) {
     console.error('删除食谱计划失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

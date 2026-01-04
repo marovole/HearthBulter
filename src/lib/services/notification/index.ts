@@ -20,11 +20,7 @@ export type {
   EmailSendResult,
 } from './email-service';
 
-export type {
-  SMSConfig,
-  SMSMessage,
-  SMSSendResult,
-} from './sms-service';
+export type { SMSConfig, SMSMessage, SMSSendResult } from './sms-service';
 
 export type {
   WeChatConfig,
@@ -32,10 +28,7 @@ export type {
   WeChatSendResult,
 } from './wechat-service';
 
-export type {
-  TemplateVariable,
-  RenderedTemplate,
-} from './template-engine';
+export type { TemplateVariable, RenderedTemplate } from './template-engine';
 
 // 通知工厂类
 import { PrismaClient } from '@prisma/client';
@@ -95,4 +88,3 @@ export const NOTIFICATION_STATUSES = {
   FAILED: 'FAILED',
   CANCELLED: 'CANCELLED',
 } as const;
-

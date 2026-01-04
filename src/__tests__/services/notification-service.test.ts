@@ -8,19 +8,25 @@ import { prisma } from '@/lib/db';
 // Mock dependencies
 jest.mock('@/lib/services/notification/email-service', () => ({
   emailService: {
-    sendEmail: jest.fn().mockResolvedValue({ success: true, messageId: 'test-email-id' }),
+    sendEmail: jest
+      .fn()
+      .mockResolvedValue({ success: true, messageId: 'test-email-id' }),
   },
 }));
 
 jest.mock('@/lib/services/notification/sms-service', () => ({
   smsService: {
-    sendSMS: jest.fn().mockResolvedValue({ success: true, messageId: 'test-sms-id' }),
+    sendSMS: jest
+      .fn()
+      .mockResolvedValue({ success: true, messageId: 'test-sms-id' }),
   },
 }));
 
 jest.mock('@/lib/services/notification/wechat-service', () => ({
   wechatService: {
-    sendMessage: jest.fn().mockResolvedValue({ success: true, messageId: 'test-wechat-id' }),
+    sendMessage: jest
+      .fn()
+      .mockResolvedValue({ success: true, messageId: 'test-wechat-id' }),
   },
 }));
 
@@ -77,7 +83,8 @@ describe('Notification Service', () => {
         channels: ['email', 'wechat'],
       };
 
-      const result = await notificationService.sendNotification(notificationData);
+      const result =
+        await notificationService.sendNotification(notificationData);
 
       expect(result.success).toBe(true);
       expect(result.notificationId).toBe('test-notification-id');
@@ -92,7 +99,8 @@ describe('Notification Service', () => {
         channels: ['email', 'sms', 'wechat'],
       };
 
-      const result = await notificationService.sendNotification(notificationData);
+      const result =
+        await notificationService.sendNotification(notificationData);
 
       expect(result.success).toBe(true);
       // SMS should be skipped due to user preferences
@@ -108,7 +116,8 @@ describe('Notification Service', () => {
         content: 'Time to log your meal!',
       };
 
-      const result = await notificationService.sendNotification(notificationData);
+      const result =
+        await notificationService.sendNotification(notificationData);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('User not found');
@@ -147,7 +156,12 @@ describe('Notification Service', () => {
         .mockResolvedValueOnce({
           id: 'user-1',
           email: 'user1@example.com',
-          notificationPreferences: { email: true, sms: false, wechat: false, push: true },
+          notificationPreferences: {
+            email: true,
+            sms: false,
+            wechat: false,
+            push: true,
+          },
         })
         .mockResolvedValueOnce(null);
 
@@ -188,7 +202,8 @@ describe('Notification Service', () => {
         channels: ['push'],
       };
 
-      const result = await notificationService.scheduleNotification(scheduleData);
+      const result =
+        await notificationService.scheduleNotification(scheduleData);
 
       expect(result.success).toBe(true);
       expect(result.scheduleId).toBeDefined();
@@ -206,10 +221,13 @@ describe('Notification Service', () => {
         channels: ['push'],
       };
 
-      const result = await notificationService.scheduleNotification(scheduleData);
+      const result =
+        await notificationService.scheduleNotification(scheduleData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Cannot schedule notification in the past');
+      expect(result.error).toContain(
+        'Cannot schedule notification in the past',
+      );
     });
   });
 
@@ -228,7 +246,8 @@ describe('Notification Service', () => {
         },
       ]);
 
-      const result = await notificationService.getUserNotifications('test-user-id');
+      const result =
+        await notificationService.getUserNotifications('test-user-id');
 
       expect(result.success).toBe(true);
       expect(result.notifications).toHaveLength(1);
@@ -251,7 +270,7 @@ describe('Notification Service', () => {
 
       const result = await notificationService.getUserNotifications(
         'test-user-id',
-        { type: 'meal_reminder' }
+        { type: 'meal_reminder' },
       );
 
       expect(result.success).toBe(true);
@@ -268,7 +287,8 @@ describe('Notification Service', () => {
         readAt: new Date(),
       });
 
-      const result = await notificationService.markNotificationAsRead('notif-1');
+      const result =
+        await notificationService.markNotificationAsRead('notif-1');
 
       expect(result.success).toBe(true);
       expect(prisma.notification.update).toHaveBeenCalledWith({
@@ -289,18 +309,24 @@ describe('Notification Service', () => {
       });
       prisma.notification.delete.mockResolvedValue({});
 
-      const result = await notificationService.deleteNotification('notif-1', 'test-user-id');
+      const result = await notificationService.deleteNotification(
+        'notif-1',
+        'test-user-id',
+      );
 
       expect(result.success).toBe(true);
     });
 
-    it('should prevent deleting other user\'s notification', async () => {
+    it("should prevent deleting other user's notification", async () => {
       prisma.notification.findUnique.mockResolvedValue({
         id: 'notif-1',
         userId: 'different-user-id',
       });
 
-      const result = await notificationService.deleteNotification('notif-1', 'test-user-id');
+      const result = await notificationService.deleteNotification(
+        'notif-1',
+        'test-user-id',
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Unauthorized');

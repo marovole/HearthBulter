@@ -1,7 +1,7 @@
 /**
  * Weekly Report Service
  * 周报生成服务
- * 
+ *
  * 提供营养周报、体重变化分析和健康建议生成功能
  */
 
@@ -10,15 +10,15 @@ import { analyticsService } from '@/lib/services/analytics-service';
 import { startOfWeek, endOfWeek, subWeeks, format } from 'date-fns';
 
 export interface WeeklyReport {
-  weekStartDate: Date
-  weekEndDate: Date
-  nutritionAdherenceRate: number
-  weightChange: number
-  weightChangePercent: number
-  insights: string[]
-  recommendations: string[]
-  achievements: string[]
-  nextWeekGoals: string[]
+  weekStartDate: Date;
+  weekEndDate: Date;
+  nutritionAdherenceRate: number;
+  weightChange: number;
+  weightChangePercent: number;
+  insights: string[];
+  recommendations: string[];
+  achievements: string[];
+  nextWeekGoals: string[];
 }
 
 export class WeeklyReportService {
@@ -29,22 +29,26 @@ export class WeeklyReportService {
    */
   async generateWeeklyReport(
     memberId: string,
-    weekOffset: number = 0
+    weekOffset: number = 0,
   ): Promise<WeeklyReport> {
     const now = new Date();
-    const weekStartDate = startOfWeek(subWeeks(now, weekOffset), { weekStartsOn: 1 });
-    const weekEndDate = endOfWeek(subWeeks(now, weekOffset), { weekStartsOn: 1 });
+    const weekStartDate = startOfWeek(subWeeks(now, weekOffset), {
+      weekStartsOn: 1,
+    });
+    const weekEndDate = endOfWeek(subWeeks(now, weekOffset), {
+      weekStartsOn: 1,
+    });
 
     // 获取本周营养汇总
     const nutritionSummary = await analyticsService.summarizeNutrition(
       memberId,
-      'weekly'
+      'weekly',
     );
 
     // 获取体重趋势分析
     const weightTrend = await analyticsService.analyzeWeightTrend(
       memberId,
-      7 // 本周7天
+      7, // 本周7天
     );
 
     // 生成洞察
@@ -53,28 +57,28 @@ export class WeeklyReportService {
       nutritionSummary,
       weightTrend,
       weekStartDate,
-      weekEndDate
+      weekEndDate,
     );
 
     // 生成建议
     const recommendations = await generateRecommendations(
       nutritionSummary,
       weightTrend,
-      insights
+      insights,
     );
 
     // 生成成就
     const achievements = await generateAchievements(
       memberId,
       nutritionSummary,
-      weightTrend
+      weightTrend,
     );
 
     // 生成下周目标
     const nextWeekGoals = await generateNextWeekGoals(
       nutritionSummary,
       weightTrend,
-      recommendations
+      recommendations,
     );
 
     return {
@@ -118,7 +122,7 @@ async function generateInsights(
   nutritionSummary: any,
   weightTrend: any,
   weekStartDate: Date,
-  weekEndDate: Date
+  weekEndDate: Date,
 ): Promise<string[]> {
   const insights: string[] = [];
 
@@ -133,21 +137,28 @@ async function generateInsights(
 
   // 体重变化洞察
   if (weightTrend.change < -0.5) {
-    insights.push(`本周体重下降${Math.abs(weightTrend.change).toFixed(1)}kg，减重效果显著。`);
+    insights.push(
+      `本周体重下降${Math.abs(weightTrend.change).toFixed(1)}kg，减重效果显著。`,
+    );
   } else if (weightTrend.change > 0.5) {
-    insights.push(`本周体重增加${weightTrend.change.toFixed(1)}kg，需要关注饮食和运动。`);
+    insights.push(
+      `本周体重增加${weightTrend.change.toFixed(1)}kg，需要关注饮食和运动。`,
+    );
   } else {
     insights.push('本周体重保持稳定，继续保持良好的生活习惯。');
   }
 
   // 异常检测洞察
   if (weightTrend.anomalies.length > 0) {
-    insights.push(`检测到${weightTrend.anomalies.length}个体重异常波动，建议记录相关原因。`);
+    insights.push(
+      `检测到${weightTrend.anomalies.length}个体重异常波动，建议记录相关原因。`,
+    );
   }
 
   // 蛋白质摄入洞察
   if (nutritionSummary.actualProtein && nutritionSummary.targetProtein) {
-    const proteinRate = (nutritionSummary.actualProtein / nutritionSummary.targetProtein) * 100;
+    const proteinRate =
+      (nutritionSummary.actualProtein / nutritionSummary.targetProtein) * 100;
     if (proteinRate < 80) {
       insights.push('蛋白质摄入偏低，可能影响肌肉维持和修复。');
     }
@@ -162,7 +173,7 @@ async function generateInsights(
 async function generateRecommendations(
   nutritionSummary: any,
   weightTrend: any,
-  insights: string[]
+  insights: string[],
 ): Promise<string[]> {
   const recommendations: string[] = [];
 
@@ -205,7 +216,7 @@ async function generateRecommendations(
 async function generateAchievements(
   memberId: string,
   nutritionSummary: any,
-  weightTrend: any
+  weightTrend: any,
 ): Promise<string[]> {
   const achievements: string[] = [];
 
@@ -239,13 +250,15 @@ async function generateAchievements(
 async function generateNextWeekGoals(
   nutritionSummary: any,
   weightTrend: any,
-  recommendations: string[]
+  recommendations: string[],
 ): Promise<string[]> {
   const goals: string[] = [];
 
   // 营养目标
   if (nutritionSummary.adherenceRate < 85) {
-    goals.push(`将营养达标率提升至85%以上（当前${nutritionSummary.adherenceRate.toFixed(1)}%）`);
+    goals.push(
+      `将营养达标率提升至85%以上（当前${nutritionSummary.adherenceRate.toFixed(1)}%）`,
+    );
   }
 
   // 体重目标
@@ -263,7 +276,7 @@ async function generateNextWeekGoals(
   goals.push('每日饮水量保持在2000ml以上');
 
   // 基于建议的目标
-  if (recommendations.some(r => r.includes('蛋白质'))) {
+  if (recommendations.some((r) => r.includes('蛋白质'))) {
     goals.push('确保每日蛋白质摄入达到目标值');
   }
 

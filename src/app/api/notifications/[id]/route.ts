@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -23,18 +23,18 @@ export async function GET(
     if (!notificationId) {
       return NextResponse.json(
         { error: 'Notification ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 使用双写框架获取通知
-    const notification = await notificationRepository.getNotificationById(notificationId
-    );
+    const notification =
+      await notificationRepository.getNotificationById(notificationId);
 
     if (!notification) {
       return NextResponse.json(
         { error: 'Notification not found' },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -48,7 +48,7 @@ export async function GET(
     console.error('Error fetching notification:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notification' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -61,7 +61,7 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -72,14 +72,12 @@ export async function DELETE(
     if (!notificationId || !memberId) {
       return NextResponse.json(
         { error: 'Notification ID and Member ID are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 使用双写框架删除通知（软删除）
-    await notificationRepository.deleteNotification(notificationId,
-      memberId
-    );
+    await notificationRepository.deleteNotification(notificationId, memberId);
 
     return NextResponse.json({
       success: true,
@@ -89,7 +87,7 @@ export async function DELETE(
     console.error('Error deleting notification:', error);
     return NextResponse.json(
       { error: 'Failed to delete notification' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

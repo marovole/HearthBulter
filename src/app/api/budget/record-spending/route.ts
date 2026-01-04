@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { budgetRepository } from '@/lib/repositories/budget-repository-singleton';
-import { foodCategorySchema, type FoodCategory, type SpendingCreateDTO } from '@/lib/repositories/types/budget';
+import {
+  foodCategorySchema,
+  type FoodCategory,
+  type SpendingCreateDTO,
+} from '@/lib/repositories/types/budget';
 
 /**
  * POST /api/budget/record-spending
@@ -31,26 +35,20 @@ export async function POST(request: NextRequest) {
     if (!budgetId || !amount || !category || !description) {
       return NextResponse.json(
         { error: '缺少必需字段：budgetId, amount, category, description' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 验证金额
     const spendAmount = parseFloat(amount);
     if (spendAmount <= 0) {
-      return NextResponse.json(
-        { error: '支出金额必须大于0' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '支出金额必须大于0' }, { status: 400 });
     }
 
     // 验证分类
     const categoryValidation = foodCategorySchema.safeParse(category);
     if (!categoryValidation.success) {
-      return NextResponse.json(
-        { error: '无效的食材分类' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '无效的食材分类' }, { status: 400 });
     }
 
     // 构建 SpendingCreateDTO
@@ -80,52 +78,49 @@ export async function POST(request: NextRequest) {
       // 根据 RPC 函数返回的错误类型，映射到合适的 HTTP 状态码
       const message = error.message;
 
-      if (message.includes('BUDGET_NOT_FOUND') || message.includes('预算不存在')) {
+      if (
+        message.includes('BUDGET_NOT_FOUND') ||
+        message.includes('预算不存在')
+      ) {
         return NextResponse.json(
           { error: '预算不存在或已不活跃' },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
-      if (message.includes('DATE_OUT_OF_RANGE') || message.includes('不在预算周期内')) {
+      if (
+        message.includes('DATE_OUT_OF_RANGE') ||
+        message.includes('不在预算周期内')
+      ) {
         return NextResponse.json(
           { error: '支出日期不在预算周期内' },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       if (message.includes('BUDGET_EXCEEDED') || message.includes('超出预算')) {
-        return NextResponse.json(
-          { error: message },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: message }, { status: 400 });
       }
 
-      if (message.includes('CATEGORY_LIMIT_EXCEEDED') || message.includes('分类预算')) {
-        return NextResponse.json(
-          { error: message },
-          { status: 400 }
-        );
+      if (
+        message.includes('CATEGORY_LIMIT_EXCEEDED') ||
+        message.includes('分类预算')
+      ) {
+        return NextResponse.json({ error: message }, { status: 400 });
       }
 
       if (message.includes('ID 与请求不一致')) {
         return NextResponse.json(
           { error: '系统错误：预算 ID 不一致' },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
       // 其他错误
-      return NextResponse.json(
-        { error: message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: '记录支出失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '记录支出失败' }, { status: 500 });
   }
 }
 
@@ -142,10 +137,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') as FoodCategory | null;
 
     if (!budgetId) {
-      return NextResponse.json(
-        { error: '缺少budgetId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少budgetId参数' }, { status: 400 });
     }
 
     // 使用 Repository 获取支出历史
@@ -154,15 +146,12 @@ export async function GET(request: NextRequest) {
         budgetId,
         category: category || undefined,
       },
-      undefined // 不使用分页，返回所有结果
+      undefined, // 不使用分页，返回所有结果
     );
 
     return NextResponse.json(result.items || []);
   } catch (error) {
     console.error('获取支出历史失败:', error);
-    return NextResponse.json(
-      { error: '获取支出历史失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取支出历史失败' }, { status: 500 });
   }
 }

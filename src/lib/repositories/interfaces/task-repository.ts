@@ -39,7 +39,7 @@ export interface TaskRepository {
    */
   listTasks(
     query: TaskListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<TaskDTO>>;
 
   /**
@@ -55,7 +55,7 @@ export interface TaskRepository {
   getTaskById(
     familyId: string,
     taskId: string,
-    options?: TaskGetOptions
+    options?: TaskGetOptions,
   ): Promise<TaskDTO | null>;
 
   /**
@@ -71,7 +71,7 @@ export interface TaskRepository {
   getMyTasks(
     familyId: string,
     memberId: string,
-    status?: TaskStatus
+    status?: TaskStatus,
   ): Promise<TaskDTO[]>;
 
   /**
@@ -85,7 +85,7 @@ export interface TaskRepository {
   createTask(
     familyId: string,
     creatorId: string,
-    payload: CreateTaskDTO
+    payload: CreateTaskDTO,
   ): Promise<TaskDTO>;
 
   /**
@@ -99,7 +99,7 @@ export interface TaskRepository {
   updateTask(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskDTO
+    payload: UpdateTaskDTO,
   ): Promise<TaskDTO>;
 
   /**
@@ -115,7 +115,7 @@ export interface TaskRepository {
   updateTaskStatus(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskStatusDTO
+    payload: UpdateTaskStatusDTO,
   ): Promise<TaskDTO>;
 
   /**
@@ -129,7 +129,7 @@ export interface TaskRepository {
   assignTask(
     familyId: string,
     taskId: string,
-    assigneeId: string
+    assigneeId: string,
   ): Promise<TaskDTO>;
 
   /**

@@ -50,7 +50,7 @@ export async function generateReportData(
   memberId: string,
   reportType: ReportType,
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
 ): Promise<ReportData> {
   // 确定时间范围
   const period = calculatePeriod(reportType, startDate, endDate);
@@ -66,7 +66,8 @@ export async function generateReportData(
 
   // 计算总天数和数据完整天数
   const totalDays = Math.ceil(
-    (period.endDate.getTime() - period.startDate.getTime()) / (1000 * 60 * 60 * 24)
+    (period.endDate.getTime() - period.startDate.getTime()) /
+      (1000 * 60 * 60 * 24),
   );
 
   const mealLogsCount = await prisma.mealLog.count({
@@ -82,15 +83,35 @@ export async function generateReportData(
   const dataCompleteDays = Math.min(mealLogsCount, totalDays);
 
   // 计算平均健康评分
-  const averageScore = await getAverageScore(memberId, period.startDate, period.endDate);
+  const averageScore = await getAverageScore(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
 
   // 获取趋势数据
-  const trends = await getTrendsForReport(memberId, period.startDate, period.endDate);
+  const trends = await getTrendsForReport(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
 
   // 生成成就、关注点和建议
-  const achievements = await generateAchievements(memberId, period.startDate, period.endDate);
-  const concerns = await generateConcerns(memberId, period.startDate, period.endDate);
-  const recommendations = await generateRecommendations(memberId, period.startDate, period.endDate);
+  const achievements = await generateAchievements(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
+  const concerns = await generateConcerns(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
+  const recommendations = await generateRecommendations(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
 
   // 获取异常记录
   const anomalies = await prisma.healthAnomaly.findMany({
@@ -121,7 +142,7 @@ export async function generateReportData(
     achievements,
     concerns,
     recommendations,
-    anomalies: anomalies.map(a => ({
+    anomalies: anomalies.map((a) => ({
       title: a.title,
       description: a.description,
       severity: a.severity,
@@ -155,10 +176,14 @@ export function generateHTMLReport(data: ReportData): string {
     0: { text: '较差', color: '#ef4444' },
   };
 
-  const grade = data.summary.averageScore >= 90 ? gradeLabel[90]
-    : data.summary.averageScore >= 75 ? gradeLabel[75]
-      : data.summary.averageScore >= 60 ? gradeLabel[60]
-        : gradeLabel[0];
+  const grade =
+    data.summary.averageScore >= 90
+      ? gradeLabel[90]
+      : data.summary.averageScore >= 75
+        ? gradeLabel[75]
+        : data.summary.averageScore >= 60
+          ? gradeLabel[60]
+          : gradeLabel[0];
 
   return `
 <!DOCTYPE html>
@@ -226,47 +251,67 @@ export function generateHTMLReport(data: ReportData): string {
       </div>
 
       <!-- 成就 -->
-      ${data.achievements.length > 0 ? `
+      ${
+        data.achievements.length > 0
+          ? `
       <div class="section">
         <h2>🎉 本期成就</h2>
         <ul class="list">
-          ${data.achievements.map(a => `<li class="achievement">✅ ${a}</li>`).join('')}
+          ${data.achievements.map((a) => `<li class="achievement">✅ ${a}</li>`).join('')}
         </ul>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <!-- 关注点 -->
-      ${data.concerns.length > 0 ? `
+      ${
+        data.concerns.length > 0
+          ? `
       <div class="section">
         <h2>⚠️ 需要关注</h2>
         <ul class="list">
-          ${data.concerns.map(c => `<li class="concern">⚠️ ${c}</li>`).join('')}
+          ${data.concerns.map((c) => `<li class="concern">⚠️ ${c}</li>`).join('')}
         </ul>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <!-- 异常记录 -->
-      ${data.anomalies.length > 0 ? `
+      ${
+        data.anomalies.length > 0
+          ? `
       <div class="section">
         <h2>🚨 异常检测</h2>
-        ${data.anomalies.map(a => `
+        ${data.anomalies
+          .map(
+            (a) => `
           <div class="anomaly">
             <div class="anomaly-title">${a.title}</div>
             <div class="anomaly-desc">${a.description}</div>
           </div>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <!-- 改进建议 -->
-      ${data.recommendations.length > 0 ? `
+      ${
+        data.recommendations.length > 0
+          ? `
       <div class="section">
         <h2>💡 改进建议</h2>
         <ul class="list">
-          ${data.recommendations.map(r => `<li class="recommendation">💡 ${r}</li>`).join('')}
+          ${data.recommendations.map((r) => `<li class="recommendation">💡 ${r}</li>`).join('')}
         </ul>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
 
     <div class="footer">
@@ -286,10 +331,15 @@ export async function createReport(
   memberId: string,
   reportType: ReportType,
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
 ) {
   // 生成报告数据
-  const data = await generateReportData(memberId, reportType, startDate, endDate);
+  const data = await generateReportData(
+    memberId,
+    reportType,
+    startDate,
+    endDate,
+  );
 
   // 生成HTML内容
   const htmlContent = generateHTMLReport(data);
@@ -335,7 +385,10 @@ export async function createReport(
  * 生成分享token
  * 使用安全的 JWT Token 替代不安全的 Math.random()
  */
-export async function generateShareToken(reportId: string, expiryDays: number = 7) {
+export async function generateShareToken(
+  reportId: string,
+  expiryDays: number = 7,
+) {
   // 获取报告信息以确认存在并获取所有者 ID
   const report = await prisma.healthReport.findUnique({
     where: { id: reportId },
@@ -352,7 +405,7 @@ export async function generateShareToken(reportId: string, expiryDays: number = 
     'health_report',
     report.memberId,
     expiryDays,
-    ['read']
+    ['read'],
   );
 
   const expiresAt = new Date();
@@ -435,7 +488,7 @@ export async function getReportByShareToken(token: string) {
 function calculatePeriod(
   reportType: ReportType,
   customStartDate?: Date,
-  customEndDate?: Date
+  customEndDate?: Date,
 ): { startDate: Date; endDate: Date } {
   if (reportType === 'CUSTOM' && customStartDate && customEndDate) {
     return { startDate: customStartDate, endDate: customEndDate };
@@ -445,15 +498,15 @@ function calculatePeriod(
   const startDate = new Date();
 
   switch (reportType) {
-  case 'WEEKLY':
-    startDate.setDate(endDate.getDate() - 7);
-    break;
-  case 'MONTHLY':
-    startDate.setMonth(endDate.getMonth() - 1);
-    break;
-  case 'QUARTERLY':
-    startDate.setMonth(endDate.getMonth() - 3);
-    break;
+    case 'WEEKLY':
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case 'MONTHLY':
+      startDate.setMonth(endDate.getMonth() - 1);
+      break;
+    case 'QUARTERLY':
+      startDate.setMonth(endDate.getMonth() - 3);
+      break;
   }
 
   return { startDate, endDate };
@@ -465,24 +518,39 @@ function calculatePeriod(
 async function getTrendsForReport(
   memberId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) {
   const trends: any = {};
 
   // 体重趋势
-  const weightTrend = await analyzeTrend(memberId, 'WEIGHT', startDate, endDate);
+  const weightTrend = await analyzeTrend(
+    memberId,
+    'WEIGHT',
+    startDate,
+    endDate,
+  );
   if (weightTrend.dataPoints.length > 0) {
     trends.weight = weightTrend.dataPoints;
   }
 
   // 卡路里趋势
-  const caloriesTrend = await analyzeTrend(memberId, 'CALORIES', startDate, endDate);
+  const caloriesTrend = await analyzeTrend(
+    memberId,
+    'CALORIES',
+    startDate,
+    endDate,
+  );
   if (caloriesTrend.dataPoints.length > 0) {
     trends.calories = caloriesTrend.dataPoints;
   }
 
   // 运动趋势
-  const exerciseTrend = await analyzeTrend(memberId, 'EXERCISE', startDate, endDate);
+  const exerciseTrend = await analyzeTrend(
+    memberId,
+    'EXERCISE',
+    startDate,
+    endDate,
+  );
   if (exerciseTrend.dataPoints.length > 0) {
     trends.exercise = exerciseTrend.dataPoints;
   }
@@ -502,7 +570,7 @@ async function getTrendsForReport(
 async function generateAchievements(
   memberId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<string[]> {
   const achievements: string[] = [];
 
@@ -546,7 +614,9 @@ async function generateAchievements(
       const percentage = (progress / target) * 100;
 
       if (percentage >= 25) {
-        achievements.push(`体重目标已完成${percentage.toFixed(0)}%，继续加油！`);
+        achievements.push(
+          `体重目标已完成${percentage.toFixed(0)}%，继续加油！`,
+        );
       }
     }
   }
@@ -560,7 +630,7 @@ async function generateAchievements(
 async function generateConcerns(
   memberId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<string[]> {
   const concerns: string[] = [];
 
@@ -582,7 +652,9 @@ async function generateConcerns(
   }
 
   // 检查数据记录完整度
-  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const totalDays = Math.ceil(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
   const recordedDays = await prisma.mealLog.groupBy({
     by: ['date'],
     where: {
@@ -596,7 +668,9 @@ async function generateConcerns(
 
   const completeness = (recordedDays.length / totalDays) * 100;
   if (completeness < 50) {
-    concerns.push(`数据记录完整度仅${completeness.toFixed(0)}%，建议提高记录频率`);
+    concerns.push(
+      `数据记录完整度仅${completeness.toFixed(0)}%，建议提高记录频率`,
+    );
   }
 
   return concerns;
@@ -608,13 +682,13 @@ async function generateConcerns(
 async function generateRecommendations(
   memberId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<string[]> {
   const recommendations: string[] = [];
 
   // 基于平均评分给出建议
   const avgScore = await getAverageScore(memberId, startDate, endDate);
-  
+
   if (avgScore < 70) {
     // 获取最近的评分详情
     const recentScores = await prisma.healthScore.findMany({
@@ -630,9 +704,15 @@ async function generateRecommendations(
     });
 
     if (recentScores.length > 0) {
-      const avgNutrition = recentScores.reduce((sum, s) => sum + (s.nutritionScore || 0), 0) / recentScores.length;
-      const avgExercise = recentScores.reduce((sum, s) => sum + (s.exerciseScore || 0), 0) / recentScores.length;
-      const avgSleep = recentScores.reduce((sum, s) => sum + (s.sleepScore || 0), 0) / recentScores.length;
+      const avgNutrition =
+        recentScores.reduce((sum, s) => sum + (s.nutritionScore || 0), 0) /
+        recentScores.length;
+      const avgExercise =
+        recentScores.reduce((sum, s) => sum + (s.exerciseScore || 0), 0) /
+        recentScores.length;
+      const avgSleep =
+        recentScores.reduce((sum, s) => sum + (s.sleepScore || 0), 0) /
+        recentScores.length;
 
       if (avgNutrition < 70) {
         recommendations.push('建议优化饮食结构，确保三大营养素均衡摄入');
@@ -652,5 +732,3 @@ async function generateRecommendations(
 
   return recommendations;
 }
-
-

@@ -44,12 +44,12 @@ export class HemaAdapter extends BasePlatformAdapter {
   async exchangeToken(request: TokenExchangeRequest): Promise<TokenInfo> {
     try {
       const response = await this.makeRequest<{
-        access_token: string
-        refresh_token?: string
-        token_type: string
-        scope?: string
-        expires_in?: number
-        user_id?: string
+        access_token: string;
+        refresh_token?: string;
+        token_type: string;
+        scope?: string;
+        expires_in?: number;
+        user_id?: string;
       }>('/oauth/token', {
         method: 'POST',
         body: JSON.stringify({
@@ -81,12 +81,12 @@ export class HemaAdapter extends BasePlatformAdapter {
   async refreshToken(refreshToken: string): Promise<TokenInfo> {
     try {
       const response = await this.makeRequest<{
-        access_token: string
-        refresh_token?: string
-        token_type: string
-        scope?: string
-        expires_in?: number
-        user_id?: string
+        access_token: string;
+        refresh_token?: string;
+        token_type: string;
+        scope?: string;
+        expires_in?: number;
+        user_id?: string;
       }>('/oauth/token', {
         method: 'POST',
         body: JSON.stringify({
@@ -115,7 +115,10 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 商品搜索
-  async searchProducts(request: ProductSearchRequest, token: string): Promise<ProductSearchResponse> {
+  async searchProducts(
+    request: ProductSearchRequest,
+    token: string,
+  ): Promise<ProductSearchResponse> {
     try {
       const params = new URLSearchParams({
         keyword: request.keyword,
@@ -138,19 +141,24 @@ export class HemaAdapter extends BasePlatformAdapter {
         params.append('max_price', request.maxPrice.toString());
       }
       if (request.inStock !== undefined) {
-        params.append('stock_status', request.inStock ? 'in_stock' : 'out_of_stock');
+        params.append(
+          'stock_status',
+          request.inStock ? 'in_stock' : 'out_of_stock',
+        );
       }
 
       const response = await this.makeRequest<{
-        items: any[]
-        total_count: number
-        current_page: number
-        page_size: number
-        has_next: boolean
+        items: any[];
+        total_count: number;
+        current_page: number;
+        page_size: number;
+        has_next: boolean;
       }>(`/products/search?${params.toString()}`, {}, token);
 
       return {
-        products: response.items.map(product => this.standardizeProductInfo(product)),
+        products: response.items.map((product) =>
+          this.standardizeProductInfo(product),
+        ),
         total: response.total_count,
         page: response.current_page,
         pageSize: response.page_size,
@@ -165,9 +173,16 @@ export class HemaAdapter extends BasePlatformAdapter {
     }
   }
 
-  async getProduct(productId: string, token: string): Promise<PlatformProductInfo | null> {
+  async getProduct(
+    productId: string,
+    token: string,
+  ): Promise<PlatformProductInfo | null> {
     try {
-      const response = await this.makeRequest<any>(`/products/${productId}`, {}, token);
+      const response = await this.makeRequest<any>(
+        `/products/${productId}`,
+        {},
+        token,
+      );
       return this.standardizeProductInfo(response);
     } catch (error) {
       if (error.type === PlatformErrorType.PRODUCT_NOT_FOUND) {
@@ -178,24 +193,39 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 库存查询
-  async queryStock(request: StockQueryRequest, token: string): Promise<StockQueryResponse> {
+  async queryStock(
+    request: StockQueryRequest,
+    token: string,
+  ): Promise<StockQueryResponse> {
     try {
-      const response = await this.makeRequest<Record<string, {
-        available_stock: number
-        stock_status: string
-        is_available: boolean
-      }>>('/products/stock/batch', {
-        method: 'POST',
-        body: JSON.stringify({
-          product_ids: request.productIds,
-        }),
-      }, token);
+      const response = await this.makeRequest<
+        Record<
+          string,
+          {
+            available_stock: number;
+            stock_status: string;
+            is_available: boolean;
+          }
+        >
+      >(
+        '/products/stock/batch',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            product_ids: request.productIds,
+          }),
+        },
+        token,
+      );
 
-      const stocks: Record<string, {
-        stock: number
-        isInStock: boolean
-        stockStatus?: string
-      }> = {};
+      const stocks: Record<
+        string,
+        {
+          stock: number;
+          isInStock: boolean;
+          stockStatus?: string;
+        }
+      > = {};
 
       for (const [productId, stockInfo] of Object.entries(response)) {
         stocks[productId] = {
@@ -216,10 +246,13 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 订单管理
-  async createOrder(request: CreateOrderRequest, token: string): Promise<CreateOrderResponse> {
+  async createOrder(
+    request: CreateOrderRequest,
+    token: string,
+  ): Promise<CreateOrderResponse> {
     try {
       const orderData = {
-        items: request.items.map(item => ({
+        items: request.items.map((item) => ({
           product_id: item.platformProductId,
           quantity: item.quantity,
           sku_spec: item.specification,
@@ -231,20 +264,24 @@ export class HemaAdapter extends BasePlatformAdapter {
       };
 
       const response = await this.makeRequest<{
-        order_code: string
-        order_status: OrderStatus
-        total_amount: number
-        product_amount: number
-        delivery_fee: number
-        discount_amount: number
-        estimated_delivery_time: string
+        order_code: string;
+        order_status: OrderStatus;
+        total_amount: number;
+        product_amount: number;
+        delivery_fee: number;
+        discount_amount: number;
+        estimated_delivery_time: string;
         payment_info?: {
-          payment_url: string
-        }
-      }>('/orders/create', {
-        method: 'POST',
-        body: JSON.stringify(orderData),
-      }, token);
+          payment_url: string;
+        };
+      }>(
+        '/orders/create',
+        {
+          method: 'POST',
+          body: JSON.stringify(orderData),
+        },
+        token,
+      );
 
       return {
         platformOrderId: response.order_code,
@@ -265,18 +302,21 @@ export class HemaAdapter extends BasePlatformAdapter {
     }
   }
 
-  async getOrderStatus(orderId: string, token: string): Promise<OrderStatusResponse> {
+  async getOrderStatus(
+    orderId: string,
+    token: string,
+  ): Promise<OrderStatusResponse> {
     try {
       const response = await this.makeRequest<{
-        order_code: string
-        order_status: OrderStatus
-        payment_status: string
-        delivery_status: DeliveryStatus
+        order_code: string;
+        order_status: OrderStatus;
+        payment_status: string;
+        delivery_status: DeliveryStatus;
         logistics_info?: {
-          tracking_number: string
-        }
-        estimated_delivery_time: string
-        actual_delivery_time?: string
+          tracking_number: string;
+        };
+        estimated_delivery_time: string;
+        actual_delivery_time?: string;
       }>(`/orders/${orderId}`, {}, token);
 
       return {
@@ -299,12 +339,16 @@ export class HemaAdapter extends BasePlatformAdapter {
 
   async cancelOrder(orderId: string, token: string): Promise<boolean> {
     try {
-      await this.makeRequest(`/orders/${orderId}/cancel`, {
-        method: 'POST',
-        body: JSON.stringify({
-          cancel_reason: '用户取消',
-        }),
-      }, token);
+      await this.makeRequest(
+        `/orders/${orderId}/cancel`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            cancel_reason: '用户取消',
+          }),
+        },
+        token,
+      );
       return true;
     } catch (error) {
       throw new PlatformError({
@@ -316,17 +360,29 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 价格查询
-  async getProductPrices(productIds: string[], token: string): Promise<Record<string, number>> {
+  async getProductPrices(
+    productIds: string[],
+    token: string,
+  ): Promise<Record<string, number>> {
     try {
-      const response = await this.makeRequest<Record<string, {
-        price: number
-        promotional_price?: number
-      }>>('/products/price/batch', {
-        method: 'POST',
-        body: JSON.stringify({
-          product_ids: productIds,
-        }),
-      }, token);
+      const response = await this.makeRequest<
+        Record<
+          string,
+          {
+            price: number;
+            promotional_price?: number;
+          }
+        >
+      >(
+        '/products/price/batch',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            product_ids: productIds,
+          }),
+        },
+        token,
+      );
 
       const prices: Record<string, number> = {};
       for (const [productId, priceInfo] of Object.entries(response)) {
@@ -343,18 +399,25 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 配送信息
-  async getDeliveryOptions(address: DeliveryAddress, token: string): Promise<Record<string, any>> {
+  async getDeliveryOptions(
+    address: DeliveryAddress,
+    token: string,
+  ): Promise<Record<string, any>> {
     try {
       const response = await this.makeRequest<{
-        immediate: { time: string; fee: number }
-        scheduled: { time: string; fee: number }
-        pickup?: { time: string; fee: number }
-      }>('/delivery/options', {
-        method: 'POST',
-        body: JSON.stringify({
-          address: this.standardizeAddress(address),
-        }),
-      }, token);
+        immediate: { time: string; fee: number };
+        scheduled: { time: string; fee: number };
+        pickup?: { time: string; fee: number };
+      }>(
+        '/delivery/options',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            address: this.standardizeAddress(address),
+          }),
+        },
+        token,
+      );
 
       return response;
     } catch (error) {
@@ -369,26 +432,30 @@ export class HemaAdapter extends BasePlatformAdapter {
   async estimateDeliveryTime(
     orderItems: OrderItem[],
     address: DeliveryAddress,
-    token: string
+    token: string,
   ): Promise<string> {
     try {
       const response = await this.makeRequest<{
-        delivery_time: string
+        delivery_time: string;
         time_slots: Array<{
-          start_time: string
-          end_time: string
-          fee: number
-        }>
-      }>('/delivery/estimate', {
-        method: 'POST',
-        body: JSON.stringify({
-          items: orderItems.map(item => ({
-            product_id: item.platformProductId,
-            quantity: item.quantity,
-          })),
-          address: this.standardizeAddress(address),
-        }),
-      }, token);
+          start_time: string;
+          end_time: string;
+          fee: number;
+        }>;
+      }>(
+        '/delivery/estimate',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            items: orderItems.map((item) => ({
+              product_id: item.platformProductId,
+              quantity: item.quantity,
+            })),
+            address: this.standardizeAddress(address),
+          }),
+        },
+        token,
+      );
 
       return response.delivery_time;
     } catch (error) {
@@ -402,8 +469,10 @@ export class HemaAdapter extends BasePlatformAdapter {
 
   // 工具方法
   private generateState(): string {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
   }
 
   // 盒马特定的商品信息标准化
@@ -421,18 +490,28 @@ export class HemaAdapter extends BasePlatformAdapter {
       volume: rawProduct.volume ? parseFloat(rawProduct.volume) : undefined,
       unit: rawProduct.unit,
       price: parseFloat(rawProduct.sale_price || rawProduct.price),
-      originalPrice: rawProduct.original_price ? parseFloat(rawProduct.original_price) : undefined,
+      originalPrice: rawProduct.original_price
+        ? parseFloat(rawProduct.original_price)
+        : undefined,
       currency: rawProduct.currency || 'CNY',
       priceUnit: rawProduct.price_unit,
       stock: parseInt(rawProduct.available_stock) || 0,
-      isInStock: rawProduct.stock_status === '有货' && (rawProduct.available_stock || 0) > 0,
+      isInStock:
+        rawProduct.stock_status === '有货' &&
+        (rawProduct.available_stock || 0) > 0,
       stockStatus: rawProduct.stock_status,
-      salesCount: rawProduct.monthly_sales ? parseInt(rawProduct.monthly_sales) : undefined,
+      salesCount: rawProduct.monthly_sales
+        ? parseInt(rawProduct.monthly_sales)
+        : undefined,
       rating: rawProduct.rating ? parseFloat(rawProduct.rating) : undefined,
-      reviewCount: rawProduct.review_count ? parseInt(rawProduct.review_count) : undefined,
+      reviewCount: rawProduct.review_count
+        ? parseInt(rawProduct.review_count)
+        : undefined,
       deliveryOptions: rawProduct.delivery_info,
       deliveryTime: rawProduct.delivery_time,
-      shippingFee: rawProduct.delivery_fee ? parseFloat(rawProduct.delivery_fee) : undefined,
+      shippingFee: rawProduct.delivery_fee
+        ? parseFloat(rawProduct.delivery_fee)
+        : undefined,
       platformData: rawProduct,
     };
   }

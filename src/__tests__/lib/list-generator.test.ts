@@ -30,9 +30,13 @@ jest.mock('@/lib/db', () => ({
 }));
 
 // Mock @prisma/client to include FoodCategory enum
-jest.mock('@prisma/client', () => ({
-  FoodCategory: FoodCategoryValues,
-}), { virtual: true });
+jest.mock(
+  '@prisma/client',
+  () => ({
+    FoodCategory: FoodCategoryValues,
+  }),
+  { virtual: true },
+);
 
 describe('List Generator', () => {
   const generator = new ListGenerator();
@@ -91,9 +95,9 @@ describe('List Generator', () => {
             ],
           },
         ],
-      }
+      };
 
-      ;(prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
+      (prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
 
       const result = await generator.generateShoppingList('plan-1');
 
@@ -147,9 +151,9 @@ describe('List Generator', () => {
             ],
           },
         ],
-      }
+      };
 
-      ;(prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
+      (prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
 
       const result = await generator.generateShoppingList('plan-1');
 
@@ -199,13 +203,15 @@ describe('List Generator', () => {
             ],
           },
         ],
-      }
+      };
 
-      ;(prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
+      (prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
 
       const result = await generator.generateShoppingList('plan-1');
 
-      const vegetables = result.items.find((item) => item.category === 'VEGETABLES');
+      const vegetables = result.items.find(
+        (item) => item.category === 'VEGETABLES',
+      );
       expect(vegetables?.perishableDays).toBe(5);
 
       const protein = result.items.find((item) => item.category === 'PROTEIN');
@@ -216,20 +222,20 @@ describe('List Generator', () => {
     });
 
     it('should throw error when plan does not exist', async () => {
-      ;(prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(null);
 
-      await expect(generator.generateShoppingList('non-existent')).rejects.toThrow(
-        '食谱计划不存在'
-      );
+      await expect(
+        generator.generateShoppingList('non-existent'),
+      ).rejects.toThrow('食谱计划不存在');
     });
 
     it('should handle empty meal plan', async () => {
       const mockPlan = {
         id: 'plan-1',
         meals: [],
-      }
+      };
 
-      ;(prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
+      (prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
 
       const result = await generator.generateShoppingList('plan-1');
 
@@ -282,4 +288,3 @@ describe('List Generator', () => {
     });
   });
 });
-

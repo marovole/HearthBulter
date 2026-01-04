@@ -16,13 +16,15 @@ export async function GET(request: NextRequest) {
     const memberId = searchParams.get('memberId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
-    const sortBy = searchParams.get('sortBy') as 'favoritedAt' | 'name' || 'favoritedAt';
-    const sortOrder = searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
+    const sortBy =
+      (searchParams.get('sortBy') as 'favoritedAt' | 'name') || 'favoritedAt';
+    const sortOrder =
+      (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc';
 
     if (!memberId) {
       return NextResponse.json(
         { error: 'memberId is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,12 +44,11 @@ export async function GET(request: NextRequest) {
       favorites: result.favorites,
       pagination: result.pagination,
     });
-
   } catch (error) {
     console.error('Error getting favorites:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

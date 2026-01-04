@@ -26,18 +26,18 @@ export interface FilteredContent {
  */
 export function filterUserInput(
   content: string,
-  options: AISensitiveFilterOptions = {}
+  options: AISensitiveFilterOptions = {},
 ): FilteredContent {
   const filterResult = sensitiveFilter.filter(content, {
     maskMode: options.maskMode || 'partial',
-    excludeTypes: options.excludeTypes as any || ['age'], // 年龄通常需要保留
+    excludeTypes: (options.excludeTypes as any) || ['age'], // 年龄通常需要保留
     includeTypes: options.includeTypes as any,
   });
 
   if (options.enableLogging && filterResult.hasSensitiveInfo) {
     console.warn('[AI敏感信息过滤] 用户输入检测到敏感信息', {
       riskLevel: filterResult.riskLevel,
-      detectedTypes: filterResult.detectedItems.map(item => item.type),
+      detectedTypes: filterResult.detectedItems.map((item) => item.type),
       contentLength: content.length,
     });
   }
@@ -47,7 +47,7 @@ export function filterUserInput(
     filtered: filterResult.filteredText,
     hasSensitiveInfo: filterResult.hasSensitiveInfo,
     riskLevel: filterResult.riskLevel,
-    detectedTypes: filterResult.detectedItems.map(item => item.type),
+    detectedTypes: filterResult.detectedItems.map((item) => item.type),
   };
 }
 
@@ -56,18 +56,18 @@ export function filterUserInput(
  */
 export function filterAIOutput(
   content: string,
-  options: AISensitiveFilterOptions = {}
+  options: AISensitiveFilterOptions = {},
 ): FilteredContent {
   const filterResult = sensitiveFilter.filter(content, {
     maskMode: options.maskMode || 'partial',
-    excludeTypes: options.excludeTypes as any || [],
+    excludeTypes: (options.excludeTypes as any) || [],
     includeTypes: options.includeTypes as any,
   });
 
   if (options.enableLogging && filterResult.hasSensitiveInfo) {
     console.warn('[AI敏感信息过滤] AI输出检测到敏感信息（异常情况）', {
       riskLevel: filterResult.riskLevel,
-      detectedTypes: filterResult.detectedItems.map(item => item.type),
+      detectedTypes: filterResult.detectedItems.map((item) => item.type),
       contentLength: content.length,
     });
   }
@@ -77,7 +77,7 @@ export function filterAIOutput(
     filtered: filterResult.filteredText,
     hasSensitiveInfo: filterResult.hasSensitiveInfo,
     riskLevel: filterResult.riskLevel,
-    detectedTypes: filterResult.detectedItems.map(item => item.type),
+    detectedTypes: filterResult.detectedItems.map((item) => item.type),
   };
 }
 
@@ -86,7 +86,7 @@ export function filterAIOutput(
  */
 export function filterStructuredData<T extends Record<string, any>>(
   data: T,
-  options: AISensitiveFilterOptions = {}
+  options: AISensitiveFilterOptions = {},
 ): T {
   const filteredData = { ...data };
 
@@ -95,7 +95,7 @@ export function filterStructuredData<T extends Record<string, any>>(
       const result = filterUserInput(value, options);
       return result.filtered;
     } else if (Array.isArray(value)) {
-      return value.map(item => filterValue(item));
+      return value.map((item) => filterValue(item));
     } else if (typeof value === 'object' && value !== null) {
       const filteredObj: Record<string, any> = {};
       for (const [key, val] of Object.entries(value)) {
@@ -112,7 +112,9 @@ export function filterStructuredData<T extends Record<string, any>>(
 /**
  * 创建敏感信息过滤中间件函数
  */
-export function createSensitiveFilterMiddleware(options: AISensitiveFilterOptions = {}) {
+export function createSensitiveFilterMiddleware(
+  options: AISensitiveFilterOptions = {},
+) {
   return {
     filterUserInput: (content: string) => filterUserInput(content, options),
     filterAIOutput: (content: string) => filterAIOutput(content, options),

@@ -30,7 +30,9 @@ export class SupabaseFamilyRepository implements FamilyRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = '[SupabaseFamilyRepository]';
 
-  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
+  constructor(
+    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
+  ) {
     this.client = client;
   }
 
@@ -93,7 +95,7 @@ export class SupabaseFamilyRepository implements FamilyRepository {
 
   async listUserFamilies(
     query: FamilyListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<FamilyWithMembersDTO>> {
     const { userId, includeDeleted = false, includeMembers = true } = query;
 
@@ -116,7 +118,11 @@ export class SupabaseFamilyRepository implements FamilyRepository {
     // 查询用户作为成员加入的家庭
     let memberQuery = this.client
       .from('family_members')
-      .select(includeMembers ? 'family_id, families(*, members:family_members(*))' : 'family_id, families(*)')
+      .select(
+        includeMembers
+          ? 'family_id, families(*, members:family_members(*))'
+          : 'family_id, families(*)',
+      )
       .eq('user_id', userId);
 
     if (!includeDeleted) {
@@ -134,9 +140,12 @@ export class SupabaseFamilyRepository implements FamilyRepository {
 
     // 添加创建的家庭
     createdFamilies?.forEach((family) => {
-      const members = includeMembers && Array.isArray((family as any).members)
-        ? (family as any).members.filter((m: any) => !m.deleted_at).map(this.mapFamilyMemberRow)
-        : [];
+      const members =
+        includeMembers && Array.isArray((family as any).members)
+          ? (family as any).members
+              .filter((m: any) => !m.deleted_at)
+              .map(this.mapFamilyMemberRow)
+          : [];
 
       familyMap.set(family.id, {
         ...this.mapFamilyRow(family),
@@ -149,9 +158,12 @@ export class SupabaseFamilyRepository implements FamilyRepository {
     memberData?.forEach((item: any) => {
       const family = item.families;
       if (family && !familyMap.has(family.id)) {
-        const members = includeMembers && Array.isArray(family.members)
-          ? family.members.filter((m: any) => !m.deleted_at).map(this.mapFamilyMemberRow)
-          : [];
+        const members =
+          includeMembers && Array.isArray(family.members)
+            ? family.members
+                .filter((m: any) => !m.deleted_at)
+                .map(this.mapFamilyMemberRow)
+            : [];
 
         familyMap.set(family.id, {
           ...this.mapFamilyRow(family),
@@ -161,8 +173,9 @@ export class SupabaseFamilyRepository implements FamilyRepository {
       }
     });
 
-    const allFamilies = Array.from(familyMap.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const allFamilies = Array.from(familyMap.values()).sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
 
     // 应用分页
     const offset = pagination?.offset || 0;
@@ -182,7 +195,8 @@ export class SupabaseFamilyRepository implements FamilyRepository {
     };
 
     if (payload.name !== undefined) updateData.name = payload.name;
-    if (payload.description !== undefined) updateData.description = payload.description;
+    if (payload.description !== undefined)
+      updateData.description = payload.description;
 
     const { data, error } = await this.client
       .from('families')
@@ -211,7 +225,9 @@ export class SupabaseFamilyRepository implements FamilyRepository {
 
   // ==================== 家庭成员管理 ====================
 
-  async addFamilyMember(payload: CreateFamilyMemberDTO): Promise<FamilyMemberDTO> {
+  async addFamilyMember(
+    payload: CreateFamilyMemberDTO,
+  ): Promise<FamilyMemberDTO> {
     const now = new Date().toISOString();
     const { data, error } = await this.client
       .from('family_members')
@@ -243,13 +259,18 @@ export class SupabaseFamilyRepository implements FamilyRepository {
     return this.mapFamilyMemberRow(data!);
   }
 
-  async listFamilyMembers(familyId: string, includeDeleted = false): Promise<FamilyMemberDTO[]> {
+  async listFamilyMembers(
+    familyId: string,
+    includeDeleted = false,
+  ): Promise<FamilyMemberDTO[]> {
     let query = this.client
       .from('family_members')
-      .select(`
+      .select(
+        `
         *,
         user:users(id, name, email)
-      `)
+      `,
+      )
       .eq('family_id', familyId);
 
     if (!includeDeleted) {
@@ -280,7 +301,10 @@ export class SupabaseFamilyRepository implements FamilyRepository {
     return data ? this.mapFamilyMemberRow(data) : null;
   }
 
-  async updateFamilyMember(id: string, payload: UpdateFamilyMemberDTO): Promise<FamilyMemberDTO> {
+  async updateFamilyMember(
+    id: string,
+    payload: UpdateFamilyMemberDTO,
+  ): Promise<FamilyMemberDTO> {
     const updateData: Partial<FamilyMemberRow> = {
       updated_at: new Date().toISOString(),
     };
@@ -330,7 +354,10 @@ export class SupabaseFamilyRepository implements FamilyRepository {
     return !!data;
   }
 
-  async getUserFamilyRole(familyId: string, userId: string): Promise<string | null> {
+  async getUserFamilyRole(
+    familyId: string,
+    userId: string,
+  ): Promise<string | null> {
     const { data, error } = await this.client
       .from('family_members')
       .select('role')
@@ -409,7 +436,9 @@ export class SupabaseFamilyRepository implements FamilyRepository {
       deletedAt: row.deleted_at ? new Date(row.deleted_at) : undefined,
       // 扩展字段
       gender: rowWithUser.gender || undefined,
-      birthDate: rowWithUser.birth_date ? new Date(rowWithUser.birth_date) : undefined,
+      birthDate: rowWithUser.birth_date
+        ? new Date(rowWithUser.birth_date)
+        : undefined,
       height: rowWithUser.height || undefined,
       weight: rowWithUser.weight || undefined,
       bmi: rowWithUser.bmi || undefined,
@@ -417,10 +446,10 @@ export class SupabaseFamilyRepository implements FamilyRepository {
       // 关联用户信息
       user: rowWithUser.user
         ? {
-          id: rowWithUser.user.id,
-          name: rowWithUser.user.name,
-          email: rowWithUser.user.email,
-        }
+            id: rowWithUser.user.id,
+            name: rowWithUser.user.name,
+            email: rowWithUser.user.email,
+          }
         : undefined,
     };
   }

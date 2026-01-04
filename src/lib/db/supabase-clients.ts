@@ -1,6 +1,6 @@
 /**
  * Supabase 多层客户端管理
- * 
+ *
  * 实现最小权限原则，区分不同场景的访问需求：
  * 1. 匿名客户端 - 公开数据访问
  * 2. 用户客户端 - 带用户 JWT 的访问（受 RLS 限制）
@@ -41,7 +41,7 @@ function logClientUsage(log: ClientUsageLog): void {
       clientUsageLogs.shift();
     }
   }
-  
+
   if (log.clientType === 'service') {
     logger.info('Service client accessed', {
       reason: log.reason,
@@ -69,7 +69,7 @@ function getSupabaseUrl(): string {
 export function getAnonClient(): SupabaseClient<Database> {
   const url = getSupabaseUrl();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!anonKey) {
     throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY 环境变量未设置');
   }
@@ -99,13 +99,13 @@ export function getAnonClient(): SupabaseClient<Database> {
 /**
  * 获取用户级客户端
  * 使用用户的 JWT 进行访问，受 RLS 策略限制
- * 
+ *
  * @param userJwt 用户的 JWT Token（从 session 获取）
  */
 export function getUserClient(userJwt: string): SupabaseClient<Database> {
   const url = getSupabaseUrl();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!anonKey) {
     throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY 环境变量未设置');
   }
@@ -131,7 +131,7 @@ export function getUserClient(userJwt: string): SupabaseClient<Database> {
       headers: {
         'x-application-name': 'health-butler',
         'x-client-type': 'user',
-        'Authorization': `Bearer ${userJwt}`,
+        Authorization: `Bearer ${userJwt}`,
       },
     },
   });
@@ -140,19 +140,19 @@ export function getUserClient(userJwt: string): SupabaseClient<Database> {
 /**
  * 获取服务级客户端
  * 使用 Service Key，绕过 RLS 策略
- * 
+ *
  * 注意：仅限后台任务使用，必须提供使用原因
- * 
+ *
  * @param reason 使用原因（必须）
  * @param caller 调用方标识（可选，用于追踪）
  */
 export function getServiceClient(
   reason: ServiceClientReason,
-  caller?: string
+  caller?: string,
 ): SupabaseClient<Database> {
   const url = getSupabaseUrl();
   const serviceKey = process.env.SUPABASE_SERVICE_KEY;
-  
+
   if (!serviceKey) {
     throw new Error('SUPABASE_SERVICE_KEY 环境变量未设置');
   }
@@ -186,15 +186,17 @@ export function getServiceClient(
 
 /**
  * 获取默认客户端（向后兼容）
- * 
+ *
  * @deprecated 请使用 getAnonClient、getUserClient 或 getServiceClient
  */
 export function getDefaultClient(): SupabaseClient<Database> {
   logger.warn('使用了 getDefaultClient()，请迁移到具体的客户端类型');
-  
+
   const url = getSupabaseUrl();
-  const key = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+  const key =
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   if (!key) {
     throw new Error('Supabase key 环境变量未设置');
   }
@@ -237,7 +239,8 @@ export function getClientUsageStats(): {
   for (const log of clientUsageLogs) {
     stats.byType[log.clientType]++;
     if (log.clientType === 'service' && log.reason) {
-      stats.serviceReasons[log.reason] = (stats.serviceReasons[log.reason] || 0) + 1;
+      stats.serviceReasons[log.reason] =
+        (stats.serviceReasons[log.reason] || 0) + 1;
     }
   }
 

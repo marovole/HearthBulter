@@ -32,10 +32,10 @@ export function NutritionProgress({ nutrient }: NutritionProgressProps) {
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <span className="font-medium">{name}</span>
-        <div className="text-sm text-gray-600">
+    <div className='space-y-2'>
+      <div className='flex justify-between items-center'>
+        <span className='font-medium'>{name}</span>
+        <div className='text-sm text-gray-600'>
           <span className={isOver ? 'text-red-600 font-semibold' : ''}>
             {Math.round(actual)}
           </span>
@@ -55,7 +55,7 @@ export function NutritionProgress({ nutrient }: NutritionProgressProps) {
         </div>
       </div>
 
-      <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+      <div className='relative w-full h-3 bg-gray-200 rounded-full overflow-hidden'>
         <div
           className={`h-full transition-all duration-500 ${getStatusColor()}`}
           style={{ width: `${percentage}%` }}
@@ -63,15 +63,15 @@ export function NutritionProgress({ nutrient }: NutritionProgressProps) {
       </div>
 
       {(isOver || isLow) && (
-        <div className="text-sm text-gray-600">
+        <div className='text-sm text-gray-600'>
           {isOver && (
-            <span className="text-red-600">
+            <span className='text-red-600'>
               已超出{Math.round(actual - target)}
               {unit}，建议减少摄入
             </span>
           )}
           {isLow && (
-            <span className="text-yellow-600">
+            <span className='text-yellow-600'>
               还差{Math.round(target - actual)}
               {unit}，建议适当增加
             </span>
@@ -126,12 +126,11 @@ export function DailyNutritionProgress({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 space-y-4">
-      <h3 className="text-lg font-semibold mb-4">今日营养进度</h3>
+    <div className='bg-white rounded-lg shadow p-6 space-y-4'>
+      <h3 className='text-lg font-semibold mb-4'>今日营养进度</h3>
       {nutrients.map((nutrient, index) => (
         <NutritionProgress key={index} nutrient={nutrient} />
       ))}
     </div>
   );
 }
-

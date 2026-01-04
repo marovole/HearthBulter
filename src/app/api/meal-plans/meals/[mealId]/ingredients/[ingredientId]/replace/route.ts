@@ -12,12 +12,12 @@ import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-sing
 export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ mealId: string; ingredientId: string }> }
+  { params }: { params: Promise<{ mealId: string; ingredientId: string }> },
 ) {
   try {
     const { mealId, ingredientId } = await params;
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
@@ -58,7 +58,8 @@ export async function POST(
     }
 
     const isCreator = meal.plan.member.family.creatorId === session.user.id;
-    const isAdmin = meal.plan.member.family.members[0]?.role === 'ADMIN' || isCreator;
+    const isAdmin =
+      meal.plan.member.family.members[0]?.role === 'ADMIN' || isCreator;
     const isSelf = meal.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
@@ -118,16 +119,19 @@ export async function POST(
     }
 
     // 计算总营养（假设营养数据是每100g）
-    const totalNutrition = (allIngredients || []).reduce((acc, ing: any) => {
-      const factor = ing.amount / 100;
-      const food = ing.food;
-      return {
-        calories: acc.calories + (food?.calories || 0) * factor,
-        protein: acc.protein + (food?.protein || 0) * factor,
-        carbs: acc.carbs + (food?.carbs || 0) * factor,
-        fat: acc.fat + (food?.fat || 0) * factor,
-      };
-    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+    const totalNutrition = (allIngredients || []).reduce(
+      (acc, ing: any) => {
+        const factor = ing.amount / 100;
+        const food = ing.food;
+        return {
+          calories: acc.calories + (food?.calories || 0) * factor,
+          protein: acc.protein + (food?.protein || 0) * factor,
+          carbs: acc.carbs + (food?.carbs || 0) * factor,
+          fat: acc.fat + (food?.fat || 0) * factor,
+        };
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    );
 
     // 使用 Repository 更新餐食营养数据
     await mealPlanRepository.updateMeal(mealId, {
@@ -137,21 +141,23 @@ export async function POST(
       fat: totalNutrition.fat,
     });
 
-    return NextResponse.json({
-      message: '食材替换成功',
-      originalIngredient: {
-        id: originalIngredient.id,
-        food: originalIngredient.food,
-        amount: originalIngredient.amount,
+    return NextResponse.json(
+      {
+        message: '食材替换成功',
+        originalIngredient: {
+          id: originalIngredient.id,
+          food: originalIngredient.food,
+          amount: originalIngredient.amount,
+        },
+        newIngredient: {
+          id: updatedIngredient.id,
+          food: updatedIngredient.food,
+          amount: updatedIngredient.amount,
+        },
+        updatedNutrition: totalNutrition,
       },
-      newIngredient: {
-        id: updatedIngredient.id,
-        food: updatedIngredient.food,
-        amount: updatedIngredient.amount,
-      },
-      updatedNutrition: totalNutrition,
-    }, { status: 200 });
-
+      { status: 200 },
+    );
   } catch (error) {
     console.error('替换食材失败:', error);
     return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });

@@ -14,17 +14,19 @@ const logger = new TaskLogger();
  */
 export async function runAnomalyDetection(): Promise<void> {
   logger.info('Starting anomaly detection scan...');
-  
+
   try {
     // 获取所有活跃的家庭成员
     const activeMembers = await getActiveMembers();
-    
+
     if (activeMembers.length === 0) {
       logger.info('No active members found for anomaly detection');
       return;
     }
 
-    logger.info(`Running anomaly detection for ${activeMembers.length} active members`);
+    logger.info(
+      `Running anomaly detection for ${activeMembers.length} active members`,
+    );
 
     let totalAnomalies = 0;
     let successCount = 0;
@@ -35,26 +37,31 @@ export async function runAnomalyDetection(): Promise<void> {
         // 运行异常检测
         const anomalies = await detectAnomalies(member.id);
         totalAnomalies += anomalies.length;
-        
+
         if (anomalies.length > 0) {
-          logger.info(`Found ${anomalies.length} anomalies for member ${member.name}`);
-          
+          logger.info(
+            `Found ${anomalies.length} anomalies for member ${member.name}`,
+          );
+
           // 记录异常到数据库（如果detectAnomalies还没有做的话）
           for (const anomaly of anomalies) {
             await saveAnomaly(member.id, anomaly);
           }
         }
-        
-        successCount++;
 
+        successCount++;
       } catch (error) {
-        logger.error(`Failed to run anomaly detection for member ${member.id}:`, error);
+        logger.error(
+          `Failed to run anomaly detection for member ${member.id}:`,
+          error,
+        );
         errorCount++;
       }
     }
 
-    logger.info(`Anomaly detection completed: ${successCount} success, ${errorCount} errors, ${totalAnomalies} total anomalies found`);
-
+    logger.info(
+      `Anomaly detection completed: ${successCount} success, ${errorCount} errors, ${totalAnomalies} total anomalies found`,
+    );
   } catch (error) {
     logger.error('Anomaly detection scan failed:', error);
     throw error;
@@ -109,12 +116,15 @@ async function getActiveMembers() {
 /**
  * 保存异常到数据库
  */
-async function saveAnomaly(memberId: string, anomaly: {
-  title: string;
-  description: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  dataPoint?: any;
-}) {
+async function saveAnomaly(
+  memberId: string,
+  anomaly: {
+    title: string;
+    description: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    dataPoint?: any;
+  },
+) {
   // 检查是否已存在相同的异常
   const existingAnomaly = await prisma.healthAnomaly.findFirst({
     where: {
@@ -128,7 +138,9 @@ async function saveAnomaly(memberId: string, anomaly: {
   });
 
   if (existingAnomaly) {
-    logger.debug(`Anomaly already exists for member ${memberId}: ${anomaly.title}`);
+    logger.debug(
+      `Anomaly already exists for member ${memberId}: ${anomaly.title}`,
+    );
     return;
   }
 
@@ -145,5 +157,7 @@ async function saveAnomaly(memberId: string, anomaly: {
     },
   });
 
-  logger.debug(`Saved anomaly for member ${memberId}: ${anomaly.title} (${anomaly.severity})`);
+  logger.debug(
+    `Saved anomaly for member ${memberId}: ${anomaly.title} (${anomaly.severity})`,
+  );
 }

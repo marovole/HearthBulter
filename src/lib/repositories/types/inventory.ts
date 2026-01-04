@@ -17,11 +17,11 @@ import { dateRangeFilterSchema, stringFilterSchema } from './common';
  * 库存状态枚举
  */
 export const inventoryStatusSchema = z.enum([
-  'FRESH',      // 新鲜
-  'NORMAL',     // 正常
-  'EXPIRING',   // 即将过期
-  'EXPIRED',    // 已过期
-  'DEPLETED',   // 耗尽
+  'FRESH', // 新鲜
+  'NORMAL', // 正常
+  'EXPIRING', // 即将过期
+  'EXPIRED', // 已过期
+  'DEPLETED', // 耗尽
 ]);
 export type InventoryStatus = z.infer<typeof inventoryStatusSchema>;
 
@@ -29,11 +29,11 @@ export type InventoryStatus = z.infer<typeof inventoryStatusSchema>;
  * 存储位置枚举
  */
 export const storageLocationSchema = z.enum([
-  'FRIDGE',         // 冰箱
-  'FREEZER',        // 冷冻室
-  'PANTRY',         // 食品柜
-  'ROOM_TEMP',      // 室温
-  'OTHER',          // 其他
+  'FRIDGE', // 冰箱
+  'FREEZER', // 冷冻室
+  'PANTRY', // 食品柜
+  'ROOM_TEMP', // 室温
+  'OTHER', // 其他
 ]);
 export type StorageLocation = z.infer<typeof storageLocationSchema>;
 
@@ -41,12 +41,12 @@ export type StorageLocation = z.infer<typeof storageLocationSchema>;
  * 使用原因枚举
  */
 export const usageReasonSchema = z.enum([
-  'COOKING',        // 烹饪
-  'EATING',         // 直接食用
-  'RECIPE',         // 食谱制作
-  'EXPIRED',        // 过期
-  'DAMAGED',        // 损坏
-  'OTHER',          // 其他
+  'COOKING', // 烹饪
+  'EATING', // 直接食用
+  'RECIPE', // 食谱制作
+  'EXPIRED', // 过期
+  'DAMAGED', // 损坏
+  'OTHER', // 其他
 ]);
 export type UsageReason = z.infer<typeof usageReasonSchema>;
 
@@ -54,12 +54,12 @@ export type UsageReason = z.infer<typeof usageReasonSchema>;
  * 浪费原因枚举
  */
 export const wasteReasonSchema = z.enum([
-  'EXPIRED',        // 过期
-  'SPOILED',        // 腐坏
-  'OVERSTOCK',      // 库存过剩
-  'DAMAGED',        // 损坏
-  'DISLIKED',       // 不喜欢
-  'OTHER',          // 其他
+  'EXPIRED', // 过期
+  'SPOILED', // 腐坏
+  'OVERSTOCK', // 库存过剩
+  'DAMAGED', // 损坏
+  'DISLIKED', // 不喜欢
+  'OTHER', // 其他
 ]);
 export type WasteReason = z.infer<typeof wasteReasonSchema>;
 
@@ -183,7 +183,9 @@ export const inventoryUsageCreateSchema = inventoryUsageSchema.omit({
   createdAt: true,
 });
 
-export type InventoryUsageCreateDTO = z.infer<typeof inventoryUsageCreateSchema>;
+export type InventoryUsageCreateDTO = z.infer<
+  typeof inventoryUsageCreateSchema
+>;
 
 /**
  * 浪费记录 Schema
@@ -216,8 +218,14 @@ export type WasteRecordCreateDTO = z.infer<typeof wasteRecordCreateSchema>;
 export const inventoryStatsSchema = z.object({
   totalItems: z.number().int().nonnegative(),
   totalValue: z.number().nonnegative(),
-  itemsByStatus: z.record(inventoryStatusSchema, z.number().int().nonnegative()),
-  itemsByLocation: z.record(storageLocationSchema, z.number().int().nonnegative()),
+  itemsByStatus: z.record(
+    inventoryStatusSchema,
+    z.number().int().nonnegative(),
+  ),
+  itemsByLocation: z.record(
+    storageLocationSchema,
+    z.number().int().nonnegative(),
+  ),
   expiringCount: z.number().int().nonnegative(),
   expiredCount: z.number().int().nonnegative(),
   lowStockCount: z.number().int().nonnegative(),
@@ -238,7 +246,9 @@ export const inventoryItemWithRelationsSchema = inventoryItemSchema.extend({
   wasteRecords: z.array(wasteRecordSchema).default([]),
 });
 
-export type InventoryItemWithRelationsDTO = z.infer<typeof inventoryItemWithRelationsSchema>;
+export type InventoryItemWithRelationsDTO = z.infer<
+  typeof inventoryItemWithRelationsSchema
+>;
 
 /**
  * 使用库存输入 Schema（用于食谱制作等批量使用）
@@ -264,4 +274,6 @@ export const batchUseInventoryInputSchema = z.object({
   items: z.array(useInventoryInputSchema).min(1),
 });
 
-export type BatchUseInventoryInputDTO = z.infer<typeof batchUseInventoryInputSchema>;
+export type BatchUseInventoryInputDTO = z.infer<
+  typeof batchUseInventoryInputSchema
+>;

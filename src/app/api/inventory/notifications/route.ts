@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
 import { getCurrentUser } from '@/lib/auth';
 import { memberRepository } from '@/lib/repositories/member-repository-singleton';
-import type { NotificationType, NotificationPriority } from '@/lib/repositories/types/notification';
+import type {
+  NotificationType,
+  NotificationPriority,
+} from '@/lib/repositories/types/notification';
 
 /**
  * GET /api/inventory/notifications
@@ -23,7 +26,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
     const type = searchParams.get('type') as NotificationType | null;
-    const priority = searchParams.get('priority') as NotificationPriority | null;
+    const priority = searchParams.get(
+      'priority',
+    ) as NotificationPriority | null;
     const isRead = searchParams.get('isRead');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
@@ -36,13 +41,13 @@ export async function GET(request: NextRequest) {
     const { hasAccess } = await memberRepository.verifyMemberAccess(
       'verifyMemberAccess',
       memberId,
-      user.id
+      user.id,
     );
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限访问该成员的通知' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -63,17 +68,16 @@ export async function GET(request: NextRequest) {
     }
     if (isRead !== null) {
       const readValue = isRead === 'true';
-      query = readValue ? query.not('readAt', 'is', null) : query.is('readAt', null);
+      query = readValue
+        ? query.not('readAt', 'is', null)
+        : query.is('readAt', null);
     }
 
     const { data: notifications, error, count } = await query;
 
     if (error) {
       console.error('获取通知列表失败:', error);
-      return NextResponse.json(
-        { error: '获取通知列表失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '获取通知列表失败' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -81,12 +85,11 @@ export async function GET(request: NextRequest) {
       data: notifications || [],
       count: count || 0,
     });
-
   } catch (error) {
     console.error('获取通知列表失败:', error);
     return NextResponse.json(
       { error: '获取通知列表失败', details: error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -109,7 +112,10 @@ export async function POST(request: NextRequest) {
     const requiredFields = ['memberId', 'type', 'title', 'message', 'priority'];
     for (const field of requiredFields) {
       if (!body[field]) {
-        return NextResponse.json({ error: `缺少必需字段: ${field}` }, { status: 400 });
+        return NextResponse.json(
+          { error: `缺少必需字段: ${field}` },
+          { status: 400 },
+        );
       }
     }
 
@@ -117,13 +123,13 @@ export async function POST(request: NextRequest) {
     const { hasAccess } = await memberRepository.verifyMemberAccess(
       'verifyMemberAccess',
       body.memberId,
-      user.id
+      user.id,
     );
 
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限为该成员创建通知' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -137,7 +143,9 @@ export async function POST(request: NextRequest) {
       message: body.message,
       priority: body.priority as NotificationPriority,
       data: body.data || null,
-      scheduledFor: body.scheduledFor ? new Date(body.scheduledFor).toISOString() : null,
+      scheduledFor: body.scheduledFor
+        ? new Date(body.scheduledFor).toISOString()
+        : null,
       expiresAt: body.expiresAt ? new Date(body.expiresAt).toISOString() : null,
       readAt: null,
       createdAt: now,
@@ -152,10 +160,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('创建通知失败:', error);
-      return NextResponse.json(
-        { error: '创建通知失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '创建通知失败' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -163,12 +168,11 @@ export async function POST(request: NextRequest) {
       message: '通知创建成功',
       data: notification,
     });
-
   } catch (error) {
     console.error('创建通知失败:', error);
     return NextResponse.json(
       { error: '创建通知失败', details: error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

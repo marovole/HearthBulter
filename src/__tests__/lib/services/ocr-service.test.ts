@@ -4,7 +4,12 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { OcrService, SUPPORTED_MIME_TYPES, type SupportedMimeType, type OcrResult } from '@/lib/services/ocr-service';
+import {
+  OcrService,
+  SUPPORTED_MIME_TYPES,
+  type SupportedMimeType,
+  type OcrResult,
+} from '@/lib/services/ocr-service';
 import Tesseract from 'tesseract.js';
 import * as pdfParse from 'pdf-parse';
 import sharp from 'sharp';
@@ -97,7 +102,7 @@ describe('OcrService', () => {
       expect(Tesseract.recognize).toHaveBeenCalledWith(
         mockProcessedBuffer,
         'chi_sim+eng',
-        expect.objectContaining({ logger: expect.any(Function) })
+        expect.objectContaining({ logger: expect.any(Function) }),
       );
 
       expect(result.text).toBe('识别的文本内容');
@@ -110,7 +115,9 @@ describe('OcrService', () => {
         greyscale: jest.fn().mockReturnThis(),
         normalize: jest.fn().mockReturnThis(),
         sharpen: jest.fn().mockReturnThis(),
-        toBuffer: jest.fn().mockRejectedValue(new Error('Preprocessing failed')),
+        toBuffer: jest
+          .fn()
+          .mockRejectedValue(new Error('Preprocessing failed')),
       });
 
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -119,12 +126,12 @@ describe('OcrService', () => {
 
       expect(consoleSpy).toHaveBeenCalledWith(
         '图片预处理失败，使用原始图片:',
-        expect.any(Error)
+        expect.any(Error),
       );
       expect(Tesseract.recognize).toHaveBeenCalledWith(
         mockImageBuffer, // Should use original buffer
         'chi_sim+eng',
-        expect.any(Object)
+        expect.any(Object),
       );
 
       consoleSpy.mockRestore();
@@ -170,10 +177,12 @@ describe('OcrService', () => {
     });
 
     it('should throw error if OCR recognition fails', async () => {
-      (Tesseract.recognize as jest.Mock).mockRejectedValue(new Error('OCR引擎错误'));
+      (Tesseract.recognize as jest.Mock).mockRejectedValue(
+        new Error('OCR引擎错误'),
+      );
 
       await expect(
-        OcrService.recognize(mockImageBuffer, 'image/jpeg')
+        OcrService.recognize(mockImageBuffer, 'image/jpeg'),
       ).rejects.toThrow('OCR识别失败: OCR引擎错误');
     });
 
@@ -183,7 +192,9 @@ describe('OcrService', () => {
       const endTime = Date.now();
 
       expect(result.processingTime).toBeGreaterThanOrEqual(0);
-      expect(result.processingTime).toBeLessThanOrEqual(endTime - startTime + 100); // Allow some margin
+      expect(result.processingTime).toBeLessThanOrEqual(
+        endTime - startTime + 100,
+      ); // Allow some margin
     });
 
     it('should support custom language', async () => {
@@ -194,7 +205,7 @@ describe('OcrService', () => {
       expect(Tesseract.recognize).toHaveBeenCalledWith(
         expect.any(Buffer),
         'chi_sim+eng', // Default language
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -214,7 +225,10 @@ describe('OcrService', () => {
     });
 
     it('should recognize text-based PDF', async () => {
-      const result = await OcrService.recognize(mockPdfBuffer, 'application/pdf');
+      const result = await OcrService.recognize(
+        mockPdfBuffer,
+        'application/pdf',
+      );
 
       expect(pdfParse as jest.Mock).toHaveBeenCalledWith(mockPdfBuffer);
 
@@ -229,7 +243,10 @@ describe('OcrService', () => {
         numpages: 1,
       });
 
-      const result = await OcrService.recognize(mockPdfBuffer, 'application/pdf');
+      const result = await OcrService.recognize(
+        mockPdfBuffer,
+        'application/pdf',
+      );
 
       expect(result.text).toBe('PDF边缘空格');
     });
@@ -241,7 +258,7 @@ describe('OcrService', () => {
       });
 
       await expect(
-        OcrService.recognize(mockPdfBuffer, 'application/pdf')
+        OcrService.recognize(mockPdfBuffer, 'application/pdf'),
       ).rejects.toThrow('PDF识别失败: 图片型PDF需要先转换为图片');
     });
 
@@ -252,7 +269,7 @@ describe('OcrService', () => {
       });
 
       await expect(
-        OcrService.recognize(mockPdfBuffer, 'application/pdf')
+        OcrService.recognize(mockPdfBuffer, 'application/pdf'),
       ).rejects.toThrow('PDF识别失败: 图片型PDF需要先转换为图片');
     });
 
@@ -260,7 +277,7 @@ describe('OcrService', () => {
       (pdfParse as jest.Mock).mockRejectedValue(new Error('PDF解析失败'));
 
       await expect(
-        OcrService.recognize(mockPdfBuffer, 'application/pdf')
+        OcrService.recognize(mockPdfBuffer, 'application/pdf'),
       ).rejects.toThrow('PDF识别失败: PDF解析失败');
     });
 
@@ -268,7 +285,7 @@ describe('OcrService', () => {
       (pdfParse as jest.Mock).mockRejectedValue(null);
 
       await expect(
-        OcrService.recognize(mockPdfBuffer, 'application/pdf')
+        OcrService.recognize(mockPdfBuffer, 'application/pdf'),
       ).rejects.toThrow('PDF识别失败: 未知错误');
     });
 
@@ -276,7 +293,7 @@ describe('OcrService', () => {
       (pdfParse as jest.Mock).mockRejectedValue('字符串错误');
 
       await expect(
-        OcrService.recognize(mockPdfBuffer, 'application/pdf')
+        OcrService.recognize(mockPdfBuffer, 'application/pdf'),
       ).rejects.toThrow('PDF识别失败: 字符串错误');
     });
   });
@@ -285,17 +302,21 @@ describe('OcrService', () => {
     const mockBuffer = Buffer.from('test-data');
 
     beforeEach(() => {
-      jest.spyOn(OcrService, 'recognizeImage' as any).mockImplementation(async (buffer, language) => ({
-        text: 'Image text',
-        confidence: 95,
-        processingTime: 1000,
-      }));
+      jest
+        .spyOn(OcrService, 'recognizeImage' as any)
+        .mockImplementation(async (buffer, language) => ({
+          text: 'Image text',
+          confidence: 95,
+          processingTime: 1000,
+        }));
 
-      jest.spyOn(OcrService, 'recognizePdf' as any).mockImplementation(async (buffer) => ({
-        text: 'PDF text',
-        confidence: 100,
-        processingTime: 500,
-      }));
+      jest
+        .spyOn(OcrService, 'recognizePdf' as any)
+        .mockImplementation(async (buffer) => ({
+          text: 'PDF text',
+          confidence: 100,
+          processingTime: 500,
+        }));
     });
 
     afterEach(() => {
@@ -328,7 +349,7 @@ describe('OcrService', () => {
 
     it('should throw error for unsupported file type', async () => {
       await expect(
-        OcrService.recognize(mockBuffer, 'text/plain' as SupportedMimeType)
+        OcrService.recognize(mockBuffer, 'text/plain' as SupportedMimeType),
       ).rejects.toThrow('不支持的文件类型: text/plain');
     });
   });
@@ -341,14 +362,16 @@ describe('OcrService', () => {
     ];
 
     beforeEach(() => {
-      jest.spyOn(OcrService, 'recognize').mockImplementation(async (buffer, mimeType) => {
-        const index = mockBuffers.indexOf(buffer);
-        return {
-          text: `Text ${index + 1}`,
-          confidence: 90 + index,
-          processingTime: 1000 + index * 100,
-        };
-      });
+      jest
+        .spyOn(OcrService, 'recognize')
+        .mockImplementation(async (buffer, mimeType) => {
+          const index = mockBuffers.indexOf(buffer);
+          return {
+            text: `Text ${index + 1}`,
+            confidence: 90 + index,
+            processingTime: 1000 + index * 100,
+          };
+        });
     });
 
     afterEach(() => {
@@ -356,7 +379,10 @@ describe('OcrService', () => {
     });
 
     it('should recognize multiple files', async () => {
-      const results = await OcrService.recognizeBatch(mockBuffers, 'image/jpeg');
+      const results = await OcrService.recognizeBatch(
+        mockBuffers,
+        'image/jpeg',
+      );
 
       expect(results).toHaveLength(3);
       expect(results[0].text).toBe('Text 1');
@@ -365,7 +391,10 @@ describe('OcrService', () => {
     });
 
     it('should maintain order of results', async () => {
-      const results = await OcrService.recognizeBatch(mockBuffers, 'image/jpeg');
+      const results = await OcrService.recognizeBatch(
+        mockBuffers,
+        'image/jpeg',
+      );
 
       expect(results[0].processingTime).toBe(1000);
       expect(results[1].processingTime).toBe(1100);
@@ -379,25 +408,24 @@ describe('OcrService', () => {
     });
 
     it('should process all files even if some fail', async () => {
-      const failingBuffers = [
-        ...mockBuffers,
-        Buffer.from('failing'),
-      ];
+      const failingBuffers = [...mockBuffers, Buffer.from('failing')];
 
-      jest.spyOn(OcrService, 'recognize').mockImplementation(async (buffer, mimeType) => {
-        if (buffer === failingBuffers[3]) {
-          throw new Error('recognition failed');
-        }
-        const index = failingBuffers.indexOf(buffer);
-        return {
-          text: `Text ${index + 1}`,
-          confidence: 90 + index,
-          processingTime: 1000 + index * 100,
-        };
-      });
+      jest
+        .spyOn(OcrService, 'recognize')
+        .mockImplementation(async (buffer, mimeType) => {
+          if (buffer === failingBuffers[3]) {
+            throw new Error('recognition failed');
+          }
+          const index = failingBuffers.indexOf(buffer);
+          return {
+            text: `Text ${index + 1}`,
+            confidence: 90 + index,
+            processingTime: 1000 + index * 100,
+          };
+        });
 
       await expect(
-        OcrService.recognizeBatch(failingBuffers, 'image/jpeg')
+        OcrService.recognizeBatch(failingBuffers, 'image/jpeg'),
       ).rejects.toThrow('recognition failed');
 
       expect(OcrService.recognize).toHaveBeenCalledTimes(4);
@@ -407,9 +435,18 @@ describe('OcrService', () => {
       await OcrService.recognizeBatch(mockBuffers, 'image/jpeg');
 
       expect(OcrService.recognize).toHaveBeenCalledTimes(3);
-      expect(OcrService.recognize).toHaveBeenCalledWith(mockBuffers[0], 'image/jpeg');
-      expect(OcrService.recognize).toHaveBeenCalledWith(mockBuffers[1], 'image/jpeg');
-      expect(OcrService.recognize).toHaveBeenCalledWith(mockBuffers[2], 'image/jpeg');
+      expect(OcrService.recognize).toHaveBeenCalledWith(
+        mockBuffers[0],
+        'image/jpeg',
+      );
+      expect(OcrService.recognize).toHaveBeenCalledWith(
+        mockBuffers[1],
+        'image/jpeg',
+      );
+      expect(OcrService.recognize).toHaveBeenCalledWith(
+        mockBuffers[2],
+        'image/jpeg',
+      );
     });
   });
 
@@ -427,7 +464,10 @@ describe('OcrService', () => {
         numpages: 1,
       });
 
-      const result = await OcrService.recognize(mockPdfBuffer, 'application/pdf');
+      const result = await OcrService.recognize(
+        mockPdfBuffer,
+        'application/pdf',
+      );
 
       expect(result.text).toBe('完整的PDF报告内容');
       expect(result.confidence).toBe(100);
@@ -463,22 +503,27 @@ describe('OcrService', () => {
       // Currently it's designed for same mime type batches
       const buffers = [mockPdfBuffer, mockImageBuffer, mockImageBuffer];
 
-      jest.spyOn(OcrService, 'recognize').mockImplementation(async (buffer, mimeType) => {
-        if (buffer === mockPdfBuffer) {
+      jest
+        .spyOn(OcrService, 'recognize')
+        .mockImplementation(async (buffer, mimeType) => {
+          if (buffer === mockPdfBuffer) {
+            return {
+              text: 'PDF content',
+              confidence: 100,
+              processingTime: 500,
+            };
+          }
           return {
-            text: 'PDF content',
-            confidence: 100,
-            processingTime: 500,
+            text: 'Image content',
+            confidence: 90,
+            processingTime: 1000,
           };
-        }
-        return {
-          text: 'Image content',
-          confidence: 90,
-          processingTime: 1000,
-        };
-      });
+        });
 
-      const results = await OcrService.recognizeBatch([mockPdfBuffer, mockImageBuffer], 'application/pdf');
+      const results = await OcrService.recognizeBatch(
+        [mockPdfBuffer, mockImageBuffer],
+        'application/pdf',
+      );
 
       expect(results).toHaveLength(2);
       expect(results[0].text).toBe('PDF content');
@@ -495,24 +540,29 @@ describe('OcrService', () => {
         toBuffer: jest.fn().mockRejectedValue(new Error('Sharp error')),
       });
 
-      const result = await OcrService.recognize(Buffer.from('test'), 'image/jpeg');
+      const result = await OcrService.recognize(
+        Buffer.from('test'),
+        'image/jpeg',
+      );
 
       expect(result).toBeDefined();
       // Should fall back to original buffer and still work
     });
 
     it('should handle Tesseract processing with warnings', async () => {
-      (Tesseract.recognize as jest.Mock).mockImplementation(async (buffer, lang, options) => {
-        if (options.logger) {
-          options.logger({ status: 'recognizing text', progress: 0.5 });
-        }
-        return {
-          data: {
-            text: 'Processed with warnings',
-            confidence: 85,
-          },
-        };
-      });
+      (Tesseract.recognize as jest.Mock).mockImplementation(
+        async (buffer, lang, options) => {
+          if (options.logger) {
+            options.logger({ status: 'recognizing text', progress: 0.5 });
+          }
+          return {
+            data: {
+              text: 'Processed with warnings',
+              confidence: 85,
+            },
+          };
+        },
+      );
 
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 

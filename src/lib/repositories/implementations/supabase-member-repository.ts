@@ -37,13 +37,14 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async verifyMemberAccess(
     memberId: string,
-    userId: string
+    userId: string,
   ): Promise<MemberAccessResult> {
     try {
       // 查询成员信息，包含家庭信息
       const { data: member, error } = await this.supabase
         .from('family_members')
-        .select(`
+        .select(
+          `
           id,
           name,
           familyId,
@@ -53,7 +54,8 @@ export class SupabaseMemberRepository implements MemberRepository {
             id,
             creatorId
           )
-        `)
+        `,
+        )
         .eq('id', memberId)
         .is('deletedAt', null)
         .single();
@@ -71,7 +73,9 @@ export class SupabaseMemberRepository implements MemberRepository {
       // 1. 用户是家庭创建者
       // 2. 用户是成员本人（member.userId === userId）
       // 3. 用户是管理员成员
-      const family = Array.isArray(member.family) ? member.family[0] : member.family;
+      const family = Array.isArray(member.family)
+        ? member.family[0]
+        : member.family;
       const isCreator = family?.creatorId === userId;
       const isSelf = member.userId === userId;
 
@@ -117,7 +121,7 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async getHealthGoals(
     memberId: string,
-    includeInactive: boolean = false
+    includeInactive: boolean = false,
   ): Promise<HealthGoalDTO[]> {
     let query = this.supabase
       .from('health_goals')
@@ -163,7 +167,7 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async createHealthGoal(
     memberId: string,
-    input: CreateHealthGoalInput
+    input: CreateHealthGoalInput,
   ): Promise<HealthGoalDTO> {
     const { data, error } = await this.supabase
       .from('health_goals')
@@ -198,22 +202,27 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async updateHealthGoal(
     goalId: string,
-    input: UpdateHealthGoalInput
+    input: UpdateHealthGoalInput,
   ): Promise<HealthGoalDTO> {
     const updateData: any = {};
 
     if (input.goalType !== undefined) updateData.goalType = input.goalType;
-    if (input.targetWeight !== undefined) updateData.targetWeight = input.targetWeight;
-    if (input.currentWeight !== undefined) updateData.currentWeight = input.currentWeight;
-    if (input.targetWeeks !== undefined) updateData.targetWeeks = input.targetWeeks;
+    if (input.targetWeight !== undefined)
+      updateData.targetWeight = input.targetWeight;
+    if (input.currentWeight !== undefined)
+      updateData.currentWeight = input.currentWeight;
+    if (input.targetWeeks !== undefined)
+      updateData.targetWeeks = input.targetWeeks;
     if (input.targetDate !== undefined) {
       updateData.targetDate = input.targetDate.toISOString();
     }
     if (input.tdee !== undefined) updateData.tdee = input.tdee;
     if (input.bmr !== undefined) updateData.bmr = input.bmr;
-    if (input.activityFactor !== undefined) updateData.activityFactor = input.activityFactor;
+    if (input.activityFactor !== undefined)
+      updateData.activityFactor = input.activityFactor;
     if (input.carbRatio !== undefined) updateData.carbRatio = input.carbRatio;
-    if (input.proteinRatio !== undefined) updateData.proteinRatio = input.proteinRatio;
+    if (input.proteinRatio !== undefined)
+      updateData.proteinRatio = input.proteinRatio;
     if (input.fatRatio !== undefined) updateData.fatRatio = input.fatRatio;
     if (input.status !== undefined) updateData.status = input.status;
     if (input.progress !== undefined) updateData.progress = input.progress;
@@ -268,7 +277,7 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async createAllergy(
     memberId: string,
-    input: CreateAllergyInput
+    input: CreateAllergyInput,
   ): Promise<AllergyDTO> {
     const { data, error } = await this.supabase
       .from('allergies')
@@ -292,14 +301,17 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async updateAllergy(
     allergyId: string,
-    input: UpdateAllergyInput
+    input: UpdateAllergyInput,
   ): Promise<AllergyDTO> {
     const updateData: any = {};
 
-    if (input.allergenType !== undefined) updateData.allergenType = input.allergenType;
-    if (input.allergenName !== undefined) updateData.allergenName = input.allergenName;
+    if (input.allergenType !== undefined)
+      updateData.allergenType = input.allergenType;
+    if (input.allergenName !== undefined)
+      updateData.allergenName = input.allergenName;
     if (input.severity !== undefined) updateData.severity = input.severity;
-    if (input.description !== undefined) updateData.description = input.description;
+    if (input.description !== undefined)
+      updateData.description = input.description;
 
     const { data, error } = await this.supabase
       .from('allergies')
@@ -334,7 +346,14 @@ export class SupabaseMemberRepository implements MemberRepository {
   // ============================================================================
 
   async getHealthData(query: HealthDataQuery): Promise<HealthDataResult> {
-    const { memberId, startDate, endDate, page = 1, limit = 10, sortOrder = 'desc' } = query;
+    const {
+      memberId,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sortOrder = 'desc',
+    } = query;
 
     let dbQuery = this.supabase
       .from('health_data')
@@ -377,7 +396,7 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async createHealthData(
     memberId: string,
-    input: CreateHealthDataInput
+    input: CreateHealthDataInput,
   ): Promise<HealthDataDTO> {
     const { data, error } = await this.supabase
       .from('health_data')
@@ -407,13 +426,14 @@ export class SupabaseMemberRepository implements MemberRepository {
 
   async updateHealthData(
     dataId: string,
-    input: UpdateHealthDataInput
+    input: UpdateHealthDataInput,
   ): Promise<HealthDataDTO> {
     const updateData: any = {};
 
     if (input.weight !== undefined) updateData.weight = input.weight;
     if (input.bodyFat !== undefined) updateData.bodyFat = input.bodyFat;
-    if (input.muscleMass !== undefined) updateData.muscleMass = input.muscleMass;
+    if (input.muscleMass !== undefined)
+      updateData.muscleMass = input.muscleMass;
     if (input.bloodPressureSystolic !== undefined) {
       updateData.bloodPressureSystolic = input.bloodPressureSystolic;
     }

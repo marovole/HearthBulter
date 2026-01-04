@@ -1,4 +1,4 @@
-type ToastType = 'success' | 'error' | 'info'
+type ToastType = 'success' | 'error' | 'info';
 
 function notify(type: ToastType, message: string) {
   if (typeof window !== 'undefined' && 'Notification' in window) {

@@ -1,4 +1,9 @@
-import { IPlatformAdapter, IPlatformAdapterFactory, PlatformError, PlatformErrorType } from './types';
+import {
+  IPlatformAdapter,
+  IPlatformAdapterFactory,
+  PlatformError,
+  PlatformErrorType,
+} from './types';
 import { EcommercePlatform } from '@prisma/client';
 import { SamsClubAdapter } from './sams-adapter';
 import { HemaAdapter } from './hema-adapter';
@@ -27,7 +32,7 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
 
   createAdapter(platform: EcommercePlatform): IPlatformAdapter {
     const adapter = this.adapters.get(platform);
-    
+
     if (!adapter) {
       throw new PlatformError({
         type: PlatformErrorType.PLATFORM_ERROR,
@@ -56,9 +61,9 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
 
   // 获取所有适配器信息
   getAllAdaptersInfo(): Array<{
-    platform: EcommercePlatform
-    platformName: string
-    baseUrl: string
+    platform: EcommercePlatform;
+    platformName: string;
+    baseUrl: string;
   }> {
     return Array.from(this.adapters.entries()).map(([platform, adapter]) => ({
       platform,
@@ -72,7 +77,9 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
 export const platformAdapterFactory = PlatformAdapterFactory.getInstance();
 
 // 便捷函数
-export function createPlatformAdapter(platform: EcommercePlatform): IPlatformAdapter {
+export function createPlatformAdapter(
+  platform: EcommercePlatform,
+): IPlatformAdapter {
   return platformAdapterFactory.createAdapter(platform);
 }
 

@@ -1,4 +1,9 @@
-import { sensitiveFilter, filterSensitiveInfo, hasSensitiveInfo, getSensitiveInfoRisk } from '@/lib/services/sensitive-filter';
+import {
+  sensitiveFilter,
+  filterSensitiveInfo,
+  hasSensitiveInfo,
+  getSensitiveInfoRisk,
+} from '@/lib/services/sensitive-filter';
 
 describe('SensitiveFilterService', () => {
   describe('filter', () => {
@@ -17,7 +22,9 @@ describe('SensitiveFilterService', () => {
       const result = sensitiveFilter.filter(text);
 
       expect(result.hasSensitiveInfo).toBe(true);
-      expect(result.detectedItems.some(item => item.type === 'phone')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'phone')).toBe(
+        true,
+      );
       expect(result.filteredText).not.toContain('13800138000');
       expect(result.filteredText).not.toContain('010-12345678');
     });
@@ -103,7 +110,10 @@ describe('SensitiveFilterService', () => {
       const originalText = '身份证：123456789012345678';
       const filteredText = sensitiveFilter.filter(originalText).filteredText;
 
-      const isValid = sensitiveFilter.validateFilter(originalText, filteredText);
+      const isValid = sensitiveFilter.validateFilter(
+        originalText,
+        filteredText,
+      );
       expect(isValid).toBe(true);
     });
   });
@@ -140,7 +150,9 @@ describe('SensitiveFilterService', () => {
       const result = sensitiveFilter.filter(text);
 
       expect(result.hasSensitiveInfo).toBe(true);
-      expect(result.detectedItems.some(item => item.type === 'custom')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'custom')).toBe(
+        true,
+      );
       expect(result.filteredText).toContain('[SECRET]');
     });
   });
@@ -168,16 +180,24 @@ describe('SensitiveFilterService', () => {
       const text = '身份证123456789012345678，邮箱test@example.com';
       const result = sensitiveFilter.filter(text, { excludeTypes: ['email'] });
 
-      expect(result.detectedItems.some(item => item.type === 'id_card')).toBe(true);
-      expect(result.detectedItems.every(item => item.type !== 'email')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'id_card')).toBe(
+        true,
+      );
+      expect(result.detectedItems.every((item) => item.type !== 'email')).toBe(
+        true,
+      );
     });
 
     it('should include only specified types', () => {
       const text = '身份证123456789012345678，邮箱test@example.com';
       const result = sensitiveFilter.filter(text, { includeTypes: ['email'] });
 
-      expect(result.detectedItems.some(item => item.type === 'id_card')).toBe(false);
-      expect(result.detectedItems.some(item => item.type === 'email')).toBe(true);
+      expect(result.detectedItems.some((item) => item.type === 'id_card')).toBe(
+        false,
+      );
+      expect(result.detectedItems.some((item) => item.type === 'email')).toBe(
+        true,
+      );
     });
   });
 });

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       if (!user?.id) {
         return NextResponse.json(
           { status: 'error', error: '未授权访问' },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       if (!authResult.authorized) {
         return NextResponse.json(
           { status: 'error', error: '需要管理员权限' },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -47,7 +47,10 @@ export async function GET(request: NextRequest) {
     // 仅检查配置是否存在（不暴露实际值）
     const configStatus = {
       auth: process.env.NEXTAUTH_SECRET ? 'configured' : 'missing',
-      database: process.env.DATABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL ? 'configured' : 'missing',
+      database:
+        process.env.DATABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+          ? 'configured'
+          : 'missing',
     };
 
     return NextResponse.json({
@@ -55,12 +58,14 @@ export async function GET(request: NextRequest) {
       config: configStatus,
       message: 'Health Butler API is running',
     });
-
   } catch (error) {
-    return NextResponse.json({
-      status: 'unhealthy',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        status: 'unhealthy',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 },
+    );
   }
 }

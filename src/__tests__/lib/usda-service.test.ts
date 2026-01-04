@@ -28,16 +28,20 @@ describe('USDA Service', () => {
               { nutrientId: 1008, nutrientName: 'Energy', value: 165 },
               { nutrientId: 1003, nutrientName: 'Protein', value: 23 },
               { nutrientId: 1005, nutrientName: 'Carbohydrate', value: 0 },
-              { nutrientId: 1004, nutrientName: 'Total lipid (fat)', value: 1.2 },
+              {
+                nutrientId: 1004,
+                nutrientName: 'Total lipid (fat)',
+                value: 1.2,
+              },
             ],
           },
         ],
         totalHits: 1,
         currentPage: 1,
         totalPages: 1,
-      }
+      };
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       });
@@ -47,16 +51,21 @@ describe('USDA Service', () => {
       expect(result).toEqual(mockResponse);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('chicken'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should handle API errors with retry', async () => {
-      ;(global.fetch as jest.Mock)
+      (global.fetch as jest.Mock)
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ foods: [], totalHits: 0, currentPage: 1, totalPages: 0 }),
+          json: async () => ({
+            foods: [],
+            totalHits: 0,
+            currentPage: 1,
+            totalPages: 0,
+          }),
         });
 
       const result = await service.searchFoods('chicken');
@@ -66,7 +75,7 @@ describe('USDA Service', () => {
     });
 
     it('should handle rate limit errors', async () => {
-      ;(global.fetch as jest.Mock)
+      (global.fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: false,
           status: 429,
@@ -74,7 +83,12 @@ describe('USDA Service', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ foods: [], totalHits: 0, currentPage: 1, totalPages: 0 }),
+          json: async () => ({
+            foods: [],
+            totalHits: 0,
+            currentPage: 1,
+            totalPages: 0,
+          }),
         });
 
       const result = await service.searchFoods('chicken');
@@ -87,7 +101,7 @@ describe('USDA Service', () => {
       const serviceWithoutKey = new USDAService();
 
       await expect(serviceWithoutKey.searchFoods('chicken')).rejects.toThrow(
-        'USDA API key is not configured'
+        'USDA API key is not configured',
       );
     });
   });
@@ -101,9 +115,9 @@ describe('USDA Service', () => {
           { nutrientId: 1008, nutrientName: 'Energy', value: 165 },
           { nutrientId: 1003, nutrientName: 'Protein', value: 23 },
         ],
-      }
+      };
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => mockFood,
       });
@@ -113,7 +127,7 @@ describe('USDA Service', () => {
       expect(result).toEqual(mockFood);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('123456'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -121,7 +135,7 @@ describe('USDA Service', () => {
       const serviceWithoutKey = new USDAService();
 
       await expect(serviceWithoutKey.getFoodByFdcId(123456)).rejects.toThrow(
-        'USDA API key is not configured'
+        'USDA API key is not configured',
       );
     });
   });
@@ -137,16 +151,20 @@ describe('USDA Service', () => {
               { nutrientId: 1008, nutrientName: 'Energy', value: 165 },
               { nutrientId: 1003, nutrientName: 'Protein', value: 23 },
               { nutrientId: 1005, nutrientName: 'Carbohydrate', value: 0 },
-              { nutrientId: 1004, nutrientName: 'Total lipid (fat)', value: 1.2 },
+              {
+                nutrientId: 1004,
+                nutrientName: 'Total lipid (fat)',
+                value: 1.2,
+              },
             ],
           },
         ],
         totalHits: 1,
         currentPage: 1,
         totalPages: 1,
-      }
+      };
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       });
@@ -173,16 +191,20 @@ describe('USDA Service', () => {
               { nutrientId: 1008, nutrientName: 'Energy', value: 34 },
               { nutrientId: 1003, nutrientName: 'Protein', value: 2.8 },
               { nutrientId: 1005, nutrientName: 'Carbohydrate', value: 7 },
-              { nutrientId: 1004, nutrientName: 'Total lipid (fat)', value: 0.4 },
+              {
+                nutrientId: 1004,
+                nutrientName: 'Total lipid (fat)',
+                value: 0.4,
+              },
             ],
           },
         ],
         totalHits: 1,
         currentPage: 1,
         totalPages: 1,
-      }
+      };
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       });
@@ -193,7 +215,7 @@ describe('USDA Service', () => {
       expect(result.foods).toHaveLength(1);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('broccoli'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -212,9 +234,9 @@ describe('USDA Service', () => {
         totalHits: 1,
         currentPage: 1,
         totalPages: 1,
-      }
+      };
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       });
@@ -224,7 +246,7 @@ describe('USDA Service', () => {
       expect(result.foods).toHaveLength(1);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('beef'),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -243,9 +265,9 @@ describe('USDA Service', () => {
         totalHits: 1,
         currentPage: 1,
         totalPages: 1,
-      }
+      };
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       });
@@ -259,4 +281,3 @@ describe('USDA Service', () => {
     });
   });
 });
-

@@ -5,13 +5,28 @@
 import { z } from 'zod';
 
 // 报告类型枚举
-export const reportTypeSchema = z.enum(['WEEKLY', 'MONTHLY', 'QUARTERLY', 'CUSTOM']);
+export const reportTypeSchema = z.enum([
+  'WEEKLY',
+  'MONTHLY',
+  'QUARTERLY',
+  'CUSTOM',
+]);
 
 // 异常严重程度枚举
-export const anomalySeveritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
+export const anomalySeveritySchema = z.enum([
+  'LOW',
+  'MEDIUM',
+  'HIGH',
+  'CRITICAL',
+]);
 
 // 异常状态枚举
-export const anomalyStatusSchema = z.enum(['PENDING', 'ACKNOWLEDGED', 'RESOLVED', 'IGNORED']);
+export const anomalyStatusSchema = z.enum([
+  'PENDING',
+  'ACKNOWLEDGED',
+  'RESOLVED',
+  'IGNORED',
+]);
 
 // 通用 ID Schema
 const memberIdSchema = z.string().min(1, '缺少成员 ID');
@@ -26,20 +41,22 @@ export const reportsQuerySchema = z.object({
 });
 
 // 报告创建 Schema
-export const createReportSchema = z.object({
-  memberId: memberIdSchema,
-  reportType: reportTypeSchema,
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-}).refine(
-  (data) => {
-    if (data.reportType === 'CUSTOM') {
-      return data.startDate && data.endDate;
-    }
-    return true;
-  },
-  { message: '自定义报告必须指定开始和结束日期' }
-);
+export const createReportSchema = z
+  .object({
+    memberId: memberIdSchema,
+    reportType: reportTypeSchema,
+    startDate: z.string().datetime().optional(),
+    endDate: z.string().datetime().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.reportType === 'CUSTOM') {
+        return data.startDate && data.endDate;
+      }
+      return true;
+    },
+    { message: '自定义报告必须指定开始和结束日期' },
+  );
 
 // 报告分享 Schema
 export const shareReportSchema = z.object({
@@ -77,7 +94,14 @@ export const healthScoreQuerySchema = z.object({
 // 趋势分析查询 Schema
 export const trendAnalysisQuerySchema = z.object({
   memberId: memberIdSchema,
-  metricType: z.enum(['WEIGHT', 'CALORIES', 'EXERCISE', 'SLEEP', 'HEART_RATE', 'BLOOD_PRESSURE']),
+  metricType: z.enum([
+    'WEIGHT',
+    'CALORIES',
+    'EXERCISE',
+    'SLEEP',
+    'HEART_RATE',
+    'BLOOD_PRESSURE',
+  ]),
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
   granularity: z.enum(['DAY', 'WEEK', 'MONTH']).default('DAY'),

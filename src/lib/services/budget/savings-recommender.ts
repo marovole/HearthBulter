@@ -1,58 +1,69 @@
 import { PrismaClient } from '@prisma/client';
-import { Food, FoodCategory, PriceHistory, SavingsType, SavingsRecommendation } from '@prisma/client';
+import {
+  Food,
+  FoodCategory,
+  PriceHistory,
+  SavingsType,
+  SavingsRecommendation,
+} from '@prisma/client';
+import type {
+  AffordableFood,
+  MealRecipe,
+  BudgetItem,
+} from '@/types/service-types';
 
 const prisma = new PrismaClient();
 
 export interface PromotionInfo {
-  foodId: string
-  foodName: string
-  originalPrice: number
-  discountedPrice: number
-  discountPercentage: number
-  platform: string
-  validUntil: Date
+  foodId: string;
+  foodName: string;
+  originalPrice: number;
+  discountedPrice: number;
+  discountPercentage: number;
+  platform: string;
+  validUntil: Date;
 }
 
 export interface GroupBuyInfo {
-  foodId: string
-  foodName: string
-  regularPrice: number
-  groupPrice: number
-  minQuantity: number
-  currentParticipants: number
-  platform: string
-  expiresAt: Date
+  foodId: string;
+  foodName: string;
+  regularPrice: number;
+  groupPrice: number;
+  minQuantity: number;
+  currentParticipants: number;
+  platform: string;
+  expiresAt: Date;
 }
 
 export interface SeasonalAlternative {
-  originalFoodId: string
-  originalFoodName: string
-  originalPrice: number
-  alternativeFoodId: string
-  alternativeFoodName: string
-  alternativePrice: number
-  savings: number
-  season: string
+  originalFoodId: string;
+  originalFoodName: string;
+  originalPrice: number;
+  alternativeFoodId: string;
+  alternativeFoodName: string;
+  alternativePrice: number;
+  savings: number;
+  season: string;
 }
 
 export interface BulkPurchaseSuggestion {
-  foodId: string
-  foodName: string
-  unitPrice: number
-  bulkPrice: number
-  minBulkQuantity: number
-  totalSavings: number
-  platform: string
+  foodId: string;
+  foodName: string;
+  unitPrice: number;
+  bulkPrice: number;
+  minBulkQuantity: number;
+  totalSavings: number;
+  platform: string;
 }
 
 export interface CouponMatch {
-  foodId: string
-  foodName: string
-  couponCode: string
-  discountAmount: number
-  discountType: 'PERCENTAGE' | 'FIXED'
-  platform: string
-  validUntil: Date
+  foodId: string;
+  foodName: string;
+  couponCode: string;
+  discountAmount: number;
+  discountType: 'PERCENTAGE' | 'FIXED';
+  platform: string;
+  validUntil: Date;
 }
 
 export class SavingsRecommender {
@@ -60,13 +71,19 @@ export class SavingsRecommender {
    * 获取所有节省建议
    */
   async getSavingsRecommendations(memberId: string): Promise<{
-    promotions: PromotionInfo[]
-    groupBuys: GroupBuyInfo[]
-    seasonalAlternatives: SeasonalAlternative[]
-    bulkPurchases: BulkPurchaseSuggestion[]
-    coupons: CouponMatch[]
+    promotions: PromotionInfo[];
+    groupBuys: GroupBuyInfo[];
+    seasonalAlternatives: SeasonalAlternative[];
+    bulkPurchases: BulkPurchaseSuggestion[];
+    coupons: CouponMatch[];
   }> {
-    const [promotions, groupBuys, seasonalAlternatives, bulkPurchases, coupons] = await Promise.all([
+    const [
+      promotions,
+      groupBuys,
+      seasonalAlternatives,
+      bulkPurchases,
+      coupons,
+    ] = await Promise.all([
       this.identifyPromotions(memberId),
       this.identifyGroupBuys(memberId),
       this.identifySeasonalAlternatives(memberId),
@@ -89,11 +106,11 @@ export class SavingsRecommender {
   private async identifyPromotions(memberId: string): Promise<PromotionInfo[]> {
     // 获取用户最近购买的食物
     const recentPurchases = await this.getRecentPurchases(memberId, 30);
-    
+
     if (recentPurchases.length === 0) return [];
 
-    const foodIds = recentPurchases.map(p => p.foodId);
-    
+    const foodIds = recentPurchases.map((p) => p.foodId);
+
     // 获取这些食物的最新价格历史
     const priceHistories = await prisma.priceHistory.findMany({
       where: {
@@ -111,7 +128,7 @@ export class SavingsRecommender {
     const promotions: PromotionInfo[] = [];
     const foodPrices: { [key: string]: PriceHistory[] } = {};
 
-    priceHistories.forEach(price => {
+    priceHistories.forEach((price) => {
       if (!foodPrices[price.foodId]) {
         foodPrices[price.foodId] = [];
       }
@@ -126,8 +143,11 @@ export class SavingsRecommender {
 
       // 检测价格下降超过10%
       if (latestPrice.unitPrice < previousPrice.unitPrice * 0.9) {
-        const discountPercentage = ((previousPrice.unitPrice - latestPrice.unitPrice) / previousPrice.unitPrice) * 100;
-        
+        const discountPercentage =
+          ((previousPrice.unitPrice - latestPrice.unitPrice) /
+            previousPrice.unitPrice) *
+          100;
+
         promotions.push({
           foodId,
           foodName: latestPrice.food.name,
@@ -140,7 +160,9 @@ export class SavingsRecommender {
       }
     }
 
-    return promotions.sort((a, b) => b.discountPercentage - a.discountPercentage);
+    return promotions.sort(
+      (a, b) => b.discountPercentage - a.discountPercentage,
+    );
   }
 
   /**
@@ -149,7 +171,7 @@ export class SavingsRecommender {
   private async identifyGroupBuys(memberId: string): Promise<GroupBuyInfo[]> {
     // 模拟团购数据 - 实际应用中会从团购API获取
     const recentPurchases = await this.getRecentPurchases(memberId, 30);
-    const foodIds = recentPurchases.map(p => p.foodId);
+    const foodIds = recentPurchases.map((p) => p.foodId);
 
     const foods = await prisma.food.findMany({
       where: { id: { in: foodIds } },
@@ -170,7 +192,8 @@ export class SavingsRecommender {
       if (!latestPrice) continue;
 
       // 模拟：某些商品有团购优惠
-      if (Math.random() > 0.7) { // 30%概率有团购
+      if (Math.random() > 0.7) {
+        // 30%概率有团购
         const groupPrice = latestPrice.unitPrice * 0.8; // 20%折扣
         const minQuantity = Math.floor(Math.random() * 5 + 2); // 2-6人成团
 
@@ -187,13 +210,17 @@ export class SavingsRecommender {
       }
     }
 
-    return groupBuys.sort((a, b) => (b.regularPrice - b.groupPrice) - (a.regularPrice - a.groupPrice));
+    return groupBuys.sort(
+      (a, b) => b.regularPrice - b.groupPrice - (a.regularPrice - a.groupPrice),
+    );
   }
 
   /**
    * 识别季节性平价替代
    */
-  private async identifySeasonalAlternatives(memberId: string): Promise<SeasonalAlternative[]> {
+  private async identifySeasonalAlternatives(
+    memberId: string,
+  ): Promise<SeasonalAlternative[]> {
     const recentPurchases = await this.getRecentPurchases(memberId, 30);
     const seasonalAlternatives: SeasonalAlternative[] = [];
 
@@ -239,8 +266,12 @@ export class SavingsRecommender {
         if (!latestPrice) continue;
 
         // 如果当季食物更便宜
-        if (latestPrice.unitPrice < originalFood.priceHistories[0].unitPrice * 0.8) {
-          const savings = originalFood.priceHistories[0].unitPrice - latestPrice.unitPrice;
+        if (
+          latestPrice.unitPrice <
+          originalFood.priceHistories[0].unitPrice * 0.8
+        ) {
+          const savings =
+            originalFood.priceHistories[0].unitPrice - latestPrice.unitPrice;
 
           seasonalAlternatives.push({
             originalFoodId: originalFood.id,
@@ -262,10 +293,12 @@ export class SavingsRecommender {
   /**
    * 识别批量采购建议
    */
-  private async identifyBulkPurchases(memberId: string): Promise<BulkPurchaseSuggestion[]> {
+  private async identifyBulkPurchases(
+    memberId: string,
+  ): Promise<BulkPurchaseSuggestion[]> {
     // 分析用户购买频率
     const purchaseFrequency = await this.getPurchaseFrequency(memberId, 90);
-    
+
     const bulkPurchases: BulkPurchaseSuggestion[] = [];
 
     for (const [foodId, frequency] of Object.entries(purchaseFrequency)) {
@@ -331,10 +364,12 @@ export class SavingsRecommender {
 
       // 模拟：30%概率有可用优惠券
       if (Math.random() > 0.7) {
-        const discountType = Math.random() > 0.5 ? 'PERCENTAGE' as const : 'FIXED' as const;
-        const discountAmount = discountType === 'PERCENTAGE' 
-          ? Math.floor(Math.random() * 20 + 5) // 5-25%折扣
-          : Math.floor(Math.random() * 10 + 2); // 2-12元固定优惠
+        const discountType =
+          Math.random() > 0.5 ? ('PERCENTAGE' as const) : ('FIXED' as const);
+        const discountAmount =
+          discountType === 'PERCENTAGE'
+            ? Math.floor(Math.random() * 20 + 5) // 5-25%折扣
+            : Math.floor(Math.random() * 10 + 2); // 2-12元固定优惠
 
         coupons.push({
           foodId: food.id,
@@ -354,40 +389,55 @@ export class SavingsRecommender {
   /**
    * 生成经济食谱
    */
-  async generateEconomyRecipes(memberId: string, budgetConstraint: number): Promise<{
+  async generateEconomyRecipes(
+    memberId: string,
+    budgetConstraint: number,
+  ): Promise<{
     recipes: Array<{
-      name: string
+      name: string;
       ingredients: Array<{
-        foodName: string
-        amount: number
-        cost: number
-      }>
-      totalCost: number
+        foodName: string;
+        amount: number;
+        cost: number;
+      }>;
+      totalCost: number;
       nutrition: {
-        calories: number
-        protein: number
-        carbs: number
-        fat: number
-      }
-      savings: number
-    }>
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+      };
+      savings: number;
+    }>;
   }> {
     // 获取平价食材
-    const affordableFoods = await this.getAffordableFoods(memberId, budgetConstraint);
-    
+    const affordableFoods = await this.getAffordableFoods(
+      memberId,
+      budgetConstraint,
+    );
+
     // 生成食谱组合
     const recipes = [];
-    
+
     // 早餐组合
-    const breakfastRecipe = this.generateBreakfastRecipe(affordableFoods, budgetConstraint * 0.3);
+    const breakfastRecipe = this.generateBreakfastRecipe(
+      affordableFoods,
+      budgetConstraint * 0.3,
+    );
     if (breakfastRecipe) recipes.push(breakfastRecipe);
-    
+
     // 午餐组合
-    const lunchRecipe = this.generateLunchRecipe(affordableFoods, budgetConstraint * 0.4);
+    const lunchRecipe = this.generateLunchRecipe(
+      affordableFoods,
+      budgetConstraint * 0.4,
+    );
     if (lunchRecipe) recipes.push(lunchRecipe);
-    
+
     // 晚餐组合
-    const dinnerRecipe = this.generateDinnerRecipe(affordableFoods, budgetConstraint * 0.3);
+    const dinnerRecipe = this.generateDinnerRecipe(
+      affordableFoods,
+      budgetConstraint * 0.3,
+    );
     if (dinnerRecipe) recipes.push(dinnerRecipe);
 
     return { recipes };
@@ -396,7 +446,10 @@ export class SavingsRecommender {
   /**
    * 获取用户最近购买记录
    */
-  private async getRecentPurchases(memberId: string, days: number): Promise<Array<{ foodId: string }>> {
+  private async getRecentPurchases(
+    memberId: string,
+    days: number,
+  ): Promise<Array<{ foodId: string }>> {
     // 从支出记录中获取购买信息
     const spendings = await prisma.spending.findMany({
       where: {
@@ -413,11 +466,11 @@ export class SavingsRecommender {
     });
 
     const purchases: Array<{ foodId: string }> = [];
-    
-    spendings.forEach(spending => {
+
+    spendings.forEach((spending) => {
       if (spending.items) {
         const items = spending.items as any[];
-        items.forEach(item => {
+        items.forEach((item) => {
           if (item.foodId) {
             purchases.push({ foodId: item.foodId });
           }
@@ -431,17 +484,20 @@ export class SavingsRecommender {
   /**
    * 获取购买频率
    */
-  private async getPurchaseFrequency(memberId: string, days: number): Promise<{ [key: string]: number }> {
+  private async getPurchaseFrequency(
+    memberId: string,
+    days: number,
+  ): Promise<{ [key: string]: number }> {
     const purchases = await this.getRecentPurchases(memberId, days);
     const frequency: { [key: string]: number } = {};
 
-    purchases.forEach(purchase => {
+    purchases.forEach((purchase) => {
       frequency[purchase.foodId] = (frequency[purchase.foodId] || 0) + 1;
     });
 
     // 转换为月频率
     const months = days / 30;
-    Object.keys(frequency).forEach(foodId => {
+    Object.keys(frequency).forEach((foodId) => {
       frequency[foodId] = frequency[foodId] / months;
     });
 
@@ -451,11 +507,16 @@ export class SavingsRecommender {
   /**
    * 获取平价食材
    */
-  private async getAffordableFoods(memberId: string, maxPrice: number): Promise<Array<{
-    food: Food
-    unitPrice: number
-    platform: string
-  }>> {
+  private async getAffordableFoods(
+    memberId: string,
+    maxPrice: number,
+  ): Promise<
+    Array<{
+      food: Food;
+      unitPrice: number;
+      platform: string;
+    }>
+  > {
     const priceHistories = await prisma.priceHistory.findMany({
       where: {
         isValid: true,
@@ -470,7 +531,7 @@ export class SavingsRecommender {
       take: 50,
     });
 
-    return priceHistories.map(ph => ({
+    return priceHistories.map((ph) => ({
       food: ph.food,
       unitPrice: ph.unitPrice,
       platform: ph.platform,
@@ -480,15 +541,23 @@ export class SavingsRecommender {
   /**
    * 生成早餐食谱
    */
-  private generateBreakfastRecipe(affordableFoods: any[], budget: number): any {
-    const breakfastFoods = affordableFoods.filter(f => 
-      f.food.category === 'GRAINS' || f.food.category === 'DAIRY' || f.food.category === 'FRUITS'
-    ).slice(0, 3);
+  private generateBreakfastRecipe(
+    affordableFoods: AffordableFood[],
+    budget: number,
+  ): MealRecipe | null {
+    const breakfastFoods = affordableFoods
+      .filter(
+        (f) =>
+          f.food?.category === 'GRAINS' ||
+          f.food?.category === 'DAIRY' ||
+          f.food?.category === 'FRUITS',
+      )
+      .slice(0, 3);
 
     if (breakfastFoods.length < 2) return null;
 
-    const ingredients = breakfastFoods.map(food => ({
-      foodName: food.food.name,
+    const ingredients = breakfastFoods.map((food) => ({
+      foodName: food.food?.name || food.name,
       amount: 100,
       cost: food.unitPrice * 0.1,
     }));
@@ -500,10 +569,22 @@ export class SavingsRecommender {
       ingredients,
       totalCost,
       nutrition: {
-        calories: breakfastFoods.reduce((sum, f) => sum + f.food.calories, 0),
-        protein: breakfastFoods.reduce((sum, f) => sum + f.food.protein, 0),
-        carbs: breakfastFoods.reduce((sum, f) => sum + f.food.carbs, 0),
-        fat: breakfastFoods.reduce((sum, f) => sum + f.food.fat, 0),
+        calories: breakfastFoods.reduce(
+          (sum, f) => sum + (f.food?.calories || f.nutrition.calories),
+          0,
+        ),
+        protein: breakfastFoods.reduce(
+          (sum, f) => sum + (f.food?.protein || f.nutrition.protein),
+          0,
+        ),
+        carbs: breakfastFoods.reduce(
+          (sum, f) => sum + (f.food?.carbs || f.nutrition.carbs),
+          0,
+        ),
+        fat: breakfastFoods.reduce(
+          (sum, f) => sum + (f.food?.fat || f.nutrition.fat),
+          0,
+        ),
       },
       savings: Math.max(0, budget - totalCost),
     };
@@ -512,15 +593,23 @@ export class SavingsRecommender {
   /**
    * 生成午餐食谱
    */
-  private generateLunchRecipe(affordableFoods: any[], budget: number): any {
-    const lunchFoods = affordableFoods.filter(f => 
-      f.food.category === 'PROTEIN' || f.food.category === 'VEGETABLES' || f.food.category === 'GRAINS'
-    ).slice(0, 4);
+  private generateLunchRecipe(
+    affordableFoods: AffordableFood[],
+    budget: number,
+  ): MealRecipe | null {
+    const lunchFoods = affordableFoods
+      .filter(
+        (f) =>
+          f.food?.category === 'PROTEIN' ||
+          f.food?.category === 'VEGETABLES' ||
+          f.food?.category === 'GRAINS',
+      )
+      .slice(0, 4);
 
     if (lunchFoods.length < 3) return null;
 
-    const ingredients = lunchFoods.map(food => ({
-      foodName: food.food.name,
+    const ingredients = lunchFoods.map((food) => ({
+      foodName: food.food?.name || food.name,
       amount: 150,
       cost: food.unitPrice * 0.15,
     }));
@@ -532,10 +621,22 @@ export class SavingsRecommender {
       ingredients,
       totalCost,
       nutrition: {
-        calories: lunchFoods.reduce((sum, f) => sum + f.food.calories * 1.5, 0),
-        protein: lunchFoods.reduce((sum, f) => sum + f.food.protein * 1.5, 0),
-        carbs: lunchFoods.reduce((sum, f) => sum + f.food.carbs * 1.5, 0),
-        fat: lunchFoods.reduce((sum, f) => sum + f.food.fat * 1.5, 0),
+        calories: lunchFoods.reduce(
+          (sum, f) => sum + (f.food?.calories || f.nutrition.calories) * 1.5,
+          0,
+        ),
+        protein: lunchFoods.reduce(
+          (sum, f) => sum + (f.food?.protein || f.nutrition.protein) * 1.5,
+          0,
+        ),
+        carbs: lunchFoods.reduce(
+          (sum, f) => sum + (f.food?.carbs || f.nutrition.carbs) * 1.5,
+          0,
+        ),
+        fat: lunchFoods.reduce(
+          (sum, f) => sum + (f.food?.fat || f.nutrition.fat) * 1.5,
+          0,
+        ),
       },
       savings: Math.max(0, budget - totalCost),
     };
@@ -544,15 +645,21 @@ export class SavingsRecommender {
   /**
    * 生成晚餐食谱
    */
-  private generateDinnerRecipe(affordableFoods: any[], budget: number): any {
-    const dinnerFoods = affordableFoods.filter(f => 
-      f.food.category === 'PROTEIN' || f.food.category === 'VEGETABLES'
-    ).slice(0, 3);
+  private generateDinnerRecipe(
+    affordableFoods: AffordableFood[],
+    budget: number,
+  ): MealRecipe | null {
+    const dinnerFoods = affordableFoods
+      .filter(
+        (f) =>
+          f.food?.category === 'PROTEIN' || f.food?.category === 'VEGETABLES',
+      )
+      .slice(0, 3);
 
     if (dinnerFoods.length < 2) return null;
 
-    const ingredients = dinnerFoods.map(food => ({
-      foodName: food.food.name,
+    const ingredients = dinnerFoods.map((food) => ({
+      foodName: food.food?.name || food.name,
       amount: 120,
       cost: food.unitPrice * 0.12,
     }));
@@ -564,10 +671,22 @@ export class SavingsRecommender {
       ingredients,
       totalCost,
       nutrition: {
-        calories: dinnerFoods.reduce((sum, f) => sum + f.food.calories * 1.2, 0),
-        protein: dinnerFoods.reduce((sum, f) => sum + f.food.protein * 1.2, 0),
-        carbs: dinnerFoods.reduce((sum, f) => sum + f.food.carbs * 1.2, 0),
-        fat: dinnerFoods.reduce((sum, f) => sum + f.food.fat * 1.2, 0),
+        calories: dinnerFoods.reduce(
+          (sum, f) => sum + (f.food?.calories || f.nutrition.calories) * 1.2,
+          0,
+        ),
+        protein: dinnerFoods.reduce(
+          (sum, f) => sum + (f.food?.protein || f.nutrition.protein) * 1.2,
+          0,
+        ),
+        carbs: dinnerFoods.reduce(
+          (sum, f) => sum + (f.food?.carbs || f.nutrition.carbs) * 1.2,
+          0,
+        ),
+        fat: dinnerFoods.reduce(
+          (sum, f) => sum + (f.food?.fat || f.nutrition.fat) * 1.2,
+          0,
+        ),
       },
       savings: Math.max(0, budget - totalCost),
     };
@@ -598,16 +717,20 @@ export class SavingsRecommender {
   /**
    * 保存节省建议到数据库
    */
-  async saveSavingsRecommendation(memberId: string, type: SavingsType, recommendation: {
-    title: string
-    description: string
-    savings: number
-    originalPrice?: number
-    discountedPrice?: number
-    platform?: string
-    foodItems?: any[]
-    validUntil?: Date
-  }): Promise<SavingsRecommendation> {
+  async saveSavingsRecommendation(
+    memberId: string,
+    type: SavingsType,
+    recommendation: {
+      title: string;
+      description: string;
+      savings: number;
+      originalPrice?: number;
+      discountedPrice?: number;
+      platform?: string;
+      foodItems?: BudgetItem[];
+      validUntil?: Date;
+    },
+  ): Promise<SavingsRecommendation> {
     return await prisma.savingsRecommendation.create({
       data: {
         memberId,
@@ -619,7 +742,9 @@ export class SavingsRecommender {
         discountedPrice: recommendation.discountedPrice,
         platform: recommendation.platform,
         foodItems: recommendation.foodItems,
-        validUntil: recommendation.validUntil || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        validUntil:
+          recommendation.validUntil ||
+          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
   }

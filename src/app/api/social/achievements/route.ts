@@ -35,10 +35,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -49,12 +46,13 @@ export async function GET(request: NextRequest) {
 
     // 如果请求所有可用的成就
     if (all) {
-      const availableAchievements = achievementSystem.getAvailableAchievements();
+      const availableAchievements =
+        achievementSystem.getAvailableAchievements();
 
       return NextResponse.json({
         success: true,
         data: {
-          achievements: availableAchievements.map(trigger => ({
+          achievements: availableAchievements.map((trigger) => ({
             type: trigger.type,
             name: trigger.name,
             description: trigger.description,
@@ -91,7 +89,7 @@ export async function GET(request: NextRequest) {
       if (!member) {
         return NextResponse.json(
           { error: '无权限访问该家庭成员' },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -140,7 +138,10 @@ export async function GET(request: NextRequest) {
     });
 
     // 获取成就统计
-    const stats = await getAchievementStats(memberId || undefined, session.user.id);
+    const stats = await getAchievementStats(
+      memberId || undefined,
+      session.user.id,
+    );
 
     return NextResponse.json({
       success: true,
@@ -154,13 +155,9 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
   } catch (error) {
     console.error('获取成就列表失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -171,10 +168,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -183,10 +177,7 @@ export async function POST(request: NextRequest) {
     // 验证管理员权限
     const isAdmin = await checkAdminPermission(session.user.id, adminCode);
     if (!isAdmin) {
-      return NextResponse.json(
-        { error: '无管理员权限' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无管理员权限' }, { status: 403 });
     }
 
     // 验证用户权限
@@ -210,7 +201,7 @@ export async function POST(request: NextRequest) {
     if (!member) {
       return NextResponse.json(
         { error: '无权限访问该家庭成员' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -223,10 +214,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingAchievement) {
-      return NextResponse.json(
-        { error: '该成就已经解锁' },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: '该成就已经解锁' }, { status: 409 });
     }
 
     // 手动解锁成就
@@ -244,7 +232,7 @@ export async function POST(request: NextRequest) {
         checkFunction: async () => true,
       },
       'MANUAL_UNLOCK',
-      { reason, adminId: session.user.id }
+      { reason, adminId: session.user.id },
     );
 
     return NextResponse.json({
@@ -254,12 +242,11 @@ export async function POST(request: NextRequest) {
         message: '成就解锁成功',
       },
     });
-
   } catch (error) {
     console.error('手动解锁成就失败:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '服务器内部错误' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -267,21 +254,24 @@ export async function POST(request: NextRequest) {
 /**
  * 获取成就统计
  */
-async function getAchievementStats(memberId?: string, userId?: string): Promise<any> {
+async function getAchievementStats(
+  memberId?: string,
+  userId?: string,
+): Promise<any> {
   const whereClause = memberId
     ? { memberId }
     : userId
       ? {
-        member: {
-          family: {
-            members: {
-              some: {
-                userId,
+          member: {
+            family: {
+              members: {
+                some: {
+                  userId,
+                },
               },
             },
           },
-        },
-      }
+        }
       : {};
 
   const achievements = await supabaseAdapter.achievement.findMany({
@@ -305,18 +295,22 @@ async function getAchievementStats(memberId?: string, userId?: string): Promise<
     },
     byType: {} as Record<AchievementType, number>,
     recentUnlocks: achievements
-      .sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime(),
+      )
       .slice(0, 5),
   };
 
   // 统计稀有度
-  achievements.forEach(achievement => {
+  achievements.forEach((achievement) => {
     if (stats.byRarity[achievement.rarity] !== undefined) {
       stats.byRarity[achievement.rarity]++;
     }
 
     if (stats.byType[achievement.type] !== undefined) {
-      stats.byType[achievement.type] = (stats.byType[achievement.type] || 0) + 1;
+      stats.byType[achievement.type] =
+        (stats.byType[achievement.type] || 0) + 1;
     } else {
       stats.byType[achievement.type] = 1;
     }
@@ -328,7 +322,10 @@ async function getAchievementStats(memberId?: string, userId?: string): Promise<
 /**
  * 检查管理员权限
  */
-async function checkAdminPermission(userId: string, adminCode?: string): Promise<boolean> {
+async function checkAdminPermission(
+  userId: string,
+  adminCode?: string,
+): Promise<boolean> {
   // 这里应该检查用户是否有管理员权限
   // 可以检查用户角色、验证管理员码等
 

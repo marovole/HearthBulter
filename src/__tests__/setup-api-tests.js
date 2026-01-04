@@ -26,7 +26,7 @@ jest.mock('next/server', () => ({
     url,
     method: init.method || 'GET',
     headers: new Map(Object.entries(init.headers || {})),
-    json: async () => init.body ? JSON.parse(init.body) : {},
+    json: async () => (init.body ? JSON.parse(init.body) : {}),
     text: async () => init.body || '',
     clone: jest.fn(),
   })),
@@ -102,8 +102,8 @@ console.error = (...args) => {
   if (
     typeof args[0] === 'string' &&
     (args[0].includes('Warning:') ||
-     args[0].includes('Test environment') ||
-     args[0].includes('Mock'))
+      args[0].includes('Test environment') ||
+      args[0].includes('Mock'))
   ) {
     return;
   }
@@ -115,8 +115,8 @@ console.warn = (...args) => {
   if (
     typeof args[0] === 'string' &&
     (args[0].includes('Warning:') ||
-     args[0].includes('deprecated') ||
-     args[0].includes('Test environment'))
+      args[0].includes('deprecated') ||
+      args[0].includes('Test environment'))
   ) {
     return;
   }

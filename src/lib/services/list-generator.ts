@@ -1,7 +1,7 @@
 /**
  * List Generator Service
  * 购物清单生成服务
- * 
+ *
  * 从食谱计划自动提取食材、聚合去重、分类展示，并支持保质期标注
  */
 
@@ -33,21 +33,21 @@ import type { FoodCategory as FoodCategoryType } from '@prisma/client';
  * 食材聚合结果
  */
 export interface AggregatedIngredient {
-  foodId: string
-  foodName: string
-  category: FoodCategoryType
-  totalAmount: number // 总重量（g）
-  perishableDays?: number // 保质期天数（可选）
+  foodId: string;
+  foodName: string;
+  category: FoodCategoryType;
+  totalAmount: number; // 总重量（g）
+  perishableDays?: number; // 保质期天数（可选）
 }
 
 /**
  * 购物清单生成结果
  */
 export interface GeneratedShoppingList {
-  planId: string
-  items: AggregatedIngredient[]
-  totalItems: number
-  categories: Record<FoodCategoryType, AggregatedIngredient[]>
+  planId: string;
+  items: AggregatedIngredient[];
+  totalItems: number;
+  categories: Record<FoodCategoryType, AggregatedIngredient[]>;
 }
 
 /**
@@ -118,15 +118,15 @@ export class ListGenerator {
   private aggregateIngredients(
     meals: Array<{
       ingredients: Array<{
-        foodId: string
-        amount: number
+        foodId: string;
+        amount: number;
         food: {
-          id: string
-          name: string
-          category: FoodCategory
-        }
-      }>
-    }>
+          id: string;
+          name: string;
+          category: FoodCategory;
+        };
+      }>;
+    }>,
   ): AggregatedIngredient[] {
     // 使用 Map 按 foodId 聚合
     const ingredientMap = new Map<string, AggregatedIngredient>();
@@ -158,18 +158,20 @@ export class ListGenerator {
 
     // 过滤掉数量过小的食材（小于10g）
     const filteredIngredients = ingredients.filter(
-      ingredient => ingredient.totalAmount >= 10
+      (ingredient) => ingredient.totalAmount >= 10,
     );
 
     // 转换为数组并按分类和优先级排序
     return filteredIngredients.sort((a, b) => {
       // 优先按易腐性排序（易腐食材优先）
-      const aPerishable = a.perishableDays !== undefined && a.perishableDays <= 7;
-      const bPerishable = b.perishableDays !== undefined && b.perishableDays <= 7;
-      
+      const aPerishable =
+        a.perishableDays !== undefined && a.perishableDays <= 7;
+      const bPerishable =
+        b.perishableDays !== undefined && b.perishableDays <= 7;
+
       if (aPerishable && !bPerishable) return -1;
       if (!aPerishable && bPerishable) return 1;
-      
+
       // 然后按分类排序（使用分类枚举顺序）
       const categoryOrder = Object.values(FoodCategory);
       const categoryDiff =
@@ -188,7 +190,7 @@ export class ListGenerator {
    */
   private createAlternativeGroups(
     ingredients: AggregatedIngredient[],
-    groups: Map<string, AggregatedIngredient[]>
+    groups: Map<string, AggregatedIngredient[]>,
   ): void {
     // 按相似性分组食材（基于名称关键词）
     const similarityGroups = [
@@ -202,12 +204,15 @@ export class ListGenerator {
       { keywords: ['牛肉', '牛腩', '牛排', '牛肉块'], category: 'PROTEIN' },
     ];
 
-    similarityGroups.forEach(group => {
-      const similarIngredients = ingredients.filter(ingredient => 
-        group.category === ingredient.category &&
-        group.keywords.some(keyword => ingredient.foodName.includes(keyword))
+    similarityGroups.forEach((group) => {
+      const similarIngredients = ingredients.filter(
+        (ingredient) =>
+          group.category === ingredient.category &&
+          group.keywords.some((keyword) =>
+            ingredient.foodName.includes(keyword),
+          ),
       );
-      
+
       if (similarIngredients.length > 1) {
         const groupKey = group.keywords[0];
         groups.set(groupKey, similarIngredients);
@@ -221,9 +226,10 @@ export class ListGenerator {
    * @returns 按分类分组的食材
    */
   private groupByCategory(
-    items: AggregatedIngredient[]
+    items: AggregatedIngredient[],
   ): Record<FoodCategory, AggregatedIngredient[]> {
-    const categories: Partial<Record<FoodCategory, AggregatedIngredient[]>> = {};
+    const categories: Partial<Record<FoodCategory, AggregatedIngredient[]>> =
+      {};
 
     items.forEach((item) => {
       if (!categories[item.category]) {
@@ -248,7 +254,7 @@ export class ListGenerator {
    */
   getPerishableItems(items: AggregatedIngredient[]): AggregatedIngredient[] {
     return items.filter(
-      (item) => item.perishableDays !== undefined && item.perishableDays <= 7
+      (item) => item.perishableDays !== undefined && item.perishableDays <= 7,
     );
   }
 
@@ -279,4 +285,3 @@ export class ListGenerator {
 
 // 导出单例实例
 export const listGenerator = new ListGenerator();
-

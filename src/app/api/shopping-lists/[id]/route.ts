@@ -21,7 +21,7 @@ const updateShoppingListSchema = z.object({
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: listId } = await params;
@@ -35,7 +35,8 @@ export async function PATCH(
     // 查询购物清单并验证权限
     const { data: shoppingList, error: listError } = await supabase
       .from('shopping_lists')
-      .select(`
+      .select(
+        `
         id,
         planId,
         plan:meal_plans!inner(
@@ -51,7 +52,8 @@ export async function PATCH(
             )
           )
         )
-      `)
+      `,
+      )
       .eq('id', listId)
       .single();
 
@@ -69,14 +71,15 @@ export async function PATCH(
       .maybeSingle();
 
     // 验证权限
-    const isCreator = shoppingList.plan.member.family.creatorId === session.user.id;
+    const isCreator =
+      shoppingList.plan.member.family.creatorId === session.user.id;
     const isAdmin = userMember?.role === 'ADMIN' || isCreator;
     const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限修改该购物清单' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -87,7 +90,7 @@ export async function PATCH(
     // 使用 ShoppingListRepository 更新
     const updatedList = await shoppingListRepository.updateShoppingList(
       listId,
-      validatedData
+      validatedData,
     );
 
     return NextResponse.json(
@@ -95,21 +98,18 @@ export async function PATCH(
         message: '购物清单更新成功',
         shoppingList: updatedList,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '请求参数验证失败', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error('更新购物清单失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -121,7 +121,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: listId } = await params;
@@ -135,7 +135,8 @@ export async function DELETE(
     // 查询购物清单并验证权限
     const { data: shoppingList, error: listError } = await supabase
       .from('shopping_lists')
-      .select(`
+      .select(
+        `
         id,
         planId,
         plan:meal_plans!inner(
@@ -151,7 +152,8 @@ export async function DELETE(
             )
           )
         )
-      `)
+      `,
+      )
       .eq('id', listId)
       .single();
 
@@ -169,14 +171,15 @@ export async function DELETE(
       .maybeSingle();
 
     // 验证权限
-    const isCreator = shoppingList.plan.member.family.creatorId === session.user.id;
+    const isCreator =
+      shoppingList.plan.member.family.creatorId === session.user.id;
     const isAdmin = userMember?.role === 'ADMIN' || isCreator;
     const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限删除该购物清单' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -187,14 +190,10 @@ export async function DELETE(
       {
         message: '购物清单删除成功',
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('删除购物清单失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

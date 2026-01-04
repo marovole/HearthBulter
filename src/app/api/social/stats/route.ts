@@ -4,17 +4,17 @@
  * Migrated from Prisma to Supabase
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { shareTrackingService } from "@/lib/services/social/share-tracking";
-import type { ShareAnalytics } from "@/lib/services/social/share-tracking";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import { calculateSocialStats } from "@/lib/db/supabase-rpc-helpers";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { shareTrackingService } from '@/lib/services/social/share-tracking';
+import type { ShareAnalytics } from '@/lib/services/social/share-tracking';
+import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { calculateSocialStats } from '@/lib/db/supabase-rpc-helpers';
 import {
   addCacheHeaders,
   EDGE_CACHE_PRESETS,
-} from "@/lib/cache/edge-cache-helpers";
-import { verifyShareToken } from "@/lib/security/token-generator";
+} from '@/lib/cache/edge-cache-helpers';
+import { verifyShareToken } from '@/lib/security/token-generator';
 
 /**
  * GET /api/social/stats
@@ -24,19 +24,19 @@ import { verifyShareToken } from "@/lib/security/token-generator";
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get("memberId");
-    const period = searchParams.get("period") as "7d" | "30d" | "90d" | "1y";
-    const type = searchParams.get("type"); // 'user' | 'global'
-    const token = searchParams.get("token"); // 特定分享token
+    const memberId = searchParams.get('memberId');
+    const period = searchParams.get('period') as '7d' | '30d' | '90d' | '1y';
+    const type = searchParams.get('type'); // 'user' | 'global'
+    const token = searchParams.get('token'); // 特定分享token
 
     const supabase = SupabaseClientManager.getInstance();
 
@@ -44,14 +44,14 @@ export async function GET(request: NextRequest) {
     if (memberId) {
       // 简化的权限检查：先查询成员，再检查是否在同一家庭
       const { data: member } = await supabase
-        .from("family_members")
-        .select("id, familyId, userId")
-        .eq("id", memberId)
+        .from('family_members')
+        .select('id, familyId, userId')
+        .eq('id', memberId)
         .single();
 
       if (!member) {
         return NextResponse.json(
-          { error: "无权限访问该家庭成员" },
+          { error: '无权限访问该家庭成员' },
           { status: 403 },
         );
       }
@@ -59,16 +59,16 @@ export async function GET(request: NextRequest) {
       // 检查是否是本人或同家庭成员
       if (member.userId !== session.user.id) {
         const { data: sameFamilyCheck } = await supabase
-          .from("family_members")
-          .select("id")
-          .eq("familyId", member.familyId)
-          .eq("userId", session.user.id)
-          .is("deletedAt", null)
+          .from('family_members')
+          .select('id')
+          .eq('familyId', member.familyId)
+          .eq('userId', session.user.id)
+          .is('deletedAt', null)
           .maybeSingle();
 
         if (!sameFamilyCheck) {
           return NextResponse.json(
-            { error: "无权限访问该家庭成员" },
+            { error: '无权限访问该家庭成员' },
             { status: 403 },
           );
         }
@@ -80,20 +80,20 @@ export async function GET(request: NextRequest) {
       const verification = await verifyShareToken(token);
       if (!verification.valid || !verification.payload) {
         return NextResponse.json(
-          { error: verification.error || "分享链接已失效" },
+          { error: verification.error || '分享链接已失效' },
           { status: 410 },
         );
       }
 
-      if (verification.payload.resourceType !== "social_share") {
-        return NextResponse.json({ error: "无效的分享类型" }, { status: 410 });
+      if (verification.payload.resourceType !== 'social_share') {
+        return NextResponse.json({ error: '无效的分享类型' }, { status: 410 });
       }
 
       const shareStats = await shareTrackingService.getShareStatistics(token);
 
       // 验证访问权限
       const { data: shareContent } = await supabase
-        .from("shared_contents")
+        .from('shared_contents')
         .select(
           `
           id,
@@ -104,21 +104,21 @@ export async function GET(request: NextRequest) {
           )
         `,
         )
-        .eq("id", verification.payload.resourceId)
+        .eq('id', verification.payload.resourceId)
         .single();
 
       if (!shareContent) {
-        return NextResponse.json({ error: "分享内容不存在" }, { status: 404 });
+        return NextResponse.json({ error: '分享内容不存在' }, { status: 404 });
       }
 
       // 检查隐私权限
       const memberUserId = shareContent.member?.user?.id;
       if (
         memberUserId !== session.user.id &&
-        shareContent.privacyLevel === "PRIVATE"
+        shareContent.privacyLevel === 'PRIVATE'
       ) {
         return NextResponse.json(
-          { error: "无权限查看该分享统计" },
+          { error: '无权限查看该分享统计' },
           { status: 403 },
         );
       }
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: {
-          type: "share",
+          type: 'share',
           token,
           stats: shareStats,
         },
@@ -134,15 +134,15 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取用户或全局分析
-    const analysisType = type || "user";
+    const analysisType = type || 'user';
     let analytics: ShareAnalytics;
     let additionalStats = {};
 
-    if (analysisType === "user" && memberId) {
+    if (analysisType === 'user' && memberId) {
       // 使用优化的 RPC 获取用户统计数据
       // 优势：单次往返、服务端聚合、减少网络延迟
       const statsResult = await calculateSocialStats(memberId, {
-        period: period || "30d",
+        period: period || '30d',
       });
 
       if (statsResult.success && statsResult.data) {
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
       } else {
         // RPC 失败，降级到原有服务层
         console.warn(
-          "RPC calculate_social_stats failed, falling back to service layer:",
+          'RPC calculate_social_stats failed, falling back to service layer:',
           statsResult.error,
         );
         analytics = await shareTrackingService.getUserShareAnalytics(
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
           period,
         );
       }
-    } else if (analysisType === "global") {
+    } else if (analysisType === 'global') {
       // Global 模式暂时保持现有逻辑
       // TODO: 创建支持 NULL member_id 的 RPC 或物化视图
       analytics = await shareTrackingService.getGlobalShareAnalytics(period);
@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
     } else {
       // 无 memberId 且非 global 模式，返回错误
       return NextResponse.json(
-        { error: "memberId is required for user analytics" },
+        { error: 'memberId is required for user analytics' },
         { status: 400 },
       );
     }
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         type: analysisType,
-        period: period || "30d",
+        period: period || '30d',
         analytics,
         additional: additionalStats,
         generatedAt: new Date().toISOString(),
@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
 
     // 添加 Edge Cache（仅 global 模式，私有缓存）
     const headers = new Headers();
-    if (analysisType === "global") {
+    if (analysisType === 'global') {
       addCacheHeaders(headers, {
         ...EDGE_CACHE_PRESETS.ANALYTICS_ENDPOINT,
         private: true, // P0 修复：即使是 global 也使用私有缓存（基于 Cookie 认证）
@@ -209,8 +209,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseData, { headers });
   } catch (error) {
-    console.error("获取分享统计失败:", error);
-    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
+    console.error('获取分享统计失败:', error);
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -236,19 +236,19 @@ export async function POST(request: NextRequest) {
     if (adminCode) {
       const isAdmin = await checkAdminPermission(session.user.id, adminCode);
       if (!isAdmin) {
-        return NextResponse.json({ error: "无管理员权限" }, { status: 403 });
+        return NextResponse.json({ error: '无管理员权限' }, { status: 403 });
       }
     } else if (memberId) {
       // 验证用户权限
       const { data: member } = await supabase
-        .from("family_members")
-        .select("id, familyId, userId")
-        .eq("id", memberId)
+        .from('family_members')
+        .select('id, familyId, userId')
+        .eq('id', memberId)
         .single();
 
       if (!member) {
         return NextResponse.json(
-          { error: "无权限访问该家庭成员" },
+          { error: '无权限访问该家庭成员' },
           { status: 403 },
         );
       }
@@ -256,16 +256,16 @@ export async function POST(request: NextRequest) {
       // 检查是否是本人或同家庭成员
       if (member.userId !== session.user.id) {
         const { data: sameFamilyCheck } = await supabase
-          .from("family_members")
-          .select("id")
-          .eq("familyId", member.familyId)
-          .eq("userId", session.user.id)
-          .is("deletedAt", null)
+          .from('family_members')
+          .select('id')
+          .eq('familyId', member.familyId)
+          .eq('userId', session.user.id)
+          .is('deletedAt', null)
           .maybeSingle();
 
         if (!sameFamilyCheck) {
           return NextResponse.json(
-            { error: "无权限访问该家庭成员" },
+            { error: '无权限访问该家庭成员' },
             { status: 403 },
           );
         }
@@ -275,23 +275,23 @@ export async function POST(request: NextRequest) {
     // 生成报告
     const report = await shareTrackingService.generateShareTrackingReport(
       memberId || undefined,
-      period || "30d",
+      period || '30d',
     );
 
     // 根据格式返回数据
-    if (format === "json") {
+    if (format === 'json') {
       return NextResponse.json({
         success: true,
         data: report,
       });
-    } else if (format === "csv") {
+    } else if (format === 'csv') {
       const csvData = convertToCSV(report);
 
       return new NextResponse(csvData, {
         status: 200,
         headers: {
-          "Content-Type": "text/csv",
-          "Content-Disposition": `attachment; filename="share-report-${period}.csv"`,
+          'Content-Type': 'text/csv',
+          'Content-Disposition': `attachment; filename="share-report-${period}.csv"`,
         },
       });
     } else {
@@ -301,8 +301,8 @@ export async function POST(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error("生成分享报告失败:", error);
-    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
+    console.error('生成分享报告失败:', error);
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -320,17 +320,17 @@ async function getUserAdditionalStats(
 
   // 总分享数
   const { count: totalShares } = await supabase
-    .from("shared_content")
-    .select("id", { count: "exact", head: true })
-    .eq("memberId", memberId)
-    .gte("createdAt", startDate.toISOString());
+    .from('shared_content')
+    .select('id', { count: 'exact', head: true })
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString());
 
   // 总浏览数
   const { data: viewData } = await supabase
-    .from("shared_content")
-    .select("viewCount")
-    .eq("memberId", memberId)
-    .gte("createdAt", startDate.toISOString());
+    .from('shared_content')
+    .select('viewCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString());
 
   const totalViews = (viewData || []).reduce(
     (sum, item) => sum + (item.viewCount || 0),
@@ -339,10 +339,10 @@ async function getUserAdditionalStats(
 
   // 总转化数
   const { data: conversionData } = await supabase
-    .from("shared_content")
-    .select("conversionCount")
-    .eq("memberId", memberId)
-    .gte("createdAt", startDate.toISOString());
+    .from('shared_content')
+    .select('conversionCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString());
 
   const totalConversions = (conversionData || []).reduce(
     (sum, item) => sum + (item.conversionCount || 0),
@@ -351,11 +351,11 @@ async function getUserAdditionalStats(
 
   // 平均转化率计算
   const { data: rateData } = await supabase
-    .from("shared_content")
-    .select("clickCount, conversionCount")
-    .eq("memberId", memberId)
-    .gte("createdAt", startDate.toISOString())
-    .gt("clickCount", 0);
+    .from('shared_content')
+    .select('clickCount, conversionCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString())
+    .gt('clickCount', 0);
 
   const avgRate =
     rateData && rateData.length > 0
@@ -368,11 +368,11 @@ async function getUserAdditionalStats(
 
   // 最佳分享
   const { data: topShareData } = await supabase
-    .from("shared_content")
-    .select("shareToken, title, viewCount, clickCount, conversionCount")
-    .eq("memberId", memberId)
-    .gte("createdAt", startDate.toISOString())
-    .order("conversionCount", { ascending: false })
+    .from('shared_content')
+    .select('shareToken, title, viewCount, clickCount, conversionCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString())
+    .order('conversionCount', { ascending: false })
     .limit(1);
 
   const topShare = topShareData?.[0] || null;
@@ -399,24 +399,24 @@ async function getGlobalAdditionalStats(
 
   // 总用户数 (distinct memberId)
   const { data: allShares } = await supabase
-    .from("shared_content")
-    .select("memberId")
-    .gte("createdAt", startDate.toISOString());
+    .from('shared_content')
+    .select('memberId')
+    .gte('createdAt', startDate.toISOString());
 
   const uniqueMembers = new Set((allShares || []).map((s) => s.memberId));
   const totalUsers = uniqueMembers.size;
 
   // 总分享数
   const { count: totalShares } = await supabase
-    .from("shared_content")
-    .select("id", { count: "exact", head: true })
-    .gte("createdAt", startDate.toISOString());
+    .from('shared_content')
+    .select('id', { count: 'exact', head: true })
+    .gte('createdAt', startDate.toISOString());
 
   // 总浏览数
   const { data: viewData } = await supabase
-    .from("shared_content")
-    .select("viewCount")
-    .gte("createdAt", startDate.toISOString());
+    .from('shared_content')
+    .select('viewCount')
+    .gte('createdAt', startDate.toISOString());
 
   const totalViews = (viewData || []).reduce(
     (sum, item) => sum + (item.viewCount || 0),
@@ -425,9 +425,9 @@ async function getGlobalAdditionalStats(
 
   // 总转化数
   const { data: conversionData } = await supabase
-    .from("shared_content")
-    .select("conversionCount")
-    .gte("createdAt", startDate.toISOString());
+    .from('shared_content')
+    .select('conversionCount')
+    .gte('createdAt', startDate.toISOString());
 
   const totalConversions = (conversionData || []).reduce(
     (sum, item) => sum + (item.conversionCount || 0),
@@ -438,9 +438,9 @@ async function getGlobalAdditionalStats(
   // Note: Supabase doesn't support groupBy with having clause directly
   // We need to fetch all data and compute client-side
   const { data: allSharesForGrouping } = await supabase
-    .from("shared_content")
-    .select("memberId")
-    .gte("createdAt", startDate.toISOString());
+    .from('shared_content')
+    .select('memberId')
+    .gte('createdAt', startDate.toISOString());
 
   const shareCountByMember: Record<string, number> = {};
   (allSharesForGrouping || []).forEach((share) => {
@@ -473,13 +473,13 @@ function getPeriodDates(period?: string): { startDate: Date; endDate: Date } {
   let startDate: Date;
 
   switch (period) {
-    case "7d":
+    case '7d':
       startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
       break;
-    case "90d":
+    case '90d':
       startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
       break;
-    case "1y":
+    case '1y':
       startDate = new Date(endDate.getTime() - 365 * 24 * 60 * 60 * 1000);
       break;
     default: // 30d
@@ -494,24 +494,24 @@ function getPeriodDates(period?: string): { startDate: Date; endDate: Date } {
  * 转换为CSV格式
  */
 function convertToCSV(report: any): string {
-  const headers = ["指标", "数值", "备注"];
+  const headers = ['指标', '数值', '备注'];
 
   const rows = [
-    ["报告标题", report.reportTitle, ""],
-    ["生成时间", report.generatedAt, ""],
-    ["统计周期", report.period, ""],
-    [""],
-    ["总分享数", report.summary.totalShares.toString(), ""],
-    ["总浏览数", report.summary.totalViews.toString(), ""],
-    ["总点击数", report.summary.totalClicks.toString(), ""],
-    ["总转化数", report.summary.totalConversions.toString(), ""],
-    ["转化率", report.summary.conversionRate, "%"],
-    [""],
+    ['报告标题', report.reportTitle, ''],
+    ['生成时间', report.generatedAt, ''],
+    ['统计周期', report.period, ''],
+    [''],
+    ['总分享数', report.summary.totalShares.toString(), ''],
+    ['总浏览数', report.summary.totalViews.toString(), ''],
+    ['总点击数', report.summary.totalClicks.toString(), ''],
+    ['总转化数', report.summary.totalConversions.toString(), ''],
+    ['转化率', report.summary.conversionRate, '%'],
+    [''],
   ];
 
   // 添加top content
-  rows.push(["TOP 5 分享内容", "", ""]);
-  rows.push(["标题", "浏览量", "转化量"]);
+  rows.push(['TOP 5 分享内容', '', '']);
+  rows.push(['标题', '浏览量', '转化量']);
   report.topContent.forEach((content: any) => {
     rows.push([
       content.title,
@@ -520,7 +520,7 @@ function convertToCSV(report: any): string {
     ]);
   });
 
-  return [headers, ...rows].map((row) => row.join(",")).join("\n");
+  return [headers, ...rows].map((row) => row.join(',')).join('\n');
 }
 
 /**
@@ -534,7 +534,7 @@ async function checkAdminPermission(
     return false;
   }
 
-  const validAdminCodes = process.env.ADMIN_CODES?.split(",") || [];
+  const validAdminCodes = process.env.ADMIN_CODES?.split(',') || [];
   return validAdminCodes.includes(adminCode);
 }
 
@@ -550,7 +550,7 @@ async function checkAdminPermission(
  * @returns ShareAnalytics 格式的数据
  */
 async function mapRpcToShareAnalytics(
-  rpcData: import("@/lib/db/supabase-rpc-helpers").SocialStatsRpcResult,
+  rpcData: import('@/lib/db/supabase-rpc-helpers').SocialStatsRpcResult,
   memberId: string,
   supabase: ReturnType<typeof SupabaseClientManager.getInstance>,
 ): Promise<ShareAnalytics> {
@@ -585,16 +585,16 @@ async function mapRpcToShareAnalytics(
   const normalizedPeriod = normalizePeriod(period);
   const { startDate } = getPeriodDates(normalizedPeriod);
   const { data: topContent } = await supabase
-    .from("shared_content")
-    .select("shareToken, title, viewCount, clickCount, conversionCount")
-    .eq("memberId", memberId)
-    .gte("createdAt", startDate.toISOString())
-    .order("conversionCount", { ascending: false })
+    .from('shared_content')
+    .select('shareToken, title, viewCount, clickCount, conversionCount')
+    .eq('memberId', memberId)
+    .gte('createdAt', startDate.toISOString())
+    .order('conversionCount', { ascending: false })
     .limit(5);
 
   const topPerformingContent = (topContent || []).map((item) => ({
     shareToken: item.shareToken,
-    title: item.title || "Untitled",
+    title: item.title || 'Untitled',
     views: item.viewCount || 0,
     clicks: item.clickCount || 0,
     conversions: item.conversionCount || 0,
@@ -635,7 +635,7 @@ async function mapRpcToShareAnalytics(
  * @returns 规范化后的 period 值
  */
 function normalizePeriod(period: string): string {
-  const validPeriods = ["7d", "30d", "90d", "1y"];
+  const validPeriods = ['7d', '30d', '90d', '1y'];
 
   // 如果已经是有效值，直接返回
   if (validPeriods.includes(period)) {
@@ -643,31 +643,31 @@ function normalizePeriod(period: string): string {
   }
 
   // 尝试转换其他常见格式
-  const normalized = period.toLowerCase().replace(/[_\s]/g, "");
+  const normalized = period.toLowerCase().replace(/[_\s]/g, '');
   switch (normalized) {
-    case "last7days":
-    case "7days":
-    case "1week":
-    case "week":
-      return "7d";
-    case "last30days":
-    case "30days":
-    case "1month":
-    case "month":
-      return "30d";
-    case "last90days":
-    case "90days":
-    case "3months":
-    case "quarter":
-      return "90d";
-    case "lastyear":
-    case "1year":
-    case "year":
-      return "1y";
+    case 'last7days':
+    case '7days':
+    case '1week':
+    case 'week':
+      return '7d';
+    case 'last30days':
+    case '30days':
+    case '1month':
+    case 'month':
+      return '30d';
+    case 'last90days':
+    case '90days':
+    case '3months':
+    case 'quarter':
+      return '90d';
+    case 'lastyear':
+    case '1year':
+    case 'year':
+      return '1y';
     default:
       // 降级到默认值
       console.warn(`Invalid period value "${period}", falling back to 30d`);
-      return "30d";
+      return '30d';
   }
 }
 
@@ -681,7 +681,7 @@ function normalizePeriod(period: string): string {
  * @returns 额外统计数据
  */
 function calculateAdditionalStatsFromRpc(
-  rpcData: import("@/lib/db/supabase-rpc-helpers").SocialStatsRpcResult,
+  rpcData: import('@/lib/db/supabase-rpc-helpers').SocialStatsRpcResult,
   analytics: ShareAnalytics,
 ): Record<string, any> {
   const { totals } = rpcData;

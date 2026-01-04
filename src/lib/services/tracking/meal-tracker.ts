@@ -64,7 +64,7 @@ export async function createMealLog(data: {
  * 根据食物列表计算总营养成分
  */
 export async function calculateNutritionFromFoods(
-  foods: Array<{ foodId: string; amount: number }>
+  foods: Array<{ foodId: string; amount: number }>,
 ) {
   // 获取所有食物的营养信息
   const foodIds = foods.map((f) => f.foodId);
@@ -157,7 +157,7 @@ export async function getMealLogHistory(
     mealType?: MealType;
     limit?: number;
     offset?: number;
-  } = {}
+  } = {},
 ) {
   const { startDate, endDate, mealType, limit = 50, offset = 0 } = options;
 
@@ -207,7 +207,7 @@ export async function updateMealLog(
   data: {
     foods?: Array<{ foodId: string; amount: number }>;
     notes?: string;
-  }
+  },
 ) {
   const { foods, notes } = data;
 
@@ -315,7 +315,7 @@ async function updateDailyNutritionTarget(memberId: string, date: Date) {
       carbs: sum.carbs + log.carbs,
       fat: sum.fat + log.fat,
     }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
   // 获取营养目标
@@ -341,8 +341,10 @@ async function updateDailyNutritionTarget(memberId: string, date: Date) {
   const targetFat = (targetCalories * (healthGoal.fatRatio || 0.3)) / 9; // 1g脂肪=9kcal
 
   // 计算偏差百分比
-  const caloriesDeviation = ((actual.calories - targetCalories) / targetCalories) * 100;
-  const proteinDeviation = ((actual.protein - targetProtein) / targetProtein) * 100;
+  const caloriesDeviation =
+    ((actual.calories - targetCalories) / targetCalories) * 100;
+  const proteinDeviation =
+    ((actual.protein - targetProtein) / targetProtein) * 100;
   const carbsDeviation = ((actual.carbs - targetCarbs) / targetCarbs) * 100;
   const fatDeviation = ((actual.fat - targetFat) / targetFat) * 100;
 
@@ -417,7 +419,7 @@ async function updateTrackingStreak(memberId: string, date: Date) {
   const lastCheckIn = streak.lastCheckIn ? new Date(streak.lastCheckIn) : null;
   if (lastCheckIn) {
     lastCheckIn.setHours(0, 0, 0, 0);
-    
+
     // 如果是同一天，不更新
     if (lastCheckIn.getTime() === today.getTime()) {
       return streak;
@@ -426,7 +428,7 @@ async function updateTrackingStreak(memberId: string, date: Date) {
     // 检查是否连续
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     const isConsecutive = lastCheckIn.getTime() === yesterday.getTime();
 
     const newCurrentStreak = isConsecutive ? streak.currentStreak + 1 : 1;
@@ -467,7 +469,7 @@ export async function getRecentFoods(
     days?: number;
     limit?: number;
     mealType?: MealType;
-  } = {}
+  } = {},
 ) {
   const { days = 7, limit = 10, mealType } = options;
 
@@ -500,7 +502,10 @@ export async function getRecentFoods(
   });
 
   // 统计食物出现频率
-  const foodFrequency = new Map<string, { count: number; food: any; avgAmount: number; totalAmount: number }>();
+  const foodFrequency = new Map<
+    string,
+    { count: number; food: any; avgAmount: number; totalAmount: number }
+  >();
 
   mealLogs.forEach((log) => {
     log.foods.forEach((mealFood) => {
@@ -530,4 +535,3 @@ export async function getRecentFoods(
       avgAmount: Math.round(item.avgAmount),
     }));
 }
-

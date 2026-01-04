@@ -30,12 +30,17 @@ import type {
 import type { PaginatedResult, PaginationInput } from '../types/common';
 
 type InventoryItemRow = Database['public']['Tables']['inventory_items']['Row'];
-type InventoryItemInsert = Database['public']['Tables']['inventory_items']['Insert'];
-type InventoryItemUpdate = Database['public']['Tables']['inventory_items']['Update'];
-type InventoryUsageRow = Database['public']['Tables']['inventory_usages']['Row'];
-type InventoryUsageInsert = Database['public']['Tables']['inventory_usages']['Insert'];
+type InventoryItemInsert =
+  Database['public']['Tables']['inventory_items']['Insert'];
+type InventoryItemUpdate =
+  Database['public']['Tables']['inventory_items']['Update'];
+type InventoryUsageRow =
+  Database['public']['Tables']['inventory_usages']['Row'];
+type InventoryUsageInsert =
+  Database['public']['Tables']['inventory_usages']['Insert'];
 type WasteRecordRow = Database['public']['Tables']['waste_records']['Row'];
-type WasteRecordInsert = Database['public']['Tables']['waste_records']['Insert'];
+type WasteRecordInsert =
+  Database['public']['Tables']['waste_records']['Insert'];
 
 /**
  * Supabase 库存 Repository 实现
@@ -51,7 +56,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = '[SupabaseInventoryRepository]';
 
-  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
+  constructor(
+    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
+  ) {
     this.client = client;
   }
 
@@ -60,7 +67,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 创建库存物品
    */
-  async createInventoryItem(payload: InventoryItemCreateDTO): Promise<InventoryItemDTO> {
+  async createInventoryItem(
+    payload: InventoryItemCreateDTO,
+  ): Promise<InventoryItemDTO> {
     const insertPayload = this.mapInventoryItemDtoToInsert(payload);
 
     const { data, error } = await this.client
@@ -79,7 +88,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
           carbs,
           fat
         )
-      `
+      `,
       )
       .single();
 
@@ -90,7 +99,10 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 更新库存物品
    */
-  async updateInventoryItem(id: string, payload: InventoryItemUpdateDTO): Promise<InventoryItemDTO> {
+  async updateInventoryItem(
+    id: string,
+    payload: InventoryItemUpdateDTO,
+  ): Promise<InventoryItemDTO> {
     const updatePayload = this.mapInventoryItemDtoToUpdate(payload);
 
     const { data, error } = await this.client
@@ -110,7 +122,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
           carbs,
           fat
         )
-      `
+      `,
       )
       .single();
 
@@ -121,7 +133,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 获取库存物品详情（含关联数据）
    */
-  async getInventoryItemById(id: string): Promise<InventoryItemWithRelationsDTO | null> {
+  async getInventoryItemById(
+    id: string,
+  ): Promise<InventoryItemWithRelationsDTO | null> {
     const { data, error } = await this.client
       .from('inventory_items')
       .select(
@@ -157,12 +171,13 @@ export class SupabaseInventoryRepository implements InventoryRepository {
           notes,
           created_at
         )
-      `
+      `,
       )
       .eq('id', id)
       .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') this.handleError('getInventoryItemById', error);
+    if (error && error.code !== 'PGRST116')
+      this.handleError('getInventoryItemById', error);
     return data ? this.mapInventoryItemWithRelationsRow(data as any) : null;
   }
 
@@ -172,7 +187,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   async listInventoryItems(
     memberId: string,
     filter?: InventoryItemFilterDTO,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<InventoryItemDTO>> {
     let query = this.client
       .from('inventory_items')
@@ -190,7 +205,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
           fat
         )
       `,
-        { count: 'exact' }
+        { count: 'exact' },
       )
       .eq('member_id', memberId)
       .is('deleted_at', null);
@@ -198,7 +213,8 @@ export class SupabaseInventoryRepository implements InventoryRepository {
     // 应用过滤条件
     if (filter) {
       if (filter.status) query = query.eq('status', filter.status);
-      if (filter.storageLocation) query = query.eq('storage_location', filter.storageLocation);
+      if (filter.storageLocation)
+        query = query.eq('storage_location', filter.storageLocation);
       if (filter.isLowStock) query = query.eq('is_low_stock', true);
 
       // 食品名称模糊查询
@@ -211,18 +227,28 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       // 保质期范围查询
       if (filter.expiryDateRange) {
         if (filter.expiryDateRange.start) {
-          query = query.gte('expiry_date', filter.expiryDateRange.start.toISOString());
+          query = query.gte(
+            'expiry_date',
+            filter.expiryDateRange.start.toISOString(),
+          );
         }
         if (filter.expiryDateRange.end) {
-          query = query.lte('expiry_date', filter.expiryDateRange.end.toISOString());
+          query = query.lte(
+            'expiry_date',
+            filter.expiryDateRange.end.toISOString(),
+          );
         }
       }
 
       // 临期和过期筛选
       if (filter.isExpiring) {
         const now = new Date();
-        const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        query = query.gte('expiry_date', now.toISOString()).lte('expiry_date', sevenDaysLater.toISOString());
+        const sevenDaysLater = new Date(
+          now.getTime() + 7 * 24 * 60 * 60 * 1000,
+        );
+        query = query
+          .gte('expiry_date', now.toISOString())
+          .lte('expiry_date', sevenDaysLater.toISOString());
       }
       if (filter.isExpired) {
         const now = new Date();
@@ -250,11 +276,15 @@ export class SupabaseInventoryRepository implements InventoryRepository {
     const { data, count, error } = await query;
     if (error) this.handleError('listInventoryItems', error);
 
-    const items = (data || []).map((row) => this.mapInventoryItemRow(row as any));
+    const items = (data || []).map((row) =>
+      this.mapInventoryItemRow(row as any),
+    );
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
+      hasMore: pagination?.limit
+        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
+        : false,
     };
   }
 
@@ -275,7 +305,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 使用库存（单个物品）
    */
-  async useInventoryItem(payload: UseInventoryInputDTO): Promise<InventoryItemDTO> {
+  async useInventoryItem(
+    payload: UseInventoryInputDTO,
+  ): Promise<InventoryItemDTO> {
     // 1. 获取当前库存
     const { data: item, error: fetchError } = await this.client
       .from('inventory_items')
@@ -284,8 +316,10 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       .single();
 
     if (fetchError) this.handleError('useInventoryItem:fetch', fetchError);
-    if (!item) throw new Error(`Inventory item ${payload.inventoryItemId} not found`);
-    if (item.quantity < payload.quantity) throw new Error('Insufficient inventory');
+    if (!item)
+      throw new Error(`Inventory item ${payload.inventoryItemId} not found`);
+    if (item.quantity < payload.quantity)
+      throw new Error('Insufficient inventory');
 
     // 2. 创建使用记录
     const usageInsert: InventoryUsageInsert = {
@@ -298,18 +332,24 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       usage_date: new Date().toISOString(),
     };
 
-    const { error: usageError } = await this.client.from('inventory_usages').insert(usageInsert as any);
+    const { error: usageError } = await this.client
+      .from('inventory_usages')
+      .insert(usageInsert as any);
     if (usageError) this.handleError('useInventoryItem:usage', usageError);
 
     // 3. 扣减库存数量
     const newQuantity = item.quantity - payload.quantity;
-    return await this.updateInventoryItem(payload.inventoryItemId, { quantity: newQuantity });
+    return await this.updateInventoryItem(payload.inventoryItemId, {
+      quantity: newQuantity,
+    });
   }
 
   /**
    * 批量使用库存
    */
-  async batchUseInventory(payload: BatchUseInventoryInputDTO): Promise<InventoryItemDTO[]> {
+  async batchUseInventory(
+    payload: BatchUseInventoryInputDTO,
+  ): Promise<InventoryItemDTO[]> {
     const results: InventoryItemDTO[] = [];
 
     // TODO: 应该使用事务处理，这里简化为串行处理
@@ -330,7 +370,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
    */
   async listInventoryUsages(
     inventoryItemId: string,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<InventoryUsageDTO>> {
     let query = this.client
       .from('inventory_usages')
@@ -351,7 +391,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
+      hasMore: pagination?.limit
+        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
+        : false,
     };
   }
 
@@ -360,7 +402,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 创建浪费记录
    */
-  async createWasteRecord(payload: WasteRecordCreateDTO): Promise<WasteRecordDTO> {
+  async createWasteRecord(
+    payload: WasteRecordCreateDTO,
+  ): Promise<WasteRecordDTO> {
     // 1. 获取当前库存
     const { data: item, error: fetchError } = await this.client
       .from('inventory_items')
@@ -369,8 +413,10 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       .single();
 
     if (fetchError) this.handleError('createWasteRecord:fetch', fetchError);
-    if (!item) throw new Error(`Inventory item ${payload.inventoryItemId} not found`);
-    if (item.quantity < payload.quantity) throw new Error('Waste quantity exceeds inventory');
+    if (!item)
+      throw new Error(`Inventory item ${payload.inventoryItemId} not found`);
+    if (item.quantity < payload.quantity)
+      throw new Error('Waste quantity exceeds inventory');
 
     // 2. 创建浪费记录
     const wasteInsert: WasteRecordInsert = {
@@ -381,12 +427,18 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       notes: payload.notes ?? null,
     };
 
-    const { data, error } = await this.client.from('waste_records').insert(wasteInsert as any).select('*').single();
+    const { data, error } = await this.client
+      .from('waste_records')
+      .insert(wasteInsert as any)
+      .select('*')
+      .single();
     if (error) this.handleError('createWasteRecord:insert', error);
 
     // 3. 扣减库存数量
     const newQuantity = item.quantity - payload.quantity;
-    await this.updateInventoryItem(payload.inventoryItemId, { quantity: newQuantity });
+    await this.updateInventoryItem(payload.inventoryItemId, {
+      quantity: newQuantity,
+    });
 
     return this.mapWasteRecordRow(data!);
   }
@@ -401,7 +453,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       endDate?: Date;
       reason?: WasteRecordDTO['reason'];
     },
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<WasteRecordDTO>> {
     let query = this.client
       .from('waste_records')
@@ -409,8 +461,10 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       .order('waste_date', { ascending: false });
 
     if (inventoryItemId) query = query.eq('inventory_item_id', inventoryItemId);
-    if (filter?.startDate) query = query.gte('waste_date', filter.startDate.toISOString());
-    if (filter?.endDate) query = query.lte('waste_date', filter.endDate.toISOString());
+    if (filter?.startDate)
+      query = query.gte('waste_date', filter.startDate.toISOString());
+    if (filter?.endDate)
+      query = query.lte('waste_date', filter.endDate.toISOString());
     if (filter?.reason) query = query.eq('reason', filter.reason);
 
     if (pagination?.limit) {
@@ -426,7 +480,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
+      hasMore: pagination?.limit
+        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
+        : false,
     };
   }
 
@@ -448,7 +504,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
     // 获取浪费记录
     const { data: wasteRecords, error: wasteError } = await this.client
       .from('waste_records')
-      .select('quantity, reason, inventory_items!inner(purchase_price, member_id)')
+      .select(
+        'quantity, reason, inventory_items!inner(purchase_price, member_id)',
+      )
       .eq('inventory_items.member_id', memberId);
 
     if (wasteError) this.handleError('getInventoryStats:waste', wasteError);
@@ -456,21 +514,30 @@ export class SupabaseInventoryRepository implements InventoryRepository {
     // 计算统计数据
     const itemsList = items || [];
     const totalItems = itemsList.length;
-    const totalValue = itemsList.reduce((sum, item) => sum + (item.purchase_price ?? 0), 0);
+    const totalValue = itemsList.reduce(
+      (sum, item) => sum + (item.purchase_price ?? 0),
+      0,
+    );
 
     // 按状态统计
-    const itemsByStatus = itemsList.reduce((acc, item) => {
-      const status = item.status as InventoryStatus;
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {} as Record<InventoryStatus, number>);
+    const itemsByStatus = itemsList.reduce(
+      (acc, item) => {
+        const status = item.status as InventoryStatus;
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<InventoryStatus, number>,
+    );
 
     // 按位置统计
-    const itemsByLocation = itemsList.reduce((acc, item) => {
-      const location = item.storage_location as StorageLocation;
-      acc[location] = (acc[location] || 0) + 1;
-      return acc;
-    }, {} as Record<StorageLocation, number>);
+    const itemsByLocation = itemsList.reduce(
+      (acc, item) => {
+        const location = item.storage_location as StorageLocation;
+        acc[location] = (acc[location] || 0) + 1;
+        return acc;
+      },
+      {} as Record<StorageLocation, number>,
+    );
 
     // 过期和临期统计
     const now = new Date();
@@ -493,12 +560,19 @@ export class SupabaseInventoryRepository implements InventoryRepository {
     const wasteList = (wasteRecords || []) as any[];
     const wasteStats = {
       totalQuantity: wasteList.reduce((sum, w) => sum + (w.quantity ?? 0), 0),
-      totalValue: wasteList.reduce((sum, w) => sum + ((w.inventory_items?.purchase_price ?? 0) * (w.quantity ?? 0)), 0),
-      byReason: wasteList.reduce((acc, w) => {
-        const reason = w.reason;
-        acc[reason] = (acc[reason] || 0) + (w.quantity ?? 0);
-        return acc;
-      }, {} as Record<string, number>),
+      totalValue: wasteList.reduce(
+        (sum, w) =>
+          sum + (w.inventory_items?.purchase_price ?? 0) * (w.quantity ?? 0),
+        0,
+      ),
+      byReason: wasteList.reduce(
+        (acc, w) => {
+          const reason = w.reason;
+          acc[reason] = (acc[reason] || 0) + (w.quantity ?? 0);
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
     };
 
     return {
@@ -516,9 +590,14 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 获取即将过期的库存物品
    */
-  async getExpiringItems(memberId: string, daysThreshold: number = 7): Promise<InventoryItemDTO[]> {
+  async getExpiringItems(
+    memberId: string,
+    daysThreshold: number = 7,
+  ): Promise<InventoryItemDTO[]> {
     const now = new Date();
-    const thresholdDate = new Date(now.getTime() + daysThreshold * 24 * 60 * 60 * 1000);
+    const thresholdDate = new Date(
+      now.getTime() + daysThreshold * 24 * 60 * 60 * 1000,
+    );
 
     const { data, error } = await this.client
       .from('inventory_items')
@@ -535,7 +614,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
           carbs,
           fat
         )
-      `
+      `,
       )
       .eq('member_id', memberId)
       .is('deleted_at', null)
@@ -566,7 +645,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
           carbs,
           fat
         )
-      `
+      `,
       )
       .eq('member_id', memberId)
       .eq('is_low_stock', true)
@@ -583,7 +662,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   async getInventoryValueTrend(
     memberId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<Array<{ date: Date; totalValue: number; itemCount: number }>> {
     // TODO: 这个方法需要历史快照数据，当前简化实现仅返回当前值
     const stats = await this.getInventoryStats(memberId);
@@ -602,7 +681,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
    * 批量更新库存状态
    */
   async batchUpdateInventoryStatus(memberId?: string): Promise<number> {
-    let query = this.client.from('inventory_items').select('id, quantity, expiry_date, min_stock_threshold');
+    let query = this.client
+      .from('inventory_items')
+      .select('id, quantity, expiry_date, min_stock_threshold');
 
     if (memberId) query = query.eq('member_id', memberId);
     query = query.is('deleted_at', null);
@@ -615,12 +696,16 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       const status = this.calculateInventoryStatus(
         item.quantity,
         item.expiry_date ? new Date(item.expiry_date) : undefined,
-        item.min_stock_threshold ?? undefined
+        item.min_stock_threshold ?? undefined,
       );
 
-      const daysToExpiry = item.expiry_date ? this.calculateDaysToExpiry(new Date(item.expiry_date)) : null;
+      const daysToExpiry = item.expiry_date
+        ? this.calculateDaysToExpiry(new Date(item.expiry_date))
+        : null;
 
-      const isLowStock = item.min_stock_threshold ? item.quantity <= item.min_stock_threshold : false;
+      const isLowStock = item.min_stock_threshold
+        ? item.quantity <= item.min_stock_threshold
+        : false;
 
       await this.client
         .from('inventory_items')
@@ -640,7 +725,10 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 批量删除过期物品
    */
-  async batchDeleteExpiredItems(memberId: string, expiredDaysThreshold: number = 30): Promise<number> {
+  async batchDeleteExpiredItems(
+    memberId: string,
+    expiredDaysThreshold: number = 30,
+  ): Promise<number> {
     const thresholdDate = new Date();
     thresholdDate.setDate(thresholdDate.getDate() - expiredDaysThreshold);
 
@@ -674,7 +762,7 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   private calculateInventoryStatus(
     quantity: number,
     expiryDate?: Date,
-    minStockThreshold?: number
+    minStockThreshold?: number,
   ): InventoryStatus {
     if (quantity <= 0) return 'DEPLETED';
     if (minStockThreshold && quantity <= minStockThreshold) return 'NORMAL'; // 低库存不改变状态
@@ -692,10 +780,20 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 数据映射：InventoryItemCreateDTO → InventoryItemInsert
    */
-  private mapInventoryItemDtoToInsert(dto: InventoryItemCreateDTO): InventoryItemInsert {
-    const daysToExpiry = dto.expiryDate ? this.calculateDaysToExpiry(dto.expiryDate) : null;
-    const status = this.calculateInventoryStatus(dto.quantity, dto.expiryDate, dto.minStockThreshold);
-    const isLowStock = dto.minStockThreshold ? dto.quantity <= dto.minStockThreshold : false;
+  private mapInventoryItemDtoToInsert(
+    dto: InventoryItemCreateDTO,
+  ): InventoryItemInsert {
+    const daysToExpiry = dto.expiryDate
+      ? this.calculateDaysToExpiry(dto.expiryDate)
+      : null;
+    const status = this.calculateInventoryStatus(
+      dto.quantity,
+      dto.expiryDate,
+      dto.minStockThreshold,
+    );
+    const isLowStock = dto.minStockThreshold
+      ? dto.quantity <= dto.minStockThreshold
+      : false;
 
     return {
       member_id: dto.memberId,
@@ -722,29 +820,39 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 数据映射：InventoryItemUpdateDTO → InventoryItemUpdate
    */
-  private mapInventoryItemDtoToUpdate(dto: InventoryItemUpdateDTO): InventoryItemUpdate {
+  private mapInventoryItemDtoToUpdate(
+    dto: InventoryItemUpdateDTO,
+  ): InventoryItemUpdate {
     const update: InventoryItemUpdate = {};
 
     if (dto.quantity !== undefined) update.quantity = dto.quantity;
     if (dto.unit) update.unit = dto.unit;
-    if (dto.purchasePrice !== undefined) update.purchase_price = dto.purchasePrice;
-    if (dto.purchaseSource !== undefined) update.purchase_source = dto.purchaseSource;
+    if (dto.purchasePrice !== undefined)
+      update.purchase_price = dto.purchasePrice;
+    if (dto.purchaseSource !== undefined)
+      update.purchase_source = dto.purchaseSource;
     if (dto.expiryDate !== undefined) {
       update.expiry_date = dto.expiryDate?.toISOString() ?? null;
       if (dto.expiryDate) {
         update.days_to_expiry = this.calculateDaysToExpiry(dto.expiryDate);
       }
     }
-    if (dto.productionDate !== undefined) update.production_date = dto.productionDate?.toISOString() ?? null;
+    if (dto.productionDate !== undefined)
+      update.production_date = dto.productionDate?.toISOString() ?? null;
     if (dto.storageLocation) update.storage_location = dto.storageLocation;
     if (dto.storageNotes !== undefined) update.storage_notes = dto.storageNotes;
-    if (dto.minStockThreshold !== undefined) update.min_stock_threshold = dto.minStockThreshold;
+    if (dto.minStockThreshold !== undefined)
+      update.min_stock_threshold = dto.minStockThreshold;
     if (dto.barcode !== undefined) update.barcode = dto.barcode;
     if (dto.brand !== undefined) update.brand = dto.brand;
     if (dto.packageInfo !== undefined) update.package_info = dto.packageInfo;
 
     // 重新计算状态（如果影响状态的字段被更新）
-    if (dto.quantity !== undefined || dto.expiryDate !== undefined || dto.minStockThreshold !== undefined) {
+    if (
+      dto.quantity !== undefined ||
+      dto.expiryDate !== undefined ||
+      dto.minStockThreshold !== undefined
+    ) {
       // 注意：这里需要现有数据来计算，实际应用中应该先 fetch 再 update
       // 为简化，这里假设 Supabase 触发器会处理状态更新
     }
@@ -777,7 +885,9 @@ export class SupabaseInventoryRepository implements InventoryRepository {
       purchasePrice: row.purchase_price ?? undefined,
       purchaseSource: row.purchase_source ?? undefined,
       expiryDate: row.expiry_date ? new Date(row.expiry_date) : undefined,
-      productionDate: row.production_date ? new Date(row.production_date) : undefined,
+      productionDate: row.production_date
+        ? new Date(row.production_date)
+        : undefined,
       daysToExpiry: row.days_to_expiry ?? undefined,
       storageLocation: row.storage_location as StorageLocation,
       storageNotes: row.storage_notes ?? undefined,
@@ -798,12 +908,18 @@ export class SupabaseInventoryRepository implements InventoryRepository {
   /**
    * 数据映射：InventoryItemRow (with relations) → InventoryItemWithRelationsDTO
    */
-  private mapInventoryItemWithRelationsRow(row: any): InventoryItemWithRelationsDTO {
+  private mapInventoryItemWithRelationsRow(
+    row: any,
+  ): InventoryItemWithRelationsDTO {
     const base = this.mapInventoryItemRow(row);
     return {
       ...base,
-      usageRecords: (row.usage_records || []).map((r: any) => this.mapInventoryUsageRow(r)),
-      wasteRecords: (row.waste_records || []).map((r: any) => this.mapWasteRecordRow(r)),
+      usageRecords: (row.usage_records || []).map((r: any) =>
+        this.mapInventoryUsageRow(r),
+      ),
+      wasteRecords: (row.waste_records || []).map((r: any) =>
+        this.mapWasteRecordRow(r),
+      ),
     };
   }
 

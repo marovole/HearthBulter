@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireAuth } from '@/lib/middleware/api-auth';
+import { checkAIRateLimit } from '@/lib/middleware/api-rate-limit';
+import { checkMultipleConsents } from '@/lib/middleware/api-consent';
 import { healthAnalyzer } from '@/lib/services/ai/health-analyzer';
 import { healthRepository } from '@/lib/repositories/health-repository-singleton';
 import { SupabaseFamilyRepository } from '@/lib/repositories/implementations/supabase-family-repository';
 import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { rateLimiter } from '@/lib/services/ai/rate-limiter';
 import { aiFallbackService } from '@/lib/services/ai/fallback-service';
 import { medicalReportFilter } from '@/lib/middleware/ai-sensitive-filter';
-import { consentManager } from '@/lib/services/consent-manager';
+import { logger } from '@/lib/logger';
 
-// 创建专门用于权限检查的 FamilyRepository 实例（不需要双写）
-
-// Force dynamic rendering for auth()
 export const dynamic = 'force-dynamic';
+
 const familyRepo = new SupabaseFamilyRepository(
   SupabaseClientManager.getInstance(),
 );
@@ -20,76 +19,24 @@ const familyRepo = new SupabaseFamilyRepository(
 /**
  * POST /api/ai/analyze-health
  * 执行健康分析
- *
- * Migrated from Prisma to Supabase (endpoint layer)
- * Note: Service layer (healthAnalyzer, rateLimiter, etc.) still uses Prisma
  */
 export async function POST(request: NextRequest) {
   try {
-    // 验证用户身份
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth();
+    if (!authResult.success) return authResult.response;
+    const { userId } = authResult.context;
 
-    // 速率限制检查
-    const rateLimitResult = await rateLimiter.checkLimit(
-      session.user.id,
-      'ai_analyze_health',
-    );
+    const rateLimitResult = await checkAIRateLimit(userId, 'ai_analyze_health');
+    if (!rateLimitResult.success) return rateLimitResult.response;
 
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        {
-          error: 'Rate limit exceeded',
-          retryAfter: rateLimitResult.retryAfter,
-          resetTime: rateLimitResult.resetTime,
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-            'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
-          },
-        },
-      );
-    }
-
-    // 同意检查
-    const requiredConsents = ['ai_health_analysis', 'medical_data_processing'];
-    const consentResults = await consentManager.checkMultipleConsents(
-      session.user.id,
-      requiredConsents,
-    );
-
-    // 检查必需的同意
-    const missingConsents = requiredConsents.filter(
-      (consentId) => !consentResults[consentId],
-    );
-    if (missingConsents.length > 0) {
-      // 获取缺失的同意类型详情
-      const consentTypes = missingConsents
-        .map((id) => consentManager.getConsentType(id))
-        .filter(Boolean);
-
-      return NextResponse.json(
-        {
-          error: 'Required consents not granted',
-          requiredConsents: consentTypes.map((type) => ({
-            id: type?.id,
-            name: type?.name,
-            description: type?.description,
-            content: type?.content,
-          })),
-          missingConsents,
-        },
-        { status: 403 },
-      );
-    }
+    const consentResult = await checkMultipleConsents(userId, [
+      'ai_health_analysis',
+      'medical_data_processing',
+    ]);
+    if (!consentResult.success) return consentResult.response;
 
     const body = await request.json();
-    const { memberId, includeRecommendations = true } = body;
+    const { memberId } = body;
 
     if (!memberId) {
       return NextResponse.json(
@@ -98,7 +45,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 使用 HealthRepository 获取成员健康上下文（一次性获取所有数据）
+    // 使用 HealthRepository 获取成员健康上下文
     const memberContext =
       await healthRepository.getMemberHealthContext(memberId);
 
@@ -109,14 +56,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 使用 FamilyRepository 检查权限：是成员本人或家庭管理员
-    const isOwnMember = memberContext.member.userId === session.user.id;
+    // 检查权限：是成员本人或家庭管理员
+    const isOwnMember = memberContext.member.userId === userId;
     let isAdmin = false;
 
     if (!isOwnMember) {
       const role = await familyRepo.getUserFamilyRole(
         memberContext.member.familyId,
-        session.user.id,
+        userId,
       );
       isAdmin = role === 'ADMIN';
     }
@@ -128,7 +75,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 组装完整的成员数据（兼容现有代码）
+    // 组装完整的成员数据
     const member = {
       ...memberContext.member,
       birthDate: memberContext.member.birthDate.toISOString(),
@@ -162,10 +109,10 @@ export async function POST(request: NextRequest) {
       health_goals: member.healthGoals.map((g) => g.goalType),
       dietary_preferences: member.dietaryPreference
         ? [
-          member.dietaryPreference.dietType,
-          ...(member.dietaryPreference.isVegetarian ? ['vegetarian'] : []),
-          ...(member.dietaryPreference.isVegan ? ['vegan'] : []),
-        ].filter((pref): pref is string => pref !== null)
+            member.dietaryPreference.dietType,
+            ...(member.dietaryPreference.isVegetarian ? ['vegetarian'] : []),
+            ...(member.dietaryPreference.isVegan ? ['vegan'] : []),
+          ].filter((pref): pref is string => pref !== null)
         : [],
       allergies: member.allergies.map((a) => a.allergenName),
       activity_level: 'moderate' as const, // 可以从健康数据推断
@@ -236,8 +183,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!aiAdvice) {
-      console.error('保存AI建议失败');
-      // 继续返回结果，即使保存失败
+      logger.error('保存AI建议失败', { memberId });
     }
 
     const result = {
@@ -255,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Health analysis API error:', error);
+    logger.error('Health analysis API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },
@@ -266,15 +212,12 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/ai/analyze-health
  * 获取历史分析记录
- *
- * Migrated from Prisma to Supabase
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth();
+    if (!authResult.success) return authResult.response;
+    const { userId } = authResult.context;
 
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');
@@ -298,13 +241,13 @@ export async function GET(request: NextRequest) {
     }
 
     // 检查权限：是成员本人或家庭管理员
-    const isOwnMember = memberData.userId === session.user.id;
+    const isOwnMember = memberData.userId === userId;
     let isAdmin = false;
 
     if (!isOwnMember) {
       const role = await familyRepo.getUserFamilyRole(
         memberData.familyId,
-        session.user.id,
+        userId,
       );
       isAdmin = role === 'ADMIN';
     }
@@ -324,7 +267,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ history });
   } catch (error) {
-    console.error('Health analysis history API error:', error);
+    logger.error('Health analysis history API error', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

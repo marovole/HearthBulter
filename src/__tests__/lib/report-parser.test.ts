@@ -11,7 +11,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const cholesterol = result.indicators.find(
-        (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL'
+        (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL',
       );
 
       expect(cholesterol).toBeDefined();
@@ -26,7 +26,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const ldl = result.indicators.find(
-        (ind) => ind.indicatorType === 'LDL_CHOLESTEROL'
+        (ind) => ind.indicatorType === 'LDL_CHOLESTEROL',
       );
 
       expect(ldl).toBeDefined();
@@ -39,7 +39,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const hdl = result.indicators.find(
-        (ind) => ind.indicatorType === 'HDL_CHOLESTEROL'
+        (ind) => ind.indicatorType === 'HDL_CHOLESTEROL',
       );
 
       expect(hdl).toBeDefined();
@@ -52,7 +52,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const glucose = result.indicators.find(
-        (ind) => ind.indicatorType === 'FASTING_GLUCOSE'
+        (ind) => ind.indicatorType === 'FASTING_GLUCOSE',
       );
 
       expect(glucose).toBeDefined();
@@ -65,7 +65,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const glucose = result.indicators.find(
-        (ind) => ind.indicatorType === 'FASTING_GLUCOSE'
+        (ind) => ind.indicatorType === 'FASTING_GLUCOSE',
       );
 
       expect(glucose).toBeDefined();
@@ -78,9 +78,7 @@ describe('ReportParser', () => {
       const text = 'ALT：150 U/L';
       const result = ReportParser.parse(text);
 
-      const alt = result.indicators.find(
-        (ind) => ind.indicatorType === 'ALT'
-      );
+      const alt = result.indicators.find((ind) => ind.indicatorType === 'ALT');
 
       expect(alt).toBeDefined();
       expect(alt?.value).toBe(150);
@@ -91,9 +89,7 @@ describe('ReportParser', () => {
       const text = 'AST：80 U/L';
       const result = ReportParser.parse(text);
 
-      const ast = result.indicators.find(
-        (ind) => ind.indicatorType === 'AST'
-      );
+      const ast = result.indicators.find((ind) => ind.indicatorType === 'AST');
 
       expect(ast).toBeDefined();
       expect(ast?.value).toBe(80);
@@ -105,7 +101,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const creatinine = result.indicators.find(
-        (ind) => ind.indicatorType === 'CREATININE'
+        (ind) => ind.indicatorType === 'CREATININE',
       );
 
       expect(creatinine).toBeDefined();
@@ -122,14 +118,18 @@ describe('ReportParser', () => {
 
       expect(result.indicators.length).toBeGreaterThanOrEqual(3);
       expect(
-        result.indicators.some((ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL')
+        result.indicators.some(
+          (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL',
+        ),
       ).toBe(true);
       expect(
-        result.indicators.some((ind) => ind.indicatorType === 'FASTING_GLUCOSE')
+        result.indicators.some(
+          (ind) => ind.indicatorType === 'FASTING_GLUCOSE',
+        ),
       ).toBe(true);
-      expect(
-        result.indicators.some((ind) => ind.indicatorType === 'ALT')
-      ).toBe(true);
+      expect(result.indicators.some((ind) => ind.indicatorType === 'ALT')).toBe(
+        true,
+      );
     });
 
     it('应该正确识别异常值', () => {
@@ -141,14 +141,12 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const cholesterol = result.indicators.find(
-        (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL'
+        (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL',
       );
       const glucose = result.indicators.find(
-        (ind) => ind.indicatorType === 'FASTING_GLUCOSE'
+        (ind) => ind.indicatorType === 'FASTING_GLUCOSE',
       );
-      const alt = result.indicators.find(
-        (ind) => ind.indicatorType === 'ALT'
-      );
+      const alt = result.indicators.find((ind) => ind.indicatorType === 'ALT');
 
       expect(cholesterol?.isAbnormal).toBe(true);
       expect(cholesterol?.status).toBe('CRITICAL');
@@ -201,7 +199,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const cholesterol = result.indicators.find(
-        (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL'
+        (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL',
       );
 
       expect(cholesterol?.value).toBe(5.85);
@@ -215,7 +213,7 @@ describe('ReportParser', () => {
       const result = ReportParser.parse(text);
 
       const cholesterolIndicators = result.indicators.filter(
-        (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL'
+        (ind) => ind.indicatorType === 'TOTAL_CHOLESTEROL',
       );
 
       // 应该只保留第一个匹配的结果
@@ -223,4 +221,3 @@ describe('ReportParser', () => {
     });
   });
 });
-

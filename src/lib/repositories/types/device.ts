@@ -127,7 +127,9 @@ export const deviceConnectionCreateInputSchema = z.object({
   dataTypes: z.array(healthDataTypeSchema),
   syncInterval: z.number().int().default(1800),
 });
-export type DeviceConnectionCreateInputDTO = z.infer<typeof deviceConnectionCreateInputSchema>;
+export type DeviceConnectionCreateInputDTO = z.infer<
+  typeof deviceConnectionCreateInputSchema
+>;
 
 /**
  * 设备连接更新输入
@@ -150,7 +152,9 @@ export const deviceConnectionUpdateInputSchema = z.object({
   errorCount: z.number().int().optional(),
   retryCount: z.number().int().optional(),
 });
-export type DeviceConnectionUpdateInputDTO = z.infer<typeof deviceConnectionUpdateInputSchema>;
+export type DeviceConnectionUpdateInputDTO = z.infer<
+  typeof deviceConnectionUpdateInputSchema
+>;
 
 /**
  * 设备连接过滤条件
@@ -162,4 +166,6 @@ export const deviceConnectionFilterSchema = z.object({
   syncStatus: syncStatusSchema.optional(),
   deviceType: deviceTypeSchema.optional(),
 });
-export type DeviceConnectionFilterDTO = z.infer<typeof deviceConnectionFilterSchema>;
+export type DeviceConnectionFilterDTO = z.infer<
+  typeof deviceConnectionFilterSchema
+>;

@@ -3,12 +3,12 @@ import { logger } from '@/lib/logging/structured-logger';
 
 // 合规标准
 export enum ComplianceStandard {
-  GDPR = 'GDPR',           // 欧盟通用数据保护条例
-  CCPA = 'CCPA',           // 加州消费者隐私法案
-  ISO27001 = 'ISO27001',   // 信息安全管理体系
-  SOC2 = 'SOC2',           // 服务组织控制
-  HIPAA = 'HIPAA',         // 健康保险便携性和责任法案
-  PCI_DSS = 'PCI_DSS',     // 支付卡行业数据安全标准
+  GDPR = 'GDPR', // 欧盟通用数据保护条例
+  CCPA = 'CCPA', // 加州消费者隐私法案
+  ISO27001 = 'ISO27001', // 信息安全管理体系
+  SOC2 = 'SOC2', // 服务组织控制
+  HIPAA = 'HIPAA', // 健康保险便携性和责任法案
+  PCI_DSS = 'PCI_DSS', // 支付卡行业数据安全标准
 }
 
 // 合规要求
@@ -17,7 +17,12 @@ interface ComplianceRequirement {
   standard: ComplianceStandard;
   title: string;
   description: string;
-  category: 'data_protection' | 'access_control' | 'audit_logging' | 'encryption' | 'risk_management';
+  category:
+    | 'data_protection'
+    | 'access_control'
+    | 'audit_logging'
+    | 'encryption'
+    | 'risk_management';
   mandatory: boolean;
   controls: ComplianceControl[];
 }
@@ -73,7 +78,8 @@ interface RiskAssessment {
  */
 export class ComplianceAuditor {
   private static instance: ComplianceAuditor;
-  private requirements: Map<ComplianceStandard, ComplianceRequirement[]> = new Map();
+  private requirements: Map<ComplianceStandard, ComplianceRequirement[]> =
+    new Map();
   private assessments: RiskAssessment[] = [];
   private lastAuditDate: Date | null = null;
 
@@ -263,7 +269,9 @@ export class ComplianceAuditor {
   /**
    * 生成合规报告
    */
-  async generateComplianceReport(standard: ComplianceStandard): Promise<ComplianceReport> {
+  async generateComplianceReport(
+    standard: ComplianceStandard,
+  ): Promise<ComplianceReport> {
     const requirements = this.requirements.get(standard) || [];
     const generatedAt = new Date();
 
@@ -274,8 +282,8 @@ export class ComplianceAuditor {
     let highRiskItems = 0;
     const recommendations: string[] = [];
 
-    const assessedRequirements = requirements.map(req => {
-      const assessedControls = req.controls.map(control => {
+    const assessedRequirements = requirements.map((req) => {
+      const assessedControls = req.controls.map((control) => {
         totalControls++;
 
         if (control.status === 'implemented') {
@@ -283,8 +291,13 @@ export class ComplianceAuditor {
           if (req.mandatory) {
             mandatoryImplemented++;
           }
-        } else if (control.status === 'partial' || control.status === 'not_implemented') {
-          recommendations.push(`实施控制: ${control.title} - ${control.description}`);
+        } else if (
+          control.status === 'partial' ||
+          control.status === 'not_implemented'
+        ) {
+          recommendations.push(
+            `实施控制: ${control.title} - ${control.description}`,
+          );
           if (req.mandatory) {
             highRiskItems++;
           }
@@ -305,9 +318,16 @@ export class ComplianceAuditor {
       };
     });
 
-    const overallScore = totalControls > 0 ? Math.round((implementedControls / totalControls) * 100) : 0;
-    const status = overallScore >= 95 ? 'compliant' :
-      overallScore >= 80 ? 'partially_compliant' : 'non_compliant';
+    const overallScore =
+      totalControls > 0
+        ? Math.round((implementedControls / totalControls) * 100)
+        : 0;
+    const status =
+      overallScore >= 95
+        ? 'compliant'
+        : overallScore >= 80
+          ? 'partially_compliant'
+          : 'non_compliant';
 
     const report: ComplianceReport = {
       id: `report_${standard}_${Date.now()}`,
@@ -355,12 +375,14 @@ export class ComplianceAuditor {
   /**
    * 收集证据
    */
-  private collectEvidence(requirements: ComplianceRequirement[]): { [requirementId: string]: string[] } {
+  private collectEvidence(requirements: ComplianceRequirement[]): {
+    [requirementId: string]: string[];
+  } {
     const evidence: { [requirementId: string]: string[] } = {};
 
-    requirements.forEach(req => {
+    requirements.forEach((req) => {
       evidence[req.id] = [];
-      req.controls.forEach(control => {
+      req.controls.forEach((control) => {
         if (control.evidence) {
           evidence[req.id].push(...control.evidence);
         }
@@ -378,7 +400,9 @@ export class ComplianceAuditor {
     findings: ComplianceFinding[];
     recommendations: string[];
   }> {
-    const standards = standard ? [standard] : Array.from(this.requirements.keys());
+    const standards = standard
+      ? [standard]
+      : Array.from(this.requirements.keys());
     const findings: ComplianceFinding[] = [];
     const recommendations: string[] = [];
 
@@ -397,7 +421,7 @@ export class ComplianceAuditor {
       }
     }
 
-    const passed = findings.every(f => f.status === 'compliant');
+    const passed = findings.every((f) => f.status === 'compliant');
 
     logger.info('合规检查完成', {
       type: 'compliance',
@@ -419,7 +443,7 @@ export class ComplianceAuditor {
    */
   private async evaluateControl(
     control: ComplianceControl,
-    requirement: ComplianceRequirement
+    requirement: ComplianceRequirement,
   ): Promise<ComplianceFinding> {
     const recommendations: string[] = [];
     let status: 'compliant' | 'non_compliant' | 'needs_attention' = 'compliant';
@@ -466,19 +490,19 @@ export class ComplianceAuditor {
     controlId: string,
     status: ComplianceControl['status'],
     evidence?: string[],
-    implementation?: string
+    implementation?: string,
   ): Promise<void> {
     const requirements = this.requirements.get(standard);
     if (!requirements) {
       throw new Error(`未找到标准 ${standard} 的要求`);
     }
 
-    const requirement = requirements.find(req => req.id === requirementId);
+    const requirement = requirements.find((req) => req.id === requirementId);
     if (!requirement) {
       throw new Error(`未找到要求 ${requireId}`);
     }
 
-    const control = requirement.controls.find(ctrl => ctrl.id === controlId);
+    const control = requirement.controls.find((ctrl) => ctrl.id === controlId);
     if (!control) {
       throw new Error(`未找到控制 ${controlId}`);
     }
@@ -526,9 +550,9 @@ export class ComplianceAuditor {
    */
   async updateRiskAssessment(
     riskId: string,
-    updates: Partial<RiskAssessment>
+    updates: Partial<RiskAssessment>,
   ): Promise<void> {
-    const risk = this.assessments.find(r => r.id === riskId);
+    const risk = this.assessments.find((r) => r.id === riskId);
     if (!risk) {
       throw new Error(`未找到风险评估 ${riskId}`);
     }
@@ -559,11 +583,16 @@ export class ComplianceAuditor {
    */
   private getLikelihoodScore(likelihood: RiskAssessment['likelihood']): number {
     switch (likelihood) {
-    case 'low': return 25;
-    case 'medium': return 50;
-    case 'high': return 75;
-    case 'critical': return 100;
-    default: return 50;
+      case 'low':
+        return 25;
+      case 'medium':
+        return 50;
+      case 'high':
+        return 75;
+      case 'critical':
+        return 100;
+      default:
+        return 50;
     }
   }
 
@@ -572,11 +601,16 @@ export class ComplianceAuditor {
    */
   private getImpactScore(impact: RiskAssessment['impact']): number {
     switch (impact) {
-    case 'low': return 25;
-    case 'medium': return 50;
-    case 'high': return 75;
-    case 'critical': return 100;
-    default: return 50;
+      case 'low':
+        return 25;
+      case 'medium':
+        return 50;
+      case 'high':
+        return 75;
+      case 'critical':
+        return 100;
+      default:
+        return 50;
     }
   }
 
@@ -593,8 +627,8 @@ export class ComplianceAuditor {
     const requirements = this.requirements.get(standard) || [];
     const roadmap: any[] = [];
 
-    requirements.forEach(req => {
-      req.controls.forEach(control => {
+    requirements.forEach((req) => {
+      req.controls.forEach((control) => {
         if (control.status !== 'implemented') {
           const priority = req.mandatory ? 'high' : 'medium';
           const estimatedEffort = this.estimateEffort(control);
@@ -621,29 +655,35 @@ export class ComplianceAuditor {
   /**
    * 估算实施工作量
    */
-  private estimateEffort(control: ComplianceControl): 'low' | 'medium' | 'high' {
+  private estimateEffort(
+    control: ComplianceControl,
+  ): 'low' | 'medium' | 'high' {
     if (control.status === 'partial') return 'low';
-    if (control.implementation && control.implementation.length > 100) return 'high';
+    if (control.implementation && control.implementation.length > 100)
+      return 'high';
     return 'medium';
   }
 
   /**
    * 计算时间线
    */
-  private calculateTimeline(control: ComplianceControl, effort: 'low' | 'medium' | 'high'): string {
+  private calculateTimeline(
+    control: ComplianceControl,
+    effort: 'low' | 'medium' | 'high',
+  ): string {
     const now = new Date();
     let days: number;
 
     switch (effort) {
-    case 'low':
-      days = 7;
-      break;
-    case 'medium':
-      days = 21;
-      break;
-    case 'high':
-      days = 60;
-      break;
+      case 'low':
+        days = 7;
+        break;
+      case 'medium':
+        days = 21;
+        break;
+      case 'high':
+        days = 60;
+        break;
     }
 
     const targetDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);

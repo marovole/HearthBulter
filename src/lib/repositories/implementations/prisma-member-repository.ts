@@ -35,9 +35,11 @@ export class PrismaMemberRepository implements MemberRepository {
 
   async verifyMemberAccess(
     _memberId: string,
-    _userId: string
+    _userId: string,
   ): Promise<MemberAccessResult> {
-    throw new Error('PrismaMemberRepository.verifyMemberAccess not implemented');
+    throw new Error(
+      'PrismaMemberRepository.verifyMemberAccess not implemented',
+    );
   }
 
   // ============================================================================
@@ -46,7 +48,7 @@ export class PrismaMemberRepository implements MemberRepository {
 
   async getHealthGoals(
     _memberId: string,
-    _includeInactive?: boolean
+    _includeInactive?: boolean,
   ): Promise<HealthGoalDTO[]> {
     throw new Error('PrismaMemberRepository.getHealthGoals not implemented');
   }
@@ -57,14 +59,14 @@ export class PrismaMemberRepository implements MemberRepository {
 
   async createHealthGoal(
     _memberId: string,
-    _input: CreateHealthGoalInput
+    _input: CreateHealthGoalInput,
   ): Promise<HealthGoalDTO> {
     throw new Error('PrismaMemberRepository.createHealthGoal not implemented');
   }
 
   async updateHealthGoal(
     _goalId: string,
-    _input: UpdateHealthGoalInput
+    _input: UpdateHealthGoalInput,
   ): Promise<HealthGoalDTO> {
     throw new Error('PrismaMemberRepository.updateHealthGoal not implemented');
   }
@@ -83,14 +85,14 @@ export class PrismaMemberRepository implements MemberRepository {
 
   async createAllergy(
     _memberId: string,
-    _input: CreateAllergyInput
+    _input: CreateAllergyInput,
   ): Promise<AllergyDTO> {
     throw new Error('PrismaMemberRepository.createAllergy not implemented');
   }
 
   async updateAllergy(
     _allergyId: string,
-    _input: UpdateAllergyInput
+    _input: UpdateAllergyInput,
   ): Promise<AllergyDTO> {
     throw new Error('PrismaMemberRepository.updateAllergy not implemented');
   }
@@ -109,14 +111,14 @@ export class PrismaMemberRepository implements MemberRepository {
 
   async createHealthData(
     _memberId: string,
-    _input: CreateHealthDataInput
+    _input: CreateHealthDataInput,
   ): Promise<HealthDataDTO> {
     throw new Error('PrismaMemberRepository.createHealthData not implemented');
   }
 
   async updateHealthData(
     _dataId: string,
-    _input: UpdateHealthDataInput
+    _input: UpdateHealthDataInput,
   ): Promise<HealthDataDTO> {
     throw new Error('PrismaMemberRepository.updateHealthData not implemented');
   }

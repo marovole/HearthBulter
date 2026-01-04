@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
       // 验证权限：只有关联的家庭成员可以查询
       const { data: plan, error: planError } = await supabase
         .from('meal_plans')
-        .select(`
+        .select(
+          `
           id,
           memberId,
           member:family_members!inner(
@@ -44,7 +45,8 @@ export async function GET(request: NextRequest) {
               creatorId
             )
           )
-        `)
+        `,
+        )
         .eq('id', planId)
         .is('deletedAt', null)
         .single();
@@ -69,7 +71,7 @@ export async function GET(request: NextRequest) {
       if (!isAdmin && !isSelf) {
         return NextResponse.json(
           { error: '无权限查看该购物清单' },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
@@ -81,7 +83,10 @@ export async function GET(request: NextRequest) {
         includeItems: true,
       });
 
-      return NextResponse.json({ shoppingLists: result.items }, { status: 200 });
+      return NextResponse.json(
+        { shoppingLists: result.items },
+        { status: 200 },
+      );
     } else {
       // 如果没有指定 planId，只能查询当前用户相关的清单
       // 通过查找用户所属的家庭成员的食谱计划
@@ -117,14 +122,13 @@ export async function GET(request: NextRequest) {
         includeItems: true,
       });
 
-      return NextResponse.json({ shoppingLists: result.items }, { status: 200 });
+      return NextResponse.json(
+        { shoppingLists: result.items },
+        { status: 200 },
+      );
     }
   } catch (error) {
     console.error('查询购物清单失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

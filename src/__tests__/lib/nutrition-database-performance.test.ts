@@ -38,10 +38,10 @@ describe('Nutrition Database Performance Tests', () => {
 
       // Mock Prisma查询
       const mockFindMany = jest.fn().mockResolvedValue(testFoods);
-      const mockCount = jest.fn().mockResolvedValue(100)
+      const mockCount = jest.fn().mockResolvedValue(100);
 
-      ;(prisma.food.findMany as jest.Mock) = mockFindMany
-      ;(prisma.food.count as jest.Mock) = mockCount;
+      (prisma.food.findMany as jest.Mock) = mockFindMany;
+      (prisma.food.count as jest.Mock) = mockCount;
 
       const startTime = Date.now();
 
@@ -55,7 +55,7 @@ describe('Nutrition Database Performance Tests', () => {
             ],
           },
           take: 20,
-        })
+        }),
       );
 
       await Promise.all(queries);
@@ -89,8 +89,8 @@ describe('Nutrition Database Performance Tests', () => {
       };
 
       // Mock Prisma查询
-      const mockFindUnique = jest.fn().mockResolvedValue(testFood)
-      ;(prisma.food.findUnique as jest.Mock) = mockFindUnique;
+      const mockFindUnique = jest.fn().mockResolvedValue(testFood);
+      (prisma.food.findUnique as jest.Mock) = mockFindUnique;
 
       // 第一次查询（无缓存）
       const startTime1 = Date.now();
@@ -107,7 +107,7 @@ describe('Nutrition Database Performance Tests', () => {
 
       // 缓存查询应该更快
       expect(duration2).toBeLessThan(duration1);
-      
+
       // 缓存查询不应该调用数据库
       expect(mockFindUnique).toHaveBeenCalledTimes(1);
     });
@@ -133,8 +133,8 @@ describe('Nutrition Database Performance Tests', () => {
       }));
 
       // Mock Prisma查询
-      const mockFindMany = jest.fn().mockResolvedValue(testFoods)
-      ;(prisma.food.findMany as jest.Mock) = mockFindMany;
+      const mockFindMany = jest.fn().mockResolvedValue(testFoods);
+      (prisma.food.findMany as jest.Mock) = mockFindMany;
 
       // 创建1000个营养计算输入
       const inputs = Array.from({ length: 1000 }, (_, i) => ({
@@ -177,8 +177,8 @@ describe('Nutrition Database Performance Tests', () => {
       }));
 
       // Mock Prisma查询
-      const mockFindMany = jest.fn().mockResolvedValue(testFoods)
-      ;(prisma.food.findMany as jest.Mock) = mockFindMany;
+      const mockFindMany = jest.fn().mockResolvedValue(testFoods);
+      (prisma.food.findMany as jest.Mock) = mockFindMany;
 
       const startTime = Date.now();
 

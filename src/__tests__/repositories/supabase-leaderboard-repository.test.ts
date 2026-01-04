@@ -6,7 +6,10 @@
  */
 
 import { SupabaseLeaderboardRepository } from '@/lib/repositories/implementations/supabase-leaderboard-repository';
-import { RepositoryError, RepositoryErrorCode } from '@/lib/errors/repository-error';
+import {
+  RepositoryError,
+  RepositoryErrorCode,
+} from '@/lib/errors/repository-error';
 import { SupabaseClient } from '@supabase/supabase-js';
 import type { LeaderboardType } from '@prisma/client';
 
@@ -46,7 +49,8 @@ describe('SupabaseLeaderboardRepository', () => {
   let mockQueryBuilder: any;
 
   beforeEach(() => {
-    const { mockClient: client, mockQueryBuilder: builder } = createMockSupabaseClient();
+    const { mockClient: client, mockQueryBuilder: builder } =
+      createMockSupabaseClient();
     mockClient = client;
     mockQueryBuilder = builder;
     repository = new SupabaseLeaderboardRepository(mockClient);
@@ -122,7 +126,9 @@ describe('SupabaseLeaderboardRepository', () => {
         return Promise.resolve(callback({ data: null, error: dbError }));
       });
 
-      await expect(repository.aggregateHealthDataByMember({})).rejects.toThrow();
+      await expect(
+        repository.aggregateHealthDataByMember({}),
+      ).rejects.toThrow();
     });
 
     it('应该返回空数组当没有数据时', async () => {
@@ -176,8 +182,12 @@ describe('SupabaseLeaderboardRepository', () => {
       (repository as any).getMemberById = jest.fn().mockResolvedValue(null);
 
       try {
-        await expect(repository.getMemberHealthData('non-existent')).rejects.toThrow(RepositoryError);
-        await expect(repository.getMemberHealthData('non-existent')).rejects.toThrow('not found');
+        await expect(
+          repository.getMemberHealthData('non-existent'),
+        ).rejects.toThrow(RepositoryError);
+        await expect(
+          repository.getMemberHealthData('non-existent'),
+        ).rejects.toThrow('not found');
       } finally {
         // 恢复原始方法
         (repository as any).getMemberById = repositoryGetMemberById;
@@ -233,7 +243,11 @@ describe('SupabaseLeaderboardRepository', () => {
 
   describe('getMemberById', () => {
     it('应该根据ID获取成员', async () => {
-      const member = { id: 'member-1', name: 'Test User', avatar: 'avatar-url' };
+      const member = {
+        id: 'member-1',
+        name: 'Test User',
+        avatar: 'avatar-url',
+      };
 
       mockQueryBuilder.maybeSingle.mockResolvedValueOnce({
         data: member,
@@ -364,7 +378,9 @@ describe('SupabaseLeaderboardRepository', () => {
       expect(result).not.toBeNull();
       expect(result?.id).toBe('entry-latest');
       expect(result?.rank).toBe(1);
-      expect(mockQueryBuilder.order).toHaveBeenCalledWith('calculated_at', { ascending: false });
+      expect(mockQueryBuilder.order).toHaveBeenCalledWith('calculated_at', {
+        ascending: false,
+      });
       expect(mockQueryBuilder.limit).toHaveBeenCalledWith(1);
     });
 

@@ -50,8 +50,8 @@ class SupabaseClient {
 export const supabase = SupabaseClient.getInstance().getClient();
 
 // 导出类型
-export type SupabaseClientType = ReturnType<typeof createClient>
-export type User = Database['public']['Tables']['users']['Row']
-export type HealthData = Database['public']['Tables']['health_data']['Row']
-export type MealRecord = Database['public']['Tables']['meal_records']['Row']
-export type Recipe = Database['public']['Tables']['recipes']['Row']
+export type SupabaseClientType = ReturnType<typeof createClient>;
+export type User = Database['public']['Tables']['users']['Row'];
+export type HealthData = Database['public']['Tables']['health_data']['Row'];
+export type MealRecord = Database['public']['Tables']['meal_records']['Row'];
+export type Recipe = Database['public']['Tables']['recipes']['Row'];

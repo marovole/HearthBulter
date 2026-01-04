@@ -13,13 +13,14 @@ import type { IndicatorType } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
     .from('family_members')
-    .select(`
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -27,7 +28,8 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `)
+    `,
+    )
     .eq('id', memberId)
     .is('deletedAt', null)
     .single();
@@ -67,7 +69,7 @@ async function verifyMemberAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> }
+  { params }: { params: Promise<{ memberId: string; reportId: string }> },
 ) {
   try {
     const { memberId, reportId } = await params;
@@ -81,10 +83,7 @@ export async function GET(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: '无权限查看该报告' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无权限查看该报告' }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -100,31 +99,23 @@ export async function GET(
 
     if (currentError) {
       console.error('查询当前报告失败:', currentError);
-      return NextResponse.json(
-        { error: '查询报告失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询报告失败' }, { status: 500 });
     }
 
     if (!currentReport) {
-      return NextResponse.json(
-        { error: '报告不存在' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: '报告不存在' }, { status: 404 });
     }
 
     // 查询当前报告的指标
-    const { data: currentIndicators, error: currentIndicatorsError } = await supabase
-      .from('medical_indicators')
-      .select('*')
-      .eq('reportId', reportId);
+    const { data: currentIndicators, error: currentIndicatorsError } =
+      await supabase
+        .from('medical_indicators')
+        .select('*')
+        .eq('reportId', reportId);
 
     if (currentIndicatorsError) {
       console.error('查询当前指标失败:', currentIndicatorsError);
-      return NextResponse.json(
-        { error: '查询指标失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询指标失败' }, { status: 500 });
     }
 
     // 查询该成员的其他报告（按日期排序，获取最近的一条）
@@ -139,17 +130,15 @@ export async function GET(
       previousQuery = previousQuery.lt('reportDate', currentReport.reportDate);
     }
 
-    const { data: previousReports, error: previousReportsError } = await previousQuery
-      .order('reportDate', { ascending: false, nullsFirst: false })
-      .order('createdAt', { ascending: false })
-      .limit(1);
+    const { data: previousReports, error: previousReportsError } =
+      await previousQuery
+        .order('reportDate', { ascending: false, nullsFirst: false })
+        .order('createdAt', { ascending: false })
+        .limit(1);
 
     if (previousReportsError) {
       console.error('查询历史报告失败:', previousReportsError);
-      return NextResponse.json(
-        { error: '查询报告失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询报告失败' }, { status: 500 });
     }
 
     const previousReport = previousReports?.[0];
@@ -167,40 +156,38 @@ export async function GET(
     }
 
     // 查询历史报告的指标
-    const { data: previousIndicators, error: previousIndicatorsError } = await supabase
-      .from('medical_indicators')
-      .select('*')
-      .eq('reportId', previousReport.id);
+    const { data: previousIndicators, error: previousIndicatorsError } =
+      await supabase
+        .from('medical_indicators')
+        .select('*')
+        .eq('reportId', previousReport.id);
 
     if (previousIndicatorsError) {
       console.error('查询历史指标失败:', previousIndicatorsError);
-      return NextResponse.json(
-        { error: '查询指标失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '查询指标失败' }, { status: 500 });
     }
 
     // 构建指标对比数据
     const comparison: Array<{
-      indicatorType: IndicatorType
-      name: string
-      unit: string
-      previousValue?: number
-      currentValue: number
-      change?: number
-      changePercent?: number
-      trend: 'improved' | 'worsened' | 'stable' | 'new'
-      previousStatus?: string
-      currentStatus: string
+      indicatorType: IndicatorType;
+      name: string;
+      unit: string;
+      previousValue?: number;
+      currentValue: number;
+      change?: number;
+      changePercent?: number;
+      trend: 'improved' | 'worsened' | 'stable' | 'new';
+      previousStatus?: string;
+      currentStatus: string;
     }> = [];
 
     // 按指标类型分组
     const previousIndicatorsMap = new Map(
-      (previousIndicators || []).map((ind) => [ind.indicatorType, ind])
+      (previousIndicators || []).map((ind) => [ind.indicatorType, ind]),
     );
 
     const currentIndicatorsMap = new Map(
-      (currentIndicators || []).map((ind) => [ind.indicatorType, ind])
+      (currentIndicators || []).map((ind) => [ind.indicatorType, ind]),
     );
 
     // 处理所有当前指标
@@ -217,12 +204,9 @@ export async function GET(
 
         // 判断趋势
         let trend: 'improved' | 'worsened' | 'stable' = 'stable';
-        
+
         // 如果当前状态比之前好，视为改善
-        if (
-          current.status === 'NORMAL' &&
-          previous.status !== 'NORMAL'
-        ) {
+        if (current.status === 'NORMAL' && previous.status !== 'NORMAL') {
           trend = 'improved';
         } else if (
           current.status !== 'NORMAL' &&
@@ -309,7 +293,9 @@ export async function GET(
         OTHER: 20,
       };
 
-      return (typeOrder[a.indicatorType] || 99) - (typeOrder[b.indicatorType] || 99);
+      return (
+        (typeOrder[a.indicatorType] || 99) - (typeOrder[b.indicatorType] || 99)
+      );
     });
 
     return NextResponse.json({
@@ -339,8 +325,7 @@ export async function GET(
         error: '服务器内部错误',
         details: error instanceof Error ? error.message : '未知错误',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

@@ -95,7 +95,7 @@ export class EmailService {
         content: Buffer | string;
         contentType?: string;
       }>;
-    } = {}
+    } = {},
   ): Promise<string> {
     await this.ensureInitialized();
 
@@ -132,7 +132,7 @@ export class EmailService {
   async sendTemplate(
     memberId: string,
     templateName: string,
-    data: Record<string, any>
+    data: Record<string, any>,
   ): Promise<string> {
     const template = await this.getEmailTemplate(templateName);
     if (!template) {
@@ -154,7 +154,7 @@ export class EmailService {
       subject: string;
       content: string;
       html?: boolean;
-    }>
+    }>,
   ): Promise<EmailSendResult[]> {
     const results: EmailSendResult[] = [];
 
@@ -162,7 +162,7 @@ export class EmailService {
     const batchSize = 10;
     for (let i = 0; i < emails.length; i += batchSize) {
       const batch = emails.slice(i, i + batchSize);
-      
+
       const batchResults = await Promise.allSettled(
         batch.map(async (email) => {
           try {
@@ -170,7 +170,7 @@ export class EmailService {
               email.memberId,
               email.subject,
               email.content,
-              { html: email.html }
+              { html: email.html },
             );
             return {
               memberId: email.memberId,
@@ -186,7 +186,7 @@ export class EmailService {
               error: error instanceof Error ? error.message : 'Unknown error',
             };
           }
-        })
+        }),
       );
 
       batchResults.forEach((result) => {
@@ -226,7 +226,7 @@ export class EmailService {
       filename: string;
       content: Buffer | string;
       contentType?: string;
-    }>
+    }>,
   ): Promise<string> {
     return await this.send(memberId, subject, content, {
       html: true,
@@ -279,7 +279,7 @@ export class EmailService {
       // 暂时返回模拟数据
       const { PrismaClient } = require('@prisma/client');
       const prisma = new PrismaClient();
-      
+
       const member = await prisma.familyMember.findUnique({
         where: { id: memberId },
         include: {
@@ -467,7 +467,7 @@ export class EmailService {
    * 延迟函数
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -486,7 +486,7 @@ export class EmailService {
   getStatus(): {
     isConfigured: boolean;
     isConnected: boolean;
-    } {
+  } {
     return {
       isConfigured: this.isConfigured,
       isConnected: this.isConfigured, // 简化实现，实际应该检查连接状态

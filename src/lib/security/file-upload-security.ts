@@ -94,12 +94,12 @@ const DEFAULT_FILE_TYPES: Record<string, FileTypeConfig> = {
 
 // 危险文件签名
 const DANGEROUS_SIGNATURES = [
-  Buffer.from([0x4D, 0x5A]), // PE executable (MZ)
-  Buffer.from([0x7F, 0x45, 0x4C, 0x46]), // ELF executable
-  Buffer.from([0xCA, 0xFE, 0xBA, 0xBE]), // Java class
-  Buffer.from([0x50, 0x4B, 0x03, 0x04]), // ZIP archive
+  Buffer.from([0x4d, 0x5a]), // PE executable (MZ)
+  Buffer.from([0x7f, 0x45, 0x4c, 0x46]), // ELF executable
+  Buffer.from([0xca, 0xfe, 0xba, 0xbe]), // Java class
+  Buffer.from([0x50, 0x4b, 0x03, 0x04]), // ZIP archive
   Buffer.from([0x52, 0x61, 0x72, 0x21]), // RAR archive
-  Buffer.from([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C]), // 7Z archive
+  Buffer.from([0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]), // 7Z archive
 ];
 
 // 危险内容模式
@@ -165,7 +165,10 @@ export class FileUploadSecurity {
         logger.info('创建上传目录', { path: this.config.uploadPath });
       }
 
-      if (this.config.quarantineEnabled && !fs.existsSync(this.config.quarantinePath)) {
+      if (
+        this.config.quarantineEnabled &&
+        !fs.existsSync(this.config.quarantinePath)
+      ) {
         fs.mkdirSync(this.config.quarantinePath, { recursive: true });
         logger.info('创建隔离目录', { path: this.config.quarantinePath });
       }
@@ -186,7 +189,9 @@ export class FileUploadSecurity {
 
     // 1. 检查文件大小
     if (buffer.length > this.config.maxFileSize) {
-      threats.push(`文件大小超限: ${buffer.length} > ${this.config.maxFileSize}`);
+      threats.push(
+        `文件大小超限: ${buffer.length} > ${this.config.maxFileSize}`,
+      );
       safe = false;
     }
 
@@ -262,26 +267,40 @@ export class FileUploadSecurity {
     const header = buffer.subarray(0, 4);
 
     // 图片文件
-    if (header[0] === 0xFF && header[1] === 0xD8) return 'image';
+    if (header[0] === 0xff && header[1] === 0xd8) return 'image';
     if (header.toString('ascii', 1, 4) === 'PNG') return 'image';
     if (header.toString('ascii', 0, 3) === 'GIF') return 'image';
-    if (header.toString('ascii', 0, 4) === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP') return 'image';
+    if (
+      header.toString('ascii', 0, 4) === 'RIFF' &&
+      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+    )
+      return 'image';
 
     // PDF文件
     if (buffer.toString('ascii', 0, 4) === '%PDF') return 'document';
 
     // 压缩文件
-    if (header[0] === 0x50 && header[1] === 0x4B) return 'archive';
+    if (header[0] === 0x50 && header[1] === 0x4b) return 'archive';
 
     // 可执行文件
-    if (header[0] === 0x4D && header[1] === 0x5A) return 'executable';
-    if (header[0] === 0x7F && header[1] === 0x45 && header[2] === 0x4C && header[3] === 0x46) return 'executable';
+    if (header[0] === 0x4d && header[1] === 0x5a) return 'executable';
+    if (
+      header[0] === 0x7f &&
+      header[1] === 0x45 &&
+      header[2] === 0x4c &&
+      header[3] === 0x46
+    )
+      return 'executable';
 
     // 文本文件
     if (this.isTextFile(buffer)) {
       // 进一步检查是否为脚本
       const content = buffer.toString('utf-8');
-      if (content.includes('<?php') || content.includes('javascript:') || content.includes('<%')) {
+      if (
+        content.includes('<?php') ||
+        content.includes('javascript:') ||
+        content.includes('<%')
+      ) {
         return 'script';
       }
       return 'document';
@@ -312,7 +331,7 @@ export class FileUploadSecurity {
 
     const header = buffer.subarray(0, Math.min(16, buffer.length));
 
-    return DANGEROUS_SIGNATURES.some(signature => {
+    return DANGEROUS_SIGNATURES.some((signature) => {
       if (header.length < signature.length) return false;
       return header.subarray(0, signature.length).equals(signature);
     });
@@ -321,7 +340,10 @@ export class FileUploadSecurity {
   /**
    * 检查MIME类型一致性
    */
-  private checkMimeConsistency(buffer: Buffer, declaredExtension: string): boolean {
+  private checkMimeConsistency(
+    buffer: Buffer,
+    declaredExtension: string,
+  ): boolean {
     const fileType = this.detectFileType(buffer);
     const typeConfig = this.config.allowedTypes[fileType];
 
@@ -337,7 +359,7 @@ export class FileUploadSecurity {
     // 检查是否包含非打印字符（除了常见的控制字符）
     for (let i = 0; i < Math.min(1024, buffer.length); i++) {
       const byte = buffer[i];
-      if (byte < 0x09 || (byte > 0x0D && byte < 0x20) || byte > 0x7E) {
+      if (byte < 0x09 || (byte > 0x0d && byte < 0x20) || byte > 0x7e) {
         return false;
       }
     }
@@ -392,7 +414,7 @@ export class FileUploadSecurity {
   async handleUpload(
     buffer: Buffer,
     filename: string,
-    userId?: string
+    userId?: string,
   ): Promise<{
     success: boolean;
     filepath?: string;
@@ -489,11 +511,14 @@ export class FileUploadSecurity {
   private async quarantineFile(
     buffer: Buffer,
     filename: string,
-    scanResult: FileScanResult
+    scanResult: FileScanResult,
   ): Promise<void> {
     try {
       const quarantineFilename = `quarantine_${Date.now()}_${filename}`;
-      const quarantinePath = path.join(this.config.quarantinePath, quarantineFilename);
+      const quarantinePath = path.join(
+        this.config.quarantinePath,
+        quarantineFilename,
+      );
 
       await this.saveFile(buffer, quarantinePath);
 
@@ -508,7 +533,7 @@ export class FileUploadSecurity {
       const recordPath = `${quarantinePath}.json`;
       await this.saveFile(
         Buffer.from(JSON.stringify(quarantineRecord, null, 2)),
-        recordPath
+        recordPath,
       );
 
       logger.warn('文件已隔离', {

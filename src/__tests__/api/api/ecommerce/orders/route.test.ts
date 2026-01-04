@@ -51,7 +51,6 @@ describe('api_ecommerce_orders_route', () => {
     it('should handle POST request', async () => {
       // Import the route handler if POST exists
       // const { POST } = require('@/app/api/ecommerce/orders/route');
-
       // TODO: Implement POST test
     });
   });

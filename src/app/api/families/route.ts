@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       {
         offset,
         limit: validatedQuery.limit,
-      }
+      },
     );
 
     const total = result.total ?? 0;
@@ -62,14 +62,11 @@ export async function GET(request: NextRequest) {
           totalPages: Math.ceil(total / validatedQuery.limit),
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('获取家庭列表失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -93,7 +90,7 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json(
         { error: '输入数据无效', details: validation.error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -127,13 +124,10 @@ export async function POST(request: NextRequest) {
         message: '家庭创建成功',
         family: familyWithMembers,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error('创建家庭失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

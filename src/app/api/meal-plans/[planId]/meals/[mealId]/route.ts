@@ -18,7 +18,7 @@ import { mealPlanner } from '@/lib/services/meal-planner';
 export const dynamic = 'force-dynamic';
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ planId: string; mealId: string }> }
+  { params }: { params: Promise<{ planId: string; mealId: string }> },
 ) {
   try {
     const { planId, mealId } = await params;
@@ -58,7 +58,7 @@ export async function PATCH(
     if (meal.planId !== planId) {
       return NextResponse.json(
         { error: '餐食不属于指定的食谱计划' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,16 +68,13 @@ export async function PATCH(
     const isSelf = meal.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
-      return NextResponse.json(
-        { error: '无权限替换此餐食' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '无权限替换此餐食' }, { status: 403 });
     }
 
     // 替换餐食
     const replacedMeal = await mealPlanner.replaceMeal(
       mealId,
-      meal.plan.memberId
+      meal.plan.memberId,
     );
 
     return NextResponse.json(
@@ -85,7 +82,7 @@ export async function PATCH(
         message: '餐食替换成功',
         meal: replacedMeal,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     if (error instanceof Error) {
@@ -96,18 +93,11 @@ export async function PATCH(
         return NextResponse.json({ error: error.message }, { status: 403 });
       }
       if (error.message === '未找到合适的替代餐食') {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: error.message }, { status: 404 });
       }
     }
 
     console.error('替换餐食失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

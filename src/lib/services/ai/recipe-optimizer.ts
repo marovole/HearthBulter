@@ -1,5 +1,9 @@
 import { callOpenAIJSON, RECOMMENDED_MODELS } from './openai-client';
-import { getActivePrompt, renderPrompt, validatePromptParameters } from './prompt-templates';
+import {
+  getActivePrompt,
+  renderPrompt,
+  validatePromptParameters,
+} from './prompt-templates';
 import { Food, MealIngredient, MealPlan } from '@/lib/types/meal';
 
 // 食谱优化结果类型
@@ -127,7 +131,7 @@ export class RecipeOptimizer {
       carbs: number;
       fat: number;
     },
-    userPreferences: UserPreferences
+    userPreferences: UserPreferences,
   ): Promise<{
     nutrition_score: number;
     gaps: {
@@ -149,14 +153,25 @@ export class RecipeOptimizer {
       protein_gap: actualNutrition.protein - targetNutrition.protein,
       carbs_gap: actualNutrition.carbs - targetNutrition.carbs,
       fat_gap: actualNutrition.fat - targetNutrition.fat,
-      micronutrient_gaps: this.identifyMicronutrientGaps(actualNutrition, userPreferences),
+      micronutrient_gaps: this.identifyMicronutrientGaps(
+        actualNutrition,
+        userPreferences,
+      ),
     };
 
     // 评估营养均衡度
-    const nutrition_score = this.calculateNutritionScore(actualNutrition, targetNutrition, userPreferences);
+    const nutrition_score = this.calculateNutritionScore(
+      actualNutrition,
+      targetNutrition,
+      userPreferences,
+    );
 
     // 识别优势和劣势
-    const { strengths, weaknesses } = this.analyzeStrengthsAndWeaknesses(actualNutrition, targetNutrition, userPreferences);
+    const { strengths, weaknesses } = this.analyzeStrengthsAndWeaknesses(
+      actualNutrition,
+      targetNutrition,
+      userPreferences,
+    );
 
     return {
       nutrition_score,
@@ -174,9 +189,12 @@ export class RecipeOptimizer {
     reason: string,
     availableIngredients: string[],
     nutritionalRequirements: string[],
-    userPreferences: UserPreferences
+    userPreferences: UserPreferences,
   ): Promise<IngredientSubstitution[]> {
-    const prompt = getActivePrompt('recipe_optimization', 'ingredient_substitution');
+    const prompt = getActivePrompt(
+      'recipe_optimization',
+      'ingredient_substitution',
+    );
     if (!prompt) {
       throw new Error('Ingredient substitution prompt template not found');
     }
@@ -190,7 +208,9 @@ export class RecipeOptimizer {
 
     const validation = validatePromptParameters(prompt, variables);
     if (!validation.valid) {
-      throw new Error(`Missing prompt parameters: ${validation.missing.join(', ')}`);
+      throw new Error(
+        `Missing prompt parameters: ${validation.missing.join(', ')}`,
+      );
     }
 
     const renderedPrompt = renderPrompt(prompt, variables);
@@ -199,13 +219,17 @@ export class RecipeOptimizer {
       const result = await callOpenAIJSON(
         renderedPrompt,
         RECOMMENDED_MODELS.FREE[0], // 使用免费模型
-        1500
+        1500,
       );
 
       return this.processSubstitutionResults(result, userPreferences);
     } catch (error) {
       console.error('Ingredient substitution failed:', error);
-      return this.generateFallbackSubstitutions(ingredient, reason, availableIngredients);
+      return this.generateFallbackSubstitutions(
+        ingredient,
+        reason,
+        availableIngredients,
+      );
     }
   }
 
@@ -215,7 +239,7 @@ export class RecipeOptimizer {
   async optimizeForSeasonality(
     recipe: any,
     currentSeason: string,
-    location: string = 'china'
+    location: string = 'china',
   ): Promise<SeasonalAlternative[]> {
     const seasonalAlternatives: SeasonalAlternative[] = [];
 
@@ -223,7 +247,11 @@ export class RecipeOptimizer {
     const ingredients = this.extractIngredients(recipe);
 
     for (const ingredient of ingredients) {
-      const alternatives = await this.findSeasonalAlternatives(ingredient, currentSeason, location);
+      const alternatives = await this.findSeasonalAlternatives(
+        ingredient,
+        currentSeason,
+        location,
+      );
       seasonalAlternatives.push(...alternatives);
     }
 
@@ -236,28 +264,41 @@ export class RecipeOptimizer {
   calculateNutritionBalanceScore(
     nutrition: NutritionFacts,
     targetNutrition: any,
-    userPreferences: UserPreferences
+    userPreferences: UserPreferences,
   ): number {
     let score = 100;
 
     // 宏量营养素均衡性评分
-    const macroBalance = this.evaluateMacroBalance(nutrition.macronutrients, targetNutrition);
+    const macroBalance = this.evaluateMacroBalance(
+      nutrition.macronutrients,
+      targetNutrition,
+    );
     score -= (1 - macroBalance) * 20;
 
     // 微量营养素丰富度评分
-    const micronutrientScore = this.evaluateMicronutrientDiversity(nutrition.micronutrients);
+    const micronutrientScore = this.evaluateMicronutrientDiversity(
+      nutrition.micronutrients,
+    );
     score -= (1 - micronutrientScore) * 15;
 
     // 膳食纤维评分
-    const fiberScore = this.evaluateFiberContent(nutrition.macronutrients.fiber);
+    const fiberScore = this.evaluateFiberContent(
+      nutrition.macronutrients.fiber,
+    );
     score -= (1 - fiberScore) * 10;
 
     // 糖分控制评分
-    const sugarScore = this.evaluateSugarContent(nutrition.macronutrients.sugar, nutrition.calories);
+    const sugarScore = this.evaluateSugarContent(
+      nutrition.macronutrients.sugar,
+      nutrition.calories,
+    );
     score -= (1 - sugarScore) * 10;
 
     // 饮食偏好匹配度评分
-    const preferenceScore = this.evaluatePreferenceMatch(nutrition, userPreferences);
+    const preferenceScore = this.evaluatePreferenceMatch(
+      nutrition,
+      userPreferences,
+    );
     score -= (1 - preferenceScore) * 5;
 
     return Math.max(0, Math.min(100, score));
@@ -274,7 +315,7 @@ export class RecipeOptimizer {
       liked_changes: string[];
       disliked_changes: string[];
       comments: string;
-    }
+    },
   ): Promise<void> {
     // 存储反馈用于后续优化
     const feedback = {
@@ -297,16 +338,28 @@ export class RecipeOptimizer {
     recipe: any,
     targetNutrition: any,
     userPreferences: UserPreferences,
-    currentSeason?: string
+    currentSeason?: string,
   ): Promise<RecipeOptimizationResult> {
     // 1. 分析现有食谱
-    const analysis = await this.analyzeRecipeGap(recipe, targetNutrition, userPreferences);
+    const analysis = await this.analyzeRecipeGap(
+      recipe,
+      targetNutrition,
+      userPreferences,
+    );
 
     // 2. 生成优化建议
-    const optimizations = await this.generateOptimizations(recipe, analysis, userPreferences, currentSeason);
+    const optimizations = await this.generateOptimizations(
+      recipe,
+      analysis,
+      userPreferences,
+      currentSeason,
+    );
 
     // 3. 创建优化后的食谱
-    const improved_recipe = await this.createOptimizedRecipe(recipe, optimizations);
+    const improved_recipe = await this.createOptimizedRecipe(
+      recipe,
+      optimizations,
+    );
 
     return {
       analysis,
@@ -338,14 +391,17 @@ export class RecipeOptimizer {
     };
   }
 
-  private identifyMicronutrientGaps(actual: any, preferences: UserPreferences): string[] {
+  private identifyMicronutrientGaps(
+    actual: any,
+    preferences: UserPreferences,
+  ): string[] {
     const gaps: string[] = [];
 
     // 检查常见微量营养素缺口
     const commonNutrients = ['维生素A', '维生素C', '钙', '铁', '锌'];
     const actualNutrients = actual.micronutrients.map((m: any) => m.name);
 
-    commonNutrients.forEach(nutrient => {
+    commonNutrients.forEach((nutrient) => {
       if (!actualNutrients.includes(nutrient)) {
         gaps.push(nutrient);
       }
@@ -354,26 +410,35 @@ export class RecipeOptimizer {
     return gaps;
   }
 
-  private calculateNutritionScore(actual: any, target: any, preferences: UserPreferences): number {
+  private calculateNutritionScore(
+    actual: any,
+    target: any,
+    preferences: UserPreferences,
+  ): number {
     // 简化的营养评分算法
     let score = 100;
 
     // 热量差距惩罚
-    const calorieGap = Math.abs(actual.calories - target.calories) / target.calories;
+    const calorieGap =
+      Math.abs(actual.calories - target.calories) / target.calories;
     score -= calorieGap * 30;
 
     // 宏量营养素差距惩罚
-    const macroGap = (
-      Math.abs(actual.protein - target.protein) / target.protein +
-      Math.abs(actual.carbs - target.carbs) / target.carbs +
-      Math.abs(actual.fat - target.fat) / target.fat
-    ) / 3;
+    const macroGap =
+      (Math.abs(actual.protein - target.protein) / target.protein +
+        Math.abs(actual.carbs - target.carbs) / target.carbs +
+        Math.abs(actual.fat - target.fat) / target.fat) /
+      3;
     score -= macroGap * 40;
 
     return Math.max(0, Math.min(100, score));
   }
 
-  private analyzeStrengthsAndWeaknesses(actual: any, target: any, preferences: UserPreferences): {
+  private analyzeStrengthsAndWeaknesses(
+    actual: any,
+    target: any,
+    preferences: UserPreferences,
+  ): {
     strengths: string[];
     weaknesses: string[];
   } {
@@ -401,19 +466,27 @@ export class RecipeOptimizer {
     recipe: any,
     analysis: any,
     preferences: UserPreferences,
-    season?: string
+    season?: string,
   ): Promise<any> {
     // 生成食材替代建议
-    const ingredient_substitutions = await this.generateSubstitutionsForRecipe(recipe, analysis);
+    const ingredient_substitutions = await this.generateSubstitutionsForRecipe(
+      recipe,
+      analysis,
+    );
 
     // 生成份量调整建议
     const portion_adjustments = this.generatePortionAdjustments(analysis);
 
     // 烹饪方法建议
-    const cooking_method_suggestions = this.generateCookingSuggestions(recipe, analysis);
+    const cooking_method_suggestions = this.generateCookingSuggestions(
+      recipe,
+      analysis,
+    );
 
     // 季节性替代
-    const seasonal_alternatives = season ? await this.optimizeForSeasonality(recipe, season) : [];
+    const seasonal_alternatives = season
+      ? await this.optimizeForSeasonality(recipe, season)
+      : [];
 
     return {
       ingredient_substitutions,
@@ -423,7 +496,10 @@ export class RecipeOptimizer {
     };
   }
 
-  private async generateSubstitutionsForRecipe(recipe: any, analysis: any): Promise<IngredientSubstitution[]> {
+  private async generateSubstitutionsForRecipe(
+    recipe: any,
+    analysis: any,
+  ): Promise<IngredientSubstitution[]> {
     const substitutions: IngredientSubstitution[] = [];
     const ingredients = this.extractIngredients(recipe);
 
@@ -435,7 +511,7 @@ export class RecipeOptimizer {
           '补充营养缺口',
           [], // 可用食材列表
           analysis.gaps.micronutrient_gaps,
-          {} as UserPreferences
+          {} as UserPreferences,
         );
         substitutions.push(...subs.slice(0, 2)); // 每个食材最多2个替代建议
       }
@@ -488,7 +564,10 @@ export class RecipeOptimizer {
     return suggestions;
   }
 
-  private async createOptimizedRecipe(recipe: any, optimizations: any): Promise<any> {
+  private async createOptimizedRecipe(
+    recipe: any,
+    optimizations: any,
+  ): Promise<any> {
     // 创建优化后的食谱版本
     return {
       name: `${recipe.name} (优化版)`,
@@ -506,7 +585,7 @@ export class RecipeOptimizer {
   private async findSeasonalAlternatives(
     ingredient: string,
     season: string,
-    location: string
+    location: string,
   ): Promise<SeasonalAlternative[]> {
     // 简化的季节性替代逻辑
     const seasonalMap: Record<string, Record<string, string[]>> = {
@@ -529,7 +608,7 @@ export class RecipeOptimizer {
     };
 
     const alternatives = seasonalMap[season]?.[ingredient] || [];
-    return alternatives.map(alt => ({
+    return alternatives.map((alt) => ({
       original: ingredient,
       seasonal_alternative: alt,
       season,
@@ -538,7 +617,10 @@ export class RecipeOptimizer {
     }));
   }
 
-  private processSubstitutionResults(result: any, preferences: UserPreferences): IngredientSubstitution[] {
+  private processSubstitutionResults(
+    result: any,
+    preferences: UserPreferences,
+  ): IngredientSubstitution[] {
     // 处理AI返回的替代建议
     return result.substitutions || [];
   }
@@ -546,22 +628,24 @@ export class RecipeOptimizer {
   private generateFallbackSubstitutions(
     ingredient: string,
     reason: string,
-    available: string[]
+    available: string[],
   ): IngredientSubstitution[] {
     // 备用替代逻辑
     const commonSubstitutions: Record<string, IngredientSubstitution[]> = {
-      '猪肉': [{
-        original_ingredient: '猪肉',
-        substitute_ingredient: '鸡胸肉',
-        reason: '降低脂肪含量',
-        nutritional_impact: {
-          similar_nutrients: ['蛋白质'],
-          improved_aspects: ['脂肪含量更低'],
-          potential_drawbacks: ['口感稍干'],
+      猪肉: [
+        {
+          original_ingredient: '猪肉',
+          substitute_ingredient: '鸡胸肉',
+          reason: '降低脂肪含量',
+          nutritional_impact: {
+            similar_nutrients: ['蛋白质'],
+            improved_aspects: ['脂肪含量更低'],
+            potential_drawbacks: ['口感稍干'],
+          },
+          availability_score: 90,
+          cost_difference: 'similar',
         },
-        availability_score: 90,
-        cost_difference: 'similar',
-      }],
+      ],
     };
 
     return commonSubstitutions[ingredient] || [];
@@ -569,7 +653,8 @@ export class RecipeOptimizer {
 
   private evaluateMacroBalance(macros: any, target: any): number {
     // 宏量营养素比例均衡度评估
-    const total = macros.protein.amount + macros.carbohydrates.amount + macros.fat.amount;
+    const total =
+      macros.protein.amount + macros.carbohydrates.amount + macros.fat.amount;
     const actual = {
       protein: (macros.protein.amount / total) * 100,
       carbs: (macros.carbohydrates.amount / total) * 100,
@@ -577,7 +662,9 @@ export class RecipeOptimizer {
     };
 
     // 与目标比例比较
-    const proteinDiff = Math.abs(actual.protein - (target.protein_percent || 20));
+    const proteinDiff = Math.abs(
+      actual.protein - (target.protein_percent || 20),
+    );
     const carbsDiff = Math.abs(actual.carbs - (target.carbs_percent || 50));
     const fatDiff = Math.abs(actual.fat - (target.fat_percent || 30));
 
@@ -587,7 +674,9 @@ export class RecipeOptimizer {
 
   private evaluateMicronutrientDiversity(micronutrients: any[]): number {
     const essential = ['维生素A', '维生素C', '钙', '铁', '锌'];
-    const present = micronutrients.filter(m => essential.includes(m.name)).length;
+    const present = micronutrients.filter((m) =>
+      essential.includes(m.name),
+    ).length;
     return present / essential.length;
   }
 
@@ -604,11 +693,17 @@ export class RecipeOptimizer {
     return sugarPercent <= 10 ? 1 : Math.max(0, 1 - (sugarPercent - 10) / 20);
   }
 
-  private evaluatePreferenceMatch(nutrition: NutritionFacts, preferences: UserPreferences): number {
+  private evaluatePreferenceMatch(
+    nutrition: NutritionFacts,
+    preferences: UserPreferences,
+  ): number {
     let score = 1;
 
     // 检查饮食限制
-    if (preferences.dietary_restrictions.includes('low_sodium') && nutrition.macronutrients.sugar.amount > 5) {
+    if (
+      preferences.dietary_restrictions.includes('low_sodium') &&
+      nutrition.macronutrients.sugar.amount > 5
+    ) {
       score -= 0.2;
     }
 

@@ -14,7 +14,7 @@ import { randomBytes } from 'crypto';
 export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: listId } = await params;
@@ -28,7 +28,8 @@ export async function POST(
     // 查询购物清单并验证权限
     const { data: shoppingList, error: listError } = await supabase
       .from('shopping_lists')
-      .select(`
+      .select(
+        `
         id,
         planId,
         plan:meal_plans!inner(
@@ -44,7 +45,8 @@ export async function POST(
             )
           )
         )
-      `)
+      `,
+      )
       .eq('id', listId)
       .single();
 
@@ -62,14 +64,15 @@ export async function POST(
       .maybeSingle();
 
     // 验证权限
-    const isCreator = shoppingList.plan.member.family.creatorId === session.user.id;
+    const isCreator =
+      shoppingList.plan.member.family.creatorId === session.user.id;
     const isAdmin = userMember?.role === 'ADMIN' || isCreator;
     const isSelf = shoppingList.plan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
         { error: '无权限分享该购物清单' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -93,10 +96,7 @@ export async function POST(
 
     if (createError) {
       console.error('创建分享记录失败:', createError);
-      return NextResponse.json(
-        { error: '创建分享记录失败' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '创建分享记录失败' }, { status: 500 });
     }
 
     // 生成分享URL
@@ -109,9 +109,6 @@ export async function POST(
     });
   } catch (error) {
     console.error('生成分享链接失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

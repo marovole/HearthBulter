@@ -4,40 +4,40 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface DashboardGridProps {
-  children: React.ReactNode
-  className?: string
+  children: React.ReactNode;
+  className?: string;
   cols?: {
-    xs?: number
-    sm?: number
-    md?: number
-    lg?: number
-    xl?: number
-    '2xl'?: number
-  }
-  gap?: number
-  autoFit?: boolean
-  minItemWidth?: string
+    xs?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+    '2xl'?: number;
+  };
+  gap?: number;
+  autoFit?: boolean;
+  minItemWidth?: string;
 }
 
 interface GridItemProps {
-  children: React.ReactNode
-  className?: string
+  children: React.ReactNode;
+  className?: string;
   span?: {
-    xs?: number
-    sm?: number
-    md?: number
-    lg?: number
-    xl?: number
-    '2xl'?: number
-  }
+    xs?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+    '2xl'?: number;
+  };
   order?: {
-    xs?: number
-    sm?: number
-    md?: number
-    lg?: number
-    xl?: number
-    '2xl'?: number
-  }
+    xs?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+    '2xl'?: number;
+  };
 }
 
 /**
@@ -51,7 +51,9 @@ export function DashboardGrid({
   autoFit = false,
   minItemWidth = '280px',
 }: DashboardGridProps) {
-  const [screenSize, setScreenSize] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'>('lg');
+  const [screenSize, setScreenSize] = useState<
+    'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  >('lg');
 
   useEffect(() => {
     const updateScreenSize = () => {
@@ -99,7 +101,7 @@ export function DashboardGrid({
         getGridCols(),
         getGapClass(),
         'transition-all duration-300 ease-in-out',
-        className
+        className,
       )}
     >
       {children}
@@ -116,7 +118,9 @@ export function DashboardGridItem({
   span = { xs: 1, sm: 1, md: 1, lg: 1, xl: 1, '2xl': 1 },
   order,
 }: GridItemProps) {
-  const [screenSize, setScreenSize] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'>('lg');
+  const [screenSize, setScreenSize] = useState<
+    'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  >('lg');
 
   useEffect(() => {
     const updateScreenSize = () => {
@@ -149,7 +153,7 @@ export function DashboardGridItem({
         getSpanClass(),
         getOrderClass(),
         'transition-all duration-300 ease-in-out',
-        className
+        className,
       )}
     >
       {children}
@@ -191,7 +195,7 @@ export const DashboardLayouts = {
   // 自适应布局
   autoFit: {
     component: ({ children }: { children: React.ReactNode }) => (
-      <DashboardGrid autoFit minItemWidth="320px" gap={6}>
+      <DashboardGrid autoFit minItemWidth='320px' gap={6}>
         {children}
       </DashboardGrid>
     ),
@@ -201,18 +205,18 @@ export const DashboardLayouts = {
   mixed: {
     component: ({ children }: { children: React.ReactNode }) => {
       const childrenArray = React.Children.toArray(children);
-      
+
       return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className='grid grid-cols-1 lg:grid-cols-12 gap-6'>
           {/* 主内容区域 */}
-          <div className="lg:col-span-8">
+          <div className='lg:col-span-8'>
             <DashboardGrid cols={{ xs: 1, sm: 1, md: 1, lg: 1, xl: 2 }} gap={6}>
               {childrenArray.slice(0, -1)}
             </DashboardGrid>
           </div>
-          
+
           {/* 侧边栏 */}
-          <div className="lg:col-span-4">
+          <div className='lg:col-span-4'>
             {childrenArray[childrenArray.length - 1]}
           </div>
         </div>
@@ -225,12 +229,12 @@ export const DashboardLayouts = {
  * 仪表盘容器组件
  */
 interface DashboardContainerProps {
-  children: React.ReactNode
-  layout?: keyof typeof DashboardLayouts
-  className?: string
-  loading?: boolean
-  error?: string
-  onRetry?: () => void
+  children: React.ReactNode;
+  layout?: keyof typeof DashboardLayouts;
+  className?: string;
+  loading?: boolean;
+  error?: string;
+  onRetry?: () => void;
 }
 
 export function DashboardContainer({
@@ -245,10 +249,10 @@ export function DashboardContainer({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-sm text-gray-500">加载中...</p>
+      <div className='flex items-center justify-center min-h-96'>
+        <div className='text-center'>
+          <div className='inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
+          <p className='mt-2 text-sm text-gray-500'>加载中...</p>
         </div>
       </div>
     );
@@ -256,19 +260,29 @@ export function DashboardContainer({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div className='flex items-center justify-center min-h-96'>
+        <div className='text-center'>
+          <div className='text-red-500 mb-4'>
+            <svg
+              className='w-12 h-12 mx-auto'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+              />
             </svg>
           </div>
-          <p className="text-red-600 mb-2">加载失败</p>
-          <p className="text-sm text-gray-500 mb-4">{error}</p>
+          <p className='text-red-600 mb-2'>加载失败</p>
+          <p className='text-sm text-gray-500 mb-4'>{error}</p>
           {onRetry && (
             <button
               onClick={onRetry}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
             >
               重试
             </button>

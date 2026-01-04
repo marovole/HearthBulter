@@ -21,13 +21,14 @@ const createMealPlanSchema = z.object({
  */
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean; member: any }> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
     .from('family_members')
-    .select(`
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -35,7 +36,8 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `)
+    `,
+    )
     .eq('id', memberId)
     .is('deletedAt', null)
     .single();
@@ -77,7 +79,7 @@ async function verifyMemberAccess(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
@@ -87,7 +89,10 @@ export async function POST(
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess, member } = await verifyMemberAccess(
+      memberId,
+      session.user.id,
+    );
 
     if (!hasAccess || !member) {
       return NextResponse.json({ error: '成员不存在' }, { status: 404 });
@@ -106,7 +111,7 @@ export async function POST(
     const planData = await mealPlanner.generateMealPlan(
       memberId,
       validatedData.days,
-      startDate
+      startDate,
     );
 
     return NextResponse.json(
@@ -114,21 +119,18 @@ export async function POST(
         message: '食谱计划生成成功',
         plan: planData,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: '请求参数验证失败', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error('生成食谱计划失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
 
@@ -140,7 +142,7 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
@@ -150,7 +152,10 @@ export async function GET(
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess, member } = await verifyMemberAccess(
+      memberId,
+      session.user.id,
+    );
 
     if (!hasAccess || !member) {
       return NextResponse.json({ error: '成员不存在' }, { status: 404 });
@@ -159,11 +164,11 @@ export async function GET(
     // 使用 Repository 查询膳食计划（包含所有嵌套数据）
     const result = await mealPlanRepository.listMealPlans(
       { memberId, includeDeleted: false },
-      { page: 1, limit: 100 } // 默认返回最多 100 个计划
+      { page: 1, limit: 100 }, // 默认返回最多 100 个计划
     );
 
     // 转换为原有的响应格式以保持向后兼容
-    const mealPlans = result.data.map(plan => ({
+    const mealPlans = result.data.map((plan) => ({
       id: plan.id,
       memberId: plan.memberId,
       startDate: plan.startDate,
@@ -177,7 +182,7 @@ export async function GET(
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt,
       deletedAt: plan.deletedAt,
-      meals: plan.meals.map(meal => ({
+      meals: plan.meals.map((meal) => ({
         id: meal.id,
         planId: meal.planId,
         date: meal.date,
@@ -195,9 +200,6 @@ export async function GET(
     return NextResponse.json({ mealPlans }, { status: 200 });
   } catch (error) {
     console.error('查询食谱计划失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

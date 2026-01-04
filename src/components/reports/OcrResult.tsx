@@ -8,12 +8,12 @@ import type {
 } from '@prisma/client';
 
 interface OcrResultProps {
-  reportId: string
-  memberId: string
+  reportId: string;
+  memberId: string;
 }
 
 interface ReportData extends MedicalReport {
-  indicators: MedicalIndicator[]
+  indicators: MedicalIndicator[];
 }
 
 const STATUS_COLORS: Record<IndicatorStatus, string> = {
@@ -39,7 +39,7 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
   const fetchReport = async () => {
     try {
       const response = await fetch(
-        `/api/members/${memberId}/reports/${reportId}`
+        `/api/members/${memberId}/reports/${reportId}`,
       );
       const data = await response.json();
 
@@ -52,7 +52,10 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
       setReport(data.data);
 
       // 如果OCR还在处理中，继续轮询
-      if (data.data.ocrStatus === 'PROCESSING' || data.data.ocrStatus === 'PENDING') {
+      if (
+        data.data.ocrStatus === 'PROCESSING' ||
+        data.data.ocrStatus === 'PENDING'
+      ) {
         setPolling(true);
       } else {
         setPolling(false);
@@ -81,10 +84,10 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
 
   if (loading && !report) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-sm text-gray-600">加载中...</p>
+      <div className='flex items-center justify-center p-8'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4' />
+          <p className='text-sm text-gray-600'>加载中...</p>
         </div>
       </div>
     );
@@ -92,16 +95,16 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-sm text-red-800">{error}</p>
+      <div className='p-4 bg-red-50 border border-red-200 rounded-md'>
+        <p className='text-sm text-red-800'>{error}</p>
       </div>
     );
   }
 
   if (!report) {
     return (
-      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-        <p className="text-sm text-yellow-800">报告不存在</p>
+      <div className='p-4 bg-yellow-50 border border-yellow-200 rounded-md'>
+        <p className='text-sm text-yellow-800'>报告不存在</p>
       </div>
     );
   }
@@ -109,14 +112,12 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
   // OCR处理中
   if (report.ocrStatus === 'PROCESSING' || report.ocrStatus === 'PENDING') {
     return (
-      <div className="p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-        <p className="text-lg font-medium text-gray-900 mb-2">
+      <div className='p-8 text-center'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4' />
+        <p className='text-lg font-medium text-gray-900 mb-2'>
           正在处理OCR识别...
         </p>
-        <p className="text-sm text-gray-600">
-          这可能需要几分钟时间，请稍候
-        </p>
+        <p className='text-sm text-gray-600'>这可能需要几分钟时间，请稍候</p>
       </div>
     );
   }
@@ -124,14 +125,12 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
   // OCR处理失败
   if (report.ocrStatus === 'FAILED') {
     return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-        <h3 className="text-lg font-medium text-red-900 mb-2">
-          OCR识别失败
-        </h3>
-        <p className="text-sm text-red-800 mb-4">
+      <div className='p-6 bg-red-50 border border-red-200 rounded-lg'>
+        <h3 className='text-lg font-medium text-red-900 mb-2'>OCR识别失败</h3>
+        <p className='text-sm text-red-800 mb-4'>
           {report.ocrError || '无法识别报告内容，请检查文件是否清晰'}
         </p>
-        <p className="text-xs text-red-600">
+        <p className='text-xs text-red-600'>
           提示：请确保报告图片清晰，文字完整可见
         </p>
       </div>
@@ -143,13 +142,13 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
   const normalIndicators = report.indicators.filter((ind) => !ind.isAbnormal);
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* 报告元信息 */}
-      <div className="bg-white border rounded-lg p-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className='bg-white border rounded-lg p-4'>
+        <div className='grid grid-cols-2 gap-4 text-sm'>
           <div>
-            <span className="text-gray-500">报告日期：</span>
-            <span className="font-medium">
+            <span className='text-gray-500'>报告日期：</span>
+            <span className='font-medium'>
               {report.reportDate
                 ? new Date(report.reportDate).toLocaleDateString('zh-CN')
                 : '未识别'}
@@ -157,42 +156,44 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
           </div>
           {report.institution && (
             <div>
-              <span className="text-gray-500">医疗机构：</span>
-              <span className="font-medium">{report.institution}</span>
+              <span className='text-gray-500'>医疗机构：</span>
+              <span className='font-medium'>{report.institution}</span>
             </div>
           )}
           {report.reportType && (
             <div>
-              <span className="text-gray-500">报告类型：</span>
-              <span className="font-medium">{report.reportType}</span>
+              <span className='text-gray-500'>报告类型：</span>
+              <span className='font-medium'>{report.reportType}</span>
             </div>
           )}
           <div>
-            <span className="text-gray-500">识别状态：</span>
-            <span className="font-medium text-green-600">已完成</span>
+            <span className='text-gray-500'>识别状态：</span>
+            <span className='font-medium text-green-600'>已完成</span>
           </div>
         </div>
       </div>
 
       {/* 异常指标提醒 */}
       {abnormalIndicators.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h3 className="text-lg font-medium text-red-900 mb-3">
+        <div className='bg-red-50 border border-red-200 rounded-lg p-4'>
+          <h3 className='text-lg font-medium text-red-900 mb-3'>
             发现 {abnormalIndicators.length} 项异常指标
           </h3>
-          <div className="space-y-2">
+          <div className='space-y-2'>
             {abnormalIndicators.map((indicator) => (
               <div
                 key={indicator.id}
-                className="flex items-center justify-between p-2 bg-white rounded"
+                className='flex items-center justify-between p-2 bg-white rounded'
               >
-                <span className="font-medium">{indicator.name}</span>
-                <span className="text-red-600">
+                <span className='font-medium'>{indicator.name}</span>
+                <span className='text-red-600'>
                   {indicator.value} {indicator.unit}
                 </span>
-                <span className={`px-2 py-1 rounded text-xs ${
-                  STATUS_COLORS[indicator.status]
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded text-xs ${
+                    STATUS_COLORS[indicator.status]
+                  }`}
+                >
                   {STATUS_LABELS[indicator.status]}
                 </span>
               </div>
@@ -202,13 +203,13 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
       )}
 
       {/* 指标列表 */}
-      <div className="bg-white border rounded-lg">
-        <div className="px-4 py-3 border-b bg-gray-50">
-          <h3 className="text-lg font-medium text-gray-900">
+      <div className='bg-white border rounded-lg'>
+        <div className='px-4 py-3 border-b bg-gray-50'>
+          <h3 className='text-lg font-medium text-gray-900'>
             识别到的健康指标 ({report.indicators.length} 项)
           </h3>
         </div>
-        <div className="divide-y">
+        <div className='divide-y'>
           {report.indicators.map((indicator) => (
             <div
               key={indicator.id}
@@ -216,29 +217,31 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
                 indicator.isAbnormal ? 'bg-red-50' : ''
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3">
-                    <h4 className="font-medium text-gray-900">
+              <div className='flex items-center justify-between'>
+                <div className='flex-1'>
+                  <div className='flex items-center space-x-3'>
+                    <h4 className='font-medium text-gray-900'>
                       {indicator.name}
                     </h4>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      STATUS_COLORS[indicator.status]
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${
+                        STATUS_COLORS[indicator.status]
+                      }`}
+                    >
                       {STATUS_LABELS[indicator.status]}
                     </span>
                   </div>
                   {indicator.referenceRange && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className='text-sm text-gray-500 mt-1'>
                       参考范围: {indicator.referenceRange}
                     </p>
                   )}
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-semibold text-gray-900">
+                <div className='text-right'>
+                  <p className='text-lg font-semibold text-gray-900'>
                     {indicator.value}
                   </p>
-                  <p className="text-sm text-gray-500">{indicator.unit}</p>
+                  <p className='text-sm text-gray-500'>{indicator.unit}</p>
                 </div>
               </div>
             </div>
@@ -246,9 +249,9 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
         </div>
 
         {report.indicators.length === 0 && (
-          <div className="p-8 text-center text-gray-500">
+          <div className='p-8 text-center text-gray-500'>
             <p>未识别到任何健康指标</p>
-            <p className="text-sm mt-2">
+            <p className='text-sm mt-2'>
               请检查报告内容是否清晰，或尝试手动修正
             </p>
           </div>
@@ -257,11 +260,11 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
 
       {/* OCR原始文本（可选，用于调试） */}
       {report.ocrText && (
-        <details className="bg-gray-50 border rounded-lg p-4">
-          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+        <details className='bg-gray-50 border rounded-lg p-4'>
+          <summary className='cursor-pointer text-sm font-medium text-gray-700'>
             查看OCR原始文本
           </summary>
-          <pre className="mt-4 text-xs text-gray-600 whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
+          <pre className='mt-4 text-xs text-gray-600 whitespace-pre-wrap break-words max-h-64 overflow-y-auto'>
             {report.ocrText}
           </pre>
         </details>
@@ -269,4 +272,3 @@ export function OcrResult({ reportId, memberId }: OcrResultProps) {
     </div>
   );
 }
-

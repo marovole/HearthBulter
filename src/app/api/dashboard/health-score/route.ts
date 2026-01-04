@@ -11,7 +11,7 @@ import { healthScoreCalculator } from '@/lib/services/health-score-calculator';
 export const dynamic = 'force-dynamic';
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const member = await prisma.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },
@@ -58,10 +58,7 @@ export async function GET(request: NextRequest) {
     const memberId = searchParams.get('memberId');
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少成员ID参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少成员ID参数' }, { status: 400 });
     }
 
     // 验证权限
@@ -70,22 +67,17 @@ export async function GET(request: NextRequest) {
     if (!hasAccess) {
       return NextResponse.json(
         { error: '无权限访问该成员的健康评分数据' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // 计算健康评分
-    const healthScore = await healthScoreCalculator.calculateHealthScore(
-      memberId
-    );
+    const healthScore =
+      await healthScoreCalculator.calculateHealthScore(memberId);
 
     return NextResponse.json({ data: healthScore }, { status: 200 });
   } catch (error) {
     console.error('获取健康评分失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }
-

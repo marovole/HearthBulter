@@ -9,7 +9,11 @@ interface EmptyStateGuideProps {
   type: 'overview' | 'weight' | 'nutrition' | 'health-score';
 }
 
-export function EmptyStateGuide({ memberId, onInitialize, type }: EmptyStateGuideProps) {
+export function EmptyStateGuide({
+  memberId,
+  onInitialize,
+  type,
+}: EmptyStateGuideProps) {
   const [isInitializing, setIsInitializing] = useState(false);
 
   const handleAutoInitialize = async () => {
@@ -97,20 +101,20 @@ export function EmptyStateGuide({ memberId, onInitialize, type }: EmptyStateGuid
   const Icon = config.icon;
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4">
-      <div className="bg-blue-50 rounded-full p-6 mb-6">
-        <Icon className="h-12 w-12 text-blue-600" />
+    <div className='flex flex-col items-center justify-center py-12 px-4'>
+      <div className='bg-blue-50 rounded-full p-6 mb-6'>
+        <Icon className='h-12 w-12 text-blue-600' />
       </div>
-      
-      <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">
+
+      <h3 className='text-xl font-semibold text-gray-900 mb-2 text-center'>
         {config.title}
       </h3>
-      
-      <p className="text-gray-600 mb-8 text-center max-w-md">
+
+      <p className='text-gray-600 mb-8 text-center max-w-md'>
         {config.description}
       </p>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className='flex flex-col sm:flex-row gap-3'>
         {config.actions.map((action, index) => (
           <button
             key={index}
@@ -118,18 +122,35 @@ export function EmptyStateGuide({ memberId, onInitialize, type }: EmptyStateGuid
             disabled={isInitializing}
             className={`
               px-6 py-3 rounded-lg font-medium transition-colors
-              ${action.primary
-            ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400'
-            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-          }
+              ${
+                action.primary
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }
               ${isInitializing ? 'cursor-not-allowed opacity-50' : ''}
             `}
           >
             {isInitializing && action.action ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <span className='flex items-center'>
+                <svg
+                  className='animate-spin -ml-1 mr-3 h-5 w-5 text-white'
+                  xmlns='http://www.w3.org/2000/svg'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                >
+                  <circle
+                    className='opacity-25'
+                    cx='12'
+                    cy='12'
+                    r='10'
+                    stroke='currentColor'
+                    strokeWidth='4'
+                  ></circle>
+                  <path
+                    className='opacity-75'
+                    fill='currentColor'
+                    d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                  ></path>
                 </svg>
                 初始化中...
               </span>
@@ -141,8 +162,8 @@ export function EmptyStateGuide({ memberId, onInitialize, type }: EmptyStateGuid
       </div>
 
       {type === 'overview' && (
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
+        <div className='mt-8 text-center'>
+          <p className='text-sm text-gray-500'>
             💡 提示：自动初始化将为您创建默认的健康目标和营养计划
           </p>
         </div>

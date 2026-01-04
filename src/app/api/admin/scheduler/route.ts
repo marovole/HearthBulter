@@ -15,7 +15,11 @@ export const dynamic = 'force-dynamic';
 /**
  * 验证管理员权限
  */
-async function checkAdminAccess(): Promise<{ authorized: boolean; userId?: string; error?: string }> {
+async function checkAdminAccess(): Promise<{
+  authorized: boolean;
+  userId?: string;
+  error?: string;
+}> {
   const user = await getCurrentUser();
 
   if (!user?.id) {
@@ -39,7 +43,7 @@ export async function GET() {
     if (!access.authorized) {
       return NextResponse.json(
         { success: false, error: access.error || '需要管理员权限' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -55,7 +59,7 @@ export async function GET() {
     logger.error('获取调度器状态失败', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to get scheduler status' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -68,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (!access.authorized) {
       return NextResponse.json(
         { success: false, error: access.error || '需要管理员权限' },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -83,57 +87,64 @@ export async function POST(request: NextRequest) {
     });
 
     switch (action) {
-    case 'start':
-      await scheduler.start();
-      return NextResponse.json({
-        success: true,
-        message: 'Scheduler started successfully',
-      });
+      case 'start':
+        await scheduler.start();
+        return NextResponse.json({
+          success: true,
+          message: 'Scheduler started successfully',
+        });
 
-    case 'stop':
-      scheduler.stop();
-      return NextResponse.json({
-        success: true,
-        message: 'Scheduler stopped successfully',
-      });
+      case 'stop':
+        scheduler.stop();
+        return NextResponse.json({
+          success: true,
+          message: 'Scheduler stopped successfully',
+        });
 
-    case 'execute':
-      if (!taskName) {
+      case 'execute':
+        if (!taskName) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Task name is required for execute action',
+            },
+            { status: 400 },
+          );
+        }
+        await scheduler.executeTaskManually(taskName);
+        return NextResponse.json({
+          success: true,
+          message: `Task ${taskName} executed successfully`,
+        });
+
+      case 'toggle':
+        if (!taskName || body.enabled === undefined) {
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                'Task name and enabled status are required for toggle action',
+            },
+            { status: 400 },
+          );
+        }
+        await scheduler.toggleTask(taskName, body.enabled);
+        return NextResponse.json({
+          success: true,
+          message: `Task ${taskName} ${body.enabled ? 'enabled' : 'disabled'} successfully`,
+        });
+
+      default:
         return NextResponse.json(
-          { success: false, error: 'Task name is required for execute action' },
-          { status: 400 }
+          { success: false, error: 'Invalid action' },
+          { status: 400 },
         );
-      }
-      await scheduler.executeTaskManually(taskName);
-      return NextResponse.json({
-        success: true,
-        message: `Task ${taskName} executed successfully`,
-      });
-
-    case 'toggle':
-      if (!taskName || body.enabled === undefined) {
-        return NextResponse.json(
-          { success: false, error: 'Task name and enabled status are required for toggle action' },
-          { status: 400 }
-        );
-      }
-      await scheduler.toggleTask(taskName, body.enabled);
-      return NextResponse.json({
-        success: true,
-        message: `Task ${taskName} ${body.enabled ? 'enabled' : 'disabled'} successfully`,
-      });
-
-    default:
-      return NextResponse.json(
-        { success: false, error: 'Invalid action' },
-        { status: 400 }
-      );
     }
   } catch (error) {
     logger.error('调度器操作失败', { error });
     return NextResponse.json(
       { success: false, error: 'Scheduler operation failed' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
