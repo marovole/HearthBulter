@@ -349,24 +349,24 @@ export class DataProtectionManager {
       let masked: string;
 
       switch (maskingConfig.type) {
-        case "partial":
-          masked = this.partialMask(data, maskingConfig);
-          break;
-        case "full":
-          masked = maskingConfig.maskChar.repeat(data.length);
-          break;
-        case "hash":
-          masked = crypto
-            .createHash("sha256")
-            .update(data)
-            .digest("hex")
-            .substring(0, 8);
-          break;
-        case "tokenize":
-          masked = this.tokenizeData(data, dataType);
-          break;
-        default:
-          masked = this.partialMask(data, maskingConfig);
+      case "partial":
+        masked = this.partialMask(data, maskingConfig);
+        break;
+      case "full":
+        masked = maskingConfig.maskChar.repeat(data.length);
+        break;
+      case "hash":
+        masked = crypto
+          .createHash("sha256")
+          .update(data)
+          .digest("hex")
+          .substring(0, 8);
+        break;
+      case "tokenize":
+        masked = this.tokenizeData(data, dataType);
+        break;
+      default:
+        masked = this.partialMask(data, maskingConfig);
       }
 
       logger.debug("数据脱敏完成", {
@@ -624,7 +624,7 @@ export class DataProtectionManager {
       autoDelete: boolean;
     }>;
     recommendations: string[];
-  } {
+    } {
     const recommendations = [
       "定期检查和更新数据分类规则",
       "监控加密密钥的使用情况",

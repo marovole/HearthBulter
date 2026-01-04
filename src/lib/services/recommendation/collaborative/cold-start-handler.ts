@@ -283,19 +283,19 @@ export class ColdStartHandler {
     // 饮食类型过滤
     if (user.dietaryPreferences?.dietType) {
       switch (user.dietaryPreferences.dietType) {
-        case "VEGETARIAN":
-        case "VEGAN":
-          // 需要检查食谱是否包含肉类
-          whereClause.ingredients = {
-            none: {
-              food: {
-                category: {
-                  in: ["肉类", "禽肉", "海鲜"],
-                },
+      case "VEGETARIAN":
+      case "VEGAN":
+        // 需要检查食谱是否包含肉类
+        whereClause.ingredients = {
+          none: {
+            food: {
+              category: {
+                in: ["肉类", "禽肉", "海鲜"],
               },
             },
-          };
-          break;
+          },
+        };
+        break;
       }
     }
 
@@ -393,18 +393,18 @@ export class ColdStartHandler {
     // 根据健康目标调整营养要求
     if (user.healthGoals?.goalType) {
       switch (user.healthGoals.goalType) {
-        case "LOSE_WEIGHT":
-          whereClause.calories = { lte: 400 };
-          whereClause.carbs = { lte: 30 };
-          break;
-        case "GAIN_MUSCLE":
-          whereClause.protein = { gte: 25 };
-          whereClause.calories = { gte: 500 };
-          break;
-        case "IMPROVE_HEALTH":
-          whereClause.fiber = { gte: 5 };
-          whereClause.sodium = { lte: 600 };
-          break;
+      case "LOSE_WEIGHT":
+        whereClause.calories = { lte: 400 };
+        whereClause.carbs = { lte: 30 };
+        break;
+      case "GAIN_MUSCLE":
+        whereClause.protein = { gte: 25 };
+        whereClause.calories = { gte: 500 };
+        break;
+      case "IMPROVE_HEALTH":
+        whereClause.fiber = { gte: 5 };
+        whereClause.sodium = { lte: 600 };
+        break;
       }
     }
 

@@ -201,15 +201,15 @@ export class InventoryNotificationService {
     try {
       let operationText = "";
       switch (updateData.operation) {
-        case "added":
-          operationText = `新增了${updateData.quantity}${updateData.unit}`;
-          break;
-        case "consumed":
-          operationText = `消耗了${updateData.quantity}${updateData.unit}`;
-          break;
-        case "removed":
-          operationText = `移除了${updateData.quantity}${updateData.unit}`;
-          break;
+      case "added":
+        operationText = `新增了${updateData.quantity}${updateData.unit}`;
+        break;
+      case "consumed":
+        operationText = `消耗了${updateData.quantity}${updateData.unit}`;
+        break;
+      case "removed":
+        operationText = `移除了${updateData.quantity}${updateData.unit}`;
+        break;
       }
 
       await this.notificationManager.createNotification({

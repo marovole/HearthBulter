@@ -112,16 +112,16 @@ async function getSummaryStats(memberId: string, startDate: Date) {
   notifications?.forEach((notif: any) => {
     // 统计状态
     switch (notif.status) {
-      case "SENT":
-        summary.sent++;
-        break;
-      case "FAILED":
-        summary.failed++;
-        break;
-      case "PENDING":
-      case "SENDING":
-        summary.pending++;
-        break;
+    case "SENT":
+      summary.sent++;
+      break;
+    case "FAILED":
+      summary.failed++;
+      break;
+    case "PENDING":
+    case "SENDING":
+      summary.pending++;
+      break;
     }
 
     // 统计已读/未读
@@ -194,16 +194,16 @@ async function getDailyStats(memberId: string, days: number) {
       stats.total++;
 
       switch (notif.status) {
-        case "SENT":
-          stats.sent++;
-          break;
-        case "FAILED":
-          stats.failed++;
-          break;
-        case "PENDING":
-        case "SENDING":
-          stats.pending++;
-          break;
+      case "SENT":
+        stats.sent++;
+        break;
+      case "FAILED":
+        stats.failed++;
+        break;
+      case "PENDING":
+      case "SENDING":
+        stats.pending++;
+        break;
       }
     }
   });

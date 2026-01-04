@@ -363,12 +363,12 @@ export class DeviceSyncService {
       lastSyncTime:
         recentSyncs.length > 0
           ? recentSyncs.reduce((latest, current) =>
-              current.lastSyncAt &&
+            current.lastSyncAt &&
               latest.lastSyncAt &&
               isAfter(current.lastSyncAt, latest.lastSyncAt)
-                ? current
-                : latest,
-            ).lastSyncAt
+              ? current
+              : latest,
+          ).lastSyncAt
           : null,
     };
   }

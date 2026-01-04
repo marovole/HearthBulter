@@ -217,20 +217,20 @@ async function searchFromCache(request: ProductSearchRequest) {
     const orderBy: any = {};
     if (request.sortBy) {
       switch (request.sortBy) {
-        case "price":
-          orderBy.price = request.sortOrder || "asc";
-          break;
-        case "sales":
-          orderBy.salesCount = request.sortOrder || "desc";
-          break;
-        case "rating":
-          orderBy.rating = request.sortOrder || "desc";
-          break;
-        case "name":
-          orderBy.name = request.sortOrder || "asc";
-          break;
-        default:
-          orderBy.cachedAt = "desc";
+      case "price":
+        orderBy.price = request.sortOrder || "asc";
+        break;
+      case "sales":
+        orderBy.salesCount = request.sortOrder || "desc";
+        break;
+      case "rating":
+        orderBy.rating = request.sortOrder || "desc";
+        break;
+      case "name":
+        orderBy.name = request.sortOrder || "asc";
+        break;
+      default:
+        orderBy.cachedAt = "desc";
       }
     } else {
       orderBy.cachedAt = "desc";

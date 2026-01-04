@@ -298,16 +298,16 @@ export class NotificationService {
       result.total += count;
 
       switch (stat.status) {
-        case NotificationStatus.SENT:
-          result.sent += count;
-          break;
-        case NotificationStatus.FAILED:
-          result.failed += count;
-          break;
-        case NotificationStatus.PENDING:
-        case NotificationStatus.SENDING:
-          result.pending += count;
-          break;
+      case NotificationStatus.SENT:
+        result.sent += count;
+        break;
+      case NotificationStatus.FAILED:
+        result.failed += count;
+        break;
+      case NotificationStatus.PENDING:
+      case NotificationStatus.SENDING:
+        result.pending += count;
+        break;
       }
 
       if (!result.byType[stat.type]) {

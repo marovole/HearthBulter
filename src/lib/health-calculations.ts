@@ -131,17 +131,17 @@ export function calculateCalorieTarget(
   goalType: "LOSE_WEIGHT" | "GAIN_MUSCLE" | "MAINTAIN" | "IMPROVE_HEALTH",
 ): number {
   switch (goalType) {
-    case "LOSE_WEIGHT":
-      // 500 calorie deficit for ~0.5kg loss per week
-      return Math.round(tdee - 500);
-    case "GAIN_MUSCLE":
-      // 300 calorie surplus for muscle gain
-      return Math.round(tdee + 300);
-    case "MAINTAIN":
-    case "IMPROVE_HEALTH":
-      return tdee;
-    default:
-      return tdee;
+  case "LOSE_WEIGHT":
+    // 500 calorie deficit for ~0.5kg loss per week
+    return Math.round(tdee - 500);
+  case "GAIN_MUSCLE":
+    // 300 calorie surplus for muscle gain
+    return Math.round(tdee + 300);
+  case "MAINTAIN":
+  case "IMPROVE_HEALTH":
+    return tdee;
+  default:
+    return tdee;
   }
 }
 

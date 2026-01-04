@@ -57,27 +57,27 @@ export function FamilyMembersCard({
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "admin":
-        return <Crown className="h-4 w-4 text-yellow-500" />;
-      case "member":
-        return <User className="h-4 w-4 text-blue-500" />;
-      case "child":
-        return <User className="h-4 w-4 text-green-500" />;
-      default:
-        return <User className="h-4 w-4 text-gray-500" />;
+    case "admin":
+      return <Crown className="h-4 w-4 text-yellow-500" />;
+    case "member":
+      return <User className="h-4 w-4 text-blue-500" />;
+    case "child":
+      return <User className="h-4 w-4 text-green-500" />;
+    default:
+      return <User className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const getRoleText = (role: string) => {
     switch (role) {
-      case "admin":
-        return "管理员";
-      case "member":
-        return "成员";
-      case "child":
-        return "儿童";
-      default:
-        return "成员";
+    case "admin":
+      return "管理员";
+    case "member":
+      return "成员";
+    case "child":
+      return "儿童";
+    default:
+      return "成员";
     }
   };
 

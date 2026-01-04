@@ -498,22 +498,22 @@ export class SecurityAuditSystem {
     let end: Date = now;
 
     switch (type) {
-      case "daily":
-        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
-      case "weekly":
-        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case "monthly":
-        start = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case "custom":
-        if (!customPeriod) {
-          throw new Error("自定义报告需要提供时间范围");
-        }
-        start = customPeriod.start;
-        end = customPeriod.end;
-        break;
+    case "daily":
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      break;
+    case "weekly":
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case "monthly":
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case "custom":
+      if (!customPeriod) {
+        throw new Error("自定义报告需要提供时间范围");
+      }
+      start = customPeriod.start;
+      end = customPeriod.end;
+      break;
     }
 
     const filteredEvents = this.events.filter(
@@ -614,18 +614,18 @@ export class SecurityAuditSystem {
     // 根据事件严重级别加权
     ipEvents.forEach((event) => {
       switch (event.severity) {
-        case SecuritySeverity.CRITICAL:
-          score += 100;
-          break;
-        case SecuritySeverity.HIGH:
-          score += 50;
-          break;
-        case SecuritySeverity.MEDIUM:
-          score += 20;
-          break;
-        case SecuritySeverity.LOW:
-          score += 5;
-          break;
+      case SecuritySeverity.CRITICAL:
+        score += 100;
+        break;
+      case SecuritySeverity.HIGH:
+        score += 50;
+        break;
+      case SecuritySeverity.MEDIUM:
+        score += 20;
+        break;
+      case SecuritySeverity.LOW:
+        score += 5;
+        break;
       }
     });
 
@@ -666,18 +666,18 @@ export class SecurityAuditSystem {
       let level = 0;
       dayEvents.forEach((event) => {
         switch (event.severity) {
-          case SecuritySeverity.CRITICAL:
-            level += 25;
-            break;
-          case SecuritySeverity.HIGH:
-            level += 10;
-            break;
-          case SecuritySeverity.MEDIUM:
-            level += 3;
-            break;
-          case SecuritySeverity.LOW:
-            level += 1;
-            break;
+        case SecuritySeverity.CRITICAL:
+          level += 25;
+          break;
+        case SecuritySeverity.HIGH:
+          level += 10;
+          break;
+        case SecuritySeverity.MEDIUM:
+          level += 3;
+          break;
+        case SecuritySeverity.LOW:
+          level += 1;
+          break;
         }
       });
 

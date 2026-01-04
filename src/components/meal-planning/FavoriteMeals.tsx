@@ -200,20 +200,20 @@ export function FavoriteMeals({
       let aValue: any, bValue: any;
 
       switch (sortBy) {
-        case "date":
-          aValue = a.date.getTime();
-          bValue = b.date.getTime();
-          break;
-        case "calories":
-          aValue = a.calories;
-          bValue = b.calories;
-          break;
-        case "cookingTime":
-          aValue = a.cookingTime || 0;
-          bValue = b.cookingTime || 0;
-          break;
-        default:
-          return 0;
+      case "date":
+        aValue = a.date.getTime();
+        bValue = b.date.getTime();
+        break;
+      case "calories":
+        aValue = a.calories;
+        bValue = b.calories;
+        break;
+      case "cookingTime":
+        aValue = a.cookingTime || 0;
+        bValue = b.cookingTime || 0;
+        break;
+      default:
+        return 0;
       }
 
       if (sortOrder === "asc") {

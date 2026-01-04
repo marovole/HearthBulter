@@ -394,16 +394,16 @@ export function NutritionAnalysisChart({
                       )}
                       {issue.type === "carbs" &&
                         issue.message.includes("偏低") && (
-                          <div className="mt-2 text-sm">
+                        <div className="mt-2 text-sm">
                             建议：适量增加全谷物、薯类等复合碳水化合物
-                          </div>
-                        )}
+                        </div>
+                      )}
                       {issue.type === "fat" &&
                         issue.message.includes("偏高") && (
-                          <div className="mt-2 text-sm">
+                        <div className="mt-2 text-sm">
                             建议：选择橄榄油、坚果等健康脂肪，控制油炸食品
-                          </div>
-                        )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

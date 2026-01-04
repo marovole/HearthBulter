@@ -184,32 +184,32 @@ export class EnvSecurityManager {
 
     // 类型验证
     switch (rule.type) {
-      case "url":
-        try {
-          new URL(value);
-        } catch {
-          throw new Error("无效的URL格式");
-        }
-        break;
+    case "url":
+      try {
+        new URL(value);
+      } catch {
+        throw new Error("无效的URL格式");
+      }
+      break;
 
-      case "email":
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-          throw new Error("无效的邮箱格式");
-        }
-        break;
+    case "email":
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        throw new Error("无效的邮箱格式");
+      }
+      break;
 
-      case "number":
-        if (isNaN(Number(value))) {
-          throw new Error("无效的数字格式");
-        }
-        break;
+    case "number":
+      if (isNaN(Number(value))) {
+        throw new Error("无效的数字格式");
+      }
+      break;
 
-      case "boolean":
-        if (!["true", "false", "1", "0"].includes(value.toLowerCase())) {
-          throw new Error("无效的布尔值格式 (应为 true/false, 1/0)");
-        }
-        break;
+    case "boolean":
+      if (!["true", "false", "1", "0"].includes(value.toLowerCase())) {
+        throw new Error("无效的布尔值格式 (应为 true/false, 1/0)");
+      }
+      break;
     }
 
     // 长度验证
@@ -370,7 +370,7 @@ export class EnvSecurityManager {
     sensitiveVars: number;
     env: string;
     securityLevel: "low" | "medium" | "high";
-  } {
+    } {
     const totalVars = Object.keys(process.env).length;
     const validatedVars = this.validatedVars.size;
     const sensitiveVars = SENSITIVE_KEYS.filter(

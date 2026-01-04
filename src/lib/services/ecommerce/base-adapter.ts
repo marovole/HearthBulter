@@ -93,22 +93,22 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
   // 映射HTTP状态码到平台错误类型
   protected mapHttpStatusToErrorType(status: number): PlatformErrorType {
     switch (status) {
-      case 401:
-        return PlatformErrorType.INVALID_TOKEN;
-      case 403:
-        return PlatformErrorType.INSUFFICIENT_PERMISSION;
-      case 404:
-        return PlatformErrorType.PRODUCT_NOT_FOUND;
-      case 422:
-        return PlatformErrorType.INVALID_REQUEST;
-      case 429:
-        return PlatformErrorType.RATE_LIMITED;
-      case 500:
-      case 502:
-      case 503:
-        return PlatformErrorType.PLATFORM_ERROR;
-      default:
-        return PlatformErrorType.NETWORK_ERROR;
+    case 401:
+      return PlatformErrorType.INVALID_TOKEN;
+    case 403:
+      return PlatformErrorType.INSUFFICIENT_PERMISSION;
+    case 404:
+      return PlatformErrorType.PRODUCT_NOT_FOUND;
+    case 422:
+      return PlatformErrorType.INVALID_REQUEST;
+    case 429:
+      return PlatformErrorType.RATE_LIMITED;
+    case 500:
+    case 502:
+    case 503:
+      return PlatformErrorType.PLATFORM_ERROR;
+    default:
+      return PlatformErrorType.NETWORK_ERROR;
     }
   }
 

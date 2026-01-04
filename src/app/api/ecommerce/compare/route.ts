@@ -80,14 +80,14 @@ export async function POST(request: NextRequest) {
       })),
       bestPrice: result.bestPrice
         ? {
-            platform: result.bestPrice.platform,
-            platformProductId: result.bestPrice.product.platformProductId,
-            name: result.bestPrice.product.name,
-            totalPrice: result.bestPrice.totalPrice,
-            unitPrice: result.bestPrice.unitPrice,
-            price: result.bestPrice.product.price,
-            shippingFee: (result.bestPrice.product as any).shippingFee,
-          }
+          platform: result.bestPrice.platform,
+          platformProductId: result.bestPrice.product.platformProductId,
+          name: result.bestPrice.product.name,
+          totalPrice: result.bestPrice.totalPrice,
+          unitPrice: result.bestPrice.unitPrice,
+          price: result.bestPrice.product.price,
+          shippingFee: (result.bestPrice.product as any).shippingFee,
+        }
         : null,
     }));
 
@@ -202,14 +202,14 @@ export async function GET(request: NextRequest) {
       })),
       bestPrice: result.bestPrice
         ? {
-            platform: result.bestPrice.platform,
-            platformProductId: result.bestPrice.product.platformProductId,
-            name: result.bestPrice.product.name,
-            totalPrice: result.bestPrice.totalPrice,
-            unitPrice: result.bestPrice.unitPrice,
-            price: result.bestPrice.product.price,
-            shippingFee: (result.bestPrice.product as any).shippingFee,
-          }
+          platform: result.bestPrice.platform,
+          platformProductId: result.bestPrice.product.platformProductId,
+          name: result.bestPrice.product.name,
+          totalPrice: result.bestPrice.totalPrice,
+          unitPrice: result.bestPrice.unitPrice,
+          price: result.bestPrice.product.price,
+          shippingFee: (result.bestPrice.product as any).shippingFee,
+        }
         : null,
     };
 

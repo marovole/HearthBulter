@@ -463,10 +463,10 @@ export default async function MemberDetailPage({
 
                       {member.medicalReports[0].ocrStatus === "COMPLETED" &&
                         member.medicalReports[0].indicators.length > 0 && (
-                          <div className="mt-3">
-                            {member.medicalReports[0].indicators.filter(
-                              (ind) => ind.isAbnormal,
-                            ).length > 0 ? (
+                        <div className="mt-3">
+                          {member.medicalReports[0].indicators.filter(
+                            (ind) => ind.isAbnormal,
+                          ).length > 0 ? (
                               <div className="bg-red-50 border border-red-200 rounded p-3">
                                 <p className="text-sm font-medium text-red-900 mb-2">
                                   发现{" "}
@@ -510,8 +510,8 @@ export default async function MemberDetailPage({
                                 </p>
                               </div>
                             )}
-                          </div>
-                        )}
+                        </div>
+                      )}
 
                       <div className="mt-4 flex gap-2">
                         <Link

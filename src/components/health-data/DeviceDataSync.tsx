@@ -129,10 +129,10 @@ export function DeviceDataSync({ memberId }: DeviceDataSyncProps) {
         prev.map((device) =>
           device.id === deviceId
             ? {
-                ...device,
-                status: "connected" as const,
-                lastSync: new Date(),
-              }
+              ...device,
+              status: "connected" as const,
+              lastSync: new Date(),
+            }
             : device,
         ),
       );
@@ -187,9 +187,9 @@ export function DeviceDataSync({ memberId }: DeviceDataSyncProps) {
           prev.map((data) =>
             data.id === dataId
               ? {
-                  ...data,
-                  status: action === "approve" ? "approved" : "rejected",
-                }
+                ...data,
+                status: action === "approve" ? "approved" : "rejected",
+              }
               : data,
           ),
         );
@@ -201,38 +201,38 @@ export function DeviceDataSync({ memberId }: DeviceDataSyncProps) {
 
   const getDeviceIcon = (type: ConnectedDevice["type"]) => {
     switch (type) {
-      case "watch":
-        return <Smartphone className="h-5 w-5" />;
-      case "scale":
-        return <Weight className="h-5 w-5" />;
-      case "band":
-        return <Activity className="h-5 w-5" />;
-      default:
-        return <Smartphone className="h-5 w-5" />;
+    case "watch":
+      return <Smartphone className="h-5 w-5" />;
+    case "scale":
+      return <Weight className="h-5 w-5" />;
+    case "band":
+      return <Activity className="h-5 w-5" />;
+    default:
+      return <Smartphone className="h-5 w-5" />;
     }
   };
 
   const getStatusIcon = (status: ConnectedDevice["status"]) => {
     switch (status) {
-      case "connected":
-        return <Wifi className="h-4 w-4 text-green-500" />;
-      case "disconnected":
-        return <WifiOff className="h-4 w-4 text-red-500" />;
-      case "syncing":
-        return <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+    case "connected":
+      return <Wifi className="h-4 w-4 text-green-500" />;
+    case "disconnected":
+      return <WifiOff className="h-4 w-4 text-red-500" />;
+    case "syncing":
+      return <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />;
+    default:
+      return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const getDataIcon = (type: SyncData["type"]) => {
     switch (type) {
-      case "heartRate":
-        return <Heart className="h-4 w-4 text-red-500" />;
-      case "weight":
-        return <Weight className="h-4 w-4 text-blue-500" />;
-      default:
-        return <Activity className="h-4 w-4 text-green-500" />;
+    case "heartRate":
+      return <Heart className="h-4 w-4 text-red-500" />;
+    case "weight":
+      return <Weight className="h-4 w-4 text-blue-500" />;
+    default:
+      return <Activity className="h-4 w-4 text-green-500" />;
     }
   };
 

@@ -62,25 +62,25 @@ export class RatingPredictor {
     let prediction: PredictionResult;
 
     switch (config.method) {
-      case "user_based":
-        prediction = this.predictUserBased(matrix, userId, itemId, config);
-        break;
-      case "item_based":
-        prediction = this.predictItemBased(matrix, userId, itemId, config);
-        break;
-      case "hybrid":
-        prediction = await this.predictHybrid(matrix, userId, itemId, config);
-        break;
-      case "matrix_factorization":
-        prediction = await this.predictMatrixFactorization(
-          matrix,
-          userId,
-          itemId,
-          config,
-        );
-        break;
-      default:
-        prediction = this.predictUserBased(matrix, userId, itemId, config);
+    case "user_based":
+      prediction = this.predictUserBased(matrix, userId, itemId, config);
+      break;
+    case "item_based":
+      prediction = this.predictItemBased(matrix, userId, itemId, config);
+      break;
+    case "hybrid":
+      prediction = await this.predictHybrid(matrix, userId, itemId, config);
+      break;
+    case "matrix_factorization":
+      prediction = await this.predictMatrixFactorization(
+        matrix,
+        userId,
+        itemId,
+        config,
+      );
+      break;
+    default:
+      prediction = this.predictUserBased(matrix, userId, itemId, config);
     }
 
     // 如果置信度太低，使用全局平均分作为后备
@@ -112,21 +112,21 @@ export class RatingPredictor {
       const neighbors =
         config.method === "user_based"
           ? this.neighborSelector.selectUserNeighbors(matrix, userId, {
-              maxNeighbors: config.maxNeighbors,
-              minCommonItems: config.minNeighbors,
-            })
+            maxNeighbors: config.maxNeighbors,
+            minCommonItems: config.minNeighbors,
+          })
           : [];
 
       for (const itemId of itemIds) {
         const prediction =
           config.method === "user_based"
             ? this.predictUserBasedWithNeighbors(
-                matrix,
-                userId,
-                itemId,
-                neighbors,
-                config,
-              )
+              matrix,
+              userId,
+              itemId,
+              neighbors,
+              config,
+            )
             : this.predictItemBased(matrix, userId, itemId, config);
 
         predictions.push(prediction);

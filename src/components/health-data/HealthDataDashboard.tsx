@@ -107,131 +107,131 @@ export function HealthDataDashboard({
     const currentMember = familyMembers.find((m) => m.id === selectedMemberId);
 
     switch (activeView) {
-      case "add":
-        return (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+    case "add":
+      return (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 录入健康数据
-              </h2>
-              <HealthDataForm
-                memberId={selectedMemberId}
-                onSuccess={handleDataAdded}
-                onCancel={() => setActiveView("overview")}
-              />
-            </div>
-          </div>
-        );
-
-      case "history":
-        return (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  历史数据
-                </h2>
-                <button className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
-                  <Download className="h-4 w-4" />
-                  <span>导出数据</span>
-                </button>
-              </div>
-              <HealthDataList
-                memberId={selectedMemberId}
-                onDelete={(id) => console.log("删除数据:", id)}
-              />
-            </div>
-          </div>
-        );
-
-      case "sync":
-        return (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                设备数据同步
-              </h2>
-              <DeviceDataSync memberId={selectedMemberId} />
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="space-y-6">
-            {/* 快速操作按钮 */}
-            <QuickEntryButtons
+            </h2>
+            <HealthDataForm
               memberId={selectedMemberId}
-              onDataAdded={() => setActiveView("overview")}
+              onSuccess={handleDataAdded}
+              onCancel={() => setActiveView("overview")}
             />
+          </div>
+        </div>
+      );
 
-            {/* 统计卡片 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Activity className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">
+    case "history":
+      return (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                  历史数据
+              </h2>
+              <button className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
+                <Download className="h-4 w-4" />
+                <span>导出数据</span>
+              </button>
+            </div>
+            <HealthDataList
+              memberId={selectedMemberId}
+              onDelete={(id) => console.log("删除数据:", id)}
+            />
+          </div>
+        </div>
+      );
+
+    case "sync":
+      return (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                设备数据同步
+            </h2>
+            <DeviceDataSync memberId={selectedMemberId} />
+          </div>
+        </div>
+      );
+
+    default:
+      return (
+        <div className="space-y-6">
+          {/* 快速操作按钮 */}
+          <QuickEntryButtons
+            memberId={selectedMemberId}
+            onDataAdded={() => setActiveView("overview")}
+          />
+
+          {/* 统计卡片 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Activity className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-medium text-gray-500">
                       今日记录
-                    </h3>
-                    <p className="text-2xl font-semibold text-gray-900">3</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-green-100 rounded-lg">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">
-                      连续打卡
-                    </h3>
-                    <p className="text-2xl font-semibold text-gray-900">7天</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <Smartphone className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">
-                      设备状态
-                    </h3>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      已连接
-                    </p>
-                  </div>
+                  </h3>
+                  <p className="text-2xl font-semibold text-gray-900">3</p>
                 </div>
               </div>
             </div>
 
-            {/* 最近数据 */}
             <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  最近数据
-                </h2>
-                <button
-                  onClick={() => setActiveView("history")}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  查看全部
-                </button>
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-medium text-gray-500">
+                      连续打卡
+                  </h3>
+                  <p className="text-2xl font-semibold text-gray-900">7天</p>
+                </div>
               </div>
-              <HealthDataList
-                memberId={selectedMemberId}
-                onDelete={(id) => console.log("删除数据:", id)}
-              />
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="flex items-center">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Smartphone className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-sm font-medium text-gray-500">
+                      设备状态
+                  </h3>
+                  <p className="text-2xl font-semibold text-gray-900">
+                      已连接
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        );
+
+          {/* 最近数据 */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                  最近数据
+              </h2>
+              <button
+                onClick={() => setActiveView("history")}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                  查看全部
+              </button>
+            </div>
+            <HealthDataList
+              memberId={selectedMemberId}
+              onDelete={(id) => console.log("删除数据:", id)}
+            />
+          </div>
+        </div>
+      );
     }
   };
 

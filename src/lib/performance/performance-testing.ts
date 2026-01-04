@@ -256,11 +256,11 @@ export class PerformanceTestManager {
       comparison: baseline
         ? this.compareResults(testResults[0], baseline)
         : {
-            responseTimeChange: 0,
-            throughputChange: 0,
-            errorRateChange: 0,
-            overallPerformance: "stable" as const,
-          },
+          responseTimeChange: 0,
+          throughputChange: 0,
+          errorRateChange: 0,
+          overallPerformance: "stable" as const,
+        },
     };
 
     this.benchmarks.push(benchmark);

@@ -13,14 +13,14 @@ export async function GET(request: NextRequest) {
       authenticated: !!token || !!authHeader,
       session: token
         ? {
-            user: {
-              id: "1",
-              email: "test@example.com",
-              name: "测试用户",
-              role: "USER",
-            },
-            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          }
+          user: {
+            id: "1",
+            email: "test@example.com",
+            name: "测试用户",
+            role: "USER",
+          },
+          expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        }
         : null,
       timestamp: new Date().toISOString(),
       headers: {

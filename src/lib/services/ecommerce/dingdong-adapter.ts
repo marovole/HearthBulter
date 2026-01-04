@@ -474,16 +474,16 @@ export class DingdongAdapter extends BasePlatformAdapter {
 
   private mapSortType(sortBy?: string): string {
     switch (sortBy) {
-      case "price":
-        return "price";
-      case "sales":
-        return "sales";
-      case "rating":
-        return "rating";
-      case "name":
-        return "name";
-      default:
-        return "default";
+    case "price":
+      return "price";
+    case "sales":
+      return "sales";
+    case "rating":
+      return "rating";
+    case "name":
+      return "name";
+    default:
+      return "default";
     }
   }
 

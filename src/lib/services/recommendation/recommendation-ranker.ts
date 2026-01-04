@@ -323,7 +323,7 @@ export class RecommendationRanker {
     return {
       category: "MAIN_DISH",
       cuisine: "川菜",
-      tags: '["辣", "快手菜"]',
+      tags: "[\"辣\", \"快手菜\"]",
     };
   }
 

@@ -156,16 +156,16 @@ export class RateLimiter {
     let identifier: string;
 
     switch (config.identifier) {
-      case "userId":
-        identifier = request.headers.get("x-user-id") || "anonymous";
-        break;
-      case "session":
-        identifier = request.headers.get("x-session-id") || "anonymous";
-        break;
-      case "ip":
-      default:
-        identifier = this.getClientIP(request);
-        break;
+    case "userId":
+      identifier = request.headers.get("x-user-id") || "anonymous";
+      break;
+    case "session":
+      identifier = request.headers.get("x-session-id") || "anonymous";
+      break;
+    case "ip":
+    default:
+      identifier = this.getClientIP(request);
+      break;
     }
 
     // 添加路径前缀以区分不同端点

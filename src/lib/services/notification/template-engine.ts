@@ -383,10 +383,10 @@ export class TemplateEngine {
       try {
         const result = request.locale
           ? await this.renderLocalizedTemplate(
-              request.type,
-              request.locale,
-              request.data,
-            )
+            request.type,
+            request.locale,
+            request.data,
+          )
           : await this.renderNotification(request.type, request.data);
         results.push(result);
       } catch (error) {

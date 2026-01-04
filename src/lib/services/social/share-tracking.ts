@@ -389,27 +389,27 @@ export class ShareTrackingService {
     const updateData: any = {};
 
     switch (eventType) {
-      case "VIEW":
-        updateData.viewCount = { increment: 1 };
-        break;
-      case "CLICK":
-        updateData.clickCount = { increment: 1 };
-        break;
-      case "LIKE":
-        updateData.likeCount = { increment: 1 };
-        break;
-      case "COMMENT":
-        updateData.commentCount = { increment: 1 };
-        break;
-      case "SHARE":
-        updateData.shareCount = { increment: 1 };
-        break;
-      case "DOWNLOAD":
-        updateData.downloadCount = { increment: 1 };
-        break;
-      case "CONVERSION":
-        updateData.conversionCount = { increment: 1 };
-        break;
+    case "VIEW":
+      updateData.viewCount = { increment: 1 };
+      break;
+    case "CLICK":
+      updateData.clickCount = { increment: 1 };
+      break;
+    case "LIKE":
+      updateData.likeCount = { increment: 1 };
+      break;
+    case "COMMENT":
+      updateData.commentCount = { increment: 1 };
+      break;
+    case "SHARE":
+      updateData.shareCount = { increment: 1 };
+      break;
+    case "DOWNLOAD":
+      updateData.downloadCount = { increment: 1 };
+      break;
+    case "CONVERSION":
+      updateData.conversionCount = { increment: 1 };
+      break;
     }
 
     if (Object.keys(updateData).length > 0) {
@@ -432,25 +432,25 @@ export class ShareTrackingService {
     let periodLabel: string;
 
     switch (period) {
-      case "7d":
-        startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-        periodLabel = "最近7天";
-        break;
-      case "30d":
-        startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
-        periodLabel = "最近30天";
-        break;
-      case "90d":
-        startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
-        periodLabel = "最近90天";
-        break;
-      case "1y":
-        startDate = new Date(endDate.getTime() - 365 * 24 * 60 * 60 * 1000);
-        periodLabel = "最近1年";
-        break;
-      default:
-        startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
-        periodLabel = "最近30天";
+    case "7d":
+      startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+      periodLabel = "最近7天";
+      break;
+    case "30d":
+      startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+      periodLabel = "最近30天";
+      break;
+    case "90d":
+      startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
+      periodLabel = "最近90天";
+      break;
+    case "1y":
+      startDate = new Date(endDate.getTime() - 365 * 24 * 60 * 60 * 1000);
+      periodLabel = "最近1年";
+      break;
+    default:
+      startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+      periodLabel = "最近30天";
     }
 
     return { startDate, periodLabel };
@@ -511,18 +511,18 @@ export class ShareTrackingService {
 
       if (stats) {
         switch (event.eventType) {
-          case "VIEW":
-            stats.views++;
-            break;
-          case "CLICK":
-            stats.clicks++;
-            break;
-          case "SHARE":
-            stats.shares++;
-            break;
-          case "CONVERSION":
-            stats.conversions++;
-            break;
+        case "VIEW":
+          stats.views++;
+          break;
+        case "CLICK":
+          stats.clicks++;
+          break;
+        case "SHARE":
+          stats.shares++;
+          break;
+        case "CONVERSION":
+          stats.conversions++;
+          break;
         }
       }
     });

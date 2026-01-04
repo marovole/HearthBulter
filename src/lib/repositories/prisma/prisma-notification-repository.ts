@@ -514,10 +514,10 @@ function mapPreferenceRow(
   const quietHours =
     row.globalQuietHoursStart !== null && row.globalQuietHoursEnd !== null
       ? {
-          start: formatIntToHour(row.globalQuietHoursStart),
-          end: formatIntToHour(row.globalQuietHoursEnd),
-          timezone: "UTC",
-        }
+        start: formatIntToHour(row.globalQuietHoursStart),
+        end: formatIntToHour(row.globalQuietHoursEnd),
+        timezone: "UTC",
+      }
       : undefined;
 
   const typeSettings = safeParseObject<Record<string, boolean>>(

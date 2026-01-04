@@ -433,11 +433,11 @@ export class PerformanceMonitor {
       responseTime: snapshot.responseTime,
       memoryUsage: snapshot.memoryUsage
         ? {
-            rss: snapshot.memoryUsage.rss,
-            heapUsed: snapshot.memoryUsage.heapUsed,
-            heapTotal: snapshot.memoryUsage.heapTotal,
-            external: snapshot.memoryUsage.external,
-          }
+          rss: snapshot.memoryUsage.rss,
+          heapUsed: snapshot.memoryUsage.heapUsed,
+          heapTotal: snapshot.memoryUsage.heapTotal,
+          external: snapshot.memoryUsage.external,
+        }
         : undefined,
     });
   }

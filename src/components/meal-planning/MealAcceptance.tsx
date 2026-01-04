@@ -148,36 +148,36 @@ export function MealAcceptance({
 
   const getStatusDisplay = () => {
     switch (status) {
-      case "ACCEPTED":
-        return {
-          icon: <CheckCircle className="h-5 w-5 text-green-600" />,
-          text: "已接受",
-          color: "bg-green-100 text-green-800 border-green-200",
-          description: acceptanceDate
-            ? `于 ${acceptanceDate.toLocaleDateString()} 接受`
-            : "已接受此食谱",
-        };
-      case "REJECTED":
-        return {
-          icon: <XCircle className="h-5 w-5 text-red-600" />,
-          text: "已拒绝",
-          color: "bg-red-100 text-red-800 border-red-200",
-          description: rejectionReason || "已拒绝此食谱",
-        };
-      case "CUSTOMIZED":
-        return {
-          icon: <Edit3 className="h-5 w-5 text-blue-600" />,
-          text: "已自定义",
-          color: "bg-blue-100 text-blue-800 border-blue-200",
-          description: `已进行 ${customizationsList.length} 项自定义修改`,
-        };
-      default:
-        return {
-          icon: <Clock className="h-5 w-5 text-yellow-600" />,
-          text: "待处理",
-          color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-          description: "请决定是否接受此食谱",
-        };
+    case "ACCEPTED":
+      return {
+        icon: <CheckCircle className="h-5 w-5 text-green-600" />,
+        text: "已接受",
+        color: "bg-green-100 text-green-800 border-green-200",
+        description: acceptanceDate
+          ? `于 ${acceptanceDate.toLocaleDateString()} 接受`
+          : "已接受此食谱",
+      };
+    case "REJECTED":
+      return {
+        icon: <XCircle className="h-5 w-5 text-red-600" />,
+        text: "已拒绝",
+        color: "bg-red-100 text-red-800 border-red-200",
+        description: rejectionReason || "已拒绝此食谱",
+      };
+    case "CUSTOMIZED":
+      return {
+        icon: <Edit3 className="h-5 w-5 text-blue-600" />,
+        text: "已自定义",
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+        description: `已进行 ${customizationsList.length} 项自定义修改`,
+      };
+    default:
+      return {
+        icon: <Clock className="h-5 w-5 text-yellow-600" />,
+        text: "待处理",
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        description: "请决定是否接受此食谱",
+      };
     }
   };
 

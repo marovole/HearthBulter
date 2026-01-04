@@ -189,29 +189,29 @@ export function DeviceConnection({
   // 获取设备图标
   const getDeviceIcon = (deviceType: DeviceType) => {
     switch (deviceType) {
-      case "SMARTWATCH":
-      case "FITNESS_BAND":
-        return <Watch className="w-5 h-5" />;
-      case "SMART_SCALE":
-        return <Scale className="w-5 h-5" />;
-      case "BLOOD_PRESSURE_MONITOR":
-        return <Heart className="w-5 h-5" />;
-      default:
-        return <Smartphone className="w-5 h-5" />;
+    case "SMARTWATCH":
+    case "FITNESS_BAND":
+      return <Watch className="w-5 h-5" />;
+    case "SMART_SCALE":
+      return <Scale className="w-5 h-5" />;
+    case "BLOOD_PRESSURE_MONITOR":
+      return <Heart className="w-5 h-5" />;
+    default:
+      return <Smartphone className="w-5 h-5" />;
     }
   };
 
   // 获取同步状态图标
   const getSyncStatusIcon = (status: string) => {
     switch (status) {
-      case "SUCCESS":
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case "FAILED":
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case "SYNCING":
-        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-      default:
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+    case "SUCCESS":
+      return <CheckCircle className="w-4 h-4 text-green-500" />;
+    case "FAILED":
+      return <AlertCircle className="w-4 h-4 text-red-500" />;
+    case "SYNCING":
+      return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+    default:
+      return <AlertCircle className="w-4 h-4 text-gray-500" />;
     }
   };
 
@@ -284,12 +284,12 @@ export function DeviceConnection({
                           连接中
                         </>
                       ) : devices.some(
-                          (d) => d.platform === "APPLE_HEALTHKIT",
-                        ) ? (
-                        <>已连接</>
-                      ) : (
-                        <>连接</>
-                      )}
+                        (d) => d.platform === "APPLE_HEALTHKIT",
+                      ) ? (
+                          <>已连接</>
+                        ) : (
+                          <>连接</>
+                        )}
                     </Button>
                   </div>
                 </CardContent>
@@ -322,12 +322,12 @@ export function DeviceConnection({
                           连接中
                         </>
                       ) : devices.some(
-                          (d) => d.platform === "HUAWEI_HEALTH",
-                        ) ? (
-                        <>已连接</>
-                      ) : (
-                        <>连接</>
-                      )}
+                        (d) => d.platform === "HUAWEI_HEALTH",
+                      ) ? (
+                          <>已连接</>
+                        ) : (
+                          <>连接</>
+                        )}
                     </Button>
                   </div>
                 </CardContent>
