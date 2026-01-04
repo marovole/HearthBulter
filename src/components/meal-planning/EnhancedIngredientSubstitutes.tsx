@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Search, 
-  AlertTriangle, 
-  Check, 
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Search,
+  AlertTriangle,
+  Check,
   X,
   Info,
   Leaf,
@@ -17,54 +17,54 @@ import {
   Scale,
   TrendingUp,
   Filter,
-} from 'lucide-react';
-import { toast } from '@/lib/toast';
+} from "lucide-react";
+import { toast } from "@/lib/toast";
 
 interface Food {
-  id: string
-  name: string
-  unit?: string
-  category?: string
-  calories?: number
-  protein?: number
-  carbs?: number
-  fat?: number
-  fiber?: number
-  sodium?: number
-  allergens?: string[]
+  id: string;
+  name: string;
+  unit?: string;
+  category?: string;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  sodium?: number;
+  allergens?: string[];
 }
 
 interface MealIngredient {
-  id: string
-  amount: number
-  food: Food
+  id: string;
+  amount: number;
+  food: Food;
 }
 
 interface EnhancedIngredientSubstitutesProps {
-  ingredient: MealIngredient
-  mealId: string
-  isOpen: boolean
-  onClose: () => void
-  onReplace?: (newIngredient: MealIngredient) => void
+  ingredient: MealIngredient;
+  mealId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onReplace?: (newIngredient: MealIngredient) => void;
 }
 
 interface SubstituteOption {
-  food: Food
-  similarityScore: number
-  nutritionMatch: number
-  allergenWarning: boolean
-  reason: string
-  recommendedAmount: number
+  food: Food;
+  similarityScore: number;
+  nutritionMatch: number;
+  allergenWarning: boolean;
+  reason: string;
+  recommendedAmount: number;
 }
 
 const SUBSTITUTE_CATEGORIES = {
-  '肉类': ['鸡肉', '猪肉', '牛肉', '羊肉', '鱼肉', '虾', '蟹'],
-  '蔬菜': ['白菜', '菠菜', '西兰花', '胡萝卜', '土豆', '番茄', '黄瓜'],
-  '水果': ['苹果', '香蕉', '橙子', '草莓', '葡萄', '西瓜'],
-  '谷物': ['大米', '面条', '面包', '燕麦', '玉米', '小米'],
-  '乳制品': ['牛奶', '酸奶', '奶酪', '黄油'],
-  '豆制品': ['豆腐', '豆浆', '豆皮', '腐竹'],
-  '调料': ['盐', '糖', '酱油', '醋', '料酒', '生抽'],
+  肉类: ["鸡肉", "猪肉", "牛肉", "羊肉", "鱼肉", "虾", "蟹"],
+  蔬菜: ["白菜", "菠菜", "西兰花", "胡萝卜", "土豆", "番茄", "黄瓜"],
+  水果: ["苹果", "香蕉", "橙子", "草莓", "葡萄", "西瓜"],
+  谷物: ["大米", "面条", "面包", "燕麦", "玉米", "小米"],
+  乳制品: ["牛奶", "酸奶", "奶酪", "黄油"],
+  豆制品: ["豆腐", "豆浆", "豆皮", "腐竹"],
+  调料: ["盐", "糖", "酱油", "醋", "料酒", "生抽"],
 };
 
 export function EnhancedIngredientSubstitutes({
@@ -74,12 +74,15 @@ export function EnhancedIngredientSubstitutes({
   onClose,
   onReplace,
 }: EnhancedIngredientSubstitutesProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [substitutes, setSubstitutes] = useState<SubstituteOption[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSubstitute, setSelectedSubstitute] = useState<SubstituteOption | null>(null);
-  const [customAmount, setCustomAmount] = useState(ingredient.amount.toString());
-  const [filterCategory, setFilterCategory] = useState<string>('');
+  const [selectedSubstitute, setSelectedSubstitute] =
+    useState<SubstituteOption | null>(null);
+  const [customAmount, setCustomAmount] = useState(
+    ingredient.amount.toString(),
+  );
+  const [filterCategory, setFilterCategory] = useState<string>("");
   const [showAllergenOnly, setShowAllergenOnly] = useState(false);
 
   useEffect(() => {
@@ -95,121 +98,159 @@ export function EnhancedIngredientSubstitutes({
       const mockSubstitutes = await generateMockSubstitutes(ingredient.food);
       setSubstitutes(mockSubstitutes);
     } catch (error) {
-      toast.error('获取替代食材失败');
+      toast.error("获取替代食材失败");
     } finally {
       setLoading(false);
     }
   };
 
-  const generateMockSubstitutes = async (originalFood: Food): Promise<SubstituteOption[]> => {
+  const generateMockSubstitutes = async (
+    originalFood: Food,
+  ): Promise<SubstituteOption[]> => {
     // 模拟延迟
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const allFoods = generateMockFoods(originalFood.category || '');
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const allFoods = generateMockFoods(originalFood.category || "");
     const substitutes: SubstituteOption[] = [];
-    
+
     for (const food of allFoods) {
       if (food.id === originalFood.id) continue;
-      
+
       const similarity = calculateSimilarity(originalFood, food);
       const nutritionMatch = calculateNutritionMatch(originalFood, food);
       const allergenWarning = hasAllergenConflict(originalFood, food);
-      
+
       if (similarity > 0.3 || nutritionMatch > 0.4) {
         substitutes.push({
           food,
           similarityScore: similarity,
           nutritionMatch: nutritionMatch,
           allergenWarning,
-          reason: generateReason(originalFood, food, similarity, nutritionMatch),
+          reason: generateReason(
+            originalFood,
+            food,
+            similarity,
+            nutritionMatch,
+          ),
           recommendedAmount: calculateRecommendedAmount(originalFood, food),
         });
       }
     }
-    
-    return substitutes.sort((a, b) => {
-      // 优先推荐无过敏原且相似度高的
-      if (a.allergenWarning !== b.allergenWarning) {
-        return a.allergenWarning ? 1 : -1;
-      }
-      return (b.similarityScore + b.nutritionMatch) - (a.similarityScore + a.nutritionMatch);
-    }).slice(0, 8);
+
+    return substitutes
+      .sort((a, b) => {
+        // 优先推荐无过敏原且相似度高的
+        if (a.allergenWarning !== b.allergenWarning) {
+          return a.allergenWarning ? 1 : -1;
+        }
+        return (
+          b.similarityScore +
+          b.nutritionMatch -
+          (a.similarityScore + a.nutritionMatch)
+        );
+      })
+      .slice(0, 8);
   };
 
   const generateMockFoods = (category: string): Food[] => {
     const mockFoods: Food[] = [];
-    
+
     Object.entries(SUBSTITUTE_CATEGORIES).forEach(([cat, foods]) => {
-      foods.forEach(foodName => {
+      foods.forEach((foodName) => {
         mockFoods.push({
           id: `food-${foodName}`,
           name: foodName,
           category: cat,
-          unit: 'g',
+          unit: "g",
           calories: Math.floor(Math.random() * 200) + 50,
           protein: Math.random() * 20,
           carbs: Math.random() * 30,
           fat: Math.random() * 15,
           fiber: Math.random() * 10,
           sodium: Math.random() * 500,
-          allergens: foodName.includes('虾') || foodName.includes('蟹') ? ['海鲜'] : 
-            foodName.includes('奶') || foodName.includes('酪') ? ['乳制品'] : [],
+          allergens:
+            foodName.includes("虾") || foodName.includes("蟹")
+              ? ["海鲜"]
+              : foodName.includes("奶") || foodName.includes("酪")
+                ? ["乳制品"]
+                : [],
         });
       });
     });
-    
+
     return mockFoods;
   };
 
   const calculateSimilarity = (food1: Food, food2: Food): number => {
     if (food1.category === food2.category) return 0.8;
-    if (food1.category?.includes('肉') && food2.category?.includes('肉')) return 0.7;
-    if (food1.category?.includes('蔬菜') && food2.category?.includes('蔬菜')) return 0.6;
+    if (food1.category?.includes("肉") && food2.category?.includes("肉"))
+      return 0.7;
+    if (food1.category?.includes("蔬菜") && food2.category?.includes("蔬菜"))
+      return 0.6;
     return 0.3;
   };
 
   const calculateNutritionMatch = (food1: Food, food2: Food): number => {
     if (!food1.calories || !food2.calories) return 0.5;
-    
-    const calorieDiff = Math.abs(food1.calories - food2.calories) / food1.calories;
+
+    const calorieDiff =
+      Math.abs(food1.calories - food2.calories) / food1.calories;
     const proteinDiff = Math.abs((food1.protein || 0) - (food2.protein || 0));
     const fatDiff = Math.abs((food1.fat || 0) - (food2.fat || 0));
-    
-    return Math.max(0, 1 - (calorieDiff + proteinDiff/20 + fatDiff/15) / 3);
+
+    return Math.max(0, 1 - (calorieDiff + proteinDiff / 20 + fatDiff / 15) / 3);
   };
 
   const hasAllergenConflict = (food1: Food, food2: Food): boolean => {
     const allergens1 = food1.allergens || [];
     const allergens2 = food2.allergens || [];
-    return allergens2.some(allergen => !allergens1.includes(allergen));
+    return allergens2.some((allergen) => !allergens1.includes(allergen));
   };
 
-  const generateReason = (original: Food, substitute: Food, similarity: number, nutritionMatch: number): string => {
+  const generateReason = (
+    original: Food,
+    substitute: Food,
+    similarity: number,
+    nutritionMatch: number,
+  ): string => {
     const reasons = [];
-    
-    if (similarity > 0.7) reasons.push('同类食材');
-    if (nutritionMatch > 0.7) reasons.push('营养相似');
-    if (substitute.calories && original.calories && substitute.calories < original.calories) {
-      reasons.push('低卡路里');
+
+    if (similarity > 0.7) reasons.push("同类食材");
+    if (nutritionMatch > 0.7) reasons.push("营养相似");
+    if (
+      substitute.calories &&
+      original.calories &&
+      substitute.calories < original.calories
+    ) {
+      reasons.push("低卡路里");
     }
-    if (substitute.protein && original.protein && substitute.protein > original.protein) {
-      reasons.push('高蛋白');
+    if (
+      substitute.protein &&
+      original.protein &&
+      substitute.protein > original.protein
+    ) {
+      reasons.push("高蛋白");
     }
     if (substitute.fiber && substitute.fiber > 5) {
-      reasons.push('高纤维');
+      reasons.push("高纤维");
     }
-    
-    return reasons.length > 0 ? reasons.join('、') : '可替代食材';
+
+    return reasons.length > 0 ? reasons.join("、") : "可替代食材";
   };
 
-  const calculateRecommendedAmount = (original: Food, substitute: Food): number => {
+  const calculateRecommendedAmount = (
+    original: Food,
+    substitute: Food,
+  ): number => {
     if (!original.calories || !substitute.calories) return original.amount;
-    return Math.round((original.calories / substitute.calories) * original.amount);
+    return Math.round(
+      (original.calories / substitute.calories) * original.amount,
+    );
   };
 
   const handleReplace = async () => {
     if (!selectedSubstitute) {
-      toast.error('请选择替代食材');
+      toast.error("请选择替代食材");
       return;
     }
 
@@ -218,37 +259,41 @@ export function EnhancedIngredientSubstitutes({
       const response = await fetch(
         `/api/meal-plans/meals/${mealId}/ingredients/${ingredient.id}/replace`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             newFoodId: selectedSubstitute.food.id,
-            newAmount: parseFloat(customAmount) || selectedSubstitute.recommendedAmount,
+            newAmount:
+              parseFloat(customAmount) || selectedSubstitute.recommendedAmount,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error('替换失败');
+        throw new Error("替换失败");
       }
 
       const result = await response.json();
-      
+
       onReplace?.({
         id: ingredient.id,
-        amount: parseFloat(customAmount) || selectedSubstitute.recommendedAmount,
+        amount:
+          parseFloat(customAmount) || selectedSubstitute.recommendedAmount,
         food: selectedSubstitute.food,
       });
-      
-      toast.success(`已将 ${ingredient.food.name} 替换为 ${selectedSubstitute.food.name}`);
+
+      toast.success(
+        `已将 ${ingredient.food.name} 替换为 ${selectedSubstitute.food.name}`,
+      );
       onClose();
     } catch (error) {
-      toast.error('替换失败，请重试');
+      toast.error("替换失败，请重试");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredSubstitutes = substitutes.filter(sub => {
+  const filteredSubstitutes = substitutes.filter((sub) => {
     if (searchTerm && !sub.food.name.includes(searchTerm)) return false;
     if (filterCategory && sub.food.category !== filterCategory) return false;
     if (showAllergenOnly && !sub.allergenWarning) return false;
@@ -256,15 +301,15 @@ export function EnhancedIngredientSubstitutes({
   });
 
   const getScoreColor = (score: number): string => {
-    if (score >= 0.8) return 'text-green-600';
-    if (score >= 0.6) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 0.8) return "text-green-600";
+    if (score >= 0.6) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getScoreBadge = (score: number): string => {
-    if (score >= 0.8) return 'bg-green-100 text-green-800';
-    if (score >= 0.6) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-red-100 text-red-800';
+    if (score >= 0.8) return "bg-green-100 text-green-800";
+    if (score >= 0.6) return "bg-yellow-100 text-yellow-800";
+    return "bg-red-100 text-red-800";
   };
 
   if (!isOpen) return null;
@@ -283,7 +328,7 @@ export function EnhancedIngredientSubstitutes({
             </Button>
           </CardTitle>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* 原食材信息 */}
           <div className="p-4 bg-gray-50 rounded-lg">
@@ -319,7 +364,9 @@ export function EnhancedIngredientSubstitutes({
               <Button
                 variant="outline"
                 onClick={() => setShowAllergenOnly(!showAllergenOnly)}
-                className={showAllergenOnly ? 'bg-orange-50 border-orange-200' : ''}
+                className={
+                  showAllergenOnly ? "bg-orange-50 border-orange-200" : ""
+                }
               >
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 过敏警告
@@ -329,17 +376,17 @@ export function EnhancedIngredientSubstitutes({
             {/* 分类筛选 */}
             <div className="flex flex-wrap gap-2">
               <Button
-                variant={filterCategory === '' ? 'default' : 'outline'}
+                variant={filterCategory === "" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilterCategory('')}
+                onClick={() => setFilterCategory("")}
               >
                 <Filter className="h-3 w-3 mr-1" />
                 全部
               </Button>
-              {Object.keys(SUBSTITUTE_CATEGORIES).map(category => (
+              {Object.keys(SUBSTITUTE_CATEGORIES).map((category) => (
                 <Button
                   key={category}
-                  variant={filterCategory === category ? 'default' : 'outline'}
+                  variant={filterCategory === category ? "default" : "outline"}
                   size="sm"
                   onClick={() => setFilterCategory(category)}
                 >
@@ -362,9 +409,9 @@ export function EnhancedIngredientSubstitutes({
                   key={index}
                   className={`p-4 border rounded-lg cursor-pointer transition-all ${
                     selectedSubstitute?.food.id === substitute.food.id
-                      ? 'ring-2 ring-blue-500 bg-blue-50'
-                      : 'hover:bg-gray-50'
-                  } ${substitute.allergenWarning ? 'border-orange-200' : 'border-gray-200'}`}
+                      ? "ring-2 ring-blue-500 bg-blue-50"
+                      : "hover:bg-gray-50"
+                  } ${substitute.allergenWarning ? "border-orange-200" : "border-gray-200"}`}
                   onClick={() => setSelectedSubstitute(substitute)}
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -373,7 +420,8 @@ export function EnhancedIngredientSubstitutes({
                         {substitute.food.name}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {substitute.food.category} • 推荐份量 {substitute.recommendedAmount}g
+                        {substitute.food.category} • 推荐份量{" "}
+                        {substitute.recommendedAmount}g
                       </div>
                     </div>
                     {substitute.allergenWarning && (
@@ -382,10 +430,16 @@ export function EnhancedIngredientSubstitutes({
                   </div>
 
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className={getScoreBadge(substitute.similarityScore)}>
+                    <Badge
+                      variant="outline"
+                      className={getScoreBadge(substitute.similarityScore)}
+                    >
                       相似度 {(substitute.similarityScore * 100).toFixed(0)}%
                     </Badge>
-                    <Badge variant="outline" className={getScoreBadge(substitute.nutritionMatch)}>
+                    <Badge
+                      variant="outline"
+                      className={getScoreBadge(substitute.nutritionMatch)}
+                    >
                       营养匹配 {(substitute.nutritionMatch * 100).toFixed(0)}%
                     </Badge>
                   </div>
@@ -396,7 +450,9 @@ export function EnhancedIngredientSubstitutes({
 
                   <div className="flex items-center justify-between text-xs text-gray-600">
                     <div>{substitute.food.calories || 0} kcal</div>
-                    <div>蛋白质 {substitute.food.protein?.toFixed(1) || 0}g</div>
+                    <div>
+                      蛋白质 {substitute.food.protein?.toFixed(1) || 0}g
+                    </div>
                     <div>脂肪 {substitute.food.fat?.toFixed(1) || 0}g</div>
                   </div>
 
@@ -404,7 +460,7 @@ export function EnhancedIngredientSubstitutes({
                     <Alert className="mt-2">
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription className="text-xs">
-                        可能含有过敏原: {substitute.food.allergens?.join('、')}
+                        可能含有过敏原: {substitute.food.allergens?.join("、")}
                       </AlertDescription>
                     </Alert>
                   )}
@@ -430,7 +486,11 @@ export function EnhancedIngredientSubstitutes({
                 />
                 <Button
                   variant="outline"
-                  onClick={() => setCustomAmount(selectedSubstitute.recommendedAmount.toString())}
+                  onClick={() =>
+                    setCustomAmount(
+                      selectedSubstitute.recommendedAmount.toString(),
+                    )
+                  }
                 >
                   使用推荐
                 </Button>
@@ -445,7 +505,7 @@ export function EnhancedIngredientSubstitutes({
               disabled={!selectedSubstitute || loading}
               className="flex-1"
             >
-              {loading ? '替换中...' : '确认替换'}
+              {loading ? "替换中..." : "确认替换"}
             </Button>
             <Button variant="outline" onClick={onClose}>
               取消

@@ -1,58 +1,65 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { HealthScoreGauge } from './HealthScoreGauge';
-import { GoalProgressBar } from './GoalProgressBar';
-import { EmptyStateGuide } from './EmptyStateGuide';
-import { TrendingUp, TrendingDown, Scale, Target, Utensils, Activity } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { HealthScoreGauge } from "./HealthScoreGauge";
+import { GoalProgressBar } from "./GoalProgressBar";
+import { EmptyStateGuide } from "./EmptyStateGuide";
+import {
+  TrendingUp,
+  TrendingDown,
+  Scale,
+  Target,
+  Utensils,
+  Activity,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface OverviewData {
   overview: {
     weightTrend: {
-      currentWeight: number | null
-      change: number
-      changePercent: number
-      targetWeight: number | null
-    }
+      currentWeight: number | null;
+      change: number;
+      changePercent: number;
+      targetWeight: number | null;
+    };
     nutritionSummary: {
-      targetCalories: number | null
-      actualCalories: number | null
-      adherenceRate: number
-    }
+      targetCalories: number | null;
+      actualCalories: number | null;
+      adherenceRate: number;
+    };
     goalProgress: Array<{
-      goalId: string
-      goalType: string
-      currentProgress: number
-      targetWeight: number | null
-      currentWeight: number | null
-      startWeight: number | null
-      onTrack: boolean
-      weeksRemaining: number | null
-    }>
-  }
+      goalId: string;
+      goalType: string;
+      currentProgress: number;
+      targetWeight: number | null;
+      currentWeight: number | null;
+      startWeight: number | null;
+      onTrack: boolean;
+      weeksRemaining: number | null;
+    }>;
+  };
   healthScore: {
-    totalScore: number
+    totalScore: number;
     breakdown: {
-      bmiScore: number
-      nutritionScore: number
-      activityScore: number
-      dataCompletenessScore: number
-    }
+      bmiScore: number;
+      nutritionScore: number;
+      activityScore: number;
+      dataCompletenessScore: number;
+    };
     details: {
-      bmi: number | null
-      bmiCategory: string | null
-      nutritionAdherenceRate: number
-      activityFrequency: number
-      dataCompletenessRate: number
-    }
-    recommendations: string[]
-  }
+      bmi: number | null;
+      bmiCategory: string | null;
+      nutritionAdherenceRate: number;
+      activityFrequency: number;
+      dataCompletenessRate: number;
+    };
+    recommendations: string[];
+  };
 }
 
 interface OverviewCardsProps {
-  memberId: string
+  memberId: string;
 }
 
 export function OverviewCards({ memberId }: OverviewCardsProps) {
@@ -68,12 +75,14 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/dashboard/overview?memberId=${memberId}`);
-      if (!response.ok) throw new Error('加载概览数据失败');
+      const response = await fetch(
+        `/api/dashboard/overview?memberId=${memberId}`,
+      );
+      if (!response.ok) throw new Error("加载概览数据失败");
       const result = await response.json();
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : "加载失败");
     } finally {
       setLoading(false);
     }
@@ -113,51 +122,61 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
   }
 
   if (!data) {
-    return <EmptyStateGuide memberId={memberId} type="overview" onInitialize={loadData} />;
+    return (
+      <EmptyStateGuide
+        memberId={memberId}
+        type="overview"
+        onInitialize={loadData}
+      />
+    );
   }
 
   const { overview, healthScore } = data;
 
   const statCards = [
     {
-      label: '当前体重',
-      value: overview.weightTrend.currentWeight 
+      label: "当前体重",
+      value: overview.weightTrend.currentWeight
         ? `${overview.weightTrend.currentWeight.toFixed(1)} kg`
-        : '--',
-      subtext: overview.weightTrend.targetWeight 
+        : "--",
+      subtext: overview.weightTrend.targetWeight
         ? `目标: ${overview.weightTrend.targetWeight.toFixed(1)} kg`
         : undefined,
       icon: Scale,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
+      color: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
-      label: '体重变化',
-      value: `${overview.weightTrend.change >= 0 ? '+' : ''}${overview.weightTrend.change.toFixed(1)} kg`,
-      subtext: `${overview.weightTrend.changePercent >= 0 ? '+' : ''}${overview.weightTrend.changePercent.toFixed(1)}%`,
+      label: "体重变化",
+      value: `${overview.weightTrend.change >= 0 ? "+" : ""}${overview.weightTrend.change.toFixed(1)} kg`,
+      subtext: `${overview.weightTrend.changePercent >= 0 ? "+" : ""}${overview.weightTrend.changePercent.toFixed(1)}%`,
       icon: overview.weightTrend.change >= 0 ? TrendingUp : TrendingDown,
-      color: overview.weightTrend.change >= 0 ? 'text-destructive' : 'text-success',
-      bgColor: overview.weightTrend.change >= 0 ? 'bg-destructive/10' : 'bg-success/10',
+      color:
+        overview.weightTrend.change >= 0 ? "text-destructive" : "text-success",
+      bgColor:
+        overview.weightTrend.change >= 0
+          ? "bg-destructive/10"
+          : "bg-success/10",
     },
     {
-      label: '营养达标率',
+      label: "营养达标率",
       value: `${overview.nutritionSummary.adherenceRate.toFixed(0)}%`,
-      subtext: overview.nutritionSummary.targetCalories 
+      subtext: overview.nutritionSummary.targetCalories
         ? `目标: ${overview.nutritionSummary.targetCalories} kcal`
         : undefined,
       icon: Utensils,
-      color: 'text-accent',
-      bgColor: 'bg-accent/10',
+      color: "text-accent",
+      bgColor: "bg-accent/10",
     },
     {
-      label: '健康评分',
+      label: "健康评分",
       value: `${healthScore.totalScore} 分`,
-      subtext: healthScore.details.bmiCategory 
-        ? `BMI: ${healthScore.details.bmiCategory === 'normal' ? '正常' : '需关注'}`
+      subtext: healthScore.details.bmiCategory
+        ? `BMI: ${healthScore.details.bmiCategory === "normal" ? "正常" : "需关注"}`
         : undefined,
       icon: Activity,
-      color: 'text-info',
-      bgColor: 'bg-info/10',
+      color: "text-info",
+      bgColor: "bg-info/10",
     },
   ];
 
@@ -166,21 +185,30 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, index) => (
-          <Card 
-            key={stat.label} 
-            variant="elevated"
-            className="group"
-          >
+          <Card key={stat.label} variant="elevated" className="group">
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <span className="text-sm font-medium text-muted-foreground">
                   {stat.label}
                 </span>
-                <div className={cn('p-2 rounded-lg transition-transform group-hover:scale-110', stat.bgColor)}>
-                  <stat.icon className={cn('h-4 w-4', stat.color)} />
+                <div
+                  className={cn(
+                    "p-2 rounded-lg transition-transform group-hover:scale-110",
+                    stat.bgColor,
+                  )}
+                >
+                  <stat.icon className={cn("h-4 w-4", stat.color)} />
                 </div>
               </div>
-              <div className={cn('font-mono text-2xl font-bold mb-1', stat.color === 'text-destructive' || stat.color === 'text-success' ? stat.color : 'text-foreground')}>
+              <div
+                className={cn(
+                  "font-mono text-2xl font-bold mb-1",
+                  stat.color === "text-destructive" ||
+                    stat.color === "text-success"
+                    ? stat.color
+                    : "text-foreground",
+                )}
+              >
                 {stat.value}
               </div>
               {stat.subtext && (

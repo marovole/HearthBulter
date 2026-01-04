@@ -3,7 +3,7 @@
  * 提供类型安全的测试Mock对象
  */
 
-import type { Session } from 'next-auth';
+import type { Session } from "next-auth";
 
 // ============ Session Mocks ============
 
@@ -11,7 +11,7 @@ export interface MockUser {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN';
+  role: "USER" | "ADMIN";
 }
 
 export interface MockSession extends Session {
@@ -20,21 +20,25 @@ export interface MockSession extends Session {
 }
 
 export const createMockUser = (overrides?: Partial<MockUser>): MockUser => ({
-  id: 'test-user-id',
-  email: 'test@example.com',
-  name: 'Test User',
-  role: 'USER',
+  id: "test-user-id",
+  email: "test@example.com",
+  name: "Test User",
+  role: "USER",
   ...overrides,
 });
 
-export const createMockSession = (overrides?: Partial<MockSession>): MockSession => ({
+export const createMockSession = (
+  overrides?: Partial<MockSession>,
+): MockSession => ({
   user: createMockUser(overrides?.user),
   expires: new Date(Date.now() + 86400000).toISOString(),
   ...overrides,
 });
 
 export const createMockAuth = () => {
-  return jest.fn<Promise<MockSession | null>, []>().mockResolvedValue(createMockSession());
+  return jest
+    .fn<Promise<MockSession | null>, []>()
+    .mockResolvedValue(createMockSession());
 };
 
 export const createMockAuthNull = () => {
@@ -76,19 +80,21 @@ export interface MockDeviceWithMember extends MockDevice {
   };
 }
 
-export const createMockDevice = (overrides?: Partial<MockDevice>): MockDevice => ({
-  id: 'device-1',
-  deviceId: 'apple-watch-123',
-  deviceName: 'Apple Watch',
-  deviceType: 'SMARTWATCH',
-  manufacturer: 'Apple',
-  model: 'Series 8',
-  platform: 'APPLE_HEALTHKIT',
+export const createMockDevice = (
+  overrides?: Partial<MockDevice>,
+): MockDevice => ({
+  id: "device-1",
+  deviceId: "apple-watch-123",
+  deviceName: "Apple Watch",
+  deviceType: "SMARTWATCH",
+  manufacturer: "Apple",
+  model: "Series 8",
+  platform: "APPLE_HEALTHKIT",
   isActive: true,
-  syncStatus: 'SUCCESS',
-  lastSyncAt: new Date('2024-01-15'),
-  connectionDate: new Date('2024-01-01'),
-  memberId: 'member-1',
+  syncStatus: "SUCCESS",
+  lastSyncAt: new Date("2024-01-15"),
+  connectionDate: new Date("2024-01-01"),
+  memberId: "member-1",
   retryCount: 0,
   firmwareVersion: null,
   accessToken: null,
@@ -103,11 +109,13 @@ export const createMockDevice = (overrides?: Partial<MockDevice>): MockDevice =>
   ...overrides,
 });
 
-export const createMockDeviceWithMember = (overrides?: Partial<MockDeviceWithMember>): MockDeviceWithMember => ({
+export const createMockDeviceWithMember = (
+  overrides?: Partial<MockDeviceWithMember>,
+): MockDeviceWithMember => ({
   ...createMockDevice(overrides),
   member: {
-    id: 'member-1',
-    name: '张三',
+    id: "member-1",
+    name: "张三",
     ...overrides?.member,
   },
 });
@@ -122,35 +130,38 @@ export interface MockMember {
   userId: string | null;
 }
 
-export const createMockMember = (overrides?: Partial<MockMember>): MockMember => ({
-  id: 'member-1',
-  name: '张三',
+export const createMockMember = (
+  overrides?: Partial<MockMember>,
+): MockMember => ({
+  id: "member-1",
+  name: "张三",
   avatar: null,
-  familyId: 'family-1',
-  userId: 'test-user-id',
+  familyId: "family-1",
+  userId: "test-user-id",
   ...overrides,
 });
 
 // ============ Notification Mocks ============
 
 export const NotificationType = {
-  CHECK_IN_REMINDER: 'CHECK_IN_REMINDER',
-  TASK_NOTIFICATION: 'TASK_NOTIFICATION',
-  EXPIRY_ALERT: 'EXPIRY_ALERT',
-  BUDGET_WARNING: 'BUDGET_WARNING',
-  HEALTH_ALERT: 'HEALTH_ALERT',
-  GOAL_ACHIEVEMENT: 'GOAL_ACHIEVEMENT',
-  FAMILY_ACTIVITY: 'FAMILY_ACTIVITY',
-  SYSTEM_ANNOUNCEMENT: 'SYSTEM_ANNOUNCEMENT',
-  MARKETING: 'MARKETING',
+  CHECK_IN_REMINDER: "CHECK_IN_REMINDER",
+  TASK_NOTIFICATION: "TASK_NOTIFICATION",
+  EXPIRY_ALERT: "EXPIRY_ALERT",
+  BUDGET_WARNING: "BUDGET_WARNING",
+  HEALTH_ALERT: "HEALTH_ALERT",
+  GOAL_ACHIEVEMENT: "GOAL_ACHIEVEMENT",
+  FAMILY_ACTIVITY: "FAMILY_ACTIVITY",
+  SYSTEM_ANNOUNCEMENT: "SYSTEM_ANNOUNCEMENT",
+  MARKETING: "MARKETING",
   // 扩展类型用于测试
-  HEALTH_REMINDER: 'HEALTH_REMINDER',
-  ACHIEVEMENT_UNLOCKED: 'ACHIEVEMENT_UNLOCKED',
-  SHARE_ACTION: 'SHARE_ACTION',
-  FAMILY_UPDATE: 'FAMILY_UPDATE',
+  HEALTH_REMINDER: "HEALTH_REMINDER",
+  ACHIEVEMENT_UNLOCKED: "ACHIEVEMENT_UNLOCKED",
+  SHARE_ACTION: "SHARE_ACTION",
+  FAMILY_UPDATE: "FAMILY_UPDATE",
 } as const;
 
-export type NotificationTypeValue = typeof NotificationType[keyof typeof NotificationType];
+export type NotificationTypeValue =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 export interface MockNotification {
   id: string;
@@ -158,7 +169,7 @@ export interface MockNotification {
   type: NotificationTypeValue;
   title: string;
   content: string;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  priority: "HIGH" | "MEDIUM" | "LOW";
   channels: string[];
   isRead: boolean;
   createdAt: Date;
@@ -167,14 +178,16 @@ export interface MockNotification {
   actionText?: string;
 }
 
-export const createMockNotification = (overrides?: Partial<MockNotification>): MockNotification => ({
-  id: 'notification-1',
-  memberId: 'member-1',
+export const createMockNotification = (
+  overrides?: Partial<MockNotification>,
+): MockNotification => ({
+  id: "notification-1",
+  memberId: "member-1",
   type: NotificationType.HEALTH_ALERT,
-  title: '测试通知',
-  content: '这是一条测试通知',
-  priority: 'MEDIUM',
-  channels: ['IN_APP'],
+  title: "测试通知",
+  content: "这是一条测试通知",
+  priority: "MEDIUM",
+  channels: ["IN_APP"],
   isRead: false,
   createdAt: new Date(),
   ...overrides,
@@ -199,19 +212,21 @@ export interface MockAchievement {
   };
 }
 
-export const createMockAchievement = (overrides?: Partial<MockAchievement>): MockAchievement => ({
-  id: 'achievement-1',
-  type: 'STREAK',
-  name: '坚持7天',
-  description: '连续打卡7天',
-  icon: '🏆',
-  color: 'gold',
-  rarity: 'RARE',
+export const createMockAchievement = (
+  overrides?: Partial<MockAchievement>,
+): MockAchievement => ({
+  id: "achievement-1",
+  type: "STREAK",
+  name: "坚持7天",
+  description: "连续打卡7天",
+  icon: "🏆",
+  color: "gold",
+  rarity: "RARE",
   points: 100,
   unlockedAt: new Date(),
   member: {
-    id: 'member-1',
-    name: '张三',
+    id: "member-1",
+    name: "张三",
     avatar: null,
   },
   ...overrides,
@@ -227,7 +242,9 @@ export interface MockSyncResult {
   lastSyncDate?: Date;
 }
 
-export const createMockSyncResult = (overrides?: Partial<MockSyncResult>): MockSyncResult => ({
+export const createMockSyncResult = (
+  overrides?: Partial<MockSyncResult>,
+): MockSyncResult => ({
   success: true,
   syncedCount: 1,
   skippedCount: 0,
@@ -245,7 +262,10 @@ export interface MockQueryResult<T> {
   limit: number;
 }
 
-export const createMockQueryResult = <T>(data: T, overrides?: Partial<MockQueryResult<T>>): MockQueryResult<T> => ({
+export const createMockQueryResult = <T>(
+  data: T,
+  overrides?: Partial<MockQueryResult<T>>,
+): MockQueryResult<T> => ({
   data,
   total: Array.isArray(data) ? data.length : 1,
   page: 1,
@@ -292,12 +312,14 @@ export const mockPrisma = () => ({
 
 // ============ Error Mocks ============
 
-export const createMockError = (message: string = 'Test error'): Error => {
+export const createMockError = (message: string = "Test error"): Error => {
   return new Error(message);
 };
 
-export const createMockDatabaseError = (code: string = 'P2002'): Error & { code: string } => {
-  const error = new Error('Database error') as Error & { code: string };
+export const createMockDatabaseError = (
+  code: string = "P2002",
+): Error & { code: string } => {
+  const error = new Error("Database error") as Error & { code: string };
   error.code = code;
   return error;
 };

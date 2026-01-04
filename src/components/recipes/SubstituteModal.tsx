@@ -1,11 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, AlertTriangle, CheckCircle, DollarSign, Scale } from 'lucide-react';
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowRight,
+  AlertTriangle,
+  CheckCircle,
+  DollarSign,
+  Scale,
+} from "lucide-react";
 
 interface SubstituteFood {
   id: string;
@@ -58,16 +70,18 @@ export function SubstituteModal({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/recipes/substitute?originalIngredientId=${originalIngredientId}`);
+      const response = await fetch(
+        `/api/recipes/substitute?originalIngredientId=${originalIngredientId}`,
+      );
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to load substitutions');
+        throw new Error(data.error || "Failed to load substitutions");
       }
 
       setSubstitutions(data.substitutions || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
     } finally {
       setLoading(false);
     }
@@ -75,35 +89,45 @@ export function SubstituteModal({
 
   const getSubstitutionTypeColor = (type: string) => {
     switch (type) {
-    case 'ALLERGY': return 'bg-red-100 text-red-800';
-    case 'STOCK_OUT': return 'bg-orange-100 text-orange-800';
-    case 'BUDGET': return 'bg-green-100 text-green-800';
-    case 'PREFERENCE': return 'bg-blue-100 text-blue-800';
-    case 'NUTRITION': return 'bg-purple-100 text-purple-800';
-    case 'SEASONAL': return 'bg-yellow-100 text-yellow-800';
-    default: return 'bg-gray-100 text-gray-800';
+      case "ALLERGY":
+        return "bg-red-100 text-red-800";
+      case "STOCK_OUT":
+        return "bg-orange-100 text-orange-800";
+      case "BUDGET":
+        return "bg-green-100 text-green-800";
+      case "PREFERENCE":
+        return "bg-blue-100 text-blue-800";
+      case "NUTRITION":
+        return "bg-purple-100 text-purple-800";
+      case "SEASONAL":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getSubstitutionTypeLabel = (type: string) => {
     const labels: { [key: string]: string } = {
-      'ALLERGY': '过敏替换',
-      'STOCK_OUT': '缺货替换',
-      'BUDGET': '预算替换',
-      'PREFERENCE': '偏好替换',
-      'NUTRITION': '营养替换',
-      'SEASONAL': '季节替换',
+      ALLERGY: "过敏替换",
+      STOCK_OUT: "缺货替换",
+      BUDGET: "预算替换",
+      PREFERENCE: "偏好替换",
+      NUTRITION: "营养替换",
+      SEASONAL: "季节替换",
     };
     return labels[type] || type;
   };
 
   const formatNutritionDelta = (delta: { [key: string]: number }) => {
     const parts = [];
-    if (delta.calories) parts.push(`${delta.calories > 0 ? '+' : ''}${delta.calories}kcal`);
-    if (delta.protein) parts.push(`${delta.protein > 0 ? '+' : ''}${delta.protein}g蛋白质`);
-    if (delta.carbs) parts.push(`${delta.carbs > 0 ? '+' : ''}${delta.carbs}g碳水`);
-    if (delta.fat) parts.push(`${delta.fat > 0 ? '+' : ''}${delta.fat}g脂肪`);
-    return parts.length > 0 ? parts.join(', ') : '营养成分无变化';
+    if (delta.calories)
+      parts.push(`${delta.calories > 0 ? "+" : ""}${delta.calories}kcal`);
+    if (delta.protein)
+      parts.push(`${delta.protein > 0 ? "+" : ""}${delta.protein}g蛋白质`);
+    if (delta.carbs)
+      parts.push(`${delta.carbs > 0 ? "+" : ""}${delta.carbs}g碳水`);
+    if (delta.fat) parts.push(`${delta.fat > 0 ? "+" : ""}${delta.fat}g脂肪`);
+    return parts.length > 0 ? parts.join(", ") : "营养成分无变化";
   };
 
   return (
@@ -145,13 +169,17 @@ export function SubstituteModal({
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-lg font-medium">{originalIngredientName}</div>
+                    <div className="text-lg font-medium">
+                      {originalIngredientName}
+                    </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     <div className="text-lg font-medium text-primary">
                       {sub.substituteFood.name}
                     </div>
                   </div>
-                  <Badge className={getSubstitutionTypeColor(sub.substitutionType)}>
+                  <Badge
+                    className={getSubstitutionTypeColor(sub.substitutionType)}
+                  >
                     {getSubstitutionTypeLabel(sub.substitutionType)}
                   </Badge>
                 </div>
@@ -161,7 +189,9 @@ export function SubstituteModal({
                 {sub.reason && (
                   <div>
                     <h4 className="text-sm font-medium mb-1">替换原因</h4>
-                    <p className="text-sm text-muted-foreground">{sub.reason}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {sub.reason}
+                    </p>
                   </div>
                 )}
 
@@ -180,8 +210,11 @@ export function SubstituteModal({
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <div className="text-sm font-medium">成本变化</div>
-                      <div className={`text-sm ${sub.costDelta > 0 ? 'text-red-600' : sub.costDelta < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        {sub.costDelta > 0 ? '+' : ''}¥{sub.costDelta.toFixed(2)}
+                      <div
+                        className={`text-sm ${sub.costDelta > 0 ? "text-red-600" : sub.costDelta < 0 ? "text-green-600" : "text-muted-foreground"}`}
+                      >
+                        {sub.costDelta > 0 ? "+" : ""}¥
+                        {sub.costDelta.toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -199,7 +232,11 @@ export function SubstituteModal({
                     <h4 className="text-sm font-medium mb-2">适用条件</h4>
                     <div className="flex flex-wrap gap-1">
                       {sub.conditions.map((condition, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {condition}
                         </Badge>
                       ))}

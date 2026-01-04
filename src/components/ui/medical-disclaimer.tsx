@@ -1,11 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle, Info } from 'lucide-react';
+import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertTriangle, Info } from "lucide-react";
 
 interface MedicalDisclaimerProps {
   onAccept: () => void;
@@ -28,7 +35,9 @@ export function MedicalDisclaimer({
       <div className="flex items-start space-x-3">
         <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
         <div>
-          <h3 className="font-semibold text-amber-800 mb-2">重要医疗免责声明</h3>
+          <h3 className="font-semibold text-amber-800 mb-2">
+            重要医疗免责声明
+          </h3>
           <div className="text-sm space-y-2 text-amber-700">
             <p>
               本AI营养建议引擎提供的健康分析、营养建议和医疗报告仅供参考，不构成专业的医疗诊断或治疗建议。
@@ -40,7 +49,9 @@ export function MedicalDisclaimer({
               <li>AI分析结果不能替代专业医生的诊断</li>
               <li>建议基于一般性健康原则，可能不适合您的具体情况</li>
               <li>如果您有已知的健康问题，请务必咨询专业医疗人员</li>
-              <li>对于儿童、孕妇、老人或有特殊健康状况的人群，使用时请特别谨慎</li>
+              <li>
+                对于儿童、孕妇、老人或有特殊健康状况的人群，使用时请特别谨慎
+              </li>
               <li>如出现健康问题，请立即就医，不要自行根据AI建议处理</li>
             </ul>
           </div>
@@ -109,9 +120,7 @@ export function MedicalDisclaimer({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-4">
-            {disclaimerContent}
-          </div>
+          <div className="py-4">{disclaimerContent}</div>
 
           <DialogFooter className="flex-col space-y-3">
             <div className="flex items-center space-x-2 w-full">
@@ -162,7 +171,9 @@ export function MedicalDisclaimer({
           <div className="flex items-start space-x-3">
             <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="font-semibold text-amber-800 mb-2">医疗免责声明</h3>
+              <h3 className="font-semibold text-amber-800 mb-2">
+                医疗免责声明
+              </h3>
               <p className="text-sm text-amber-700 mb-3">
                 本AI健康建议仅供参考，不能替代专业医疗诊断。如有健康问题，请咨询专业医生。
               </p>
@@ -185,24 +196,24 @@ export function MedicalDisclaimer({
 export function useMedicalDisclaimer() {
   const [isAccepted, setIsAccepted] = useState(() => {
     // 检查本地存储是否已接受
-    if (typeof window !== 'undefined') {
-      const accepted = localStorage.getItem('medical-disclaimer-accepted');
-      return accepted === 'true';
+    if (typeof window !== "undefined") {
+      const accepted = localStorage.getItem("medical-disclaimer-accepted");
+      return accepted === "true";
     }
     return false;
   });
 
   const acceptDisclaimer = () => {
     setIsAccepted(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('medical-disclaimer-accepted', 'true');
+    if (typeof window !== "undefined") {
+      localStorage.setItem("medical-disclaimer-accepted", "true");
     }
   };
 
   const declineDisclaimer = () => {
     setIsAccepted(false);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('medical-disclaimer-accepted');
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("medical-disclaimer-accepted");
     }
   };
 

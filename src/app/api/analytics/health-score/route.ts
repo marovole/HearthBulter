@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { calculateHealthScore, saveHealthScore, getScoreTrend } from '@/lib/services/analytics/health-scorer';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import {
+  calculateHealthScore,
+  saveHealthScore,
+  getScoreTrend,
+} from "@/lib/services/analytics/health-scorer";
 
 /**
  * GET /api/analytics/health-score
@@ -8,23 +12,23 @@ import { calculateHealthScore, saveHealthScore, getScoreTrend } from '@/lib/serv
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const memberId = searchParams.get('memberId');
-    const date = searchParams.get('date');
-    const days = searchParams.get('days');
+    const memberId = searchParams.get("memberId");
+    const date = searchParams.get("date");
+    const days = searchParams.get("days");
 
     if (!memberId) {
       return NextResponse.json(
-        { error: '缺少必要参数：memberId' },
-        { status: 400 }
+        { error: "缺少必要参数：memberId" },
+        { status: 400 },
       );
     }
 
@@ -46,11 +50,8 @@ export async function GET(request: NextRequest) {
       data: scoreResult,
     });
   } catch (error) {
-    console.error('Failed to get health score:', error);
-    return NextResponse.json(
-      { error: '获取健康评分失败' },
-      { status: 500 }
-    );
+    console.error("Failed to get health score:", error);
+    return NextResponse.json({ error: "获取健康评分失败" }, { status: 500 });
   }
 }
 
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -70,8 +71,8 @@ export async function POST(request: NextRequest) {
 
     if (!memberId) {
       return NextResponse.json(
-        { error: '缺少必要参数：memberId' },
-        { status: 400 }
+        { error: "缺少必要参数：memberId" },
+        { status: 400 },
       );
     }
 
@@ -84,11 +85,7 @@ export async function POST(request: NextRequest) {
       data: scoreResult,
     });
   } catch (error) {
-    console.error('Failed to calculate health score:', error);
-    return NextResponse.json(
-      { error: '计算健康评分失败' },
-      { status: 500 }
-    );
+    console.error("Failed to calculate health score:", error);
+    return NextResponse.json({ error: "计算健康评分失败" }, { status: 500 });
   }
 }
-

@@ -6,9 +6,9 @@
  * @module shopping-list-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseShoppingListRepository } from './implementations/supabase-shopping-list-repository';
-import type { ShoppingListRepository } from './interfaces/shopping-list-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseShoppingListRepository } from "./implementations/supabase-shopping-list-repository";
+import type { ShoppingListRepository } from "./interfaces/shopping-list-repository";
 
 let instance: ShoppingListRepository | null = null;
 

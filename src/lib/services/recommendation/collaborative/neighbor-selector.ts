@@ -1,12 +1,16 @@
-import { UserItemMatrix } from './user-item-matrix';
-import { SimilarityCalculator, SimilarityResult, SimilarityMetric } from './similarity-calculator';
+import { UserItemMatrix } from "./user-item-matrix";
+import {
+  SimilarityCalculator,
+  SimilarityResult,
+  SimilarityMetric,
+} from "./similarity-calculator";
 
 interface NeighborSelectionConfig {
   maxNeighbors: number;
   minSimilarity: number;
   minCommonItems: number;
   similarityMetric: SimilarityMetric;
-  selectionStrategy: 'top_k' | 'threshold' | 'hybrid';
+  selectionStrategy: "top_k" | "threshold" | "hybrid";
 }
 
 interface Neighbor {
@@ -26,8 +30,8 @@ export class NeighborSelector {
       maxNeighbors: 50,
       minSimilarity: 0.1,
       minCommonItems: 3,
-      similarityMetric: 'cosine',
-      selectionStrategy: 'top_k',
+      similarityMetric: "cosine",
+      selectionStrategy: "top_k",
       ...config,
     };
   }
@@ -38,7 +42,7 @@ export class NeighborSelector {
   selectUserNeighbors(
     matrix: UserItemMatrix,
     targetUserId: string,
-    customConfig?: Partial<NeighborSelectionConfig>
+    customConfig?: Partial<NeighborSelectionConfig>,
   ): Neighbor[] {
     const config = { ...this.config, ...customConfig };
 
@@ -47,7 +51,7 @@ export class NeighborSelector {
       matrix,
       targetUserId,
       config.similarityMetric,
-      config.minCommonItems
+      config.minCommonItems,
     );
 
     return this.selectNeighbors(similarities, config);
@@ -59,7 +63,7 @@ export class NeighborSelector {
   selectItemNeighbors(
     matrix: UserItemMatrix,
     targetItemId: string,
-    customConfig?: Partial<NeighborSelectionConfig>
+    customConfig?: Partial<NeighborSelectionConfig>,
   ): Neighbor[] {
     const config = { ...this.config, ...customConfig };
 
@@ -68,7 +72,7 @@ export class NeighborSelector {
       matrix,
       targetItemId,
       config.similarityMetric,
-      config.minCommonItems
+      config.minCommonItems,
     );
 
     return this.selectNeighbors(similarities, config);
@@ -80,12 +84,12 @@ export class NeighborSelector {
   selectUserNeighborsBatch(
     matrix: UserItemMatrix,
     userIds: string[],
-    customConfig?: Partial<NeighborSelectionConfig>
+    customConfig?: Partial<NeighborSelectionConfig>,
   ): Map<string, Neighbor[]> {
     const config = { ...this.config, ...customConfig };
     const results = new Map<string, Neighbor[]>();
 
-    userIds.forEach(userId => {
+    userIds.forEach((userId) => {
       const neighbors = this.selectUserNeighbors(matrix, userId, config);
       results.set(userId, neighbors);
     });
@@ -99,12 +103,12 @@ export class NeighborSelector {
   selectItemNeighborsBatch(
     matrix: UserItemMatrix,
     itemIds: string[],
-    customConfig?: Partial<NeighborSelectionConfig>
+    customConfig?: Partial<NeighborSelectionConfig>,
   ): Map<string, Neighbor[]> {
     const config = { ...this.config, ...customConfig };
     const results = new Map<string, Neighbor[]>();
 
-    itemIds.forEach(itemId => {
+    itemIds.forEach((itemId) => {
       const neighbors = this.selectItemNeighbors(matrix, itemId, config);
       results.set(itemId, neighbors);
     });
@@ -117,29 +121,31 @@ export class NeighborSelector {
    */
   private selectNeighbors(
     similarities: SimilarityResult[],
-    config: NeighborSelectionConfig
+    config: NeighborSelectionConfig,
   ): Neighbor[] {
     let candidates: SimilarityResult[] = [];
 
     switch (config.selectionStrategy) {
-    case 'top_k':
-      candidates = similarities.slice(0, config.maxNeighbors);
-      break;
-      
-    case 'threshold':
-      candidates = similarities.filter(s => s.similarity >= config.minSimilarity);
-      break;
-      
-    case 'hybrid':
-      // 先按阈值过滤，再取前K个
-      candidates = similarities
-        .filter(s => s.similarity >= config.minSimilarity)
-        .slice(0, config.maxNeighbors);
-      break;
+      case "top_k":
+        candidates = similarities.slice(0, config.maxNeighbors);
+        break;
+
+      case "threshold":
+        candidates = similarities.filter(
+          (s) => s.similarity >= config.minSimilarity,
+        );
+        break;
+
+      case "hybrid":
+        // 先按阈值过滤，再取前K个
+        candidates = similarities
+          .filter((s) => s.similarity >= config.minSimilarity)
+          .slice(0, config.maxNeighbors);
+        break;
     }
 
     // 转换为Neighbor对象并计算权重
-    const neighbors: Neighbor[] = candidates.map(candidate => ({
+    const neighbors: Neighbor[] = candidates.map((candidate) => ({
       id: candidate.id,
       similarity: candidate.similarity,
       commonItems: candidate.commonItems,
@@ -154,14 +160,15 @@ export class NeighborSelector {
    */
   private calculateNeighborWeight(
     similarity: SimilarityResult,
-    config: NeighborSelectionConfig
+    config: NeighborSelectionConfig,
   ): number {
     // 基础权重为相似度
     let weight = similarity.similarity;
 
     // 根据共同项目数量调整权重
-    const commonItemBonus = Math.log(similarity.commonItems + 1) / Math.log(100); // 归一化到0-1
-    weight *= (1 + commonItemBonus * 0.2); // 最多增加20%权重
+    const commonItemBonus =
+      Math.log(similarity.commonItems + 1) / Math.log(100); // 归一化到0-1
+    weight *= 1 + commonItemBonus * 0.2; // 最多增加20%权重
 
     // 应用相似度阈值衰减
     if (similarity.similarity < config.minSimilarity * 2) {
@@ -178,7 +185,7 @@ export class NeighborSelector {
   adaptSelectionParameters(
     matrix: UserItemMatrix,
     targetUserId: string,
-    recentRatings: Map<string, number>
+    recentRatings: Map<string, number>,
   ): NeighborSelectionConfig {
     const userRatings = matrix.ratings.get(targetUserId);
     if (!userRatings) {
@@ -191,19 +198,30 @@ export class NeighborSelector {
     // 根据用户活跃度调整参数
     if (userRatingCount < 10) {
       // 新用户：降低相似度阈值，增加邻居数量
-      adaptedConfig.minSimilarity = Math.max(0.05, this.config.minSimilarity * 0.5);
+      adaptedConfig.minSimilarity = Math.max(
+        0.05,
+        this.config.minSimilarity * 0.5,
+      );
       adaptedConfig.maxNeighbors = Math.min(100, this.config.maxNeighbors * 2);
-      adaptedConfig.minCommonItems = Math.max(1, this.config.minCommonItems - 1);
+      adaptedConfig.minCommonItems = Math.max(
+        1,
+        this.config.minCommonItems - 1,
+      );
     } else if (userRatingCount > 100) {
       // 活跃用户：提高相似度阈值，减少邻居数量
-      adaptedConfig.minSimilarity = Math.min(0.3, this.config.minSimilarity * 1.5);
+      adaptedConfig.minSimilarity = Math.min(
+        0.3,
+        this.config.minSimilarity * 1.5,
+      );
       adaptedConfig.maxNeighbors = Math.max(20, this.config.maxNeighbors * 0.7);
     }
 
     // 根据最近评分的分布调整
     if (recentRatings.size > 0) {
-      const avgRating = Array.from(recentRatings.values()).reduce((a, b) => a + b, 0) / recentRatings.size;
-      
+      const avgRating =
+        Array.from(recentRatings.values()).reduce((a, b) => a + b, 0) /
+        recentRatings.size;
+
       if (avgRating >= 4.5) {
         // 用户倾向于给高分，可以降低相似度要求
         adaptedConfig.minSimilarity *= 0.9;
@@ -223,7 +241,7 @@ export class NeighborSelector {
     matrix: UserItemMatrix,
     targetUserId: string,
     timeDecayFactor: number = 0.1,
-    customConfig?: Partial<NeighborSelectionConfig>
+    customConfig?: Partial<NeighborSelectionConfig>,
   ): Neighbor[] {
     const config = { ...this.config, ...customConfig };
     const neighbors = this.selectUserNeighbors(matrix, targetUserId, config);
@@ -234,7 +252,7 @@ export class NeighborSelector {
       return neighbors;
     }
 
-    return neighbors.map(neighbor => {
+    return neighbors.map((neighbor) => {
       const neighborRatings = matrix.ratings.get(neighbor.id);
       if (!neighborRatings) {
         return neighbor;
@@ -244,7 +262,7 @@ export class NeighborSelector {
       const timeWeight = this.calculateTimeDecayWeight(
         targetUserRatings,
         neighborRatings,
-        timeDecayFactor
+        timeDecayFactor,
       );
 
       return {
@@ -260,10 +278,10 @@ export class NeighborSelector {
   private calculateTimeDecayWeight(
     userRatings: Map<string, number>,
     neighborRatings: Map<string, number>,
-    decayFactor: number
+    decayFactor: number,
   ): number {
-    const commonItems = Array.from(userRatings.keys()).filter(item => 
-      neighborRatings.has(item)
+    const commonItems = Array.from(userRatings.keys()).filter((item) =>
+      neighborRatings.has(item),
     );
 
     if (commonItems.length === 0) {
@@ -283,11 +301,11 @@ export class NeighborSelector {
     matrix: UserItemMatrix,
     targetUserId: string,
     diversityThreshold: number = 0.8,
-    customConfig?: Partial<NeighborSelectionConfig>
+    customConfig?: Partial<NeighborSelectionConfig>,
   ): Neighbor[] {
     const config = { ...this.config, ...customConfig };
     const allNeighbors = this.selectUserNeighbors(matrix, targetUserId, config);
-    
+
     const diverseNeighbors: Neighbor[] = [];
     const selectedNeighborIds = new Set<string>();
 
@@ -299,13 +317,13 @@ export class NeighborSelector {
 
       // 检查与已选邻居的相似度
       let isDiverseEnough = true;
-      
+
       for (const selectedId of selectedNeighborIds) {
         const similarity = this.similarityCalculator.calculateUserSimilarity(
           matrix,
           neighbor.id,
           selectedId,
-          config.similarityMetric
+          config.similarityMetric,
         );
 
         if (similarity > diversityThreshold) {
@@ -330,24 +348,28 @@ export class NeighborSelector {
     matrix: UserItemMatrix,
     targetUserId: string,
     clusterSize: number = 20,
-    customConfig?: Partial<NeighborSelectionConfig>
+    customConfig?: Partial<NeighborSelectionConfig>,
   ): Neighbor[] {
     // 简化实现：基于相似度聚类
-    const allNeighbors = this.selectUserNeighbors(matrix, targetUserId, customConfig);
-    
+    const allNeighbors = this.selectUserNeighbors(
+      matrix,
+      targetUserId,
+      customConfig,
+    );
+
     if (allNeighbors.length <= clusterSize) {
       return allNeighbors;
     }
 
     // 使用简单的层次聚类思想
     const clusters = this.performSimpleClustering(allNeighbors, clusterSize);
-    
+
     // 从每个聚类中选择最佳邻居
     const selectedNeighbors: Neighbor[] = [];
-    
-    clusters.forEach(cluster => {
-      const bestNeighbor = cluster.reduce((best, current) => 
-        current.weight > best.weight ? current : best
+
+    clusters.forEach((cluster) => {
+      const bestNeighbor = cluster.reduce((best, current) =>
+        current.weight > best.weight ? current : best,
       );
       selectedNeighbors.push(bestNeighbor);
     });
@@ -358,7 +380,10 @@ export class NeighborSelector {
   /**
    * 简单聚类实现
    */
-  private performSimpleClustering(neighbors: Neighbor[], targetClusterSize: number): Neighbor[][] {
+  private performSimpleClustering(
+    neighbors: Neighbor[],
+    targetClusterSize: number,
+  ): Neighbor[][] {
     const clusters: Neighbor[][] = [];
     const used = new Set<string>();
 
@@ -400,7 +425,7 @@ export class NeighborSelector {
   validateNeighbors(
     matrix: UserItemMatrix,
     targetUserId: string,
-    neighbors: Neighbor[]
+    neighbors: Neighbor[],
   ): {
     isValid: boolean;
     issues: string[];
@@ -411,22 +436,24 @@ export class NeighborSelector {
     };
   } {
     const issues: string[] = [];
-    
+
     if (neighbors.length === 0) {
-      issues.push('No neighbors found');
+      issues.push("No neighbors found");
     }
 
-    const avgSimilarity = neighbors.reduce((sum, n) => sum + n.similarity, 0) / neighbors.length;
-    const avgCommonItems = neighbors.reduce((sum, n) => sum + n.commonItems, 0) / neighbors.length;
+    const avgSimilarity =
+      neighbors.reduce((sum, n) => sum + n.similarity, 0) / neighbors.length;
+    const avgCommonItems =
+      neighbors.reduce((sum, n) => sum + n.commonItems, 0) / neighbors.length;
 
     // 计算覆盖率：邻居覆盖的目标用户评分物品比例
     const targetRatings = matrix.ratings.get(targetUserId);
     let coverage = 0;
-    
+
     if (targetRatings && targetRatings.size > 0) {
       const coveredItems = new Set<string>();
-      
-      neighbors.forEach(neighbor => {
+
+      neighbors.forEach((neighbor) => {
         const neighborRatings = matrix.ratings.get(neighbor.id);
         if (neighborRatings) {
           neighborRatings.forEach((_, itemId) => {
@@ -436,17 +463,21 @@ export class NeighborSelector {
           });
         }
       });
-      
+
       coverage = coveredItems.size / targetRatings.size;
     }
 
     // 验证规则
     if (avgSimilarity < this.config.minSimilarity) {
-      issues.push(`Average similarity ${avgSimilarity.toFixed(3)} below threshold ${this.config.minSimilarity}`);
+      issues.push(
+        `Average similarity ${avgSimilarity.toFixed(3)} below threshold ${this.config.minSimilarity}`,
+      );
     }
 
     if (avgCommonItems < this.config.minCommonItems) {
-      issues.push(`Average common items ${avgCommonItems.toFixed(1)} below threshold ${this.config.minCommonItems}`);
+      issues.push(
+        `Average common items ${avgCommonItems.toFixed(1)} below threshold ${this.config.minCommonItems}`,
+      );
     }
 
     if (coverage < 0.3) {

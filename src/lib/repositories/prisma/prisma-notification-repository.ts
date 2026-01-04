@@ -11,11 +11,11 @@ import {
   Prisma,
   type Notification as PrismaNotification,
   type NotificationPreference as PrismaNotificationPreference,
-} from '@prisma/client';
-import { prisma } from '@/lib/db';
-import { safeParseArray, safeParseObject } from '@/lib/utils/json-helpers';
-import type { PaginatedResult, PaginationInput } from '../types/common';
-import type { NotificationRepository } from '../interfaces/notification-repository';
+} from "@prisma/client";
+import { prisma } from "@/lib/db";
+import { safeParseArray, safeParseObject } from "@/lib/utils/json-helpers";
+import type { PaginatedResult, PaginationInput } from "../types/common";
+import type { NotificationRepository } from "../interfaces/notification-repository";
 import type {
   CreateNotificationDTO,
   NotificationChannel,
@@ -27,27 +27,27 @@ import type {
   NotificationStatus,
   NotificationType,
   ScheduledNotificationDTO,
-} from '../types/notification';
+} from "../types/notification";
 
 /**
  * 默认通知渠道
  */
-const DEFAULT_CHANNELS: NotificationChannel[] = ['IN_APP'];
+const DEFAULT_CHANNELS: NotificationChannel[] = ["IN_APP"];
 
 /**
  * 通知类型列表
  */
 const ALL_NOTIFICATION_TYPES: NotificationType[] = [
-  'CHECK_IN_REMINDER',
-  'TASK_NOTIFICATION',
-  'EXPIRY_ALERT',
-  'BUDGET_WARNING',
-  'HEALTH_ALERT',
-  'GOAL_ACHIEVEMENT',
-  'FAMILY_ACTIVITY',
-  'SYSTEM_ANNOUNCEMENT',
-  'MARKETING',
-  'OTHER',
+  "CHECK_IN_REMINDER",
+  "TASK_NOTIFICATION",
+  "EXPIRY_ALERT",
+  "BUDGET_WARNING",
+  "HEALTH_ALERT",
+  "GOAL_ACHIEVEMENT",
+  "FAMILY_ACTIVITY",
+  "SYSTEM_ANNOUNCEMENT",
+  "MARKETING",
+  "OTHER",
 ];
 
 /**
@@ -59,7 +59,7 @@ type ScheduledNotificationRow = {
   notification_id: string | null;
   payload: unknown;
   scheduled_time: Date;
-  status: ScheduledNotificationDTO['status'];
+  status: ScheduledNotificationDTO["status"];
   retry_count: number | null;
 };
 
@@ -70,12 +70,14 @@ type ScheduledNotificationRow = {
  * 支持与 SupabaseNotificationRepository 的双写验证
  */
 export class PrismaNotificationRepository implements NotificationRepository {
-  private readonly loggerPrefix = '[PrismaNotificationRepository]';
+  private readonly loggerPrefix = "[PrismaNotificationRepository]";
 
   /**
    * 创建通知记录
    */
-  async createNotification(payload: CreateNotificationDTO): Promise<NotificationDTO> {
+  async createNotification(
+    payload: CreateNotificationDTO,
+  ): Promise<NotificationDTO> {
     try {
       const notification = await prisma.notification.create({
         data: {
@@ -83,20 +85,20 @@ export class PrismaNotificationRepository implements NotificationRepository {
           type: payload.type,
           title: payload.title,
           content: payload.content,
-          priority: payload.priority ?? 'MEDIUM',
+          priority: payload.priority ?? "MEDIUM",
           channels: formatChannelsToJson(payload.channels),
           metadata: payload.metadata ?? Prisma.JsonNull,
           actionUrl: payload.actionUrl ?? null,
           actionText: payload.actionText ?? null,
           dedupKey: payload.dedupKey ?? null,
           batchId: payload.batchId ?? null,
-          status: 'PENDING',
+          status: "PENDING",
         },
       });
 
       return mapNotificationRow(notification);
     } catch (error) {
-      return this.handleError('createNotification', error);
+      return this.handleError("createNotification", error);
     }
   }
 
@@ -111,7 +113,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
 
       return notification ? mapNotificationRow(notification) : null;
     } catch (error) {
-      return this.handleError('getNotificationById', error);
+      return this.handleError("getNotificationById", error);
     }
   }
 
@@ -120,7 +122,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
    */
   async listMemberNotifications(
     query: NotificationListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<NotificationDTO>> {
     try {
       const where = buildNotificationWhere(query);
@@ -130,7 +132,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
       const [notifications, total] = await Promise.all([
         prisma.notification.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           skip: offset,
           take: limit,
         }),
@@ -145,7 +147,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
         hasMore: limit ? offset + items.length < total : undefined,
       };
     } catch (error) {
-      return this.handleError('listMemberNotifications', error);
+      return this.handleError("listMemberNotifications", error);
     }
   }
 
@@ -156,13 +158,13 @@ export class PrismaNotificationRepository implements NotificationRepository {
     try {
       const data: Prisma.NotificationUpdateInput = { status };
 
-      if (status === 'SENT') {
+      if (status === "SENT") {
         data.sentAt = new Date();
       }
 
       await prisma.notification.update({ where: { id }, data });
     } catch (error) {
-      return this.handleError('updateStatus', error);
+      return this.handleError("updateStatus", error);
     }
   }
 
@@ -176,7 +178,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
         data: { readAt: new Date() },
       });
     } catch (error) {
-      return this.handleError('markAsRead', error);
+      return this.handleError("markAsRead", error);
     }
   }
 
@@ -192,7 +194,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
 
       return result.count;
     } catch (error) {
-      return this.handleError('markAllAsRead', error);
+      return this.handleError("markAllAsRead", error);
     }
   }
 
@@ -211,7 +213,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
         },
       });
     } catch (error) {
-      return this.handleError('appendDeliveryLog', error);
+      return this.handleError("appendDeliveryLog", error);
     }
   }
 
@@ -222,16 +224,16 @@ export class PrismaNotificationRepository implements NotificationRepository {
     try {
       const notifications = await prisma.notification.findMany({
         where: {
-          status: { in: ['PENDING', 'SENDING'] },
+          status: { in: ["PENDING", "SENDING"] },
           deletedAt: null,
         },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: "asc" },
         take: limit,
       });
 
       return notifications.map(mapNotificationRow);
     } catch (error) {
-      return this.handleError('listPendingNotifications', error);
+      return this.handleError("listPendingNotifications", error);
     }
   }
 
@@ -241,7 +243,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
    * Note: scheduled_notifications 表不在 Prisma schema 中,使用 raw SQL
    */
   async createScheduledNotification(
-    schedule: ScheduledNotificationDTO
+    schedule: ScheduledNotificationDTO,
   ): Promise<ScheduledNotificationDTO> {
     try {
       const payloadJson = JSON.stringify(schedule.payload);
@@ -261,19 +263,22 @@ export class PrismaNotificationRepository implements NotificationRepository {
       `;
 
       if (!rows.length) {
-        throw new Error('Scheduled notification insert failed');
+        throw new Error("Scheduled notification insert failed");
       }
 
       return mapScheduleRow(rows[0]);
     } catch (error) {
-      return this.handleError('createScheduledNotification', error);
+      return this.handleError("createScheduledNotification", error);
     }
   }
 
   /**
    * 列出到期待派发的计划通知
    */
-  async listDueSchedules(before: Date, limit: number): Promise<ScheduledNotificationDTO[]> {
+  async listDueSchedules(
+    before: Date,
+    limit: number,
+  ): Promise<ScheduledNotificationDTO[]> {
     try {
       const rows = await prisma.$queryRaw<ScheduledNotificationRow[]>`
         SELECT *
@@ -286,7 +291,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
 
       return rows.map(mapScheduleRow);
     } catch (error) {
-      return this.handleError('listDueSchedules', error);
+      return this.handleError("listDueSchedules", error);
     }
   }
 
@@ -295,7 +300,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
    */
   async updateScheduleStatus(
     scheduleId: string,
-    status: ScheduledNotificationDTO['status']
+    status: ScheduledNotificationDTO["status"],
   ): Promise<void> {
     try {
       await prisma.$executeRaw`
@@ -304,14 +309,16 @@ export class PrismaNotificationRepository implements NotificationRepository {
         WHERE "id" = ${scheduleId}
       `;
     } catch (error) {
-      return this.handleError('updateScheduleStatus', error);
+      return this.handleError("updateScheduleStatus", error);
     }
   }
 
   /**
    * 查询通知偏好
    */
-  async getNotificationPreferences(memberId: string): Promise<NotificationPreferenceDTO | null> {
+  async getNotificationPreferences(
+    memberId: string,
+  ): Promise<NotificationPreferenceDTO | null> {
     try {
       const row = await prisma.notificationPreference.findUnique({
         where: { memberId },
@@ -319,17 +326,23 @@ export class PrismaNotificationRepository implements NotificationRepository {
 
       return row ? mapPreferenceRow(row) : null;
     } catch (error) {
-      return this.handleError('getNotificationPreferences', error);
+      return this.handleError("getNotificationPreferences", error);
     }
   }
 
   /**
    * 更新或创建通知偏好
    */
-  async upsertNotificationPreferences(preference: NotificationPreferenceDTO): Promise<void> {
+  async upsertNotificationPreferences(
+    preference: NotificationPreferenceDTO,
+  ): Promise<void> {
     try {
-      const channelPreferences = JSON.stringify(preference.channelPreferences ?? {});
-      const typeSettings = JSON.stringify(buildTypeSettings(preference.mutedTypes));
+      const channelPreferences = JSON.stringify(
+        preference.channelPreferences ?? {},
+      );
+      const typeSettings = JSON.stringify(
+        buildTypeSettings(preference.mutedTypes),
+      );
       const quietHoursStart = parseQuietHourToInt(preference.quietHours?.start);
       const quietHoursEnd = parseQuietHourToInt(preference.quietHours?.end);
 
@@ -351,14 +364,16 @@ export class PrismaNotificationRepository implements NotificationRepository {
         },
       });
     } catch (error) {
-      return this.handleError('upsertNotificationPreferences', error);
+      return this.handleError("upsertNotificationPreferences", error);
     }
   }
 
   /**
    * 获取通知接收者信息
    */
-  async getNotificationRecipient(memberId: string): Promise<NotificationRecipientDTO | null> {
+  async getNotificationRecipient(
+    memberId: string,
+  ): Promise<NotificationRecipientDTO | null> {
     try {
       const recipient = await prisma.familyMember.findUnique({
         where: { id: memberId },
@@ -380,26 +395,32 @@ export class PrismaNotificationRepository implements NotificationRepository {
         memberId: recipient.id,
         email: recipient.user?.email ?? undefined,
         phone: recipient.notificationPreference?.phoneNumber ?? undefined,
-        wechatOpenId: recipient.notificationPreference?.wechatOpenId ?? undefined,
-        pushTokens: normalizePushTokens(recipient.notificationPreference?.pushToken),
+        wechatOpenId:
+          recipient.notificationPreference?.wechatOpenId ?? undefined,
+        pushTokens: normalizePushTokens(
+          recipient.notificationPreference?.pushToken,
+        ),
         preferences,
       };
     } catch (error) {
-      return this.handleError('getNotificationRecipient', error);
+      return this.handleError("getNotificationRecipient", error);
     }
   }
 
   /**
    * 删除通知（软删除）
    */
-  async deleteNotification(notificationId: string, memberId: string): Promise<void> {
+  async deleteNotification(
+    notificationId: string,
+    memberId: string,
+  ): Promise<void> {
     try {
       await prisma.notification.updateMany({
         where: { id: notificationId, memberId, deletedAt: null },
         data: { deletedAt: new Date() },
       });
     } catch (error) {
-      return this.handleError('deleteNotification', error);
+      return this.handleError("deleteNotification", error);
     }
   }
 
@@ -407,7 +428,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
    * 统一错误处理
    */
   private handleError(operation: string, error: unknown): never {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error(`${this.loggerPrefix} ${operation} failed`, error);
     throw new Error(`NotificationRepository.${operation} failed: ${message}`);
   }
@@ -420,7 +441,9 @@ export class PrismaNotificationRepository implements NotificationRepository {
 /**
  * 构建通知查询的 WHERE 条件
  */
-function buildNotificationWhere(query: NotificationListQuery): Prisma.NotificationWhereInput {
+function buildNotificationWhere(
+  query: NotificationListQuery,
+): Prisma.NotificationWhereInput {
   const where: Prisma.NotificationWhereInput = {
     memberId: query.memberId,
     deletedAt: null,
@@ -452,8 +475,12 @@ function buildNotificationWhere(query: NotificationListQuery): Prisma.Notificati
  * 映射 Prisma Notification 到 DTO
  */
 function mapNotificationRow(row: PrismaNotification): NotificationDTO {
-  const parsedChannels = safeParseArray<NotificationChannel>(row.channels, DEFAULT_CHANNELS);
-  const channels = parsedChannels.length > 0 ? parsedChannels : DEFAULT_CHANNELS;
+  const parsedChannels = safeParseArray<NotificationChannel>(
+    row.channels,
+    DEFAULT_CHANNELS,
+  );
+  const channels =
+    parsedChannels.length > 0 ? parsedChannels : DEFAULT_CHANNELS;
 
   return {
     id: row.id,
@@ -463,7 +490,10 @@ function mapNotificationRow(row: PrismaNotification): NotificationDTO {
     content: row.content,
     priority: row.priority,
     channels,
-    metadata: row.metadata !== null ? (row.metadata as Record<string, unknown>) : undefined,
+    metadata:
+      row.metadata !== null
+        ? (row.metadata as Record<string, unknown>)
+        : undefined,
     actionUrl: row.actionUrl ?? undefined,
     actionText: row.actionText ?? undefined,
     dedupKey: row.dedupKey ?? undefined,
@@ -478,24 +508,28 @@ function mapNotificationRow(row: PrismaNotification): NotificationDTO {
 /**
  * 映射 Prisma NotificationPreference 到 DTO
  */
-function mapPreferenceRow(row: PrismaNotificationPreference): NotificationPreferenceDTO {
+function mapPreferenceRow(
+  row: PrismaNotificationPreference,
+): NotificationPreferenceDTO {
   const quietHours =
     row.globalQuietHoursStart !== null && row.globalQuietHoursEnd !== null
       ? {
-        start: formatIntToHour(row.globalQuietHoursStart),
-        end: formatIntToHour(row.globalQuietHoursEnd),
-        timezone: 'UTC',
-      }
+          start: formatIntToHour(row.globalQuietHoursStart),
+          end: formatIntToHour(row.globalQuietHoursEnd),
+          timezone: "UTC",
+        }
       : undefined;
 
-  const typeSettings = safeParseObject<Record<string, boolean>>(row.typeSettings);
+  const typeSettings = safeParseObject<Record<string, boolean>>(
+    row.typeSettings,
+  );
   const mutedTypes = extractMutedTypes(typeSettings);
 
   return {
     memberId: row.memberId,
     channelPreferences: safeParseObject(
-      row.channelPreferences
-    ) as NotificationPreferenceDTO['channelPreferences'],
+      row.channelPreferences,
+    ) as NotificationPreferenceDTO["channelPreferences"],
     quietHours,
     mutedTypes: mutedTypes.length > 0 ? mutedTypes : undefined,
     lastUpdatedAt: row.updatedAt,
@@ -505,7 +539,9 @@ function mapPreferenceRow(row: PrismaNotificationPreference): NotificationPrefer
 /**
  * 映射 ScheduledNotification 原始行到 DTO
  */
-function mapScheduleRow(row: ScheduledNotificationRow): ScheduledNotificationDTO {
+function mapScheduleRow(
+  row: ScheduledNotificationRow,
+): ScheduledNotificationDTO {
   return {
     id: row.id,
     notificationId: row.notification_id ?? undefined,
@@ -521,7 +557,7 @@ function mapScheduleRow(row: ScheduledNotificationRow): ScheduledNotificationDTO
  * 构建类型设置对象（所有类型默认启用,根据 mutedTypes 禁用）
  */
 function buildTypeSettings(
-  mutedTypes?: NotificationType[]
+  mutedTypes?: NotificationType[],
 ): Record<NotificationType, boolean> {
   const mutedSet = new Set(mutedTypes ?? []);
   return ALL_NOTIFICATION_TYPES.reduce(
@@ -529,14 +565,16 @@ function buildTypeSettings(
       acc[type] = !mutedSet.has(type);
       return acc;
     },
-    {} as Record<NotificationType, boolean>
+    {} as Record<NotificationType, boolean>,
   );
 }
 
 /**
  * 从类型设置中提取被禁用的类型
  */
-function extractMutedTypes(settings: Record<string, boolean>): NotificationType[] {
+function extractMutedTypes(
+  settings: Record<string, boolean>,
+): NotificationType[] {
   return Object.entries(settings)
     .filter(([, enabled]) => !enabled)
     .map(([key]) => key as NotificationType)
@@ -547,7 +585,10 @@ function extractMutedTypes(settings: Record<string, boolean>): NotificationType[
  * 格式化渠道数组为 JSON 字符串
  */
 function formatChannelsToJson(channels?: NotificationChannel[]): string {
-  const normalized = channels && channels.length > 0 ? Array.from(new Set(channels)) : DEFAULT_CHANNELS;
+  const normalized =
+    channels && channels.length > 0
+      ? Array.from(new Set(channels))
+      : DEFAULT_CHANNELS;
   return JSON.stringify(normalized);
 }
 
@@ -568,7 +609,7 @@ function parseQuietHourToInt(value?: string): number | null {
  * 格式化整数为 quiet hour 字符串 (e.g., 22 -> "22:00")
  */
 function formatIntToHour(hour: number): string {
-  return `${hour.toString().padStart(2, '0')}:00`;
+  return `${hour.toString().padStart(2, "0")}:00`;
 }
 
 /**
@@ -578,7 +619,9 @@ function normalizePushTokens(raw?: string | null): string[] | undefined {
   if (!raw) return undefined;
 
   const parsed = safeParseArray<string>(raw);
-  const tokens = parsed.filter((value): value is string => typeof value === 'string');
+  const tokens = parsed.filter(
+    (value): value is string => typeof value === "string",
+  );
 
   return tokens.length > 0 ? tokens : [raw];
 }
@@ -587,7 +630,7 @@ function normalizePushTokens(raw?: string | null): string[] | undefined {
  * 解析计划通知的 payload
  */
 function parseSchedulePayload(value: unknown): CreateNotificationDTO {
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       return JSON.parse(value) as CreateNotificationDTO;
     } catch {

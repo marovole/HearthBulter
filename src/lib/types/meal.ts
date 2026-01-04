@@ -1,29 +1,29 @@
 // 餐饮相关类型定义
 
 export enum MealType {
-  BREAKFAST = 'BREAKFAST',
-  LUNCH = 'LUNCH',
-  DINNER = 'DINNER',
-  SNACK = 'SNACK',
+  BREAKFAST = "BREAKFAST",
+  LUNCH = "LUNCH",
+  DINNER = "DINNER",
+  SNACK = "SNACK",
 }
 
 export enum FoodCategory {
-  VEGETABLES = 'VEGETABLES',
-  FRUITS = 'FRUITS',
-  GRAINS = 'GRAINS',
-  PROTEIN = 'PROTEIN',
-  SEAFOOD = 'SEAFOOD',
-  DAIRY = 'DAIRY',
-  OILS = 'OILS',
-  SNACKS = 'SNACKS',
-  BEVERAGES = 'BEVERAGES',
-  OTHER = 'OTHER',
+  VEGETABLES = "VEGETABLES",
+  FRUITS = "FRUITS",
+  GRAINS = "GRAINS",
+  PROTEIN = "PROTEIN",
+  SEAFOOD = "SEAFOOD",
+  DAIRY = "DAIRY",
+  OILS = "OILS",
+  SNACKS = "SNACKS",
+  BEVERAGES = "BEVERAGES",
+  OTHER = "OTHER",
 }
 
 export enum DataSource {
-  USDA = 'USDA',
-  LOCAL = 'LOCAL',
-  USER_SUBMITTED = 'USER_SUBMITTED',
+  USDA = "USDA",
+  LOCAL = "LOCAL",
+  USER_SUBMITTED = "USER_SUBMITTED",
 }
 
 // 食物接口

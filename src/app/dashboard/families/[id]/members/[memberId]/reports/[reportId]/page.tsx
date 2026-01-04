@@ -1,25 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { OcrResult } from '@/components/reports/OcrResult';
-import { CorrectionForm } from '@/components/reports/CorrectionForm';
-import type {
-  MedicalReport,
-  MedicalIndicator,
-} from '@prisma/client';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { OcrResult } from "@/components/reports/OcrResult";
+import { CorrectionForm } from "@/components/reports/CorrectionForm";
+import type { MedicalReport, MedicalIndicator } from "@prisma/client";
 
 interface ReportWithIndicators extends MedicalReport {
-  indicators: MedicalIndicator[]
+  indicators: MedicalIndicator[];
 }
 
 interface ReportDetailPageProps {
   params: Promise<{
-    id: string
-    memberId: string
-    reportId: string
-  }>
+    id: string;
+    memberId: string;
+    reportId: string;
+  }>;
 }
 
 export default function ReportDetailPage({
@@ -27,14 +24,14 @@ export default function ReportDetailPage({
 }: ReportDetailPageProps) {
   const router = useRouter();
   const [params, setParams] = useState<{
-    id: string
-    memberId: string
-    reportId: string
+    id: string;
+    memberId: string;
+    reportId: string;
   } | null>(null);
   const [report, setReport] = useState<ReportWithIndicators | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [memberName, setMemberName] = useState<string>('成员');
+  const [memberName, setMemberName] = useState<string>("成员");
   const [showCorrectionForm, setShowCorrectionForm] = useState(false);
 
   useEffect(() => {
@@ -53,11 +50,11 @@ export default function ReportDetailPage({
 
     try {
       const response = await fetch(
-        `/api/families/${params.id}/members/${params.memberId}`
+        `/api/families/${params.id}/members/${params.memberId}`,
       );
       if (response.ok) {
         const data = await response.json();
-        setMemberName(data.member?.name || '成员');
+        setMemberName(data.member?.name || "成员");
       }
     } catch (err) {
       // 忽略错误，使用默认值
@@ -72,25 +69,25 @@ export default function ReportDetailPage({
       setError(null);
 
       const response = await fetch(
-        `/api/members/${params.memberId}/reports/${params.reportId}`
+        `/api/members/${params.memberId}/reports/${params.reportId}`,
       );
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || '获取报告失败');
+        throw new Error(data.error || "获取报告失败");
       }
 
       const data = await response.json();
       setReport(data.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误');
+      setError(err instanceof Error ? err.message : "未知错误");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!params || !confirm('确定要删除这份报告吗？删除后无法恢复。')) {
+    if (!params || !confirm("确定要删除这份报告吗？删除后无法恢复。")) {
       return;
     }
 
@@ -98,28 +95,28 @@ export default function ReportDetailPage({
       const response = await fetch(
         `/api/members/${params.memberId}/reports/${params.reportId}`,
         {
-          method: 'DELETE',
-        }
+          method: "DELETE",
+        },
       );
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || '删除失败');
+        throw new Error(data.error || "删除失败");
       }
 
       // 导航回列表页
       router.push(
-        `/dashboard/families/${params.id}/members/${params.memberId}/reports`
+        `/dashboard/families/${params.id}/members/${params.memberId}/reports`,
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : '删除失败');
+      alert(err instanceof Error ? err.message : "删除失败");
     }
   };
 
   const handleCompare = () => {
     if (!params) return;
     router.push(
-      `/dashboard/families/${params.id}/members/${params.memberId}/reports/${params.reportId}/compare`
+      `/dashboard/families/${params.id}/members/${params.memberId}/reports/${params.reportId}/compare`,
     );
   };
 
@@ -145,7 +142,7 @@ export default function ReportDetailPage({
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800">{error || '报告不存在'}</p>
+              <p className="text-red-800">{error || "报告不存在"}</p>
             </div>
           </div>
         </div>
@@ -189,22 +186,23 @@ export default function ReportDetailPage({
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">报告详情</h1>
             <div className="flex gap-2">
-              {report.ocrStatus === 'COMPLETED' && report.indicators.length > 0 && (
-                <>
-                  <button
-                    onClick={() => setShowCorrectionForm(!showCorrectionForm)}
-                    className="px-4 py-2 text-blue-700 bg-blue-50 rounded-lg font-medium hover:bg-blue-100 transition-colors"
-                  >
-                    {showCorrectionForm ? '取消修正' : '手动修正'}
-                  </button>
-                  <button
-                    onClick={handleCompare}
-                    className="px-4 py-2 text-green-700 bg-green-50 rounded-lg font-medium hover:bg-green-100 transition-colors"
-                  >
-                    历史对比
-                  </button>
-                </>
-              )}
+              {report.ocrStatus === "COMPLETED" &&
+                report.indicators.length > 0 && (
+                  <>
+                    <button
+                      onClick={() => setShowCorrectionForm(!showCorrectionForm)}
+                      className="px-4 py-2 text-blue-700 bg-blue-50 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+                    >
+                      {showCorrectionForm ? "取消修正" : "手动修正"}
+                    </button>
+                    <button
+                      onClick={handleCompare}
+                      className="px-4 py-2 text-green-700 bg-green-50 rounded-lg font-medium hover:bg-green-100 transition-colors"
+                    >
+                      历史对比
+                    </button>
+                  </>
+                )}
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 text-red-700 bg-red-50 rounded-lg font-medium hover:bg-red-100 transition-colors"
@@ -220,7 +218,7 @@ export default function ReportDetailPage({
           </div>
 
           {/* 手动修正表单 */}
-          {showCorrectionForm && report.ocrStatus === 'COMPLETED' && (
+          {showCorrectionForm && report.ocrStatus === "COMPLETED" && (
             <div className="mb-6">
               <div className="bg-white border rounded-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -241,4 +239,3 @@ export default function ReportDetailPage({
     </div>
   );
 }
-

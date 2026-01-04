@@ -6,9 +6,9 @@
  * @module member-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseMemberRepository } from './implementations/supabase-member-repository';
-import type { MemberRepository } from './interfaces/member-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseMemberRepository } from "./implementations/supabase-member-repository";
+import type { MemberRepository } from "./interfaces/member-repository";
 
 let instance: MemberRepository | null = null;
 

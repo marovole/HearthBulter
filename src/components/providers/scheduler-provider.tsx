@@ -3,9 +3,9 @@
  * 在服务端启动定时任务调度器
  */
 
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 export function SchedulerProvider() {
   useEffect(() => {

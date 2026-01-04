@@ -6,9 +6,9 @@
  * @module budget-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseBudgetRepository } from './implementations/supabase-budget-repository';
-import type { BudgetRepository } from './interfaces/budget-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseBudgetRepository } from "./implementations/supabase-budget-repository";
+import type { BudgetRepository } from "./interfaces/budget-repository";
 
 let instance: BudgetRepository | null = null;
 

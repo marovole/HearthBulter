@@ -3,14 +3,14 @@
  * 负责生成唯一的分享token和邀请码
  */
 
-import { randomBytes } from 'crypto';
+import { randomBytes } from "crypto";
 
 /**
  * 生成分享token
  */
 export async function generateShareToken(length: number = 16): Promise<string> {
   const bytes = randomBytes(Math.ceil(length / 2));
-  const token = bytes.toString('hex').slice(0, length);
+  const token = bytes.toString("hex").slice(0, length);
   return token;
 }
 
@@ -18,14 +18,14 @@ export async function generateShareToken(length: number = 16): Promise<string> {
  * 生成邀请码
  */
 export async function generateInviteCode(length: number = 8): Promise<string> {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+
   for (let i = 0; i < length; i++) {
     const randomIndex = Math.floor(Math.random() * chars.length);
     result += chars.charAt(randomIndex);
   }
-  
+
   return result;
 }
 
@@ -33,15 +33,18 @@ export async function generateInviteCode(length: number = 8): Promise<string> {
  * 生成分享链接
  */
 export function generateShareUrl(token: string, baseUrl?: string): string {
-  const base = baseUrl || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const base = baseUrl || process.env.NEXTAUTH_URL || "http://localhost:3000";
   return `${base}/share/${token}`;
 }
 
 /**
  * 生成邀请链接
  */
-export function generateInviteUrl(inviteCode: string, baseUrl?: string): string {
-  const base = baseUrl || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+export function generateInviteUrl(
+  inviteCode: string,
+  baseUrl?: string,
+): string {
+  const base = baseUrl || process.env.NEXTAUTH_URL || "http://localhost:3000";
   return `${base}/invite/${inviteCode}`;
 }
 
@@ -67,15 +70,15 @@ export function isValidInviteCode(code: string): boolean {
 export function generateParametrizedShareUrl(
   token: string,
   params: Record<string, string>,
-  baseUrl?: string
+  baseUrl?: string,
 ): string {
   const base = generateShareUrl(token, baseUrl);
   const url = new URL(base);
-  
+
   Object.entries(params).forEach(([key, value]) => {
     url.searchParams.set(key, value);
   });
-  
+
   return url.toString();
 }
 
@@ -85,9 +88,9 @@ export function generateParametrizedShareUrl(
 export function extractTokenFromShareUrl(url: string): string | null {
   try {
     const urlObj = new URL(url);
-    const pathParts = urlObj.pathname.split('/');
+    const pathParts = urlObj.pathname.split("/");
     const token = pathParts[pathParts.length - 1];
-    
+
     return isValidShareToken(token) ? token : null;
   } catch {
     return null;
@@ -100,9 +103,9 @@ export function extractTokenFromShareUrl(url: string): string | null {
 export function extractInviteCodeFromUrl(url: string): string | null {
   try {
     const urlObj = new URL(url);
-    const pathParts = urlObj.pathname.split('/');
+    const pathParts = urlObj.pathname.split("/");
     const code = pathParts[pathParts.length - 1];
-    
+
     return isValidInviteCode(code) ? code : null;
   } catch {
     return null;
@@ -114,7 +117,7 @@ export function extractInviteCodeFromUrl(url: string): string | null {
  */
 export async function generateShortUrl(
   longUrl: string,
-  customAlias?: string
+  customAlias?: string,
 ): Promise<string> {
   // 这里可以集成短链接服务，如 bit.ly、tinyurl 等
   // 暂时返回原链接
@@ -135,28 +138,28 @@ export function generateQRCodeData(url: string): string {
 export function generateSocialShareUrls(
   shareUrl: string,
   title: string,
-  description: string
+  description: string,
 ): Record<string, string> {
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
   const encodedDescription = encodeURIComponent(description);
-  
+
   return {
     // 微信分享（需要特殊处理，通常生成二维码）
     wechat: shareUrl,
-    
+
     // 微信朋友圈
     wechatMoments: shareUrl,
-    
+
     // 微博
     weibo: `https://service.weibo.com/share/share.php?url=${encodedUrl}&title=${encodedTitle}&content=${encodedDescription}`,
-    
+
     // QQ
     qq: `https://connect.qq.com/widget/shareqq/index.html?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedDescription}`,
-    
+
     // QQ空间
     qzone: `https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedDescription}`,
-    
+
     // 通用复制链接
     copy: shareUrl,
   };
@@ -169,18 +172,18 @@ export function generateOpenGraphMetadata(
   title: string,
   description: string,
   imageUrl?: string,
-  url?: string
+  url?: string,
 ): Record<string, string> {
   return {
-    'og:title': title,
-    'og:description': description,
-    'og:image': imageUrl || '',
-    'og:url': url || '',
-    'og:type': 'website',
-    'og:site_name': '健康管家',
-    'twitter:card': 'summary_large_image',
-    'twitter:title': title,
-    'twitter:description': description,
-    'twitter:image': imageUrl || '',
+    "og:title": title,
+    "og:description": description,
+    "og:image": imageUrl || "",
+    "og:url": url || "",
+    "og:type": "website",
+    "og:site_name": "健康管家",
+    "twitter:card": "summary_large_image",
+    "twitter:title": title,
+    "twitter:description": description,
+    "twitter:image": imageUrl || "",
   };
 }

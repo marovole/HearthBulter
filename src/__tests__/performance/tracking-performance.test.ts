@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { mealTracker } from '@/lib/services/tracking/meal-tracker';
-import { templateManager } from '@/lib/services/tracking/template-manager';
-import { deviationAnalyzer } from '@/lib/services/tracking/deviation-analyzer';
-import { prisma } from '@/lib/db';
+import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
+import { mealTracker } from "@/lib/services/tracking/meal-tracker";
+import { templateManager } from "@/lib/services/tracking/template-manager";
+import { deviationAnalyzer } from "@/lib/services/tracking/deviation-analyzer";
+import { prisma } from "@/lib/db";
 
-describe('Tracking Performance Tests', () => {
+describe("Tracking Performance Tests", () => {
   let testMember: any;
   let testFamily: any;
 
@@ -12,21 +12,21 @@ describe('Tracking Performance Tests', () => {
     // Create test data
     testFamily = await prisma.family.create({
       data: {
-        name: 'Performance Test Family',
-        creatorId: 'test-user-id',
+        name: "Performance Test Family",
+        creatorId: "test-user-id",
       },
     });
 
     testMember = await prisma.familyMember.create({
       data: {
-        name: 'Performance Test Member',
-        userId: 'test-user-id',
+        name: "Performance Test Member",
+        userId: "test-user-id",
         familyId: testFamily.id,
-        dateOfBirth: new Date('1990-01-01'),
-        gender: 'MALE',
+        dateOfBirth: new Date("1990-01-01"),
+        gender: "MALE",
         height: 170,
         weight: 70,
-        activityLevel: 'MODERATE',
+        activityLevel: "MODERATE",
       },
     });
 
@@ -62,16 +62,16 @@ describe('Tracking Performance Tests', () => {
     });
   });
 
-  describe('Meal Logging Performance', () => {
-    it('should handle single meal logging within time limit', async () => {
+  describe("Meal Logging Performance", () => {
+    it("should handle single meal logging within time limit", async () => {
       const startTime = performance.now();
 
       await mealTracker.logMeal({
         memberId: testMember.id,
-        mealType: 'BREAKFAST',
+        mealType: "BREAKFAST",
         foods: [
-          { foodId: 'test-food-1', amount: 100 },
-          { foodId: 'test-food-2', amount: 50 },
+          { foodId: "test-food-1", amount: 100 },
+          { foodId: "test-food-2", amount: 50 },
         ],
       });
 
@@ -82,17 +82,17 @@ describe('Tracking Performance Tests', () => {
       expect(duration).toBeLessThan(100);
     });
 
-    it('should handle bulk meal logging efficiently', async () => {
+    it("should handle bulk meal logging efficiently", async () => {
       const mealCount = 1000;
       const startTime = performance.now();
 
       const mealPromises = Array.from({ length: mealCount }, (_, i) =>
         mealTracker.logMeal({
           memberId: testMember.id,
-          mealType: 'BREAKFAST',
-          foods: [{ foodId: 'test-food-1', amount: 100 }],
+          mealType: "BREAKFAST",
+          foods: [{ foodId: "test-food-1", amount: 100 }],
           createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000), // Different days
-        })
+        }),
       );
 
       await Promise.all(mealPromises);
@@ -109,16 +109,16 @@ describe('Tracking Performance Tests', () => {
       expect(meals).toHaveLength(mealCount);
     });
 
-    it('should handle concurrent meal logging', async () => {
+    it("should handle concurrent meal logging", async () => {
       const concurrentCount = 100;
       const startTime = performance.now();
 
       const concurrentPromises = Array.from({ length: concurrentCount }, () =>
         mealTracker.logMeal({
           memberId: testMember.id,
-          mealType: 'BREAKFAST',
-          foods: [{ foodId: 'test-food-1', amount: 100 }],
-        })
+          mealType: "BREAKFAST",
+          foods: [{ foodId: "test-food-1", amount: 100 }],
+        }),
       );
 
       const results = await Promise.all(concurrentPromises);
@@ -128,7 +128,7 @@ describe('Tracking Performance Tests', () => {
 
       // All requests should succeed
       expect(results).toHaveLength(concurrentCount);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBeDefined();
         expect(result.id).toBeDefined();
       });
@@ -137,22 +137,29 @@ describe('Tracking Performance Tests', () => {
       expect(duration).toBeLessThan(5000);
 
       // Verify no duplicates
-      const uniqueIds = new Set(results.map(r => r.id));
+      const uniqueIds = new Set(results.map((r) => r.id));
       expect(uniqueIds.size).toBe(concurrentCount);
     });
   });
 
-  describe('Nutrition Calculation Performance', () => {
-    it('should calculate daily nutrition efficiently', async () => {
+  describe("Nutrition Calculation Performance", () => {
+    it("should calculate daily nutrition efficiently", async () => {
       // Create test meals
       const mealCount = 100;
       for (let i = 0; i < mealCount; i++) {
         await mealTracker.logMeal({
           memberId: testMember.id,
-          mealType: i % 4 === 0 ? 'BREAKFAST' : i % 4 === 1 ? 'LUNCH' : i % 4 === 2 ? 'DINNER' : 'SNACK',
+          mealType:
+            i % 4 === 0
+              ? "BREAKFAST"
+              : i % 4 === 1
+                ? "LUNCH"
+                : i % 4 === 2
+                  ? "DINNER"
+                  : "SNACK",
           foods: [
-            { foodId: 'test-food-1', amount: 100 },
-            { foodId: 'test-food-2', amount: 50 },
+            { foodId: "test-food-1", amount: 100 },
+            { foodId: "test-food-2", amount: 50 },
           ],
           createdAt: new Date(Date.now() - i * 60 * 60 * 1000), // Different hours
         });
@@ -160,7 +167,10 @@ describe('Tracking Performance Tests', () => {
 
       const startTime = performance.now();
 
-      const nutrition = await mealTracker.getDailyNutrition(testMember.id, new Date());
+      const nutrition = await mealTracker.getDailyNutrition(
+        testMember.id,
+        new Date(),
+      );
 
       const endTime = performance.now();
       const duration = endTime - startTime;
@@ -172,7 +182,7 @@ describe('Tracking Performance Tests', () => {
       expect(duration).toBeLessThan(50);
     });
 
-    it('should handle weekly nutrition analysis efficiently', async () => {
+    it("should handle weekly nutrition analysis efficiently", async () => {
       // Create a week of data
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 7);
@@ -184,10 +194,11 @@ describe('Tracking Performance Tests', () => {
         for (let meal = 0; meal < 3; meal++) {
           await mealTracker.logMeal({
             memberId: testMember.id,
-            mealType: meal === 0 ? 'BREAKFAST' : meal === 1 ? 'LUNCH' : 'DINNER',
+            mealType:
+              meal === 0 ? "BREAKFAST" : meal === 1 ? "LUNCH" : "DINNER",
             foods: [
-              { foodId: 'test-food-1', amount: 100 + meal * 10 },
-              { foodId: 'test-food-2', amount: 50 + meal * 5 },
+              { foodId: "test-food-1", amount: 100 + meal * 10 },
+              { foodId: "test-food-2", amount: 50 + meal * 5 },
             ],
             createdAt: currentDate,
           });
@@ -196,7 +207,11 @@ describe('Tracking Performance Tests', () => {
 
       const startTime = performance.now();
 
-      const weeklyData = await mealTracker.getWeeklyNutrition(testMember.id, startDate, new Date());
+      const weeklyData = await mealTracker.getWeeklyNutrition(
+        testMember.id,
+        startDate,
+        new Date(),
+      );
 
       const endTime = performance.now();
       const duration = endTime - startTime;
@@ -208,18 +223,18 @@ describe('Tracking Performance Tests', () => {
       expect(duration).toBeLessThan(100);
     });
 
-    it('should handle large dataset nutrition calculation', async () => {
+    it("should handle large dataset nutrition calculation", async () => {
       // Create 1 year of test data
       const mealCount = 365 * 3; // 3 meals per day for 1 year
 
-      console.log('Creating large dataset...');
+      console.log("Creating large dataset...");
       const startTime = performance.now();
 
       for (let i = 0; i < mealCount; i++) {
         await mealTracker.logMeal({
           memberId: testMember.id,
-          mealType: ['BREAKFAST', 'LUNCH', 'DINNER'][i % 3],
-          foods: [{ foodId: 'test-food-1', amount: 100 }],
+          mealType: ["BREAKFAST", "LUNCH", "DINNER"][i % 3],
+          foods: [{ foodId: "test-food-1", amount: 100 }],
           createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
         });
       }
@@ -245,8 +260,8 @@ describe('Tracking Performance Tests', () => {
     });
   });
 
-  describe('Template Management Performance', () => {
-    it('should handle template creation efficiently', async () => {
+  describe("Template Management Performance", () => {
+    it("should handle template creation efficiently", async () => {
       const templateCount = 100;
       const startTime = performance.now();
 
@@ -254,12 +269,12 @@ describe('Tracking Performance Tests', () => {
         templateManager.createTemplate({
           memberId: testMember.id,
           name: `Template ${i}`,
-          mealType: 'BREAKFAST',
+          mealType: "BREAKFAST",
           foods: [
-            { foodId: 'test-food-1', amount: 100 },
-            { foodId: 'test-food-2', amount: 50 },
+            { foodId: "test-food-1", amount: 100 },
+            { foodId: "test-food-2", amount: 50 },
           ],
-        })
+        }),
       );
 
       const templates = await Promise.all(templatePromises);
@@ -271,18 +286,20 @@ describe('Tracking Performance Tests', () => {
       expect(templates).toHaveLength(templateCount);
       expect(templatesPerSecond).toBeGreaterThan(50);
 
-      console.log(`Template creation: ${templatesPerSecond.toFixed(2)} templates/second`);
+      console.log(
+        `Template creation: ${templatesPerSecond.toFixed(2)} templates/second`,
+      );
     });
 
-    it('should handle template retrieval efficiently', async () => {
+    it("should handle template retrieval efficiently", async () => {
       // Create test templates
       const templateCount = 50;
       for (let i = 0; i < templateCount; i++) {
         await templateManager.createTemplate({
           memberId: testMember.id,
           name: `Template ${i}`,
-          mealType: 'BREAKFAST',
-          foods: [{ foodId: 'test-food-1', amount: 100 }],
+          mealType: "BREAKFAST",
+          foods: [{ foodId: "test-food-1", amount: 100 }],
         });
       }
 
@@ -297,13 +314,13 @@ describe('Tracking Performance Tests', () => {
       expect(duration).toBeLessThan(50);
     });
 
-    it('should handle template usage tracking efficiently', async () => {
+    it("should handle template usage tracking efficiently", async () => {
       // Create template
       const template = await templateManager.createTemplate({
         memberId: testMember.id,
-        name: 'Popular Template',
-        mealType: 'BREAKFAST',
-        foods: [{ foodId: 'test-food-1', amount: 100 }],
+        name: "Popular Template",
+        mealType: "BREAKFAST",
+        foods: [{ foodId: "test-food-1", amount: 100 }],
       });
 
       const usageCount = 1000;
@@ -311,7 +328,7 @@ describe('Tracking Performance Tests', () => {
 
       // Simulate template usage
       const usagePromises = Array.from({ length: usageCount }, () =>
-        templateManager.incrementUsage(template.id)
+        templateManager.incrementUsage(template.id),
       );
 
       await Promise.all(usagePromises);
@@ -326,12 +343,14 @@ describe('Tracking Performance Tests', () => {
       const updatedTemplate = await templateManager.getTemplate(template.id);
       expect(updatedTemplate.usageCount).toBe(usageCount);
 
-      console.log(`Template usage tracking: ${usagesPerSecond.toFixed(2)} updates/second`);
+      console.log(
+        `Template usage tracking: ${usagesPerSecond.toFixed(2)} updates/second`,
+      );
     });
   });
 
-  describe('Deviation Analysis Performance', () => {
-    it('should analyze weekly deviations efficiently', async () => {
+  describe("Deviation Analysis Performance", () => {
+    it("should analyze weekly deviations efficiently", async () => {
       // Create test data with deviations
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
@@ -345,8 +364,8 @@ describe('Tracking Performance Tests', () => {
 
         await mealTracker.logMeal({
           memberId: testMember.id,
-          mealType: 'BREAKFAST',
-          foods: [{ foodId: 'test-food-1', amount: 100 * deficiencyFactor }],
+          mealType: "BREAKFAST",
+          foods: [{ foodId: "test-food-1", amount: 100 * deficiencyFactor }],
           createdAt: currentDate,
         });
       }
@@ -356,7 +375,7 @@ describe('Tracking Performance Tests', () => {
       const deviations = await deviationAnalyzer.analyzeWeeklyDeviations(
         testMember.id,
         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        new Date()
+        new Date(),
       );
 
       const analysisEndTime = performance.now();
@@ -368,7 +387,7 @@ describe('Tracking Performance Tests', () => {
       console.log(`Deviation analysis took ${analysisDuration}ms`);
     });
 
-    it('should generate comprehensive reports efficiently', async () => {
+    it("should generate comprehensive reports efficiently", async () => {
       // Create complex dataset
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 90);
@@ -378,17 +397,18 @@ describe('Tracking Performance Tests', () => {
         currentDate.setDate(startDate.getDate() + i);
 
         // Create varied nutrition patterns
-        const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+        const isWeekend =
+          currentDate.getDay() === 0 || currentDate.getDay() === 6;
         const meals = isWeekend ? 4 : 3; // More meals on weekends
 
         for (let meal = 0; meal < meals; meal++) {
-          const mealType = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'][meal];
+          const mealType = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"][meal];
           const amount = isWeekend ? 150 : 100; // Larger portions on weekends
 
           await mealTracker.logMeal({
             memberId: testMember.id,
             mealType,
-            foods: [{ foodId: 'test-food-1', amount: amount }],
+            foods: [{ foodId: "test-food-1", amount: amount }],
             createdAt: currentDate,
           });
         }
@@ -399,32 +419,32 @@ describe('Tracking Performance Tests', () => {
       const report = await deviationAnalyzer.generateWeeklyReport(
         testMember.id,
         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        new Date()
+        new Date(),
       );
 
       const reportEndTime = performance.now();
       const reportDuration = reportEndTime - reportStartTime;
 
-      expect(report).toHaveProperty('summary');
-      expect(report).toHaveProperty('deviations');
-      expect(report).toHaveProperty('patterns');
-      expect(report).toHaveProperty('recommendations');
+      expect(report).toHaveProperty("summary");
+      expect(report).toHaveProperty("deviations");
+      expect(report).toHaveProperty("patterns");
+      expect(report).toHaveProperty("recommendations");
       expect(reportDuration).toBeLessThan(500);
 
       console.log(`Comprehensive report generation took ${reportDuration}ms`);
     });
   });
 
-  describe('Memory and Resource Usage', () => {
-    it('should not cause memory leaks with repeated operations', async () => {
+  describe("Memory and Resource Usage", () => {
+    it("should not cause memory leaks with repeated operations", async () => {
       const initialMemory = process.memoryUsage().heapUsed;
 
       // Perform many operations
       for (let i = 0; i < 100; i++) {
         await mealTracker.logMeal({
           memberId: testMember.id,
-          mealType: 'BREAKFAST',
-          foods: [{ foodId: 'test-food-1', amount: 100 }],
+          mealType: "BREAKFAST",
+          foods: [{ foodId: "test-food-1", amount: 100 }],
         });
 
         await mealTracker.getDailyNutrition(testMember.id, new Date());
@@ -448,19 +468,21 @@ describe('Tracking Performance Tests', () => {
       // Memory increase should be reasonable (less than 50MB)
       expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
 
-      console.log(`Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`,
+      );
     });
 
-    it('should handle database connection pooling efficiently', async () => {
+    it("should handle database connection pooling efficiently", async () => {
       const startTime = performance.now();
 
       // Create many concurrent database operations
       const concurrentOperations = Array.from({ length: 50 }, () =>
         mealTracker.logMeal({
           memberId: testMember.id,
-          mealType: 'BREAKFAST',
-          foods: [{ foodId: 'test-food-1', amount: 100 }],
-        })
+          mealType: "BREAKFAST",
+          foods: [{ foodId: "test-food-1", amount: 100 }],
+        }),
       );
 
       await Promise.all(concurrentOperations);
@@ -475,8 +497,8 @@ describe('Tracking Performance Tests', () => {
     });
   });
 
-  describe('Scalability Tests', () => {
-    it('should handle multiple members efficiently', async () => {
+  describe("Scalability Tests", () => {
+    it("should handle multiple members efficiently", async () => {
       const memberCount = 10;
       const members = [];
 
@@ -485,13 +507,13 @@ describe('Tracking Performance Tests', () => {
         const member = await prisma.familyMember.create({
           data: {
             name: `Test Member ${i}`,
-            userId: 'test-user-id',
+            userId: "test-user-id",
             familyId: testFamily.id,
-            dateOfBirth: new Date('1990-01-01'),
-            gender: 'MALE',
+            dateOfBirth: new Date("1990-01-01"),
+            gender: "MALE",
             height: 170,
             weight: 70,
-            activityLevel: 'MODERATE',
+            activityLevel: "MODERATE",
           },
         });
 
@@ -513,14 +535,14 @@ describe('Tracking Performance Tests', () => {
       const startTime = performance.now();
 
       // Log meals for all members concurrently
-      const mealPromises = members.flatMap(member =>
+      const mealPromises = members.flatMap((member) =>
         Array.from({ length: 10 }, () =>
           mealTracker.logMeal({
             memberId: member.id,
-            mealType: 'BREAKFAST',
-            foods: [{ foodId: 'test-food-1', amount: 100 }],
-          })
-        )
+            mealType: "BREAKFAST",
+            foods: [{ foodId: "test-food-1", amount: 100 }],
+          }),
+        ),
       );
 
       await Promise.all(mealPromises);
@@ -532,24 +554,26 @@ describe('Tracking Performance Tests', () => {
 
       expect(mealsPerSecond).toBeGreaterThan(50);
 
-      console.log(`Multi-member performance: ${mealsPerSecond.toFixed(2)} meals/second`);
+      console.log(
+        `Multi-member performance: ${mealsPerSecond.toFixed(2)} meals/second`,
+      );
 
       // Clean up additional members
       await prisma.mealLog.deleteMany({
         where: {
-          memberId: { in: members.map(m => m.id) },
+          memberId: { in: members.map((m) => m.id) },
         },
       });
 
       await prisma.nutritionGoal.deleteMany({
         where: {
-          memberId: { in: members.map(m => m.id) },
+          memberId: { in: members.map((m) => m.id) },
         },
       });
 
       await prisma.familyMember.deleteMany({
         where: {
-          id: { in: members.map(m => m.id) },
+          id: { in: members.map((m) => m.id) },
         },
       });
     });

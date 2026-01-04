@@ -1,42 +1,42 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { MealCard } from './MealCard';
-import type { MealType } from '@prisma/client';
+import { useState } from "react";
+import { MealCard } from "./MealCard";
+import type { MealType } from "@prisma/client";
 
 interface MealIngredient {
-  id: string
-  amount: number
+  id: string;
+  amount: number;
   food: {
-    id: string
-    name: string
-  }
+    id: string;
+    name: string;
+  };
 }
 
 interface Meal {
-  id: string
-  date: string
-  mealType: MealType
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  ingredients: MealIngredient[]
+  id: string;
+  date: string;
+  mealType: MealType;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  ingredients: MealIngredient[];
 }
 
 interface SwapIngredientProps {
-  planId: string
-  meal: Meal
-  isOpen: boolean
-  onClose: () => void
-  onSuccess?: () => void
+  planId: string;
+  meal: Meal;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
 }
 
 const MEAL_TYPE_LABELS: Record<MealType, string> = {
-  BREAKFAST: '早餐',
-  LUNCH: '午餐',
-  DINNER: '晚餐',
-  SNACK: '加餐',
+  BREAKFAST: "早餐",
+  LUNCH: "午餐",
+  DINNER: "晚餐",
+  SNACK: "加餐",
 };
 
 export function SwapIngredient({
@@ -60,23 +60,23 @@ export function SwapIngredient({
       const response = await fetch(
         `/api/meal-plans/${planId}/meals/${meal.id}`,
         {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
         const data = await response.json();
-        let errorMessage = '替换餐食失败';
+        let errorMessage = "替换餐食失败";
         if (data.error) {
-          if (data.error.includes('未找到')) {
-            errorMessage = '未找到合适的替代餐食，请稍后再试';
-          } else if (data.error.includes('不存在')) {
-            errorMessage = '餐食不存在，请刷新页面';
-          } else if (data.error.includes('无权限')) {
-            errorMessage = '您没有权限执行此操作';
+          if (data.error.includes("未找到")) {
+            errorMessage = "未找到合适的替代餐食，请稍后再试";
+          } else if (data.error.includes("不存在")) {
+            errorMessage = "餐食不存在，请刷新页面";
+          } else if (data.error.includes("无权限")) {
+            errorMessage = "您没有权限执行此操作";
           } else {
             errorMessage = data.error;
           }
@@ -86,8 +86,8 @@ export function SwapIngredient({
 
       const data = await response.json();
       setReplaceCount(replaceCount + 1);
-      setSuccessMessage('✅ 替换成功！');
-      
+      setSuccessMessage("✅ 替换成功！");
+
       // 成功后的回调
       if (onSuccess) {
         onSuccess();
@@ -107,7 +107,7 @@ export function SwapIngredient({
         }, 2000);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '替换失败，请稍后重试');
+      setError(err instanceof Error ? err.message : "替换失败，请稍后重试");
     } finally {
       setLoading(false);
     }
@@ -131,7 +131,7 @@ export function SwapIngredient({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget && !loading) {
@@ -139,7 +139,7 @@ export function SwapIngredient({
         }
       }}
     >
-      <div 
+      <div
         className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -201,7 +201,9 @@ export function SwapIngredient({
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 animate-in fade-in duration-200">
               <div className="flex items-center gap-2">
                 <span className="text-green-600 text-lg">✓</span>
-                <p className="text-sm font-medium text-green-900">{successMessage}</p>
+                <p className="text-sm font-medium text-green-900">
+                  {successMessage}
+                </p>
               </div>
             </div>
           )}
@@ -212,7 +214,9 @@ export function SwapIngredient({
               <div className="flex items-start gap-2">
                 <span className="text-red-600 text-lg">⚠️</span>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-red-900 mb-1">替换失败</p>
+                  <p className="text-sm font-medium text-red-900 mb-1">
+                    替换失败
+                  </p>
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               </div>
@@ -238,7 +242,7 @@ export function SwapIngredient({
               disabled={loading}
               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 order-3 sm:order-1"
             >
-              {successMessage ? '完成' : '取消'}
+              {successMessage ? "完成" : "取消"}
             </button>
             {successMessage && (
               <button
@@ -255,8 +259,8 @@ export function SwapIngredient({
                 disabled={loading}
                 className={`px-4 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 order-1 sm:order-2 ${
                   loading
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
                 }`}
                 aria-busy={loading}
               >
@@ -266,7 +270,7 @@ export function SwapIngredient({
                     替换中...
                   </span>
                 ) : (
-                  '确认替换'
+                  "确认替换"
                 )}
               </button>
             )}
@@ -276,4 +280,3 @@ export function SwapIngredient({
     </div>
   );
 }
-

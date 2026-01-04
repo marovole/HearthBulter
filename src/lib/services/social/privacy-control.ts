@@ -3,7 +3,7 @@
  * 负责管理分享内容的隐私设置和访问控制
  */
 
-import { PrismaClient, SharePrivacyLevel } from '@prisma/client';
+import { PrismaClient, SharePrivacyLevel } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -35,7 +35,9 @@ export interface SharePrivacyRule {
 /**
  * 获取用户隐私设置
  */
-export async function getUserPrivacySettings(memberId: string): Promise<PrivacySettings | null> {
+export async function getUserPrivacySettings(
+  memberId: string,
+): Promise<PrivacySettings | null> {
   try {
     const settings = await prisma.privacySetting.findUnique({
       where: { memberId },
@@ -45,7 +47,7 @@ export async function getUserPrivacySettings(memberId: string): Promise<PrivacyS
       // 返回默认设置
       return {
         memberId,
-        defaultPrivacyLevel: 'PUBLIC',
+        defaultPrivacyLevel: "PUBLIC",
         allowStrangerView: true,
         allowSearchIndex: false,
         allowDataCollection: true,
@@ -62,13 +64,13 @@ export async function getUserPrivacySettings(memberId: string): Promise<PrivacyS
       allowStrangerView: settings.allowStrangerView,
       allowSearchIndex: settings.allowSearchIndex,
       allowDataCollection: settings.allowDataCollection,
-      blockedUsers: JSON.parse(settings.blockedUsers || '[]'),
-      trustedFriends: JSON.parse(settings.trustedFriends || '[]'),
+      blockedUsers: JSON.parse(settings.blockedUsers || "[]"),
+      trustedFriends: JSON.parse(settings.trustedFriends || "[]"),
       autoExpireDays: settings.autoExpireDays,
       requireApproval: settings.requireApproval,
     };
   } catch (error) {
-    console.error('获取隐私设置失败:', error);
+    console.error("获取隐私设置失败:", error);
     return null;
   }
 }
@@ -78,7 +80,7 @@ export async function getUserPrivacySettings(memberId: string): Promise<PrivacyS
  */
 export async function updateUserPrivacySettings(
   memberId: string,
-  settings: Partial<PrivacySettings>
+  settings: Partial<PrivacySettings>,
 ): Promise<boolean> {
   try {
     const currentSettings = await getUserPrivacySettings(memberId);
@@ -115,7 +117,7 @@ export async function updateUserPrivacySettings(
 
     return true;
   } catch (error) {
-    console.error('更新隐私设置失败:', error);
+    console.error("更新隐私设置失败:", error);
     return false;
   }
 }
@@ -125,7 +127,7 @@ export async function updateUserPrivacySettings(
  */
 export async function checkShareAccess(
   shareToken: string,
-  viewerId?: string
+  viewerId?: string,
 ): Promise<{
   hasAccess: boolean;
   reason?: string;
@@ -141,86 +143,89 @@ export async function checkShareAccess(
     });
 
     if (!share) {
-      return { hasAccess: false, reason: '分享内容不存在' };
+      return { hasAccess: false, reason: "分享内容不存在" };
     }
 
     // 检查分享状态
-    if (share.status !== 'ACTIVE') {
-      return { hasAccess: false, reason: '分享已失效' };
+    if (share.status !== "ACTIVE") {
+      return { hasAccess: false, reason: "分享已失效" };
     }
 
     // 检查是否过期
     if (share.expiresAt && share.expiresAt < new Date()) {
-      return { hasAccess: false, reason: '分享已过期' };
+      return { hasAccess: false, reason: "分享已过期" };
     }
 
     // 获取发布者隐私设置
     const privacySettings = await getUserPrivacySettings(share.memberId);
     if (!privacySettings) {
-      return { hasAccess: false, reason: '无法获取隐私设置' };
+      return { hasAccess: false, reason: "无法获取隐私设置" };
     }
 
     // 检查是否被屏蔽
     if (viewerId && privacySettings.blockedUsers.includes(viewerId)) {
-      return { hasAccess: false, reason: '您已被屏蔽' };
+      return { hasAccess: false, reason: "您已被屏蔽" };
     }
 
     // 根据隐私级别检查访问权限
     switch (share.privacyLevel) {
-    case 'PUBLIC':
-      // 公开分享，所有人可访问
-      if (!privacySettings.allowStrangerView && !viewerId) {
-        return { hasAccess: false, reason: '不允许陌生人访问' };
-      }
-      break;
+      case "PUBLIC":
+        // 公开分享，所有人可访问
+        if (!privacySettings.allowStrangerView && !viewerId) {
+          return { hasAccess: false, reason: "不允许陌生人访问" };
+        }
+        break;
 
-    case 'FRIENDS':
-      // 好友可见
-      if (!viewerId) {
-        return { hasAccess: false, reason: '需要登录才能查看' };
-      }
-        
-      // 检查是否为好友（这里需要根据实际的好友关系来判断）
-      const isFriend = await checkFriendship(share.memberId, viewerId);
-      if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
-        return { hasAccess: false, reason: '仅好友可见' };
-      }
-      break;
+      case "FRIENDS":
+        // 好友可见
+        if (!viewerId) {
+          return { hasAccess: false, reason: "需要登录才能查看" };
+        }
 
-    case 'PRIVATE':
-      // 私密分享，只有特定用户可访问
-      if (!viewerId) {
-        return { hasAccess: false, reason: '需要授权才能查看' };
-      }
-        
-      // 检查是否在允许列表中
-      const privacyRule = await getSharePrivacyRule(share.id);
-      if (privacyRule && !privacyRule.allowedUsers.includes(viewerId)) {
-        return { hasAccess: false, reason: '无权访问此分享' };
-      }
-      break;
+        // 检查是否为好友（这里需要根据实际的好友关系来判断）
+        const isFriend = await checkFriendship(share.memberId, viewerId);
+        if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
+          return { hasAccess: false, reason: "仅好友可见" };
+        }
+        break;
+
+      case "PRIVATE":
+        // 私密分享，只有特定用户可访问
+        if (!viewerId) {
+          return { hasAccess: false, reason: "需要授权才能查看" };
+        }
+
+        // 检查是否在允许列表中
+        const privacyRule = await getSharePrivacyRule(share.id);
+        if (privacyRule && !privacyRule.allowedUsers.includes(viewerId)) {
+          return { hasAccess: false, reason: "无权访问此分享" };
+        }
+        break;
     }
 
-    return { 
-      hasAccess: true, 
-      privacyLevel: share.privacyLevel, 
+    return {
+      hasAccess: true,
+      privacyLevel: share.privacyLevel,
     };
   } catch (error) {
-    console.error('检查分享访问权限失败:', error);
-    return { hasAccess: false, reason: '系统错误' };
+    console.error("检查分享访问权限失败:", error);
+    return { hasAccess: false, reason: "系统错误" };
   }
 }
 
 /**
  * 检查两个用户是否为好友
  */
-async function checkFriendship(memberId1: string, memberId2: string): Promise<boolean> {
+async function checkFriendship(
+  memberId1: string,
+  memberId2: string,
+): Promise<boolean> {
   try {
     // 这里需要根据实际的好友关系表来实现
     // 暂时返回false，表示不是好友
     return false;
   } catch (error) {
-    console.error('检查好友关系失败:', error);
+    console.error("检查好友关系失败:", error);
     return false;
   }
 }
@@ -228,7 +233,9 @@ async function checkFriendship(memberId1: string, memberId2: string): Promise<bo
 /**
  * 获取分享隐私规则
  */
-async function getSharePrivacyRule(shareId: string): Promise<SharePrivacyRule | null> {
+async function getSharePrivacyRule(
+  shareId: string,
+): Promise<SharePrivacyRule | null> {
   try {
     const rule = await prisma.sharePrivacyRule.findUnique({
       where: { shareId },
@@ -247,11 +254,11 @@ async function getSharePrivacyRule(shareId: string): Promise<SharePrivacyRule | 
       allowLike: rule.allowLike,
       allowShare: rule.allowShare,
       expiresAfterDays: rule.expiresAfterDays || undefined,
-      allowedUsers: JSON.parse(rule.allowedUsers || '[]'),
-      blockedUsers: JSON.parse(rule.blockedUsers || '[]'),
+      allowedUsers: JSON.parse(rule.allowedUsers || "[]"),
+      blockedUsers: JSON.parse(rule.blockedUsers || "[]"),
     };
   } catch (error) {
-    console.error('获取分享隐私规则失败:', error);
+    console.error("获取分享隐私规则失败:", error);
     return null;
   }
 }
@@ -261,7 +268,7 @@ async function getSharePrivacyRule(shareId: string): Promise<SharePrivacyRule | 
  */
 export async function setSharePrivacyRule(
   shareId: string,
-  rule: Omit<SharePrivacyRule, 'id' | 'memberId' | 'contentType'>
+  rule: Omit<SharePrivacyRule, "id" | "memberId" | "contentType">,
 ): Promise<boolean> {
   try {
     // 获取分享信息
@@ -310,7 +317,7 @@ export async function setSharePrivacyRule(
 
     return true;
   } catch (error) {
-    console.error('设置分享隐私规则失败:', error);
+    console.error("设置分享隐私规则失败:", error);
     return false;
   }
 }
@@ -318,7 +325,10 @@ export async function setSharePrivacyRule(
 /**
  * 屏蔽用户
  */
-export async function blockUser(memberId: string, blockedUserId: string): Promise<boolean> {
+export async function blockUser(
+  memberId: string,
+  blockedUserId: string,
+): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -334,7 +344,7 @@ export async function blockUser(memberId: string, blockedUserId: string): Promis
 
     return true;
   } catch (error) {
-    console.error('屏蔽用户失败:', error);
+    console.error("屏蔽用户失败:", error);
     return false;
   }
 }
@@ -342,7 +352,10 @@ export async function blockUser(memberId: string, blockedUserId: string): Promis
 /**
  * 取消屏蔽用户
  */
-export async function unblockUser(memberId: string, blockedUserId: string): Promise<boolean> {
+export async function unblockUser(
+  memberId: string,
+  blockedUserId: string,
+): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -359,7 +372,7 @@ export async function unblockUser(memberId: string, blockedUserId: string): Prom
 
     return true;
   } catch (error) {
-    console.error('取消屏蔽用户失败:', error);
+    console.error("取消屏蔽用户失败:", error);
     return false;
   }
 }
@@ -367,7 +380,10 @@ export async function unblockUser(memberId: string, blockedUserId: string): Prom
 /**
  * 添加信任好友
  */
-export async function addTrustedFriend(memberId: string, friendId: string): Promise<boolean> {
+export async function addTrustedFriend(
+  memberId: string,
+  friendId: string,
+): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -383,7 +399,7 @@ export async function addTrustedFriend(memberId: string, friendId: string): Prom
 
     return true;
   } catch (error) {
-    console.error('添加信任好友失败:', error);
+    console.error("添加信任好友失败:", error);
     return false;
   }
 }
@@ -391,7 +407,10 @@ export async function addTrustedFriend(memberId: string, friendId: string): Prom
 /**
  * 移除信任好友
  */
-export async function removeTrustedFriend(memberId: string, friendId: string): Promise<boolean> {
+export async function removeTrustedFriend(
+  memberId: string,
+  friendId: string,
+): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -408,7 +427,7 @@ export async function removeTrustedFriend(memberId: string, friendId: string): P
 
     return true;
   } catch (error) {
-    console.error('移除信任好友失败:', error);
+    console.error("移除信任好友失败:", error);
     return false;
   }
 }
@@ -418,7 +437,7 @@ export async function removeTrustedFriend(memberId: string, friendId: string): P
  */
 export async function setShareExpiration(
   memberId: string,
-  days: number
+  days: number,
 ): Promise<boolean> {
   try {
     // 更新用户设置
@@ -437,7 +456,7 @@ export async function setShareExpiration(
     await prisma.sharedContent.updateMany({
       where: {
         memberId,
-        privacyLevel: 'PUBLIC',
+        privacyLevel: "PUBLIC",
         expiresAt: null,
       },
       data: {
@@ -447,7 +466,7 @@ export async function setShareExpiration(
 
     return true;
   } catch (error) {
-    console.error('设置分享过期时间失败:', error);
+    console.error("设置分享过期时间失败:", error);
     return false;
   }
 }
@@ -462,16 +481,16 @@ export async function cleanupExpiredShares(): Promise<number> {
         expiresAt: {
           lt: new Date(),
         },
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
       data: {
-        status: 'EXPIRED',
+        status: "EXPIRED",
       },
     });
 
     return result.count;
   } catch (error) {
-    console.error('清理过期分享失败:', error);
+    console.error("清理过期分享失败:", error);
     return 0;
   }
 }
@@ -488,7 +507,7 @@ export async function getSharePrivacyStats(memberId: string): Promise<{
 }> {
   try {
     const stats = await prisma.sharedContent.groupBy({
-      by: ['privacyLevel', 'status'],
+      by: ["privacyLevel", "status"],
       where: { memberId },
       _count: true,
     });
@@ -501,19 +520,19 @@ export async function getSharePrivacyStats(memberId: string): Promise<{
       expiredShares: 0,
     };
 
-    stats.forEach(stat => {
+    stats.forEach((stat) => {
       const count = stat._count;
       result.totalShares += count;
 
-      if (stat.privacyLevel === 'PUBLIC') result.publicShares += count;
-      if (stat.privacyLevel === 'FRIENDS') result.friendsShares += count;
-      if (stat.privacyLevel === 'PRIVATE') result.privateShares += count;
-      if (stat.status === 'EXPIRED') result.expiredShares += count;
+      if (stat.privacyLevel === "PUBLIC") result.publicShares += count;
+      if (stat.privacyLevel === "FRIENDS") result.friendsShares += count;
+      if (stat.privacyLevel === "PRIVATE") result.privateShares += count;
+      if (stat.status === "EXPIRED") result.expiredShares += count;
     });
 
     return result;
   } catch (error) {
-    console.error('获取分享隐私统计失败:', error);
+    console.error("获取分享隐私统计失败:", error);
     return {
       totalShares: 0,
       publicShares: 0,

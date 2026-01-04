@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/db';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
 export default async function FamilyDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
   const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin');
+    redirect("/auth/signin");
   }
 
   // 获取家庭详细信息
@@ -33,7 +33,7 @@ export default async function FamilyDetailPage({
           },
           healthGoals: {
             where: { deletedAt: null },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             take: 1,
           },
           allergies: {
@@ -51,11 +51,11 @@ export default async function FamilyDetailPage({
   // 验证用户是否属于该家庭
   const userMember = family.members.find((m) => m.userId === session.user.id);
   if (!userMember) {
-    redirect('/dashboard');
+    redirect("/dashboard");
   }
 
   const isCreator = family.creatorId === session.user.id;
-  const isAdmin = userMember.role === 'ADMIN' || isCreator;
+  const isAdmin = userMember.role === "ADMIN" || isCreator;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,9 +75,7 @@ export default async function FamilyDetailPage({
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                {session.user.name}
-              </span>
+              <span className="text-sm text-gray-700">{session.user.name}</span>
               <Link
                 href="/api/auth/signout"
                 className="text-sm text-gray-500 hover:text-gray-700"
@@ -137,9 +135,7 @@ export default async function FamilyDetailPage({
           {/* 成员列表 */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                家庭成员
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900">家庭成员</h3>
             </div>
 
             <div className="divide-y divide-gray-200">
@@ -159,18 +155,18 @@ export default async function FamilyDetailPage({
                             {member.name}
                           </h4>
                           <span className="text-sm text-gray-500">
-                            {member.gender === 'MALE' ? '男' : '女'}
+                            {member.gender === "MALE" ? "男" : "女"}
                           </span>
                           <span className="text-sm text-gray-500">
-                            {member.ageGroup === 'CHILD'
-                              ? '儿童'
-                              : member.ageGroup === 'TEENAGER'
-                                ? '青少年'
-                                : member.ageGroup === 'ADULT'
-                                  ? '成年人'
-                                  : '老年人'}
+                            {member.ageGroup === "CHILD"
+                              ? "儿童"
+                              : member.ageGroup === "TEENAGER"
+                                ? "青少年"
+                                : member.ageGroup === "ADULT"
+                                  ? "成年人"
+                                  : "老年人"}
                           </span>
-                          {member.role === 'ADMIN' && (
+                          {member.role === "ADMIN" && (
                             <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
                               管理员
                             </span>
@@ -224,14 +220,14 @@ export default async function FamilyDetailPage({
                             <div className="flex items-center justify-between">
                               <div>
                                 <span className="text-sm font-medium text-green-800">
-                                  当前目标:{' '}
-                                  {activeGoal.goalType === 'LOSE_WEIGHT'
-                                    ? '减重'
-                                    : activeGoal.goalType === 'GAIN_MUSCLE'
-                                      ? '增肌'
-                                      : activeGoal.goalType === 'MAINTAIN'
-                                        ? '维持'
-                                        : '改善健康'}
+                                  当前目标:{" "}
+                                  {activeGoal.goalType === "LOSE_WEIGHT"
+                                    ? "减重"
+                                    : activeGoal.goalType === "GAIN_MUSCLE"
+                                      ? "增肌"
+                                      : activeGoal.goalType === "MAINTAIN"
+                                        ? "维持"
+                                        : "改善健康"}
                                 </span>
                                 {activeGoal.targetWeight && (
                                   <span className="ml-2 text-sm text-green-700">

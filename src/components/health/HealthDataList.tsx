@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface HealthData {
-  id: string
-  weight: number | null
-  bodyFat: number | null
-  muscleMass: number | null
-  bloodPressureSystolic: number | null
-  bloodPressureDiastolic: number | null
-  heartRate: number | null
-  measuredAt: string
-  source: string
-  notes: string | null
+  id: string;
+  weight: number | null;
+  bodyFat: number | null;
+  muscleMass: number | null;
+  bloodPressureSystolic: number | null;
+  bloodPressureDiastolic: number | null;
+  heartRate: number | null;
+  measuredAt: string;
+  source: string;
+  notes: string | null;
 }
 
 interface HealthDataListProps {
-  memberId: string
-  onDelete?: (id: string) => void
+  memberId: string;
+  onDelete?: (id: string) => void;
 }
 
 export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
@@ -34,19 +34,19 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
       setLoading(true);
       const response = await fetch(`/api/members/${memberId}/health-data`);
       if (!response.ok) {
-        throw new Error('加载数据失败');
+        throw new Error("加载数据失败");
       }
       const result = await response.json();
       setData(result.data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : "加载失败");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除这条健康数据吗？')) {
+    if (!confirm("确定要删除这条健康数据吗？")) {
       return;
     }
 
@@ -54,12 +54,12 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
       const response = await fetch(
         `/api/members/${memberId}/health-data/${id}`,
         {
-          method: 'DELETE',
-        }
+          method: "DELETE",
+        },
       );
 
       if (!response.ok) {
-        throw new Error('删除失败');
+        throw new Error("删除失败");
       }
 
       // 更新列表
@@ -69,31 +69,31 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
         onDelete(id);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : '删除失败');
+      alert(err instanceof Error ? err.message : "删除失败");
     }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getSourceLabel = (source: string) => {
     switch (source) {
-    case 'MANUAL':
-      return '手动录入';
-    case 'WEARABLE':
-      return '可穿戴设备';
-    case 'MEDICAL_REPORT':
-      return '体检报告';
-    default:
-      return source;
+      case "MANUAL":
+        return "手动录入";
+      case "WEARABLE":
+        return "可穿戴设备";
+      case "MEDICAL_REPORT":
+        return "体检报告";
+      default:
+        return source;
     }
   };
 
@@ -163,18 +163,20 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
                 )}
                 {item.bloodPressureSystolic !== null &&
                   item.bloodPressureDiastolic !== null && (
-                  <div>
-                    <span className="text-gray-500">血压:</span>
-                    <span className="ml-2 font-medium">
-                      {item.bloodPressureSystolic}/
-                      {item.bloodPressureDiastolic} mmHg
-                    </span>
-                  </div>
-                )}
+                    <div>
+                      <span className="text-gray-500">血压:</span>
+                      <span className="ml-2 font-medium">
+                        {item.bloodPressureSystolic}/
+                        {item.bloodPressureDiastolic} mmHg
+                      </span>
+                    </div>
+                  )}
                 {item.heartRate !== null && (
                   <div>
                     <span className="text-gray-500">心率:</span>
-                    <span className="ml-2 font-medium">{item.heartRate} bpm</span>
+                    <span className="ml-2 font-medium">
+                      {item.heartRate} bpm
+                    </span>
                   </div>
                 )}
               </div>

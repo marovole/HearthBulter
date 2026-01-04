@@ -1,14 +1,14 @@
-import { prisma } from './database-optimization';
-import { logger } from '@/lib/logging/structured-logger';
-import { securityAudit } from '@/lib/security/security-audit';
+import { prisma } from "./database-optimization";
+import { logger } from "@/lib/logging/structured-logger";
+import { securityAudit } from "@/lib/security/security-audit";
 
 // 索引类型
 export enum IndexType {
-  BTREE = 'btree',
-  HASH = 'hash',
-  GIST = 'gist',
-  GIN = 'gin',
-  BRIN = 'brin',
+  BTREE = "btree",
+  HASH = "hash",
+  GIST = "gist",
+  GIN = "gin",
+  BRIN = "brin",
 }
 
 // 索引配置
@@ -21,7 +21,7 @@ interface IndexDefinition {
   partial?: string; // WHERE条件
   include?: string[]; // 覆盖索引
   description?: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
 }
 
 // 索引统计
@@ -34,7 +34,7 @@ interface IndexStats {
   tuplesRead: number;
   lastUsed?: Date;
   usage: number; // 使用率 (0-100)
-  efficiency: 'high' | 'medium' | 'low';
+  efficiency: "high" | "medium" | "low";
 }
 
 // 查询分析结果
@@ -75,141 +75,141 @@ export class IndexOptimizer {
     const indexes: IndexDefinition[] = [
       // 用户表索引
       {
-        name: 'idx_users_email',
-        table: 'users',
-        columns: ['email'],
+        name: "idx_users_email",
+        table: "users",
+        columns: ["email"],
         type: IndexType.BTREE,
         unique: true,
-        description: '用户邮箱唯一索引',
-        priority: 'high',
+        description: "用户邮箱唯一索引",
+        priority: "high",
       },
       {
-        name: 'idx_users_created_at',
-        table: 'users',
-        columns: ['createdAt'],
+        name: "idx_users_created_at",
+        table: "users",
+        columns: ["createdAt"],
         type: IndexType.BTREE,
-        description: '用户创建时间索引',
-        priority: 'medium',
+        description: "用户创建时间索引",
+        priority: "medium",
       },
       {
-        name: 'idx_users_status',
-        table: 'users',
-        columns: ['status'],
+        name: "idx_users_status",
+        table: "users",
+        columns: ["status"],
         type: IndexType.BTREE,
-        description: '用户状态索引',
-        priority: 'medium',
+        description: "用户状态索引",
+        priority: "medium",
       },
       {
-        name: 'idx_users_composite',
-        table: 'users',
-        columns: ['status', 'createdAt'],
+        name: "idx_users_composite",
+        table: "users",
+        columns: ["status", "createdAt"],
         type: IndexType.BTREE,
-        description: '用户状态和创建时间复合索引',
-        priority: 'medium',
+        description: "用户状态和创建时间复合索引",
+        priority: "medium",
       },
 
       // 食物表索引
       {
-        name: 'idx_foods_name',
-        table: 'foods',
-        columns: ['name'],
+        name: "idx_foods_name",
+        table: "foods",
+        columns: ["name"],
         type: IndexType.BTREE,
-        description: '食物名称索引',
-        priority: 'high',
+        description: "食物名称索引",
+        priority: "high",
       },
       {
-        name: 'idx_foods_name_en',
-        table: 'foods',
-        columns: ['nameEn'],
+        name: "idx_foods_name_en",
+        table: "foods",
+        columns: ["nameEn"],
         type: IndexType.BTREE,
-        description: '食物英文名称索引',
-        priority: 'high',
+        description: "食物英文名称索引",
+        priority: "high",
       },
       {
-        name: 'idx_foods_category',
-        table: 'foods',
-        columns: ['category'],
+        name: "idx_foods_category",
+        table: "foods",
+        columns: ["category"],
         type: IndexType.BTREE,
-        description: '食物分类索引',
-        priority: 'medium',
+        description: "食物分类索引",
+        priority: "medium",
       },
       {
-        name: 'idx_foods_search',
-        table: 'foods',
-        columns: ['name', 'nameEn', 'category'],
+        name: "idx_foods_search",
+        table: "foods",
+        columns: ["name", "nameEn", "category"],
         type: IndexType.GIN,
-        description: '食物搜索全文索引',
-        priority: 'high',
+        description: "食物搜索全文索引",
+        priority: "high",
       },
       {
-        name: 'idx_foods_calories',
-        table: 'foods',
-        columns: ['calories'],
+        name: "idx_foods_calories",
+        table: "foods",
+        columns: ["calories"],
         type: IndexType.BTREE,
-        description: '食物卡路里索引',
-        priority: 'medium',
+        description: "食物卡路里索引",
+        priority: "medium",
       },
       {
-        name: 'idx_foods_composite_search',
-        table: 'foods',
-        columns: ['category', 'calories'],
+        name: "idx_foods_composite_search",
+        table: "foods",
+        columns: ["category", "calories"],
         type: IndexType.BTREE,
-        description: '食物分类和卡路里复合索引',
-        priority: 'medium',
+        description: "食物分类和卡路里复合索引",
+        priority: "medium",
       },
 
       // 用户饮食记录索引
       {
-        name: 'idx_user_meals_user_date',
-        table: 'userMeals',
-        columns: ['userId', 'mealDate'],
+        name: "idx_user_meals_user_date",
+        table: "userMeals",
+        columns: ["userId", "mealDate"],
         type: IndexType.BTREE,
-        description: '用户饮食记录的用户ID和日期复合索引',
-        priority: 'high',
+        description: "用户饮食记录的用户ID和日期复合索引",
+        priority: "high",
       },
       {
-        name: 'idx_user_meals_meal_type',
-        table: 'userMeals',
-        columns: ['mealType'],
+        name: "idx_user_meals_meal_type",
+        table: "userMeals",
+        columns: ["mealType"],
         type: IndexType.BTREE,
-        description: '饮食记录类型索引',
-        priority: 'medium',
+        description: "饮食记录类型索引",
+        priority: "medium",
       },
       {
-        name: 'idx_user_meals_composite',
-        table: 'userMeals',
-        columns: ['userId', 'mealDate', 'mealType'],
+        name: "idx_user_meals_composite",
+        table: "userMeals",
+        columns: ["userId", "mealDate", "mealType"],
         type: IndexType.BTREE,
-        description: '用户饮食记录复合索引',
-        priority: 'high',
+        description: "用户饮食记录复合索引",
+        priority: "high",
       },
 
       // 营养目标索引
       {
-        name: 'idx_nutrition_goals_user',
-        table: 'nutritionGoals',
-        columns: ['userId'],
+        name: "idx_nutrition_goals_user",
+        table: "nutritionGoals",
+        columns: ["userId"],
         type: IndexType.BTREE,
-        description: '营养目标用户索引',
-        priority: 'high',
+        description: "营养目标用户索引",
+        priority: "high",
       },
       {
-        name: 'idx_nutrition_goals_date',
-        table: 'nutritionGoals',
-        columns: ['startDate', 'endDate'],
+        name: "idx_nutrition_goals_date",
+        table: "nutritionGoals",
+        columns: ["startDate", "endDate"],
         type: IndexType.BTREE,
-        description: '营养目标日期索引',
-        priority: 'medium',
+        description: "营养目标日期索引",
+        priority: "medium",
       },
     ];
 
-    indexes.forEach(index => {
+    indexes.forEach((index) => {
       this.indexDefinitions.set(index.name, index);
     });
 
-    logger.info('索引定义已加载', {
-      type: 'database',
-      component: 'index_optimizer',
+    logger.info("索引定义已加载", {
+      type: "database",
+      component: "index_optimizer",
       totalIndexes: indexes.length,
     });
   }
@@ -219,14 +219,20 @@ export class IndexOptimizer {
    */
   private startPeriodicAnalysis(): void {
     // 每小时分析一次索引使用情况
-    setInterval(async () => {
-      await this.analyzeIndexUsage();
-    }, 60 * 60 * 1000);
+    setInterval(
+      async () => {
+        await this.analyzeIndexUsage();
+      },
+      60 * 60 * 1000,
+    );
 
     // 每天检查一次索引建议
-    setInterval(async () => {
-      await this.checkIndexRecommendations();
-    }, 24 * 60 * 60 * 1000);
+    setInterval(
+      async () => {
+        await this.checkIndexRecommendations();
+      },
+      24 * 60 * 60 * 1000,
+    );
   }
 
   /**
@@ -270,16 +276,15 @@ export class IndexOptimizer {
         this.indexStats.set(stats.name, stats);
       }
 
-      logger.debug('索引使用情况分析完成', {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.debug("索引使用情况分析完成", {
+        type: "database",
+        component: "index_optimizer",
         analyzedIndexes: results.length,
       });
-
     } catch (error) {
-      logger.error('索引使用情况分析失败', error as Error, {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.error("索引使用情况分析失败", error as Error, {
+        type: "database",
+        component: "index_optimizer",
       });
     }
   }
@@ -287,18 +292,18 @@ export class IndexOptimizer {
   /**
    * 计算索引效率
    */
-  private calculateEfficiency(indexStats: any): 'high' | 'medium' | 'low' {
+  private calculateEfficiency(indexStats: any): "high" | "medium" | "low" {
     const scans = indexStats.idx_scan || 0;
     const tuplesRead = indexStats.idx_tup_read || 0;
     const tuplesFetched = indexStats.idx_tup_fetch || 0;
 
-    if (scans === 0) return 'low';
+    if (scans === 0) return "low";
 
-    const efficiency = tuplesFetched > 0 ? (tuplesRead / tuplesFetched) : 0;
+    const efficiency = tuplesFetched > 0 ? tuplesRead / tuplesFetched : 0;
 
-    if (efficiency < 0.1) return 'high';      // 读取的数据很少，效率高
-    if (efficiency < 0.5) return 'medium';    // 中等效率
-    return 'low';                              // 读取了大量数据，效率低
+    if (efficiency < 0.1) return "high"; // 读取的数据很少，效率高
+    if (efficiency < 0.5) return "medium"; // 中等效率
+    return "low"; // 读取了大量数据，效率低
   }
 
   /**
@@ -307,46 +312,47 @@ export class IndexOptimizer {
   private async checkIndexRecommendations(): Promise<void> {
     try {
       // 查找未使用的索引
-      const unusedIndexes = Array.from(this.indexStats.values())
-        .filter(stats => stats.scans === 0 && stats.efficiency === 'low');
+      const unusedIndexes = Array.from(this.indexStats.values()).filter(
+        (stats) => stats.scans === 0 && stats.efficiency === "low",
+      );
 
       if (unusedIndexes.length > 0) {
-        logger.info('发现未使用的索引', {
-          type: 'database',
-          component: 'index_optimizer',
-          unusedIndexes: unusedIndexes.map(idx => idx.name),
+        logger.info("发现未使用的索引", {
+          type: "database",
+          component: "index_optimizer",
+          unusedIndexes: unusedIndexes.map((idx) => idx.name),
         });
 
         securityAudit.logSuspiciousActivity(
-          '数据库索引优化建议',
+          "数据库索引优化建议",
           `发现 ${unusedIndexes.length} 个未使用的索引，建议删除以提升性能`,
-          'low',
+          "low",
           {
-            unusedIndexes: unusedIndexes.map(idx => ({
+            unusedIndexes: unusedIndexes.map((idx) => ({
               name: idx.name,
               table: idx.table,
               size: idx.size,
             })),
-          }
+          },
         );
       }
 
       // 查找低效索引
-      const inefficientIndexes = Array.from(this.indexStats.values())
-        .filter(stats => stats.efficiency === 'low' && stats.scans > 0);
+      const inefficientIndexes = Array.from(this.indexStats.values()).filter(
+        (stats) => stats.efficiency === "low" && stats.scans > 0,
+      );
 
       if (inefficientIndexes.length > 0) {
-        logger.info('发现低效索引', {
-          type: 'database',
-          component: 'index_optimizer',
-          inefficientIndexes: inefficientIndexes.map(idx => idx.name),
+        logger.info("发现低效索引", {
+          type: "database",
+          component: "index_optimizer",
+          inefficientIndexes: inefficientIndexes.map((idx) => idx.name),
         });
       }
-
     } catch (error) {
-      logger.error('索引建议检查失败', error as Error, {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.error("索引建议检查失败", error as Error, {
+        type: "database",
+        component: "index_optimizer",
       });
     }
   }
@@ -356,40 +362,41 @@ export class IndexOptimizer {
    */
   async createIndex(indexDefinition: IndexDefinition): Promise<void> {
     try {
-      const { name, table, columns, type, unique, partial, include } = indexDefinition;
+      const { name, table, columns, type, unique, partial, include } =
+        indexDefinition;
 
-      let sql = `CREATE ${unique ? 'UNIQUE ' : ''}INDEX "${name}" ON "${table}" `;
+      let sql = `CREATE ${unique ? "UNIQUE " : ""}INDEX "${name}" ON "${table}" `;
 
       // 添加索引类型
       switch (type) {
-      case IndexType.BTREE:
-        sql += 'USING btree ';
-        break;
-      case IndexType.HASH:
-        sql += 'USING hash ';
-        break;
-      case IndexType.GIST:
-        sql += 'USING gist ';
-        break;
-      case IndexType.GIN:
-        sql += 'USING gin ';
-        break;
-      case IndexType.BRIN:
-        sql += 'USING brin ';
-        break;
+        case IndexType.BTREE:
+          sql += "USING btree ";
+          break;
+        case IndexType.HASH:
+          sql += "USING hash ";
+          break;
+        case IndexType.GIST:
+          sql += "USING gist ";
+          break;
+        case IndexType.GIN:
+          sql += "USING gin ";
+          break;
+        case IndexType.BRIN:
+          sql += "USING brin ";
+          break;
       }
 
       // 添加列
       if (type === IndexType.GIN) {
         // GIN索引用于全文搜索
-        sql += `((to_tsvector('english', ${columns.map(col => `"${col}"`).join(' || ')})))`;
+        sql += `((to_tsvector('english', ${columns.map((col) => `"${col}"`).join(" || ")})))`;
       } else {
-        sql += `(${columns.map(col => `"${col}"`).join(', ')})`;
+        sql += `(${columns.map((col) => `"${col}"`).join(", ")})`;
       }
 
       // 添加包含列（覆盖索引）
       if (include && include.length > 0) {
-        sql += ` INCLUDE (${include.map(col => `"${col}"`).join(', ')})`;
+        sql += ` INCLUDE (${include.map((col) => `"${col}"`).join(", ")})`;
       }
 
       // 添加部分索引条件
@@ -402,20 +409,19 @@ export class IndexOptimizer {
       // 更新索引定义
       this.indexDefinitions.set(name, indexDefinition);
 
-      logger.info('索引创建成功', {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.info("索引创建成功", {
+        type: "database",
+        component: "index_optimizer",
         index: name,
         table,
         columns,
         type,
         sql,
       });
-
     } catch (error) {
-      logger.error('索引创建失败', error as Error, {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.error("索引创建失败", error as Error, {
+        type: "database",
+        component: "index_optimizer",
         index: indexDefinition.name,
       });
 
@@ -433,16 +439,15 @@ export class IndexOptimizer {
       this.indexDefinitions.delete(indexName);
       this.indexStats.delete(indexName);
 
-      logger.info('索引删除成功', {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.info("索引删除成功", {
+        type: "database",
+        component: "index_optimizer",
         index: indexName,
       });
-
     } catch (error) {
-      logger.error('索引删除失败', error as Error, {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.error("索引删除失败", error as Error, {
+        type: "database",
+        component: "index_optimizer",
         index: indexName,
       });
 
@@ -457,16 +462,15 @@ export class IndexOptimizer {
     try {
       await prisma.$executeRawUnsafe(`REINDEX INDEX "${indexName}"`);
 
-      logger.info('索引重建成功', {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.info("索引重建成功", {
+        type: "database",
+        component: "index_optimizer",
         index: indexName,
       });
-
     } catch (error) {
-      logger.error('索引重建失败', error as Error, {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.error("索引重建失败", error as Error, {
+        type: "database",
+        component: "index_optimizer",
         index: indexName,
       });
 
@@ -483,11 +487,12 @@ export class IndexOptimizer {
       const explainQuery = `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${query}`;
       const result = await prisma.$queryRawUnsafe<any[]>(explainQuery);
 
-      const plan = result[0]['QUERY PLAN'][0];
+      const plan = result[0]["QUERY PLAN"][0];
       const executionPlan = plan.Plan;
 
       // 分析执行计划并推荐索引
-      const recommendedIndexes = this.generateIndexRecommendations(executionPlan);
+      const recommendedIndexes =
+        this.generateIndexRecommendations(executionPlan);
       const existingIndexesUsed = this.extractUsedIndexes(executionPlan);
       const missingIndexes = this.findMissingIndexes(executionPlan);
 
@@ -496,13 +501,13 @@ export class IndexOptimizer {
         recommendedIndexes,
         missingIndexes,
         existingIndexesUsed,
-        estimatedCost: plan['Execution Time'] || 0,
+        estimatedCost: plan["Execution Time"] || 0,
         optimizationScore: this.calculateOptimizationScore(plan),
       };
 
-      logger.debug('查询分析完成', {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.debug("查询分析完成", {
+        type: "database",
+        component: "index_optimizer",
         queryHash: this.hashQuery(query),
         cost: analysis.estimatedCost,
         score: analysis.optimizationScore,
@@ -510,11 +515,10 @@ export class IndexOptimizer {
       });
 
       return analysis;
-
     } catch (error) {
-      logger.error('查询分析失败', error as Error, {
-        type: 'database',
-        component: 'index_optimizer',
+      logger.error("查询分析失败", error as Error, {
+        type: "database",
+        component: "index_optimizer",
         query: query.substring(0, 100),
       });
 
@@ -529,20 +533,20 @@ export class IndexOptimizer {
     const recommendations: IndexDefinition[] = [];
 
     // 分析顺序扫描
-    if (plan['Node Type'] === 'Seq Scan') {
-      const relation = plan['Relation Name'];
+    if (plan["Node Type"] === "Seq Scan") {
+      const relation = plan["Relation Name"];
       recommendations.push({
         name: `idx_${relation}_auto_${Date.now()}`,
         table: relation,
-        columns: ['id'], // 默认推荐ID索引
+        columns: ["id"], // 默认推荐ID索引
         type: IndexType.BTREE,
         description: `自动生成的索引建议 - 避免${relation}表的顺序扫描`,
-        priority: 'high',
+        priority: "high",
       });
     }
 
     // 分析嵌套循环连接
-    if (plan['Node Type'] === 'Nested Loop') {
+    if (plan["Node Type"] === "Nested Loop") {
       // 分析连接条件并推荐复合索引
       // 这里可以实现更复杂的逻辑
     }
@@ -556,8 +560,11 @@ export class IndexOptimizer {
   private extractUsedIndexes(plan: any): string[] {
     const indexes: string[] = [];
 
-    if (plan['Node Type'] === 'Index Scan' || plan['Node Type'] === 'Index Only Scan') {
-      indexes.push(plan['Index Name']);
+    if (
+      plan["Node Type"] === "Index Scan" ||
+      plan["Node Type"] === "Index Only Scan"
+    ) {
+      indexes.push(plan["Index Name"]);
     }
 
     // 递归检查子计划
@@ -585,14 +592,14 @@ export class IndexOptimizer {
     let score = 100;
 
     // 根据执行时间扣分
-    const executionTime = plan['Execution Time'] || 0;
+    const executionTime = plan["Execution Time"] || 0;
     if (executionTime > 1000) score -= 30;
     else if (executionTime > 500) score -= 15;
     else if (executionTime > 100) score -= 5;
 
     // 根据计划类型扣分
-    if (plan['Node Type'] === 'Seq Scan') score -= 20;
-    if (plan['Node Type'] === 'Nested Loop') score -= 10;
+    if (plan["Node Type"] === "Seq Scan") score -= 20;
+    if (plan["Node Type"] === "Nested Loop") score -= 10;
 
     return Math.max(0, score);
   }
@@ -601,8 +608,8 @@ export class IndexOptimizer {
    * 哈希查询
    */
   private hashQuery(query: string): string {
-    const crypto = require('crypto');
-    return crypto.createHash('md5').update(query).digest('hex').substring(0, 8);
+    const crypto = require("crypto");
+    return crypto.createHash("md5").update(query).digest("hex").substring(0, 8);
   }
 
   /**
@@ -629,11 +636,13 @@ export class IndexOptimizer {
   }> {
     await this.analyzeIndexUsage();
 
-    const unusedIndexes = Array.from(this.indexStats.values())
-      .filter(stats => stats.scans === 0 && stats.efficiency === 'low');
+    const unusedIndexes = Array.from(this.indexStats.values()).filter(
+      (stats) => stats.scans === 0 && stats.efficiency === "low",
+    );
 
-    const inefficientIndexes = Array.from(this.indexStats.values())
-      .filter(stats => stats.efficiency === 'low' && stats.scans > 0);
+    const inefficientIndexes = Array.from(this.indexStats.values()).filter(
+      (stats) => stats.efficiency === "low" && stats.scans > 0,
+    );
 
     // 这里可以实现缺失索引检测
     const missingIndexes: IndexDefinition[] = [];

@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { foodRepository } from '@/lib/repositories/food-repository-singleton';
+import { NextRequest, NextResponse } from "next/server";
+import { foodRepository } from "@/lib/repositories/food-repository-singleton";
 
 /**
  * GET /api/foods/popular
@@ -9,11 +9,11 @@ import { foodRepository } from '@/lib/repositories/food-repository-singleton';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get("limit") || "20");
 
     const foods = await foodRepository.findPopular(limit);
 
@@ -22,13 +22,10 @@ export async function GET(request: NextRequest) {
         foods,
         total: foods.length,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error('获取热门食材失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("获取热门食材失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

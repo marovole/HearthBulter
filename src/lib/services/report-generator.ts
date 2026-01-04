@@ -1,53 +1,59 @@
 /**
  * Report Generator
  * 健康报告生成服务
- * 
+ *
  * 生成周报和月报，包含健康数据汇总、趋势分析和个性化建议
  */
 
-import { analyticsService } from './analytics-service';
-import { healthScoreCalculator } from './health-score-calculator';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { analyticsService } from "./analytics-service";
+import { healthScoreCalculator } from "./health-score-calculator";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
 
 export interface WeeklyReport {
   period: {
-    start: Date
-    end: Date
-  }
-  memberName: string
+    start: Date;
+    end: Date;
+  };
+  memberName: string;
   summary: {
-    weightChange: number
-    weightChangePercent: number
-    currentWeight: number | null
-    targetWeight: number | null
-    healthScore: number
-    dataCompletenessRate: number
-  }
+    weightChange: number;
+    weightChangePercent: number;
+    currentWeight: number | null;
+    targetWeight: number | null;
+    healthScore: number;
+    dataCompletenessRate: number;
+  };
   weightTrend: {
-    min: number
-    max: number
-    average: number
-    dataPoints: number
-  }
+    min: number;
+    max: number;
+    average: number;
+    dataPoints: number;
+  };
   nutritionSummary: {
-    targetCalories: number | null
-    adherenceRate: number
-  }
+    targetCalories: number | null;
+    adherenceRate: number;
+  };
   goalProgress: Array<{
-    goalType: string
-    currentProgress: number
-    onTrack: boolean
-  }>
-  insights: string[]
-  recommendations: string[]
+    goalType: string;
+    currentProgress: number;
+    onTrack: boolean;
+  }>;
+  insights: string[];
+  recommendations: string[];
 }
 
 export interface MonthlyReport extends WeeklyReport {
   weeklyBreakdown: Array<{
-    week: string
-    averageWeight: number
-    dataCompletenessRate: number
-  }>
+    week: string;
+    averageWeight: number;
+    dataCompletenessRate: number;
+  }>;
 }
 
 export class ReportGenerator {
@@ -56,7 +62,7 @@ export class ReportGenerator {
    */
   async generateWeeklyReport(
     memberId: string,
-    memberName: string
+    memberName: string,
   ): Promise<WeeklyReport> {
     const now = new Date();
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
@@ -66,7 +72,7 @@ export class ReportGenerator {
     const [weightTrend, nutritionSummary, goalProgress, healthScore] =
       await Promise.all([
         analyticsService.analyzeWeightTrend(memberId, 7),
-        analyticsService.summarizeNutrition(memberId, 'weekly'),
+        analyticsService.summarizeNutrition(memberId, "weekly"),
         analyticsService.calculateGoalProgress(memberId),
         healthScoreCalculator.calculateHealthScore(memberId),
       ]);
@@ -76,7 +82,7 @@ export class ReportGenerator {
       weightTrend,
       nutritionSummary,
       goalProgress,
-      healthScore
+      healthScore,
     );
 
     return {
@@ -118,7 +124,7 @@ export class ReportGenerator {
    */
   async generateMonthlyReport(
     memberId: string,
-    memberName: string
+    memberName: string,
   ): Promise<MonthlyReport> {
     const now = new Date();
     const monthStart = startOfMonth(now);
@@ -128,7 +134,7 @@ export class ReportGenerator {
     const [weightTrend, nutritionSummary, goalProgress, healthScore] =
       await Promise.all([
         analyticsService.analyzeWeightTrend(memberId, 30),
-        analyticsService.summarizeNutrition(memberId, 'monthly'),
+        analyticsService.summarizeNutrition(memberId, "monthly"),
         analyticsService.calculateGoalProgress(memberId),
         healthScoreCalculator.calculateHealthScore(memberId),
       ]);
@@ -141,7 +147,7 @@ export class ReportGenerator {
       weightTrend,
       nutritionSummary,
       goalProgress,
-      healthScore
+      healthScore,
     );
 
     return {
@@ -183,8 +189,10 @@ export class ReportGenerator {
    * 生成周度分解数据
    */
   private async generateWeeklyBreakdown(
-    memberId: string
-  ): Promise<Array<{ week: string; averageWeight: number; dataCompletenessRate: number }>> {
+    memberId: string,
+  ): Promise<
+    Array<{ week: string; averageWeight: number; dataCompletenessRate: number }>
+  > {
     // TODO: 实现周度分解逻辑
     // 暂时返回空数组
     return [];
@@ -197,14 +205,14 @@ export class ReportGenerator {
     weightTrend: any,
     nutritionSummary: any,
     goalProgress: any[],
-    healthScore: any
+    healthScore: any,
   ): string[] {
     const insights: string[] = [];
 
     // 体重变化洞察
     if (Math.abs(weightTrend.changePercent) > 3) {
       insights.push(
-        `本周体重${weightTrend.change >= 0 ? '增加' : '减少'}了${Math.abs(weightTrend.changePercent).toFixed(1)}%，${weightTrend.change >= 0 ? '建议关注饮食控制' : '继续保持良好习惯'}`
+        `本周体重${weightTrend.change >= 0 ? "增加" : "减少"}了${Math.abs(weightTrend.changePercent).toFixed(1)}%，${weightTrend.change >= 0 ? "建议关注饮食控制" : "继续保持良好习惯"}`,
       );
     }
 
@@ -212,13 +220,13 @@ export class ReportGenerator {
     const activeGoals = goalProgress.filter((g) => g.onTrack);
     if (activeGoals.length > 0) {
       insights.push(
-        `您有${activeGoals.length}个健康目标正在按计划进行中，继续保持！`
+        `您有${activeGoals.length}个健康目标正在按计划进行中，继续保持！`,
       );
     } else if (goalProgress.length > 0) {
       const offTrackGoals = goalProgress.filter((g) => !g.onTrack);
       if (offTrackGoals.length > 0) {
         insights.push(
-          `有${offTrackGoals.length}个目标进度滞后，建议调整计划或咨询专业人士`
+          `有${offTrackGoals.length}个目标进度滞后，建议调整计划或咨询专业人士`,
         );
       }
     }
@@ -226,16 +234,16 @@ export class ReportGenerator {
     // 数据完整性洞察
     if (healthScore.details.dataCompletenessRate < 50) {
       insights.push(
-        `数据完整性较低（${Math.round(healthScore.details.dataCompletenessRate)}%），建议每天记录健康数据以获得更准确的洞察`
+        `数据完整性较低（${Math.round(healthScore.details.dataCompletenessRate)}%），建议每天记录健康数据以获得更准确的洞察`,
       );
     }
 
     // 健康评分洞察
     if (healthScore.totalScore >= 80) {
-      insights.push('您的健康评分表现优秀，继续保持当前的健康习惯！');
+      insights.push("您的健康评分表现优秀，继续保持当前的健康习惯！");
     } else if (healthScore.totalScore < 60) {
       insights.push(
-        `健康评分为${healthScore.totalScore}分，建议根据系统建议改进健康习惯`
+        `健康评分为${healthScore.totalScore}分，建议根据系统建议改进健康习惯`,
       );
     }
 
@@ -246,65 +254,65 @@ export class ReportGenerator {
    * 格式化报告为文本（用于导出）
    */
   formatReportAsText(report: WeeklyReport | MonthlyReport): string {
-    const isMonthly = 'weeklyBreakdown' in report;
-    const periodLabel = isMonthly ? '月度' : '周度';
-    const periodRange = `${format(report.period.start, 'yyyy年MM月dd日')} - ${format(report.period.end, 'yyyy年MM月dd日')}`;
+    const isMonthly = "weeklyBreakdown" in report;
+    const periodLabel = isMonthly ? "月度" : "周度";
+    const periodRange = `${format(report.period.start, "yyyy年MM月dd日")} - ${format(report.period.end, "yyyy年MM月dd日")}`;
 
     let text = `# ${periodLabel}健康报告\n\n`;
     text += `**成员**: ${report.memberName}\n`;
     text += `**报告期间**: ${periodRange}\n\n`;
 
-    text += '## 数据摘要\n\n';
-    text += `- 当前体重: ${report.summary.currentWeight?.toFixed(1) || '--'} kg\n`;
+    text += "## 数据摘要\n\n";
+    text += `- 当前体重: ${report.summary.currentWeight?.toFixed(1) || "--"} kg\n`;
     if (report.summary.targetWeight) {
       text += `- 目标体重: ${report.summary.targetWeight.toFixed(1)} kg\n`;
     }
-    text += `- 体重变化: ${report.summary.weightChange >= 0 ? '+' : ''}${report.summary.weightChange.toFixed(1)} kg (${report.summary.weightChangePercent >= 0 ? '+' : ''}${report.summary.weightChangePercent.toFixed(1)}%)\n`;
+    text += `- 体重变化: ${report.summary.weightChange >= 0 ? "+" : ""}${report.summary.weightChange.toFixed(1)} kg (${report.summary.weightChangePercent >= 0 ? "+" : ""}${report.summary.weightChangePercent.toFixed(1)}%)\n`;
     text += `- 健康评分: ${report.summary.healthScore} 分\n`;
     text += `- 数据完整性: ${Math.round(report.summary.dataCompletenessRate)}%\n\n`;
 
-    text += '## 体重趋势\n\n';
+    text += "## 体重趋势\n\n";
     text += `- 最高: ${report.weightTrend.max.toFixed(1)} kg\n`;
     text += `- 最低: ${report.weightTrend.min.toFixed(1)} kg\n`;
     text += `- 平均: ${report.weightTrend.average.toFixed(1)} kg\n`;
     text += `- 记录次数: ${report.weightTrend.dataPoints} 次\n\n`;
 
     if (report.nutritionSummary.targetCalories) {
-      text += '## 营养摄入\n\n';
+      text += "## 营养摄入\n\n";
       text += `- 目标热量: ${report.nutritionSummary.targetCalories} kcal\n`;
       text += `- 达标率: ${report.nutritionSummary.adherenceRate.toFixed(0)}%\n\n`;
     }
 
     if (report.goalProgress.length > 0) {
-      text += '## 目标进度\n\n';
+      text += "## 目标进度\n\n";
       report.goalProgress.forEach((goal) => {
         const goalTypeLabel =
-          goal.goalType === 'LOSE_WEIGHT'
-            ? '减重'
-            : goal.goalType === 'GAIN_MUSCLE'
-              ? '增肌'
-              : goal.goalType === 'MAINTAIN'
-                ? '维持'
-                : '改善健康';
-        text += `- ${goalTypeLabel}: ${Math.round(goal.currentProgress)}% ${goal.onTrack ? '✓' : '⚠'}\n`;
+          goal.goalType === "LOSE_WEIGHT"
+            ? "减重"
+            : goal.goalType === "GAIN_MUSCLE"
+              ? "增肌"
+              : goal.goalType === "MAINTAIN"
+                ? "维持"
+                : "改善健康";
+        text += `- ${goalTypeLabel}: ${Math.round(goal.currentProgress)}% ${goal.onTrack ? "✓" : "⚠"}\n`;
       });
-      text += '\n';
+      text += "\n";
     }
 
     if (report.insights.length > 0) {
-      text += '## 数据洞察\n\n';
+      text += "## 数据洞察\n\n";
       report.insights.forEach((insight) => {
         text += `- ${insight}\n`;
       });
-      text += '\n';
+      text += "\n";
     }
 
     if (report.recommendations.length > 0) {
-      text += '## 改进建议\n\n';
+      text += "## 改进建议\n\n";
       report.recommendations.forEach((rec) => {
         text += `- ${rec}\n`;
       });
-      text += '\n';
+      text += "\n";
     }
 
     return text;
@@ -313,4 +321,3 @@ export class ReportGenerator {
 
 // 导出单例
 export const reportGenerator = new ReportGenerator();
-

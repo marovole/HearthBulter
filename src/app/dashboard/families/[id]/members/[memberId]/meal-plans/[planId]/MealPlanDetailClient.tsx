@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { WeeklyPlan } from '@/components/meal-planning/WeeklyPlan';
-import { NutritionSummary } from '@/components/meal-planning/NutritionSummary';
-import { SwapIngredient } from '@/components/meal-planning/SwapIngredient';
-import type { MealPlan, Meal, MealIngredient } from '@prisma/client';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { WeeklyPlan } from "@/components/meal-planning/WeeklyPlan";
+import { NutritionSummary } from "@/components/meal-planning/NutritionSummary";
+import { SwapIngredient } from "@/components/meal-planning/SwapIngredient";
+import type { MealPlan, Meal, MealIngredient } from "@prisma/client";
 
 interface MealPlanWithMeals extends MealPlan {
   meals: (Meal & {
     ingredients: (MealIngredient & {
       food: {
-        id: string
-        name: string
-      }
-    })[]
-  })[]
+        id: string;
+        name: string;
+      };
+    })[];
+  })[];
 }
 
 interface MealPlanDetailClientProps {
-  mealPlan: MealPlanWithMeals
-  memberName: string
-  familyId: string
-  memberId: string
+  mealPlan: MealPlanWithMeals;
+  memberName: string;
+  familyId: string;
+  memberId: string;
 }
 
 export function MealPlanDetailClient({
@@ -42,44 +42,44 @@ export function MealPlanDetailClient({
 
   const handleReplaceSuccess = async () => {
     setSwapMealId(null);
-    
+
     // 刷新数据
     try {
       const response = await fetch(`/api/members/${memberId}/meal-plans`);
       if (response.ok) {
         const data = await response.json();
         const updatedPlan = data.mealPlans.find(
-          (p: MealPlanWithMeals) => p.id === mealPlan.id
+          (p: MealPlanWithMeals) => p.id === mealPlan.id,
         );
         if (updatedPlan) {
           setMealPlan(updatedPlan);
         }
       }
     } catch (err) {
-      console.error('刷新数据失败:', err);
+      console.error("刷新数据失败:", err);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('确定要删除这个食谱计划吗？')) {
+    if (!confirm("确定要删除这个食谱计划吗？")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/meal-plans/${mealPlan.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('删除失败');
+        throw new Error("删除失败");
       }
 
       // 导航回列表页
       router.push(
-        `/dashboard/families/${familyId}/members/${memberId}/meal-plans`
+        `/dashboard/families/${familyId}/members/${memberId}/meal-plans`,
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : '删除失败');
+      alert(err instanceof Error ? err.message : "删除失败");
     }
   };
 
@@ -88,21 +88,21 @@ export function MealPlanDetailClient({
       const response = await fetch(
         `/api/meal-plans/${mealPlan.id}/shopping-list`,
         {
-          method: 'POST',
-        }
+          method: "POST",
+        },
       );
 
       if (!response.ok) {
-        throw new Error('生成购物清单失败');
+        throw new Error("生成购物清单失败");
       }
 
       const data = await response.json();
       // 导航到购物清单页面
       router.push(
-        `/dashboard/families/${familyId}/members/${memberId}/shopping-lists/${data.shoppingList.id}`
+        `/dashboard/families/${familyId}/members/${memberId}/shopping-lists/${data.shoppingList.id}`,
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : '生成失败');
+      alert(err instanceof Error ? err.message : "生成失败");
     }
   };
 
@@ -209,4 +209,3 @@ export function MealPlanDetailClient({
     </div>
   );
 }
-

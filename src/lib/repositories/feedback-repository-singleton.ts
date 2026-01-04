@@ -7,9 +7,9 @@
  * 因为 /api/ai/feedback 已经是纯 Supabase 端点
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseFeedbackRepository } from './implementations/supabase-feedback-repository';
-import type { FeedbackRepository } from './interfaces/feedback-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseFeedbackRepository } from "./implementations/supabase-feedback-repository";
+import type { FeedbackRepository } from "./interfaces/feedback-repository";
 
 let instance: FeedbackRepository | null = null;
 

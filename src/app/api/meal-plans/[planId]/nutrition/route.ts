@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { nutritionCalculator } from '@/lib/services/nutrition-calculator';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { nutritionCalculator } from "@/lib/services/nutrition-calculator";
 
 /**
  * GET /api/meal-plans/:planId/nutrition
@@ -12,16 +12,16 @@ import { nutritionCalculator } from '@/lib/services/nutrition-calculator';
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ planId: string }> }
+  { params }: { params: Promise<{ planId: string }> },
 ) {
   try {
     const { planId } = await params;
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 查询食谱计划并验证权限
@@ -54,17 +54,18 @@ export async function GET(
     });
 
     if (!mealPlan) {
-      return NextResponse.json({ error: '食谱计划不存在' }, { status: 404 });
+      return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
     const isCreator = mealPlan.member.family.creatorId === session.user.id;
-    const isAdmin = mealPlan.member.family.members[0]?.role === 'ADMIN' || isCreator;
+    const isAdmin =
+      mealPlan.member.family.members[0]?.role === "ADMIN" || isCreator;
     const isSelf = mealPlan.member.userId === session.user.id;
 
     if (!isAdmin && !isSelf) {
       return NextResponse.json(
-        { error: '无权限查看该食谱的营养汇总' },
-        { status: 403 }
+        { error: "无权限查看该食谱的营养汇总" },
+        { status: 403 },
       );
     }
 
@@ -73,16 +74,17 @@ export async function GET(
       meal.ingredients.map((ing) => ({
         foodId: ing.foodId,
         amount: ing.amount,
-      }))
+      })),
     );
 
     const nutrition = await nutritionCalculator.calculateBatch(allIngredients);
 
     // 计算每日平均值
-    const days = Math.ceil(
-      (mealPlan.endDate.getTime() - mealPlan.startDate.getTime()) /
-        (1000 * 60 * 60 * 24)
-    ) + 1;
+    const days =
+      Math.ceil(
+        (mealPlan.endDate.getTime() - mealPlan.startDate.getTime()) /
+          (1000 * 60 * 60 * 24),
+      ) + 1;
 
     return NextResponse.json(
       {
@@ -106,13 +108,10 @@ export async function GET(
           fat: mealPlan.targetFat,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error('获取营养汇总失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("获取营养汇总失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

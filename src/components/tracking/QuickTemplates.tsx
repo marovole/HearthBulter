@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Clock, Star, Edit, Trash2, Plus } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Clock, Star, Edit, Trash2, Plus } from "lucide-react";
 
 interface TemplateFood {
   foodId: string;
@@ -16,7 +16,7 @@ interface TemplateFood {
 interface Template {
   id: string;
   name: string;
-  mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
   foods: TemplateFood[];
   totalCalories: number;
   usageCount: number;
@@ -26,7 +26,7 @@ interface Template {
 
 interface QuickTemplatesProps {
   memberId: string;
-  mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
   onSelectTemplate: (template: Template) => void;
   onEditTemplate?: (template: Template) => void;
   onCreateTemplate?: () => void;
@@ -51,48 +51,48 @@ export function QuickTemplates({
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/tracking/templates?memberId=${memberId}&mealType=${mealType}`
+        `/api/tracking/templates?memberId=${memberId}&mealType=${mealType}`,
       );
       if (response.ok) {
         const data = await response.json();
         setTemplates(data);
       }
     } catch (error) {
-      console.error('加载模板失败:', error);
+      console.error("加载模板失败:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!confirm('确定要删除这个模板吗？')) return;
+    if (!confirm("确定要删除这个模板吗？")) return;
 
     try {
       const response = await fetch(`/api/tracking/templates/${templateId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      
+
       if (response.ok) {
-        setTemplates(templates.filter(t => t.id !== templateId));
+        setTemplates(templates.filter((t) => t.id !== templateId));
       }
     } catch (error) {
-      console.error('删除模板失败:', error);
+      console.error("删除模板失败:", error);
     }
   };
 
   const getMealTypeLabel = (type: string) => {
     const labels = {
-      BREAKFAST: '早餐',
-      LUNCH: '午餐',
-      DINNER: '晚餐',
-      SNACK: '加餐',
+      BREAKFAST: "早餐",
+      LUNCH: "午餐",
+      DINNER: "晚餐",
+      SNACK: "加餐",
     };
     return labels[type as keyof typeof labels] || type;
   };
 
-  const displayTemplates = showAll 
-    ? templates 
-    : templates.filter(t => t.isRecommended).slice(0, 3);
+  const displayTemplates = showAll
+    ? templates
+    : templates.filter((t) => t.isRecommended).slice(0, 3);
 
   if (isLoading) {
     return (
@@ -124,7 +124,7 @@ export function QuickTemplates({
             ({getMealTypeLabel(mealType)})
           </span>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {onCreateTemplate && (
             <button
@@ -135,13 +135,13 @@ export function QuickTemplates({
               <span>新建模板</span>
             </button>
           )}
-          
+
           {templates.length > 3 && (
             <button
               onClick={() => setShowAll(!showAll)}
               className="text-sm text-blue-600 hover:text-blue-700"
             >
-              {showAll ? '收起' : `查看全部 (${templates.length})`}
+              {showAll ? "收起" : `查看全部 (${templates.length})`}
             </button>
           )}
         </div>
@@ -151,7 +151,9 @@ export function QuickTemplates({
       {displayTemplates.length === 0 ? (
         <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
           <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-2">暂无{getMealTypeLabel(mealType)}模板</p>
+          <p className="text-gray-500 mb-2">
+            暂无{getMealTypeLabel(mealType)}模板
+          </p>
           {onCreateTemplate && (
             <button
               onClick={onCreateTemplate}
@@ -172,7 +174,9 @@ export function QuickTemplates({
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <h4 className="font-medium text-gray-900">{template.name}</h4>
+                    <h4 className="font-medium text-gray-900">
+                      {template.name}
+                    </h4>
                     {template.isRecommended && (
                       <Star className="w-4 h-4 text-yellow-500 fill-current" />
                     )}
@@ -183,7 +187,7 @@ export function QuickTemplates({
                     <span>使用 {template.usageCount} 次</span>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-1">
                   {onEditTemplate && (
                     <button
@@ -207,13 +211,14 @@ export function QuickTemplates({
               {/* Food List */}
               <div className="space-y-2 mb-3">
                 {template.foods.slice(0, 3).map((food, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between text-sm"
+                  >
                     <span className="text-gray-600">
                       {food.name} × {food.amount}g
                     </span>
-                    <span className="text-gray-500">
-                      {food.calories} kcal
-                    </span>
+                    <span className="text-gray-500">{food.calories} kcal</span>
                   </div>
                 ))}
                 {template.foods.length > 3 && (
@@ -228,25 +233,38 @@ export function QuickTemplates({
                 <div className="text-center p-2 bg-gray-50 rounded">
                   <p className="text-gray-500">热量</p>
                   <p className="font-medium text-orange-600">
-                    {template.foods.reduce((sum, food) => sum + food.calories, 0)} kcal
+                    {template.foods.reduce(
+                      (sum, food) => sum + food.calories,
+                      0,
+                    )}{" "}
+                    kcal
                   </p>
                 </div>
                 <div className="text-center p-2 bg-gray-50 rounded">
                   <p className="text-gray-500">蛋白质</p>
                   <p className="font-medium text-blue-600">
-                    {template.foods.reduce((sum, food) => sum + food.protein, 0).toFixed(1)}g
+                    {template.foods
+                      .reduce((sum, food) => sum + food.protein, 0)
+                      .toFixed(1)}
+                    g
                   </p>
                 </div>
                 <div className="text-center p-2 bg-gray-50 rounded">
                   <p className="text-gray-500">碳水</p>
                   <p className="font-medium text-green-600">
-                    {template.foods.reduce((sum, food) => sum + food.carbs, 0).toFixed(1)}g
+                    {template.foods
+                      .reduce((sum, food) => sum + food.carbs, 0)
+                      .toFixed(1)}
+                    g
                   </p>
                 </div>
                 <div className="text-center p-2 bg-gray-50 rounded">
                   <p className="text-gray-500">脂肪</p>
                   <p className="font-medium text-yellow-600">
-                    {template.foods.reduce((sum, food) => sum + food.fat, 0).toFixed(1)}g
+                    {template.foods
+                      .reduce((sum, food) => sum + food.fat, 0)
+                      .toFixed(1)}
+                    g
                   </p>
                 </div>
               </div>
@@ -270,7 +288,7 @@ export function QuickTemplates({
             onClick={() => setShowAll(!showAll)}
             className="text-blue-600 hover:text-blue-700 text-sm"
           >
-            {showAll ? '收起模板' : `查看全部 ${templates.length} 个模板`}
+            {showAll ? "收起模板" : `查看全部 ${templates.length} 个模板`}
           </button>
         </div>
       )}

@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/db';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { ReportUploader } from '@/components/reports/ReportUploader';
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ReportUploader } from "@/components/reports/ReportUploader";
 
 export default async function NewReportPage({
   params,
 }: {
-  params: Promise<{ id: string; memberId: string }>
+  params: Promise<{ id: string; memberId: string }>;
 }) {
   const { id, memberId } = await params;
   const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin');
+    redirect("/auth/signin");
   }
 
   // 获取成员信息
@@ -43,7 +43,7 @@ export default async function NewReportPage({
 
   // 验证权限
   const isCreator = member.family.creatorId === session.user.id;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isAdmin = member.family.members[0]?.role === "ADMIN" || isCreator;
   const isSelf = member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
@@ -68,7 +68,7 @@ export default async function NewReportPage({
                 href={`/dashboard/families/${id}/members/${memberId}`}
                 className="hover:text-gray-900"
               >
-                {member.name || '成员'}
+                {member.name || "成员"}
               </Link>
               <span>/</span>
               <Link
@@ -87,13 +87,11 @@ export default async function NewReportPage({
             memberId={memberId}
             onSuccess={(reportId) => {
               redirect(
-                `/dashboard/families/${id}/members/${memberId}/reports/${reportId}`
+                `/dashboard/families/${id}/members/${memberId}/reports/${reportId}`,
               );
             }}
             onCancel={() => {
-              redirect(
-                `/dashboard/families/${id}/members/${memberId}/reports`
-              );
+              redirect(`/dashboard/families/${id}/members/${memberId}/reports`);
             }}
           />
         </div>
@@ -101,4 +99,3 @@ export default async function NewReportPage({
     </div>
   );
 }
-

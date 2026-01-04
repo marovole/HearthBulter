@@ -6,9 +6,9 @@
  * @module inventory-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseInventoryRepository } from './implementations/supabase-inventory-repository';
-import type { InventoryRepository } from './interfaces/inventory-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseInventoryRepository } from "./implementations/supabase-inventory-repository";
+import type { InventoryRepository } from "./interfaces/inventory-repository";
 
 let instance: InventoryRepository | null = null;
 

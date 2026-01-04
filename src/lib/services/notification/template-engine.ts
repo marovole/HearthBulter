@@ -1,8 +1,8 @@
-import { PrismaClient, NotificationType } from '@prisma/client';
+import { PrismaClient, NotificationType } from "@prisma/client";
 
 export interface TemplateVariable {
   name: string;
-  type: 'string' | 'number' | 'date' | 'boolean';
+  type: "string" | "number" | "date" | "boolean";
   description: string;
   required?: boolean;
 }
@@ -25,10 +25,10 @@ export class TemplateEngine {
    */
   async renderNotification(
     type: NotificationType,
-    data?: Record<string, any>
+    data?: Record<string, any>,
   ): Promise<RenderedTemplate> {
     const template = await this.getTemplate(type);
-    
+
     if (!template) {
       throw new Error(`Template not found for type: ${type}`);
     }
@@ -48,15 +48,15 @@ export class TemplateEngine {
   async renderChannelTemplate(
     type: NotificationType,
     channel: string,
-    data?: Record<string, any>
+    data?: Record<string, any>,
   ): Promise<RenderedTemplate | null> {
     const template = await this.getTemplate(type);
-    
+
     if (!template) {
       return null;
     }
 
-    const channelTemplates = JSON.parse(template.channelTemplates || '{}');
+    const channelTemplates = JSON.parse(template.channelTemplates || "{}");
     const channelTemplate = channelTemplates[channel];
 
     if (!channelTemplate) {
@@ -64,8 +64,14 @@ export class TemplateEngine {
       return await this.renderNotification(type, data);
     }
 
-    const title = this.renderText(channelTemplate.title || template.titleTemplate, data);
-    const content = this.renderText(channelTemplate.content || template.contentTemplate, data);
+    const title = this.renderText(
+      channelTemplate.title || template.titleTemplate,
+      data,
+    );
+    const content = this.renderText(
+      channelTemplate.content || template.contentTemplate,
+      data,
+    );
 
     return { title, content };
   }
@@ -90,20 +96,21 @@ export class TemplateEngine {
    */
   async renderLocalizedTemplate(
     type: NotificationType,
-    locale: string = 'zh-CN',
-    data?: Record<string, any>
+    locale: string = "zh-CN",
+    data?: Record<string, any>,
   ): Promise<RenderedTemplate> {
     const template = await this.getTemplate(type);
-    
+
     if (!template) {
       throw new Error(`Template not found for type: ${type}`);
     }
 
-    const translations = JSON.parse(template.translations || '{}');
+    const translations = JSON.parse(template.translations || "{}");
     const localizedTemplate = translations[locale];
 
     const titleTemplate = localizedTemplate?.title || template.titleTemplate;
-    const contentTemplate = localizedTemplate?.content || template.contentTemplate;
+    const contentTemplate =
+      localizedTemplate?.content || template.contentTemplate;
 
     const title = this.renderText(titleTemplate, data);
     const content = this.renderText(contentTemplate, data);
@@ -114,14 +121,16 @@ export class TemplateEngine {
   /**
    * 获取模板变量定义
    */
-  async getTemplateVariables(type: NotificationType): Promise<TemplateVariable[]> {
+  async getTemplateVariables(
+    type: NotificationType,
+  ): Promise<TemplateVariable[]> {
     const template = await this.getTemplate(type);
-    
+
     if (!template) {
       return [];
     }
 
-    return JSON.parse(template.variables || '[]');
+    return JSON.parse(template.variables || "[]");
   }
 
   /**
@@ -129,7 +138,7 @@ export class TemplateEngine {
    */
   async validateTemplateData(
     type: NotificationType,
-    data: Record<string, any>
+    data: Record<string, any>,
   ): Promise<{ isValid: boolean; missingVariables: string[] }> {
     const variables = await this.getTemplateVariables(type);
     const missingVariables: string[] = [];
@@ -188,12 +197,14 @@ export class TemplateEngine {
   /**
    * 获取所有模板
    */
-  async getAllTemplates(options: {
-    isActive?: boolean;
-    category?: string;
-    limit?: number;
-    offset?: number;
-  } = {}) {
+  async getAllTemplates(
+    options: {
+      isActive?: boolean;
+      category?: string;
+      limit?: number;
+      offset?: number;
+    } = {},
+  ) {
     const where: any = {};
 
     if (options.isActive !== undefined) {
@@ -207,7 +218,7 @@ export class TemplateEngine {
     const [templates, total] = await Promise.all([
       this.prisma.notificationTemplate.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: options.limit || 50,
         skip: options.offset || 0,
       }),
@@ -236,7 +247,7 @@ export class TemplateEngine {
   async previewTemplate(
     type: NotificationType,
     data: Record<string, any>,
-    locale?: string
+    locale?: string,
   ): Promise<RenderedTemplate> {
     if (locale) {
       return await this.renderLocalizedTemplate(type, locale, data);
@@ -261,11 +272,11 @@ export class TemplateEngine {
         isActive: true,
       },
       orderBy: {
-        usageCount: 'desc',
+        usageCount: "desc",
       },
     });
 
-    return templates.map(template => ({
+    return templates.map((template) => ({
       ...template,
       lastUsed: template.lastUsed?.toISOString(),
     }));
@@ -279,7 +290,8 @@ export class TemplateEngine {
     const cacheKey = `template_${type}`;
     if (this.templateCache.has(cacheKey)) {
       const cached = this.templateCache.get(cacheKey);
-      if (Date.now() - cached.timestamp < 5 * 60 * 1000) { // 5分钟缓存
+      if (Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        // 5分钟缓存
         return cached.template;
       }
     }
@@ -318,7 +330,7 @@ export class TemplateEngine {
    * 获取嵌套对象的值
    */
   private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => {
+    return path.split(".").reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
   }
@@ -328,7 +340,7 @@ export class TemplateEngine {
    */
   private hasValue(obj: any, path: string): boolean {
     const value = this.getNestedValue(obj, path);
-    return value !== undefined && value !== null && value !== '';
+    return value !== undefined && value !== null && value !== "";
   }
 
   /**
@@ -346,7 +358,7 @@ export class TemplateEngine {
       where: { isActive: true },
     });
 
-    templates.forEach(template => {
+    templates.forEach((template) => {
       const cacheKey = `template_${template.type}`;
       this.templateCache.set(cacheKey, {
         template,
@@ -363,22 +375,29 @@ export class TemplateEngine {
       type: NotificationType;
       data?: Record<string, any>;
       locale?: string;
-    }>
+    }>,
   ): Promise<RenderedTemplate[]> {
     const results: RenderedTemplate[] = [];
 
     for (const request of requests) {
       try {
         const result = request.locale
-          ? await this.renderLocalizedTemplate(request.type, request.locale, request.data)
+          ? await this.renderLocalizedTemplate(
+              request.type,
+              request.locale,
+              request.data,
+            )
           : await this.renderNotification(request.type, request.data);
         results.push(result);
       } catch (error) {
-        console.error(`Failed to render template for type ${request.type}:`, error);
+        console.error(
+          `Failed to render template for type ${request.type}:`,
+          error,
+        );
         // 返回默认模板
         results.push({
-          title: '通知',
-          content: '您有一条新通知',
+          title: "通知",
+          content: "您有一条新通知",
         });
       }
     }

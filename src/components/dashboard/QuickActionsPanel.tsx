@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { 
-  Plus, 
-  Utensils, 
-  ShoppingCart, 
+import React, { useState } from "react";
+import {
+  Plus,
+  Utensils,
+  ShoppingCart,
   Activity,
   Heart,
   Calendar,
@@ -19,177 +19,183 @@ import {
   TrendingUp,
   Clock,
   AlertCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface QuickAction {
-  id: string
-  title: string
-  description: string
-  icon: React.ComponentType<any>
-  color: string
-  category: 'data' | 'nutrition' | 'health' | 'device' | 'notification'
-  href?: string
-  onClick?: () => void
-  badge?: number
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  color: string;
+  category: "data" | "nutrition" | "health" | "device" | "notification";
+  href?: string;
+  onClick?: () => void;
+  badge?: number;
 }
 
 interface QuickActionsPanelProps {
-  memberId: string
+  memberId: string;
 }
 
 export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const quickActions: QuickAction[] = [
     // 数据录入类
     {
-      id: 'weight',
-      title: '记录体重',
-      description: '快速记录今日体重数据',
+      id: "weight",
+      title: "记录体重",
+      description: "快速记录今日体重数据",
       icon: Scale,
-      color: 'bg-blue-500',
-      category: 'data',
-      onClick: () => console.log('记录体重'),
+      color: "bg-blue-500",
+      category: "data",
+      onClick: () => console.log("记录体重"),
     },
     {
-      id: 'blood-pressure',
-      title: '测量血压',
-      description: '记录血压和心率数据',
+      id: "blood-pressure",
+      title: "测量血压",
+      description: "记录血压和心率数据",
       icon: Heart,
-      color: 'bg-red-500',
-      category: 'data',
-      onClick: () => console.log('测量血压'),
+      color: "bg-red-500",
+      category: "data",
+      onClick: () => console.log("测量血压"),
     },
     {
-      id: 'exercise',
-      title: '运动记录',
-      description: '记录今日运动情况',
+      id: "exercise",
+      title: "运动记录",
+      description: "记录今日运动情况",
       icon: Dumbbell,
-      color: 'bg-green-500',
-      category: 'data',
-      onClick: () => console.log('运动记录'),
+      color: "bg-green-500",
+      category: "data",
+      onClick: () => console.log("运动记录"),
     },
     {
-      id: 'sleep',
-      title: '睡眠记录',
-      description: '记录昨晚睡眠质量',
+      id: "sleep",
+      title: "睡眠记录",
+      description: "记录昨晚睡眠质量",
       icon: Moon,
-      color: 'bg-purple-500',
-      category: 'data',
-      onClick: () => console.log('睡眠记录'),
+      color: "bg-purple-500",
+      category: "data",
+      onClick: () => console.log("睡眠记录"),
     },
     // 营养类
     {
-      id: 'meal-log',
-      title: '饮食记录',
-      description: '记录今日饮食情况',
+      id: "meal-log",
+      title: "饮食记录",
+      description: "记录今日饮食情况",
       icon: Utensils,
-      color: 'bg-orange-500',
-      category: 'nutrition',
-      onClick: () => console.log('饮食记录'),
+      color: "bg-orange-500",
+      category: "nutrition",
+      onClick: () => console.log("饮食记录"),
     },
     {
-      id: 'meal-photo',
-      title: '拍照识别',
-      description: '拍照识别食物营养',
+      id: "meal-photo",
+      title: "拍照识别",
+      description: "拍照识别食物营养",
       icon: Camera,
-      color: 'bg-pink-500',
-      category: 'nutrition',
-      onClick: () => console.log('拍照识别'),
+      color: "bg-pink-500",
+      category: "nutrition",
+      onClick: () => console.log("拍照识别"),
     },
     {
-      id: 'recipe-suggest',
-      title: '食谱推荐',
-      description: '获取个性化食谱建议',
+      id: "recipe-suggest",
+      title: "食谱推荐",
+      description: "获取个性化食谱建议",
       icon: Apple,
-      color: 'bg-green-600',
-      category: 'nutrition',
-      onClick: () => console.log('食谱推荐'),
+      color: "bg-green-600",
+      category: "nutrition",
+      onClick: () => console.log("食谱推荐"),
     },
     {
-      id: 'shopping-list',
-      title: '购物清单',
-      description: '生成健康购物清单',
+      id: "shopping-list",
+      title: "购物清单",
+      description: "生成健康购物清单",
       icon: ShoppingCart,
-      color: 'bg-yellow-500',
-      category: 'nutrition',
-      onClick: () => console.log('购物清单'),
+      color: "bg-yellow-500",
+      category: "nutrition",
+      onClick: () => console.log("购物清单"),
     },
     // 健康管理类
     {
-      id: 'health-report',
-      title: '健康报告',
-      description: '查看健康分析报告',
+      id: "health-report",
+      title: "健康报告",
+      description: "查看健康分析报告",
       icon: FileText,
-      color: 'bg-indigo-500',
-      category: 'health',
-      onClick: () => console.log('健康报告'),
+      color: "bg-indigo-500",
+      category: "health",
+      onClick: () => console.log("健康报告"),
     },
     {
-      id: 'trend-analysis',
-      title: '趋势分析',
-      description: '查看健康数据趋势',
+      id: "trend-analysis",
+      title: "趋势分析",
+      description: "查看健康数据趋势",
       icon: TrendingUp,
-      color: 'bg-cyan-500',
-      category: 'health',
-      onClick: () => console.log('趋势分析'),
+      color: "bg-cyan-500",
+      category: "health",
+      onClick: () => console.log("趋势分析"),
     },
     {
-      id: 'appointment',
-      title: '预约体检',
-      description: '预约健康体检服务',
+      id: "appointment",
+      title: "预约体检",
+      description: "预约健康体检服务",
       icon: Calendar,
-      color: 'bg-blue-600',
-      category: 'health',
-      onClick: () => console.log('预约体检'),
+      color: "bg-blue-600",
+      category: "health",
+      onClick: () => console.log("预约体检"),
     },
     // 设备同步类
     {
-      id: 'device-sync',
-      title: '设备同步',
-      description: '同步智能设备数据',
+      id: "device-sync",
+      title: "设备同步",
+      description: "同步智能设备数据",
       icon: Smartphone,
-      color: 'bg-gray-600',
-      category: 'device',
-      onClick: () => console.log('设备同步'),
+      color: "bg-gray-600",
+      category: "device",
+      onClick: () => console.log("设备同步"),
       badge: 2,
     },
     // 通知类
     {
-      id: 'notifications',
-      title: '消息中心',
-      description: '查看健康提醒和通知',
+      id: "notifications",
+      title: "消息中心",
+      description: "查看健康提醒和通知",
       icon: Bell,
-      color: 'bg-red-600',
-      category: 'notification',
-      onClick: () => console.log('消息中心'),
+      color: "bg-red-600",
+      category: "notification",
+      onClick: () => console.log("消息中心"),
       badge: 5,
     },
   ];
 
   const categories = [
-    { id: 'all', name: '全部', icon: Plus, color: 'bg-gray-500' },
-    { id: 'data', name: '数据录入', icon: Activity, color: 'bg-blue-500' },
-    { id: 'nutrition', name: '营养饮食', icon: Utensils, color: 'bg-orange-500' },
-    { id: 'health', name: '健康管理', icon: Heart, color: 'bg-red-500' },
-    { id: 'device', name: '设备同步', icon: Smartphone, color: 'bg-gray-600' },
-    { id: 'notification', name: '通知提醒', icon: Bell, color: 'bg-red-600' },
+    { id: "all", name: "全部", icon: Plus, color: "bg-gray-500" },
+    { id: "data", name: "数据录入", icon: Activity, color: "bg-blue-500" },
+    {
+      id: "nutrition",
+      name: "营养饮食",
+      icon: Utensils,
+      color: "bg-orange-500",
+    },
+    { id: "health", name: "健康管理", icon: Heart, color: "bg-red-500" },
+    { id: "device", name: "设备同步", icon: Smartphone, color: "bg-gray-600" },
+    { id: "notification", name: "通知提醒", icon: Bell, color: "bg-red-600" },
   ];
 
-  const filteredActions = selectedCategory === 'all' 
-    ? quickActions 
-    : quickActions.filter(action => action.category === selectedCategory);
+  const filteredActions =
+    selectedCategory === "all"
+      ? quickActions
+      : quickActions.filter((action) => action.category === selectedCategory);
 
   const recentActions = [
-    { id: 'weight-1', title: '记录体重', time: '10分钟前', icon: Scale },
-    { id: 'meal-1', title: '记录午餐', time: '2小时前', icon: Utensils },
-    { id: 'exercise-1', title: '完成晨跑', time: '今天早上', icon: Dumbbell },
+    { id: "weight-1", title: "记录体重", time: "10分钟前", icon: Scale },
+    { id: "meal-1", title: "记录午餐", time: "2小时前", icon: Utensils },
+    { id: "exercise-1", title: "完成晨跑", time: "今天早上", icon: Dumbbell },
   ];
 
   const upcomingReminders = [
-    { id: 'reminder-1', title: '测量血压', time: '14:00', icon: Heart },
-    { id: 'reminder-2', title: '记录晚餐', time: '18:30', icon: Utensils },
-    { id: 'reminder-3', title: '睡前记录', time: '22:00', icon: Moon },
+    { id: "reminder-1", title: "测量血压", time: "14:00", icon: Heart },
+    { id: "reminder-2", title: "记录晚餐", time: "18:30", icon: Utensils },
+    { id: "reminder-3", title: "睡前记录", time: "22:00", icon: Moon },
   ];
 
   return (
@@ -218,8 +224,8 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
               onClick={() => setSelectedCategory(category.id)}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedCategory === category.id
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200'
+                  ? "bg-blue-100 text-blue-700 border-blue-300"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200"
               } border`}
             >
               <Icon className="h-4 w-4" />
@@ -244,11 +250,17 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
                   {action.badge}
                 </span>
               )}
-              <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+              <div
+                className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
+              >
                 <Icon className="h-6 w-6 text-white" />
               </div>
-              <h4 className="font-medium text-gray-900 text-sm mb-1">{action.title}</h4>
-              <p className="text-xs text-gray-500 line-clamp-2">{action.description}</p>
+              <h4 className="font-medium text-gray-900 text-sm mb-1">
+                {action.title}
+              </h4>
+              <p className="text-xs text-gray-500 line-clamp-2">
+                {action.description}
+              </p>
             </button>
           );
         })}
@@ -266,12 +278,17 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
             {recentActions.map((action) => {
               const Icon = action.icon;
               return (
-                <div key={action.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
+                <div
+                  key={action.id}
+                  className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg"
+                >
                   <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                     <Icon className="h-4 w-4 text-gray-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{action.title}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {action.title}
+                    </p>
                     <p className="text-xs text-gray-500">{action.time}</p>
                   </div>
                 </div>
@@ -290,12 +307,17 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
             {upcomingReminders.map((reminder) => {
               const Icon = reminder.icon;
               return (
-                <div key={reminder.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
+                <div
+                  key={reminder.id}
+                  className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg"
+                >
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                     <Icon className="h-4 w-4 text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{reminder.title}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {reminder.title}
+                    </p>
                     <p className="text-xs text-gray-500">{reminder.time}</p>
                   </div>
                 </div>

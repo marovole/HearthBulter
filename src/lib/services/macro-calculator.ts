@@ -1,6 +1,6 @@
 /**
  * 宏量营养素计算服务
- * 
+ *
  * 提供基于健康目标的宏量营养素计算，包括TDEE计算、目标热量调整和每餐营养分配
  */
 
@@ -12,39 +12,39 @@ import {
   calculateAge,
   ACTIVITY_FACTORS,
   type GoalType,
-} from '@/lib/health-calculations';
+} from "@/lib/health-calculations";
 
 export type ActivityLevel =
-  | 'SEDENTARY'
-  | 'LIGHT'
-  | 'MODERATE'
-  | 'ACTIVE'
-  | 'VERY_ACTIVE'
+  | "SEDENTARY"
+  | "LIGHT"
+  | "MODERATE"
+  | "ACTIVE"
+  | "VERY_ACTIVE";
 
 export interface MemberMacroInput {
-  weight: number // kg
-  height: number // cm
-  birthDate: Date
-  gender: 'MALE' | 'FEMALE'
-  activityLevel: ActivityLevel
-  goalType: GoalType
-  carbRatio?: number // 默认值由goalType决定
-  proteinRatio?: number
-  fatRatio?: number
+  weight: number; // kg
+  height: number; // cm
+  birthDate: Date;
+  gender: "MALE" | "FEMALE";
+  activityLevel: ActivityLevel;
+  goalType: GoalType;
+  carbRatio?: number; // 默认值由goalType决定
+  proteinRatio?: number;
+  fatRatio?: number;
 }
 
 export interface DailyMacroTargets {
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
 export interface MealMacroTargets {
-  breakfast: DailyMacroTargets
-  lunch: DailyMacroTargets
-  dinner: DailyMacroTargets
-  snack: DailyMacroTargets
+  breakfast: DailyMacroTargets;
+  lunch: DailyMacroTargets;
+  dinner: DailyMacroTargets;
+  snack: DailyMacroTargets;
 }
 
 /**
@@ -54,21 +54,23 @@ export class MacroCalculator {
   /**
    * 根据目标类型计算默认宏量比例
    */
-  static getDefaultMacroRatios(
-    goalType: GoalType
-  ): { carbRatio: number; proteinRatio: number; fatRatio: number } {
+  static getDefaultMacroRatios(goalType: GoalType): {
+    carbRatio: number;
+    proteinRatio: number;
+    fatRatio: number;
+  } {
     switch (goalType) {
-    case 'LOSE_WEIGHT':
-      // 减重：高蛋白、中等碳水、低脂肪
-      return { carbRatio: 0.45, proteinRatio: 0.3, fatRatio: 0.25 };
-    case 'GAIN_MUSCLE':
-      // 增肌：高蛋白、高碳水、中等脂肪
-      return { carbRatio: 0.4, proteinRatio: 0.35, fatRatio: 0.25 };
-    case 'MAINTAIN':
-    case 'IMPROVE_HEALTH':
-    default:
-      // 维持/健康：均衡比例
-      return { carbRatio: 0.5, proteinRatio: 0.2, fatRatio: 0.3 };
+      case "LOSE_WEIGHT":
+        // 减重：高蛋白、中等碳水、低脂肪
+        return { carbRatio: 0.45, proteinRatio: 0.3, fatRatio: 0.25 };
+      case "GAIN_MUSCLE":
+        // 增肌：高蛋白、高碳水、中等脂肪
+        return { carbRatio: 0.4, proteinRatio: 0.35, fatRatio: 0.25 };
+      case "MAINTAIN":
+      case "IMPROVE_HEALTH":
+      default:
+        // 维持/健康：均衡比例
+        return { carbRatio: 0.5, proteinRatio: 0.2, fatRatio: 0.3 };
     }
   }
 
@@ -79,8 +81,8 @@ export class MacroCalculator {
     weight: number,
     height: number,
     birthDate: Date,
-    gender: 'MALE' | 'FEMALE',
-    activityLevel: ActivityLevel
+    gender: "MALE" | "FEMALE",
+    activityLevel: ActivityLevel,
   ): number {
     const age = calculateAge(birthDate);
     const bmr = calculateBMR(weight, height, age, gender);
@@ -94,19 +96,16 @@ export class MacroCalculator {
    * 增肌：TDEE + 300 kcal
    * 维持：TDEE
    */
-  static calculateTargetCalories(
-    tdee: number,
-    goalType: GoalType
-  ): number {
+  static calculateTargetCalories(tdee: number, goalType: GoalType): number {
     switch (goalType) {
-    case 'LOSE_WEIGHT':
-      return Math.round(tdee - 400);
-    case 'GAIN_MUSCLE':
-      return Math.round(tdee + 300);
-    case 'MAINTAIN':
-    case 'IMPROVE_HEALTH':
-    default:
-      return tdee;
+      case "LOSE_WEIGHT":
+        return Math.round(tdee - 400);
+      case "GAIN_MUSCLE":
+        return Math.round(tdee + 300);
+      case "MAINTAIN":
+      case "IMPROVE_HEALTH":
+      default:
+        return tdee;
     }
   }
 
@@ -117,10 +116,10 @@ export class MacroCalculator {
     targetCalories: number,
     goalType: GoalType,
     customRatios?: {
-      carbRatio?: number
-      proteinRatio?: number
-      fatRatio?: number
-    }
+      carbRatio?: number;
+      proteinRatio?: number;
+      fatRatio?: number;
+    },
   ): DailyMacroTargets {
     const defaultRatios = this.getDefaultMacroRatios(goalType);
     const carbRatio = customRatios?.carbRatio ?? defaultRatios.carbRatio;
@@ -132,7 +131,7 @@ export class MacroCalculator {
       targetCalories,
       carbRatio,
       proteinRatio,
-      fatRatio
+      fatRatio,
     );
 
     return {
@@ -147,7 +146,7 @@ export class MacroCalculator {
    * 确保每餐蛋白质≥20g
    */
   static calculateMealMacroTargets(
-    dailyTargets: DailyMacroTargets
+    dailyTargets: DailyMacroTargets,
   ): MealMacroTargets {
     const mealRatios = {
       breakfast: 0.3,
@@ -215,20 +214,18 @@ export class MacroCalculator {
   /**
    * 计算完整的宏量营养素目标（包括TDEE、每日目标和每餐目标）
    */
-  static calculateFullMacroTargets(
-    input: MemberMacroInput
-  ): {
-    tdee: number
-    targetCalories: number
-    dailyTargets: DailyMacroTargets
-    mealTargets: MealMacroTargets
+  static calculateFullMacroTargets(input: MemberMacroInput): {
+    tdee: number;
+    targetCalories: number;
+    dailyTargets: DailyMacroTargets;
+    mealTargets: MealMacroTargets;
   } {
     const tdee = this.calculateMemberTDEE(
       input.weight,
       input.height,
       input.birthDate,
       input.gender,
-      input.activityLevel
+      input.activityLevel,
     );
 
     const targetCalories = this.calculateTargetCalories(tdee, input.goalType);
@@ -240,7 +237,7 @@ export class MacroCalculator {
         carbRatio: input.carbRatio,
         proteinRatio: input.proteinRatio,
         fatRatio: input.fatRatio,
-      }
+      },
     );
 
     const mealTargets = this.calculateMealMacroTargets(dailyTargets);

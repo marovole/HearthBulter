@@ -6,72 +6,72 @@
  * @module device-types
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // ==================== Enums ====================
 
 export const deviceTypeSchema = z.enum([
-  'SMARTWATCH',
-  'FITNESS_BAND',
-  'SMART_SCALE',
-  'BLOOD_PRESSURE_MONITOR',
-  'GLUCOSE_METER',
-  'SMART_RING',
-  'OTHER',
+  "SMARTWATCH",
+  "FITNESS_BAND",
+  "SMART_SCALE",
+  "BLOOD_PRESSURE_MONITOR",
+  "GLUCOSE_METER",
+  "SMART_RING",
+  "OTHER",
 ]);
 export type DeviceTypeDTO = z.infer<typeof deviceTypeSchema>;
 
 export const platformTypeSchema = z.enum([
-  'APPLE_HEALTHKIT',
-  'HUAWEI_HEALTH',
-  'GOOGLE_FIT',
-  'XIAOMI_HEALTH',
-  'SAMSUNG_HEALTH',
-  'GARMIN_CONNECT',
-  'FITBIT',
-  'OTHER_PLATFORM',
+  "APPLE_HEALTHKIT",
+  "HUAWEI_HEALTH",
+  "GOOGLE_FIT",
+  "XIAOMI_HEALTH",
+  "SAMSUNG_HEALTH",
+  "GARMIN_CONNECT",
+  "FITBIT",
+  "OTHER_PLATFORM",
 ]);
 export type PlatformTypeDTO = z.infer<typeof platformTypeSchema>;
 
 export const syncStatusSchema = z.enum([
-  'PENDING',
-  'SYNCING',
-  'SUCCESS',
-  'FAILED',
-  'DISABLED',
+  "PENDING",
+  "SYNCING",
+  "SUCCESS",
+  "FAILED",
+  "DISABLED",
 ]);
 export type SyncStatusDTO = z.infer<typeof syncStatusSchema>;
 
 export const devicePermissionSchema = z.enum([
-  'READ_STEPS',
-  'READ_HEART_RATE',
-  'READ_CALORIES',
-  'READ_SLEEP',
-  'READ_WEIGHT',
-  'READ_BLOOD_PRESSURE',
-  'READ_DISTANCE',
-  'READ_ACTIVE_MINUTES',
-  'READ_EXERCISE',
+  "READ_STEPS",
+  "READ_HEART_RATE",
+  "READ_CALORIES",
+  "READ_SLEEP",
+  "READ_WEIGHT",
+  "READ_BLOOD_PRESSURE",
+  "READ_DISTANCE",
+  "READ_ACTIVE_MINUTES",
+  "READ_EXERCISE",
 ]);
 export type DevicePermissionDTO = z.infer<typeof devicePermissionSchema>;
 
 export const healthDataTypeSchema = z.enum([
-  'STEPS',
-  'HEART_RATE',
-  'CALORIES_BURNED',
-  'SLEEP_DURATION',
-  'SLEEP_QUALITY',
-  'WEIGHT',
-  'BODY_FAT',
-  'MUSCLE_MASS',
-  'BLOOD_PRESSURE',
-  'DISTANCE',
-  'ACTIVE_MINUTES',
-  'EXERCISE_TYPE',
-  'EXERCISE_DURATION',
-  'RESTING_HEART_RATE',
-  'FLOORS_CLIMBED',
-  'STANDING_HOURS',
+  "STEPS",
+  "HEART_RATE",
+  "CALORIES_BURNED",
+  "SLEEP_DURATION",
+  "SLEEP_QUALITY",
+  "WEIGHT",
+  "BODY_FAT",
+  "MUSCLE_MASS",
+  "BLOOD_PRESSURE",
+  "DISTANCE",
+  "ACTIVE_MINUTES",
+  "EXERCISE_TYPE",
+  "EXERCISE_DURATION",
+  "RESTING_HEART_RATE",
+  "FLOORS_CLIMBED",
+  "STANDING_HOURS",
 ]);
 export type HealthDataTypeDTO = z.infer<typeof healthDataTypeSchema>;
 
@@ -127,7 +127,9 @@ export const deviceConnectionCreateInputSchema = z.object({
   dataTypes: z.array(healthDataTypeSchema),
   syncInterval: z.number().int().default(1800),
 });
-export type DeviceConnectionCreateInputDTO = z.infer<typeof deviceConnectionCreateInputSchema>;
+export type DeviceConnectionCreateInputDTO = z.infer<
+  typeof deviceConnectionCreateInputSchema
+>;
 
 /**
  * 设备连接更新输入
@@ -150,7 +152,9 @@ export const deviceConnectionUpdateInputSchema = z.object({
   errorCount: z.number().int().optional(),
   retryCount: z.number().int().optional(),
 });
-export type DeviceConnectionUpdateInputDTO = z.infer<typeof deviceConnectionUpdateInputSchema>;
+export type DeviceConnectionUpdateInputDTO = z.infer<
+  typeof deviceConnectionUpdateInputSchema
+>;
 
 /**
  * 设备连接过滤条件
@@ -162,4 +166,6 @@ export const deviceConnectionFilterSchema = z.object({
   syncStatus: syncStatusSchema.optional(),
   deviceType: deviceTypeSchema.optional(),
 });
-export type DeviceConnectionFilterDTO = z.infer<typeof deviceConnectionFilterSchema>;
+export type DeviceConnectionFilterDTO = z.infer<
+  typeof deviceConnectionFilterSchema
+>;

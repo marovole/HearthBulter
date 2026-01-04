@@ -1,32 +1,34 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { HealthDataList } from '@/components/health/HealthDataList';
-import { DataHistoryTable } from './DataHistoryTable';
-import { DataImportExport } from './DataImportExport';
-import { Download, Filter, Search, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { HealthDataList } from "@/components/health/HealthDataList";
+import { DataHistoryTable } from "./DataHistoryTable";
+import { DataImportExport } from "./DataImportExport";
+import { Download, Filter, Search, Calendar } from "lucide-react";
 
 interface HealthDataHistoryPageProps {
-  userId: string
+  userId: string;
 }
 
 interface FamilyMember {
-  id: string
-  name: string
-  avatar?: string
-  role: string
-  email?: string
-  healthScore?: number
-  lastActive?: Date
+  id: string;
+  name: string;
+  avatar?: string;
+  role: string;
+  email?: string;
+  healthScore?: number;
+  lastActive?: Date;
 }
 
 export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year' | 'all'>('month');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState<
+    "week" | "month" | "quarter" | "year" | "all"
+  >("month");
   const [showExport, setShowExport] = useState(false);
 
   // 获取家庭成员数据
@@ -36,29 +38,29 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
         // 这里应该调用实际的API
         const mockMembers: FamilyMember[] = [
           {
-            id: '1',
-            name: '张三',
-            role: 'admin',
-            email: 'zhangsan@example.com',
+            id: "1",
+            name: "张三",
+            role: "admin",
+            email: "zhangsan@example.com",
             healthScore: 85,
             lastActive: new Date(),
           },
           {
-            id: '2',
-            name: '李四',
-            role: 'member',
-            email: 'lisi@example.com',
+            id: "2",
+            name: "李四",
+            role: "member",
+            email: "lisi@example.com",
             healthScore: 78,
             lastActive: new Date(),
           },
         ];
-        
+
         setFamilyMembers(mockMembers);
         if (mockMembers.length > 0) {
           setSelectedMemberId(mockMembers[0].id);
         }
       } catch (error) {
-        console.error('获取家庭成员失败:', error);
+        console.error("获取家庭成员失败:", error);
       } finally {
         setLoading(false);
       }
@@ -72,7 +74,7 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
   };
 
   const handleDataDeleted = (id: string) => {
-    console.log('删除数据:', id);
+    console.log("删除数据:", id);
     // 这里可以添加刷新逻辑
   };
 
@@ -94,8 +96,12 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
       <div className="space-y-6">
         {!selectedMemberId ? (
           <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">选择家庭成员</h3>
-            <p className="text-gray-600">请从左侧选择一个家庭成员查看健康数据历史</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              选择家庭成员
+            </h3>
+            <p className="text-gray-600">
+              请从左侧选择一个家庭成员查看健康数据历史
+            </p>
           </div>
         ) : (
           <>
@@ -105,17 +111,26 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
                 <div className="flex items-center space-x-4">
                   <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                     <span className="text-lg font-semibold text-blue-600">
-                      {familyMembers.find(m => m.id === selectedMemberId)?.name?.charAt(0)}
+                      {familyMembers
+                        .find((m) => m.id === selectedMemberId)
+                        ?.name?.charAt(0)}
                     </span>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900">健康数据历史</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      健康数据历史
+                    </h1>
                     <p className="text-gray-500">
-                      查看 {familyMembers.find(m => m.id === selectedMemberId)?.name} 的历史健康数据
+                      查看{" "}
+                      {
+                        familyMembers.find((m) => m.id === selectedMemberId)
+                          ?.name
+                      }{" "}
+                      的历史健康数据
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setShowExport(!showExport)}
@@ -126,7 +141,7 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
                   </button>
                 </div>
               </div>
-              
+
               {/* 筛选和搜索 */}
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 {/* 搜索框 */}
@@ -142,7 +157,7 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
                     />
                   </div>
                 </div>
-                
+
                 {/* 时间范围选择 */}
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
@@ -159,19 +174,19 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
                   </select>
                 </div>
               </div>
-              
+
               {/* 数据表格 */}
-              <DataHistoryTable 
+              <DataHistoryTable
                 memberId={selectedMemberId}
                 searchTerm={searchTerm}
                 dateRange={dateRange}
                 onDataDeleted={handleDataDeleted}
               />
             </div>
-            
+
             {/* 导出面板 */}
             {showExport && (
-              <DataImportExport 
+              <DataImportExport
                 memberId={selectedMemberId}
                 onClose={() => setShowExport(false)}
               />

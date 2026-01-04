@@ -6,9 +6,9 @@
  * @module family-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseFamilyRepository } from './implementations/supabase-family-repository';
-import type { FamilyRepository } from './interfaces/family-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseFamilyRepository } from "./implementations/supabase-family-repository";
+import type { FamilyRepository } from "./interfaces/family-repository";
 
 let instance: FamilyRepository | null = null;
 

@@ -1,12 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   FileText,
   Download,
@@ -16,9 +28,12 @@ import {
   Activity,
   AlertCircle,
   CheckCircle,
-} from 'lucide-react';
-import { AIThinkingIndicator } from '@/components/ui/loading-indicator';
-import { FeedbackButtons, FeedbackData } from '@/components/ui/feedback-buttons';
+} from "lucide-react";
+import { AIThinkingIndicator } from "@/components/ui/loading-indicator";
+import {
+  FeedbackButtons,
+  FeedbackData,
+} from "@/components/ui/feedback-buttons";
 
 interface HealthReport {
   id: string;
@@ -28,14 +43,14 @@ interface HealthReport {
     id: string;
     title: string;
     content: string;
-    priority: 'high' | 'medium' | 'low';
+    priority: "high" | "medium" | "low";
     data?: any;
   }>;
   insights: string[];
   recommendations: string[];
   charts: Array<{
     id: string;
-    type: 'line' | 'bar' | 'pie' | 'area';
+    type: "line" | "bar" | "pie" | "area";
     title: string;
     data: any;
     config?: {
@@ -45,7 +60,7 @@ interface HealthReport {
     };
   }>;
   generatedAt: Date;
-  status: 'generating' | 'completed' | 'failed';
+  status: "generating" | "completed" | "failed";
   shareToken?: string;
 }
 
@@ -54,11 +69,18 @@ interface HealthReportViewerProps {
   onReportGenerated?: (report: HealthReport) => void;
 }
 
-export function HealthReportViewer({ memberId, onReportGenerated }: HealthReportViewerProps) {
+export function HealthReportViewer({
+  memberId,
+  onReportGenerated,
+}: HealthReportViewerProps) {
   const [reports, setReports] = useState<HealthReport[]>([]);
-  const [selectedReport, setSelectedReport] = useState<HealthReport | null>(null);
+  const [selectedReport, setSelectedReport] = useState<HealthReport | null>(
+    null,
+  );
   const [isGenerating, setIsGenerating] = useState(false);
-  const [reportType, setReportType] = useState<'weekly' | 'monthly' | 'quarterly'>('weekly');
+  const [reportType, setReportType] = useState<
+    "weekly" | "monthly" | "quarterly"
+  >("weekly");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentAdviceId, setCurrentAdviceId] = useState<string | null>(null);
@@ -70,13 +92,15 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
   const loadReports = async () => {
     try {
-      const response = await fetch(`/api/ai/generate-report?memberId=${memberId}&limit=10`);
+      const response = await fetch(
+        `/api/ai/generate-report?memberId=${memberId}&limit=10`,
+      );
       if (response.ok) {
         const data = await response.json();
         setReports(data.reports || []);
       }
     } catch (err) {
-      console.error('Failed to load reports:', err);
+      console.error("Failed to load reports:", err);
     } finally {
       setLoading(false);
     }
@@ -92,21 +116,21 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
 
       // 根据报告类型设置日期范围
       switch (reportType) {
-      case 'weekly':
-        startDate.setDate(startDate.getDate() - 7);
-        break;
-      case 'monthly':
-        startDate.setMonth(startDate.getMonth() - 1);
-        break;
-      case 'quarterly':
-        startDate.setMonth(startDate.getMonth() - 3);
-        break;
+        case "weekly":
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case "monthly":
+          startDate.setMonth(startDate.getMonth() - 1);
+          break;
+        case "quarterly":
+          startDate.setMonth(startDate.getMonth() - 3);
+          break;
       }
 
-      const response = await fetch('/api/ai/generate-report', {
-        method: 'POST',
+      const response = await fetch("/api/ai/generate-report", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           memberId,
@@ -118,29 +142,32 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
       });
 
       if (!response.ok) {
-        throw new Error('报告生成失败');
+        throw new Error("报告生成失败");
       }
 
       const data = await response.json();
       const newReport: HealthReport = data.report;
 
-      setReports(prev => [newReport, ...prev]);
+      setReports((prev) => [newReport, ...prev]);
       setSelectedReport(newReport);
       setCurrentAdviceId(data.adviceId || null);
       onReportGenerated?.(newReport);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '报告生成失败');
+      setError(err instanceof Error ? err.message : "报告生成失败");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const exportReport = async (report: HealthReport, format: 'html' | 'pdf' = 'html') => {
-    if (format === 'html' && report.htmlContent) {
+  const exportReport = async (
+    report: HealthReport,
+    format: "html" | "pdf" = "html",
+  ) => {
+    if (format === "html" && report.htmlContent) {
       // 创建下载链接
-      const blob = new Blob([report.htmlContent], { type: 'text/html' });
+      const blob = new Blob([report.htmlContent], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${report.title}.html`;
       document.body.appendChild(a);
@@ -149,25 +176,33 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
       URL.revokeObjectURL(url);
     } else {
       // PDF导出（需要在后端实现）
-      alert('PDF导出功能正在开发中，请使用HTML导出');
+      alert("PDF导出功能正在开发中，请使用HTML导出");
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-    case 'high': return 'text-red-600';
-    case 'medium': return 'text-yellow-600';
-    case 'low': return 'text-green-600';
-    default: return 'text-gray-600';
+      case "high":
+        return "text-red-600";
+      case "medium":
+        return "text-yellow-600";
+      case "low":
+        return "text-green-600";
+      default:
+        return "text-gray-600";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-    case 'completed': return <CheckCircle className="w-4 h-4 text-green-600" />;
-    case 'generating': return <AIThinkingIndicator size="sm" />;
-    case 'failed': return <AlertCircle className="w-4 h-4 text-red-600" />;
-    default: return <FileText className="w-4 h-4" />;
+      case "completed":
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case "generating":
+        return <AIThinkingIndicator size="sm" />;
+      case "failed":
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return <FileText className="w-4 h-4" />;
     }
   };
 
@@ -176,27 +211,32 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
     if (!currentAdviceId) return;
 
     try {
-      const response = await fetch('/api/ai/feedback', {
-        method: 'POST',
+      const response = await fetch("/api/ai/feedback", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           adviceId: currentAdviceId,
-          feedbackType: 'advice',
-          liked: feedback.type === 'positive',
-          disliked: feedback.type === 'negative',
-          rating: feedback.type === 'positive' ? 5 : feedback.type === 'negative' ? 2 : 3,
+          feedbackType: "advice",
+          liked: feedback.type === "positive",
+          disliked: feedback.type === "negative",
+          rating:
+            feedback.type === "positive"
+              ? 5
+              : feedback.type === "negative"
+                ? 2
+                : 3,
           comments: feedback.comment,
-          categories: ['helpfulness', 'accuracy', 'completeness'],
+          categories: ["helpfulness", "accuracy", "completeness"],
         }),
       });
 
       if (!response.ok) {
-        console.warn('Feedback submission failed');
+        console.warn("Feedback submission failed");
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      console.error("Error submitting feedback:", error);
     }
   };
 
@@ -223,15 +263,16 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
             <FileText className="w-5 h-5 mr-2" />
             生成健康报告
           </CardTitle>
-          <CardDescription>
-            根据您的健康数据生成个性化报告
-          </CardDescription>
+          <CardDescription>根据您的健康数据生成个性化报告</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-4 mb-4">
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">报告类型</label>
-              <Select value={reportType} onValueChange={(value: any) => setReportType(value)}>
+              <Select
+                value={reportType}
+                onValueChange={(value: any) => setReportType(value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -243,17 +284,14 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
               </Select>
             </div>
             <div className="flex items-end">
-              <Button
-                onClick={generateReport}
-                disabled={isGenerating}
-              >
+              <Button onClick={generateReport} disabled={isGenerating}>
                 {isGenerating ? (
                   <>
                     <AIThinkingIndicator size="sm" />
                     生成中...
                   </>
                 ) : (
-                  '生成报告'
+                  "生成报告"
                 )}
               </Button>
             </div>
@@ -272,9 +310,7 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
       <Card>
         <CardHeader>
           <CardTitle>报告历史</CardTitle>
-          <CardDescription>
-            查看之前生成的健康报告
-          </CardDescription>
+          <CardDescription>查看之前生成的健康报告</CardDescription>
         </CardHeader>
         <CardContent>
           {reports.length === 0 ? (
@@ -289,7 +325,9 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
                 <div
                   key={report.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedReport?.id === report.id ? 'border-primary bg-primary/5' : 'hover:bg-muted'
+                    selectedReport?.id === report.id
+                      ? "border-primary bg-primary/5"
+                      : "hover:bg-muted"
                   }`}
                   onClick={() => {
                     setSelectedReport(report);
@@ -303,20 +341,25 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
                       <div>
                         <h3 className="font-medium">{report.title}</h3>
                         <p className="text-sm text-muted-foreground">
-                          生成时间：{new Date(report.generatedAt).toLocaleString('zh-CN')}
+                          生成时间：
+                          {new Date(report.generatedAt).toLocaleString("zh-CN")}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline">{report.status === 'completed' ? '已完成' : '生成中'}</Badge>
+                      <Badge variant="outline">
+                        {report.status === "completed" ? "已完成" : "生成中"}
+                      </Badge>
                       {report.shareToken && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigator.clipboard.writeText(`${window.location.origin}/share/report/${report.shareToken}`);
-                            alert('分享链接已复制到剪贴板');
+                            navigator.clipboard.writeText(
+                              `${window.location.origin}/share/report/${report.shareToken}`,
+                            );
+                            alert("分享链接已复制到剪贴板");
                           }}
                         >
                           分享
@@ -341,7 +384,7 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => exportReport(selectedReport, 'html')}
+                  onClick={() => exportReport(selectedReport, "html")}
                 >
                   <Download className="w-4 h-4 mr-2" />
                   导出HTML
@@ -349,7 +392,8 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
               </div>
             </CardTitle>
             <CardDescription>
-              生成时间：{new Date(selectedReport.generatedAt).toLocaleString('zh-CN')}
+              生成时间：
+              {new Date(selectedReport.generatedAt).toLocaleString("zh-CN")}
             </CardDescription>
           </CardHeader>
 
@@ -374,7 +418,9 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
                     {selectedReport.charts.slice(0, 2).map((chart) => (
                       <Card key={chart.id}>
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">{chart.title}</CardTitle>
+                          <CardTitle className="text-sm">
+                            {chart.title}
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="h-32 bg-muted rounded flex items-center justify-center">
@@ -410,12 +456,14 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
               <TabsContent value="recommendations" className="space-y-4">
                 {selectedReport.recommendations.length > 0 ? (
                   <div className="space-y-3">
-                    {selectedReport.recommendations.map((recommendation, index) => (
-                      <div key={index} className="flex items-start">
-                        <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
-                        <p className="text-sm">{recommendation}</p>
-                      </div>
-                    ))}
+                    {selectedReport.recommendations.map(
+                      (recommendation, index) => (
+                        <div key={index} className="flex items-start">
+                          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
+                          <p className="text-sm">{recommendation}</p>
+                        </div>
+                      ),
+                    )}
                   </div>
                 ) : (
                   <div className="text-center text-muted-foreground py-8">
@@ -429,14 +477,22 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
                 {selectedReport.sections.map((section) => (
                   <Card key={section.id}>
                     <CardHeader>
-                      <CardTitle className={`text-lg flex items-center ${
-                        section.priority === 'high' ? 'text-red-600' :
-                          section.priority === 'medium' ? 'text-yellow-600' : 'text-green-600'
-                      }`}>
+                      <CardTitle
+                        className={`text-lg flex items-center ${
+                          section.priority === "high"
+                            ? "text-red-600"
+                            : section.priority === "medium"
+                              ? "text-yellow-600"
+                              : "text-green-600"
+                        }`}
+                      >
                         {section.title}
                         <Badge variant="outline" className="ml-2">
-                          {section.priority === 'high' ? '重要' :
-                            section.priority === 'medium' ? '一般' : '参考'}
+                          {section.priority === "high"
+                            ? "重要"
+                            : section.priority === "medium"
+                              ? "一般"
+                              : "参考"}
                         </Badge>
                       </CardTitle>
                     </CardHeader>
@@ -452,7 +508,7 @@ export function HealthReportViewer({ memberId, onReportGenerated }: HealthReport
       )}
 
       {/* 反馈区域 */}
-      {selectedReport && selectedReport.status === 'completed' && (
+      {selectedReport && selectedReport.status === "completed" && (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center space-y-4">

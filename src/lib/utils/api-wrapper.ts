@@ -3,16 +3,16 @@
  * 提供统一的认证、错误处理和日志记录
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { APIError, createErrorResponse } from '@/lib/errors/api-error';
-import { logger } from '@/lib/logger';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { APIError, createErrorResponse } from "@/lib/errors/api-error";
+import { logger } from "@/lib/logger";
 
 export interface ApiHandlerOptions {
   /** 是否需要认证，默认为 true */
   requireAuth?: boolean;
   /** 日志级别 */
-  logLevel?: 'error' | 'warn' | 'info' | 'debug';
+  logLevel?: "error" | "warn" | "info" | "debug";
   /** 是否记录请求详情 */
   logRequest?: boolean;
   /** 自定义错误消息 */
@@ -25,7 +25,7 @@ export interface ApiContext {
 
 export type ApiHandler<T = NextResponse> = (
   request: NextRequest,
-  context?: ApiContext
+  context?: ApiContext,
 ) => Promise<T>;
 
 /**
@@ -47,13 +47,13 @@ export type ApiHandler<T = NextResponse> = (
  */
 export function withApiHandler(
   handler: ApiHandler,
-  options: ApiHandlerOptions = {}
+  options: ApiHandlerOptions = {},
 ): ApiHandler {
   const {
     requireAuth = true,
-    logLevel = 'error',
+    logLevel = "error",
     logRequest = false,
-    errorMessage = '服务器内部错误',
+    errorMessage = "服务器内部错误",
   } = options;
 
   return async (request: NextRequest, context?: ApiContext) => {
@@ -64,14 +64,14 @@ export function withApiHandler(
     try {
       // 记录请求
       if (logRequest) {
-        logger.info('API请求', { method, url });
+        logger.info("API请求", { method, url });
       }
 
       // 认证检查
       if (requireAuth) {
         const session = await auth();
         if (!session?.user?.id) {
-          throw APIError.unauthorized('未授权访问');
+          throw APIError.unauthorized("未授权访问");
         }
       }
 
@@ -81,7 +81,7 @@ export function withApiHandler(
       // 记录成功响应时间
       const duration = Date.now() - startTime;
       if (logRequest) {
-        logger.debug('API响应', { method, url, duration, status: 'success' });
+        logger.debug("API响应", { method, url, duration, status: "success" });
       }
 
       return response;
@@ -90,8 +90,8 @@ export function withApiHandler(
 
       // 处理已知API错误
       if (error instanceof APIError) {
-        if (logLevel === 'warn' || logLevel === 'info') {
-          logger.warn('API业务错误', {
+        if (logLevel === "warn" || logLevel === "info") {
+          logger.warn("API业务错误", {
             method,
             url,
             duration,
@@ -105,7 +105,7 @@ export function withApiHandler(
 
       // 处理未知错误
       const errorMsg = error instanceof Error ? error.message : String(error);
-      logger.error('API未处理错误', {
+      logger.error("API未处理错误", {
         method,
         url,
         duration,
@@ -123,26 +123,20 @@ export function withApiHandler(
  * 用于动态路由 [id] 等场景
  */
 export function withApiHandlerParams<P extends Record<string, string>>(
-  handler: (
-    request: NextRequest,
-    params: P
-  ) => Promise<NextResponse>,
-  options: ApiHandlerOptions = {}
+  handler: (request: NextRequest, params: P) => Promise<NextResponse>,
+  options: ApiHandlerOptions = {},
 ): (
   request: NextRequest,
-  context: { params: Promise<P> }
+  context: { params: Promise<P> },
 ) => Promise<NextResponse> {
   const {
     requireAuth = true,
-    logLevel = 'error',
+    logLevel = "error",
     logRequest = false,
-    errorMessage = '服务器内部错误',
+    errorMessage = "服务器内部错误",
   } = options;
 
-  return async (
-    request: NextRequest,
-    context: { params: Promise<P> }
-  ) => {
+  return async (request: NextRequest, context: { params: Promise<P> }) => {
     const startTime = Date.now();
     const url = request.url;
     const method = request.method;
@@ -152,14 +146,14 @@ export function withApiHandlerParams<P extends Record<string, string>>(
       const params = await context.params;
 
       if (logRequest) {
-        logger.info('API请求', { method, url, params });
+        logger.info("API请求", { method, url, params });
       }
 
       // 认证检查
       if (requireAuth) {
         const session = await auth();
         if (!session?.user?.id) {
-          throw APIError.unauthorized('未授权访问');
+          throw APIError.unauthorized("未授权访问");
         }
       }
 
@@ -168,7 +162,7 @@ export function withApiHandlerParams<P extends Record<string, string>>(
 
       const duration = Date.now() - startTime;
       if (logRequest) {
-        logger.debug('API响应', { method, url, duration, status: 'success' });
+        logger.debug("API响应", { method, url, duration, status: "success" });
       }
 
       return response;
@@ -176,8 +170,8 @@ export function withApiHandlerParams<P extends Record<string, string>>(
       const duration = Date.now() - startTime;
 
       if (error instanceof APIError) {
-        if (logLevel === 'warn' || logLevel === 'info') {
-          logger.warn('API业务错误', {
+        if (logLevel === "warn" || logLevel === "info") {
+          logger.warn("API业务错误", {
             method,
             url,
             duration,
@@ -189,7 +183,7 @@ export function withApiHandlerParams<P extends Record<string, string>>(
       }
 
       const errorMsg = error instanceof Error ? error.message : String(error);
-      logger.error('API未处理错误', {
+      logger.error("API未处理错误", {
         method,
         url,
         duration,
@@ -208,7 +202,7 @@ export async function parseRequestBody<T>(request: NextRequest): Promise<T> {
   try {
     return await request.json();
   } catch {
-    throw APIError.badRequest('请求体格式错误');
+    throw APIError.badRequest("请求体格式错误");
   }
 }
 
@@ -217,13 +211,14 @@ export async function parseRequestBody<T>(request: NextRequest): Promise<T> {
  */
 export function validateRequired(
   data: Record<string, unknown>,
-  fields: string[]
+  fields: string[],
 ): void {
   const missing = fields.filter(
-    (field) => data[field] === undefined || data[field] === null || data[field] === ''
+    (field) =>
+      data[field] === undefined || data[field] === null || data[field] === "",
   );
   if (missing.length > 0) {
-    throw APIError.badRequest(`缺少必填字段: ${missing.join(', ')}`);
+    throw APIError.badRequest(`缺少必填字段: ${missing.join(", ")}`);
   }
 }
 
@@ -243,8 +238,11 @@ export function getPaginationParams(request: NextRequest): {
   skip: number;
 } {
   const params = getQueryParams(request);
-  const page = Math.max(1, parseInt(params.get('page') || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(params.get('limit') || '20', 10)));
+  const page = Math.max(1, parseInt(params.get("page") || "1", 10));
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(params.get("limit") || "20", 10)),
+  );
   const skip = (page - 1) * limit;
 
   return { page, limit, skip };
