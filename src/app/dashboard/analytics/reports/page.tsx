@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { ReportType } from '@prisma/client';
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { ReportType } from "@prisma/client";
 
 export default function ReportsPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMember, setSelectedMember] = useState<string>('');
-  const [filterType, setFilterType] = useState<ReportType | 'ALL'>('ALL');
+  const [selectedMember, setSelectedMember] = useState<string>("");
+  const [filterType, setFilterType] = useState<ReportType | "ALL">("ALL");
 
   // 加载报告列表
   const loadReports = async () => {
@@ -20,7 +20,7 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       let url = `/api/analytics/reports?memberId=${selectedMember}`;
-      if (filterType !== 'ALL') {
+      if (filterType !== "ALL") {
         url += `&reportType=${filterType}`;
       }
 
@@ -31,7 +31,7 @@ export default function ReportsPage() {
         setReports(data.data.reports);
       }
     } catch (error) {
-      console.error('Failed to load reports:', error);
+      console.error("Failed to load reports:", error);
     } finally {
       setLoading(false);
     }
@@ -40,29 +40,31 @@ export default function ReportsPage() {
   // 分享报告
   const handleShare = async (reportId: string) => {
     try {
-      const response = await fetch('/api/analytics/share', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/analytics/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportId, expiryDays: 7 }),
       });
 
       const data = await response.json();
       if (data.success) {
-        alert(`分享链接已生成：\n${data.data.shareUrl}\n\n链接将在${data.data.expiryDays}天后过期`);
+        alert(
+          `分享链接已生成：\n${data.data.shareUrl}\n\n链接将在${data.data.expiryDays}天后过期`,
+        );
       }
     } catch (error) {
-      console.error('Failed to generate share link:', error);
-      alert('生成分享链接失败');
+      console.error("Failed to generate share link:", error);
+      alert("生成分享链接失败");
     }
   };
 
   // 删除报告
   const handleDelete = async (reportId: string) => {
-    if (!confirm('确定要删除这份报告吗？')) return;
+    if (!confirm("确定要删除这份报告吗？")) return;
 
     try {
       const response = await fetch(`/api/analytics/reports/${reportId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
@@ -70,8 +72,8 @@ export default function ReportsPage() {
         await loadReports();
       }
     } catch (error) {
-      console.error('Failed to delete report:', error);
-      alert('删除报告失败');
+      console.error("Failed to delete report:", error);
+      alert("删除报告失败");
     }
   };
 
@@ -82,34 +84,36 @@ export default function ReportsPage() {
   }, [selectedMember, filterType]);
 
   const reportTypeLabels = {
-    WEEKLY: '周报',
-    MONTHLY: '月报',
-    QUARTERLY: '季报',
-    CUSTOM: '自定义',
+    WEEKLY: "周报",
+    MONTHLY: "月报",
+    QUARTERLY: "季报",
+    CUSTOM: "自定义",
   };
 
   const getScoreBadge = (score?: number) => {
     if (!score) return null;
 
-    let color = 'gray';
-    let label = '-';
+    let color = "gray";
+    let label = "-";
 
     if (score >= 90) {
-      color = 'green';
-      label = '优秀';
+      color = "green";
+      label = "优秀";
     } else if (score >= 75) {
-      color = 'blue';
-      label = '良好';
+      color = "blue";
+      label = "良好";
     } else if (score >= 60) {
-      color = 'yellow';
-      label = '一般';
+      color = "yellow";
+      label = "一般";
     } else {
-      color = 'red';
-      label = '较差';
+      color = "red";
+      label = "较差";
     }
 
     return (
-      <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold bg-${color}-100 text-${color}-700`}>
+      <span
+        className={`inline-block px-2 py-1 rounded-full text-xs font-semibold bg-${color}-100 text-${color}-700`}
+      >
         {score.toFixed(0)}分 · {label}
       </span>
     );
@@ -124,7 +128,7 @@ export default function ReportsPage() {
           <p className="text-gray-600">查看和管理健康分析报告</p>
         </div>
         <button
-          onClick={() => router.push('/dashboard/analytics/generate')}
+          onClick={() => router.push("/dashboard/analytics/generate")}
           className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
           + 生成新报告
@@ -177,7 +181,7 @@ export default function ReportsPage() {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
           <p className="text-gray-600 mb-4">暂无报告记录</p>
           <button
-            onClick={() => router.push('/dashboard/analytics/generate')}
+            onClick={() => router.push("/dashboard/analytics/generate")}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             生成第一份报告
@@ -201,15 +205,17 @@ export default function ReportsPage() {
                   {report.title}
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  {report.summary || '暂无摘要'}
+                  {report.summary || "暂无摘要"}
                 </p>
                 <div className="text-xs text-gray-500 mb-4">
-                  {new Date(report.startDate).toLocaleDateString('zh-CN')} 至{' '}
-                  {new Date(report.endDate).toLocaleDateString('zh-CN')}
+                  {new Date(report.startDate).toLocaleDateString("zh-CN")} 至{" "}
+                  {new Date(report.endDate).toLocaleDateString("zh-CN")}
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => router.push(`/dashboard/analytics/reports/${report.id}`)}
+                    onClick={() =>
+                      router.push(`/dashboard/analytics/reports/${report.id}`)
+                    }
                     className="flex-1 px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm"
                   >
                     查看详情
@@ -229,4 +235,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-

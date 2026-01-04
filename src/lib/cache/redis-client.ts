@@ -1,17 +1,20 @@
-import { Redis } from '@upstash/redis';
+import { Redis } from "@upstash/redis";
 
 // Redis 客户端配置
 // 自动清理环境变量中的空白字符（防止Vercel配置问题）
-const redisUrl = (process.env.UPSTASH_REDIS_REST_URL || '').trim();
-const redisToken = (process.env.UPSTASH_REDIS_REST_TOKEN || '').trim();
+const redisUrl = (process.env.UPSTASH_REDIS_REST_URL || "").trim();
+const redisToken = (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim();
 
 // 检查Redis配置是否完整
-const isRedisConfigured = redisUrl && redisToken && redisUrl !== '' && redisToken !== '';
+const isRedisConfigured =
+  redisUrl && redisToken && redisUrl !== "" && redisToken !== "";
 
-const redis = isRedisConfigured ? new Redis({
-  url: redisUrl,
-  token: redisToken,
-}) : null;
+const redis = isRedisConfigured
+  ? new Redis({
+      url: redisUrl,
+      token: redisToken,
+    })
+  : null;
 
 export { redis, isRedisConfigured };
 
@@ -22,25 +25,25 @@ export const CACHE_CONFIG = {
 
   // 不同类型数据的过期时间
   TTL: {
-    USER_SESSION: 3600,        // 1小时
-    NUTRITION_DATA: 1800,      // 30分钟
-    RECIPE_DATA: 3600,         // 1小时
-    STATIC_CONFIG: 86400,      // 24小时
-    API_RESPONSE: 300,         // 5分钟
-    QUERY_RESULT: 600,         // 10分钟
-    FOOD_SEARCH: 1800,         // 30分钟 - 食品搜索结果
-    USDA_DATA: 86400,          // 24小时 - USDA API 数据
-    FOOD_SEARCH_EMPTY: 300,    // 5分钟 - 空结果缓存（防止缓存穿透）
+    USER_SESSION: 3600, // 1小时
+    NUTRITION_DATA: 1800, // 30分钟
+    RECIPE_DATA: 3600, // 1小时
+    STATIC_CONFIG: 86400, // 24小时
+    API_RESPONSE: 300, // 5分钟
+    QUERY_RESULT: 600, // 10分钟
+    FOOD_SEARCH: 1800, // 30分钟 - 食品搜索结果
+    USDA_DATA: 86400, // 24小时 - USDA API 数据
+    FOOD_SEARCH_EMPTY: 300, // 5分钟 - 空结果缓存（防止缓存穿透）
   },
 
   // 缓存键前缀
   PREFIXES: {
-    USER: 'user',
-    NUTRITION: 'nutrition',
-    RECIPE: 'recipe',
-    CONFIG: 'config',
-    API: 'api',
-    QUERY: 'query',
+    USER: "user",
+    NUTRITION: "nutrition",
+    RECIPE: "recipe",
+    CONFIG: "config",
+    API: "api",
+    QUERY: "query",
   },
 };
 
@@ -51,7 +54,7 @@ export class CacheKeyBuilder {
     if (suffix) {
       parts.push(suffix);
     }
-    return parts.join(':');
+    return parts.join(":");
   }
 
   static user(userId: string, suffix?: string): string {
@@ -129,7 +132,7 @@ export class CacheService {
 
     // 如果响应时间超过3秒，输出告警日志
     if (log.duration > 3000) {
-      console.warn('⚠️ 性能告警:', {
+      console.warn("⚠️ 性能告警:", {
         operation: log.operation,
         duration: `${log.duration}ms`,
         cacheHit: log.cacheHit,
@@ -149,9 +152,10 @@ export class CacheService {
     } else {
       this.stats.misses++;
     }
-    this.stats.hitRate = this.stats.totalRequests > 0
-      ? (this.stats.hits / this.stats.totalRequests) * 100
-      : 0;
+    this.stats.hitRate =
+      this.stats.totalRequests > 0
+        ? (this.stats.hits / this.stats.totalRequests) * 100
+        : 0;
     this.stats.lastUpdated = new Date();
   }
 
@@ -187,7 +191,7 @@ export class CacheService {
     } catch (error) {
       this.connectionHealthy = false;
       this.lastConnectionCheck = new Date();
-      console.error('Redis连接测试失败:', error);
+      console.error("Redis连接测试失败:", error);
       return false;
     }
   }
@@ -197,7 +201,8 @@ export class CacheService {
    */
   private static shouldTestConnection(): boolean {
     const now = new Date();
-    const timeSinceLastCheck = now.getTime() - this.lastConnectionCheck.getTime();
+    const timeSinceLastCheck =
+      now.getTime() - this.lastConnectionCheck.getTime();
     return timeSinceLastCheck > this.CONNECTION_CHECK_INTERVAL;
   }
 
@@ -223,7 +228,7 @@ export class CacheService {
     healthy: boolean;
     configured: boolean;
     lastCheck: Date;
-    } {
+  } {
     return {
       healthy: this.connectionHealthy,
       configured: isRedisConfigured,
@@ -251,14 +256,14 @@ export class CacheService {
   static async set<T>(
     key: string,
     value: T,
-    ttl: number = CACHE_CONFIG.DEFAULT_TTL
+    ttl: number = CACHE_CONFIG.DEFAULT_TTL,
   ): Promise<void> {
     const startTime = Date.now();
     try {
       // 检查Redis连接
       const isConnectionHealthy = await this.ensureConnection();
       if (!isConnectionHealthy || !redis) {
-        console.warn('Redis连接不可用，跳过缓存设置操作');
+        console.warn("Redis连接不可用，跳过缓存设置操作");
         return;
       }
 
@@ -267,14 +272,14 @@ export class CacheService {
 
       const duration = Date.now() - startTime;
       this.logPerformance({
-        operation: 'cache:set',
+        operation: "cache:set",
         duration,
         cacheHit: false,
         timestamp: new Date(),
-        key: key.split(':')[0], // 只记录前缀，避免泄露敏感信息
+        key: key.split(":")[0], // 只记录前缀，避免泄露敏感信息
       });
     } catch (error) {
-      console.error('Cache set error:', error);
+      console.error("Cache set error:", error);
       this.connectionHealthy = false; // 标记连接不健康
       // 缓存失败不应该影响主要功能
     }
@@ -289,7 +294,7 @@ export class CacheService {
       // 检查Redis连接
       const isConnectionHealthy = await this.ensureConnection();
       if (!isConnectionHealthy || !redis) {
-        console.warn('Redis连接不可用，跳过缓存获取操作');
+        console.warn("Redis连接不可用，跳过缓存获取操作");
         this.updateStats(false); // 记录为未命中
         return null;
       }
@@ -303,11 +308,11 @@ export class CacheService {
 
       // 记录性能日志
       this.logPerformance({
-        operation: 'cache:get',
+        operation: "cache:get",
         duration,
         cacheHit: hit,
         timestamp: new Date(),
-        key: key.split(':')[0],
+        key: key.split(":")[0],
       });
 
       if (!value) return null;
@@ -319,7 +324,7 @@ export class CacheService {
         return value as T;
       }
     } catch (error) {
-      console.error('Cache get error:', error);
+      console.error("Cache get error:", error);
       this.connectionHealthy = false; // 标记连接不健康
       this.updateStats(false); // 记录为未命中
       return null;
@@ -333,7 +338,7 @@ export class CacheService {
     try {
       await redis.del(key);
     } catch (error) {
-      console.error('Cache delete error:', error);
+      console.error("Cache delete error:", error);
     }
   }
 
@@ -347,7 +352,7 @@ export class CacheService {
         await redis.del(...keys);
       }
     } catch (error) {
-      console.error('Cache delete pattern error:', error);
+      console.error("Cache delete pattern error:", error);
     }
   }
 
@@ -359,7 +364,7 @@ export class CacheService {
       const result = await redis.exists(key);
       return result === 1;
     } catch (error) {
-      console.error('Cache exists error:', error);
+      console.error("Cache exists error:", error);
       return false;
     }
   }
@@ -370,7 +375,7 @@ export class CacheService {
   static async getOrSet<T>(
     key: string,
     fetcher: () => Promise<T>,
-    ttl: number = CACHE_CONFIG.DEFAULT_TTL
+    ttl: number = CACHE_CONFIG.DEFAULT_TTL,
   ): Promise<T> {
     try {
       // 尝试从缓存获取
@@ -387,7 +392,7 @@ export class CacheService {
 
       return data;
     } catch (error) {
-      console.error('Cache getOrSet error:', error);
+      console.error("Cache getOrSet error:", error);
       // 如果缓存失败，直接返回 fetcher 结果
       return fetcher();
     }
@@ -400,7 +405,7 @@ export class CacheService {
     try {
       await redis.expire(key, ttl);
     } catch (error) {
-      console.error('Cache expire error:', error);
+      console.error("Cache expire error:", error);
     }
   }
 
@@ -411,7 +416,7 @@ export class CacheService {
     try {
       return await redis.ttl(key);
     } catch (error) {
-      console.error('Cache ttl error:', error);
+      console.error("Cache ttl error:", error);
       return -1;
     }
   }

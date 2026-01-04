@@ -1,60 +1,69 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import { Activity, UtensilsCrossed, ShoppingCart, Brain, Users, Shield, ArrowRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import {
+  Activity,
+  UtensilsCrossed,
+  ShoppingCart,
+  Brain,
+  Users,
+  Shield,
+  ArrowRight,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const features = [
   {
     icon: Activity,
-    title: '健康数据追踪',
-    description: '全面记录体重、血压、血糖等关键指标，AI 智能分析趋势，提前预警异常。',
-    color: 'text-primary',
-    bgColor: 'bg-primary/10',
-    gradient: 'from-primary/20 to-primary/5',
+    title: "健康数据追踪",
+    description:
+      "全面记录体重、血压、血糖等关键指标，AI 智能分析趋势，提前预警异常。",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+    gradient: "from-primary/20 to-primary/5",
   },
   {
     icon: UtensilsCrossed,
-    title: '智能营养规划',
-    description: '根据您的健康目标和身体数据，AI 为您量身定制每日营养方案。',
-    color: 'text-accent',
-    bgColor: 'bg-accent/10',
-    gradient: 'from-accent/20 to-accent/5',
+    title: "智能营养规划",
+    description: "根据您的健康目标和身体数据，AI 为您量身定制每日营养方案。",
+    color: "text-accent",
+    bgColor: "bg-accent/10",
+    gradient: "from-accent/20 to-accent/5",
   },
   {
     icon: Brain,
-    title: 'AI 健康顾问',
-    description: '24/7 智能问答，基于您的健康档案提供个性化建议和专业解读。',
-    color: 'text-info',
-    bgColor: 'bg-info/10',
-    gradient: 'from-info/20 to-info/5',
+    title: "AI 健康顾问",
+    description: "24/7 智能问答，基于您的健康档案提供个性化建议和专业解读。",
+    color: "text-info",
+    bgColor: "bg-info/10",
+    gradient: "from-info/20 to-info/5",
   },
   {
     icon: Users,
-    title: '家庭健康档案',
-    description: '一站式管理全家人的健康数据，关爱父母、照顾孩子，健康不落下。',
-    color: 'text-success',
-    bgColor: 'bg-success/10',
-    gradient: 'from-success/20 to-success/5',
+    title: "家庭健康档案",
+    description: "一站式管理全家人的健康数据，关爱父母、照顾孩子，健康不落下。",
+    color: "text-success",
+    bgColor: "bg-success/10",
+    gradient: "from-success/20 to-success/5",
   },
   {
     icon: ShoppingCart,
-    title: '智能购物清单',
-    description: '根据食谱自动生成购物清单，对接主流电商，一键下单配送到家。',
-    color: 'text-warning',
-    bgColor: 'bg-warning/10',
-    gradient: 'from-warning/20 to-warning/5',
+    title: "智能购物清单",
+    description: "根据食谱自动生成购物清单，对接主流电商，一键下单配送到家。",
+    color: "text-warning",
+    bgColor: "bg-warning/10",
+    gradient: "from-warning/20 to-warning/5",
   },
   {
     icon: Shield,
-    title: '数据安全保障',
-    description: '银行级加密存储，严格隐私保护，您的健康数据只属于您。',
-    color: 'text-muted-foreground',
-    bgColor: 'bg-muted',
-    gradient: 'from-muted to-muted/50',
+    title: "数据安全保障",
+    description: "银行级加密存储，严格隐私保护，您的健康数据只属于您。",
+    color: "text-muted-foreground",
+    bgColor: "bg-muted",
+    gradient: "from-muted to-muted/50",
   },
 ];
 
@@ -77,20 +86,30 @@ const itemVariants = {
   },
 };
 
-function FeatureCard({ feature, index }: { feature: typeof features[0]; index: number }) {
+function FeatureCard({
+  feature,
+  index,
+}: {
+  feature: (typeof features)[0];
+  index: number;
+}) {
   return (
     <motion.div variants={itemVariants}>
-      <Card 
-        variant="elevated" 
+      <Card
+        variant="elevated"
         className="h-full group cursor-pointer overflow-hidden"
       >
         <CardContent className="p-6 relative">
           {/* Gradient background on hover */}
-          <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-          
+          <div
+            className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+          />
+
           <div className="relative z-10">
             {/* Icon */}
-            <div className={`inline-flex p-3 rounded-xl ${feature.bgColor} mb-4 group-hover:scale-110 transition-transform duration-300`}>
+            <div
+              className={`inline-flex p-3 rounded-xl ${feature.bgColor} mb-4 group-hover:scale-110 transition-transform duration-300`}
+            >
               <feature.icon className={`w-6 h-6 ${feature.color}`} />
             </div>
 
@@ -123,10 +142,13 @@ export default function FeaturesSection() {
   });
 
   return (
-    <section id="features" className="py-24 md:py-32 bg-muted/30 relative overflow-hidden">
+    <section
+      id="features"
+      className="py-24 md:py-32 bg-muted/30 relative overflow-hidden"
+    >
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div
@@ -142,8 +164,8 @@ export default function FeaturesSection() {
             全方位健康管理
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            从数据追踪到智能分析，从营养规划到家庭管理，
-            Health Butler 为您提供一站式健康解决方案。
+            从数据追踪到智能分析，从营养规划到家庭管理， Health Butler
+            为您提供一站式健康解决方案。
           </p>
         </motion.div>
 
@@ -152,7 +174,7 @@ export default function FeaturesSection() {
           ref={ref}
           variants={containerVariants}
           initial="hidden"
-          animate={inView ? 'visible' : 'hidden'}
+          animate={inView ? "visible" : "hidden"}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {features.map((feature, index) => (

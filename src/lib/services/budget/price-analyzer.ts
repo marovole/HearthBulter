@@ -1,88 +1,88 @@
-import { PrismaClient } from '@prisma/client';
-import { Food, PriceHistory, PriceSource } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
+import { Food, PriceHistory, PriceSource } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export interface PriceData {
-  date: Date
-  price: number
-  unitPrice: number
-  platform: string
+  date: Date;
+  price: number;
+  unitPrice: number;
+  platform: string;
 }
 
 export interface PriceTrend {
-  foodId: string
-  foodName: string
-  category: string
-  currentPrice: number
-  averagePrice: number
-  minPrice: number
-  maxPrice: number
+  foodId: string;
+  foodName: string;
+  category: string;
+  currentPrice: number;
+  averagePrice: number;
+  minPrice: number;
+  maxPrice: number;
   priceChange: {
-    daily: number // 日变化
-    weekly: number // 周变化
-    monthly: number // 月变化
-  }
+    daily: number; // 日变化
+    weekly: number; // 周变化
+    monthly: number; // 月变化
+  };
   trend: {
-    direction: 'UP' | 'DOWN' | 'STABLE'
-    slope: number // 线性回归斜率
-    confidence: number // 置信度 0-1
-  }
+    direction: "UP" | "DOWN" | "STABLE";
+    slope: number; // 线性回归斜率
+    confidence: number; // 置信度 0-1
+  };
   prediction: {
-    next7Days: number[]
-    expectedMin: number
-    expectedMax: number
-  }
-  recommendations: string[]
+    next7Days: number[];
+    expectedMin: number;
+    expectedMax: number;
+  };
+  recommendations: string[];
 }
 
 export interface PlatformComparison {
-  foodId: string
-  foodName: string
+  foodId: string;
+  foodName: string;
   platforms: {
-    platform: string
-    currentPrice: number
-    unitPrice: number
-    priceHistory: PriceData[]
-    trend: 'UP' | 'DOWN' | 'STABLE'
-    reliability: number // 数据可靠性 0-1
-    shippingCost?: number // 运费
-    freeShippingThreshold?: number // 免运费门槛
+    platform: string;
+    currentPrice: number;
+    unitPrice: number;
+    priceHistory: PriceData[];
+    trend: "UP" | "DOWN" | "STABLE";
+    reliability: number; // 数据可靠性 0-1
+    shippingCost?: number; // 运费
+    freeShippingThreshold?: number; // 免运费门槛
     discountInfo?: {
-      type: 'PERCENTAGE' | 'FIXED' | 'THRESHOLD'
-      value: number
-      description: string
-    }
-  }[]
+      type: "PERCENTAGE" | "FIXED" | "THRESHOLD";
+      value: number;
+      description: string;
+    };
+  }[];
   bestPlatform: {
-    name: string
-    unitPrice: number
-    totalCost: number // 包含运费的总成本
-    savings: number // 相比平均价格的节省百分比
-  }
-  recommendation: string
+    name: string;
+    unitPrice: number;
+    totalCost: number; // 包含运费的总成本
+    savings: number; // 相比平均价格的节省百分比
+  };
+  recommendation: string;
   bulkOptimization?: {
-    platforms: string[] // 推荐的平台组合
-    totalCost: number
-    savings: number
+    platforms: string[]; // 推荐的平台组合
+    totalCost: number;
+    savings: number;
     breakdown: Array<{
-      platform: string
-      items: string[]
-      cost: number
-    }>
-  }
+      platform: string;
+      items: string[];
+      cost: number;
+    }>;
+  };
 }
 
 export interface PriceAlert {
-  foodId: string
-  foodName: string
-  type: 'SPIKE' | 'DROP' | 'OPPORTUNITY' | 'WARNING'
-  message: string
-  currentPrice: number
-  expectedPrice: number
-  deviation: number // 偏差百分比
-  urgency: 'LOW' | 'MEDIUM' | 'HIGH'
-  action: string
+  foodId: string;
+  foodName: string;
+  type: "SPIKE" | "DROP" | "OPPORTUNITY" | "WARNING";
+  message: string;
+  currentPrice: number;
+  expectedPrice: number;
+  deviation: number; // 偏差百分比
+  urgency: "LOW" | "MEDIUM" | "HIGH";
+  action: string;
 }
 
 export class PriceAnalyzer {
@@ -94,26 +94,26 @@ export class PriceAnalyzer {
       where: { id: foodId },
       include: {
         priceHistories: {
-          where: { 
+          where: {
             isValid: true,
             recordedAt: {
               gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
             },
           },
-          orderBy: { recordedAt: 'asc' },
+          orderBy: { recordedAt: "asc" },
         },
       },
     });
 
     if (!food) {
-      throw new Error('食物不存在');
+      throw new Error("食物不存在");
     }
 
     if (food.priceHistories.length < 3) {
-      throw new Error('价格数据不足，无法分析趋势');
+      throw new Error("价格数据不足，无法分析趋势");
     }
 
-    const prices = food.priceHistories.map(ph => ({
+    const prices = food.priceHistories.map((ph) => ({
       date: ph.recordedAt,
       price: ph.price,
       unitPrice: ph.unitPrice,
@@ -121,9 +121,10 @@ export class PriceAnalyzer {
     }));
 
     const currentPrice = prices[prices.length - 1].unitPrice;
-    const averagePrice = prices.reduce((sum, p) => sum + p.unitPrice, 0) / prices.length;
-    const minPrice = Math.min(...prices.map(p => p.unitPrice));
-    const maxPrice = Math.max(...prices.map(p => p.unitPrice));
+    const averagePrice =
+      prices.reduce((sum, p) => sum + p.unitPrice, 0) / prices.length;
+    const minPrice = Math.min(...prices.map((p) => p.unitPrice));
+    const maxPrice = Math.max(...prices.map((p) => p.unitPrice));
 
     // 计算价格变化
     const priceChange = this.calculatePriceChanges(prices);
@@ -136,10 +137,10 @@ export class PriceAnalyzer {
 
     // 生成建议
     const recommendations = this.generateRecommendations(
-      currentPrice, 
-      averagePrice, 
-      trend, 
-      prediction
+      currentPrice,
+      averagePrice,
+      trend,
+      prediction,
     );
 
     return {
@@ -160,25 +161,28 @@ export class PriceAnalyzer {
   /**
    * 跨平台价格比较（增强版）
    */
-  async getPlatformComparison(foodId: string, quantity: number = 1): Promise<PlatformComparison> {
+  async getPlatformComparison(
+    foodId: string,
+    quantity: number = 1,
+  ): Promise<PlatformComparison> {
     const food = await prisma.food.findUnique({
       where: { id: foodId },
       include: {
         priceHistories: {
           where: { isValid: true },
-          orderBy: { recordedAt: 'desc' },
+          orderBy: { recordedAt: "desc" },
           take: 100,
         },
       },
     });
 
     if (!food) {
-      throw new Error('食物不存在');
+      throw new Error("食物不存在");
     }
 
     // 按平台分组价格数据
     const platformData: { [key: string]: PriceData[] } = {};
-    
+
     for (const price of food.priceHistories) {
       if (!platformData[price.platform]) {
         platformData[price.platform] = [];
@@ -199,7 +203,7 @@ export class PriceAnalyzer {
       const currentPrice = priceHistory[0].unitPrice;
       const trend = this.calculateTrend(priceHistory);
       const reliability = Math.min(1, priceHistory.length / 10);
-      
+
       // 获取平台运费和优惠信息
       const platformInfo = await this.getPlatformInfo(platform);
 
@@ -217,10 +221,14 @@ export class PriceAnalyzer {
     }
 
     // 计算包含运费的总成本
-    const platformsWithCost = platforms.map(p => {
+    const platformsWithCost = platforms.map((p) => {
       const itemCost = p.unitPrice * quantity;
-      const totalCost = this.calculateTotalCost(itemCost, p.shippingCost, p.freeShippingThreshold);
-      
+      const totalCost = this.calculateTotalCost(
+        itemCost,
+        p.shippingCost,
+        p.freeShippingThreshold,
+      );
+
       return {
         ...p,
         totalCost,
@@ -228,17 +236,25 @@ export class PriceAnalyzer {
     });
 
     // 找出最优平台（基于总成本）
-    const sortedByCost = platformsWithCost.sort((a, b) => a.totalCost - b.totalCost);
+    const sortedByCost = platformsWithCost.sort(
+      (a, b) => a.totalCost - b.totalCost,
+    );
     const bestPlatform = sortedByCost[0];
-    
+
     if (bestPlatform && platforms.length > 1) {
-      const avgTotalCost = platformsWithCost.reduce((sum, p) => sum + p.totalCost, 0) / platformsWithCost.length;
-      bestPlatform.savings = ((avgTotalCost - bestPlatform.totalCost) / avgTotalCost) * 100;
+      const avgTotalCost =
+        platformsWithCost.reduce((sum, p) => sum + p.totalCost, 0) /
+        platformsWithCost.length;
+      bestPlatform.savings =
+        ((avgTotalCost - bestPlatform.totalCost) / avgTotalCost) * 100;
       bestPlatform.totalCost = bestPlatform.totalCost;
     }
 
     // 生成推荐
-    const recommendation = this.generatePlatformRecommendation(platforms, bestPlatform);
+    const recommendation = this.generatePlatformRecommendation(
+      platforms,
+      bestPlatform,
+    );
 
     return {
       foodId: food.id,
@@ -254,34 +270,34 @@ export class PriceAnalyzer {
    */
   async optimizeBulkPurchase(foodIds: string[]): Promise<{
     combinations: Array<{
-      platform: string
+      platform: string;
       items: Array<{
-        foodId: string
-        foodName: string
-        quantity: number
-        unitPrice: number
-        itemCost: number
-      }>
-      subtotal: number
-      shippingCost: number
-      totalCost: number
-    }>
+        foodId: string;
+        foodName: string;
+        quantity: number;
+        unitPrice: number;
+        itemCost: number;
+      }>;
+      subtotal: number;
+      shippingCost: number;
+      totalCost: number;
+    }>;
     bestCombination: {
-      platform: string
-      totalCost: number
-      savings: number
-      items: any[]
-    }
+      platform: string;
+      totalCost: number;
+      savings: number;
+      items: any[];
+    };
     mixedPlatformOption?: {
-      platforms: string[]
-      totalCost: number
-      savings: number
+      platforms: string[];
+      totalCost: number;
+      savings: number;
       breakdown: Array<{
-        platform: string
-        items: any[]
-        cost: number
-      }>
-    }
+        platform: string;
+        items: any[];
+        cost: number;
+      }>;
+    };
   }> {
     // 获取所有食物的平台价格信息
     const foodPlatforms = await Promise.all(
@@ -292,23 +308,31 @@ export class PriceAnalyzer {
           foodName: comparison.foodName,
           platforms: comparison.platforms,
         };
-      })
+      }),
     );
 
     // 生成单平台购买方案
-    const singlePlatformOptions = await this.generateSinglePlatformOptions(foodPlatforms);
-    
+    const singlePlatformOptions =
+      await this.generateSinglePlatformOptions(foodPlatforms);
+
     // 生成跨平台组合方案
-    const mixedPlatformOption = await this.generateMixedPlatformOption(foodPlatforms);
+    const mixedPlatformOption =
+      await this.generateMixedPlatformOption(foodPlatforms);
 
     // 找出最优方案
     const allOptions = [...singlePlatformOptions];
     if (mixedPlatformOption) {
       allOptions.push({
-        platform: '跨平台组合',
-        items: mixedPlatformOption.breakdown.flatMap(b => b.items),
-        subtotal: mixedPlatformOption.breakdown.reduce((sum, b) => sum + b.cost, 0),
-        shippingCost: mixedPlatformOption.breakdown.reduce((sum, b) => sum + (b.cost > 99 ? 0 : 12), 0), // 简化运费计算
+        platform: "跨平台组合",
+        items: mixedPlatformOption.breakdown.flatMap((b) => b.items),
+        subtotal: mixedPlatformOption.breakdown.reduce(
+          (sum, b) => sum + b.cost,
+          0,
+        ),
+        shippingCost: mixedPlatformOption.breakdown.reduce(
+          (sum, b) => sum + (b.cost > 99 ? 0 : 12),
+          0,
+        ), // 简化运费计算
         totalCost: mixedPlatformOption.totalCost,
       });
     }
@@ -317,7 +341,8 @@ export class PriceAnalyzer {
     const bestOption = sortedOptions[0];
 
     if (bestOption && allOptions.length > 1) {
-      const avgCost = allOptions.reduce((sum, o) => sum + o.totalCost, 0) / allOptions.length;
+      const avgCost =
+        allOptions.reduce((sum, o) => sum + o.totalCost, 0) / allOptions.length;
       bestOption.savings = ((avgCost - bestOption.totalCost) / avgCost) * 100;
     }
 
@@ -332,78 +357,88 @@ export class PriceAnalyzer {
    * 获取平台信息（运费、优惠等）
    */
   private async getPlatformInfo(platform: string): Promise<{
-    shippingCost: number
-    freeShippingThreshold: number
+    shippingCost: number;
+    freeShippingThreshold: number;
     discountInfo?: {
-      type: 'PERCENTAGE' | 'FIXED' | 'THRESHOLD'
-      value: number
-      description: string
-    }
+      type: "PERCENTAGE" | "FIXED" | "THRESHOLD";
+      value: number;
+      description: string;
+    };
   }> {
     // 模拟平台配置数据（实际应用中从配置或API获取）
     const platformConfigs: { [key: string]: any } = {
-      '山姆会员商店': {
+      山姆会员商店: {
         shippingCost: 15,
         freeShippingThreshold: 299,
         discountInfo: {
-          type: 'THRESHOLD',
+          type: "THRESHOLD",
           value: 299,
-          description: '满29元免运费',
+          description: "满29元免运费",
         },
       },
-      '盒马鲜生': {
+      盒马鲜生: {
         shippingCost: 12,
         freeShippingThreshold: 99,
         discountInfo: {
-          type: 'THRESHOLD',
+          type: "THRESHOLD",
           value: 99,
-          description: '满99元免运费',
+          description: "满99元免运费",
         },
       },
-      '叮咚买菜': {
+      叮咚买菜: {
         shippingCost: 8,
         freeShippingThreshold: 59,
         discountInfo: {
-          type: 'THRESHOLD',
+          type: "THRESHOLD",
           value: 59,
-          description: '满59元免运费',
+          description: "满59元免运费",
         },
       },
-      '每日优鲜': {
+      每日优鲜: {
         shippingCost: 10,
         freeShippingThreshold: 79,
         discountInfo: {
-          type: 'PERCENTAGE',
+          type: "PERCENTAGE",
           value: 10,
-          description: '新用户首单9折',
+          description: "新用户首单9折",
         },
       },
     };
 
-    return platformConfigs[platform] || {
-      shippingCost: 12,
-      freeShippingThreshold: 99,
-    };
+    return (
+      platformConfigs[platform] || {
+        shippingCost: 12,
+        freeShippingThreshold: 99,
+      }
+    );
   }
 
   /**
    * 计算总成本（包含运费）
    */
-  private calculateTotalCost(itemCost: number, shippingCost?: number, freeShippingThreshold?: number): number {
+  private calculateTotalCost(
+    itemCost: number,
+    shippingCost?: number,
+    freeShippingThreshold?: number,
+  ): number {
     if (!shippingCost || !freeShippingThreshold) {
       return itemCost;
     }
 
-    return itemCost >= freeShippingThreshold ? itemCost : itemCost + shippingCost;
+    return itemCost >= freeShippingThreshold
+      ? itemCost
+      : itemCost + shippingCost;
   }
 
   /**
    * 生成单平台购买方案
    */
-  private async generateSinglePlatformOptions(foodPlatforms: any[]): Promise<any[]> {
+  private async generateSinglePlatformOptions(
+    foodPlatforms: any[],
+  ): Promise<any[]> {
     // 获取所有涉及的平台
     const allPlatforms = new Set<string>();
-    foodPlatforms.forEach(fp => {
+    foodPlatforms.forEach((fp) => {
       fp.platforms.forEach((p: any) => allPlatforms.add(p.platform));
     });
 
@@ -415,7 +450,9 @@ export class PriceAnalyzer {
       let subtotal = 0;
 
       for (const fp of foodPlatforms) {
-        const platformInfo = fp.platforms.find((p: any) => p.platform === platform);
+        const platformInfo = fp.platforms.find(
+          (p: any) => p.platform === platform,
+        );
         if (platformInfo) {
           const item = {
             foodId: fp.foodId,
@@ -431,7 +468,11 @@ export class PriceAnalyzer {
 
       if (items.length > 0) {
         const platformData = await this.getPlatformInfo(platform);
-        const shippingCost = this.calculateShippingCost(subtotal, platformData.shippingCost, platformData.freeShippingThreshold);
+        const shippingCost = this.calculateShippingCost(
+          subtotal,
+          platformData.shippingCost,
+          platformData.freeShippingThreshold,
+        );
         const totalCost = subtotal + shippingCost;
 
         options.push({
@@ -450,22 +491,30 @@ export class PriceAnalyzer {
   /**
    * 生成跨平台组合方案
    */
-  private async generateMixedPlatformOption(foodPlatforms: any[]): Promise<any> {
+  private async generateMixedPlatformOption(
+    foodPlatforms: any[],
+  ): Promise<any> {
     const breakdown = [];
     let totalCost = 0;
 
     for (const fp of foodPlatforms) {
       // 找出该食物最便宜的平台
-      const sortedPlatforms = fp.platforms.sort((a: any, b: any) => a.unitPrice - b.unitPrice);
+      const sortedPlatforms = fp.platforms.sort(
+        (a: any, b: any) => a.unitPrice - b.unitPrice,
+      );
       const cheapestPlatform = sortedPlatforms[0];
 
       if (!cheapestPlatform) continue;
 
       // 查找是否已有该平台的分组
-      let platformGroup = breakdown.find((b: any) => b.platform === cheapestPlatform.platform);
-      
+      let platformGroup = breakdown.find(
+        (b: any) => b.platform === cheapestPlatform.platform,
+      );
+
       if (!platformGroup) {
-        const platformData = await this.getPlatformInfo(cheapestPlatform.platform);
+        const platformData = await this.getPlatformInfo(
+          cheapestPlatform.platform,
+        );
         platformGroup = {
           platform: cheapestPlatform.platform,
           items: [],
@@ -491,9 +540,9 @@ export class PriceAnalyzer {
     // 计算各平台运费
     for (const group of breakdown) {
       const shippingCost = this.calculateShippingCost(
-        group.cost, 
-        group.shippingCost, 
-        group.freeShippingThreshold
+        group.cost,
+        group.shippingCost,
+        group.freeShippingThreshold,
       );
       group.totalCost = group.cost + shippingCost;
       totalCost += group.totalCost;
@@ -512,7 +561,11 @@ export class PriceAnalyzer {
   /**
    * 计算运费
    */
-  private calculateShippingCost(subtotal: number, shippingCost: number, freeShippingThreshold: number): number {
+  private calculateShippingCost(
+    subtotal: number,
+    shippingCost: number,
+    freeShippingThreshold: number,
+  ): number {
     return subtotal >= freeShippingThreshold ? 0 : shippingCost;
   }
 
@@ -533,7 +586,7 @@ export class PriceAnalyzer {
       include: {
         food: true,
       },
-      orderBy: { recordedAt: 'desc' },
+      orderBy: { recordedAt: "desc" },
       take: 100,
     });
 
@@ -565,14 +618,16 @@ export class PriceAnalyzer {
   /**
    * 批量更新价格数据
    */
-  async updatePriceData(priceUpdates: {
-    foodId: string
-    price: number
-    unit: string
-    platform: string
-    source?: PriceSource
-  }[]): Promise<void> {
-    const updates = priceUpdates.map(update => ({
+  async updatePriceData(
+    priceUpdates: {
+      foodId: string;
+      price: number;
+      unit: string;
+      platform: string;
+      source?: PriceSource;
+    }[],
+  ): Promise<void> {
+    const updates = priceUpdates.map((update) => ({
       ...update,
       unitPrice: this.calculateUnitPrice(update.price, update.unit),
       source: update.source || PriceSource.USER_REPORT,
@@ -587,9 +642,9 @@ export class PriceAnalyzer {
    * 计算价格变化
    */
   private calculatePriceChanges(prices: PriceData[]): {
-    daily: number
-    weekly: number
-    monthly: number
+    daily: number;
+    weekly: number;
+    monthly: number;
   } {
     const latest = prices[prices.length - 1];
     const daily = this.findPriceAtDaysAgo(prices, 1);
@@ -597,18 +652,27 @@ export class PriceAnalyzer {
     const monthly = this.findPriceAtDaysAgo(prices, 30);
 
     return {
-      daily: daily ? ((latest.unitPrice - daily.unitPrice) / daily.unitPrice) * 100 : 0,
-      weekly: weekly ? ((latest.unitPrice - weekly.unitPrice) / weekly.unitPrice) * 100 : 0,
-      monthly: monthly ? ((latest.unitPrice - monthly.unitPrice) / monthly.unitPrice) * 100 : 0,
+      daily: daily
+        ? ((latest.unitPrice - daily.unitPrice) / daily.unitPrice) * 100
+        : 0,
+      weekly: weekly
+        ? ((latest.unitPrice - weekly.unitPrice) / weekly.unitPrice) * 100
+        : 0,
+      monthly: monthly
+        ? ((latest.unitPrice - monthly.unitPrice) / monthly.unitPrice) * 100
+        : 0,
     };
   }
 
   /**
    * 查找指定天数前的价格
    */
-  private findPriceAtDaysAgo(prices: PriceData[], days: number): PriceData | null {
+  private findPriceAtDaysAgo(
+    prices: PriceData[],
+    days: number,
+  ): PriceData | null {
     const targetDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    
+
     let closest = null;
     let minDiff = Infinity;
 
@@ -627,18 +691,18 @@ export class PriceAnalyzer {
    * 计算价格趋势
    */
   private calculateTrend(prices: PriceData[]): {
-    direction: 'UP' | 'DOWN' | 'STABLE'
-    slope: number
-    confidence: number
+    direction: "UP" | "DOWN" | "STABLE";
+    slope: number;
+    confidence: number;
   } {
     if (prices.length < 3) {
-      return { direction: 'STABLE', slope: 0, confidence: 0 };
+      return { direction: "STABLE", slope: 0, confidence: 0 };
     }
 
     // 简单线性回归
     const n = prices.length;
     const x = prices.map((_, i) => i);
-    const y = prices.map(p => p.unitPrice);
+    const y = prices.map((p) => p.unitPrice);
 
     const sumX = x.reduce((sum, val) => sum + val, 0);
     const sumY = y.reduce((sum, val) => sum + val, 0);
@@ -646,21 +710,22 @@ export class PriceAnalyzer {
     const sumXX = x.reduce((sum, val) => sum + val * val, 0);
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    
+
     // 计算R²值作为置信度
     const meanY = sumY / n;
     const ssTotal = y.reduce((sum, val) => sum + Math.pow(val - meanY, 2), 0);
     const ssResidual = y.reduce((sum, val, i) => {
-      const predicted = (slope * x[i]) + (meanY - slope * (sumX / n));
+      const predicted = slope * x[i] + (meanY - slope * (sumX / n));
       return sum + Math.pow(val - predicted, 2);
     }, 0);
-    
-    const rSquared = ssTotal > 0 ? 1 - (ssResidual / ssTotal) : 0;
+
+    const rSquared = ssTotal > 0 ? 1 - ssResidual / ssTotal : 0;
     const confidence = Math.max(0, rSquared);
 
-    let direction: 'UP' | 'DOWN' | 'STABLE' = 'STABLE';
-    if (Math.abs(slope) > 0.01) { // 阈值可调整
-      direction = slope > 0 ? 'UP' : 'DOWN';
+    let direction: "UP" | "DOWN" | "STABLE" = "STABLE";
+    if (Math.abs(slope) > 0.01) {
+      // 阈值可调整
+      direction = slope > 0 ? "UP" : "DOWN";
     }
 
     return { direction, slope, confidence };
@@ -670,9 +735,9 @@ export class PriceAnalyzer {
    * 预测未来价格
    */
   private predictPrices(prices: PriceData[]): {
-    next7Days: number[]
-    expectedMin: number
-    expectedMax: number
+    next7Days: number[];
+    expectedMin: number;
+    expectedMax: number;
   } {
     if (prices.length < 5) {
       const currentPrice = prices[prices.length - 1].unitPrice;
@@ -689,7 +754,7 @@ export class PriceAnalyzer {
 
     const next7Days: number[] = [];
     for (let i = 1; i <= 7; i++) {
-      const predictedPrice = currentPrice + (trend.slope * i);
+      const predictedPrice = currentPrice + trend.slope * i;
       // 添加随机波动
       const randomFactor = (Math.random() - 0.5) * volatility * 2;
       next7Days.push(Math.max(0, predictedPrice + randomFactor));
@@ -713,13 +778,17 @@ export class PriceAnalyzer {
 
     const returns = [];
     for (let i = 1; i < prices.length; i++) {
-      const returnRate = (prices[i].unitPrice - prices[i-1].unitPrice) / prices[i-1].unitPrice;
+      const returnRate =
+        (prices[i].unitPrice - prices[i - 1].unitPrice) /
+        prices[i - 1].unitPrice;
       returns.push(returnRate);
     }
 
     const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
-    const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
-    
+    const variance =
+      returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) /
+      returns.length;
+
     return Math.sqrt(variance);
   }
 
@@ -730,30 +799,32 @@ export class PriceAnalyzer {
     currentPrice: number,
     averagePrice: number,
     trend: any,
-    prediction: any
+    prediction: any,
   ): string[] {
     const recommendations: string[] = [];
 
     // 基于当前价格的建议
     if (currentPrice < averagePrice * 0.8) {
-      recommendations.push('当前价格较低，建议适量采购');
+      recommendations.push("当前价格较低，建议适量采购");
     } else if (currentPrice > averagePrice * 1.2) {
-      recommendations.push('当前价格较高，建议延后采购或寻找替代品');
+      recommendations.push("当前价格较高，建议延后采购或寻找替代品");
     }
 
     // 基于趋势的建议
-    if (trend.direction === 'UP' && trend.confidence > 0.7) {
-      recommendations.push('价格呈上涨趋势，建议尽早采购');
-    } else if (trend.direction === 'DOWN' && trend.confidence > 0.7) {
-      recommendations.push('价格呈下降趋势，建议等待更低价格');
+    if (trend.direction === "UP" && trend.confidence > 0.7) {
+      recommendations.push("价格呈上涨趋势，建议尽早采购");
+    } else if (trend.direction === "DOWN" && trend.confidence > 0.7) {
+      recommendations.push("价格呈下降趋势，建议等待更低价格");
     }
 
     // 基于预测的建议
-    const futureAvg = prediction.next7Days.reduce((sum, p) => sum + p, 0) / prediction.next7Days.length;
+    const futureAvg =
+      prediction.next7Days.reduce((sum, p) => sum + p, 0) /
+      prediction.next7Days.length;
     if (futureAvg < currentPrice * 0.9) {
-      recommendations.push('预计未来价格会下降，建议等待');
+      recommendations.push("预计未来价格会下降，建议等待");
     } else if (futureAvg > currentPrice * 1.1) {
-      recommendations.push('预计未来价格会上涨，建议当前采购');
+      recommendations.push("预计未来价格会上涨，建议当前采购");
     }
 
     return recommendations;
@@ -764,10 +835,10 @@ export class PriceAnalyzer {
    */
   private generatePlatformRecommendation(
     platforms: any[],
-    bestPlatform: any
+    bestPlatform: any,
   ): string {
     if (!bestPlatform || platforms.length < 2) {
-      return '需要更多平台数据来生成推荐';
+      return "需要更多平台数据来生成推荐";
     }
 
     if (bestPlatform.savings > 10) {
@@ -775,7 +846,7 @@ export class PriceAnalyzer {
     } else if (bestPlatform.savings > 5) {
       return `推荐${bestPlatform.platform}，价格较优`;
     } else {
-      return '各平台价格相近，可根据便利性选择';
+      return "各平台价格相近，可根据便利性选择";
     }
   }
 
@@ -785,10 +856,11 @@ export class PriceAnalyzer {
   private analyzePriceAnomaly(prices: PriceHistory[]): PriceAlert | null {
     const latest = prices[0];
     const previous = prices.slice(1, 6); // 最近5个历史价格
-    
+
     if (previous.length < 3) return null;
 
-    const avgPrice = previous.reduce((sum, p) => sum + p.unitPrice, 0) / previous.length;
+    const avgPrice =
+      previous.reduce((sum, p) => sum + p.unitPrice, 0) / previous.length;
     const deviation = ((latest.unitPrice - avgPrice) / avgPrice) * 100;
 
     let alert: PriceAlert | null = null;
@@ -797,25 +869,25 @@ export class PriceAnalyzer {
       alert = {
         foodId: latest.foodId,
         foodName: latest.food.name,
-        type: 'SPIKE',
+        type: "SPIKE",
         message: `${latest.food.name}价格暴涨${deviation.toFixed(1)}%`,
         currentPrice: latest.unitPrice,
         expectedPrice: avgPrice,
         deviation,
-        urgency: deviation > 50 ? 'HIGH' : 'MEDIUM',
-        action: '建议延后采购或寻找替代品',
+        urgency: deviation > 50 ? "HIGH" : "MEDIUM",
+        action: "建议延后采购或寻找替代品",
       };
     } else if (deviation < -15) {
       alert = {
         foodId: latest.foodId,
         foodName: latest.food.name,
-        type: 'OPPORTUNITY',
+        type: "OPPORTUNITY",
         message: `${latest.food.name}价格下降${Math.abs(deviation).toFixed(1)}%`,
         currentPrice: latest.unitPrice,
         expectedPrice: avgPrice,
         deviation,
-        urgency: 'MEDIUM',
-        action: '建议及时采购，价格优惠',
+        urgency: "MEDIUM",
+        action: "建议及时采购，价格优惠",
       };
     }
 
@@ -827,12 +899,12 @@ export class PriceAnalyzer {
    */
   private calculateUnitPrice(price: number, unit: string): number {
     const unitMap: { [key: string]: number } = {
-      'kg': 1,
-      '斤': 2, // 1kg = 2斤
-      'g': 0.001,
-      '500g': 0.5,
-      '100g': 0.1,
-      '250g': 0.25,
+      kg: 1,
+      斤: 2, // 1kg = 2斤
+      g: 0.001,
+      "500g": 0.5,
+      "100g": 0.1,
+      "250g": 0.25,
     };
 
     const multiplier = unitMap[unit] || 1;
@@ -848,7 +920,7 @@ export class PriceAnalyzer {
       include: {
         priceHistories: {
           where: { isValid: true },
-          orderBy: { recordedAt: 'desc' },
+          orderBy: { recordedAt: "desc" },
           take: 30,
         },
         _count: {
@@ -857,14 +929,14 @@ export class PriceAnalyzer {
       },
       orderBy: {
         priceHistories: {
-          _count: 'desc',
+          _count: "desc",
         },
       },
       take: limit,
     });
 
     const trends: PriceTrend[] = [];
-    
+
     for (const food of popularFoods) {
       if (food.priceHistories.length >= 3) {
         const trend = await this.getPriceTrend(food.id);

@@ -1,27 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { mealTrackingRepository } from "@/lib/repositories/meal-tracking-repository-singleton";
 import {
-
   getRecommendedTemplates,
   createTemplateFromMealLog,
   autoGenerateTemplates,
-} from '@/lib/services/tracking/template-manager';
-import { z } from 'zod';
+} from "@/lib/services/tracking/template-manager";
+import { z } from "zod";
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const createTemplateSchema = z.object({
   memberId: z.string(),
   name: z.string(),
   description: z.string().optional(),
-  mealType: z.enum(['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK']),
+  mealType: z.enum(["BREAKFAST", "LUNCH", "DINNER", "SNACK"]),
   foods: z.array(
     z.object({
       foodId: z.string(),
       amount: z.number().positive(),
-    })
+    }),
   ),
 });
 
@@ -37,10 +36,7 @@ export async function POST(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -50,7 +46,7 @@ export async function POST(req: NextRequest) {
       const template = await createTemplateFromMealLog(
         body.mealLogId,
         body.name,
-        body.description
+        body.description,
       );
       return NextResponse.json(template, { status: 201 });
     }
@@ -63,23 +59,21 @@ export async function POST(req: NextRequest) {
 
     // 常规创建模板（使用 Repository）
     const validatedData = createTemplateSchema.parse(body);
-    const template = await mealTrackingRepository.createQuickTemplate(validatedData);
+    const template =
+      await mealTrackingRepository.createQuickTemplate(validatedData);
 
     return NextResponse.json(template, { status: 201 });
   } catch (error) {
-    console.error('Error creating template:', error);
+    console.error("Error creating template:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '无效的请求数据', details: error.errors },
-        { status: 400 }
+        { error: "无效的请求数据", details: error.errors },
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: '创建模板失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "创建模板失败" }, { status: 500 });
   }
 }
 
@@ -95,23 +89,17 @@ export async function GET(req: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
-    const memberId = searchParams.get('memberId');
-    const mealType = searchParams.get('mealType');
-    const recommended = searchParams.get('recommended') === 'true';
-    const limit = searchParams.get('limit');
+    const memberId = searchParams.get("memberId");
+    const mealType = searchParams.get("mealType");
+    const recommended = searchParams.get("recommended") === "true";
+    const limit = searchParams.get("limit");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少memberId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });
     }
 
     // 推荐模板（使用服务层）
@@ -119,7 +107,7 @@ export async function GET(req: NextRequest) {
       const templates = await getRecommendedTemplates(
         memberId,
         mealType as any,
-        limit ? parseInt(limit) : undefined
+        limit ? parseInt(limit) : undefined,
       );
       return NextResponse.json({ templates });
     }
@@ -127,17 +115,13 @@ export async function GET(req: NextRequest) {
     // 常规模板列表（使用 Repository）
     const templates = await mealTrackingRepository.listQuickTemplates(
       memberId,
-      mealType || undefined
+      mealType || undefined,
     );
 
     return NextResponse.json({ templates });
   } catch (error) {
-    console.error('Error fetching templates:', error);
+    console.error("Error fetching templates:", error);
 
-    return NextResponse.json(
-      { error: '获取模板失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "获取模板失败" }, { status: 500 });
   }
 }
-

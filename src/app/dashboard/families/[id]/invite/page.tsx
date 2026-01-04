@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 
 export default function InvitePage() {
   const router = useRouter();
@@ -10,9 +10,9 @@ export default function InvitePage() {
   const familyId = params.id as string;
 
   const [inviteData, setInviteData] = useState<{
-    inviteCode: string | null
-    inviteUrl: string | null
-    message?: string
+    inviteCode: string | null;
+    inviteUrl: string | null;
+    message?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -30,16 +30,16 @@ export default function InvitePage() {
         const data = await response.json();
         setInviteData(data);
       } else if (response.status === 401) {
-        router.push('/auth/signin');
+        router.push("/auth/signin");
       } else if (response.status === 403) {
-        setError('您没有权限访问此页面');
+        setError("您没有权限访问此页面");
       } else {
         const errorData = await response.json();
-        setError(errorData.error || '获取邀请码失败');
+        setError(errorData.error || "获取邀请码失败");
       }
     } catch (err) {
-      console.error('获取邀请码失败:', err);
-      setError('网络错误，请稍后重试');
+      console.error("获取邀请码失败:", err);
+      setError("网络错误，请稍后重试");
     } finally {
       setLoading(false);
     }
@@ -51,23 +51,23 @@ export default function InvitePage() {
       setGenerating(true);
       setError(null);
       const response = await fetch(`/api/families/${familyId}/invite`, {
-        method: 'POST',
+        method: "POST",
       });
 
       if (response.ok) {
         const data = await response.json();
         setInviteData(data);
       } else if (response.status === 401) {
-        router.push('/auth/signin');
+        router.push("/auth/signin");
       } else if (response.status === 403) {
-        setError('只有管理员可以生成邀请码');
+        setError("只有管理员可以生成邀请码");
       } else {
         const errorData = await response.json();
-        setError(errorData.error || '生成邀请码失败');
+        setError(errorData.error || "生成邀请码失败");
       }
     } catch (err) {
-      console.error('生成邀请码失败:', err);
-      setError('网络错误，请稍后重试');
+      console.error("生成邀请码失败:", err);
+      setError("网络错误，请稍后重试");
     } finally {
       setGenerating(false);
     }
@@ -82,8 +82,8 @@ export default function InvitePage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('复制失败:', err);
-      alert('复制失败，请手动复制');
+      console.error("复制失败:", err);
+      alert("复制失败，请手动复制");
     }
   };
 
@@ -112,9 +112,7 @@ export default function InvitePage() {
               >
                 ← 返回家庭
               </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                邀请成员
-              </h1>
+              <h1 className="text-xl font-semibold text-gray-900">邀请成员</h1>
             </div>
           </div>
         </div>
@@ -162,7 +160,7 @@ export default function InvitePage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="text"
-                      value={inviteData.inviteUrl || ''}
+                      value={inviteData.inviteUrl || ""}
                       readOnly
                       className="flex-1 bg-gray-50 border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-900"
                     />
@@ -170,11 +168,11 @@ export default function InvitePage() {
                       onClick={copyInviteUrl}
                       className={`px-4 py-2 rounded-md font-medium transition-colors ${
                         copied
-                          ? 'bg-green-600 text-white'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                          ? "bg-green-600 text-white"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
                       }`}
                     >
-                      {copied ? '已复制!' : '复制链接'}
+                      {copied ? "已复制!" : "复制链接"}
                     </button>
                   </div>
                 </div>
@@ -198,7 +196,7 @@ export default function InvitePage() {
                   disabled={generating}
                   className="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
-                  {generating ? '生成中...' : '生成新的邀请码'}
+                  {generating ? "生成中..." : "生成新的邀请码"}
                 </button>
                 <p className="mt-2 text-xs text-gray-500 text-center">
                   生成新邀请码会使旧的邀请码失效
@@ -209,14 +207,14 @@ export default function InvitePage() {
                 {/* 尚未生成邀请码 */}
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-6">
-                    {inviteData?.message || '尚未生成邀请码'}
+                    {inviteData?.message || "尚未生成邀请码"}
                   </p>
                   <button
                     onClick={generateInviteCode}
                     disabled={generating}
                     className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
                   >
-                    {generating ? '生成中...' : '生成邀请码'}
+                    {generating ? "生成中..." : "生成邀请码"}
                   </button>
                 </div>
               </>

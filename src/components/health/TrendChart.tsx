@@ -1,44 +1,44 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface TrendDataPoint {
-  date: string
-  value: number
+  date: string;
+  value: number;
 }
 
 interface TrendData {
-  data: TrendDataPoint[]
-  average: number | null
-  min: number | null
-  max: number | null
-  change: number | null
+  data: TrendDataPoint[];
+  average: number | null;
+  min: number | null;
+  max: number | null;
+  change: number | null;
 }
 
 interface TrendsResponse {
   trends: {
-    weight?: TrendData
-    bodyFat?: TrendData
-    muscleMass?: TrendData
-    heartRate?: TrendData
+    weight?: TrendData;
+    bodyFat?: TrendData;
+    muscleMass?: TrendData;
+    heartRate?: TrendData;
     bloodPressure?: {
-      data: Array<{ date: string; systolic: number; diastolic: number }>
-      average: { systolic: number; diastolic: number }
-      min: { systolic: number; diastolic: number }
-      max: { systolic: number; diastolic: number }
-      change: { systolic: number; diastolic: number } | null
-    }
-  }
+      data: Array<{ date: string; systolic: number; diastolic: number }>;
+      average: { systolic: number; diastolic: number };
+      min: { systolic: number; diastolic: number };
+      max: { systolic: number; diastolic: number };
+      change: { systolic: number; diastolic: number } | null;
+    };
+  };
   period: {
-    start: string
-    end: string
-  }
+    start: string;
+    end: string;
+  };
 }
 
 interface TrendChartProps {
-  memberId: string
-  type: 'weight' | 'bodyFat' | 'muscleMass' | 'heartRate' | 'bloodPressure'
-  days?: number
+  memberId: string;
+  type: "weight" | "bodyFat" | "muscleMass" | "heartRate" | "bloodPressure";
+  days?: number;
 }
 
 export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
@@ -54,15 +54,15 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/members/${memberId}/health-data/trends?days=${days}`
+        `/api/members/${memberId}/health-data/trends?days=${days}`,
       );
       if (!response.ok) {
-        throw new Error('加载趋势数据失败');
+        throw new Error("加载趋势数据失败");
       }
       const data = await response.json();
       setTrends(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : "加载失败");
     } finally {
       setLoading(false);
     }
@@ -70,18 +70,18 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
 
   const getTypeLabel = () => {
     switch (type) {
-    case 'weight':
-      return '体重 (kg)';
-    case 'bodyFat':
-      return '体脂率 (%)';
-    case 'muscleMass':
-      return '肌肉量 (kg)';
-    case 'heartRate':
-      return '心率 (bpm)';
-    case 'bloodPressure':
-      return '血压 (mmHg)';
-    default:
-      return '';
+      case "weight":
+        return "体重 (kg)";
+      case "bodyFat":
+        return "体脂率 (%)";
+      case "muscleMass":
+        return "肌肉量 (kg)";
+      case "heartRate":
+        return "心率 (bpm)";
+      case "bloodPressure":
+        return "血压 (mmHg)";
+      default:
+        return "";
     }
   };
 
@@ -108,7 +108,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
 
   const trendData = trends.trends[type];
 
-  if (!trendData || (type !== 'bloodPressure' && trendData.data.length === 0)) {
+  if (!trendData || (type !== "bloodPressure" && trendData.data.length === 0)) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-500">暂无{getTypeLabel()}趋势数据</p>
@@ -117,7 +117,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
   }
 
   // 简单趋势图渲染（使用SVG）
-  if (type === 'bloodPressure') {
+  if (type === "bloodPressure") {
     const bpData = trends.trends.bloodPressure!;
     if (bpData.data.length === 0) {
       return (
@@ -155,15 +155,11 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
     });
 
     const systolicPath = points
-      .map(
-        (p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.ySystolic}`
-      )
-      .join(' ');
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.ySystolic}`)
+      .join(" ");
     const diastolicPath = points
-      .map(
-        (p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.yDiastolic}`
-      )
-      .join(' ');
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.yDiastolic}`)
+      .join(" ");
 
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -187,12 +183,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
             );
           })}
           {/* 收缩压曲线 */}
-          <path
-            d={systolicPath}
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="2"
-          />
+          <path d={systolicPath} fill="none" stroke="#ef4444" strokeWidth="2" />
           {/* 舒张压曲线 */}
           <path
             d={diastolicPath}
@@ -203,28 +194,18 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
           {/* 数据点 */}
           {points.map((p, i) => (
             <g key={i}>
-              <circle
-                cx={p.x}
-                cy={p.ySystolic}
-                r="3"
-                fill="#ef4444"
-              />
-              <circle
-                cx={p.x}
-                cy={p.yDiastolic}
-                r="3"
-                fill="#3b82f6"
-              />
+              <circle cx={p.x} cy={p.ySystolic} r="3" fill="#ef4444" />
+              <circle cx={p.x} cy={p.yDiastolic} r="3" fill="#3b82f6" />
             </g>
           ))}
         </svg>
         <div className="mt-4 flex justify-between text-sm text-gray-600">
           <div>
-            <span className="text-red-600">●</span> 收缩压 平均:{' '}
+            <span className="text-red-600">●</span> 收缩压 平均:{" "}
             {bpData.average.systolic.toFixed(1)} mmHg
           </div>
           <div>
-            <span className="text-blue-600">●</span> 舒张压 平均:{' '}
+            <span className="text-blue-600">●</span> 舒张压 平均:{" "}
             {bpData.average.diastolic.toFixed(1)} mmHg
           </div>
         </div>
@@ -246,14 +227,16 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
   const range = max - min || 1;
 
   const points = simpleTrendData.data.map((d, i) => {
-    const x = padding + (i / (simpleTrendData.data.length - 1 || 1)) * chartAreaWidth;
-    const y = padding + chartAreaHeight - ((d.value - min) / range) * chartAreaHeight;
+    const x =
+      padding + (i / (simpleTrendData.data.length - 1 || 1)) * chartAreaWidth;
+    const y =
+      padding + chartAreaHeight - ((d.value - min) / range) * chartAreaHeight;
     return { x, y, value: d.value, date: d.date };
   });
 
   const path = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-    .join(' ');
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+    .join(" ");
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -296,10 +279,10 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
         {simpleTrendData.change !== null && (
           <div
             className={
-              simpleTrendData.change > 0 ? 'text-green-600' : 'text-red-600'
+              simpleTrendData.change > 0 ? "text-green-600" : "text-red-600"
             }
           >
-            变化: {simpleTrendData.change > 0 ? '+' : ''}
+            变化: {simpleTrendData.change > 0 ? "+" : ""}
             {simpleTrendData.change.toFixed(1)}
           </div>
         )}

@@ -4,7 +4,7 @@
  * 抽象 AI 反馈的持久化和聚合操作，支持 advice 和 conversation 两种反馈类型
  */
 
-import type { FeedbackData, FeedbackStats } from '@/lib/types/feedback';
+import type { FeedbackData, FeedbackStats } from "@/lib/types/feedback";
 
 /**
  * AI 建议记录（包含反馈）
@@ -38,7 +38,9 @@ export interface FeedbackRepository {
    * @param adviceId - AI 建议 ID
    * @returns AI 建议记录，如果不存在则返回 null
    */
-  getAdviceByIdWithFeedback(adviceId: string): Promise<AIAdviceWithFeedback | null>;
+  getAdviceByIdWithFeedback(
+    adviceId: string,
+  ): Promise<AIAdviceWithFeedback | null>;
 
   /**
    * 获取 AI 对话记录（包含反馈）
@@ -46,7 +48,9 @@ export interface FeedbackRepository {
    * @param conversationId - AI 对话 ID
    * @returns AI 对话记录，如果不存在则返回 null
    */
-  getConversationByIdWithFeedback(conversationId: string): Promise<AIConversationWithFeedback | null>;
+  getConversationByIdWithFeedback(
+    conversationId: string,
+  ): Promise<AIConversationWithFeedback | null>;
 
   /**
    * 追加反馈到 AI 建议
@@ -64,7 +68,10 @@ export interface FeedbackRepository {
    * @param feedback - 反馈数据
    * @throws Error 如果追加失败
    */
-  appendConversationFeedback(conversationId: string, feedback: FeedbackData): Promise<void>;
+  appendConversationFeedback(
+    conversationId: string,
+    feedback: FeedbackData,
+  ): Promise<void>;
 
   /**
    * 获取反馈统计数据（调用 RPC sp_ai_feedback_stats）
@@ -77,6 +84,6 @@ export interface FeedbackRepository {
   fetchFeedbackStats(
     memberId: string,
     adviceType?: string | null,
-    daysAgo?: number
+    daysAgo?: number,
   ): Promise<FeedbackStats>;
 }

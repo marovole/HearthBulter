@@ -3,7 +3,7 @@
  * 用于缓存生成的分享图片，提高性能和减少重复生成
  */
 
-import { createHash } from 'crypto';
+import { createHash } from "crypto";
 
 interface CacheEntry {
   url: string;
@@ -21,7 +21,7 @@ class ImageCache {
    */
   private generateCacheKey(template: string, data: any): string {
     const dataStr = JSON.stringify(data, Object.keys(data).sort());
-    return createHash('md5').update(`${template}:${dataStr}`).digest('hex');
+    return createHash("md5").update(`${template}:${dataStr}`).digest("hex");
   }
 
   /**
@@ -92,7 +92,7 @@ class ImageCache {
     totalEntries: number;
     expiredEntries: number;
     size: number;
-    } {
+  } {
     const now = new Date();
     let expiredCount = 0;
 
@@ -121,7 +121,7 @@ class ImageCache {
    */
   async warmup(): Promise<void> {
     // 这里可以实现预热逻辑，比如预先生成常用的分享图片
-    console.log('图片缓存预热完成');
+    console.log("图片缓存预热完成");
   }
 }
 
@@ -129,11 +129,14 @@ class ImageCache {
 export const imageCache = new ImageCache();
 
 // 定期清理过期缓存
-setInterval(() => {
-  const cleaned = imageCache.cleanup();
-  if (cleaned > 0) {
-    console.log(`清理了 ${cleaned} 个过期的图片缓存`);
-  }
-}, 60 * 60 * 1000); // 每小时清理一次
+setInterval(
+  () => {
+    const cleaned = imageCache.cleanup();
+    if (cleaned > 0) {
+      console.log(`清理了 ${cleaned} 个过期的图片缓存`);
+    }
+  },
+  60 * 60 * 1000,
+); // 每小时清理一次
 
 export default imageCache;

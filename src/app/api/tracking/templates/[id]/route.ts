@@ -1,15 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { mealTrackingRepository } from "@/lib/repositories/meal-tracking-repository-singleton";
 import {
-
   updateQuickTemplate,
   useTemplate,
-} from '@/lib/services/tracking/template-manager';
-import { z } from 'zod';
+} from "@/lib/services/tracking/template-manager";
+import { z } from "zod";
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const updateTemplateSchema = z.object({
   name: z.string().optional(),
@@ -19,7 +18,7 @@ const updateTemplateSchema = z.object({
       z.object({
         foodId: z.string(),
         amount: z.number().positive(),
-      })
+      }),
     )
     .optional(),
 });
@@ -30,17 +29,14 @@ const updateTemplateSchema = z.object({
  */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -50,19 +46,16 @@ export async function PATCH(
 
     return NextResponse.json(template);
   } catch (error) {
-    console.error('Error updating template:', error);
+    console.error("Error updating template:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '无效的请求数据', details: error.errors },
-        { status: 400 }
+        { error: "无效的请求数据", details: error.errors },
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: '更新模板失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "更新模板失败" }, { status: 500 });
   }
 }
 
@@ -74,30 +67,24 @@ export async function PATCH(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     // 使用 Repository 删除模板
-    await mealTrackingRepository.deleteQuickTemplate( id);
+    await mealTrackingRepository.deleteQuickTemplate(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting template:', error);
+    console.error("Error deleting template:", error);
 
-    return NextResponse.json(
-      { error: '删除模板失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "删除模板失败" }, { status: 500 });
   }
 }
 
@@ -110,29 +97,22 @@ export async function DELETE(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     const template = await useTemplate(id);
 
     return NextResponse.json(template);
   } catch (error) {
-    console.error('Error using template:', error);
+    console.error("Error using template:", error);
 
-    return NextResponse.json(
-      { error: '使用模板失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "使用模板失败" }, { status: 500 });
   }
 }
-

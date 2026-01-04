@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/db';
-import { notFound } from 'next/navigation';
-import { MealPlanDetailClient } from './MealPlanDetailClient';
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { notFound } from "next/navigation";
+import { MealPlanDetailClient } from "./MealPlanDetailClient";
 
 interface MealPlanDetailPageProps {
   params: Promise<{
-    id: string
-    memberId: string
-    planId: string
-  }>
+    id: string;
+    memberId: string;
+    planId: string;
+  }>;
 }
 
 export default async function MealPlanDetailPage({
@@ -21,7 +21,7 @@ export default async function MealPlanDetailPage({
   const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin');
+    redirect("/auth/signin");
   }
 
   // 获取食谱计划和成员信息
@@ -56,10 +56,7 @@ export default async function MealPlanDetailPage({
             },
           },
         },
-        orderBy: [
-          { date: 'asc' },
-          { mealType: 'asc' },
-        ],
+        orderBy: [{ date: "asc" }, { mealType: "asc" }],
       },
     },
   });
@@ -70,7 +67,8 @@ export default async function MealPlanDetailPage({
 
   // 验证权限
   const isCreator = mealPlan.member.family.creatorId === session.user.id;
-  const isAdmin = mealPlan.member.family.members[0]?.role === 'ADMIN' || isCreator;
+  const isAdmin =
+    mealPlan.member.family.members[0]?.role === "ADMIN" || isCreator;
   const isSelf = mealPlan.member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {
@@ -85,10 +83,9 @@ export default async function MealPlanDetailPage({
   return (
     <MealPlanDetailClient
       mealPlan={mealPlan}
-      memberName={mealPlan.member.name || '成员'}
+      memberName={mealPlan.member.name || "成员"}
       familyId={id}
       memberId={memberId}
     />
   );
 }
-

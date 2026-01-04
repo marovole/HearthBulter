@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { ArrowRight, Heart, Activity, Utensils, TrendingUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Heart,
+  Activity,
+  Utensils,
+  TrendingUp,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -22,10 +28,38 @@ const staggerContainer = {
 };
 
 const floatingElements = [
-  { icon: Heart, color: 'text-rose-500', bg: 'bg-rose-50', x: '8%', y: '20%', delay: 0 },
-  { icon: Activity, color: 'text-primary', bg: 'bg-primary/10', x: '85%', y: '15%', delay: 0.5 },
-  { icon: Utensils, color: 'text-amber-500', bg: 'bg-amber-50', x: '12%', y: '65%', delay: 1 },
-  { icon: TrendingUp, color: 'text-info', bg: 'bg-blue-50', x: '88%', y: '70%', delay: 1.5 },
+  {
+    icon: Heart,
+    color: "text-rose-500",
+    bg: "bg-rose-50",
+    x: "8%",
+    y: "20%",
+    delay: 0,
+  },
+  {
+    icon: Activity,
+    color: "text-primary",
+    bg: "bg-primary/10",
+    x: "85%",
+    y: "15%",
+    delay: 0.5,
+  },
+  {
+    icon: Utensils,
+    color: "text-amber-500",
+    bg: "bg-amber-50",
+    x: "12%",
+    y: "65%",
+    delay: 1,
+  },
+  {
+    icon: TrendingUp,
+    color: "text-info",
+    bg: "bg-blue-50",
+    x: "88%",
+    y: "70%",
+    delay: 1.5,
+  },
 ];
 
 export default function Hero() {
@@ -33,7 +67,7 @@ export default function Hero() {
     <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-background">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 bg-mesh-pattern opacity-60" />
-      
+
       {/* Organic gradient blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -42,7 +76,7 @@ export default function Hero() {
             scale: [1, 1.1, 1],
             opacity: [0.5, 0.7, 0.5],
           }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute top-1/2 -left-32 w-[400px] h-[400px] rounded-full bg-accent/8 blur-3xl"
@@ -50,7 +84,12 @@ export default function Hero() {
             scale: [1.1, 1, 1.1],
             opacity: [0.4, 0.6, 0.4],
           }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
         />
         <motion.div
           className="absolute -bottom-32 left-1/3 w-[350px] h-[350px] rounded-full bg-success/8 blur-3xl"
@@ -58,7 +97,12 @@ export default function Hero() {
             scale: [1, 1.15, 1],
             opacity: [0.3, 0.5, 0.3],
           }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2,
+          }}
         />
       </div>
 
@@ -70,7 +114,11 @@ export default function Hero() {
           style={{ left: item.x, top: item.y }}
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: item.delay + 0.5, duration: 0.5, type: 'spring' }}
+          transition={{
+            delay: item.delay + 0.5,
+            duration: 0.5,
+            type: "spring",
+          }}
         >
           <motion.div
             className={`${item.bg} p-4 rounded-2xl shadow-soft`}
@@ -81,7 +129,7 @@ export default function Hero() {
             transition={{
               duration: 6,
               repeat: Infinity,
-              ease: 'easeInOut',
+              ease: "easeInOut",
               delay: item.delay,
             }}
           >
@@ -126,7 +174,10 @@ export default function Hero() {
           </motion.p>
 
           {/* CTA */}
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4">
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-col sm:flex-row gap-4"
+          >
             <Button asChild size="xl" variant="glow" className="group">
               <Link href="/auth/signup">
                 免费开始使用
@@ -134,9 +185,7 @@ export default function Hero() {
               </Link>
             </Button>
             <Button asChild size="xl" variant="outline">
-              <Link href="/auth/signin">
-                已有账号？登录
-              </Link>
+              <Link href="/auth/signin">已有账号？登录</Link>
             </Button>
           </motion.div>
 
@@ -150,19 +199,25 @@ export default function Hero() {
                 <div className="font-mono text-3xl sm:text-4xl font-bold text-foreground">
                   10K+
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">活跃用户</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  活跃用户
+                </div>
               </div>
               <div>
                 <div className="font-mono text-3xl sm:text-4xl font-bold text-foreground">
                   100+
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">精选食谱</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  精选食谱
+                </div>
               </div>
               <div>
                 <div className="font-mono text-3xl sm:text-4xl font-bold text-foreground">
                   95%
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">用户满意度</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  用户满意度
+                </div>
               </div>
             </div>
           </motion.div>
@@ -184,7 +239,7 @@ export default function Hero() {
               <motion.div
                 className="w-64 h-64 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
                 animate={{ rotate: 360 }}
-                transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
               >
                 <div className="w-48 h-48 rounded-full bg-gradient-to-br from-primary/30 to-transparent flex items-center justify-center">
                   <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center">
@@ -192,7 +247,7 @@ export default function Hero() {
                   </div>
                 </div>
               </motion.div>
-              
+
               {/* Orbiting elements */}
               {[0, 1, 2].map((i) => (
                 <motion.div
@@ -208,12 +263,16 @@ export default function Hero() {
                   transition={{
                     duration: 8 + i * 4,
                     repeat: Infinity,
-                    ease: 'linear',
+                    ease: "linear",
                   }}
                 >
                   <motion.div
                     className={`w-4 h-4 rounded-full ${
-                      i === 0 ? 'bg-primary' : i === 1 ? 'bg-accent' : 'bg-success'
+                      i === 0
+                        ? "bg-primary"
+                        : i === 1
+                          ? "bg-accent"
+                          : "bg-success"
                     }`}
                     style={{
                       transform: `translateX(${100 + i * 40}px)`,

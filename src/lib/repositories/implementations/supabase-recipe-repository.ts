@@ -1,5 +1,5 @@
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { safeParseArray } from '@/lib/utils/json-helpers';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { safeParseArray } from "@/lib/utils/json-helpers";
 import type {
   RecipeRepository,
   RecipeFavoriteDTO,
@@ -9,7 +9,7 @@ import type {
   AddFavoriteInput,
   AddOrUpdateRatingInput,
   RecipeWithIngredientsDTO,
-} from '@/lib/repositories/interfaces/recipe-repository';
+} from "@/lib/repositories/interfaces/recipe-repository";
 
 /**
  * Supabase Recipe Repository 实现
@@ -17,23 +17,32 @@ import type {
  * 使用 Supabase Client 访问食谱数据
  */
 export class SupabaseRecipeRepository implements RecipeRepository {
-  constructor(private readonly supabase = SupabaseClientManager.getInstance()) {}
+  constructor(
+    private readonly supabase = SupabaseClientManager.getInstance(),
+  ) {}
 
-  async getFavoritesByMember(query: GetFavoritesQuery): Promise<FavoritesResult> {
+  async getFavoritesByMember(
+    query: GetFavoritesQuery,
+  ): Promise<FavoritesResult> {
     const {
       memberId,
       page = 1,
       limit = 10,
-      sortBy = 'favoritedAt',
-      sortOrder = 'desc',
+      sortBy = "favoritedAt",
+      sortOrder = "desc",
     } = query;
 
     const skip = (page - 1) * limit;
 
     // 获取收藏列表（带recipe关联）
-    const { data: favorites, error: favoritesError, count } = await this.supabase
-      .from('recipe_favorites')
-      .select(`
+    const {
+      data: favorites,
+      error: favoritesError,
+      count,
+    } = await this.supabase
+      .from("recipe_favorites")
+      .select(
+        `
         id,
         favoritedAt,
         notes,
@@ -51,9 +60,11 @@ export class SupabaseRecipeRepository implements RecipeRepository {
           createdAt,
           updatedAt
         )
-      `, { count: 'exact' })
-      .eq('memberId', memberId)
-      .order(sortBy, { ascending: sortOrder === 'asc' })
+      `,
+        { count: "exact" },
+      )
+      .eq("memberId", memberId)
+      .order(sortBy, { ascending: sortOrder === "asc" })
       .range(skip, skip + limit - 1);
 
     if (favoritesError) {
@@ -69,8 +80,9 @@ export class SupabaseRecipeRepository implements RecipeRepository {
 
       // 查询所有相关的ingredients
       const { data: ingredients, error: ingredientsError } = await this.supabase
-        .from('recipe_ingredients')
-        .select(`
+        .from("recipe_ingredients")
+        .select(
+          `
           id,
           recipeId,
           amount,
@@ -86,11 +98,12 @@ export class SupabaseRecipeRepository implements RecipeRepository {
             fat,
             category
           )
-        `)
-        .in('recipeId', recipeIds);
+        `,
+        )
+        .in("recipeId", recipeIds);
 
       if (ingredientsError) {
-        console.error('查询食材失败:', ingredientsError);
+        console.error("查询食材失败:", ingredientsError);
       } else {
         // 按recipeId分组ingredients
         const ingredientsMap = new Map<string, any[]>();
@@ -114,7 +127,9 @@ export class SupabaseRecipeRepository implements RecipeRepository {
     }
 
     return {
-      favorites: favoritesWithIngredients.map((fav: any) => this.normalizeFavorite(fav)),
+      favorites: favoritesWithIngredients.map((fav: any) =>
+        this.normalizeFavorite(fav),
+      ),
       pagination: {
         page,
         limit,
@@ -129,7 +144,7 @@ export class SupabaseRecipeRepository implements RecipeRepository {
 
     // 创建收藏记录
     const { data: favorite, error } = await this.supabase
-      .from('recipe_favorites')
+      .from("recipe_favorites")
       .insert({
         recipeId,
         memberId,
@@ -141,8 +156,11 @@ export class SupabaseRecipeRepository implements RecipeRepository {
 
     if (error) {
       // 如果是重复收藏（违反唯一约束），返回现有记录
-      if (error.code === '23505') {
-        const existingFavorite = await this.checkFavoriteStatus(recipeId, memberId);
+      if (error.code === "23505") {
+        const existingFavorite = await this.checkFavoriteStatus(
+          recipeId,
+          memberId,
+        );
         if (existingFavorite) {
           return existingFavorite;
         }
@@ -155,22 +173,25 @@ export class SupabaseRecipeRepository implements RecipeRepository {
 
   async removeFavorite(recipeId: string, memberId: string): Promise<void> {
     const { error } = await this.supabase
-      .from('recipe_favorites')
+      .from("recipe_favorites")
       .delete()
-      .eq('recipeId', recipeId)
-      .eq('memberId', memberId);
+      .eq("recipeId", recipeId)
+      .eq("memberId", memberId);
 
     if (error) {
       throw error;
     }
   }
 
-  async checkFavoriteStatus(recipeId: string, memberId: string): Promise<RecipeFavoriteDTO | null> {
+  async checkFavoriteStatus(
+    recipeId: string,
+    memberId: string,
+  ): Promise<RecipeFavoriteDTO | null> {
     const { data, error } = await this.supabase
-      .from('recipe_favorites')
-      .select('*')
-      .eq('recipeId', recipeId)
-      .eq('memberId', memberId)
+      .from("recipe_favorites")
+      .select("*")
+      .eq("recipeId", recipeId)
+      .eq("memberId", memberId)
       .maybeSingle();
 
     if (error) {
@@ -180,7 +201,9 @@ export class SupabaseRecipeRepository implements RecipeRepository {
     return data ? this.normalizeFavorite(data) : null;
   }
 
-  async addOrUpdateRating(input: AddOrUpdateRatingInput): Promise<RecipeRatingDTO> {
+  async addOrUpdateRating(
+    input: AddOrUpdateRatingInput,
+  ): Promise<RecipeRatingDTO> {
     const { recipeId, memberId, rating, comment, tags } = input;
 
     const ratingData = {
@@ -193,9 +216,9 @@ export class SupabaseRecipeRepository implements RecipeRepository {
     };
 
     const { data, error } = await this.supabase
-      .from('recipe_ratings')
+      .from("recipe_ratings")
       .upsert(ratingData, {
-        onConflict: 'recipeId,memberId',
+        onConflict: "recipeId,memberId",
       })
       .select()
       .single();
@@ -207,12 +230,15 @@ export class SupabaseRecipeRepository implements RecipeRepository {
     return this.normalizeRating(data);
   }
 
-  async getRating(recipeId: string, memberId: string): Promise<RecipeRatingDTO | null> {
+  async getRating(
+    recipeId: string,
+    memberId: string,
+  ): Promise<RecipeRatingDTO | null> {
     const { data, error } = await this.supabase
-      .from('recipe_ratings')
-      .select('*')
-      .eq('recipeId', recipeId)
-      .eq('memberId', memberId)
+      .from("recipe_ratings")
+      .select("*")
+      .eq("recipeId", recipeId)
+      .eq("memberId", memberId)
       .maybeSingle();
 
     if (error) {
@@ -224,9 +250,9 @@ export class SupabaseRecipeRepository implements RecipeRepository {
 
   async recipeExists(recipeId: string): Promise<boolean> {
     const { data, error } = await this.supabase
-      .from('recipes')
-      .select('id')
-      .eq('id', recipeId)
+      .from("recipes")
+      .select("id")
+      .eq("id", recipeId)
       .maybeSingle();
 
     if (error) {

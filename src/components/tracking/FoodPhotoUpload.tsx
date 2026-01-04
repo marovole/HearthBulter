@@ -1,7 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { Camera, Upload, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { useState, useRef } from "react";
+import {
+  Camera,
+  Upload,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 
 interface RecognizedFood {
   name: string;
@@ -20,26 +26,32 @@ interface FoodPhotoUploadProps {
   onError: (error: string) => void;
 }
 
-export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadProps) {
+export function FoodPhotoUpload({
+  onFoodRecognized,
+  onError,
+}: FoodPhotoUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [recognitionResult, setRecognitionResult] = useState<RecognizedFood | null>(null);
+  const [recognitionResult, setRecognitionResult] =
+    useState<RecognizedFood | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      onError('请选择图片文件');
+    if (!file.type.startsWith("image/")) {
+      onError("请选择图片文件");
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      onError('图片大小不能超过10MB');
+      onError("图片大小不能超过10MB");
       return;
     }
 
@@ -61,39 +73,38 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
     try {
       // Create FormData for file upload
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append("image", file);
 
       // Upload image
-      const uploadResponse = await fetch('/api/tracking/photo/upload', {
-        method: 'POST',
+      const uploadResponse = await fetch("/api/tracking/photo/upload", {
+        method: "POST",
         body: formData,
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('图片上传失败');
+        throw new Error("图片上传失败");
       }
 
       const { imageUrl } = await uploadResponse.json();
 
       // Recognize food
-      const recognizeResponse = await fetch('/api/tracking/recognize', {
-        method: 'POST',
+      const recognizeResponse = await fetch("/api/tracking/recognize", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ imageUrl }),
       });
 
       if (!recognizeResponse.ok) {
-        throw new Error('食物识别失败');
+        throw new Error("食物识别失败");
       }
 
       const result = await recognizeResponse.json();
       setRecognitionResult(result);
-
     } catch (error) {
-      console.error('食物识别错误:', error);
-      onError(error instanceof Error ? error.message : '识别过程中出现错误');
+      console.error("食物识别错误:", error);
+      onError(error instanceof Error ? error.message : "识别过程中出现错误");
       setRecognitionResult(null);
     } finally {
       setIsUploading(false);
@@ -117,20 +128,20 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
     setPreview(null);
     setRecognitionResult(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 80) return 'text-green-600';
-    if (confidence >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (confidence >= 80) return "text-green-600";
+    if (confidence >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getConfidenceText = (confidence: number) => {
-    if (confidence >= 80) return '识别准确度很高';
-    if (confidence >= 60) return '识别准确度中等';
-    return '识别准确度较低，建议手动确认';
+    if (confidence >= 80) return "识别准确度很高";
+    if (confidence >= 60) return "识别准确度中等";
+    return "识别准确度较低，建议手动确认";
   };
 
   return (
@@ -142,7 +153,7 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
             <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
               <Camera className="w-8 h-8 text-gray-400" />
             </div>
-            
+
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 拍照识别食物
@@ -185,7 +196,7 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
               alt="Food preview"
               className="w-full h-64 object-cover rounded-lg"
             />
-            
+
             {isRecognizing && (
               <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
                 <div className="text-center">
@@ -208,9 +219,11 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
                     估算份量: {recognitionResult.estimatedAmount}g
                   </p>
                 </div>
-                
+
                 <div className="text-right">
-                  <div className={`flex items-center space-x-1 ${getConfidenceColor(recognitionResult.confidence)}`}>
+                  <div
+                    className={`flex items-center space-x-1 ${getConfidenceColor(recognitionResult.confidence)}`}
+                  >
                     {recognitionResult.confidence >= 80 ? (
                       <CheckCircle className="w-5 h-5" />
                     ) : (

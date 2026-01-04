@@ -10,7 +10,7 @@
  * @module inventory-tracker
  */
 
-import type { InventoryRepository } from '@/lib/repositories/interfaces/inventory-repository';
+import type { InventoryRepository } from "@/lib/repositories/interfaces/inventory-repository";
 import type {
   InventoryItemDTO,
   InventoryItemCreateDTO,
@@ -20,7 +20,7 @@ import type {
   InventoryStatsDTO,
   InventoryStatus,
   StorageLocation,
-} from '@/lib/repositories/types/inventory';
+} from "@/lib/repositories/types/inventory";
 
 /**
  * 创建库存物品输入（兼容旧接口）
@@ -92,7 +92,9 @@ export class InventoryTracker {
   /**
    * 创建库存条目
    */
-  async createInventoryItem(input: CreateInventoryItemInput): Promise<InventoryItemWithRelations> {
+  async createInventoryItem(
+    input: CreateInventoryItemInput,
+  ): Promise<InventoryItemWithRelations> {
     const payload: InventoryItemCreateDTO = {
       memberId: input.memberId,
       foodId: input.foodId,
@@ -114,9 +116,11 @@ export class InventoryTracker {
     const item = await this.repository.createInventoryItem(payload);
 
     // 获取完整的关联数据
-    const itemWithRelations = await this.repository.getInventoryItemById(item.id);
+    const itemWithRelations = await this.repository.getInventoryItemById(
+      item.id,
+    );
     if (!itemWithRelations) {
-      throw new Error('Failed to retrieve created inventory item');
+      throw new Error("Failed to retrieve created inventory item");
     }
 
     return itemWithRelations;
@@ -125,7 +129,10 @@ export class InventoryTracker {
   /**
    * 更新库存条目
    */
-  async updateInventoryItem(id: string, input: UpdateInventoryItemInput): Promise<InventoryItemWithRelations> {
+  async updateInventoryItem(
+    id: string,
+    input: UpdateInventoryItemInput,
+  ): Promise<InventoryItemWithRelations> {
     const payload: InventoryItemUpdateDTO = {
       quantity: input.quantity,
       unit: input.unit,
@@ -147,7 +154,7 @@ export class InventoryTracker {
     // 获取更新后的完整数据
     const itemWithRelations = await this.repository.getInventoryItemById(id);
     if (!itemWithRelations) {
-      throw new Error('Failed to retrieve updated inventory item');
+      throw new Error("Failed to retrieve updated inventory item");
     }
 
     return itemWithRelations;
@@ -167,7 +174,10 @@ export class InventoryTracker {
    * Repository 的 listInventoryItems 已经使用 Supabase JOIN 返回了 food 信息
    * 后续可以添加批量获取 usage_records 和 waste_records 的逻辑
    */
-  async getInventoryItems(memberId: string, filters?: InventoryFilters): Promise<InventoryItemWithRelations[]> {
+  async getInventoryItems(
+    memberId: string,
+    filters?: InventoryFilters,
+  ): Promise<InventoryItemWithRelations[]> {
     // 转换过滤条件格式
     const filter: InventoryItemFilterDTO = {};
 
@@ -192,7 +202,9 @@ export class InventoryTracker {
   /**
    * 获取单个库存条目详情
    */
-  async getInventoryItemById(id: string): Promise<InventoryItemWithRelations | null> {
+  async getInventoryItemById(
+    id: string,
+  ): Promise<InventoryItemWithRelations | null> {
     return await this.repository.getInventoryItemById(id);
   }
 
@@ -211,27 +223,35 @@ export class InventoryTracker {
       relatedType?: string;
       notes?: string;
       recipeName?: string;
-    }
+    },
   ): Promise<InventoryItemWithRelations> {
     // 验证 usageType 是否为有效的枚举值
     const validReasons: Array<typeof usageReasonSchema._type> = [
-      'COOKING', 'EATING', 'RECIPE', 'EXPIRED', 'DAMAGED', 'OTHER',
+      "COOKING",
+      "EATING",
+      "RECIPE",
+      "EXPIRED",
+      "DAMAGED",
+      "OTHER",
     ];
 
     if (!validReasons.includes(usageType as typeof usageReasonSchema._type)) {
       throw new Error(
-        `Invalid usageType: ${usageType}. Valid values: ${validReasons.join(', ')}`
+        `Invalid usageType: ${usageType}. Valid values: ${validReasons.join(", ")}`,
       );
     }
 
     // 验证库存物品属于当前用户（权限检查）
-    const inventoryItem = await this.repository.getInventoryItemById(inventoryItemId);
+    const inventoryItem =
+      await this.repository.getInventoryItemById(inventoryItemId);
     if (!inventoryItem) {
       throw new Error(`Inventory item not found: ${inventoryItemId}`);
     }
 
     if (inventoryItem.memberId !== memberId) {
-      throw new Error('Permission denied: Inventory item does not belong to the current user');
+      throw new Error(
+        "Permission denied: Inventory item does not belong to the current user",
+      );
     }
 
     // 使用库存（移除 any 类型强制转换）
@@ -241,14 +261,15 @@ export class InventoryTracker {
       reason: usageType as typeof usageReasonSchema._type,
       notes: options?.notes,
       // 注意：relatedId 和 relatedType 在新的 DTO 中映射为 mealId/recipeId
-      mealId: options?.relatedType === 'MEAL' ? options?.relatedId : undefined,
-      recipeId: options?.relatedType === 'RECIPE' ? options?.relatedId : undefined,
+      mealId: options?.relatedType === "MEAL" ? options?.relatedId : undefined,
+      recipeId:
+        options?.relatedType === "RECIPE" ? options?.relatedId : undefined,
     });
 
     // 获取更新后的完整数据
     const item = await this.repository.getInventoryItemById(inventoryItemId);
     if (!item) {
-      throw new Error('Failed to retrieve inventory item after use');
+      throw new Error("Failed to retrieve inventory item after use");
     }
 
     return item;
@@ -264,7 +285,7 @@ export class InventoryTracker {
       quantity: number;
       unit: string;
     }>,
-    recipeName: string
+    recipeName: string,
   ): Promise<InventoryItemWithRelations[]> {
     const results: InventoryItemWithRelations[] = [];
 
@@ -277,7 +298,11 @@ export class InventoryTracker {
 
       // 筛选符合条件的物品（foodId 匹配且数量充足）
       const matchingItems = allItems.items
-        .filter((item) => item.foodId === ingredient.foodId && item.quantity >= ingredient.quantity)
+        .filter(
+          (item) =>
+            item.foodId === ingredient.foodId &&
+            item.quantity >= ingredient.quantity,
+        )
         .sort((a, b) => {
           // 按过期日期升序排序（临期优先）
           if (a.expiryDate && b.expiryDate) {
@@ -295,13 +320,13 @@ export class InventoryTracker {
         const updatedItem = await this.useInventory(
           inventoryItem.id,
           ingredient.quantity,
-          'COOKING',
+          "COOKING",
           memberId,
           {
             recipeName,
             notes: `食谱：${recipeName}`,
-            relatedType: 'RECIPE',
-          }
+            relatedType: "RECIPE",
+          },
         );
 
         results.push(updatedItem);
@@ -330,11 +355,11 @@ export class InventoryTracker {
     return {
       totalItems: stats.totalItems,
       totalCategories: Object.keys(stats.itemsByLocation).length, // 使用位置数量作为近似
-      freshItems: stats.itemsByStatus['FRESH'] ?? 0,
-      expiringItems: stats.itemsByStatus['EXPIRING'] ?? 0,
-      expiredItems: stats.itemsByStatus['EXPIRED'] ?? 0,
+      freshItems: stats.itemsByStatus["FRESH"] ?? 0,
+      expiringItems: stats.itemsByStatus["EXPIRING"] ?? 0,
+      expiredItems: stats.itemsByStatus["EXPIRED"] ?? 0,
       lowStockItems: stats.lowStockCount,
-      outOfStockItems: stats.itemsByStatus['DEPLETED'] ?? 0,
+      outOfStockItems: stats.itemsByStatus["DEPLETED"] ?? 0,
       estimatedValue: stats.totalValue,
     };
   }
@@ -359,14 +384,14 @@ export class InventoryTracker {
   private calculateInventoryStatus(
     quantity: number,
     expiryDate?: Date,
-    minStockThreshold?: number
+    minStockThreshold?: number,
   ): InventoryStatus {
     if (quantity <= 0) {
-      return 'DEPLETED';
+      return "DEPLETED";
     }
 
     if (minStockThreshold && quantity <= minStockThreshold) {
-      return 'NORMAL';
+      return "NORMAL";
     }
 
     if (expiryDate) {
@@ -374,13 +399,13 @@ export class InventoryTracker {
       const daysToExpiry = this.calculateDaysToExpiry(expiryDate);
 
       if (daysToExpiry < 0) {
-        return 'EXPIRED';
+        return "EXPIRED";
       } else if (daysToExpiry <= 3) {
-        return 'EXPIRING';
+        return "EXPIRING";
       }
     }
 
-    return 'FRESH';
+    return "FRESH";
   }
 }
 
@@ -394,7 +419,9 @@ let inventoryTrackerInstance: InventoryTracker | null = null;
 
 function getInventoryTrackerSingleton(): InventoryTracker {
   if (!inventoryTrackerInstance) {
-    const { inventoryRepository } = require('@/lib/repositories/inventory-repository-singleton');
+    const {
+      inventoryRepository,
+    } = require("@/lib/repositories/inventory-repository-singleton");
     inventoryTrackerInstance = new InventoryTracker(inventoryRepository);
   }
   return inventoryTrackerInstance;

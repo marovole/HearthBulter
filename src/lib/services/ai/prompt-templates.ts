@@ -1,14 +1,18 @@
-import { RECOMMENDED_MODELS } from './openai-client';
+import { RECOMMENDED_MODELS } from "./openai-client";
 
 // Prompt模板版本管理
 export interface PromptTemplate {
   id: string;
   name: string;
   version: string;
-  category: 'health_analysis' | 'recipe_optimization' | 'nutrition_consultation' | 'report_generation';
+  category:
+    | "health_analysis"
+    | "recipe_optimization"
+    | "nutrition_consultation"
+    | "report_generation";
   template: string;
   parameters: string[];
-  outputFormat: 'text' | 'json';
+  outputFormat: "text" | "json";
   isActive: boolean;
   createdAt: string;
 }
@@ -16,10 +20,10 @@ export interface PromptTemplate {
 // 健康分析Prompt模板
 export const HEALTH_ANALYSIS_PROMPTS: Record<string, PromptTemplate> = {
   basic_health_analysis: {
-    id: 'health_analysis_v1',
-    name: '基础健康分析',
-    version: '1.0',
-    category: 'health_analysis',
+    id: "health_analysis_v1",
+    name: "基础健康分析",
+    version: "1.0",
+    category: "health_analysis",
     template: `你是一位专业的营养师和健康顾问。请根据用户提供的体检数据进行全面分析。
 
 体检数据：
@@ -42,17 +46,26 @@ export const HEALTH_ANALYSIS_PROMPTS: Record<string, PromptTemplate> = {
 5. 建议检查的项目
 
 请用中文回答，保持专业性和易懂性。`,
-    parameters: ['medical_data', 'age', 'gender', 'height', 'weight', 'health_goals', 'dietary_preferences', 'allergies'],
-    outputFormat: 'json',
+    parameters: [
+      "medical_data",
+      "age",
+      "gender",
+      "height",
+      "weight",
+      "health_goals",
+      "dietary_preferences",
+      "allergies",
+    ],
+    outputFormat: "json",
     isActive: true,
     createdAt: new Date().toISOString(),
   },
 
   detailed_health_analysis: {
-    id: 'health_analysis_detailed_v1',
-    name: '详细健康分析',
-    version: '1.0',
-    category: 'health_analysis',
+    id: "health_analysis_detailed_v1",
+    name: "详细健康分析",
+    version: "1.0",
+    category: "health_analysis",
     template: `你是一位资深的临床营养师，请对用户的体检报告进行深度分析。
 
 体检报告数据（JSON格式）：
@@ -88,8 +101,8 @@ export const HEALTH_ANALYSIS_PROMPTS: Record<string, PromptTemplate> = {
 }
 
 分析要基于医学证据，确保建议合理安全。`,
-    parameters: ['medical_report_json', 'user_profile', 'meal_history'],
-    outputFormat: 'json',
+    parameters: ["medical_report_json", "user_profile", "meal_history"],
+    outputFormat: "json",
     isActive: true,
     createdAt: new Date().toISOString(),
   },
@@ -98,10 +111,10 @@ export const HEALTH_ANALYSIS_PROMPTS: Record<string, PromptTemplate> = {
 // 食谱优化Prompt模板
 export const RECIPE_OPTIMIZATION_PROMPTS: Record<string, PromptTemplate> = {
   recipe_nutrition_analysis: {
-    id: 'recipe_analysis_v1',
-    name: '食谱营养分析',
-    version: '1.0',
-    category: 'recipe_optimization',
+    id: "recipe_analysis_v1",
+    name: "食谱营养分析",
+    version: "1.0",
+    category: "recipe_optimization",
     template: `你是一位专业的营养师，请分析这份食谱的营养价值。
 
 食谱详情：
@@ -120,17 +133,17 @@ export const RECIPE_OPTIMIZATION_PROMPTS: Record<string, PromptTemplate> = {
 4. 改善建议
 
 如果发现问题，请提供具体的优化方案。`,
-    parameters: ['recipe_details', 'target_nutrition', 'health_conditions'],
-    outputFormat: 'json',
+    parameters: ["recipe_details", "target_nutrition", "health_conditions"],
+    outputFormat: "json",
     isActive: true,
     createdAt: new Date().toISOString(),
   },
 
   ingredient_substitution: {
-    id: 'ingredient_sub_v1',
-    name: '食材替代建议',
-    version: '1.0',
-    category: 'recipe_optimization',
+    id: "ingredient_sub_v1",
+    name: "食材替代建议",
+    version: "1.0",
+    category: "recipe_optimization",
     template: `用户需要替换食谱中的某些食材。
 
 原始食材：{{original_ingredient}}
@@ -145,8 +158,13 @@ export const RECIPE_OPTIMIZATION_PROMPTS: Record<string, PromptTemplate> = {
 4. 成本和季节性
 
 提供3-5个替代选项，按优先级排序。`,
-    parameters: ['original_ingredient', 'reason', 'available_ingredients', 'nutrition_requirements'],
-    outputFormat: 'json',
+    parameters: [
+      "original_ingredient",
+      "reason",
+      "available_ingredients",
+      "nutrition_requirements",
+    ],
+    outputFormat: "json",
     isActive: true,
     createdAt: new Date().toISOString(),
   },
@@ -155,10 +173,10 @@ export const RECIPE_OPTIMIZATION_PROMPTS: Record<string, PromptTemplate> = {
 // 营养咨询Prompt模板
 export const NUTRITION_CONSULTATION_PROMPTS: Record<string, PromptTemplate> = {
   general_consultation: {
-    id: 'consultation_general_v1',
-    name: '通用营养咨询',
-    version: '1.0',
-    category: 'nutrition_consultation',
+    id: "consultation_general_v1",
+    name: "通用营养咨询",
+    version: "1.0",
+    category: "nutrition_consultation",
     template: `你是一位友好的营养咨询师，用户有以下问题：
 
 用户问题：{{user_question}}
@@ -175,17 +193,17 @@ export const NUTRITION_CONSULTATION_PROMPTS: Record<string, PromptTemplate> = {
 - 先回答问题
 - 然后提供相关建议
 - 最后询问是否还有其他问题`,
-    parameters: ['user_question', 'user_context', 'conversation_history'],
-    outputFormat: 'text',
+    parameters: ["user_question", "user_context", "conversation_history"],
+    outputFormat: "text",
     isActive: true,
     createdAt: new Date().toISOString(),
   },
 
   specific_nutrition_question: {
-    id: 'consultation_specific_v1',
-    name: '特定营养问题',
-    version: '1.0',
-    category: 'nutrition_consultation',
+    id: "consultation_specific_v1",
+    name: "特定营养问题",
+    version: "1.0",
+    category: "nutrition_consultation",
     template: `针对特定营养问题提供解答。
 
 问题：{{specific_question}}
@@ -198,8 +216,8 @@ export const NUTRITION_CONSULTATION_PROMPTS: Record<string, PromptTemplate> = {
 4. 推荐相关资源（如需要）
 
 确保回答准确且安全。`,
-    parameters: ['specific_question', 'relevant_data'],
-    outputFormat: 'text',
+    parameters: ["specific_question", "relevant_data"],
+    outputFormat: "text",
     isActive: true,
     createdAt: new Date().toISOString(),
   },
@@ -208,10 +226,10 @@ export const NUTRITION_CONSULTATION_PROMPTS: Record<string, PromptTemplate> = {
 // 报告生成Prompt模板
 export const REPORT_GENERATION_PROMPTS: Record<string, PromptTemplate> = {
   weekly_health_report: {
-    id: 'report_weekly_v1',
-    name: '周健康报告',
-    version: '1.0',
-    category: 'report_generation',
+    id: "report_weekly_v1",
+    name: "周健康报告",
+    version: "1.0",
+    category: "report_generation",
     template: `生成用户本周健康和营养报告。
 
 数据汇总：
@@ -227,17 +245,17 @@ export const REPORT_GENERATION_PROMPTS: Record<string, PromptTemplate> = {
 5. 亮点和改进点
 
 保持积极鼓励的语气。`,
-    parameters: ['weekly_data', 'user_goals'],
-    outputFormat: 'text',
+    parameters: ["weekly_data", "user_goals"],
+    outputFormat: "text",
     isActive: true,
     createdAt: new Date().toISOString(),
   },
 
   monthly_health_report: {
-    id: 'report_monthly_v1',
-    name: '月健康报告',
-    version: '1.0',
-    category: 'report_generation',
+    id: "report_monthly_v1",
+    name: "月健康报告",
+    version: "1.0",
+    category: "report_generation",
     template: `生成用户本月详细健康报告。
 
 月度数据：
@@ -252,53 +270,66 @@ export const REPORT_GENERATION_PROMPTS: Record<string, PromptTemplate> = {
 3. 长期趋势洞察
 4. 个性化建议
 5. 下一阶段目标`,
-    parameters: ['monthly_data', 'health_trends'],
-    outputFormat: 'text',
+    parameters: ["monthly_data", "health_trends"],
+    outputFormat: "text",
     isActive: true,
     createdAt: new Date().toISOString(),
   },
 };
 
 // Prompt模板管理函数
-export function getActivePrompt(category: PromptTemplate['category'], name?: string): PromptTemplate | null {
+export function getActivePrompt(
+  category: PromptTemplate["category"],
+  name?: string,
+): PromptTemplate | null {
   const categoryPrompts = getPromptsByCategory(category);
   if (name) {
     return categoryPrompts[name] || null;
   }
   // 返回第一个活跃的模板
-  return Object.values(categoryPrompts).find(p => p.isActive) || null;
+  return Object.values(categoryPrompts).find((p) => p.isActive) || null;
 }
 
-export function getPromptsByCategory(category: PromptTemplate['category']): Record<string, PromptTemplate> {
+export function getPromptsByCategory(
+  category: PromptTemplate["category"],
+): Record<string, PromptTemplate> {
   switch (category) {
-  case 'health_analysis':
-    return HEALTH_ANALYSIS_PROMPTS;
-  case 'recipe_optimization':
-    return RECIPE_OPTIMIZATION_PROMPTS;
-  case 'nutrition_consultation':
-    return NUTRITION_CONSULTATION_PROMPTS;
-  case 'report_generation':
-    return REPORT_GENERATION_PROMPTS;
-  default:
-    return {};
+    case "health_analysis":
+      return HEALTH_ANALYSIS_PROMPTS;
+    case "recipe_optimization":
+      return RECIPE_OPTIMIZATION_PROMPTS;
+    case "nutrition_consultation":
+      return NUTRITION_CONSULTATION_PROMPTS;
+    case "report_generation":
+      return REPORT_GENERATION_PROMPTS;
+    default:
+      return {};
   }
 }
 
-export function renderPrompt(template: PromptTemplate, variables: Record<string, any>): string {
+export function renderPrompt(
+  template: PromptTemplate,
+  variables: Record<string, any>,
+): string {
   let rendered = template.template;
 
   // 替换变量
   Object.entries(variables).forEach(([key, value]) => {
     const placeholder = `{{${key}}}`;
-    rendered = rendered.replace(new RegExp(placeholder, 'g'), String(value));
+    rendered = rendered.replace(new RegExp(placeholder, "g"), String(value));
   });
 
   return rendered;
 }
 
 // 验证Prompt参数
-export function validatePromptParameters(template: PromptTemplate, providedParams: Record<string, any>): { valid: boolean; missing: string[] } {
-  const missing = template.parameters.filter(param => !(param in providedParams));
+export function validatePromptParameters(
+  template: PromptTemplate,
+  providedParams: Record<string, any>,
+): { valid: boolean; missing: string[] } {
+  const missing = template.parameters.filter(
+    (param) => !(param in providedParams),
+  );
   return {
     valid: missing.length === 0,
     missing,

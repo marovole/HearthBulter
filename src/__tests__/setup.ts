@@ -423,25 +423,21 @@ jest.mock("@/lib/db", () => ({
       findFirst: jest.fn(),
       findUnique: jest.fn(),
       findMany: jest.fn(),
-      create: jest
-        .fn()
-        .mockResolvedValue({
-          id: "test-health-goal-id",
-          goalType: "MAINTAIN",
-          status: "ACTIVE",
-        }),
+      create: jest.fn().mockResolvedValue({
+        id: "test-health-goal-id",
+        goalType: "MAINTAIN",
+        status: "ACTIVE",
+      }),
       update: jest.fn(),
       delete: jest.fn(),
     },
     userPreference: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
-      create: jest
-        .fn()
-        .mockResolvedValue({
-          id: "test-preference-id",
-          memberId: "test-member-id",
-        }),
+      create: jest.fn().mockResolvedValue({
+        id: "test-preference-id",
+        memberId: "test-member-id",
+      }),
       update: jest.fn(),
       upsert: jest.fn(),
       delete: jest.fn(),
@@ -564,13 +560,11 @@ jest.mock("@/lib/services/ai/rate-limiter", () => ({
     getStatsByTimeRange: jest
       .fn()
       .mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
-    getGlobalStats: jest
-      .fn()
-      .mockReturnValue({
-        totalRequests: 0,
-        blockedRequests: 0,
-        activeUsers: 0,
-      }),
+    getGlobalStats: jest.fn().mockReturnValue({
+      totalRequests: 0,
+      blockedRequests: 0,
+      activeUsers: 0,
+    }),
     cleanup: jest.fn(),
     updateConfig: jest.fn(),
     hasUserData: jest.fn().mockReturnValue(false),
@@ -587,13 +581,11 @@ jest.mock("@/lib/services/ai/rate-limiter", () => ({
     isAllowed: jest.fn().mockResolvedValue(true),
     getRemainingRequests: jest.fn().mockResolvedValue(10),
     clearAll: jest.fn(),
-    getGlobalStats: jest
-      .fn()
-      .mockReturnValue({
-        totalRequests: 0,
-        blockedRequests: 0,
-        activeUsers: 0,
-      }),
+    getGlobalStats: jest.fn().mockReturnValue({
+      totalRequests: 0,
+      blockedRequests: 0,
+      activeUsers: 0,
+    }),
   },
 }));
 

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import type { ReactNode } from 'react';
-import { SessionProvider as NextAuthSessionProvider } from 'next-auth/react';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
+import type { ReactNode } from "react";
+import { SessionProvider as NextAuthSessionProvider } from "next-auth/react";
+import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
 
 /**
  * Props for the Providers component
@@ -47,12 +47,7 @@ export default function Providers({ children }: ProvidersProps): JSX.Element {
         {children}
 
         {/* Global toast notification system */}
-        <Toaster
-          position="top-right"
-          expand={false}
-          richColors
-          closeButton
-        />
+        <Toaster position="top-right" expand={false} richColors closeButton />
       </NextAuthSessionProvider>
     </ThemeProvider>
   );

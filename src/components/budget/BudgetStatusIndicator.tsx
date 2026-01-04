@@ -1,55 +1,55 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { 
-  AlertTriangleIcon, 
-  TrendingUpIcon, 
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  AlertTriangleIcon,
+  TrendingUpIcon,
   TrendingDownIcon,
   DollarSignIcon,
   RefreshCwIcon,
-} from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import { BudgetStatus as BudgetStatusType, FoodCategory } from '@prisma/client';
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import { BudgetStatus as BudgetStatusType, FoodCategory } from "@prisma/client";
 
 interface BudgetStatus {
-  budget: any
-  usedAmount: number
-  remainingAmount: number
-  usagePercentage: number
+  budget: any;
+  usedAmount: number;
+  remainingAmount: number;
+  usagePercentage: number;
   categoryUsage: {
     [key in FoodCategory]?: {
-      budget: number
-      used: number
-      remaining: number
-      percentage: number
-    }
-  }
-  dailyAverage: number
-  daysRemaining: number
-  projectedSpend: number
-  alerts: string[]
+      budget: number;
+      used: number;
+      remaining: number;
+      percentage: number;
+    };
+  };
+  dailyAverage: number;
+  daysRemaining: number;
+  projectedSpend: number;
+  alerts: string[];
 }
 
 interface BudgetStatusIndicatorProps {
-  memberId: string
-  budgetId?: string
-  compact?: boolean
-  showDetails?: boolean
-  onBudgetClick?: (budget: BudgetStatus) => void
+  memberId: string;
+  budgetId?: string;
+  compact?: boolean;
+  showDetails?: boolean;
+  onBudgetClick?: (budget: BudgetStatus) => void;
 }
 
-export function BudgetStatusIndicator({ 
-  memberId, 
-  budgetId, 
-  compact = false, 
+export function BudgetStatusIndicator({
+  memberId,
+  budgetId,
+  compact = false,
   showDetails = false,
-  onBudgetClick, 
+  onBudgetClick,
 }: BudgetStatusIndicatorProps) {
   const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,19 +57,19 @@ export function BudgetStatusIndicator({
 
   const fetchBudgetStatus = async () => {
     try {
-      const url = budgetId 
+      const url = budgetId
         ? `/api/budget/current?budgetId=${budgetId}`
         : `/api/budget/current?memberId=${memberId}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('获取预算状态失败');
+        throw new Error("获取预算状态失败");
       }
-      
+
       const data = await response.json();
       setBudgetStatus(data);
     } catch (err) {
-      console.error('获取预算状态失败:', err);
+      console.error("获取预算状态失败:", err);
       setBudgetStatus(null);
     } finally {
       setLoading(false);
@@ -87,15 +87,15 @@ export function BudgetStatusIndicator({
   };
 
   const getUsageColor = (percentage: number) => {
-    if (percentage >= 100) return 'text-red-600';
-    if (percentage >= 80) return 'text-yellow-600';
-    return 'text-green-600';
+    if (percentage >= 100) return "text-red-600";
+    if (percentage >= 80) return "text-yellow-600";
+    return "text-green-600";
   };
 
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 100) return 'bg-red-500';
-    if (percentage >= 80) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (percentage >= 100) return "bg-red-500";
+    if (percentage >= 80) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   const getStatusBadge = (percentage: number) => {
@@ -130,14 +130,19 @@ export function BudgetStatusIndicator({
     return (
       <Alert>
         <AlertTriangleIcon className="h-4 w-4" />
-        <AlertDescription>
-          没有找到活跃的预算
-        </AlertDescription>
+        <AlertDescription>没有找到活跃的预算</AlertDescription>
       </Alert>
     );
   }
 
-  const { budget, usedAmount, remainingAmount, usagePercentage, daysRemaining, alerts } = budgetStatus;
+  const {
+    budget,
+    usedAmount,
+    remainingAmount,
+    usagePercentage,
+    daysRemaining,
+    alerts,
+  } = budgetStatus;
 
   if (compact) {
     return (
@@ -155,21 +160,21 @@ export function BudgetStatusIndicator({
               onClick={handleRefresh}
               disabled={refreshing}
             >
-              <RefreshCwIcon className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCwIcon
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">预算使用</span>
               <span className={getUsageColor(usagePercentage)}>
-                {formatCurrency(usedAmount)} / {formatCurrency(budget.totalAmount)}
+                {formatCurrency(usedAmount)} /{" "}
+                {formatCurrency(budget.totalAmount)}
               </span>
             </div>
-            <Progress 
-              value={Math.min(usagePercentage, 100)} 
-              className="h-2"
-            />
+            <Progress value={Math.min(usagePercentage, 100)} className="h-2" />
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>{usagePercentage.toFixed(1)}% 已使用</span>
               <span>剩余 {daysRemaining} 天</span>
@@ -196,9 +201,10 @@ export function BudgetStatusIndicator({
           <div>
             <h3 className="text-lg font-semibold">{budget.name}</h3>
             <p className="text-sm text-muted-foreground">
-              剩余 {daysRemaining} 天 · {formatDistanceToNow(new Date(budget.endDate), { 
-                addSuffix: true, 
-                locale: zhCN, 
+              剩余 {daysRemaining} 天 ·{" "}
+              {formatDistanceToNow(new Date(budget.endDate), {
+                addSuffix: true,
+                locale: zhCN,
               })}
             </p>
           </div>
@@ -210,7 +216,9 @@ export function BudgetStatusIndicator({
               onClick={handleRefresh}
               disabled={refreshing}
             >
-              <RefreshCwIcon className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCwIcon
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </div>
@@ -223,7 +231,9 @@ export function BudgetStatusIndicator({
             <p className="text-xs text-muted-foreground">总预算</p>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${getUsageColor(usagePercentage)}`}>
+            <div
+              className={`text-2xl font-bold ${getUsageColor(usagePercentage)}`}
+            >
               {formatCurrency(usedAmount)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -231,7 +241,9 @@ export function BudgetStatusIndicator({
             </p>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${remainingAmount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div
+              className={`text-2xl font-bold ${remainingAmount > 0 ? "text-green-600" : "text-red-600"}`}
+            >
               {formatCurrency(remainingAmount)}
             </div>
             <p className="text-xs text-muted-foreground">剩余预算</p>
@@ -245,10 +257,7 @@ export function BudgetStatusIndicator({
               {usagePercentage.toFixed(1)}%
             </span>
           </div>
-          <Progress 
-            value={Math.min(usagePercentage, 100)} 
-            className="h-3"
-          />
+          <Progress value={Math.min(usagePercentage, 100)} className="h-3" />
           {usagePercentage > 100 && (
             <p className="text-xs text-red-600">
               已超支 {formatCurrency(usedAmount - budget.totalAmount)}
@@ -267,22 +276,28 @@ export function BudgetStatusIndicator({
                 {formatCurrency(budgetStatus.dailyAverage)}
               </span>
             </div>
-            
+
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-1">
                 <TrendingDownIcon className="h-4 w-4" />
                 预计总支出
               </span>
-              <span className={`font-medium ${budgetStatus.projectedSpend > budget.totalAmount ? 'text-red-600' : 'text-green-600'}`}>
+              <span
+                className={`font-medium ${budgetStatus.projectedSpend > budget.totalAmount ? "text-red-600" : "text-green-600"}`}
+              >
                 {formatCurrency(budgetStatus.projectedSpend)}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-sm">
               <span>预计节省/超支</span>
-              <span className={`font-medium ${budgetStatus.projectedSpend > budget.totalAmount ? 'text-red-600' : 'text-green-600'}`}>
-                {budgetStatus.projectedSpend > budget.totalAmount ? '+' : ''}
-                {formatCurrency(budgetStatus.projectedSpend - budget.totalAmount)}
+              <span
+                className={`font-medium ${budgetStatus.projectedSpend > budget.totalAmount ? "text-red-600" : "text-green-600"}`}
+              >
+                {budgetStatus.projectedSpend > budget.totalAmount ? "+" : ""}
+                {formatCurrency(
+                  budgetStatus.projectedSpend - budget.totalAmount,
+                )}
               </span>
             </div>
           </div>
@@ -290,7 +305,13 @@ export function BudgetStatusIndicator({
 
         {alerts.length > 0 && (
           <div className="border-t pt-4">
-            <Alert variant={alerts.some(alert => alert.includes('超支')) ? 'destructive' : 'default'}>
+            <Alert
+              variant={
+                alerts.some((alert) => alert.includes("超支"))
+                  ? "destructive"
+                  : "default"
+              }
+            >
               <AlertTriangleIcon className="h-4 w-4" />
               <AlertDescription>
                 {alerts.slice(0, 2).map((alert, index) => (
@@ -308,8 +329,8 @@ export function BudgetStatusIndicator({
 
         {onBudgetClick && (
           <div className="border-t pt-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full"
               onClick={() => onBudgetClick(budgetStatus)}
             >

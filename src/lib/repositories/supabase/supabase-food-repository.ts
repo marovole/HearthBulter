@@ -1,12 +1,12 @@
-import type { FoodCategory } from '@prisma/client';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { safeParseArray } from '@/lib/utils/json-helpers';
+import type { FoodCategory } from "@prisma/client";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { safeParseArray } from "@/lib/utils/json-helpers";
 import type {
   FoodRecord,
   FoodRepository,
   FoodSearchQuery,
   FoodSearchResult,
-} from '@/lib/repositories/interfaces/food-repository';
+} from "@/lib/repositories/interfaces/food-repository";
 
 /**
  * Supabase Food Repository 实现
@@ -14,7 +14,9 @@ import type {
  * 使用 Supabase Client 访问食材数据
  */
 export class SupabaseFoodRepository implements FoodRepository {
-  constructor(private readonly supabase = SupabaseClientManager.getInstance()) {}
+  constructor(
+    private readonly supabase = SupabaseClientManager.getInstance(),
+  ) {}
 
   /**
    * 规范化 Supabase 返回的 Food 对象
@@ -29,9 +31,9 @@ export class SupabaseFoodRepository implements FoodRepository {
 
   async findById(id: string): Promise<FoodRecord | null> {
     const { data, error } = await this.supabase
-      .from('foods')
-      .select('*')
-      .eq('id', id)
+      .from("foods")
+      .select("*")
+      .eq("id", id)
       .maybeSingle();
 
     if (error) {
@@ -48,15 +50,15 @@ export class SupabaseFoodRepository implements FoodRepository {
     const ilikeValue = `%${query}%`;
 
     let dbQuery = this.supabase
-      .from('foods')
-      .select('*', { count: 'exact' })
+      .from("foods")
+      .select("*", { count: "exact" })
       .or(`name.ilike.${ilikeValue},nameEn.ilike.${ilikeValue}`)
-      .order('name', { ascending: true })
+      .order("name", { ascending: true })
       .range((page - 1) * limit, page * limit - 1);
 
     // 添加分类过滤
     if (category) {
-      dbQuery = dbQuery.eq('category', category);
+      dbQuery = dbQuery.eq("category", category);
     }
 
     const { data, error, count } = await dbQuery;
@@ -66,7 +68,7 @@ export class SupabaseFoodRepository implements FoodRepository {
     }
 
     return {
-      foods: (data || []).map(food => this.normalizeFoodRecord(food)),
+      foods: (data || []).map((food) => this.normalizeFoodRecord(food)),
       total: count || 0,
       page,
       limit,
@@ -75,38 +77,42 @@ export class SupabaseFoodRepository implements FoodRepository {
 
   async findPopular(limit: number): Promise<FoodRecord[]> {
     const { data, error } = await this.supabase
-      .from('foods')
-      .select('*')
-      .order('createdAt', { ascending: false })
+      .from("foods")
+      .select("*")
+      .order("createdAt", { ascending: false })
       .limit(limit);
 
     if (error) {
       throw error;
     }
 
-    return (data || []).map(food => this.normalizeFoodRecord(food));
+    return (data || []).map((food) => this.normalizeFoodRecord(food));
   }
 
-  async listByCategory(category: FoodCategory, from: number, to: number): Promise<FoodRecord[]> {
+  async listByCategory(
+    category: FoodCategory,
+    from: number,
+    to: number,
+  ): Promise<FoodRecord[]> {
     const { data, error } = await this.supabase
-      .from('foods')
-      .select('*')
-      .eq('category', category)
-      .order('name', { ascending: true })
+      .from("foods")
+      .select("*")
+      .eq("category", category)
+      .order("name", { ascending: true })
       .range(from, to);
 
     if (error) {
       throw error;
     }
 
-    return (data || []).map(food => this.normalizeFoodRecord(food));
+    return (data || []).map((food) => this.normalizeFoodRecord(food));
   }
 
   async countByCategory(category: FoodCategory): Promise<number> {
     const { count, error } = await this.supabase
-      .from('foods')
-      .select('*', { count: 'exact', head: true })
-      .eq('category', category);
+      .from("foods")
+      .select("*", { count: "exact", head: true })
+      .eq("category", category);
 
     if (error) {
       throw error;

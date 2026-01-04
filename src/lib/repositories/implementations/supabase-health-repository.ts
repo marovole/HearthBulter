@@ -5,12 +5,12 @@
  * 复用 FamilyRepository 进行权限检查，使用并行查询优化性能
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 import type {
   HealthRepository,
   MemberHealthContext,
   AIAdviceHistoryRecord,
-} from '@/lib/repositories/interfaces/health-repository';
+} from "@/lib/repositories/interfaces/health-repository";
 
 export class SupabaseHealthRepository implements HealthRepository {
   private readonly supabase = SupabaseClientManager.getInstance();
@@ -25,7 +25,7 @@ export class SupabaseHealthRepository implements HealthRepository {
     options?: {
       healthDataLimit?: number;
       medicalReportsLimit?: number;
-    }
+    },
   ): Promise<MemberHealthContext | null> {
     const healthDataLimit = options?.healthDataLimit ?? 10;
     const medicalReportsLimit = options?.medicalReportsLimit ?? 5;
@@ -42,48 +42,50 @@ export class SupabaseHealthRepository implements HealthRepository {
       ] = await Promise.all([
         // 1. 获取成员基本信息
         this.supabase
-          .from('family_members')
-          .select('id, familyId, userId, name, birthDate, gender, height, weight, bmi')
-          .eq('id', memberId)
-          .is('deletedAt', null)
+          .from("family_members")
+          .select(
+            "id, familyId, userId, name, birthDate, gender, height, weight, bmi",
+          )
+          .eq("id", memberId)
+          .is("deletedAt", null)
           .single(),
 
         // 2. 获取健康目标
         this.supabase
-          .from('health_goals')
-          .select('id, goalType, targetValue, currentValue, deadline, status')
-          .eq('memberId', memberId)
-          .is('deletedAt', null),
+          .from("health_goals")
+          .select("id, goalType, targetValue, currentValue, deadline, status")
+          .eq("memberId", memberId)
+          .is("deletedAt", null),
 
         // 3. 获取过敏信息
         this.supabase
-          .from('allergies')
-          .select('id, allergenName, severity, symptoms')
-          .eq('memberId', memberId)
-          .is('deletedAt', null),
+          .from("allergies")
+          .select("id, allergenName, severity, symptoms")
+          .eq("memberId", memberId)
+          .is("deletedAt", null),
 
         // 4. 获取饮食偏好
         this.supabase
-          .from('dietary_preferences')
-          .select('dietType, isVegetarian, isVegan, restrictions, preferences')
-          .eq('memberId', memberId)
-          .is('deletedAt', null)
+          .from("dietary_preferences")
+          .select("dietType, isVegetarian, isVegan, restrictions, preferences")
+          .eq("memberId", memberId)
+          .is("deletedAt", null)
           .maybeSingle(),
 
         // 5. 获取健康数据（最近 N 条）
         this.supabase
-          .from('health_data')
-          .select('id, dataType, value, unit, measuredAt, source')
-          .eq('memberId', memberId)
-          .order('measuredAt', { ascending: false })
+          .from("health_data")
+          .select("id, dataType, value, unit, measuredAt, source")
+          .eq("memberId", memberId)
+          .order("measuredAt", { ascending: false })
           .limit(healthDataLimit),
 
         // 6. 获取体检报告（最近 N 条）
         this.supabase
-          .from('medical_reports')
-          .select('id, reportType, reportDate, uploadedAt')
-          .eq('memberId', memberId)
-          .order('createdAt', { ascending: false })
+          .from("medical_reports")
+          .select("id, reportType, reportDate, uploadedAt")
+          .eq("memberId", memberId)
+          .order("createdAt", { ascending: false })
           .limit(medicalReportsLimit),
       ]);
 
@@ -99,9 +101,11 @@ export class SupabaseHealthRepository implements HealthRepository {
       if (medicalReportsResult.data && medicalReportsResult.data.length > 0) {
         const reportIds = medicalReportsResult.data.map((r) => r.id);
         const { data: indicators } = await this.supabase
-          .from('medical_report_indicators')
-          .select('id, reportId, indicatorName, value, unit, referenceRange, status')
-          .in('reportId', reportIds);
+          .from("medical_report_indicators")
+          .select(
+            "id, reportId, indicatorName, value, unit, referenceRange, status",
+          )
+          .in("reportId", reportIds);
 
         allIndicators = indicators || [];
       }
@@ -135,12 +139,12 @@ export class SupabaseHealthRepository implements HealthRepository {
         })),
         dietaryPreference: dietaryPreferenceResult.data
           ? {
-            dietType: dietaryPreferenceResult.data.dietType,
-            isVegetarian: dietaryPreferenceResult.data.isVegetarian ?? false,
-            isVegan: dietaryPreferenceResult.data.isVegan ?? false,
-            restrictions: dietaryPreferenceResult.data.restrictions,
-            preferences: dietaryPreferenceResult.data.preferences,
-          }
+              dietType: dietaryPreferenceResult.data.dietType,
+              isVegetarian: dietaryPreferenceResult.data.isVegetarian ?? false,
+              isVegan: dietaryPreferenceResult.data.isVegan ?? false,
+              restrictions: dietaryPreferenceResult.data.restrictions,
+              preferences: dietaryPreferenceResult.data.preferences,
+            }
           : null,
         healthData: (healthDataResult.data || []).map((h) => ({
           id: h.id,
@@ -169,7 +173,7 @@ export class SupabaseHealthRepository implements HealthRepository {
         })),
       };
     } catch (error) {
-      console.error('Failed to fetch member health context:', error);
+      console.error("Failed to fetch member health context:", error);
       return null;
     }
   }
@@ -179,20 +183,20 @@ export class SupabaseHealthRepository implements HealthRepository {
    */
   async getMemberHealthHistory(
     memberId: string,
-    limit = 10
+    limit = 10,
   ): Promise<AIAdviceHistoryRecord[]> {
     try {
       const { data, error } = await this.supabase
-        .from('ai_advice')
-        .select('id, generatedAt, content, feedback')
-        .eq('memberId', memberId)
-        .eq('type', 'HEALTH_ANALYSIS')
-        .is('deletedAt', null)
-        .order('generatedAt', { ascending: false })
+        .from("ai_advice")
+        .select("id, generatedAt, content, feedback")
+        .eq("memberId", memberId)
+        .eq("type", "HEALTH_ANALYSIS")
+        .is("deletedAt", null)
+        .order("generatedAt", { ascending: false })
         .limit(limit);
 
       if (error) {
-        console.error('Failed to fetch health history:', error);
+        console.error("Failed to fetch health history:", error);
         return [];
       }
 
@@ -203,7 +207,7 @@ export class SupabaseHealthRepository implements HealthRepository {
         feedback: record.feedback,
       }));
     } catch (error) {
-      console.error('Failed to fetch member health history:', error);
+      console.error("Failed to fetch member health history:", error);
       return [];
     }
   }
@@ -222,7 +226,7 @@ export class SupabaseHealthRepository implements HealthRepository {
       const now = new Date().toISOString();
 
       const { data: aiAdvice, error } = await this.supabase
-        .from('ai_advice')
+        .from("ai_advice")
         .insert({
           memberId: data.memberId,
           type: data.type,
@@ -233,11 +237,11 @@ export class SupabaseHealthRepository implements HealthRepository {
           createdAt: now,
           updatedAt: now,
         })
-        .select('id, generatedAt')
+        .select("id, generatedAt")
         .single();
 
       if (error) {
-        console.error('Failed to save AI health advice:', error);
+        console.error("Failed to save AI health advice:", error);
         return null;
       }
 
@@ -246,7 +250,7 @@ export class SupabaseHealthRepository implements HealthRepository {
         generatedAt: new Date(aiAdvice.generatedAt),
       };
     } catch (error) {
-      console.error('Failed to save health advice:', error);
+      console.error("Failed to save health advice:", error);
       return null;
     }
   }
@@ -260,7 +264,7 @@ export class SupabaseHealthRepository implements HealthRepository {
     id: string;
     memberId: string;
     messages: any[];
-    status: 'ACTIVE' | 'ARCHIVED';
+    status: "ACTIVE" | "ARCHIVED";
     tokens?: number;
     updatedAt: Date;
     lastMessageAt: Date;
@@ -276,31 +280,29 @@ export class SupabaseHealthRepository implements HealthRepository {
       // 如果压缩了消息，记录日志（使用 warn 级别避免日志噪音）
       if (data.messages.length > MAX_MESSAGES) {
         console.warn(
-          `[HealthRepository] Compressed conversation ${data.id}: ${data.messages.length} → ${compressedMessages.length} messages`
+          `[HealthRepository] Compressed conversation ${data.id}: ${data.messages.length} → ${compressedMessages.length} messages`,
         );
       }
 
-      const { error } = await this.supabase
-        .from('ai_conversations')
-        .upsert(
-          {
-            id: data.id,
-            memberId: data.memberId,
-            messages: compressedMessages,
-            status: data.status,
-            tokens: data.tokens ?? 0,
-            updatedAt: data.updatedAt.toISOString(),
-            lastMessageAt: data.lastMessageAt.toISOString(),
-          },
-          { onConflict: 'id' }
-        );
+      const { error } = await this.supabase.from("ai_conversations").upsert(
+        {
+          id: data.id,
+          memberId: data.memberId,
+          messages: compressedMessages,
+          status: data.status,
+          tokens: data.tokens ?? 0,
+          updatedAt: data.updatedAt.toISOString(),
+          lastMessageAt: data.lastMessageAt.toISOString(),
+        },
+        { onConflict: "id" },
+      );
 
       if (error) {
-        console.error('Failed to save AI conversation:', error);
+        console.error("Failed to save AI conversation:", error);
         throw error;
       }
     } catch (error) {
-      console.error('Failed to save AI conversation:', error);
+      console.error("Failed to save AI conversation:", error);
       throw error;
     }
   }

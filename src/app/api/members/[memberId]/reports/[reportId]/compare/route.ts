@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import type { IndicatorType } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import type { IndicatorType } from "@prisma/client";
 
 /**
  * 验证用户是否有权限访问成员的健康数据
@@ -10,16 +10,17 @@ import type { IndicatorType } from '@prisma/client';
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
-    .from('family_members')
-    .select(`
+    .from("family_members")
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -27,9 +28,10 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `)
-    .eq('id', memberId)
-    .is('deletedAt', null)
+    `,
+    )
+    .eq("id", memberId)
+    .is("deletedAt", null)
     .single();
 
   if (!member) {
@@ -41,12 +43,12 @@ async function verifyMemberAccess(
   let isAdmin = false;
   if (!isCreator) {
     const { data: adminMember } = await supabase
-      .from('family_members')
-      .select('id, role')
-      .eq('familyId', member.familyId)
-      .eq('userId', userId)
-      .eq('role', 'ADMIN')
-      .is('deletedAt', null)
+      .from("family_members")
+      .select("id, role")
+      .eq("familyId", member.familyId)
+      .eq("userId", userId)
+      .eq("role", "ADMIN")
+      .is("deletedAt", null)
       .maybeSingle();
 
     isAdmin = !!adminMember;
@@ -67,89 +69,76 @@ async function verifyMemberAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> }
+  { params }: { params: Promise<{ memberId: string; reportId: string }> },
 ) {
   try {
     const { memberId, reportId } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: '无权限查看该报告' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "无权限查看该报告" }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
 
     // 查询当前报告
     const { data: currentReport, error: currentError } = await supabase
-      .from('medical_reports')
-      .select('*')
-      .eq('id', reportId)
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
+      .from("medical_reports")
+      .select("*")
+      .eq("id", reportId)
+      .eq("memberId", memberId)
+      .is("deletedAt", null)
       .maybeSingle();
 
     if (currentError) {
-      console.error('查询当前报告失败:', currentError);
-      return NextResponse.json(
-        { error: '查询报告失败' },
-        { status: 500 }
-      );
+      console.error("查询当前报告失败:", currentError);
+      return NextResponse.json({ error: "查询报告失败" }, { status: 500 });
     }
 
     if (!currentReport) {
-      return NextResponse.json(
-        { error: '报告不存在' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "报告不存在" }, { status: 404 });
     }
 
     // 查询当前报告的指标
-    const { data: currentIndicators, error: currentIndicatorsError } = await supabase
-      .from('medical_indicators')
-      .select('*')
-      .eq('reportId', reportId);
+    const { data: currentIndicators, error: currentIndicatorsError } =
+      await supabase
+        .from("medical_indicators")
+        .select("*")
+        .eq("reportId", reportId);
 
     if (currentIndicatorsError) {
-      console.error('查询当前指标失败:', currentIndicatorsError);
-      return NextResponse.json(
-        { error: '查询指标失败' },
-        { status: 500 }
-      );
+      console.error("查询当前指标失败:", currentIndicatorsError);
+      return NextResponse.json({ error: "查询指标失败" }, { status: 500 });
     }
 
     // 查询该成员的其他报告（按日期排序，获取最近的一条）
     let previousQuery = supabase
-      .from('medical_reports')
-      .select('*')
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .neq('id', reportId);
+      .from("medical_reports")
+      .select("*")
+      .eq("memberId", memberId)
+      .is("deletedAt", null)
+      .neq("id", reportId);
 
     if (currentReport.reportDate) {
-      previousQuery = previousQuery.lt('reportDate', currentReport.reportDate);
+      previousQuery = previousQuery.lt("reportDate", currentReport.reportDate);
     }
 
-    const { data: previousReports, error: previousReportsError } = await previousQuery
-      .order('reportDate', { ascending: false, nullsFirst: false })
-      .order('createdAt', { ascending: false })
-      .limit(1);
+    const { data: previousReports, error: previousReportsError } =
+      await previousQuery
+        .order("reportDate", { ascending: false, nullsFirst: false })
+        .order("createdAt", { ascending: false })
+        .limit(1);
 
     if (previousReportsError) {
-      console.error('查询历史报告失败:', previousReportsError);
-      return NextResponse.json(
-        { error: '查询报告失败' },
-        { status: 500 }
-      );
+      console.error("查询历史报告失败:", previousReportsError);
+      return NextResponse.json({ error: "查询报告失败" }, { status: 500 });
     }
 
     const previousReport = previousReports?.[0];
@@ -157,7 +146,7 @@ export async function GET(
     // 如果没有历史报告，返回当前报告数据
     if (!previousReport) {
       return NextResponse.json({
-        message: '暂无历史报告可对比',
+        message: "暂无历史报告可对比",
         current: {
           reportId: currentReport.id,
           reportDate: currentReport.reportDate,
@@ -167,40 +156,38 @@ export async function GET(
     }
 
     // 查询历史报告的指标
-    const { data: previousIndicators, error: previousIndicatorsError } = await supabase
-      .from('medical_indicators')
-      .select('*')
-      .eq('reportId', previousReport.id);
+    const { data: previousIndicators, error: previousIndicatorsError } =
+      await supabase
+        .from("medical_indicators")
+        .select("*")
+        .eq("reportId", previousReport.id);
 
     if (previousIndicatorsError) {
-      console.error('查询历史指标失败:', previousIndicatorsError);
-      return NextResponse.json(
-        { error: '查询指标失败' },
-        { status: 500 }
-      );
+      console.error("查询历史指标失败:", previousIndicatorsError);
+      return NextResponse.json({ error: "查询指标失败" }, { status: 500 });
     }
 
     // 构建指标对比数据
     const comparison: Array<{
-      indicatorType: IndicatorType
-      name: string
-      unit: string
-      previousValue?: number
-      currentValue: number
-      change?: number
-      changePercent?: number
-      trend: 'improved' | 'worsened' | 'stable' | 'new'
-      previousStatus?: string
-      currentStatus: string
+      indicatorType: IndicatorType;
+      name: string;
+      unit: string;
+      previousValue?: number;
+      currentValue: number;
+      change?: number;
+      changePercent?: number;
+      trend: "improved" | "worsened" | "stable" | "new";
+      previousStatus?: string;
+      currentStatus: string;
     }> = [];
 
     // 按指标类型分组
     const previousIndicatorsMap = new Map(
-      (previousIndicators || []).map((ind) => [ind.indicatorType, ind])
+      (previousIndicators || []).map((ind) => [ind.indicatorType, ind]),
     );
 
     const currentIndicatorsMap = new Map(
-      (currentIndicators || []).map((ind) => [ind.indicatorType, ind])
+      (currentIndicators || []).map((ind) => [ind.indicatorType, ind]),
     );
 
     // 处理所有当前指标
@@ -213,35 +200,32 @@ export async function GET(
         const changePercent =
           previous.value !== 0
             ? ((change / previous.value) * 100).toFixed(2)
-            : '0';
+            : "0";
 
         // 判断趋势
-        let trend: 'improved' | 'worsened' | 'stable' = 'stable';
-        
+        let trend: "improved" | "worsened" | "stable" = "stable";
+
         // 如果当前状态比之前好，视为改善
-        if (
-          current.status === 'NORMAL' &&
-          previous.status !== 'NORMAL'
-        ) {
-          trend = 'improved';
+        if (current.status === "NORMAL" && previous.status !== "NORMAL") {
+          trend = "improved";
         } else if (
-          current.status !== 'NORMAL' &&
-          previous.status === 'NORMAL'
+          current.status !== "NORMAL" &&
+          previous.status === "NORMAL"
         ) {
-          trend = 'worsened';
+          trend = "worsened";
         } else if (
-          current.status === 'CRITICAL' &&
-          previous.status !== 'CRITICAL'
+          current.status === "CRITICAL" &&
+          previous.status !== "CRITICAL"
         ) {
-          trend = 'worsened';
+          trend = "worsened";
         } else if (
-          current.status !== 'CRITICAL' &&
-          previous.status === 'CRITICAL'
+          current.status !== "CRITICAL" &&
+          previous.status === "CRITICAL"
         ) {
-          trend = 'improved';
+          trend = "improved";
         } else if (Math.abs(change / previous.value) < 0.05) {
           // 变化小于5%视为稳定
-          trend = 'stable';
+          trend = "stable";
         }
 
         comparison.push({
@@ -263,7 +247,7 @@ export async function GET(
           name: current.name,
           unit: current.unit,
           currentValue: current.value,
-          trend: 'new',
+          trend: "new",
           currentStatus: current.status,
         });
       }
@@ -277,9 +261,9 @@ export async function GET(
           name: previous.name,
           unit: previous.unit,
           previousValue: previous.value,
-          trend: 'new', // 标记为"新"（实际上是消失，但前端可以根据previousValue判断）
+          trend: "new", // 标记为"新"（实际上是消失，但前端可以根据previousValue判断）
           previousStatus: previous.status,
-          currentStatus: 'NORMAL',
+          currentStatus: "NORMAL",
         });
       }
     }
@@ -309,7 +293,9 @@ export async function GET(
         OTHER: 20,
       };
 
-      return (typeOrder[a.indicatorType] || 99) - (typeOrder[b.indicatorType] || 99);
+      return (
+        (typeOrder[a.indicatorType] || 99) - (typeOrder[b.indicatorType] || 99)
+      );
     });
 
     return NextResponse.json({
@@ -326,21 +312,20 @@ export async function GET(
       comparison,
       summary: {
         totalIndicators: comparison.length,
-        improved: comparison.filter((c) => c.trend === 'improved').length,
-        worsened: comparison.filter((c) => c.trend === 'worsened').length,
-        stable: comparison.filter((c) => c.trend === 'stable').length,
-        new: comparison.filter((c) => c.trend === 'new').length,
+        improved: comparison.filter((c) => c.trend === "improved").length,
+        worsened: comparison.filter((c) => c.trend === "worsened").length,
+        stable: comparison.filter((c) => c.trend === "stable").length,
+        new: comparison.filter((c) => c.trend === "new").length,
       },
     });
   } catch (error) {
-    console.error('对比报告失败:', error);
+    console.error("对比报告失败:", error);
     return NextResponse.json(
       {
-        error: '服务器内部错误',
-        details: error instanceof Error ? error.message : '未知错误',
+        error: "服务器内部错误",
+        details: error instanceof Error ? error.message : "未知错误",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

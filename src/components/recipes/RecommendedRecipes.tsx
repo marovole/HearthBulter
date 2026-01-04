@@ -1,11 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Star, Clock, DollarSign, Users, Heart, Eye, ChefHat, RefreshCw } from 'lucide-react';
-import { RecipeCard } from './RecipeCard';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Star,
+  Clock,
+  DollarSign,
+  Users,
+  Heart,
+  Eye,
+  ChefHat,
+  RefreshCw,
+} from "lucide-react";
+import { RecipeCard } from "./RecipeCard";
 
 interface Recipe {
   id: string;
@@ -84,27 +99,33 @@ export function RecommendedRecipes({
         ...(servings && { servings: servings.toString() }),
         ...(maxCookTime && { maxCookTime: maxCookTime.toString() }),
         ...(budgetLimit && { budgetLimit: budgetLimit.toString() }),
-        ...(dietaryRestrictions?.length && { dietaryRestrictions: dietaryRestrictions.join(',') }),
-        ...(excludedIngredients?.length && { excludedIngredients: excludedIngredients.join(',') }),
-        ...(preferredCuisines?.length && { preferredCuisines: preferredCuisines.join(',') }),
+        ...(dietaryRestrictions?.length && {
+          dietaryRestrictions: dietaryRestrictions.join(","),
+        }),
+        ...(excludedIngredients?.length && {
+          excludedIngredients: excludedIngredients.join(","),
+        }),
+        ...(preferredCuisines?.length && {
+          preferredCuisines: preferredCuisines.join(","),
+        }),
         ...(season && { season }),
         limit: limit.toString(),
       });
 
       if (excludeRecipeIds.length > 0) {
-        params.set('excludeRecipeIds', excludeRecipeIds.join(','));
+        params.set("excludeRecipeIds", excludeRecipeIds.join(","));
       }
 
       const response = await fetch(`/api/recommendations/recipes?${params}`);
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to load recommendations');
+        throw new Error(data.error || "Failed to load recommendations");
       }
 
       setRecommendations(data.recommendations || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -113,7 +134,7 @@ export function RecommendedRecipes({
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    const excludeRecipeIds = recommendations.map(r => r.recipeId);
+    const excludeRecipeIds = recommendations.map((r) => r.recipeId);
     await loadRecommendations(excludeRecipeIds);
   };
 
@@ -125,9 +146,9 @@ export function RecommendedRecipes({
     servings,
     maxCookTime,
     budgetLimit,
-    dietaryRestrictions?.join(','),
-    excludedIngredients?.join(','),
-    preferredCuisines?.join(','),
+    dietaryRestrictions?.join(","),
+    excludedIngredients?.join(","),
+    preferredCuisines?.join(","),
     season,
     limit,
   ]);
@@ -177,7 +198,9 @@ export function RecommendedRecipes({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">为您推荐</h2>
-          <p className="text-muted-foreground">基于您的偏好和历史行为精心挑选</p>
+          <p className="text-muted-foreground">
+            基于您的偏好和历史行为精心挑选
+          </p>
         </div>
         <Button
           onClick={handleRefresh}
@@ -185,7 +208,9 @@ export function RecommendedRecipes({
           variant="outline"
           size="sm"
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+          />
           换一批
         </Button>
       </div>

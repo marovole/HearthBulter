@@ -1,42 +1,46 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Plus, 
-  Minus, 
-  Users, 
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Plus,
+  Minus,
+  Users,
   Calculator,
   Scale,
   AlertTriangle,
   CheckCircle,
   RefreshCw,
-} from 'lucide-react';
-import { toast } from '@/lib/toast';
+} from "lucide-react";
+import { toast } from "@/lib/toast";
 
 interface PortionAdjusterProps {
-  mealId: string
-  originalServings: number
+  mealId: string;
+  originalServings: number;
   originalIngredients: Array<{
-    id: string
-    amount: number
+    id: string;
+    amount: number;
     food: {
-      id: string
-      name: string
-      unit?: string
-    }
-  }>
+      id: string;
+      name: string;
+      unit?: string;
+    };
+  }>;
   originalNutrition: {
-    calories: number
-    protein: number
-    carbs: number
-    fat: number
-  }
-  onAdjust?: (newServings: number, adjustedIngredients: any[], adjustedNutrition: any) => void
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  onAdjust?: (
+    newServings: number,
+    adjustedIngredients: any[],
+    adjustedNutrition: any,
+  ) => void;
 }
 
 export function PortionAdjuster({
@@ -47,27 +51,30 @@ export function PortionAdjuster({
   onAdjust,
 }: PortionAdjusterProps) {
   const [servings, setServings] = useState(originalServings);
-  const [customServings, setCustomServings] = useState(originalServings.toString());
+  const [customServings, setCustomServings] = useState(
+    originalServings.toString(),
+  );
   const [isCustomMode, setIsCustomMode] = useState(false);
-  const [adjustedIngredients, setAdjustedIngredients] = useState(originalIngredients);
+  const [adjustedIngredients, setAdjustedIngredients] =
+    useState(originalIngredients);
   const [adjustedNutrition, setAdjustedNutrition] = useState(originalNutrition);
   const [hasChanges, setHasChanges] = useState(false);
 
   const scaleFactor = servings / originalServings;
 
   useEffect(() => {
-    const newIngredients = originalIngredients.map(ingredient => ({
+    const newIngredients = originalIngredients.map((ingredient) => ({
       ...ingredient,
       amount: ingredient.amount * scaleFactor,
     }));
-    
+
     const newNutrition = {
       calories: originalNutrition.calories * scaleFactor,
       protein: originalNutrition.protein * scaleFactor,
       carbs: originalNutrition.carbs * scaleFactor,
       fat: originalNutrition.fat * scaleFactor,
     };
-    
+
     setAdjustedIngredients(newIngredients);
     setAdjustedNutrition(newNutrition);
     setHasChanges(servings !== originalServings);
@@ -75,7 +82,7 @@ export function PortionAdjuster({
 
   const handleQuickAdjust = (newServings: number) => {
     if (newServings < 0.5 || newServings > 20) {
-      toast.error('份量必须在0.5到20人份之间');
+      toast.error("份量必须在0.5到20人份之间");
       return;
     }
     setServings(newServings);
@@ -86,7 +93,7 @@ export function PortionAdjuster({
   const handleCustomServings = () => {
     const value = parseFloat(customServings);
     if (isNaN(value) || value < 0.5 || value > 20) {
-      toast.error('请输入有效的份量数值（0.5-20）');
+      toast.error("请输入有效的份量数值（0.5-20）");
       return;
     }
     setServings(value);
@@ -106,9 +113,9 @@ export function PortionAdjuster({
 
   const formatAmount = (amount: number, unit?: string): string => {
     if (amount >= 1000) {
-      return `${(amount / 1000).toFixed(1)}${unit || 'kg'}`;
+      return `${(amount / 1000).toFixed(1)}${unit || "kg"}`;
     }
-    return `${amount.toFixed(0)}${unit || 'g'}`;
+    return `${amount.toFixed(0)}${unit || "g"}`;
   };
 
   const getPercentageChange = (original: number, adjusted: number): string => {
@@ -118,8 +125,8 @@ export function PortionAdjuster({
 
   const getChangeColor = (original: number, adjusted: number): string => {
     const change = ((adjusted - original) / original) * 100;
-    if (Math.abs(change) < 1) return 'text-gray-600';
-    return change > 0 ? 'text-green-600' : 'text-orange-600';
+    if (Math.abs(change) < 1) return "text-gray-600";
+    return change > 0 ? "text-green-600" : "text-orange-600";
   };
 
   return (
@@ -142,9 +149,12 @@ export function PortionAdjuster({
               </div>
             </div>
           </div>
-          
+
           {hasChanges && (
-            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+            <Badge
+              variant="outline"
+              className="bg-green-100 text-green-800 border-green-200"
+            >
               <Calculator className="h-3 w-3 mr-1" />
               调整中
             </Badge>
@@ -164,7 +174,7 @@ export function PortionAdjuster({
               <Minus className="h-4 w-4 mr-1" />
               -0.5
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -174,7 +184,7 @@ export function PortionAdjuster({
               <Minus className="h-4 w-4 mr-1" />
               -1
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -184,7 +194,7 @@ export function PortionAdjuster({
               <Plus className="h-4 w-4 mr-1" />
               +1
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -195,13 +205,13 @@ export function PortionAdjuster({
               +0.5
             </Button>
           </div>
-          
+
           {/* 常用份量 */}
           <div className="grid grid-cols-6 gap-2">
             {[1, 2, 3, 4, 6, 8].map((num) => (
               <Button
                 key={num}
-                variant={servings === num ? 'default' : 'outline'}
+                variant={servings === num ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleQuickAdjust(num)}
               >
@@ -228,10 +238,7 @@ export function PortionAdjuster({
               step="0.5"
               className="flex-1"
             />
-            <Button
-              onClick={handleCustomServings}
-              disabled={!isCustomMode}
-            >
+            <Button onClick={handleCustomServings} disabled={!isCustomMode}>
               应用
             </Button>
           </div>
@@ -244,7 +251,7 @@ export function PortionAdjuster({
         {hasChanges && (
           <div className="space-y-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
             <h4 className="font-medium text-blue-900">调整预览</h4>
-            
+
             {/* 营养变化 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
@@ -252,38 +259,58 @@ export function PortionAdjuster({
                   {adjustedNutrition.calories.toFixed(0)}
                 </div>
                 <div className="text-sm text-gray-600">千卡</div>
-                <div className={`text-xs ${getChangeColor(originalNutrition.calories, adjustedNutrition.calories)}`}>
-                  {getPercentageChange(originalNutrition.calories, adjustedNutrition.calories)}
+                <div
+                  className={`text-xs ${getChangeColor(originalNutrition.calories, adjustedNutrition.calories)}`}
+                >
+                  {getPercentageChange(
+                    originalNutrition.calories,
+                    adjustedNutrition.calories,
+                  )}
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-lg font-bold text-blue-600">
                   {adjustedNutrition.protein.toFixed(1)}
                 </div>
                 <div className="text-sm text-gray-600">蛋白质(g)</div>
-                <div className={`text-xs ${getChangeColor(originalNutrition.protein, adjustedNutrition.protein)}`}>
-                  {getPercentageChange(originalNutrition.protein, adjustedNutrition.protein)}
+                <div
+                  className={`text-xs ${getChangeColor(originalNutrition.protein, adjustedNutrition.protein)}`}
+                >
+                  {getPercentageChange(
+                    originalNutrition.protein,
+                    adjustedNutrition.protein,
+                  )}
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-lg font-bold text-green-600">
                   {adjustedNutrition.carbs.toFixed(1)}
                 </div>
                 <div className="text-sm text-gray-600">碳水(g)</div>
-                <div className={`text-xs ${getChangeColor(originalNutrition.carbs, adjustedNutrition.carbs)}`}>
-                  {getPercentageChange(originalNutrition.carbs, adjustedNutrition.carbs)}
+                <div
+                  className={`text-xs ${getChangeColor(originalNutrition.carbs, adjustedNutrition.carbs)}`}
+                >
+                  {getPercentageChange(
+                    originalNutrition.carbs,
+                    adjustedNutrition.carbs,
+                  )}
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-lg font-bold text-purple-600">
                   {adjustedNutrition.fat.toFixed(1)}
                 </div>
                 <div className="text-sm text-gray-600">脂肪(g)</div>
-                <div className={`text-xs ${getChangeColor(originalNutrition.fat, adjustedNutrition.fat)}`}>
-                  {getPercentageChange(originalNutrition.fat, adjustedNutrition.fat)}
+                <div
+                  className={`text-xs ${getChangeColor(originalNutrition.fat, adjustedNutrition.fat)}`}
+                >
+                  {getPercentageChange(
+                    originalNutrition.fat,
+                    adjustedNutrition.fat,
+                  )}
                 </div>
               </div>
             </div>
@@ -293,16 +320,33 @@ export function PortionAdjuster({
               <h5 className="text-sm font-medium text-blue-900">食材调整</h5>
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {adjustedIngredients.slice(0, 5).map((ingredient) => {
-                  const original = originalIngredients.find(i => i.id === ingredient.id);
+                  const original = originalIngredients.find(
+                    (i) => i.id === ingredient.id,
+                  );
                   return (
-                    <div key={ingredient.id} className="flex justify-between text-sm">
-                      <span className="text-gray-700">{ingredient.food.name}</span>
+                    <div
+                      key={ingredient.id}
+                      className="flex justify-between text-sm"
+                    >
+                      <span className="text-gray-700">
+                        {ingredient.food.name}
+                      </span>
                       <div className="text-right">
                         <span className="font-medium">
-                          {formatAmount(ingredient.amount, ingredient.food.unit)}
+                          {formatAmount(
+                            ingredient.amount,
+                            ingredient.food.unit,
+                          )}
                         </span>
-                        <span className={`ml-2 ${getChangeColor(original?.amount || 0, ingredient.amount)}`}>
-                          ({getPercentageChange(original?.amount || 0, ingredient.amount)})
+                        <span
+                          className={`ml-2 ${getChangeColor(original?.amount || 0, ingredient.amount)}`}
+                        >
+                          (
+                          {getPercentageChange(
+                            original?.amount || 0,
+                            ingredient.amount,
+                          )}
+                          )
                         </span>
                       </div>
                     </div>
@@ -345,7 +389,7 @@ export function PortionAdjuster({
               应用调整
             </Button>
           )}
-          
+
           <Button
             variant="outline"
             onClick={handleReset}

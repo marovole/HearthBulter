@@ -6,8 +6,8 @@
  * @module prisma-task-repository
  */
 
-import type { PrismaClient } from '@prisma/client';
-import type { PaginatedResult, PaginationInput } from '../types/common';
+import type { PrismaClient } from "@prisma/client";
+import type { PaginatedResult, PaginationInput } from "../types/common";
 import type {
   TaskDTO,
   TaskListQuery,
@@ -17,8 +17,8 @@ import type {
   UpdateTaskStatusDTO,
   TaskStatsDTO,
   TaskStatus,
-} from '../types/task';
-import type { TaskRepository } from '../interfaces/task-repository';
+} from "../types/task";
+import type { TaskRepository } from "../interfaces/task-repository";
 
 /**
  * Prisma 任务 Repository 占位实现
@@ -37,9 +37,9 @@ export class PrismaTaskRepository implements TaskRepository {
    */
   async listTasks(
     query: TaskListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<TaskDTO>> {
-    return this.notImplemented('listTasks');
+    return this.notImplemented("listTasks");
   }
 
   /**
@@ -48,9 +48,9 @@ export class PrismaTaskRepository implements TaskRepository {
   async getTaskById(
     familyId: string,
     taskId: string,
-    options?: TaskGetOptions
+    options?: TaskGetOptions,
   ): Promise<TaskDTO | null> {
-    return this.notImplemented('getTaskById');
+    return this.notImplemented("getTaskById");
   }
 
   /**
@@ -59,9 +59,9 @@ export class PrismaTaskRepository implements TaskRepository {
   async getMyTasks(
     familyId: string,
     memberId: string,
-    status?: TaskStatus
+    status?: TaskStatus,
   ): Promise<TaskDTO[]> {
-    return this.notImplemented('getMyTasks');
+    return this.notImplemented("getMyTasks");
   }
 
   /**
@@ -70,9 +70,9 @@ export class PrismaTaskRepository implements TaskRepository {
   async createTask(
     familyId: string,
     creatorId: string,
-    payload: CreateTaskDTO
+    payload: CreateTaskDTO,
   ): Promise<TaskDTO> {
-    return this.notImplemented('createTask');
+    return this.notImplemented("createTask");
   }
 
   /**
@@ -81,9 +81,9 @@ export class PrismaTaskRepository implements TaskRepository {
   async updateTask(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskDTO
+    payload: UpdateTaskDTO,
   ): Promise<TaskDTO> {
-    return this.notImplemented('updateTask');
+    return this.notImplemented("updateTask");
   }
 
   /**
@@ -92,9 +92,9 @@ export class PrismaTaskRepository implements TaskRepository {
   async updateTaskStatus(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskStatusDTO
+    payload: UpdateTaskStatusDTO,
   ): Promise<TaskDTO> {
-    return this.notImplemented('updateTaskStatus');
+    return this.notImplemented("updateTaskStatus");
   }
 
   /**
@@ -103,23 +103,23 @@ export class PrismaTaskRepository implements TaskRepository {
   async assignTask(
     familyId: string,
     taskId: string,
-    assigneeId: string
+    assigneeId: string,
   ): Promise<TaskDTO> {
-    return this.notImplemented('assignTask');
+    return this.notImplemented("assignTask");
   }
 
   /**
    * 删除任务
    */
   async deleteTask(familyId: string, taskId: string): Promise<void> {
-    return this.notImplemented('deleteTask');
+    return this.notImplemented("deleteTask");
   }
 
   /**
    * 获取任务统计
    */
   async getTaskStats(familyId: string): Promise<TaskStatsDTO> {
-    return this.notImplemented('getTaskStats');
+    return this.notImplemented("getTaskStats");
   }
 
   /**

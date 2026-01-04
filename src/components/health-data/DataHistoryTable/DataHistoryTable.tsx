@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
 /**
  * 健康数据历史表格 - 重构后的主组件
  * 职责：组装子组件，提供统一的接口
  */
 
-import React from 'react';
-import { useHealthDataTable } from './useHealthDataTable';
-import { LoadingState } from './LoadingState';
-import { ErrorState } from './ErrorState';
-import { EmptyState } from './EmptyState';
-import { BatchActions } from './BatchActions';
-import { TableFilters } from './TableFilters';
-import { TableHeader } from './TableHeader';
-import { TableRow } from './TableRow';
-import { TablePagination } from './TablePagination';
-import type { DataHistoryTableProps } from './types';
+import React from "react";
+import { useHealthDataTable } from "./useHealthDataTable";
+import { LoadingState } from "./LoadingState";
+import { ErrorState } from "./ErrorState";
+import { EmptyState } from "./EmptyState";
+import { BatchActions } from "./BatchActions";
+import { TableFilters } from "./TableFilters";
+import { TableHeader } from "./TableHeader";
+import { TableRow } from "./TableRow";
+import { TablePagination } from "./TablePagination";
+import type { DataHistoryTableProps } from "./types";
 
 export function DataHistoryTable(props: DataHistoryTableProps) {
   const {

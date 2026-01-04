@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  Maximize, 
-  SkipBack, 
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  SkipBack,
   SkipForward,
   Settings,
   Download,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface VideoPlayerProps {
-  src: string
-  title: string
-  poster?: string
-  duration?: number
-  autoPlay?: boolean
-  showControls?: boolean
-  onProgress?: (progress: number) => void
-  onComplete?: () => void
+  src: string;
+  title: string;
+  poster?: string;
+  duration?: number;
+  autoPlay?: boolean;
+  showControls?: boolean;
+  onProgress?: (progress: number) => void;
+  onComplete?: () => void;
 }
 
 export function VideoPlayer({
@@ -45,7 +45,7 @@ export function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -71,14 +71,14 @@ export function VideoPlayer({
       }
     };
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('ended', handleEnded);
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("ended", handleEnded);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('ended', handleEnded);
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("ended", handleEnded);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, [autoPlay, onProgress, onComplete]);
 
@@ -97,7 +97,7 @@ export function VideoPlayer({
   const handleSeek = (time: number) => {
     const video = videoRef.current;
     if (!video) return;
-    
+
     video.currentTime = time;
     setCurrentTime(time);
   };
@@ -135,7 +135,10 @@ export function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
-    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+    video.currentTime = Math.max(
+      0,
+      Math.min(video.duration, video.currentTime + seconds),
+    );
   };
 
   const changePlaybackSpeed = (speed: number) => {
@@ -150,13 +153,16 @@ export function VideoPlayer({
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div ref={containerRef} className="relative bg-black rounded-lg overflow-hidden">
+    <div
+      ref={containerRef}
+      className="relative bg-black rounded-lg overflow-hidden"
+    >
       <video
         ref={videoRef}
         src={src}
@@ -167,7 +173,7 @@ export function VideoPlayer({
 
       {/* Video Overlay */}
       {!isPlaying && (
-        <div 
+        <div
           className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 cursor-pointer"
           onClick={togglePlay}
         >
@@ -185,7 +191,7 @@ export function VideoPlayer({
             <Progress value={progress} className="h-1 cursor-pointer" />
             <div className="flex justify-between text-xs text-white mt-1">
               <span>{formatTime(currentTime)}</span>
-              <span>{duration ? formatTime(duration) : '--:--'}</span>
+              <span>{duration ? formatTime(duration) : "--:--"}</span>
             </div>
           </div>
 
@@ -236,14 +242,16 @@ export function VideoPlayer({
                     <Volume2 className="h-4 w-4" />
                   )}
                 </Button>
-                
+
                 <input
                   type="range"
                   min="0"
                   max="1"
                   step="0.1"
                   value={isMuted ? 0 : volume}
-                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    handleVolumeChange(parseFloat(e.target.value))
+                  }
                   className="w-20 h-1 bg-white bg-opacity-30 rounded-lg appearance-none cursor-pointer"
                 />
               </div>
@@ -263,13 +271,17 @@ export function VideoPlayer({
 
                 {showSettings && (
                   <div className="absolute bottom-8 right-0 bg-white rounded-lg shadow-lg p-2 min-w-32">
-                    <div className="text-xs font-medium text-gray-700 mb-2">播放速度</div>
-                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
+                    <div className="text-xs font-medium text-gray-700 mb-2">
+                      播放速度
+                    </div>
+                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
                       <button
                         key={speed}
                         onClick={() => changePlaybackSpeed(speed)}
                         className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
-                          playbackSpeed === speed ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
+                          playbackSpeed === speed
+                            ? "bg-blue-100 text-blue-700"
+                            : "text-gray-700"
                         }`}
                       >
                         {speed}x
@@ -295,9 +307,7 @@ export function VideoPlayer({
       {/* Title Badge */}
       {title && (
         <div className="absolute top-4 left-4">
-          <Badge className="bg-black bg-opacity-50 text-white">
-            {title}
-          </Badge>
+          <Badge className="bg-black bg-opacity-50 text-white">{title}</Badge>
         </div>
       )}
     </div>
@@ -307,13 +317,13 @@ export function VideoPlayer({
 // Video Tutorial Component
 interface VideoTutorialProps {
   video: {
-    src: string
-    title: string
-    description: string
-    duration: number
-    poster?: string
-  }
-  onComplete?: () => void
+    src: string;
+    title: string;
+    description: string;
+    duration: number;
+    poster?: string;
+  };
+  onComplete?: () => void;
 }
 
 export function VideoTutorial({ video, onComplete }: VideoTutorialProps) {
@@ -337,9 +347,7 @@ export function VideoTutorial({ video, onComplete }: VideoTutorialProps) {
             <p className="text-gray-600 text-sm">{video.description}</p>
           </div>
           {isCompleted && (
-            <Badge className="bg-green-100 text-green-800">
-              已完成
-            </Badge>
+            <Badge className="bg-green-100 text-green-800">已完成</Badge>
           )}
         </div>
       </CardHeader>
@@ -352,7 +360,7 @@ export function VideoTutorial({ video, onComplete }: VideoTutorialProps) {
           onProgress={handleProgress}
           onComplete={() => setIsCompleted(true)}
         />
-        
+
         {/* Download Link */}
         <div className="mt-4 flex justify-center">
           <Button variant="outline" size="sm">

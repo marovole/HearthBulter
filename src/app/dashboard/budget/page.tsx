@@ -1,16 +1,33 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { PlusIcon, SettingsIcon, TrendingUpIcon } from 'lucide-react';
-import { BudgetSetting, BudgetDashboard, BudgetStatusIndicator } from '@/components/budget';
-import { BudgetStatus } from '@prisma/client';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { PlusIcon, SettingsIcon, TrendingUpIcon } from "lucide-react";
+import {
+  BudgetSetting,
+  BudgetDashboard,
+  BudgetStatusIndicator,
+} from "@/components/budget";
+import { BudgetStatus } from "@prisma/client";
 
 // 模拟用户ID，实际应用中从认证系统获取
-const MOCK_MEMBER_ID = 'user-member-id';
+const MOCK_MEMBER_ID = "user-member-id";
 
 export default function BudgetManagementPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -20,7 +37,7 @@ export default function BudgetManagementPage() {
   const handleBudgetCreated = (budget: any) => {
     setShowCreateDialog(false);
     setSelectedBudgetId(budget.id);
-    setRefreshKey(prev => prev + 1); // 触发刷新
+    setRefreshKey((prev) => prev + 1); // 触发刷新
   };
 
   const handleBudgetSelect = (budgetStatus: any) => {
@@ -37,7 +54,7 @@ export default function BudgetManagementPage() {
             设定和追踪您的饮食预算，优化支出结构
           </p>
         </div>
-        
+
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button>
@@ -72,7 +89,7 @@ export default function BudgetManagementPage() {
             onBudgetClick={handleBudgetSelect}
           />
         </div>
-        
+
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -82,18 +99,18 @@ export default function BudgetManagementPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
                 onClick={() => setShowCreateDialog(true)}
               >
                 <PlusIcon className="h-4 w-4 mr-2" />
                 创建新预算
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
-                onClick={() => setRefreshKey(prev => prev + 1)}
+                onClick={() => setRefreshKey((prev) => prev + 1)}
               >
                 <TrendingUpIcon className="h-4 w-4 mr-2" />
                 刷新数据
@@ -137,9 +154,7 @@ export default function BudgetManagementPage() {
           <Card>
             <CardHeader>
               <CardTitle>支出分析</CardTitle>
-              <CardDescription>
-                详细的支出分析和趋势图表
-              </CardDescription>
+              <CardDescription>详细的支出分析和趋势图表</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12 text-muted-foreground">
@@ -157,9 +172,7 @@ export default function BudgetManagementPage() {
           <Card>
             <CardHeader>
               <CardTitle>历史记录</CardTitle>
-              <CardDescription>
-                查看历史预算和支出记录
-              </CardDescription>
+              <CardDescription>查看历史预算和支出记录</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12 text-muted-foreground">
@@ -190,7 +203,7 @@ export default function BudgetManagementPage() {
                 <li>• 支持预算预警设置（80%、100%、110%）</li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-medium mb-2">支出追踪功能</h3>
               <ul className="text-sm text-muted-foreground space-y-1">

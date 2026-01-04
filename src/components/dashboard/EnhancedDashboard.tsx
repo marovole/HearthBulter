@@ -1,29 +1,34 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { DashboardLayout } from './DashboardLayout';
-import { OverviewCards } from './OverviewCards';
-import { TrendsSection } from './TrendsSection';
-import { InsightsPanel } from './InsightsPanel';
-import { HealthMetricsChart } from './HealthMetricsChart';
-import { FamilyMembersCard } from './FamilyMembersCard';
-import { NutritionTrendChart } from './NutritionTrendChart';
-import { HealthScoreDisplay } from './HealthScoreDisplay';
-import { QuickActionsPanel } from './QuickActionsPanel';
-import { WeightTrendChart } from './WeightTrendChart';
-import { NutritionAnalysisChart } from './NutritionAnalysisChart';
-import HealthScoreCard from './HealthScoreCard';
-import type { FamilyMember, RawFamilyMember, RawFamily } from '@/types/family';
+import React, { useState, useEffect, useMemo } from "react";
+import { DashboardLayout } from "./DashboardLayout";
+import { OverviewCards } from "./OverviewCards";
+import { TrendsSection } from "./TrendsSection";
+import { InsightsPanel } from "./InsightsPanel";
+import { HealthMetricsChart } from "./HealthMetricsChart";
+import { FamilyMembersCard } from "./FamilyMembersCard";
+import { NutritionTrendChart } from "./NutritionTrendChart";
+import { HealthScoreDisplay } from "./HealthScoreDisplay";
+import { QuickActionsPanel } from "./QuickActionsPanel";
+import { WeightTrendChart } from "./WeightTrendChart";
+import { NutritionAnalysisChart } from "./NutritionAnalysisChart";
+import HealthScoreCard from "./HealthScoreCard";
+import type { FamilyMember, RawFamilyMember, RawFamily } from "@/types/family";
 
 interface EnhancedDashboardProps {
-  userId: string
-  initialMemberId?: string
+  userId: string;
+  initialMemberId?: string;
 }
 
-export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboardProps) {
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialMemberId || null);
+export function EnhancedDashboard({
+  userId,
+  initialMemberId,
+}: EnhancedDashboardProps) {
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
+    initialMemberId || null,
+  );
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -37,9 +42,9 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         setError(null);
 
         // 1. 获取用户的家庭列表
-        const familiesResponse = await fetch('/api/families');
+        const familiesResponse = await fetch("/api/families");
         if (!familiesResponse.ok) {
-          throw new Error('获取家庭列表失败');
+          throw new Error("获取家庭列表失败");
         }
 
         const familiesData = await familiesResponse.json();
@@ -47,17 +52,17 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
 
         // 2. 如果没有家庭，自动创建一个默认家庭
         if (families.length === 0) {
-          const createFamilyResponse = await fetch('/api/families', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const createFamilyResponse = await fetch("/api/families", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              name: '我的家庭',
-              description: '默认家庭',
+              name: "我的家庭",
+              description: "默认家庭",
             }),
           });
 
           if (!createFamilyResponse.ok) {
-            throw new Error('创建默认家庭失败');
+            throw new Error("创建默认家庭失败");
           }
 
           const createFamilyData = await createFamilyResponse.json();
@@ -70,19 +75,22 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
 
         // 4. 如果家庭没有成员，自动创建一个关联到当前用户的成员
         if (members.length === 0) {
-          const createMemberResponse = await fetch(`/api/families/${family.id}/members`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: '我',
-              gender: 'OTHER',
-              birthDate: new Date().toISOString(),
-              role: 'ADMIN',
-            }),
-          });
+          const createMemberResponse = await fetch(
+            `/api/families/${family.id}/members`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: "我",
+                gender: "OTHER",
+                birthDate: new Date().toISOString(),
+                role: "ADMIN",
+              }),
+            },
+          );
 
           if (!createMemberResponse.ok) {
-            throw new Error('创建默认成员失败');
+            throw new Error("创建默认成员失败");
           }
 
           const createMemberData = await createMemberResponse.json();
@@ -90,28 +98,32 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         }
 
         // 5. 转换成员数据格式
-        const formattedMembers: FamilyMember[] = members.map((member: RawFamilyMember) => ({
-          id: member.id,
-          name: member.name,
-          avatar: member.avatar || undefined,
-          role: member.role.toLowerCase(),
-          email: member.user?.email || undefined,
-          healthScore: 0, // 默认值，后续可以从健康评分 API 获取
-          lastActive: new Date(),
-        }));
+        const formattedMembers: FamilyMember[] = members.map(
+          (member: RawFamilyMember) => ({
+            id: member.id,
+            name: member.name,
+            avatar: member.avatar || undefined,
+            role: member.role.toLowerCase(),
+            email: member.user?.email || undefined,
+            healthScore: 0, // 默认值，后续可以从健康评分 API 获取
+            lastActive: new Date(),
+          }),
+        );
 
         setFamilyMembers(formattedMembers);
 
         // 6. 选择成员：优先选择与当前用户关联的成员，否则选择第一个
         if (!selectedMemberId && formattedMembers.length > 0) {
           // 尝试找到关联到当前用户的成员
-          const userMember = members.find((m: RawFamilyMember) => m.userId === userId);
+          const userMember = members.find(
+            (m: RawFamilyMember) => m.userId === userId,
+          );
           const memberId = userMember ? userMember.id : formattedMembers[0].id;
           setSelectedMemberId(memberId);
         }
       } catch (error) {
-        console.error('获取家庭成员失败:', error);
-        setError(error instanceof Error ? error.message : '加载失败，请重试');
+        console.error("获取家庭成员失败:", error);
+        setError(error instanceof Error ? error.message : "加载失败，请重试");
       } finally {
         setLoading(false);
       }
@@ -126,7 +138,9 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
       if (!selectedMemberId) return;
 
       try {
-        const response = await fetch(`/api/members/${selectedMemberId}/initialize`);
+        const response = await fetch(
+          `/api/members/${selectedMemberId}/initialize`,
+        );
         if (response.ok) {
           const data = await response.json();
           setNeedsInitialization(data.needsInitialization);
@@ -137,7 +151,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
           }
         }
       } catch (error) {
-        console.error('检查初始化状态失败:', error);
+        console.error("检查初始化状态失败:", error);
       }
     };
 
@@ -150,9 +164,12 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
 
     setIsInitializing(true);
     try {
-      const response = await fetch(`/api/members/${selectedMemberId}/initialize`, {
-        method: 'POST',
-      });
+      const response = await fetch(
+        `/api/members/${selectedMemberId}/initialize`,
+        {
+          method: "POST",
+        },
+      );
 
       if (response.ok) {
         setNeedsInitialization(false);
@@ -162,7 +179,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
         }, 1000);
       }
     } catch (error) {
-      console.error('自动初始化失败:', error);
+      console.error("自动初始化失败:", error);
     } finally {
       setIsInitializing(false);
     }
@@ -178,7 +195,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
 
   // 缓存当前选中的成员，避免重复查找
   const currentMember = useMemo(() => {
-    return familyMembers.find(m => m.id === selectedMemberId);
+    return familyMembers.find((m) => m.id === selectedMemberId);
   }, [familyMembers, selectedMemberId]);
 
   const renderDashboardContent = () => {
@@ -195,7 +212,9 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
       return (
         <div className="flex flex-col items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-          <p className="text-gray-900 font-medium mb-2">正在初始化您的健康档案...</p>
+          <p className="text-gray-900 font-medium mb-2">
+            正在初始化您的健康档案...
+          </p>
           <p className="text-gray-600 text-sm">这只需要几秒钟</p>
         </div>
       );
@@ -221,96 +240,100 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
     if (!selectedMemberId) {
       return (
         <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">选择家庭成员</h3>
-          <p className="text-gray-600">请从左侧选择一个家庭成员开始查看健康数据</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            选择家庭成员
+          </h3>
+          <p className="text-gray-600">
+            请从左侧选择一个家庭成员开始查看健康数据
+          </p>
         </div>
       );
     }
 
     switch (activeTab) {
-    case 'overview':
-      return (
-        <div className="space-y-6">
-          <OverviewCards memberId={selectedMemberId} />
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      case "overview":
+        return (
+          <div className="space-y-6">
+            <OverviewCards memberId={selectedMemberId} />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <WeightTrendChart memberId={selectedMemberId} />
+              <HealthScoreCard memberId={selectedMemberId} />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <NutritionAnalysisChart memberId={selectedMemberId} />
+              <TrendsSection memberId={selectedMemberId} />
+            </div>
+            <QuickActionsPanel memberId={selectedMemberId} />
+          </div>
+        );
+
+      case "health":
+        return (
+          <div className="space-y-6">
             <WeightTrendChart memberId={selectedMemberId} />
-            <HealthScoreCard memberId={selectedMemberId} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <HealthMetricsChart memberId={selectedMemberId} />
+              <TrendsSection memberId={selectedMemberId} />
+            </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        );
+
+      case "nutrition":
+        return (
+          <div className="space-y-6">
             <NutritionAnalysisChart memberId={selectedMemberId} />
-            <TrendsSection memberId={selectedMemberId} />
-          </div>
-          <QuickActionsPanel memberId={selectedMemberId} />
-        </div>
-      );
-      
-    case 'health':
-      return (
-        <div className="space-y-6">
-          <WeightTrendChart memberId={selectedMemberId} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <HealthMetricsChart memberId={selectedMemberId} />
-            <TrendsSection memberId={selectedMemberId} />
-          </div>
-        </div>
-      );
-      
-    case 'nutrition':
-      return (
-        <div className="space-y-6">
-          <NutritionAnalysisChart memberId={selectedMemberId} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <NutritionTrendChart memberId={selectedMemberId} />
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">营养建议</h3>
-              <p className="text-gray-600">基于您的健康数据，我们建议...</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <NutritionTrendChart memberId={selectedMemberId} />
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4">营养建议</h3>
+                <p className="text-gray-600">基于您的健康数据，我们建议...</p>
+              </div>
             </div>
           </div>
-        </div>
-      );
-      
-    case 'family':
-      return (
-        <div className="space-y-6">
-          <FamilyMembersCard 
-            members={familyMembers}
-            currentMemberId={selectedMemberId}
-            onMemberSelect={handleMemberChange}
-          />
-        </div>
-      );
-      
-    case 'score':
-      return (
-        <div className="space-y-6">
-          <HealthScoreCard memberId={selectedMemberId} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <HealthScoreDisplay memberId={selectedMemberId} />
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">健康评分趋势</h3>
-              <p className="text-gray-600">评分变化图表将在这里显示</p>
+        );
+
+      case "family":
+        return (
+          <div className="space-y-6">
+            <FamilyMembersCard
+              members={familyMembers}
+              currentMemberId={selectedMemberId}
+              onMemberSelect={handleMemberChange}
+            />
+          </div>
+        );
+
+      case "score":
+        return (
+          <div className="space-y-6">
+            <HealthScoreCard memberId={selectedMemberId} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <HealthScoreDisplay memberId={selectedMemberId} />
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4">健康评分趋势</h3>
+                <p className="text-gray-600">评分变化图表将在这里显示</p>
+              </div>
             </div>
           </div>
-        </div>
-      );
-      
-    case 'settings':
-      return (
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">仪表盘设置</h3>
-            <p className="text-gray-600">个性化您的仪表盘显示偏好</p>
+        );
+
+      case "settings":
+        return (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-4">仪表盘设置</h3>
+              <p className="text-gray-600">个性化您的仪表盘显示偏好</p>
+            </div>
           </div>
-        </div>
-      );
-      
-    default:
-      return (
-        <div className="space-y-6">
-          <OverviewCards memberId={selectedMemberId} />
-          <InsightsPanel memberId={selectedMemberId} />
-        </div>
-      );
+        );
+
+      default:
+        return (
+          <div className="space-y-6">
+            <OverviewCards memberId={selectedMemberId} />
+            <InsightsPanel memberId={selectedMemberId} />
+          </div>
+        );
     }
   };
 
@@ -335,7 +358,7 @@ export function EnhancedDashboard({ userId, initialMemberId }: EnhancedDashboard
                     {currentMember.name}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    {currentMember.role === 'admin' ? '管理员' : '家庭成员'}
+                    {currentMember.role === "admin" ? "管理员" : "家庭成员"}
                   </p>
                 </div>
               </div>

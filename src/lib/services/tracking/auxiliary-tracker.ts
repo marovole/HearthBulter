@@ -3,7 +3,7 @@
  * 负责处理饮水、运动、睡眠、体重等辅助打卡功能
  */
 
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 /**
  * 获取或创建今日辅助打卡记录
@@ -96,7 +96,7 @@ export async function trackExercise(
     minutes: number;
     caloriesBurned: number;
     exerciseType: string[];
-  }
+  },
 ) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -133,7 +133,7 @@ export async function trackExercise(
 export function estimateCaloriesBurned(
   exerciseType: string,
   minutes: number,
-  weight: number
+  weight: number,
 ): number {
   // 简化的MET值（代谢当量）计算
   // MET = 每公斤体重每分钟消耗的热量（单位：kcal/kg/min）
@@ -162,8 +162,8 @@ export async function trackSleep(
   memberId: string,
   data: {
     hours: number;
-    quality: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
-  }
+    quality: "EXCELLENT" | "GOOD" | "FAIR" | "POOR";
+  },
 ) {
   // 睡眠记录的日期应该是前一天（因为睡眠是前一晚的）
   const yesterday = new Date();
@@ -198,7 +198,7 @@ export async function trackWeight(
   data: {
     weight: number;
     bodyFat?: number;
-  }
+  },
 ) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -258,7 +258,7 @@ export async function getAuxiliaryTrackingHistory(
     startDate?: Date;
     endDate?: Date;
     limit?: number;
-  } = {}
+  } = {},
 ) {
   const { startDate, endDate, limit = 30 } = options;
 
@@ -275,7 +275,7 @@ export async function getAuxiliaryTrackingHistory(
   return db.auxiliaryTracking.findMany({
     where,
     orderBy: {
-      date: 'desc',
+      date: "desc",
     },
     take: limit,
   });
@@ -284,10 +284,7 @@ export async function getAuxiliaryTrackingHistory(
 /**
  * 获取体重趋势
  */
-export async function getWeightTrend(
-  memberId: string,
-  days: number = 30
-) {
+export async function getWeightTrend(memberId: string, days: number = 30) {
   const endDate = new Date();
   endDate.setHours(0, 0, 0, 0);
 
@@ -311,13 +308,13 @@ export async function getWeightTrend(
       bodyFat: true,
     },
     orderBy: {
-      date: 'asc',
+      date: "asc",
     },
   });
 
   if (trackings.length === 0) {
     return {
-      trend: 'no_data' as const,
+      trend: "no_data" as const,
       data: [],
       change: 0,
       avgWeight: 0,
@@ -331,9 +328,9 @@ export async function getWeightTrend(
   const avgWeight =
     trackings.reduce((sum, t) => sum + (t.weight || 0), 0) / trackings.length;
 
-  let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
+  let trend: "increasing" | "decreasing" | "stable" = "stable";
   if (Math.abs(change) > 1) {
-    trend = change > 0 ? 'increasing' : 'decreasing';
+    trend = change > 0 ? "increasing" : "decreasing";
   }
 
   return {
@@ -347,10 +344,7 @@ export async function getWeightTrend(
 /**
  * 获取睡眠质量统计
  */
-export async function getSleepStats(
-  memberId: string,
-  days: number = 7
-) {
+export async function getSleepStats(memberId: string, days: number = 7) {
   const endDate = new Date();
   endDate.setHours(0, 0, 0, 0);
 
@@ -374,7 +368,7 @@ export async function getSleepStats(
       sleepQuality: true,
     },
     orderBy: {
-      date: 'asc',
+      date: "asc",
     },
   });
 
@@ -388,7 +382,8 @@ export async function getSleepStats(
   }
 
   const avgHours =
-    trackings.reduce((sum, t) => sum + (t.sleepHours || 0), 0) / trackings.length;
+    trackings.reduce((sum, t) => sum + (t.sleepHours || 0), 0) /
+    trackings.length;
 
   const qualityDistribution: { [key: string]: number } = {};
   trackings.forEach((t) => {
@@ -409,10 +404,7 @@ export async function getSleepStats(
 /**
  * 获取运动统计
  */
-export async function getExerciseStats(
-  memberId: string,
-  days: number = 7
-) {
+export async function getExerciseStats(memberId: string, days: number = 7) {
   const endDate = new Date();
   endDate.setHours(0, 0, 0, 0);
 
@@ -437,17 +429,17 @@ export async function getExerciseStats(
       exerciseType: true,
     },
     orderBy: {
-      date: 'asc',
+      date: "asc",
     },
   });
 
   const totalMinutes = trackings.reduce(
     (sum, t) => sum + (t.exerciseMinutes || 0),
-    0
+    0,
   );
   const totalCalories = trackings.reduce(
     (sum, t) => sum + (t.caloriesBurned || 0),
-    0
+    0,
   );
   const activeDays = trackings.length;
 
@@ -479,10 +471,7 @@ export async function getExerciseStats(
 /**
  * 获取饮水统计
  */
-export async function getWaterStats(
-  memberId: string,
-  days: number = 7
-) {
+export async function getWaterStats(memberId: string, days: number = 7) {
   const endDate = new Date();
   endDate.setHours(0, 0, 0, 0);
 
@@ -503,18 +492,18 @@ export async function getWaterStats(
       waterTarget: true,
     },
     orderBy: {
-      date: 'asc',
+      date: "asc",
     },
   });
 
   const totalIntake = trackings.reduce(
     (sum, t) => sum + (t.waterIntake || 0),
-    0
+    0,
   );
   const avgIntake = Math.round(totalIntake / days);
 
   const targetReachedDays = trackings.filter(
-    (t) => (t.waterIntake || 0) >= (t.waterTarget || 2000)
+    (t) => (t.waterIntake || 0) >= (t.waterTarget || 2000),
   ).length;
 
   const completionRate = (targetReachedDays / days) * 100;
@@ -527,4 +516,3 @@ export async function getWaterStats(
     data: trackings,
   };
 }
-

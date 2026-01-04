@@ -1,35 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import { Permission, hasPermission, getUserFamilyRole, PermissionError } from '@/lib/permissions';
-import { FamilyMemberRole } from '@prisma/client';
-import { prisma } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import {
+  Permission,
+  hasPermission,
+  getUserFamilyRole,
+  PermissionError,
+} from "@/lib/permissions";
+import { FamilyMemberRole } from "@prisma/client";
+import { prisma } from "@/lib/db";
 
 // 权限中间件配置
 export interface PermissionMiddlewareConfig {
-  requiredPermission?: Permission
-  requireFamilyMember?: boolean
-  requireFamilyAdmin?: boolean
-  requireFamilyCreator?: boolean
-  allowSelf?: boolean // 允许用户操作自己的资源
+  requiredPermission?: Permission;
+  requireFamilyMember?: boolean;
+  requireFamilyAdmin?: boolean;
+  requireFamilyCreator?: boolean;
+  allowSelf?: boolean; // 允许用户操作自己的资源
 }
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
-    id: string
-    email: string
-    role: string
-  }
+    id: string;
+    email: string;
+    role: string;
+  };
   familyMember?: {
-    id: string
-    familyId: string
-    role: FamilyMemberRole
-  }
+    id: string;
+    familyId: string;
+    role: FamilyMemberRole;
+  };
 }
 
 // 权限中间件函数
 export async function withPermissions(
   request: AuthenticatedRequest,
-  config: PermissionMiddlewareConfig
+  config: PermissionMiddlewareConfig,
 ): Promise<{ success: boolean; response?: NextResponse; error?: string }> {
   try {
     // 1. 验证用户身份
@@ -37,10 +42,7 @@ export async function withPermissions(
     if (!token || !token.sub) {
       return {
         success: false,
-        response: NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        ),
+        response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
       };
     }
 
@@ -52,16 +54,21 @@ export async function withPermissions(
     };
 
     // 2. 如果需要家庭成员身份，验证家庭成员关系
-    if (config.requireFamilyMember || config.requireFamilyAdmin || config.requireFamilyCreator) {
-      const familyId = request.nextUrl.searchParams.get('familyId') || 
-                      request.headers.get('x-family-id');
+    if (
+      config.requireFamilyMember ||
+      config.requireFamilyAdmin ||
+      config.requireFamilyCreator
+    ) {
+      const familyId =
+        request.nextUrl.searchParams.get("familyId") ||
+        request.headers.get("x-family-id");
 
       if (!familyId) {
         return {
           success: false,
           response: NextResponse.json(
-            { error: 'Family ID is required' },
-            { status: 400 }
+            { error: "Family ID is required" },
+            { status: 400 },
           ),
         };
       }
@@ -71,14 +78,14 @@ export async function withPermissions(
         return {
           success: false,
           response: NextResponse.json(
-            { error: 'Not a family member' },
-            { status: 403 }
+            { error: "Not a family member" },
+            { status: 403 },
           ),
         };
       }
 
       request.familyMember = {
-        id: '', // 需要从数据库获取实际的member ID
+        id: "", // 需要从数据库获取实际的member ID
         familyId,
         role: memberRole,
       };
@@ -88,8 +95,8 @@ export async function withPermissions(
         return {
           success: false,
           response: NextResponse.json(
-            { error: 'Family admin access required' },
-            { status: 403 }
+            { error: "Family admin access required" },
+            { status: 403 },
           ),
         };
       }
@@ -108,8 +115,8 @@ export async function withPermissions(
           return {
             success: false,
             response: NextResponse.json(
-              { error: 'Family creator access required' },
-              { status: 403 }
+              { error: "Family creator access required" },
+              { status: 403 },
             ),
           };
         }
@@ -118,45 +125,47 @@ export async function withPermissions(
 
     // 5. 检查具体权限
     if (config.requiredPermission) {
-      const familyId = request.nextUrl.searchParams.get('familyId') || 
-                      request.headers.get('x-family-id');
-      
+      const familyId =
+        request.nextUrl.searchParams.get("familyId") ||
+        request.headers.get("x-family-id");
+
       if (!familyId && config.requireFamilyMember) {
         return {
           success: false,
           response: NextResponse.json(
-            { error: 'Family ID is required for permission check' },
-            { status: 400 }
+            { error: "Family ID is required for permission check" },
+            { status: 400 },
           ),
         };
       }
 
       const memberRole = request.familyMember?.role || FamilyMemberRole.GUEST;
-      
+
       // 如果需要检查资源所有权
       let resourceOwnerId: string | undefined;
       if (config.allowSelf) {
         // 从请求中获取资源所有者ID（具体实现取决于API端点）
-        resourceOwnerId = request.headers.get('x-resource-owner-id') || undefined;
+        resourceOwnerId =
+          request.headers.get("x-resource-owner-id") || undefined;
       }
 
       const hasRequiredPermission = hasPermission(
         memberRole,
         config.requiredPermission,
         resourceOwnerId,
-        userId
+        userId,
       );
 
       if (!hasRequiredPermission) {
         return {
           success: false,
           response: NextResponse.json(
-            { 
-              error: 'Insufficient permissions',
+            {
+              error: "Insufficient permissions",
               required: config.requiredPermission,
               userRole: memberRole,
             },
-            { status: 403 }
+            { status: 403 },
           ),
         };
       }
@@ -164,12 +173,12 @@ export async function withPermissions(
 
     return { success: true };
   } catch (error) {
-    console.error('Permission middleware error:', error);
+    console.error("Permission middleware error:", error);
     return {
       success: false,
       response: NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
+        { error: "Internal server error" },
+        { status: 500 },
       ),
     };
   }
@@ -179,14 +188,14 @@ export async function withPermissions(
 export function createPermissionHandler(config: PermissionMiddlewareConfig) {
   return async (request: AuthenticatedRequest): Promise<NextResponse> => {
     const result = await withPermissions(request, config);
-    
+
     if (!result.success) {
       return result.response!;
     }
-    
+
     // 权限检查通过，继续处理请求
     // 这里会在具体的API路由中实现
-    return NextResponse.json({ message: 'Permission check passed' });
+    return NextResponse.json({ message: "Permission check passed" });
   };
 }
 
@@ -274,16 +283,22 @@ export const PERMISSION_CONFIGS = {
 
 // API路由权限检查包装器
 export function withApiPermissions(
-  handler: (request: AuthenticatedRequest, context?: any) => Promise<NextResponse>,
-  config: PermissionMiddlewareConfig
+  handler: (
+    request: AuthenticatedRequest,
+    context?: any,
+  ) => Promise<NextResponse>,
+  config: PermissionMiddlewareConfig,
 ) {
-  return async (request: AuthenticatedRequest, context?: any): Promise<NextResponse> => {
+  return async (
+    request: AuthenticatedRequest,
+    context?: any,
+  ): Promise<NextResponse> => {
     const result = await withPermissions(request, config);
-    
+
     if (!result.success) {
       return result.response!;
     }
-    
+
     // 权限检查通过，执行原始处理器
     return handler(request, context);
   };
@@ -294,14 +309,27 @@ export function useClientPermissions() {
   // 这里会返回客户端权限检查的hooks
   // 实际实现会在React组件中使用
   return {
-    canCreateTask: (userRole: FamilyMemberRole) => hasPermission(userRole, Permission.CREATE_TASK),
-    canUpdateTask: (userRole: FamilyMemberRole, isOwner: boolean) => 
-      hasPermission(userRole, Permission.UPDATE_TASK, isOwner ? 'owner' : undefined),
-    canDeleteTask: (userRole: FamilyMemberRole, isOwner: boolean) => 
-      hasPermission(userRole, Permission.DELETE_TASK, isOwner ? 'owner' : undefined),
-    canAssignTask: (userRole: FamilyMemberRole) => hasPermission(userRole, Permission.ASSIGN_TASK),
-    canManageFamily: (userRole: FamilyMemberRole) => hasPermission(userRole, Permission.MANAGE_FAMILY),
-    canInviteMembers: (userRole: FamilyMemberRole) => hasPermission(userRole, Permission.INVITE_MEMBERS),
-    canRemoveMembers: (userRole: FamilyMemberRole) => hasPermission(userRole, Permission.REMOVE_MEMBERS),
+    canCreateTask: (userRole: FamilyMemberRole) =>
+      hasPermission(userRole, Permission.CREATE_TASK),
+    canUpdateTask: (userRole: FamilyMemberRole, isOwner: boolean) =>
+      hasPermission(
+        userRole,
+        Permission.UPDATE_TASK,
+        isOwner ? "owner" : undefined,
+      ),
+    canDeleteTask: (userRole: FamilyMemberRole, isOwner: boolean) =>
+      hasPermission(
+        userRole,
+        Permission.DELETE_TASK,
+        isOwner ? "owner" : undefined,
+      ),
+    canAssignTask: (userRole: FamilyMemberRole) =>
+      hasPermission(userRole, Permission.ASSIGN_TASK),
+    canManageFamily: (userRole: FamilyMemberRole) =>
+      hasPermission(userRole, Permission.MANAGE_FAMILY),
+    canInviteMembers: (userRole: FamilyMemberRole) =>
+      hasPermission(userRole, Permission.INVITE_MEMBERS),
+    canRemoveMembers: (userRole: FamilyMemberRole) =>
+      hasPermission(userRole, Permission.REMOVE_MEMBERS),
   };
 }

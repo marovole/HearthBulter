@@ -6,12 +6,17 @@
  * @module family
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * 家庭成员角色枚举
  */
-export const familyMemberRoleSchema = z.enum(['OWNER', 'ADMIN', 'MEMBER', 'GUEST']);
+export const familyMemberRoleSchema = z.enum([
+  "OWNER",
+  "ADMIN",
+  "MEMBER",
+  "GUEST",
+]);
 export type FamilyMemberRole = z.infer<typeof familyMemberRoleSchema>;
 
 /**
@@ -53,13 +58,19 @@ export type UpdateFamilyDTO = z.infer<typeof updateFamilySchema>;
 /**
  * 性别枚举
  */
-export const genderSchema = z.enum(['MALE', 'FEMALE', 'OTHER']);
+export const genderSchema = z.enum(["MALE", "FEMALE", "OTHER"]);
 export type Gender = z.infer<typeof genderSchema>;
 
 /**
  * 年龄段枚举
  */
-export const ageGroupSchema = z.enum(['INFANT', 'CHILD', 'TEEN', 'ADULT', 'SENIOR']);
+export const ageGroupSchema = z.enum([
+  "INFANT",
+  "CHILD",
+  "TEEN",
+  "ADULT",
+  "SENIOR",
+]);
 export type AgeGroup = z.infer<typeof ageGroupSchema>;
 
 /**
@@ -83,7 +94,7 @@ export const familyMemberSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email().optional().nullable(),
   avatar: z.string().url().optional().nullable(),
-  role: familyMemberRoleSchema.default('MEMBER'),
+  role: familyMemberRoleSchema.default("MEMBER"),
   joinedAt: z.coerce.date(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
@@ -104,18 +115,20 @@ export type FamilyMemberDTO = z.infer<typeof familyMemberSchema>;
 /**
  * 创建家庭成员 DTO
  */
-export const createFamilyMemberSchema = familyMemberSchema.omit({
-  id: true,
-  joinedAt: true,
-  createdAt: true,
-  updatedAt: true,
-  deletedAt: true,
-}).extend({
-  // userId 可选，允许创建不关联系统用户的成员（如儿童档案）
-  userId: z.string().uuid().optional(),
-  gender: genderSchema.optional(),
-  birthDate: z.coerce.date().optional(),
-});
+export const createFamilyMemberSchema = familyMemberSchema
+  .omit({
+    id: true,
+    joinedAt: true,
+    createdAt: true,
+    updatedAt: true,
+    deletedAt: true,
+  })
+  .extend({
+    // userId 可选，允许创建不关联系统用户的成员（如儿童档案）
+    userId: z.string().uuid().optional(),
+    gender: genderSchema.optional(),
+    birthDate: z.coerce.date().optional(),
+  });
 
 export type CreateFamilyMemberDTO = z.infer<typeof createFamilyMemberSchema>;
 
@@ -135,9 +148,11 @@ export type UpdateFamilyMemberDTO = z.infer<typeof updateFamilyMemberSchema>;
  */
 export const familyWithMembersSchema = familySchema.extend({
   members: z.array(familyMemberSchema).default([]),
-  _count: z.object({
-    members: z.number().int().nonnegative(),
-  }).optional(),
+  _count: z
+    .object({
+      members: z.number().int().nonnegative(),
+    })
+    .optional(),
 });
 
 export type FamilyWithMembersDTO = z.infer<typeof familyWithMembersSchema>;

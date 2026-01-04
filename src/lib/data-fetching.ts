@@ -1,4 +1,4 @@
-import { supabase } from './supabase-client';
+import { supabase } from "./supabase-client";
 
 export class DataFetcher {
   // 静态数据：构建时获取
@@ -10,7 +10,7 @@ export class DataFetcher {
       }
       return response.json();
     } catch (error) {
-      console.error('Error fetching static data:', error);
+      console.error("Error fetching static data:", error);
       throw error;
     }
   }
@@ -21,7 +21,7 @@ export class DataFetcher {
       const response = await fetch(`/api/dynamic${path}`, {
         ...options,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...options?.headers,
         },
       });
@@ -32,7 +32,7 @@ export class DataFetcher {
 
       return response.json();
     } catch (error) {
-      console.error('Error fetching dynamic data:', error);
+      console.error("Error fetching dynamic data:", error);
       throw error;
     }
   }
@@ -41,34 +41,35 @@ export class DataFetcher {
   static subscribeToData(
     channel: string,
     table: string,
-    callback: (data: any) => void
+    callback: (data: any) => void,
   ) {
     return supabase
       .channel(channel)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table },
-        callback
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table }, callback)
       .subscribe();
   }
 
   // 获取健康数据
-  static async getHealthData(userId: string, options?: { limit?: number; offset?: number; type?: string }) {
+  static async getHealthData(
+    userId: string,
+    options?: { limit?: number; offset?: number; type?: string },
+  ) {
     const { limit = 20, offset = 0, type } = options || {};
-    
+
     let query = supabase
-      .from('health_data')
-      .select(`
+      .from("health_data")
+      .select(
+        `
         *,
         user:users!user_id(id, name, email)
-      `)
-      .eq('user_id', userId)
-      .order('recorded_at', { ascending: false })
+      `,
+      )
+      .eq("user_id", userId)
+      .order("recorded_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (type) {
-      query = query.eq('data_type', type);
+      query = query.eq("data_type", type);
     }
 
     const { data, error } = await query;
@@ -88,21 +89,24 @@ export class DataFetcher {
   }
 
   // 创建健康数据
-  static async createHealthData(userId: string, data: {
-    data_type: string
-    value: number
-    unit?: string
-    recorded_at?: string
-    metadata?: Record<string, any>
-  }) {
+  static async createHealthData(
+    userId: string,
+    data: {
+      data_type: string;
+      value: number;
+      unit?: string;
+      recorded_at?: string;
+      metadata?: Record<string, any>;
+    },
+  ) {
     const { data_type, value, unit, recorded_at, metadata = {} } = data;
 
     if (!data_type || !value) {
-      throw new Error('Missing required fields: data_type, value');
+      throw new Error("Missing required fields: data_type, value");
     }
 
     const { data: createdData, error } = await supabase
-      .from('health_data')
+      .from("health_data")
       .insert({
         user_id: userId,
         data_type,
@@ -124,9 +128,9 @@ export class DataFetcher {
   // 获取用户信息
   static async getUser(userId: string) {
     const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
+      .from("users")
+      .select("*")
+      .eq("id", userId)
       .single();
 
     if (error) {
@@ -139,9 +143,9 @@ export class DataFetcher {
   // 更新用户信息
   static async updateUser(userId: string, updates: Partial<any>) {
     const { data, error } = await supabase
-      .from('users')
+      .from("users")
       .update(updates)
-      .eq('id', userId)
+      .eq("id", userId)
       .select()
       .single();
 
