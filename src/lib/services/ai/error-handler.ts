@@ -1,21 +1,21 @@
 /**
  * AI 服务错误处理器
- * 
+ *
  * 规范化错误响应，不泄露 AI 提供商详情
  */
 
-import { logger } from '@/lib/logger';
-import { RateLimitError } from './rate-limiter';
+import { logger } from "@/lib/logger";
+import { RateLimitError } from "./rate-limiter";
 
 // AI 错误类型
 export enum AIErrorType {
-  RATE_LIMITED = 'RATE_LIMITED',
-  TIMEOUT = 'TIMEOUT',
-  INVALID_INPUT = 'INVALID_INPUT',
-  MODEL_ERROR = 'MODEL_ERROR',
-  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
-  SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
-  UNKNOWN = 'UNKNOWN',
+  RATE_LIMITED = "RATE_LIMITED",
+  TIMEOUT = "TIMEOUT",
+  INVALID_INPUT = "INVALID_INPUT",
+  MODEL_ERROR = "MODEL_ERROR",
+  QUOTA_EXCEEDED = "QUOTA_EXCEEDED",
+  SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE",
+  UNKNOWN = "UNKNOWN",
 }
 
 // AI 错误响应
@@ -53,11 +53,11 @@ function analyzeErrorType(error: unknown): AIErrorType {
   }
 
   const errorMessage = error instanceof Error ? error.message : String(error);
-  const errorName = error instanceof Error ? error.name : '';
+  const errorName = error instanceof Error ? error.name : "";
 
   // 检查超时
   if (
-    errorName === 'TimeoutError' ||
+    errorName === "TimeoutError" ||
     errorMessage.match(/timeout|timed out|ETIMEDOUT/i)
   ) {
     return AIErrorType.TIMEOUT;
@@ -87,13 +87,13 @@ function analyzeErrorType(error: unknown): AIErrorType {
  */
 function getUserFriendlyMessage(errorType: AIErrorType): string {
   const messages: Record<AIErrorType, string> = {
-    [AIErrorType.RATE_LIMITED]: '请求频率过高，请稍后再试',
-    [AIErrorType.TIMEOUT]: '请求超时，请稍后再试',
-    [AIErrorType.INVALID_INPUT]: '输入内容无效，请检查后重试',
-    [AIErrorType.MODEL_ERROR]: 'AI 处理失败，请稍后再试',
-    [AIErrorType.QUOTA_EXCEEDED]: 'AI 服务暂时不可用，请联系管理员',
-    [AIErrorType.SERVICE_UNAVAILABLE]: 'AI 服务暂时不可用，请稍后再试',
-    [AIErrorType.UNKNOWN]: '处理请求时发生错误，请稍后再试',
+    [AIErrorType.RATE_LIMITED]: "请求频率过高，请稍后再试",
+    [AIErrorType.TIMEOUT]: "请求超时，请稍后再试",
+    [AIErrorType.INVALID_INPUT]: "输入内容无效，请检查后重试",
+    [AIErrorType.MODEL_ERROR]: "AI 处理失败，请稍后再试",
+    [AIErrorType.QUOTA_EXCEEDED]: "AI 服务暂时不可用，请联系管理员",
+    [AIErrorType.SERVICE_UNAVAILABLE]: "AI 服务暂时不可用，请稍后再试",
+    [AIErrorType.UNKNOWN]: "处理请求时发生错误，请稍后再试",
   };
 
   return messages[errorType];
@@ -115,7 +115,10 @@ function isRetryable(errorType: AIErrorType): boolean {
 /**
  * 获取重试等待时间
  */
-function getRetryAfter(error: unknown, errorType: AIErrorType): number | undefined {
+function getRetryAfter(
+  error: unknown,
+  errorType: AIErrorType,
+): number | undefined {
   if (error instanceof RateLimitError) {
     return error.retryAfter;
   }
@@ -139,7 +142,7 @@ export function handleAIError(
     userId?: string;
     operation?: string;
     provider?: string;
-  }
+  },
 ): AIErrorResponse {
   const errorType = analyzeErrorType(error);
   const message = getUserFriendlyMessage(errorType);
@@ -147,7 +150,7 @@ export function handleAIError(
   const retryAfter = getRetryAfter(error, errorType);
 
   // 记录详细错误日志（不暴露给用户）
-  logger.error('AI 调用错误', {
+  logger.error("AI 调用错误", {
     errorType,
     originalError: error instanceof Error ? error.message : String(error),
     stack: error instanceof Error ? error.stack : undefined,
@@ -172,7 +175,7 @@ export class AIServiceError extends Error {
 
   constructor(response: AIErrorResponse) {
     super(response.message);
-    this.name = 'AIServiceError';
+    this.name = "AIServiceError";
     this.type = response.type;
     this.retryable = response.retryable;
     this.retryAfter = response.retryAfter;
@@ -189,7 +192,7 @@ export async function withRetry<T>(
     baseDelay?: number;
     maxDelay?: number;
     onRetry?: (attempt: number, error: unknown) => void;
-  } = {}
+  } = {},
 ): Promise<T> {
   const {
     maxRetries = 3,
@@ -215,21 +218,21 @@ export async function withRetry<T>(
       // 计算延迟时间（指数退避）
       const delay = Math.min(
         baseDelay * Math.pow(2, attempt) + Math.random() * 1000,
-        maxDelay
+        maxDelay,
       );
 
       if (onRetry) {
         onRetry(attempt + 1, error);
       }
 
-      logger.info('AI 调用重试', {
+      logger.info("AI 调用重试", {
         attempt: attempt + 1,
         maxRetries,
         delay,
         errorType,
       });
 
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
@@ -241,7 +244,7 @@ export async function withRetry<T>(
  */
 export async function withTimeout<T>(
   fn: () => Promise<T>,
-  timeoutMs: number = 30000
+  timeoutMs: number = 30000,
 ): Promise<T> {
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
@@ -258,6 +261,6 @@ export async function withTimeout<T>(
 class TimeoutError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'TimeoutError';
+    this.name = "TimeoutError";
   }
 }

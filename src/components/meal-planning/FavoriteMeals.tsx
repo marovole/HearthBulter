@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Heart, 
-  Search, 
-  Filter, 
-  Grid, 
-  List, 
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Heart,
+  Search,
+  Filter,
+  Grid,
+  List,
   Calendar,
   Clock,
   Users,
@@ -20,66 +20,68 @@ import {
   SortAsc,
   SortDesc,
   Star,
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import { toast } from '@/lib/toast';
+} from "lucide-react";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import { toast } from "@/lib/toast";
 
 interface FavoriteMeal {
-  id: string
-  name: string
-  description?: string
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  servings: number
-  cookingTime?: number
-  difficulty?: 'EASY' | 'MEDIUM' | 'HARD'
-  mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'
-  date: Date
-  tags?: string[]
-  image?: string
+  id: string;
+  name: string;
+  description?: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  servings: number;
+  cookingTime?: number;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+  date: Date;
+  tags?: string[];
+  image?: string;
 }
 
 interface FavoriteMealsProps {
-  userId?: string
-  onMealSelect?: (meal: FavoriteMeal) => void
-  onRemoveFavorite?: (mealId: string) => void
+  userId?: string;
+  onMealSelect?: (meal: FavoriteMeal) => void;
+  onRemoveFavorite?: (mealId: string) => void;
 }
 
 const MEAL_TYPE_LABELS = {
-  BREAKFAST: '早餐',
-  LUNCH: '午餐',
-  DINNER: '晚餐',
-  SNACK: '加餐',
+  BREAKFAST: "早餐",
+  LUNCH: "午餐",
+  DINNER: "晚餐",
+  SNACK: "加餐",
 };
 
 const DIFFICULTY_LABELS = {
-  EASY: '简单',
-  MEDIUM: '中等',
-  HARD: '困难',
+  EASY: "简单",
+  MEDIUM: "中等",
+  HARD: "困难",
 };
 
 const DIFFICULTY_COLORS = {
-  EASY: 'bg-green-100 text-green-800',
-  MEDIUM: 'bg-yellow-100 text-yellow-800',
-  HARD: 'bg-red-100 text-red-800',
+  EASY: "bg-green-100 text-green-800",
+  MEDIUM: "bg-yellow-100 text-yellow-800",
+  HARD: "bg-red-100 text-red-800",
 };
 
-export function FavoriteMeals({ 
-  userId, 
-  onMealSelect, 
-  onRemoveFavorite, 
+export function FavoriteMeals({
+  userId,
+  onMealSelect,
+  onRemoveFavorite,
 }: FavoriteMealsProps) {
   const [favorites, setFavorites] = useState<FavoriteMeal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'date' | 'calories' | 'cookingTime'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortBy, setSortBy] = useState<"date" | "calories" | "cookingTime">(
+    "date",
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
 
   useEffect(() => {
     loadFavorites();
@@ -92,7 +94,7 @@ export function FavoriteMeals({
       const mockFavorites = generateMockFavorites();
       setFavorites(mockFavorites);
     } catch (error) {
-      toast.error('加载收藏列表失败');
+      toast.error("加载收藏列表失败");
     } finally {
       setLoading(false);
     }
@@ -101,68 +103,68 @@ export function FavoriteMeals({
   const generateMockFavorites = (): FavoriteMeal[] => {
     return [
       {
-        id: '1',
-        name: '宫保鸡丁',
-        description: '经典川菜，麻辣鲜香',
+        id: "1",
+        name: "宫保鸡丁",
+        description: "经典川菜，麻辣鲜香",
         calories: 520,
         protein: 32,
         carbs: 45,
         fat: 18,
         servings: 2,
         cookingTime: 30,
-        difficulty: 'MEDIUM',
-        mealType: 'LUNCH',
-        date: new Date('2024-01-15'),
-        tags: ['川菜', '鸡肉', '下饭菜'],
-        image: '/images/kungpao-chicken.jpg',
+        difficulty: "MEDIUM",
+        mealType: "LUNCH",
+        date: new Date("2024-01-15"),
+        tags: ["川菜", "鸡肉", "下饭菜"],
+        image: "/images/kungpao-chicken.jpg",
       },
       {
-        id: '2',
-        name: '蒸蛋羹',
-        description: '嫩滑爽口，营养丰富',
+        id: "2",
+        name: "蒸蛋羹",
+        description: "嫩滑爽口，营养丰富",
         calories: 180,
         protein: 12,
         carbs: 8,
         fat: 10,
         servings: 1,
         cookingTime: 15,
-        difficulty: 'EASY',
-        mealType: 'BREAKFAST',
-        date: new Date('2024-01-14'),
-        tags: ['家常菜', '鸡蛋', '营养'],
-        image: '/images/steamed-egg.jpg',
+        difficulty: "EASY",
+        mealType: "BREAKFAST",
+        date: new Date("2024-01-14"),
+        tags: ["家常菜", "鸡蛋", "营养"],
+        image: "/images/steamed-egg.jpg",
       },
       {
-        id: '3',
-        name: '红烧肉',
-        description: '肥而不腻，入口即化',
+        id: "3",
+        name: "红烧肉",
+        description: "肥而不腻，入口即化",
         calories: 680,
         protein: 28,
         carbs: 15,
         fat: 55,
         servings: 3,
         cookingTime: 90,
-        difficulty: 'HARD',
-        mealType: 'DINNER',
-        date: new Date('2024-01-13'),
-        tags: ['红烧', '猪肉', '经典'],
-        image: '/images/braised-pork.jpg',
+        difficulty: "HARD",
+        mealType: "DINNER",
+        date: new Date("2024-01-13"),
+        tags: ["红烧", "猪肉", "经典"],
+        image: "/images/braised-pork.jpg",
       },
       {
-        id: '4',
-        name: '蔬菜沙拉',
-        description: '清爽健康，低卡路里',
+        id: "4",
+        name: "蔬菜沙拉",
+        description: "清爽健康，低卡路里",
         calories: 220,
         protein: 8,
         carbs: 25,
         fat: 12,
         servings: 1,
         cookingTime: 10,
-        difficulty: 'EASY',
-        mealType: 'LUNCH',
-        date: new Date('2024-01-12'),
-        tags: ['素食', '减脂', '沙拉'],
-        image: '/images/vegetable-salad.jpg',
+        difficulty: "EASY",
+        mealType: "LUNCH",
+        date: new Date("2024-01-12"),
+        tags: ["素食", "减脂", "沙拉"],
+        image: "/images/vegetable-salad.jpg",
       },
     ];
   };
@@ -170,71 +172,79 @@ export function FavoriteMeals({
   const handleRemoveFavorite = async (mealId: string) => {
     try {
       // 调用API取消收藏
-      setFavorites(prev => prev.filter(fav => fav.id !== mealId));
+      setFavorites((prev) => prev.filter((fav) => fav.id !== mealId));
       onRemoveFavorite?.(mealId);
-      toast.success('已取消收藏');
+      toast.success("已取消收藏");
     } catch (error) {
-      toast.error('取消收藏失败');
+      toast.error("取消收藏失败");
     }
   };
 
   const filteredAndSorted = favorites
-    .filter(meal => {
-      if (searchTerm && !meal.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+    .filter((meal) => {
+      if (
+        searchTerm &&
+        !meal.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ) {
         return false;
       }
-      if (filterType !== 'all' && meal.mealType !== filterType) {
+      if (filterType !== "all" && meal.mealType !== filterType) {
         return false;
       }
-      if (filterDifficulty !== 'all' && meal.difficulty !== filterDifficulty) {
+      if (filterDifficulty !== "all" && meal.difficulty !== filterDifficulty) {
         return false;
       }
       return true;
     })
     .sort((a, b) => {
       let aValue: any, bValue: any;
-      
+
       switch (sortBy) {
-      case 'date':
-        aValue = a.date.getTime();
-        bValue = b.date.getTime();
-        break;
-      case 'calories':
-        aValue = a.calories;
-        bValue = b.calories;
-        break;
-      case 'cookingTime':
-        aValue = a.cookingTime || 0;
-        bValue = b.cookingTime || 0;
-        break;
-      default:
-        return 0;
+        case "date":
+          aValue = a.date.getTime();
+          bValue = b.date.getTime();
+          break;
+        case "calories":
+          aValue = a.calories;
+          bValue = b.calories;
+          break;
+        case "cookingTime":
+          aValue = a.cookingTime || 0;
+          bValue = b.cookingTime || 0;
+          break;
+        default:
+          return 0;
       }
-      
-      if (sortOrder === 'asc') {
+
+      if (sortOrder === "asc") {
         return aValue - bValue;
       } else {
         return bValue - aValue;
       }
     });
 
-  const toggleSort = (field: 'date' | 'calories' | 'cookingTime') => {
+  const toggleSort = (field: "date" | "calories" | "cookingTime") => {
     if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortBy(field);
-      setSortOrder('desc');
+      setSortOrder("desc");
     }
   };
 
   const renderGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {filteredAndSorted.map((meal) => (
-        <Card key={meal.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+        <Card
+          key={meal.id}
+          className="hover:shadow-lg transition-shadow cursor-pointer"
+        >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="text-lg line-clamp-1">{meal.name}</CardTitle>
+                <CardTitle className="text-lg line-clamp-1">
+                  {meal.name}
+                </CardTitle>
                 <p className="text-sm text-gray-600 line-clamp-2 mt-1">
                   {meal.description}
                 </p>
@@ -252,13 +262,13 @@ export function FavoriteMeals({
               </Button>
             </div>
           </CardHeader>
-          
+
           <CardContent className="space-y-3">
             {/* 图片 */}
             {meal.image && (
               <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
-                <img 
-                  src={meal.image} 
+                <img
+                  src={meal.image}
                   alt={meal.name}
                   className="w-full h-full object-cover"
                 />
@@ -271,7 +281,9 @@ export function FavoriteMeals({
                 {MEAL_TYPE_LABELS[meal.mealType]}
               </Badge>
               {meal.difficulty && (
-                <Badge className={`text-xs ${DIFFICULTY_COLORS[meal.difficulty]}`}>
+                <Badge
+                  className={`text-xs ${DIFFICULTY_COLORS[meal.difficulty]}`}
+                >
                   {DIFFICULTY_LABELS[meal.difficulty]}
                 </Badge>
               )}
@@ -311,7 +323,7 @@ export function FavoriteMeals({
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                {format(meal.date, 'MM/dd', { locale: zhCN })}
+                {format(meal.date, "MM/dd", { locale: zhCN })}
               </div>
             </div>
 
@@ -332,10 +344,7 @@ export function FavoriteMeals({
             )}
 
             {/* 操作按钮 */}
-            <Button
-              onClick={() => onMealSelect?.(meal)}
-              className="w-full"
-            >
+            <Button onClick={() => onMealSelect?.(meal)} className="w-full">
               查看详情
             </Button>
           </CardContent>
@@ -353,8 +362,8 @@ export function FavoriteMeals({
               {/* 图片 */}
               {meal.image && (
                 <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                  <img 
-                    src={meal.image} 
+                  <img
+                    src={meal.image}
                     alt={meal.name}
                     className="w-full h-full object-cover"
                   />
@@ -365,7 +374,9 @@ export function FavoriteMeals({
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 className="font-semibold text-lg line-clamp-1">{meal.name}</h3>
+                    <h3 className="font-semibold text-lg line-clamp-1">
+                      {meal.name}
+                    </h3>
                     <p className="text-sm text-gray-600 line-clamp-1">
                       {meal.description}
                     </p>
@@ -405,16 +416,15 @@ export function FavoriteMeals({
                     {MEAL_TYPE_LABELS[meal.mealType]}
                   </Badge>
                   {meal.difficulty && (
-                    <Badge className={`text-xs ${DIFFICULTY_COLORS[meal.difficulty]}`}>
+                    <Badge
+                      className={`text-xs ${DIFFICULTY_COLORS[meal.difficulty]}`}
+                    >
                       {DIFFICULTY_LABELS[meal.difficulty]}
                     </Badge>
                   )}
                 </div>
-                
-                <Button
-                  size="sm"
-                  onClick={() => onMealSelect?.(meal)}
-                >
+
+                <Button size="sm" onClick={() => onMealSelect?.(meal)}>
                   查看详情
                 </Button>
               </div>
@@ -442,7 +452,7 @@ export function FavoriteMeals({
           我的收藏 ({favorites.length})
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* 搜索和筛选 */}
         <div className="space-y-4">
@@ -458,9 +468,13 @@ export function FavoriteMeals({
             </div>
             <Button
               variant="outline"
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
             >
-              {viewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+              {viewMode === "grid" ? (
+                <List className="h-4 w-4" />
+              ) : (
+                <Grid className="h-4 w-4" />
+              )}
             </Button>
           </div>
 
@@ -492,39 +506,48 @@ export function FavoriteMeals({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toggleSort('date')}
+              onClick={() => toggleSort("date")}
               className="flex items-center gap-1"
             >
               <Calendar className="h-3 w-3" />
               日期
-              {sortBy === 'date' && (
-                sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />
-              )}
+              {sortBy === "date" &&
+                (sortOrder === "asc" ? (
+                  <SortAsc className="h-3 w-3" />
+                ) : (
+                  <SortDesc className="h-3 w-3" />
+                ))}
             </Button>
 
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toggleSort('calories')}
+              onClick={() => toggleSort("calories")}
               className="flex items-center gap-1"
             >
               热量
-              {sortBy === 'calories' && (
-                sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />
-              )}
+              {sortBy === "calories" &&
+                (sortOrder === "asc" ? (
+                  <SortAsc className="h-3 w-3" />
+                ) : (
+                  <SortDesc className="h-3 w-3" />
+                ))}
             </Button>
 
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toggleSort('cookingTime')}
+              onClick={() => toggleSort("cookingTime")}
               className="flex items-center gap-1"
             >
               <Clock className="h-3 w-3" />
               时间
-              {sortBy === 'cookingTime' && (
-                sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />
-              )}
+              {sortBy === "cookingTime" &&
+                (sortOrder === "asc" ? (
+                  <SortAsc className="h-3 w-3" />
+                ) : (
+                  <SortDesc className="h-3 w-3" />
+                ))}
             </Button>
           </div>
         </div>
@@ -534,14 +557,14 @@ export function FavoriteMeals({
           <div className="text-center py-12">
             <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm || filterType !== 'all' || filterDifficulty !== 'all' 
-                ? '没有找到匹配的收藏' 
-                : '还没有收藏任何食谱'}
+              {searchTerm || filterType !== "all" || filterDifficulty !== "all"
+                ? "没有找到匹配的收藏"
+                : "还没有收藏任何食谱"}
             </h3>
             <p className="text-gray-600">
-              {searchTerm || filterType !== 'all' || filterDifficulty !== 'all' 
-                ? '尝试调整搜索条件或筛选器' 
-                : '在食谱详情页面点击收藏按钮来添加收藏'}
+              {searchTerm || filterType !== "all" || filterDifficulty !== "all"
+                ? "尝试调整搜索条件或筛选器"
+                : "在食谱详情页面点击收藏按钮来添加收藏"}
             </p>
           </div>
         ) : (
@@ -549,8 +572,8 @@ export function FavoriteMeals({
             <div className="text-sm text-gray-600">
               显示 {filteredAndSorted.length} / {favorites.length} 个收藏
             </div>
-            
-            {viewMode === 'grid' ? renderGridView() : renderListView()}
+
+            {viewMode === "grid" ? renderGridView() : renderListView()}
           </>
         )}
       </CardContent>

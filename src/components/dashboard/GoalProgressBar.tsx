@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 interface GoalProgressBarProps {
-  goalType: string
-  currentProgress: number // 0-100
-  targetWeight: number | null
-  currentWeight: number | null
-  startWeight: number | null
-  onTrack: boolean
-  weeksRemaining: number | null
+  goalType: string;
+  currentProgress: number; // 0-100
+  targetWeight: number | null;
+  currentWeight: number | null;
+  startWeight: number | null;
+  onTrack: boolean;
+  weeksRemaining: number | null;
 }
 
 export function GoalProgressBar({
@@ -21,32 +21,32 @@ export function GoalProgressBar({
 }: GoalProgressBarProps) {
   const getGoalTypeLabel = (type: string) => {
     switch (type) {
-    case 'LOSE_WEIGHT':
-      return '减重目标';
-    case 'GAIN_MUSCLE':
-      return '增肌目标';
-    case 'MAINTAIN':
-      return '维持体重';
-    case 'IMPROVE_HEALTH':
-      return '改善健康';
-    default:
-      return '健康目标';
+      case "LOSE_WEIGHT":
+        return "减重目标";
+      case "GAIN_MUSCLE":
+        return "增肌目标";
+      case "MAINTAIN":
+        return "维持体重";
+      case "IMPROVE_HEALTH":
+        return "改善健康";
+      default:
+        return "健康目标";
     }
   };
 
   const getProgressColor = () => {
-    if (currentProgress >= 80) return 'bg-green-600';
-    if (currentProgress >= 50) return 'bg-blue-600';
-    if (currentProgress >= 25) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (currentProgress >= 80) return "bg-green-600";
+    if (currentProgress >= 50) return "bg-blue-600";
+    if (currentProgress >= 25) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   const getStatusColor = () => {
-    return onTrack ? 'text-green-600' : 'text-red-600';
+    return onTrack ? "text-green-600" : "text-red-600";
   };
 
   const getStatusText = () => {
-    return onTrack ? '正常进度' : '进度滞后';
+    return onTrack ? "正常进度" : "进度滞后";
   };
 
   return (
@@ -79,19 +79,19 @@ export function GoalProgressBar({
         <div>
           <div className="text-gray-500">起始体重</div>
           <div className="font-semibold text-gray-900">
-            {startWeight ? `${startWeight.toFixed(1)} kg` : '--'}
+            {startWeight ? `${startWeight.toFixed(1)} kg` : "--"}
           </div>
         </div>
         <div>
           <div className="text-gray-500">当前体重</div>
           <div className="font-semibold text-gray-900">
-            {currentWeight ? `${currentWeight.toFixed(1)} kg` : '--'}
+            {currentWeight ? `${currentWeight.toFixed(1)} kg` : "--"}
           </div>
         </div>
         <div>
           <div className="text-gray-500">目标体重</div>
           <div className="font-semibold text-gray-900">
-            {targetWeight ? `${targetWeight.toFixed(1)} kg` : '--'}
+            {targetWeight ? `${targetWeight.toFixed(1)} kg` : "--"}
           </div>
         </div>
       </div>
@@ -100,11 +100,13 @@ export function GoalProgressBar({
       {weeksRemaining !== null && (
         <div className="mt-3 pt-3 border-t border-gray-200">
           <div className="text-xs text-gray-600">
-            预计剩余时间：<span className="font-semibold text-gray-900">{weeksRemaining} 周</span>
+            预计剩余时间：
+            <span className="font-semibold text-gray-900">
+              {weeksRemaining} 周
+            </span>
           </div>
         </div>
       )}
     </div>
   );
 }
-

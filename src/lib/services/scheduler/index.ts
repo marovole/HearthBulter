@@ -3,11 +3,11 @@
  * 负责管理所有定时任务的创建、启动和停止
  */
 
-import * as cron from 'node-cron';
-import { generateWeeklyReports } from './weekly-reports';
-import { generateMonthlyReports } from './monthly-reports';
-import { runAnomalyDetection } from './anomaly-detection';
-import { TaskLogger } from './logger';
+import * as cron from "node-cron";
+import { generateWeeklyReports } from "./weekly-reports";
+import { generateMonthlyReports } from "./monthly-reports";
+import { runAnomalyDetection } from "./anomaly-detection";
+import { TaskLogger } from "./logger";
 
 interface ScheduledTask {
   name: string;
@@ -27,24 +27,24 @@ class TaskScheduler {
    */
   private readonly taskDefinitions: ScheduledTask[] = [
     {
-      name: 'weekly-reports',
-      cronExpression: '0 9 * * 0', // 每周日上午9点
+      name: "weekly-reports",
+      cronExpression: "0 9 * * 0", // 每周日上午9点
       task: generateWeeklyReports,
-      description: '生成周报',
+      description: "生成周报",
       enabled: true,
     },
     {
-      name: 'monthly-reports',
-      cronExpression: '0 9 1 * *', // 每月1号上午9点
+      name: "monthly-reports",
+      cronExpression: "0 9 1 * *", // 每月1号上午9点
       task: generateMonthlyReports,
-      description: '生成月报',
+      description: "生成月报",
       enabled: true,
     },
     {
-      name: 'anomaly-detection',
-      cronExpression: '0 */6 * * *', // 每6小时执行一次
+      name: "anomaly-detection",
+      cronExpression: "0 */6 * * *", // 每6小时执行一次
       task: runAnomalyDetection,
-      description: '异常检测扫描',
+      description: "异常检测扫描",
       enabled: true,
     },
   ];
@@ -54,12 +54,12 @@ class TaskScheduler {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      this.logger.warn('Scheduler is already running');
+      this.logger.warn("Scheduler is already running");
       return;
     }
 
-    this.logger.info('Starting task scheduler...');
-    
+    this.logger.info("Starting task scheduler...");
+
     for (const taskDef of this.taskDefinitions) {
       if (taskDef.enabled) {
         await this.scheduleTask(taskDef);
@@ -75,12 +75,12 @@ class TaskScheduler {
    */
   stop(): void {
     if (!this.isRunning) {
-      this.logger.warn('Scheduler is not running');
+      this.logger.warn("Scheduler is not running");
       return;
     }
 
-    this.logger.info('Stopping task scheduler...');
-    
+    this.logger.info("Stopping task scheduler...");
+
     for (const [name, task] of this.tasks) {
       task.stop();
       this.logger.info(`Stopped task: ${name}`);
@@ -88,7 +88,7 @@ class TaskScheduler {
 
     this.tasks.clear();
     this.isRunning = false;
-    this.logger.info('Scheduler stopped');
+    this.logger.info("Scheduler stopped");
   }
 
   /**
@@ -103,14 +103,16 @@ class TaskScheduler {
         },
         {
           scheduled: false,
-          timezone: 'Asia/Shanghai',
-        }
+          timezone: "Asia/Shanghai",
+        },
       );
 
       this.tasks.set(taskDef.name, scheduledTask);
       scheduledTask.start();
-      
-      this.logger.info(`Scheduled task: ${taskDef.name} (${taskDef.cronExpression}) - ${taskDef.description}`);
+
+      this.logger.info(
+        `Scheduled task: ${taskDef.name} (${taskDef.cronExpression}) - ${taskDef.description}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to schedule task ${taskDef.name}:`, error);
     }
@@ -137,7 +139,7 @@ class TaskScheduler {
    * 手动执行任务
    */
   async executeTaskManually(taskName: string): Promise<void> {
-    const taskDef = this.taskDefinitions.find(t => t.name === taskName);
+    const taskDef = this.taskDefinitions.find((t) => t.name === taskName);
     if (!taskDef) {
       throw new Error(`Task not found: ${taskName}`);
     }
@@ -156,7 +158,7 @@ class TaskScheduler {
     enabled: boolean;
     running: boolean;
   }> {
-    return this.taskDefinitions.map(taskDef => ({
+    return this.taskDefinitions.map((taskDef) => ({
       name: taskDef.name,
       cronExpression: taskDef.cronExpression,
       description: taskDef.description,
@@ -169,7 +171,7 @@ class TaskScheduler {
    * 启用/禁用任务
    */
   async toggleTask(taskName: string, enabled: boolean): Promise<void> {
-    const taskDef = this.taskDefinitions.find(t => t.name === taskName);
+    const taskDef = this.taskDefinitions.find((t) => t.name === taskName);
     if (!taskDef) {
       throw new Error(`Task not found: ${taskName}`);
     }
@@ -181,7 +183,7 @@ class TaskScheduler {
     }
 
     taskDef.enabled = enabled;
-    
+
     if (enabled) {
       await this.scheduleTask(taskDef);
       this.logger.info(`Enabled task: ${taskName}`);

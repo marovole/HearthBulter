@@ -10,31 +10,31 @@
  * @module service-container
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase-database';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase-database";
 
-import type { RecommendationRepository } from '@/lib/repositories/interfaces/recommendation-repository';
-import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
-import type { AnalyticsRepository } from '@/lib/repositories/interfaces/analytics-repository';
-import type { BudgetRepository } from '@/lib/repositories/interfaces/budget-repository';
+import type { RecommendationRepository } from "@/lib/repositories/interfaces/recommendation-repository";
+import type { NotificationRepository } from "@/lib/repositories/interfaces/notification-repository";
+import type { AnalyticsRepository } from "@/lib/repositories/interfaces/analytics-repository";
+import type { BudgetRepository } from "@/lib/repositories/interfaces/budget-repository";
 
-import { SupabaseRecommendationRepository } from '@/lib/repositories/implementations/supabase-recommendation-repository';
-import { SupabaseNotificationRepository } from '@/lib/repositories/implementations/supabase-notification-repository';
-import { SupabaseAnalyticsRepository } from '@/lib/repositories/implementations/supabase-analytics-repository';
-import { SupabaseBudgetRepository } from '@/lib/repositories/implementations/supabase-budget-repository';
+import { SupabaseRecommendationRepository } from "@/lib/repositories/implementations/supabase-recommendation-repository";
+import { SupabaseNotificationRepository } from "@/lib/repositories/implementations/supabase-notification-repository";
+import { SupabaseAnalyticsRepository } from "@/lib/repositories/implementations/supabase-analytics-repository";
+import { SupabaseBudgetRepository } from "@/lib/repositories/implementations/supabase-budget-repository";
 
 // Service层导入（暂时使用现有实现，后续重构为Repository模式）
-import { RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
-import { NotificationManager } from '@/lib/services/notification/notification-manager';
-import { AnalyticsService } from '@/lib/services/analytics-service';
-import { BudgetTracker } from '@/lib/services/budget/budget-tracker';
-import { BudgetNotificationService } from '@/lib/services/budget/budget-notification-service';
-import { TrendAnalyzer } from '@/lib/services/analytics/trend-analyzer';
+import { RecommendationEngine } from "@/lib/services/recommendation/recommendation-engine";
+import { NotificationManager } from "@/lib/services/notification/notification-manager";
+import { AnalyticsService } from "@/lib/services/analytics-service";
+import { BudgetTracker } from "@/lib/services/budget/budget-tracker";
+import { BudgetNotificationService } from "@/lib/services/budget/budget-notification-service";
+import { TrendAnalyzer } from "@/lib/services/analytics/trend-analyzer";
 
 /**
  * Repository 后端类型
  */
-export type RepositoryBackend = 'supabase' | 'mock';
+export type RepositoryBackend = "supabase" | "mock";
 
 /**
  * Repository 覆盖配置
@@ -67,7 +67,7 @@ export interface ServiceContainerConfig {
  * 提供懒加载和依赖注入支持
  */
 export class ServiceContainer {
-  private static readonly GLOBAL_KEY = '__serviceContainerSingleton';
+  private static readonly GLOBAL_KEY = "__serviceContainerSingleton";
   private readonly config: ServiceContainerConfig;
   private readonly supabaseClient: SupabaseClient<Database>;
 
@@ -93,7 +93,7 @@ export class ServiceContainer {
     if (config.supabaseClient) {
       this.supabaseClient = config.supabaseClient;
     } else {
-      const { SupabaseClientManager } = require('@/lib/db/supabase-adapter');
+      const { SupabaseClientManager } = require("@/lib/db/supabase-adapter");
       this.supabaseClient = SupabaseClientManager.getInstance();
     }
   }
@@ -135,10 +135,12 @@ export class ServiceContainer {
     }
 
     if (!this.recommendationRepository) {
-      if (this.config.repositoryType === 'mock') {
-        throw new Error('Mock repositories not yet implemented');
+      if (this.config.repositoryType === "mock") {
+        throw new Error("Mock repositories not yet implemented");
       }
-      this.recommendationRepository = new SupabaseRecommendationRepository(this.supabaseClient);
+      this.recommendationRepository = new SupabaseRecommendationRepository(
+        this.supabaseClient,
+      );
     }
 
     return this.recommendationRepository;
@@ -153,10 +155,12 @@ export class ServiceContainer {
     }
 
     if (!this.notificationRepository) {
-      if (this.config.repositoryType === 'mock') {
-        throw new Error('Mock repositories not yet implemented');
+      if (this.config.repositoryType === "mock") {
+        throw new Error("Mock repositories not yet implemented");
       }
-      this.notificationRepository = new SupabaseNotificationRepository(this.supabaseClient);
+      this.notificationRepository = new SupabaseNotificationRepository(
+        this.supabaseClient,
+      );
     }
 
     return this.notificationRepository;
@@ -171,10 +175,12 @@ export class ServiceContainer {
     }
 
     if (!this.analyticsRepository) {
-      if (this.config.repositoryType === 'mock') {
-        throw new Error('Mock repositories not yet implemented');
+      if (this.config.repositoryType === "mock") {
+        throw new Error("Mock repositories not yet implemented");
       }
-      this.analyticsRepository = new SupabaseAnalyticsRepository(this.supabaseClient);
+      this.analyticsRepository = new SupabaseAnalyticsRepository(
+        this.supabaseClient,
+      );
     }
 
     return this.analyticsRepository;
@@ -189,8 +195,8 @@ export class ServiceContainer {
     }
 
     if (!this.budgetRepository) {
-      if (this.config.repositoryType === 'mock') {
-        throw new Error('Mock repositories not yet implemented');
+      if (this.config.repositoryType === "mock") {
+        throw new Error("Mock repositories not yet implemented");
       }
       this.budgetRepository = new SupabaseBudgetRepository(this.supabaseClient);
     }
@@ -205,7 +211,9 @@ export class ServiceContainer {
    */
   getRecommendationEngine(): RecommendationEngine {
     if (!this.recommendationEngine) {
-      this.recommendationEngine = new RecommendationEngine(this.getRecommendationRepository());
+      this.recommendationEngine = new RecommendationEngine(
+        this.getRecommendationRepository(),
+      );
     }
     return this.recommendationEngine;
   }
@@ -217,7 +225,9 @@ export class ServiceContainer {
    */
   getNotificationManager(): NotificationManager {
     if (!this.notificationManager) {
-      this.notificationManager = new NotificationManager(this.getNotificationRepository());
+      this.notificationManager = new NotificationManager(
+        this.getNotificationRepository(),
+      );
     }
     return this.notificationManager;
   }
@@ -229,7 +239,9 @@ export class ServiceContainer {
    */
   getAnalyticsService(): AnalyticsService {
     if (!this.analyticsService) {
-      this.analyticsService = new AnalyticsService(this.getAnalyticsRepository());
+      this.analyticsService = new AnalyticsService(
+        this.getAnalyticsRepository(),
+      );
     }
     return this.analyticsService;
   }
@@ -251,13 +263,13 @@ export class ServiceContainer {
       const budgetNotificationService = new BudgetNotificationService(
         this.getNotificationRepository(),
         this.getBudgetRepository(),
-        notificationManager
+        notificationManager,
       );
 
       // 创建 BudgetTracker
       this.budgetTracker = new BudgetTracker(
         this.getBudgetRepository(),
-        budgetNotificationService
+        budgetNotificationService,
       );
     }
     return this.budgetTracker;
@@ -282,7 +294,9 @@ export class ServiceContainer {
  * 注意：通常应使用 getDefaultContainer() 获取单例实例，
  * 此函数仅用于测试场景需要独立容器实例时
  */
-export function createServiceContainer(config: ServiceContainerConfig = {}): ServiceContainer {
+export function createServiceContainer(
+  config: ServiceContainerConfig = {},
+): ServiceContainer {
   // 直接调用 getInstance，不创建新实例
   return ServiceContainer.getInstance(config);
 }

@@ -1,51 +1,51 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 
 export default function NewAllergyPage() {
   const params = useParams<{ id: string; memberId: string }>();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
-    allergenType: 'FOOD',
-    allergenName: '',
-    severity: 'MODERATE',
-    description: '',
+    allergenType: "FOOD",
+    allergenName: "",
+    severity: "MODERATE",
+    description: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const response = await fetch(
         `/api/members/${params.memberId}/allergies`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(formData),
-        }
+        },
       );
 
       const data = await response.json();
 
       if (response.ok) {
         router.push(
-          `/dashboard/families/${params.id}/members/${params.memberId}`
+          `/dashboard/families/${params.id}/members/${params.memberId}`,
         );
         router.refresh();
       } else {
-        setError(data.error || '添加过敏记录失败');
+        setError(data.error || "添加过敏记录失败");
       }
     } catch (error) {
-      setError('网络错误，请重试');
+      setError("网络错误，请重试");
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +77,7 @@ export default function NewAllergyPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
               <p className="text-sm text-yellow-800">
-                <strong>重要提示:</strong>{' '}
+                <strong>重要提示:</strong>{" "}
                 请准确填写过敏信息，这将帮助系统为您生成安全的饮食计划。
               </p>
             </div>
@@ -239,7 +239,7 @@ export default function NewAllergyPage() {
                   disabled={isLoading}
                   className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? '添加中...' : '添加过敏记录'}
+                  {isLoading ? "添加中..." : "添加过敏记录"}
                 </button>
               </div>
             </form>

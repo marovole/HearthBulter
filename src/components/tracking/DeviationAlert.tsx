@@ -1,12 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { AlertTriangle, TrendingDown, TrendingUp, Info, X, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from "react";
+import {
+  AlertTriangle,
+  TrendingDown,
+  TrendingUp,
+  Info,
+  X,
+  ChevronRight,
+} from "lucide-react";
 
 interface Deviation {
   id: string;
-  type: 'PROTEIN_DEFICIENCY' | 'CARB_EXCESS' | 'FAT_EXCESS' | 'CALORIE_DEFICIENCY' | 'CALORIE_EXCESS';
-  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  type:
+    | "PROTEIN_DEFICIENCY"
+    | "CARB_EXCESS"
+    | "FAT_EXCESS"
+    | "CALORIE_DEFICIENCY"
+    | "CALORIE_EXCESS";
+  severity: "LOW" | "MEDIUM" | "HIGH";
   nutrient: string;
   currentValue: number;
   targetValue: number;
@@ -14,7 +26,7 @@ interface Deviation {
   days: number;
   message: string;
   suggestions: string[];
-  trend: 'IMPROVING' | 'WORSENING' | 'STABLE';
+  trend: "IMPROVING" | "WORSENING" | "STABLE";
 }
 
 interface DeviationAlertProps {
@@ -23,7 +35,11 @@ interface DeviationAlertProps {
   onViewDetails?: (deviation: Deviation) => void;
 }
 
-export function DeviationAlert({ memberId, onDismiss, onViewDetails }: DeviationAlertProps) {
+export function DeviationAlert({
+  memberId,
+  onDismiss,
+  onViewDetails,
+}: DeviationAlertProps) {
   const [deviations, setDeviations] = useState<Deviation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
@@ -35,13 +51,15 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
   const loadDeviations = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/tracking/deviation?memberId=${memberId}`);
+      const response = await fetch(
+        `/api/tracking/deviation?memberId=${memberId}`,
+      );
       if (response.ok) {
         const data = await response.json();
         setDeviations(data);
       }
     } catch (error) {
-      console.error('加载偏差分析失败:', error);
+      console.error("加载偏差分析失败:", error);
     } finally {
       setIsLoading(false);
     }
@@ -54,51 +72,67 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-    case 'HIGH': return 'bg-red-50 border-red-200 text-red-800';
-    case 'MEDIUM': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-    case 'LOW': return 'bg-blue-50 border-blue-200 text-blue-800';
-    default: return 'bg-gray-50 border-gray-200 text-gray-800';
+      case "HIGH":
+        return "bg-red-50 border-red-200 text-red-800";
+      case "MEDIUM":
+        return "bg-yellow-50 border-yellow-200 text-yellow-800";
+      case "LOW":
+        return "bg-blue-50 border-blue-200 text-blue-800";
+      default:
+        return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-    case 'HIGH': return <AlertTriangle className="w-5 h-5 text-red-600" />;
-    case 'MEDIUM': return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
-    case 'LOW': return <Info className="w-5 h-5 text-blue-600" />;
-    default: return <Info className="w-5 h-5 text-gray-600" />;
+      case "HIGH":
+        return <AlertTriangle className="w-5 h-5 text-red-600" />;
+      case "MEDIUM":
+        return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
+      case "LOW":
+        return <Info className="w-5 h-5 text-blue-600" />;
+      default:
+        return <Info className="w-5 h-5 text-gray-600" />;
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-    case 'IMPROVING': return <TrendingDown className="w-4 h-4 text-green-600" />;
-    case 'WORSENING': return <TrendingUp className="w-4 h-4 text-red-600" />;
-    case 'STABLE': return <div className="w-4 h-4 rounded-full bg-gray-400" />;
-    default: return null;
+      case "IMPROVING":
+        return <TrendingDown className="w-4 h-4 text-green-600" />;
+      case "WORSENING":
+        return <TrendingUp className="w-4 h-4 text-red-600" />;
+      case "STABLE":
+        return <div className="w-4 h-4 rounded-full bg-gray-400" />;
+      default:
+        return null;
     }
   };
 
   const getNutrientLabel = (nutrient: string) => {
     const labels = {
-      protein: '蛋白质',
-      carbs: '碳水化合物',
-      fat: '脂肪',
-      calories: '热量',
+      protein: "蛋白质",
+      carbs: "碳水化合物",
+      fat: "脂肪",
+      calories: "热量",
     };
     return labels[nutrient as keyof typeof labels] || nutrient;
   };
 
   const getTrendText = (trend: string) => {
     switch (trend) {
-    case 'IMPROVING': return '趋势改善';
-    case 'WORSENING': return '趋势恶化';
-    case 'STABLE': return '保持稳定';
-    default: return '';
+      case "IMPROVING":
+        return "趋势改善";
+      case "WORSENING":
+        return "趋势恶化";
+      case "STABLE":
+        return "保持稳定";
+      default:
+        return "";
     }
   };
 
-  const activeDeviations = deviations.filter(d => !dismissedIds.has(d.id));
+  const activeDeviations = deviations.filter((d) => !dismissedIds.has(d.id));
 
   if (isLoading) {
     return (
@@ -157,14 +191,16 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
                 {getSeverityIcon(deviation.severity)}
                 <div className="flex-1">
                   <h4 className="font-medium mb-1">
-                    {getNutrientLabel(deviation.nutrient)}摄入{deviation.type.includes('DEFICIENCY') ? '不足' : '超标'}
+                    {getNutrientLabel(deviation.nutrient)}摄入
+                    {deviation.type.includes("DEFICIENCY") ? "不足" : "超标"}
                   </h4>
                   <p className="text-sm opacity-80">
-                    当前 {deviation.currentValue}g / 目标 {deviation.targetValue}g
+                    当前 {deviation.currentValue}g / 目标{" "}
+                    {deviation.targetValue}g
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1 text-xs">
                   {getTrendIcon(deviation.trend)}
@@ -182,21 +218,24 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
             {/* Deviation Details */}
             <div className="space-y-2 mb-3">
               <p className="text-sm">{deviation.message}</p>
-              
+
               <div className="flex items-center space-x-4 text-xs">
-                <span>
-                  偏差程度: {Math.abs(deviation.deviationPercent)}%
-                </span>
-                <span>
-                  持续时间: {deviation.days} 天
-                </span>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  deviation.severity === 'HIGH' ? 'bg-red-100 text-red-700' :
-                    deviation.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-blue-100 text-blue-700'
-                }`}>
-                  {deviation.severity === 'HIGH' ? '严重' :
-                    deviation.severity === 'MEDIUM' ? '中等' : '轻微'}
+                <span>偏差程度: {Math.abs(deviation.deviationPercent)}%</span>
+                <span>持续时间: {deviation.days} 天</span>
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${
+                    deviation.severity === "HIGH"
+                      ? "bg-red-100 text-red-700"
+                      : deviation.severity === "MEDIUM"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-blue-100 text-blue-700"
+                  }`}
+                >
+                  {deviation.severity === "HIGH"
+                    ? "严重"
+                    : deviation.severity === "MEDIUM"
+                      ? "中等"
+                      : "轻微"}
                 </span>
               </div>
             </div>
@@ -206,12 +245,17 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
               <div className="border-t border-current border-opacity-20 pt-3">
                 <p className="text-sm font-medium mb-2">调整建议:</p>
                 <ul className="space-y-1">
-                  {deviation.suggestions.slice(0, 2).map((suggestion, index) => (
-                    <li key={index} className="text-xs flex items-start space-x-1">
-                      <span className="mt-0.5">•</span>
-                      <span>{suggestion}</span>
-                    </li>
-                  ))}
+                  {deviation.suggestions
+                    .slice(0, 2)
+                    .map((suggestion, index) => (
+                      <li
+                        key={index}
+                        className="text-xs flex items-start space-x-1"
+                      >
+                        <span className="mt-0.5">•</span>
+                        <span>{suggestion}</span>
+                      </li>
+                    ))}
                   {deviation.suggestions.length > 2 && (
                     <li className="text-xs opacity-80">
                       还有 {deviation.suggestions.length - 2} 条建议...
@@ -230,7 +274,7 @@ export function DeviationAlert({ memberId, onDismiss, onViewDetails }: Deviation
                 <span>查看详情</span>
                 <ChevronRight className="w-3 h-3" />
               </button>
-              
+
               <button
                 onClick={() => handleDismiss(deviation.id)}
                 className="px-3 py-1 text-xs border border-current border-opacity-30 rounded hover:bg-current hover:bg-opacity-10"

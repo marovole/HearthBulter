@@ -9,13 +9,13 @@
  * @module device-repository
  */
 
-import type { PaginatedResult, PaginationInput } from '../types/common';
+import type { PaginatedResult, PaginationInput } from "../types/common";
 import type {
   DeviceConnectionDTO,
   DeviceConnectionCreateInputDTO,
   DeviceConnectionUpdateInputDTO,
   DeviceConnectionFilterDTO,
-} from '../types/device';
+} from "../types/device";
 
 /**
  * Device Repository 接口
@@ -27,7 +27,9 @@ export interface DeviceRepository {
    * @param input - 设备连接创建数据
    * @returns 创建的设备连接
    */
-  createDeviceConnection(input: DeviceConnectionCreateInputDTO): Promise<DeviceConnectionDTO>;
+  createDeviceConnection(
+    input: DeviceConnectionCreateInputDTO,
+  ): Promise<DeviceConnectionDTO>;
 
   /**
    * 根据 ID 查询设备连接
@@ -43,7 +45,9 @@ export interface DeviceRepository {
    * @param deviceId - 设备 ID
    * @returns 设备连接，如果不存在返回 null
    */
-  getDeviceConnectionByDeviceId(deviceId: string): Promise<DeviceConnectionDTO | null>;
+  getDeviceConnectionByDeviceId(
+    deviceId: string,
+  ): Promise<DeviceConnectionDTO | null>;
 
   /**
    * 查询设备连接列表（支持过滤和分页）
@@ -54,7 +58,7 @@ export interface DeviceRepository {
    */
   listDeviceConnections(
     filter?: DeviceConnectionFilterDTO,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<DeviceConnectionDTO>>;
 
   /**
@@ -66,7 +70,7 @@ export interface DeviceRepository {
    */
   updateDeviceConnection(
     id: string,
-    input: DeviceConnectionUpdateInputDTO
+    input: DeviceConnectionUpdateInputDTO,
   ): Promise<DeviceConnectionDTO>;
 
   /**
@@ -86,9 +90,9 @@ export interface DeviceRepository {
    */
   updateSyncStatus(
     id: string,
-    syncStatus: 'PENDING' | 'SYNCING' | 'SUCCESS' | 'FAILED' | 'DISABLED',
+    syncStatus: "PENDING" | "SYNCING" | "SUCCESS" | "FAILED" | "DISABLED",
     lastSyncAt?: Date,
-    lastError?: string | null
+    lastError?: string | null,
   ): Promise<void>;
 
   /**

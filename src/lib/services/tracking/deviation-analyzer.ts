@@ -3,16 +3,16 @@
  * 负责分析用户的营养摄入偏差、提供调整建议
  */
 
-import { db } from '@/lib/db';
-import { Prisma } from '@prisma/client';
+import { db } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
 export interface DeviationAnalysis {
-  nutrient: 'calories' | 'protein' | 'carbs' | 'fat';
+  nutrient: "calories" | "protein" | "carbs" | "fat";
   target: number;
   actual: number;
   deviation: number; // 百分比
-  status: 'normal' | 'low' | 'high' | 'critical';
-  severity: 'none' | 'mild' | 'moderate' | 'severe';
+  status: "normal" | "low" | "high" | "critical";
+  severity: "none" | "mild" | "moderate" | "severe";
   suggestion?: string;
 }
 
@@ -27,7 +27,7 @@ export interface WeeklyReport {
   };
   deviations: DeviationAnalysis[];
   recommendations: string[];
-  trend: 'improving' | 'stable' | 'declining';
+  trend: "improving" | "stable" | "declining";
 }
 
 /**
@@ -35,7 +35,7 @@ export interface WeeklyReport {
  */
 export async function analyzeDailyDeviation(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<DeviationAnalysis[]> {
   const targetDate = new Date(date);
   targetDate.setHours(0, 0, 0, 0);
@@ -59,25 +59,25 @@ export async function analyzeDailyDeviation(
   // 分析各营养素偏差
   const nutrients = [
     {
-      name: 'calories' as const,
+      name: "calories" as const,
       target: target.targetCalories,
       actual: target.actualCalories,
       deviation: target.caloriesDeviation,
     },
     {
-      name: 'protein' as const,
+      name: "protein" as const,
       target: target.targetProtein,
       actual: target.actualProtein,
       deviation: target.proteinDeviation,
     },
     {
-      name: 'carbs' as const,
+      name: "carbs" as const,
       target: target.targetCarbs,
       actual: target.actualCarbs,
       deviation: target.carbsDeviation,
     },
     {
-      name: 'fat' as const,
+      name: "fat" as const,
       target: target.targetFat,
       actual: target.actualFat,
       deviation: target.fatDeviation,
@@ -96,7 +96,7 @@ export async function analyzeDailyDeviation(
  * 分析单个营养素的偏差
  */
 function analyzeNutrientDeviation(data: {
-  name: 'calories' | 'protein' | 'carbs' | 'fat';
+  name: "calories" | "protein" | "carbs" | "fat";
   target: number;
   actual: number;
   deviation: number;
@@ -104,25 +104,25 @@ function analyzeNutrientDeviation(data: {
   const { name, target, actual, deviation } = data;
 
   // 判断状态和严重程度
-  let status: 'normal' | 'low' | 'high' | 'critical' = 'normal';
-  let severity: 'none' | 'mild' | 'moderate' | 'severe' = 'none';
+  let status: "normal" | "low" | "high" | "critical" = "normal";
+  let severity: "none" | "mild" | "moderate" | "severe" = "none";
   let suggestion: string | undefined;
 
   const absDeviation = Math.abs(deviation);
 
   // 根据偏差程度判断
   if (absDeviation < 10) {
-    status = 'normal';
-    severity = 'none';
+    status = "normal";
+    severity = "none";
   } else if (absDeviation < 20) {
-    status = deviation > 0 ? 'high' : 'low';
-    severity = 'mild';
+    status = deviation > 0 ? "high" : "low";
+    severity = "mild";
   } else if (absDeviation < 30) {
-    status = deviation > 0 ? 'high' : 'low';
-    severity = 'moderate';
+    status = deviation > 0 ? "high" : "low";
+    severity = "moderate";
   } else {
-    status = 'critical';
-    severity = 'severe';
+    status = "critical";
+    severity = "severe";
   }
 
   // 生成建议
@@ -143,10 +143,10 @@ function analyzeNutrientDeviation(data: {
  * 生成营养调整建议
  */
 function generateSuggestion(
-  nutrient: 'calories' | 'protein' | 'carbs' | 'fat',
+  nutrient: "calories" | "protein" | "carbs" | "fat",
   deviation: number,
   target: number,
-  actual: number
+  actual: number,
 ): string | undefined {
   const diff = Math.abs(target - actual);
 
@@ -155,32 +155,32 @@ function generateSuggestion(
   }
 
   const nutrientNames = {
-    calories: '热量',
-    protein: '蛋白质',
-    carbs: '碳水化合物',
-    fat: '脂肪',
+    calories: "热量",
+    protein: "蛋白质",
+    carbs: "碳水化合物",
+    fat: "脂肪",
   };
 
   const name = nutrientNames[nutrient];
 
   if (deviation > 0) {
     // 摄入过多
-    if (nutrient === 'protein') {
+    if (nutrient === "protein") {
       return `今日${name}摄入超标${diff.toFixed(0)}g，建议减少肉类、蛋类的摄入量。`;
-    } else if (nutrient === 'carbs') {
+    } else if (nutrient === "carbs") {
       return `今日${name}摄入超标${diff.toFixed(0)}g，建议减少米面、糖类的摄入量。`;
-    } else if (nutrient === 'fat') {
+    } else if (nutrient === "fat") {
       return `今日${name}摄入超标${diff.toFixed(0)}g，建议减少油炸食物、肥肉的摄入量。`;
     } else {
       return `今日${name}摄入超标${diff.toFixed(0)}kcal，建议适当减少食量或增加运动。`;
     }
   } else {
     // 摄入不足
-    if (nutrient === 'protein') {
+    if (nutrient === "protein") {
       return `今日${name}摄入不足${diff.toFixed(0)}g，建议增加鸡蛋、鸡胸肉、豆制品等高蛋白食物。`;
-    } else if (nutrient === 'carbs') {
+    } else if (nutrient === "carbs") {
       return `今日${name}摄入不足${diff.toFixed(0)}g，建议适当增加主食（米饭、面条、全麦面包）的摄入。`;
-    } else if (nutrient === 'fat') {
+    } else if (nutrient === "fat") {
       return `今日${name}摄入不足${diff.toFixed(0)}g，建议适当增加坚果、橄榄油等健康脂肪。`;
     } else {
       return `今日${name}摄入不足${diff.toFixed(0)}kcal，建议适当增加食量，确保营养充足。`;
@@ -193,7 +193,7 @@ function generateSuggestion(
  */
 export async function analyzePeriodDeviation(
   memberId: string,
-  days: number = 7
+  days: number = 7,
 ) {
   const endDate = new Date();
   endDate.setHours(0, 0, 0, 0);
@@ -211,7 +211,7 @@ export async function analyzePeriodDeviation(
       },
     },
     orderBy: {
-      date: 'asc',
+      date: "asc",
     },
   });
 
@@ -224,24 +224,24 @@ export async function analyzePeriodDeviation(
     nutrient: string;
     avgDeviation: number;
     consecutiveDays: number;
-    severity: 'mild' | 'moderate' | 'severe';
+    severity: "mild" | "moderate" | "severe";
     suggestion: string;
   }> = [];
 
-  const nutrients = ['calories', 'protein', 'carbs', 'fat'] as const;
+  const nutrients = ["calories", "protein", "carbs", "fat"] as const;
 
   for (const nutrient of nutrients) {
     // 计算平均偏差
     const deviations = targets.map((t) => {
       switch (nutrient) {
-      case 'calories':
-        return t.caloriesDeviation;
-      case 'protein':
-        return t.proteinDeviation;
-      case 'carbs':
-        return t.carbsDeviation;
-      case 'fat':
-        return t.fatDeviation;
+        case "calories":
+          return t.caloriesDeviation;
+        case "protein":
+          return t.proteinDeviation;
+        case "carbs":
+          return t.carbsDeviation;
+        case "fat":
+          return t.fatDeviation;
       }
     });
 
@@ -253,7 +253,10 @@ export async function analyzePeriodDeviation(
     let currentStreak = 0;
 
     deviations.forEach((deviation) => {
-      if (Math.abs(deviation) > 15 && Math.sign(deviation) === Math.sign(avgDeviation)) {
+      if (
+        Math.abs(deviation) > 15 &&
+        Math.sign(deviation) === Math.sign(avgDeviation)
+      ) {
         currentStreak++;
         consecutiveDays = Math.max(consecutiveDays, currentStreak);
       } else {
@@ -262,18 +265,18 @@ export async function analyzePeriodDeviation(
     });
 
     if (consecutiveDays >= 3 && Math.abs(avgDeviation) > 15) {
-      let severity: 'mild' | 'moderate' | 'severe' = 'mild';
+      let severity: "mild" | "moderate" | "severe" = "mild";
       if (Math.abs(avgDeviation) > 30) {
-        severity = 'severe';
+        severity = "severe";
       } else if (Math.abs(avgDeviation) > 20) {
-        severity = 'moderate';
+        severity = "moderate";
       }
 
       const nutrientNames = {
-        calories: '热量',
-        protein: '蛋白质',
-        carbs: '碳水化合物',
-        fat: '脂肪',
+        calories: "热量",
+        protein: "蛋白质",
+        carbs: "碳水化合物",
+        fat: "脂肪",
       };
 
       issues.push({
@@ -281,7 +284,11 @@ export async function analyzePeriodDeviation(
         avgDeviation,
         consecutiveDays,
         severity,
-        suggestion: generatePeriodSuggestion(nutrient, avgDeviation, consecutiveDays),
+        suggestion: generatePeriodSuggestion(
+          nutrient,
+          avgDeviation,
+          consecutiveDays,
+        ),
       });
     }
   }
@@ -297,46 +304,51 @@ export async function analyzePeriodDeviation(
  * 生成周期性偏差建议
  */
 function generatePeriodSuggestion(
-  nutrient: 'calories' | 'protein' | 'carbs' | 'fat',
+  nutrient: "calories" | "protein" | "carbs" | "fat",
   avgDeviation: number,
-  days: number
+  days: number,
 ): string {
   const nutrientNames = {
-    calories: '热量',
-    protein: '蛋白质',
-    carbs: '碳水化合物',
-    fat: '脂肪',
+    calories: "热量",
+    protein: "蛋白质",
+    carbs: "碳水化合物",
+    fat: "脂肪",
   };
 
   const name = nutrientNames[nutrient];
-  const direction = avgDeviation > 0 ? '超标' : '不足';
+  const direction = avgDeviation > 0 ? "超标" : "不足";
   const percentage = Math.abs(avgDeviation).toFixed(0);
 
   let suggestion = `您已连续${days}天${name}摄入${direction}约${percentage}%。`;
 
-  if (nutrient === 'protein') {
+  if (nutrient === "protein") {
     if (avgDeviation > 0) {
-      suggestion += '建议调整饮食结构，减少肉类摄入，增加蔬菜水果比例。';
+      suggestion += "建议调整饮食结构，减少肉类摄入，增加蔬菜水果比例。";
     } else {
-      suggestion += '蛋白质摄入不足可能影响肌肉合成，建议每餐增加鸡蛋、瘦肉或豆制品。';
+      suggestion +=
+        "蛋白质摄入不足可能影响肌肉合成，建议每餐增加鸡蛋、瘦肉或豆制品。";
     }
-  } else if (nutrient === 'carbs') {
+  } else if (nutrient === "carbs") {
     if (avgDeviation > 0) {
-      suggestion += '碳水摄入过多可能导致体重增加，建议减少精制主食，选择全谷物。';
+      suggestion +=
+        "碳水摄入过多可能导致体重增加，建议减少精制主食，选择全谷物。";
     } else {
-      suggestion += '碳水不足可能导致能量不足，建议适当增加主食摄入。';
+      suggestion += "碳水不足可能导致能量不足，建议适当增加主食摄入。";
     }
-  } else if (nutrient === 'fat') {
+  } else if (nutrient === "fat") {
     if (avgDeviation > 0) {
-      suggestion += '脂肪摄入过多不利于心血管健康，建议减少油炸食物和肥肉。';
+      suggestion += "脂肪摄入过多不利于心血管健康，建议减少油炸食物和肥肉。";
     } else {
-      suggestion += '适量脂肪有助于维生素吸收，建议增加坚果、深海鱼等健康脂肪。';
+      suggestion +=
+        "适量脂肪有助于维生素吸收，建议增加坚果、深海鱼等健康脂肪。";
     }
   } else {
     if (avgDeviation > 0) {
-      suggestion += '热量摄入持续超标可能导致体重增加，建议适当减少食量或增加运动。';
+      suggestion +=
+        "热量摄入持续超标可能导致体重增加，建议适当减少食量或增加运动。";
     } else {
-      suggestion += '热量摄入不足可能影响健康，建议适当增加食量，保证营养充足。';
+      suggestion +=
+        "热量摄入不足可能影响健康，建议适当增加食量，保证营养充足。";
     }
   }
 
@@ -347,7 +359,7 @@ function generatePeriodSuggestion(
  * 生成周报告
  */
 export async function generateWeeklyReport(
-  memberId: string
+  memberId: string,
 ): Promise<WeeklyReport> {
   const endDate = new Date();
   endDate.setHours(0, 0, 0, 0);
@@ -388,10 +400,10 @@ export async function generateWeeklyReport(
   // 打卡率建议
   if (checkInRate < 70) {
     recommendations.push(
-      '本周打卡率较低，建议坚持每日记录饮食，以便更好地追踪营养摄入。'
+      "本周打卡率较低，建议坚持每日记录饮食，以便更好地追踪营养摄入。",
     );
   } else if (checkInRate === 100) {
-    recommendations.push('恭喜！本周打卡率100%，继续保持！');
+    recommendations.push("恭喜！本周打卡率100%，继续保持！");
   }
 
   // 偏差建议
@@ -415,7 +427,7 @@ export async function generateWeeklyReport(
     },
   });
 
-  let trend: 'improving' | 'stable' | 'declining' = 'stable';
+  let trend: "improving" | "stable" | "declining" = "stable";
 
   if (previousWeekTargets.length > 0) {
     // 计算前一周的平均偏差
@@ -427,7 +439,7 @@ export async function generateWeeklyReport(
           Math.abs(t.proteinDeviation) +
           Math.abs(t.carbsDeviation) +
           Math.abs(t.fatDeviation),
-        0
+        0,
       ) /
       (targets.length * 4);
 
@@ -439,14 +451,14 @@ export async function generateWeeklyReport(
           Math.abs(t.proteinDeviation) +
           Math.abs(t.carbsDeviation) +
           Math.abs(t.fatDeviation),
-        0
+        0,
       ) /
       (previousWeekTargets.length * 4);
 
     if (thisWeekAvgDeviation < lastWeekAvgDeviation * 0.9) {
-      trend = 'improving';
+      trend = "improving";
     } else if (thisWeekAvgDeviation > lastWeekAvgDeviation * 1.1) {
-      trend = 'declining';
+      trend = "declining";
     }
   }
 
@@ -467,7 +479,7 @@ export async function generateWeeklyReport(
       target: 0, // 这里需要从targets中获取平均目标值
       actual: 0, // 这里需要从targets中获取平均实际值
       deviation: issue.avgDeviation,
-      status: issue.severity === 'severe' ? 'critical' : 'high',
+      status: issue.severity === "severe" ? "critical" : "high",
       severity: issue.severity,
       suggestion: issue.suggestion,
     })),
@@ -481,7 +493,7 @@ export async function generateWeeklyReport(
  */
 export async function getRemainingMealSuggestion(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<{
   calories: number;
   protein: number;
@@ -508,7 +520,7 @@ export async function getRemainingMealSuggestion(
       protein: 0,
       carbs: 0,
       fat: 0,
-      suggestions: ['暂无营养目标数据'],
+      suggestions: ["暂无营养目标数据"],
     };
   }
 
@@ -529,24 +541,24 @@ export async function getRemainingMealSuggestion(
 
   if (remaining.protein > 10) {
     suggestions.push(
-      `蛋白质还差${Math.round(remaining.protein)}g，建议增加鸡蛋、鸡胸肉等高蛋白食物`
+      `蛋白质还差${Math.round(remaining.protein)}g，建议增加鸡蛋、鸡胸肉等高蛋白食物`,
     );
   }
 
   if (remaining.carbs > 20) {
     suggestions.push(
-      `碳水化合物还差${Math.round(remaining.carbs)}g，建议适当增加主食摄入`
+      `碳水化合物还差${Math.round(remaining.carbs)}g，建议适当增加主食摄入`,
     );
   }
 
   if (remaining.fat > 5) {
     suggestions.push(
-      `脂肪还差${Math.round(remaining.fat)}g，建议增加坚果或橄榄油等健康脂肪`
+      `脂肪还差${Math.round(remaining.fat)}g，建议增加坚果或橄榄油等健康脂肪`,
     );
   }
 
   if (suggestions.length === 0) {
-    suggestions.push('今日营养摄入已达标，无需额外补充');
+    suggestions.push("今日营养摄入已达标，无需额外补充");
   }
 
   return {
@@ -561,8 +573,18 @@ export async function getRemainingMealSuggestion(
  * 分析营养偏差 - 简化版本用于测试
  */
 export function analyzeNutritionDeviations(
-  nutritionData: Array<{ calories: number; protein: number; carbs: number; fat: number }>,
-  nutritionGoals: { calories: number; protein: number; carbs: number; fat: number }
+  nutritionData: Array<{
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>,
+  nutritionGoals: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  },
 ): DeviationAnalysis[] {
   const deviations: DeviationAnalysis[] = [];
 
@@ -572,26 +594,42 @@ export function analyzeNutritionDeviations(
 
   // 计算平均值
   const avgData = {
-    calories: nutritionData.reduce((sum, d) => sum + d.calories, 0) / nutritionData.length,
-    protein: nutritionData.reduce((sum, d) => sum + d.protein, 0) / nutritionData.length,
-    carbs: nutritionData.reduce((sum, d) => sum + d.carbs, 0) / nutritionData.length,
-    fat: nutritionData.reduce((sum, d) => sum + d.fat, 0) / nutritionData.length,
+    calories:
+      nutritionData.reduce((sum, d) => sum + d.calories, 0) /
+      nutritionData.length,
+    protein:
+      nutritionData.reduce((sum, d) => sum + d.protein, 0) /
+      nutritionData.length,
+    carbs:
+      nutritionData.reduce((sum, d) => sum + d.carbs, 0) / nutritionData.length,
+    fat:
+      nutritionData.reduce((sum, d) => sum + d.fat, 0) / nutritionData.length,
   };
 
   // 分析每个营养素
-  const nutrients: Array<keyof typeof nutritionGoals> = ['calories', 'protein', 'carbs', 'fat'];
+  const nutrients: Array<keyof typeof nutritionGoals> = [
+    "calories",
+    "protein",
+    "carbs",
+    "fat",
+  ];
 
   for (const nutrient of nutrients) {
     const target = nutritionGoals[nutrient];
     const actual = avgData[nutrient];
     const deviation = ((actual - target) / target) * 100;
 
-    let status: DeviationAnalysis['status'] = 'normal';
-    let severity: DeviationAnalysis['severity'] = 'none';
+    let status: DeviationAnalysis["status"] = "normal";
+    let severity: DeviationAnalysis["severity"] = "none";
 
     if (Math.abs(deviation) > 5) {
-      status = deviation > 0 ? 'high' : 'low';
-      severity = Math.abs(deviation) > 20 ? 'severe' : Math.abs(deviation) > 10 ? 'moderate' : 'mild';
+      status = deviation > 0 ? "high" : "low";
+      severity =
+        Math.abs(deviation) > 20
+          ? "severe"
+          : Math.abs(deviation) > 10
+            ? "moderate"
+            : "mild";
     }
 
     deviations.push({
@@ -613,10 +651,10 @@ export function analyzeNutritionDeviations(
  */
 export function calculateTrendDirection(
   data: number[],
-  windowSize: number = 3
-): 'improving' | 'stable' | 'declining' {
+  windowSize: number = 3,
+): "improving" | "stable" | "declining" {
   if (data.length < windowSize * 2) {
-    return 'stable';
+    return "stable";
   }
 
   // 计算前半部分和后半部分的平均值
@@ -624,17 +662,19 @@ export function calculateTrendDirection(
   const firstHalf = data.slice(0, midPoint);
   const secondHalf = data.slice(midPoint);
 
-  const firstAvg = firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
-  const secondAvg = secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
+  const firstAvg =
+    firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
+  const secondAvg =
+    secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
 
   const change = ((secondAvg - firstAvg) / firstAvg) * 100;
 
   if (change > 5) {
-    return 'improving';
+    return "improving";
   } else if (change < -5) {
-    return 'declining';
+    return "declining";
   } else {
-    return 'stable';
+    return "stable";
   }
 }
 
@@ -642,18 +682,29 @@ export function calculateTrendDirection(
  * 检测异常模式
  */
 export function detectAnomalyPatterns(
-  data: Array<{ date: Date; value: number }>
-): Array<{ type: 'spike' | 'drop' | 'missing'; date: Date; severity: 'mild' | 'moderate' | 'severe' }> {
-  const patterns: Array<{ type: 'spike' | 'drop' | 'missing'; date: Date; severity: 'mild' | 'moderate' | 'severe' }> = [];
+  data: Array<{ date: Date; value: number }>,
+): Array<{
+  type: "spike" | "drop" | "missing";
+  date: Date;
+  severity: "mild" | "moderate" | "severe";
+}> {
+  const patterns: Array<{
+    type: "spike" | "drop" | "missing";
+    date: Date;
+    severity: "mild" | "moderate" | "severe";
+  }> = [];
 
   if (data.length < 2) {
     return patterns;
   }
 
   // 计算平均值和标准差
-  const values = data.map(d => d.value);
+  const values = data.map((d) => d.value);
   const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-  const stdDev = Math.sqrt(values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length);
+  const stdDev = Math.sqrt(
+    values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      values.length,
+  );
 
   for (let i = 1; i < data.length; i++) {
     const current = data[i].value;
@@ -662,9 +713,9 @@ export function detectAnomalyPatterns(
 
     if (change > 50) {
       patterns.push({
-        type: current > previous ? 'spike' : 'drop',
+        type: current > previous ? "spike" : "drop",
         date: data[i].date,
-        severity: change > 100 ? 'severe' : change > 75 ? 'moderate' : 'mild',
+        severity: change > 100 ? "severe" : change > 75 ? "moderate" : "mild",
       });
     }
   }
@@ -677,25 +728,27 @@ export function detectAnomalyPatterns(
  */
 export function generateDeviationReport(
   deviations: DeviationAnalysis[],
-  timeRange: { start: Date; end: Date }
+  timeRange: { start: Date; end: Date },
 ): {
   summary: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   recommendations: string[];
 } {
-  const severeCount = deviations.filter(d => d.severity === 'severe').length;
-  const moderateCount = deviations.filter(d => d.severity === 'moderate').length;
+  const severeCount = deviations.filter((d) => d.severity === "severe").length;
+  const moderateCount = deviations.filter(
+    (d) => d.severity === "moderate",
+  ).length;
 
-  let severity: 'low' | 'medium' | 'high' = 'low';
+  let severity: "low" | "medium" | "high" = "low";
   if (severeCount > 0) {
-    severity = 'high';
+    severity = "high";
   } else if (moderateCount > 0) {
-    severity = 'medium';
+    severity = "medium";
   }
 
   const recommendations = deviations
-    .filter(d => d.suggestion)
-    .map(d => d.suggestion!);
+    .filter((d) => d.suggestion)
+    .map((d) => d.suggestion!);
 
   const summary = `发现${deviations.length}项营养偏差，其中${severeCount}项严重偏差，${moderateCount}项中等偏差。`;
 
@@ -709,17 +762,19 @@ export function generateDeviationReport(
 /**
  * 获取偏差严重程度
  */
-export function getDeviationSeverity(deviation: number): 'none' | 'mild' | 'moderate' | 'severe' {
+export function getDeviationSeverity(
+  deviation: number,
+): "none" | "mild" | "moderate" | "severe" {
   const absDeviation = Math.abs(deviation);
 
   if (absDeviation <= 5) {
-    return 'none';
+    return "none";
   } else if (absDeviation <= 10) {
-    return 'mild';
+    return "mild";
   } else if (absDeviation <= 20) {
-    return 'moderate';
+    return "moderate";
   } else {
-    return 'severe';
+    return "severe";
   }
 }
 
@@ -727,28 +782,27 @@ export function getDeviationSeverity(deviation: number): 'none' | 'mild' | 'mode
  * 生成营养建议
  */
 function generateNutritionSuggestion(
-  nutrient: 'calories' | 'protein' | 'carbs' | 'fat',
-  deviation: number
+  nutrient: "calories" | "protein" | "carbs" | "fat",
+  deviation: number,
 ): string {
   const nutrientNames = {
-    calories: '热量',
-    protein: '蛋白质',
-    carbs: '碳水化合物',
-    fat: '脂肪',
+    calories: "热量",
+    protein: "蛋白质",
+    carbs: "碳水化合物",
+    fat: "脂肪",
   };
 
   const name = nutrientNames[nutrient];
-  const direction = deviation > 0 ? '超标' : '不足';
+  const direction = deviation > 0 ? "超标" : "不足";
   const percentage = Math.abs(deviation).toFixed(0);
 
   let suggestion = `${name}摄入${direction}约${percentage}%。`;
 
   if (deviation > 0) {
-    suggestion += '建议适当减少相关食物摄入。';
+    suggestion += "建议适当减少相关食物摄入。";
   } else {
-    suggestion += '建议适当增加相关食物摄入。';
+    suggestion += "建议适当增加相关食物摄入。";
   }
 
   return suggestion;
 }
-

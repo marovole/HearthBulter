@@ -6,13 +6,18 @@
  * @module shopping-list
  */
 
-import { z } from 'zod';
-import type { SortInput } from './common';
+import { z } from "zod";
+import type { SortInput } from "./common";
 
 /**
  * 购物清单状态枚举
  */
-export const shoppingListStatusSchema = z.enum(['DRAFT', 'ACTIVE', 'COMPLETED', 'ARCHIVED']);
+export const shoppingListStatusSchema = z.enum([
+  "DRAFT",
+  "ACTIVE",
+  "COMPLETED",
+  "ARCHIVED",
+]);
 export type ShoppingListStatus = z.infer<typeof shoppingListStatusSchema>;
 
 /**
@@ -23,7 +28,9 @@ export const shoppingListPlanMemberSchema = z.object({
   name: z.string(),
 });
 
-export type ShoppingListPlanMemberDTO = z.infer<typeof shoppingListPlanMemberSchema>;
+export type ShoppingListPlanMemberDTO = z.infer<
+  typeof shoppingListPlanMemberSchema
+>;
 
 /**
  * 购物清单关联的餐单信息
@@ -47,7 +54,9 @@ export const shoppingListItemFoodSchema = z.object({
   imageUrl: z.string().url().optional().nullable(),
 });
 
-export type ShoppingListItemFoodDTO = z.infer<typeof shoppingListItemFoodSchema>;
+export type ShoppingListItemFoodDTO = z.infer<
+  typeof shoppingListItemFoodSchema
+>;
 
 /**
  * 购物项 DTO
@@ -123,7 +132,7 @@ export interface ShoppingListListQuery {
   /**
    * 排序选项
    */
-  sort?: SortInput<'name' | 'createdAt' | 'updatedAt' | 'budget'>;
+  sort?: SortInput<"name" | "createdAt" | "updatedAt" | "budget">;
   /**
    * 名称关键字搜索
    */
@@ -164,7 +173,9 @@ export const updateShoppingListItemSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
-export type UpdateShoppingListItemDTO = z.infer<typeof updateShoppingListItemSchema>;
+export type UpdateShoppingListItemDTO = z.infer<
+  typeof updateShoppingListItemSchema
+>;
 
 /**
  * 完成购物清单 DTO
@@ -173,4 +184,6 @@ export const completeShoppingListSchema = z.object({
   actualCost: z.number().min(0).optional(),
 });
 
-export type CompleteShoppingListDTO = z.infer<typeof completeShoppingListSchema>;
+export type CompleteShoppingListDTO = z.infer<
+  typeof completeShoppingListSchema
+>;

@@ -1,15 +1,28 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ThumbsUp, ThumbsDown, MessageCircle, CheckCircle, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface FeedbackData {
-  type: 'positive' | 'negative' | 'comment';
+  type: "positive" | "negative" | "comment";
   comment?: string;
   timestamp: Date;
   adviceId?: string;
@@ -20,8 +33,8 @@ interface FeedbackButtonsProps {
   adviceId?: string;
   sessionId?: string;
   onFeedback?: (feedback: FeedbackData) => void;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'inline' | 'compact' | 'detailed';
+  size?: "sm" | "md" | "lg";
+  variant?: "inline" | "compact" | "detailed";
   className?: string;
   disabled?: boolean;
   showCounts?: boolean;
@@ -32,35 +45,41 @@ export function FeedbackButtons({
   adviceId,
   sessionId,
   onFeedback,
-  size = 'md',
-  variant = 'inline',
+  size = "md",
+  variant = "inline",
   className,
   disabled = false,
   showCounts = false,
   initialFeedback,
 }: FeedbackButtonsProps) {
-  const [feedback, setFeedback] = useState<FeedbackData | null>(initialFeedback || null);
+  const [feedback, setFeedback] = useState<FeedbackData | null>(
+    initialFeedback || null,
+  );
   const [showCommentDialog, setShowCommentDialog] = useState(false);
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [counts, setCounts] = useState({ positive: 0, negative: 0, comments: 0 });
+  const [counts, setCounts] = useState({
+    positive: 0,
+    negative: 0,
+    comments: 0,
+  });
 
   const sizeClasses = {
-    sm: 'h-8 w-8',
-    md: 'h-9 w-9',
-    lg: 'h-10 w-10',
+    sm: "h-8 w-8",
+    md: "h-9 w-9",
+    lg: "h-10 w-10",
   };
 
   const iconSizeClasses = {
-    sm: 'w-3 h-3',
-    md: 'w-4 h-4',
-    lg: 'w-5 h-5',
+    sm: "w-3 h-3",
+    md: "w-4 h-4",
+    lg: "w-5 h-5",
   };
 
-  const handleFeedback = async (type: 'positive' | 'negative' | 'comment') => {
+  const handleFeedback = async (type: "positive" | "negative" | "comment") => {
     if (disabled || isSubmitting) return;
 
-    if (type === 'comment') {
+    if (type === "comment") {
       setShowCommentDialog(true);
       return;
     }
@@ -79,13 +98,14 @@ export function FeedbackButtons({
 
       // 更新计数（如果显示计数）
       if (showCounts) {
-        setCounts(prev => ({
+        setCounts((prev) => ({
           ...prev,
-          [type === 'positive' ? 'positive' : 'negative']: prev[type === 'positive' ? 'positive' : 'negative'] + 1,
+          [type === "positive" ? "positive" : "negative"]:
+            prev[type === "positive" ? "positive" : "negative"] + 1,
         }));
       }
     } catch (error) {
-      console.error('Feedback submission failed:', error);
+      console.error("Feedback submission failed:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -95,7 +115,7 @@ export function FeedbackButtons({
     if (!commentText.trim() || isSubmitting) return;
 
     const feedbackData: FeedbackData = {
-      type: 'comment',
+      type: "comment",
       comment: commentText.trim(),
       timestamp: new Date(),
       adviceId,
@@ -107,34 +127,36 @@ export function FeedbackButtons({
       await onFeedback?.(feedbackData);
       setFeedback(feedbackData);
       setShowCommentDialog(false);
-      setCommentText('');
+      setCommentText("");
 
       // 更新计数
       if (showCounts) {
-        setCounts(prev => ({
+        setCounts((prev) => ({
           ...prev,
           comments: prev.comments + 1,
         }));
       }
     } catch (error) {
-      console.error('Comment submission failed:', error);
+      console.error("Comment submission failed:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const getButtonVariant = (buttonType: 'positive' | 'negative' | 'comment') => {
-    if (!feedback || feedback.type !== buttonType) return 'outline';
-    return 'default';
+  const getButtonVariant = (
+    buttonType: "positive" | "negative" | "comment",
+  ) => {
+    if (!feedback || feedback.type !== buttonType) return "outline";
+    return "default";
   };
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
-      <div className={cn('flex items-center space-x-1', className)}>
+      <div className={cn("flex items-center space-x-1", className)}>
         <Button
           size="sm"
-          variant={getButtonVariant('positive')}
-          onClick={() => handleFeedback('positive')}
+          variant={getButtonVariant("positive")}
+          onClick={() => handleFeedback("positive")}
           disabled={disabled || isSubmitting}
           className={cn(sizeClasses.sm)}
         >
@@ -142,8 +164,8 @@ export function FeedbackButtons({
         </Button>
         <Button
           size="sm"
-          variant={getButtonVariant('negative')}
-          onClick={() => handleFeedback('negative')}
+          variant={getButtonVariant("negative")}
+          onClick={() => handleFeedback("negative")}
           disabled={disabled || isSubmitting}
           className={cn(sizeClasses.sm)}
         >
@@ -151,8 +173,8 @@ export function FeedbackButtons({
         </Button>
         <Button
           size="sm"
-          variant={getButtonVariant('comment')}
-          onClick={() => handleFeedback('comment')}
+          variant={getButtonVariant("comment")}
+          onClick={() => handleFeedback("comment")}
           disabled={disabled || isSubmitting}
           className={cn(sizeClasses.sm)}
         >
@@ -162,9 +184,9 @@ export function FeedbackButtons({
     );
   }
 
-  if (variant === 'detailed') {
+  if (variant === "detailed") {
     return (
-      <div className={cn('space-y-3', className)}>
+      <div className={cn("space-y-3", className)}>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">
             这个建议对您有帮助吗？
@@ -179,8 +201,8 @@ export function FeedbackButtons({
 
         <div className="flex items-center space-x-2">
           <Button
-            variant={getButtonVariant('positive')}
-            onClick={() => handleFeedback('positive')}
+            variant={getButtonVariant("positive")}
+            onClick={() => handleFeedback("positive")}
             disabled={disabled || isSubmitting}
             className="flex items-center space-x-2"
           >
@@ -194,8 +216,8 @@ export function FeedbackButtons({
           </Button>
 
           <Button
-            variant={getButtonVariant('negative')}
-            onClick={() => handleFeedback('negative')}
+            variant={getButtonVariant("negative")}
+            onClick={() => handleFeedback("negative")}
             disabled={disabled || isSubmitting}
             className="flex items-center space-x-2"
           >
@@ -209,8 +231,8 @@ export function FeedbackButtons({
           </Button>
 
           <Button
-            variant={getButtonVariant('comment')}
-            onClick={() => handleFeedback('comment')}
+            variant={getButtonVariant("comment")}
+            onClick={() => handleFeedback("comment")}
             disabled={disabled || isSubmitting}
             className="flex items-center space-x-2"
           >
@@ -227,9 +249,9 @@ export function FeedbackButtons({
         {/* 反馈历史显示 */}
         {feedback && (
           <div className="text-xs text-muted-foreground">
-            {feedback.type === 'positive' && '✓ 您觉得这个建议有帮助'}
-            {feedback.type === 'negative' && '✗ 您觉得这个建议没有帮助'}
-            {feedback.type === 'comment' && feedback.comment && (
+            {feedback.type === "positive" && "✓ 您觉得这个建议有帮助"}
+            {feedback.type === "negative" && "✗ 您觉得这个建议没有帮助"}
+            {feedback.type === "comment" && feedback.comment && (
               <div className="mt-1 p-2 bg-muted rounded text-xs">
                 您的反馈: {feedback.comment}
               </div>
@@ -243,11 +265,11 @@ export function FeedbackButtons({
   // 默认 inline 变体
   return (
     <>
-      <div className={cn('flex items-center space-x-1', className)}>
+      <div className={cn("flex items-center space-x-1", className)}>
         <Button
           size="sm"
-          variant={getButtonVariant('positive')}
-          onClick={() => handleFeedback('positive')}
+          variant={getButtonVariant("positive")}
+          onClick={() => handleFeedback("positive")}
           disabled={disabled || isSubmitting}
           className="flex items-center space-x-1"
         >
@@ -259,8 +281,8 @@ export function FeedbackButtons({
 
         <Button
           size="sm"
-          variant={getButtonVariant('negative')}
-          onClick={() => handleFeedback('negative')}
+          variant={getButtonVariant("negative")}
+          onClick={() => handleFeedback("negative")}
           disabled={disabled || isSubmitting}
           className="flex items-center space-x-1"
         >
@@ -273,7 +295,7 @@ export function FeedbackButtons({
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => handleFeedback('comment')}
+          onClick={() => handleFeedback("comment")}
           disabled={disabled || isSubmitting}
           className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
         >
@@ -319,7 +341,7 @@ export function FeedbackButtons({
               onClick={handleCommentSubmit}
               disabled={!commentText.trim() || isSubmitting}
             >
-              {isSubmitting ? '提交中...' : '提交反馈'}
+              {isSubmitting ? "提交中..." : "提交反馈"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -330,7 +352,7 @@ export function FeedbackButtons({
 
 // 快速反馈组件 - 用于AI对话
 interface QuickFeedbackProps {
-  onFeedback?: (type: 'like' | 'dislike') => void;
+  onFeedback?: (type: "like" | "dislike") => void;
   className?: string;
   disabled?: boolean;
 }
@@ -340,20 +362,20 @@ export function QuickFeedback({
   className,
   disabled = false,
 }: QuickFeedbackProps) {
-  const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null);
+  const [feedback, setFeedback] = useState<"like" | "dislike" | null>(null);
 
-  const handleFeedback = (type: 'like' | 'dislike') => {
+  const handleFeedback = (type: "like" | "dislike") => {
     if (disabled) return;
     setFeedback(type);
     onFeedback?.(type);
   };
 
   return (
-    <div className={cn('flex items-center space-x-1', className)}>
+    <div className={cn("flex items-center space-x-1", className)}>
       <Button
         size="sm"
-        variant={feedback === 'like' ? 'default' : 'ghost'}
-        onClick={() => handleFeedback('like')}
+        variant={feedback === "like" ? "default" : "ghost"}
+        onClick={() => handleFeedback("like")}
         disabled={disabled}
         className="h-8 w-8 p-0"
       >
@@ -361,8 +383,8 @@ export function QuickFeedback({
       </Button>
       <Button
         size="sm"
-        variant={feedback === 'dislike' ? 'default' : 'ghost'}
-        onClick={() => handleFeedback('dislike')}
+        variant={feedback === "dislike" ? "default" : "ghost"}
+        onClick={() => handleFeedback("dislike")}
         disabled={disabled}
         className="h-8 w-8 p-0"
       >

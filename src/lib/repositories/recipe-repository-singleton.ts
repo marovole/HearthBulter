@@ -6,9 +6,9 @@
  * @module recipe-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseRecipeRepository } from './implementations/supabase-recipe-repository';
-import type { RecipeRepository } from './interfaces/recipe-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseRecipeRepository } from "./implementations/supabase-recipe-repository";
+import type { RecipeRepository } from "./interfaces/recipe-repository";
 
 let instance: RecipeRepository | null = null;
 

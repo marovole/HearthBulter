@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import type { AnomalySeverity, AnomalyType } from '@/lib/types/analytics';
+import { useState } from "react";
+import type { AnomalySeverity, AnomalyType } from "@/lib/types/analytics";
 
 interface AnomalyAlertProps {
   anomaly: {
@@ -19,32 +19,32 @@ interface AnomalyAlertProps {
 
 const severityConfig = {
   CRITICAL: {
-    label: '危急',
-    color: 'text-red-700',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-300',
-    icon: '🚨',
+    label: "危急",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-300",
+    icon: "🚨",
   },
   HIGH: {
-    label: '严重',
-    color: 'text-orange-700',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-300',
-    icon: '⚠️',
+    label: "严重",
+    color: "text-orange-700",
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-300",
+    icon: "⚠️",
   },
   MEDIUM: {
-    label: '中等',
-    color: 'text-yellow-700',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-300',
-    icon: '⚡',
+    label: "中等",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-300",
+    icon: "⚡",
   },
   LOW: {
-    label: '轻微',
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-300',
-    icon: 'ℹ️',
+    label: "轻微",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-300",
+    icon: "ℹ️",
   },
 };
 
@@ -55,20 +55,22 @@ export default function AnomalyAlert({
   onIgnore,
 }: AnomalyAlertProps) {
   const [showResolution, setShowResolution] = useState(false);
-  const [resolution, setResolution] = useState('');
-  
+  const [resolution, setResolution] = useState("");
+
   const config = severityConfig[anomaly.severity];
 
   const handleResolve = () => {
     if (resolution.trim() && onResolve) {
       onResolve(anomaly.id, resolution);
       setShowResolution(false);
-      setResolution('');
+      setResolution("");
     }
   };
 
   return (
-    <div className={`rounded-lg border-2 ${config.borderColor} ${config.bgColor} p-4 mb-3`}>
+    <div
+      className={`rounded-lg border-2 ${config.borderColor} ${config.bgColor} p-4 mb-3`}
+    >
       {/* 标题行 */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-start gap-2 flex-1">
@@ -78,15 +80,15 @@ export default function AnomalyAlert({
               <h4 className={`font-semibold ${config.color}`}>
                 {anomaly.title}
               </h4>
-              <span className={`text-xs px-2 py-0.5 rounded-full ${config.bgColor} ${config.color} border ${config.borderColor}`}>
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full ${config.bgColor} ${config.color} border ${config.borderColor}`}
+              >
                 {config.label}
               </span>
             </div>
-            <p className="text-sm text-gray-700 mt-1">
-              {anomaly.description}
-            </p>
+            <p className="text-sm text-gray-700 mt-1">{anomaly.description}</p>
             <p className="text-xs text-gray-500 mt-1">
-              检测时间：{new Date(anomaly.detectedAt).toLocaleString('zh-CN')}
+              检测时间：{new Date(anomaly.detectedAt).toLocaleString("zh-CN")}
             </p>
           </div>
         </div>
@@ -143,7 +145,7 @@ export default function AnomalyAlert({
             <button
               onClick={() => {
                 setShowResolution(false);
-                setResolution('');
+                setResolution("");
               }}
               className="px-4 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
             >
@@ -155,4 +157,3 @@ export default function AnomalyAlert({
     </div>
   );
 }
-

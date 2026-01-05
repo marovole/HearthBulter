@@ -11,13 +11,13 @@
  * @module analytics
  */
 
-import { z } from 'zod';
-import type { Database } from '@/types/supabase-database';
-import { dateRangeFilterSchema } from './common';
+import { z } from "zod";
+import type { Database } from "@/types/supabase-database";
+import { dateRangeFilterSchema } from "./common";
 
-type FamilyMemberRow = Database['public']['Tables']['family_members']['Row'];
-type MealRecordRow = Database['public']['Tables']['meal_records']['Row'];
-type HealthDataRow = Database['public']['Tables']['health_data']['Row'];
+type FamilyMemberRow = Database["public"]["Tables"]["family_members"]["Row"];
+type MealRecordRow = Database["public"]["Tables"]["meal_records"]["Row"];
+type HealthDataRow = Database["public"]["Tables"]["health_data"]["Row"];
 
 /**
  * 成员档案 Schema
@@ -51,19 +51,19 @@ export type TimeSeriesPointDTO = z.infer<typeof timeSeriesPointSchema>;
 export const trendQuerySchema = z.object({
   memberId: z.string().uuid(),
   metric: z.enum([
-    'WEIGHT',
-    'BODY_FAT',
-    'MUSCLE_MASS',
-    'BLOOD_PRESSURE',
-    'HEART_RATE',
-    'CALORIES',
-    'PROTEIN',
-    'CARBS',
-    'FAT',
-    'EXERCISE',
-    'SLEEP',
-    'WATER',
-    'HEALTH_SCORE',
+    "WEIGHT",
+    "BODY_FAT",
+    "MUSCLE_MASS",
+    "BLOOD_PRESSURE",
+    "HEART_RATE",
+    "CALORIES",
+    "PROTEIN",
+    "CARBS",
+    "FAT",
+    "EXERCISE",
+    "SLEEP",
+    "WATER",
+    "HEALTH_SCORE",
   ]),
   range: dateRangeFilterSchema,
 });
@@ -95,7 +95,7 @@ export const anomalySchema = z.object({
   memberId: z.string().uuid(),
   title: z.string().min(1),
   description: z.string(),
-  severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'EXTREME']),
+  severity: z.enum(["LOW", "MEDIUM", "HIGH", "EXTREME"]),
   detectedAt: z.coerce.date(),
 });
 
@@ -107,7 +107,7 @@ export type AnomalyDTO = z.infer<typeof anomalySchema>;
 export const reportPeriodSchema = z.object({
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
-  type: z.enum(['WEEKLY', 'MONTHLY', 'QUARTERLY', 'CUSTOM']),
+  type: z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "CUSTOM"]),
 });
 
 export type ReportPeriodDTO = z.infer<typeof reportPeriodSchema>;
@@ -137,7 +137,7 @@ export const reportSnapshotSchema = z.object({
   memberId: z.string().uuid(),
   period: reportPeriodSchema,
   payload: z.record(z.any()),
-  status: z.enum(['GENERATING', 'COMPLETED', 'FAILED']).default('GENERATING'),
+  status: z.enum(["GENERATING", "COMPLETED", "FAILED"]).default("GENERATING"),
   createdAt: z.coerce.date(),
 });
 

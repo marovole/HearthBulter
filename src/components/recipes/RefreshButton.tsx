@@ -1,14 +1,20 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface RefreshButtonProps {
   onRefresh: () => Promise<void>;
   loading?: boolean;
-  size?: 'sm' | 'default' | 'lg';
-  variant?: 'default' | 'outline' | 'ghost' | 'link' | 'destructive' | 'secondary';
+  size?: "sm" | "default" | "lg";
+  variant?:
+    | "default"
+    | "outline"
+    | "ghost"
+    | "link"
+    | "destructive"
+    | "secondary";
   children?: React.ReactNode;
   disabled?: boolean;
 }
@@ -16,8 +22,8 @@ interface RefreshButtonProps {
 export function RefreshButton({
   onRefresh,
   loading = false,
-  size = 'default',
-  variant = 'outline',
+  size = "default",
+  variant = "outline",
   children,
   disabled = false,
 }: RefreshButtonProps) {
@@ -43,8 +49,10 @@ export function RefreshButton({
       variant={variant}
       size={size}
     >
-      <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-      {children || (isLoading ? '刷新中...' : '换一批')}
+      <RefreshCw
+        className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+      />
+      {children || (isLoading ? "刷新中..." : "换一批")}
     </Button>
   );
 }

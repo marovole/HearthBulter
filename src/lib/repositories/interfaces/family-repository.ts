@@ -6,7 +6,7 @@
  * @module family-repository
  */
 
-import type { PaginatedResult, PaginationInput } from '../types/common';
+import type { PaginatedResult, PaginationInput } from "../types/common";
 import type {
   FamilyDTO,
   CreateFamilyDTO,
@@ -16,7 +16,7 @@ import type {
   UpdateFamilyMemberDTO,
   FamilyWithMembersDTO,
   FamilyListQuery,
-} from '../types/family';
+} from "../types/family";
 
 /**
  * 家庭 Repository 接口
@@ -63,7 +63,7 @@ export interface FamilyRepository {
    */
   listUserFamilies(
     query: FamilyListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<FamilyWithMembersDTO>>;
 
   /**
@@ -99,7 +99,10 @@ export interface FamilyRepository {
    * @param includeDeleted - 是否包含已删除成员
    * @returns 成员列表
    */
-  listFamilyMembers(familyId: string, includeDeleted?: boolean): Promise<FamilyMemberDTO[]>;
+  listFamilyMembers(
+    familyId: string,
+    includeDeleted?: boolean,
+  ): Promise<FamilyMemberDTO[]>;
 
   /**
    * 获取家庭成员详情
@@ -116,7 +119,10 @@ export interface FamilyRepository {
    * @param payload - 更新参数
    * @returns 更新后的成员对象
    */
-  updateFamilyMember(id: string, payload: UpdateFamilyMemberDTO): Promise<FamilyMemberDTO>;
+  updateFamilyMember(
+    id: string,
+    payload: UpdateFamilyMemberDTO,
+  ): Promise<FamilyMemberDTO>;
 
   /**
    * 移除家庭成员（软删除）

@@ -1,8 +1,12 @@
-import { codeReviewService, CodeReviewInput, CodeReviewResult } from '@/lib/services/code-review-service';
+import {
+  codeReviewService,
+  CodeReviewInput,
+  CodeReviewResult,
+} from "@/lib/services/code-review-service";
 
-describe('CodeReviewService', () => {
-  describe('reviewCode', () => {
-    it('should review TypeScript files correctly', async () => {
+describe("CodeReviewService", () => {
+  describe("reviewCode", () => {
+    it("should review TypeScript files correctly", async () => {
       const input: CodeReviewInput = {
         content: `
           interface User {
@@ -17,11 +21,12 @@ describe('CodeReviewService', () => {
 
           console.log('User created');
         `,
-        filePath: 'src/user.ts',
-        fileType: 'typescript',
+        filePath: "src/user.ts",
+        fileType: "typescript",
       };
 
-      const result: CodeReviewResult = await codeReviewService.reviewCode(input);
+      const result: CodeReviewResult =
+        await codeReviewService.reviewCode(input);
 
       expect(result).toBeDefined();
       expect(result.approved).toBeDefined();
@@ -31,39 +36,41 @@ describe('CodeReviewService', () => {
       expect(result.metadata.filePath).toBe(input.filePath);
     });
 
-    it('should detect any type usage', async () => {
+    it("should detect any type usage", async () => {
       const input: CodeReviewInput = {
-        content: 'const user: any = {};',
-        filePath: 'src/test.ts',
-        fileType: 'typescript',
+        content: "const user: any = {};",
+        filePath: "src/test.ts",
+        fileType: "typescript",
       };
 
       const result = await codeReviewService.reviewCode(input);
 
       const anyTypeIssues = result.issues.filter(
-        issue => issue.type === 'typescript' && issue.description.includes('any')
+        (issue) =>
+          issue.type === "typescript" && issue.description.includes("any"),
       );
 
       expect(anyTypeIssues.length).toBeGreaterThan(0);
     });
 
-    it('should detect console.log statements', async () => {
+    it("should detect console.log statements", async () => {
       const input: CodeReviewInput = {
         content: 'console.log("debug message");',
-        filePath: 'src/debug.ts',
-        fileType: 'typescript',
+        filePath: "src/debug.ts",
+        fileType: "typescript",
       };
 
       const result = await codeReviewService.reviewCode(input);
 
       const consoleIssues = result.issues.filter(
-        issue => issue.type === 'style' && issue.description.includes('console.log')
+        (issue) =>
+          issue.type === "style" && issue.description.includes("console.log"),
       );
 
       expect(consoleIssues.length).toBeGreaterThan(0);
     });
 
-    it('should handle React component files', async () => {
+    it("should handle React component files", async () => {
       const input: CodeReviewInput = {
         content: `
           'use client';
@@ -78,8 +85,8 @@ describe('CodeReviewService', () => {
             return <div>{title}</div>;
           }
         `,
-        filePath: 'src/MyComponent.tsx',
-        fileType: 'react',
+        filePath: "src/MyComponent.tsx",
+        fileType: "react",
       };
 
       const result = await codeReviewService.reviewCode(input);
@@ -88,11 +95,11 @@ describe('CodeReviewService', () => {
       expect(result.metadata.filePath).toBe(input.filePath);
     });
 
-    it('should calculate metrics correctly', async () => {
+    it("should calculate metrics correctly", async () => {
       const input: CodeReviewInput = {
-        content: 'const a = 1;\nconst b = 2;\nconst c = 3;',
-        filePath: 'src/simple.ts',
-        fileType: 'typescript',
+        content: "const a = 1;\nconst b = 2;\nconst c = 3;",
+        filePath: "src/simple.ts",
+        fileType: "typescript",
       };
 
       const result = await codeReviewService.reviewCode(input);
@@ -106,18 +113,18 @@ describe('CodeReviewService', () => {
     });
   });
 
-  describe('reviewBatch', () => {
-    it('should review multiple files', async () => {
+  describe("reviewBatch", () => {
+    it("should review multiple files", async () => {
       const inputs: CodeReviewInput[] = [
         {
           content: 'const goodCode = "hello";',
-          filePath: 'src/good.ts',
-          fileType: 'typescript',
+          filePath: "src/good.ts",
+          fileType: "typescript",
         },
         {
           content: 'const badCode: any = "world";',
-          filePath: 'src/bad.ts',
-          fileType: 'typescript',
+          filePath: "src/bad.ts",
+          fileType: "typescript",
         },
       ];
 
@@ -129,12 +136,12 @@ describe('CodeReviewService', () => {
     });
   });
 
-  describe('generateReport', () => {
-    it('should generate summary report', async () => {
+  describe("generateReport", () => {
+    it("should generate summary report", async () => {
       const mockResults: CodeReviewResult[] = [
         {
           approved: true,
-          riskLevel: 'low',
+          riskLevel: "low",
           issues: [],
           warnings: [],
           suggestions: [],
@@ -148,19 +155,27 @@ describe('CodeReviewService', () => {
           metadata: {
             reviewTimestamp: new Date(),
             processingTime: 100,
-            reviewerVersion: '1.0.0',
-            filePath: 'src/good.ts',
+            reviewerVersion: "1.0.0",
+            filePath: "src/good.ts",
           },
         },
         {
           approved: false,
-          riskLevel: 'high',
+          riskLevel: "high",
           issues: [
-            { type: 'typescript', severity: 'high', description: 'any type usage' },
-            { type: 'style', severity: 'low', description: 'console.log found' },
+            {
+              type: "typescript",
+              severity: "high",
+              description: "any type usage",
+            },
+            {
+              type: "style",
+              severity: "low",
+              description: "console.log found",
+            },
           ],
-          warnings: ['TypeScript issues found'],
-          suggestions: ['Use proper types'],
+          warnings: ["TypeScript issues found"],
+          suggestions: ["Use proper types"],
           metrics: {
             complexity: 15,
             linesOfCode: 50,
@@ -171,8 +186,8 @@ describe('CodeReviewService', () => {
           metadata: {
             reviewTimestamp: new Date(),
             processingTime: 150,
-            reviewerVersion: '1.0.0',
-            filePath: 'src/bad.ts',
+            reviewerVersion: "1.0.0",
+            filePath: "src/bad.ts",
           },
         },
       ];
@@ -186,16 +201,16 @@ describe('CodeReviewService', () => {
     });
   });
 
-  describe('rule management', () => {
-    it('should allow adding custom rules', () => {
+  describe("rule management", () => {
+    it("should allow adding custom rules", () => {
       const customRule = {
-        id: 'custom-test-rule',
-        name: 'Custom Test Rule',
-        description: 'A test rule',
+        id: "custom-test-rule",
+        name: "Custom Test Rule",
+        description: "A test rule",
         condition: () => true,
-        severity: 'low' as const,
-        type: 'style' as const,
-        recommendation: 'Test recommendation',
+        severity: "low" as const,
+        type: "style" as const,
+        recommendation: "Test recommendation",
         enabled: true,
       };
 
@@ -206,15 +221,15 @@ describe('CodeReviewService', () => {
       expect(codeReviewService.getRules()).toHaveLength(initialRuleCount + 1);
     });
 
-    it('should allow removing rules', () => {
+    it("should allow removing rules", () => {
       const customRule = {
-        id: 'test-rule-to-remove',
-        name: 'Test Rule to Remove',
-        description: 'A test rule to remove',
+        id: "test-rule-to-remove",
+        name: "Test Rule to Remove",
+        description: "A test rule to remove",
         condition: () => false,
-        severity: 'low' as const,
-        type: 'style' as const,
-        recommendation: 'Test recommendation',
+        severity: "low" as const,
+        type: "style" as const,
+        recommendation: "Test recommendation",
         enabled: true,
       };
 
@@ -226,32 +241,34 @@ describe('CodeReviewService', () => {
       expect(codeReviewService.getRules()).toHaveLength(ruleCountAfterAdd - 1);
     });
 
-    it('should allow toggling rule enabled state', () => {
+    it("should allow toggling rule enabled state", () => {
       const customRule = {
-        id: 'test-toggle-rule',
-        name: 'Test Toggle Rule',
-        description: 'A test rule for toggling',
+        id: "test-toggle-rule",
+        name: "Test Toggle Rule",
+        description: "A test rule for toggling",
         condition: () => false,
-        severity: 'low' as const,
-        type: 'style' as const,
-        recommendation: 'Test recommendation',
+        severity: "low" as const,
+        type: "style" as const,
+        recommendation: "Test recommendation",
         enabled: true,
       };
 
       codeReviewService.addRule(customRule);
 
       // Initially enabled
-      let rule = codeReviewService.getRules().find(r => r.id === customRule.id);
+      let rule = codeReviewService
+        .getRules()
+        .find((r) => r.id === customRule.id);
       expect(rule?.enabled).toBe(true);
 
       // Toggle to disabled
       codeReviewService.toggleRule(customRule.id, false);
-      rule = codeReviewService.getRules().find(r => r.id === customRule.id);
+      rule = codeReviewService.getRules().find((r) => r.id === customRule.id);
       expect(rule?.enabled).toBe(false);
 
       // Toggle back to enabled
       codeReviewService.toggleRule(customRule.id, true);
-      rule = codeReviewService.getRules().find(r => r.id === customRule.id);
+      rule = codeReviewService.getRules().find((r) => r.id === customRule.id);
       expect(rule?.enabled).toBe(true);
     });
   });

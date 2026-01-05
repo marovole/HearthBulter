@@ -3,9 +3,9 @@
  * 负责管理用户的餐饮模板、智能推荐和模板使用统计
  */
 
-import { db } from '@/lib/db';
-import { MealType } from '@prisma/client';
-import { calculateNutritionFromFoods } from './meal-tracker';
+import { db } from "@/lib/db";
+import { MealType } from "@prisma/client";
+import { calculateNutritionFromFoods } from "./meal-tracker";
 
 /**
  * 创建快速模板
@@ -58,7 +58,7 @@ export async function createQuickTemplate(data: {
 export async function createTemplateFromMealLog(
   mealLogId: string,
   templateName: string,
-  description?: string
+  description?: string,
 ) {
   const mealLog = await db.mealLog.findUnique({
     where: { id: mealLogId },
@@ -68,7 +68,7 @@ export async function createTemplateFromMealLog(
   });
 
   if (!mealLog) {
-    throw new Error('Meal log not found');
+    throw new Error("Meal log not found");
   }
 
   return createQuickTemplate({
@@ -86,10 +86,7 @@ export async function createTemplateFromMealLog(
 /**
  * 获取成员的模板列表
  */
-export async function getQuickTemplates(
-  memberId: string,
-  mealType?: MealType
-) {
+export async function getQuickTemplates(memberId: string, mealType?: MealType) {
   const where: any = {
     memberId,
     deletedAt: null,
@@ -109,7 +106,7 @@ export async function getQuickTemplates(
       },
     },
     orderBy: {
-      score: 'desc', // 按推荐分数排序
+      score: "desc", // 按推荐分数排序
     },
   });
 }
@@ -120,7 +117,7 @@ export async function getQuickTemplates(
 export async function getRecommendedTemplates(
   memberId: string,
   mealType: MealType,
-  limit: number = 3
+  limit: number = 3,
 ) {
   const currentHour = new Date().getHours();
 
@@ -156,7 +153,7 @@ export async function getRecommendedTemplates(
       },
     },
     orderBy: {
-      score: 'desc',
+      score: "desc",
     },
     take: limit,
   });
@@ -188,7 +185,7 @@ async function updateTemplateScores(memberId: string) {
     // 最近使用时间分数（0-30分）
     if (template.lastUsed) {
       const daysSinceLastUse = Math.floor(
-        (now.getTime() - template.lastUsed.getTime()) / (1000 * 60 * 60 * 24)
+        (now.getTime() - template.lastUsed.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       if (daysSinceLastUse <= 7) {
@@ -237,7 +234,7 @@ export async function useTemplate(templateId: string) {
   });
 
   if (!template) {
-    throw new Error('Template not found');
+    throw new Error("Template not found");
   }
 
   // 更新使用统计
@@ -261,7 +258,7 @@ export async function updateQuickTemplate(
     name?: string;
     description?: string;
     foods?: Array<{ foodId: string; amount: number }>;
-  }
+  },
 ) {
   const { name, description, foods } = data;
 
@@ -352,15 +349,25 @@ export async function autoGenerateTemplates(memberId: string) {
   // 为每个餐食类型分析最常见的组合
   for (const [mealType, logs] of mealTypeGroups.entries()) {
     // 统计食物组合出现频率
-    const combinationFrequency = new Map<string, {
-      count: number;
-      foods: Array<{ foodId: string; totalAmount: number; avgAmount: number }>;
-    }>();
+    const combinationFrequency = new Map<
+      string,
+      {
+        count: number;
+        foods: Array<{
+          foodId: string;
+          totalAmount: number;
+          avgAmount: number;
+        }>;
+      }
+    >();
 
     logs.forEach((log) => {
       // 将食物ID排序后作为组合的key
-      const foodIds = log.foods.map((f) => f.foodId).sort().join(',');
-      
+      const foodIds = log.foods
+        .map((f) => f.foodId)
+        .sort()
+        .join(",");
+
       const existing = combinationFrequency.get(foodIds);
       if (existing) {
         existing.count++;
@@ -392,10 +399,10 @@ export async function autoGenerateTemplates(memberId: string) {
     // 为每个高频组合创建模板
     for (const [_, data] of topCombinations) {
       const mealTypeName = {
-        [MealType.BREAKFAST]: '早餐',
-        [MealType.LUNCH]: '午餐',
-        [MealType.DINNER]: '晚餐',
-        [MealType.SNACK]: '加餐',
+        [MealType.BREAKFAST]: "早餐",
+        [MealType.LUNCH]: "午餐",
+        [MealType.DINNER]: "晚餐",
+        [MealType.SNACK]: "加餐",
       }[mealType];
 
       const templateName = `常吃${mealTypeName} (${data.count}次)`;
@@ -414,11 +421,10 @@ export async function autoGenerateTemplates(memberId: string) {
 
         generatedTemplates.push(template);
       } catch (error) {
-        console.error('Failed to create template:', error);
+        console.error("Failed to create template:", error);
       }
     }
   }
 
   return generatedTemplates;
 }
-

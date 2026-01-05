@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 
 export default function NewGoalPage() {
   const params = useParams<{ id: string; memberId: string }>();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
-    goalType: 'LOSE_WEIGHT',
-    targetWeight: '',
-    targetWeeks: '',
-    activityLevel: 'MODERATE',
+    goalType: "LOSE_WEIGHT",
+    targetWeight: "",
+    targetWeeks: "",
+    activityLevel: "MODERATE",
     carbRatio: 0.5,
     proteinRatio: 0.2,
     fatRatio: 0.3,
@@ -23,44 +23,41 @@ export default function NewGoalPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch(
-        `/api/members/${params.memberId}/goals`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            goalType: formData.goalType,
-            targetWeight: formData.targetWeight
-              ? parseFloat(formData.targetWeight)
-              : undefined,
-            targetWeeks: formData.targetWeeks
-              ? parseInt(formData.targetWeeks)
-              : undefined,
-            activityLevel: formData.activityLevel,
-            carbRatio: formData.carbRatio,
-            proteinRatio: formData.proteinRatio,
-            fatRatio: formData.fatRatio,
-          }),
-        }
-      );
+      const response = await fetch(`/api/members/${params.memberId}/goals`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          goalType: formData.goalType,
+          targetWeight: formData.targetWeight
+            ? parseFloat(formData.targetWeight)
+            : undefined,
+          targetWeeks: formData.targetWeeks
+            ? parseInt(formData.targetWeeks)
+            : undefined,
+          activityLevel: formData.activityLevel,
+          carbRatio: formData.carbRatio,
+          proteinRatio: formData.proteinRatio,
+          fatRatio: formData.fatRatio,
+        }),
+      });
 
       const data = await response.json();
 
       if (response.ok) {
         router.push(
-          `/dashboard/families/${params.id}/members/${params.memberId}`
+          `/dashboard/families/${params.id}/members/${params.memberId}`,
         );
         router.refresh();
       } else {
-        setError(data.error || '创建健康目标失败');
+        setError(data.error || "创建健康目标失败");
       }
     } catch (error) {
-      setError('网络错误，请重试');
+      setError("网络错误，请重试");
     } finally {
       setIsLoading(false);
     }
@@ -285,14 +282,14 @@ export default function NewGoalPage() {
                       formData.carbRatio +
                         formData.proteinRatio +
                         formData.fatRatio -
-                        1
+                        1,
                     ) < 0.01
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-yellow-50 text-yellow-700'
+                      ? "bg-green-50 text-green-700"
+                      : "bg-yellow-50 text-yellow-700"
                   }`}
                 >
                   <p className="text-sm font-medium">
-                    总计:{' '}
+                    总计:{" "}
                     {(
                       (formData.carbRatio +
                         formData.proteinRatio +
@@ -304,8 +301,8 @@ export default function NewGoalPage() {
                       formData.carbRatio +
                         formData.proteinRatio +
                         formData.fatRatio -
-                        1
-                    ) >= 0.01 && ' (建议调整为100%)'}
+                        1,
+                    ) >= 0.01 && " (建议调整为100%)"}
                   </p>
                 </div>
               </div>
@@ -331,7 +328,7 @@ export default function NewGoalPage() {
                   disabled={isLoading}
                   className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? '创建中...' : '创建目标'}
+                  {isLoading ? "创建中..." : "创建目标"}
                 </button>
               </div>
             </form>

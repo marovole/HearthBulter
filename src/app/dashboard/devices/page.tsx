@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to prevent prerender errors with React Context
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * 设备管理页面
  */
 
-import { Suspense } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { DeviceConnection } from '@/components/features/devices/DeviceConnection';
-import { SyncStatus } from '@/components/features/devices/SyncStatus';
-import { PageHeader } from '@/components/ui/page-header';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Suspense } from "react";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { DeviceConnection } from "@/components/features/devices/DeviceConnection";
+import { SyncStatus } from "@/components/features/devices/SyncStatus";
+import { PageHeader } from "@/components/ui/page-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DevicesPage() {
   return (
@@ -22,8 +22,8 @@ export default function DevicesPage() {
         title="设备管理"
         description="连接和管理您的可穿戴设备，自动同步健康数据"
         breadcrumbs={[
-          { label: '控制台', href: '/dashboard' },
-          { label: '设备管理' },
+          { label: "控制台", href: "/dashboard" },
+          { label: "设备管理" },
         ]}
       />
 
@@ -55,13 +55,13 @@ export default function DevicesPage() {
 function DeviceOverview() {
   return (
     <div className="space-y-6">
-      <SyncStatus 
+      <SyncStatus
         devices={[]} // 这里应该从API获取设备列表
         onSyncDevice={(deviceId) => {
-          console.log('同步设备:', deviceId);
+          console.log("同步设备:", deviceId);
         }}
         onSyncAll={() => {
-          console.log('同步所有设备');
+          console.log("同步所有设备");
         }}
       />
     </div>
@@ -72,16 +72,16 @@ function DeviceOverview() {
 function DeviceManagement() {
   return (
     <div className="space-y-6">
-      <DeviceConnection 
+      <DeviceConnection
         member={{
-          id: 'current-member',
-          name: '当前用户',
+          id: "current-member",
+          name: "当前用户",
         }}
         onDeviceConnected={(device) => {
-          console.log('设备已连接:', device);
+          console.log("设备已连接:", device);
         }}
         onDeviceDisconnected={(deviceId) => {
-          console.log('设备已断开:', deviceId);
+          console.log("设备已断开:", deviceId);
         }}
       />
     </div>

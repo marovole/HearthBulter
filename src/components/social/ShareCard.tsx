@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Heart, 
-  MessageCircle, 
-  Share2, 
+import React from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Heart,
+  MessageCircle,
+  Share2,
   Eye,
   Calendar,
   Trophy,
   Target,
   Utensils,
   TrendingUp,
-} from 'lucide-react';
-import { ShareContentType, SharePrivacyLevel } from '@prisma/client';
+} from "lucide-react";
+import { ShareContentType, SharePrivacyLevel } from "@prisma/client";
 
 interface ShareCardProps {
   share: {
@@ -61,55 +61,55 @@ export function ShareCard({
   // 获取内容类型图标
   const getContentIcon = (type: ShareContentType) => {
     switch (type) {
-    case 'HEALTH_REPORT':
-      return <TrendingUp className="h-4 w-4" />;
-    case 'GOAL_ACHIEVEMENT':
-      return <Target className="h-4 w-4" />;
-    case 'MEAL_LOG':
-      return <Utensils className="h-4 w-4" />;
-    case 'ACHIEVEMENT':
-      return <Trophy className="h-4 w-4" />;
-    case 'CHECK_IN_STREAK':
-      return <Calendar className="h-4 w-4" />;
-    case 'WEIGHT_MILESTONE':
-      return <TrendingUp className="h-4 w-4" />;
-    default:
-      return <Share2 className="h-4 w-4" />;
+      case "HEALTH_REPORT":
+        return <TrendingUp className="h-4 w-4" />;
+      case "GOAL_ACHIEVEMENT":
+        return <Target className="h-4 w-4" />;
+      case "MEAL_LOG":
+        return <Utensils className="h-4 w-4" />;
+      case "ACHIEVEMENT":
+        return <Trophy className="h-4 w-4" />;
+      case "CHECK_IN_STREAK":
+        return <Calendar className="h-4 w-4" />;
+      case "WEIGHT_MILESTONE":
+        return <TrendingUp className="h-4 w-4" />;
+      default:
+        return <Share2 className="h-4 w-4" />;
     }
   };
 
   // 获取内容类型标签
   const getContentTypeLabel = (type: ShareContentType) => {
     const labels = {
-      'HEALTH_REPORT': '健康报告',
-      'GOAL_ACHIEVEMENT': '目标达成',
-      'MEAL_LOG': '餐饮打卡',
-      'ACHIEVEMENT': '成就徽章',
-      'CHECK_IN_STREAK': '连续打卡',
-      'WEIGHT_MILESTONE': '体重里程碑',
-      'RECIPE': '食谱分享',
+      HEALTH_REPORT: "健康报告",
+      GOAL_ACHIEVEMENT: "目标达成",
+      MEAL_LOG: "餐饮打卡",
+      ACHIEVEMENT: "成就徽章",
+      CHECK_IN_STREAK: "连续打卡",
+      WEIGHT_MILESTONE: "体重里程碑",
+      RECIPE: "食谱分享",
     };
-    return labels[type] || '分享';
+    return labels[type] || "分享";
   };
 
   // 获取隐私级别标签
   const getPrivacyLabel = (level: SharePrivacyLevel) => {
     const labels = {
-      'PUBLIC': '公开',
-      'FRIENDS': '好友可见',
-      'PRIVATE': '私密',
+      PUBLIC: "公开",
+      FRIENDS: "好友可见",
+      PRIVATE: "私密",
     };
-    return labels[level] || '公开';
+    return labels[level] || "公开";
   };
 
   // 获取隐私级别颜色
   const getPrivacyColor = (level: SharePrivacyLevel) => {
     const colors = {
-      'PUBLIC': 'default',
-      'FRIENDS': 'secondary',
-      'PRIVATE': 'destructive',
+      PUBLIC: "default",
+      FRIENDS: "secondary",
+      PRIVATE: "destructive",
     };
-    return colors[level] || 'default';
+    return colors[level] || "default";
   };
 
   // 格式化日期
@@ -118,20 +118,20 @@ export function ShareCard({
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
+
     if (days === 0) {
       const hours = Math.floor(diff / (1000 * 60 * 60));
       if (hours === 0) {
         const minutes = Math.floor(diff / (1000 * 60));
-        return minutes === 0 ? '刚刚' : `${minutes}分钟前`;
+        return minutes === 0 ? "刚刚" : `${minutes}分钟前`;
       }
       return `${hours}小时前`;
     } else if (days === 1) {
-      return '昨天';
+      return "昨天";
     } else if (days < 7) {
       return `${days}天前`;
     } else {
-      return date.toLocaleDateString('zh-CN');
+      return date.toLocaleDateString("zh-CN");
     }
   };
 
@@ -139,7 +139,7 @@ export function ShareCard({
   const handleView = () => {
     onView?.(share);
     // 打开分享链接
-    window.open(share.shareUrl, '_blank');
+    window.open(share.shareUrl, "_blank");
   };
 
   // 处理点赞
@@ -157,12 +157,12 @@ export function ShareCard({
   // 处理分享
   const handleShare = async () => {
     onShare?.(share);
-    
+
     try {
       await navigator.clipboard.writeText(share.shareUrl);
       // 这里可以显示成功提示
     } catch (error) {
-      console.error('复制失败:', error);
+      console.error("复制失败:", error);
     }
   };
 
@@ -174,11 +174,9 @@ export function ShareCard({
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10">
               <AvatarImage src={share.member.avatar} />
-              <AvatarFallback>
-                {share.member.name.charAt(0)}
-              </AvatarFallback>
+              <AvatarFallback>{share.member.name.charAt(0)}</AvatarFallback>
             </Avatar>
-            
+
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
                 {share.member.name}
@@ -188,12 +186,12 @@ export function ShareCard({
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Badge variant={getPrivacyColor(share.privacyLevel) as any}>
               {getPrivacyLabel(share.privacyLevel)}
             </Badge>
-            
+
             <Badge variant="outline" className="flex items-center space-x-1">
               {getContentIcon(share.contentType)}
               <span>{getContentTypeLabel(share.contentType)}</span>
@@ -201,11 +199,11 @@ export function ShareCard({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* 分享图片 */}
         {share.imageUrl && (
-          <div 
+          <div
             className="rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
             onClick={handleView}
           >
@@ -216,28 +214,28 @@ export function ShareCard({
             />
           </div>
         )}
-        
+
         {/* 标题和描述 */}
         <div className="space-y-2">
-          <h3 
+          <h3
             className="font-semibold text-lg leading-tight cursor-pointer hover:text-primary transition-colors"
             onClick={handleView}
           >
             {share.title}
           </h3>
-          
+
           {share.description && (
             <p className="text-sm text-gray-600 leading-relaxed">
               {share.description}
             </p>
           )}
         </div>
-        
+
         {/* 元数据 */}
         {share.metadata && (
           <div className="flex flex-wrap gap-2">
             {Object.entries(share.metadata).map(([key, value]) => {
-              if (typeof value === 'number') {
+              if (typeof value === "number") {
                 return (
                   <Badge key={key} variant="secondary" className="text-xs">
                     {key}: {value}
@@ -248,7 +246,7 @@ export function ShareCard({
             })}
           </div>
         )}
-        
+
         {/* 统计信息 */}
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center space-x-4">
@@ -256,30 +254,28 @@ export function ShareCard({
               <Eye className="h-3 w-3" />
               <span>{share.viewCount}</span>
             </span>
-            
+
             <span className="flex items-center space-x-1">
               <Heart className="h-3 w-3" />
               <span>{share.likeCount}</span>
             </span>
-            
+
             <span className="flex items-center space-x-1">
               <MessageCircle className="h-3 w-3" />
               <span>{share.commentCount}</span>
             </span>
-            
+
             <span className="flex items-center space-x-1">
               <Share2 className="h-3 w-3" />
               <span>{share.shareCount}</span>
             </span>
           </div>
-          
+
           {share.expiresAt && (
-            <span>
-              过期时间: {formatDate(share.expiresAt)}
-            </span>
+            <span>过期时间: {formatDate(share.expiresAt)}</span>
           )}
         </div>
-        
+
         {/* 操作按钮 */}
         {showActions && (
           <div className="flex items-center space-x-2 pt-2 border-t">
@@ -292,7 +288,7 @@ export function ShareCard({
               <Heart className="h-4 w-4 mr-2" />
               点赞
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -302,7 +298,7 @@ export function ShareCard({
               <MessageCircle className="h-4 w-4 mr-2" />
               评论
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"

@@ -1,10 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { testDatabaseConnection } from '@/lib/db';
-import { foodRepository } from '@/lib/repositories/food-repository-singleton';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { usdaService } from '@/lib/services/usda-service';
-import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from '@/lib/cache/redis-client';
-import type { FoodCategory } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { testDatabaseConnection } from "@/lib/db";
+import { foodRepository } from "@/lib/repositories/food-repository-singleton";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { usdaService } from "@/lib/services/usda-service";
+import {
+  CacheService,
+  CacheKeyBuilder,
+  CACHE_CONFIG,
+} from "@/lib/cache/redis-client";
+import type { FoodCategory } from "@prisma/client";
 
 /**
  * GET /api/foods/search?q=鸡胸肉
@@ -15,38 +19,41 @@ import type { FoodCategory } from '@prisma/client';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const apiStartTime = Date.now(); // 记录 API 开始时间
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const query = searchParams.get('q');
-    const category = searchParams.get('category') as FoodCategory | null;
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const page = parseInt(searchParams.get('page') || '1');
+    const query = searchParams.get("q");
+    const category = searchParams.get("category") as FoodCategory | null;
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = parseInt(searchParams.get("page") || "1");
 
-    if (!query || query.trim() === '') {
-      return NextResponse.json(
-        { error: '请提供搜索关键词' },
-        { status: 400 }
-      );
+    if (!query || query.trim() === "") {
+      return NextResponse.json({ error: "请提供搜索关键词" }, { status: 400 });
     }
 
     // 生成缓存键（标准化查询关键词）
     const normalizedQuery = query.trim().toLowerCase();
-    const cacheKey = CacheKeyBuilder.build('foods-search', normalizedQuery, `${category || 'all'}-${limit}-${page}`);
+    const cacheKey = CacheKeyBuilder.build(
+      "foods-search",
+      normalizedQuery,
+      `${category || "all"}-${limit}-${page}`,
+    );
 
     // 尝试从缓存获取结果
     const cachedResult = await CacheService.get(cacheKey);
     if (cachedResult) {
       const apiDuration = Date.now() - apiStartTime;
-      console.log(`🚀 食品搜索 [缓存命中] - ${apiDuration}ms - 查询: "${query}"`);
+      console.log(
+        `🚀 食品搜索 [缓存命中] - ${apiDuration}ms - 查询: "${query}"`,
+      );
 
       return NextResponse.json(cachedResult, {
         headers: {
-          'X-Cache': 'HIT',
-          'X-Response-Time': `${apiDuration}ms`,
+          "X-Cache": "HIT",
+          "X-Response-Time": `${apiDuration}ms`,
         },
       });
     }
@@ -62,7 +69,7 @@ export async function GET(request: NextRequest) {
       // 测试数据库连接
       const dbConnected = await testDatabaseConnection();
       if (!dbConnected) {
-        throw new Error('数据库连接失败');
+        throw new Error("数据库连接失败");
       }
 
       // 使用 Repository 执行搜索
@@ -77,7 +84,9 @@ export async function GET(request: NextRequest) {
       totalCount = searchResult.total;
 
       dbDuration = Date.now() - dbStartTime;
-      console.log(`📊 数据库查询 - ${dbDuration}ms - 找到 ${localFoods.length} 条本地结果`);
+      console.log(
+        `📊 数据库查询 - ${dbDuration}ms - 找到 ${localFoods.length} 条本地结果`,
+      );
     } catch (error) {
       dbError = error instanceof Error ? error.message : String(error);
       dbDuration = Date.now() - dbStartTime;
@@ -96,7 +105,7 @@ export async function GET(request: NextRequest) {
         total: totalCount,
         page,
         limit,
-        type: dbError ? 'fallback' : 'local',
+        type: dbError ? "fallback" : "local",
         warnings: dbError ? [`数据库不可用: ${dbError}`] : [],
       };
 
@@ -104,15 +113,17 @@ export async function GET(request: NextRequest) {
       await CacheService.set(cacheKey, result, CACHE_CONFIG.TTL.FOOD_SEARCH);
 
       const apiDuration = Date.now() - apiStartTime;
-      console.log(`🚀 食品搜索 [${dbError ? '降级' : '本地'}结果] - 总计 ${apiDuration}ms - 查询: "${query}"`);
+      console.log(
+        `🚀 食品搜索 [${dbError ? "降级" : "本地"}结果] - 总计 ${apiDuration}ms - 查询: "${query}"`,
+      );
 
       return NextResponse.json(result, {
         status: 200,
         headers: {
-          'X-Cache': 'MISS',
-          'X-Response-Time': `${apiDuration}ms`,
-          'X-DB-Time': `${Date.now() - dbStartTime}ms`,
-          'X-DB-Error': dbError ? 'true' : 'false',
+          "X-Cache": "MISS",
+          "X-Response-Time": `${apiDuration}ms`,
+          "X-DB-Time": `${Date.now() - dbStartTime}ms`,
+          "X-DB-Error": dbError ? "true" : "false",
         },
       });
     }
@@ -122,11 +133,13 @@ export async function GET(request: NextRequest) {
     try {
       const usdaResults = await usdaService.searchAndMapFoods(
         query,
-        limit - localFoods.length
+        limit - localFoods.length,
       );
 
       const usdaDuration = Date.now() - usdaStartTime;
-      console.log(`🌐 USDA API 查询 - ${usdaDuration}ms - 找到 ${usdaResults.length} 条结果`);
+      console.log(
+        `🌐 USDA API 查询 - ${usdaDuration}ms - 找到 ${usdaResults.length} 条结果`,
+      );
 
       // 将USDA结果保存到数据库（异步，不阻塞响应）
       setImmediate(() => {
@@ -140,14 +153,15 @@ export async function GET(request: NextRequest) {
               const backgroundSupabase = SupabaseClientManager.getInstance();
 
               // 检查是否已存在
-              const { data: existing, error: existingError } = await backgroundSupabase
-                .from('foods')
-                .select('id')
-                .eq('usdaId', foodData.usdaId)
-                .maybeSingle();
+              const { data: existing, error: existingError } =
+                await backgroundSupabase
+                  .from("foods")
+                  .select("id")
+                  .eq("usdaId", foodData.usdaId)
+                  .maybeSingle();
 
               if (existingError) {
-                console.error('检查USDA数据存在性失败:', existingError);
+                console.error("检查USDA数据存在性失败:", existingError);
                 return;
               }
 
@@ -157,7 +171,7 @@ export async function GET(request: NextRequest) {
 
               // 插入新数据
               const { error: insertError } = await backgroundSupabase
-                .from('foods')
+                .from("foods")
                 .insert({
                   name: foodData.name,
                   nameEn: foodData.nameEn,
@@ -182,14 +196,14 @@ export async function GET(request: NextRequest) {
                 });
 
               if (insertError) {
-                console.error('保存USDA数据失败:', insertError);
+                console.error("保存USDA数据失败:", insertError);
               }
             } catch (error) {
-              console.error('保存USDA数据失败:', error);
+              console.error("保存USDA数据失败:", error);
             }
-          })
+          }),
         ).catch((error) => {
-          console.error('批量保存USDA数据失败:', error);
+          console.error("批量保存USDA数据失败:", error);
         });
       });
 
@@ -209,22 +223,24 @@ export async function GET(request: NextRequest) {
         total: totalCount + usdaResults.length,
         page,
         limit,
-        type: 'mixed',
+        type: "mixed",
       };
 
       // 缓存混合结果（使用 USDA_DATA TTL，因为数据来自 USDA）
       await CacheService.set(cacheKey, result, CACHE_CONFIG.TTL.USDA_DATA);
 
       const apiDuration = Date.now() - apiStartTime;
-      console.log(`🚀 食品搜索 [混合结果] - 总计 ${apiDuration}ms - 查询: "${query}"`);
+      console.log(
+        `🚀 食品搜索 [混合结果] - 总计 ${apiDuration}ms - 查询: "${query}"`,
+      );
 
       return NextResponse.json(result, {
         status: 200,
         headers: {
-          'X-Cache': 'MISS',
-          'X-Response-Time': `${apiDuration}ms`,
-          'X-DB-Time': `${dbDuration}ms`,
-          'X-USDA-Time': `${usdaDuration}ms`,
+          "X-Cache": "MISS",
+          "X-Response-Time": `${apiDuration}ms`,
+          "X-DB-Time": `${dbDuration}ms`,
+          "X-USDA-Time": `${usdaDuration}ms`,
         },
       });
     } catch (usdaError) {
@@ -237,31 +253,34 @@ export async function GET(request: NextRequest) {
         total: totalCount,
         page,
         limit,
-        type: 'local',
-        warning: 'USDA API暂时不可用，仅显示本地结果',
+        type: "local",
+        warning: "USDA API暂时不可用，仅显示本地结果",
       };
 
       // 缓存失败回退结果（使用较短的 TTL）
-      await CacheService.set(cacheKey, result, CACHE_CONFIG.TTL.FOOD_SEARCH_EMPTY);
+      await CacheService.set(
+        cacheKey,
+        result,
+        CACHE_CONFIG.TTL.FOOD_SEARCH_EMPTY,
+      );
 
       const apiDuration = Date.now() - apiStartTime;
-      console.log(`🚀 食品搜索 [降级] - 总计 ${apiDuration}ms - 查询: "${query}"`);
+      console.log(
+        `🚀 食品搜索 [降级] - 总计 ${apiDuration}ms - 查询: "${query}"`,
+      );
 
       return NextResponse.json(result, {
         status: 200,
         headers: {
-          'X-Cache': 'MISS',
-          'X-Response-Time': `${apiDuration}ms`,
-          'X-DB-Time': `${Date.now() - dbStartTime}ms`,
+          "X-Cache": "MISS",
+          "X-Response-Time": `${apiDuration}ms`,
+          "X-DB-Time": `${Date.now() - dbStartTime}ms`,
         },
       });
     }
   } catch (error) {
-    console.error('搜索食物失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("搜索食物失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -269,13 +288,17 @@ export async function GET(request: NextRequest) {
  * 获取降级食品搜索结果
  * 当数据库不可用时提供基本的静态结果
  */
-function getFallbackFoodResults(query: string, category: FoodCategory | null, limit: number) {
+function getFallbackFoodResults(
+  query: string,
+  category: FoodCategory | null,
+  limit: number,
+) {
   const fallbackData = [
     {
-      id: 'fallback-1',
-      name: '苹果',
-      nameEn: 'Apple',
-      aliases: ['红富士苹果', '青苹果'],
+      id: "fallback-1",
+      name: "苹果",
+      nameEn: "Apple",
+      aliases: ["红富士苹果", "青苹果"],
       calories: 52,
       protein: 0.3,
       carbs: 14,
@@ -287,19 +310,19 @@ function getFallbackFoodResults(query: string, category: FoodCategory | null, li
       vitaminC: 4.6,
       calcium: 6,
       iron: 0.1,
-      category: 'FRUITS',
-      tags: ['水果', '低卡'],
-      source: 'fallback',
+      category: "FRUITS",
+      tags: ["水果", "低卡"],
+      source: "fallback",
       usdaId: null,
       verified: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
     {
-      id: 'fallback-2',
-      name: '鸡胸肉',
-      nameEn: 'Chicken Breast',
-      aliases: ['鸡胸', '白肉鸡'],
+      id: "fallback-2",
+      name: "鸡胸肉",
+      nameEn: "Chicken Breast",
+      aliases: ["鸡胸", "白肉鸡"],
       calories: 165,
       protein: 31,
       carbs: 0,
@@ -311,19 +334,19 @@ function getFallbackFoodResults(query: string, category: FoodCategory | null, li
       vitaminC: 0,
       calcium: 15,
       iron: 1.0,
-      category: 'PROTEINS',
-      tags: ['蛋白质', '低脂'],
-      source: 'fallback',
+      category: "PROTEINS",
+      tags: ["蛋白质", "低脂"],
+      source: "fallback",
       usdaId: null,
       verified: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
     {
-      id: 'fallback-3',
-      name: '米饭',
-      nameEn: 'Rice',
-      aliases: ['白米饭', '蒸米饭'],
+      id: "fallback-3",
+      name: "米饭",
+      nameEn: "Rice",
+      aliases: ["白米饭", "蒸米饭"],
       calories: 130,
       protein: 2.7,
       carbs: 28,
@@ -335,9 +358,9 @@ function getFallbackFoodResults(query: string, category: FoodCategory | null, li
       vitaminC: 0,
       calcium: 10,
       iron: 0.2,
-      category: 'GRAINS',
-      tags: ['主食', '碳水'],
-      source: 'fallback',
+      category: "GRAINS",
+      tags: ["主食", "碳水"],
+      source: "fallback",
       usdaId: null,
       verified: false,
       createdAt: new Date().toISOString(),
@@ -346,11 +369,12 @@ function getFallbackFoodResults(query: string, category: FoodCategory | null, li
   ];
 
   // 简单的搜索过滤
-  const filtered = fallbackData.filter(food =>
-    (!category || food.category === category) &&
-    (food.name.includes(query) ||
-     food.nameEn.toLowerCase().includes(query.toLowerCase()) ||
-     food.aliases.some((alias: string) => alias.includes(query)))
+  const filtered = fallbackData.filter(
+    (food) =>
+      (!category || food.category === category) &&
+      (food.name.includes(query) ||
+        food.nameEn.toLowerCase().includes(query.toLowerCase()) ||
+        food.aliases.some((alias: string) => alias.includes(query))),
   );
 
   return filtered.slice(0, limit);
@@ -364,7 +388,9 @@ function parseFoodResponse(food: any) {
     id: food.id,
     name: food.name,
     nameEn: food.nameEn,
-    aliases: Array.isArray(food.aliases) ? food.aliases : JSON.parse(food.aliases || '[]'),
+    aliases: Array.isArray(food.aliases)
+      ? food.aliases
+      : JSON.parse(food.aliases || "[]"),
     calories: food.calories,
     protein: food.protein,
     carbs: food.carbs,
@@ -377,7 +403,7 @@ function parseFoodResponse(food: any) {
     calcium: food.calcium,
     iron: food.iron,
     category: food.category,
-    tags: Array.isArray(food.tags) ? food.tags : JSON.parse(food.tags || '[]'),
+    tags: Array.isArray(food.tags) ? food.tags : JSON.parse(food.tags || "[]"),
     source: food.source,
     usdaId: food.usdaId,
     verified: food.verified,
@@ -385,4 +411,3 @@ function parseFoodResponse(food: any) {
     updatedAt: food.updatedAt,
   };
 }
-

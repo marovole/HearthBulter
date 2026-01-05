@@ -1,4 +1,4 @@
-import { performance } from 'perf_hooks';
+import { performance } from "perf_hooks";
 
 // 性能指标接口
 interface PerformanceMetrics {
@@ -39,10 +39,10 @@ interface PerformanceMetrics {
 
 // 告警级别
 export enum AlertLevel {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
-  CRITICAL = 'critical',
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
+  CRITICAL = "critical",
 }
 
 // 告警接口
@@ -65,27 +65,27 @@ export class EnhancedPerformanceMonitor {
   private alerts: Alert[] = [];
   private thresholds = {
     responseTime: {
-      warning: 500,  // ms
-      error: 1000,   // ms
+      warning: 500, // ms
+      error: 1000, // ms
       critical: 2000, // ms
     },
     memoryUsage: {
-      warning: 0.7,  // 70%
-      error: 0.85,   // 85%
+      warning: 0.7, // 70%
+      error: 0.85, // 85%
       critical: 0.95, // 95%
     },
     errorRate: {
       warning: 0.05, // 5%
-      error: 0.1,   // 10%
+      error: 0.1, // 10%
       critical: 0.2, // 20%
     },
     databaseQueries: {
-      slow: 100,    // ms
+      slow: 100, // ms
       critical: 500, // ms
     },
     cacheHitRate: {
       warning: 0.7, // 70%
-      error: 0.5,   // 50%
+      error: 0.5, // 50%
     },
   };
 
@@ -103,7 +103,7 @@ export class EnhancedPerformanceMonitor {
   /**
    * 开始性能监控
    */
-  startMonitoring(requestInfo: PerformanceMetrics['requestInfo']): string {
+  startMonitoring(requestInfo: PerformanceMetrics["requestInfo"]): string {
     const requestId = this.generateRequestId();
 
     const metrics: PerformanceMetrics = {
@@ -125,8 +125,8 @@ export class EnhancedPerformanceMonitor {
     requestId: string,
     statusCode: number,
     responseSize?: number,
-    databaseMetrics?: PerformanceMetrics['databaseMetrics'],
-    cacheMetrics?: PerformanceMetrics['cacheMetrics']
+    databaseMetrics?: PerformanceMetrics["databaseMetrics"],
+    cacheMetrics?: PerformanceMetrics["cacheMetrics"],
   ): PerformanceMetrics | null {
     const metricList = this.metrics.get(requestId);
     if (!metricList || metricList.length === 0) return null;
@@ -182,14 +182,14 @@ export class EnhancedPerformanceMonitor {
     if (duration > this.thresholds.databaseQueries.critical) {
       this.createAlert(
         AlertLevel.CRITICAL,
-        '数据库查询超时',
+        "数据库查询超时",
         `查询耗时 ${duration}ms，超过临界值 ${this.thresholds.databaseQueries.critical}ms`,
-        'database',
+        "database",
         {
           query,
           duration,
           requestId,
-        }
+        },
       );
     }
   }
@@ -218,38 +218,38 @@ export class EnhancedPerformanceMonitor {
     if (duration > responseTime.critical) {
       this.createAlert(
         AlertLevel.CRITICAL,
-        '响应时间过长',
+        "响应时间过长",
         `请求处理耗时 ${duration}ms，远超临界值 ${responseTime.critical}ms`,
-        'performance',
+        "performance",
         {
           url: metrics.requestInfo.url,
           method: metrics.requestInfo.method,
           duration,
-        }
+        },
       );
     } else if (duration > responseTime.error) {
       this.createAlert(
         AlertLevel.ERROR,
-        '响应时间过长',
+        "响应时间过长",
         `请求处理耗时 ${duration}ms，超过错误阈值 ${responseTime.error}ms`,
-        'performance',
+        "performance",
         {
           url: metrics.requestInfo.url,
           method: metrics.requestInfo.method,
           duration,
-        }
+        },
       );
     } else if (duration > responseTime.warning) {
       this.createAlert(
         AlertLevel.WARNING,
-        '响应时间偏长',
+        "响应时间偏长",
         `请求处理耗时 ${duration}ms，超过警告阈值 ${responseTime.warning}ms`,
-        'performance',
+        "performance",
         {
           url: metrics.requestInfo.url,
           method: metrics.requestInfo.method,
           duration,
-        }
+        },
       );
     }
   }
@@ -266,26 +266,26 @@ export class EnhancedPerformanceMonitor {
     if (usageRatio > thresholds.critical) {
       this.createAlert(
         AlertLevel.CRITICAL,
-        '内存使用率过高',
+        "内存使用率过高",
         `内存使用率达到 ${(usageRatio * 100).toFixed(1)}%，超过临界值 ${(thresholds.critical * 100).toFixed(1)}%`,
-        'memory',
+        "memory",
         {
           usedMemory,
           totalMemory,
           usageRatio,
-        }
+        },
       );
     } else if (usageRatio > thresholds.error) {
       this.createAlert(
         AlertLevel.ERROR,
-        '内存使用率偏高',
+        "内存使用率偏高",
         `内存使用率达到 ${(usageRatio * 100).toFixed(1)}%，超过错误阈值 ${(thresholds.error * 100).toFixed(1)}%`,
-        'memory',
+        "memory",
         {
           usedMemory,
           totalMemory,
           usageRatio,
-        }
+        },
       );
     }
   }
@@ -298,19 +298,21 @@ export class EnhancedPerformanceMonitor {
 
     if (slowQueries.length > 0) {
       const slowestQuery = slowQueries.reduce((prev, curr) =>
-        curr.duration > prev.duration ? curr : prev
+        curr.duration > prev.duration ? curr : prev,
       );
 
       this.createAlert(
         AlertLevel.WARNING,
-        '检测到慢查询',
+        "检测到慢查询",
         `发现 ${slowQueries.length} 个慢查询，最慢的耗时 ${slowestQuery.duration}ms`,
-        'database',
+        "database",
         {
           queryCount: slowQueries.length,
           slowestQuery,
-          averageDuration: metrics.databaseMetrics.queryDuration / metrics.databaseMetrics.queryCount,
-        }
+          averageDuration:
+            metrics.databaseMetrics.queryDuration /
+            metrics.databaseMetrics.queryCount,
+        },
       );
     }
   }
@@ -324,26 +326,26 @@ export class EnhancedPerformanceMonitor {
     if (hitRate < cacheHitRate.error) {
       this.createAlert(
         AlertLevel.ERROR,
-        '缓存命中率过低',
+        "缓存命中率过低",
         `缓存命中率仅为 ${(hitRate * 100).toFixed(1)}%，低于错误阈值 ${(cacheHitRate.error * 100).toFixed(1)}%`,
-        'cache',
+        "cache",
         {
           hitRate,
           hits: metrics.cacheMetrics.hits,
           misses: metrics.cacheMetrics.misses,
-        }
+        },
       );
     } else if (hitRate < cacheHitRate.warning) {
       this.createAlert(
         AlertLevel.WARNING,
-        '缓存命中率偏低',
+        "缓存命中率偏低",
         `缓存命中率为 ${(hitRate * 100).toFixed(1)}%，低于警告阈值 ${(cacheHitRate.warning * 100).toFixed(1)}%`,
-        'cache',
+        "cache",
         {
           hitRate,
           hits: metrics.cacheMetrics.hits,
           misses: metrics.cacheMetrics.misses,
-        }
+        },
       );
     }
   }
@@ -356,7 +358,7 @@ export class EnhancedPerformanceMonitor {
     title: string,
     message: string,
     source: string,
-    context: Record<string, any>
+    context: Record<string, any>,
   ): void {
     const alert: Alert = {
       id: this.generateAlertId(),
@@ -399,24 +401,24 @@ export class EnhancedPerformanceMonitor {
       }
       // WARNING 和 INFO 级别的告警可以批量处理
     } catch (error) {
-      console.error('发送告警通知失败:', error);
+      console.error("发送告警通知失败:", error);
     }
   }
 
   private async sendCriticalNotification(alert: Alert): Promise<void> {
     // 实现紧急通知逻辑（短信、电话等）
-    console.log('🚨 CRITICAL ALERT:', alert);
+    console.log("🚨 CRITICAL ALERT:", alert);
   }
 
   private async sendErrorNotification(alert: Alert): Promise<void> {
     // 实现错误通知逻辑（邮件、Slack等）
-    console.log('❌ ERROR ALERT:', alert);
+    console.log("❌ ERROR ALERT:", alert);
   }
 
   /**
    * 获取内存使用情况
    */
-  private getMemoryUsage(): PerformanceMetrics['memoryUsage'] {
+  private getMemoryUsage(): PerformanceMetrics["memoryUsage"] {
     try {
       const usage = process.memoryUsage();
       return {
@@ -436,13 +438,16 @@ export class EnhancedPerformanceMonitor {
   private saveMetrics(metrics: PerformanceMetrics): void {
     // 这里可以将指标保存到数据库、文件或监控系统
     // 为了演示，我们只是记录到控制台
-    const logLevel = metrics.duration > this.thresholds.responseTime.error ? 'error' : 'info';
+    const logLevel =
+      metrics.duration > this.thresholds.responseTime.error ? "error" : "info";
     console.log(`[${logLevel.toUpperCase()}] Performance:`, {
       url: metrics.requestInfo.url,
       method: metrics.requestInfo.method,
       duration: `${metrics.duration}ms`,
       statusCode: metrics.responseInfo.statusCode,
-      memory: metrics.memoryUsage ? `${Math.round((metrics.memoryUsage.heapUsed / metrics.memoryUsage.heapTotal) * 100)}%` : 'N/A',
+      memory: metrics.memoryUsage
+        ? `${Math.round((metrics.memoryUsage.heapUsed / metrics.memoryUsage.heapTotal) * 100)}%`
+        : "N/A",
     });
   }
 
@@ -474,8 +479,10 @@ export class EnhancedPerformanceMonitor {
       totalMetrics: 0,
       averageResponseTime: 0,
       errorRate: 0,
-      alerts: this.alerts.filter(alert =>
-        alert.timestamp >= timeRange.start && alert.timestamp <= timeRange.end
+      alerts: this.alerts.filter(
+        (alert) =>
+          alert.timestamp >= timeRange.start &&
+          alert.timestamp <= timeRange.end,
       ),
     };
   }
@@ -484,23 +491,30 @@ export class EnhancedPerformanceMonitor {
    * 清理过期数据
    */
   private startPeriodicCleanup(): void {
-    setInterval(() => {
-      // 清理过期的性能指标（保留最近1小时）
-      const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    setInterval(
+      () => {
+        // 清理过期的性能指标（保留最近1小时）
+        const oneHourAgo = Date.now() - 60 * 60 * 1000;
 
-      for (const [key, metricList] of this.metrics.entries()) {
-        const filteredMetrics = metricList.filter(m => m.timestamp > oneHourAgo);
-        if (filteredMetrics.length === 0) {
-          this.metrics.delete(key);
-        } else {
-          this.metrics.set(key, filteredMetrics);
+        for (const [key, metricList] of this.metrics.entries()) {
+          const filteredMetrics = metricList.filter(
+            (m) => m.timestamp > oneHourAgo,
+          );
+          if (filteredMetrics.length === 0) {
+            this.metrics.delete(key);
+          } else {
+            this.metrics.set(key, filteredMetrics);
+          }
         }
-      }
 
-      // 清理过期的告警（保留最近24小时）
-      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-      this.alerts = this.alerts.filter(alert => alert.timestamp > oneDayAgo);
-    }, 5 * 60 * 1000); // 每5分钟清理一次
+        // 清理过期的告警（保留最近24小时）
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+        this.alerts = this.alerts.filter(
+          (alert) => alert.timestamp > oneDayAgo,
+        );
+      },
+      5 * 60 * 1000,
+    ); // 每5分钟清理一次
   }
 
   /**
@@ -512,19 +526,20 @@ export class EnhancedPerformanceMonitor {
     currentMemoryUsage: number;
     activeAlerts: number;
     alertsByLevel: Record<AlertLevel, number>;
-    } {
+  } {
     const allMetrics = Array.from(this.metrics.values()).flat();
     const totalRequests = allMetrics.length;
-    const averageResponseTime = totalRequests > 0
-      ? allMetrics.reduce((sum, m) => sum + m.duration, 0) / totalRequests
-      : 0;
+    const averageResponseTime =
+      totalRequests > 0
+        ? allMetrics.reduce((sum, m) => sum + m.duration, 0) / totalRequests
+        : 0;
 
     const currentMemoryUsage = this.getMemoryUsage();
     const memoryUsagePercent = currentMemoryUsage
       ? (currentMemoryUsage.heapUsed / currentMemoryUsage.heapTotal) * 100
       : 0;
 
-    const activeAlerts = this.alerts.filter(alert => !alert.resolved).length;
+    const activeAlerts = this.alerts.filter((alert) => !alert.resolved).length;
     const alertsByLevel = {
       [AlertLevel.INFO]: 0,
       [AlertLevel.WARNING]: 0,

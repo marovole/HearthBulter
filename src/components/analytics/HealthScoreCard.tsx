@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { ScoreGrade } from '@prisma/client';
+import { ScoreGrade } from "@prisma/client";
 
 interface HealthScoreCardProps {
   score: number;
@@ -16,28 +16,28 @@ interface HealthScoreCardProps {
 
 const gradeConfig = {
   EXCELLENT: {
-    label: '优秀',
-    color: 'text-green-600',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
+    label: "优秀",
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
   },
   GOOD: {
-    label: '良好',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
+    label: "良好",
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
   },
   FAIR: {
-    label: '一般',
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
+    label: "一般",
+    color: "text-yellow-600",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
   },
   POOR: {
-    label: '较差',
-    color: 'text-red-600',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
+    label: "较差",
+    color: "text-red-600",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200",
   },
 };
 
@@ -50,14 +50,18 @@ export default function HealthScoreCard({
   const config = gradeConfig[grade];
 
   return (
-    <div className={`rounded-xl border-2 ${config.borderColor} ${config.bgColor} p-6`}>
+    <div
+      className={`rounded-xl border-2 ${config.borderColor} ${config.bgColor} p-6`}
+    >
       {/* 主评分 */}
       <div className="text-center mb-4">
         <div className="text-sm text-gray-600 mb-2">综合健康评分</div>
         <div className={`text-6xl font-bold ${config.color} mb-2`}>
           {score.toFixed(1)}
         </div>
-        <div className={`inline-block px-4 py-1 rounded-full ${config.bgColor} ${config.color} font-semibold`}>
+        <div
+          className={`inline-block px-4 py-1 rounded-full ${config.bgColor} ${config.color} font-semibold`}
+        >
           {config.label}
         </div>
       </div>
@@ -101,12 +105,20 @@ export default function HealthScoreCard({
   );
 }
 
-function ScoreItem({ label, score, weight }: { label: string; score: number; weight: number }) {
+function ScoreItem({
+  label,
+  score,
+  weight,
+}: {
+  label: string;
+  score: number;
+  weight: number;
+}) {
   const getColor = (s: number) => {
-    if (s >= 90) return 'text-green-600';
-    if (s >= 75) return 'text-blue-600';
-    if (s >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (s >= 90) return "text-green-600";
+    if (s >= 75) return "text-blue-600";
+    if (s >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   return (
@@ -119,4 +131,3 @@ function ScoreItem({ label, score, weight }: { label: string; score: number; wei
     </div>
   );
 }
-

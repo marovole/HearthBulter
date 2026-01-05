@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface NutritionProgressProps {
   nutrient: {
@@ -19,16 +19,16 @@ export function NutritionProgress({ nutrient }: NutritionProgressProps) {
   const isGood = !isOver && !isLow;
 
   const getStatusColor = () => {
-    if (isOver) return 'bg-red-500';
-    if (isLow) return 'bg-yellow-500';
+    if (isOver) return "bg-red-500";
+    if (isLow) return "bg-yellow-500";
     return color;
   };
 
   const getStatusText = () => {
-    if (isOver) return '超标';
-    if (isLow) return '不足';
-    if (percentage >= 95) return '已达标✓';
-    return '进行中';
+    if (isOver) return "超标";
+    if (isLow) return "不足";
+    if (percentage >= 95) return "已达标✓";
+    return "进行中";
   };
 
   return (
@@ -36,7 +36,7 @@ export function NutritionProgress({ nutrient }: NutritionProgressProps) {
       <div className="flex justify-between items-center">
         <span className="font-medium">{name}</span>
         <div className="text-sm text-gray-600">
-          <span className={isOver ? 'text-red-600 font-semibold' : ''}>
+          <span className={isOver ? "text-red-600 font-semibold" : ""}>
             {Math.round(actual)}
           </span>
           /{target}
@@ -44,10 +44,10 @@ export function NutritionProgress({ nutrient }: NutritionProgressProps) {
           <span
             className={`ml-2 px-2 py-0.5 rounded text-xs ${
               isOver
-                ? 'bg-red-100 text-red-700'
+                ? "bg-red-100 text-red-700"
                 : isLow
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-green-100 text-green-700'
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-green-100 text-green-700"
             }`}
           >
             {getStatusText()}
@@ -96,32 +96,32 @@ export function DailyNutritionProgress({
 }: DailyNutritionProgressProps) {
   const nutrients = [
     {
-      name: '热量',
+      name: "热量",
       target: targets.calories.target,
       actual: targets.calories.actual,
-      unit: 'kcal',
-      color: 'bg-blue-500',
+      unit: "kcal",
+      color: "bg-blue-500",
     },
     {
-      name: '蛋白质',
+      name: "蛋白质",
       target: targets.protein.target,
       actual: targets.protein.actual,
-      unit: 'g',
-      color: 'bg-green-500',
+      unit: "g",
+      color: "bg-green-500",
     },
     {
-      name: '碳水化合物',
+      name: "碳水化合物",
       target: targets.carbs.target,
       actual: targets.carbs.actual,
-      unit: 'g',
-      color: 'bg-yellow-500',
+      unit: "g",
+      color: "bg-yellow-500",
     },
     {
-      name: '脂肪',
+      name: "脂肪",
       target: targets.fat.target,
       actual: targets.fat.actual,
-      unit: 'g',
-      color: 'bg-orange-500',
+      unit: "g",
+      color: "bg-orange-500",
     },
   ];
 
@@ -134,4 +134,3 @@ export function DailyNutritionProgress({
     </div>
   );
 }
-

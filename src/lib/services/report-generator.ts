@@ -14,6 +14,7 @@ import {
   startOfMonth,
   endOfMonth,
 } from "date-fns";
+import { prisma } from "@/lib/db";
 
 export interface WeeklyReport {
   period: {

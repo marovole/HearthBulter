@@ -1,48 +1,48 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { 
-  AlertTriangle, 
-  Clock, 
-  CheckCircle, 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import {
+  AlertTriangle,
+  Clock,
+  CheckCircle,
   TrendingDown,
   Trash2,
   RefreshCw,
   Info,
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+} from "lucide-react";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 interface ExpiryAlert {
-  id: string
-  itemId: string
-  foodName: string
-  expiryDate: string
-  daysToExpiry: number
-  status: string
-  quantity: number
-  unit: string
-  storageLocation: string
+  id: string;
+  itemId: string;
+  foodName: string;
+  expiryDate: string;
+  daysToExpiry: number;
+  status: string;
+  quantity: number;
+  unit: string;
+  storageLocation: string;
 }
 
 interface ExpirySummary {
-  memberId: string
-  expiredItems: ExpiryAlert[]
-  expiringItems: ExpiryAlert[]
-  totalExpiredValue: number
-  totalExpiringValue: number
-  recommendations: string[]
+  memberId: string;
+  expiredItems: ExpiryAlert[];
+  expiringItems: ExpiryAlert[];
+  totalExpiredValue: number;
+  totalExpiringValue: number;
+  recommendations: string[];
 }
 
 interface ExpiryMonitorProps {
-  memberId: string
-  onRefresh?: () => void
+  memberId: string;
+  onRefresh?: () => void;
 }
 
 export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
@@ -57,14 +57,16 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
   const fetchExpiryAlerts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/inventory/expiry?memberId=${memberId}`);
+      const response = await fetch(
+        `/api/inventory/expiry?memberId=${memberId}`,
+      );
       const result = await response.json();
 
       if (result.success) {
         setSummary(result.data);
       }
     } catch (error) {
-      console.error('获取保质期提醒失败:', error);
+      console.error("获取保质期提醒失败:", error);
     } finally {
       setLoading(false);
     }
@@ -76,21 +78,25 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
   };
 
   const handleProcessExpired = async (itemIds: string[]) => {
-    if (!confirm(`确定要处理这 ${itemIds.length} 件过期物品吗？这将在库存中移除它们并创建浪费记录。`)) {
+    if (
+      !confirm(
+        `确定要处理这 ${itemIds.length} 件过期物品吗？这将在库存中移除它们并创建浪费记录。`,
+      )
+    ) {
       return;
     }
 
     setProcessing(true);
     try {
-      const response = await fetch('/api/inventory/expiry', {
-        method: 'POST',
+      const response = await fetch("/api/inventory/expiry", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           memberId,
           itemIds,
-          wasteReason: 'EXPIRED',
+          wasteReason: "EXPIRED",
         }),
       });
 
@@ -100,11 +106,11 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
         fetchExpiryAlerts();
         onRefresh?.();
       } else {
-        alert(result.error || '处理失败');
+        alert(result.error || "处理失败");
       }
     } catch (error) {
-      console.error('处理过期物品失败:', error);
-      alert('处理失败，请重试');
+      console.error("处理过期物品失败:", error);
+      alert("处理失败，请重试");
     } finally {
       setProcessing(false);
     }
@@ -117,21 +123,21 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
   };
 
   const getExpiryColor = (daysToExpiry: number) => {
-    if (daysToExpiry < 0) return 'text-red-600';
-    if (daysToExpiry <= 3) return 'text-red-500';
-    if (daysToExpiry <= 7) return 'text-yellow-600';
-    if (daysToExpiry <= 14) return 'text-orange-500';
-    return 'text-green-600';
+    if (daysToExpiry < 0) return "text-red-600";
+    if (daysToExpiry <= 3) return "text-red-500";
+    if (daysToExpiry <= 7) return "text-yellow-600";
+    if (daysToExpiry <= 14) return "text-orange-500";
+    return "text-green-600";
   };
 
   const getStorageLocationLabel = (location: string) => {
     const labels: { [key: string]: string } = {
-      REFRIGERATOR: '冷藏',
-      FREEZER: '冷冻',
-      PANTRY: '常温',
-      COUNTER: '台面',
-      CABINET: '橱柜',
-      OTHER: '其他',
+      REFRIGERATOR: "冷藏",
+      FREEZER: "冷冻",
+      PANTRY: "常温",
+      COUNTER: "台面",
+      CABINET: "橱柜",
+      OTHER: "其他",
     };
     return labels[location] || location;
   };
@@ -153,19 +159,26 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
     );
   }
 
-  const hasAlerts = summary.expiredItems.length > 0 || summary.expiringItems.length > 0;
+  const hasAlerts =
+    summary.expiredItems.length > 0 || summary.expiringItems.length > 0;
 
   return (
     <div className="space-y-6">
       {/* 总览卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className={summary.expiredItems.length > 0 ? 'border-red-200 bg-red-50' : ''}>
+        <Card
+          className={
+            summary.expiredItems.length > 0 ? "border-red-200 bg-red-50" : ""
+          }
+        >
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <AlertTriangle className="h-8 w-8 text-red-600" />
               <div>
                 <p className="text-sm text-gray-600">已过期</p>
-                <p className="text-2xl font-bold text-red-600">{summary.expiredItems.length}</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {summary.expiredItems.length}
+                </p>
                 <p className="text-xs text-gray-500">
                   损失 ¥{summary.totalExpiredValue.toFixed(2)}
                 </p>
@@ -174,13 +187,21 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
           </CardContent>
         </Card>
 
-        <Card className={summary.expiringItems.length > 0 ? 'border-yellow-200 bg-yellow-50' : ''}>
+        <Card
+          className={
+            summary.expiringItems.length > 0
+              ? "border-yellow-200 bg-yellow-50"
+              : ""
+          }
+        >
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <Clock className="h-8 w-8 text-yellow-600" />
               <div>
                 <p className="text-sm text-gray-600">即将过期</p>
-                <p className="text-2xl font-bold text-yellow-600">{summary.expiringItems.length}</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {summary.expiringItems.length}
+                </p>
                 <p className="text-xs text-gray-500">
                   价值 ¥{summary.totalExpiringValue.toFixed(2)}
                 </p>
@@ -196,10 +217,10 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
               <div>
                 <p className="text-sm text-gray-600">状态良好</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {hasAlerts ? '需关注' : '正常'}
+                  {hasAlerts ? "需关注" : "正常"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {hasAlerts ? '请及时处理' : '无过期风险'}
+                  {hasAlerts ? "请及时处理" : "无过期风险"}
                 </p>
               </div>
             </div>
@@ -223,13 +244,15 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
 
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">保质期详情</h3>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={handleRefresh}
           disabled={processing}
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${processing ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${processing ? "animate-spin" : ""}`}
+          />
           刷新
         </Button>
       </div>
@@ -264,7 +287,11 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => handleProcessExpired(summary.expiredItems.map(item => item.itemId))}
+                  onClick={() =>
+                    handleProcessExpired(
+                      summary.expiredItems.map((item) => item.itemId),
+                    )
+                  }
                   disabled={processing}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -281,7 +308,7 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
                           <h4 className="font-medium">{item.foodName}</h4>
                           <Badge variant="destructive">已过期</Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                           <div>
                             <span className="font-medium">数量：</span>
@@ -289,7 +316,9 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
                           </div>
                           <div>
                             <span className="font-medium">过期时间：</span>
-                            {format(new Date(item.expiryDate), 'yyyy-MM-dd', { locale: zhCN })}
+                            {format(new Date(item.expiryDate), "yyyy-MM-dd", {
+                              locale: zhCN,
+                            })}
                           </div>
                           <div>
                             <span className="font-medium">存储位置：</span>
@@ -339,11 +368,14 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h4 className="font-medium">{item.foodName}</h4>
-                          <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                          <Badge
+                            variant="outline"
+                            className="text-yellow-600 border-yellow-600"
+                          >
                             {item.daysToExpiry} 天后过期
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
                           <div>
                             <span className="font-medium">数量：</span>
@@ -351,7 +383,9 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
                           </div>
                           <div>
                             <span className="font-medium">过期时间：</span>
-                            {format(new Date(item.expiryDate), 'yyyy-MM-dd', { locale: zhCN })}
+                            {format(new Date(item.expiryDate), "yyyy-MM-dd", {
+                              locale: zhCN,
+                            })}
                           </div>
                           <div>
                             <span className="font-medium">存储位置：</span>
@@ -364,15 +398,17 @@ export function ExpiryMonitor({ memberId, onRefresh }: ExpiryMonitorProps) {
                         </div>
 
                         <div className="w-full">
-                          <Progress 
-                            value={getExpiryProgress(item.daysToExpiry)} 
+                          <Progress
+                            value={getExpiryProgress(item.daysToExpiry)}
                             className="h-2"
                           />
                         </div>
                       </div>
 
                       <div className="ml-4">
-                        <Clock className={`h-5 w-5 ${getExpiryColor(item.daysToExpiry)}`} />
+                        <Clock
+                          className={`h-5 w-5 ${getExpiryColor(item.daysToExpiry)}`}
+                        />
                       </div>
                     </div>
                   </CardContent>

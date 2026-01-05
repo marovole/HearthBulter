@@ -9,7 +9,7 @@
  */
 export function calculateBMI(weight: number, height: number): number {
   if (weight <= 0 || height <= 0) {
-    throw new Error('Weight and height must be positive numbers');
+    throw new Error("Weight and height must be positive numbers");
   }
 
   const heightInMeters = height / 100;
@@ -27,14 +27,14 @@ export function calculateBMR(
   weight: number,
   height: number,
   age: number,
-  gender: 'MALE' | 'FEMALE'
+  gender: "MALE" | "FEMALE",
 ): number {
   if (weight <= 0 || height <= 0 || age <= 0) {
-    throw new Error('Weight, height, and age must be positive numbers');
+    throw new Error("Weight, height, and age must be positive numbers");
   }
 
   const bmr =
-    gender === 'MALE'
+    gender === "MALE"
       ? 10 * weight + 6.25 * height - 5 * age + 5
       : 10 * weight + 6.25 * height - 5 * age - 161;
 
@@ -47,7 +47,7 @@ export function calculateBMR(
  */
 export function calculateTDEE(bmr: number, activityFactor: number): number {
   if (bmr <= 0 || activityFactor <= 0) {
-    throw new Error('BMR and activity factor must be positive numbers');
+    throw new Error("BMR and activity factor must be positive numbers");
   }
 
   return Math.round(bmr * activityFactor);
@@ -71,7 +71,7 @@ export const ACTIVITY_FACTORS = {
 export function calculateProgress(
   startWeight: number | null,
   currentWeight: number | null,
-  targetWeight: number | null
+  targetWeight: number | null,
 ): number {
   if (!startWeight || !currentWeight || !targetWeight) {
     return 0;
@@ -112,14 +112,14 @@ export function calculateAge(birthDate: Date): number {
  * Determine age group based on age
  */
 export function calculateAgeGroup(
-  birthDate: Date
-): 'CHILD' | 'TEENAGER' | 'ADULT' | 'ELDERLY' {
+  birthDate: Date,
+): "CHILD" | "TEENAGER" | "ADULT" | "ELDERLY" {
   const age = calculateAge(birthDate);
 
-  if (age < 12) return 'CHILD';
-  if (age < 18) return 'TEENAGER';
-  if (age < 65) return 'ADULT';
-  return 'ELDERLY';
+  if (age < 12) return "CHILD";
+  if (age < 18) return "TEENAGER";
+  if (age < 65) return "ADULT";
+  return "ELDERLY";
 }
 
 /**
@@ -128,20 +128,20 @@ export function calculateAgeGroup(
  */
 export function calculateCalorieTarget(
   tdee: number,
-  goalType: 'LOSE_WEIGHT' | 'GAIN_MUSCLE' | 'MAINTAIN' | 'IMPROVE_HEALTH'
+  goalType: "LOSE_WEIGHT" | "GAIN_MUSCLE" | "MAINTAIN" | "IMPROVE_HEALTH",
 ): number {
   switch (goalType) {
-  case 'LOSE_WEIGHT':
-    // 500 calorie deficit for ~0.5kg loss per week
-    return Math.round(tdee - 500);
-  case 'GAIN_MUSCLE':
-    // 300 calorie surplus for muscle gain
-    return Math.round(tdee + 300);
-  case 'MAINTAIN':
-  case 'IMPROVE_HEALTH':
-    return tdee;
-  default:
-    return tdee;
+    case "LOSE_WEIGHT":
+      // 500 calorie deficit for ~0.5kg loss per week
+      return Math.round(tdee - 500);
+    case "GAIN_MUSCLE":
+      // 300 calorie surplus for muscle gain
+      return Math.round(tdee + 300);
+    case "MAINTAIN":
+    case "IMPROVE_HEALTH":
+      return tdee;
+    default:
+      return tdee;
   }
 }
 
@@ -152,16 +152,16 @@ export function calculateMacroTargets(
   calorieTarget: number,
   carbRatio: number,
   proteinRatio: number,
-  fatRatio: number
+  fatRatio: number,
 ): {
-  carbs: number
-  protein: number
-  fat: number
+  carbs: number;
+  protein: number;
+  fat: number;
 } {
   // Validate ratios sum to 1 (or 100%)
   const totalRatio = carbRatio + proteinRatio + fatRatio;
   if (Math.abs(totalRatio - 1) > 0.01) {
-    throw new Error('Macronutrient ratios must sum to 1 (100%)');
+    throw new Error("Macronutrient ratios must sum to 1 (100%)");
   }
 
   // Calories per gram: Carbs=4, Protein=4, Fat=9
@@ -183,7 +183,7 @@ export function calculateMacroTargets(
 export function estimateWeeksToTarget(
   currentWeight: number,
   targetWeight: number,
-  goalType: 'LOSE_WEIGHT' | 'GAIN_MUSCLE'
+  goalType: "LOSE_WEIGHT" | "GAIN_MUSCLE",
 ): number {
   const weightDifference = Math.abs(targetWeight - currentWeight);
 

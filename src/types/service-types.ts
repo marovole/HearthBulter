@@ -10,7 +10,7 @@ import type {
   TaskStatus,
   NotificationType,
   NotificationPriority,
-} from '@prisma/client';
+} from "@prisma/client";
 
 // ============ 库存相关类型 ============
 
@@ -87,7 +87,7 @@ export interface ShoppingSuggestion {
   suggestedQuantity: number;
   unit: string;
   reason: string;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  priority: "HIGH" | "MEDIUM" | "LOW";
   estimatedPrice?: number;
 }
 
@@ -142,21 +142,21 @@ export interface TaskWithRelations extends TaskBase {
 // ============ 活动类型 ============
 
 export type ActivityType =
-  | 'TASK_CREATED'
-  | 'TASK_COMPLETED'
-  | 'TASK_ASSIGNED'
-  | 'TASK_UPDATED'
-  | 'TASK_DELETED'
-  | 'SHOPPING_ITEM_ADDED'
-  | 'SHOPPING_ITEM_PURCHASED'
-  | 'SHOPPING_ITEM_ASSIGNED'
-  | 'SHOPPING_ITEM_DELETED'
-  | 'MEAL_LOGGED'
-  | 'HEALTH_DATA_ADDED'
-  | 'GOAL_CREATED'
-  | 'GOAL_COMPLETED'
-  | 'MEMBER_JOINED'
-  | 'MEMBER_LEFT';
+  | "TASK_CREATED"
+  | "TASK_COMPLETED"
+  | "TASK_ASSIGNED"
+  | "TASK_UPDATED"
+  | "TASK_DELETED"
+  | "SHOPPING_ITEM_ADDED"
+  | "SHOPPING_ITEM_PURCHASED"
+  | "SHOPPING_ITEM_ASSIGNED"
+  | "SHOPPING_ITEM_DELETED"
+  | "MEAL_LOGGED"
+  | "HEALTH_DATA_ADDED"
+  | "GOAL_CREATED"
+  | "GOAL_COMPLETED"
+  | "MEMBER_JOINED"
+  | "MEMBER_LEFT";
 
 export interface ActivityMetadata {
   taskId?: string;
@@ -244,8 +244,8 @@ export interface WasteAnalysis {
 }
 
 export interface RecommendationItem {
-  type: 'PURCHASE' | 'CONSUME' | 'REDUCE_WASTE' | 'OPTIMIZE_STORAGE';
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  type: "PURCHASE" | "CONSUME" | "REDUCE_WASTE" | "OPTIMIZE_STORAGE";
+  priority: "HIGH" | "MEDIUM" | "LOW";
   title: string;
   description: string;
   actionItems: string[];
@@ -313,7 +313,7 @@ export interface WhereCondition<T = unknown> {
   contains?: string;
   startsWith?: string;
   endsWith?: string;
-  mode?: 'default' | 'insensitive';
+  mode?: "default" | "insensitive";
 }
 
 export interface DateRangeCondition {
@@ -332,7 +332,7 @@ export interface PaginationParams {
 
 export interface SortParams {
   field: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
 // ============ 通用响应类型 ============

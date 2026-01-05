@@ -7,10 +7,10 @@
  * @module supabase-recommendation-repository
  */
 
-import { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
-import type { Database, Json } from '@/types/supabase-database';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import type { RecommendationRepository } from '../interfaces/recommendation-repository';
+import { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Json } from "@/types/supabase-database";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import type { RecommendationRepository } from "../interfaces/recommendation-repository";
 import type {
   HealthGoalDTO,
   InventorySnapshotDTO,
@@ -20,16 +20,22 @@ import type {
   RecommendationWeightsDTO,
   RecipeSummaryDTO,
   UserPreferenceDTO,
-} from '../types/recommendation';
-import type { DateRangeFilter, PaginatedResult, PaginationInput } from '../types/common';
+} from "../types/recommendation";
+import type {
+  DateRangeFilter,
+  PaginatedResult,
+  PaginationInput,
+} from "../types/common";
 
-type RecipeRow = Database['public']['Tables']['recipes']['Row'];
-type UserPreferenceRow = Database['public']['Tables']['user_preferences']['Row'];
-type RecipeRatingRow = Database['public']['Tables']['recipe_ratings']['Row'];
-type RecipeFavoriteRow = Database['public']['Tables']['recipe_favorites']['Row'];
-type RecipeViewRow = Database['public']['Tables']['recipe_views']['Row'];
-type HealthGoalRow = Database['public']['Tables']['health_goals']['Row'];
-type InventoryItemRow = Database['public']['Tables']['inventory_items']['Row'];
+type RecipeRow = Database["public"]["Tables"]["recipes"]["Row"];
+type UserPreferenceRow =
+  Database["public"]["Tables"]["user_preferences"]["Row"];
+type RecipeRatingRow = Database["public"]["Tables"]["recipe_ratings"]["Row"];
+type RecipeFavoriteRow =
+  Database["public"]["Tables"]["recipe_favorites"]["Row"];
+type RecipeViewRow = Database["public"]["Tables"]["recipe_views"]["Row"];
+type HealthGoalRow = Database["public"]["Tables"]["health_goals"]["Row"];
+type InventoryItemRow = Database["public"]["Tables"]["inventory_items"]["Row"];
 
 /**
  * Supabase 推荐 Repository 实现
@@ -40,11 +46,15 @@ type InventoryItemRow = Database['public']['Tables']['inventory_items']['Row'];
  * - 批量并发查询
  * - 完善的错误处理
  */
-export class SupabaseRecommendationRepository implements RecommendationRepository {
+export class SupabaseRecommendationRepository
+  implements RecommendationRepository
+{
   private readonly client: SupabaseClient<Database>;
-  private readonly loggerPrefix = '[SupabaseRecommendationRepository]';
+  private readonly loggerPrefix = "[SupabaseRecommendationRepository]";
 
-  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
+  constructor(
+    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
+  ) {
     this.client = client;
   }
 
@@ -53,13 +63,13 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    */
   async getUserPreference(memberId: string): Promise<UserPreferenceDTO | null> {
     const { data, error } = await this.client
-      .from('user_preferences')
-      .select('*')
-      .eq('member_id', memberId)
+      .from("user_preferences")
+      .select("*")
+      .eq("member_id", memberId)
       .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
-      this.handleError('getUserPreference', error);
+    if (error && error.code !== "PGRST116") {
+      this.handleError("getUserPreference", error);
     }
 
     return data ? this.mapUserPreference(data) : null;
@@ -72,10 +82,10 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    */
   async listCandidateRecipes(
     filters: RecommendationRecipeFilter,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<RecipeSummaryDTO>> {
     let query = this.client
-      .from('recipes')
+      .from("recipes")
       .select(
         `
         id,
@@ -94,35 +104,35 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
         tags,
         ingredients
       `,
-        { count: 'exact' }
+        { count: "exact" },
       )
-      .eq('status', 'PUBLISHED')
-      .eq('is_public', true);
+      .eq("status", "PUBLISHED")
+      .eq("is_public", true);
 
     // 应用过滤条件
     if (filters.mealTypes?.length) {
-      query = query.in('meal_type', filters.mealTypes);
+      query = query.in("meal_type", filters.mealTypes);
     }
 
     if (filters.cuisineTypes?.length) {
-      query = query.in('cuisine_type', filters.cuisineTypes);
+      query = query.in("cuisine_type", filters.cuisineTypes);
     }
 
     if (filters.tags?.length) {
-      query = query.contains('tags', filters.tags);
+      query = query.contains("tags", filters.tags);
     }
 
     if (filters.excludeRecipeIds?.length) {
       // 使用 Supabase 的 .in() 方法的否定形式
-      query = query.not('id', 'in', filters.excludeRecipeIds);
+      query = query.not("id", "in", filters.excludeRecipeIds);
     }
 
     if (filters.maxCookTimeMinutes) {
-      query = query.lte('cook_time', filters.maxCookTimeMinutes);
+      query = query.lte("cook_time", filters.maxCookTimeMinutes);
     }
 
     if (filters.budgetLimit) {
-      query = query.lte('estimated_cost', filters.budgetLimit);
+      query = query.lte("estimated_cost", filters.budgetLimit);
     }
 
     // 应用分页
@@ -134,7 +144,7 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
 
     const { data, error, count } = await query;
     if (error) {
-      this.handleError('listCandidateRecipes', error);
+      this.handleError("listCandidateRecipes", error);
     }
 
     const items = (data || []).map((row) => this.mapRecipe(row as RecipeRow));
@@ -142,7 +152,9 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
+      hasMore: pagination?.limit
+        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
+        : false,
     };
   }
 
@@ -151,16 +163,22 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    *
    * 并发查询评分、收藏、浏览记录，提升性能
    */
-  async getRecipeBehavior(memberId: string, range?: DateRangeFilter): Promise<RecommendationBehaviorDTO> {
+  async getRecipeBehavior(
+    memberId: string,
+    range?: DateRangeFilter,
+  ): Promise<RecommendationBehaviorDTO> {
     const [ratingsRes, favoritesRes, viewsRes] = await Promise.all([
-      this.selectWithRange('recipe_ratings', 'rated_at', memberId, range),
-      this.selectWithRange('recipe_favorites', 'favorited_at', memberId, range),
-      this.selectWithRange('recipe_views', 'viewed_at', memberId, range),
+      this.selectWithRange("recipe_ratings", "rated_at", memberId, range),
+      this.selectWithRange("recipe_favorites", "favorited_at", memberId, range),
+      this.selectWithRange("recipe_views", "viewed_at", memberId, range),
     ]);
 
-    if (ratingsRes.error) this.handleError('getRecipeBehavior:ratings', ratingsRes.error);
-    if (favoritesRes.error) this.handleError('getRecipeBehavior:favorites', favoritesRes.error);
-    if (viewsRes.error) this.handleError('getRecipeBehavior:views', viewsRes.error);
+    if (ratingsRes.error)
+      this.handleError("getRecipeBehavior:ratings", ratingsRes.error);
+    if (favoritesRes.error)
+      this.handleError("getRecipeBehavior:favorites", favoritesRes.error);
+    if (viewsRes.error)
+      this.handleError("getRecipeBehavior:views", viewsRes.error);
 
     return {
       ratings: (ratingsRes.data || []).map((row: any) => ({
@@ -184,16 +202,19 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    *
    * 基于菜系和标签计算相似度
    */
-  async getSimilarRecipes(recipeId: string, limit = 10): Promise<RecipeSummaryDTO[]> {
+  async getSimilarRecipes(
+    recipeId: string,
+    limit = 10,
+  ): Promise<RecipeSummaryDTO[]> {
     // 1. 获取目标食谱
     const { data: baseRecipe, error } = await this.client
-      .from('recipes')
-      .select('id, cuisine_type, tags, meal_type')
-      .eq('id', recipeId)
+      .from("recipes")
+      .select("id, cuisine_type, tags, meal_type")
+      .eq("id", recipeId)
       .single();
 
     if (error) {
-      this.handleError('getSimilarRecipes:baseRecipe', error);
+      this.handleError("getSimilarRecipes:baseRecipe", error);
     }
 
     if (!baseRecipe) {
@@ -202,7 +223,7 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
 
     // 2. 查询相似食谱
     let query = this.client
-      .from('recipes')
+      .from("recipes")
       .select(
         `
         id,
@@ -219,29 +240,31 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
         fat_per_serving,
         tags,
         ingredients
-      `
+      `,
       )
-      .neq('id', recipeId)
-      .eq('status', 'PUBLISHED')
-      .eq('is_public', true)
+      .neq("id", recipeId)
+      .eq("status", "PUBLISHED")
+      .eq("is_public", true)
       .limit(limit * 2); // 查询更多，后续过滤
 
     // 菜系匹配优先
     if (baseRecipe.cuisine_type) {
-      query = query.eq('cuisine_type', baseRecipe.cuisine_type);
+      query = query.eq("cuisine_type", baseRecipe.cuisine_type);
     }
 
     // 标签重叠过滤
     if (Array.isArray(baseRecipe.tags) && baseRecipe.tags.length) {
-      query = query.overlaps('tags', baseRecipe.tags as string[]);
+      query = query.overlaps("tags", baseRecipe.tags as string[]);
     }
 
     const { data, error: listError } = await query;
     if (listError) {
-      this.handleError('getSimilarRecipes:list', listError);
+      this.handleError("getSimilarRecipes:list", listError);
     }
 
-    return (data || []).map((row) => this.mapRecipe(row as RecipeRow)).slice(0, limit);
+    return (data || [])
+      .map((row) => this.mapRecipe(row as RecipeRow))
+      .slice(0, limit);
   }
 
   /**
@@ -249,16 +272,16 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    */
   async getActiveHealthGoal(memberId: string): Promise<HealthGoalDTO | null> {
     const { data, error } = await this.client
-      .from('health_goals')
-      .select('*')
-      .eq('member_id', memberId)
-      .eq('status', 'ACTIVE')
-      .order('created_at', { ascending: false })
+      .from("health_goals")
+      .select("*")
+      .eq("member_id", memberId)
+      .eq("status", "ACTIVE")
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
-      this.handleError('getActiveHealthGoal', error);
+    if (error && error.code !== "PGRST116") {
+      this.handleError("getActiveHealthGoal", error);
     }
 
     return data ? this.mapHealthGoal(data) : null;
@@ -269,13 +292,13 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    */
   async getInventorySnapshot(memberId: string): Promise<InventorySnapshotDTO> {
     const { data, error } = await this.client
-      .from('inventory_items')
-      .select('*')
-      .eq('member_id', memberId)
-      .is('deleted_at', null);
+      .from("inventory_items")
+      .select("*")
+      .eq("member_id", memberId)
+      .is("deleted_at", null);
 
     if (error) {
-      this.handleError('getInventorySnapshot', error);
+      this.handleError("getInventorySnapshot", error);
     }
 
     return {
@@ -295,7 +318,7 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    * 记录推荐日志
    */
   async saveRecommendationLog(entry: RecommendationLogDTO): Promise<void> {
-    const { error } = await this.client.from('recommendation_logs').insert({
+    const { error } = await this.client.from("recommendation_logs").insert({
       member_id: entry.memberId,
       recipe_id: entry.recipeId,
       rank: entry.rank,
@@ -306,27 +329,28 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
     });
 
     if (error) {
-      this.handleError('saveRecommendationLog', error);
+      this.handleError("saveRecommendationLog", error);
     }
   }
 
   /**
    * 更新或创建用户的推荐权重
    */
-  async upsertRecommendationWeights(memberId: string, weights: RecommendationWeightsDTO): Promise<void> {
-    const { error } = await this.client
-      .from('user_preferences')
-      .upsert(
-        {
-          member_id: memberId,
-          recommendation_weight: weights as unknown as Json,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'member_id' }
-      );
+  async upsertRecommendationWeights(
+    memberId: string,
+    weights: RecommendationWeightsDTO,
+  ): Promise<void> {
+    const { error } = await this.client.from("user_preferences").upsert(
+      {
+        member_id: memberId,
+        recommendation_weight: weights as unknown as Json,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "member_id" },
+    );
 
     if (error) {
-      this.handleError('upsertRecommendationWeights', error);
+      this.handleError("upsertRecommendationWeights", error);
     }
   }
 
@@ -360,13 +384,14 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    * 数据映射：UserPreferenceRow → UserPreferenceDTO
    */
   private mapUserPreference(row: UserPreferenceRow): UserPreferenceDTO {
-    const weights = row.recommendation_weight as RecommendationWeightsDTO | null;
+    const weights =
+      row.recommendation_weight as RecommendationWeightsDTO | null;
     return {
       memberId: row.member_id,
       preferredIngredients: this.parseStringArray(row.preferred_ingredients),
       avoidedIngredients: this.parseStringArray(row.avoided_ingredients),
       maxCookTimeMinutes: row.max_cook_time,
-      costLevel: (row.cost_level as UserPreferenceDTO['costLevel']) || 'MEDIUM',
+      costLevel: (row.cost_level as UserPreferenceDTO["costLevel"]) || "MEDIUM",
       preferredCuisines: this.parseStringArray(row.preferred_cuisines),
       recommendationWeights: weights ?? undefined,
     };
@@ -380,7 +405,7 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
       id: row.id,
       memberId: row.member_id,
       goalType: row.goal_type,
-      status: row.status as HealthGoalDTO['status'],
+      status: row.status as HealthGoalDTO["status"],
       targetCalories: row.target_calories,
       macroTargets: {
         protein: row.target_protein,
@@ -397,12 +422,14 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
   private parseStringArray(value: Json | null): string[] {
     if (!value) return [];
     if (Array.isArray(value)) {
-      return value.filter((item): item is string => typeof item === 'string');
+      return value.filter((item): item is string => typeof item === "string");
     }
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       try {
         const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+        return Array.isArray(parsed)
+          ? parsed.filter((item): item is string => typeof item === "string")
+          : [];
       } catch {
         return [];
       }
@@ -415,15 +442,26 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    */
   private normalizeIngredients(value: Json | null | undefined) {
     if (!value) return [];
-    const array = Array.isArray(value) ? value : typeof value === 'string' ? JSON.parse(value) : [];
+    const array = Array.isArray(value)
+      ? value
+      : typeof value === "string"
+        ? JSON.parse(value)
+        : [];
     if (!Array.isArray(array)) return [];
     return array
       .map((item) => {
-        if (typeof item !== 'object' || !item) return null;
+        if (typeof item !== "object" || !item) return null;
         return {
-          name: 'name' in item && typeof item.name === 'string' ? item.name : '',
-          amount: 'amount' in item && typeof item.amount === 'number' ? item.amount : undefined,
-          unit: 'unit' in item && typeof item.unit === 'string' ? item.unit : undefined,
+          name:
+            "name" in item && typeof item.name === "string" ? item.name : "",
+          amount:
+            "amount" in item && typeof item.amount === "number"
+              ? item.amount
+              : undefined,
+          unit:
+            "unit" in item && typeof item.unit === "string"
+              ? item.unit
+              : undefined,
         };
       })
       .filter((item): item is NonNullable<typeof item> => !!item?.name);
@@ -433,12 +471,15 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    * 辅助：带时间范围的查询
    */
   private async selectWithRange<T extends { member_id: string }>(
-    table: keyof Database['public']['Tables'],
+    table: keyof Database["public"]["Tables"],
     column: string,
     memberId: string,
-    range?: DateRangeFilter
+    range?: DateRangeFilter,
   ) {
-    let query = this.client.from(table as string).select('*').eq('member_id', memberId);
+    let query = this.client
+      .from(table as string)
+      .select("*")
+      .eq("member_id", memberId);
     if (range?.start) {
       query = query.gte(column, range.start.toISOString());
     }
@@ -452,7 +493,7 @@ export class SupabaseRecommendationRepository implements RecommendationRepositor
    * 统一错误处理
    */
   private handleError(operation: string, error?: PostgrestError | null): never {
-    const message = error?.message ?? 'Unknown Supabase error';
+    const message = error?.message ?? "Unknown Supabase error";
     console.error(`${this.loggerPrefix} ${operation} failed:`, error);
     throw new Error(`RecommendationRepository.${operation} failed: ${message}`);
   }

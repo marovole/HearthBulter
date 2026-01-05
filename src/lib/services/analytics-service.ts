@@ -5,55 +5,63 @@
  * 提供体重趋势分析、营养摄入汇总、目标进度计算和异常检测功能
  */
 
-import type { AnalyticsRepository } from '@/lib/repositories/interfaces/analytics-repository';
-import type { DateRangeFilter } from '@/lib/repositories/types/common';
-import { calculateBMI, calculateProgress } from '@/lib/health-calculations';
-import { startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import type { AnalyticsRepository } from "@/lib/repositories/interfaces/analytics-repository";
+import type { DateRangeFilter } from "@/lib/repositories/types/common";
+import { calculateBMI, calculateProgress } from "@/lib/health-calculations";
+import {
+  startOfDay,
+  endOfDay,
+  subDays,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
 
 export interface WeightTrendAnalysis {
-  data: Array<{ date: Date; weight: number }>
-  min: number
-  max: number
-  average: number
-  change: number // 变化值（正数表示增加，负数表示减少）
-  changePercent: number // 变化百分比
-  currentWeight: number | null
-  targetWeight: number | null
+  data: Array<{ date: Date; weight: number }>;
+  min: number;
+  max: number;
+  average: number;
+  change: number; // 变化值（正数表示增加，负数表示减少）
+  changePercent: number; // 变化百分比
+  currentWeight: number | null;
+  targetWeight: number | null;
   anomalies: Array<{
-    date: Date
-    weight: number
-    reason: string
-    severity: 'low' | 'medium' | 'high'
-  }>
+    date: Date;
+    weight: number;
+    reason: string;
+    severity: "low" | "medium" | "high";
+  }>;
 }
 
 export interface NutritionSummary {
-  period: 'daily' | 'weekly' | 'monthly'
-  startDate: Date
-  endDate: Date
-  targetCalories: number | null
-  targetCarbs: number | null
-  targetProtein: number | null
-  targetFat: number | null
-  actualCalories: number | null // 暂时为null，meal-planning完成后填充
-  actualCarbs: number | null
-  actualProtein: number | null
-  actualFat: number | null
-  adherenceRate: number // 达标率 0-100
+  period: "daily" | "weekly" | "monthly";
+  startDate: Date;
+  endDate: Date;
+  targetCalories: number | null;
+  targetCarbs: number | null;
+  targetProtein: number | null;
+  targetFat: number | null;
+  actualCalories: number | null; // 暂时为null，meal-planning完成后填充
+  actualCarbs: number | null;
+  actualProtein: number | null;
+  actualFat: number | null;
+  adherenceRate: number; // 达标率 0-100
 }
 
 export interface GoalProgress {
-  goalId: string
-  goalType: string
-  currentProgress: number // 0-100
-  startWeight: number | null
-  currentWeight: number | null
-  targetWeight: number | null
-  startDate: Date
-  targetDate: Date | null
-  estimatedCompletionDate: Date | null
-  weeksRemaining: number | null
-  onTrack: boolean
+  goalId: string;
+  goalType: string;
+  currentProgress: number; // 0-100
+  startWeight: number | null;
+  currentWeight: number | null;
+  targetWeight: number | null;
+  startDate: Date;
+  targetDate: Date | null;
+  estimatedCompletionDate: Date | null;
+  weeksRemaining: number | null;
+  onTrack: boolean;
 }
 
 export class AnalyticsService {
@@ -66,7 +74,7 @@ export class AnalyticsService {
    */
   async analyzeWeightTrend(
     memberId: string,
-    days: number = 30
+    days: number = 30,
   ): Promise<WeightTrendAnalysis> {
     const endDate = new Date();
     const startDate = subDays(endDate, days);
@@ -76,18 +84,18 @@ export class AnalyticsService {
       // 获取成员信息和健康目标
       const memberProfile = await this.repository.getMemberProfile(memberId);
       if (!memberProfile) {
-        throw new Error('成员不存在');
+        throw new Error("成员不存在");
       }
 
       // 查询体重趋势数据
       const weightSeries = await this.repository.fetchTrendSeries({
         memberId,
-        metric: 'weight',
+        metric: "weight",
         range: dateRange,
-        aggregation: 'daily',
+        aggregation: "daily",
       });
 
-      const weightData = weightSeries.points.map(point => ({
+      const weightData = weightSeries.points.map((point) => ({
         date: point.timestamp,
         weight: point.value,
       }));
@@ -107,7 +115,7 @@ export class AnalyticsService {
         };
       }
 
-      const weights = weightData.map(d => d.weight);
+      const weights = weightData.map((d) => d.weight);
       const min = Math.min(...weights);
       const max = Math.max(...weights);
       const average = weights.reduce((a, b) => a + b, 0) / weights.length;
@@ -134,7 +142,7 @@ export class AnalyticsService {
         anomalies,
       };
     } catch (error) {
-      console.error('Failed to analyze weight trend:', error);
+      console.error("Failed to analyze weight trend:", error);
       throw error;
     }
   }
@@ -143,20 +151,20 @@ export class AnalyticsService {
    * 检测体重异常
    */
   private detectWeightAnomalies(
-    weightData: Array<{ date: Date; weight: number }>
+    weightData: Array<{ date: Date; weight: number }>,
   ): Array<{
-    date: Date
-    weight: number
-    reason: string
-    severity: 'low' | 'medium' | 'high'
+    date: Date;
+    weight: number;
+    reason: string;
+    severity: "low" | "medium" | "high";
   }> {
     if (weightData.length < 2) return [];
 
     const anomalies: Array<{
-      date: Date
-      weight: number
-      reason: string
-      severity: 'low' | 'medium' | 'high'
+      date: Date;
+      weight: number;
+      reason: string;
+      severity: "low" | "medium" | "high";
     }> = [];
 
     // 计算移动平均（3天窗口）
@@ -166,21 +174,18 @@ export class AnalyticsService {
       const previous = weightData[i - 1];
 
       // 计算前几天的平均
-      const window = weightData.slice(
-        Math.max(0, i - windowSize),
-        i
-      );
+      const window = weightData.slice(Math.max(0, i - windowSize), i);
       const avgWeight =
         window.reduce((sum, d) => sum + d.weight, 0) / window.length;
 
       // 检测异常：变化超过平均值的10%
       const changePercent = Math.abs(
-        ((current.weight - previous.weight) / previous.weight) * 100
+        ((current.weight - previous.weight) / previous.weight) * 100,
       );
 
       if (changePercent > 5) {
         const severity =
-          changePercent > 10 ? 'high' : changePercent > 7 ? 'medium' : 'low';
+          changePercent > 10 ? "high" : changePercent > 7 ? "medium" : "low";
         const reason =
           current.weight > previous.weight
             ? `体重突增 ${changePercent.toFixed(1)}%`
@@ -205,32 +210,32 @@ export class AnalyticsService {
    */
   async summarizeNutrition(
     memberId: string,
-    period: 'daily' | 'weekly' | 'monthly' = 'daily'
+    period: "daily" | "weekly" | "monthly" = "daily",
   ): Promise<NutritionSummary> {
     const now = new Date();
     let startDate: Date;
     let endDate: Date;
 
     switch (period) {
-    case 'daily':
-      startDate = startOfDay(now);
-      endDate = endOfDay(now);
-      break;
-    case 'weekly':
-      startDate = startOfWeek(now, { weekStartsOn: 1 });
-      endDate = endOfWeek(now, { weekStartsOn: 1 });
-      break;
-    case 'monthly':
-      startDate = startOfMonth(now);
-      endDate = endOfMonth(now);
-      break;
+      case "daily":
+        startDate = startOfDay(now);
+        endDate = endOfDay(now);
+        break;
+      case "weekly":
+        startDate = startOfWeek(now, { weekStartsOn: 1 });
+        endDate = endOfWeek(now, { weekStartsOn: 1 });
+        break;
+      case "monthly":
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        break;
     }
 
     try {
       // 获取成员的健康目标
       const memberProfile = await this.repository.getMemberProfile(memberId);
       if (!memberProfile) {
-        throw new Error('成员不存在');
+        throw new Error("成员不存在");
       }
 
       const activeGoal = memberProfile.healthGoals?.[0];
@@ -263,9 +268,9 @@ export class AnalyticsService {
       try {
         const calorieSeries = await this.repository.fetchTrendSeries({
           memberId,
-          metric: 'calories',
+          metric: "calories",
           range: dateRange,
-          aggregation: period === 'daily' ? 'daily' : 'sum',
+          aggregation: period === "daily" ? "daily" : "sum",
         });
         if (calorieSeries.points.length > 0) {
           actualCalories = calorieSeries.statistics?.mean || null;
@@ -273,9 +278,9 @@ export class AnalyticsService {
 
         const proteinSeries = await this.repository.fetchTrendSeries({
           memberId,
-          metric: 'protein',
+          metric: "protein",
           range: dateRange,
-          aggregation: period === 'daily' ? 'daily' : 'sum',
+          aggregation: period === "daily" ? "daily" : "sum",
         });
         if (proteinSeries.points.length > 0) {
           actualProtein = proteinSeries.statistics?.mean || null;
@@ -283,9 +288,9 @@ export class AnalyticsService {
 
         const carbsSeries = await this.repository.fetchTrendSeries({
           memberId,
-          metric: 'carbs',
+          metric: "carbs",
           range: dateRange,
-          aggregation: period === 'daily' ? 'daily' : 'sum',
+          aggregation: period === "daily" ? "daily" : "sum",
         });
         if (carbsSeries.points.length > 0) {
           actualCarbs = carbsSeries.statistics?.mean || null;
@@ -293,22 +298,25 @@ export class AnalyticsService {
 
         const fatSeries = await this.repository.fetchTrendSeries({
           memberId,
-          metric: 'fat',
+          metric: "fat",
           range: dateRange,
-          aggregation: period === 'daily' ? 'daily' : 'sum',
+          aggregation: period === "daily" ? "daily" : "sum",
         });
         if (fatSeries.points.length > 0) {
           actualFat = fatSeries.statistics?.mean || null;
         }
       } catch (error) {
-        console.warn('Failed to fetch nutrition data:', error);
+        console.warn("Failed to fetch nutrition data:", error);
         // 保持默认 null 值
       }
 
       // 计算达标率
       let adherenceRate = 0;
       if (targetCalories && actualCalories) {
-        const calorieAdherence = Math.min(100, (actualCalories / targetCalories) * 100);
+        const calorieAdherence = Math.min(
+          100,
+          (actualCalories / targetCalories) * 100,
+        );
         adherenceRate = calorieAdherence;
       }
 
@@ -327,7 +335,7 @@ export class AnalyticsService {
         adherenceRate,
       };
     } catch (error) {
-      console.error('Failed to summarize nutrition:', error);
+      console.error("Failed to summarize nutrition:", error);
       throw error;
     }
   }
@@ -340,20 +348,21 @@ export class AnalyticsService {
     try {
       const memberProfile = await this.repository.getMemberProfile(memberId);
       if (!memberProfile) {
-        throw new Error('成员不存在');
+        throw new Error("成员不存在");
       }
 
       // 获取最新的体重数据
       const weightSeries = await this.repository.fetchTrendSeries({
         memberId,
-        metric: 'weight',
+        metric: "weight",
         range: { startDate: subDays(new Date(), 365), endDate: new Date() },
-        aggregation: 'latest',
+        aggregation: "latest",
       });
 
-      const currentWeight = weightSeries.points.length > 0
-        ? weightSeries.points[weightSeries.points.length - 1].value
-        : memberProfile.currentWeight;
+      const currentWeight =
+        weightSeries.points.length > 0
+          ? weightSeries.points[weightSeries.points.length - 1].value
+          : memberProfile.currentWeight;
 
       const progress: GoalProgress[] = [];
 
@@ -362,7 +371,7 @@ export class AnalyticsService {
         if (
           !goal.targetWeight ||
           !goal.startWeight ||
-          goal.goalType === 'IMPROVE_HEALTH'
+          goal.goalType === "IMPROVE_HEALTH"
         ) {
           continue;
         }
@@ -370,7 +379,7 @@ export class AnalyticsService {
         const goalProgress = calculateProgress(
           goal.startWeight,
           currentWeight,
-          goal.targetWeight
+          goal.targetWeight,
         );
 
         // 计算预计完成时间
@@ -389,12 +398,12 @@ export class AnalyticsService {
 
           if (goalProgress > 0 && elapsedWeeks > 0) {
             const weeklyRate = Math.abs(
-              (currentWeight - goal.startWeight) / elapsedWeeks
+              (currentWeight - goal.startWeight) / elapsedWeeks,
             );
             if (weeklyRate > 0) {
               weeksRemaining = weightDiff / weeklyRate;
               estimatedCompletionDate = new Date(
-                now.getTime() + weeksRemaining * 7 * 24 * 60 * 60 * 1000
+                now.getTime() + weeksRemaining * 7 * 24 * 60 * 60 * 1000,
               );
             }
           }
@@ -423,7 +432,7 @@ export class AnalyticsService {
 
       return progress;
     } catch (error) {
-      console.error('Failed to calculate goal progress:', error);
+      console.error("Failed to calculate goal progress:", error);
       throw error;
     }
   }
@@ -435,7 +444,7 @@ export class AnalyticsService {
     try {
       const [weightTrend, nutritionSummary, goalProgress] = await Promise.all([
         this.analyzeWeightTrend(memberId, 30),
-        this.summarizeNutrition(memberId, 'daily'),
+        this.summarizeNutrition(memberId, "daily"),
         this.calculateGoalProgress(memberId),
       ]);
 
@@ -445,7 +454,7 @@ export class AnalyticsService {
         goalProgress,
       };
     } catch (error) {
-      console.error('Failed to get dashboard overview:', error);
+      console.error("Failed to get dashboard overview:", error);
       throw error;
     }
   }
@@ -459,16 +468,23 @@ export class AnalyticsService {
     const dateRange: DateRangeFilter = { startDate, endDate };
 
     try {
-      const anomalies = await this.repository.listAnomalies(memberId, dateRange, 50);
+      const anomalies = await this.repository.listAnomalies(
+        memberId,
+        dateRange,
+        50,
+      );
 
       // 按严重程度分组
-      const grouped = anomalies.reduce((acc, anomaly) => {
-        if (!acc[anomaly.severity]) {
-          acc[anomaly.severity] = [];
-        }
-        acc[anomaly.severity].push(anomaly);
-        return acc;
-      }, {} as Record<string, typeof anomalies>);
+      const grouped = anomalies.reduce(
+        (acc, anomaly) => {
+          if (!acc[anomaly.severity]) {
+            acc[anomaly.severity] = [];
+          }
+          acc[anomaly.severity].push(anomaly);
+          return acc;
+        },
+        {} as Record<string, typeof anomalies>,
+      );
 
       return {
         total: anomalies.length,
@@ -478,14 +494,16 @@ export class AnalyticsService {
         anomalies,
       };
     } catch (error) {
-      console.error('Failed to get anomaly report:', error);
+      console.error("Failed to get anomaly report:", error);
       throw error;
     }
   }
 }
 
 // 导出工厂函数（用于向后兼容）
-export function createAnalyticsService(repository: AnalyticsRepository): AnalyticsService {
+export function createAnalyticsService(
+  repository: AnalyticsRepository,
+): AnalyticsService {
   return new AnalyticsService(repository);
 }
 
@@ -495,7 +513,9 @@ let analyticsServiceInstance: AnalyticsService | null = null;
 
 export function getAnalyticsServiceSingleton(): AnalyticsService {
   if (!analyticsServiceInstance) {
-    const { getDefaultContainer } = require('@/lib/container/service-container');
+    const {
+      getDefaultContainer,
+    } = require("@/lib/container/service-container");
     analyticsServiceInstance = getDefaultContainer().getAnalyticsService();
   }
   return analyticsServiceInstance;

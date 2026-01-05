@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface PriceData {
-  platform: string
-  platformName: string
-  price: number
-  originalPrice?: number
-  availability: 'IN_STOCK' | 'OUT_OF_STOCK' | 'LOW_STOCK'
-  unit: string
-  url?: string
-  rating?: number
-  salesCount?: number
-  lastUpdated: string
+  platform: string;
+  platformName: string;
+  price: number;
+  originalPrice?: number;
+  availability: "IN_STOCK" | "OUT_OF_STOCK" | "LOW_STOCK";
+  unit: string;
+  url?: string;
+  rating?: number;
+  salesCount?: number;
+  lastUpdated: string;
 }
 
 interface PriceComparisonProps {
-  foodId: string
-  foodName: string
-  amount: number
-  onClose: () => void
+  foodId: string;
+  foodName: string;
+  amount: number;
+  onClose: () => void;
 }
 
 export function PriceComparison({
@@ -31,7 +31,7 @@ export function PriceComparison({
   const [priceData, setPriceData] = useState<PriceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'sales'>('price');
+  const [sortBy, setSortBy] = useState<"price" | "rating" | "sales">("price");
 
   useEffect(() => {
     fetchPriceComparison();
@@ -42,15 +42,17 @@ export function PriceComparison({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/ecommerce/compare?foodId=${foodId}&amount=${amount}`);
+      const response = await fetch(
+        `/api/ecommerce/compare?foodId=${foodId}&amount=${amount}`,
+      );
       if (!response.ok) {
-        throw new Error('获取价格比较失败');
+        throw new Error("获取价格比较失败");
       }
 
       const data = await response.json();
       setPriceData(data.prices || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '获取价格比较失败');
+      setError(err instanceof Error ? err.message : "获取价格比较失败");
     } finally {
       setLoading(false);
     }
@@ -59,40 +61,40 @@ export function PriceComparison({
   const getSortedData = () => {
     const sorted = [...priceData];
     switch (sortBy) {
-    case 'price':
-      return sorted.sort((a, b) => a.price - b.price);
-    case 'rating':
-      return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    case 'sales':
-      return sorted.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
-    default:
-      return sorted;
+      case "price":
+        return sorted.sort((a, b) => a.price - b.price);
+      case "rating":
+        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case "sales":
+        return sorted.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+      default:
+        return sorted;
     }
   };
 
   const getAvailabilityText = (availability: string) => {
     switch (availability) {
-    case 'IN_STOCK':
-      return '有货';
-    case 'OUT_OF_STOCK':
-      return '缺货';
-    case 'LOW_STOCK':
-      return '库存紧张';
-    default:
-      return '未知';
+      case "IN_STOCK":
+        return "有货";
+      case "OUT_OF_STOCK":
+        return "缺货";
+      case "LOW_STOCK":
+        return "库存紧张";
+      default:
+        return "未知";
     }
   };
 
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
-    case 'IN_STOCK':
-      return 'text-green-600 bg-green-50';
-    case 'OUT_OF_STOCK':
-      return 'text-red-600 bg-red-50';
-    case 'LOW_STOCK':
-      return 'text-orange-600 bg-orange-50';
-    default:
-      return 'text-gray-600 bg-gray-50';
+      case "IN_STOCK":
+        return "text-green-600 bg-green-50";
+      case "OUT_OF_STOCK":
+        return "text-red-600 bg-red-50";
+      case "LOW_STOCK":
+        return "text-orange-600 bg-orange-50";
+      default:
+        return "text-gray-600 bg-gray-50";
     }
   };
 
@@ -106,8 +108,10 @@ export function PriceComparison({
   const formatTimeAgo = (timestamp: string) => {
     const now = new Date();
     const time = new Date(timestamp);
-    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60));
-    
+    const diffInMinutes = Math.floor(
+      (now.getTime() - time.getTime()) / (1000 * 60),
+    );
+
     if (diffInMinutes < 60) return `${diffInMinutes}分钟前`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}小时前`;
     return `${Math.floor(diffInMinutes / 1440)}天前`;
@@ -115,7 +119,8 @@ export function PriceComparison({
 
   const sortedData = getSortedData();
   const lowestPrice = sortedData.length > 0 ? sortedData[0].price : null;
-  const highestPrice = sortedData.length > 0 ? sortedData[sortedData.length - 1].price : null;
+  const highestPrice =
+    sortedData.length > 0 ? sortedData[sortedData.length - 1].price : null;
 
   if (loading) {
     return (
@@ -137,7 +142,10 @@ export function PriceComparison({
           <div>
             <h2 className="text-xl font-bold text-gray-900">价格比较</h2>
             <p className="text-sm text-gray-500 mt-1">
-              {foodName} • {amount >= 1000 ? `${(amount/1000).toFixed(1)}kg` : `${amount}g`}
+              {foodName} •{" "}
+              {amount >= 1000
+                ? `${(amount / 1000).toFixed(1)}kg`
+                : `${amount}g`}
             </p>
           </div>
           <button
@@ -153,13 +161,18 @@ export function PriceComparison({
           <div className="p-4 bg-blue-50 border-b">
             <div className="flex items-center justify-between text-sm">
               <div className="text-blue-800">
-                最低价: <span className="font-bold">¥{lowestPrice.toFixed(2)}</span>
+                最低价:{" "}
+                <span className="font-bold">¥{lowestPrice.toFixed(2)}</span>
               </div>
               <div className="text-blue-800">
-                最高价: <span className="font-bold">¥{highestPrice.toFixed(2)}</span>
+                最高价:{" "}
+                <span className="font-bold">¥{highestPrice.toFixed(2)}</span>
               </div>
               <div className="text-blue-800">
-                差价: <span className="font-bold">¥{(highestPrice - lowestPrice).toFixed(2)}</span>
+                差价:{" "}
+                <span className="font-bold">
+                  ¥{(highestPrice - lowestPrice).toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
@@ -171,17 +184,17 @@ export function PriceComparison({
             <span className="text-sm text-gray-700">排序方式:</span>
             <div className="flex space-x-2">
               {[
-                { value: 'price', label: '价格' },
-                { value: 'rating', label: '评分' },
-                { value: 'sales', label: '销量' },
+                { value: "price", label: "价格" },
+                { value: "rating", label: "评分" },
+                { value: "sales", label: "销量" },
               ].map((option) => (
                 <button
                   key={option.value}
                   onClick={() => setSortBy(option.value as any)}
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                     sortBy === option.value
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      ? "bg-blue-600 text-white"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   {option.label}
@@ -208,18 +221,23 @@ export function PriceComparison({
           ) : sortedData.length === 0 ? (
             <div className="p-6 text-center">
               <div className="text-gray-500 mb-4">暂无价格数据</div>
-              <p className="text-gray-400 text-sm">该商品暂时无法获取价格比较信息</p>
+              <p className="text-gray-400 text-sm">
+                该商品暂时无法获取价格比较信息
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
               {sortedData.map((item, index) => {
-                const savings = calculateSavings(item.price, item.originalPrice);
+                const savings = calculateSavings(
+                  item.price,
+                  item.originalPrice,
+                );
                 const isLowestPrice = item.price === lowestPrice;
-                
+
                 return (
                   <div
                     key={`${item.platform}-${index}`}
-                    className={`p-4 ${isLowestPrice ? 'bg-green-50' : ''}`}
+                    className={`p-4 ${isLowestPrice ? "bg-green-50" : ""}`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
@@ -253,9 +271,7 @@ export function PriceComparison({
                               <span>{item.rating.toFixed(1)}</span>
                             </div>
                           )}
-                          {item.salesCount && (
-                            <div>月销 {item.salesCount}</div>
-                          )}
+                          {item.salesCount && <div>月销 {item.salesCount}</div>}
                         </div>
                       </div>
 
@@ -271,7 +287,8 @@ export function PriceComparison({
                                 ¥{item.originalPrice!.toFixed(2)}
                               </div>
                               <div className="text-red-600 text-xs">
-                                省¥{savings.amount.toFixed(2)} ({savings.percentage.toFixed(0)}%)
+                                省¥{savings.amount.toFixed(2)} (
+                                {savings.percentage.toFixed(0)}%)
                               </div>
                             </div>
                           ) : (
@@ -280,14 +297,16 @@ export function PriceComparison({
                             </div>
                           )}
                         </div>
-                        <span className={`px-2 py-1 text-xs rounded-full ${getAvailabilityColor(item.availability)}`}>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${getAvailabilityColor(item.availability)}`}
+                        >
                           {getAvailabilityText(item.availability)}
                         </span>
                       </div>
                     </div>
 
                     {/* Action */}
-                    {item.url && item.availability !== 'OUT_OF_STOCK' && (
+                    {item.url && item.availability !== "OUT_OF_STOCK" && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <a
                           href={item.url}
@@ -296,8 +315,16 @@ export function PriceComparison({
                           className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
                         >
                           <span>前往购买</span>
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </a>
                       </div>

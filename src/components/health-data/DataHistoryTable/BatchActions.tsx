@@ -1,11 +1,11 @@
-import { Filter, Trash2 } from 'lucide-react';
+import { Filter, Trash2 } from "lucide-react";
 
 interface BatchActionsProps {
-  selectedCount: number
-  totalCount: number
-  showFilters: boolean
-  onToggleFilters: () => void
-  onBatchDelete: () => void
+  selectedCount: number;
+  totalCount: number;
+  showFilters: boolean;
+  onToggleFilters: () => void;
+  onBatchDelete: () => void;
 }
 
 export function BatchActions({
@@ -25,7 +25,7 @@ export function BatchActions({
           <Filter className="h-4 w-4" />
           <span>筛选</span>
         </button>
-        
+
         {selectedCount > 0 && (
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">
@@ -41,10 +41,8 @@ export function BatchActions({
           </div>
         )}
       </div>
-      
-      <div className="text-sm text-gray-500">
-        共 {totalCount} 条记录
-      </div>
+
+      <div className="text-sm text-gray-500">共 {totalCount} 条记录</div>
     </div>
   );
 }

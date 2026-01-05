@@ -5,12 +5,12 @@
 /**
  * 家庭成员角色
  */
-export type FamilyMemberRole = 'ADMIN' | 'MEMBER';
+export type FamilyMemberRole = "ADMIN" | "MEMBER";
 
 /**
  * 性别类型
  */
-export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
+export type Gender = "MALE" | "FEMALE" | "OTHER";
 
 /**
  * API 返回的原始家庭成员数据结构

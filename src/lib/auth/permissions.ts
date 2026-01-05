@@ -4,7 +4,7 @@
  * 已迁移到使用 FamilyRepository（支持双写框架）
  */
 
-import { familyRepository } from '@/lib/repositories/family-repository-singleton';
+import { familyRepository } from "@/lib/repositories/family-repository-singleton";
 
 /**
  * 验证用户是否有权访问指定家庭
@@ -31,12 +31,12 @@ export async function verifyFamilyAccess(familyId: string, userId: string) {
 
     const isMember = await familyRepository.isUserFamilyMember(
       familyId,
-      userId
+      userId,
     );
 
     return isMember ? family : null;
   } catch (error) {
-    console.error('Failed to verify family access:', error);
+    console.error("Failed to verify family access:", error);
     throw error;
   }
 }
@@ -65,14 +65,11 @@ export async function verifyFamilyAdmin(familyId: string, userId: string) {
     }
 
     // 检查用户角色是否是 ADMIN
-    const role = await familyRepository.getUserFamilyRole(
-      familyId,
-      userId
-    );
+    const role = await familyRepository.getUserFamilyRole(familyId, userId);
 
-    return role === 'ADMIN' ? family : null;
+    return role === "ADMIN" ? family : null;
   } catch (error) {
-    console.error('Failed to verify family admin permission:', error);
+    console.error("Failed to verify family admin permission:", error);
     throw error;
   }
 }

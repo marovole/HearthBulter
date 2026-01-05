@@ -1,5 +1,5 @@
 // 动态导入 nodemailer 以支持边缘运行时环境
-import type nodemailer from 'nodemailer';
+import type nodemailer from "nodemailer";
 
 export interface EmailConfig {
   host: string;
@@ -27,7 +27,7 @@ export interface EmailMessage {
 
 export interface EmailSendResult {
   messageId: string;
-  status: 'sent' | 'failed';
+  status: "sent" | "failed";
   error?: string;
   cost?: number;
 }
@@ -62,7 +62,7 @@ export class EmailService {
   private async setupTransporter(): Promise<void> {
     try {
       // 动态导入 nodemailer，避免在构建时或边缘运行时导入失败
-      const nodemailerModule = await import('nodemailer');
+      const nodemailerModule = await import("nodemailer");
       const nodemailer = nodemailerModule.default;
 
       this.transporter = nodemailer.createTransporter({
@@ -76,7 +76,7 @@ export class EmailService {
 
       this.isConfigured = true;
     } catch (error) {
-      console.error('Failed to setup email transporter:', error);
+      console.error("Failed to setup email transporter:", error);
       this.isConfigured = false;
     }
   }
@@ -95,19 +95,19 @@ export class EmailService {
         content: Buffer | string;
         contentType?: string;
       }>;
-    } = {}
+    } = {},
   ): Promise<string> {
     await this.ensureInitialized();
 
     if (!this.isConfigured || !this.transporter) {
-      throw new Error('Email service is not configured');
+      throw new Error("Email service is not configured");
     }
 
     try {
       // 获取用户邮箱地址
       const email = await this.getUserEmail(memberId);
       if (!email) {
-        throw new Error('User email not found');
+        throw new Error("User email not found");
       }
 
       const message: EmailMessage = {
@@ -121,7 +121,7 @@ export class EmailService {
       const result = await this.transporter.sendMail(message);
       return result.messageId;
     } catch (error) {
-      console.error('Failed to send email:', error);
+      console.error("Failed to send email:", error);
       throw error;
     }
   }
@@ -132,7 +132,7 @@ export class EmailService {
   async sendTemplate(
     memberId: string,
     templateName: string,
-    data: Record<string, any>
+    data: Record<string, any>,
   ): Promise<string> {
     const template = await this.getEmailTemplate(templateName);
     if (!template) {
@@ -154,7 +154,7 @@ export class EmailService {
       subject: string;
       content: string;
       html?: boolean;
-    }>
+    }>,
   ): Promise<EmailSendResult[]> {
     const results: EmailSendResult[] = [];
 
@@ -162,7 +162,7 @@ export class EmailService {
     const batchSize = 10;
     for (let i = 0; i < emails.length; i += batchSize) {
       const batch = emails.slice(i, i + batchSize);
-      
+
       const batchResults = await Promise.allSettled(
         batch.map(async (email) => {
           try {
@@ -170,27 +170,27 @@ export class EmailService {
               email.memberId,
               email.subject,
               email.content,
-              { html: email.html }
+              { html: email.html },
             );
             return {
               memberId: email.memberId,
               messageId,
-              status: 'sent' as const,
+              status: "sent" as const,
               cost: 0.1, // 假设每封邮件成本
             };
           } catch (error) {
             return {
               memberId: email.memberId,
-              messageId: '',
-              status: 'failed' as const,
-              error: error instanceof Error ? error.message : 'Unknown error',
+              messageId: "",
+              status: "failed" as const,
+              error: error instanceof Error ? error.message : "Unknown error",
             };
           }
-        })
+        }),
       );
 
       batchResults.forEach((result) => {
-        if (result.status === 'fulfilled') {
+        if (result.status === "fulfilled") {
           results.push({
             messageId: result.value.messageId,
             status: result.value.status,
@@ -199,9 +199,9 @@ export class EmailService {
           });
         } else {
           results.push({
-            messageId: '',
-            status: 'failed',
-            error: result.reason.message || 'Unknown error',
+            messageId: "",
+            status: "failed",
+            error: result.reason.message || "Unknown error",
           });
         }
       });
@@ -226,7 +226,7 @@ export class EmailService {
       filename: string;
       content: Buffer | string;
       contentType?: string;
-    }>
+    }>,
   ): Promise<string> {
     return await this.send(memberId, subject, content, {
       html: true,
@@ -248,7 +248,7 @@ export class EmailService {
       await this.transporter.verify();
       return true;
     } catch (error) {
-      console.error('Email connection verification failed:', error);
+      console.error("Email connection verification failed:", error);
       return false;
     }
   }
@@ -277,9 +277,9 @@ export class EmailService {
     try {
       // 这里应该查询数据库获取用户邮箱
       // 暂时返回模拟数据
-      const { PrismaClient } = require('@prisma/client');
+      const { PrismaClient } = require("@prisma/client");
       const prisma = new PrismaClient();
-      
+
       const member = await prisma.familyMember.findUnique({
         where: { id: memberId },
         include: {
@@ -293,7 +293,7 @@ export class EmailService {
 
       return member?.user?.email || null;
     } catch (error) {
-      console.error('Failed to get user email:', error);
+      console.error("Failed to get user email:", error);
       return null;
     }
   }
@@ -398,7 +398,7 @@ export class EmailService {
    * 获取嵌套对象的值
    */
   private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => {
+    return path.split(".").reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
   }
@@ -411,8 +411,8 @@ export class EmailService {
     html: string;
   } | null> {
     const templates: Record<string, { subject: string; html: string }> = {
-      'check-in-reminder': {
-        subject: '📝 打卡提醒 - {{userName}}',
+      "check-in-reminder": {
+        subject: "📝 打卡提醒 - {{userName}}",
         html: `
           <h2>Hi {{userName}},</h2>
           <p>该记录<strong>{{mealType}}</strong>了！</p>
@@ -421,8 +421,8 @@ export class EmailService {
           <p>祝您健康愉快！</p>
         `,
       },
-      'goal-achievement': {
-        subject: '🎉 恭喜达成目标 - {{goalTitle}}',
+      "goal-achievement": {
+        subject: "🎉 恭喜达成目标 - {{goalTitle}}",
         html: `
           <h2>🎉 恭喜您！</h2>
           <p>您已成功达成目标：<strong>{{goalTitle}}</strong></p>
@@ -431,8 +431,8 @@ export class EmailService {
           <p>健康管家团队</p>
         `,
       },
-      'health-alert': {
-        subject: '⚠️ 健康异常提醒',
+      "health-alert": {
+        subject: "⚠️ 健康异常提醒",
         html: `
           <h2>⚠️ 健康提醒</h2>
           <p>我们检测到您的<strong>{{healthMetric}}</strong>出现异常：</p>
@@ -451,15 +451,15 @@ export class EmailService {
    */
   private getDefaultConfig(): EmailConfig {
     return {
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_SECURE === "true",
       auth: {
-        user: process.env.SMTP_USER || '',
-        pass: process.env.SMTP_PASS || '',
+        user: process.env.SMTP_USER || "",
+        pass: process.env.SMTP_PASS || "",
       },
-      from: process.env.SMTP_FROM || '健康管家 <noreply@healthbutler.com>',
-      replyTo: process.env.SMTP_REPLY_TO || 'support@healthbutler.com',
+      from: process.env.SMTP_FROM || "健康管家 <noreply@healthbutler.com>",
+      replyTo: process.env.SMTP_REPLY_TO || "support@healthbutler.com",
     };
   }
 
@@ -467,7 +467,7 @@ export class EmailService {
    * 延迟函数
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -486,7 +486,7 @@ export class EmailService {
   getStatus(): {
     isConfigured: boolean;
     isConnected: boolean;
-    } {
+  } {
     return {
       isConfigured: this.isConfigured,
       isConnected: this.isConfigured, // 简化实现，实际应该检查连接状态
@@ -509,7 +509,7 @@ export const emailService = new Proxy({} as EmailService, {
   get(target, prop) {
     const instance = getEmailServiceInstance();
     const value = (instance as any)[prop];
-    return typeof value === 'function' ? value.bind(instance) : value;
+    return typeof value === "function" ? value.bind(instance) : value;
   },
   set(target, prop, value) {
     const instance = getEmailServiceInstance();

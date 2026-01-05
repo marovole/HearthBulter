@@ -1,9 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { taskRepository } from '@/lib/repositories/task-repository-singleton';
-import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions';
-import { hasPermission, Permission } from '@/lib/permissions';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { prisma } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { taskRepository } from "@/lib/repositories/task-repository-singleton";
+import {
+  withApiPermissions,
+  PERMISSION_CONFIGS,
+} from "@/middleware/permissions";
+import { hasPermission, Permission } from "@/lib/permissions";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { prisma } from "@/lib/db";
 
 /**
  * PUT /api/families/:familyId/tasks/:taskId
@@ -13,10 +16,10 @@ import { prisma } from '@/lib/db';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string; taskId: string }> }
+  { params }: { params: Promise<{ familyId: string; taskId: string }> },
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -30,17 +33,17 @@ export async function PUT(
 
       // 验证用户权限并获取成员信息
       const { data: member } = await supabase
-        .from('family_members')
-        .select('id, role')
-        .eq('user_id', userId)
-        .eq('family_id', familyId)
-        .is('deleted_at', null)
+        .from("family_members")
+        .select("id, role")
+        .eq("user_id", userId)
+        .eq("family_id", familyId)
+        .is("deleted_at", null)
         .maybeSingle();
 
       if (!member) {
         return NextResponse.json(
-          { success: false, error: 'Not a family member' },
-          { status: 403 }
+          { success: false, error: "Not a family member" },
+          { status: 403 },
         );
       }
 
@@ -49,16 +52,26 @@ export async function PUT(
 
       if (!existingTask) {
         return NextResponse.json(
-          { success: false, error: 'Task not found' },
-          { status: 404 }
+          { success: false, error: "Task not found" },
+          { status: 404 },
         );
       }
 
       // 检查更新权限
-      if (!hasPermission(member.role as any, Permission.UPDATE_TASK, existingTask.creatorId, member.id)) {
+      if (
+        !hasPermission(
+          member.role as any,
+          Permission.UPDATE_TASK,
+          existingTask.creatorId,
+          member.id,
+        )
+      ) {
         return NextResponse.json(
-          { success: false, error: 'Insufficient permissions to update this task' },
-          { status: 403 }
+          {
+            success: false,
+            error: "Insufficient permissions to update this task",
+          },
+          { status: 403 },
         );
       }
 
@@ -72,36 +85,39 @@ export async function PUT(
       });
 
       // 记录活动日志
-      await prisma.activity.create({
-        data: {
-          familyId,
-          memberId: member.id,
-          activityType: 'TASK_UPDATED',
-          title: '更新了任务详情',
-          description: updatedTask.title,
-          metadata: {
-            taskId: updatedTask.id,
-            taskTitle: updatedTask.title,
-            action: 'DETAILS_CHANGED',
-            changes: { title, description, category, priority, dueDate },
+      await prisma.activity
+        .create({
+          data: {
+            familyId,
+            memberId: member.id,
+            activityType: "TASK_UPDATED",
+            title: "更新了任务详情",
+            description: updatedTask.title,
+            metadata: {
+              taskId: updatedTask.id,
+              taskTitle: updatedTask.title,
+              action: "DETAILS_CHANGED",
+              changes: { title, description, category, priority, dueDate },
+            },
           },
-        },
-      }).catch(err => {
-        console.error('Error logging activity:', err);
-      });
+        })
+        .catch((err) => {
+          console.error("Error logging activity:", err);
+        });
 
       return NextResponse.json({
         success: true,
         data: updatedTask,
       });
     } catch (error) {
-      console.error('Error updating task:', error);
+      console.error("Error updating task:", error);
       return NextResponse.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to update task',
+          error:
+            error instanceof Error ? error.message : "Failed to update task",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }, PERMISSION_CONFIGS.UPDATE_TASK)(request as any, { params });
@@ -115,7 +131,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string; taskId: string }> }
+  { params }: { params: Promise<{ familyId: string; taskId: string }> },
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -126,17 +142,17 @@ export async function DELETE(
 
       // 验证用户权限并获取成员信息
       const { data: member } = await supabase
-        .from('family_members')
-        .select('id, role')
-        .eq('user_id', userId)
-        .eq('family_id', familyId)
-        .is('deleted_at', null)
+        .from("family_members")
+        .select("id, role")
+        .eq("user_id", userId)
+        .eq("family_id", familyId)
+        .is("deleted_at", null)
         .maybeSingle();
 
       if (!member) {
         return NextResponse.json(
-          { success: false, error: 'Not a family member' },
-          { status: 403 }
+          { success: false, error: "Not a family member" },
+          { status: 403 },
         );
       }
 
@@ -145,16 +161,26 @@ export async function DELETE(
 
       if (!task) {
         return NextResponse.json(
-          { success: false, error: 'Task not found' },
-          { status: 404 }
+          { success: false, error: "Task not found" },
+          { status: 404 },
         );
       }
 
       // 检查删除权限
-      if (!hasPermission(member.role as any, Permission.DELETE_TASK, task.creatorId, member.id)) {
+      if (
+        !hasPermission(
+          member.role as any,
+          Permission.DELETE_TASK,
+          task.creatorId,
+          member.id,
+        )
+      ) {
         return NextResponse.json(
-          { success: false, error: 'Insufficient permissions to delete this task' },
-          { status: 403 }
+          {
+            success: false,
+            error: "Insufficient permissions to delete this task",
+          },
+          { status: 403 },
         );
       }
 
@@ -162,35 +188,38 @@ export async function DELETE(
       await taskRepository.deleteTask(familyId, taskId);
 
       // 记录活动日志
-      await prisma.activity.create({
-        data: {
-          familyId,
-          memberId: member.id,
-          activityType: 'TASK_UPDATED',
-          title: '删除了任务',
-          description: task.title,
-          metadata: {
-            taskId: task.id,
-            taskTitle: task.title,
-            action: 'DELETED',
+      await prisma.activity
+        .create({
+          data: {
+            familyId,
+            memberId: member.id,
+            activityType: "TASK_UPDATED",
+            title: "删除了任务",
+            description: task.title,
+            metadata: {
+              taskId: task.id,
+              taskTitle: task.title,
+              action: "DELETED",
+            },
           },
-        },
-      }).catch(err => {
-        console.error('Error logging activity:', err);
-      });
+        })
+        .catch((err) => {
+          console.error("Error logging activity:", err);
+        });
 
       return NextResponse.json({
         success: true,
         data: { success: true },
       });
     } catch (error) {
-      console.error('Error deleting task:', error);
+      console.error("Error deleting task:", error);
       return NextResponse.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to delete task',
+          error:
+            error instanceof Error ? error.message : "Failed to delete task",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }, PERMISSION_CONFIGS.DELETE_TASK)(request as any, { params });

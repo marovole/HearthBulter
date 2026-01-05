@@ -1,12 +1,17 @@
 /**
  * Supabase Authentication Adapter
- * 
+ *
  * 从 NextAuth.js 迁移到 Supabase Auth
  * 保持与原有认证 API 的兼容性
  */
 
-import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase-database';
+import {
+  createClient,
+  SupabaseClient,
+  User,
+  Session,
+} from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase-database";
 
 // Supabase 客户端配置
 function getSupabaseAuthClient(): SupabaseClient<Database> {
@@ -14,7 +19,7 @@ function getSupabaseAuthClient(): SupabaseClient<Database> {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase auth configuration');
+    throw new Error("Missing Supabase auth configuration");
   }
 
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -22,7 +27,7 @@ function getSupabaseAuthClient(): SupabaseClient<Database> {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
     },
   });
 }
@@ -33,7 +38,7 @@ function getSupabaseServiceClient(): SupabaseClient<Database> {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Missing Supabase service configuration');
+    throw new Error("Missing Supabase service configuration");
   }
 
   return createClient<Database>(supabaseUrl, supabaseServiceKey, {
@@ -63,7 +68,9 @@ export class SupabaseAuthService {
   private supabase: SupabaseClient<Database>;
 
   constructor(isServer = false) {
-    this.supabase = isServer ? getSupabaseServiceClient() : getSupabaseAuthClient();
+    this.supabase = isServer
+      ? getSupabaseServiceClient()
+      : getSupabaseAuthClient();
   }
 
   /**
@@ -80,7 +87,7 @@ export class SupabaseAuthService {
         password: credentials.password,
         options: {
           data: {
-            name: credentials.name || credentials.email.split('@')[0],
+            name: credentials.name || credentials.email.split("@")[0],
           },
         },
       });
@@ -91,11 +98,11 @@ export class SupabaseAuthService {
 
       // 在 users 表中创建用户记录
       if (data.user) {
-        await this.supabase.from('users').insert({
+        await this.supabase.from("users").insert({
           id: data.user.id,
           email: data.user.email!,
-          name: credentials.name || credentials.email.split('@')[0],
-          role: 'USER',
+          name: credentials.name || credentials.email.split("@")[0],
+          role: "USER",
         });
       }
 
@@ -103,7 +110,7 @@ export class SupabaseAuthService {
     } catch (error) {
       return {
         user: null,
-        error: error instanceof Error ? error : new Error('Unknown error'),
+        error: error instanceof Error ? error : new Error("Unknown error"),
       };
     }
   }
@@ -129,7 +136,7 @@ export class SupabaseAuthService {
     } catch (error) {
       return {
         session: null,
-        error: error instanceof Error ? error : new Error('Unknown error'),
+        error: error instanceof Error ? error : new Error("Unknown error"),
       };
     }
   }
@@ -148,7 +155,7 @@ export class SupabaseAuthService {
       return { error: null };
     } catch (error) {
       return {
-        error: error instanceof Error ? error : new Error('Unknown error'),
+        error: error instanceof Error ? error : new Error("Unknown error"),
       };
     }
   }
@@ -166,9 +173,9 @@ export class SupabaseAuthService {
 
       // 获取用户详细信息
       const { data: userData } = await this.supabase
-        .from('users')
-        .select('*')
-        .eq('id', data.session.user.id)
+        .from("users")
+        .select("*")
+        .eq("id", data.session.user.id)
         .single();
 
       if (!userData) {
@@ -186,7 +193,7 @@ export class SupabaseAuthService {
         expires: new Date(data.session.expires_at! * 1000).toISOString(),
       };
     } catch (error) {
-      console.error('Get session error:', error);
+      console.error("Get session error:", error);
       return null;
     }
   }
@@ -202,7 +209,10 @@ export class SupabaseAuthService {
   /**
    * 刷新会话
    */
-  async refreshSession(): Promise<{ session: Session | null; error: Error | null }> {
+  async refreshSession(): Promise<{
+    session: Session | null;
+    error: Error | null;
+  }> {
     try {
       const { data, error } = await this.supabase.auth.refreshSession();
 
@@ -214,7 +224,7 @@ export class SupabaseAuthService {
     } catch (error) {
       return {
         session: null,
-        error: error instanceof Error ? error : new Error('Unknown error'),
+        error: error instanceof Error ? error : new Error("Unknown error"),
       };
     }
   }
@@ -235,7 +245,7 @@ export class SupabaseAuthService {
       return { error: null };
     } catch (error) {
       return {
-        error: error instanceof Error ? error : new Error('Unknown error'),
+        error: error instanceof Error ? error : new Error("Unknown error"),
       };
     }
   }
@@ -256,7 +266,7 @@ export class SupabaseAuthService {
       return { error: null };
     } catch (error) {
       return {
-        error: error instanceof Error ? error : new Error('Unknown error'),
+        error: error instanceof Error ? error : new Error("Unknown error"),
       };
     }
   }
@@ -268,7 +278,7 @@ export class SupabaseAuthService {
     try {
       const { error } = await this.supabase.auth.verifyOtp({
         token_hash: token,
-        type: 'email',
+        type: "email",
       });
 
       if (error) {
@@ -278,7 +288,7 @@ export class SupabaseAuthService {
       return { error: null };
     } catch (error) {
       return {
-        error: error instanceof Error ? error : new Error('Unknown error'),
+        error: error instanceof Error ? error : new Error("Unknown error"),
       };
     }
   }
@@ -286,7 +296,9 @@ export class SupabaseAuthService {
   /**
    * OAuth 登录 (Google, GitHub 等)
    */
-  async signInWithOAuth(provider: 'google' | 'github' | 'facebook'): Promise<{ error: Error | null }> {
+  async signInWithOAuth(
+    provider: "google" | "github" | "facebook",
+  ): Promise<{ error: Error | null }> {
     try {
       const { error } = await this.supabase.auth.signInWithOAuth({
         provider,
@@ -302,7 +314,7 @@ export class SupabaseAuthService {
       return { error: null };
     } catch (error) {
       return {
-        error: error instanceof Error ? error : new Error('Unknown error'),
+        error: error instanceof Error ? error : new Error("Unknown error"),
       };
     }
   }
@@ -319,9 +331,9 @@ export class SupabaseAuthService {
 
       // 获取用户详细信息
       const { data: userData } = await this.supabase
-        .from('users')
-        .select('*')
-        .eq('id', session.user.id)
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id)
         .single();
 
       if (!userData) {
@@ -395,15 +407,15 @@ export function checkAuthConfiguration() {
   const issues: string[] = [];
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    issues.push('NEXT_PUBLIC_SUPABASE_URL 未设置');
+    issues.push("NEXT_PUBLIC_SUPABASE_URL 未设置");
   }
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    issues.push('NEXT_PUBLIC_SUPABASE_ANON_KEY 未设置');
+    issues.push("NEXT_PUBLIC_SUPABASE_ANON_KEY 未设置");
   }
 
   if (!process.env.SUPABASE_SERVICE_KEY) {
-    issues.push('SUPABASE_SERVICE_KEY 未设置（仅服务端需要）');
+    issues.push("SUPABASE_SERVICE_KEY 未设置（仅服务端需要）");
   }
 
   return {
@@ -414,4 +426,4 @@ export function checkAuthConfiguration() {
 }
 
 // 导出类型
-export type { User, Session } from '@supabase/supabase-js';
+export type { User, Session } from "@supabase/supabase-js";

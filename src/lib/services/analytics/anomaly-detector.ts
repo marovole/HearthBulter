@@ -3,9 +3,13 @@
  * 基于统计方法检测健康数据异常并生成预警
  */
 
-import { PrismaClient } from '@prisma/client';
-import type { AnomalyType, AnomalySeverity, TrendDataType } from '@/lib/types/analytics';
-import { aggregateTimeSeriesData, calculateStatistics } from './trend-analyzer';
+import { PrismaClient } from "@prisma/client";
+import type {
+  AnomalyType,
+  AnomalySeverity,
+  TrendDataType,
+} from "@/lib/types/analytics";
+import { aggregateTimeSeriesData, calculateStatistics } from "./trend-analyzer";
 
 const prisma = new PrismaClient();
 
@@ -28,7 +32,7 @@ export async function detectSuddenChange(
   memberId: string,
   dataType: TrendDataType,
   newValue: number,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult | null> {
   // 获取过去30天的数据
   const endDate = new Date(date);
@@ -36,30 +40,35 @@ export async function detectSuddenChange(
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - 30);
 
-  const historicalData = await aggregateTimeSeriesData(memberId, dataType, startDate, endDate);
+  const historicalData = await aggregateTimeSeriesData(
+    memberId,
+    dataType,
+    startDate,
+    endDate,
+  );
 
   if (historicalData.length < 7) {
     return null; // 数据不足，无法检测
   }
 
   const stats = calculateStatistics(historicalData);
-  
+
   // 使用3σ原则：超出均值±3倍标准差视为异常
   const lowerBound = stats.mean - 3 * stats.stdDev;
   const upperBound = stats.mean + 3 * stats.stdDev;
-  
+
   if (newValue < lowerBound || newValue > upperBound) {
     const deviation = Math.abs((newValue - stats.mean) / stats.stdDev);
-    
+
     let severity: AnomalySeverity;
     if (deviation >= 4) {
-      severity = 'CRITICAL';
+      severity = "CRITICAL";
     } else if (deviation >= 3.5) {
-      severity = 'HIGH';
+      severity = "HIGH";
     } else if (deviation >= 3) {
-      severity = 'MEDIUM';
+      severity = "MEDIUM";
     } else {
-      severity = 'LOW';
+      severity = "LOW";
     }
 
     const dataTypeName = getDataTypeName(dataType);
@@ -67,10 +76,10 @@ export async function detectSuddenChange(
 
     return {
       detected: true,
-      anomalyType: 'SUDDEN_CHANGE',
+      anomalyType: "SUDDEN_CHANGE",
       severity,
       title: `${dataTypeName}异常波动`,
-      description: `${dataTypeName}突然${newValue > stats.mean ? '上升' : '下降'}，当前值${newValue.toFixed(1)}${unit}，超出正常范围（${lowerBound.toFixed(1)}-${upperBound.toFixed(1)}${unit}）`,
+      description: `${dataTypeName}突然${newValue > stats.mean ? "上升" : "下降"}，当前值${newValue.toFixed(1)}${unit}，超出正常范围（${lowerBound.toFixed(1)}-${upperBound.toFixed(1)}${unit}）`,
       value: newValue,
       expectedMin: lowerBound,
       expectedMax: upperBound,
@@ -87,7 +96,7 @@ export async function detectSuddenChange(
 export async function detectWeightAnomaly(
   memberId: string,
   newWeight: number,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult | null> {
   // 获取前一天的体重
   const yesterday = new Date(date);
@@ -102,7 +111,7 @@ export async function detectWeightAnomaly(
       },
       weight: { not: null },
     },
-    orderBy: { measuredAt: 'desc' },
+    orderBy: { measuredAt: "desc" },
   });
 
   if (!previousData || !previousData.weight) {
@@ -114,18 +123,18 @@ export async function detectWeightAnomaly(
   if (change > 2) {
     let severity: AnomalySeverity;
     if (change > 5) {
-      severity = 'CRITICAL';
+      severity = "CRITICAL";
     } else if (change > 3) {
-      severity = 'HIGH';
+      severity = "HIGH";
     } else {
-      severity = 'MEDIUM';
+      severity = "MEDIUM";
     }
 
     return {
       detected: true,
-      anomalyType: 'SUDDEN_CHANGE',
+      anomalyType: "SUDDEN_CHANGE",
       severity,
-      title: '体重异常波动',
+      title: "体重异常波动",
       description: `体重单日变化${change.toFixed(1)}kg，请确认数据准确性。快速体重变化可能影响健康，建议关注。`,
       value: newWeight,
       expectedMin: previousData.weight - 2,
@@ -141,7 +150,7 @@ export async function detectWeightAnomaly(
  */
 export async function detectNutritionImbalance(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
@@ -157,7 +166,7 @@ export async function detectNutritionImbalance(
         lte: date,
       },
     },
-    orderBy: { date: 'asc' },
+    orderBy: { date: "asc" },
   });
 
   if (targets.length < 3) {
@@ -165,16 +174,20 @@ export async function detectNutritionImbalance(
   }
 
   // 检查连续3天蛋白质摄入是否低于目标值的50%
-  const proteinDeficient = targets.every(t => t.actualProtein < t.targetProtein * 0.5);
+  const proteinDeficient = targets.every(
+    (t) => t.actualProtein < t.targetProtein * 0.5,
+  );
   if (proteinDeficient) {
-    const avgProtein = targets.reduce((sum, t) => sum + t.actualProtein, 0) / targets.length;
-    const avgTarget = targets.reduce((sum, t) => sum + t.targetProtein, 0) / targets.length;
+    const avgProtein =
+      targets.reduce((sum, t) => sum + t.actualProtein, 0) / targets.length;
+    const avgTarget =
+      targets.reduce((sum, t) => sum + t.targetProtein, 0) / targets.length;
 
     anomalies.push({
       detected: true,
-      anomalyType: 'NUTRITION_IMBALANCE',
-      severity: 'HIGH',
-      title: '蛋白质摄入严重不足',
+      anomalyType: "NUTRITION_IMBALANCE",
+      severity: "HIGH",
+      title: "蛋白质摄入严重不足",
       description: `连续3天蛋白质摄入低于目标值50%，平均摄入${avgProtein.toFixed(1)}g，目标${avgTarget.toFixed(1)}g。建议增加优质蛋白质食物摄入。`,
       value: avgProtein,
       expectedMin: avgTarget * 0.8,
@@ -183,16 +196,20 @@ export async function detectNutritionImbalance(
   }
 
   // 检查卡路里是否连续超标
-  const caloriesExcessive = targets.every(t => t.actualCalories > t.targetCalories * 1.3);
+  const caloriesExcessive = targets.every(
+    (t) => t.actualCalories > t.targetCalories * 1.3,
+  );
   if (caloriesExcessive) {
-    const avgCalories = targets.reduce((sum, t) => sum + t.actualCalories, 0) / targets.length;
-    const avgTarget = targets.reduce((sum, t) => sum + t.targetCalories, 0) / targets.length;
+    const avgCalories =
+      targets.reduce((sum, t) => sum + t.actualCalories, 0) / targets.length;
+    const avgTarget =
+      targets.reduce((sum, t) => sum + t.targetCalories, 0) / targets.length;
 
     anomalies.push({
       detected: true,
-      anomalyType: 'NUTRITION_IMBALANCE',
-      severity: 'MEDIUM',
-      title: '卡路里摄入超标',
+      anomalyType: "NUTRITION_IMBALANCE",
+      severity: "MEDIUM",
+      title: "卡路里摄入超标",
       description: `连续3天卡路里摄入超出目标值30%以上，平均摄入${avgCalories.toFixed(0)}kcal，目标${avgTarget.toFixed(0)}kcal。建议控制饮食量。`,
       value: avgCalories,
       expectedMin: avgTarget * 0.8,
@@ -208,16 +225,16 @@ export async function detectNutritionImbalance(
  */
 export async function detectGoalDeviation(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult | null> {
   // 获取活跃的健康目标
   const goal = await prisma.healthGoal.findFirst({
     where: {
       memberId,
-      status: 'ACTIVE',
-      goalType: { in: ['LOSE_WEIGHT', 'GAIN_MUSCLE'] },
+      status: "ACTIVE",
+      goalType: { in: ["LOSE_WEIGHT", "GAIN_MUSCLE"] },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   if (!goal || !goal.targetWeight || !goal.startWeight) {
@@ -231,7 +248,7 @@ export async function detectGoalDeviation(
       weight: { not: null },
       measuredAt: { lte: date },
     },
-    orderBy: { measuredAt: 'desc' },
+    orderBy: { measuredAt: "desc" },
   });
 
   if (!latestWeight || !latestWeight.weight) {
@@ -239,8 +256,8 @@ export async function detectGoalDeviation(
   }
 
   const currentWeight = latestWeight.weight;
-  const isLosing = goal.goalType === 'LOSE_WEIGHT';
-  
+  const isLosing = goal.goalType === "LOSE_WEIGHT";
+
   // 检查趋势是否与目标一致
   let isDeviated = false;
   if (isLosing && currentWeight > goal.startWeight) {
@@ -252,10 +269,10 @@ export async function detectGoalDeviation(
   if (isDeviated) {
     return {
       detected: true,
-      anomalyType: 'GOAL_DEVIATION',
-      severity: 'MEDIUM',
-      title: '目标进度偏离',
-      description: `您的体重趋势与目标（${isLosing ? '减重' : '增肌'}）背离。当前体重${currentWeight.toFixed(1)}kg，建议调整饮食和运动计划。`,
+      anomalyType: "GOAL_DEVIATION",
+      severity: "MEDIUM",
+      title: "目标进度偏离",
+      description: `您的体重趋势与目标（${isLosing ? "减重" : "增肌"}）背离。当前体重${currentWeight.toFixed(1)}kg，建议调整饮食和运动计划。`,
       value: currentWeight,
       expectedMin: isLosing ? 0 : goal.targetWeight || 0,
       expectedMax: isLosing ? goal.targetWeight || 0 : 1000,
@@ -270,7 +287,7 @@ export async function detectGoalDeviation(
  */
 export async function detectMissingData(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
@@ -291,10 +308,10 @@ export async function detectMissingData(
   if (mealLogsCount === 0) {
     anomalies.push({
       detected: true,
-      anomalyType: 'MISSING_DATA',
-      severity: 'LOW',
-      title: '缺少营养打卡数据',
-      description: '您已经7天未记录饮食数据，建议恢复记录以便跟踪健康状况。',
+      anomalyType: "MISSING_DATA",
+      severity: "LOW",
+      title: "缺少营养打卡数据",
+      description: "您已经7天未记录饮食数据，建议恢复记录以便跟踪健康状况。",
       value: 0,
     });
   }
@@ -314,10 +331,10 @@ export async function detectMissingData(
   if (exerciseCount === 0) {
     anomalies.push({
       detected: true,
-      anomalyType: 'MISSING_DATA',
-      severity: 'LOW',
-      title: '缺少运动数据',
-      description: '您已经7天未记录运动数据，建议定期记录以监测活动量。',
+      anomalyType: "MISSING_DATA",
+      severity: "LOW",
+      title: "缺少运动数据",
+      description: "您已经7天未记录运动数据，建议定期记录以监测活动量。",
       value: 0,
     });
   }
@@ -330,7 +347,7 @@ export async function detectMissingData(
  */
 export async function detectAllAnomalies(
   memberId: string,
-  date: Date
+  date: Date,
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
@@ -357,7 +374,7 @@ export async function detectAllAnomalies(
 export async function saveAnomaly(
   memberId: string,
   anomaly: AnomalyDetectionResult,
-  dataType: TrendDataType
+  dataType: TrendDataType,
 ) {
   await prisma.healthAnomaly.create({
     data: {
@@ -380,15 +397,15 @@ export async function saveAnomaly(
  */
 export async function getPendingAnomalies(
   memberId: string,
-  limit: number = 10
+  limit: number = 10,
 ) {
   return await prisma.healthAnomaly.findMany({
     where: {
       memberId,
-      status: 'PENDING',
+      status: "PENDING",
     },
     orderBy: {
-      detectedAt: 'desc',
+      detectedAt: "desc",
     },
     take: limit,
   });
@@ -401,7 +418,7 @@ export async function acknowledgeAnomaly(anomalyId: string) {
   await prisma.healthAnomaly.update({
     where: { id: anomalyId },
     data: {
-      status: 'ACKNOWLEDGED',
+      status: "ACKNOWLEDGED",
     },
   });
 }
@@ -409,14 +426,11 @@ export async function acknowledgeAnomaly(anomalyId: string) {
 /**
  * 解决异常
  */
-export async function resolveAnomaly(
-  anomalyId: string,
-  resolution: string
-) {
+export async function resolveAnomaly(anomalyId: string, resolution: string) {
   await prisma.healthAnomaly.update({
     where: { id: anomalyId },
     data: {
-      status: 'RESOLVED',
+      status: "RESOLVED",
       resolvedAt: new Date(),
       resolution,
     },
@@ -430,7 +444,7 @@ export async function ignoreAnomaly(anomalyId: string) {
   await prisma.healthAnomaly.update({
     where: { id: anomalyId },
     data: {
-      status: 'IGNORED',
+      status: "IGNORED",
     },
   });
 }
@@ -438,19 +452,19 @@ export async function ignoreAnomaly(anomalyId: string) {
 // 辅助函数：获取数据类型中文名称
 function getDataTypeName(dataType: TrendDataType): string {
   const names: Record<TrendDataType, string> = {
-    WEIGHT: '体重',
-    BODY_FAT: '体脂率',
-    MUSCLE_MASS: '肌肉量',
-    BLOOD_PRESSURE: '血压',
-    HEART_RATE: '心率',
-    CALORIES: '卡路里',
-    PROTEIN: '蛋白质',
-    CARBS: '碳水化合物',
-    FAT: '脂肪',
-    EXERCISE: '运动时长',
-    SLEEP: '睡眠时长',
-    WATER: '饮水量',
-    HEALTH_SCORE: '健康评分',
+    WEIGHT: "体重",
+    BODY_FAT: "体脂率",
+    MUSCLE_MASS: "肌肉量",
+    BLOOD_PRESSURE: "血压",
+    HEART_RATE: "心率",
+    CALORIES: "卡路里",
+    PROTEIN: "蛋白质",
+    CARBS: "碳水化合物",
+    FAT: "脂肪",
+    EXERCISE: "运动时长",
+    SLEEP: "睡眠时长",
+    WATER: "饮水量",
+    HEALTH_SCORE: "健康评分",
   };
   return names[dataType] || dataType;
 }
@@ -458,27 +472,28 @@ function getDataTypeName(dataType: TrendDataType): string {
 // 辅助函数：获取数据类型单位
 function getDataTypeUnit(dataType: TrendDataType): string {
   const units: Record<TrendDataType, string> = {
-    WEIGHT: 'kg',
-    BODY_FAT: '%',
-    MUSCLE_MASS: 'kg',
-    BLOOD_PRESSURE: 'mmHg',
-    HEART_RATE: 'bpm',
-    CALORIES: 'kcal',
-    PROTEIN: 'g',
-    CARBS: 'g',
-    FAT: 'g',
-    EXERCISE: '分钟',
-    SLEEP: '小时',
-    WATER: 'ml',
-    HEALTH_SCORE: '分',
+    WEIGHT: "kg",
+    BODY_FAT: "%",
+    MUSCLE_MASS: "kg",
+    BLOOD_PRESSURE: "mmHg",
+    HEART_RATE: "bpm",
+    CALORIES: "kcal",
+    PROTEIN: "g",
+    CARBS: "g",
+    FAT: "g",
+    EXERCISE: "分钟",
+    SLEEP: "小时",
+    WATER: "ml",
+    HEALTH_SCORE: "分",
   };
-  return units[dataType] || '';
+  return units[dataType] || "";
 }
 
 /**
  * 快捷函数：检测所有异常（使用当前日期）
  */
-export async function detectAnomalies(memberId: string): Promise<AnomalyDetectionResult[]> {
+export async function detectAnomalies(
+  memberId: string,
+): Promise<AnomalyDetectionResult[]> {
   return await detectAllAnomalies(memberId, new Date());
 }
-

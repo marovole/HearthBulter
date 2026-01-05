@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { z } from 'zod';
-import { reminderService } from '@/lib/services/tracking/reminder-service';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { z } from "zod";
+import { reminderService } from "@/lib/services/tracking/reminder-service";
 
 /**
  * 验证用户是否有权限访问成员的追踪数据
@@ -11,17 +11,18 @@ import { reminderService } from '@/lib/services/tracking/reminder-service';
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 async function verifyTrackingAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
   // 查询成员信息
   const { data: member, error: memberError } = await supabase
-    .from('family_members')
-    .select(`
+    .from("family_members")
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -29,9 +30,10 @@ async function verifyTrackingAccess(
         id,
         creatorId
       )
-    `)
-    .eq('id', memberId)
-    .is('deletedAt', null)
+    `,
+    )
+    .eq("id", memberId)
+    .is("deletedAt", null)
     .maybeSingle();
 
   if (memberError || !member) {
@@ -44,15 +46,15 @@ async function verifyTrackingAccess(
 
   // 查询当前用户在该家庭中的角色
   const { data: userMember } = await supabase
-    .from('family_members')
-    .select('role')
-    .eq('familyId', memberData.family.id)
-    .eq('userId', userId)
-    .is('deletedAt', null)
+    .from("family_members")
+    .select("role")
+    .eq("familyId", memberData.family.id)
+    .eq("userId", userId)
+    .is("deletedAt", null)
     .maybeSingle();
 
   const userMemberData = userMember as any;
-  const isAdmin = userMemberData?.role === 'ADMIN' || isCreator;
+  const isAdmin = userMemberData?.role === "ADMIN" || isCreator;
 
   return {
     hasAccess: isAdmin || isSelf,
@@ -63,11 +65,19 @@ async function verifyTrackingAccess(
  * 提醒配置验证schema
  */
 const reminderConfigSchema = z.object({
-  type: z.enum(['MEAL_TIME', 'MISSING_MEAL', 'NUTRITION_DEFICIENCY', 'STREAK_WARNING']),
+  type: z.enum([
+    "MEAL_TIME",
+    "MISSING_MEAL",
+    "NUTRITION_DEFICIENCY",
+    "STREAK_WARNING",
+  ]),
   enabled: z.boolean().optional(),
   hour: z.number().int().min(0).max(23),
   minute: z.number().int().min(0).max(59).optional().default(0),
-  daysOfWeek: z.array(z.number().int().min(0).max(6)).optional().default([0, 1, 2, 3, 4, 5, 6]),
+  daysOfWeek: z
+    .array(z.number().int().min(0).max(6))
+    .optional()
+    .default([0, 1, 2, 3, 4, 5, 6]),
   message: z.string().max(200).optional().nullable(),
 });
 
@@ -82,19 +92,16 @@ const reminderConfigSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
+    const memberId = searchParams.get("memberId");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少memberId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });
     }
 
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
@@ -102,8 +109,8 @@ export async function GET(request: NextRequest) {
 
     if (!hasAccess) {
       return NextResponse.json(
-        { error: '无权限访问该成员的提醒配置' },
-        { status: 403 }
+        { error: "无权限访问该成员的提醒配置" },
+        { status: 403 },
       );
     }
 
@@ -111,11 +118,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ reminders }, { status: 200 });
   } catch (error) {
-    console.error('获取提醒配置失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("获取提醒配置失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -131,16 +135,13 @@ export async function POST(request: NextRequest) {
     const { memberId, ...config } = body;
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少memberId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });
     }
 
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
@@ -148,8 +149,8 @@ export async function POST(request: NextRequest) {
 
     if (!hasAccess) {
       return NextResponse.json(
-        { error: '无权限设置该成员的提醒配置' },
-        { status: 403 }
+        { error: "无权限设置该成员的提醒配置" },
+        { status: 403 },
       );
     }
 
@@ -157,26 +158,26 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: '输入数据无效', details: validation.error.errors },
-        { status: 400 }
+        { error: "输入数据无效", details: validation.error.errors },
+        { status: 400 },
       );
     }
 
-    const reminder = await reminderService.upsertReminderConfig(memberId, validation.data);
+    const reminder = await reminderService.upsertReminderConfig(
+      memberId,
+      validation.data,
+    );
 
     return NextResponse.json(
       {
-        message: '提醒配置保存成功',
+        message: "提醒配置保存成功",
         reminder,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error('保存提醒配置失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("保存提醒配置失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -193,15 +194,15 @@ export async function PUT(request: NextRequest) {
 
     if (!memberId || !Array.isArray(configs)) {
       return NextResponse.json(
-        { error: '缺少memberId参数或configs数组' },
-        { status: 400 }
+        { error: "缺少memberId参数或configs数组" },
+        { status: 400 },
       );
     }
 
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
@@ -209,8 +210,8 @@ export async function PUT(request: NextRequest) {
 
     if (!hasAccess) {
       return NextResponse.json(
-        { error: '无权限设置该成员的提醒配置' },
-        { status: 403 }
+        { error: "无权限设置该成员的提醒配置" },
+        { status: 403 },
       );
     }
 
@@ -221,27 +222,27 @@ export async function PUT(request: NextRequest) {
 
       if (!validation.success) {
         return NextResponse.json(
-          { error: '配置数据无效', details: validation.error.errors },
-          { status: 400 }
+          { error: "配置数据无效", details: validation.error.errors },
+          { status: 400 },
         );
       }
 
-      const reminder = await reminderService.upsertReminderConfig(memberId, validation.data);
+      const reminder = await reminderService.upsertReminderConfig(
+        memberId,
+        validation.data,
+      );
       updatedReminders.push(reminder);
     }
 
     return NextResponse.json(
       {
-        message: '批量更新提醒配置成功',
+        message: "批量更新提醒配置成功",
         reminders: updatedReminders,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error('批量更新提醒配置失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("批量更新提醒配置失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { WeightTrendChart } from './WeightTrendChart';
-import { MacroPieChart } from './MacroPieChart';
+import { useState, useEffect } from "react";
+import { WeightTrendChart } from "./WeightTrendChart";
+import { MacroPieChart } from "./MacroPieChart";
 
 interface TrendsSectionProps {
-  memberId: string
+  memberId: string;
 }
 
 export function TrendsSection({ memberId }: TrendsSectionProps) {
   const [days, setDays] = useState(30);
-  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
 
   return (
     <div className="space-y-6">
@@ -36,9 +36,7 @@ export function TrendsSection({ memberId }: TrendsSectionProps) {
               <select
                 value={period}
                 onChange={(e) =>
-                  setPeriod(
-                    e.target.value as 'daily' | 'weekly' | 'monthly'
-                  )
+                  setPeriod(e.target.value as "daily" | "weekly" | "monthly")
                 }
                 className="text-sm border border-gray-300 rounded-md px-2 py-1"
               >
@@ -70,8 +68,8 @@ function NutritionChart({
   memberId,
   period,
 }: {
-  memberId: string
-  period: 'daily' | 'weekly' | 'monthly'
+  memberId: string;
+  period: "daily" | "weekly" | "monthly";
 }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -84,15 +82,15 @@ function NutritionChart({
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/dashboard/nutrition-analysis?memberId=${memberId}&period=${period}`
+        `/api/dashboard/nutrition-analysis?memberId=${memberId}&period=${period}`,
       );
       if (!response.ok) {
-        throw new Error('加载营养数据失败');
+        throw new Error("加载营养数据失败");
       }
       const result = await response.json();
       setData(result.data);
     } catch (err) {
-      console.error('加载营养数据失败:', err);
+      console.error("加载营养数据失败:", err);
     } finally {
       setLoading(false);
     }
@@ -122,22 +120,21 @@ function NutritionChart({
       target={
         data.targetCarbs && data.targetProtein && data.targetFat
           ? {
-            carbs: data.targetCarbs,
-            protein: data.targetProtein,
-            fat: data.targetFat,
-          }
+              carbs: data.targetCarbs,
+              protein: data.targetProtein,
+              fat: data.targetFat,
+            }
           : undefined
       }
       actual={
         data.actualCarbs && data.actualProtein && data.actualFat
           ? {
-            carbs: data.actualCarbs,
-            protein: data.actualProtein,
-            fat: data.actualFat,
-          }
+              carbs: data.actualCarbs,
+              protein: data.actualProtein,
+              fat: data.actualFat,
+            }
           : undefined
       }
     />
   );
 }
-
