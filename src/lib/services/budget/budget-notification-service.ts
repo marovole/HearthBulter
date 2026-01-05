@@ -296,16 +296,27 @@ export class BudgetNotificationService {
    * 获取用户名称
    */
   private async getUserName(memberId: string): Promise<string> {
-    const recipient =
-      await this.notificationRepo.getNotificationRecipient(memberId);
-    return recipient?.memberId ? "用户" : "用户"; // TODO: 从预算 repository 获取用户名
+    try {
+      const member = await this.budgetRepo.getMemberById(memberId);
+      if (member && member.name) {
+        return member.name;
+      }
+      return "用户";
+    } catch {
+      return "用户";
+    }
   }
 
   /**
    * 获取家庭成员列表
    */
   private async getFamilyMembers(familyId: string): Promise<string[]> {
-    // TODO: 从 BudgetRepository 获取家庭成员列表
-    return [];
+    try {
+      const members = await this.budgetRepo.getFamilyMembers(familyId);
+      return members.map((m) => m.id);
+    } catch (error) {
+      console.error("Failed to get family members:", error);
+      return [];
+    }
   }
 }

@@ -509,8 +509,23 @@ export class NotificationManager {
       throw new Error("User has no registered push token");
     }
 
-    // TODO: integrate actual push provider
-    return `push_${Date.now()}`;
+    // Push notification integration
+    // TODO: integrate actual push provider (Firebase Cloud Messaging / OneSignal / 极光推送)
+    // For now, return a placeholder message ID
+    // In production, implement:
+    // 1. Batch sending for multiple tokens
+    // 2. Platform-specific payload (APNs for iOS, FCM for Android)
+    // 3. Delivery tracking and bounce handling
+    const messageId = `push_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+    // Log for debugging (remove in production)
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `[Push Notification] Title: "${data.title}" -> ${recipient.pushTokens.length} device(s)`,
+      );
+    }
+
+    return messageId;
   }
 }
 

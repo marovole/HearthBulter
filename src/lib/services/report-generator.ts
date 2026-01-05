@@ -14,6 +14,7 @@ import {
   startOfMonth,
   endOfMonth,
 } from "date-fns";
+import { prisma } from "@/lib/db";
 
 export interface WeeklyReport {
   period: {
@@ -187,15 +188,88 @@ export class ReportGenerator {
 
   /**
    * 生成周度分解数据
+   * 将月度数据按周分解，用于月度报告中的周对比
    */
   private async generateWeeklyBreakdown(
     memberId: string,
   ): Promise<
     Array<{ week: string; averageWeight: number; dataCompletenessRate: number }>
   > {
-    // TODO: 实现周度分解逻辑
-    // 暂时返回空数组
-    return [];
+    // 获取过去30天的数据
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    try {
+      // 查询该时间段内的健康数据
+      const healthData = await prisma.healthData.findMany({
+        where: {
+          memberId,
+          measuredAt: {
+            gte: thirtyDaysAgo,
+            lte: now,
+          },
+        },
+        orderBy: { measuredAt: "asc" },
+      });
+
+      if (healthData.length === 0) {
+        return [];
+      }
+
+      // 按周分组
+      const weeklyData = new Map<
+        string,
+        { weights: number[]; totalDays: Set<string> }
+      >();
+
+      healthData.forEach((data) => {
+        const date = new Date(data.measuredAt);
+        const weekNum = Math.ceil(date.getDate() / 7); // 第几周
+        const weekKey = `第${weekNum}周`;
+
+        if (!weeklyData.has(weekKey)) {
+          weeklyData.set(weekKey, { weights: [], totalDays: new Set() });
+        }
+
+        const week = weeklyData.get(weekKey)!;
+        if (data.weight !== null) {
+          week.weights.push(data.weight);
+        }
+        week.totalDays.add(date.toISOString().split("T")[0]);
+      });
+
+      // 计算每周的平均值
+      const breakdown: Array<{
+        week: string;
+        averageWeight: number;
+        dataCompletenessRate: number;
+      }> = [];
+
+      weeklyData.forEach((data, week) => {
+        const averageWeight =
+          data.weights.length > 0
+            ? data.weights.reduce((sum, w) => sum + w, 0) / data.weights.length
+            : 0;
+
+        // 数据完整性：记录天数 / 7天
+        const dataCompletenessRate = Math.min(
+          100,
+          (data.totalDays.size / 7) * 100,
+        );
+
+        breakdown.push({
+          week,
+          averageWeight: Math.round(averageWeight * 10) / 10,
+          dataCompletenessRate: Math.round(dataCompletenessRate),
+        });
+      });
+
+      return breakdown;
+    } catch (error) {
+      console.error("生成周度分解数据失败:", error);
+      return [];
+    }
   }
 
   /**

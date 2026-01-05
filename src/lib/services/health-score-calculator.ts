@@ -156,7 +156,13 @@ export class HealthScoreCalculator {
     adherenceRate: number;
   }> {
     // TODO: 实际营养数据到位后，基于实际摄入计算达标率
-    // 暂时基于健康目标返回默认值
+    // 优化方案：查询 meal_logs 表计算实际营养摄入与目标的对比
+    // 实现逻辑：
+    // 1. 获取成员的目标宏量营养素 (targetCalories, targetProtein, targetCarbs, targetFat)
+    // 2. 查询过去7天的 meal_logs 计算实际摄入平均值
+    // 3. 计算各项的达标率 (实际/目标 * 100%)
+    // 4. 综合评分 = (热量达标率 * 0.3 + 蛋白质达标率 * 0.3 + 碳水达标率 * 0.2 + 脂肪达标率 * 0.2) * 30
+
     const member = await prisma.familyMember.findUnique({
       where: { id: memberId },
       include: {
@@ -172,8 +178,10 @@ export class HealthScoreCalculator {
       return { score: 0, adherenceRate: 0 };
     }
 
-    // 暂时返回中等评分，meal-planning完成后会基于实际数据计算
-    const adherenceRate = 70; // 假设70%达标率
+    // 暂时返回中等评分，基于是否有活跃目标来判断
+    // 后续接入真实营养数据后可改为基于实际摄入计算
+    const hasActiveGoal = member.healthGoals[0] !== undefined;
+    const adherenceRate = hasActiveGoal ? 70 : 50; // 有目标假设70%达标率
     const score = Math.round((adherenceRate / 100) * 30);
 
     return { score, adherenceRate };
