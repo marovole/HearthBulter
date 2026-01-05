@@ -169,38 +169,38 @@ export async function checkShareAccess(
 
     // 根据隐私级别检查访问权限
     switch (share.privacyLevel) {
-    case "PUBLIC":
-      // 公开分享，所有人可访问
-      if (!privacySettings.allowStrangerView && !viewerId) {
-        return { hasAccess: false, reason: "不允许陌生人访问" };
-      }
-      break;
+      case "PUBLIC":
+        // 公开分享，所有人可访问
+        if (!privacySettings.allowStrangerView && !viewerId) {
+          return { hasAccess: false, reason: "不允许陌生人访问" };
+        }
+        break;
 
-    case "FRIENDS":
-      // 好友可见
-      if (!viewerId) {
-        return { hasAccess: false, reason: "需要登录才能查看" };
-      }
+      case "FRIENDS":
+        // 好友可见
+        if (!viewerId) {
+          return { hasAccess: false, reason: "需要登录才能查看" };
+        }
 
-      // 检查是否为好友（这里需要根据实际的好友关系来判断）
-      const isFriend = await checkFriendship(share.memberId, viewerId);
-      if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
-        return { hasAccess: false, reason: "仅好友可见" };
-      }
-      break;
+        // 检查是否为好友（这里需要根据实际的好友关系来判断）
+        const isFriend = await checkFriendship(share.memberId, viewerId);
+        if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
+          return { hasAccess: false, reason: "仅好友可见" };
+        }
+        break;
 
-    case "PRIVATE":
-      // 私密分享，只有特定用户可访问
-      if (!viewerId) {
-        return { hasAccess: false, reason: "需要授权才能查看" };
-      }
+      case "PRIVATE":
+        // 私密分享，只有特定用户可访问
+        if (!viewerId) {
+          return { hasAccess: false, reason: "需要授权才能查看" };
+        }
 
-      // 检查是否在允许列表中
-      const privacyRule = await getSharePrivacyRule(share.id);
-      if (privacyRule && !privacyRule.allowedUsers.includes(viewerId)) {
-        return { hasAccess: false, reason: "无权访问此分享" };
-      }
-      break;
+        // 检查是否在允许列表中
+        const privacyRule = await getSharePrivacyRule(share.id);
+        if (privacyRule && !privacyRule.allowedUsers.includes(viewerId)) {
+          return { hasAccess: false, reason: "无权访问此分享" };
+        }
+        break;
     }
 
     return {

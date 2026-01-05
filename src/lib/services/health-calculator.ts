@@ -110,15 +110,15 @@ export function calculateDailyMacros(profile: UserProfile): MacroGoals {
 
   // 根据目标调整卡路里
   switch (profile.goal) {
-  case "weight_loss":
-    targetCalories = tdee * 0.85; // 15% deficit
-    break;
-  case "muscle_gain":
-    targetCalories = tdee * 1.1; // 10% surplus
-    break;
-  case "maintain":
-  default:
-    targetCalories = tdee;
+    case "weight_loss":
+      targetCalories = tdee * 0.85; // 15% deficit
+      break;
+    case "muscle_gain":
+      targetCalories = tdee * 1.1; // 10% surplus
+      break;
+    case "maintain":
+    default:
+      targetCalories = tdee;
   }
 
   // 蛋白质需求 (g/kg body weight)
@@ -193,19 +193,19 @@ export function calculateMealMacros(
   let distributions: number[];
 
   switch (mealCount) {
-  case 3:
-    distributions = [0.35, 0.35, 0.3]; // 早餐、午餐、晚餐
-    break;
-  case 4:
-    distributions = [0.25, 0.3, 0.3, 0.15]; // 早餐、午餐、晚餐、加餐
-    break;
-  case 5:
-    distributions = [0.2, 0.25, 0.3, 0.15, 0.1]; // 早餐、上午加餐、午餐、下午加餐、晚餐
-    break;
-  default:
-    // 平均分配
-    const equalShare = 1 / mealCount;
-    distributions = Array(mealCount).fill(equalShare);
+    case 3:
+      distributions = [0.35, 0.35, 0.3]; // 早餐、午餐、晚餐
+      break;
+    case 4:
+      distributions = [0.25, 0.3, 0.3, 0.15]; // 早餐、午餐、晚餐、加餐
+      break;
+    case 5:
+      distributions = [0.2, 0.25, 0.3, 0.15, 0.1]; // 早餐、上午加餐、午餐、下午加餐、晚餐
+      break;
+    default:
+      // 平均分配
+      const equalShare = 1 / mealCount;
+      distributions = Array(mealCount).fill(equalShare);
   }
 
   for (let i = 0; i < mealCount; i++) {

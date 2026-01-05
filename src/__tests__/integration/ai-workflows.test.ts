@@ -313,7 +313,7 @@ describe("AI Workflows Integration Tests", () => {
 
       // 验证流式响应格式
       const text = await response.text();
-      expect(text).toContain("data: {\"chunk\":\"根据\"}");
+      expect(text).toContain('data: {"chunk":"根据"}');
       expect(text).toContain("data: [DONE]");
     });
 

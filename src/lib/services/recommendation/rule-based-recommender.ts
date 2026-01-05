@@ -231,21 +231,21 @@ export class RuleBasedRecommender {
 
     // 根据目标类型调整评分
     switch (healthGoal.goalType) {
-    case "LOSE_WEIGHT":
-      if (recipe.calories <= 400) score += 10;
-      if (recipe.carbs <= recipe.protein * 2) score += 5;
-      break;
-    case "GAIN_MUSCLE":
-      if (recipe.protein >= 25) score += 10;
-      if (recipe.calories >= 500) score += 5;
-      break;
-    case "MAINTAIN":
-      if (recipe.calories >= 300 && recipe.calories <= 600) score += 10;
-      break;
-    case "IMPROVE_HEALTH":
-      if (recipe.fiber && recipe.fiber >= 5) score += 8;
-      if (recipe.sodium && recipe.sodium <= 600) score += 7;
-      break;
+      case "LOSE_WEIGHT":
+        if (recipe.calories <= 400) score += 10;
+        if (recipe.carbs <= recipe.protein * 2) score += 5;
+        break;
+      case "GAIN_MUSCLE":
+        if (recipe.protein >= 25) score += 10;
+        if (recipe.calories >= 500) score += 5;
+        break;
+      case "MAINTAIN":
+        if (recipe.calories >= 300 && recipe.calories <= 600) score += 10;
+        break;
+      case "IMPROVE_HEALTH":
+        if (recipe.fiber && recipe.fiber >= 5) score += 8;
+        if (recipe.sodium && recipe.sodium <= 600) score += 7;
+        break;
     }
 
     return Math.min(score, 30);

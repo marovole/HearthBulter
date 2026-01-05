@@ -262,16 +262,16 @@ async function getAchievementStats(
     ? { memberId }
     : userId
       ? {
-        member: {
-          family: {
-            members: {
-              some: {
-                userId,
+          member: {
+            family: {
+              members: {
+                some: {
+                  userId,
+                },
               },
             },
           },
-        },
-      }
+        }
       : {};
 
   const achievements = await supabaseAdapter.achievement.findMany({

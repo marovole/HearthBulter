@@ -149,12 +149,12 @@ export function MemberPermissionManager({
       prev.map((member) =>
         member.id === memberId
           ? {
-            ...member,
-            permissions: {
-              ...member.permissions,
-              [permission]: value,
-            },
-          }
+              ...member,
+              permissions: {
+                ...member.permissions,
+                [permission]: value,
+              },
+            }
           : member,
       ),
     );
@@ -205,10 +205,10 @@ export function MemberPermissionManager({
       prev.map((member) =>
         member.id === memberId
           ? {
-            ...member,
-            role: newRole,
-            permissions: defaultPermissions[newRole],
-          }
+              ...member,
+              role: newRole,
+              permissions: defaultPermissions[newRole],
+            }
           : member,
       ),
     );
@@ -216,40 +216,40 @@ export function MemberPermissionManager({
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-    case "admin":
-      return <Crown className="h-4 w-4 text-yellow-500" />;
-    case "member":
-      return <User className="h-4 w-4 text-blue-500" />;
-    case "child":
-      return <Baby className="h-4 w-4 text-green-500" />;
-    default:
-      return <User className="h-4 w-4 text-gray-500" />;
+      case "admin":
+        return <Crown className="h-4 w-4 text-yellow-500" />;
+      case "member":
+        return <User className="h-4 w-4 text-blue-500" />;
+      case "child":
+        return <Baby className="h-4 w-4 text-green-500" />;
+      default:
+        return <User className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const getRoleText = (role: string) => {
     switch (role) {
-    case "admin":
-      return "管理员";
-    case "member":
-      return "成员";
-    case "child":
-      return "儿童";
-    default:
-      return "成员";
+      case "admin":
+        return "管理员";
+      case "member":
+        return "成员";
+      case "child":
+        return "儿童";
+      default:
+        return "成员";
     }
   };
 
   const getRoleDescription = (role: string) => {
     switch (role) {
-    case "admin":
-      return "拥有所有权限，可以管理家庭成员和设置";
-    case "member":
-      return "可以查看和编辑自己的健康数据，管理个人目标";
-    case "child":
-      return "只能查看自己的健康数据，适合未成年人使用";
-    default:
-      return "";
+      case "admin":
+        return "拥有所有权限，可以管理家庭成员和设置";
+      case "member":
+        return "可以查看和编辑自己的健康数据，管理个人目标";
+      case "child":
+        return "只能查看自己的健康数据，适合未成年人使用";
+      default:
+        return "";
     }
   };
 
@@ -415,10 +415,10 @@ export function MemberPermissionManager({
                           {member.permissions[
                             key as keyof typeof member.permissions
                           ] ? (
-                              <Unlock className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <Lock className="h-4 w-4 text-gray-400" />
-                            )}
+                            <Unlock className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Lock className="h-4 w-4 text-gray-400" />
+                          )}
                           <span className="text-sm font-medium text-gray-900">
                             {label}
                           </span>

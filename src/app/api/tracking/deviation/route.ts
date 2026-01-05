@@ -42,42 +42,42 @@ export async function GET(req: NextRequest) {
     let result;
 
     switch (type) {
-    case "daily":
-      {
-        if (!date) {
-          return NextResponse.json(
-            { error: "缺少date参数" },
-            { status: 400 },
+      case "daily":
+        {
+          if (!date) {
+            return NextResponse.json(
+              { error: "缺少date参数" },
+              { status: 400 },
+            );
+          }
+          result = await analyzeDailyDeviation(memberId, new Date(date));
+        }
+        break;
+
+      case "period":
+        {
+          result = await analyzePeriodDeviation(
+            memberId,
+            days ? parseInt(days) : 7,
           );
         }
-        result = await analyzeDailyDeviation(memberId, new Date(date));
-      }
-      break;
+        break;
 
-    case "period":
-      {
-        result = await analyzePeriodDeviation(
-          memberId,
-          days ? parseInt(days) : 7,
-        );
-      }
-      break;
+      case "weekly_report":
+        {
+          result = await generateWeeklyReport(memberId);
+        }
+        break;
 
-    case "weekly_report":
-      {
-        result = await generateWeeklyReport(memberId);
-      }
-      break;
+      case "remaining":
+        {
+          const targetDate = date ? new Date(date) : new Date();
+          result = await getRemainingMealSuggestion(memberId, targetDate);
+        }
+        break;
 
-    case "remaining":
-      {
-        const targetDate = date ? new Date(date) : new Date();
-        result = await getRemainingMealSuggestion(memberId, targetDate);
-      }
-      break;
-
-    default:
-      return NextResponse.json({ error: "无效的分析类型" }, { status: 400 });
+      default:
+        return NextResponse.json({ error: "无效的分析类型" }, { status: 400 });
     }
 
     return NextResponse.json(result);

@@ -228,10 +228,10 @@ export function HealthMetricsChart({
                 const item = chartData.find((d) => d.date === label);
                 return item
                   ? new Date(item.fullDate).toLocaleDateString("zh-CN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
                   : label;
               }}
             />
@@ -302,10 +302,10 @@ export function HealthMetricsChart({
               const item = chartData.find((d) => d.date === label);
               return item
                 ? new Date(item.fullDate).toLocaleDateString("zh-CN", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
                 : label;
             }}
             formatter={(value: number) => [

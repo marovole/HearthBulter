@@ -474,15 +474,15 @@ export class ExpiryMonitor {
 
     // 根据存储位置给出特定建议
     switch (item.storageLocation) {
-    case "REFRIGERATOR":
-      tips.push("确保冰箱温度在4°C以下");
-      break;
-    case "FREEZER":
-      tips.push("冷冻可大幅延长保质期");
-      break;
-    case "PANTRY":
-      tips.push("保持干燥通风环境");
-      break;
+      case "REFRIGERATOR":
+        tips.push("确保冰箱温度在4°C以下");
+        break;
+      case "FREEZER":
+        tips.push("冷冻可大幅延长保质期");
+        break;
+      case "PANTRY":
+        tips.push("保持干燥通风环境");
+        break;
     }
 
     return tips[Math.floor(Math.random() * tips.length)];

@@ -60,17 +60,17 @@ export class MacroCalculator {
     fatRatio: number;
   } {
     switch (goalType) {
-    case "LOSE_WEIGHT":
-      // 减重：高蛋白、中等碳水、低脂肪
-      return { carbRatio: 0.45, proteinRatio: 0.3, fatRatio: 0.25 };
-    case "GAIN_MUSCLE":
-      // 增肌：高蛋白、高碳水、中等脂肪
-      return { carbRatio: 0.4, proteinRatio: 0.35, fatRatio: 0.25 };
-    case "MAINTAIN":
-    case "IMPROVE_HEALTH":
-    default:
-      // 维持/健康：均衡比例
-      return { carbRatio: 0.5, proteinRatio: 0.2, fatRatio: 0.3 };
+      case "LOSE_WEIGHT":
+        // 减重：高蛋白、中等碳水、低脂肪
+        return { carbRatio: 0.45, proteinRatio: 0.3, fatRatio: 0.25 };
+      case "GAIN_MUSCLE":
+        // 增肌：高蛋白、高碳水、中等脂肪
+        return { carbRatio: 0.4, proteinRatio: 0.35, fatRatio: 0.25 };
+      case "MAINTAIN":
+      case "IMPROVE_HEALTH":
+      default:
+        // 维持/健康：均衡比例
+        return { carbRatio: 0.5, proteinRatio: 0.2, fatRatio: 0.3 };
     }
   }
 
@@ -98,14 +98,14 @@ export class MacroCalculator {
    */
   static calculateTargetCalories(tdee: number, goalType: GoalType): number {
     switch (goalType) {
-    case "LOSE_WEIGHT":
-      return Math.round(tdee - 400);
-    case "GAIN_MUSCLE":
-      return Math.round(tdee + 300);
-    case "MAINTAIN":
-    case "IMPROVE_HEALTH":
-    default:
-      return tdee;
+      case "LOSE_WEIGHT":
+        return Math.round(tdee - 400);
+      case "GAIN_MUSCLE":
+        return Math.round(tdee + 300);
+      case "MAINTAIN":
+      case "IMPROVE_HEALTH":
+      default:
+        return tdee;
     }
   }
 

@@ -85,7 +85,7 @@ class AIReviewService {
           this.containsKeywords(content, ["诊断", "确诊", "疾病", "患有"]),
         severity: "critical",
         type: "medical_claim",
-        recommendation: "移除所有医疗诊断声明，改为\"基于数据分析的健康建议\"",
+        recommendation: '移除所有医疗诊断声明，改为"基于数据分析的健康建议"',
         enabled: true,
       },
 
@@ -114,7 +114,7 @@ class AIReviewService {
         severity: "high",
         type: "extreme_advice",
         recommendation:
-          "将绝对性语言改为建议性语言，如\"建议减少\"而不是\"完全停止\"",
+          '将绝对性语言改为建议性语言，如"建议减少"而不是"完全停止"',
         enabled: true,
       },
 
@@ -152,7 +152,7 @@ class AIReviewService {
         },
         severity: "medium",
         type: "uncertainty",
-        recommendation: "添加不确定性表达，如\"建议考虑\"、\"可能有助于\"等",
+        recommendation: '添加不确定性表达，如"建议考虑"、"可能有助于"等',
         enabled: true,
       },
 
@@ -233,7 +233,7 @@ class AIReviewService {
         },
         severity: "medium",
         type: "incomplete_info",
-        recommendation: "添加\"此建议仅供参考，请咨询专业医生\"等免责声明",
+        recommendation: '添加"此建议仅供参考，请咨询专业医生"等免责声明',
         enabled: true,
       },
     ];
@@ -364,30 +364,30 @@ class AIReviewService {
 
     for (const issue of issues) {
       switch (issue.type) {
-      case "uncertainty":
-        // 添加不确定性表达
-        if (!/(?:可能|建议|考虑|或许)/.test(fixedContent)) {
-          fixedContent = `建议${fixedContent.toLowerCase()}`;
-        }
-        break;
+        case "uncertainty":
+          // 添加不确定性表达
+          if (!/(?:可能|建议|考虑|或许)/.test(fixedContent)) {
+            fixedContent = `建议${fixedContent.toLowerCase()}`;
+          }
+          break;
 
-      case "incomplete_info":
-        // 添加免责声明
-        if (!/(?:仅供参考|请咨询)/.test(fixedContent)) {
-          fixedContent +=
+        case "incomplete_info":
+          // 添加免责声明
+          if (!/(?:仅供参考|请咨询)/.test(fixedContent)) {
+            fixedContent +=
               "\n\n⚠️ 此建议仅供参考，不构成专业医疗诊断。如有健康问题，请咨询专业医生。";
-        }
-        break;
+          }
+          break;
 
-      case "extreme_advice":
-        // 将绝对性语言改为建议性
-        fixedContent = fixedContent
-          .replace(/完全停止/g, "建议减少")
-          .replace(/立即停止/g, "建议逐渐减少")
-          .replace(/绝对不能/g, "建议避免")
-          .replace(/必须完全/g, "建议尽量")
-          .replace(/永久戒除/g, "建议长期避免");
-        break;
+        case "extreme_advice":
+          // 将绝对性语言改为建议性
+          fixedContent = fixedContent
+            .replace(/完全停止/g, "建议减少")
+            .replace(/立即停止/g, "建议逐渐减少")
+            .replace(/绝对不能/g, "建议避免")
+            .replace(/必须完全/g, "建议尽量")
+            .replace(/永久戒除/g, "建议长期避免");
+          break;
       }
     }
 

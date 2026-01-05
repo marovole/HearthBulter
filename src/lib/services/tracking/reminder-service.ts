@@ -175,36 +175,36 @@ class ReminderService {
     const { memberId, type, message } = reminder;
 
     switch (type) {
-    case "MEAL_TIME":
-      return await this.generateMealTimeReminder(
-        memberId,
-        scheduledTime,
-        message,
-      );
+      case "MEAL_TIME":
+        return await this.generateMealTimeReminder(
+          memberId,
+          scheduledTime,
+          message,
+        );
 
-    case "MISSING_MEAL":
-      return await this.generateMissingMealReminder(
-        memberId,
-        scheduledTime,
-        message,
-      );
+      case "MISSING_MEAL":
+        return await this.generateMissingMealReminder(
+          memberId,
+          scheduledTime,
+          message,
+        );
 
-    case "NUTRITION_DEFICIENCY":
-      return await this.generateNutritionDeficiencyReminder(
-        memberId,
-        scheduledTime,
-        message,
-      );
+      case "NUTRITION_DEFICIENCY":
+        return await this.generateNutritionDeficiencyReminder(
+          memberId,
+          scheduledTime,
+          message,
+        );
 
-    case "STREAK_WARNING":
-      return await this.generateStreakWarningReminder(
-        memberId,
-        scheduledTime,
-        message,
-      );
+      case "STREAK_WARNING":
+        return await this.generateStreakWarningReminder(
+          memberId,
+          scheduledTime,
+          message,
+        );
 
-    default:
-      return null;
+      default:
+        return null;
     }
   }
 

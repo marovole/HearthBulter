@@ -88,25 +88,25 @@ export async function POST(request: NextRequest) {
         selectedPlatform: item.selectedPlatform,
         selectedProduct: item.selectedProduct
           ? {
-            platform: item.selectedProduct.platform,
-            platformProductId: item.selectedProduct.platformProductId,
-            name: item.selectedProduct.name,
-            brand: item.selectedProduct.brand,
-            price: item.selectedProduct.price,
-            originalPrice: item.selectedProduct.originalPrice,
-            totalPrice: (item.selectedProduct as any).totalPrice,
-            unitPrice: (item.selectedProduct as any).unitPrice,
-            shippingFee: (item.selectedProduct as any).shippingFee,
-            stock: item.selectedProduct.stock,
-            isInStock: item.selectedProduct.isInStock,
-            imageUrl: item.selectedProduct.imageUrl,
-            confidence: item.matches.find(
-              (m) =>
-                m.platformProduct.platformProductId ===
+              platform: item.selectedProduct.platform,
+              platformProductId: item.selectedProduct.platformProductId,
+              name: item.selectedProduct.name,
+              brand: item.selectedProduct.brand,
+              price: item.selectedProduct.price,
+              originalPrice: item.selectedProduct.originalPrice,
+              totalPrice: (item.selectedProduct as any).totalPrice,
+              unitPrice: (item.selectedProduct as any).unitPrice,
+              shippingFee: (item.selectedProduct as any).shippingFee,
+              stock: item.selectedProduct.stock,
+              isInStock: item.selectedProduct.isInStock,
+              imageUrl: item.selectedProduct.imageUrl,
+              confidence: item.matches.find(
+                (m) =>
+                  m.platformProduct.platformProductId ===
                   item.selectedProduct?.platformProductId,
-            )?.confidence,
-            valueScore: (item.selectedProduct as any).valueScore,
-          }
+              )?.confidence,
+              valueScore: (item.selectedProduct as any).valueScore,
+            }
           : null,
         alternatives: item.matches.slice(0, 3).map((match) => ({
           platform: match.platformProduct.platform,

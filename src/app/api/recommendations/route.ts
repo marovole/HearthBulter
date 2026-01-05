@@ -146,48 +146,48 @@ export async function POST(request: NextRequest) {
     const { type, data } = body;
 
     switch (type) {
-    case "rating":
-      // 记录用户评分
-      const rating = await supabaseAdapter.recipeRating.create({
-        data: {
-          recipeId: data.recipeId,
-          memberId: data.memberId,
-          rating: data.rating,
-          review: data.review,
-          isRecommended: data.isRecommended,
-        },
-      });
-      return NextResponse.json({ success: true, data: rating });
+      case "rating":
+        // 记录用户评分
+        const rating = await supabaseAdapter.recipeRating.create({
+          data: {
+            recipeId: data.recipeId,
+            memberId: data.memberId,
+            rating: data.rating,
+            review: data.review,
+            isRecommended: data.isRecommended,
+          },
+        });
+        return NextResponse.json({ success: true, data: rating });
 
-    case "favorite":
-      // 记录用户收藏
-      const favorite = await supabaseAdapter.recipeFavorite.create({
-        data: {
-          recipeId: data.recipeId,
-          memberId: data.memberId,
-          folderName: data.folderName || "默认收藏夹",
-          notes: data.notes,
-        },
-      });
-      return NextResponse.json({ success: true, data: favorite });
+      case "favorite":
+        // 记录用户收藏
+        const favorite = await supabaseAdapter.recipeFavorite.create({
+          data: {
+            recipeId: data.recipeId,
+            memberId: data.memberId,
+            folderName: data.folderName || "默认收藏夹",
+            notes: data.notes,
+          },
+        });
+        return NextResponse.json({ success: true, data: favorite });
 
-    case "view":
-      // 记录用户浏览
-      const view = await supabaseAdapter.recipeView.create({
-        data: {
-          recipeId: data.recipeId,
-          memberId: data.memberId,
-          viewDuration: data.viewDuration || 0,
-          viewSource: data.viewSource,
-          isCompleted: data.isCompleted || false,
-          deviceType: data.deviceType,
-        },
-      });
-      return NextResponse.json({ success: true, data: view });
+      case "view":
+        // 记录用户浏览
+        const view = await supabaseAdapter.recipeView.create({
+          data: {
+            recipeId: data.recipeId,
+            memberId: data.memberId,
+            viewDuration: data.viewDuration || 0,
+            viewSource: data.viewSource,
+            isCompleted: data.isCompleted || false,
+            deviceType: data.deviceType,
+          },
+        });
+        return NextResponse.json({ success: true, data: view });
 
-    case "substitution":
-      // 记录食材替换
-      const substitution =
+      case "substitution":
+        // 记录食材替换
+        const substitution =
           await supabaseAdapter.ingredientSubstitution.create({
             data: {
               recipeId: data.recipeId,
@@ -201,13 +201,13 @@ export async function POST(request: NextRequest) {
               feedback: data.feedback,
             },
           });
-      return NextResponse.json({ success: true, data: substitution });
+        return NextResponse.json({ success: true, data: substitution });
 
-    default:
-      return NextResponse.json(
-        { success: false, error: "Invalid interaction type" },
-        { status: 400 },
-      );
+      default:
+        return NextResponse.json(
+          { success: false, error: "Invalid interaction type" },
+          { status: 400 },
+        );
     }
   } catch (error) {
     console.error("Interaction API error:", error);

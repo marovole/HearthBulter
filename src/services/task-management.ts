@@ -389,15 +389,15 @@ export class TaskManagementService {
       // 根据状态更新时间字段
       const now = new Date();
       switch (status) {
-      case TaskStatus.IN_PROGRESS:
-        updateData.startedAt = now;
-        break;
-      case TaskStatus.COMPLETED:
-        updateData.completedAt = now;
-        break;
-      case TaskStatus.CANCELLED:
-        updateData.completedAt = now;
-        break;
+        case TaskStatus.IN_PROGRESS:
+          updateData.startedAt = now;
+          break;
+        case TaskStatus.COMPLETED:
+          updateData.completedAt = now;
+          break;
+        case TaskStatus.CANCELLED:
+          updateData.completedAt = now;
+          break;
       }
 
       // 更新任务
@@ -850,25 +850,25 @@ export class TaskManagementService {
 
   private static getActivityTitle(activityType: string, metadata: any): string {
     switch (activityType) {
-    case "TASK_CREATED":
-      return "创建了任务";
-    case "TASK_UPDATED":
-      switch (metadata.action) {
-      case "ASSIGNED":
-        return "分配了任务";
-      case "STATUS_CHANGED":
-        return "更新了任务状态";
-      case "DETAILS_CHANGED":
-        return "更新了任务详情";
-      case "DELETED":
-        return "删除了任务";
+      case "TASK_CREATED":
+        return "创建了任务";
+      case "TASK_UPDATED":
+        switch (metadata.action) {
+          case "ASSIGNED":
+            return "分配了任务";
+          case "STATUS_CHANGED":
+            return "更新了任务状态";
+          case "DETAILS_CHANGED":
+            return "更新了任务详情";
+          case "DELETED":
+            return "删除了任务";
+          default:
+            return "更新了任务";
+        }
+      case "TASK_COMPLETED":
+        return "完成了任务";
       default:
-        return "更新了任务";
-      }
-    case "TASK_COMPLETED":
-      return "完成了任务";
-    default:
-      return "任务更新";
+        return "任务更新";
     }
   }
 
@@ -877,12 +877,12 @@ export class TaskManagementService {
     metadata: any,
   ): string {
     switch (activityType) {
-    case "TASK_CREATED":
-    case "TASK_UPDATED":
-    case "TASK_COMPLETED":
-      return metadata.taskTitle || "";
-    default:
-      return "";
+      case "TASK_CREATED":
+      case "TASK_UPDATED":
+      case "TASK_COMPLETED":
+        return metadata.taskTitle || "";
+      default:
+        return "";
     }
   }
 }

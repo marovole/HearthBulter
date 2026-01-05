@@ -304,7 +304,7 @@ class CacheStatsService {
     operations: CacheOperation[];
     keyStats: CacheKeyStats[];
     startTime: Date;
-    } {
+  } {
     return {
       operations: [...this.operations],
       keyStats: Array.from(this.keyStats.values()),
@@ -366,19 +366,19 @@ class CacheStatsService {
       // 如果操作在这个时间窗口内
       if (operation.timestamp >= windowStart) {
         switch (operation.operation) {
-        case "get":
-          if (operation.success) {
-            windowStat.hits++;
-          } else {
-            windowStat.misses++;
-          }
-          break;
-        case "set":
-          windowStat.sets++;
-          break;
-        case "delete":
-          windowStat.deletes++;
-          break;
+          case "get":
+            if (operation.success) {
+              windowStat.hits++;
+            } else {
+              windowStat.misses++;
+            }
+            break;
+          case "set":
+            windowStat.sets++;
+            break;
+          case "delete":
+            windowStat.deletes++;
+            break;
         }
 
         // 更新平均响应时间
@@ -429,22 +429,22 @@ class CacheStatsService {
     const keyStat = this.keyStats.get(key)!;
 
     switch (opType) {
-    case "get":
-      if (success) {
-        keyStat.hits++;
-      } else {
-        keyStat.misses++;
-      }
-      keyStat.lastAccess = operation.timestamp;
-      break;
-    case "set":
-      keyStat.sets++;
-      if (operation.ttl) keyStat.ttl = operation.ttl;
-      if (operation.size) keyStat.size = operation.size;
-      break;
-    case "delete":
-      // 可以选择删除统计或标记为已删除
-      break;
+      case "get":
+        if (success) {
+          keyStat.hits++;
+        } else {
+          keyStat.misses++;
+        }
+        keyStat.lastAccess = operation.timestamp;
+        break;
+      case "set":
+        keyStat.sets++;
+        if (operation.ttl) keyStat.ttl = operation.ttl;
+        if (operation.size) keyStat.size = operation.size;
+        break;
+      case "delete":
+        // 可以选择删除统计或标记为已删除
+        break;
     }
 
     // 更新访问频率（每分钟）
@@ -478,20 +478,20 @@ class CacheStatsService {
    */
   private getWindowMinutes(window: TimeWindowStats["window"]): number {
     switch (window) {
-    case "1m":
-      return 1;
-    case "5m":
-      return 5;
-    case "15m":
-      return 15;
-    case "1h":
-      return 60;
-    case "6h":
-      return 360;
-    case "24h":
-      return 1440;
-    default:
-      return 15;
+      case "1m":
+        return 1;
+      case "5m":
+        return 5;
+      case "15m":
+        return 15;
+      case "1h":
+        return 60;
+      case "6h":
+        return 360;
+      case "24h":
+        return 1440;
+      default:
+        return 15;
     }
   }
 
@@ -546,7 +546,7 @@ export function getCacheHitRate(): number {
 export function getCachePerformance(): Pick<
   CacheMetrics,
   "averageResponseTime" | "p95ResponseTime" | "p99ResponseTime"
-  > {
+> {
   const metrics = cacheStatsService.getMetrics();
   return {
     averageResponseTime: metrics.averageResponseTime,

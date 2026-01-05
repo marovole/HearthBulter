@@ -95,9 +95,9 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
     const totalDays =
       range.start && range.end
         ? Math.ceil(
-          (range.end.getTime() - range.start.getTime()) /
+            (range.end.getTime() - range.start.getTime()) /
               (1000 * 60 * 60 * 24),
-        )
+          )
         : uniqueDays.size;
 
     return {
@@ -240,15 +240,15 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
     query: TrendQueryDTO,
   ): Promise<TimeSeriesPointDTO[]> {
     switch (query.metric) {
-    case "CALORIES":
-    case "PROTEIN":
-    case "CARBS":
-    case "FAT":
-      return this.fetchNutritionTrend(query);
-    case "HEALTH_SCORE":
-      return this.fetchScoreTrend(query);
-    default:
-      return this.fetchHealthMetricTrend(query);
+      case "CALORIES":
+      case "PROTEIN":
+      case "CARBS":
+      case "FAT":
+        return this.fetchNutritionTrend(query);
+      case "HEALTH_SCORE":
+        return this.fetchScoreTrend(query);
+      default:
+        return this.fetchHealthMetricTrend(query);
     }
   }
 

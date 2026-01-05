@@ -261,14 +261,14 @@ export class AssetOptimizer {
     const extension = fileName.split(".").pop()?.toLowerCase() || "";
 
     switch (type) {
-    case "image":
-      return ["webp", "avif"].includes(extension);
-    case "script":
-      return fileName.includes(".min.") || fileName.includes(".bundle.");
-    case "style":
-      return fileName.includes(".min.") || fileName.includes(".critical.");
-    default:
-      return false;
+      case "image":
+        return ["webp", "avif"].includes(extension);
+      case "script":
+        return fileName.includes(".min.") || fileName.includes(".bundle.");
+      case "style":
+        return fileName.includes(".min.") || fileName.includes(".critical.");
+      default:
+        return false;
     }
   }
 
@@ -335,28 +335,28 @@ export class AssetOptimizer {
     };
 
     switch (type) {
-    case "image":
-      return {
-        loadTime: { warning: 500, error: 1500 },
-        size: { warning: 500 * 1024, error: 2 * 1024 * 1024 }, // 500KB / 2MB
-      };
-    case "script":
-      return {
-        loadTime: { warning: 300, error: 1000 },
-        size: { warning: 200 * 1024, error: 1024 * 1024 }, // 200KB / 1MB
-      };
-    case "style":
-      return {
-        loadTime: { warning: 200, error: 800 },
-        size: { warning: 100 * 1024, error: 500 * 1024 }, // 100KB / 500KB
-      };
-    case "font":
-      return {
-        loadTime: { warning: 300, error: 1000 },
-        size: { warning: 150 * 1024, error: 500 * 1024 }, // 150KB / 500KB
-      };
-    default:
-      return baseThresholds;
+      case "image":
+        return {
+          loadTime: { warning: 500, error: 1500 },
+          size: { warning: 500 * 1024, error: 2 * 1024 * 1024 }, // 500KB / 2MB
+        };
+      case "script":
+        return {
+          loadTime: { warning: 300, error: 1000 },
+          size: { warning: 200 * 1024, error: 1024 * 1024 }, // 200KB / 1MB
+        };
+      case "style":
+        return {
+          loadTime: { warning: 200, error: 800 },
+          size: { warning: 100 * 1024, error: 500 * 1024 }, // 100KB / 500KB
+        };
+      case "font":
+        return {
+          loadTime: { warning: 300, error: 1000 },
+          size: { warning: 150 * 1024, error: 500 * 1024 }, // 150KB / 500KB
+        };
+      default:
+        return baseThresholds;
     }
   }
 
@@ -367,29 +367,29 @@ export class AssetOptimizer {
     const recommendations: string[] = [];
 
     switch (metrics.type) {
-    case "image":
-      recommendations.push("使用WebP或AVIF格式");
-      recommendations.push("启用图片懒加载");
-      recommendations.push("使用响应式图片");
-      recommendations.push("压缩图片质量");
-      break;
-    case "script":
-      recommendations.push("压缩JavaScript代码");
-      recommendations.push("启用代码分割");
-      recommendations.push("移除未使用的代码");
-      recommendations.push("使用Tree Shaking");
-      break;
-    case "style":
-      recommendations.push("压缩CSS代码");
-      recommendations.push("内联关键CSS");
-      recommendations.push("移除未使用的样式");
-      recommendations.push("使用CSS Purging");
-      break;
-    case "font":
-      recommendations.push("使用字体子集");
-      recommendations.push("启用字体预加载");
-      recommendations.push("使用字体显示策略");
-      break;
+      case "image":
+        recommendations.push("使用WebP或AVIF格式");
+        recommendations.push("启用图片懒加载");
+        recommendations.push("使用响应式图片");
+        recommendations.push("压缩图片质量");
+        break;
+      case "script":
+        recommendations.push("压缩JavaScript代码");
+        recommendations.push("启用代码分割");
+        recommendations.push("移除未使用的代码");
+        recommendations.push("使用Tree Shaking");
+        break;
+      case "style":
+        recommendations.push("压缩CSS代码");
+        recommendations.push("内联关键CSS");
+        recommendations.push("移除未使用的样式");
+        recommendations.push("使用CSS Purging");
+        break;
+      case "font":
+        recommendations.push("使用字体子集");
+        recommendations.push("启用字体预加载");
+        recommendations.push("使用字体显示策略");
+        break;
     }
 
     recommendations.push("启用资源缓存");
@@ -535,20 +535,20 @@ export class AssetOptimizer {
     link.href = url;
 
     switch (type) {
-    case "script":
-      link.as = "script";
-      break;
-    case "style":
-      link.as = "style";
-      break;
-    case "image":
-      link.as = "image";
-      break;
-    case "font":
-      link.as = "font";
-      link.type = "font/woff2";
-      link.crossOrigin = "anonymous";
-      break;
+      case "script":
+        link.as = "script";
+        break;
+      case "style":
+        link.as = "style";
+        break;
+      case "image":
+        link.as = "image";
+        break;
+      case "font":
+        link.as = "font";
+        link.type = "font/woff2";
+        link.crossOrigin = "anonymous";
+        break;
     }
 
     document.head.appendChild(link);

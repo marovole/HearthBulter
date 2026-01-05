@@ -162,10 +162,10 @@ export async function POST(request: NextRequest) {
       health_goals: member.healthGoals.map((g) => g.goalType),
       dietary_preferences: member.dietaryPreference
         ? [
-          member.dietaryPreference.dietType,
-          ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
-          ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
-        ].filter((pref): pref is string => pref !== null)
+            member.dietaryPreference.dietType,
+            ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
+            ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
+          ].filter((pref): pref is string => pref !== null)
         : [],
       allergies: member.allergies.map((a) => a.allergenName),
       activity_level: "moderate" as const, // 可以从健康数据推断

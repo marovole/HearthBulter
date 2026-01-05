@@ -126,7 +126,7 @@ export class ErrorMonitoringService {
     byLevel: Record<ErrorLevel, number>;
     recent: ApiError[];
     criticalIssues: ApiError[];
-    } {
+  } {
     const byLevel = {
       [ErrorLevel.LOW]: 0,
       [ErrorLevel.MEDIUM]: 0,
@@ -164,7 +164,7 @@ export class ErrorMonitoringService {
     slowestRequests: PerformanceMetrics[];
     errorRate: number;
     recent: PerformanceMetrics[];
-    } {
+  } {
     if (this.performance.length === 0) {
       return {
         total: 0,

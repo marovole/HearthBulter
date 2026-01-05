@@ -111,13 +111,13 @@ export async function GET(request: NextRequest) {
 
     const enriched = recommendations.reduce<
       Array<(typeof recommendations)[number] & { recipe: RecipeWithRelations }>
-        >((acc, rec) => {
-          const recipe = recipeMap.get(rec.recipeId);
-          if (recipe) {
-            acc.push({ ...rec, recipe });
-          }
-          return acc;
-        }, []);
+    >((acc, rec) => {
+      const recipe = recipeMap.get(rec.recipeId);
+      if (recipe) {
+        acc.push({ ...rec, recipe });
+      }
+      return acc;
+    }, []);
 
     return NextResponse.json({
       success: true,

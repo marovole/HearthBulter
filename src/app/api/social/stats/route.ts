@@ -360,10 +360,10 @@ async function getUserAdditionalStats(
   const avgRate =
     rateData && rateData.length > 0
       ? rateData.reduce((sum, item) => {
-        return (
-          sum + ((item.conversionCount || 0) / (item.clickCount || 1)) * 100
-        );
-      }, 0) / rateData.length
+          return (
+            sum + ((item.conversionCount || 0) / (item.clickCount || 1)) * 100
+          );
+        }, 0) / rateData.length
       : 0;
 
   // 最佳分享
@@ -473,18 +473,18 @@ function getPeriodDates(period?: string): { startDate: Date; endDate: Date } {
   let startDate: Date;
 
   switch (period) {
-  case "7d":
-    startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-    break;
-  case "90d":
-    startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
-    break;
-  case "1y":
-    startDate = new Date(endDate.getTime() - 365 * 24 * 60 * 60 * 1000);
-    break;
-  default: // 30d
-    startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
-    break;
+    case "7d":
+      startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case "90d":
+      startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    case "1y":
+      startDate = new Date(endDate.getTime() - 365 * 24 * 60 * 60 * 1000);
+      break;
+    default: // 30d
+      startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
   }
 
   return { startDate, endDate };
@@ -645,29 +645,29 @@ function normalizePeriod(period: string): string {
   // 尝试转换其他常见格式
   const normalized = period.toLowerCase().replace(/[_\s]/g, "");
   switch (normalized) {
-  case "last7days":
-  case "7days":
-  case "1week":
-  case "week":
-    return "7d";
-  case "last30days":
-  case "30days":
-  case "1month":
-  case "month":
-    return "30d";
-  case "last90days":
-  case "90days":
-  case "3months":
-  case "quarter":
-    return "90d";
-  case "lastyear":
-  case "1year":
-  case "year":
-    return "1y";
-  default:
-    // 降级到默认值
-    console.warn(`Invalid period value "${period}", falling back to 30d`);
-    return "30d";
+    case "last7days":
+    case "7days":
+    case "1week":
+    case "week":
+      return "7d";
+    case "last30days":
+    case "30days":
+    case "1month":
+    case "month":
+      return "30d";
+    case "last90days":
+    case "90days":
+    case "3months":
+    case "quarter":
+      return "90d";
+    case "lastyear":
+    case "1year":
+    case "year":
+      return "1y";
+    default:
+      // 降级到默认值
+      console.warn(`Invalid period value "${period}", falling back to 30d`);
+      return "30d";
   }
 }
 

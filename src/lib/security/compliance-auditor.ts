@@ -583,16 +583,16 @@ export class ComplianceAuditor {
    */
   private getLikelihoodScore(likelihood: RiskAssessment["likelihood"]): number {
     switch (likelihood) {
-    case "low":
-      return 25;
-    case "medium":
-      return 50;
-    case "high":
-      return 75;
-    case "critical":
-      return 100;
-    default:
-      return 50;
+      case "low":
+        return 25;
+      case "medium":
+        return 50;
+      case "high":
+        return 75;
+      case "critical":
+        return 100;
+      default:
+        return 50;
     }
   }
 
@@ -601,16 +601,16 @@ export class ComplianceAuditor {
    */
   private getImpactScore(impact: RiskAssessment["impact"]): number {
     switch (impact) {
-    case "low":
-      return 25;
-    case "medium":
-      return 50;
-    case "high":
-      return 75;
-    case "critical":
-      return 100;
-    default:
-      return 50;
+      case "low":
+        return 25;
+      case "medium":
+        return 50;
+      case "high":
+        return 75;
+      case "critical":
+        return 100;
+      default:
+        return 50;
     }
   }
 
@@ -675,15 +675,15 @@ export class ComplianceAuditor {
     let days: number;
 
     switch (effort) {
-    case "low":
-      days = 7;
-      break;
-    case "medium":
-      days = 21;
-      break;
-    case "high":
-      days = 60;
-      break;
+      case "low":
+        days = 7;
+        break;
+      case "medium":
+        days = 21;
+        break;
+      case "high":
+        days = 60;
+        break;
     }
 
     const targetDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
