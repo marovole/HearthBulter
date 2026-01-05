@@ -128,26 +128,26 @@ export function HealthDataManager({ memberId }: { memberId: string }) {
   // 获取单位选项
   const getUnitOptions = (dataType: string) => {
     switch (dataType) {
-      case "weight":
-        return ["kg", "lbs", "g", "oz"];
-      case "blood_pressure":
-        return ["mmHg", "kPa"];
-      case "blood_sugar":
-        return ["mg/dL", "mmol/L"];
-      case "heart_rate":
-        return ["bpm"];
-      case "temperature":
-        return ["celsius", "fahrenheit"];
-      case "steps":
-        return ["steps"];
-      case "sleep":
-        return ["hours"];
-      case "calories":
-        return ["kcal"];
-      case "water":
-        return ["ml", "l", "cups"];
-      default:
-        return ["unit"];
+    case "weight":
+      return ["kg", "lbs", "g", "oz"];
+    case "blood_pressure":
+      return ["mmHg", "kPa"];
+    case "blood_sugar":
+      return ["mg/dL", "mmol/L"];
+    case "heart_rate":
+      return ["bpm"];
+    case "temperature":
+      return ["celsius", "fahrenheit"];
+    case "steps":
+      return ["steps"];
+    case "sleep":
+      return ["hours"];
+    case "calories":
+      return ["kcal"];
+    case "water":
+      return ["ml", "l", "cups"];
+    default:
+      return ["unit"];
     }
   };
 
@@ -156,12 +156,12 @@ export function HealthDataManager({ memberId }: { memberId: string }) {
   const combinedData =
     realtimeHealthData.length > 0
       ? [
-          ...realtimeHealthData,
-          ...allHealthData.filter(
-            (item) =>
-              !realtimeHealthData.some((realtime) => realtime.id === item.id),
-          ),
-        ]
+        ...realtimeHealthData,
+        ...allHealthData.filter(
+          (item) =>
+            !realtimeHealthData.some((realtime) => realtime.id === item.id),
+        ),
+      ]
       : allHealthData;
 
   if (loading) {

@@ -100,18 +100,18 @@ export function AchievementGallery({
   // 获取稀有度图标
   const getRarityIcon = (rarity: AchievementRarity) => {
     switch (rarity) {
-      case "BRONZE":
-        return <Medal className="h-4 w-4" />;
-      case "SILVER":
-        return <Award className="h-4 w-4" />;
-      case "GOLD":
-        return <Trophy className="h-4 w-4" />;
-      case "PLATINUM":
-        return <Star className="h-4 w-4" />;
-      case "DIAMOND":
-        return <Star className="h-4 w-4" />;
-      default:
-        return <Medal className="h-4 w-4" />;
+    case "BRONZE":
+      return <Medal className="h-4 w-4" />;
+    case "SILVER":
+      return <Award className="h-4 w-4" />;
+    case "GOLD":
+      return <Trophy className="h-4 w-4" />;
+    case "PLATINUM":
+      return <Star className="h-4 w-4" />;
+    case "DIAMOND":
+      return <Star className="h-4 w-4" />;
+    default:
+      return <Medal className="h-4 w-4" />;
     }
   };
 
@@ -130,34 +130,34 @@ export function AchievementGallery({
   // 获取类型图标
   const getTypeIcon = (type: AchievementType) => {
     switch (type) {
-      case "CHECK_IN_STREAK":
-        return <Calendar className="h-6 w-6" />;
-      case "WEIGHT_LOSS":
-        return <TrendingUp className="h-6 w-6" />;
-      case "NUTRITION_GOAL":
-        return <Target className="h-6 w-6" />;
-      case "EXERCISE_TARGET":
-        return <TrendingUp className="h-6 w-6" />;
-      case "HEALTH_MILESTONE":
-        return <Trophy className="h-6 w-6" />;
-      case "COMMUNITY_CONTRIBUTION":
-        return <Star className="h-6 w-6" />;
-      default:
-        return <Award className="h-6 w-6" />;
+    case "CHECK_IN_STREAK":
+      return <Calendar className="h-6 w-6" />;
+    case "WEIGHT_LOSS":
+      return <TrendingUp className="h-6 w-6" />;
+    case "NUTRITION_GOAL":
+      return <Target className="h-6 w-6" />;
+    case "EXERCISE_TARGET":
+      return <TrendingUp className="h-6 w-6" />;
+    case "HEALTH_MILESTONE":
+      return <Trophy className="h-6 w-6" />;
+    case "COMMUNITY_CONTRIBUTION":
+      return <Star className="h-6 w-6" />;
+    default:
+      return <Award className="h-6 w-6" />;
     }
   };
 
   // 过滤成就
   const filteredAchievements = achievements.filter((achievement) => {
     switch (activeTab) {
-      case "unlocked":
-        return achievement.isUnlocked;
-      case "locked":
-        return !achievement.isUnlocked;
-      case "shared":
-        return achievement.isShared;
-      default:
-        return true;
+    case "unlocked":
+      return achievement.isUnlocked;
+    case "locked":
+      return !achievement.isUnlocked;
+    case "shared":
+      return achievement.isShared;
+    default:
+      return true;
     }
   });
 
@@ -399,18 +399,18 @@ function getRarityColor(rarity: AchievementRarity) {
 
 function getRarityIcon(rarity: AchievementRarity) {
   switch (rarity) {
-    case "BRONZE":
-      return <Medal className="h-3 w-3" />;
-    case "SILVER":
-      return <Award className="h-3 w-3" />;
-    case "GOLD":
-      return <Trophy className="h-3 w-3" />;
-    case "PLATINUM":
-      return <Star className="h-3 w-3" />;
-    case "DIAMOND":
-      return <Star className="h-3 w-3" />;
-    default:
-      return <Medal className="h-3 w-3" />;
+  case "BRONZE":
+    return <Medal className="h-3 w-3" />;
+  case "SILVER":
+    return <Award className="h-3 w-3" />;
+  case "GOLD":
+    return <Trophy className="h-3 w-3" />;
+  case "PLATINUM":
+    return <Star className="h-3 w-3" />;
+  case "DIAMOND":
+    return <Star className="h-3 w-3" />;
+  default:
+    return <Medal className="h-3 w-3" />;
   }
 }
 

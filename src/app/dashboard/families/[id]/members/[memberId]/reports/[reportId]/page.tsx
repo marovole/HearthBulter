@@ -188,21 +188,21 @@ export default function ReportDetailPage({
             <div className="flex gap-2">
               {report.ocrStatus === "COMPLETED" &&
                 report.indicators.length > 0 && (
-                  <>
-                    <button
-                      onClick={() => setShowCorrectionForm(!showCorrectionForm)}
-                      className="px-4 py-2 text-blue-700 bg-blue-50 rounded-lg font-medium hover:bg-blue-100 transition-colors"
-                    >
-                      {showCorrectionForm ? "取消修正" : "手动修正"}
-                    </button>
-                    <button
-                      onClick={handleCompare}
-                      className="px-4 py-2 text-green-700 bg-green-50 rounded-lg font-medium hover:bg-green-100 transition-colors"
-                    >
+                <>
+                  <button
+                    onClick={() => setShowCorrectionForm(!showCorrectionForm)}
+                    className="px-4 py-2 text-blue-700 bg-blue-50 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+                  >
+                    {showCorrectionForm ? "取消修正" : "手动修正"}
+                  </button>
+                  <button
+                    onClick={handleCompare}
+                    className="px-4 py-2 text-green-700 bg-green-50 rounded-lg font-medium hover:bg-green-100 transition-colors"
+                  >
                       历史对比
-                    </button>
-                  </>
-                )}
+                  </button>
+                </>
+              )}
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 text-red-700 bg-red-50 rounded-lg font-medium hover:bg-red-100 transition-colors"

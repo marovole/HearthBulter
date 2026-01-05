@@ -587,17 +587,17 @@ export class EconomicMode {
     let days: number;
 
     switch (period) {
-      case "WEEKLY":
-        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        days = 7;
-        break;
-      case "MONTHLY":
-        start = new Date(now.getFullYear(), now.getMonth(), 1);
-        days = 30;
-        break;
-      default:
-        start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        days = 30;
+    case "WEEKLY":
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      days = 7;
+      break;
+    case "MONTHLY":
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      days = 30;
+      break;
+    default:
+      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      days = 30;
     }
 
     return { start, end: now, days };

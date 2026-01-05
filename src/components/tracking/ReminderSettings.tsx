@@ -358,11 +358,11 @@ export function ReminderSettings({ memberId, onSave }: ReminderSettingsProps) {
               {/* Warning for disabled critical reminders */}
               {!config.enabled &&
                 ["MEAL_TIME", "MISSING_MEAL"].includes(config.type) && (
-                  <div className="flex items-center space-x-2 text-sm text-yellow-600 bg-yellow-50 p-2 rounded">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span>关闭此提醒可能影响您的营养追踪连续性</span>
-                  </div>
-                )}
+                <div className="flex items-center space-x-2 text-sm text-yellow-600 bg-yellow-50 p-2 rounded">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>关闭此提醒可能影响您的营养追踪连续性</span>
+                </div>
+              )}
             </div>
           );
         })}

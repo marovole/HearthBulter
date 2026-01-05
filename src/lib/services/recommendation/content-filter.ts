@@ -263,23 +263,23 @@ export class ContentFilter {
 
     if (healthGoal) {
       switch (healthGoal.goalType) {
-        case "LOSE_WEIGHT":
-          preferences.maxCalories = 400;
-          preferences.maxCarbs = healthGoal.carbRatio ? 30 : undefined;
-          preferences.minProtein = healthGoal.proteinRatio ? 15 : undefined;
-          break;
-        case "GAIN_MUSCLE":
-          preferences.minProtein = 25;
-          preferences.maxCalories = 800;
-          break;
-        case "MAINTAIN":
-          preferences.maxCalories = 600;
-          preferences.minProtein = 15;
-          break;
-        case "IMPROVE_HEALTH":
-          preferences.maxFat = 20;
-          preferences.maxCalories = 500;
-          break;
+      case "LOSE_WEIGHT":
+        preferences.maxCalories = 400;
+        preferences.maxCarbs = healthGoal.carbRatio ? 30 : undefined;
+        preferences.minProtein = healthGoal.proteinRatio ? 15 : undefined;
+        break;
+      case "GAIN_MUSCLE":
+        preferences.minProtein = 25;
+        preferences.maxCalories = 800;
+        break;
+      case "MAINTAIN":
+        preferences.maxCalories = 600;
+        preferences.minProtein = 15;
+        break;
+      case "IMPROVE_HEALTH":
+        preferences.maxFat = 20;
+        preferences.maxCalories = 500;
+        break;
       }
     }
 

@@ -266,12 +266,12 @@ export const createMockQueryResult = <T>(
   data: T,
   overrides?: Partial<MockQueryResult<T>>,
 ): MockQueryResult<T> => ({
-  data,
-  total: Array.isArray(data) ? data.length : 1,
-  page: 1,
-  limit: 10,
-  ...overrides,
-});
+    data,
+    total: Array.isArray(data) ? data.length : 1,
+    page: 1,
+    limit: 10,
+    ...overrides,
+  });
 
 // ============ Mock Factory Functions ============
 

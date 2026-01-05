@@ -298,15 +298,15 @@ async function checkAdminPermission(
  */
 function getHistoryPeriod(timeframe?: string): string {
   switch (timeframe) {
-    case "daily":
-      return "最近7天";
-    case "weekly":
-      return "最近30天";
-    case "monthly":
-      return "最近90天";
-    case "all-time":
-      return "最近1年";
-    default:
-      return "最近30天";
+  case "daily":
+    return "最近7天";
+  case "weekly":
+    return "最近30天";
+  case "monthly":
+    return "最近90天";
+  case "all-time":
+    return "最近1年";
+  default:
+    return "最近30天";
   }
 }

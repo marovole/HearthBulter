@@ -848,23 +848,23 @@ export class ShoppingListService {
 
   private static getActivityTitle(activityType: string, metadata: any): string {
     switch (activityType) {
-      case "SHOPPING_UPDATED":
-        switch (metadata.action) {
-          case "ADD_ITEM":
-            return "添加了购物项";
-          case "ASSIGN_ITEM":
-            return "分配了购物项";
-          case "PURCHASE_ITEM":
-            return "购买了物品";
-          case "UPDATE_ITEM":
-            return "更新了购物项";
-          case "DELETE_ITEM":
-            return "删除了购物项";
-          default:
-            return "更新了购物清单";
-        }
+    case "SHOPPING_UPDATED":
+      switch (metadata.action) {
+      case "ADD_ITEM":
+        return "添加了购物项";
+      case "ASSIGN_ITEM":
+        return "分配了购物项";
+      case "PURCHASE_ITEM":
+        return "购买了物品";
+      case "UPDATE_ITEM":
+        return "更新了购物项";
+      case "DELETE_ITEM":
+        return "删除了购物项";
       default:
-        return "购物清单更新";
+        return "更新了购物清单";
+      }
+    default:
+      return "购物清单更新";
     }
   }
 
@@ -873,20 +873,20 @@ export class ShoppingListService {
     metadata: any,
   ): string {
     switch (activityType) {
-      case "SHOPPING_UPDATED":
-        let description = "";
-        if (metadata.foodName) {
-          description += `${metadata.foodName}`;
-        }
-        if (metadata.assigneeName) {
-          description += ` 分配给 ${metadata.assigneeName}`;
-        }
-        if (metadata.actualPrice) {
-          description += ` 实际价格: ¥${metadata.actualPrice}`;
-        }
-        return description;
-      default:
-        return "";
+    case "SHOPPING_UPDATED":
+      let description = "";
+      if (metadata.foodName) {
+        description += `${metadata.foodName}`;
+      }
+      if (metadata.assigneeName) {
+        description += ` 分配给 ${metadata.assigneeName}`;
+      }
+      if (metadata.actualPrice) {
+        description += ` 实际价格: ¥${metadata.actualPrice}`;
+      }
+      return description;
+    default:
+      return "";
     }
   }
 }

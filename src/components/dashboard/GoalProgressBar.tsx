@@ -21,16 +21,16 @@ export function GoalProgressBar({
 }: GoalProgressBarProps) {
   const getGoalTypeLabel = (type: string) => {
     switch (type) {
-      case "LOSE_WEIGHT":
-        return "减重目标";
-      case "GAIN_MUSCLE":
-        return "增肌目标";
-      case "MAINTAIN":
-        return "维持体重";
-      case "IMPROVE_HEALTH":
-        return "改善健康";
-      default:
-        return "健康目标";
+    case "LOSE_WEIGHT":
+      return "减重目标";
+    case "GAIN_MUSCLE":
+      return "增肌目标";
+    case "MAINTAIN":
+      return "维持体重";
+    case "IMPROVE_HEALTH":
+      return "改善健康";
+    default:
+      return "健康目标";
     }
   };
 

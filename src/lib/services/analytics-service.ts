@@ -217,18 +217,18 @@ export class AnalyticsService {
     let endDate: Date;
 
     switch (period) {
-      case "daily":
-        startDate = startOfDay(now);
-        endDate = endOfDay(now);
-        break;
-      case "weekly":
-        startDate = startOfWeek(now, { weekStartsOn: 1 });
-        endDate = endOfWeek(now, { weekStartsOn: 1 });
-        break;
-      case "monthly":
-        startDate = startOfMonth(now);
-        endDate = endOfMonth(now);
-        break;
+    case "daily":
+      startDate = startOfDay(now);
+      endDate = endOfDay(now);
+      break;
+    case "weekly":
+      startDate = startOfWeek(now, { weekStartsOn: 1 });
+      endDate = endOfWeek(now, { weekStartsOn: 1 });
+      break;
+    case "monthly":
+      startDate = startOfMonth(now);
+      endDate = endOfMonth(now);
+      break;
     }
 
     try {

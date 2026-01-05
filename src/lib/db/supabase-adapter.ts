@@ -492,7 +492,7 @@ function escapeFilterValue(value: unknown): string {
     str.includes("%")
   ) {
     // 使用双引号包裹，内部双引号需要转义
-    return `"${str.replace(/"/g, '\\"')}"`;
+    return `"${str.replace(/"/g, "\\\"")}"`;
   }
 
   return str;

@@ -355,29 +355,29 @@ class SensitiveFilterService {
     type: SensitiveInfoPattern["type"],
   ): string {
     switch (type) {
-      case "id_card":
-        // 身份证：显示前6位和后4位
-        return text.length >= 10
-          ? `${text.slice(0, 6)}****${text.slice(-4)}`
-          : "***身份证***";
-      case "phone":
-        // 手机号：显示前3位和后4位
-        return text.length >= 11
-          ? `${text.slice(0, 3)}****${text.slice(-4)}`
-          : "***电话***";
-      case "email":
-        // 邮箱：显示@前2个字符和域名
-        const [local, domain] = text.split("@");
-        return local && domain
-          ? `${local.slice(0, 2)}***@${domain}`
-          : "***邮箱***";
-      case "bank_account":
-        // 银行卡：显示前6位和后4位
-        return text.length >= 10
-          ? `${text.slice(0, 6)}****${text.slice(-4)}`
-          : "***卡号***";
-      default:
-        return "***已隐藏***";
+    case "id_card":
+      // 身份证：显示前6位和后4位
+      return text.length >= 10
+        ? `${text.slice(0, 6)}****${text.slice(-4)}`
+        : "***身份证***";
+    case "phone":
+      // 手机号：显示前3位和后4位
+      return text.length >= 11
+        ? `${text.slice(0, 3)}****${text.slice(-4)}`
+        : "***电话***";
+    case "email":
+      // 邮箱：显示@前2个字符和域名
+      const [local, domain] = text.split("@");
+      return local && domain
+        ? `${local.slice(0, 2)}***@${domain}`
+        : "***邮箱***";
+    case "bank_account":
+      // 银行卡：显示前6位和后4位
+      return text.length >= 10
+        ? `${text.slice(0, 6)}****${text.slice(-4)}`
+        : "***卡号***";
+    default:
+      return "***已隐藏***";
     }
   }
 
@@ -389,24 +389,24 @@ class SensitiveFilterService {
     type: SensitiveInfoPattern["type"],
   ): string {
     switch (type) {
-      case "id_card":
-        return "[身份证号]";
-      case "phone":
-        return "[联系电话]";
-      case "email":
-        return "[电子邮箱]";
-      case "address":
-        return "[地址信息]";
-      case "medical_record":
-        return "[病历编号]";
-      case "name":
-        return "[患者姓名]";
-      case "age":
-        return "[年龄]";
-      case "bank_account":
-        return "[银行卡号]";
-      default:
-        return "[敏感信息]";
+    case "id_card":
+      return "[身份证号]";
+    case "phone":
+      return "[联系电话]";
+    case "email":
+      return "[电子邮箱]";
+    case "address":
+      return "[地址信息]";
+    case "medical_record":
+      return "[病历编号]";
+    case "name":
+      return "[患者姓名]";
+    case "age":
+      return "[年龄]";
+    case "bank_account":
+      return "[银行卡号]";
+    default:
+      return "[敏感信息]";
     }
   }
 

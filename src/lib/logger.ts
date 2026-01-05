@@ -80,16 +80,16 @@ class Logger {
       const prefix = `[${entry.timestamp.toISOString()}] [${level.toUpperCase()}]`;
       const contextStr = context ? ` ${JSON.stringify(context)}` : "";
       switch (level) {
-        case "debug":
-        case "info":
-          console.log(`${prefix} ${message}${contextStr}`);
-          break;
-        case "warn":
-          console.warn(`${prefix} ${message}${contextStr}`);
-          break;
-        case "error":
-          console.error(`${prefix} ${message}${contextStr}`);
-          break;
+      case "debug":
+      case "info":
+        console.log(`${prefix} ${message}${contextStr}`);
+        break;
+      case "warn":
+        console.warn(`${prefix} ${message}${contextStr}`);
+        break;
+      case "error":
+        console.error(`${prefix} ${message}${contextStr}`);
+        break;
       }
     }
 

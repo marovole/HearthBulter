@@ -252,8 +252,8 @@ export function generateHTMLReport(data: ReportData): string {
 
       <!-- 成就 -->
       ${
-        data.achievements.length > 0
-          ? `
+  data.achievements.length > 0
+    ? `
       <div class="section">
         <h2>🎉 本期成就</h2>
         <ul class="list">
@@ -261,13 +261,13 @@ export function generateHTMLReport(data: ReportData): string {
         </ul>
       </div>
       `
-          : ""
-      }
+    : ""
+}
 
       <!-- 关注点 -->
       ${
-        data.concerns.length > 0
-          ? `
+  data.concerns.length > 0
+    ? `
       <div class="section">
         <h2>⚠️ 需要关注</h2>
         <ul class="list">
@@ -275,34 +275,34 @@ export function generateHTMLReport(data: ReportData): string {
         </ul>
       </div>
       `
-          : ""
-      }
+    : ""
+}
 
       <!-- 异常记录 -->
       ${
-        data.anomalies.length > 0
-          ? `
+  data.anomalies.length > 0
+    ? `
       <div class="section">
         <h2>🚨 异常检测</h2>
         ${data.anomalies
-          .map(
-            (a) => `
+    .map(
+      (a) => `
           <div class="anomaly">
             <div class="anomaly-title">${a.title}</div>
             <div class="anomaly-desc">${a.description}</div>
           </div>
         `,
-          )
-          .join("")}
+    )
+    .join("")}
       </div>
       `
-          : ""
-      }
+    : ""
+}
 
       <!-- 改进建议 -->
       ${
-        data.recommendations.length > 0
-          ? `
+  data.recommendations.length > 0
+    ? `
       <div class="section">
         <h2>💡 改进建议</h2>
         <ul class="list">
@@ -310,8 +310,8 @@ export function generateHTMLReport(data: ReportData): string {
         </ul>
       </div>
       `
-          : ""
-      }
+    : ""
+}
     </div>
 
     <div class="footer">
@@ -498,15 +498,15 @@ function calculatePeriod(
   const startDate = new Date();
 
   switch (reportType) {
-    case "WEEKLY":
-      startDate.setDate(endDate.getDate() - 7);
-      break;
-    case "MONTHLY":
-      startDate.setMonth(endDate.getMonth() - 1);
-      break;
-    case "QUARTERLY":
-      startDate.setMonth(endDate.getMonth() - 3);
-      break;
+  case "WEEKLY":
+    startDate.setDate(endDate.getDate() - 7);
+    break;
+  case "MONTHLY":
+    startDate.setMonth(endDate.getMonth() - 1);
+    break;
+  case "QUARTERLY":
+    startDate.setMonth(endDate.getMonth() - 3);
+    break;
   }
 
   return { startDate, endDate };

@@ -143,8 +143,8 @@ export class SupabaseFamilyRepository implements FamilyRepository {
       const members =
         includeMembers && Array.isArray((family as any).members)
           ? (family as any).members
-              .filter((m: any) => !m.deleted_at)
-              .map(this.mapFamilyMemberRow)
+            .filter((m: any) => !m.deleted_at)
+            .map(this.mapFamilyMemberRow)
           : [];
 
       familyMap.set(family.id, {
@@ -161,8 +161,8 @@ export class SupabaseFamilyRepository implements FamilyRepository {
         const members =
           includeMembers && Array.isArray(family.members)
             ? family.members
-                .filter((m: any) => !m.deleted_at)
-                .map(this.mapFamilyMemberRow)
+              .filter((m: any) => !m.deleted_at)
+              .map(this.mapFamilyMemberRow)
             : [];
 
         familyMap.set(family.id, {
@@ -446,10 +446,10 @@ export class SupabaseFamilyRepository implements FamilyRepository {
       // 关联用户信息
       user: rowWithUser.user
         ? {
-            id: rowWithUser.user.id,
-            name: rowWithUser.user.name,
-            email: rowWithUser.user.email,
-          }
+          id: rowWithUser.user.id,
+          name: rowWithUser.user.name,
+          email: rowWithUser.user.email,
+        }
         : undefined,
     };
   }

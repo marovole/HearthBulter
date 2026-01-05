@@ -75,27 +75,27 @@ export function EcommerceIntegration({
 
   const getAvailabilityText = (availability: string) => {
     switch (availability) {
-      case "IN_STOCK":
-        return "有货";
-      case "OUT_OF_STOCK":
-        return "缺货";
-      case "LOW_STOCK":
-        return "库存紧张";
-      default:
-        return "未知";
+    case "IN_STOCK":
+      return "有货";
+    case "OUT_OF_STOCK":
+      return "缺货";
+    case "LOW_STOCK":
+      return "库存紧张";
+    default:
+      return "未知";
     }
   };
 
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
-      case "IN_STOCK":
-        return "text-green-600 bg-green-50";
-      case "OUT_OF_STOCK":
-        return "text-red-600 bg-red-50";
-      case "LOW_STOCK":
-        return "text-orange-600 bg-orange-50";
-      default:
-        return "text-gray-600 bg-gray-50";
+    case "IN_STOCK":
+      return "text-green-600 bg-green-50";
+    case "OUT_OF_STOCK":
+      return "text-red-600 bg-red-50";
+    case "LOW_STOCK":
+      return "text-orange-600 bg-orange-50";
+    default:
+      return "text-gray-600 bg-gray-50";
     }
   };
 

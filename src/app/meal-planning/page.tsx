@@ -85,10 +85,10 @@ export default function MealPlanningPage() {
           : viewMode === "week"
             ? addDays(startDate, 6)
             : new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth() + 1,
-                0,
-              );
+              currentDate.getFullYear(),
+              currentDate.getMonth() + 1,
+              0,
+            );
 
       const response = await fetch(
         `/api/meal-plans?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,

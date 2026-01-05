@@ -17,14 +17,14 @@ export async function GET(request: NextRequest) {
       authenticated: !!session,
       session: session
         ? {
-            user: {
-              id: session.user?.id,
-              email: session.user?.email,
-              name: session.user?.name,
-              role: session.user?.role || "USER",
-            },
-            expires: session.expires,
-          }
+          user: {
+            id: session.user?.id,
+            email: session.user?.email,
+            name: session.user?.name,
+            role: session.user?.role || "USER",
+          },
+          expires: session.expires,
+        }
         : null,
       timestamp: new Date().toISOString(),
     });

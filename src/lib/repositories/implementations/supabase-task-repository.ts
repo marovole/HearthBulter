@@ -309,13 +309,13 @@ export class SupabaseTaskRepository implements TaskRepository {
     // 根据状态自动设置时间字段
     const now = new Date().toISOString();
     switch (payload.status) {
-      case "IN_PROGRESS":
-        updateData.started_at = now;
-        break;
-      case "COMPLETED":
-      case "CANCELLED":
-        updateData.completed_at = now;
-        break;
+    case "IN_PROGRESS":
+      updateData.started_at = now;
+      break;
+    case "COMPLETED":
+    case "CANCELLED":
+      updateData.completed_at = now;
+      break;
     }
 
     const { data, error } = await this.client

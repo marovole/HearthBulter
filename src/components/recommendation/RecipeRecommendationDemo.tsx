@@ -181,27 +181,27 @@ export default function RecipeRecommendationDemo() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "EASY":
-        return "bg-green-100 text-green-800";
-      case "MEDIUM":
-        return "bg-yellow-100 text-yellow-800";
-      case "HARD":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+    case "EASY":
+      return "bg-green-100 text-green-800";
+    case "MEDIUM":
+      return "bg-yellow-100 text-yellow-800";
+    case "HARD":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
     }
   };
 
   const getDifficultyText = (difficulty: string) => {
     switch (difficulty) {
-      case "EASY":
-        return "简单";
-      case "MEDIUM":
-        return "中等";
-      case "HARD":
-        return "困难";
-      default:
-        return "未知";
+    case "EASY":
+      return "简单";
+    case "MEDIUM":
+      return "中等";
+    case "HARD":
+      return "困难";
+    default:
+      return "未知";
     }
   };
 
@@ -506,8 +506,8 @@ export default function RecipeRecommendationDemo() {
                             cuisine,
                           )
                             ? prev.preferredCuisines.filter(
-                                (c) => c !== cuisine,
-                              )
+                              (c) => c !== cuisine,
+                            )
                             : [...prev.preferredCuisines, cuisine],
                         }));
                       }}

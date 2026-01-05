@@ -68,14 +68,14 @@ export function SyncStatus({
   // 获取同步状态颜色
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "SUCCESS":
-        return "bg-green-100 text-green-800";
-      case "FAILED":
-        return "bg-red-100 text-red-800";
-      case "SYNCING":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+    case "SUCCESS":
+      return "bg-green-100 text-green-800";
+    case "FAILED":
+      return "bg-red-100 text-red-800";
+    case "SYNCING":
+      return "bg-blue-100 text-blue-800";
+    default:
+      return "bg-gray-100 text-gray-800";
     }
   };
 

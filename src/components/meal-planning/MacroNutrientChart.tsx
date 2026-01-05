@@ -243,12 +243,12 @@ export function MacroNutrientChart({
 
   const getStatusColor = (status: "good" | "warning" | "danger"): string => {
     switch (status) {
-      case "good":
-        return "text-green-600 bg-green-50 border-green-200";
-      case "warning":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
-      case "danger":
-        return "text-red-600 bg-red-50 border-red-200";
+    case "good":
+      return "text-green-600 bg-green-50 border-green-200";
+    case "warning":
+      return "text-yellow-600 bg-yellow-50 border-yellow-200";
+    case "danger":
+      return "text-red-600 bg-red-50 border-red-200";
     }
   };
 

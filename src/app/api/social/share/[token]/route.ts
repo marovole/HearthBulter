@@ -184,20 +184,20 @@ export async function POST(
     const updateData: any = {};
 
     switch (action) {
-      case "click":
-        updateData.clickCount = sharedContent.clickCount + 1;
-        break;
-      case "share":
-        updateData.shareCount = sharedContent.shareCount + 1;
-        break;
-      case "conversion":
-        updateData.conversionCount = sharedContent.conversionCount + 1;
-        break;
-      default:
-        return NextResponse.json(
-          { error: "不支持的动作类型" },
-          { status: 400 },
-        );
+    case "click":
+      updateData.clickCount = sharedContent.clickCount + 1;
+      break;
+    case "share":
+      updateData.shareCount = sharedContent.shareCount + 1;
+      break;
+    case "conversion":
+      updateData.conversionCount = sharedContent.conversionCount + 1;
+      break;
+    default:
+      return NextResponse.json(
+        { error: "不支持的动作类型" },
+        { status: 400 },
+      );
     }
 
     await supabaseAdapter.sharedContent.update({

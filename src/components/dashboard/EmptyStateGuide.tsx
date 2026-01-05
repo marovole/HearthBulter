@@ -123,10 +123,10 @@ export function EmptyStateGuide({
             className={`
               px-6 py-3 rounded-lg font-medium transition-colors
               ${
-                action.primary
-                  ? "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-              }
+          action.primary
+            ? "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400"
+            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          }
               ${isInitializing ? "cursor-not-allowed opacity-50" : ""}
             `}
           >

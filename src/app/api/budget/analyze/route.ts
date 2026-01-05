@@ -46,26 +46,26 @@ export async function POST(request: NextRequest) {
     let result;
 
     switch (analysisType) {
-      case "trends":
-        result = await spendingAnalyzer.getSpendingTrends(
-          memberId,
-          customPeriod?.months || 6,
-        );
-        break;
-      case "highCategories":
-        result = await spendingAnalyzer.getHighSpendingCategories(
-          memberId,
-          customPeriod?.limit || 5,
-        );
-        break;
-      case "perPerson":
-        result = await spendingAnalyzer.getPerPersonCost(memberId);
-        break;
-      default:
-        result = await spendingAnalyzer.analyzeSpending(
-          memberId,
-          customPeriod?.type || "MONTHLY",
-        );
+    case "trends":
+      result = await spendingAnalyzer.getSpendingTrends(
+        memberId,
+        customPeriod?.months || 6,
+      );
+      break;
+    case "highCategories":
+      result = await spendingAnalyzer.getHighSpendingCategories(
+        memberId,
+        customPeriod?.limit || 5,
+      );
+      break;
+    case "perPerson":
+      result = await spendingAnalyzer.getPerPersonCost(memberId);
+      break;
+    default:
+      result = await spendingAnalyzer.analyzeSpending(
+        memberId,
+        customPeriod?.type || "MONTHLY",
+      );
     }
 
     return NextResponse.json(result);

@@ -550,10 +550,10 @@ export function PermissionManager() {
                                   {permissionMatrix[role]?.includes(
                                     permission,
                                   ) ? (
-                                    <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                                  ) : (
-                                    <XCircle className="w-5 h-5 text-red-500 mx-auto" />
-                                  )}
+                                      <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
+                                    ) : (
+                                      <XCircle className="w-5 h-5 text-red-500 mx-auto" />
+                                    )}
                                 </TableCell>
                               ))}
                             </TableRow>

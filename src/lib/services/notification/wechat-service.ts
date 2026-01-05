@@ -116,15 +116,15 @@ export class WeChatService {
       };
 
       switch (type) {
-        case "text":
-          message.text = { content };
-          break;
-        case "image":
-          message.image = { media_id: content };
-          break;
-        case "news":
-          message.news = { articles: content };
-          break;
+      case "text":
+        message.text = { content };
+        break;
+      case "image":
+        message.image = { media_id: content };
+        break;
+      case "news":
+        message.news = { articles: content };
+        break;
       }
 
       const response = await axios.post(

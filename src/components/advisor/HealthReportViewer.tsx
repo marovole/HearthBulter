@@ -116,15 +116,15 @@ export function HealthReportViewer({
 
       // 根据报告类型设置日期范围
       switch (reportType) {
-        case "weekly":
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case "monthly":
-          startDate.setMonth(startDate.getMonth() - 1);
-          break;
-        case "quarterly":
-          startDate.setMonth(startDate.getMonth() - 3);
-          break;
+      case "weekly":
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case "monthly":
+        startDate.setMonth(startDate.getMonth() - 1);
+        break;
+      case "quarterly":
+        startDate.setMonth(startDate.getMonth() - 3);
+        break;
       }
 
       const response = await fetch("/api/ai/generate-report", {
@@ -182,27 +182,27 @@ export function HealthReportViewer({
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "text-red-600";
-      case "medium":
-        return "text-yellow-600";
-      case "low":
-        return "text-green-600";
-      default:
-        return "text-gray-600";
+    case "high":
+      return "text-red-600";
+    case "medium":
+      return "text-yellow-600";
+    case "low":
+      return "text-green-600";
+    default:
+      return "text-gray-600";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "completed":
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case "generating":
-        return <AIThinkingIndicator size="sm" />;
-      case "failed":
-        return <AlertCircle className="w-4 h-4 text-red-600" />;
-      default:
-        return <FileText className="w-4 h-4" />;
+    case "completed":
+      return <CheckCircle className="w-4 h-4 text-green-600" />;
+    case "generating":
+      return <AIThinkingIndicator size="sm" />;
+    case "failed":
+      return <AlertCircle className="w-4 h-4 text-red-600" />;
+    default:
+      return <FileText className="w-4 h-4" />;
     }
   };
 

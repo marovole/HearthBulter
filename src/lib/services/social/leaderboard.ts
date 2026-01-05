@@ -88,39 +88,39 @@ export class LeaderboardService {
     let result: LeaderboardResult;
 
     switch (type) {
-      case LeaderboardType.HEALTH_SCORE:
-        result = await this.calculateHealthScoreLeaderboard(
-          memberId,
-          timeframe,
-          limit,
-        );
-        break;
-      case LeaderboardType.CHECKIN_STREAK:
-        result = await this.calculateCheckinStreakLeaderboard(memberId, limit);
-        break;
-      case LeaderboardType.WEIGHT_LOSS:
-        result = await this.calculateWeightLossLeaderboard(
-          memberId,
-          timeframe,
-          limit,
-        );
-        break;
-      case LeaderboardType.EXERCISE_MINUTES:
-        result = await this.calculateExerciseMinutesLeaderboard(
-          memberId,
-          timeframe,
-          limit,
-        );
-        break;
-      case LeaderboardType.CALORIES_MANAGEMENT:
-        result = await this.calculateCaloriesManagementLeaderboard(
-          memberId,
-          timeframe,
-          limit,
-        );
-        break;
-      default:
-        throw new Error(`不支持的排行榜类型: ${type}`);
+    case LeaderboardType.HEALTH_SCORE:
+      result = await this.calculateHealthScoreLeaderboard(
+        memberId,
+        timeframe,
+        limit,
+      );
+      break;
+    case LeaderboardType.CHECKIN_STREAK:
+      result = await this.calculateCheckinStreakLeaderboard(memberId, limit);
+      break;
+    case LeaderboardType.WEIGHT_LOSS:
+      result = await this.calculateWeightLossLeaderboard(
+        memberId,
+        timeframe,
+        limit,
+      );
+      break;
+    case LeaderboardType.EXERCISE_MINUTES:
+      result = await this.calculateExerciseMinutesLeaderboard(
+        memberId,
+        timeframe,
+        limit,
+      );
+      break;
+    case LeaderboardType.CALORIES_MANAGEMENT:
+      result = await this.calculateCaloriesManagementLeaderboard(
+        memberId,
+        timeframe,
+        limit,
+      );
+      break;
+    default:
+      throw new Error(`不支持的排行榜类型: ${type}`);
     }
 
     // 缓存结果
@@ -657,23 +657,23 @@ export class LeaderboardService {
     metadata?: any,
   ): string {
     switch (type) {
-      case LeaderboardType.HEALTH_SCORE:
-        return `${value}分`;
+    case LeaderboardType.HEALTH_SCORE:
+      return `${value}分`;
 
-      case LeaderboardType.CHECKIN_STREAK:
-        return `${value}天`;
+    case LeaderboardType.CHECKIN_STREAK:
+      return `${value}天`;
 
-      case LeaderboardType.WEIGHT_LOSS:
-        return `${value}kg`;
+    case LeaderboardType.WEIGHT_LOSS:
+      return `${value}kg`;
 
-      case LeaderboardType.EXERCISE_MINUTES:
-        return `${value}分钟`;
+    case LeaderboardType.EXERCISE_MINUTES:
+      return `${value}分钟`;
 
-      case LeaderboardType.CALORIES_MANAGEMENT:
-        return `${value}%`;
+    case LeaderboardType.CALORIES_MANAGEMENT:
+      return `${value}%`;
 
-      default:
-        return value.toString();
+    default:
+      return value.toString();
     }
   }
 
@@ -687,24 +687,24 @@ export class LeaderboardService {
     let startDate: Date;
 
     switch (timeframe) {
-      case "daily":
-        startDate = startOfDay(new Date());
-        break;
+    case "daily":
+      startDate = startOfDay(new Date());
+      break;
 
-      case "weekly":
-        startDate = subDays(startDate, 7);
-        break;
+    case "weekly":
+      startDate = subDays(startDate, 7);
+      break;
 
-      case "monthly":
-        startDate = subDays(startDate, 30);
-        break;
+    case "monthly":
+      startDate = subDays(startDate, 30);
+      break;
 
-      case "all-time":
-        startDate = new Date(2020, 0, 1); // 从2020年开始
-        break;
+    case "all-time":
+      startDate = new Date(2020, 0, 1); // 从2020年开始
+      break;
 
-      default:
-        startDate = subDays(startDate, 7);
+    default:
+      startDate = subDays(startDate, 7);
     }
 
     return { startDate, endDate };
@@ -717,16 +717,16 @@ export class LeaderboardService {
     timeframe: "daily" | "weekly" | "monthly" | "all-time",
   ): string {
     switch (timeframe) {
-      case "daily":
-        return "今日";
-      case "weekly":
-        return "本周";
-      case "monthly":
-        return "本月";
-      case "all-time":
-        return "全部时间";
-      default:
-        return "本周";
+    case "daily":
+      return "今日";
+    case "weekly":
+      return "本周";
+    case "monthly":
+      return "本月";
+    case "all-time":
+      return "全部时间";
+    default:
+      return "本周";
     }
   }
 
