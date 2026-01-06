@@ -1,15 +1,17 @@
 /**
  * 安全 Token 生成器
  * 使用 Web Crypto API 和 jose 库生成安全的分享 Token
+ *
+ * 注意：Node.js 20+ 原生支持 globalThis.crypto，无需 polyfill
  */
 
 import { webcrypto as nodeCrypto } from "crypto";
 import type { JWTPayload } from "jose";
 import { logger } from "@/lib/logger";
 
+// 使用 Node.js 的 webcrypto API（与 Web Crypto API 兼容）
+// 注意：不再设置 globalThis.crypto，因为在 Node.js 20+ 中这是只读属性
 const cryptoApi = nodeCrypto;
-// 为 jose 提供 WebCrypto
-(globalThis as any).crypto = cryptoApi;
 
 const TOKEN_ISSUER = "health-butler";
 const TOKEN_AUDIENCE = "share-token";

@@ -1,13 +1,16 @@
 /**
  * 定时任务调度器
  * 负责管理所有定时任务的创建、启动和停止
+ *
+ * 注意：node-cron 使用动态导入以避免在 Next.js 构建时出现
+ * "Cannot set property crypto" 错误（Node.js 20+ 兼容性问题）
  */
 
-import * as cron from "node-cron";
-import { generateWeeklyReports } from "./weekly-reports";
-import { generateMonthlyReports } from "./monthly-reports";
-import { runAnomalyDetection } from "./anomaly-detection";
 import { TaskLogger } from "./logger";
+
+// 动态导入类型
+type CronModule = typeof import("node-cron");
+type ScheduledCronTask = ReturnType<CronModule["schedule"]>;
 
 interface ScheduledTask {
   name: string;
@@ -18,36 +21,68 @@ interface ScheduledTask {
 }
 
 class TaskScheduler {
-  private tasks: Map<string, cron.ScheduledTask> = new Map();
+  private tasks: Map<string, ScheduledCronTask> = new Map();
   private logger = new TaskLogger();
   private isRunning = false;
+  private cronModule: CronModule | null = null;
 
   /**
-   * 定义所有定时任务
+   * 任务定义（不包含具体的 task 函数，这些将在运行时动态加载）
    */
-  private readonly taskDefinitions: ScheduledTask[] = [
+  private readonly taskDefinitions: Array<Omit<ScheduledTask, "task">> = [
     {
       name: "weekly-reports",
       cronExpression: "0 9 * * 0", // 每周日上午9点
-      task: generateWeeklyReports,
       description: "生成周报",
       enabled: true,
     },
     {
       name: "monthly-reports",
       cronExpression: "0 9 1 * *", // 每月1号上午9点
-      task: generateMonthlyReports,
       description: "生成月报",
       enabled: true,
     },
     {
       name: "anomaly-detection",
       cronExpression: "0 */6 * * *", // 每6小时执行一次
-      task: runAnomalyDetection,
       description: "异常检测扫描",
       enabled: true,
     },
   ];
+
+  /**
+   * 动态加载 node-cron 模块
+   */
+  private async loadCronModule(): Promise<CronModule> {
+    if (!this.cronModule) {
+      this.cronModule = await import("node-cron");
+    }
+    return this.cronModule;
+  }
+
+  /**
+   * 动态加载任务函数
+   */
+  private async loadTaskFunction(
+    taskName: string,
+  ): Promise<() => Promise<void>> {
+    switch (taskName) {
+      case "weekly-reports": {
+        const { generateWeeklyReports } = await import("./weekly-reports");
+        return generateWeeklyReports;
+      }
+      case "monthly-reports": {
+        const { generateMonthlyReports } = await import("./monthly-reports");
+        return generateMonthlyReports;
+      }
+      case "anomaly-detection": {
+        const { runAnomalyDetection } = await import("./anomaly-detection");
+        return runAnomalyDetection;
+      }
+      default:
+        throw new Error(`Unknown task: ${taskName}`);
+    }
+  }
 
   /**
    * 启动所有定时任务
@@ -94,12 +129,17 @@ class TaskScheduler {
   /**
    * 调度单个任务
    */
-  private async scheduleTask(taskDef: ScheduledTask): Promise<void> {
+  private async scheduleTask(
+    taskDef: Omit<ScheduledTask, "task">,
+  ): Promise<void> {
     try {
+      const cron = await this.loadCronModule();
+      const taskFunction = await this.loadTaskFunction(taskDef.name);
+
       const scheduledTask = cron.schedule(
         taskDef.cronExpression,
         async () => {
-          await this.executeTask(taskDef);
+          await this.executeTaskWithFunction(taskDef.name, taskFunction);
         },
         {
           scheduled: false,
@@ -119,19 +159,22 @@ class TaskScheduler {
   }
 
   /**
-   * 执行任务
+   * 执行任务（使用提供的函数）
    */
-  private async executeTask(taskDef: ScheduledTask): Promise<void> {
+  private async executeTaskWithFunction(
+    taskName: string,
+    taskFunction: () => Promise<void>,
+  ): Promise<void> {
     const startTime = Date.now();
-    this.logger.info(`Executing task: ${taskDef.name}`);
+    this.logger.info(`Executing task: ${taskName}`);
 
     try {
-      await taskDef.task();
+      await taskFunction();
       const duration = Date.now() - startTime;
-      this.logger.info(`Task completed: ${taskDef.name} (${duration}ms)`);
+      this.logger.info(`Task completed: ${taskName} (${duration}ms)`);
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.logger.error(`Task failed: ${taskDef.name} (${duration}ms):`, error);
+      this.logger.error(`Task failed: ${taskName} (${duration}ms):`, error);
     }
   }
 
@@ -145,7 +188,8 @@ class TaskScheduler {
     }
 
     this.logger.info(`Manually executing task: ${taskName}`);
-    await this.executeTask(taskDef);
+    const taskFunction = await this.loadTaskFunction(taskName);
+    await this.executeTaskWithFunction(taskName, taskFunction);
   }
 
   /**
