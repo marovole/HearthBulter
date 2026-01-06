@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { mealPlanner } from '@/lib/services/meal-planner';
-import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-singleton';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { mealPlanner } from "@/lib/services/meal-planner";
+import { mealPlanRepository } from "@/lib/repositories/meal-plan-repository-singleton";
+import { z } from "zod";
 
 // 创建食谱计划的验证 schema
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 const createMealPlanSchema = z.object({
   days: z.number().min(1).max(14).default(7), // 默认7天
   startDate: z.string().datetime().optional(), // ISO 8601 格式
@@ -21,13 +21,14 @@ const createMealPlanSchema = z.object({
  */
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean; member: any }> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
-    .from('family_members')
-    .select(`
+    .from("family_members")
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -35,9 +36,10 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `)
-    .eq('id', memberId)
-    .is('deletedAt', null)
+    `,
+    )
+    .eq("id", memberId)
+    .is("deletedAt", null)
     .single();
 
   if (!member) {
@@ -49,12 +51,12 @@ async function verifyMemberAccess(
   let isAdmin = false;
   if (!isCreator) {
     const { data: adminMember } = await supabase
-      .from('family_members')
-      .select('id, role')
-      .eq('familyId', member.familyId)
-      .eq('userId', userId)
-      .eq('role', 'ADMIN')
-      .is('deletedAt', null)
+      .from("family_members")
+      .select("id, role")
+      .eq("familyId", member.familyId)
+      .eq("userId", userId)
+      .eq("role", "ADMIN")
+      .is("deletedAt", null)
       .maybeSingle();
 
     isAdmin = !!adminMember;
@@ -77,20 +79,23 @@ async function verifyMemberAccess(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess, member } = await verifyMemberAccess(
+      memberId,
+      session.user.id,
+    );
 
     if (!hasAccess || !member) {
-      return NextResponse.json({ error: '成员不存在' }, { status: 404 });
+      return NextResponse.json({ error: "成员不存在" }, { status: 404 });
     }
 
     // 解析请求体
@@ -106,29 +111,26 @@ export async function POST(
     const planData = await mealPlanner.generateMealPlan(
       memberId,
       validatedData.days,
-      startDate
+      startDate,
     );
 
     return NextResponse.json(
       {
-        message: '食谱计划生成成功',
+        message: "食谱计划生成成功",
         plan: planData,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '请求参数验证失败', details: error.errors },
-        { status: 400 }
+        { error: "请求参数验证失败", details: error.errors },
+        { status: 400 },
       );
     }
 
-    console.error('生成食谱计划失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("生成食谱计划失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -140,30 +142,33 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
+    const { hasAccess, member } = await verifyMemberAccess(
+      memberId,
+      session.user.id,
+    );
 
     if (!hasAccess || !member) {
-      return NextResponse.json({ error: '成员不存在' }, { status: 404 });
+      return NextResponse.json({ error: "成员不存在" }, { status: 404 });
     }
 
     // 使用 Repository 查询膳食计划（包含所有嵌套数据）
     const result = await mealPlanRepository.listMealPlans(
       { memberId, includeDeleted: false },
-      { page: 1, limit: 100 } // 默认返回最多 100 个计划
+      { page: 1, limit: 100 }, // 默认返回最多 100 个计划
     );
 
     // 转换为原有的响应格式以保持向后兼容
-    const mealPlans = result.data.map(plan => ({
+    const mealPlans = result.data.map((plan) => ({
       id: plan.id,
       memberId: plan.memberId,
       startDate: plan.startDate,
@@ -177,7 +182,7 @@ export async function GET(
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt,
       deletedAt: plan.deletedAt,
-      meals: plan.meals.map(meal => ({
+      meals: plan.meals.map((meal) => ({
         id: meal.id,
         planId: meal.planId,
         date: meal.date,
@@ -194,10 +199,7 @@ export async function GET(
 
     return NextResponse.json({ mealPlans }, { status: 200 });
   } catch (error) {
-    console.error('查询食谱计划失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("查询食谱计划失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

@@ -25,7 +25,7 @@
     "eol-last": "warn",
     "comma-dangle": ["warn", "always-multiline"],
     "semi": ["error", "always"],
-    "quotes": ["error", "single"],
+    "quotes": ["error", "double"],
     "indent": ["error", 2],
     "max-len": ["warn", { "code": 120, "ignoreUrls": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }],
     "complexity": ["warn", 15],

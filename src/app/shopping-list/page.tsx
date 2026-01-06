@@ -1,45 +1,47 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { ShoppingListCard } from '@/components/shopping-list/ShoppingListCard';
-import { CreateShoppingListButton } from '@/components/shopping-list/CreateShoppingListButton';
+import { useState, useEffect } from "react";
+import { ShoppingListCard } from "@/components/shopping-list/ShoppingListCard";
+import { CreateShoppingListButton } from "@/components/shopping-list/CreateShoppingListButton";
 
 interface ShoppingList {
-  id: string
-  planId: string
-  name: string
-  budget: number | null
-  estimatedCost: number | null
-  actualCost: number | null
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
+  id: string;
+  planId: string;
+  name: string;
+  budget: number | null;
+  estimatedCost: number | null;
+  actualCost: number | null;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
   items: {
-    id: string
-    foodId: string
-    amount: number
-    category: string
-    purchased: boolean
-    estimatedPrice: number | null
+    id: string;
+    foodId: string;
+    amount: number;
+    category: string;
+    purchased: boolean;
+    estimatedPrice: number | null;
     food: {
-      id: string
-      name: string
-      category: string
-    }
-  }[]
-  createdAt: string
+      id: string;
+      name: string;
+      category: string;
+    };
+  }[];
+  createdAt: string;
   plan: {
-    id: string
+    id: string;
     member: {
-      id: string
-      name: string
-    }
-  }
+      id: string;
+      name: string;
+    };
+  };
 }
 
 export default function ShoppingListPage() {
   const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
+  const [filter, setFilter] = useState<
+    "all" | "pending" | "in_progress" | "completed"
+  >("all");
 
   useEffect(() => {
     fetchShoppingLists();
@@ -48,35 +50,36 @@ export default function ShoppingListPage() {
   const fetchShoppingLists = async () => {
     try {
       setLoading(true);
-      const url = filter === 'all' 
-        ? '/api/shopping-lists'
-        : `/api/shopping-lists?status=${filter.toUpperCase()}`;
-      
+      const url =
+        filter === "all"
+          ? "/api/shopping-lists"
+          : `/api/shopping-lists?status=${filter.toUpperCase()}`;
+
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('获取购物清单失败');
+        throw new Error("获取购物清单失败");
       }
 
       const data = await response.json();
       setShoppingLists(data.shoppingLists || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误');
+      setError(err instanceof Error ? err.message : "未知错误");
     } finally {
       setLoading(false);
     }
   };
 
   const handleListCreated = (newList: ShoppingList) => {
-    setShoppingLists(prev => [newList, ...prev]);
+    setShoppingLists((prev) => [newList, ...prev]);
   };
 
   const handleListDeleted = (listId: string) => {
-    setShoppingLists(prev => prev.filter(list => list.id !== listId));
+    setShoppingLists((prev) => prev.filter((list) => list.id !== listId));
   };
 
   const handleListUpdated = (updatedList: ShoppingList) => {
-    setShoppingLists(prev => 
-      prev.map(list => list.id === updatedList.id ? updatedList : list)
+    setShoppingLists((prev) =>
+      prev.map((list) => (list.id === updatedList.id ? updatedList : list)),
     );
   };
 
@@ -116,18 +119,18 @@ export default function ShoppingListPage() {
           <span className="text-sm text-gray-700">筛选状态:</span>
           <div className="flex space-x-2">
             {[
-              { value: 'all', label: '全部' },
-              { value: 'pending', label: '待采购' },
-              { value: 'in_progress', label: '采购中' },
-              { value: 'completed', label: '已完成' },
+              { value: "all", label: "全部" },
+              { value: "pending", label: "待采购" },
+              { value: "in_progress", label: "采购中" },
+              { value: "completed", label: "已完成" },
             ].map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => setFilter(value as any)}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                   filter === value
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 {label}
@@ -142,7 +145,9 @@ export default function ShoppingListPage() {
         {shoppingLists.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-500 text-lg mb-4">暂无购物清单</div>
-            <p className="text-gray-400 mb-6">从食谱计划创建您的第一个购物清单</p>
+            <p className="text-gray-400 mb-6">
+              从食谱计划创建您的第一个购物清单
+            </p>
             <CreateShoppingListButton onListCreated={handleListCreated} />
           </div>
         ) : (

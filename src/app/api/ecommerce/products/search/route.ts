@@ -1,34 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { platformAdapterFactory } from '@/lib/services/ecommerce';
-import { EcommercePlatform } from '@prisma/client';
-import { ProductSearchRequest, PlatformError, PlatformErrorType } from '@/lib/services/ecommerce/types';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { platformAdapterFactory } from "@/lib/services/ecommerce";
+import { EcommercePlatform } from "@prisma/client";
+import {
+  ProductSearchRequest,
+  PlatformError,
+  PlatformErrorType,
+} from "@/lib/services/ecommerce/types";
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const keyword = searchParams.get('keyword');
-    const platform = searchParams.get('platform')?.toUpperCase() as EcommercePlatform;
-    const category = searchParams.get('category');
-    const brand = searchParams.get('brand');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
-    const inStock = searchParams.get('inStock');
-    const sortBy = searchParams.get('sortBy') as 'price' | 'sales' | 'rating' | 'name';
-    const sortOrder = searchParams.get('sortOrder') as 'asc' | 'desc';
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+    const keyword = searchParams.get("keyword");
+    const platform = searchParams
+      .get("platform")
+      ?.toUpperCase() as EcommercePlatform;
+    const category = searchParams.get("category");
+    const brand = searchParams.get("brand");
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
+    const inStock = searchParams.get("inStock");
+    const sortBy = searchParams.get("sortBy") as
+      | "price"
+      | "sales"
+      | "rating"
+      | "name";
+    const sortOrder = searchParams.get("sortOrder") as "asc" | "desc";
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "20");
 
     if (!keyword) {
-      return NextResponse.json({ error: 'keyword is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "keyword is required" },
+        { status: 400 },
+      );
     }
 
     // 如果指定了平台，从平台API搜索
@@ -39,7 +52,7 @@ export async function GET(request: NextRequest) {
         brand,
         minPrice: minPrice ? parseFloat(minPrice) : undefined,
         maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-        inStock: inStock === 'true',
+        inStock: inStock === "true",
         sortBy,
         sortOrder,
         page,
@@ -54,25 +67,25 @@ export async function GET(request: NextRequest) {
       brand,
       minPrice: minPrice ? parseFloat(minPrice) : undefined,
       maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-      inStock: inStock === 'true',
+      inStock: inStock === "true",
       sortBy,
       sortOrder,
       page,
       pageSize,
     });
   } catch (error) {
-    console.error('Product search error:', error);
-    
+    console.error("Product search error:", error);
+
     if (error instanceof PlatformError) {
       return NextResponse.json(
         { error: error.message, type: error.type },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to search products' },
-      { status: 500 }
+      { error: "Failed to search products" },
+      { status: 500 },
     );
   }
 }
@@ -80,7 +93,7 @@ export async function GET(request: NextRequest) {
 async function searchFromPlatformAPI(
   userId: string,
   platform: EcommercePlatform,
-  request: ProductSearchRequest
+  request: ProductSearchRequest,
 ) {
   try {
     // 获取用户的平台账号
@@ -89,27 +102,31 @@ async function searchFromPlatformAPI(
         userId,
         platform,
         isActive: true,
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
     });
 
     if (!platformAccount) {
       return NextResponse.json(
-        { error: 'Platform account not found or inactive' },
-        { status: 400 }
+        { error: "Platform account not found or inactive" },
+        { status: 400 },
       );
     }
 
     // 检查token是否有效
     const adapter = platformAdapterFactory.createAdapter(platform);
-    const isValidToken = await adapter.validateToken(platformAccount.accessToken);
-    
+    const isValidToken = await adapter.validateToken(
+      platformAccount.accessToken,
+    );
+
     if (!isValidToken) {
       // 尝试刷新token
       if (platformAccount.refreshToken) {
         try {
-          const newTokenInfo = await adapter.refreshToken(platformAccount.refreshToken);
-          
+          const newTokenInfo = await adapter.refreshToken(
+            platformAccount.refreshToken,
+          );
+
           // 更新数据库中的token
           await prisma.platformAccount.update({
             where: { id: platformAccount.id },
@@ -120,24 +137,27 @@ async function searchFromPlatformAPI(
               lastSyncAt: new Date(),
             },
           });
-          
+
           platformAccount.accessToken = newTokenInfo.accessToken;
         } catch (refreshError) {
           return NextResponse.json(
-            { error: 'Token expired and refresh failed' },
-            { status: 401 }
+            { error: "Token expired and refresh failed" },
+            { status: 401 },
           );
         }
       } else {
         return NextResponse.json(
-          { error: 'Token expired and no refresh token available' },
-          { status: 401 }
+          { error: "Token expired and no refresh token available" },
+          { status: 401 },
         );
       }
     }
 
     // 调用平台API搜索
-    const searchResponse = await adapter.searchProducts(request, platformAccount.accessToken);
+    const searchResponse = await adapter.searchProducts(
+      request,
+      platformAccount.accessToken,
+    );
 
     return NextResponse.json({
       success: true,
@@ -146,7 +166,7 @@ async function searchFromPlatformAPI(
       ...searchResponse,
     });
   } catch (error) {
-    console.error('Platform API search error:', error);
+    console.error("Platform API search error:", error);
     throw error;
   }
 }
@@ -161,18 +181,21 @@ async function searchFromCache(request: ProductSearchRequest) {
 
     if (request.keyword) {
       whereConditions.OR = [
-        { name: { contains: request.keyword, mode: 'insensitive' } },
-        { description: { contains: request.keyword, mode: 'insensitive' } },
-        { brand: { contains: request.keyword, mode: 'insensitive' } },
+        { name: { contains: request.keyword, mode: "insensitive" } },
+        { description: { contains: request.keyword, mode: "insensitive" } },
+        { brand: { contains: request.keyword, mode: "insensitive" } },
       ];
     }
 
     if (request.category) {
-      whereConditions.category = { contains: request.category, mode: 'insensitive' };
+      whereConditions.category = {
+        contains: request.category,
+        mode: "insensitive",
+      };
     }
 
     if (request.brand) {
-      whereConditions.brand = { contains: request.brand, mode: 'insensitive' };
+      whereConditions.brand = { contains: request.brand, mode: "insensitive" };
     }
 
     if (request.minPrice !== undefined) {
@@ -180,7 +203,10 @@ async function searchFromCache(request: ProductSearchRequest) {
     }
 
     if (request.maxPrice !== undefined) {
-      whereConditions.price = { ...whereConditions.price, lte: request.maxPrice };
+      whereConditions.price = {
+        ...whereConditions.price,
+        lte: request.maxPrice,
+      };
     }
 
     if (request.inStock !== undefined) {
@@ -191,23 +217,23 @@ async function searchFromCache(request: ProductSearchRequest) {
     const orderBy: any = {};
     if (request.sortBy) {
       switch (request.sortBy) {
-      case 'price':
-        orderBy.price = request.sortOrder || 'asc';
-        break;
-      case 'sales':
-        orderBy.salesCount = request.sortOrder || 'desc';
-        break;
-      case 'rating':
-        orderBy.rating = request.sortOrder || 'desc';
-        break;
-      case 'name':
-        orderBy.name = request.sortOrder || 'asc';
-        break;
-      default:
-        orderBy.cachedAt = 'desc';
+        case "price":
+          orderBy.price = request.sortOrder || "asc";
+          break;
+        case "sales":
+          orderBy.salesCount = request.sortOrder || "desc";
+          break;
+        case "rating":
+          orderBy.rating = request.sortOrder || "desc";
+          break;
+        case "name":
+          orderBy.name = request.sortOrder || "asc";
+          break;
+        default:
+          orderBy.cachedAt = "desc";
       }
     } else {
-      orderBy.cachedAt = 'desc';
+      orderBy.cachedAt = "desc";
     }
 
     // 查询数据库
@@ -222,7 +248,7 @@ async function searchFromCache(request: ProductSearchRequest) {
     ]);
 
     // 转换为标准格式
-    const standardizedProducts = products.map(product => ({
+    const standardizedProducts = products.map((product) => ({
       platformProductId: product.platformProductId,
       platform: product.platform,
       sku: product.sku,
@@ -261,7 +287,7 @@ async function searchFromCache(request: ProductSearchRequest) {
       hasMore: request.page! * request.pageSize! < total,
     });
   } catch (error) {
-    console.error('Cache search error:', error);
+    console.error("Cache search error:", error);
     throw error;
   }
 }

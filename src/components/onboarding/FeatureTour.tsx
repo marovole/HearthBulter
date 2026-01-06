@@ -1,37 +1,44 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { X, ChevronLeft, ChevronRight, Target, MousePointer } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Target,
+  MousePointer,
+} from "lucide-react";
 
 interface TourStep {
-  id: string
-  title: string
-  content: string
-  selector?: string
-  position?: 'top' | 'bottom' | 'left' | 'right' | 'center'
-  action?: string
+  id: string;
+  title: string;
+  content: string;
+  selector?: string;
+  position?: "top" | "bottom" | "left" | "right" | "center";
+  action?: string;
 }
 
 interface FeatureTourProps {
-  steps: TourStep[]
-  isOpen: boolean
-  onComplete: () => void
-  onSkip: () => void
-  onStart?: () => void
+  steps: TourStep[];
+  isOpen: boolean;
+  onComplete: () => void;
+  onSkip: () => void;
+  onStart?: () => void;
 }
 
-export function FeatureTour({ 
-  steps, 
-  isOpen, 
-  onComplete, 
-  onSkip, 
-  onStart, 
+export function FeatureTour({
+  steps,
+  isOpen,
+  onComplete,
+  onSkip,
+  onStart,
 }: FeatureTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null);
+  const [highlightedElement, setHighlightedElement] =
+    useState<HTMLElement | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const tourRef = useRef<HTMLDivElement>(null);
 
@@ -45,16 +52,16 @@ export function FeatureTour({
 
   const highlightElement = (selector: string) => {
     removeHighlight();
-    
+
     const element = document.querySelector(selector) as HTMLElement;
     if (element) {
       setHighlightedElement(element);
-      element.style.position = 'relative';
-      element.style.zIndex = '9999';
-      
+      element.style.position = "relative";
+      element.style.zIndex = "9999";
+
       // Create overlay
-      const overlay = document.createElement('div');
-      overlay.className = 'feature-tour-overlay';
+      const overlay = document.createElement("div");
+      overlay.className = "feature-tour-overlay";
       overlay.style.cssText = `
         position: fixed;
         top: 0;
@@ -71,35 +78,35 @@ export function FeatureTour({
       const rect = element.getBoundingClientRect();
       const tooltipWidth = 350;
       const tooltipHeight = 200;
-      
+
       let top = rect.bottom + 10;
       let left = rect.left + rect.width / 2 - tooltipWidth / 2;
-      
+
       // Adjust position if tooltip goes off screen
       if (top + tooltipHeight > window.innerHeight) {
         top = rect.top - tooltipHeight - 10;
       }
-      
+
       if (left < 10) {
         left = 10;
       } else if (left + tooltipWidth > window.innerWidth - 10) {
         left = window.innerWidth - tooltipWidth - 10;
       }
-      
+
       setTooltipPosition({ top, left });
 
       // Scroll element into view
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
   const removeHighlight = () => {
     if (highlightedElement) {
-      highlightedElement.style.zIndex = '';
+      highlightedElement.style.zIndex = "";
       setHighlightedElement(null);
     }
-    
-    const overlay = document.querySelector('.feature-tour-overlay');
+
+    const overlay = document.querySelector(".feature-tour-overlay");
     if (overlay) {
       overlay.remove();
     }
@@ -141,8 +148,11 @@ export function FeatureTour({
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleSkip} />
-      
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        onClick={handleSkip}
+      />
+
       {/* Tooltip */}
       <div
         ref={tourRef}
@@ -201,10 +211,10 @@ export function FeatureTour({
                     onClick={() => goToStep(index)}
                     className={`h-1 flex-1 rounded-full transition-colors ${
                       index === currentStep
-                        ? 'bg-blue-600'
+                        ? "bg-blue-600"
                         : index < currentStep
-                          ? 'bg-green-500'
-                          : 'bg-gray-200'
+                          ? "bg-green-500"
+                          : "bg-gray-200"
                     }`}
                   />
                 ))}
@@ -227,7 +237,7 @@ export function FeatureTour({
                   onClick={handleNext}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {currentStep === steps.length - 1 ? '完成' : '下一步'}
+                  {currentStep === steps.length - 1 ? "完成" : "下一步"}
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>

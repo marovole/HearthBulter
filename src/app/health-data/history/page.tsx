@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to prevent prerender errors with React Context
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { HealthDataHistoryPage } from '@/components/health-data/HealthDataHistoryPage';
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { HealthDataHistoryPage } from "@/components/health-data/HealthDataHistoryPage";
 
 /**
  * Health Data History Page Component
@@ -21,12 +21,12 @@ export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
     }
   }, [status, router]);
 
-  if (status === 'loading' || !session) {
+  if (status === "loading" || !session) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />

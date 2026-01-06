@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Hero from '@/components/landing/Hero';
-import FeaturesSection from '@/components/landing/FeaturesSection';
-import StatsCounter from '@/components/landing/StatsCounter';
-import TestimonialCarousel from '@/components/landing/TestimonialCarousel';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import Link from 'next/link';
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Hero from "@/components/landing/Hero";
+import FeaturesSection from "@/components/landing/FeaturesSection";
+import StatsCounter from "@/components/landing/StatsCounter";
+import TestimonialCarousel from "@/components/landing/TestimonialCarousel";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'authenticated' && session) {
-      router.push('/dashboard');
+    if (status === "authenticated" && session) {
+      router.push("/dashboard");
     }
   }, [status, session, router]);
 
@@ -37,7 +37,7 @@ export default function Home() {
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white text-sm font-medium mb-8 backdrop-blur-sm">
@@ -54,7 +54,7 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button 
+            <Button
               asChild
               size="xl"
               className="bg-white text-primary hover:bg-white/90 shadow-soft-xl group"
@@ -65,15 +65,13 @@ export default function Home() {
               </Link>
             </Button>
 
-            <Button 
+            <Button
               asChild
               size="xl"
               variant="outline"
               className="border-white/30 text-white hover:bg-white/10 hover:border-white/50"
             >
-              <Link href="/auth/signin">
-                已有账号？登录
-              </Link>
+              <Link href="/auth/signin">已有账号？登录</Link>
             </Button>
           </div>
 
@@ -103,9 +101,24 @@ export default function Home() {
               © 2024 Health Butler. 让健康管理更简单。
             </div>
             <div className="flex gap-6 text-sm text-muted-foreground">
-              <Link href="#" className="hover:text-foreground transition-colors">隐私政策</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">服务条款</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">联系我们</Link>
+              <Link
+                href="#"
+                className="hover:text-foreground transition-colors"
+              >
+                隐私政策
+              </Link>
+              <Link
+                href="#"
+                className="hover:text-foreground transition-colors"
+              >
+                服务条款
+              </Link>
+              <Link
+                href="#"
+                className="hover:text-foreground transition-colors"
+              >
+                联系我们
+              </Link>
             </div>
           </div>
         </div>

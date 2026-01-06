@@ -7,9 +7,9 @@
  * @module supabase-meal-plan-repository
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { MealPlanRepository } from '../interfaces/meal-plan-repository';
-import type { PaginatedResult, PaginationInput } from '../types/common';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { MealPlanRepository } from "../interfaces/meal-plan-repository";
+import type { PaginatedResult, PaginationInput } from "../types/common";
 import type {
   MealPlanDTO,
   MealPlanCreateInputDTO,
@@ -19,7 +19,7 @@ import type {
   MealCreateInputDTO,
   MealUpdateInputDTO,
   MealIngredientCreateInputDTO,
-} from '../types/meal-plan';
+} from "../types/meal-plan";
 
 /**
  * SupabaseMealPlanRepository
@@ -41,12 +41,12 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
   async createMealPlan(input: MealPlanCreateInputDTO): Promise<MealPlanDTO> {
     // 日期验证
     if (input.endDate <= input.startDate) {
-      throw new Error('Meal plan endDate must be later than startDate');
+      throw new Error("Meal plan endDate must be later than startDate");
     }
 
     // 创建主计划
     const { data: planRow, error: planError } = await this.client
-      .from('meal_plans')
+      .from("meal_plans")
       .insert({
         memberId: input.memberId,
         startDate: input.startDate.toISOString(),
@@ -56,13 +56,13 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
         targetProtein: input.targetProtein,
         targetCarbs: input.targetCarbs,
         targetFat: input.targetFat,
-        status: input.status ?? 'ACTIVE',
+        status: input.status ?? "ACTIVE",
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (planError) throw planError;
-    if (!planRow) throw new Error('Failed to create meal plan');
+    if (!planRow) throw new Error("Failed to create meal plan");
 
     // 如果有初始餐次，逐个创建以确保正确的食材关联
     // 注意：使用逐个插入而非批量插入，以避免依赖 Supabase 的返回顺序
@@ -71,13 +71,18 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
       try {
         for (const mealInput of meals) {
           // 验证餐次日期在计划范围内
-          if (mealInput.date < input.startDate || mealInput.date > input.endDate) {
-            throw new Error(`Meal date ${mealInput.date.toISOString()} is outside plan period`);
+          if (
+            mealInput.date < input.startDate ||
+            mealInput.date > input.endDate
+          ) {
+            throw new Error(
+              `Meal date ${mealInput.date.toISOString()} is outside plan period`,
+            );
           }
 
           // 创建单个餐次
           const { data: createdMeal, error: mealError } = await this.client
-            .from('meals')
+            .from("meals")
             .insert({
               planId: planRow.id,
               date: mealInput.date.toISOString(),
@@ -87,22 +92,23 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
               carbs: mealInput.carbs,
               fat: mealInput.fat,
             })
-            .select('id')
+            .select("id")
             .single();
 
           if (mealError) throw mealError;
-          if (!createdMeal) throw new Error('Failed to create meal for the plan');
+          if (!createdMeal)
+            throw new Error("Failed to create meal for the plan");
 
           // 立即为该餐次添加食材，确保正确关联
           if (mealInput.ingredients && mealInput.ingredients.length > 0) {
-            const ingredientsData = mealInput.ingredients.map(ing => ({
+            const ingredientsData = mealInput.ingredients.map((ing) => ({
               mealId: createdMeal.id,
               foodId: ing.foodId,
               amount: ing.amount,
             }));
 
             const { error: ingredientsError } = await this.client
-              .from('meal_ingredients')
+              .from("meal_ingredients")
               .insert(ingredientsData);
 
             if (ingredientsError) throw ingredientsError;
@@ -113,13 +119,16 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
         // 注意：数据库配置了级联删除 (MealPlan -> Meal -> MealIngredient)
         // 因此删除计划会自动清理所有已创建的餐次和食材
         const { error: cleanupError } = await this.client
-          .from('meal_plans')
+          .from("meal_plans")
           .delete()
-          .eq('id', planRow.id);
+          .eq("id", planRow.id);
 
         if (cleanupError) {
           // 记录清理失败，但仍抛出原始错误
-          console.error('Failed to cleanup meal plan after error:', cleanupError);
+          console.error(
+            "Failed to cleanup meal plan after error:",
+            cleanupError,
+          );
         }
 
         throw error;
@@ -129,7 +138,7 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
     // 查询完整的计划数据（包含餐次和食材）
     const createdPlan = await this.getMealPlanById(planRow.id);
     if (!createdPlan) {
-      throw new Error('Unable to retrieve created meal plan');
+      throw new Error("Unable to retrieve created meal plan");
     }
 
     return createdPlan;
@@ -137,8 +146,9 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
 
   async getMealPlanById(id: string): Promise<MealPlanDTO | null> {
     const { data, error } = await this.client
-      .from('meal_plans')
-      .select(`
+      .from("meal_plans")
+      .select(
+        `
         *,
         meals:meals(
           *,
@@ -147,9 +157,10 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
             food:foods(id, name)
           )
         )
-      `)
-      .eq('id', id)
-      .is('deletedAt', null)
+      `,
+      )
+      .eq("id", id)
+      .is("deletedAt", null)
       .maybeSingle();
 
     if (error) throw error;
@@ -161,11 +172,10 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
 
   async listMealPlans(
     filter?: MealPlanFilterDTO,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<MealPlanDTO>> {
-    let query = this.client
-      .from('meal_plans')
-      .select(`
+    let query = this.client.from("meal_plans").select(
+      `
         *,
         meals:meals(
           *,
@@ -174,28 +184,30 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
             food:foods(id, name)
           )
         )
-      `, { count: 'exact' });
+      `,
+      { count: "exact" },
+    );
 
     // 应用过滤条件
     if (filter?.memberId) {
-      query = query.eq('memberId', filter.memberId);
+      query = query.eq("memberId", filter.memberId);
     }
     if (filter?.goalType) {
-      query = query.eq('goalType', filter.goalType);
+      query = query.eq("goalType", filter.goalType);
     }
     if (filter?.status) {
-      query = query.eq('status', filter.status);
+      query = query.eq("status", filter.status);
     }
     if (!filter?.includeDeleted) {
-      query = query.is('deletedAt', null);
+      query = query.is("deletedAt", null);
     }
 
     // 时间范围过滤
     if (filter?.startDate) {
-      query = query.gte('endDate', filter.startDate.toISOString());
+      query = query.gte("endDate", filter.startDate.toISOString());
     }
     if (filter?.endDate) {
-      query = query.lte('startDate', filter.endDate.toISOString());
+      query = query.lte("startDate", filter.endDate.toISOString());
     }
 
     // 分页
@@ -203,14 +215,16 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
     const limit = pagination?.limit || 10;
     const offset = (page - 1) * limit;
 
-    query = query.range(offset, offset + limit - 1).order('createdAt', { ascending: false });
+    query = query
+      .range(offset, offset + limit - 1)
+      .order("createdAt", { ascending: false });
 
     const { data, error, count } = await query;
 
     if (error) throw error;
 
     return {
-      data: (data || []).map(plan => this.toMealPlanDTO(plan)),
+      data: (data || []).map((plan) => this.toMealPlanDTO(plan)),
       total: count || 0,
       page,
       limit,
@@ -228,13 +242,16 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
    * @returns 更新后的完整膳食计划
    * @throws 如果计划不存在或日期验证失败
    */
-  async updateMealPlan(id: string, input: MealPlanUpdateInputDTO): Promise<MealPlanDTO> {
+  async updateMealPlan(
+    id: string,
+    input: MealPlanUpdateInputDTO,
+  ): Promise<MealPlanDTO> {
     // 查询现有计划
     const { data: existingPlan, error: fetchError } = await this.client
-      .from('meal_plans')
-      .select('startDate, endDate')
-      .eq('id', id)
-      .is('deletedAt', null)
+      .from("meal_plans")
+      .select("startDate, endDate")
+      .eq("id", id)
+      .is("deletedAt", null)
       .maybeSingle();
 
     if (fetchError) throw fetchError;
@@ -248,7 +265,7 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
 
     // 验证新的日期范围
     if (newEnd <= newStart) {
-      throw new Error('Meal plan endDate must be later than startDate');
+      throw new Error("Meal plan endDate must be later than startDate");
     }
 
     // 构建更新数据（仅包含提供的字段）
@@ -259,18 +276,22 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
     if (input.startDate) updateData.startDate = input.startDate.toISOString();
     if (input.endDate) updateData.endDate = input.endDate.toISOString();
     if (input.goalType) updateData.goalType = input.goalType;
-    if (input.targetCalories !== undefined) updateData.targetCalories = input.targetCalories;
-    if (input.targetProtein !== undefined) updateData.targetProtein = input.targetProtein;
-    if (input.targetCarbs !== undefined) updateData.targetCarbs = input.targetCarbs;
+    if (input.targetCalories !== undefined)
+      updateData.targetCalories = input.targetCalories;
+    if (input.targetProtein !== undefined)
+      updateData.targetProtein = input.targetProtein;
+    if (input.targetCarbs !== undefined)
+      updateData.targetCarbs = input.targetCarbs;
     if (input.targetFat !== undefined) updateData.targetFat = input.targetFat;
     if (input.status) updateData.status = input.status;
 
     // 执行更新并获取完整数据
     const { data: updatedPlan, error: updateError } = await this.client
-      .from('meal_plans')
+      .from("meal_plans")
       .update(updateData)
-      .eq('id', id)
-      .select(`
+      .eq("id", id)
+      .select(
+        `
         *,
         meals:meals(
           *,
@@ -279,20 +300,21 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
             food:foods(id, name)
           )
         )
-      `)
+      `,
+      )
       .single();
 
     if (updateError) throw updateError;
-    if (!updatedPlan) throw new Error('Failed to retrieve updated meal plan');
+    if (!updatedPlan) throw new Error("Failed to retrieve updated meal plan");
 
     return this.toMealPlanDTO(updatedPlan);
   }
 
   async deleteMealPlan(id: string): Promise<void> {
     const { error } = await this.client
-      .from('meal_plans')
+      .from("meal_plans")
       .update({ deletedAt: new Date().toISOString() })
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) throw error;
   }
@@ -307,13 +329,16 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
    * @returns 创建的完整餐次（包含食材）
    * @throws 如果计划不存在或餐次日期不在计划范围内
    */
-  async createMeal(planId: string, input: MealCreateInputDTO): Promise<MealDTO> {
+  async createMeal(
+    planId: string,
+    input: MealCreateInputDTO,
+  ): Promise<MealDTO> {
     // 验证计划存在且未删除
     const { data: plan, error: planError } = await this.client
-      .from('meal_plans')
-      .select('startDate, endDate')
-      .eq('id', planId)
-      .is('deletedAt', null)
+      .from("meal_plans")
+      .select("startDate, endDate")
+      .eq("id", planId)
+      .is("deletedAt", null)
       .maybeSingle();
 
     if (planError) throw planError;
@@ -326,13 +351,13 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
     if (input.date < planStart || input.date > planEnd) {
       throw new Error(
         `Meal date ${input.date.toISOString()} must be within plan period ` +
-        `(${planStart.toISOString()} to ${planEnd.toISOString()})`
+          `(${planStart.toISOString()} to ${planEnd.toISOString()})`,
       );
     }
 
     // 创建餐次
     const { data: createdMeal, error: mealError } = await this.client
-      .from('meals')
+      .from("meals")
       .insert({
         planId,
         date: input.date.toISOString(),
@@ -342,22 +367,22 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
         carbs: input.carbs,
         fat: input.fat,
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (mealError) throw mealError;
-    if (!createdMeal) throw new Error('Failed to create meal');
+    if (!createdMeal) throw new Error("Failed to create meal");
 
     // 如果有食材，批量添加
     if (input.ingredients && input.ingredients.length > 0) {
       const { error: ingredientError } = await this.client
-        .from('meal_ingredients')
+        .from("meal_ingredients")
         .insert(
-          input.ingredients.map(ing => ({
+          input.ingredients.map((ing) => ({
             mealId: createdMeal.id,
             foodId: ing.foodId,
             amount: ing.amount,
-          }))
+          })),
         );
 
       if (ingredientError) throw ingredientError;
@@ -365,15 +390,16 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
 
     // 查询完整的餐次数据（包含食材）
     const mealDTO = await this.getMealById(createdMeal.id);
-    if (!mealDTO) throw new Error('Unable to retrieve created meal');
+    if (!mealDTO) throw new Error("Unable to retrieve created meal");
 
     return mealDTO;
   }
 
   async getMealById(id: string): Promise<MealDTO | null> {
     const { data, error } = await this.client
-      .from('meals')
-      .select(`
+      .from("meals")
+      .select(
+        `
         *,
         ingredients:meal_ingredients(
           id,
@@ -381,8 +407,9 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
           foodId,
           amount
         )
-      `)
-      .eq('id', id)
+      `,
+      )
+      .eq("id", id)
       .maybeSingle();
 
     if (error) throw error;
@@ -422,10 +449,11 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
     updateData.updatedAt = new Date().toISOString();
 
     const { data, error } = await this.client
-      .from('meals')
+      .from("meals")
       .update(updateData)
-      .eq('id', id)
-      .select(`
+      .eq("id", id)
+      .select(
+        `
         *,
         ingredients:meal_ingredients(
           id,
@@ -433,7 +461,8 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
           foodId,
           amount
         )
-      `)
+      `,
+      )
       .single();
 
     if (error) throw error;
@@ -441,21 +470,18 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
     // 如果提供了 ingredients，更新它们
     if (input.ingredients) {
       // 先删除所有现有 ingredients
-      await this.client
-        .from('meal_ingredients')
-        .delete()
-        .eq('mealId', id);
+      await this.client.from("meal_ingredients").delete().eq("mealId", id);
 
       // 插入新的 ingredients
       if (input.ingredients.length > 0) {
         const { error: insertError } = await this.client
-          .from('meal_ingredients')
+          .from("meal_ingredients")
           .insert(
-            input.ingredients.map(ing => ({
+            input.ingredients.map((ing) => ({
               mealId: id,
               foodId: ing.foodId,
               amount: ing.amount,
-            }))
+            })),
           );
 
         if (insertError) throw insertError;
@@ -463,8 +489,9 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
 
       // 重新查询以获取更新后的 ingredients
       const { data: updatedData, error: fetchError } = await this.client
-        .from('meals')
-        .select(`
+        .from("meals")
+        .select(
+          `
           *,
           ingredients:meal_ingredients(
             id,
@@ -472,8 +499,9 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
             foodId,
             amount
           )
-        `)
-        .eq('id', id)
+        `,
+        )
+        .eq("id", id)
         .single();
 
       if (fetchError) throw fetchError;
@@ -529,18 +557,18 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
   async deleteMeal(id: string): Promise<void> {
     // 先删除所有关联的食材
     const { error: ingredientError } = await this.client
-      .from('meal_ingredients')
+      .from("meal_ingredients")
       .delete()
-      .eq('mealId', id);
+      .eq("mealId", id);
 
     if (ingredientError) throw ingredientError;
 
     // 删除餐次本身
     const { data, error } = await this.client
-      .from('meals')
+      .from("meals")
       .delete()
-      .eq('id', id)
-      .select('id');
+      .eq("id", id)
+      .select("id");
 
     if (error) throw error;
 
@@ -552,24 +580,21 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
 
   async updateMealIngredients(
     mealId: string,
-    ingredients: MealIngredientCreateInputDTO[]
+    ingredients: MealIngredientCreateInputDTO[],
   ): Promise<MealDTO> {
     // 先删除所有现有 ingredients
-    await this.client
-      .from('meal_ingredients')
-      .delete()
-      .eq('mealId', mealId);
+    await this.client.from("meal_ingredients").delete().eq("mealId", mealId);
 
     // 插入新的 ingredients
     if (ingredients.length > 0) {
       const { error: insertError } = await this.client
-        .from('meal_ingredients')
+        .from("meal_ingredients")
         .insert(
-          ingredients.map(ing => ({
+          ingredients.map((ing) => ({
             mealId,
             foodId: ing.foodId,
             amount: ing.amount,
-          }))
+          })),
         );
 
       if (insertError) throw insertError;
@@ -577,8 +602,9 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
 
     // 查询更新后的 meal（包含新的 ingredients）
     const { data, error } = await this.client
-      .from('meals')
-      .select(`
+      .from("meals")
+      .select(
+        `
         *,
         ingredients:meal_ingredients(
           id,
@@ -586,8 +612,9 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
           foodId,
           amount
         )
-      `)
-      .eq('id', mealId)
+      `,
+      )
+      .eq("id", mealId)
       .single();
 
     if (error) throw error;
@@ -615,8 +642,9 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
   async getActivePlanByMember(memberId: string): Promise<MealPlanDTO | null> {
     const now = new Date();
     const { data, error } = await this.client
-      .from('meal_plans')
-      .select(`
+      .from("meal_plans")
+      .select(
+        `
         *,
         meals:meals(
           *,
@@ -625,13 +653,14 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
             food:foods(id, name)
           )
         )
-      `)
-      .eq('memberId', memberId)
-      .eq('status', 'ACTIVE')
-      .is('deletedAt', null)
-      .lte('startDate', now.toISOString())
-      .gte('endDate', now.toISOString())
-      .order('createdAt', { ascending: false })
+      `,
+      )
+      .eq("memberId", memberId)
+      .eq("status", "ACTIVE")
+      .is("deletedAt", null)
+      .lte("startDate", now.toISOString())
+      .gte("endDate", now.toISOString())
+      .order("createdAt", { ascending: false })
       .limit(1)
       .maybeSingle();
 
@@ -645,11 +674,12 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<MealPlanDTO>> {
     let query = this.client
-      .from('meal_plans')
-      .select(`
+      .from("meal_plans")
+      .select(
+        `
         *,
         meals:meals(
           *,
@@ -658,25 +688,29 @@ export class SupabaseMealPlanRepository implements MealPlanRepository {
             food:foods(id, name)
           )
         )
-      `, { count: 'exact' })
-      .eq('memberId', memberId)
-      .is('deletedAt', null)
-      .lte('startDate', endDate.toISOString())
-      .gte('endDate', startDate.toISOString());
+      `,
+        { count: "exact" },
+      )
+      .eq("memberId", memberId)
+      .is("deletedAt", null)
+      .lte("startDate", endDate.toISOString())
+      .gte("endDate", startDate.toISOString());
 
     // 分页
     const page = pagination?.page || 1;
     const limit = pagination?.limit || 10;
     const offset = (page - 1) * limit;
 
-    query = query.range(offset, offset + limit - 1).order('startDate', { ascending: false });
+    query = query
+      .range(offset, offset + limit - 1)
+      .order("startDate", { ascending: false });
 
     const { data, error, count } = await query;
 
     if (error) throw error;
 
     return {
-      data: (data || []).map(plan => this.toMealPlanDTO(plan)),
+      data: (data || []).map((plan) => this.toMealPlanDTO(plan)),
       total: count || 0,
       page,
       limit,

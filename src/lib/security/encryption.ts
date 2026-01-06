@@ -1,13 +1,16 @@
 /**
  * AES-256-GCM 加密工具
  * 使用 Web Crypto API 实现，兼容 Cloudflare Workers
+ *
+ * 注意：Node.js 20+ 原生支持 globalThis.crypto，无需 polyfill
  */
 
 import { webcrypto as nodeCrypto } from "crypto";
 import { logger } from "@/lib/logger";
 
+// 使用 Node.js 的 webcrypto API（与 Web Crypto API 兼容）
+// 注意：不再设置 globalThis.crypto，因为在 Node.js 20+ 中这是只读属性
 const cryptoApi = nodeCrypto;
-(globalThis as any).crypto = cryptoApi;
 
 const ENCRYPTION_VERSION = "v1";
 const ALGORITHM = "AES-GCM";

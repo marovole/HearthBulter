@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { recipeRepository } from '@/lib/repositories/recipe-repository-singleton';
-import type { GetFavoritesQuery } from '@/lib/repositories/interfaces/recipe-repository';
+import { NextRequest, NextResponse } from "next/server";
+import { recipeRepository } from "@/lib/repositories/recipe-repository-singleton";
+import type { GetFavoritesQuery } from "@/lib/repositories/interfaces/recipe-repository";
 
 /**
  * GET /api/recipes/favorites - 获取收藏的食谱列表
@@ -9,20 +9,22 @@ import type { GetFavoritesQuery } from '@/lib/repositories/interfaces/recipe-rep
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const sortBy = searchParams.get('sortBy') as 'favoritedAt' | 'name' || 'favoritedAt';
-    const sortOrder = searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
+    const memberId = searchParams.get("memberId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const sortBy =
+      (searchParams.get("sortBy") as "favoritedAt" | "name") || "favoritedAt";
+    const sortOrder =
+      (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'memberId is required' },
-        { status: 400 }
+        { error: "memberId is required" },
+        { status: 400 },
       );
     }
 
@@ -42,12 +44,11 @@ export async function GET(request: NextRequest) {
       favorites: result.favorites,
       pagination: result.pagination,
     });
-
   } catch (error) {
-    console.error('Error getting favorites:', error);
+    console.error("Error getting favorites:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-repository-singleton';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { mealTrackingRepository } from "@/lib/repositories/meal-tracking-repository-singleton";
 
 /**
  * GET /api/tracking/meals/recent-foods?memberId=xxx&limit=10
@@ -12,43 +12,33 @@ import { mealTrackingRepository } from '@/lib/repositories/meal-tracking-reposit
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: '未授权' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
-    const memberId = searchParams.get('memberId');
-    const limit = searchParams.get('limit');
+    const memberId = searchParams.get("memberId");
+    const limit = searchParams.get("limit");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: '缺少memberId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });
     }
 
     // 使用 Repository 获取最近常用食物
     const recentFoods = await mealTrackingRepository.getRecentFoods(
       memberId,
-      limit ? parseInt(limit) : undefined
+      limit ? parseInt(limit) : undefined,
     );
 
     return NextResponse.json({ recentFoods });
   } catch (error) {
-    console.error('Error fetching recent foods:', error);
+    console.error("Error fetching recent foods:", error);
 
-    return NextResponse.json(
-      { error: '获取最近食物失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "获取最近食物失败" }, { status: 500 });
   }
 }
-

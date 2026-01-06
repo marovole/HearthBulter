@@ -1,14 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Shield,
   AlertTriangle,
@@ -20,9 +33,15 @@ import {
   RefreshCw,
   AlertCircle,
   Lightbulb,
-} from 'lucide-react';
-import { AIContentReview, ReviewResult, ReviewIssue, aiReviewService, fixAIContent } from '@/lib/services/ai-review-service';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import {
+  AIContentReview,
+  ReviewResult,
+  ReviewIssue,
+  aiReviewService,
+  fixAIContent,
+} from "@/lib/services/ai-review-service";
+import { cn } from "@/lib/utils";
 
 interface AIReviewPanelProps {
   review: AIContentReview;
@@ -45,7 +64,7 @@ export function AIReviewPanel({
   const [isReviewing, setIsReviewing] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showFixDialog, setShowFixDialog] = useState(false);
-  const [fixedContent, setFixedContent] = useState('');
+  const [fixedContent, setFixedContent] = useState("");
   const [isFixing, setIsFixing] = useState(false);
 
   useEffect(() => {
@@ -61,7 +80,7 @@ export function AIReviewPanel({
       setReviewResult(result);
       onReviewComplete?.(result);
     } catch (error) {
-      console.error('Review failed:', error);
+      console.error("Review failed:", error);
       // 这里可以显示错误状态
     } finally {
       setIsReviewing(false);
@@ -87,7 +106,7 @@ export function AIReviewPanel({
       setFixedContent(fixed);
       setShowFixDialog(true);
     } catch (error) {
-      console.error('Failed to fix content:', error);
+      console.error("Failed to fix content:", error);
     } finally {
       setIsFixing(false);
     }
@@ -100,50 +119,50 @@ export function AIReviewPanel({
     }
   };
 
-  const getRiskColor = (riskLevel: ReviewResult['riskLevel']) => {
+  const getRiskColor = (riskLevel: ReviewResult["riskLevel"]) => {
     switch (riskLevel) {
-    case 'critical':
-      return 'text-red-600 bg-red-50 border-red-200';
-    case 'high':
-      return 'text-orange-600 bg-orange-50 border-orange-200';
-    case 'medium':
-      return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    case 'low':
-      return 'text-green-600 bg-green-50 border-green-200';
-    default:
-      return 'text-gray-600 bg-gray-50 border-gray-200';
+      case "critical":
+        return "text-red-600 bg-red-50 border-red-200";
+      case "high":
+        return "text-orange-600 bg-orange-50 border-orange-200";
+      case "medium":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      case "low":
+        return "text-green-600 bg-green-50 border-green-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 
-  const getSeverityIcon = (severity: ReviewIssue['severity']) => {
+  const getSeverityIcon = (severity: ReviewIssue["severity"]) => {
     switch (severity) {
-    case 'critical':
-      return <XCircle className="w-4 h-4 text-red-500" />;
-    case 'high':
-      return <AlertTriangle className="w-4 h-4 text-orange-500" />;
-    case 'medium':
-      return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-    case 'low':
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "critical":
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case "high":
+        return <AlertTriangle className="w-4 h-4 text-orange-500" />;
+      case "medium":
+        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case "low":
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
     }
   };
 
-  const getIssueTypeLabel = (type: ReviewIssue['type']) => {
+  const getIssueTypeLabel = (type: ReviewIssue["type"]) => {
     const labels = {
-      medical_claim: '医疗声明',
-      extreme_advice: '极端建议',
-      incomplete_info: '信息不全',
-      contradictory: '矛盾信息',
-      sensitive_topic: '敏感话题',
-      uncertainty: '不确定性',
-      commercial_bias: '商业偏见',
+      medical_claim: "医疗声明",
+      extreme_advice: "极端建议",
+      incomplete_info: "信息不全",
+      contradictory: "矛盾信息",
+      sensitive_topic: "敏感话题",
+      uncertainty: "不确定性",
+      commercial_bias: "商业偏见",
     };
     return labels[type] || type;
   };
 
   if (isReviewing) {
     return (
-      <Card className={cn('border-amber-200 bg-amber-50', className)}>
+      <Card className={cn("border-amber-200 bg-amber-50", className)}>
         <CardContent className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-3">
             <RefreshCw className="w-5 h-5 animate-spin text-amber-600" />
@@ -175,8 +194,10 @@ export function AIReviewPanel({
             <div className="flex items-center space-x-2">
               <Shield className="w-5 h-5" />
               <span>AI内容审核结果</span>
-              <Badge variant={reviewResult.approved ? 'default' : 'destructive'}>
-                {reviewResult.approved ? '通过' : '需要审核'}
+              <Badge
+                variant={reviewResult.approved ? "default" : "destructive"}
+              >
+                {reviewResult.approved ? "通过" : "需要审核"}
               </Badge>
             </div>
             <Button
@@ -185,11 +206,12 @@ export function AIReviewPanel({
               onClick={() => setShowDetails(!showDetails)}
             >
               <Eye className="w-4 h-4 mr-1" />
-              {showDetails ? '收起' : '详情'}
+              {showDetails ? "收起" : "详情"}
             </Button>
           </CardTitle>
           <CardDescription>
-            审核时间: {reviewResult.metadata.reviewTimestamp.toLocaleString('zh-CN')} |
+            审核时间:{" "}
+            {reviewResult.metadata.reviewTimestamp.toLocaleString("zh-CN")} |
             处理时间: {reviewResult.metadata.processingTime}ms
           </CardDescription>
         </CardHeader>
@@ -199,10 +221,19 @@ export function AIReviewPanel({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">风险等级:</span>
-              <Badge className={cn('capitalize', getRiskColor(reviewResult.riskLevel))}>
-                {reviewResult.riskLevel === 'critical' ? '严重' :
-                  reviewResult.riskLevel === 'high' ? '高' :
-                    reviewResult.riskLevel === 'medium' ? '中' : '低'}
+              <Badge
+                className={cn(
+                  "capitalize",
+                  getRiskColor(reviewResult.riskLevel),
+                )}
+              >
+                {reviewResult.riskLevel === "critical"
+                  ? "严重"
+                  : reviewResult.riskLevel === "high"
+                    ? "高"
+                    : reviewResult.riskLevel === "medium"
+                      ? "中"
+                      : "低"}
               </Badge>
             </div>
             <div className="text-sm text-muted-foreground">
@@ -212,12 +243,20 @@ export function AIReviewPanel({
 
           {/* 问题摘要 */}
           {reviewResult.issues.length > 0 && (
-            <Alert className={reviewResult.approved ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'}>
+            <Alert
+              className={
+                reviewResult.approved
+                  ? "border-yellow-200 bg-yellow-50"
+                  : "border-red-200 bg-red-50"
+              }
+            >
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-2">
                   <p className="font-medium">
-                    {reviewResult.approved ? '发现可改进的问题' : '发现需要解决的问题'}
+                    {reviewResult.approved
+                      ? "发现可改进的问题"
+                      : "发现需要解决的问题"}
                   </p>
                   <ul className="text-sm space-y-1 ml-4">
                     {reviewResult.issues.slice(0, 3).map((issue, index) => (
@@ -245,16 +284,25 @@ export function AIReviewPanel({
               <ScrollArea className="max-h-60">
                 <div className="space-y-2">
                   {reviewResult.issues.map((issue, index) => (
-                    <div key={index} className="p-3 border rounded-lg bg-white/50">
+                    <div
+                      key={index}
+                      className="p-3 border rounded-lg bg-white/50"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           {getSeverityIcon(issue.severity)}
-                          <span className="font-medium">{getIssueTypeLabel(issue.type)}</span>
+                          <span className="font-medium">
+                            {getIssueTypeLabel(issue.type)}
+                          </span>
                         </div>
                         <Badge variant="outline" className="text-xs">
-                          {issue.severity === 'critical' ? '严重' :
-                            issue.severity === 'high' ? '高' :
-                              issue.severity === 'medium' ? '中' : '低'}
+                          {issue.severity === "critical"
+                            ? "严重"
+                            : issue.severity === "high"
+                              ? "高"
+                              : issue.severity === "medium"
+                                ? "中"
+                                : "低"}
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">
@@ -262,7 +310,9 @@ export function AIReviewPanel({
                       </p>
                       <div className="flex items-start space-x-2">
                         <Lightbulb className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-blue-700">{issue.recommendation}</p>
+                        <p className="text-sm text-blue-700">
+                          {issue.recommendation}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -304,7 +354,7 @@ export function AIReviewPanel({
                     disabled={isFixing}
                   >
                     <Edit className="w-4 h-4 mr-2" />
-                    {isFixing ? '修复中...' : '自动修复'}
+                    {isFixing ? "修复中..." : "自动修复"}
                   </Button>
                 )}
               </>
@@ -317,11 +367,11 @@ export function AIReviewPanel({
                   className="flex-1"
                 >
                   <Edit className="w-4 h-4 mr-2" />
-                  {isFixing ? '修复中...' : '尝试修复'}
+                  {isFixing ? "修复中..." : "尝试修复"}
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => handleReject('审核未通过')}
+                  onClick={() => handleReject("审核未通过")}
                   className="flex-1"
                 >
                   <XCircle className="w-4 h-4 mr-2" />
@@ -370,9 +420,7 @@ export function AIReviewPanel({
             <Button variant="outline" onClick={() => setShowFixDialog(false)}>
               取消
             </Button>
-            <Button onClick={handleApplyFix}>
-              应用修复
-            </Button>
+            <Button onClick={handleApplyFix}>应用修复</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -383,7 +431,7 @@ export function AIReviewPanel({
 // 快速审核组件
 interface QuickAIReviewProps {
   content: string;
-  contentType?: AIContentReview['contentType'];
+  contentType?: AIContentReview["contentType"];
   userId: string;
   onResult?: (approved: boolean, issues: ReviewIssue[]) => void;
   className?: string;
@@ -391,7 +439,7 @@ interface QuickAIReviewProps {
 
 export function QuickAIReview({
   content,
-  contentType = 'general_response',
+  contentType = "general_response",
   userId,
   onResult,
   className,
@@ -418,7 +466,7 @@ export function QuickAIReview({
       setResult(reviewResult);
       onResult?.(reviewResult.approved, reviewResult.issues);
     } catch (error) {
-      console.error('Quick review failed:', error);
+      console.error("Quick review failed:", error);
     } finally {
       setIsLoading(false);
     }
@@ -426,7 +474,12 @@ export function QuickAIReview({
 
   if (isLoading) {
     return (
-      <div className={cn('flex items-center space-x-2 text-sm text-muted-foreground', className)}>
+      <div
+        className={cn(
+          "flex items-center space-x-2 text-sm text-muted-foreground",
+          className,
+        )}
+      >
         <RefreshCw className="w-3 h-3 animate-spin" />
         <span>审核中...</span>
       </div>
@@ -436,14 +489,14 @@ export function QuickAIReview({
   if (!result) return null;
 
   return (
-    <div className={cn('flex items-center space-x-2', className)}>
+    <div className={cn("flex items-center space-x-2", className)}>
       {result.approved ? (
         <CheckCircle className="w-4 h-4 text-green-500" />
       ) : (
         <AlertTriangle className="w-4 h-4 text-orange-500" />
       )}
       <span className="text-sm">
-        {result.approved ? '审核通过' : `${result.issues.length} 个问题`}
+        {result.approved ? "审核通过" : `${result.issues.length} 个问题`}
       </span>
     </div>
   );

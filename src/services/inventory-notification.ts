@@ -10,35 +10,35 @@
  * @module inventory-notification-service
  */
 
-import type { PrismaClient } from '@prisma/client';
-import { NotificationType } from '@prisma/client';
-import { expiryMonitor } from './expiry-monitor';
-import { inventoryAnalyzer } from './inventory-analyzer';
-import type { InventoryRepository } from '@/lib/repositories/interfaces/inventory-repository';
-import type { NotificationRepository } from '@/lib/repositories/interfaces/notification-repository';
+import type { PrismaClient } from "@prisma/client";
+import { NotificationType } from "@prisma/client";
+import { expiryMonitor } from "./expiry-monitor";
+import { inventoryAnalyzer } from "./inventory-analyzer";
+import type { InventoryRepository } from "@/lib/repositories/interfaces/inventory-repository";
+import type { NotificationRepository } from "@/lib/repositories/interfaces/notification-repository";
 
 export interface NotificationConfig {
   expiryAlerts: {
     enabled: boolean;
     advanceDays: number[]; // [3, 7] 表示提前3天和7天提醒
-    frequency: 'DAILY' | 'WEEKLY' | 'IMMEDIATE';
+    frequency: "DAILY" | "WEEKLY" | "IMMEDIATE";
   };
   lowStockAlerts: {
     enabled: boolean;
     threshold: number; // 低于阈值时提醒
-    frequency: 'DAILY' | 'WEEKLY' | 'IMMEDIATE';
+    frequency: "DAILY" | "WEEKLY" | "IMMEDIATE";
   };
   wasteReports: {
     enabled: boolean;
-    frequency: 'WEEKLY' | 'MONTHLY';
+    frequency: "WEEKLY" | "MONTHLY";
   };
   usageReminders: {
     enabled: boolean;
-    frequency: 'DAILY' | 'WEEKLY';
+    frequency: "DAILY" | "WEEKLY";
   };
   purchaseSuggestions: {
     enabled: boolean;
-    frequency: 'WEEKLY' | 'MONTHLY';
+    frequency: "WEEKLY" | "MONTHLY";
   };
 }
 
@@ -61,7 +61,7 @@ export interface InventoryNotification {
   type: NotificationType;
   title: string;
   message: string;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  priority: "HIGH" | "MEDIUM" | "LOW";
   data?: InventoryNotificationData;
   isRead: boolean;
   createdAt: Date;
@@ -85,7 +85,7 @@ export interface NotificationSummary {
  */
 export type InventoryNotificationPrisma = Pick<
   PrismaClient,
-  'notificationConfig' | 'notification' | 'wasteLog' | 'user'
+  "notificationConfig" | "notification" | "wasteLog" | "user"
 >;
 
 /**
@@ -143,24 +143,24 @@ export class InventoryNotificationService {
         expiryAlerts: {
           enabled: config.expiryAlerts,
           advanceDays: config.expiryAdvanceDays || [3, 7],
-          frequency: (config.expiryFrequency as any) || 'DAILY',
+          frequency: (config.expiryFrequency as any) || "DAILY",
         },
         lowStockAlerts: {
           enabled: config.lowStockAlerts,
           threshold: config.lowStockThreshold || 1,
-          frequency: (config.lowStockFrequency as any) || 'IMMEDIATE',
+          frequency: (config.lowStockFrequency as any) || "IMMEDIATE",
         },
         wasteReports: {
           enabled: config.wasteReports,
-          frequency: (config.wasteFrequency as any) || 'WEEKLY',
+          frequency: (config.wasteFrequency as any) || "WEEKLY",
         },
         usageReminders: {
           enabled: config.usageReminders,
-          frequency: (config.usageFrequency as any) || 'DAILY',
+          frequency: (config.usageFrequency as any) || "DAILY",
         },
         purchaseSuggestions: {
           enabled: config.purchaseSuggestions,
-          frequency: (config.purchaseFrequency as any) || 'WEEKLY',
+          frequency: (config.purchaseFrequency as any) || "WEEKLY",
         },
       };
     }
@@ -170,24 +170,24 @@ export class InventoryNotificationService {
       expiryAlerts: {
         enabled: true,
         advanceDays: [3, 7],
-        frequency: 'DAILY',
+        frequency: "DAILY",
       },
       lowStockAlerts: {
         enabled: true,
         threshold: 1,
-        frequency: 'IMMEDIATE',
+        frequency: "IMMEDIATE",
       },
       wasteReports: {
         enabled: true,
-        frequency: 'WEEKLY',
+        frequency: "WEEKLY",
       },
       usageReminders: {
         enabled: false,
-        frequency: 'DAILY',
+        frequency: "DAILY",
       },
       purchaseSuggestions: {
         enabled: true,
-        frequency: 'WEEKLY',
+        frequency: "WEEKLY",
       },
     };
   }
@@ -195,7 +195,10 @@ export class InventoryNotificationService {
   /**
    * 更新用户的通知配置
    */
-  async updateNotificationConfig(memberId: string, config: Partial<NotificationConfig>): Promise<boolean> {
+  async updateNotificationConfig(
+    memberId: string,
+    config: Partial<NotificationConfig>,
+  ): Promise<boolean> {
     try {
       // TODO: 使用 NotificationConfigRepository 替代 Prisma
       await this.prisma.notificationConfig.upsert({
@@ -218,21 +221,21 @@ export class InventoryNotificationService {
           memberId,
           expiryAlerts: config.expiryAlerts?.enabled ?? true,
           expiryAdvanceDays: config.expiryAlerts?.advanceDays ?? [3, 7],
-          expiryFrequency: config.expiryAlerts?.frequency ?? 'DAILY',
+          expiryFrequency: config.expiryAlerts?.frequency ?? "DAILY",
           lowStockAlerts: config.lowStockAlerts?.enabled ?? true,
           lowStockThreshold: config.lowStockAlerts?.threshold ?? 1,
-          lowStockFrequency: config.lowStockAlerts?.frequency ?? 'IMMEDIATE',
+          lowStockFrequency: config.lowStockAlerts?.frequency ?? "IMMEDIATE",
           wasteReports: config.wasteReports?.enabled ?? true,
-          wasteFrequency: config.wasteReports?.frequency ?? 'WEEKLY',
+          wasteFrequency: config.wasteReports?.frequency ?? "WEEKLY",
           usageReminders: config.usageReminders?.enabled ?? false,
-          usageFrequency: config.usageReminders?.frequency ?? 'DAILY',
+          usageFrequency: config.usageReminders?.frequency ?? "DAILY",
           purchaseSuggestions: config.purchaseSuggestions?.enabled ?? true,
-          purchaseFrequency: config.purchaseSuggestions?.frequency ?? 'WEEKLY',
+          purchaseFrequency: config.purchaseSuggestions?.frequency ?? "WEEKLY",
         },
       });
       return true;
     } catch (error) {
-      console.error('更新通知配置失败:', error);
+      console.error("更新通知配置失败:", error);
       return false;
     }
   }
@@ -240,7 +243,9 @@ export class InventoryNotificationService {
   /**
    * 生成过期提醒通知
    */
-  async generateExpiryNotifications(memberId: string): Promise<InventoryNotification[]> {
+  async generateExpiryNotifications(
+    memberId: string,
+  ): Promise<InventoryNotification[]> {
     const notifications: InventoryNotification[] = [];
     const config = await this.getNotificationConfig(memberId);
 
@@ -255,17 +260,17 @@ export class InventoryNotificationService {
       const itemsText = expirySummary.expiringItems
         .slice(0, 5)
         .map((item) => `${item.foodName} (${item.daysToExpiry}天)`)
-        .join('、');
+        .join("、");
 
       notifications.push({
-        id: '', // 将在创建时生成
+        id: "", // 将在创建时生成
         memberId,
         type: NotificationType.EXPIRY_ALERT,
-        title: '食材即将过期',
+        title: "食材即将过期",
         message: `您有 ${expirySummary.expiringItems.length} 件食材即将过期：${itemsText}${
-          expirySummary.expiringItems.length > 5 ? '等' : ''
+          expirySummary.expiringItems.length > 5 ? "等" : ""
         }`,
-        priority: 'HIGH',
+        priority: "HIGH",
         data: {
           expiringItems: expirySummary.expiringItems,
           totalValue: expirySummary.totalExpiringValue,
@@ -280,17 +285,17 @@ export class InventoryNotificationService {
       const itemsText = expirySummary.expiredItems
         .slice(0, 5)
         .map((item) => `${item.foodName}`)
-        .join('、');
+        .join("、");
 
       notifications.push({
-        id: '',
+        id: "",
         memberId,
         type: NotificationType.EXPIRY_ALERT,
-        title: '食材已过期',
+        title: "食材已过期",
         message: `您有 ${expirySummary.expiredItems.length} 件食材已过期：${itemsText}${
-          expirySummary.expiredItems.length > 5 ? '等' : ''
+          expirySummary.expiredItems.length > 5 ? "等" : ""
         }，请及时处理`,
-        priority: 'HIGH',
+        priority: "HIGH",
         data: {
           expiredItems: expirySummary.expiredItems,
           totalValue: expirySummary.totalExpiredValue,
@@ -306,7 +311,9 @@ export class InventoryNotificationService {
   /**
    * 生成库存不足提醒
    */
-  async generateLowStockNotifications(memberId: string): Promise<InventoryNotification[]> {
+  async generateLowStockNotifications(
+    memberId: string,
+  ): Promise<InventoryNotification[]> {
     const notifications: InventoryNotification[] = [];
     const config = await this.getNotificationConfig(memberId);
 
@@ -321,17 +328,17 @@ export class InventoryNotificationService {
       const itemsText = lowStockItems
         .slice(0, 5)
         .map((item) => `${item.food.name}`)
-        .join('、');
+        .join("、");
 
       notifications.push({
-        id: '',
+        id: "",
         memberId,
         type: NotificationType.LOW_STOCK_ALERT,
-        title: '库存不足提醒',
+        title: "库存不足提醒",
         message: `您有 ${lowStockItems.length} 种食材库存不足：${itemsText}${
-          lowStockItems.length > 5 ? '等' : ''
+          lowStockItems.length > 5 ? "等" : ""
         }，建议及时补货`,
-        priority: 'MEDIUM',
+        priority: "MEDIUM",
         data: {
           lowStockItems: lowStockItems.slice(0, 10).map((item) => ({
             foodId: item.foodId,
@@ -351,7 +358,9 @@ export class InventoryNotificationService {
   /**
    * 生成浪费报告
    */
-  async generateWasteReportNotifications(memberId: string): Promise<InventoryNotification[]> {
+  async generateWasteReportNotifications(
+    memberId: string,
+  ): Promise<InventoryNotification[]> {
     const notifications: InventoryNotification[] = [];
     const config = await this.getNotificationConfig(memberId);
 
@@ -379,29 +388,35 @@ export class InventoryNotificationService {
     });
 
     if (wasteRecords.length > 0) {
-      const totalWasteValue = wasteRecords.reduce((sum, record) => sum + (record.estimatedCost || 0), 0);
+      const totalWasteValue = wasteRecords.reduce(
+        (sum, record) => sum + (record.estimatedCost || 0),
+        0,
+      );
 
-      const topWastedItems = wasteRecords.reduce((acc, record) => {
-        const foodName = record.inventoryItem.food.name;
-        acc[foodName] = (acc[foodName] || 0) + record.wastedQuantity;
-        return acc;
-      }, {} as Record<string, number>);
+      const topWastedItems = wasteRecords.reduce(
+        (acc, record) => {
+          const foodName = record.inventoryItem.food.name;
+          acc[foodName] = (acc[foodName] || 0) + record.wastedQuantity;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       const topItems = Object.entries(topWastedItems)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 3)
         .map(([name, quantity]) => `${name}(${quantity})`)
-        .join('、');
+        .join("、");
 
       notifications.push({
-        id: '',
+        id: "",
         memberId,
         type: NotificationType.WASTE_REPORT,
-        title: '月度浪费报告',
+        title: "月度浪费报告",
         message: `过去30天您浪费了 ${wasteRecords.length} 件食材，价值约 ¥${totalWasteValue.toFixed(
-          2
+          2,
         )}。主要浪费物品：${topItems}`,
-        priority: 'MEDIUM',
+        priority: "MEDIUM",
         data: {
           wasteCount: wasteRecords.length,
           totalValue: totalWasteValue,
@@ -418,7 +433,9 @@ export class InventoryNotificationService {
   /**
    * 生成采购建议通知
    */
-  async generatePurchaseSuggestionNotifications(memberId: string): Promise<InventoryNotification[]> {
+  async generatePurchaseSuggestionNotifications(
+    memberId: string,
+  ): Promise<InventoryNotification[]> {
     const notifications: InventoryNotification[] = [];
     const config = await this.getNotificationConfig(memberId);
 
@@ -426,21 +443,24 @@ export class InventoryNotificationService {
       return notifications;
     }
 
-    const suggestions = await inventoryAnalyzer.generatePurchaseSuggestions(memberId);
+    const suggestions =
+      await inventoryAnalyzer.generatePurchaseSuggestions(memberId);
 
     if (suggestions.length > 0) {
-      const highPrioritySuggestions = suggestions.filter((s) => s.priority === 'HIGH').slice(0, 3);
+      const highPrioritySuggestions = suggestions
+        .filter((s) => s.priority === "HIGH")
+        .slice(0, 3);
       const suggestionsText = highPrioritySuggestions
         .map((s) => `${s.foodName}(${s.suggestedQuantity}${s.unit})`)
-        .join('、');
+        .join("、");
 
       notifications.push({
-        id: '',
+        id: "",
         memberId,
         type: NotificationType.PURCHASE_SUGGESTION,
-        title: '智能采购建议',
+        title: "智能采购建议",
         message: `基于您的库存和使用习惯，建议采购：${suggestionsText}`,
-        priority: 'LOW',
+        priority: "LOW",
         data: {
           suggestions: highPrioritySuggestions,
           totalSuggestions: suggestions.length,
@@ -456,7 +476,9 @@ export class InventoryNotificationService {
   /**
    * 批量创建通知
    */
-  async createNotifications(notifications: Omit<InventoryNotification, 'id'>[]): Promise<boolean> {
+  async createNotifications(
+    notifications: Omit<InventoryNotification, "id">[],
+  ): Promise<boolean> {
     try {
       // TODO: 使用 NotificationRepository 批量创建方法
       for (const notification of notifications) {
@@ -476,7 +498,7 @@ export class InventoryNotificationService {
       }
       return true;
     } catch (error) {
-      console.error('创建通知失败:', error);
+      console.error("创建通知失败:", error);
       return false;
     }
   }
@@ -488,11 +510,11 @@ export class InventoryNotificationService {
     memberId: string,
     filters?: {
       type?: NotificationType;
-      priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+      priority?: "HIGH" | "MEDIUM" | "LOW";
       isRead?: boolean;
       limit?: number;
       offset?: number;
-    }
+    },
   ): Promise<NotificationSummary> {
     const whereClause: any = { memberId };
 
@@ -503,7 +525,7 @@ export class InventoryNotificationService {
     // TODO: 使用 NotificationRepository 替代 Prisma
     const notifications = await this.prisma.notification.findMany({
       where: whereClause,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: filters?.limit || 50,
       skip: filters?.offset || 0,
     });
@@ -513,15 +535,15 @@ export class InventoryNotificationService {
     });
 
     const highPriorityCount = await this.prisma.notification.count({
-      where: { memberId, priority: 'HIGH', isRead: false },
+      where: { memberId, priority: "HIGH", isRead: false },
     });
 
     const mediumPriorityCount = await this.prisma.notification.count({
-      where: { memberId, priority: 'MEDIUM', isRead: false },
+      where: { memberId, priority: "MEDIUM", isRead: false },
     });
 
     const lowPriorityCount = await this.prisma.notification.count({
-      where: { memberId, priority: 'LOW', isRead: false },
+      where: { memberId, priority: "LOW", isRead: false },
     });
 
     return {
@@ -541,7 +563,10 @@ export class InventoryNotificationService {
   /**
    * 标记通知为已读
    */
-  async markNotificationAsRead(notificationId: string, memberId: string): Promise<boolean> {
+  async markNotificationAsRead(
+    notificationId: string,
+    memberId: string,
+  ): Promise<boolean> {
     try {
       // TODO: 使用 NotificationRepository 替代 Prisma
       const result = await this.prisma.notification.updateMany({
@@ -556,7 +581,7 @@ export class InventoryNotificationService {
       });
       return result.count > 0;
     } catch (error) {
-      console.error('标记通知已读失败:', error);
+      console.error("标记通知已读失败:", error);
       return false;
     }
   }
@@ -579,7 +604,7 @@ export class InventoryNotificationService {
       });
       return true;
     } catch (error) {
-      console.error('批量标记通知已读失败:', error);
+      console.error("批量标记通知已读失败:", error);
       return false;
     }
   }
@@ -587,7 +612,10 @@ export class InventoryNotificationService {
   /**
    * 删除通知
    */
-  async deleteNotification(notificationId: string, memberId: string): Promise<boolean> {
+  async deleteNotification(
+    notificationId: string,
+    memberId: string,
+  ): Promise<boolean> {
     try {
       // TODO: 使用 NotificationRepository 替代 Prisma
       const result = await this.prisma.notification.deleteMany({
@@ -598,7 +626,7 @@ export class InventoryNotificationService {
       });
       return result.count > 0;
     } catch (error) {
-      console.error('删除通知失败:', error);
+      console.error("删除通知失败:", error);
       return false;
     }
   }
@@ -619,22 +647,26 @@ export class InventoryNotificationService {
       });
 
       for (const user of users) {
-        const allNotifications: Omit<InventoryNotification, 'id'>[] = [];
+        const allNotifications: Omit<InventoryNotification, "id">[] = [];
 
         // 生成各类通知
-        const [expiryNotifications, lowStockNotifications, wasteNotifications, purchaseNotifications] =
-          await Promise.all([
-            this.generateExpiryNotifications(user.id),
-            this.generateLowStockNotifications(user.id),
-            this.generateWasteReportNotifications(user.id),
-            this.generatePurchaseSuggestionNotifications(user.id),
-          ]);
+        const [
+          expiryNotifications,
+          lowStockNotifications,
+          wasteNotifications,
+          purchaseNotifications,
+        ] = await Promise.all([
+          this.generateExpiryNotifications(user.id),
+          this.generateLowStockNotifications(user.id),
+          this.generateWasteReportNotifications(user.id),
+          this.generatePurchaseSuggestionNotifications(user.id),
+        ]);
 
         allNotifications.push(
           ...expiryNotifications,
           ...lowStockNotifications,
           ...wasteNotifications,
-          ...purchaseNotifications
+          ...purchaseNotifications,
         );
 
         // 创建通知
@@ -643,7 +675,7 @@ export class InventoryNotificationService {
         }
       }
     } catch (error) {
-      console.error('生成定时通知失败:', error);
+      console.error("生成定时通知失败:", error);
     }
   }
 
@@ -662,7 +694,7 @@ export class InventoryNotificationService {
         },
       });
     } catch (error) {
-      console.error('清理过期通知失败:', error);
+      console.error("清理过期通知失败:", error);
     }
   }
 }
@@ -673,13 +705,18 @@ export class InventoryNotificationService {
  */
 // 兼容层：导出 singleton 供旧代码使用
 // TODO: 迁移所有使用方到 DI container 后移除此导出
-let inventoryNotificationServiceInstance: InventoryNotificationService | null = null;
+let inventoryNotificationServiceInstance: InventoryNotificationService | null =
+  null;
 
 function getInventoryNotificationServiceSingleton(): InventoryNotificationService {
   if (!inventoryNotificationServiceInstance) {
-    const { inventoryRepository } = require('@/lib/repositories/inventory-repository-singleton');
-    const { notificationRepository } = require('@/lib/repositories/notification-repository-singleton');
-    const { getPrismaClient } = require('@/lib/db');
+    const {
+      inventoryRepository,
+    } = require("@/lib/repositories/inventory-repository-singleton");
+    const {
+      notificationRepository,
+    } = require("@/lib/repositories/notification-repository-singleton");
+    const { getPrismaClient } = require("@/lib/db");
 
     // 注意：这里使用 lazy loading，因为 getPrismaClient 是异步的
     // 实际使用时会在第一次调用 service 方法时初始化
@@ -688,7 +725,7 @@ function getInventoryNotificationServiceSingleton(): InventoryNotificationServic
         return async (...args: any[]) => {
           const prisma = await getPrismaClient();
           const method = (prisma as any)[prop];
-          if (typeof method === 'function') {
+          if (typeof method === "function") {
             return method.apply(prisma, args);
           }
           return method;
@@ -705,4 +742,5 @@ function getInventoryNotificationServiceSingleton(): InventoryNotificationServic
   return inventoryNotificationServiceInstance;
 }
 
-export const inventoryNotificationService = getInventoryNotificationServiceSingleton();
+export const inventoryNotificationService =
+  getInventoryNotificationServiceSingleton();

@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import { useState, useEffect } from 'react';
-import { Star, Quote } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import { useState, useEffect } from "react";
+import { Star, Quote } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from '@/components/ui/carousel';
+} from "@/components/ui/carousel";
 
 interface Testimonial {
   id: string;
@@ -26,31 +26,34 @@ interface Testimonial {
 
 const testimonials: Testimonial[] = [
   {
-    id: '1',
-    name: '张女士',
-    role: '全职妈妈',
-    content: '使用 Health Butler 3 个月，全家的饮食更科学了，孩子也更健康！AI 生成的食谱非常实用，购物清单功能节省了我很多时间。',
+    id: "1",
+    name: "张女士",
+    role: "全职妈妈",
+    content:
+      "使用 Health Butler 3 个月，全家的饮食更科学了，孩子也更健康！AI 生成的食谱非常实用，购物清单功能节省了我很多时间。",
     rating: 5,
-    achievement: '全家健康改善',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
+    achievement: "全家健康改善",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
   },
   {
-    id: '2',
-    name: '李先生',
-    role: '程序员',
-    content: '作为加班族，很难保持健康饮食。Health Butler 帮我规划每日营养，血压和体重都有明显改善，强烈推荐！',
+    id: "2",
+    name: "李先生",
+    role: "程序员",
+    content:
+      "作为加班族，很难保持健康饮食。Health Butler 帮我规划每日营养，血压和体重都有明显改善，强烈推荐！",
     rating: 5,
-    achievement: '血压恢复正常',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+    achievement: "血压恢复正常",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
   },
   {
-    id: '3',
-    name: '王女士',
-    role: '健身教练',
-    content: '专业的营养分析和食谱推荐让我的健身效果事半功倍。数据可视化功能特别好用，能清楚看到身体变化趋势。',
+    id: "3",
+    name: "王女士",
+    role: "健身教练",
+    content:
+      "专业的营养分析和食谱推荐让我的健身效果事半功倍。数据可视化功能特别好用，能清楚看到身体变化趋势。",
     rating: 5,
-    achievement: '健身效果提升',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily',
+    achievement: "健身效果提升",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily",
   },
 ];
 
@@ -83,8 +86,8 @@ export default function TestimonialCarousel() {
       setCurrent(api.selectedScrollSnap());
     };
 
-    api.on('select', handleSelect);
-    return () => api.off('select', handleSelect);
+    api.on("select", handleSelect);
+    return () => api.off("select", handleSelect);
   }, [api]);
 
   const StarRating = ({ rating }: { rating: number }) => (
@@ -93,7 +96,7 @@ export default function TestimonialCarousel() {
         <Star
           key={i}
           className={`w-4 h-4 ${
-            i < rating ? 'fill-accent text-accent' : 'text-muted'
+            i < rating ? "fill-accent text-accent" : "text-muted"
           }`}
         />
       ))}
@@ -130,13 +133,16 @@ export default function TestimonialCarousel() {
           onMouseLeave={() => setIsPaused(false)}
         >
           <Carousel
-            opts={{ align: 'center', loop: true }}
+            opts={{ align: "center", loop: true }}
             setApi={setApi}
             className="w-full"
           >
             <CarouselContent className="-ml-4">
               {testimonials.map((testimonial) => (
-                <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                <CarouselItem
+                  key={testimonial.id}
+                  className="pl-4 md:basis-1/2 lg:basis-1/3"
+                >
                   <Card variant="elevated" className="h-full">
                     <CardContent className="p-6 flex flex-col h-full">
                       {/* Quote icon */}
@@ -158,7 +164,10 @@ export default function TestimonialCarousel() {
 
                       <div className="flex items-center gap-3 mt-auto pt-4 border-t border-border">
                         <Avatar className="w-10 h-10">
-                          <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                          <AvatarImage
+                            src={testimonial.avatar}
+                            alt={testimonial.name}
+                          />
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                             {testimonial.name[0]}
                           </AvatarFallback>
@@ -189,8 +198,8 @@ export default function TestimonialCarousel() {
               key={index}
               className={`h-2 rounded-full transition-all duration-300 ${
                 index === current
-                  ? 'w-6 bg-primary'
-                  : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                  ? "w-6 bg-primary"
+                  : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
               }`}
               onClick={() => api?.scrollTo(index)}
               aria-label={`跳转到第 ${index + 1} 条评价`}

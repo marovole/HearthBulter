@@ -1,6 +1,6 @@
-import { CacheService, CacheKeyBuilder } from '@/lib/cache/redis-client';
-import { logger } from '@/lib/logging/structured-logger';
-import crypto from 'crypto';
+import { CacheService, CacheKeyBuilder } from "@/lib/cache/redis-client";
+import { logger } from "@/lib/logging/structured-logger";
+import crypto from "crypto";
 
 // 查询缓存配置
 interface QueryCacheConfig {
@@ -8,7 +8,7 @@ interface QueryCacheConfig {
   defaultTTL: number; // 默认缓存时间（秒）
   maxResultSize: number; // 最大结果大小（字节）
   keyPrefix: string;
-  invalidationStrategy: 'time' | 'tag' | 'manual';
+  invalidationStrategy: "time" | "tag" | "manual";
   compressionEnabled: boolean;
 }
 
@@ -67,15 +67,15 @@ export class QueryCache {
    * 获取默认配置
    */
   private getDefaultConfig(): QueryCacheConfig {
-    const env = process.env.NODE_ENV || 'development';
-    const isProduction = env === 'production';
+    const env = process.env.NODE_ENV || "development";
+    const isProduction = env === "production";
 
     return {
       enabled: isProduction,
       defaultTTL: isProduction ? 300 : 60, // 5分钟 / 1分钟
       maxResultSize: 1024 * 1024, // 1MB
-      keyPrefix: 'db_query',
-      invalidationStrategy: 'tag',
+      keyPrefix: "db_query",
+      invalidationStrategy: "tag",
       compressionEnabled: isProduction,
     };
   }
@@ -105,13 +105,16 @@ export class QueryCache {
     };
 
     const hashString = JSON.stringify(hashInput, Object.keys(hashInput).sort());
-    return crypto.createHash('md5').update(hashString).digest('hex');
+    return crypto.createHash("md5").update(hashString).digest("hex");
   }
 
   /**
    * 生成缓存键
    */
-  private generateCacheKey(queryHash: string, strategy?: CacheStrategy): string {
+  private generateCacheKey(
+    queryHash: string,
+    strategy?: CacheStrategy,
+  ): string {
     const prefix = strategy?.key || this.config.keyPrefix;
     return CacheKeyBuilder.build(prefix, queryHash);
   }
@@ -125,18 +128,18 @@ export class QueryCache {
 
       // 检查大小限制
       if (serialized.length > this.config.maxResultSize) {
-        logger.warn('查询结果过大，跳过缓存', {
-          type: 'query_cache',
+        logger.warn("查询结果过大，跳过缓存", {
+          type: "query_cache",
           size: serialized.length,
           maxSize: this.config.maxResultSize,
         });
-        throw new Error('结果过大');
+        throw new Error("结果过大");
       }
 
       return serialized;
     } catch (error) {
-      logger.error('序列化查询结果失败', error as Error, {
-        type: 'query_cache',
+      logger.error("序列化查询结果失败", error as Error, {
+        type: "query_cache",
       });
       throw error;
     }
@@ -149,8 +152,8 @@ export class QueryCache {
     try {
       return JSON.parse(serialized);
     } catch (error) {
-      logger.error('反序列化查询结果失败', error as Error, {
-        type: 'query_cache',
+      logger.error("反序列化查询结果失败", error as Error, {
+        type: "query_cache",
       });
       throw error;
     }
@@ -169,9 +172,9 @@ export class QueryCache {
       // 为了简化，暂时返回原始数据
       return data;
     } catch (error) {
-      logger.warn('数据压缩失败，使用原始数据', {
-        type: 'query_cache',
-        error: error instanceof Error ? error.message : '未知错误',
+      logger.warn("数据压缩失败，使用原始数据", {
+        type: "query_cache",
+        error: error instanceof Error ? error.message : "未知错误",
       });
       return data;
     }
@@ -190,9 +193,9 @@ export class QueryCache {
       // 为了简化，暂时返回原始数据
       return data;
     } catch (error) {
-      logger.warn('数据解压缩失败，使用原始数据', {
-        type: 'query_cache',
-        error: error instanceof Error ? error.message : '未知错误',
+      logger.warn("数据解压缩失败，使用原始数据", {
+        type: "query_cache",
+        error: error instanceof Error ? error.message : "未知错误",
       });
       return data;
     }
@@ -204,7 +207,7 @@ export class QueryCache {
   async get<T>(
     query: string,
     params?: any[],
-    strategy?: CacheStrategy
+    strategy?: CacheStrategy,
   ): Promise<T | null> {
     if (!this.config.enabled) {
       return null;
@@ -227,7 +230,8 @@ export class QueryCache {
 
       if (cachedData) {
         const decompressed = await this.decompress(cachedData);
-        const result: CachedQueryResult<T> = this.deserializeResult(decompressed);
+        const result: CachedQueryResult<T> =
+          this.deserializeResult(decompressed);
 
         // 检查是否过期
         const now = Date.now();
@@ -242,8 +246,8 @@ export class QueryCache {
         this.stats.hits++;
         this.updateHitRate();
 
-        logger.debug('查询缓存命中', {
-          type: 'query_cache',
+        logger.debug("查询缓存命中", {
+          type: "query_cache",
           queryHash: queryHash.substring(0, 8),
           age,
           ttl: result.ttl,
@@ -255,8 +259,8 @@ export class QueryCache {
         this.stats.misses++;
         this.updateHitRate();
 
-        logger.debug('查询缓存未命中', {
-          type: 'query_cache',
+        logger.debug("查询缓存未命中", {
+          type: "query_cache",
           queryHash: queryHash.substring(0, 8),
           fetchTime: Date.now() - startTime,
         });
@@ -264,8 +268,8 @@ export class QueryCache {
         return null;
       }
     } catch (error) {
-      logger.error('获取查询缓存失败', error as Error, {
-        type: 'query_cache',
+      logger.error("获取查询缓存失败", error as Error, {
+        type: "query_cache",
         queryHash: queryHash.substring(0, 8),
       });
 
@@ -282,7 +286,7 @@ export class QueryCache {
     query: string,
     data: T,
     params?: any[],
-    strategy?: CacheStrategy
+    strategy?: CacheStrategy,
   ): Promise<void> {
     if (!this.config.enabled) {
       return;
@@ -311,30 +315,36 @@ export class QueryCache {
       await CacheService.set(
         cacheKey,
         finalData,
-        strategy?.ttl || this.config.defaultTTL
+        strategy?.ttl || this.config.defaultTTL,
       );
 
       // 设置标签
       if (strategy?.tags && strategy.tags.length > 0) {
         for (const tag of strategy.tags) {
-          const tagKey = CacheKeyBuilder.build(this.config.keyPrefix, 'tag', tag);
+          const tagKey = CacheKeyBuilder.build(
+            this.config.keyPrefix,
+            "tag",
+            tag,
+          );
           await CacheService.sadd(tagKey, [cacheKey]);
-          await CacheService.expire(tagKey, strategy?.ttl || this.config.defaultTTL);
+          await CacheService.expire(
+            tagKey,
+            strategy?.ttl || this.config.defaultTTL,
+          );
         }
       }
 
-      logger.debug('查询结果已缓存', {
-        type: 'query_cache',
+      logger.debug("查询结果已缓存", {
+        type: "query_cache",
         queryHash: queryHash.substring(0, 8),
         ttl: cacheResult.ttl,
         size: cacheResult.size,
         rowCount: cacheResult.rowCount,
         setTime: Date.now() - startTime,
       });
-
     } catch (error) {
-      logger.error('设置查询缓存失败', error as Error, {
-        type: 'query_cache',
+      logger.error("设置查询缓存失败", error as Error, {
+        type: "query_cache",
         queryHash: queryHash.substring(0, 8),
       });
     }
@@ -347,8 +357,8 @@ export class QueryCache {
     try {
       await CacheService.del(cacheKey);
     } catch (error) {
-      logger.error('删除查询缓存失败', error as Error, {
-        type: 'query_cache',
+      logger.error("删除查询缓存失败", error as Error, {
+        type: "query_cache",
         cacheKey,
       });
     }
@@ -358,27 +368,27 @@ export class QueryCache {
    * 按标签删除缓存
    */
   async deleteByTag(tag: string): Promise<void> {
-    if (!this.config.enabled || this.config.invalidationStrategy !== 'tag') {
+    if (!this.config.enabled || this.config.invalidationStrategy !== "tag") {
       return;
     }
 
     try {
-      const tagKey = CacheKeyBuilder.build(this.config.keyPrefix, 'tag', tag);
+      const tagKey = CacheKeyBuilder.build(this.config.keyPrefix, "tag", tag);
       const keys = await CacheService.smembers(tagKey);
 
       if (keys.length > 0) {
         await CacheService.del(...keys);
         await CacheService.del(tagKey);
 
-        logger.info('按标签删除缓存完成', {
-          type: 'query_cache',
+        logger.info("按标签删除缓存完成", {
+          type: "query_cache",
           tag,
           deletedKeys: keys.length,
         });
       }
     } catch (error) {
-      logger.error('按标签删除缓存失败', error as Error, {
-        type: 'query_cache',
+      logger.error("按标签删除缓存失败", error as Error, {
+        type: "query_cache",
         tag,
       });
     }
@@ -389,18 +399,18 @@ export class QueryCache {
    */
   async clear(): Promise<void> {
     try {
-      const pattern = CacheKeyBuilder.build(this.config.keyPrefix, '*');
+      const pattern = CacheKeyBuilder.build(this.config.keyPrefix, "*");
       // 这里需要实现模式匹配删除功能
       // 具体实现取决于Redis客户端
 
       this.stats = this.initializeStats();
 
-      logger.info('查询缓存已清空', {
-        type: 'query_cache',
+      logger.info("查询缓存已清空", {
+        type: "query_cache",
       });
     } catch (error) {
-      logger.error('清空查询缓存失败', error as Error, {
-        type: 'query_cache',
+      logger.error("清空查询缓存失败", error as Error, {
+        type: "query_cache",
       });
     }
   }
@@ -409,9 +419,10 @@ export class QueryCache {
    * 更新命中率
    */
   private updateHitRate(): void {
-    this.stats.hitRate = this.stats.totalQueries > 0
-      ? (this.stats.hits / this.stats.totalQueries) * 100
-      : 0;
+    this.stats.hitRate =
+      this.stats.totalQueries > 0
+        ? (this.stats.hits / this.stats.totalQueries) * 100
+        : 0;
   }
 
   /**
@@ -426,8 +437,8 @@ export class QueryCache {
    */
   resetStats(): void {
     this.stats = this.initializeStats();
-    logger.info('查询缓存统计已重置', {
-      type: 'query_cache',
+    logger.info("查询缓存统计已重置", {
+      type: "query_cache",
     });
   }
 
@@ -436,16 +447,24 @@ export class QueryCache {
    */
   cached<T extends any[], R>(
     strategy: CacheStrategy,
-    queryBuilder: (...args: T) => { query: string; params?: any[] }
+    queryBuilder: (...args: T) => { query: string; params?: any[] },
   ) {
-    return (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
+    return (
+      target: any,
+      propertyName: string,
+      descriptor: PropertyDescriptor,
+    ) => {
       const method = descriptor.value;
 
       descriptor.value = async (...args: T): Promise<R> => {
         const { query, params } = queryBuilder(...args);
 
         // 尝试从缓存获取
-        const cached = await QueryCache.getInstance().get<R>(query, params, strategy);
+        const cached = await QueryCache.getInstance().get<R>(
+          query,
+          params,
+          strategy,
+        );
         if (cached !== null) {
           return cached;
         }
@@ -468,8 +487,8 @@ export class QueryCache {
    */
   updateConfig(newConfig: Partial<QueryCacheConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    logger.info('查询缓存配置已更新', {
-      type: 'query_cache',
+    logger.info("查询缓存配置已更新", {
+      type: "query_cache",
       config: this.config,
     });
   }
@@ -489,19 +508,21 @@ export const queryCache = QueryCache.getInstance();
 export const getCachedQuery = <T>(
   query: string,
   params?: any[],
-  strategy?: CacheStrategy
+  strategy?: CacheStrategy,
 ) => queryCache.get<T>(query, params, strategy);
 
 export const setCachedQuery = <T>(
   query: string,
   data: T,
   params?: any[],
-  strategy?: CacheStrategy
+  strategy?: CacheStrategy,
 ) => queryCache.set(query, data, params, strategy);
 
-export const deleteCachedQuery = (cacheKey: string) => queryCache.delete(cacheKey);
+export const deleteCachedQuery = (cacheKey: string) =>
+  queryCache.delete(cacheKey);
 
-export const deleteCachedQueryByTag = (tag: string) => queryCache.deleteByTag(tag);
+export const deleteCachedQueryByTag = (tag: string) =>
+  queryCache.deleteByTag(tag);
 
 // 导出装饰器
 export const Cached = queryCache.cached.bind(queryCache);

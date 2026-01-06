@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import TrendChart from '@/components/analytics/TrendChart';
-import HealthScoreCard from '@/components/analytics/HealthScoreCard';
-import AnomalyAlert from '@/components/analytics/AnomalyAlert';
-import type { TrendDataType } from '@/lib/types/analytics';
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import TrendChart from "@/components/analytics/TrendChart";
+import HealthScoreCard from "@/components/analytics/HealthScoreCard";
+import AnomalyAlert from "@/components/analytics/AnomalyAlert";
+import type { TrendDataType } from "@/lib/types/analytics";
 
 export default function AnalyticsPage() {
   const { data: session } = useSession();
-  const [selectedMember, setSelectedMember] = useState<string>('');
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const [selectedMember, setSelectedMember] = useState<string>("");
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
   const [trendData, setTrendData] = useState<any>(null);
   const [healthScore, setHealthScore] = useState<any>(null);
   const [anomalies, setAnomalies] = useState<any[]>([]);
@@ -22,10 +22,10 @@ export default function AnalyticsPage() {
 
     try {
       const response = await fetch(
-        `/api/analytics/health-score?memberId=${selectedMember}&days=7`
+        `/api/analytics/health-score?memberId=${selectedMember}&days=7`,
       );
       const data = await response.json();
-      
+
       if (data.success) {
         // 计算最新评分
         const trend = data.data;
@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
           const latest = trend[trend.length - 1];
           // 需要获取完整的评分详情
           const scoreResponse = await fetch(
-            `/api/analytics/health-score?memberId=${selectedMember}`
+            `/api/analytics/health-score?memberId=${selectedMember}`,
           );
           const scoreData = await scoreResponse.json();
           if (scoreData.success) {
@@ -42,7 +42,7 @@ export default function AnalyticsPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to load health score:', error);
+      console.error("Failed to load health score:", error);
     }
   };
 
@@ -50,22 +50,22 @@ export default function AnalyticsPage() {
   const loadTrendData = async (dataType: TrendDataType) => {
     if (!selectedMember) return;
 
-    const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
     try {
       const response = await fetch(
-        `/api/analytics/trends?memberId=${selectedMember}&dataType=${dataType}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+        `/api/analytics/trends?memberId=${selectedMember}&dataType=${dataType}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
       );
       const data = await response.json();
-      
+
       if (data.success) {
         return data.data;
       }
     } catch (error) {
-      console.error('Failed to load trend data:', error);
+      console.error("Failed to load trend data:", error);
     }
     return null;
   };
@@ -76,24 +76,28 @@ export default function AnalyticsPage() {
 
     try {
       const response = await fetch(
-        `/api/analytics/anomalies?memberId=${selectedMember}&status=PENDING&limit=5`
+        `/api/analytics/anomalies?memberId=${selectedMember}&status=PENDING&limit=5`,
       );
       const data = await response.json();
-      
+
       if (data.success) {
         setAnomalies(data.data);
       }
     } catch (error) {
-      console.error('Failed to load anomalies:', error);
+      console.error("Failed to load anomalies:", error);
     }
   };
 
   // 处理异常操作
-  const handleAnomalyAction = async (anomalyId: string, action: string, resolution?: string) => {
+  const handleAnomalyAction = async (
+    anomalyId: string,
+    action: string,
+    resolution?: string,
+  ) => {
     try {
-      const response = await fetch('/api/analytics/anomalies', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/analytics/anomalies", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ anomalyId, action, resolution }),
       });
 
@@ -102,7 +106,7 @@ export default function AnalyticsPage() {
         await loadAnomalies();
       }
     } catch (error) {
-      console.error('Failed to update anomaly:', error);
+      console.error("Failed to update anomaly:", error);
     }
   };
 
@@ -111,10 +115,7 @@ export default function AnalyticsPage() {
     const init = async () => {
       setLoading(true);
       if (selectedMember) {
-        await Promise.all([
-          loadHealthScore(),
-          loadAnomalies(),
-        ]);
+        await Promise.all([loadHealthScore(), loadAnomalies()]);
       }
       setLoading(false);
     };
@@ -124,7 +125,7 @@ export default function AnalyticsPage() {
   // 加载体重趋势（示例）
   useEffect(() => {
     if (selectedMember) {
-      loadTrendData('WEIGHT').then(data => {
+      loadTrendData("WEIGHT").then((data) => {
         if (data) {
           setTrendData(data);
         }
@@ -171,17 +172,17 @@ export default function AnalyticsPage() {
             时间范围
           </label>
           <div className="flex gap-2">
-            {(['7d', '30d', '90d'] as const).map((range) => (
+            {(["7d", "30d", "90d"] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   timeRange === range
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {range === '7d' ? '7天' : range === '30d' ? '30天' : '90天'}
+                {range === "7d" ? "7天" : range === "30d" ? "30天" : "90天"}
               </button>
             ))}
           </div>
@@ -214,9 +215,11 @@ export default function AnalyticsPage() {
                 <AnomalyAlert
                   key={anomaly.id}
                   anomaly={anomaly}
-                  onAcknowledge={(id) => handleAnomalyAction(id, 'acknowledge')}
-                  onResolve={(id, resolution) => handleAnomalyAction(id, 'resolve', resolution)}
-                  onIgnore={(id) => handleAnomalyAction(id, 'ignore')}
+                  onAcknowledge={(id) => handleAnomalyAction(id, "acknowledge")}
+                  onResolve={(id, resolution) =>
+                    handleAnomalyAction(id, "resolve", resolution)
+                  }
+                  onIgnore={(id) => handleAnomalyAction(id, "ignore")}
                 />
               ))}
             </div>
@@ -242,13 +245,17 @@ export default function AnalyticsPage() {
             <h2 className="text-xl font-semibold mb-4">快速操作</h2>
             <div className="flex gap-4">
               <button
-                onClick={() => window.location.href = '/dashboard/analytics/reports'}
+                onClick={() =>
+                  (window.location.href = "/dashboard/analytics/reports")
+                }
                 className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 查看报告历史
               </button>
               <button
-                onClick={() => window.location.href = '/dashboard/analytics/generate'}
+                onClick={() =>
+                  (window.location.href = "/dashboard/analytics/generate")
+                }
                 className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 生成新报告
@@ -260,4 +267,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-

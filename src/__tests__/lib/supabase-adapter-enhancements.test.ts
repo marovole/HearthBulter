@@ -7,17 +7,17 @@
  * 3. JSON path 操作符支持
  */
 
-import { supabaseAdapter } from '@/lib/db/supabase-adapter';
+import { supabaseAdapter } from "@/lib/db/supabase-adapter";
 
-describe('Supabase Adapter Enhancements', () => {
-  describe('Nested Relation Joins', () => {
-    it('should support nested include with single level', () => {
+describe("Supabase Adapter Enhancements", () => {
+  describe("Nested Relation Joins", () => {
+    it("should support nested include with single level", () => {
       // 这是一个类型检查测试，确保 API 签名正确
       expect(supabaseAdapter.recipe).toBeDefined();
       expect(supabaseAdapter.recipe.findMany).toBeDefined();
     });
 
-    it('should support nested include with multiple levels', () => {
+    it("should support nested include with multiple levels", () => {
       // 测试嵌套 include 的类型签名
       const includeConfig = {
         ingredients: {
@@ -34,38 +34,35 @@ describe('Supabase Adapter Enhancements', () => {
     });
   });
 
-  describe('OrderBy Array Support', () => {
-    it('should support orderBy as object', () => {
-      const orderByConfig = { createdAt: 'desc' };
+  describe("OrderBy Array Support", () => {
+    it("should support orderBy as object", () => {
+      const orderByConfig = { createdAt: "desc" };
       expect(orderByConfig).toBeDefined();
     });
 
-    it('should support orderBy as array', () => {
-      const orderByConfig = [
-        { rarity: 'desc' },
-        { unlockedAt: 'desc' },
-      ];
+    it("should support orderBy as array", () => {
+      const orderByConfig = [{ rarity: "desc" }, { unlockedAt: "desc" }];
       expect(orderByConfig).toBeDefined();
       expect(Array.isArray(orderByConfig)).toBe(true);
     });
   });
 
-  describe('JSON Path Operators', () => {
-    it('should support JSON path with equals operator', () => {
+  describe("JSON Path Operators", () => {
+    it("should support JSON path with equals operator", () => {
       const whereConfig = {
         metadata: {
-          path: ['season'],
-          equals: 'SUMMER',
+          path: ["season"],
+          equals: "SUMMER",
         },
       };
       expect(whereConfig).toBeDefined();
-      expect(whereConfig.metadata.path).toEqual(['season']);
+      expect(whereConfig.metadata.path).toEqual(["season"]);
     });
 
-    it('should support JSON path with multiple operators', () => {
+    it("should support JSON path with multiple operators", () => {
       const whereConfig = {
         metadata: {
-          path: ['settings', 'notifications'],
+          path: ["settings", "notifications"],
           equals: true,
         },
       };
@@ -73,16 +70,16 @@ describe('Supabase Adapter Enhancements', () => {
     });
   });
 
-  describe('Integration Test - Recipe Query', () => {
-    it('should construct complex query without errors', () => {
+  describe("Integration Test - Recipe Query", () => {
+    it("should construct complex query without errors", () => {
       // 这个测试验证所有增强功能可以一起使用
       const queryConfig = {
         where: {
-          status: 'PUBLISHED',
+          status: "PUBLISHED",
           isPublic: true,
           metadata: {
-            path: ['season'],
-            equals: 'SUMMER',
+            path: ["season"],
+            equals: "SUMMER",
           },
         },
         include: {
@@ -93,17 +90,14 @@ describe('Supabase Adapter Enhancements', () => {
           },
           instructions: true,
         },
-        orderBy: [
-          { averageRating: 'desc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
         take: 10,
       };
 
       expect(queryConfig).toBeDefined();
       expect(queryConfig.include.ingredients.include.food).toBe(true);
       expect(Array.isArray(queryConfig.orderBy)).toBe(true);
-      expect(queryConfig.where.metadata.path).toEqual(['season']);
+      expect(queryConfig.where.metadata.path).toEqual(["season"]);
     });
   });
 });

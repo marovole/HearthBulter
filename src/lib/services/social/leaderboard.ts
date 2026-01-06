@@ -3,15 +3,15 @@
  * 管理各种类型的排行榜数据计算和展示
  */
 
-import { 
-  subDays, 
-  startOfDay, 
-  endOfDay, 
-  isAfter, 
+import {
+  subDays,
+  startOfDay,
+  endOfDay,
+  isAfter,
   format,
   differenceInDays,
-} from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+} from "date-fns";
+import { zhCN } from "date-fns/locale";
 import type {
   LeaderboardEntry,
   LeaderboardType,
@@ -20,38 +20,38 @@ import type {
   HealthData,
   Recipe,
   SharedContent,
-} from '@prisma/client';
-import { LEADERBOARD_TYPE_CONFIGS } from '@/types/social-sharing';
-import { prisma } from '@/lib/db';
+} from "@prisma/client";
+import { LEADERBOARD_TYPE_CONFIGS } from "@/types/social-sharing";
+import { prisma } from "@/lib/db";
 
 /**
  * 排行榜数据项
  */
 export interface LeaderboardItem {
-  rank: number
-  memberId: string
-  memberName: string
-  avatar?: string
-  value: number
-  displayValue: string
-  change: 'up' | 'down' | 'same' | 'new'
-  changeValue?: number
-  metadata?: Record<string, any>
+  rank: number;
+  memberId: string;
+  memberName: string;
+  avatar?: string;
+  value: number;
+  displayValue: string;
+  change: "up" | "down" | "same" | "new";
+  changeValue?: number;
+  metadata?: Record<string, any>;
 }
 
 /**
  * 排行榜计算结果
  */
 export interface LeaderboardResult {
-  type: LeaderboardType
-  title: string
-  description: string
-  unit: string
-  timeframe: string
-  totalUsers: number
-  data: LeaderboardItem[]
-  lastUpdated: Date
-  userRank?: LeaderboardItem
+  type: LeaderboardType;
+  title: string;
+  description: string;
+  unit: string;
+  timeframe: string;
+  totalUsers: number;
+  data: LeaderboardItem[];
+  lastUpdated: Date;
+  userRank?: LeaderboardItem;
 }
 
 /**
@@ -75,10 +75,10 @@ export class LeaderboardService {
   async getLeaderboard(
     type: LeaderboardType,
     memberId?: string,
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all-time' = 'weekly',
-    limit: number = 50
+    timeframe: "daily" | "weekly" | "monthly" | "all-time" = "weekly",
+    limit: number = 50,
   ): Promise<LeaderboardResult> {
-    const cacheKey = `${type}_${timeframe}_${limit}_${memberId || 'all'}`;
+    const cacheKey = `${type}_${timeframe}_${limit}_${memberId || "all"}`;
     const cached = this.cache.get(cacheKey);
 
     if (cached && cached.expiry > new Date()) {
@@ -88,23 +88,39 @@ export class LeaderboardService {
     let result: LeaderboardResult;
 
     switch (type) {
-    case LeaderboardType.HEALTH_SCORE:
-      result = await this.calculateHealthScoreLeaderboard(memberId, timeframe, limit);
-      break;
-    case LeaderboardType.CHECKIN_STREAK:
-      result = await this.calculateCheckinStreakLeaderboard(memberId, limit);
-      break;
-    case LeaderboardType.WEIGHT_LOSS:
-      result = await this.calculateWeightLossLeaderboard(memberId, timeframe, limit);
-      break;
-    case LeaderboardType.EXERCISE_MINUTES:
-      result = await this.calculateExerciseMinutesLeaderboard(memberId, timeframe, limit);
-      break;
-    case LeaderboardType.CALORIES_MANAGEMENT:
-      result = await this.calculateCaloriesManagementLeaderboard(memberId, timeframe, limit);
-      break;
-    default:
-      throw new Error(`不支持的排行榜类型: ${type}`);
+      case LeaderboardType.HEALTH_SCORE:
+        result = await this.calculateHealthScoreLeaderboard(
+          memberId,
+          timeframe,
+          limit,
+        );
+        break;
+      case LeaderboardType.CHECKIN_STREAK:
+        result = await this.calculateCheckinStreakLeaderboard(memberId, limit);
+        break;
+      case LeaderboardType.WEIGHT_LOSS:
+        result = await this.calculateWeightLossLeaderboard(
+          memberId,
+          timeframe,
+          limit,
+        );
+        break;
+      case LeaderboardType.EXERCISE_MINUTES:
+        result = await this.calculateExerciseMinutesLeaderboard(
+          memberId,
+          timeframe,
+          limit,
+        );
+        break;
+      case LeaderboardType.CALORIES_MANAGEMENT:
+        result = await this.calculateCaloriesManagementLeaderboard(
+          memberId,
+          timeframe,
+          limit,
+        );
+        break;
+      default:
+        throw new Error(`不支持的排行榜类型: ${type}`);
     }
 
     // 缓存结果
@@ -121,15 +137,15 @@ export class LeaderboardService {
    */
   private async calculateHealthScoreLeaderboard(
     memberId?: string,
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all-time' = 'weekly',
-    limit: number = 50
+    timeframe: "daily" | "weekly" | "monthly" | "all-time" = "weekly",
+    limit: number = 50,
   ): Promise<LeaderboardResult> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.HEALTH_SCORE];
 
     // 获取所有用户的健康评分
     const healthScores = await prisma.healthData.groupBy({
-      by: ['memberId'],
+      by: ["memberId"],
       where: {
         measuredAt: {
           gte: startDate,
@@ -175,17 +191,17 @@ export class LeaderboardService {
             avgWeight: score._avg.weight,
           },
         };
-      })
+      }),
     );
 
-    const validMembers = scoredMembers.filter(m => m !== null) as any[];
+    const validMembers = scoredMembers.filter((m) => m !== null) as any[];
     validMembers.sort((a, b) => b.value - a.value);
 
     // 转换为排行榜格式
     const leaderboardItems = await this.convertToLeaderboardItems(
       validMembers,
       LeaderboardType.HEALTH_SCORE,
-      memberId
+      memberId,
     );
 
     const result: LeaderboardResult = {
@@ -197,7 +213,7 @@ export class LeaderboardService {
       totalUsers: leaderboardItems.length,
       data: leaderboardItems,
       lastUpdated: new Date(),
-      userRank: leaderboardItems.find(item => item.memberId === memberId),
+      userRank: leaderboardItems.find((item) => item.memberId === memberId),
     };
 
     return result;
@@ -208,7 +224,7 @@ export class LeaderboardService {
    */
   private async calculateCheckinStreakLeaderboard(
     memberId?: string,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<LeaderboardResult> {
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.CHECKIN_STREAK];
 
@@ -233,12 +249,12 @@ export class LeaderboardService {
               gte: subDays(new Date(), 365),
             },
           },
-          orderBy: { measuredAt: 'desc' },
+          orderBy: { measuredAt: "desc" },
         },
       },
     });
 
-    const membersWithStreaks = members.map(member => {
+    const membersWithStreaks = members.map((member) => {
       const streakDays = this.calculateStreakDays(member.healthData);
       return {
         memberId: member.id,
@@ -256,7 +272,7 @@ export class LeaderboardService {
     const leaderboardItems = await this.convertToLeaderboardItems(
       membersWithStreaks,
       LeaderboardType.CHECKIN_STREAK,
-      memberId
+      memberId,
     );
 
     const result: LeaderboardResult = {
@@ -264,11 +280,11 @@ export class LeaderboardService {
       title: config.label,
       description: config.description,
       unit: config.unit,
-      timeframe: '全部时间',
+      timeframe: "全部时间",
       totalUsers: leaderboardItems.length,
       data: leaderboardItems,
       lastUpdated: new Date(),
-      userRank: leaderboardItems.find(item => item.memberId === memberId),
+      userRank: leaderboardItems.find((item) => item.memberId === memberId),
     };
 
     return result;
@@ -279,8 +295,8 @@ export class LeaderboardService {
    */
   private async calculateWeightLossLeaderboard(
     memberId?: string,
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all-time' = 'monthly',
-    limit: number = 50
+    timeframe: "daily" | "weekly" | "monthly" | "all-time" = "monthly",
+    limit: number = 50,
   ): Promise<LeaderboardResult> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.WEIGHT_LOSS];
@@ -310,14 +326,16 @@ export class LeaderboardService {
               lte: endDate,
             },
           },
-          orderBy: { measuredAt: 'asc' },
+          orderBy: { measuredAt: "asc" },
         },
       },
     });
 
-    const membersWithWeightLoss = members.map(member => {
-      const weightData = member.healthData.map(d => d.weight!).filter(w => w > 0);
-      
+    const membersWithWeightLoss = members.map((member) => {
+      const weightData = member.healthData
+        .map((d) => d.weight!)
+        .filter((w) => w > 0);
+
       if (weightData.length < 2) {
         return {
           memberId: member.id,
@@ -352,7 +370,7 @@ export class LeaderboardService {
     const leaderboardItems = await this.convertToLeaderboardItems(
       membersWithWeightLoss,
       LeaderboardType.WEIGHT_LOSS,
-      memberId
+      memberId,
     );
 
     const result: LeaderboardResult = {
@@ -364,7 +382,7 @@ export class LeaderboardService {
       totalUsers: leaderboardItems.length,
       data: leaderboardItems,
       lastUpdated: new Date(),
-      userRank: leaderboardItems.find(item => item.memberId === memberId),
+      userRank: leaderboardItems.find((item) => item.memberId === memberId),
     };
 
     return result;
@@ -375,22 +393,22 @@ export class LeaderboardService {
    */
   private async calculateExerciseMinutesLeaderboard(
     memberId?: string,
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all-time' = 'weekly',
-    limit: number = 50
+    timeframe: "daily" | "weekly" | "monthly" | "all-time" = "weekly",
+    limit: number = 50,
   ): Promise<LeaderboardResult> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.EXERCISE_MINUTES];
 
     // 获取所有用户的运动总时长（这里使用健康数据的记录数量作为运动时长的代理）
     const exerciseData = await prisma.healthData.groupBy({
-      by: ['memberId'],
+      by: ["memberId"],
       where: {
         measuredAt: {
           gte: startDate,
           lte: endDate,
         },
         notes: {
-          contains: '运动',
+          contains: "运动",
         },
       },
       _count: {
@@ -419,16 +437,16 @@ export class LeaderboardService {
             exerciseCount: data._count.id,
           },
         };
-      })
+      }),
     );
 
-    const validMembers = membersWithExercise.filter(m => m !== null) as any[];
+    const validMembers = membersWithExercise.filter((m) => m !== null) as any[];
     validMembers.sort((a, b) => b.value - a.value);
 
     const leaderboardItems = await this.convertToLeaderboardItems(
       validMembers,
       LeaderboardType.EXERCISE_MINUTES,
-      memberId
+      memberId,
     );
 
     const result: LeaderboardResult = {
@@ -440,7 +458,7 @@ export class LeaderboardService {
       totalUsers: leaderboardItems.length,
       data: leaderboardItems,
       lastUpdated: new Date(),
-      userRank: leaderboardItems.find(item => item.memberId === memberId),
+      userRank: leaderboardItems.find((item) => item.memberId === memberId),
     };
 
     return result;
@@ -451,19 +469,20 @@ export class LeaderboardService {
    */
   private async calculateCaloriesManagementLeaderboard(
     memberId?: string,
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all-time' = 'monthly',
-    limit: number = 50
+    timeframe: "daily" | "weekly" | "monthly" | "all-time" = "monthly",
+    limit: number = 50,
   ): Promise<LeaderboardResult> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
-    const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.CALORIES_MANAGEMENT];
+    const config =
+      LEADERBOARD_TYPE_CONFIGS[LeaderboardType.CALORIES_MANAGEMENT];
 
     // 获取所有用户的卡路里管理准确率
     const members = await prisma.familyMember.findMany({
       where: {
         healthGoals: {
           some: {
-            goalType: 'CALORIES',
-            status: 'ACTIVE',
+            goalType: "CALORIES",
+            status: "ACTIVE",
           },
         },
       },
@@ -473,8 +492,8 @@ export class LeaderboardService {
         avatar: true,
         healthGoals: {
           where: {
-            goalType: 'CALORIES',
-            status: 'ACTIVE',
+            goalType: "CALORIES",
+            status: "ACTIVE",
           },
           take: 1,
         },
@@ -484,16 +503,16 @@ export class LeaderboardService {
               gte: startDate,
               lte: endDate,
             },
-            source: 'MANUAL',
+            source: "MANUAL",
           },
         },
       },
     });
 
-    const membersWithCalorieAccuracy = members.map(member => {
+    const membersWithCalorieAccuracy = members.map((member) => {
       const calorieGoal = member.healthGoals[0]?.targetValue || 2000;
-      const manualData = member.healthData.filter(d => 
-        d.notes && d.notes.includes('卡路里')
+      const manualData = member.healthData.filter(
+        (d) => d.notes && d.notes.includes("卡路里"),
       );
 
       if (manualData.length === 0) {
@@ -510,9 +529,11 @@ export class LeaderboardService {
       }
 
       // 计算准确率（在目标范围内的天数比例）
-      const accurateDays = manualData.filter(d => {
+      const accurateDays = manualData.filter((d) => {
         const calories = this.extractCaloriesFromNotes(d.notes);
-        return calories && Math.abs(calories - calorieGoal) <= calorieGoal * 0.2; // 20%误差范围
+        return (
+          calories && Math.abs(calories - calorieGoal) <= calorieGoal * 0.2
+        ); // 20%误差范围
       }).length;
 
       const accuracy = (accurateDays / manualData.length) * 100;
@@ -535,7 +556,7 @@ export class LeaderboardService {
     const leaderboardItems = await this.convertToLeaderboardItems(
       membersWithCalorieAccuracy,
       LeaderboardType.CALORIES_MANAGEMENT,
-      memberId
+      memberId,
     );
 
     const result: LeaderboardResult = {
@@ -547,7 +568,7 @@ export class LeaderboardService {
       totalUsers: leaderboardItems.length,
       data: leaderboardItems,
       lastUpdated: new Date(),
-      userRank: leaderboardItems.find(item => item.memberId === memberId),
+      userRank: leaderboardItems.find((item) => item.memberId === memberId),
     };
 
     return result;
@@ -559,14 +580,18 @@ export class LeaderboardService {
   private async convertToLeaderboardItems(
     members: any[],
     type: LeaderboardType,
-    currentMemberId?: string
+    currentMemberId?: string,
   ): Promise<LeaderboardItem[]> {
     const items: LeaderboardItem[] = [];
 
     for (let i = 0; i < members.length; i++) {
       const member = members[i];
       const rank = i + 1;
-      const change = await this.calculateRankChange(member.memberId, type, rank);
+      const change = await this.calculateRankChange(
+        member.memberId,
+        type,
+        rank,
+      );
 
       items.push({
         rank,
@@ -574,7 +599,11 @@ export class LeaderboardService {
         memberName: member.memberName,
         avatar: member.avatar,
         value: member.value,
-        displayValue: this.formatDisplayValue(type, member.value, member.metadata),
+        displayValue: this.formatDisplayValue(
+          type,
+          member.value,
+          member.metadata,
+        ),
         change,
         changeValue: change.changeValue,
         metadata: member.metadata,
@@ -590,8 +619,8 @@ export class LeaderboardService {
   private async calculateRankChange(
     memberId: string,
     type: LeaderboardType,
-    currentRank: number
-  ): Promise<'up' | 'down' | 'same' | 'new' & { changeValue?: number }> {
+    currentRank: number,
+  ): Promise<"up" | "down" | "same" | ("new" & { changeValue?: number })> {
     // 获取上一次的排名记录
     const lastRanking = await prisma.leaderboardEntry.findFirst({
       where: {
@@ -601,75 +630,81 @@ export class LeaderboardService {
           gte: subDays(new Date(), 7), // 一周内的记录
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     if (!lastRanking) {
-      return { change: 'new' };
+      return { change: "new" };
     }
 
     const rankDiff = lastRanking.rank - currentRank;
-    
+
     if (rankDiff > 0) {
-      return { change: 'up', changeValue: rankDiff };
+      return { change: "up", changeValue: rankDiff };
     } else if (rankDiff < 0) {
-      return { change: 'down', changeValue: Math.abs(rankDiff) };
+      return { change: "down", changeValue: Math.abs(rankDiff) };
     } else {
-      return { change: 'same' };
+      return { change: "same" };
     }
   }
 
   /**
    * 格式化显示值
    */
-  private formatDisplayValue(type: LeaderboardType, value: number, metadata?: any): string {
+  private formatDisplayValue(
+    type: LeaderboardType,
+    value: number,
+    metadata?: any,
+  ): string {
     switch (type) {
-    case LeaderboardType.HEALTH_SCORE:
-      return `${value}分`;
-      
-    case LeaderboardType.CHECKIN_STREAK:
-      return `${value}天`;
-      
-    case LeaderboardType.WEIGHT_LOSS:
-      return `${value}kg`;
-      
-    case LeaderboardType.EXERCISE_MINUTES:
-      return `${value}分钟`;
-      
-    case LeaderboardType.CALORIES_MANAGEMENT:
-      return `${value}%`;
-      
-    default:
-      return value.toString();
+      case LeaderboardType.HEALTH_SCORE:
+        return `${value}分`;
+
+      case LeaderboardType.CHECKIN_STREAK:
+        return `${value}天`;
+
+      case LeaderboardType.WEIGHT_LOSS:
+        return `${value}kg`;
+
+      case LeaderboardType.EXERCISE_MINUTES:
+        return `${value}分钟`;
+
+      case LeaderboardType.CALORIES_MANAGEMENT:
+        return `${value}%`;
+
+      default:
+        return value.toString();
     }
   }
 
   /**
    * 获取时间范围的开始和结束日期
    */
-  private getTimeframeDates(timeframe: 'daily' | 'weekly' | 'monthly' | 'all-time'): { startDate: Date; endDate: Date } {
+  private getTimeframeDates(
+    timeframe: "daily" | "weekly" | "monthly" | "all-time",
+  ): { startDate: Date; endDate: Date } {
     const endDate = endOfDay(new Date());
     let startDate: Date;
 
     switch (timeframe) {
-    case 'daily':
-      startDate = startOfDay(new Date());
-      break;
-      
-    case 'weekly':
-      startDate = subDays(startDate, 7);
-      break;
-      
-    case 'monthly':
-      startDate = subDays(startDate, 30);
-      break;
-      
-    case 'all-time':
-      startDate = new Date(2020, 0, 1); // 从2020年开始
-      break;
-      
-    default:
-      startDate = subDays(startDate, 7);
+      case "daily":
+        startDate = startOfDay(new Date());
+        break;
+
+      case "weekly":
+        startDate = subDays(startDate, 7);
+        break;
+
+      case "monthly":
+        startDate = subDays(startDate, 30);
+        break;
+
+      case "all-time":
+        startDate = new Date(2020, 0, 1); // 从2020年开始
+        break;
+
+      default:
+        startDate = subDays(startDate, 7);
     }
 
     return { startDate, endDate };
@@ -678,18 +713,20 @@ export class LeaderboardService {
   /**
    * 获取时间范围显示文本
    */
-  private getTimeframeDisplay(timeframe: 'daily' | 'weekly' | 'monthly' | 'all-time'): string {
+  private getTimeframeDisplay(
+    timeframe: "daily" | "weekly" | "monthly" | "all-time",
+  ): string {
     switch (timeframe) {
-    case 'daily':
-      return '今日';
-    case 'weekly':
-      return '本周';
-    case 'monthly':
-      return '本月';
-    case 'all-time':
-      return '全部时间';
-    default:
-      return '本周';
+      case "daily":
+        return "今日";
+      case "weekly":
+        return "本周";
+      case "monthly":
+        return "本月";
+      case "all-time":
+        return "全部时间";
+      default:
+        return "本周";
     }
   }
 
@@ -697,11 +734,11 @@ export class LeaderboardService {
    * 计算健康评分
    */
   private calculateHealthScore(data: {
-    avgWeight: number
-    avgHeartRate: number
-    avgBloodPressureSystolic: number
-    avgBloodPressureDiastolic: number
-    dataCount: number
+    avgWeight: number;
+    avgHeartRate: number;
+    avgBloodPressureSystolic: number;
+    avgBloodPressureDiastolic: number;
+    dataCount: number;
   }): number {
     let score = 50;
 
@@ -716,8 +753,12 @@ export class LeaderboardService {
     }
 
     // 血压评分 (25分)
-    if (data.avgBloodPressureSystolic >= 90 && data.avgBloodPressureSystolic <= 120 &&
-        data.avgBloodPressureDiastolic >= 60 && data.avgBloodPressureDiastolic <= 80) {
+    if (
+      data.avgBloodPressureSystolic >= 90 &&
+      data.avgBloodPressureSystolic <= 120 &&
+      data.avgBloodPressureDiastolic >= 60 &&
+      data.avgBloodPressureDiastolic <= 80
+    ) {
       score += 12.5;
     }
 
@@ -738,8 +779,9 @@ export class LeaderboardService {
   private calculateStreakDays(healthData: HealthData[]): number {
     if (healthData.length === 0) return 0;
 
-    const sortedData = healthData.sort((a, b) => 
-      new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime()
+    const sortedData = healthData.sort(
+      (a, b) =>
+        new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime(),
     );
 
     let streak = 0;
@@ -748,7 +790,7 @@ export class LeaderboardService {
     for (let i = 0; i < sortedData.length; i++) {
       const dataDate = startOfDay(new Date(sortedData[i].measuredAt));
       const daysDiff = differenceInDays(today, dataDate);
-      
+
       if (daysDiff === streak) {
         streak++;
       } else {
@@ -775,7 +817,7 @@ export class LeaderboardService {
     type: LeaderboardType,
     rank: number,
     value: number,
-    metadata?: any
+    metadata?: any,
   ): Promise<LeaderboardEntry> {
     return await prisma.leaderboardEntry.create({
       data: {
@@ -802,7 +844,7 @@ export class LeaderboardService {
   async getRankingHistory(
     memberId: string,
     type: LeaderboardType,
-    days: number = 30
+    days: number = 30,
   ): Promise<LeaderboardEntry[]> {
     const startDate = subDays(new Date(), days);
 
@@ -814,7 +856,7 @@ export class LeaderboardService {
           gte: startDate,
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: days,
     });
   }
@@ -841,8 +883,8 @@ export const leaderboardService = LeaderboardService.getInstance();
 export async function getLeaderboard(
   type: LeaderboardType,
   memberId?: string,
-  timeframe?: 'daily' | 'weekly' | 'monthly' | 'all-time',
-  limit?: number
+  timeframe?: "daily" | "weekly" | "monthly" | "all-time",
+  limit?: number,
 ): Promise<LeaderboardResult> {
   const service = LeaderboardService.getInstance();
   return service.getLeaderboard(type, memberId, timeframe, limit);
@@ -851,7 +893,7 @@ export async function getLeaderboard(
 export async function getUserRankingHistory(
   memberId: string,
   type: LeaderboardType,
-  days?: number
+  days?: number,
 ): Promise<LeaderboardEntry[]> {
   const service = LeaderboardService.getInstance();
   return service.getRankingHistory(memberId, type, days);
@@ -862,7 +904,7 @@ export async function saveUserRanking(
   type: LeaderboardType,
   rank: number,
   value: number,
-  metadata?: any
+  metadata?: any,
 ): Promise<LeaderboardEntry> {
   const service = LeaderboardService.getInstance();
   return service.saveLeaderboardEntry(memberId, type, rank, value, metadata);

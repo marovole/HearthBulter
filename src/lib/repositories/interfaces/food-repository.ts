@@ -1,4 +1,4 @@
-import type { Food, FoodCategory } from '@prisma/client';
+import type { Food, FoodCategory } from "@prisma/client";
 
 /**
  * Food 记录类型（基于 Prisma schema，与 Supabase 一致）
@@ -87,7 +87,11 @@ export interface FoodRepository {
    * @param to - 结束索引
    * @returns 食材列表
    */
-  listByCategory(category: FoodCategory, from: number, to: number): Promise<FoodRecord[]>;
+  listByCategory(
+    category: FoodCategory,
+    from: number,
+    to: number,
+  ): Promise<FoodRecord[]>;
 
   /**
    * 统计指定分类的食材数量

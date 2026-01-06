@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { NextRequest, NextResponse } from "next/server";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 
 /**
  * GET /api/recipes/history - 获取食谱浏览历史
@@ -8,19 +8,19 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '30');
-    const days = parseInt(searchParams.get('days') || '30');
+    const memberId = searchParams.get("memberId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "30");
+    const days = parseInt(searchParams.get("days") || "30");
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'memberId is required' },
-        { status: 400 }
+        { error: "memberId is required" },
+        { status: 400 },
       );
     }
 
@@ -30,9 +30,14 @@ export async function GET(request: NextRequest) {
     const supabase = SupabaseClientManager.getInstance();
 
     // 获取浏览历史
-    const { data: views, error: viewsError, count } = await supabase
-      .from('recipe_views')
-      .select(`
+    const {
+      data: views,
+      error: viewsError,
+      count,
+    } = await supabase
+      .from("recipe_views")
+      .select(
+        `
         id,
         viewedAt,
         viewDuration,
@@ -51,17 +56,19 @@ export async function GET(request: NextRequest) {
           createdAt,
           updatedAt
         )
-      `, { count: 'exact' })
-      .eq('memberId', memberId)
-      .gte('viewedAt', startDate.toISOString())
-      .order('viewedAt', { ascending: false })
+      `,
+        { count: "exact" },
+      )
+      .eq("memberId", memberId)
+      .gte("viewedAt", startDate.toISOString())
+      .order("viewedAt", { ascending: false })
       .range(skip, skip + limit - 1);
 
     if (viewsError) {
-      console.error('查询浏览历史失败:', viewsError);
+      console.error("查询浏览历史失败:", viewsError);
       return NextResponse.json(
-        { error: 'Failed to fetch recipe history' },
-        { status: 500 }
+        { error: "Failed to fetch recipe history" },
+        { status: 500 },
       );
     }
 
@@ -74,8 +81,9 @@ export async function GET(request: NextRequest) {
 
       // 查询所有相关的ingredients
       const { data: ingredients, error: ingredientsError } = await supabase
-        .from('recipe_ingredients')
-        .select(`
+        .from("recipe_ingredients")
+        .select(
+          `
           id,
           recipeId,
           amount,
@@ -91,11 +99,12 @@ export async function GET(request: NextRequest) {
             fat,
             category
           )
-        `)
-        .in('recipeId', recipeIds);
+        `,
+        )
+        .in("recipeId", recipeIds);
 
       if (ingredientsError) {
-        console.error('查询食材失败:', ingredientsError);
+        console.error("查询食材失败:", ingredientsError);
       } else {
         // 按recipeId分组ingredients
         const ingredientsMap = new Map<string, any[]>();
@@ -133,12 +142,11 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-
   } catch (error) {
-    console.error('Error getting recipe history:', error);
+    console.error("Error getting recipe history:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -155,8 +163,8 @@ export async function POST(request: NextRequest) {
     // 验证必需参数
     if (!memberId || !recipeId) {
       return NextResponse.json(
-        { error: 'Missing required parameters: memberId and recipeId' },
-        { status: 400 }
+        { error: "Missing required parameters: memberId and recipeId" },
+        { status: 400 },
       );
     }
 
@@ -164,43 +172,40 @@ export async function POST(request: NextRequest) {
 
     // 检查食谱是否存在
     const { data: recipe, error: recipeError } = await supabase
-      .from('recipes')
-      .select('id')
-      .eq('id', recipeId)
+      .from("recipes")
+      .select("id")
+      .eq("id", recipeId)
       .maybeSingle();
 
     if (recipeError) {
-      console.error('查询食谱失败:', recipeError);
+      console.error("查询食谱失败:", recipeError);
       return NextResponse.json(
-        { error: 'Failed to check recipe' },
-        { status: 500 }
+        { error: "Failed to check recipe" },
+        { status: 500 },
       );
     }
 
     if (!recipe) {
-      return NextResponse.json(
-        { error: 'Recipe not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
     }
 
     // 创建浏览记录
     const { data: view, error: viewError } = await supabase
-      .from('recipe_views')
+      .from("recipe_views")
       .insert({
         memberId,
         recipeId,
         viewDuration: viewDuration || null,
-        source: source || 'direct',
+        source: source || "direct",
       })
       .select()
       .single();
 
     if (viewError) {
-      console.error('创建浏览记录失败:', viewError);
+      console.error("创建浏览记录失败:", viewError);
       return NextResponse.json(
-        { error: 'Failed to record view' },
-        { status: 500 }
+        { error: "Failed to record view" },
+        { status: 500 },
       );
     }
 
@@ -211,12 +216,11 @@ export async function POST(request: NextRequest) {
       success: true,
       view,
     });
-
   } catch (error) {
-    console.error('Error recording recipe view:', error);
+    console.error("Error recording recipe view:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -230,22 +234,22 @@ async function updateRecipeViewCount(recipeId: string) {
 
   // 查询浏览总数
   const { count, error: countError } = await supabase
-    .from('recipe_views')
-    .select('*', { count: 'exact', head: true })
-    .eq('recipeId', recipeId);
+    .from("recipe_views")
+    .select("*", { count: "exact", head: true })
+    .eq("recipeId", recipeId);
 
   if (countError) {
-    console.error('查询浏览计数失败:', countError);
+    console.error("查询浏览计数失败:", countError);
     return;
   }
 
   // 更新食谱的viewCount
   const { error: updateError } = await supabase
-    .from('recipes')
+    .from("recipes")
     .update({ viewCount: count || 0 })
-    .eq('id', recipeId);
+    .eq("id", recipeId);
 
   if (updateError) {
-    console.error('更新食谱浏览计数失败:', updateError);
+    console.error("更新食谱浏览计数失败:", updateError);
   }
 }

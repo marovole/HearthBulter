@@ -7,10 +7,10 @@
  * @module supabase-budget-repository
  */
 
-import { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase-database';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import type { BudgetRepository } from '../interfaces/budget-repository';
+import { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase-database";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import type { BudgetRepository } from "../interfaces/budget-repository";
 import type {
   BudgetAlertDTO,
   BudgetCreateDTO,
@@ -20,17 +20,21 @@ import type {
   SpendingCreateDTO,
   SpendingDTO,
   SpendingFilterDTO,
-} from '../types/budget';
-import type { PaginatedResult, PaginationInput } from '../types/common';
-import type { RecordSpendingParams, RecordSpendingResult } from '@/types/supabase-rpc';
+} from "../types/budget";
+import type { PaginatedResult, PaginationInput } from "../types/common";
+import type {
+  RecordSpendingParams,
+  RecordSpendingResult,
+} from "@/types/supabase-rpc";
 
-type BudgetRow = Database['public']['Tables']['budgets']['Row'];
-type BudgetInsert = Database['public']['Tables']['budgets']['Insert'];
-type BudgetUpdate = Database['public']['Tables']['budgets']['Update'];
-type SpendingRow = Database['public']['Tables']['spendings']['Row'];
-type SpendingInsert = Database['public']['Tables']['spendings']['Insert'];
-type BudgetAlertRow = Database['public']['Tables']['budget_alerts']['Row'];
-type BudgetAlertInsert = Database['public']['Tables']['budget_alerts']['Insert'];
+type BudgetRow = Database["public"]["Tables"]["budgets"]["Row"];
+type BudgetInsert = Database["public"]["Tables"]["budgets"]["Insert"];
+type BudgetUpdate = Database["public"]["Tables"]["budgets"]["Update"];
+type SpendingRow = Database["public"]["Tables"]["spendings"]["Row"];
+type SpendingInsert = Database["public"]["Tables"]["spendings"]["Insert"];
+type BudgetAlertRow = Database["public"]["Tables"]["budget_alerts"]["Row"];
+type BudgetAlertInsert =
+  Database["public"]["Tables"]["budget_alerts"]["Insert"];
 
 /**
  * Supabase 预算 Repository 实现
@@ -43,9 +47,11 @@ type BudgetAlertInsert = Database['public']['Tables']['budget_alerts']['Insert']
  */
 export class SupabaseBudgetRepository implements BudgetRepository {
   private readonly client: SupabaseClient<Database>;
-  private readonly loggerPrefix = '[SupabaseBudgetRepository]';
+  private readonly loggerPrefix = "[SupabaseBudgetRepository]";
 
-  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
+  constructor(
+    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
+  ) {
     this.client = client;
   }
 
@@ -55,12 +61,12 @@ export class SupabaseBudgetRepository implements BudgetRepository {
   async createBudget(payload: BudgetCreateDTO): Promise<BudgetDTO> {
     const insertPayload = this.mapBudgetDtoToInsert(payload);
     const { data, error } = await this.client
-      .from('budgets')
+      .from("budgets")
       .insert(insertPayload as any)
-      .select('*')
+      .select("*")
       .single();
 
-    if (error) this.handleError('createBudget', error);
+    if (error) this.handleError("createBudget", error);
     return this.mapBudgetRow(data!);
   }
 
@@ -70,14 +76,14 @@ export class SupabaseBudgetRepository implements BudgetRepository {
   async updateBudget(id: string, payload: BudgetUpdateDTO): Promise<BudgetDTO> {
     const updatePayload = this.mapBudgetDtoToUpdate(payload);
     const { data, error } = await this.client
-      .from('budgets')
+      .from("budgets")
       // @ts-ignore - Supabase types don't correctly infer budgets table update type
       .update(updatePayload)
-      .eq('id', id)
-      .select('*')
+      .eq("id", id)
+      .select("*")
       .single();
 
-    if (error) this.handleError('updateBudget', error);
+    if (error) this.handleError("updateBudget", error);
     return this.mapBudgetRow(data!);
   }
 
@@ -85,8 +91,13 @@ export class SupabaseBudgetRepository implements BudgetRepository {
    * 获取预算详情
    */
   async getBudgetById(id: string): Promise<BudgetDTO | null> {
-    const { data, error } = await this.client.from('budgets').select('*').eq('id', id).maybeSingle();
-    if (error && error.code !== 'PGRST116') this.handleError('getBudgetById', error);
+    const { data, error } = await this.client
+      .from("budgets")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error && error.code !== "PGRST116")
+      this.handleError("getBudgetById", error);
     return data ? this.mapBudgetRow(data) : null;
   }
 
@@ -95,16 +106,16 @@ export class SupabaseBudgetRepository implements BudgetRepository {
    */
   async listBudgets(
     memberId: string,
-    filter?: { status?: BudgetDTO['status'] },
-    pagination?: PaginationInput
+    filter?: { status?: BudgetDTO["status"] },
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<BudgetDTO>> {
     let query = this.client
-      .from('budgets')
-      .select('*', { count: 'exact' })
-      .eq('member_id', memberId)
-      .order('created_at', { ascending: false });
+      .from("budgets")
+      .select("*", { count: "exact" })
+      .eq("member_id", memberId)
+      .order("created_at", { ascending: false });
 
-    if (filter?.status) query = query.eq('status', filter.status);
+    if (filter?.status) query = query.eq("status", filter.status);
     if (pagination?.limit) {
       const from = pagination.offset ?? 0;
       const to = from + pagination.limit - 1;
@@ -112,13 +123,15 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     }
 
     const { data, count, error } = await query;
-    if (error) this.handleError('listBudgets', error);
+    if (error) this.handleError("listBudgets", error);
 
     const items = (data || []).map((row) => this.mapBudgetRow(row));
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
+      hasMore: pagination?.limit
+        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
+        : false,
     };
   }
 
@@ -154,38 +167,39 @@ export class SupabaseBudgetRepository implements BudgetRepository {
 
     // 第二步：调用 RPC 函数
     const { data, error } = await this.client.rpc<RecordSpendingResult>(
-      'record_spending_tx',
-      rpcParams
+      "record_spending_tx",
+      rpcParams,
     );
 
     if (error) {
-      this.handleError('recordSpending:rpc', error);
+      this.handleError("recordSpending:rpc", error);
     }
 
     // 第三步：检查 RPC 返回的成功标志
     if (!data?.success) {
-      const errorMessage = data?.error ?? data?.message ?? 'record_spending_tx failed';
+      const errorMessage =
+        data?.error ?? data?.message ?? "record_spending_tx failed";
       throw new Error(errorMessage);
     }
 
     // 第四步：验证返回数据的完整性
     if (!data.data?.spending || !data.data?.budget?.id) {
-      throw new Error('record_spending_tx 返回的数据不完整');
+      throw new Error("record_spending_tx 返回的数据不完整");
     }
 
     // 第五步：验证返回的 budget ID 与请求一致（防御性编程）
     if (data.data.budget.id !== payload.budgetId) {
       console.error(
-        `[SupabaseBudgetRepository] Budget ID mismatch: requested=${payload.budgetId}, returned=${data.data.budget.id}`
+        `[SupabaseBudgetRepository] Budget ID mismatch: requested=${payload.budgetId}, returned=${data.data.budget.id}`,
       );
-      throw new Error('返回的预算 ID 与请求不一致');
+      throw new Error("返回的预算 ID 与请求不一致");
     }
 
     // 第六步：映射 RPC 返回值到 DTO
     return this.mapRpcSpendingToDto(
       data.data.spending,
       data.data.budget.id,
-      payload.items
+      payload.items,
     );
   }
 
@@ -198,19 +212,21 @@ export class SupabaseBudgetRepository implements BudgetRepository {
    * @returns SpendingDTO
    */
   private mapRpcSpendingToDto(
-    record: RecordSpendingResult['data']['spending'],
+    record: RecordSpendingResult["data"]["spending"],
     budgetId: string,
-    fallbackItems?: SpendingCreateDTO['items']
+    fallbackItems?: SpendingCreateDTO["items"],
   ): SpendingDTO {
     return {
       id: record.id,
       budgetId,
       amount: record.amount,
-      category: record.category as SpendingDTO['category'],
+      category: record.category as SpendingDTO["category"],
       description: record.description ?? undefined,
       transactionId: record.transaction_id ?? undefined,
       platform: record.platform ?? undefined,
-      items: (record.items ?? fallbackItems) as SpendingDTO['items'] | undefined,
+      items: (record.items ?? fallbackItems) as
+        | SpendingDTO["items"]
+        | undefined,
       purchaseDate: new Date(record.purchase_date),
       createdAt: new Date(record.created_at),
     };
@@ -221,17 +237,19 @@ export class SupabaseBudgetRepository implements BudgetRepository {
    */
   async listSpendings(
     filter: SpendingFilterDTO,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<SpendingDTO>> {
     let query = this.client
-      .from('spendings')
-      .select('*', { count: 'exact' })
-      .eq('budget_id', filter.budgetId)
-      .order('purchase_date', { ascending: false });
+      .from("spendings")
+      .select("*", { count: "exact" })
+      .eq("budget_id", filter.budgetId)
+      .order("purchase_date", { ascending: false });
 
-    if (filter.category) query = query.eq('category', filter.category);
-    if (filter.range?.start) query = query.gte('purchase_date', filter.range.start.toISOString());
-    if (filter.range?.end) query = query.lte('purchase_date', filter.range.end.toISOString());
+    if (filter.category) query = query.eq("category", filter.category);
+    if (filter.range?.start)
+      query = query.gte("purchase_date", filter.range.start.toISOString());
+    if (filter.range?.end)
+      query = query.lte("purchase_date", filter.range.end.toISOString());
     if (pagination?.limit) {
       const from = pagination.offset ?? 0;
       const to = from + pagination.limit - 1;
@@ -239,13 +257,15 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     }
 
     const { data, count, error } = await query;
-    if (error) this.handleError('listSpendings', error);
+    if (error) this.handleError("listSpendings", error);
 
     const items = (data || []).map((row) => this.mapSpendingRow(row));
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
+      hasMore: pagination?.limit
+        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
+        : false,
     };
   }
 
@@ -260,12 +280,19 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     const budget = await this.getBudgetById(budgetId);
     if (!budget) throw new Error(`Budget ${budgetId} not found`);
 
-    const { data, error } = await this.client.from('spendings').select('amount').eq('budget_id', budgetId);
-    if (error) this.handleError('aggregateBudgetUsage', error);
+    const { data, error } = await this.client
+      .from("spendings")
+      .select("amount")
+      .eq("budget_id", budgetId);
+    if (error) this.handleError("aggregateBudgetUsage", error);
 
-    const usedAmount = (data || []).reduce((sum, row) => sum + ((row as any).amount ?? 0), 0);
+    const usedAmount = (data || []).reduce(
+      (sum, row) => sum + ((row as any).amount ?? 0),
+      0,
+    );
     const remainingAmount = Math.max(0, budget.totalAmount - usedAmount);
-    const usagePercentage = budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
+    const usagePercentage =
+      budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
 
     return { usedAmount, remainingAmount, usagePercentage };
   }
@@ -284,8 +311,10 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       status: alert.status,
       created_at: alert.createdAt.toISOString(),
     };
-    const { error } = await this.client.from('budget_alerts').insert(alertInsert as any);
-    if (error) this.handleError('createBudgetAlert', error);
+    const { error } = await this.client
+      .from("budget_alerts")
+      .insert(alertInsert as any);
+    if (error) this.handleError("createBudgetAlert", error);
   }
 
   /**
@@ -293,12 +322,12 @@ export class SupabaseBudgetRepository implements BudgetRepository {
    */
   async listActiveAlerts(budgetId: string): Promise<BudgetAlertDTO[]> {
     const { data, error } = await this.client
-      .from('budget_alerts')
-      .select('*')
-      .eq('budget_id', budgetId)
-      .eq('status', 'ACTIVE')
-      .order('created_at', { ascending: false });
-    if (error) this.handleError('listActiveAlerts', error);
+      .from("budget_alerts")
+      .select("*")
+      .eq("budget_id", budgetId)
+      .eq("status", "ACTIVE")
+      .order("created_at", { ascending: false });
+    if (error) this.handleError("listActiveAlerts", error);
     return (data || []).map((row) => this.mapBudgetAlertRow(row));
   }
 
@@ -314,17 +343,29 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     const [usage, alerts, spendings] = await Promise.all([
       this.aggregateBudgetUsage(budgetId),
       this.listActiveAlerts(budgetId),
-      this.client.from('spendings').select('*').eq('budget_id', budgetId),
+      this.client.from("spendings").select("*").eq("budget_id", budgetId),
     ]);
 
-    if (spendings.error) this.handleError('getBudgetStatus:spendings', spendings.error);
+    if (spendings.error)
+      this.handleError("getBudgetStatus:spendings", spendings.error);
 
-    const totalDays = Math.ceil((budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const elapsedDays = Math.max(1, Math.ceil((Date.now() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)));
+    const totalDays = Math.ceil(
+      (budget.endDate.getTime() - budget.startDate.getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
+    const elapsedDays = Math.max(
+      1,
+      Math.ceil(
+        (Date.now() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    );
 
     const dailyAverage = usage.usedAmount / elapsedDays;
     const projectedSpend = dailyAverage * totalDays;
-    const categoryUsage = this.calculateCategoryUsage(budget, spendings.data || []);
+    const categoryUsage = this.calculateCategoryUsage(
+      budget,
+      spendings.data || [],
+    );
 
     return {
       budget: {
@@ -347,25 +388,28 @@ export class SupabaseBudgetRepository implements BudgetRepository {
   async softDeleteBudget(id: string): Promise<void> {
     const updatePayload: BudgetUpdate = {
       deleted_at: new Date().toISOString(),
-      status: 'CANCELLED',
+      status: "CANCELLED",
     };
     const { error } = await this.client
-      .from('budgets')
+      .from("budgets")
       // @ts-ignore - Supabase types don't correctly infer budgets table update type
       .update(updatePayload)
-      .eq('id', id);
-    if (error) this.handleError('softDeleteBudget', error);
+      .eq("id", id);
+    if (error) this.handleError("softDeleteBudget", error);
   }
 
   /**
    * 计算分类支出统计
    */
   private calculateCategoryUsage(budget: BudgetDTO, spendings: SpendingRow[]) {
-    const usage: BudgetStatusDTO['categoryUsage'] = {};
+    const usage: BudgetStatusDTO["categoryUsage"] = {};
     const categories = Object.keys(budget.categoryBudgets ?? {});
 
     for (const category of categories) {
-      const categoryBudget = budget.categoryBudgets![category as keyof typeof budget.categoryBudgets] ?? 0;
+      const categoryBudget =
+        budget.categoryBudgets![
+          category as keyof typeof budget.categoryBudgets
+        ] ?? 0;
       const categorySpent = spendings
         .filter((s) => s.category === category)
         .reduce((sum, row) => sum + (row.amount ?? 0), 0);
@@ -373,7 +417,8 @@ export class SupabaseBudgetRepository implements BudgetRepository {
         budget: categoryBudget,
         used: categorySpent,
         remaining: Math.max(0, categoryBudget - categorySpent),
-        percentage: categoryBudget > 0 ? (categorySpent / categoryBudget) * 100 : 0,
+        percentage:
+          categoryBudget > 0 ? (categorySpent / categoryBudget) * 100 : 0,
       };
     }
 
@@ -434,9 +479,12 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       update.other_budget = dto.categoryBudgets.OTHER ?? null;
     }
 
-    if (dto.alertThreshold80 !== undefined) update.alert_threshold_80 = dto.alertThreshold80;
-    if (dto.alertThreshold100 !== undefined) update.alert_threshold_100 = dto.alertThreshold100;
-    if (dto.alertThreshold110 !== undefined) update.alert_threshold_110 = dto.alertThreshold110;
+    if (dto.alertThreshold80 !== undefined)
+      update.alert_threshold_80 = dto.alertThreshold80;
+    if (dto.alertThreshold100 !== undefined)
+      update.alert_threshold_100 = dto.alertThreshold100;
+    if (dto.alertThreshold110 !== undefined)
+      update.alert_threshold_110 = dto.alertThreshold110;
 
     return update;
   }
@@ -449,14 +497,14 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       id: row.id,
       memberId: row.member_id,
       name: row.name,
-      period: row.period as BudgetDTO['period'],
+      period: row.period as BudgetDTO["period"],
       startDate: new Date(row.start_date),
       endDate: new Date(row.end_date),
       totalAmount: row.total_amount,
       usedAmount: row.used_amount ?? 0,
       remainingAmount: row.remaining_amount ?? 0,
       usagePercentage: row.usage_percentage ?? 0,
-      status: row.status as BudgetDTO['status'],
+      status: row.status as BudgetDTO["status"],
       alertThreshold80: row.alert_threshold_80 ?? true,
       alertThreshold100: row.alert_threshold_100 ?? true,
       alertThreshold110: row.alert_threshold_110 ?? true,
@@ -484,11 +532,11 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       id: row.id,
       budgetId: row.budget_id,
       amount: row.amount ?? 0,
-      category: row.category as SpendingDTO['category'],
+      category: row.category as SpendingDTO["category"],
       description: row.description ?? undefined,
       transactionId: row.transaction_id ?? undefined,
       platform: row.platform ?? undefined,
-      items: (row.items as SpendingDTO['items']) ?? undefined,
+      items: (row.items as SpendingDTO["items"]) ?? undefined,
       purchaseDate: new Date(row.purchase_date),
       createdAt: new Date(row.created_at),
     };
@@ -501,12 +549,12 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     return {
       id: row.id,
       budgetId: row.budget_id,
-      type: row.type as BudgetAlertDTO['type'],
+      type: row.type as BudgetAlertDTO["type"],
       threshold: row.threshold,
       currentValue: row.current_value,
       message: row.message,
-      category: (row.category as BudgetAlertDTO['category']) ?? undefined,
-      status: row.status as BudgetAlertDTO['status'],
+      category: (row.category as BudgetAlertDTO["category"]) ?? undefined,
+      status: row.status as BudgetAlertDTO["status"],
       createdAt: new Date(row.created_at),
     };
   }
@@ -515,7 +563,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
    * 统一错误处理
    */
   private handleError(operation: string, error?: PostgrestError | null): never {
-    const message = error?.message ?? 'Unknown Supabase error';
+    const message = error?.message ?? "Unknown Supabase error";
     console.error(`${this.loggerPrefix} ${operation} failed:`, error);
     throw new Error(`BudgetRepository.${operation} failed: ${message}`);
   }

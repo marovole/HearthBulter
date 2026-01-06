@@ -3,11 +3,11 @@
  * 定时同步所有活跃设备的数据
  */
 
-import { addMinutes, subMinutes, isAfter } from 'date-fns';
-import { prisma } from '@/lib/db';
-import { healthKitService } from './healthkit-service';
-import { huaweiHealthService } from './huawei-health-service';
-import type { DeviceConnection, SyncStatus } from '@prisma/client';
+import { addMinutes, subMinutes, isAfter } from "date-fns";
+import { prisma } from "@/lib/db";
+import { healthKitService } from "./healthkit-service";
+import { huaweiHealthService } from "./huawei-health-service";
+import type { DeviceConnection, SyncStatus } from "@prisma/client";
 
 /**
  * 设备同步服务类
@@ -29,20 +29,23 @@ export class DeviceSyncService {
    */
   startBackgroundSync(intervalMinutes: number = 30): void {
     if (this.isRunning) {
-      console.log('设备同步服务已在运行');
+      console.log("设备同步服务已在运行");
       return;
     }
 
     console.log(`启动设备后台同步任务，间隔 ${intervalMinutes} 分钟`);
-    
+
     // 立即执行一次同步
     this.syncAllDevices();
-    
+
     // 设置定时同步
-    this.syncInterval = setInterval(() => {
-      this.syncAllDevices();
-    }, intervalMinutes * 60 * 1000);
-    
+    this.syncInterval = setInterval(
+      () => {
+        this.syncAllDevices();
+      },
+      intervalMinutes * 60 * 1000,
+    );
+
     this.isRunning = true;
   }
 
@@ -54,20 +57,20 @@ export class DeviceSyncService {
       clearInterval(this.syncInterval);
       this.syncInterval = null;
     }
-    
+
     this.isRunning = false;
-    console.log('设备后台同步任务已停止');
+    console.log("设备后台同步任务已停止");
   }
 
   /**
    * 同步所有活跃设备
    */
   async syncAllDevices(): Promise<SyncAllResult> {
-    console.log('开始同步所有活跃设备...');
-    
+    console.log("开始同步所有活跃设备...");
+
     const startTime = new Date();
     const results: DeviceSyncResult[] = [];
-    
+
     try {
       // 获取所有活跃且启用自动同步的设备
       const activeDevices = await prisma.deviceConnection.findMany({
@@ -75,7 +78,7 @@ export class DeviceSyncService {
           isActive: true,
           isAutoSync: true,
           syncStatus: {
-            not: 'DISABLED',
+            not: "DISABLED",
           },
         },
         include: {
@@ -96,8 +99,8 @@ export class DeviceSyncService {
       console.log(`找到 ${activeDevices.length} 个活跃设备`);
 
       // 并行同步所有设备
-      const syncPromises = activeDevices.map(device => 
-        this.syncSingleDevice(device)
+      const syncPromises = activeDevices.map((device) =>
+        this.syncSingleDevice(device),
       );
 
       const deviceResults = await Promise.all(syncPromises);
@@ -108,7 +111,9 @@ export class DeviceSyncService {
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
 
-      console.log(`设备同步完成，耗时 ${duration}ms，成功 ${summary.successCount}/${summary.totalCount}`);
+      console.log(
+        `设备同步完成，耗时 ${duration}ms，成功 ${summary.successCount}/${summary.totalCount}`,
+      );
 
       return {
         success: summary.errorCount === 0,
@@ -121,10 +126,9 @@ export class DeviceSyncService {
         endTime,
         results,
       };
-
     } catch (error) {
-      console.error('设备同步失败:', error);
-      
+      console.error("设备同步失败:", error);
+
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
 
@@ -138,7 +142,7 @@ export class DeviceSyncService {
         startTime,
         endTime,
         results: [],
-        errors: [error instanceof Error ? error.message : '未知错误'],
+        errors: [error instanceof Error ? error.message : "未知错误"],
       };
     }
   }
@@ -147,10 +151,10 @@ export class DeviceSyncService {
    * 同步单个设备
    */
   private async syncSingleDevice(
-    device: DeviceConnection & { member: any }
+    device: DeviceConnection & { member: any },
   ): Promise<DeviceSyncResult> {
     const startTime = new Date();
-    
+
     try {
       // 检查是否需要同步
       if (!this.shouldSyncDevice(device)) {
@@ -160,7 +164,7 @@ export class DeviceSyncService {
           platform: device.platform,
           success: true,
           skipped: true,
-          reason: '未到同步时间',
+          reason: "未到同步时间",
           syncedDataCount: 0,
           duration: 0,
           startTime,
@@ -172,23 +176,23 @@ export class DeviceSyncService {
       await prisma.deviceConnection.update({
         where: { id: device.id },
         data: {
-          syncStatus: 'SYNCING',
+          syncStatus: "SYNCING",
         },
       });
 
       // 调用相应的同步服务
       let syncResult;
-      if (device.platform === 'APPLE_HEALTHKIT') {
+      if (device.platform === "APPLE_HEALTHKIT") {
         syncResult = await healthKitService.syncAllData(
           device.member.id,
           device.id,
-          device.lastSyncAt || undefined
+          device.lastSyncAt || undefined,
         );
-      } else if (device.platform === 'HUAWEI_HEALTH') {
+      } else if (device.platform === "HUAWEI_HEALTH") {
         syncResult = await huaweiHealthService.syncAllData(
           device.member.id,
           device.id,
-          device.lastSyncAt || undefined
+          device.lastSyncAt || undefined,
         );
       } else {
         throw new Error(`不支持的平台: ${device.platform}`);
@@ -202,7 +206,7 @@ export class DeviceSyncService {
         await prisma.deviceConnection.update({
           where: { id: device.id },
           data: {
-            syncStatus: 'SUCCESS',
+            syncStatus: "SUCCESS",
             lastSyncAt: syncResult.lastSyncDate,
             errorCount: 0,
             lastError: null,
@@ -220,13 +224,12 @@ export class DeviceSyncService {
           startTime,
           endTime,
         };
-
       } else {
         // 增加错误计数
         await prisma.deviceConnection.update({
           where: { id: device.id },
           data: {
-            syncStatus: 'FAILED',
+            syncStatus: "FAILED",
             lastError: syncResult.errors[0],
             errorCount: { increment: 1 },
           },
@@ -244,11 +247,10 @@ export class DeviceSyncService {
           errors: syncResult.errors,
         };
       }
-
     } catch (error) {
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
-      
+
       console.error(`设备 ${device.deviceName} 同步失败:`, error);
 
       // 更新错误状态
@@ -256,13 +258,13 @@ export class DeviceSyncService {
         await prisma.deviceConnection.update({
           where: { id: device.id },
           data: {
-            syncStatus: 'FAILED',
-            lastError: error instanceof Error ? error.message : '未知错误',
+            syncStatus: "FAILED",
+            lastError: error instanceof Error ? error.message : "未知错误",
             errorCount: { increment: 1 },
           },
         });
       } catch (updateError) {
-        console.error('更新设备状态失败:', updateError);
+        console.error("更新设备状态失败:", updateError);
       }
 
       return {
@@ -274,7 +276,7 @@ export class DeviceSyncService {
         duration,
         startTime,
         endTime,
-        errors: [error instanceof Error ? error.message : '未知错误'],
+        errors: [error instanceof Error ? error.message : "未知错误"],
       };
     }
   }
@@ -291,7 +293,7 @@ export class DeviceSyncService {
     // 检查是否到了同步时间
     const now = new Date();
     const nextSyncTime = addMinutes(device.lastSyncAt, device.syncInterval);
-    
+
     return isAfter(now, nextSyncTime);
   }
 
@@ -301,10 +303,13 @@ export class DeviceSyncService {
   private summarizeSyncResults(results: DeviceSyncResult[]): SyncSummary {
     return {
       totalCount: results.length,
-      successCount: results.filter(r => r.success && !r.skipped).length,
-      errorCount: results.filter(r => !r.success).length,
-      skippedCount: results.filter(r => r.skipped).length,
-      syncedDataCount: results.reduce((sum, r) => sum + (r.syncedDataCount || 0), 0),
+      successCount: results.filter((r) => r.success && !r.skipped).length,
+      errorCount: results.filter((r) => !r.success).length,
+      skippedCount: results.filter((r) => r.skipped).length,
+      syncedDataCount: results.reduce(
+        (sum, r) => sum + (r.syncedDataCount || 0),
+        0,
+      ),
     };
   }
 
@@ -316,7 +321,7 @@ export class DeviceSyncService {
     const twentyFourHoursAgo = subMinutes(now, 24 * 60);
 
     const stats = await prisma.deviceConnection.groupBy({
-      by: ['syncStatus'],
+      by: ["syncStatus"],
       where: {
         isActive: true,
       },
@@ -338,10 +343,14 @@ export class DeviceSyncService {
     });
 
     const total = stats.reduce((sum, stat) => sum + stat._count.id, 0);
-    const successCount = stats.find(s => s.syncStatus === 'SUCCESS')?._count.id || 0;
-    const failedCount = stats.find(s => s.syncStatus === 'FAILED')?._count.id || 0;
-    const pendingCount = stats.find(s => s.syncStatus === 'PENDING')?._count.id || 0;
-    const syncingCount = stats.find(s => s.syncStatus === 'SYNCING')?._count.id || 0;
+    const successCount =
+      stats.find((s) => s.syncStatus === "SUCCESS")?._count.id || 0;
+    const failedCount =
+      stats.find((s) => s.syncStatus === "FAILED")?._count.id || 0;
+    const pendingCount =
+      stats.find((s) => s.syncStatus === "PENDING")?._count.id || 0;
+    const syncingCount =
+      stats.find((s) => s.syncStatus === "SYNCING")?._count.id || 0;
 
     return {
       total,
@@ -351,14 +360,16 @@ export class DeviceSyncService {
       pending: pendingCount,
       syncing: syncingCount,
       recentlySynced: recentSyncs.length,
-      lastSyncTime: recentSyncs.length > 0 
-        ? recentSyncs.reduce((latest, current) => 
-          current.lastSyncAt && latest.lastSyncAt && 
-            isAfter(current.lastSyncAt, latest.lastSyncAt) 
-            ? current 
-            : latest
-        ).lastSyncAt
-        : null,
+      lastSyncTime:
+        recentSyncs.length > 0
+          ? recentSyncs.reduce((latest, current) =>
+              current.lastSyncAt &&
+              latest.lastSyncAt &&
+              isAfter(current.lastSyncAt, latest.lastSyncAt)
+                ? current
+                : latest,
+            ).lastSyncAt
+          : null,
     };
   }
 
@@ -367,14 +378,11 @@ export class DeviceSyncService {
    */
   async cleanupStaleDevices(): Promise<CleanupResult> {
     const threeDaysAgo = subMinutes(new Date(), 24 * 60 * 3);
-    
+
     const staleDevices = await prisma.deviceConnection.findMany({
       where: {
         isActive: true,
-        OR: [
-          { lastSyncAt: null },
-          { lastSyncAt: { lt: threeDaysAgo } },
-        ],
+        OR: [{ lastSyncAt: null }, { lastSyncAt: { lt: threeDaysAgo } }],
       },
     });
 
@@ -388,7 +396,7 @@ export class DeviceSyncService {
           data: {
             isActive: false,
             isAutoSync: false,
-            syncStatus: 'DISABLED',
+            syncStatus: "DISABLED",
           },
         });
         disabledCount++;
@@ -424,7 +432,7 @@ export class DeviceSyncService {
     });
 
     if (!device) {
-      throw new Error('设备未找到或未激活');
+      throw new Error("设备未找到或未激活");
     }
 
     return this.syncSingleDevice(device);
@@ -437,68 +445,70 @@ export class DeviceSyncService {
     return {
       isRunning: this.isRunning,
       hasActiveSync: this.syncInterval !== null,
-      nextSyncTime: this.syncInterval ? new Date(Date.now() + 30 * 60 * 1000) : null,
+      nextSyncTime: this.syncInterval
+        ? new Date(Date.now() + 30 * 60 * 1000)
+        : null,
     };
   }
 }
 
 // 类型定义
 export interface SyncAllResult {
-  success: boolean
-  totalCount: number
-  successCount: number
-  errorCount: number
-  syncedDataCount: number
-  duration: number
-  startTime: Date
-  endTime: Date
-  results: DeviceSyncResult[]
-  errors?: string[]
+  success: boolean;
+  totalCount: number;
+  successCount: number;
+  errorCount: number;
+  syncedDataCount: number;
+  duration: number;
+  startTime: Date;
+  endTime: Date;
+  results: DeviceSyncResult[];
+  errors?: string[];
 }
 
 export interface DeviceSyncResult {
-  deviceId: string
-  deviceName: string
-  platform: string
-  success: boolean
-  skipped?: boolean
-  reason?: string
-  syncedDataCount: number
-  duration: number
-  startTime: Date
-  endTime: Date
-  errors?: string[]
+  deviceId: string;
+  deviceName: string;
+  platform: string;
+  success: boolean;
+  skipped?: boolean;
+  reason?: string;
+  syncedDataCount: number;
+  duration: number;
+  startTime: Date;
+  endTime: Date;
+  errors?: string[];
 }
 
 interface SyncSummary {
-  totalCount: number
-  successCount: number
-  errorCount: number
-  skippedCount: number
-  syncedDataCount: number
+  totalCount: number;
+  successCount: number;
+  errorCount: number;
+  skippedCount: number;
+  syncedDataCount: number;
 }
 
 export interface SyncStats {
-  total: number
-  active: number
-  success: number
-  failed: number
-  pending: number
-  syncing: number
-  recentlySynced: number
-  lastSyncTime: Date | null
+  total: number;
+  active: number;
+  success: number;
+  failed: number;
+  pending: number;
+  syncing: number;
+  recentlySynced: number;
+  lastSyncTime: Date | null;
 }
 
 export interface CleanupResult {
-  totalStale: number
-  disabledCount: number
-  errors: string[]
+  totalStale: number;
+  disabledCount: number;
+  errors: string[];
 }
 
 export interface ServiceStatus {
-  isRunning: boolean
-  hasActiveSync: boolean
-  nextSyncTime: Date | null
+  isRunning: boolean;
+  hasActiveSync: boolean;
+  nextSyncTime: Date | null;
 }
 
 // 导出单例实例
@@ -508,14 +518,14 @@ export const deviceSyncService = DeviceSyncService.getInstance();
 export async function initializeDeviceSync(): Promise<void> {
   // 在应用启动时初始化设备同步服务
   const syncService = DeviceSyncService.getInstance();
-  
+
   // 检查环境变量是否启用后台同步
-  const enableBackgroundSync = process.env.ENABLE_DEVICE_SYNC === 'true';
-  
+  const enableBackgroundSync = process.env.ENABLE_DEVICE_SYNC === "true";
+
   if (enableBackgroundSync) {
-    const syncInterval = parseInt(process.env.DEVICE_SYNC_INTERVAL || '30');
+    const syncInterval = parseInt(process.env.DEVICE_SYNC_INTERVAL || "30");
     syncService.startBackgroundSync(syncInterval);
   } else {
-    console.log('设备后台同步已禁用');
+    console.log("设备后台同步已禁用");
   }
 }

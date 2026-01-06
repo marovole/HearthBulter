@@ -17,7 +17,7 @@ export interface MemberHealthContext {
     userId: string | null;
     name: string;
     birthDate: Date;
-    gender: 'MALE' | 'FEMALE';
+    gender: "MALE" | "FEMALE";
     height: number | null;
     weight: number | null;
     bmi: number | null;
@@ -108,7 +108,7 @@ export interface HealthRepository {
       healthDataLimit?: number;
       /** 体检报告数量限制 */
       medicalReportsLimit?: number;
-    }
+    },
   ): Promise<MemberHealthContext | null>;
 
   /**
@@ -120,7 +120,7 @@ export interface HealthRepository {
    */
   getMemberHealthHistory(
     memberId: string,
-    limit?: number
+    limit?: number,
   ): Promise<AIAdviceHistoryRecord[]>;
 
   /**
@@ -149,7 +149,7 @@ export interface HealthRepository {
     id: string;
     memberId: string;
     messages: any[];
-    status: 'ACTIVE' | 'ARCHIVED';
+    status: "ACTIVE" | "ARCHIVED";
     tokens?: number;
     updatedAt: Date;
     lastMessageAt: Date;

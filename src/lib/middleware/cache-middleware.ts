@@ -1,5 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from '@/lib/cache/redis-client';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  CacheService,
+  CacheKeyBuilder,
+  CACHE_CONFIG,
+} from "@/lib/cache/redis-client";
 
 // 缓存中间件配置
 interface CacheMiddlewareOptions {
@@ -15,17 +19,14 @@ interface CacheMiddlewareOptions {
 export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
   const {
     ttl = CACHE_CONFIG.TTL.API_RESPONSE,
-    varyHeaders = ['authorization', 'cookie'],
+    varyHeaders = ["authorization", "cookie"],
     skipCache = () => false,
     cacheKeyGenerator,
   } = options;
 
   return async (request: NextRequest): Promise<NextResponse | null> => {
     // 跳过缓存的条件
-    if (
-      request.method !== 'GET' ||
-      skipCache(request)
-    ) {
+    if (request.method !== "GET" || skipCache(request)) {
       return null;
     }
 
@@ -50,10 +51,14 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
 
       if (cachedResponse) {
         // 检查 Vary 头部
-        const cachedVary = cachedResponse.headers['vary'];
-        const shouldVary = cachedVary && varyHeaders.some(header =>
-          request.headers.get(header) !== cachedResponse.headers[`x-${header}`]
-        );
+        const cachedVary = cachedResponse.headers["vary"];
+        const shouldVary =
+          cachedVary &&
+          varyHeaders.some(
+            (header) =>
+              request.headers.get(header) !==
+              cachedResponse.headers[`x-${header}`],
+          );
 
         if (!shouldVary) {
           // 返回缓存响应
@@ -63,14 +68,20 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
           });
 
           // 添加缓存标识
-          response.headers.set('X-Cache', 'HIT');
-          response.headers.set('Age', String(Math.floor(Date.now() / 1000) - parseInt(cachedResponse.headers['x-cached-at'] || '0')));
+          response.headers.set("X-Cache", "HIT");
+          response.headers.set(
+            "Age",
+            String(
+              Math.floor(Date.now() / 1000) -
+                parseInt(cachedResponse.headers["x-cached-at"] || "0"),
+            ),
+          );
 
           return response;
         }
       }
     } catch (error) {
-      console.error('Cache middleware error:', error);
+      console.error("Cache middleware error:", error);
     }
 
     return null;
@@ -83,16 +94,16 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
 export function wrapResponseWithCache(
   response: NextResponse,
   request: NextRequest,
-  options: CacheMiddlewareOptions = {}
+  options: CacheMiddlewareOptions = {},
 ): NextResponse {
   const {
     ttl = CACHE_CONFIG.TTL.API_RESPONSE,
-    varyHeaders = ['authorization', 'cookie'],
+    varyHeaders = ["authorization", "cookie"],
     cacheKeyGenerator,
   } = options;
 
   // 只缓存成功的 GET 请求
-  if (request.method !== 'GET' || !response.ok) {
+  if (request.method !== "GET" || !response.ok) {
     return response;
   }
 
@@ -118,8 +129,8 @@ export function wrapResponseWithCache(
 
       // 添加 Vary 相关信息
       if (varyHeaders.length > 0) {
-        headers['vary'] = varyHeaders.join(', ');
-        varyHeaders.forEach(header => {
+        headers["vary"] = varyHeaders.join(", ");
+        varyHeaders.forEach((header) => {
           const value = request.headers.get(header);
           if (value) {
             headers[`x-${header}`] = value;
@@ -128,24 +139,28 @@ export function wrapResponseWithCache(
       }
 
       // 添加缓存时间戳
-      headers['x-cached-at'] = String(Math.floor(Date.now() / 1000));
+      headers["x-cached-at"] = String(Math.floor(Date.now() / 1000));
 
       // 获取响应体
       const body = await response.text();
 
       // 缓存响应数据
-      await CacheService.set(cacheKey, {
-        status: response.status,
-        headers,
-        body,
-      }, ttl);
+      await CacheService.set(
+        cacheKey,
+        {
+          status: response.status,
+          headers,
+          body,
+        },
+        ttl,
+      );
     } catch (error) {
-      console.error('Response caching error:', error);
+      console.error("Response caching error:", error);
     }
   });
 
   // 添加缓存标识
-  response.headers.set('X-Cache', 'MISS');
+  response.headers.set("X-Cache", "MISS");
   return response;
 }
 
@@ -154,24 +169,24 @@ export function wrapResponseWithCache(
  */
 export const defaultCacheMiddlewareOptions: CacheMiddlewareOptions = {
   ttl: CACHE_CONFIG.TTL.API_RESPONSE,
-  varyHeaders: ['authorization', 'cookie'],
+  varyHeaders: ["authorization", "cookie"],
   skipCache: (request) => {
     // 跳过缓存的请求
     const url = new URL(request.url);
 
     // 跳过动态路由
-    if (url.pathname.includes('/api/')) {
+    if (url.pathname.includes("/api/")) {
       const pathname = url.pathname;
 
       // 跳过需要实时数据的 API
       const skipPatterns = [
-        '/api/notifications',
-        '/api/analytics',
-        '/api/reports',
-        '/api/realtime',
+        "/api/notifications",
+        "/api/analytics",
+        "/api/reports",
+        "/api/realtime",
       ];
 
-      return skipPatterns.some(pattern => pathname.includes(pattern));
+      return skipPatterns.some((pattern) => pathname.includes(pattern));
     }
 
     return false;
@@ -181,7 +196,9 @@ export const defaultCacheMiddlewareOptions: CacheMiddlewareOptions = {
 /**
  * 预定义的缓存中间件
  */
-export const cacheMiddleware = createCacheMiddleware(defaultCacheMiddlewareOptions);
+export const cacheMiddleware = createCacheMiddleware(
+  defaultCacheMiddlewareOptions,
+);
 
 /**
  * 静态资源缓存中间件
@@ -197,18 +214,18 @@ export const staticCacheMiddleware = createCacheMiddleware({
  */
 export const userDataCacheMiddleware = createCacheMiddleware({
   ttl: CACHE_CONFIG.TTL.USER_SESSION,
-  varyHeaders: ['authorization', 'cookie'],
+  varyHeaders: ["authorization", "cookie"],
   skipCache: (request) => {
     // 跳过敏感用户数据的缓存
     const url = new URL(request.url);
     const pathname = url.pathname;
 
     const sensitivePatterns = [
-      '/api/auth',
-      '/api/users/profile',
-      '/api/families/members',
+      "/api/auth",
+      "/api/users/profile",
+      "/api/families/members",
     ];
 
-    return sensitivePatterns.some(pattern => pathname.includes(pattern));
+    return sensitivePatterns.some((pattern) => pathname.includes(pattern));
   },
 });

@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase";
 
 class SupabaseClient {
   private static instance: SupabaseClient;
@@ -10,7 +10,7 @@ class SupabaseClient {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
+      throw new Error("Missing Supabase environment variables");
     }
 
     this.client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -21,11 +21,11 @@ class SupabaseClient {
       },
       global: {
         headers: {
-          'x-application-name': 'health-butler',
+          "x-application-name": "health-butler",
         },
       },
       db: {
-        schema: 'public',
+        schema: "public",
       },
       realtime: {
         params: {
@@ -50,8 +50,8 @@ class SupabaseClient {
 export const supabase = SupabaseClient.getInstance().getClient();
 
 // 导出类型
-export type SupabaseClientType = ReturnType<typeof createClient>
-export type User = Database['public']['Tables']['users']['Row']
-export type HealthData = Database['public']['Tables']['health_data']['Row']
-export type MealRecord = Database['public']['Tables']['meal_records']['Row']
-export type Recipe = Database['public']['Tables']['recipes']['Row']
+export type SupabaseClientType = ReturnType<typeof createClient>;
+export type User = Database["public"]["Tables"]["users"]["Row"];
+export type HealthData = Database["public"]["Tables"]["health_data"]["Row"];
+export type MealRecord = Database["public"]["Tables"]["meal_records"]["Row"];
+export type Recipe = Database["public"]["Tables"]["recipes"]["Row"];

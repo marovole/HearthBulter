@@ -3,21 +3,21 @@
  * 测试营养数据库查询性能
  */
 
-import { prisma } from '@/lib/db';
-import { usdaService } from '@/lib/services/usda-service';
-import { nutritionCalculator } from '@/lib/services/nutrition-calculator';
-import { foodCacheService } from '@/lib/services/cache-service';
+import { prisma } from "@/lib/db";
+import { usdaService } from "@/lib/services/usda-service";
+import { nutritionCalculator } from "@/lib/services/nutrition-calculator";
+import { foodCacheService } from "@/lib/services/cache-service";
 
 // Mock USDA API
-jest.mock('@/lib/services/usda-service');
+jest.mock("@/lib/services/usda-service");
 
-describe('Nutrition Database Performance Tests', () => {
+describe("Nutrition Database Performance Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('Food Search Performance', () => {
-    it('should handle 1000 consecutive food searches efficiently', async () => {
+  describe("Food Search Performance", () => {
+    it("should handle 1000 consecutive food searches efficiently", async () => {
       // 创建测试数据
       const testFoods = Array.from({ length: 100 }, (_, i) => ({
         id: `food-${i}`,
@@ -28,9 +28,9 @@ describe('Nutrition Database Performance Tests', () => {
         protein: 10 + i,
         carbs: 20 + i,
         fat: 5 + i,
-        category: 'PROTEIN' as const,
+        category: "PROTEIN" as const,
         tags: JSON.stringify([]),
-        source: 'LOCAL' as const,
+        source: "LOCAL" as const,
         verified: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -38,10 +38,10 @@ describe('Nutrition Database Performance Tests', () => {
 
       // Mock Prisma查询
       const mockFindMany = jest.fn().mockResolvedValue(testFoods);
-      const mockCount = jest.fn().mockResolvedValue(100)
+      const mockCount = jest.fn().mockResolvedValue(100);
 
-      ;(prisma.food.findMany as jest.Mock) = mockFindMany
-      ;(prisma.food.count as jest.Mock) = mockCount;
+      (prisma.food.findMany as jest.Mock) = mockFindMany;
+      (prisma.food.count as jest.Mock) = mockCount;
 
       const startTime = Date.now();
 
@@ -55,7 +55,7 @@ describe('Nutrition Database Performance Tests', () => {
             ],
           },
           take: 20,
-        })
+        }),
       );
 
       await Promise.all(queries);
@@ -69,32 +69,32 @@ describe('Nutrition Database Performance Tests', () => {
     });
   });
 
-  describe('Cache Performance', () => {
-    it('should significantly improve performance with cache', async () => {
+  describe("Cache Performance", () => {
+    it("should significantly improve performance with cache", async () => {
       const testFood = {
-        id: 'test-food-1',
-        name: '测试食物',
-        nameEn: 'test-food',
+        id: "test-food-1",
+        name: "测试食物",
+        nameEn: "test-food",
         aliases: JSON.stringify([]),
         calories: 100,
         protein: 10,
         carbs: 20,
         fat: 5,
-        category: 'PROTEIN' as const,
+        category: "PROTEIN" as const,
         tags: JSON.stringify([]),
-        source: 'LOCAL' as const,
+        source: "LOCAL" as const,
         verified: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
       // Mock Prisma查询
-      const mockFindUnique = jest.fn().mockResolvedValue(testFood)
-      ;(prisma.food.findUnique as jest.Mock) = mockFindUnique;
+      const mockFindUnique = jest.fn().mockResolvedValue(testFood);
+      (prisma.food.findUnique as jest.Mock) = mockFindUnique;
 
       // 第一次查询（无缓存）
       const startTime1 = Date.now();
-      await foodCacheService.getFood('test-food-1');
+      await foodCacheService.getFood("test-food-1");
       const duration1 = Date.now() - startTime1;
 
       // 设置缓存
@@ -102,19 +102,19 @@ describe('Nutrition Database Performance Tests', () => {
 
       // 第二次查询（有缓存）
       const startTime2 = Date.now();
-      await foodCacheService.getFood('test-food-1');
+      await foodCacheService.getFood("test-food-1");
       const duration2 = Date.now() - startTime2;
 
       // 缓存查询应该更快
       expect(duration2).toBeLessThan(duration1);
-      
+
       // 缓存查询不应该调用数据库
       expect(mockFindUnique).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('Nutrition Calculation Performance', () => {
-    it('should calculate nutrition for 1000 food items efficiently', async () => {
+  describe("Nutrition Calculation Performance", () => {
+    it("should calculate nutrition for 1000 food items efficiently", async () => {
       // 创建测试数据
       const testFoods = Array.from({ length: 100 }, (_, i) => ({
         id: `food-${i}`,
@@ -133,8 +133,8 @@ describe('Nutrition Database Performance Tests', () => {
       }));
 
       // Mock Prisma查询
-      const mockFindMany = jest.fn().mockResolvedValue(testFoods)
-      ;(prisma.food.findMany as jest.Mock) = mockFindMany;
+      const mockFindMany = jest.fn().mockResolvedValue(testFoods);
+      (prisma.food.findMany as jest.Mock) = mockFindMany;
 
       // 创建1000个营养计算输入
       const inputs = Array.from({ length: 1000 }, (_, i) => ({
@@ -157,8 +157,8 @@ describe('Nutrition Database Performance Tests', () => {
     });
   });
 
-  describe('Batch Query Performance', () => {
-    it('should handle batch queries efficiently', async () => {
+  describe("Batch Query Performance", () => {
+    it("should handle batch queries efficiently", async () => {
       const testFoods = Array.from({ length: 50 }, (_, i) => ({
         id: `food-${i}`,
         name: `测试食物${i}`,
@@ -168,17 +168,17 @@ describe('Nutrition Database Performance Tests', () => {
         protein: 10 + i,
         carbs: 20 + i,
         fat: 5 + i,
-        category: 'PROTEIN' as const,
+        category: "PROTEIN" as const,
         tags: JSON.stringify([]),
-        source: 'LOCAL' as const,
+        source: "LOCAL" as const,
         verified: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       }));
 
       // Mock Prisma查询
-      const mockFindMany = jest.fn().mockResolvedValue(testFoods)
-      ;(prisma.food.findMany as jest.Mock) = mockFindMany;
+      const mockFindMany = jest.fn().mockResolvedValue(testFoods);
+      (prisma.food.findMany as jest.Mock) = mockFindMany;
 
       const startTime = Date.now();
 

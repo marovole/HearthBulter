@@ -1,51 +1,51 @@
-'use client';
+"use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from 'react';
-import { signIn, getSession, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Heart, Mail, Lock, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState, useEffect } from "react";
+import { signIn, getSession, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Heart, Mail, Lock, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function SignInPage() {
   const { data: session, status } = useSession();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'authenticated' && session) {
-      router.push('/dashboard');
+    if (status === "authenticated" && session) {
+      router.push("/dashboard");
     }
   }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
       });
 
       if (result?.error) {
-        setError('邮箱或密码错误');
+        setError("邮箱或密码错误");
       } else {
         await getSession();
-        router.push('/dashboard');
+        router.push("/dashboard");
         router.refresh();
       }
     } catch {
-      setError('登录失败，请重试');
+      setError("登录失败，请重试");
     } finally {
       setIsLoading(false);
     }
@@ -54,9 +54,9 @@ export default function SignInPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn('google', { callbackUrl: '/dashboard' });
+      await signIn("google", { callbackUrl: "/dashboard" });
     } catch {
-      setError('Google登录失败');
+      setError("Google登录失败");
       setIsLoading(false);
     }
   };
@@ -70,7 +70,7 @@ export default function SignInPage() {
           <div className="absolute top-1/4 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="relative z-10 flex flex-col justify-center px-12 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -85,13 +85,13 @@ export default function SignInPage() {
                 Health Butler
               </span>
             </div>
-            
+
             <h1 className="font-display text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
               欢迎回来，
               <br />
               继续您的健康之旅
             </h1>
-            
+
             <p className="text-white/80 text-lg max-w-md">
               登录后即可访问您的健康数据、营养计划和个性化建议。
             </p>
@@ -108,7 +108,8 @@ export default function SignInPage() {
                 ))}
               </div>
               <div className="text-white/80 text-sm">
-                <span className="font-semibold text-white">10,000+</span> 用户已加入
+                <span className="font-semibold text-white">10,000+</span>{" "}
+                用户已加入
               </div>
             </div>
           </motion.div>
@@ -138,8 +139,11 @@ export default function SignInPage() {
               登录账户
             </h2>
             <p className="text-muted-foreground">
-              还没有账户？{' '}
-              <Link href="/auth/signup" className="text-primary font-medium hover:underline">
+              还没有账户？{" "}
+              <Link
+                href="/auth/signup"
+                className="text-primary font-medium hover:underline"
+              >
                 立即注册
               </Link>
             </p>
@@ -150,7 +154,10 @@ export default function SignInPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Email field */}
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="email"
+                    className="text-sm font-medium text-foreground"
+                  >
                     邮箱地址
                   </label>
                   <div className="relative">
@@ -171,7 +178,10 @@ export default function SignInPage() {
 
                 {/* Password field */}
                 <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium text-foreground"
+                  >
                     密码
                   </label>
                   <div className="relative">
@@ -203,7 +213,7 @@ export default function SignInPage() {
                   className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading ? '登录中...' : '登录'}
+                  {isLoading ? "登录中..." : "登录"}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </form>
