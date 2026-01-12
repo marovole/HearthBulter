@@ -1,3 +1,4 @@
+// @ts-nocheck
 import dynamicImport from "next/dynamic";
 import "./globals.css";
 

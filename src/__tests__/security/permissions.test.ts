@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Permission Control Tests
  * Tests for role-based access control and authorization

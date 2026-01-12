@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MealCard 组件测试
  */

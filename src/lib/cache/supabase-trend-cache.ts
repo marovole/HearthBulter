@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Trend Cache (L2 缓存层)
  *

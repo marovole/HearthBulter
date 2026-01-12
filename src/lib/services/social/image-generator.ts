@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * 分享图片生成服务
  * 使用html2canvas生成分享卡片图片

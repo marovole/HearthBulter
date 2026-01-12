@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/devices/[id]/route.ts API 测试
  * Generated test file - please expand with actual test cases

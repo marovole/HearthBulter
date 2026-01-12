@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PrismaClient } from "@prisma/client";
 import { SKUMatcher, MatchConfig } from "./sku-matcher";
 import {

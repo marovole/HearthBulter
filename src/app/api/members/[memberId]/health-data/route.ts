@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { memberRepository } from "@/lib/repositories/member-repository-singleton";

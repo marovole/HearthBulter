@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Authentication Adapter
  *

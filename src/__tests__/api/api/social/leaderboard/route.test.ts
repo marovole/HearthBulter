@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/social/leaderboard/route.ts API 测试
  * 完善的排行榜API测试

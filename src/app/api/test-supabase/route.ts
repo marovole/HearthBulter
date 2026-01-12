@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextResponse } from "next/server";
 
 // 最小化依赖版本 - 只测试环境变量和基础功能

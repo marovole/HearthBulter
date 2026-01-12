@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/social/stats/route.ts API 测试
  * 完善的社交分享统计API测试

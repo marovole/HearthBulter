@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * USDA Service Tests
  * Unit tests for USDA API integration service

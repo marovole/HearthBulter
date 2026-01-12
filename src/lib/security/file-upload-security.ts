@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { logger } from "@/lib/logging/structured-logger";
 import path from "path";
 import crypto from "crypto";

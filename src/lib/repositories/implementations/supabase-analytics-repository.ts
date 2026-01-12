@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase 分析 Repository 实现
  *

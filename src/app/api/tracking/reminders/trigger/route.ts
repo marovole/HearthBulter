@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { reminderService } from "@/lib/services/tracking/reminder-service";

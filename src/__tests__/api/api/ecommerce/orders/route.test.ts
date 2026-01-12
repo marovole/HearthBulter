@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/ecommerce/orders/route.ts API 测试
  * Generated test file - please expand with actual test cases

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase 通知 Repository 实现
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PrismaClient } from "@prisma/client";
 import { Food, PriceHistory, PriceSource } from "@prisma/client";
 

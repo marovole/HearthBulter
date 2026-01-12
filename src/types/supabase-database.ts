@@ -530,6 +530,281 @@ export interface Database {
           created_at?: string;
         };
       };
+      shopping_lists: {
+        Row: {
+          id: string;
+          plan_id: string | null;
+          name: string;
+          budget: number;
+          estimated_cost: number | null;
+          actual_cost: number | null;
+          status: string;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          plan_id?: string | null;
+          name: string;
+          budget?: number;
+          estimated_cost?: number | null;
+          actual_cost?: number | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          plan_id?: string | null;
+          name?: string;
+          budget?: number;
+          estimated_cost?: number | null;
+          actual_cost?: number | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+      };
+      shopping_list_items: {
+        Row: {
+          id: string;
+          shopping_list_id: string;
+          food_id: string;
+          category: string | null;
+          quantity: number;
+          unit: string;
+          purchased: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          shopping_list_id: string;
+          food_id: string;
+          category?: string | null;
+          quantity: number;
+          unit: string;
+          purchased?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          shopping_list_id?: string;
+          food_id?: string;
+          category?: string | null;
+          quantity?: number;
+          unit?: string;
+          purchased?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      foods: {
+        Row: {
+          id: string;
+          name: string;
+          category: string | null;
+          default_unit: string | null;
+          image_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          category?: string | null;
+          default_unit?: string | null;
+          image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          category?: string | null;
+          default_unit?: string | null;
+          image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      meal_plans: {
+        Row: {
+          id: string;
+          name: string;
+          member_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          member_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          member_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      inventory_items: {
+        Row: {
+          id: string;
+          member_id: string;
+          food_id: string;
+          quantity: number;
+          original_quantity: number;
+          unit: string;
+          purchase_price: number | null;
+          purchase_source: string | null;
+          expiry_date: string | null;
+          production_date: string | null;
+          days_to_expiry: number | null;
+          storage_location: string;
+          storage_notes: string | null;
+          min_stock_threshold: number | null;
+          is_low_stock: boolean;
+          barcode: string | null;
+          brand: string | null;
+          package_info: string | null;
+          status: string;
+          last_used_at: string | null;
+          usage_count: number;
+          waste_count: number;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          member_id: string;
+          food_id: string;
+          quantity: number;
+          original_quantity?: number;
+          unit: string;
+          purchase_price?: number | null;
+          purchase_source?: string | null;
+          expiry_date?: string | null;
+          production_date?: string | null;
+          days_to_expiry?: number | null;
+          storage_location?: string;
+          storage_notes?: string | null;
+          min_stock_threshold?: number | null;
+          is_low_stock?: boolean;
+          barcode?: string | null;
+          brand?: string | null;
+          package_info?: string | null;
+          status?: string;
+          last_used_at?: string | null;
+          usage_count?: number;
+          waste_count?: number;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          member_id?: string;
+          food_id?: string;
+          quantity?: number;
+          original_quantity?: number;
+          unit?: string;
+          purchase_price?: number | null;
+          purchase_source?: string | null;
+          expiry_date?: string | null;
+          production_date?: string | null;
+          days_to_expiry?: number | null;
+          storage_location?: string;
+          storage_notes?: string | null;
+          min_stock_threshold?: number | null;
+          is_low_stock?: boolean;
+          barcode?: string | null;
+          brand?: string | null;
+          package_info?: string | null;
+          status?: string;
+          last_used_at?: string | null;
+          usage_count?: number;
+          waste_count?: number;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+      };
+      inventory_usages: {
+        Row: {
+          id: string;
+          inventory_item_id: string;
+          quantity: number;
+          reason: string;
+          meal_id: string | null;
+          recipe_id: string | null;
+          notes: string | null;
+          usage_date: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          inventory_item_id: string;
+          quantity: number;
+          reason: string;
+          meal_id?: string | null;
+          recipe_id?: string | null;
+          notes?: string | null;
+          usage_date: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          inventory_item_id?: string;
+          quantity?: number;
+          reason?: string;
+          meal_id?: string | null;
+          recipe_id?: string | null;
+          notes?: string | null;
+          usage_date?: string;
+          created_at?: string;
+        };
+      };
+      waste_records: {
+        Row: {
+          id: string;
+          inventory_item_id: string;
+          quantity: number;
+          reason: string;
+          waste_date: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          inventory_item_id: string;
+          quantity: number;
+          reason: string;
+          waste_date: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          inventory_item_id?: string;
+          quantity?: number;
+          reason?: string;
+          waste_date?: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+      };
       // 添加其他表的类型定义...
       // 为简洁起见，这里只列出主要表
       // 实际项目中应包含所有 68 个表

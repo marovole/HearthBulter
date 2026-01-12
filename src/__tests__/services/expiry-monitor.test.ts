@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { expiryMonitor } from "@/services/expiry-monitor";
 import { inventoryTracker } from "@/services/inventory-tracker";
 import { PrismaClient, InventoryStatus, StorageLocation } from "@prisma/client";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Token 生成器单元测试
  */

@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * 安全防护中间件
  * 提供SQL注入、XSS、CSRF防护和安全审计

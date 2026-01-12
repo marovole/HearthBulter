@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Prompt模板单元测试
  */

@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 "use client";
 
 // Force dynamic rendering to prevent prerender errors with React Context

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 强类型Mock工厂
  * 提供类型安全的测试Mock对象

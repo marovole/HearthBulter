@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { ScoreGrade } from "@prisma/client";

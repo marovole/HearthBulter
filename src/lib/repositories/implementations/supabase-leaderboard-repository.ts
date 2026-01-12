@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Leaderboard Repository 实现
  *

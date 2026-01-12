@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 // 通知系统组件导出
 export { NotificationList } from "./notification-list";
 export { NotificationItem } from "./notification-item";

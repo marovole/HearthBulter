@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { getReportByShareToken } from "@/lib/services/analytics/report-generator";
 

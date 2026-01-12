@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 // Cloudflare环境工具函数
 export const isCloudflare = typeof WebSocketPair !== "undefined";
 

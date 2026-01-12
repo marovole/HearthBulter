@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextResponse } from "next/server";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 

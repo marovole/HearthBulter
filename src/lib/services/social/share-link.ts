@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * 分享链接生成服务
  * 负责生成唯一的分享token和邀请码

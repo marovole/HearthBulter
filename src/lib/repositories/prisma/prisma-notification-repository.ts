@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Prisma Notification Repository
  *

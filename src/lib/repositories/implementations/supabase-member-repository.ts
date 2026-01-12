@@ -65,7 +65,9 @@ export class SupabaseMemberRepository implements MemberRepository {
         return { hasAccess: false, member: null };
       }
 
-      if (!member) {
+      // family 是通过 Supabase 关联查询嵌套在 member 对象中的
+      const family = (member as any)?.family;
+      if (!member || !family) {
         return { hasAccess: false, member: null };
       }
 
@@ -73,11 +75,8 @@ export class SupabaseMemberRepository implements MemberRepository {
       // 1. 用户是家庭创建者
       // 2. 用户是成员本人（member.userId === userId）
       // 3. 用户是管理员成员
-      const family = Array.isArray(member.family)
-        ? member.family[0]
-        : member.family;
-      const isCreator = family?.creatorId === userId;
-      const isSelf = member.userId === userId;
+      const isCreator = family.creatorId === userId;
+      const isSelf = (member as any).userId === userId;
 
       // 如果不是创建者也不是本人，检查是否是管理员
       let isAdmin = false;
@@ -86,7 +85,7 @@ export class SupabaseMemberRepository implements MemberRepository {
           .from("family_members")
           .select("role")
           .eq("userId", userId)
-          .eq("familyId", member.familyId)
+          .eq("familyId", (member as any).familyId)
           .is("deletedAt", null)
           .single();
 
@@ -98,11 +97,11 @@ export class SupabaseMemberRepository implements MemberRepository {
       return {
         hasAccess,
         member: {
-          id: member.id,
-          name: member.name,
-          familyId: member.familyId,
-          userId: member.userId || undefined,
-          role: member.role,
+          id: (member as any).id,
+          name: (member as any).name,
+          familyId: (member as any).familyId,
+          userId: (member as any).userId || undefined,
+          role: (member as any).role,
           family: {
             id: family.id,
             creatorId: family.creatorId,

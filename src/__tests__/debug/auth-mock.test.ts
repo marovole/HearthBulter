@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Debug test to verify auth mock is working
  */

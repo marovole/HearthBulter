@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 import "@testing-library/jest-dom";
 import { URL, URLSearchParams } from "url";

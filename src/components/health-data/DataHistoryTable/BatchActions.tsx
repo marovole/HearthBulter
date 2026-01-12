@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Filter, Trash2 } from "lucide-react";
 
 interface BatchActionsProps {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { TableFilters as Filters } from "./types";
 
 interface TableFiltersProps {

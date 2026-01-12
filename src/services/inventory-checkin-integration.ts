@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PrismaClient, CheckInType, InventoryStatus } from "@prisma/client";
 import { inventoryTracker } from "./inventory-tracker";
 

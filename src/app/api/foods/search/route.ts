@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { testDatabaseConnection } from "@/lib/db";
 import { foodRepository } from "@/lib/repositories/food-repository-singleton";

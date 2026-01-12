@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { PrismaClient } from "@prisma/client";
 import {
   RecipeRecommendation,

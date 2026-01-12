@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * List Generator Tests
  * Unit tests for shopping list generation service

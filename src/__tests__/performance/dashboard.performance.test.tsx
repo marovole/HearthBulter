@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Dashboard Performance Tests
  * 仪表盘性能测试

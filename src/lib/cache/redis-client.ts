@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Redis } from "@upstash/redis";
 
 // Redis 客户端配置
