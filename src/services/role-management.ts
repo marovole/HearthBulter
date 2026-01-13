@@ -309,7 +309,7 @@ export class RoleManagementService {
         throw new PermissionError("Not a family member");
       }
 
-      const stats = await prisma.familyMember.groupBy({
+      const stats = (await prisma.familyMember.groupBy({
         by: ["role"],
         where: {
           familyId,
@@ -318,7 +318,7 @@ export class RoleManagementService {
         _count: {
           role: true,
         },
-      }) as any[];
+      })) as any[];
 
       const roleStats = {
         admin: 0,

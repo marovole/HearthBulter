@@ -377,7 +377,9 @@ export class InventoryAnalyzer {
         },
       });
 
-      const freshItems = items.filter((item) => item.status === InventoryStatus.FRESH).length;
+      const freshItems = items.filter(
+        (item) => item.status === InventoryStatus.FRESH,
+      ).length;
       const expiringItems = items.filter(
         (item) => item.status === InventoryStatus.EXPIRING,
       ).length;

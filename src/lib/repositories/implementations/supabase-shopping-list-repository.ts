@@ -180,7 +180,8 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
     };
 
     if (payload.name !== undefined) updateData.name = payload.name;
-    if (payload.budget !== undefined) updateData.budget = payload.budget ?? undefined;
+    if (payload.budget !== undefined)
+      updateData.budget = payload.budget ?? undefined;
     if (payload.status !== undefined) updateData.status = payload.status;
 
     const { data, error } = await this.client

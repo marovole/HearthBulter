@@ -397,7 +397,10 @@ export class ExpiryMonitor {
       ...expiringItems.map((item) => item.storageLocation),
     ]);
 
-    if (storageLocations.has("FRIDGE") || storageLocations.has("REFRIGERATOR")) {
+    if (
+      storageLocations.has("FRIDGE") ||
+      storageLocations.has("REFRIGERATOR")
+    ) {
       recommendations.push("检查冰箱温度设置，确保在4°C以下");
     }
 
@@ -450,7 +453,10 @@ export class ExpiryMonitor {
             : NotificationType.EXPIRY_ALERT,
         title,
         content,
-        priority: type === "expired" ? NotificationPriority.HIGH : NotificationPriority.MEDIUM,
+        priority:
+          type === "expired"
+            ? NotificationPriority.HIGH
+            : NotificationPriority.MEDIUM,
         metadata: {
           type,
           itemCount: items.length,

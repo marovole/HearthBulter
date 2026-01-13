@@ -314,8 +314,14 @@ export class InventoryTracker {
           if (a.expiryDate) return -1;
           if (b.expiryDate) return 1;
           // 如果都没有过期日期，按创建时间升序
-          const timeA = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt).getTime();
-          const timeB = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt).getTime();
+          const timeA =
+            a.createdAt instanceof Date
+              ? a.createdAt.getTime()
+              : new Date(a.createdAt).getTime();
+          const timeB =
+            b.createdAt instanceof Date
+              ? b.createdAt.getTime()
+              : new Date(b.createdAt).getTime();
           return timeA - timeB;
         });
 

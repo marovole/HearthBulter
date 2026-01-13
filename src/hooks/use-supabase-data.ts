@@ -395,7 +395,8 @@ export function useRealtimeData<T extends { id?: string | number }>(
               } else if (payload.eventType === "DELETE") {
                 setData((prev) =>
                   prev.filter(
-                    (item) => item.id !== (payload.old as { id: unknown } as T).id,
+                    (item) =>
+                      item.id !== (payload.old as { id: unknown } as T).id,
                   ),
                 );
               }

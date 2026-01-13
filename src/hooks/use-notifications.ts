@@ -143,14 +143,17 @@ export function useNotifications(options: UseNotificationsOptions) {
         const params = new URLSearchParams({
           memberId,
           ...Object.fromEntries(
-            Object.entries(options).filter(
-              ([_, value]) => value !== undefined && value !== "",
-            ).map(([k, v]) => [k, String(v)]),
+            Object.entries(options)
+              .filter(([_, value]) => value !== undefined && value !== "")
+              .map(([k, v]) => [k, String(v)]),
           ),
         });
 
         const response = await fetch(`/api/notifications?${params}`);
-        const data = await response.json() as ApiResponse<{ notifications: Notification[]; total: number }>;
+        const data = (await response.json()) as ApiResponse<{
+          notifications: Notification[];
+          total: number;
+        }>;
 
         if (data.success) {
           return data.data;
@@ -158,7 +161,6 @@ export function useNotifications(options: UseNotificationsOptions) {
           throw new Error(data.error || "Failed to fetch notifications");
         }
       } catch (err) {
-
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch notifications";
         setError(errorMessage);
@@ -177,7 +179,7 @@ export function useNotifications(options: UseNotificationsOptions) {
         const response = await fetch(
           `/api/notifications/stats?memberId=${memberId}&days=${days}`,
         );
-        const data = await response.json() as ApiResponse<NotificationStats>;
+        const data = (await response.json()) as ApiResponse<NotificationStats>;
 
         if (data.success) {
           return data.data;
@@ -221,7 +223,7 @@ export function useNotifications(options: UseNotificationsOptions) {
           body: JSON.stringify(data),
         });
 
-        const result = await response.json() as ApiResponse<Notification>;
+        const result = (await response.json()) as ApiResponse<Notification>;
 
         if (result.success) {
           // 刷新通知列表
@@ -257,7 +259,7 @@ export function useNotifications(options: UseNotificationsOptions) {
           }),
         });
 
-        const result = await response.json() as ApiResponse<void>;
+        const result = (await response.json()) as ApiResponse<void>;
 
         if (!result.success) {
           throw new Error(result.error || "Failed to mark as read");
@@ -288,7 +290,7 @@ export function useNotifications(options: UseNotificationsOptions) {
         }),
       });
 
-      const result = await response.json() as ApiResponse<void>;
+      const result = (await response.json()) as ApiResponse<void>;
 
       if (!result.success) {
         throw new Error(result.error || "Failed to mark all as read");
@@ -314,7 +316,7 @@ export function useNotifications(options: UseNotificationsOptions) {
           },
         );
 
-        const result = await response.json() as ApiResponse<void>;
+        const result = (await response.json()) as ApiResponse<void>;
 
         if (!result.success) {
           throw new Error(result.error || "Failed to delete notification");
@@ -349,7 +351,7 @@ export function useNotifications(options: UseNotificationsOptions) {
           }),
         });
 
-        const result = await response.json() as ApiResponse<void>;
+        const result = (await response.json()) as ApiResponse<void>;
 
         if (!result.success) {
           throw new Error(result.error || "Failed to batch mark as read");
@@ -384,7 +386,7 @@ export function useNotifications(options: UseNotificationsOptions) {
           }),
         });
 
-        const result = await response.json() as ApiResponse<void>;
+        const result = (await response.json()) as ApiResponse<void>;
 
         if (!result.success) {
           throw new Error(result.error || "Failed to batch delete");
@@ -401,7 +403,9 @@ export function useNotifications(options: UseNotificationsOptions) {
 
   // 批量创建通知
   const createBulkNotifications = useCallback(
-    async (notifications: BulkNotificationRequest[]): Promise<Notification[]> => {
+    async (
+      notifications: BulkNotificationRequest[],
+    ): Promise<Notification[]> => {
       try {
         setError(null);
 
@@ -418,7 +422,7 @@ export function useNotifications(options: UseNotificationsOptions) {
           }),
         });
 
-        const result = await response.json() as ApiResponse<Notification[]>;
+        const result = (await response.json()) as ApiResponse<Notification[]>;
 
         if (result.success) {
           // 刷新通知列表
@@ -460,7 +464,7 @@ export function useNotifications(options: UseNotificationsOptions) {
         }),
       });
 
-      const result = await response.json() as ApiResponse<void>;
+      const result = (await response.json()) as ApiResponse<void>;
 
       if (!result.success) {
         throw new Error(result.error || "Failed to delete all notifications");

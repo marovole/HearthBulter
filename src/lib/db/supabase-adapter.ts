@@ -338,20 +338,26 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
     if (key === "NOT") {
       // NOT 需要反转条件
       // 由于 Supabase 的 not() API 较复杂，这里简化处理
-      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-        Object.entries(value as Record<string, unknown>).forEach(([notKey, notValue]) => {
-          const snakeKey = toSnakeCase(notKey);
-          if (notValue === null) {
-            query = query.not(snakeKey, "is", null);
-          } else if (typeof notValue === "object") {
-            // NOT 复杂条件暂不支持
-            throw new Error(
-              `Complex NOT conditions not yet supported in Supabase adapter for table ${tableName}`,
-            );
-          } else {
-            query = query.neq(snakeKey, notValue);
-          }
-        });
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        Object.entries(value as Record<string, unknown>).forEach(
+          ([notKey, notValue]) => {
+            const snakeKey = toSnakeCase(notKey);
+            if (notValue === null) {
+              query = query.not(snakeKey, "is", null);
+            } else if (typeof notValue === "object") {
+              // NOT 复杂条件暂不支持
+              throw new Error(
+                `Complex NOT conditions not yet supported in Supabase adapter for table ${tableName}`,
+              );
+            } else {
+              query = query.neq(snakeKey, notValue);
+            }
+          },
+        );
       }
       return;
     }
@@ -365,7 +371,9 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
     ) {
       const relationFilter =
         "some" in value ? "some" : "every" in value ? "every" : "none";
-      const condition = JSON.stringify((value as Record<string, unknown>)[relationFilter]);
+      const condition = JSON.stringify(
+        (value as Record<string, unknown>)[relationFilter],
+      );
       throw new Error(
         "Relation filter not yet supported in Supabase adapter:\n" +
           `  Table: ${tableName}\n` +
@@ -699,11 +707,11 @@ class ModelAdapter<T = any> {
   }): Promise<{ count: number }> {
     const snakeData = args.data.map(keysToSnakeCase);
 
-    const { error, count } = await (this.supabase
-      .from(this.tableName) as any)
-      .insert(snakeData, {
-        ignoreDuplicates: args.skipDuplicates,
-      });
+    const { error, count } = await (
+      this.supabase.from(this.tableName) as any
+    ).insert(snakeData, {
+      ignoreDuplicates: args.skipDuplicates,
+    });
 
     if (error) {
       throw new Error(`Supabase createMany error: ${error.message}`);
@@ -721,8 +729,7 @@ class ModelAdapter<T = any> {
     const snakeData = keysToSnakeCase(args.data);
     const selectQuery = buildSelectQuery(args.include, args.select);
 
-    let query = (this.supabase
-      .from(this.tableName) as any)
+    let query = (this.supabase.from(this.tableName) as any)
       .update(snakeData)
       .select(selectQuery);
 
