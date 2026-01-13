@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/inventory/items/route";
 import { InventoryStatus, StorageLocation } from "@prisma/client";

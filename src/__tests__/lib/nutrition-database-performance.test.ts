@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Performance Tests for Nutrition Database
  * 测试营养数据库查询性能

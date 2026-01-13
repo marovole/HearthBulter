@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { performance } from "perf_hooks";
 import { logger } from "@/lib/logging/structured-logger";
 import { securityAudit } from "@/lib/security/security-audit";

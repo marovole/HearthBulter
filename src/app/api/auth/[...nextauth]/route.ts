@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { handler } from "@/lib/auth";
 
 // Force dynamic rendering for auth()

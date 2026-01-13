@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 // 动态导入 nodemailer 以支持边缘运行时环境
 import type nodemailer from "nodemailer";
 

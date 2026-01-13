@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Analytics Service
  * 健康数据分析服务

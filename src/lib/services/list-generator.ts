@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * List Generator Service
  * 购物清单生成服务

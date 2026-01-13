@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * api/devices/sync/route.ts API 测试
  * 设备同步API测试

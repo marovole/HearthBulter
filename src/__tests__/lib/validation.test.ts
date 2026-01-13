@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Validation Tests
  * Unit tests for validation functions

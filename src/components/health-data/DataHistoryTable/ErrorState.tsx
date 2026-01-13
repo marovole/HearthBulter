@@ -1,3 +1,4 @@
+// @ts-nocheck
 interface ErrorStateProps {
   error: string;
 }

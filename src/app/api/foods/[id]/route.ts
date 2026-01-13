@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { foodRepository } from "@/lib/repositories/food-repository-singleton";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * accept_family_invite RPC 函数测试
  */

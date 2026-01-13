@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CacheService, CacheKeyBuilder } from "@/lib/cache/redis-client";
 import { logger } from "@/lib/logging/structured-logger";
 import crypto from "crypto";

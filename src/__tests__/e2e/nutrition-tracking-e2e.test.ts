@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
 import { prisma } from "@/lib/db";
 

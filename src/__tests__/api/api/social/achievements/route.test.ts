@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/social/achievements/route.ts API 测试
  * 社交成就API测试

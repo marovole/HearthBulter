@@ -8,13 +8,28 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase-database";
 
-// 检查是否在构建时
-const isBuildTime = process.env.NODE_ENV === 'production' && typeof window === 'undefined' && !process.env.NEXT_RUNTIME;
+// 检测是否在构建阶段（无运行时环境变量）
+function isBuildTime(): boolean {
+  // Next.js 构建时设置 NEXT_PHASE 为 phase-production-build
+  const phase = process.env.NEXT_PHASE;
+  if (phase === "phase-production-build") {
+    return true;
+  }
+
+  // 如果没有任何 Supabase 环境变量，可能是构建阶段
+  const hasAnySupabaseConfig =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  return !hasAnySupabaseConfig;
+}
 
 // 环境变量获取函数，支持多种环境
 function getSupabaseConfig() {
   // During build time, return null to skip Supabase initialization
-  if (isBuildTime) {
+  if (isBuildTime()) {
     return null;
   }
 
@@ -367,20 +382,26 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
     if (key === "NOT") {
       // NOT 需要反转条件
       // 由于 Supabase 的 not() API 较复杂，这里简化处理
-      if (typeof value === "object" && !Array.isArray(value)) {
-        Object.entries(value).forEach(([notKey, notValue]) => {
-          const snakeKey = toSnakeCase(notKey);
-          if (notValue === null) {
-            query = query.not(snakeKey, "is", null);
-          } else if (typeof notValue === "object") {
-            // NOT 复杂条件暂不支持
-            throw new Error(
-              `Complex NOT conditions not yet supported in Supabase adapter for table ${tableName}`,
-            );
-          } else {
-            query = query.neq(snakeKey, notValue);
-          }
-        });
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        Object.entries(value as Record<string, unknown>).forEach(
+          ([notKey, notValue]) => {
+            const snakeKey = toSnakeCase(notKey);
+            if (notValue === null) {
+              query = query.not(snakeKey, "is", null);
+            } else if (typeof notValue === "object") {
+              // NOT 复杂条件暂不支持
+              throw new Error(
+                `Complex NOT conditions not yet supported in Supabase adapter for table ${tableName}`,
+              );
+            } else {
+              query = query.neq(snakeKey, notValue);
+            }
+          },
+        );
       }
       return;
     }
@@ -388,12 +409,15 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
     // 检查关系过滤（some/every/none）
     if (
       typeof value === "object" &&
+      value !== null &&
       !Array.isArray(value) &&
       ("some" in value || "every" in value || "none" in value)
     ) {
       const relationFilter =
         "some" in value ? "some" : "every" in value ? "every" : "none";
-      const condition = JSON.stringify(value[relationFilter]);
+      const condition = JSON.stringify(
+        (value as Record<string, unknown>)[relationFilter],
+      );
       throw new Error(
         "Relation filter not yet supported in Supabase adapter:\n" +
           `  Table: ${tableName}\n` +
@@ -606,6 +630,25 @@ class ModelAdapter<T = any> {
     private supabase: SupabaseClient<Database>,
   ) {}
 
+  async groupBy(args: {
+    by: string[];
+    where?: any;
+    _count?: any;
+    _sum?: any;
+    _avg?: any;
+    _min?: any;
+    _max?: any;
+    orderBy?: any;
+    take?: number;
+    skip?: number;
+  }): Promise<any[]> {
+    // Supabase 不直接支持 groupBy，需要使用 RPC 或在应用层处理
+    // 这里暂时抛出错误或提供基本实现
+    throw new Error(
+      `groupBy is not directly supported by SupabaseAdapter for table ${this.tableName}. Please use a custom RPC.`,
+    );
+  }
+
   async findUnique(args: {
     where: any;
     include?: any;
@@ -708,11 +751,11 @@ class ModelAdapter<T = any> {
   }): Promise<{ count: number }> {
     const snakeData = args.data.map(keysToSnakeCase);
 
-    const { error, count } = await this.supabase
-      .from(this.tableName)
-      .insert(snakeData, {
-        ignoreDuplicates: args.skipDuplicates,
-      });
+    const { error, count } = await (
+      this.supabase.from(this.tableName) as any
+    ).insert(snakeData, {
+      ignoreDuplicates: args.skipDuplicates,
+    });
 
     if (error) {
       throw new Error(`Supabase createMany error: ${error.message}`);
@@ -730,8 +773,7 @@ class ModelAdapter<T = any> {
     const snakeData = keysToSnakeCase(args.data);
     const selectQuery = buildSelectQuery(args.include, args.select);
 
-    let query = this.supabase
-      .from(this.tableName)
+    let query = (this.supabase.from(this.tableName) as any)
       .update(snakeData)
       .select(selectQuery);
 
@@ -850,7 +892,7 @@ class ModelAdapter<T = any> {
   }): Promise<{ count: number }> {
     const snakeData = keysToSnakeCase(args.data);
 
-    let query = this.supabase.from(this.tableName).update(snakeData);
+    let query = (this.supabase.from(this.tableName) as any).update(snakeData);
 
     query = applyWhereClause(query, args.where, this.tableName);
 
@@ -864,7 +906,7 @@ class ModelAdapter<T = any> {
   }
 
   async delete(args: { where: any }): Promise<T> {
-    let query = this.supabase.from(this.tableName).delete().select();
+    let query = (this.supabase.from(this.tableName) as any).delete().select();
 
     query = applyWhereClause(query, args.where, this.tableName);
 
@@ -1088,6 +1130,7 @@ export class SupabaseAdapter {
 
 // 导出单例实例 (lazy loaded)
 let _supabaseAdapter: SupabaseAdapter | null = null;
+
 export function getSupabaseAdapter(): SupabaseAdapter {
   if (!_supabaseAdapter) {
     _supabaseAdapter = new SupabaseAdapter();
@@ -1096,8 +1139,8 @@ export function getSupabaseAdapter(): SupabaseAdapter {
 }
 
 // For backwards compatibility, create a proxy that lazily initializes
-export const supabaseAdapter = new Proxy({} as SupabaseAdapter, {
-  get(target, prop) {
+export const supabaseAdapter: SupabaseAdapter = new Proxy({} as SupabaseAdapter, {
+  get(_target, prop) {
     return (getSupabaseAdapter() as any)[prop];
   }
 });

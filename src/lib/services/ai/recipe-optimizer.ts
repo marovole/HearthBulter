@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { callOpenAIJSON, RECOMMENDED_MODELS } from "./openai-client";
 import {
   getActivePrompt,

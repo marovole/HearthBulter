@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";

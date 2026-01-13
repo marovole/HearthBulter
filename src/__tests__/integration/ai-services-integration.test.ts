@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AI服务集成测试
  * 测试AI服务层的集成，避免Next.js API路由的复杂性

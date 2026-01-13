@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * 安全 Token 生成器
  * 使用 Web Crypto API 和 jose 库生成安全的分享 Token

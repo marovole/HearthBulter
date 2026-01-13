@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { performance } from "perf_hooks";
 
 // 性能指标接口

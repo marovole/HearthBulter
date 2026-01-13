@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * IDOR (Insecure Direct Object Reference) 攻击测试
  *

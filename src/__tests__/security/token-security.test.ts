@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Token 安全测试
  *

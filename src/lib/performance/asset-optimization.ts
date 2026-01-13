@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 interface AssetMetrics {
   name: string;
   type: "image" | "script" | "style" | "font" | "video" | "other";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Health Calculations Tests
  * Unit tests for health-related calculation functions

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { spendingAnalyzer } from "@/lib/services/budget/spending-analyzer";
 

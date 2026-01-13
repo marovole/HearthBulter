@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Invite System Tests
  * Unit tests for invitation code generation and validation

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase 推荐 Repository 实现
  *

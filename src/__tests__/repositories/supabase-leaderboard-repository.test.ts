@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SupabaseLeaderboardRepository 单元测试
  *

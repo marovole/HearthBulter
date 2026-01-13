@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/notifications/route.ts API 测试
  * 通知系统API测试

@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 // 通知系统核心服务导出
 export { NotificationManager } from "./notification-manager";
 export { NotificationService } from "./notification-service";

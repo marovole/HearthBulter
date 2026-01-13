@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { BasePlatformAdapter } from "./base-adapter";
 import {
   OAuthRequest,

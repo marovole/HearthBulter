@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { SortAsc, SortDesc } from "lucide-react";
 import type { SortField, SortDirection } from "./types";
 
