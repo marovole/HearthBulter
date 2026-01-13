@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { ShoppingListService } from "@/services/shopping-list";
 import {

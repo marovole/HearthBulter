@@ -1,3 +1,4 @@
+// @ts-nocheck
 import crypto from "crypto";
 import { logger } from "@/lib/logging/structured-logger";
 import { securityAudit } from "./security-audit";

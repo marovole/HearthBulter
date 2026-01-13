@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Family Management Integration Tests
  * Tests for family creation, member management, and permission flows

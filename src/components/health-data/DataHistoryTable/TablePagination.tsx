@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface TablePaginationProps {

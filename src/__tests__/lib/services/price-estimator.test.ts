@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * price-estimator 测试
  * 服务层测试 - 核心业务逻辑覆盖

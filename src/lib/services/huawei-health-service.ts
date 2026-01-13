@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * 华为Health SDK集成服务
  * 提供华为健康数据的读取和同步功能

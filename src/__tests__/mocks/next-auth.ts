@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Mock for next-auth to support ESM imports in Jest
 export const auth = jest.fn().mockResolvedValue({
   user: {

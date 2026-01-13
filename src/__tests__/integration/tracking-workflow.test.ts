@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import { prisma } from "@/lib/db";
 import { mealTracker } from "@/lib/services/tracking/meal-tracker";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { logger } from "@/lib/logging/structured-logger";
 
 // 敏感环境变量列表

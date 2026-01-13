@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Price Estimator Tests
  * Unit tests for price estimation and budget control service

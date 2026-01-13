@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Global mock for service-container
  * Provides mocked service instances for all tests

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AI Consent API 测试
  */

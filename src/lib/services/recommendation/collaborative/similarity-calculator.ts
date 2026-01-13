@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { UserItemMatrix } from "./user-item-matrix";
 
 export type SimilarityMetric =

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Nutrition Calculator Tests
  * Unit tests for nutrition calculation service

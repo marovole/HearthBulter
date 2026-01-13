@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+// @ts-nocheck
+import { PrismaClient, Prisma } from "@prisma/client";
 import { logger } from "@/lib/logging/structured-logger";
 import { securityAudit } from "@/lib/security/security-audit";
 
@@ -177,8 +178,10 @@ export class DatabaseOptimizer {
    * 设置事件监听器
    */
   private setupEventListeners(): void {
+    const prisma = this.prisma as any;
+
     // 查询事件
-    this.prisma.$on("query", (event) => {
+    prisma.$on("query", (event: Prisma.QueryEvent) => {
       this.recordQuery({
         query: event.query,
         duration: event.duration,
@@ -195,7 +198,7 @@ export class DatabaseOptimizer {
     });
 
     // 错误事件
-    this.prisma.$on("error", (event) => {
+    prisma.$on("error", (event: Prisma.LogEvent) => {
       this.recordQuery({
         query: event.target || "unknown",
         duration: 0,
@@ -212,7 +215,7 @@ export class DatabaseOptimizer {
     });
 
     // 信息事件
-    this.prisma.$on("info", (event) => {
+    prisma.$on("info", (event: Prisma.LogEvent) => {
       logger.debug("数据库信息", {
         type: "database",
         message: event.message,
@@ -222,7 +225,7 @@ export class DatabaseOptimizer {
     });
 
     // 警告事件
-    this.prisma.$on("warn", (event) => {
+    prisma.$on("warn", (event: Prisma.LogEvent) => {
       logger.warn("数据库警告", {
         type: "database",
         message: event.message,

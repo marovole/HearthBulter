@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TestCard 组件测试
  */

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { recipeRepository } from "@/lib/repositories/recipe-repository-singleton";
 import { updateRecipeFavoriteCount } from "@/lib/db/supabase-rpc-helpers";

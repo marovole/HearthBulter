@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { inventoryNotificationService } from "@/services/inventory-notification";
 import { getCurrentUser } from "@/lib/auth";

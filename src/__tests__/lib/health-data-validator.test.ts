@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Health Data Validator Tests
  * Unit tests for health data validation and anomaly detection

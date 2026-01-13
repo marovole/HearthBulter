@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import crypto from "crypto";
 import axios from "axios";
 

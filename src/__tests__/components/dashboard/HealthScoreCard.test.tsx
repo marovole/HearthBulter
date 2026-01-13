@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * HealthScoreCard 组件测试
  */

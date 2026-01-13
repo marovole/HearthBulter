@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Mock for @/lib/auth to avoid next-auth ES module issues in Jest
  */

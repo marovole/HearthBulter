@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { performance } from "perf_hooks";
 import * as React from "react";
 

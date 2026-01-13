@@ -168,6 +168,7 @@ export class RoleManagementService {
           executor.role,
           member.role,
           member.userId === family?.creatorId,
+          executorId === family?.creatorId,
         ),
       }));
 
@@ -183,9 +184,10 @@ export class RoleManagementService {
     executorRole: FamilyMemberRole,
     targetRole: FamilyMemberRole,
     targetIsCreator: boolean,
+    executorIsCreator: boolean,
   ): boolean {
     // 创建者可以管理任何人
-    if (executorRole === FamilyMemberRole.ADMIN) {
+    if (executorIsCreator) {
       return true;
     }
 
@@ -307,7 +309,7 @@ export class RoleManagementService {
         throw new PermissionError("Not a family member");
       }
 
-      const stats = await prisma.familyMember.groupBy({
+      const stats = (await prisma.familyMember.groupBy({
         by: ["role"],
         where: {
           familyId,
@@ -316,7 +318,7 @@ export class RoleManagementService {
         _count: {
           role: true,
         },
-      });
+      })) as any[];
 
       const roleStats = {
         admin: 0,

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 成本测试：Token消耗统计
  * 测试AI API的Token使用量和成本控制

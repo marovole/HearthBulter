@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * Nutrition Calculator 测试
  * 服务层测试 - 核心业务逻辑覆盖

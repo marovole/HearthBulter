@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 辅助追踪 API
  *

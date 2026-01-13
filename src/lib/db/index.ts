@@ -18,6 +18,12 @@ import {
   ensureDatabaseConnection as supabaseEnsureConnection,
 } from "./supabase-adapter";
 
+// 扩展 globalThis 类型以支持自定义属性
+declare global {
+  // eslint-disable-next-line no-var
+  var __envValidated: boolean | undefined;
+}
+
 // 检测是否在构建阶段
 // Cloudflare Workers 环境：CF_PAGES 变量存在时为运行时
 const isBuildTime =

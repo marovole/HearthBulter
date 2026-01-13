@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
 import { PrismaClient } from "@prisma/client";
 

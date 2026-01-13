@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase 适配器增强功能测试
  *

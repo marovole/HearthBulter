@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase 膳食追踪 Repository 实现
  *

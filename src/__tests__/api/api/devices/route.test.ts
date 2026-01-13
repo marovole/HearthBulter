@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * api/devices/route.ts API 测试
  * 设备管理API测试

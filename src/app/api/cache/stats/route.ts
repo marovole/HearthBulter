@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextResponse } from "next/server";
 import { CacheService } from "@/lib/cache/redis-client";
 

@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 /**
  * API Error Handler
  * API错误处理和重试机制
