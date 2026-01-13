@@ -9,11 +9,10 @@ import { Id } from "../../convex/_generated/dataModel";
 /**
  * Get dashboard overview for a member
  */
-export function useDashboardOverview(memberId: Id<"familyMembers"> | undefined) {
-  return useQuery(
-    api.dashboard.overview,
-    memberId ? { memberId } : "skip"
-  );
+export function useDashboardOverview(
+  memberId: Id<"familyMembers"> | undefined,
+) {
+  return useQuery(api.dashboard.overview, memberId ? { memberId } : "skip");
 }
 
 /**
@@ -21,11 +20,11 @@ export function useDashboardOverview(memberId: Id<"familyMembers"> | undefined) 
  */
 export function useWeeklySummary(
   memberId: Id<"familyMembers"> | undefined,
-  weekStartDate?: number
+  weekStartDate?: number,
 ) {
   return useQuery(
     api.dashboard.weeklySummary,
-    memberId ? { memberId, weekStartDate } : "skip"
+    memberId ? { memberId, weekStartDate } : "skip",
   );
 }
 
@@ -35,7 +34,7 @@ export function useWeeklySummary(
 export function useFamilyOverview(familyId: Id<"families"> | undefined) {
   return useQuery(
     api.dashboard.familyOverview,
-    familyId ? { familyId } : "skip"
+    familyId ? { familyId } : "skip",
   );
 }
 
@@ -76,11 +75,11 @@ export function useJoinFamily() {
  */
 export function useHealthHistory(
   memberId: Id<"familyMembers"> | undefined,
-  options?: { startDate?: number; endDate?: number; limit?: number }
+  options?: { startDate?: number; endDate?: number; limit?: number },
 ) {
   return useQuery(
     api.health.getHealthHistory,
-    memberId ? { memberId, ...options } : "skip"
+    memberId ? { memberId, ...options } : "skip",
   );
 }
 
@@ -119,11 +118,11 @@ export function useCreateHealthGoal() {
  */
 export function useFoodSearch(
   query: string,
-  options?: { category?: string; limit?: number }
+  options?: { category?: string; limit?: number },
 ) {
   return useQuery(
     api.foods.search,
-    query.trim() ? { query, ...options } : "skip"
+    query.trim() ? { query, ...options } : "skip",
   );
 }
 
@@ -145,11 +144,11 @@ export function usePopularFoods(limit?: number) {
  * Calculate nutrition
  */
 export function useCalculateNutrition(
-  items: Array<{ foodId: Id<"foods">; amount: number }>
+  items: Array<{ foodId: Id<"foods">; amount: number }>,
 ) {
   return useQuery(
     api.foods.calculateNutrition,
-    items.length > 0 ? { items } : "skip"
+    items.length > 0 ? { items } : "skip",
   );
 }
 
@@ -160,12 +159,9 @@ export function useCalculateNutrition(
  */
 export function useMealPlans(
   memberId: Id<"familyMembers"> | undefined,
-  status?: "ACTIVE" | "COMPLETED" | "CANCELLED"
+  status?: "ACTIVE" | "COMPLETED" | "CANCELLED",
 ) {
-  return useQuery(
-    api.mealPlans.list,
-    memberId ? { memberId, status } : "skip"
-  );
+  return useQuery(api.mealPlans.list, memberId ? { memberId, status } : "skip");
 }
 
 /**
@@ -196,11 +192,11 @@ export function useCreateMealPlan() {
  */
 export function useMealLogs(
   memberId: Id<"familyMembers"> | undefined,
-  options?: { startDate?: number; endDate?: number; limit?: number }
+  options?: { startDate?: number; endDate?: number; limit?: number },
 ) {
   return useQuery(
     api.mealLogs.list,
-    memberId ? { memberId, ...options } : "skip"
+    memberId ? { memberId, ...options } : "skip",
   );
 }
 
@@ -209,11 +205,11 @@ export function useMealLogs(
  */
 export function useMealLogsByDate(
   memberId: Id<"familyMembers"> | undefined,
-  date: number
+  date: number,
 ) {
   return useQuery(
     api.mealLogs.getByDate,
-    memberId ? { memberId, date } : "skip"
+    memberId ? { memberId, date } : "skip",
   );
 }
 
@@ -222,11 +218,11 @@ export function useMealLogsByDate(
  */
 export function useDailySummary(
   memberId: Id<"familyMembers"> | undefined,
-  date: number
+  date: number,
 ) {
   return useQuery(
     api.mealLogs.getDailySummary,
-    memberId ? { memberId, date } : "skip"
+    memberId ? { memberId, date } : "skip",
   );
 }
 
@@ -251,11 +247,11 @@ export function useCreateMealLog() {
  */
 export function useRecipeSearch(
   query: string,
-  options?: { category?: string; difficulty?: string; limit?: number }
+  options?: { category?: string; difficulty?: string; limit?: number },
 ) {
   return useQuery(
     api.recipes.search,
-    query.trim() ? { query, ...options } : "skip"
+    query.trim() ? { query, ...options } : "skip",
   );
 }
 
@@ -277,10 +273,7 @@ export function usePopularRecipes(limit?: number) {
  * Get favorite recipes
  */
 export function useFavoriteRecipes(memberId: Id<"familyMembers"> | undefined) {
-  return useQuery(
-    api.recipes.getFavorites,
-    memberId ? { memberId } : "skip"
-  );
+  return useQuery(api.recipes.getFavorites, memberId ? { memberId } : "skip");
 }
 
 /**
@@ -304,11 +297,11 @@ export function useRateRecipe() {
  */
 export function useInventory(
   memberId: Id<"familyMembers"> | undefined,
-  options?: { status?: string; storageLocation?: string }
+  options?: { status?: string; storageLocation?: string },
 ) {
   return useQuery(
     api.inventory.list,
-    memberId ? { memberId, ...options } : "skip"
+    memberId ? { memberId, ...options } : "skip",
   );
 }
 
@@ -317,11 +310,11 @@ export function useInventory(
  */
 export function useExpiringItems(
   memberId: Id<"familyMembers"> | undefined,
-  daysAhead?: number
+  daysAhead?: number,
 ) {
   return useQuery(
     api.inventory.getExpiring,
-    memberId ? { memberId, daysAhead } : "skip"
+    memberId ? { memberId, daysAhead } : "skip",
   );
 }
 
@@ -329,10 +322,7 @@ export function useExpiringItems(
  * Get low stock items
  */
 export function useLowStockItems(memberId: Id<"familyMembers"> | undefined) {
-  return useQuery(
-    api.inventory.getLowStock,
-    memberId ? { memberId } : "skip"
-  );
+  return useQuery(api.inventory.getLowStock, memberId ? { memberId } : "skip");
 }
 
 /**
@@ -393,11 +383,11 @@ export function useAddSpending() {
  */
 export function useNotifications(
   memberId: Id<"familyMembers"> | undefined,
-  limit?: number
+  limit?: number,
 ) {
   return useQuery(
     api.notifications.list,
-    memberId ? { memberId, limit } : "skip"
+    memberId ? { memberId, limit } : "skip",
   );
 }
 
@@ -405,11 +395,11 @@ export function useNotifications(
  * Get unread count
  */
 export function useUnreadNotificationCount(
-  memberId: Id<"familyMembers"> | undefined
+  memberId: Id<"familyMembers"> | undefined,
 ) {
   return useQuery(
     api.notifications.getUnreadCount,
-    memberId ? { memberId } : "skip"
+    memberId ? { memberId } : "skip",
   );
 }
 
@@ -441,11 +431,11 @@ export function useGenerateUploadUrl() {
  */
 export function useMedicalReports(
   memberId: Id<"familyMembers"> | undefined,
-  limit?: number
+  limit?: number,
 ) {
   return useQuery(
     api.files.getMedicalReports,
-    memberId ? { memberId, limit } : "skip"
+    memberId ? { memberId, limit } : "skip",
   );
 }
 

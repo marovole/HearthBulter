@@ -17,7 +17,10 @@ export function useCurrentUser() {
  */
 export function useCurrentMember(familyId?: string) {
   const args = familyId ? { familyId: familyId as any } : {};
-  return useQuery(api.auth.currentMember, Object.keys(args).length > 0 ? args : "skip");
+  return useQuery(
+    api.auth.currentMember,
+    Object.keys(args).length > 0 ? args : "skip",
+  );
 }
 
 /**
@@ -49,7 +52,7 @@ export function useAuth() {
         setIsLoading(false);
       }
     },
-    [signIn]
+    [signIn],
   );
 
   const handleSignUp = useCallback(
@@ -66,7 +69,7 @@ export function useAuth() {
         setIsLoading(false);
       }
     },
-    [signIn]
+    [signIn],
   );
 
   const handleSignOut = useCallback(async () => {
