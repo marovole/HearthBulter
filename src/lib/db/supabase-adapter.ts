@@ -8,8 +8,16 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase-database";
 
+// 检查是否在构建时
+const isBuildTime = process.env.NODE_ENV === 'production' && typeof window === 'undefined' && !process.env.NEXT_RUNTIME;
+
 // 环境变量获取函数，支持多种环境
 function getSupabaseConfig() {
+  // During build time, return null to skip Supabase initialization
+  if (isBuildTime) {
+    return null;
+  }
+
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 
@@ -18,36 +26,53 @@ function getSupabaseConfig() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    const error =
-      "Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY";
-    console.error("❌ Supabase 配置错误:", error);
-    console.error("环境变量状态:", {
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL
-        ? "✅"
-        : "❌",
-      SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? "✅" : "❌",
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        ? "✅"
-        : "❌",
-    });
-    // 在生产环境仍然抛出错误，但提供更多诊断信息
-    throw new Error(error);
+    // During build time or when using Convex, Supabase config may not be available
+    // Return null to indicate Supabase is not configured
+    return null;
   }
 
   return { supabaseUrl, supabaseKey };
 }
 
+// 创建一个空操作的模拟客户端，用于构建时
+function createMockClient(): SupabaseClient<Database> {
+  const mockError = () => {
+    throw new Error(
+      "Supabase is not configured. This project uses Convex for data storage. " +
+      "If you need Supabase, please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY"
+    );
+  };
+
+  // 返回一个代理对象，任何方法调用都会抛出错误
+  return new Proxy({} as SupabaseClient<Database>, {
+    get: (target, prop) => {
+      if (prop === 'from') {
+        return () => new Proxy({}, {
+          get: () => mockError
+        });
+      }
+      return mockError;
+    }
+  });
+}
+
 // 单例模式的 Supabase 客户端
 export class SupabaseClientManager {
-  private static instance: SupabaseClient<Database>;
+  private static instance: SupabaseClient<Database> | null = null;
 
   static getInstance(): SupabaseClient<Database> {
     if (!SupabaseClientManager.instance) {
-      const { supabaseUrl, supabaseKey } = getSupabaseConfig();
+      const config = getSupabaseConfig();
+
+      if (!config) {
+        // Return a mock client that will throw errors when actually used
+        SupabaseClientManager.instance = createMockClient();
+        return SupabaseClientManager.instance;
+      }
 
       SupabaseClientManager.instance = createClient<Database>(
-        supabaseUrl,
-        supabaseKey,
+        config.supabaseUrl,
+        config.supabaseKey,
         {
           auth: {
             persistSession: false,
@@ -66,6 +91,10 @@ export class SupabaseClientManager {
     }
 
     return SupabaseClientManager.instance;
+  }
+
+  static isConfigured(): boolean {
+    return getSupabaseConfig() !== null;
   }
 }
 
@@ -1057,8 +1086,21 @@ export class SupabaseAdapter {
   }
 }
 
-// 导出单例实例
-export const supabaseAdapter = new SupabaseAdapter();
+// 导出单例实例 (lazy loaded)
+let _supabaseAdapter: SupabaseAdapter | null = null;
+export function getSupabaseAdapter(): SupabaseAdapter {
+  if (!_supabaseAdapter) {
+    _supabaseAdapter = new SupabaseAdapter();
+  }
+  return _supabaseAdapter;
+}
+
+// For backwards compatibility, create a proxy that lazily initializes
+export const supabaseAdapter = new Proxy({} as SupabaseAdapter, {
+  get(target, prop) {
+    return (getSupabaseAdapter() as any)[prop];
+  }
+});
 
 // 兼容层：导出 prisma 别名供旧代码使用
 // TODO: 迁移所有使用方到 Supabase adapter 后移除此导出

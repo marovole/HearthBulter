@@ -54,12 +54,24 @@ function logClientUsage(log: ClientUsageLog): void {
 /**
  * 获取 Supabase URL
  */
-function getSupabaseUrl(): string {
+function getSupabaseUrl(): string | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   if (!url) {
-    throw new Error("SUPABASE_URL 环境变量未设置");
+    return null;
   }
   return url;
+}
+
+// 创建一个模拟客户端用于构建时
+function createMockClient(): SupabaseClient<Database> {
+  const mockError = () => {
+    throw new Error(
+      "Supabase is not configured. This project uses Convex for data storage."
+    );
+  };
+  return new Proxy({} as SupabaseClient<Database>, {
+    get: () => () => new Proxy({}, { get: () => mockError })
+  });
 }
 
 /**
@@ -70,8 +82,8 @@ export function getAnonClient(): SupabaseClient<Database> {
   const url = getSupabaseUrl();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!anonKey) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY 环境变量未设置");
+  if (!url || !anonKey) {
+    return createMockClient();
   }
 
   logClientUsage({
@@ -106,8 +118,8 @@ export function getUserClient(userJwt: string): SupabaseClient<Database> {
   const url = getSupabaseUrl();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!anonKey) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY 环境变量未设置");
+  if (!url || !anonKey) {
+    return createMockClient();
   }
 
   if (!userJwt) {
@@ -153,8 +165,8 @@ export function getServiceClient(
   const url = getSupabaseUrl();
   const serviceKey = process.env.SUPABASE_SERVICE_KEY;
 
-  if (!serviceKey) {
-    throw new Error("SUPABASE_SERVICE_KEY 环境变量未设置");
+  if (!url || !serviceKey) {
+    return createMockClient();
   }
 
   // 记录服务客户端使用

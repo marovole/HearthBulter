@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 
+// 检查是否在构建时
+const isBuildTime = process.env.NODE_ENV === 'production' && typeof window === 'undefined' && !process.env.NEXT_RUNTIME;
+
 class SupabaseClient {
-  private static instance: SupabaseClient;
+  private static instance: SupabaseClient | null = null;
   private client: any;
 
   private constructor() {
@@ -10,7 +13,16 @@ class SupabaseClient {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error("Missing Supabase environment variables");
+      // During build time, create a mock client
+      this.client = new Proxy({}, {
+        get: () => () => {
+          throw new Error(
+            "Supabase is not configured. This project uses Convex for data storage. " +
+            "If you need Supabase, please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY"
+          );
+        }
+      });
+      return;
     }
 
     this.client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -47,7 +59,21 @@ class SupabaseClient {
   }
 }
 
-export const supabase = SupabaseClient.getInstance().getClient();
+// Lazy initialization for build safety
+let _supabaseInstance: any = null;
+function getSupabaseClient() {
+  if (!_supabaseInstance) {
+    _supabaseInstance = SupabaseClient.getInstance().getClient();
+  }
+  return _supabaseInstance;
+}
+
+// Export a proxy that lazily initializes
+export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(target, prop) {
+    return (getSupabaseClient() as any)[prop];
+  }
+});
 
 // 导出类型
 export type SupabaseClientType = ReturnType<typeof createClient>;

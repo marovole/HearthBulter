@@ -5,13 +5,26 @@
  * 用于存储体检报告文件（PDF/图片）
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-// 初始化 Supabase 客户端
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!,
-);
+// 懒加载 Supabase 客户端
+let _supabase: SupabaseClient | null = null;
+
+function getSupabaseStorageClient(): SupabaseClient {
+  if (!_supabase) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!url || !key) {
+      throw new Error(
+        "Supabase Storage is not configured. This project uses Convex for file storage."
+      );
+    }
+
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
 
 // Supabase Storage Bucket 名称
 const STORAGE_BUCKET = "medical-reports";
@@ -95,7 +108,7 @@ export class FileStorageService {
       }
 
       // 上传到 Supabase Storage
-      const { data, error } = await supabase.storage
+      const { data, error } = await getSupabaseStorageClient().storage
         .from(STORAGE_BUCKET)
         .upload(pathname, fileData, {
           contentType,
@@ -107,7 +120,7 @@ export class FileStorageService {
       }
 
       // 获取公共 URL（注意：需要配置 Bucket 为 public 或使用签名 URL）
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = getSupabaseStorageClient().storage
         .from(STORAGE_BUCKET)
         .getPublicUrl(data.path);
 
@@ -133,7 +146,7 @@ export class FileStorageService {
    */
   static async fileExists(pathname: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.storage
+      const { data, error } = await getSupabaseStorageClient().storage
         .from(STORAGE_BUCKET)
         .list(pathname.substring(0, pathname.lastIndexOf("/")), {
           search: pathname.substring(pathname.lastIndexOf("/") + 1),
@@ -150,7 +163,7 @@ export class FileStorageService {
    */
   static async deleteFile(pathname: string): Promise<void> {
     try {
-      const { error } = await supabase.storage
+      const { error } = await getSupabaseStorageClient().storage
         .from(STORAGE_BUCKET)
         .remove([pathname]);
 
@@ -205,7 +218,7 @@ export class FileStorageService {
     expiresIn: number = 3600,
   ): Promise<string> {
     try {
-      const { data, error } = await supabase.storage
+      const { data, error } = await getSupabaseStorageClient().storage
         .from(STORAGE_BUCKET)
         .createSignedUrl(pathname, expiresIn);
 

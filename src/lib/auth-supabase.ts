@@ -13,13 +13,25 @@ import {
 } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase-database";
 
+// 创建模拟客户端用于构建时
+function createMockAuthClient(): SupabaseClient<Database> {
+  const mockError = () => {
+    throw new Error(
+      "Supabase Auth is not configured. This project uses Convex for authentication."
+    );
+  };
+  return new Proxy({} as SupabaseClient<Database>, {
+    get: () => () => new Proxy({}, { get: () => mockError })
+  });
+}
+
 // Supabase 客户端配置
 function getSupabaseAuthClient(): SupabaseClient<Database> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase auth configuration");
+    return createMockAuthClient();
   }
 
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -38,7 +50,7 @@ function getSupabaseServiceClient(): SupabaseClient<Database> {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Missing Supabase service configuration");
+    return createMockAuthClient();
   }
 
   return createClient<Database>(supabaseUrl, supabaseServiceKey, {

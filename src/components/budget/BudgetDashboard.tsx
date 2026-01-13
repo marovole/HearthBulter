@@ -25,10 +25,9 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import {
-  BudgetStatus as BudgetStatusType,
   FoodCategory,
   BudgetPeriod,
-} from "@prisma/client";
+} from "@/types/enums";
 
 interface BudgetStatus {
   budget: any;
