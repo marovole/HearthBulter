@@ -7,13 +7,48 @@
  * 用于存储体检报告文件（PDF/图片）
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-// 初始化 Supabase 客户端
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!,
-);
+// 检测是否在构建阶段（无运行时环境变量）
+function isBuildTime(): boolean {
+  const phase = process.env.NEXT_PHASE;
+  if (phase === "phase-production-build") {
+    return true;
+  }
+
+  const hasAnySupabaseConfig =
+    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_SERVICE_KEY;
+
+  return !hasAnySupabaseConfig;
+}
+
+// 惰性初始化 Supabase 客户端
+let _supabaseStorageClient: SupabaseClient | null = null;
+
+function getSupabaseStorageClient(): SupabaseClient {
+  if (!_supabaseStorageClient) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      // 在构建阶段，使用占位符
+      if (isBuildTime()) {
+        console.warn(
+          "⚠️ Supabase storage configuration not found during build - using placeholder",
+        );
+        _supabaseStorageClient = createClient(
+          "https://placeholder.supabase.co",
+          "placeholder-service-key-for-build-only",
+        );
+        return _supabaseStorageClient;
+      }
+      throw new Error("Missing Supabase storage configuration");
+    }
+
+    _supabaseStorageClient = createClient(supabaseUrl, supabaseKey);
+  }
+  return _supabaseStorageClient;
+}
 
 // Supabase Storage Bucket 名称
 const STORAGE_BUCKET = "medical-reports";
@@ -97,8 +132,8 @@ export class FileStorageService {
       }
 
       // 上传到 Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(STORAGE_BUCKET)
+      const { data, error } = await getSupabaseStorageClient()
+        .storage.from(STORAGE_BUCKET)
         .upload(pathname, fileData, {
           contentType,
           upsert: false, // 不覆盖现有文件
@@ -109,8 +144,8 @@ export class FileStorageService {
       }
 
       // 获取公共 URL（注意：需要配置 Bucket 为 public 或使用签名 URL）
-      const { data: urlData } = supabase.storage
-        .from(STORAGE_BUCKET)
+      const { data: urlData } = getSupabaseStorageClient()
+        .storage.from(STORAGE_BUCKET)
         .getPublicUrl(data.path);
 
       // 获取文件大小
@@ -135,8 +170,8 @@ export class FileStorageService {
    */
   static async fileExists(pathname: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.storage
-        .from(STORAGE_BUCKET)
+      const { data, error } = await getSupabaseStorageClient()
+        .storage.from(STORAGE_BUCKET)
         .list(pathname.substring(0, pathname.lastIndexOf("/")), {
           search: pathname.substring(pathname.lastIndexOf("/") + 1),
         });
@@ -152,8 +187,8 @@ export class FileStorageService {
    */
   static async deleteFile(pathname: string): Promise<void> {
     try {
-      const { error } = await supabase.storage
-        .from(STORAGE_BUCKET)
+      const { error } = await getSupabaseStorageClient()
+        .storage.from(STORAGE_BUCKET)
         .remove([pathname]);
 
       if (error) {
@@ -207,8 +242,8 @@ export class FileStorageService {
     expiresIn: number = 3600,
   ): Promise<string> {
     try {
-      const { data, error } = await supabase.storage
-        .from(STORAGE_BUCKET)
+      const { data, error } = await getSupabaseStorageClient()
+        .storage.from(STORAGE_BUCKET)
         .createSignedUrl(pathname, expiresIn);
 
       if (error) {

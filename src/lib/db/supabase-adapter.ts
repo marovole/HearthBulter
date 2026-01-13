@@ -8,6 +8,25 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase-database";
 
+// 检测是否在构建阶段（无运行时环境变量）
+function isBuildTime(): boolean {
+  // Next.js 构建时设置 NEXT_PHASE 为 phase-production-build
+  // 或者当所有 Supabase 相关环境变量都未设置时
+  const phase = process.env.NEXT_PHASE;
+  if (phase === "phase-production-build") {
+    return true;
+  }
+
+  // 如果没有任何 Supabase 环境变量，可能是构建阶段
+  const hasAnySupabaseConfig =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  return !hasAnySupabaseConfig;
+}
+
 // 环境变量获取函数，支持多种环境
 function getSupabaseConfig() {
   const supabaseUrl =
@@ -18,6 +37,17 @@ function getSupabaseConfig() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
+    // 在构建阶段，返回占位符值以允许静态分析通过
+    if (isBuildTime()) {
+      console.warn(
+        "⚠️ Supabase configuration not found during build - using placeholder",
+      );
+      return {
+        supabaseUrl: "https://placeholder.supabase.co",
+        supabaseKey: "placeholder-key-for-build-only",
+      };
+    }
+
     const error =
       "Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY";
     console.error("❌ Supabase 配置错误:", error);
@@ -1084,8 +1114,26 @@ export class SupabaseAdapter {
   }
 }
 
-// 导出单例实例
-export const supabaseAdapter = new SupabaseAdapter();
+// 惰性初始化单例，避免构建时抛出环境变量错误
+let _supabaseAdapter: SupabaseAdapter | null = null;
+
+function getSupabaseAdapter(): SupabaseAdapter {
+  if (!_supabaseAdapter) {
+    _supabaseAdapter = new SupabaseAdapter();
+  }
+  return _supabaseAdapter;
+}
+
+// 导出单例实例（惰性初始化）
+// 使用 Proxy 实现惰性访问，避免模块加载时执行初始化
+export const supabaseAdapter: SupabaseAdapter = new Proxy(
+  {} as SupabaseAdapter,
+  {
+    get(_target, prop) {
+      return (getSupabaseAdapter() as any)[prop];
+    },
+  },
+);
 
 // 兼容层：导出 prisma 别名供旧代码使用
 // TODO: 迁移所有使用方到 Supabase adapter 后移除此导出

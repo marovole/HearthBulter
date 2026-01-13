@@ -14,12 +14,37 @@ import {
 } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase-database";
 
+// 检测是否在构建阶段（无运行时环境变量）
+function isBuildTime(): boolean {
+  const phase = process.env.NEXT_PHASE;
+  if (phase === "phase-production-build") {
+    return true;
+  }
+
+  const hasAnySupabaseConfig =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_SERVICE_KEY;
+
+  return !hasAnySupabaseConfig;
+}
+
 // Supabase 客户端配置
 function getSupabaseAuthClient(): SupabaseClient<Database> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    // 在构建阶段，使用占位符
+    if (isBuildTime()) {
+      console.warn(
+        "⚠️ Supabase auth client configuration not found during build - using placeholder",
+      );
+      return createClient<Database>(
+        "https://placeholder.supabase.co",
+        "placeholder-anon-key-for-build-only",
+      );
+    }
     throw new Error("Missing Supabase auth configuration");
   }
 
@@ -39,6 +64,16 @@ function getSupabaseServiceClient(): SupabaseClient<Database> {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
+    // 在构建阶段，使用占位符
+    if (isBuildTime()) {
+      console.warn(
+        "⚠️ Supabase service client configuration not found during build - using placeholder",
+      );
+      return createClient<Database>(
+        "https://placeholder.supabase.co",
+        "placeholder-service-key-for-build-only",
+      );
+    }
     throw new Error("Missing Supabase service configuration");
   }
 
