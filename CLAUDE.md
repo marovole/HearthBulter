@@ -125,16 +125,14 @@ CodeX MCP 提供了一个工具 `codex`，用于执行 AI 辅助的编码任务�
 
 ```bash
 # 开发服务器
-pnpm dev                  # 启动开发服务器
+pnpm dev                  # 启动开发服务器 (Convex + Next.js 并行)
+pnpm dev:next             # 仅启动 Next.js 开发服务器
+pnpm dev:convex           # 仅启动 Convex 开发服务器
 
-# 数据库操作 (Supabase)
-pnpm db:generate         # 生成 Prisma 客户端
-pnpm db:push            # 推送 schema 到 Supabase
-pnpm db:migrate         # 创建并应用迁移
-pnpm db:studio          # 打开 Prisma Studio GUI
-pnpm db:seed            # 初始化数据库数据
-pnpm db:test            # 测试数据库连接
-pnpm supabase:test      # 测试 Supabase 连接
+# Convex 操作
+npx convex dev            # Convex 开发模式 (实时同步)
+npx convex deploy         # 部署 Convex 后端到生产环境
+npx convex dashboard      # 打开 Convex 仪表板
 
 # 代码质量
 pnpm lint               # 运行 ESLint
@@ -149,53 +147,71 @@ pnpm test:coverage      # 运行测试并生成覆盖率报告
 pnpm test:e2e           # 运行端到端测试
 
 # 构建和部署
+pnpm build              # 构建 Next.js 应用
 pnpm build:cloudflare   # 构建 Cloudflare Pages 版本
-pnpm deploy             # 部署到 Cloudflare Pages (生产)
-pnpm deploy:prod        # 部署到 Cloudflare Pages (生产)
-pnpm cloudflare:deploy  # 使用脚本部署
-pnpm check:deployment   # 检查部署状态
+pnpm convex:deploy      # 部署 Convex 后端
+pnpm deploy             # 部署到 Cloudflare Pages
 ```
 
 ### 核心架构信息
 
-**架构**: 纯 Cloudflare Pages + Supabase 架构（完全免费）
+**架构**: Cloudflare Pages + Convex.dev 架构（高性能低成本）
 
-**技术栈**: 
-- 前端: Next.js 15 (App Router + Static Export) + TypeScript 5.x + React 18
-- UI: Tailwind CSS 4.x + shadcn/ui
-- 状态: Zustand
+**技术栈**:
+- 前端: Next.js 14 (App Router) + TypeScript 5.x + React 18
+- UI: Tailwind CSS 3.x + shadcn/ui
+- 状态: Convex 实时订阅 (自动更新)
 
-**数据库与存储**: 
-- 数据库: Supabase PostgreSQL (71 张表，免费 500MB)
-- 文件存储: Supabase Storage (免费 1GB)
-- ORM: Prisma 6.x
+**后端与数据库 (Convex)**:
+- 数据库: Convex Document Database (68 张表)
+- 文件存储: Convex File Storage
+- 实时: Convex 原生实时订阅
+- 认证: Convex Auth (Email/Password)
 
-**认证**: NextAuth.js v5
+**AI 服务**: OpenAI GPT-4 (通过 Convex Actions)
 
-**AI 服务**: OpenAI GPT-4 + Anthropic Claude
-
-**部署**: Cloudflare Pages (全球 CDN + 边缘计算)
+**部署**:
+- 前端: Cloudflare Pages (全球 CDN)
+- 后端: Convex Cloud (全球边缘计算)
 
 ### 关键目录结构
 
 ```
+convex/
+├── schema.ts            # Convex 数据库 Schema (68 表)
+├── auth.config.ts       # Convex Auth 配置
+├── auth.ts              # 认证相关函数
+├── families.ts          # 家庭管理
+├── health.ts            # 健康数据和目标
+├── foods.ts             # 食物搜索 (全文索引)
+├── recipes.ts           # 食谱管理
+├── mealPlans.ts         # 餐饮计划
+├── mealLogs.ts          # 用餐日志
+├── inventory.ts         # 库存管理
+├── budget.ts            # 预算追踪
+├── notifications.ts     # 通知系统
+├── files.ts             # 文件存储
+├── dashboard.ts         # 仪表板聚合
+├── ai.ts                # AI Actions
+└── http.ts              # HTTP Actions (Webhooks)
+
 src/
-├── app/                 # Next.js App Router 页面和 API
+├── app/                 # Next.js App Router 页面
 │   ├── (auth)/         # 认证相关页面
 │   ├── dashboard/      # 仪表板页面
-│   └── api/            # 70+ API 端点
+│   └── providers.tsx   # 全局 Providers (含 Convex)
 ├── components/
 │   ├── ui/            # shadcn/ui 基础组件
 │   └── features/      # 业务功能组件
+├── providers/
+│   └── convex-provider.tsx  # Convex 客户端 Provider
+├── hooks/
+│   ├── use-convex.ts       # Convex 数据 Hooks
+│   └── use-auth-convex.ts  # Convex 认证 Hooks
 ├── lib/
-│   ├── services/      # AI、分析、预算等业务逻辑
-│   ├── db/            # Prisma 客户端
+│   ├── services/      # 业务逻辑服务
 │   └── utils/         # 工具函数
-├── types/             # TypeScript 类型定义
-└── hooks/             # 自定义 React hooks
-
-prisma/
-└── schema.prisma       # 数据库 Schema
+└── types/             # TypeScript 类型定义
 
 openspec/
 ├── AGENTS.md          # OpenSpec 详细说明
@@ -206,46 +222,71 @@ openspec/
 ### 环境变量配置 (参考 .env.example)
 
 必需变量:
-- `DATABASE_URL` - PostgreSQL 连接字符串
-- `NEXTAUTH_SECRET` - 至少32字符
-- `NEXTAUTH_URL` - 应用 URL
+- `CONVEX_DEPLOYMENT` - Convex 部署 ID
+- `NEXT_PUBLIC_CONVEX_URL` - Convex 公开 URL
 
 推荐变量:
-- `USDA_API_KEY` - 营养数据库 API
 - `OPENAI_API_KEY` - AI 服务
-- `OPENROUTER_API_KEY` - Claude 集成
+- `USDA_API_KEY` - 营养数据库 API
+
+### Convex 开发指南
+
+**实时数据获取**:
+```typescript
+// 使用 Convex hooks 获取实时数据
+import { useDashboardOverview } from "@/hooks/use-convex";
+
+const data = useDashboardOverview(memberId);
+// 数据自动实时更新，无需手动刷新
+```
+
+**执行 Mutations**:
+```typescript
+import { useCreateMealLog } from "@/hooks/use-convex";
+
+const createMealLog = useCreateMealLog();
+await createMealLog({ memberId, date, mealType, foods });
+```
+
+**AI Actions**:
+```typescript
+import { useAnalyzeHealth } from "@/hooks/use-convex";
+
+const analyzeHealth = useAnalyzeHealth();
+const result = await analyzeHealth({ memberId, dataType, data });
+```
 
 ### 重要开发准则
 
 1. **TypeScript Strict Mode** - 所有代码必须通过严格类型检查
-2. **测试覆盖率** - 最低 25% 覆盖率要求
-3. **API 开发** - 使用 Zod 验证输入，实现适当的错误处理
-4. **AI 功能** - 注意速率限制和成本优化
-5. **性能** - 使用 Prisma 查询优化，实现缓存策略
-6. **安全性** - 基于角色的访问控制，输入验证
+2. **Convex Schema** - 修改 schema.ts 后运行 `npx convex dev` 同步
+3. **实时数据** - 优先使用 Convex queries，自动获得实时更新
+4. **AI 功能** - 使用 Convex Actions 调用外部 API
+5. **文件上传** - 使用 `generateUploadUrl` 获取上传 URL
+6. **安全性** - 在 handler 中检查 `ctx.auth.getUserIdentity()`
 
 ### 开发建议
 
-- 修改数据库前先备份
-- 实现 AI 功能时添加详细日志
-- 遵循现有的组件和服务模式
-- 为新功能编写单元测试
-- 使用 Prisma Studio 进行数据库调试
+- 使用 `npx convex dev` 保持后端实时同步
+- 通过 Convex Dashboard 查看数据和日志
+- 遵循现有的 Convex 函数模式
+- 为新表添加适当的索引
+- 使用 `v.optional()` 处理可选字段
 - 复杂变更前先创建 OpenSpec 提案
 
 ### 常见故障排除
 
-**数据库连接失败**:
-- 检查 DATABASE_URL 格式
-- 验证 PostgreSQL 是否运行
-- 使用 `pnpm db:test` 测试连接
+**Convex 连接失败**:
+- 检查 `NEXT_PUBLIC_CONVEX_URL` 是否正确
+- 运行 `npx convex dev` 启动本地开发服务器
+- 检查 Convex Dashboard 查看部署状态
 
-**构建失败**:
-- 运行 `pnpm type-check` 检查类型错误
-- 检查所有依赖是否安装
-- 查看具体错误日志
+**Schema 同步问题**:
+- 运行 `npx convex dev` 重新同步
+- 检查 schema.ts 语法错误
+- 查看终端错误日志
 
-**测试失败**:
-- 检查环境变量是否配置
-- 验证测试数据库初始化
-- 检查异步测试的超时设置
+**认证问题**:
+- 确保 `ConvexClientProvider` 包装了应用
+- 检查 `auth.config.ts` 配置
+- 使用 `useIsAuthenticated()` 检查状态
