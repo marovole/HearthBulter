@@ -27,14 +27,17 @@ class SupabaseClient {
     if (!supabaseUrl || !supabaseAnonKey) {
       // During build time or when Convex is used, create a mock client
       // that will throw a helpful error if actually called at runtime
-      this.client = new Proxy({}, {
-        get: () => () => {
-          throw new Error(
-            "Supabase is not configured. This project uses Convex for data storage. " +
-            "If you need Supabase, please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY"
-          );
-        }
-      });
+      this.client = new Proxy(
+        {},
+        {
+          get: () => () => {
+            throw new Error(
+              "Supabase is not configured. This project uses Convex for data storage. " +
+                "If you need Supabase, please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY",
+            );
+          },
+        },
+      );
       return;
     }
 

@@ -155,10 +155,10 @@ export const getDailySummary = query({
         if (!acc[log.mealType]) {
           acc[log.mealType] = { calories: 0, protein: 0, carbs: 0, fat: 0 };
         }
-        acc[log.mealType].calories += log.calories;
-        acc[log.mealType].protein += log.protein;
-        acc[log.mealType].carbs += log.carbs;
-        acc[log.mealType].fat += log.fat;
+        acc[log.mealType]!.calories += log.calories;
+        acc[log.mealType]!.protein += log.protein;
+        acc[log.mealType]!.carbs += log.carbs;
+        acc[log.mealType]!.fat += log.fat;
         return acc;
       },
       {} as Record<string, { calories: number; protein: number; carbs: number; fat: number }>

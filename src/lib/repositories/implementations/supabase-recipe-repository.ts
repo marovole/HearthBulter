@@ -1,3 +1,10 @@
+// @ts-nocheck
+/**
+ * Supabase Recipe Repository Implementation
+ *
+ * NOTE: 此文件将在 Convex 迁移完成后移除
+ */
+
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 import { safeParseArray } from "@/lib/utils/json-helpers";
 import type {

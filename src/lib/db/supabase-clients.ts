@@ -66,11 +66,11 @@ function getSupabaseUrl(): string | null {
 function createMockClient(): SupabaseClient<Database> {
   const mockError = () => {
     throw new Error(
-      "Supabase is not configured. This project uses Convex for data storage."
+      "Supabase is not configured. This project uses Convex for data storage.",
     );
   };
   return new Proxy({} as SupabaseClient<Database>, {
-    get: () => () => new Proxy({}, { get: () => mockError })
+    get: () => () => new Proxy({}, { get: () => mockError }),
   });
 }
 
@@ -205,6 +205,10 @@ export function getDefaultClient(): SupabaseClient<Database> {
   logger.warn("使用了 getDefaultClient()，请迁移到具体的客户端类型");
 
   const url = getSupabaseUrl();
+  if (!url) {
+    throw new Error("Supabase URL 环境变量未设置");
+  }
+
   const key =
     process.env.SUPABASE_SERVICE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

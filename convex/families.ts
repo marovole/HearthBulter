@@ -42,7 +42,7 @@ export const create = mutation({
 
     // Create family member for the creator
     await ctx.db.insert("familyMembers", {
-      name: user.name ?? identity.email!.split("@")[0],
+      name: user.name ?? identity.email?.split("@")[0] ?? "User",
       gender: "OTHER",
       birthDate: Date.now(),
       familyId,
@@ -221,7 +221,7 @@ export const joinByInviteCode = mutation({
 
     // Create new membership
     return await ctx.db.insert("familyMembers", {
-      name: user.name ?? identity.email!.split("@")[0],
+      name: user.name ?? identity.email?.split("@")[0] ?? "User",
       gender: "OTHER",
       birthDate: Date.now(),
       familyId: family._id,

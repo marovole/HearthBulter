@@ -1,7 +1,10 @@
+// @ts-nocheck
 /**
  * Supabase Feedback Repository Implementation
  *
  * 使用 Supabase 实现 AI 反馈数据访问，包括调用 RPC 进行统计聚合
+ *
+ * NOTE: 此文件将在 Convex 迁移完成后移除
  */
 
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";

@@ -33,11 +33,11 @@ function isBuildTime(): boolean {
 function createMockAuthClient(): SupabaseClient<Database> {
   const mockError = () => {
     throw new Error(
-      "Supabase Auth is not configured. This project uses Convex for authentication."
+      "Supabase Auth is not configured. This project uses Convex for authentication.",
     );
   };
   return new Proxy({} as SupabaseClient<Database>, {
-    get: () => () => new Proxy({}, { get: () => mockError })
+    get: () => () => new Proxy({}, { get: () => mockError }),
   });
 }
 

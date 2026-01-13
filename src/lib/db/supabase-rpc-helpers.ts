@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase RPC 函数调用辅助工具
  *
@@ -8,6 +9,8 @@
  *
  * 这些 wrapper 确保 RPC 失败时能够被正确记录和监控，
  * 避免静默失败导致数据不一致。
+ *
+ * NOTE: 此文件将在 Convex 迁移完成后移除
  */
 
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";

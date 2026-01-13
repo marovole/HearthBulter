@@ -3,6 +3,12 @@
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import type {
+  FoodCategory,
+  RecipeCategory,
+  InventoryStatus,
+  StorageLocation,
+} from "@/types/enums";
 
 // ==================== DASHBOARD HOOKS ====================
 
@@ -118,7 +124,7 @@ export function useCreateHealthGoal() {
  */
 export function useFoodSearch(
   query: string,
-  options?: { category?: string; limit?: number },
+  options?: { category?: FoodCategory; limit?: number },
 ) {
   return useQuery(
     api.foods.search,
@@ -247,7 +253,7 @@ export function useCreateMealLog() {
  */
 export function useRecipeSearch(
   query: string,
-  options?: { category?: string; difficulty?: string; limit?: number },
+  options?: { category?: RecipeCategory; limit?: number },
 ) {
   return useQuery(
     api.recipes.search,
@@ -297,7 +303,7 @@ export function useRateRecipe() {
  */
 export function useInventory(
   memberId: Id<"familyMembers"> | undefined,
-  options?: { status?: string; storageLocation?: string },
+  options?: { status?: InventoryStatus; storageLocation?: StorageLocation },
 ) {
   return useQuery(
     api.inventory.list,

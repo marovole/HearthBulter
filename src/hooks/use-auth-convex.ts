@@ -60,7 +60,12 @@ export function useAuth() {
       setIsLoading(true);
       setError(null);
       try {
-        await signIn("password", { email, password, name, flow: "signUp" });
+        await signIn("password", {
+          email,
+          password,
+          name: name || "",
+          flow: "signUp",
+        });
         return true;
       } catch (err) {
         setError(err instanceof Error ? err.message : "注册失败");

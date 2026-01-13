@@ -67,7 +67,8 @@ export const FamilyMemberRole = {
   MEMBER: "MEMBER",
   GUEST: "GUEST",
 } as const;
-export type FamilyMemberRole = (typeof FamilyMemberRole)[keyof typeof FamilyMemberRole];
+export type FamilyMemberRole =
+  (typeof FamilyMemberRole)[keyof typeof FamilyMemberRole];
 
 // Goal Type enum and type
 export const GoalType = {
@@ -103,7 +104,8 @@ export const AllergySeverity = {
   SEVERE: "SEVERE",
   LIFE_THREATENING: "LIFE_THREATENING",
 } as const;
-export type AllergySeverity = (typeof AllergySeverity)[keyof typeof AllergySeverity];
+export type AllergySeverity =
+  (typeof AllergySeverity)[keyof typeof AllergySeverity];
 
 // Dietary Type enum and type
 export const DietaryType = {
@@ -126,7 +128,8 @@ export const InvitationStatus = {
   REJECTED: "REJECTED",
   EXPIRED: "EXPIRED",
 } as const;
-export type InvitationStatus = (typeof InvitationStatus)[keyof typeof InvitationStatus];
+export type InvitationStatus =
+  (typeof InvitationStatus)[keyof typeof InvitationStatus];
 
 // Data Source enum and type
 export const DataSource = {
@@ -149,7 +152,8 @@ export const HealthDataSource = {
   GARMIN_CONNECT: "GARMIN_CONNECT",
   FITBIT: "FITBIT",
 } as const;
-export type HealthDataSource = (typeof HealthDataSource)[keyof typeof HealthDataSource];
+export type HealthDataSource =
+  (typeof HealthDataSource)[keyof typeof HealthDataSource];
 
 // Reminder Type enum and type
 export const ReminderType = {
@@ -218,7 +222,8 @@ export const IndicatorStatus = {
   HIGH: "HIGH",
   CRITICAL: "CRITICAL",
 } as const;
-export type IndicatorStatus = (typeof IndicatorStatus)[keyof typeof IndicatorStatus];
+export type IndicatorStatus =
+  (typeof IndicatorStatus)[keyof typeof IndicatorStatus];
 
 // List Status enum and type
 export const ListStatus = {
@@ -235,7 +240,8 @@ export const RecognitionStatus = {
   COMPLETED: "COMPLETED",
   FAILED: "FAILED",
 } as const;
-export type RecognitionStatus = (typeof RecognitionStatus)[keyof typeof RecognitionStatus];
+export type RecognitionStatus =
+  (typeof RecognitionStatus)[keyof typeof RecognitionStatus];
 
 // Report Type enum and type
 export const ReportType = {
@@ -281,7 +287,8 @@ export const SweetnessLevel = {
   HIGH: "HIGH",
   EXTREME: "EXTREME",
 } as const;
-export type SweetnessLevel = (typeof SweetnessLevel)[keyof typeof SweetnessLevel];
+export type SweetnessLevel =
+  (typeof SweetnessLevel)[keyof typeof SweetnessLevel];
 
 // Saltiness Level enum and type
 export const SaltinessLevel = {
@@ -290,7 +297,8 @@ export const SaltinessLevel = {
   HIGH: "HIGH",
   EXTREME: "EXTREME",
 } as const;
-export type SaltinessLevel = (typeof SaltinessLevel)[keyof typeof SaltinessLevel];
+export type SaltinessLevel =
+  (typeof SaltinessLevel)[keyof typeof SaltinessLevel];
 
 // Trend Data Type enum and type
 export const TrendDataType = {
@@ -327,7 +335,8 @@ export const AnomalySeverity = {
   HIGH: "HIGH",
   CRITICAL: "CRITICAL",
 } as const;
-export type AnomalySeverity = (typeof AnomalySeverity)[keyof typeof AnomalySeverity];
+export type AnomalySeverity =
+  (typeof AnomalySeverity)[keyof typeof AnomalySeverity];
 
 // Anomaly Status enum and type
 export const AnomalyStatus = {
@@ -352,7 +361,8 @@ export const ConversationStatus = {
   ACTIVE: "ACTIVE",
   ARCHIVED: "ARCHIVED",
 } as const;
-export type ConversationStatus = (typeof ConversationStatus)[keyof typeof ConversationStatus];
+export type ConversationStatus =
+  (typeof ConversationStatus)[keyof typeof ConversationStatus];
 
 // Prompt Type enum and type
 export const PromptType = {
@@ -391,7 +401,8 @@ export const RecommendationStatus = {
   REJECTED: "REJECTED",
   EXPIRED: "EXPIRED",
 } as const;
-export type RecommendationStatus = (typeof RecommendationStatus)[keyof typeof RecommendationStatus];
+export type RecommendationStatus =
+  (typeof RecommendationStatus)[keyof typeof RecommendationStatus];
 
 // Alert Type enum and type
 export const AlertType = {
@@ -418,7 +429,8 @@ export const EcommercePlatform = {
   HEMA: "HEMA",
   DINGDONG: "DINGDONG",
 } as const;
-export type EcommercePlatform = (typeof EcommercePlatform)[keyof typeof EcommercePlatform];
+export type EcommercePlatform =
+  (typeof EcommercePlatform)[keyof typeof EcommercePlatform];
 
 // Platform Account Status enum and type
 export const PlatformAccountStatus = {
@@ -427,7 +439,8 @@ export const PlatformAccountStatus = {
   EXPIRED: "EXPIRED",
   ERROR: "ERROR",
 } as const;
-export type PlatformAccountStatus = (typeof PlatformAccountStatus)[keyof typeof PlatformAccountStatus];
+export type PlatformAccountStatus =
+  (typeof PlatformAccountStatus)[keyof typeof PlatformAccountStatus];
 
 // Order Status enum and type
 export const OrderStatus = {
@@ -449,7 +462,8 @@ export const DeliveryStatus = {
   DELIVERED: "DELIVERED",
   FAILED: "FAILED",
 } as const;
-export type DeliveryStatus = (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
+export type DeliveryStatus =
+  (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
 
 // Difficulty enum and type
 export const Difficulty = {
@@ -472,7 +486,8 @@ export const RecipeCategory = {
   SAUCE: "SAUCE",
   OTHER: "OTHER",
 } as const;
-export type RecipeCategory = (typeof RecipeCategory)[keyof typeof RecipeCategory];
+export type RecipeCategory =
+  (typeof RecipeCategory)[keyof typeof RecipeCategory];
 
 // Recipe Status enum and type
 export const RecipeStatus = {
@@ -500,7 +515,8 @@ export const SubstitutionType = {
   NUTRITION: "NUTRITION",
   SEASONAL: "SEASONAL",
 } as const;
-export type SubstitutionType = (typeof SubstitutionType)[keyof typeof SubstitutionType];
+export type SubstitutionType =
+  (typeof SubstitutionType)[keyof typeof SubstitutionType];
 
 // Task Category enum and type
 export const TaskCategory = {
@@ -575,7 +591,8 @@ export const ShareContentType = {
   WEEKLY_SUMMARY: "WEEKLY_SUMMARY",
   MONTHLY_REPORT: "MONTHLY_REPORT",
 } as const;
-export type ShareContentType = (typeof ShareContentType)[keyof typeof ShareContentType];
+export type ShareContentType =
+  (typeof ShareContentType)[keyof typeof ShareContentType];
 
 // Share Status enum and type
 export const ShareStatus = {
@@ -592,7 +609,8 @@ export const SharePrivacyLevel = {
   FRIENDS: "FRIENDS",
   PRIVATE: "PRIVATE",
 } as const;
-export type SharePrivacyLevel = (typeof SharePrivacyLevel)[keyof typeof SharePrivacyLevel];
+export type SharePrivacyLevel =
+  (typeof SharePrivacyLevel)[keyof typeof SharePrivacyLevel];
 
 // Share Tracking Event Type enum and type
 export const ShareTrackingEventType = {
@@ -602,7 +620,8 @@ export const ShareTrackingEventType = {
   CONVERSION: "CONVERSION",
   DOWNLOAD: "DOWNLOAD",
 } as const;
-export type ShareTrackingEventType = (typeof ShareTrackingEventType)[keyof typeof ShareTrackingEventType];
+export type ShareTrackingEventType =
+  (typeof ShareTrackingEventType)[keyof typeof ShareTrackingEventType];
 
 // Achievement Type enum and type
 export const AchievementType = {
@@ -613,7 +632,8 @@ export const AchievementType = {
   HEALTH_MILESTONE: "HEALTH_MILESTONE",
   COMMUNITY_CONTRIBUTION: "COMMUNITY_CONTRIBUTION",
 } as const;
-export type AchievementType = (typeof AchievementType)[keyof typeof AchievementType];
+export type AchievementType =
+  (typeof AchievementType)[keyof typeof AchievementType];
 
 // Achievement Rarity enum and type
 export const AchievementRarity = {
@@ -623,7 +643,8 @@ export const AchievementRarity = {
   PLATINUM: "PLATINUM",
   DIAMOND: "DIAMOND",
 } as const;
-export type AchievementRarity = (typeof AchievementRarity)[keyof typeof AchievementRarity];
+export type AchievementRarity =
+  (typeof AchievementRarity)[keyof typeof AchievementRarity];
 
 // Leaderboard Type enum and type
 export const LeaderboardType = {
@@ -633,7 +654,8 @@ export const LeaderboardType = {
   EXERCISE_MINUTES: "EXERCISE_MINUTES",
   NUTRITION_SCORE: "NUTRITION_SCORE",
 } as const;
-export type LeaderboardType = (typeof LeaderboardType)[keyof typeof LeaderboardType];
+export type LeaderboardType =
+  (typeof LeaderboardType)[keyof typeof LeaderboardType];
 
 // Leaderboard Period enum and type
 export const LeaderboardPeriod = {
@@ -643,7 +665,8 @@ export const LeaderboardPeriod = {
   YEARLY: "YEARLY",
   ALL_TIME: "ALL_TIME",
 } as const;
-export type LeaderboardPeriod = (typeof LeaderboardPeriod)[keyof typeof LeaderboardPeriod];
+export type LeaderboardPeriod =
+  (typeof LeaderboardPeriod)[keyof typeof LeaderboardPeriod];
 
 // Community Post Status enum and type
 export const CommunityPostStatus = {
@@ -652,7 +675,8 @@ export const CommunityPostStatus = {
   HIDDEN: "HIDDEN",
   DELETED: "DELETED",
 } as const;
-export type CommunityPostStatus = (typeof CommunityPostStatus)[keyof typeof CommunityPostStatus];
+export type CommunityPostStatus =
+  (typeof CommunityPostStatus)[keyof typeof CommunityPostStatus];
 
 // Community Post Type enum and type
 export const CommunityPostType = {
@@ -662,7 +686,8 @@ export const CommunityPostType = {
   QUESTION: "QUESTION",
   DISCUSSION: "DISCUSSION",
 } as const;
-export type CommunityPostType = (typeof CommunityPostType)[keyof typeof CommunityPostType];
+export type CommunityPostType =
+  (typeof CommunityPostType)[keyof typeof CommunityPostType];
 
 // Notification Type enum and type
 export const NotificationType = {
@@ -677,7 +702,8 @@ export const NotificationType = {
   MARKETING: "MARKETING",
   OTHER: "OTHER",
 } as const;
-export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 // Notification Channel enum and type
 export const NotificationChannel = {
@@ -687,7 +713,8 @@ export const NotificationChannel = {
   WECHAT: "WECHAT",
   PUSH: "PUSH",
 } as const;
-export type NotificationChannel = (typeof NotificationChannel)[keyof typeof NotificationChannel];
+export type NotificationChannel =
+  (typeof NotificationChannel)[keyof typeof NotificationChannel];
 
 // Notification Priority enum and type
 export const NotificationPriority = {
@@ -696,7 +723,8 @@ export const NotificationPriority = {
   HIGH: "HIGH",
   URGENT: "URGENT",
 } as const;
-export type NotificationPriority = (typeof NotificationPriority)[keyof typeof NotificationPriority];
+export type NotificationPriority =
+  (typeof NotificationPriority)[keyof typeof NotificationPriority];
 
 // Notification Status enum and type
 export const NotificationStatus = {
@@ -706,7 +734,8 @@ export const NotificationStatus = {
   FAILED: "FAILED",
   CANCELLED: "CANCELLED",
 } as const;
-export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus];
+export type NotificationStatus =
+  (typeof NotificationStatus)[keyof typeof NotificationStatus];
 
 // Storage Location enum and type
 export const StorageLocation = {
@@ -717,7 +746,8 @@ export const StorageLocation = {
   CABINET: "CABINET",
   OTHER: "OTHER",
 } as const;
-export type StorageLocation = (typeof StorageLocation)[keyof typeof StorageLocation];
+export type StorageLocation =
+  (typeof StorageLocation)[keyof typeof StorageLocation];
 
 // Inventory Status enum and type
 export const InventoryStatus = {
@@ -727,7 +757,8 @@ export const InventoryStatus = {
   LOW_STOCK: "LOW_STOCK",
   OUT_OF_STOCK: "OUT_OF_STOCK",
 } as const;
-export type InventoryStatus = (typeof InventoryStatus)[keyof typeof InventoryStatus];
+export type InventoryStatus =
+  (typeof InventoryStatus)[keyof typeof InventoryStatus];
 
 // Waste Reason enum and type
 export const WasteReason = {

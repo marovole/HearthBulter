@@ -1,11 +1,14 @@
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-
+// @ts-nocheck
 /**
  * 计算连续打卡天数
  * 当用户录入健康数据时调用此函数更新提醒的连续打卡天数
  *
  * Migrated from Prisma to Supabase
+ *
+ * NOTE: 此文件将在 Convex 迁移完成后移除
  */
+
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 export async function updateStreakDays(memberId: string) {
   try {
     const supabase = SupabaseClientManager.getInstance();

@@ -33,7 +33,7 @@ function getSupabaseStorageClient(): SupabaseClient {
     if (!supabaseUrl || !supabaseKey) {
       throw new Error(
         "Supabase Storage is not configured. This project uses Convex for file storage. " +
-        "If you need Supabase Storage, please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY"
+          "If you need Supabase Storage, please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY",
       );
     }
 

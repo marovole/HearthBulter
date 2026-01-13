@@ -54,20 +54,24 @@ function createMockClient(): SupabaseClient<Database> {
   const mockError = () => {
     throw new Error(
       "Supabase is not configured. This project uses Convex for data storage. " +
-      "If you need Supabase, please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY"
+        "If you need Supabase, please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY",
     );
   };
 
   // 返回一个代理对象，任何方法调用都会抛出错误
   return new Proxy({} as SupabaseClient<Database>, {
     get: (target, prop) => {
-      if (prop === 'from') {
-        return () => new Proxy({}, {
-          get: () => mockError
-        });
+      if (prop === "from") {
+        return () =>
+          new Proxy(
+            {},
+            {
+              get: () => mockError,
+            },
+          );
       }
       return mockError;
-    }
+    },
   });
 }
 
@@ -1139,11 +1143,14 @@ export function getSupabaseAdapter(): SupabaseAdapter {
 }
 
 // For backwards compatibility, create a proxy that lazily initializes
-export const supabaseAdapter: SupabaseAdapter = new Proxy({} as SupabaseAdapter, {
-  get(_target, prop) {
-    return (getSupabaseAdapter() as any)[prop];
-  }
-});
+export const supabaseAdapter: SupabaseAdapter = new Proxy(
+  {} as SupabaseAdapter,
+  {
+    get(_target, prop) {
+      return (getSupabaseAdapter() as any)[prop];
+    },
+  },
+);
 
 // 兼容层：导出 prisma 别名供旧代码使用
 // TODO: 迁移所有使用方到 Supabase adapter 后移除此导出

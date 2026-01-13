@@ -229,15 +229,15 @@ export const weeklySummary = query({
     > = {};
 
     for (const log of mealLogs) {
-      const dateKey = new Date(log.date).toISOString().split("T")[0];
+      const dateKey = new Date(log.date).toISOString().split("T")[0] ?? "";
       if (!dailyTotals[dateKey]) {
         dailyTotals[dateKey] = { calories: 0, protein: 0, carbs: 0, fat: 0, count: 0 };
       }
-      dailyTotals[dateKey].calories += log.calories;
-      dailyTotals[dateKey].protein += log.protein;
-      dailyTotals[dateKey].carbs += log.carbs;
-      dailyTotals[dateKey].fat += log.fat;
-      dailyTotals[dateKey].count += 1;
+      dailyTotals[dateKey]!.calories += log.calories;
+      dailyTotals[dateKey]!.protein += log.protein;
+      dailyTotals[dateKey]!.carbs += log.carbs;
+      dailyTotals[dateKey]!.fat += log.fat;
+      dailyTotals[dateKey]!.count += 1;
     }
 
     const daysWithData = Object.keys(dailyTotals).length;
@@ -267,8 +267,9 @@ export const weeklySummary = query({
 
     const weights = healthData.filter((h) => h.weight).map((h) => h.weight!);
     const avgWeight = weights.length > 0 ? weights.reduce((a, b) => a + b, 0) / weights.length : null;
+    const lastWeight = weights[weights.length - 1];
     const weightChange =
-      weights.length >= 2 ? weights[weights.length - 1] - weights[0] : null;
+      weights.length >= 2 && lastWeight !== undefined ? lastWeight - weights[0]! : null;
 
     return {
       weekStart: weekStart.getTime(),

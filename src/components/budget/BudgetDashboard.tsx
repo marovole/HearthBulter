@@ -26,10 +26,7 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import {
-  FoodCategory,
-  BudgetPeriod,
-} from "@/types/enums";
+import { FoodCategory, BudgetPeriod } from "@/types/enums";
 
 interface BudgetStatus {
   budget: any;

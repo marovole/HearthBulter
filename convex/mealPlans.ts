@@ -93,11 +93,11 @@ export const getById = query({
 
     // Group meals by date
     const mealsByDate = mealsWithIngredients.reduce((acc, meal) => {
-      const dateKey = new Date(meal.date).toISOString().split("T")[0];
+      const dateKey = new Date(meal.date).toISOString().split("T")[0] ?? "";
       if (!acc[dateKey]) {
         acc[dateKey] = [];
       }
-      acc[dateKey].push(meal);
+      acc[dateKey]!.push(meal);
       return acc;
     }, {} as Record<string, typeof mealsWithIngredients>);
 
