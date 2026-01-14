@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { DashboardLayout } from "./DashboardLayout";
 import { OverviewCards } from "./OverviewCards";
@@ -18,19 +18,19 @@ import HealthScoreCard from "./HealthScoreCard";
 import type { FamilyMember, RawFamilyMember, RawFamily } from "@/types/family";
 
 interface EnhancedDashboardProps {
-  userId: string;
+  userEmail: string;
   initialMemberId?: string;
 }
 
 export function EnhancedDashboard({
-  userId,
+  userEmail,
   initialMemberId,
 }: EnhancedDashboardProps) {
   // 1. Convex Queries
-  const convexUser = useQuery(api.users.getMe, { email: "test@example.com" });
+  const resolvedEmail = userEmail || null;
   const families = useQuery(
     api.families.list,
-    convexUser ? { userId: convexUser._id } : "skip",
+    resolvedEmail ? { email: resolvedEmail } : "skip",
   );
 
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
@@ -56,7 +56,10 @@ export function EnhancedDashboard({
   // 自动选择第一个成员
   useEffect(() => {
     if (!selectedMemberId && familyMembers.length > 0) {
-      setSelectedMemberId(familyMembers[0].id);
+      const firstMember = familyMembers[0];
+      if (firstMember) {
+        setSelectedMemberId(firstMember.id);
+      }
     }
   }, [familyMembers, selectedMemberId]);
 

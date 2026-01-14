@@ -1,34 +1,44 @@
+import { ConvexError } from "convex/values";
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
 
 /**
- * Helper to verify if a user has access to a family member's data.
- * This replaces the Prisma-based verifyMemberAccess.
+ * Resolve a Convex user id from email.
  */
-export async function verifyMemberAccess(
+export async function getUserIdByEmail(
   ctx: QueryCtx | MutationCtx,
-  memberId: Id<"familyMembers">,
   userEmail: string,
 ) {
-  // Find the user by email
   const user = await ctx.db
     .query("users")
     .withIndex("by_email", (q) => q.eq("email", userEmail))
     .unique();
 
   if (!user) {
-    throw new Error("User not found");
+    throw new ConvexError({
+      code: "UNAUTHORIZED",
+      message: "用户不存在",
+    });
   }
 
-  const userId = user._id;
+  return user._id;
+}
 
-  // Find the target member
+/**
+ * Helper to verify if a user has access to a family member's data.
+ */
+export async function verifyMemberAccess(
+  ctx: QueryCtx | MutationCtx,
+  memberId: Id<"familyMembers">,
+  userEmail: string,
+) {
+  const userId = await getUserIdByEmail(ctx, userEmail);
+
   const member = await ctx.db.get(memberId);
   if (!member || member.deletedAt) {
     return { hasAccess: false, member: null };
   }
 
-  // Find the user's role in this family
   const userMember = await ctx.db
     .query("familyMembers")
     .withIndex("by_family_active", (q) =>

@@ -34,10 +34,10 @@ export default function MealPlanningPage() {
   const router = useRouter();
 
   // 1. Convex State
-  const convexUser = useQuery(api.users.getMe, { email: "test@example.com" });
+  const userEmail = session?.user?.email || null;
   const families = useQuery(
     api.families.list,
-    convexUser ? { userId: convexUser._id } : "skip",
+    userEmail ? { email: userEmail } : "skip",
   );
 
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
@@ -51,8 +51,12 @@ export default function MealPlanningPage() {
   // Auto select member
   useEffect(() => {
     if (families && families.length > 0 && !selectedMemberId) {
-      if (families[0].members && families[0].members.length > 0) {
-        setSelectedMemberId(families[0].members[0]._id);
+      const firstFamily = families[0];
+      if (firstFamily?.members && firstFamily.members.length > 0) {
+        const firstMember = firstFamily.members[0];
+        if (firstMember) {
+          setSelectedMemberId(firstMember._id);
+        }
       }
     }
   }, [families, selectedMemberId]);

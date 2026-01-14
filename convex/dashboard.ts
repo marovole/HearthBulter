@@ -1,14 +1,22 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { verifyMemberAccess } from "./lib/auth";
 
 /**
  * Get dashboard overview data for a member
  */
 export const getOverview = query({
-  args: { memberId: v.id("familyMembers") },
+  args: { memberId: v.id("familyMembers"), userEmail: v.string() },
   handler: async (ctx, args) => {
-    const member = await ctx.db.get(args.memberId);
-    if (!member) return null;
+    const { hasAccess, member } = await verifyMemberAccess(
+      ctx,
+      args.memberId,
+      args.userEmail,
+    );
+
+    if (!hasAccess || !member) {
+      return null;
+    }
 
     // 1. Fetch latest health data records for trend
     const healthRecords = await ctx.db

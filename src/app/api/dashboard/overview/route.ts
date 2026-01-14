@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
     const convexOverview = await convexClient.query(api.dashboard.getOverview, {
       // @ts-expect-error - 暂时忽略类型冲突，后续会统一 ID 类型
       memberId: memberId,
+      userEmail: session.user.email || "",
     });
 
     return NextResponse.json(

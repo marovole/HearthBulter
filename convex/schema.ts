@@ -113,9 +113,16 @@ export default defineSchema({
     originalQuantity: v.number(),
     purchaseDate: v.number(),
     purchasePrice: v.optional(v.number()), // in cents/fen
+    purchaseSource: v.optional(v.string()),
     expiryDate: v.optional(v.number()),
+    productionDate: v.optional(v.number()),
     storageLocation: v.string(),
+    storageNotes: v.optional(v.string()),
+    minStockThreshold: v.optional(v.number()),
     status: v.string(),
+    barcode: v.optional(v.string()),
+    brand: v.optional(v.string()),
+    packageInfo: v.optional(v.string()),
     ...softDelete,
     ...timestamps,
   })

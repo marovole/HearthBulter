@@ -19,19 +19,19 @@ import {
 } from "lucide-react";
 
 interface HealthDataDashboardProps {
-  userId: string;
+  userEmail: string;
   initialMemberId?: string;
 }
 
 export function HealthDataDashboard({
-  userId,
+  userEmail,
   initialMemberId,
 }: HealthDataDashboardProps) {
   // Convex Hooks
-  const convexUser = useQuery(api.users.getMe, { email: "test@example.com" });
+  const resolvedEmail = userEmail || null;
   const families = useQuery(
     api.families.list,
-    convexUser ? { userId: convexUser._id } : "skip",
+    resolvedEmail ? { email: resolvedEmail } : "skip",
   );
 
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
@@ -59,7 +59,10 @@ export function HealthDataDashboard({
   // Auto select first member
   useEffect(() => {
     if (!selectedMemberId && familyMembers.length > 0) {
-      setSelectedMemberId(familyMembers[0].id);
+      const firstMember = familyMembers[0];
+      if (firstMember) {
+        setSelectedMemberId(firstMember.id);
+      }
     }
   }, [familyMembers, selectedMemberId]);
 
