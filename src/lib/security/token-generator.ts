@@ -8,8 +8,10 @@ import type { JWTPayload } from "jose";
 import { logger } from "@/lib/logger";
 
 const cryptoApi = nodeCrypto;
-// 为 jose 提供 WebCrypto
-(globalThis as any).crypto = cryptoApi;
+// 为 jose 提供 WebCrypto (Cloudflare 环境下 crypto 是只读的)
+if (typeof (globalThis as any).crypto === "undefined") {
+  (globalThis as any).crypto = cryptoApi;
+}
 
 const TOKEN_ISSUER = "health-butler";
 const TOKEN_AUDIENCE = "share-token";
