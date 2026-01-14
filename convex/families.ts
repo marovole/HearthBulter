@@ -1,23 +1,29 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { apiSuccess } from "./lib/response";
+import { getUserIdByEmail } from "./lib/auth";
 
 /**
  * List families for the current user
  */
 export const list = query({
-  args: { userId: v.id("users") },
+  args: { email: v.string() },
   handler: async (ctx, args) => {
-    // In Convex, we usually fetch by user ID
+    if (!args.email) {
+      return [];
+    }
+
+    const userId = await getUserIdByEmail(ctx, args.email);
+
     const families = await ctx.db
       .query("families")
-      .withIndex("by_creator", (q) => q.eq("creatorId", args.userId))
+      .withIndex("by_creator", (q) => q.eq("creatorId", userId))
       .collect();
 
-    // Also include families where the user is a member
     const memberRecords = await ctx.db
       .query("familyMembers")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .collect();
 
     const otherFamilyIds = memberRecords
@@ -33,7 +39,6 @@ export const list = query({
       ...otherFamilies.filter((f): f is NonNullable<typeof f> => !!f),
     ];
 
-    // Enrich with members
     return await Promise.all(
       allFamilies.map(async (family) => {
         const members = await ctx.db
