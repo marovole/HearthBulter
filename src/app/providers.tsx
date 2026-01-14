@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import type { ReactNode } from 'react';
-import { SessionProvider as NextAuthSessionProvider } from 'next-auth/react';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
+import type { ReactNode } from "react";
+import { SessionProvider as NextAuthSessionProvider } from "next-auth/react";
+import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
+import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 
 /**
  * Props for the Providers component
@@ -32,28 +33,25 @@ interface ProvidersProps {
  */
 export default function Providers({ children }: ProvidersProps): JSX.Element {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <NextAuthSessionProvider
-        // Enable session refresh on window focus for better UX
-        refetchOnWindowFocus={true}
-        // Refetch session every 5 minutes to keep it fresh
-        refetchInterval={5 * 60}
+    <ConvexClientProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
       >
-        {children}
+        <NextAuthSessionProvider
+          // Enable session refresh on window focus for better UX
+          refetchOnWindowFocus={true}
+          // Refetch session every 5 minutes to keep it fresh
+          refetchInterval={5 * 60}
+        >
+          {children}
 
-        {/* Global toast notification system */}
-        <Toaster
-          position="top-right"
-          expand={false}
-          richColors
-          closeButton
-        />
-      </NextAuthSessionProvider>
-    </ThemeProvider>
+          {/* Global toast notification system */}
+          <Toaster position="top-right" expand={false} richColors closeButton />
+        </NextAuthSessionProvider>
+      </ThemeProvider>
+    </ConvexClientProvider>
   );
 }

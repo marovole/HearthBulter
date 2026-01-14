@@ -1,39 +1,9 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { convexClient, api } from "@/lib/convex-client";
 import { headers } from "next/headers";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
-
-async function testSupabaseDatabaseConnection(): Promise<boolean> {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("Supabase 环境变量缺失");
-      return false;
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: { headers: { "x-health-check": "true" } },
-    });
-
-    // 执行简单查询测试连接
-    const { error } = await supabase.from("users").select("id").limit(1);
-
-    if (error) {
-      console.error("Supabase 连接测试失败:", error.message);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Supabase 连接测试异常:", error);
-    return false;
-  }
-}
 
 export async function GET() {
   try {
@@ -45,14 +15,25 @@ export async function GET() {
       }
     }
 
-    const isConnected = await testSupabaseDatabaseConnection();
+    // 测试 Convex 连接
+    let isConnected = false;
+    try {
+      // 尝试发起一个简单的查询
+      await convexClient.query(api.users.getMe, {
+        email: "health-check@example.com",
+      });
+      isConnected = true;
+    } catch (e) {
+      console.error("Convex 连接测试失败:", e);
+    }
 
     return NextResponse.json({
       status: isConnected ? "healthy" : "unhealthy",
       timestamp: new Date().toISOString(),
       database: isConnected ? "connected" : "disconnected",
+      provider: "convex",
       uptime: process.uptime(),
-      version: "1.0.2",
+      version: "1.1.0-convex",
     });
   } catch (error) {
     return NextResponse.json(

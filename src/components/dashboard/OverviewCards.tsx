@@ -1,85 +1,32 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { HealthScoreGauge } from './HealthScoreGauge';
-import { GoalProgressBar } from './GoalProgressBar';
-import { EmptyStateGuide } from './EmptyStateGuide';
-import { TrendingUp, TrendingDown, Scale, Target, Utensils, Activity } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-interface OverviewData {
-  overview: {
-    weightTrend: {
-      currentWeight: number | null
-      change: number
-      changePercent: number
-      targetWeight: number | null
-    }
-    nutritionSummary: {
-      targetCalories: number | null
-      actualCalories: number | null
-      adherenceRate: number
-    }
-    goalProgress: Array<{
-      goalId: string
-      goalType: string
-      currentProgress: number
-      targetWeight: number | null
-      currentWeight: number | null
-      startWeight: number | null
-      onTrack: boolean
-      weeksRemaining: number | null
-    }>
-  }
-  healthScore: {
-    totalScore: number
-    breakdown: {
-      bmiScore: number
-      nutritionScore: number
-      activityScore: number
-      dataCompletenessScore: number
-    }
-    details: {
-      bmi: number | null
-      bmiCategory: string | null
-      nutritionAdherenceRate: number
-      activityFrequency: number
-      dataCompletenessRate: number
-    }
-    recommendations: string[]
-  }
-}
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import { Card, CardContent } from "@/components/ui/card";
+import { HealthScoreGauge } from "./HealthScoreGauge";
+import { GoalProgressBar } from "./GoalProgressBar";
+import { EmptyStateGuide } from "./EmptyStateGuide";
+import {
+  TrendingUp,
+  TrendingDown,
+  Scale,
+  Target,
+  Utensils,
+  Activity,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface OverviewCardsProps {
-  memberId: string
+  memberId: string;
 }
 
 export function OverviewCards({ memberId }: OverviewCardsProps) {
-  const [data, setData] = useState<OverviewData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const data = useQuery(api.dashboard.getOverview, {
+    memberId: memberId as Id<"familyMembers">,
+  });
 
-  useEffect(() => {
-    loadData();
-  }, [memberId]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch(`/api/dashboard/overview?memberId=${memberId}`);
-      if (!response.ok) throw new Error('加载概览数据失败');
-      const result = await response.json();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (data === undefined) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
@@ -94,70 +41,58 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
     );
   }
 
-  if (error) {
+  if (!data) {
     return (
-      <Card variant="outline" className="border-destructive/50">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-destructive">{error}</p>
-            <button
-              onClick={loadData}
-              className="text-sm text-primary font-medium hover:underline"
-            >
-              重试
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+      <EmptyStateGuide
+        memberId={memberId}
+        type="overview"
+        onInitialize={() => {}}
+      />
     );
   }
 
-  if (!data) {
-    return <EmptyStateGuide memberId={memberId} type="overview" onInitialize={loadData} />;
-  }
-
-  const { overview, healthScore } = data;
+  const { weightTrend, nutritionSummary, healthScore, goalProgress } = data;
 
   const statCards = [
     {
-      label: '当前体重',
-      value: overview.weightTrend.currentWeight 
-        ? `${overview.weightTrend.currentWeight.toFixed(1)} kg`
-        : '--',
-      subtext: overview.weightTrend.targetWeight 
-        ? `目标: ${overview.weightTrend.targetWeight.toFixed(1)} kg`
+      label: "当前体重",
+      value: weightTrend.currentWeight
+        ? `${weightTrend.currentWeight.toFixed(1)} kg`
+        : "--",
+      subtext: weightTrend.targetWeight
+        ? `目标: ${weightTrend.targetWeight.toFixed(1)} kg`
         : undefined,
       icon: Scale,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
+      color: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
-      label: '体重变化',
-      value: `${overview.weightTrend.change >= 0 ? '+' : ''}${overview.weightTrend.change.toFixed(1)} kg`,
-      subtext: `${overview.weightTrend.changePercent >= 0 ? '+' : ''}${overview.weightTrend.changePercent.toFixed(1)}%`,
-      icon: overview.weightTrend.change >= 0 ? TrendingUp : TrendingDown,
-      color: overview.weightTrend.change >= 0 ? 'text-destructive' : 'text-success',
-      bgColor: overview.weightTrend.change >= 0 ? 'bg-destructive/10' : 'bg-success/10',
+      label: "体重变化",
+      value: `${weightTrend.change >= 0 ? "+" : ""}${weightTrend.change.toFixed(1)} kg`,
+      subtext: `${weightTrend.changePercent >= 0 ? "+" : ""}${weightTrend.changePercent.toFixed(1)}%`,
+      icon: weightTrend.change >= 0 ? TrendingUp : TrendingDown,
+      color: weightTrend.change >= 0 ? "text-destructive" : "text-success",
+      bgColor: weightTrend.change >= 0 ? "bg-destructive/10" : "bg-success/10",
     },
     {
-      label: '营养达标率',
-      value: `${overview.nutritionSummary.adherenceRate.toFixed(0)}%`,
-      subtext: overview.nutritionSummary.targetCalories 
-        ? `目标: ${overview.nutritionSummary.targetCalories} kcal`
+      label: "营养达标率",
+      value: `${nutritionSummary.adherenceRate.toFixed(0)}%`,
+      subtext: nutritionSummary.targetCalories
+        ? `目标: ${nutritionSummary.targetCalories} kcal`
         : undefined,
       icon: Utensils,
-      color: 'text-accent',
-      bgColor: 'bg-accent/10',
+      color: "text-accent",
+      bgColor: "bg-accent/10",
     },
     {
-      label: '健康评分',
+      label: "健康评分",
       value: `${healthScore.totalScore} 分`,
-      subtext: healthScore.details.bmiCategory 
-        ? `BMI: ${healthScore.details.bmiCategory === 'normal' ? '正常' : '需关注'}`
+      subtext: healthScore.details.bmiCategory
+        ? `BMI: ${healthScore.details.bmiCategory === "normal" ? "正常" : "需关注"}`
         : undefined,
       icon: Activity,
-      color: 'text-info',
-      bgColor: 'bg-info/10',
+      color: "text-info",
+      bgColor: "bg-info/10",
     },
   ];
 
@@ -165,22 +100,31 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
     <div className="space-y-6">
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, index) => (
-          <Card 
-            key={stat.label} 
-            variant="elevated"
-            className="group"
-          >
+        {statCards.map((stat) => (
+          <Card key={stat.label} variant="elevated" className="group">
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <span className="text-sm font-medium text-muted-foreground">
                   {stat.label}
                 </span>
-                <div className={cn('p-2 rounded-lg transition-transform group-hover:scale-110', stat.bgColor)}>
-                  <stat.icon className={cn('h-4 w-4', stat.color)} />
+                <div
+                  className={cn(
+                    "p-2 rounded-lg transition-transform group-hover:scale-110",
+                    stat.bgColor,
+                  )}
+                >
+                  <stat.icon className={cn("h-4 w-4", stat.color)} />
                 </div>
               </div>
-              <div className={cn('font-mono text-2xl font-bold mb-1', stat.color === 'text-destructive' || stat.color === 'text-success' ? stat.color : 'text-foreground')}>
+              <div
+                className={cn(
+                  "font-mono text-2xl font-bold mb-1",
+                  stat.color === "text-destructive" ||
+                    stat.color === "text-success"
+                    ? stat.color
+                    : "text-foreground",
+                )}
+              >
                 {stat.value}
               </div>
               {stat.subtext && (
@@ -212,9 +156,9 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
             <h3 className="font-display text-lg font-semibold text-foreground mb-4">
               目标进度
             </h3>
-            {overview.goalProgress.length > 0 ? (
+            {goalProgress.length > 0 ? (
               <div className="space-y-4">
-                {overview.goalProgress.map((goal) => (
+                {goalProgress.map((goal: any) => (
                   <GoalProgressBar
                     key={goal.goalId}
                     goalType={goal.goalType}
