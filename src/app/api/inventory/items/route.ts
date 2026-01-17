@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const isLowStock = searchParams.get("isLowStock") === "true";
 
     const memberIdValue = memberId;
-    const items = await convexClient.query(api.inventory.list, {
+    const items = (await convexClient.query(api.inventory.list, {
       memberId: isValidId(memberIdValue)
         ? (memberIdValue as Id<"familyMembers">)
         : memberIdValue,
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       isExpiring: isExpiring ? true : undefined,
       isExpired: isExpired ? true : undefined,
       isLowStock: isLowStock ? true : undefined,
-    });
+    })) as Array<Record<string, unknown>> | null;
 
     const normalizedItems = (items || []).map((item: any) => ({
       id: item._id || item.id,
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     const foodIdValue = data.foodId;
 
     // 在 Convex 中创建
-    const result = await convexClient.mutation(api.inventory.add, {
+    const result = (await convexClient.mutation(api.inventory.add, {
       memberId: isValidId(memberIdValue)
         ? (memberIdValue as Id<"familyMembers">)
         : memberIdValue,
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
       brand: data.brand,
       packageInfo: data.packageInfo,
       userEmail: user.email || "",
-    });
+    })) as { data?: unknown } | null;
 
     return NextResponse.json({
       success: true,

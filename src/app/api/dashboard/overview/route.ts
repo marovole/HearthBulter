@@ -74,11 +74,13 @@ export async function GET(request: NextRequest) {
     // 从 Convex 获取数据
     // 注意：如果是新用户，可能需要先通过迁移脚本确保数据在 Convex 中存在
     // 这里我们尝试通过邮箱查找 Convex 中的 member
-    const convexOverview = await convexClient.query(api.dashboard.getOverview, {
-      // @ts-expect-error - 暂时忽略类型冲突，后续会统一 ID 类型
-      memberId: memberId,
-      userEmail: session.user.email || "",
-    });
+    const convexOverview = (await convexClient.query(
+      api.dashboard.getOverview,
+      {
+        memberId: memberId,
+        userEmail: session.user.email || "",
+      },
+    )) as { healthScore?: number } | null;
 
     return NextResponse.json(
       {
