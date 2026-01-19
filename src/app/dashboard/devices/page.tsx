@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  */
 
 import { Suspense } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { DeviceConnection } from "@/components/features/devices/DeviceConnection";
 import { SyncStatus } from "@/components/features/devices/SyncStatus";
 import { PageHeader } from "@/components/ui/page-header";

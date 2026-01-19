@@ -33,7 +33,8 @@ export async function generateInviteCode(length: number = 8): Promise<string> {
  * 生成分享链接
  */
 export function generateShareUrl(token: string, baseUrl?: string): string {
-  const base = baseUrl || process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const base =
+    baseUrl || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${base}/share/${token}`;
 }
 
@@ -44,7 +45,8 @@ export function generateInviteUrl(
   inviteCode: string,
   baseUrl?: string,
 ): string {
-  const base = baseUrl || process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const base =
+    baseUrl || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${base}/invite/${inviteCode}`;
 }
 

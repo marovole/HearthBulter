@@ -98,11 +98,16 @@ describe("USDA Service", () => {
     });
 
     it("should throw error when API key is not configured", async () => {
+      const originalEnv = process.env.USDA_API_KEY;
+      delete process.env.USDA_API_KEY;
+
       const serviceWithoutKey = new USDAService();
 
       await expect(serviceWithoutKey.searchFoods("chicken")).rejects.toThrow(
         "USDA API key is not configured",
       );
+
+      process.env.USDA_API_KEY = originalEnv;
     });
   });
 
@@ -132,11 +137,16 @@ describe("USDA Service", () => {
     });
 
     it("should throw error when API key is not configured", async () => {
+      const originalEnv = process.env.USDA_API_KEY;
+      delete process.env.USDA_API_KEY;
+
       const serviceWithoutKey = new USDAService();
 
       await expect(serviceWithoutKey.getFoodByFdcId(123456)).rejects.toThrow(
         "USDA API key is not configured",
       );
+
+      process.env.USDA_API_KEY = originalEnv;
     });
   });
 

@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     const analysisType = type || "user";
     let analytics: ShareAnalytics;
-    let additionalStats: Record<string, unknown> = {};
+    const additionalStats: Record<string, unknown> = {};
 
     if (analysisType === "user" && memberId) {
       analytics = await shareTrackingService.getUserShareAnalytics(

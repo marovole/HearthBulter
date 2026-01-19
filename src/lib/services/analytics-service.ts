@@ -505,6 +505,8 @@ let analyticsServiceInstance: AnalyticsService | undefined;
 
 export function getAnalyticsServiceSingleton(): AnalyticsService {
   if (!analyticsServiceInstance) {
+    // Dynamic import to avoid circular dependency
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const {
       getDefaultContainer,
     } = require("@/lib/container/service-container");

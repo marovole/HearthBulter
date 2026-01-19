@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXTAUTH_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
       "http://localhost:3000";
 
     const access = await convexClient.query<{ hasAccess: boolean }>(

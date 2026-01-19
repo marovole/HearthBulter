@@ -41,7 +41,7 @@ export async function POST(
       : SharePrivacyLevel.PUBLIC;
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXTAUTH_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
       "http://localhost:3000";
 
     const achievement = await convexClient.query<Record<

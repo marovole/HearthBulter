@@ -16,11 +16,9 @@ export function validateEnvironmentVariables(): void {
   const errors: EnvValidationError[] = [];
   const isProduction = process.env.NODE_ENV === "production";
 
-  // 必需的环境变量
+  // 必需的环境变量（已迁移到 Clerk，移除 NextAuth 依赖）
   const requiredVars = [
     "DATABASE_URL",
-    "NEXTAUTH_SECRET",
-    "NEXTAUTH_URL",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_KEY",
@@ -38,25 +36,12 @@ export function validateEnvironmentVariables(): void {
 
   // 生产环境特殊检查
   if (isProduction) {
-    // 检查NEXTAUTH_SECRET的强度
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (secret) {
-      if (secret.length < 32) {
-        errors.push({
-          variable: "NEXTAUTH_SECRET",
-          message: "NEXTAUTH_SECRET 在生产环境中必须至少32个字符",
-        });
-      }
-      if (
-        secret.includes("please-change") ||
-        secret.includes("example") ||
-        secret.includes("your-")
-      ) {
-        errors.push({
-          variable: "NEXTAUTH_SECRET",
-          message: "NEXTAUTH_SECRET 使用了示例值，请在生产环境中设置安全的密钥",
-        });
-      }
+    // 检查 Clerk 密钥
+    if (!process.env.CLERK_SECRET_KEY) {
+      errors.push({
+        variable: "CLERK_SECRET_KEY",
+        message: "生产环境需要配置 Clerk 认证密钥",
+      });
     }
 
     // 检查数据库URL是否为localhost
@@ -119,7 +104,9 @@ export function validateOptionalEnvironmentVariables(): void {
 
   if (warnings.length > 0) {
     console.warn("\n可选环境变量警告:");
-    warnings.forEach((w) => console.warn(w));
+    for (const w of warnings) {
+      console.warn(w);
+    }
     console.warn("");
   }
 }

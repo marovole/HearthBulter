@@ -88,15 +88,15 @@ export async function GET(request: NextRequest) {
       updatedAt: item.updatedAt ? new Date(item.updatedAt).toISOString() : null,
       food: item.food
         ? {
-            id: item.food._id || item.food.id,
-            name: item.food.name,
-            nameEn: item.food.nameEn,
-            category: item.food.category,
-            calories: item.food.calories,
-            protein: item.food.protein,
-            carbs: item.food.carbs,
-            fat: item.food.fat,
-          }
+          id: item.food._id || item.food.id,
+          name: item.food.name,
+          nameEn: item.food.nameEn,
+          category: item.food.category,
+          calories: item.food.calories,
+          protein: item.food.protein,
+          carbs: item.food.carbs,
+          fat: item.food.fat,
+        }
         : null,
       usageRecords: [],
       wasteRecords: [],

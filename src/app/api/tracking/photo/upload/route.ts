@@ -53,8 +53,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未找到关联的成员" }, { status: 404 });
     }
 
-    const mealType = MEAL_TYPES.includes(mealTypeParam as typeof MEAL_TYPES[number])
-      ? (mealTypeParam as typeof MEAL_TYPES[number])
+    const mealType = MEAL_TYPES.includes(
+      mealTypeParam as (typeof MEAL_TYPES)[number],
+    )
+      ? (mealTypeParam as (typeof MEAL_TYPES)[number])
       : "SNACK";
 
     const mealLogId = await convexClient.mutation<Id<"mealLogs">>(

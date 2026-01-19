@@ -34,7 +34,6 @@ id = "3416fc31333f449194c9e8e3c00fafec"
 # 环境变量配置
 [vars]
 NODE_ENV = "production"
-NEXTAUTH_URL = "https://healthbutler.life"
 NEXT_PUBLIC_ALLOWED_ORIGINS = "https://healthbutler.life"
 NEXT_PUBLIC_SITE_URL = "https://healthbutler.life"
 NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"
@@ -44,7 +43,6 @@ UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
 # 生产环境变量
 [env.production.vars]
 NODE_ENV = "production"
-NEXTAUTH_URL = "https://healthbutler.life"
 NEXT_PUBLIC_ALLOWED_ORIGINS = "https://healthbutler.life"
 NEXT_PUBLIC_SITE_URL = "https://healthbutler.life"
 NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"
@@ -54,7 +52,6 @@ UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
 # Preview 环境变量
 [env.preview.vars]
 NODE_ENV = "preview"
-NEXTAUTH_URL = "https://preview.hearthbulter.pages.dev"
 NEXT_PUBLIC_ALLOWED_ORIGINS = "https://preview.hearthbulter.pages.dev"
 NEXT_PUBLIC_SITE_URL = "https://preview.hearthbulter.pages.dev"
 NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"

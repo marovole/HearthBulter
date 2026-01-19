@@ -45,10 +45,7 @@ export async function GET(request: NextRequest) {
       session.user.id,
     );
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该预算" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该预算" }, { status: 403 });
     }
 
     // 构建查询过滤器

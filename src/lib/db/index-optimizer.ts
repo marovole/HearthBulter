@@ -1,6 +1,7 @@
 import { prisma } from "./database-optimization";
 import { logger } from "@/lib/logging/structured-logger";
 import { SecuritySeverity, securityAudit } from "@/lib/security/security-audit";
+import { createHash } from "crypto";
 
 // 索引类型
 export enum IndexType {
@@ -608,8 +609,7 @@ export class IndexOptimizer {
    * 哈希查询
    */
   private hashQuery(query: string): string {
-    const crypto = require("crypto");
-    return crypto.createHash("md5").update(query).digest("hex").substring(0, 8);
+    return createHash("md5").update(query).digest("hex").substring(0, 8);
   }
 
   /**

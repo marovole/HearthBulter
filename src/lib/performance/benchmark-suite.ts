@@ -86,7 +86,7 @@ export class BenchmarkSuiteManager {
       version: "1.0.0",
       environment: {
         name: process.env.NODE_ENV || "development",
-        url: process.env.NEXTAUTH_URL || "http://localhost:3000",
+        url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
         description: "本地开发环境",
       },
       tests: [
@@ -185,7 +185,7 @@ export class BenchmarkSuiteManager {
       version: "1.0.0",
       environment: {
         name: process.env.NODE_ENV || "development",
-        url: process.env.NEXTAUTH_URL || "http://localhost:3000",
+        url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
         description: "前端页面性能测试",
       },
       tests: [

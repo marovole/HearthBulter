@@ -35,7 +35,7 @@ interface EnvConfig {
   [key: string]: EnvValidationRule;
 }
 
-// 生产环境必需配置
+// 生产环境必需配置（已迁移到 Clerk 认证）
 const PRODUCTION_ENV_CONFIG: EnvConfig = {
   NODE_ENV: {
     required: true,
@@ -47,16 +47,16 @@ const PRODUCTION_ENV_CONFIG: EnvConfig = {
     type: "url",
     description: "数据库连接字符串",
   },
-  NEXTAUTH_SECRET: {
+  CLERK_SECRET_KEY: {
     required: true,
     type: "string",
-    minLength: 32,
-    description: "NextAuth.js 加密密钥",
+    minLength: 20,
+    description: "Clerk 认证密钥",
   },
-  NEXTAUTH_URL: {
+  NEXT_PUBLIC_SITE_URL: {
     required: true,
     type: "url",
-    description: "NextAuth.js 回调URL",
+    description: "应用部署 URL",
   },
   NEXT_PUBLIC_SUPABASE_URL: {
     required: true,
@@ -211,32 +211,33 @@ export class EnvSecurityManager {
 
     // 类型验证
     switch (rule.type) {
-    case "url":
-      try {
-        new URL(value);
-      } catch {
-        throw new Error("无效的URL格式");
-      }
-      break;
+      case "url":
+        try {
+          new URL(value);
+        } catch {
+          throw new Error("无效的URL格式");
+        }
+        break;
 
-    case "email":
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) {
-        throw new Error("无效的邮箱格式");
+      case "email": {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          throw new Error("无效的邮箱格式");
+        }
+        break;
       }
-      break;
 
-    case "number":
-      if (isNaN(Number(value))) {
-        throw new Error("无效的数字格式");
-      }
-      break;
+      case "number":
+        if (isNaN(Number(value))) {
+          throw new Error("无效的数字格式");
+        }
+        break;
 
-    case "boolean":
-      if (!["true", "false", "1", "0"].includes(value.toLowerCase())) {
-        throw new Error("无效的布尔值格式 (应为 true/false, 1/0)");
-      }
-      break;
+      case "boolean":
+        if (!["true", "false", "1", "0"].includes(value.toLowerCase())) {
+          throw new Error("无效的布尔值格式 (应为 true/false, 1/0)");
+        }
+        break;
     }
 
     // 长度验证
@@ -256,12 +257,12 @@ export class EnvSecurityManager {
   private checkSecurityIssues(): void {
     const issues: string[] = [];
 
-    // 检查弱密钥
+    // 检查 Clerk 密钥
     if (
-      process.env.NEXTAUTH_SECRET &&
-      process.env.NEXTAUTH_SECRET.length < 32
+      process.env.CLERK_SECRET_KEY &&
+      process.env.CLERK_SECRET_KEY.length < 20
     ) {
-      issues.push("NEXTAUTH_SECRET 长度不足，至少需要32个字符");
+      issues.push("CLERK_SECRET_KEY 长度不足");
     }
 
     // 检查明文密码
@@ -397,7 +398,7 @@ export class EnvSecurityManager {
     sensitiveVars: number;
     env: string;
     securityLevel: "low" | "medium" | "high";
-    } {
+  } {
     const totalVars = Object.keys(process.env).length;
     const validatedVars = this.validatedVars.size;
     const sensitiveVars = SENSITIVE_KEYS.filter(

@@ -162,16 +162,16 @@ export class SocialOAuthService {
     });
 
     switch (platform) {
-      case SocialPlatform.WECHAT:
-        return this.generateWechatAuthUrl(config, authState);
-      case SocialPlatform.WEIBO:
-        return this.generateWeiboAuthUrl(config, authState);
-      case SocialPlatform.TWITTER:
-        return this.generateTwitterAuthUrl(config, authState);
-      case SocialPlatform.FACEBOOK:
-        return this.generateFacebookAuthUrl(config, authState);
-      default:
-        throw new Error(`不支持的平台: ${platform}`);
+    case SocialPlatform.WECHAT:
+      return this.generateWechatAuthUrl(config, authState);
+    case SocialPlatform.WEIBO:
+      return this.generateWeiboAuthUrl(config, authState);
+    case SocialPlatform.TWITTER:
+      return this.generateTwitterAuthUrl(config, authState);
+    case SocialPlatform.FACEBOOK:
+      return this.generateFacebookAuthUrl(config, authState);
+    default:
+      throw new Error(`不支持的平台: ${platform}`);
     }
   }
 
@@ -250,16 +250,16 @@ export class SocialOAuthService {
 
     try {
       switch (accessToken.platform) {
-        case SocialPlatform.WECHAT:
-          return await this.shareToWechat(accessToken, content);
-        case SocialPlatform.WEIBO:
-          return await this.shareToWeibo(accessToken, content);
-        case SocialPlatform.TWITTER:
-          return await this.shareToTwitter(accessToken, content);
-        case SocialPlatform.FACEBOOK:
-          return await this.shareToFacebook(accessToken, content);
-        default:
-          throw new Error(`不支持的平台: ${accessToken.platform}`);
+      case SocialPlatform.WECHAT:
+        return await this.shareToWechat(accessToken, content);
+      case SocialPlatform.WEIBO:
+        return await this.shareToWeibo(accessToken, content);
+      case SocialPlatform.TWITTER:
+        return await this.shareToTwitter(accessToken, content);
+      case SocialPlatform.FACEBOOK:
+        return await this.shareToFacebook(accessToken, content);
+      default:
+        throw new Error(`不支持的平台: ${accessToken.platform}`);
       }
     } catch (error) {
       console.error(`分享到${accessToken.platform}失败:`, error);
@@ -358,47 +358,47 @@ export class SocialOAuthService {
     let body: any;
 
     switch (platform) {
-      case SocialPlatform.WECHAT:
-        tokenUrl = "https://api.weixin.qq.com/sns/oauth2/access_token";
-        body = {
-          appid: config.appId,
-          secret: config.appSecret,
-          code,
-          grant_type: "authorization_code",
-        };
-        break;
+    case SocialPlatform.WECHAT:
+      tokenUrl = "https://api.weixin.qq.com/sns/oauth2/access_token";
+      body = {
+        appid: config.appId,
+        secret: config.appSecret,
+        code,
+        grant_type: "authorization_code",
+      };
+      break;
 
-      case SocialPlatform.WEIBO:
-        body = {
-          client_id: config.appId,
-          client_secret: config.appSecret,
-          grant_type: "authorization_code",
-          redirect_uri: config.redirectUri,
-          code,
-        };
-        break;
+    case SocialPlatform.WEIBO:
+      body = {
+        client_id: config.appId,
+        client_secret: config.appSecret,
+        grant_type: "authorization_code",
+        redirect_uri: config.redirectUri,
+        code,
+      };
+      break;
 
-      case SocialPlatform.TWITTER:
-        body = {
-          grant_type: "authorization_code",
-          client_id: config.appId,
-          code,
-          redirect_uri: config.redirectUri,
-          code_verifier: this.generateCodeVerifier(),
-        };
-        break;
+    case SocialPlatform.TWITTER:
+      body = {
+        grant_type: "authorization_code",
+        client_id: config.appId,
+        code,
+        redirect_uri: config.redirectUri,
+        code_verifier: this.generateCodeVerifier(),
+      };
+      break;
 
-      case SocialPlatform.FACEBOOK:
-        body = {
-          client_id: config.appId,
-          client_secret: config.appSecret,
-          redirect_uri: config.redirectUri,
-          code,
-        };
-        break;
+    case SocialPlatform.FACEBOOK:
+      body = {
+        client_id: config.appId,
+        client_secret: config.appSecret,
+        redirect_uri: config.redirectUri,
+        code,
+      };
+      break;
 
-      default:
-        throw new Error(`不支持的平台: ${platform}`);
+    default:
+      throw new Error(`不支持的平台: ${platform}`);
     }
 
     const response = await fetch(tokenUrl, {
@@ -425,46 +425,46 @@ export class SocialOAuthService {
     platform: SocialPlatform,
   ): SocialAccessToken {
     switch (platform) {
-      case SocialPlatform.WECHAT:
-        return {
-          accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token,
-          expiresIn: tokenData.expires_in,
-          scope: tokenData.scope,
-          tokenType: tokenData.token_type || "Bearer",
-          platform,
-        };
+    case SocialPlatform.WECHAT:
+      return {
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token,
+        expiresIn: tokenData.expires_in,
+        scope: tokenData.scope,
+        tokenType: tokenData.token_type || "Bearer",
+        platform,
+      };
 
-      case SocialPlatform.WEIBO:
-        return {
-          accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token,
-          expiresIn: tokenData.expires_in,
-          scope: tokenData.scope || "",
-          tokenType: "Bearer",
-          platform,
-        };
+    case SocialPlatform.WEIBO:
+      return {
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token,
+        expiresIn: tokenData.expires_in,
+        scope: tokenData.scope || "",
+        tokenType: "Bearer",
+        platform,
+      };
 
-      case SocialPlatform.TWITTER:
-        return {
-          accessToken: tokenData.access_token,
-          expiresIn: tokenData.expires_in,
-          scope: tokenData.scope || "",
-          tokenType: tokenData.token_type || "Bearer",
-          platform,
-        };
+    case SocialPlatform.TWITTER:
+      return {
+        accessToken: tokenData.access_token,
+        expiresIn: tokenData.expires_in,
+        scope: tokenData.scope || "",
+        tokenType: tokenData.token_type || "Bearer",
+        platform,
+      };
 
-      case SocialPlatform.FACEBOOK:
-        return {
-          accessToken: tokenData.access_token,
-          expiresIn: tokenData.expires_in,
-          scope: tokenData.scope || "",
-          tokenType: tokenData.token_type || "Bearer",
-          platform,
-        };
+    case SocialPlatform.FACEBOOK:
+      return {
+        accessToken: tokenData.access_token,
+        expiresIn: tokenData.expires_in,
+        scope: tokenData.scope || "",
+        tokenType: tokenData.token_type || "Bearer",
+        platform,
+      };
 
-      default:
-        throw new Error(`不支持的平台: ${platform}`);
+    default:
+      throw new Error(`不支持的平台: ${platform}`);
     }
   }
 
@@ -476,63 +476,63 @@ export class SocialOAuthService {
     platform: SocialPlatform,
   ): SocialUserInfo {
     switch (platform) {
-      case SocialPlatform.WECHAT:
-        return {
-          id: userData.openid,
-          nickname: userData.nickname,
-          avatar: userData.headimgurl,
-          gender:
+    case SocialPlatform.WECHAT:
+      return {
+        id: userData.openid,
+        nickname: userData.nickname,
+        avatar: userData.headimgurl,
+        gender:
             userData.sex === 1
               ? "male"
               : userData.sex === 2
                 ? "female"
                 : "unknown",
-          location: `${userData.province} ${userData.city}`,
-          platform,
-        };
+        location: `${userData.province} ${userData.city}`,
+        platform,
+      };
 
-      case SocialPlatform.WEIBO:
-        return {
-          id: userData.idstr,
-          nickname: userData.screen_name,
-          avatar: userData.profile_image_url,
-          gender:
+    case SocialPlatform.WEIBO:
+      return {
+        id: userData.idstr,
+        nickname: userData.screen_name,
+        avatar: userData.profile_image_url,
+        gender:
             userData.gender === "m"
               ? "male"
               : userData.gender === "f"
                 ? "female"
                 : "unknown",
-          location: userData.location,
-          platform,
-        };
+        location: userData.location,
+        platform,
+      };
 
-      case SocialPlatform.TWITTER:
-        return {
-          id: userData.id.toString(),
-          nickname: userData.name,
-          avatar: userData.profile_image_url,
-          gender: "unknown",
-          location: userData.location,
-          platform,
-        };
+    case SocialPlatform.TWITTER:
+      return {
+        id: userData.id.toString(),
+        nickname: userData.name,
+        avatar: userData.profile_image_url,
+        gender: "unknown",
+        location: userData.location,
+        platform,
+      };
 
-      case SocialPlatform.FACEBOOK:
-        return {
-          id: userData.id,
-          nickname: userData.name,
-          avatar: userData.picture?.data?.url,
-          gender:
+    case SocialPlatform.FACEBOOK:
+      return {
+        id: userData.id,
+        nickname: userData.name,
+        avatar: userData.picture?.data?.url,
+        gender:
             userData.gender === "male"
               ? "male"
               : userData.gender === "female"
                 ? "female"
                 : "unknown",
-          location: userData.location?.name,
-          platform,
-        };
+        location: userData.location?.name,
+        platform,
+      };
 
-      default:
-        throw new Error(`不支持的平台: ${platform}`);
+    default:
+      throw new Error(`不支持的平台: ${platform}`);
     }
   }
 
@@ -763,25 +763,25 @@ export class SocialOAuthService {
     let body: any;
 
     switch (platform) {
-      case SocialPlatform.WECHAT:
-        body = {
-          appid: config.appId,
-          grant_type: "refresh_token",
-          refresh_token: refreshToken,
-        };
-        break;
+    case SocialPlatform.WECHAT:
+      body = {
+        appid: config.appId,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      };
+      break;
 
-      case SocialPlatform.WEIBO:
-        body = {
-          client_id: config.appId,
-          client_secret: config.appSecret,
-          grant_type: "refresh_token",
-          refresh_token: refreshToken,
-        };
-        break;
+    case SocialPlatform.WEIBO:
+      body = {
+        client_id: config.appId,
+        client_secret: config.appSecret,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      };
+      break;
 
-      default:
-        throw new Error(`平台 ${platform} 不支持令牌刷新`);
+    default:
+      throw new Error(`平台 ${platform} 不支持令牌刷新`);
     }
 
     const response = await fetch(config.tokenEndpoint, {
@@ -812,17 +812,17 @@ export class SocialOAuthService {
       let body: any;
 
       switch (platform) {
-        case SocialPlatform.WECHAT:
-          revokeUrl = "https://api.weixin.qq.com/sns/auth";
-          body = {
-            access_token: accessToken,
-            openid: "user_openid", // 需要用户的openid
-          };
-          break;
+      case SocialPlatform.WECHAT:
+        revokeUrl = "https://api.weixin.qq.com/sns/auth";
+        body = {
+          access_token: accessToken,
+          openid: "user_openid", // 需要用户的openid
+        };
+        break;
 
-        default:
-          // 其他平台可能需要不同的撤销端点
-          return true;
+      default:
+        // 其他平台可能需要不同的撤销端点
+        return true;
       }
 
       const response = await fetch(revokeUrl, {

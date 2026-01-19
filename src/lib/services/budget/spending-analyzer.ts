@@ -621,20 +621,20 @@ export class SpendingAnalyzer {
 
   private getPeriod(type: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY") {
     const now = Date.now();
-    const start = now;
+    let start = now;
 
     switch (type) {
       case "WEEKLY":
-        start - 7 * 24 * 60 * 60 * 1000;
+        start = now - 7 * 24 * 60 * 60 * 1000;
         break;
       case "MONTHLY":
-        start - 30 * 24 * 60 * 60 * 1000;
+        start = now - 30 * 24 * 60 * 60 * 1000;
         break;
       case "QUARTERLY":
-        start - 90 * 24 * 60 * 60 * 1000;
+        start = now - 90 * 24 * 60 * 60 * 1000;
         break;
       case "YEARLY":
-        start - 365 * 24 * 60 * 60 * 1000;
+        start = now - 365 * 24 * 60 * 60 * 1000;
         break;
     }
 

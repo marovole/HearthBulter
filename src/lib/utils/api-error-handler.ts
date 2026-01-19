@@ -151,12 +151,12 @@ function calculateDelay(
   backoff: "linear" | "exponential",
 ): number {
   switch (backoff) {
-    case "linear":
-      return baseDelay * attempt;
-    case "exponential":
-      return baseDelay * Math.pow(2, attempt - 1);
-    default:
-      return baseDelay;
+  case "linear":
+    return baseDelay * attempt;
+  case "exponential":
+    return baseDelay * Math.pow(2, attempt - 1);
+  default:
+    return baseDelay;
   }
 }
 

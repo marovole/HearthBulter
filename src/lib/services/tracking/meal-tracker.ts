@@ -252,7 +252,7 @@ async function updateTrackingStreak(memberId: string, date: Date) {
   const today = new Date(date);
   today.setHours(0, 0, 0, 0);
 
-  let streak = (await convexTracking.getTrackingStreak(
+  const streak = (await convexTracking.getTrackingStreak(
     memberId,
   )) as Doc<"trackingStreaks"> | null;
 

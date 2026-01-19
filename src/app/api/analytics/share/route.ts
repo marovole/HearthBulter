@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         token,
-        shareUrl: `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/share/report/${token}`,
+        shareUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/share/report/${token}`,
         expiryDays,
       },
       message: "分享链接已生成",

@@ -10,7 +10,7 @@ export async function GET() {
     env: {
       NODE_ENV: process.env.NODE_ENV,
       hasDatabase: !!process.env.DATABASE_URL,
-      hasNextAuth: !!process.env.NEXTAUTH_SECRET,
+      hasClerk: !!process.env.CLERK_SECRET_KEY,
     },
   });
 }

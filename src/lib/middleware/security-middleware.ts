@@ -411,7 +411,7 @@ export class SecurityMiddleware {
       const allowedReferers = [
         "localhost",
         "127.0.0.1",
-        process.env.NEXTAUTH_URL?.split("/")[2],
+        process.env.NEXT_PUBLIC_SITE_URL?.split("/")[2],
       ].filter((value): value is string => Boolean(value));
 
       return allowedReferers.some((allowed) =>
@@ -431,7 +431,7 @@ export class SecurityMiddleware {
       const allowedOrigins = [
         "http://localhost:3000",
         "https://localhost:3000",
-        process.env.NEXTAUTH_URL,
+        process.env.NEXT_PUBLIC_SITE_URL,
         process.env.ALLOWED_ORIGIN,
         "https://accounts.google.com",
       ].filter(Boolean);
