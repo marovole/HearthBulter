@@ -3,14 +3,14 @@
  * 使用html2canvas生成分享卡片图片
  */
 
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import QRCode from 'qrcode';
-import { 
-  ShareTemplate, 
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import QRCode from "qrcode";
+import {
+  ShareTemplate,
   ImageGenerationConfig,
-  SHARE_TEMPLATE_CONFIGS, 
-} from '@/types/social-sharing';
+  SHARE_TEMPLATE_CONFIGS,
+} from "@/types/social-sharing";
 
 /**
  * 图片生成器类
@@ -28,9 +28,13 @@ export class ShareImageGenerator {
   /**
    * 生成分享图片
    */
-  async generateShareImage(template: ShareTemplate, data: any, config?: Partial<ImageGenerationConfig>): Promise<string> {
+  async generateShareImage(
+    template: ShareTemplate,
+    data: any,
+    config?: Partial<ImageGenerationConfig>,
+  ): Promise<string> {
     const finalConfig = { ...SHARE_TEMPLATE_CONFIGS[template], ...config };
-    
+
     switch (template) {
     case ShareTemplate.HEALTH_REPORT:
       return this.generateHealthReportImage(data, finalConfig);
@@ -56,7 +60,10 @@ export class ShareImageGenerator {
   /**
    * 生成健康报告图片
    */
-  private async generateHealthReportImage(data: any, config: ImageGenerationConfig): Promise<string> {
+  private async generateHealthReportImage(
+    data: any,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     const html = this.createHealthReportHTML(data, config);
     return this.generateImageFromHTML(html, config);
   }
@@ -64,7 +71,10 @@ export class ShareImageGenerator {
   /**
    * 生成目标达成图片
    */
-  private async generateGoalAchievedImage(data: any, config: ImageGenerationConfig): Promise<string> {
+  private async generateGoalAchievedImage(
+    data: any,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     const html = this.createGoalAchievedHTML(data, config);
     return this.generateImageFromHTML(html, config);
   }
@@ -72,7 +82,10 @@ export class ShareImageGenerator {
   /**
    * 生成成就解锁图片
    */
-  private async generateAchievementUnlockedImage(data: any, config: ImageGenerationConfig): Promise<string> {
+  private async generateAchievementUnlockedImage(
+    data: any,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     const html = this.createAchievementUnlockedHTML(data, config);
     return this.generateImageFromHTML(html, config);
   }
@@ -80,7 +93,10 @@ export class ShareImageGenerator {
   /**
    * 生成减重图片
    */
-  private async generateWeightLossImage(data: any, config: ImageGenerationConfig): Promise<string> {
+  private async generateWeightLossImage(
+    data: any,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     const html = this.createWeightLossHTML(data, config);
     return this.generateImageFromHTML(html, config);
   }
@@ -88,7 +104,10 @@ export class ShareImageGenerator {
   /**
    * 生成连续打卡庆祝图片
    */
-  private async generateStreakCelebrationImage(data: any, config: ImageGenerationConfig): Promise<string> {
+  private async generateStreakCelebrationImage(
+    data: any,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     const html = this.createStreakCelebrationHTML(data, config);
     return this.generateImageFromHTML(html, config);
   }
@@ -96,7 +115,10 @@ export class ShareImageGenerator {
   /**
    * 生成食谱卡片图片
    */
-  private async generateRecipeCardImage(data: any, config: ImageGenerationConfig): Promise<string> {
+  private async generateRecipeCardImage(
+    data: any,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     const html = this.createRecipeCardHTML(data, config);
     return this.generateImageFromHTML(html, config);
   }
@@ -104,7 +126,10 @@ export class ShareImageGenerator {
   /**
    * 生成个人记录图片
    */
-  private async generatePersonalRecordImage(data: any, config: ImageGenerationConfig): Promise<string> {
+  private async generatePersonalRecordImage(
+    data: any,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     const html = this.createPersonalRecordHTML(data, config);
     return this.generateImageFromHTML(html, config);
   }
@@ -112,7 +137,10 @@ export class ShareImageGenerator {
   /**
    * 生成社区帖子图片
    */
-  private async generateCommunityPostImage(data: any, config: ImageGenerationConfig): Promise<string> {
+  private async generateCommunityPostImage(
+    data: any,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     const html = this.createCommunityPostHTML(data, config);
     return this.generateImageFromHTML(html, config);
   }
@@ -121,24 +149,27 @@ export class ShareImageGenerator {
    * 从HTML生成图片
    * 注意：仅支持浏览器环境，Cloudflare Workers 不支持服务端图片生成
    */
-  private async generateImageFromHTML(html: string, config: ImageGenerationConfig): Promise<string> {
+  private async generateImageFromHTML(
+    html: string,
+    config: ImageGenerationConfig,
+  ): Promise<string> {
     // 仅在浏览器环境中使用html2canvas
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       throw new Error(
-        '图片生成仅支持浏览器环境。Cloudflare Workers 不支持 Puppeteer/Chromium。' +
-        '请在客户端调用此功能。'
+        "图片生成仅支持浏览器环境。Cloudflare Workers 不支持 Puppeteer/Chromium。" +
+          "请在客户端调用此功能。",
       );
     }
 
     try {
-      const { default: html2canvas } = await import('html2canvas');
+      const { default: html2canvas } = await import("html2canvas");
 
       // 创建临时DOM元素
-      const tempDiv = document.createElement('div');
+      const tempDiv = document.createElement("div");
       tempDiv.innerHTML = html;
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '-9999px';
+      tempDiv.style.position = "absolute";
+      tempDiv.style.left = "-9999px";
+      tempDiv.style.top = "-9999px";
       tempDiv.style.width = `${config.width}px`;
       tempDiv.style.fontFamily = config.fontFamily;
       document.body.appendChild(tempDiv);
@@ -156,18 +187,22 @@ export class ShareImageGenerator {
 
       // 转换为blob并获取URL
       return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            resolve(url);
-          } else {
-            reject(new Error('图片生成失败'));
-          }
-        }, `image/${config.format}`, config.quality / 100);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              resolve(url);
+            } else {
+              reject(new Error("图片生成失败"));
+            }
+          },
+          `image/${config.format}`,
+          config.quality / 100,
+        );
       });
     } catch (error) {
-      console.error('HTML转图片失败:', error);
-      throw new Error('图片生成失败');
+      console.error("HTML转图片失败:", error);
+      throw new Error("图片生成失败");
     }
   }
 
@@ -180,23 +215,33 @@ export class ShareImageGenerator {
         width: 200,
         margin: 1,
         color: {
-          dark: '#000000',
-          light: '#FFFFFF',
+          dark: "#000000",
+          light: "#FFFFFF",
         },
       });
       return qrDataUrl;
     } catch (error) {
-      console.error('二维码生成失败:', error);
-      throw new Error('二维码生成失败');
+      console.error("二维码生成失败:", error);
+      throw new Error("二维码生成失败");
     }
   }
 
   /**
    * 健康报告HTML模板
    */
-  private createHealthReportHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, healthScore, weightChange, dataPoints, period, latestData } = data;
-    const currentDate = format(new Date(), 'yyyy年MM月dd日', { locale: zhCN });
+  private createHealthReportHTML(
+    data: any,
+    config: ImageGenerationConfig,
+  ): string {
+    const {
+      memberName,
+      healthScore,
+      weightChange,
+      dataPoints,
+      period,
+      latestData,
+    } = data;
+    const currentDate = format(new Date(), "yyyy年MM月dd日", { locale: zhCN });
 
     return `
       <div style="
@@ -212,7 +257,9 @@ export class ShareImageGenerator {
         border-radius: 16px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
-        ${config.branding ? `
+        ${
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -221,7 +268,9 @@ export class ShareImageGenerator {
             color: #6b7280;
             opacity: 0.7;
           ">Health Butler</div>
-        ` : ''}
+        `
+    : ""
+}
         
         <div style="margin-bottom: 30px;">
           <h1 style="font-size: 32px; font-weight: bold; margin: 0; color: #059669;">
@@ -269,7 +318,9 @@ export class ShareImageGenerator {
           </div>
         </div>
 
-        ${weightChange.lost > 0 ? `
+        ${
+  weightChange.lost > 0
+    ? `
           <div style="
             background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
             padding: 16px 20px;
@@ -281,7 +332,9 @@ export class ShareImageGenerator {
               🎉 ${weightChange.period}减重${weightChange.lost.toFixed(1)}kg！
             </span>
           </div>
-        ` : ''}
+        `
+    : ""
+}
       </div>
     `;
   }
@@ -289,9 +342,14 @@ export class ShareImageGenerator {
   /**
    * 目标达成HTML模板
    */
-  private createGoalAchievedHTML(data: any, config: ImageGenerationConfig): string {
+  private createGoalAchievedHTML(
+    data: any,
+    config: ImageGenerationConfig,
+  ): string {
     const { memberName, goalTitle, progress, achievedDate, metric } = data;
-    const dateStr = format(new Date(achievedDate), 'yyyy年MM月dd日', { locale: zhCN });
+    const dateStr = format(new Date(achievedDate), "yyyy年MM月dd日", {
+      locale: zhCN,
+    });
 
     return `
       <div style="
@@ -308,7 +366,9 @@ export class ShareImageGenerator {
         border-radius: 16px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
-        ${config.branding ? `
+        ${
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -317,7 +377,9 @@ export class ShareImageGenerator {
             color: #92400e;
             opacity: 0.7;
           ">Health Butler</div>
-        ` : ''}
+        `
+    : ""
+}
 
         <div style="margin-bottom: 40px;">
           <div style="font-size: 96px; margin-bottom: 20px;">🎯</div>
@@ -369,9 +431,22 @@ export class ShareImageGenerator {
   /**
    * 成就解锁HTML模板
    */
-  private createAchievementUnlockedHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, achievementTitle, achievementDescription, points, icon, color, unlockedAt } = data;
-    const dateStr = format(new Date(unlockedAt), 'yyyy年MM月dd日', { locale: zhCN });
+  private createAchievementUnlockedHTML(
+    data: any,
+    config: ImageGenerationConfig,
+  ): string {
+    const {
+      memberName,
+      achievementTitle,
+      achievementDescription,
+      points,
+      icon,
+      color,
+      unlockedAt,
+    } = data;
+    const dateStr = format(new Date(unlockedAt), "yyyy年MM月dd日", {
+      locale: zhCN,
+    });
 
     return `
       <div style="
@@ -398,7 +473,9 @@ export class ShareImageGenerator {
           opacity: 0.1;
         "></div>
 
-        ${config.branding ? `
+        ${
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -408,7 +485,9 @@ export class ShareImageGenerator {
             opacity: 0.7;
             z-index: 10;
           ">Health Butler</div>
-        ` : ''}
+        `
+    : ""
+}
 
         <div style="margin-bottom: 30px; position: relative; z-index: 5;">
           <div style="
@@ -466,8 +545,19 @@ export class ShareImageGenerator {
   /**
    * 减重HTML模板
    */
-  private createWeightLossHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, initialWeight, currentWeight, weightLoss, weightLossPercent, period, icon } = data;
+  private createWeightLossHTML(
+    data: any,
+    config: ImageGenerationConfig,
+  ): string {
+    const {
+      memberName,
+      initialWeight,
+      currentWeight,
+      weightLoss,
+      weightLossPercent,
+      period,
+      icon,
+    } = data;
 
     return `
       <div style="
@@ -484,7 +574,9 @@ export class ShareImageGenerator {
         border-radius: 16px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
-        ${config.branding ? `
+        ${
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -493,7 +585,9 @@ export class ShareImageGenerator {
             color: #15803d;
             opacity: 0.7;
           ">Health Butler</div>
-        ` : ''}
+        `
+    : ""
+}
 
         <div style="margin-bottom: 30px;">
           <div style="font-size: 64px; margin-bottom: 16px;">${icon}</div>
@@ -556,8 +650,12 @@ export class ShareImageGenerator {
   /**
    * 连续打卡庆祝HTML模板
    */
-  private createStreakCelebrationHTML(data: any, config: ImageGenerationConfig): string {
-    const { memberName, streakDays, currentStreak, bestStreak, period, icon } = data;
+  private createStreakCelebrationHTML(
+    data: any,
+    config: ImageGenerationConfig,
+  ): string {
+    const { memberName, streakDays, currentStreak, bestStreak, period, icon } =
+      data;
 
     return `
       <div style="
@@ -574,7 +672,9 @@ export class ShareImageGenerator {
         border-radius: 16px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
-        ${config.branding ? `
+        ${
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -583,7 +683,9 @@ export class ShareImageGenerator {
             color: #dc2626;
             opacity: 0.7;
           ">Health Butler</div>
-        ` : ''}
+        `
+    : ""
+}
 
         <div style="margin-bottom: 30px;">
           <div style="
@@ -663,9 +765,19 @@ export class ShareImageGenerator {
   /**
    * 食谱卡片HTML模板
    */
-  private createRecipeCardHTML(data: any, config: ImageGenerationConfig): string {
-    const { recipeName, memberName, calories, protein, ingredients, createdAt } = data;
-    const dateStr = format(new Date(createdAt), 'MM月dd日', { locale: zhCN });
+  private createRecipeCardHTML(
+    data: any,
+    config: ImageGenerationConfig,
+  ): string {
+    const {
+      recipeName,
+      memberName,
+      calories,
+      protein,
+      ingredients,
+      createdAt,
+    } = data;
+    const dateStr = format(new Date(createdAt), "MM月dd日", { locale: zhCN });
 
     return `
       <div style="
@@ -681,7 +793,9 @@ export class ShareImageGenerator {
         border-radius: 16px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
-        ${config.branding ? `
+        ${
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -690,7 +804,9 @@ export class ShareImageGenerator {
             color: #c2410c;
             opacity: 0.7;
           ">Health Butler</div>
-        ` : ''}
+        `
+    : ""
+}
 
         <div style="margin-bottom: 20px;">
           <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0; color: #c2410c;">
@@ -737,7 +853,7 @@ export class ShareImageGenerator {
 
           <div style="background: #fef3c7; padding: 12px; border-radius: 6px;">
             <div style="font-size: 12px; color: #78350f; font-weight: 600; margin: 0;">
-              主要食材：${ingredients.slice(0, 4).join('、')}${ingredients.length > 4 ? '...' : ''}
+              主要食材：${ingredients.slice(0, 4).join("、")}${ingredients.length > 4 ? "..." : ""}
             </div>
           </div>
         </div>
@@ -760,9 +876,14 @@ export class ShareImageGenerator {
   /**
    * 个人记录HTML模板
    */
-  private createPersonalRecordHTML(data: any, config: ImageGenerationConfig): string {
+  private createPersonalRecordHTML(
+    data: any,
+    config: ImageGenerationConfig,
+  ): string {
     const { memberName, title, description, recordDate, icon } = data;
-    const dateStr = format(new Date(recordDate), 'yyyy年MM月dd日 HH:mm', { locale: zhCN });
+    const dateStr = format(new Date(recordDate), "yyyy年MM月dd日 HH:mm", {
+      locale: zhCN,
+    });
 
     return `
       <div style="
@@ -779,7 +900,9 @@ export class ShareImageGenerator {
         border-radius: 16px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
-        ${config.branding ? `
+        ${
+  config.branding
+    ? `
           <div style="
             position: absolute;
             top: 20px;
@@ -788,7 +911,9 @@ export class ShareImageGenerator {
             color: #7c3aed;
             opacity: 0.7;
           ">Health Butler</div>
-        ` : ''}
+        `
+    : ""
+}
 
         <div style="margin-bottom: 30px;">
           <div style="
@@ -832,9 +957,14 @@ export class ShareImageGenerator {
   /**
    * 社区帖子HTML模板
    */
-  private createCommunityPostHTML(data: any, config: ImageGenerationConfig): string {
+  private createCommunityPostHTML(
+    data: any,
+    config: ImageGenerationConfig,
+  ): string {
     const { title, content, imageUrl, authorName, createdAt } = data;
-    const dateStr = format(new Date(createdAt), 'yyyy年MM月dd日', { locale: zhCN });
+    const dateStr = format(new Date(createdAt), "yyyy年MM月dd日", {
+      locale: zhCN,
+    });
 
     return `
       <div style="
@@ -850,7 +980,9 @@ export class ShareImageGenerator {
         border-radius: 16px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       ">
-        ${imageUrl ? `
+        ${
+  imageUrl
+    ? `
           <div style="
             position: absolute;
             top: 0;
@@ -861,11 +993,13 @@ export class ShareImageGenerator {
             border-radius: 16px 16px 0 0;
           "></div>
           <div style="height: 200px;"></div>
-        ` : ''}
+        `
+    : ""
+}
 
-        <div style="${imageUrl ? 'margin-top: 30px;' : ''}">
+        <div style="${imageUrl ? "margin-top: 30px;" : ""}">
           <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 12px 0; color: #15803d;">
-            ${title || '社区分享'}
+            ${title || "社区分享"}
           </h1>
           <div style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">
             ${authorName} • ${dateStr}
@@ -904,12 +1038,19 @@ export class ShareImageGenerator {
 export const shareImageGenerator = ShareImageGenerator.getInstance();
 
 // 导出工具函数
-export async function generateShareImage(template: ShareTemplate, data: any, config?: Partial<any>): Promise<string> {
+export async function generateShareImage(
+  template: ShareTemplate,
+  data: any,
+  config?: Partial<any>,
+): Promise<string> {
   const generator = ShareImageGenerator.getInstance();
   return generator.generateShareImage(template, data, config);
 }
 
-export async function generateSharePreview(template: ShareTemplate, data: any): Promise<string> {
+export async function generateSharePreview(
+  template: ShareTemplate,
+  data: any,
+): Promise<string> {
   const generator = ShareImageGenerator.getInstance();
   const config = SHARE_TEMPLATE_CONFIGS[template];
   return generator.generateShareImage(template, data, {

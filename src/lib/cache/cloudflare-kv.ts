@@ -35,7 +35,7 @@ export interface KvResult<T> {
   /** 错误信息（失败时） */
   error?: string;
   /** 缓存命中/失败来源 */
-  source: 'kv-hit' | 'kv-miss' | 'kv-error';
+  source: "kv-hit" | "kv-miss" | "kv-error";
   /** 操作耗时（毫秒） */
   duration?: number;
 }
@@ -54,6 +54,35 @@ export interface KvMetadata {
   version?: number;
 }
 
+type KVNamespace = {
+  getWithMetadata<Metadata = unknown>(
+    key: string,
+    options?: { type?: "text" | "json" | "arrayBuffer" | "stream" },
+  ): Promise<{
+    value: unknown;
+    metadata: Metadata | null;
+  }>;
+  put(
+    key: string,
+    value: string | ArrayBuffer | ReadableStream,
+    options?: {
+      expirationTtl?: number;
+      expiration?: number;
+      metadata?: unknown;
+    },
+  ): Promise<void>;
+  delete(key: string): Promise<void>;
+  list(options?: {
+    prefix?: string;
+    limit?: number;
+    cursor?: string;
+  }): Promise<{
+    keys: Array<{ name: string }>;
+    list_complete: boolean;
+    cursor?: string;
+  }>;
+};
+
 /**
  * Cloudflare KV 客户端
  *
@@ -71,7 +100,7 @@ export class KvCache {
     this.options = {
       defaultTtl: options.defaultTtl ?? 60,
       debug: options.debug ?? false,
-      keyPrefix: options.keyPrefix ?? 'cache:',
+      keyPrefix: options.keyPrefix ?? "cache:",
     };
 
     // 尝试获取 KV 绑定
@@ -106,34 +135,39 @@ export class KvCache {
     if (!this.isAvailable()) {
       return {
         success: false,
-        error: 'KV binding not available',
-        source: 'kv-error',
+        error: "KV binding not available",
+        source: "kv-error",
         duration: Date.now() - startTime,
       };
     }
 
     try {
-      const result = await this.kv!.getWithMetadata<KvMetadata>(fullKey, { type: 'json' });
+      const result = await this.kv!.getWithMetadata<KvMetadata>(fullKey, {
+        type: "json",
+      });
 
       if (result.value === null) {
         this.log(`KV miss: ${key}`);
         return {
           success: false,
-          source: 'kv-miss',
+          source: "kv-miss",
           duration: Date.now() - startTime,
         };
       }
 
       // 检查是否过期（客户端验证）
-      if (result.metadata?.expiresAt && result.metadata.expiresAt < Date.now() / 1000) {
+      if (
+        result.metadata?.expiresAt &&
+        result.metadata.expiresAt < Date.now() / 1000
+      ) {
         this.log(`KV expired: ${key}`);
         // 异步删除过期键
-        this.kv!.delete(fullKey).catch((err) =>
-          console.error('[KvCache] Failed to delete expired key:', err)
+        this.kv!.delete(fullKey).catch((err: unknown) =>
+          console.error("[KvCache] Failed to delete expired key:", err),
         );
         return {
           success: false,
-          source: 'kv-miss',
+          source: "kv-miss",
           duration: Date.now() - startTime,
         };
       }
@@ -142,15 +176,15 @@ export class KvCache {
       return {
         success: true,
         data: result.value as T,
-        source: 'kv-hit',
+        source: "kv-hit",
         duration: Date.now() - startTime,
       };
     } catch (error) {
-      console.error('[KvCache] Get error:', error);
+      console.error("[KvCache] Get error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        source: 'kv-error',
+        error: error instanceof Error ? error.message : "Unknown error",
+        source: "kv-error",
         duration: Date.now() - startTime,
       };
     }
@@ -192,7 +226,7 @@ export class KvCache {
       this.log(`KV set: ${key} (TTL: ${expirationTtl}s)`);
       return true;
     } catch (error) {
-      console.error('[KvCache] Set error:', error);
+      console.error("[KvCache] Set error:", error);
       return false;
     }
   }
@@ -218,7 +252,7 @@ export class KvCache {
       this.log(`KV deleted: ${key}`);
       return true;
     } catch (error) {
-      console.error('[KvCache] Delete error:', error);
+      console.error("[KvCache] Delete error:", error);
       return false;
     }
   }
@@ -244,7 +278,9 @@ export class KvCache {
 
       do {
         const result = await this.kv!.list({ prefix: fullPrefix, cursor });
-        const deletePromises = result.keys.map((key) => this.kv!.delete(key.name));
+        const deletePromises = result.keys.map((key: { name: string }) =>
+          this.kv!.delete(key.name),
+        );
         await Promise.all(deletePromises);
         count += result.keys.length;
         cursor = result.cursor;
@@ -253,7 +289,7 @@ export class KvCache {
       this.log(`KV deleted by prefix: ${prefix} (${count} keys)`);
       return count;
     } catch (error) {
-      console.error('[KvCache] Delete by prefix error:', error);
+      console.error("[KvCache] Delete by prefix error:", error);
       return 0;
     }
   }
@@ -265,13 +301,20 @@ export class KvCache {
    */
   private getKvBinding(): KVNamespace | null {
     // 尝试从 globalThis 获取（Cloudflare Pages Functions）
-    if (typeof globalThis !== 'undefined' && 'CACHE_KV' in globalThis) {
-      return (globalThis as any).CACHE_KV as KVNamespace;
+    if (typeof globalThis !== "undefined") {
+      const globalScope = globalThis as typeof globalThis & {
+        CACHE_KV?: KVNamespace;
+      };
+      if (globalScope.CACHE_KV) {
+        return globalScope.CACHE_KV;
+      }
     }
 
     // 开发环境或不支持 KV
     if (this.options.debug) {
-      console.warn('[KvCache] KV binding not available (development mode or not deployed to Cloudflare)');
+      console.warn(
+        "[KvCache] KV binding not available (development mode or not deployed to Cloudflare)",
+      );
     }
 
     return null;
@@ -295,7 +338,7 @@ export class KvCache {
    */
   private log(message: string, metadata?: any): void {
     if (this.options.debug) {
-      console.log(`[KvCache] ${message}`, metadata || '');
+      console.log(`[KvCache] ${message}`, metadata || "");
     }
   }
 }

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ReportType } from '@prisma/client';
-import DOMPurify from 'isomorphic-dompurify';
+import { useState } from "react";
+import { ReportType } from "@prisma/client";
+import DOMPurify from "isomorphic-dompurify";
 
 interface Report {
   id: string;
@@ -23,10 +23,10 @@ interface ReportViewerProps {
 }
 
 const reportTypeLabels = {
-  WEEKLY: '周报',
-  MONTHLY: '月报',
-  QUARTERLY: '季报',
-  CUSTOM: '自定义报告',
+  WEEKLY: "周报",
+  MONTHLY: "月报",
+  QUARTERLY: "季报",
+  CUSTOM: "自定义报告",
 };
 
 export default function ReportViewer({
@@ -37,20 +37,20 @@ export default function ReportViewer({
   const [showActions, setShowActions] = useState(false);
 
   const formatDate = (date: Date | string) => {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    const d = typeof date === "string" ? new Date(date) : date;
+    return d.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
   const getScoreColor = (score?: number) => {
-    if (!score) return 'text-gray-500';
-    if (score >= 90) return 'text-green-600';
-    if (score >= 75) return 'text-blue-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (!score) return "text-gray-500";
+    if (score >= 90) return "text-green-600";
+    if (score >= 75) return "text-blue-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   return (
@@ -69,7 +69,9 @@ export default function ReportViewer({
           </div>
           {report.overallScore && (
             <div className="text-center">
-              <div className="text-4xl font-bold">{report.overallScore.toFixed(1)}</div>
+              <div className="text-4xl font-bold">
+                {report.overallScore.toFixed(1)}
+              </div>
               <div className="text-sm text-purple-100">综合评分</div>
             </div>
           )}
@@ -87,7 +89,9 @@ export default function ReportViewer({
       {report.htmlContent && (
         <div
           className="p-6 prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(report.htmlContent) }}
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(report.htmlContent),
+          }}
         />
       )}
 
@@ -108,7 +112,7 @@ export default function ReportViewer({
           {onDelete && (
             <button
               onClick={() => {
-                if (confirm('确定要删除这份报告吗？')) {
+                if (confirm("确定要删除这份报告吗？")) {
                   onDelete(report.id);
                 }
               }}
@@ -122,4 +126,3 @@ export default function ReportViewer({
     </div>
   );
 }
-

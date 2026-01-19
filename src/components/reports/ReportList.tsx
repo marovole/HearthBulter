@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import type { MedicalReport, MedicalIndicator } from '@prisma/client';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import type { MedicalReport, MedicalIndicator } from "@prisma/client";
 
 interface ReportListProps {
-  memberId: string
-  familyId?: string
-  onReportSelect?: (reportId: string) => void
+  memberId: string;
+  familyId?: string;
+  onReportSelect?: (reportId: string) => void;
 }
 
 interface ReportWithIndicators extends MedicalReport {
-  indicators: MedicalIndicator[]
+  indicators: MedicalIndicator[];
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING: '待处理',
-  PROCESSING: '处理中',
-  COMPLETED: '已完成',
-  FAILED: '失败',
+  PENDING: "待处理",
+  PROCESSING: "处理中",
+  COMPLETED: "已完成",
+  FAILED: "失败",
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-gray-100 text-gray-800',
-  PROCESSING: 'bg-blue-100 text-blue-800',
-  COMPLETED: 'bg-green-100 text-green-800',
-  FAILED: 'bg-red-100 text-red-800',
+  PENDING: "bg-gray-100 text-gray-800",
+  PROCESSING: "bg-blue-100 text-blue-800",
+  COMPLETED: "bg-green-100 text-green-800",
+  FAILED: "bg-red-100 text-red-800",
 };
 
 export function ReportList({
@@ -37,21 +37,24 @@ export function ReportList({
   const [reports, setReports] = useState<ReportWithIndicators[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<string>('all'); // all, completed, failed, processing
+  const [filter, setFilter] = useState<string>("all"); // all, completed, failed, processing
 
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const url = new URL(`/api/members/${memberId}/reports`, window.location.origin);
-      if (filter !== 'all') {
-        url.searchParams.set('status', filter.toUpperCase());
+      const url = new URL(
+        `/api/members/${memberId}/reports`,
+        window.location.origin,
+      );
+      if (filter !== "all") {
+        url.searchParams.set("status", filter.toUpperCase());
       }
 
       const response = await fetch(url.toString());
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || '加载失败');
+        setError(data.error || "加载失败");
         setLoading(false);
         return;
       }
@@ -59,7 +62,7 @@ export function ReportList({
       setReports(data.data);
       setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : "加载失败");
       setLoading(false);
     }
   };
@@ -83,7 +86,7 @@ export function ReportList({
   const handleDelete = async (reportId: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (!confirm('确定要删除这份报告吗？删除后无法恢复。')) {
+    if (!confirm("确定要删除这份报告吗？删除后无法恢复。")) {
       return;
     }
 
@@ -91,20 +94,20 @@ export function ReportList({
       const response = await fetch(
         `/api/members/${memberId}/reports/${reportId}`,
         {
-          method: 'DELETE',
-        }
+          method: "DELETE",
+        },
       );
 
       if (!response.ok) {
         const data = await response.json();
-        alert(data.error || '删除失败');
+        alert(data.error || "删除失败");
         return;
       }
 
       // 重新加载列表
       fetchReports();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '删除失败');
+      alert(err instanceof Error ? err.message : "删除失败");
     }
   };
 
@@ -132,41 +135,41 @@ export function ReportList({
       {/* 筛选器 */}
       <div className="flex items-center space-x-2">
         <button
-          onClick={() => setFilter('all')}
+          onClick={() => setFilter("all")}
           className={`px-3 py-1 text-sm rounded-md ${
-            filter === 'all'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            filter === "all"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
           全部
         </button>
         <button
-          onClick={() => setFilter('completed')}
+          onClick={() => setFilter("completed")}
           className={`px-3 py-1 text-sm rounded-md ${
-            filter === 'completed'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            filter === "completed"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
           已完成
         </button>
         <button
-          onClick={() => setFilter('processing')}
+          onClick={() => setFilter("processing")}
           className={`px-3 py-1 text-sm rounded-md ${
-            filter === 'processing'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            filter === "processing"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
           处理中
         </button>
         <button
-          onClick={() => setFilter('failed')}
+          onClick={() => setFilter("failed")}
           className={`px-3 py-1 text-sm rounded-md ${
-            filter === 'failed'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            filter === "failed"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
         >
           失败
@@ -182,7 +185,7 @@ export function ReportList({
         <div className="space-y-3">
           {reports.map((report) => {
             const abnormalCount = report.indicators.filter(
-              (ind) => ind.isAbnormal
+              (ind) => ind.isAbnormal,
             ).length;
 
             return (
@@ -209,16 +212,16 @@ export function ReportList({
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       {report.reportDate && (
                         <span>
-                          报告日期:{' '}
+                          报告日期:{" "}
                           {new Date(report.reportDate).toLocaleDateString(
-                            'zh-CN'
+                            "zh-CN",
                           )}
                         </span>
                       )}
                       {report.institution && (
                         <span>机构: {report.institution}</span>
                       )}
-                      {report.ocrStatus === 'COMPLETED' && (
+                      {report.ocrStatus === "COMPLETED" && (
                         <span>
                           识别到 {report.indicators.length} 项指标
                           {abnormalCount > 0 && (
@@ -231,8 +234,8 @@ export function ReportList({
                     </div>
 
                     <div className="mt-2 text-xs text-gray-500">
-                      上传时间:{' '}
-                      {new Date(report.createdAt).toLocaleString('zh-CN')}
+                      上传时间:{" "}
+                      {new Date(report.createdAt).toLocaleString("zh-CN")}
                     </div>
                   </div>
 
@@ -279,4 +282,3 @@ export function ReportList({
     </div>
   );
 }
-

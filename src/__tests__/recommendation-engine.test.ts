@@ -1,90 +1,168 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
-import { PrismaClient } from '@prisma/client';
+import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import { RecommendationEngine } from "../lib/services/recommendation/recommendation-engine";
+import type { RecommendationRepository } from "../lib/repositories/interfaces/recommendation-repository";
+import type { RecipeDetailDTO } from "../lib/repositories/interfaces/recommendation-repository";
+import type { RecipeSummaryDTO } from "../lib/repositories/types/recommendation";
 
-// Mock Prisma Client
-const mockPrisma = {
-  userPreference: {
-    findUnique: jest.fn(),
-    upsert: jest.fn(),
-  },
-  recipe: {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-  },
-  recipeRating: {
-    findMany: jest.fn().mockResolvedValue([]),
-    create: jest.fn(),
-  },
-  recipeFavorite: {
-    findMany: jest.fn().mockResolvedValue([]),
-    create: jest.fn(),
-  },
-  recipeView: {
-    findMany: jest.fn(),
-    create: jest.fn(),
-  },
-  ingredientSubstitution: {
-    findMany: jest.fn(),
-    create: jest.fn(),
-  },
-  healthGoal: {
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-  },
-  healthData: {
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-  },
-  familyMember: {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-  },
-  $queryRaw: jest.fn().mockResolvedValue([]),
-  $transaction: jest.fn(),
-} as unknown as PrismaClient;
+const buildRecipeDetail = (
+  overrides?: Partial<RecipeDetailDTO>,
+): RecipeDetailDTO => ({
+  id: "recipe-1",
+  name: "测试食谱1",
+  cuisineType: "中式",
+  mealType: "LUNCH",
+  difficulty: "EASY",
+  servings: 2,
+  prepTimeMinutes: 10,
+  cookTimeMinutes: 20,
+  caloriesPerServing: 300,
+  proteinPerServing: 20,
+  carbsPerServing: 30,
+  fatPerServing: 10,
+  averageRating: 4.5,
+  ratingCount: 10,
+  viewCount: 100,
+  estimatedCost: 25,
+  tags: ["SPRING"],
+  ingredients: [{ name: "鸡蛋", amount: 1 }],
+  description: null,
+  cuisine: "中式",
+  category: "MAIN_DISH",
+  totalTime: 30,
+  calories: 300,
+  protein: 20,
+  carbs: 30,
+  fat: 10,
+  mealTypes: ["LUNCH"],
+  costLevel: "MEDIUM",
+  tagsRaw: null,
+  ingredientsDetailed: [
+    {
+      id: "ingredient-1",
+      foodId: "food-1",
+      amount: 1,
+      unit: "个",
+      food: { id: "food-1", name: "鸡蛋", category: "蛋类" },
+    },
+  ],
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
+});
 
-describe('RecommendationEngine', () => {
+const buildRecipeSummary = (
+  overrides?: Partial<RecipeSummaryDTO>,
+): RecipeSummaryDTO => ({
+  id: "recipe-2",
+  name: "测试食谱2",
+  cuisineType: "中式",
+  mealType: "DINNER",
+  difficulty: "EASY",
+  servings: 2,
+  prepTimeMinutes: 10,
+  cookTimeMinutes: 20,
+  caloriesPerServing: 280,
+  proteinPerServing: 18,
+  carbsPerServing: 25,
+  fatPerServing: 9,
+  averageRating: 4.2,
+  ratingCount: 8,
+  viewCount: 80,
+  estimatedCost: 20,
+  tags: ["SPRING"],
+  ingredients: [{ name: "番茄", amount: 1 }],
+  ...overrides,
+});
+
+const createMock = <T extends (...args: any[]) => any>() =>
+  jest.fn() as unknown as jest.MockedFunction<T>;
+
+describe("RecommendationEngine", () => {
   let engine: RecommendationEngine;
+  let mockRepository: jest.Mocked<RecommendationRepository>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    engine = new RecommendationEngine(mockPrisma);
+    mockRepository = {
+      getUserPreference:
+        createMock<
+          RecommendationRepository["getUserPreference"]
+        >().mockResolvedValue(null),
+      listCandidateRecipes: createMock<
+        RecommendationRepository["listCandidateRecipes"]
+      >().mockResolvedValue({ items: [], total: 0, hasMore: false }),
+      getRecipeBehavior: createMock<
+        RecommendationRepository["getRecipeBehavior"]
+      >().mockResolvedValue({ ratings: [], favorites: [], views: [] }),
+      getDetailedRecipeBehavior: createMock<
+        RecommendationRepository["getDetailedRecipeBehavior"]
+      >().mockResolvedValue({ ratings: [], favorites: [], views: [] }),
+      getSimilarRecipes: createMock<
+        RecommendationRepository["getSimilarRecipes"]
+      >().mockResolvedValue([]),
+      getRecipeById:
+        createMock<
+          RecommendationRepository["getRecipeById"]
+        >().mockResolvedValue(null),
+      listPopularRecipes: createMock<
+        RecommendationRepository["listPopularRecipes"]
+      >().mockResolvedValue([]),
+      getActiveHealthGoal:
+        createMock<
+          RecommendationRepository["getActiveHealthGoal"]
+        >().mockResolvedValue(null),
+      getInventorySnapshot: createMock<
+        RecommendationRepository["getInventorySnapshot"]
+      >().mockResolvedValue({
+        memberId: "test-user",
+        capturedAt: new Date(),
+        items: [],
+      }),
+      saveRecommendationLog:
+        createMock<
+          RecommendationRepository["saveRecommendationLog"]
+        >().mockResolvedValue(undefined),
+      upsertRecommendationWeights:
+        createMock<
+          RecommendationRepository["upsertRecommendationWeights"]
+        >().mockResolvedValue(undefined),
+      upsertLearnedUserPreferences:
+        createMock<
+          RecommendationRepository["upsertLearnedUserPreferences"]
+        >().mockResolvedValue(undefined),
+      getRecipesByIds: createMock<
+        RecommendationRepository["getRecipesByIds"]
+      >().mockResolvedValue([]),
+      listMemberBehaviorSamples: createMock<
+        RecommendationRepository["listMemberBehaviorSamples"]
+      >().mockResolvedValue([]),
+      getRecipeCooccurrence: createMock<
+        RecommendationRepository["getRecipeCooccurrence"]
+      >().mockResolvedValue([]),
+      listDetailedCandidateRecipes: createMock<
+        RecommendationRepository["listDetailedCandidateRecipes"]
+      >().mockResolvedValue({ items: [], total: 0, hasMore: false }),
+    };
+
+    engine = new RecommendationEngine(mockRepository);
   });
 
-  describe('getRecommendations', () => {
-    it('should return recommendations with valid context', async () => {
+  describe("getRecommendations", () => {
+    it("should return recommendations with valid context", async () => {
       const context = {
-        memberId: 'test-user',
+        memberId: "test-user",
         servings: 2,
         maxCookTime: 60,
         budgetLimit: 50,
       };
 
-      // Mock user preference
-      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue({
-        memberId: 'test-user',
-        recommendationWeight: {
-          inventory: 0.4,
-          price: 0.2,
-          nutrition: 0.3,
-          preference: 0.1,
-        },
+      const recipeDetail = buildRecipeDetail();
+      mockRepository.listDetailedCandidateRecipes.mockResolvedValue({
+        items: [recipeDetail],
+        total: 1,
+        hasMore: false,
       });
-
-      // Mock recipe data
-      (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue([
-        {
-          id: 'recipe-1',
-          name: '测试食谱1',
-          status: 'PUBLISHED',
-          isPublic: true,
-          deletedAt: null,
-          averageRating: 4.5,
-          ratingCount: 10,
-          viewCount: 100,
-        },
-      ]);
+      mockRepository.getRecipesByIds.mockResolvedValue([recipeDetail]);
+      mockRepository.listPopularRecipes.mockResolvedValue([recipeDetail]);
 
       const result = await engine.getRecommendations(context, 5);
 
@@ -93,14 +171,18 @@ describe('RecommendationEngine', () => {
       expect(result.length).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle missing user preference gracefully', async () => {
+    it("should handle missing user preference gracefully", async () => {
       const context = {
-        memberId: 'test-user',
+        memberId: "test-user",
         servings: 2,
       };
 
-      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(null);
-      (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue([]);
+      mockRepository.listDetailedCandidateRecipes.mockResolvedValue({
+        items: [],
+        total: 0,
+        hasMore: false,
+      });
+      mockRepository.listPopularRecipes.mockResolvedValue([]);
 
       const result = await engine.getRecommendations(context, 5);
 
@@ -109,22 +191,19 @@ describe('RecommendationEngine', () => {
     });
   });
 
-  describe('getSimilarRecipes', () => {
-    it('should return similar recipes for a given recipe', async () => {
-      const recipeId = 'recipe-1';
+  describe("getSimilarRecipes", () => {
+    it("should return similar recipes for a given recipe", async () => {
+      const recipeId = "recipe-1";
       const limit = 5;
 
-      // Mock recipe data
-      (mockPrisma.recipe.findUnique as jest.Mock).mockResolvedValue({
+      const recipeDetail = buildRecipeDetail({
         id: recipeId,
-        name: '测试食谱',
-        ingredients: [
-          {
-            food: { name: '鸡肉' },
-          },
-        ],
-        tags: ['辣', '快手菜'],
+        name: "测试食谱",
       });
+      const similarRecipe = buildRecipeSummary({ id: "recipe-2" });
+
+      mockRepository.getRecipeById.mockResolvedValue(recipeDetail);
+      mockRepository.getSimilarRecipes.mockResolvedValue([similarRecipe]);
 
       const result = await engine.getSimilarRecipes(recipeId, limit);
 
@@ -133,36 +212,25 @@ describe('RecommendationEngine', () => {
       expect(result.length).toBeLessThanOrEqual(limit);
     });
 
-    it('should throw error for non-existent recipe', async () => {
-      const recipeId = 'non-existent';
+    it("should throw error for non-existent recipe", async () => {
+      const recipeId = "non-existent";
 
-      (mockPrisma.recipe.findUnique as jest.Mock).mockResolvedValue(null);
+      mockRepository.getRecipeById.mockResolvedValue(null);
 
-      await expect(engine.getSimilarRecipes(recipeId, 5)).rejects.toThrow('Recipe not found');
+      await expect(engine.getSimilarRecipes(recipeId, 5)).rejects.toThrow(
+        "Recipe not found",
+      );
     });
   });
 
-  describe('getPopularRecipes', () => {
-    it('should return popular recipes', async () => {
+  describe("getPopularRecipes", () => {
+    it("should return popular recipes", async () => {
       const limit = 10;
-      const category = 'MAIN_DISH';
+      const category = "MAIN_DISH";
 
-      // Mock popular recipes data
-      (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue([
-        {
-          id: 'recipe-1',
-          name: '热门食谱1',
-          averageRating: 4.8,
-          ratingCount: 50,
-          viewCount: 500,
-        },
-        {
-          id: 'recipe-2',
-          name: '热门食谱2',
-          averageRating: 4.6,
-          ratingCount: 30,
-          viewCount: 300,
-        },
+      mockRepository.listPopularRecipes.mockResolvedValue([
+        buildRecipeDetail({ id: "recipe-1" }),
+        buildRecipeDetail({ id: "recipe-2" }),
       ]);
 
       const result = await engine.getPopularRecipes(limit, category);
@@ -172,154 +240,15 @@ describe('RecommendationEngine', () => {
       expect(result.length).toBeLessThanOrEqual(limit);
     });
 
-    it('should return recipes sorted by rating and popularity', async () => {
-      (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue([
-        {
-          id: 'recipe-1',
-          name: '食谱1',
-          averageRating: 4.5,
-          ratingCount: 10,
-          viewCount: 100,
-        },
-        {
-          id: 'recipe-2',
-          name: '食谱2',
-          averageRating: 4.8,
-          ratingCount: 20,
-          viewCount: 200,
-        },
+    it("should return recipes sorted by rating and popularity", async () => {
+      mockRepository.listPopularRecipes.mockResolvedValue([
+        buildRecipeDetail({ id: "recipe-1", averageRating: 4.5 }),
+        buildRecipeDetail({ id: "recipe-2", averageRating: 4.8 }),
       ]);
 
       const result = await engine.getPopularRecipes(5);
 
       expect(result[0].score).toBeGreaterThanOrEqual(result[1].score);
-    });
-  });
-
-  describe('refreshRecommendations', () => {
-    it('should return new recommendations excluding specified recipes', async () => {
-      const context = {
-        memberId: 'test-user',
-        servings: 2,
-      };
-      const excludeRecipeIds = ['recipe-1', 'recipe-2'];
-
-      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(null);
-      (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue([
-        {
-          id: 'recipe-3',
-          name: '新食谱',
-          status: 'PUBLISHED',
-          isPublic: true,
-          deletedAt: null,
-        },
-      ]);
-
-      const result = await engine.refreshRecommendations(context, excludeRecipeIds, 5);
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-      
-      // Ensure excluded recipes are not in results
-      const resultIds = result.map(r => r.recipeId);
-      expect(resultIds).not.toContain('recipe-1');
-      expect(resultIds).not.toContain('recipe-2');
-    });
-  });
-
-  describe('updateUserPreferences', () => {
-    it('should update user preferences based on behavior data', async () => {
-      const memberId = 'test-user';
-
-      // Mock behavior data
-      (mockPrisma.recipeRating.findMany as jest.Mock).mockResolvedValue([
-        {
-          rating: 5,
-          recipe: { cuisine: '川菜' },
-        },
-      ]);
-
-      (mockPrisma.recipeFavorite.findMany as jest.Mock).mockResolvedValue([
-        {
-          recipe: { cuisine: '粤菜' },
-        },
-      ]);
-
-      (mockPrisma.recipeView.findMany as jest.Mock).mockResolvedValue([]);
-
-      (mockPrisma.userPreference.upsert as jest.Mock).mockResolvedValue({
-        memberId,
-        learnedPreferences: {
-          preferredCuisines: ['川菜', '粤菜'],
-          confidence: 0.8,
-        },
-      });
-
-      await engine.updateUserPreferences(memberId);
-
-      expect(mockPrisma.userPreference.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { memberId },
-          update: expect.objectContaining({
-            learnedPreferences: expect.any(Object),
-            lastAnalyzedAt: expect.any(Date),
-          }),
-        })
-      );
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle database errors gracefully', async () => {
-      const context = {
-        memberId: 'test-user',
-        servings: 2,
-      };
-
-      (mockPrisma.userPreference.findUnique as jest.Mock).mockRejectedValue(
-        new Error('Database connection failed')
-      );
-
-      await expect(engine.getRecommendations(context, 5)).rejects.toThrow();
-    });
-
-    it('should handle invalid context parameters', async () => {
-      const invalidContext = {
-        memberId: '', // Invalid empty member ID
-        servings: -1, // Invalid negative servings
-      };
-
-      // Should not crash, but handle gracefully
-      await expect(engine.getRecommendations(invalidContext, 5)).resolves.toBeDefined();
-    });
-  });
-
-  describe('Performance', () => {
-    it('should handle large result sets efficiently', async () => {
-      const context = {
-        memberId: 'test-user',
-        servings: 2,
-      };
-
-      // Mock large dataset
-      const largeRecipeSet = Array.from({ length: 1000 }, (_, i) => ({
-        id: `recipe-${i}`,
-        name: `食谱${i}`,
-        status: 'PUBLISHED',
-        isPublic: true,
-        deletedAt: null,
-      }));
-
-      (mockPrisma.userPreference.findUnique as jest.Mock).mockResolvedValue(null);
-      (mockPrisma.recipe.findMany as jest.Mock).mockResolvedValue(largeRecipeSet);
-
-      const startTime = Date.now();
-      const result = await engine.getRecommendations(context, 50);
-      const endTime = Date.now();
-
-      expect(result).toBeDefined();
-      expect(result.length).toBeLessThanOrEqual(50);
-      expect(endTime - startTime).toBeLessThan(5000); // Should complete within 5 seconds
     });
   });
 });

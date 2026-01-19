@@ -1,91 +1,81 @@
-/**
- * 餐饮打卡服务
- * 负责处理用户的餐饮记录、营养计算和数据管理
- */
+import { convexTracking } from "@/lib/convex-tracking";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
-import { db } from '@/lib/db';
-import { MealType, Prisma } from '@prisma/client';
+interface MealLogDoc {
+  _id: Id<"mealLogs">;
+  memberId: Id<"familyMembers">;
+  date: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  foods: Array<{
+    _id: Id<"mealLogFoods">;
+    foodId: Id<"foods">;
+    amount: number;
+  }>;
+}
 
-/**
- * 创建餐饮记录
- */
+interface FoodDoc {
+  _id: Id<"foods">;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+}
+
 export async function createMealLog(data: {
   memberId: string;
   date: Date;
-  mealType: MealType;
+  mealType: string;
   foods: Array<{ foodId: string; amount: number }>;
   notes?: string;
 }) {
   const { memberId, date, mealType, foods, notes } = data;
 
-  // 计算总营养成分
   const nutrition = await calculateNutritionFromFoods(foods);
 
-  // 创建餐饮记录
-  const mealLog = await db.mealLog.create({
-    data: {
-      memberId,
-      date,
-      mealType,
-      calories: nutrition.calories,
-      protein: nutrition.protein,
-      carbs: nutrition.carbs,
-      fat: nutrition.fat,
-      fiber: nutrition.fiber,
-      sugar: nutrition.sugar,
-      sodium: nutrition.sodium,
-      notes,
-      foods: {
-        create: foods.map((food) => ({
-          foodId: food.foodId,
-          amount: food.amount,
-        })),
-      },
-    },
-    include: {
-      foods: {
-        include: {
-          food: true,
-        },
-      },
-    },
+  const mealLogId = await convexTracking.createMealLog({
+    memberId,
+    date,
+    mealType,
+    calories: nutrition.calories,
+    protein: nutrition.protein,
+    carbs: nutrition.carbs,
+    fat: nutrition.fat,
+    fiber: nutrition.fiber,
+    sugar: nutrition.sugar,
+    sodium: nutrition.sodium,
+    notes,
   });
 
-  // 更新每日营养目标追踪
-  await updateDailyNutritionTarget(memberId, date);
+  for (const food of foods) {
+    await convexTracking.addMealLogFood(
+      mealLogId as string,
+      food.foodId,
+      food.amount,
+    );
+  }
 
-  // 更新连续打卡记录
+  await updateDailyNutritionTarget(memberId, date);
   await updateTrackingStreak(memberId, date);
 
+  const mealLog = await convexTracking.getMealLogById(mealLogId as string);
   return mealLog;
 }
 
-/**
- * 根据食物列表计算总营养成分
- */
 export async function calculateNutritionFromFoods(
-  foods: Array<{ foodId: string; amount: number }>
+  foods: Array<{ foodId: string; amount: number }>,
 ) {
-  // 获取所有食物的营养信息
   const foodIds = foods.map((f) => f.foodId);
-  const foodData = await db.food.findMany({
-    where: { id: { in: foodIds } },
-    select: {
-      id: true,
-      calories: true,
-      protein: true,
-      carbs: true,
-      fat: true,
-      fiber: true,
-      sugar: true,
-      sodium: true,
-    },
-  });
+  const foodData = (await convexTracking.getFoodsByIds(foodIds)) as FoodDoc[];
 
-  // 创建食物ID到营养数据的映射
-  const foodMap = new Map(foodData.map((f) => [f.id, f]));
+  const foodMap = new Map(foodData.map((f) => [f._id, f]));
 
-  // 计算总营养成分（根据份量按比例计算）
   const nutrition = {
     calories: 0,
     protein: 0,
@@ -97,10 +87,9 @@ export async function calculateNutritionFromFoods(
   };
 
   foods.forEach((food) => {
-    const foodInfo = foodMap.get(food.foodId);
+    const foodInfo = foodMap.get(food.foodId as Id<"foods">);
     if (!foodInfo) return;
 
-    // 营养数据是per 100g，需要按实际份量计算
     const ratio = food.amount / 100;
     nutrition.calories += foodInfo.calories * ratio;
     nutrition.protein += foodInfo.protein * ratio;
@@ -114,200 +103,102 @@ export async function calculateNutritionFromFoods(
   return nutrition;
 }
 
-/**
- * 获取成员的今日餐饮记录
- */
 export async function getTodayMealLogs(memberId: string) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  return db.mealLog.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: today,
-        lt: tomorrow,
-      },
-      deletedAt: null,
-    },
-    include: {
-      foods: {
-        include: {
-          food: true,
-        },
-      },
-      photos: true,
-    },
-    orderBy: {
-      checkedAt: 'asc',
-    },
-  });
+  return convexTracking.getTodayMealLogs(memberId);
 }
 
-/**
- * 获取成员的历史餐饮记录
- */
 export async function getMealLogHistory(
   memberId: string,
   options: {
     startDate?: Date;
     endDate?: Date;
-    mealType?: MealType;
+    mealType?: string;
     limit?: number;
     offset?: number;
-  } = {}
+  } = {},
 ) {
-  const { startDate, endDate, mealType, limit = 50, offset = 0 } = options;
-
-  const where: Prisma.MealLogWhereInput = {
-    memberId,
-    deletedAt: null,
-  };
-
-  if (startDate || endDate) {
-    where.date = {};
-    if (startDate) where.date.gte = startDate;
-    if (endDate) where.date.lte = endDate;
-  }
-
-  if (mealType) {
-    where.mealType = mealType;
-  }
-
-  const [logs, total] = await Promise.all([
-    db.mealLog.findMany({
-      where,
-      include: {
-        foods: {
-          include: {
-            food: true,
-          },
-        },
-        photos: true,
-      },
-      orderBy: {
-        date: 'desc',
-      },
-      take: limit,
-      skip: offset,
-    }),
-    db.mealLog.count({ where }),
-  ]);
-
-  return { logs, total };
+  return convexTracking.getMealLogHistory(memberId, options);
 }
 
-/**
- * 更新餐饮记录
- */
 export async function updateMealLog(
   mealLogId: string,
   data: {
     foods?: Array<{ foodId: string; amount: number }>;
     notes?: string;
-  }
+  },
 ) {
   const { foods, notes } = data;
 
-  // 如果更新了食物，需要重新计算营养成分
-  let nutrition;
+  let nutrition:
+    | Awaited<ReturnType<typeof calculateNutritionFromFoods>>
+    | undefined;
   if (foods) {
     nutrition = await calculateNutritionFromFoods(foods);
-
-    // 删除旧的食物关联
-    await db.mealLogFood.deleteMany({
-      where: { mealLogId },
-    });
+    await convexTracking.deleteMealLogFoods(mealLogId);
   }
 
-  const mealLog = await db.mealLog.update({
-    where: { id: mealLogId },
-    data: {
-      ...(nutrition && {
-        calories: nutrition.calories,
-        protein: nutrition.protein,
-        carbs: nutrition.carbs,
-        fat: nutrition.fat,
-        fiber: nutrition.fiber,
-        sugar: nutrition.sugar,
-        sodium: nutrition.sodium,
-      }),
-      ...(notes !== undefined && { notes }),
-      ...(foods && {
-        foods: {
-          create: foods.map((food) => ({
-            foodId: food.foodId,
-            amount: food.amount,
-          })),
-        },
-      }),
-    },
-    include: {
-      foods: {
-        include: {
-          food: true,
-        },
-      },
-    },
+  await convexTracking.updateMealLog(mealLogId, {
+    ...(nutrition && {
+      calories: nutrition.calories,
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      fiber: nutrition.fiber,
+      sugar: nutrition.sugar,
+      sodium: nutrition.sodium,
+    }),
+    ...(notes !== undefined && { notes }),
   });
 
-  // 如果更新了营养成分，需要更新每日目标追踪
-  if (nutrition) {
-    const mealLogData = await db.mealLog.findUnique({
-      where: { id: mealLogId },
-      select: { memberId: true, date: true },
-    });
-    if (mealLogData) {
-      await updateDailyNutritionTarget(mealLogData.memberId, mealLogData.date);
+  if (foods) {
+    for (const food of foods) {
+      await convexTracking.addMealLogFood(mealLogId, food.foodId, food.amount);
+    }
+    const mealLog = (await convexTracking.getMealLogById(
+      mealLogId,
+    )) as MealLogDoc | null;
+    if (mealLog) {
+      await updateDailyNutritionTarget(
+        mealLog.memberId as string,
+        new Date(mealLog.date),
+      );
     }
   }
 
-  return mealLog;
+  return convexTracking.getMealLogById(mealLogId);
 }
 
-/**
- * 删除餐饮记录（软删除）
- */
 export async function deleteMealLog(mealLogId: string) {
-  const mealLog = await db.mealLog.update({
-    where: { id: mealLogId },
-    data: {
-      deletedAt: new Date(),
-    },
-  });
-
-  // 更新每日营养目标追踪
-  await updateDailyNutritionTarget(mealLog.memberId, mealLog.date);
-
-  return mealLog;
+  await convexTracking.softDeleteMealLog(mealLogId);
+  const mealLog = (await convexTracking.getMealLogById(
+    mealLogId,
+  )) as MealLogDoc | null;
+  if (mealLog) {
+    await updateDailyNutritionTarget(
+      mealLog.memberId as string,
+      new Date(mealLog.date),
+    );
+  }
 }
 
-/**
- * 更新每日营养目标追踪
- */
 async function updateDailyNutritionTarget(memberId: string, date: Date) {
-  // 标准化日期（去除时间部分）
   const targetDate = new Date(date);
   targetDate.setHours(0, 0, 0, 0);
 
-  // 获取当天所有餐饮记录
   const tomorrow = new Date(targetDate);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const mealLogs = await db.mealLog.findMany({
-    where: {
-      memberId,
-      date: {
-        gte: targetDate,
-        lt: tomorrow,
-      },
-      deletedAt: null,
-    },
-  });
+  const mealLogs = (await convexTracking.getMealLogsForPeriod(
+    memberId,
+    targetDate,
+    tomorrow,
+  )) as Array<{
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>;
 
-  // 计算实际摄入
   const actual = mealLogs.reduce(
     (sum, log) => ({
       calories: sum.calories + log.calories,
@@ -315,125 +206,85 @@ async function updateDailyNutritionTarget(memberId: string, date: Date) {
       carbs: sum.carbs + log.carbs,
       fat: sum.fat + log.fat,
     }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
-  // 获取营养目标
-  const healthGoal = await db.healthGoal.findFirst({
-    where: {
-      memberId,
-      status: 'ACTIVE',
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  const targetCalories = 2000;
+  const targetProtein = 100;
+  const targetCarbs = 250;
+  const targetFat = 65;
 
-  if (!healthGoal) {
-    // 如果没有健康目标，不创建追踪记录
-    return;
-  }
+  const caloriesDeviation =
+    targetCalories > 0
+      ? ((actual.calories - targetCalories) / targetCalories) * 100
+      : 0;
+  const proteinDeviation =
+    targetProtein > 0
+      ? ((actual.protein - targetProtein) / targetProtein) * 100
+      : 0;
+  const carbsDeviation =
+    targetCarbs > 0 ? ((actual.carbs - targetCarbs) / targetCarbs) * 100 : 0;
+  const fatDeviation =
+    targetFat > 0 ? ((actual.fat - targetFat) / targetFat) * 100 : 0;
 
-  // 计算每日目标（从TDEE计算）
-  const targetCalories = healthGoal.tdee || 2000;
-  const targetProtein = (targetCalories * (healthGoal.proteinRatio || 0.2)) / 4; // 1g蛋白质=4kcal
-  const targetCarbs = (targetCalories * (healthGoal.carbRatio || 0.5)) / 4;
-  const targetFat = (targetCalories * (healthGoal.fatRatio || 0.3)) / 9; // 1g脂肪=9kcal
-
-  // 计算偏差百分比
-  const caloriesDeviation = ((actual.calories - targetCalories) / targetCalories) * 100;
-  const proteinDeviation = ((actual.protein - targetProtein) / targetProtein) * 100;
-  const carbsDeviation = ((actual.carbs - targetCarbs) / targetCarbs) * 100;
-  const fatDeviation = ((actual.fat - targetFat) / targetFat) * 100;
-
-  // 判断是否完成打卡（至少记录了一餐）
   const isCompleted = mealLogs.length > 0;
 
-  // 更新或创建每日目标追踪记录
-  await db.dailyNutritionTarget.upsert({
-    where: {
-      memberId_date: {
-        memberId,
-        date: targetDate,
-      },
-    },
-    update: {
-      actualCalories: actual.calories,
-      actualProtein: actual.protein,
-      actualCarbs: actual.carbs,
-      actualFat: actual.fat,
-      caloriesDeviation,
-      proteinDeviation,
-      carbsDeviation,
-      fatDeviation,
-      isCompleted,
-    },
-    create: {
-      memberId,
-      date: targetDate,
-      targetCalories,
-      targetProtein,
-      targetCarbs,
-      targetFat,
-      actualCalories: actual.calories,
-      actualProtein: actual.protein,
-      actualCarbs: actual.carbs,
-      actualFat: actual.fat,
-      caloriesDeviation,
-      proteinDeviation,
-      carbsDeviation,
-      fatDeviation,
-      isCompleted,
-    },
+  await convexTracking.upsertDailyNutritionTarget({
+    memberId,
+    date: targetDate,
+    targetCalories,
+    targetProtein,
+    targetCarbs,
+    targetFat,
+    actualCalories: actual.calories,
+    actualProtein: actual.protein,
+    actualCarbs: actual.carbs,
+    actualFat: actual.fat,
+    caloriesDeviation,
+    proteinDeviation,
+    carbsDeviation,
+    fatDeviation,
+    isCompleted,
   });
 }
 
-/**
- * 更新连续打卡记录
- */
 async function updateTrackingStreak(memberId: string, date: Date) {
   const today = new Date(date);
   today.setHours(0, 0, 0, 0);
 
-  // 获取或创建连续打卡记录
-  let streak = await db.trackingStreak.findUnique({
-    where: { memberId },
-  });
+  let streak = (await convexTracking.getTrackingStreak(
+    memberId,
+  )) as Doc<"trackingStreaks"> | null;
 
   if (!streak) {
-    streak = await db.trackingStreak.create({
-      data: {
-        memberId,
-        currentStreak: 1,
-        longestStreak: 1,
-        totalDays: 1,
-        lastCheckIn: today,
-      },
+    await convexTracking.upsertTrackingStreak({
+      memberId,
+      currentStreak: 1,
+      longestStreak: 1,
+      totalDays: 1,
+      lastCheckIn: today,
+      badges: JSON.stringify([]),
     });
-    return streak;
+    return;
   }
 
-  // 检查是否是新的一天
   const lastCheckIn = streak.lastCheckIn ? new Date(streak.lastCheckIn) : null;
   if (lastCheckIn) {
     lastCheckIn.setHours(0, 0, 0, 0);
-    
-    // 如果是同一天，不更新
+
     if (lastCheckIn.getTime() === today.getTime()) {
-      return streak;
+      return;
     }
 
-    // 检查是否连续
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     const isConsecutive = lastCheckIn.getTime() === yesterday.getTime();
 
     const newCurrentStreak = isConsecutive ? streak.currentStreak + 1 : 1;
     const newLongestStreak = Math.max(streak.longestStreak, newCurrentStreak);
     const newBadges = JSON.parse(streak.badges) as string[];
 
-    // 检查是否解锁新徽章
     const milestones = [7, 30, 100, 365];
     milestones.forEach((milestone) => {
       const badgeId = `${milestone}-days`;
@@ -442,65 +293,47 @@ async function updateTrackingStreak(memberId: string, date: Date) {
       }
     });
 
-    // 更新记录
-    return db.trackingStreak.update({
-      where: { memberId },
-      data: {
-        currentStreak: newCurrentStreak,
-        longestStreak: newLongestStreak,
-        totalDays: streak.totalDays + 1,
-        lastCheckIn: today,
-        badges: JSON.stringify(newBadges),
-      },
+    await convexTracking.upsertTrackingStreak({
+      memberId,
+      currentStreak: newCurrentStreak,
+      longestStreak: newLongestStreak,
+      totalDays: streak.totalDays + 1,
+      lastCheckIn: today,
+      badges: JSON.stringify(newBadges),
     });
   }
-
-  return streak;
 }
 
-/**
- * 获取最近常吃的食物（用于快速添加）
- */
 export async function getRecentFoods(
   memberId: string,
   options: {
     days?: number;
     limit?: number;
-    mealType?: MealType;
-  } = {}
+    mealType?: string;
+  } = {},
 ) {
   const { days = 7, limit = 10, mealType } = options;
 
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const where: Prisma.MealLogWhereInput = {
-    memberId,
-    date: { gte: startDate },
-    deletedAt: null,
-  };
+  const result = (await convexTracking.getMealLogHistory(memberId, {
+    startDate,
+    mealType,
+    limit: 100,
+  })) as { logs: Array<Doc<"mealLogs"> & { foods: Doc<"mealLogFoods">[] }> };
 
-  if (mealType) {
-    where.mealType = mealType;
-  }
+  const mealLogs = result.logs;
 
-  // 获取最近的餐饮记录
-  const mealLogs = await db.mealLog.findMany({
-    where,
-    include: {
-      foods: {
-        include: {
-          food: true,
-        },
-      },
-    },
-    orderBy: {
-      date: 'desc',
-    },
-  });
-
-  // 统计食物出现频率
-  const foodFrequency = new Map<string, { count: number; food: any; avgAmount: number; totalAmount: number }>();
+  const foodFrequency = new Map<
+    string,
+    {
+      count: number;
+      food: Doc<"foods">;
+      avgAmount: number;
+      totalAmount: number;
+    }
+  >();
 
   mealLogs.forEach((log) => {
     log.foods.forEach((mealFood) => {
@@ -512,7 +345,7 @@ export async function getRecentFoods(
       } else {
         foodFrequency.set(mealFood.foodId, {
           count: 1,
-          food: mealFood.food,
+          food: mealFood.foodId as unknown as Doc<"foods">,
           avgAmount: mealFood.amount,
           totalAmount: mealFood.amount,
         });
@@ -520,7 +353,6 @@ export async function getRecentFoods(
     });
   });
 
-  // 按频率排序并返回
   return Array.from(foodFrequency.values())
     .sort((a, b) => b.count - a.count)
     .slice(0, limit)
@@ -530,4 +362,3 @@ export async function getRecentFoods(
       avgAmount: Math.round(item.avgAmount),
     }));
 }
-

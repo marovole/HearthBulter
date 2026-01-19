@@ -6,9 +6,8 @@
  * @module task-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseTaskRepository } from './implementations/supabase-task-repository';
-import type { TaskRepository } from './interfaces/task-repository';
+import { ConvexTaskRepository } from "./implementations/convex-task-repository";
+import type { TaskRepository } from "./interfaces/task-repository";
 
 let instance: TaskRepository | null = null;
 
@@ -19,8 +18,7 @@ let instance: TaskRepository | null = null;
  */
 export function getTaskRepository(): TaskRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseTaskRepository(supabaseClient);
+    instance = new ConvexTaskRepository();
   }
   return instance;
 }

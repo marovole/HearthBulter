@@ -1,32 +1,23 @@
 "use client";
 
-// Force dynamic rendering to prevent prerender errors with React Context
 export const dynamic = "force-dynamic";
 
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { HealthDataDashboard } from "@/components/health-data/HealthDataDashboard";
 
-/**
- * Health Data Page Component
- *
- * Main page for viewing and managing health data records.
- * Requires authentication.
- *
- * IMPORTANT: Client component for Cloudflare Pages static export compatibility.
- */
 export default function HealthDataPage() {
-  const { data: session, status } = useSession();
+  const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (isLoaded && !isSignedIn) {
       router.push("/auth/signin");
     }
-  }, [status, router]);
+  }, [isLoaded, isSignedIn, router]);
 
-  if (status === "loading" || !session) {
+  if (!isLoaded || !isSignedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
@@ -34,5 +25,9 @@ export default function HealthDataPage() {
     );
   }
 
-  return <HealthDataDashboard userEmail={session.user.email || ""} />;
+  return (
+    <HealthDataDashboard
+      userEmail={user?.primaryEmailAddress?.emailAddress || ""}
+    />
+  );
 }

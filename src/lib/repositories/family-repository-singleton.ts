@@ -6,9 +6,8 @@
  * @module family-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseFamilyRepository } from './implementations/supabase-family-repository';
-import type { FamilyRepository } from './interfaces/family-repository';
+import { ConvexFamilyRepository } from "./implementations/convex-family-repository";
+import type { FamilyRepository } from "./interfaces/family-repository";
 
 let instance: FamilyRepository | null = null;
 
@@ -19,8 +18,7 @@ let instance: FamilyRepository | null = null;
  */
 export function getFamilyRepository(): FamilyRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseFamilyRepository(supabaseClient);
+    instance = new ConvexFamilyRepository();
   }
   return instance;
 }

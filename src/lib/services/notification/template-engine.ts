@@ -1,8 +1,21 @@
-import { PrismaClient, NotificationType } from '@prisma/client';
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id, Doc } from "@/../convex/_generated/dataModel";
+
+export type NotificationType =
+  | "CHECK_IN_REMINDER"
+  | "TASK_NOTIFICATION"
+  | "EXPIRY_ALERT"
+  | "BUDGET_WARNING"
+  | "HEALTH_ALERT"
+  | "GOAL_ACHIEVEMENT"
+  | "FAMILY_ACTIVITY"
+  | "SYSTEM_ANNOUNCEMENT"
+  | "MARKETING"
+  | "OTHER";
 
 export interface TemplateVariable {
   name: string;
-  type: 'string' | 'number' | 'date' | 'boolean';
+  type: "string" | "number" | "date" | "boolean";
   description: string;
   required?: boolean;
 }
@@ -12,23 +25,38 @@ export interface RenderedTemplate {
   content: string;
 }
 
+interface NotificationTemplate {
+  _id: Id<"notificationTemplates">;
+  type: string;
+  titleTemplate: string;
+  contentTemplate: string;
+  channelTemplates?: unknown;
+  variables?: unknown;
+  isActive: boolean;
+  version: string;
+  defaultChannels?: unknown;
+  defaultPriority?: string;
+  translations?: unknown;
+  description?: string;
+  category?: string;
+  usageCount?: number;
+  lastUsed?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export class TemplateEngine {
-  private prisma: PrismaClient;
-  private templateCache: Map<string, any> = new Map();
+  private templateCache: Map<
+    string,
+    { template: NotificationTemplate; timestamp: number }
+  > = new Map();
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
-  }
-
-  /**
-   * 渲染通知模板
-   */
   async renderNotification(
     type: NotificationType,
-    data?: Record<string, any>
+    data?: Record<string, unknown>,
   ): Promise<RenderedTemplate> {
     const template = await this.getTemplate(type);
-    
+
     if (!template) {
       throw new Error(`Template not found for type: ${type}`);
     }
@@ -36,74 +64,78 @@ export class TemplateEngine {
     const title = this.renderText(template.titleTemplate, data);
     const content = this.renderText(template.contentTemplate, data);
 
-    // 更新使用统计
-    await this.updateTemplateStats(template.id);
+    await this.updateTemplateStats(template.type);
 
     return { title, content };
   }
 
-  /**
-   * 渲染渠道特定模板
-   */
   async renderChannelTemplate(
     type: NotificationType,
     channel: string,
-    data?: Record<string, any>
+    data?: Record<string, unknown>,
   ): Promise<RenderedTemplate | null> {
     const template = await this.getTemplate(type);
-    
+
     if (!template) {
       return null;
     }
 
-    const channelTemplates = JSON.parse(template.channelTemplates || '{}');
-    const channelTemplate = channelTemplates[channel];
+    const channelTemplates =
+      typeof template.channelTemplates === "string"
+        ? JSON.parse(template.channelTemplates as string)
+        : (template.channelTemplates as Record<string, unknown> | undefined);
+    const channelTemplate = channelTemplates?.[channel];
 
     if (!channelTemplate) {
-      // 回退到默认模板
       return await this.renderNotification(type, data);
     }
 
-    const title = this.renderText(channelTemplate.title || template.titleTemplate, data);
-    const content = this.renderText(channelTemplate.content || template.contentTemplate, data);
+    const title = this.renderText(
+      (channelTemplate as { title?: string }).title || template.titleTemplate,
+      data,
+    );
+    const content = this.renderText(
+      (channelTemplate as { content?: string }).content ||
+        template.contentTemplate,
+      data,
+    );
 
     return { title, content };
   }
 
-  /**
-   * 渲染文本模板
-   */
-  renderText(template: string, data?: Record<string, any>): string {
+  renderText(template: string, data?: Record<string, unknown>): string {
     if (!template || !data) {
       return template;
     }
 
-    // 简单的模板变量替换 {{variableName}}
     return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
       const value = this.getNestedValue(data, key);
       return value !== undefined ? String(value) : match;
     });
   }
 
-  /**
-   * 渲染多语言模板
-   */
   async renderLocalizedTemplate(
     type: NotificationType,
-    locale: string = 'zh-CN',
-    data?: Record<string, any>
+    locale: string = "zh-CN",
+    data?: Record<string, unknown>,
   ): Promise<RenderedTemplate> {
     const template = await this.getTemplate(type);
-    
+
     if (!template) {
       throw new Error(`Template not found for type: ${type}`);
     }
 
-    const translations = JSON.parse(template.translations || '{}');
-    const localizedTemplate = translations[locale];
+    const translations =
+      typeof template.translations === "string"
+        ? JSON.parse(template.translations as string)
+        : (template.translations as Record<string, unknown> | undefined);
+    const localizedTemplate = translations?.[locale] as
+      | { title?: string; content?: string }
+      | undefined;
 
     const titleTemplate = localizedTemplate?.title || template.titleTemplate;
-    const contentTemplate = localizedTemplate?.content || template.contentTemplate;
+    const contentTemplate =
+      localizedTemplate?.content || template.contentTemplate;
 
     const title = this.renderText(titleTemplate, data);
     const content = this.renderText(contentTemplate, data);
@@ -111,25 +143,25 @@ export class TemplateEngine {
     return { title, content };
   }
 
-  /**
-   * 获取模板变量定义
-   */
-  async getTemplateVariables(type: NotificationType): Promise<TemplateVariable[]> {
+  async getTemplateVariables(
+    type: NotificationType,
+  ): Promise<TemplateVariable[]> {
     const template = await this.getTemplate(type);
-    
+
     if (!template) {
       return [];
     }
 
-    return JSON.parse(template.variables || '[]');
+    const variables =
+      typeof template.variables === "string"
+        ? JSON.parse(template.variables as string)
+        : (template.variables as TemplateVariable[] | undefined);
+    return variables || [];
   }
 
-  /**
-   * 验证模板数据
-   */
   async validateTemplateData(
     type: NotificationType,
-    data: Record<string, any>
+    data: Record<string, unknown>,
   ): Promise<{ isValid: boolean; missingVariables: string[] }> {
     const variables = await this.getTemplateVariables(type);
     const missingVariables: string[] = [];
@@ -146,9 +178,6 @@ export class TemplateEngine {
     };
   }
 
-  /**
-   * 创建或更新模板
-   */
   async upsertTemplate(data: {
     type: NotificationType;
     titleTemplate: string;
@@ -162,81 +191,66 @@ export class TemplateEngine {
     translations?: string;
     description?: string;
     category?: string;
-  }) {
-    const existingTemplate = await this.prisma.notificationTemplate.findUnique({
-      where: { type: data.type },
+  }): Promise<Id<"notificationTemplates">> {
+    return await convexClient.mutation(api["notification-templates"].upsert, {
+      type: data.type,
+      titleTemplate: data.titleTemplate,
+      contentTemplate: data.contentTemplate,
+      channelTemplates: data.channelTemplates
+        ? JSON.parse(data.channelTemplates)
+        : undefined,
+      variables: data.variables ? JSON.parse(data.variables) : undefined,
+      isActive: data.isActive ?? true,
+      version: data.version ?? "1.0.0",
+      defaultChannels: data.defaultChannels
+        ? JSON.parse(data.defaultChannels)
+        : undefined,
+      defaultPriority: data.defaultPriority,
+      translations: data.translations
+        ? JSON.parse(data.translations)
+        : undefined,
+      description: data.description,
+      category: data.category,
     });
-
-    if (existingTemplate) {
-      return await this.prisma.notificationTemplate.update({
-        where: { type: data.type },
-        data: {
-          ...data,
-          updatedAt: new Date(),
-        },
-      });
-    } else {
-      return await this.prisma.notificationTemplate.create({
-        data: {
-          ...data,
-          usageCount: 0,
-        },
-      });
-    }
   }
 
-  /**
-   * 获取所有模板
-   */
   async getAllTemplates(options: {
     isActive?: boolean;
     category?: string;
     limit?: number;
     offset?: number;
-  } = {}) {
-    const where: any = {};
-
-    if (options.isActive !== undefined) {
-      where.isActive = options.isActive;
-    }
-
-    if (options.category) {
-      where.category = options.category;
-    }
-
-    const [templates, total] = await Promise.all([
-      this.prisma.notificationTemplate.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: options.limit || 50,
-        skip: options.offset || 0,
-      }),
-      this.prisma.notificationTemplate.count({ where }),
-    ]);
+  }): Promise<{
+    templates: NotificationTemplate[];
+    total: number;
+    hasMore: boolean;
+  }> {
+    const result = await convexClient.query<{
+      data: NotificationTemplate[];
+      total: number;
+    }>(api["notification-templates"].list, {
+      isActive: options.isActive,
+      category: options.category,
+      limit: options.limit ?? 50,
+      offset: options.offset,
+    });
 
     return {
-      templates,
-      total,
-      hasMore: (options.offset || 0) + templates.length < total,
+      templates: result.data,
+      total: result.total,
+      hasMore: (options.offset ?? 0) + result.data.length < result.total,
     };
   }
 
-  /**
-   * 删除模板
-   */
   async deleteTemplate(type: NotificationType): Promise<void> {
-    await this.prisma.notificationTemplate.delete({
-      where: { type },
+    await convexClient.mutation(api["notification-templates"].deleteTemplate, {
+      type,
     });
   }
 
-  /**
-   * 预览模板渲染结果
-   */
   async previewTemplate(
     type: NotificationType,
-    data: Record<string, any>,
-    locale?: string
+    data: Record<string, unknown>,
+    locale?: string,
   ): Promise<RenderedTemplate> {
     if (locale) {
       return await this.renderLocalizedTemplate(type, locale, data);
@@ -245,51 +259,49 @@ export class TemplateEngine {
     }
   }
 
-  /**
-   * 获取模板使用统计
-   */
-  async getTemplateStats(type?: NotificationType) {
-    const where = type ? { type } : {};
-
-    const templates = await this.prisma.notificationTemplate.findMany({
-      where,
-      select: {
-        type: true,
-        usageCount: true,
-        lastUsed: true,
-        category: true,
-        isActive: true,
-      },
-      orderBy: {
-        usageCount: 'desc',
-      },
+  async getTemplateStats(type?: NotificationType): Promise<
+    Array<{
+      type: string;
+      usageCount: number;
+      lastUsed: number | null;
+      category: string | undefined;
+      isActive: boolean;
+    }>
+  > {
+    const stats = await convexClient.query<
+      Array<{
+        type: string;
+        usageCount: number | undefined;
+        lastUsed: number | undefined;
+        category: string | undefined;
+        isActive: boolean;
+      }>
+    >(api["notification-templates"].getStats, {
+      type,
     });
 
-    return templates.map(template => ({
-      ...template,
-      lastUsed: template.lastUsed?.toISOString(),
+    return stats.map((s) => ({
+      ...s,
+      usageCount: s.usageCount ?? 0,
+      lastUsed: s.lastUsed ?? null,
     }));
   }
 
-  /**
-   * 获取模板
-   */
-  private async getTemplate(type: NotificationType) {
-    // 检查缓存
+  private async getTemplate(
+    type: NotificationType,
+  ): Promise<NotificationTemplate | null> {
     const cacheKey = `template_${type}`;
-    if (this.templateCache.has(cacheKey)) {
-      const cached = this.templateCache.get(cacheKey);
-      if (Date.now() - cached.timestamp < 5 * 60 * 1000) { // 5分钟缓存
-        return cached.template;
-      }
+    const cached = this.templateCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      return cached.template;
     }
 
-    const template = await this.prisma.notificationTemplate.findUnique({
-      where: { type },
-    });
+    const template = await convexClient.query<NotificationTemplate | null>(
+      api["notification-templates"].getByType,
+      { type },
+    );
 
     if (template) {
-      // 缓存模板
       this.templateCache.set(cacheKey, {
         template,
         timestamp: Date.now(),
@@ -299,86 +311,86 @@ export class TemplateEngine {
     return template;
   }
 
-  /**
-   * 更新模板使用统计
-   */
-  private async updateTemplateStats(templateId: string): Promise<void> {
-    await this.prisma.notificationTemplate.update({
-      where: { id: templateId },
-      data: {
-        usageCount: {
-          increment: 1,
-        },
-        lastUsed: new Date(),
-      },
+  private async updateTemplateStats(type: string): Promise<void> {
+    await convexClient.mutation(api["notification-templates"].incrementUsage, {
+      type,
     });
   }
 
-  /**
-   * 获取嵌套对象的值
-   */
-  private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => {
-      return current && current[key] !== undefined ? current[key] : undefined;
-    }, obj);
+  private getNestedValue(obj: unknown, path: string): unknown {
+    if (typeof obj !== "object" || obj === null) {
+      return undefined;
+    }
+
+    let current: unknown = obj;
+    for (const key of path.split(".")) {
+      if (
+        current &&
+        typeof current === "object" &&
+        key in (current as Record<string, unknown>)
+      ) {
+        current = (current as Record<string, unknown>)[key];
+      } else {
+        return undefined;
+      }
+    }
+
+    return current;
   }
 
-  /**
-   * 检查对象是否有值
-   */
-  private hasValue(obj: any, path: string): boolean {
+  private hasValue(obj: Record<string, unknown>, path: string): boolean {
     const value = this.getNestedValue(obj, path);
-    return value !== undefined && value !== null && value !== '';
+    return value !== undefined && value !== null && value !== "";
   }
 
-  /**
-   * 清理模板缓存
-   */
   clearCache(): void {
     this.templateCache.clear();
   }
 
-  /**
-   * 预热模板缓存
-   */
   async warmupCache(): Promise<void> {
-    const templates = await this.prisma.notificationTemplate.findMany({
-      where: { isActive: true },
+    const result = await convexClient.query<{
+      data: NotificationTemplate[];
+      total: number;
+    }>(api["notification-templates"].list, {
+      isActive: true,
     });
 
-    templates.forEach(template => {
+    for (const template of result.data) {
       const cacheKey = `template_${template.type}`;
       this.templateCache.set(cacheKey, {
         template,
         timestamp: Date.now(),
       });
-    });
+    }
   }
 
-  /**
-   * 批量渲染模板
-   */
   async batchRender(
     requests: Array<{
       type: NotificationType;
-      data?: Record<string, any>;
+      data?: Record<string, unknown>;
       locale?: string;
-    }>
+    }>,
   ): Promise<RenderedTemplate[]> {
     const results: RenderedTemplate[] = [];
 
     for (const request of requests) {
       try {
         const result = request.locale
-          ? await this.renderLocalizedTemplate(request.type, request.locale, request.data)
+          ? await this.renderLocalizedTemplate(
+              request.type,
+              request.locale,
+              request.data,
+            )
           : await this.renderNotification(request.type, request.data);
         results.push(result);
       } catch (error) {
-        console.error(`Failed to render template for type ${request.type}:`, error);
-        // 返回默认模板
+        console.error(
+          `Failed to render template for type ${request.type}:`,
+          error,
+        );
         results.push({
-          title: '通知',
-          content: '您有一条新通知',
+          title: "通知",
+          content: "您有一条新通知",
         });
       }
     }

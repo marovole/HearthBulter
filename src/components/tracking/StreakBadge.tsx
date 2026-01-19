@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface Badge {
   id: string;
@@ -44,9 +44,7 @@ export function StreakBadge({
           <div className="text-sm text-gray-600 mt-1">最长连续</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-green-500">
-            ✓ {totalDays}
-          </div>
+          <div className="text-3xl font-bold text-green-500">✓ {totalDays}</div>
           <div className="text-sm text-gray-600 mt-1">总打卡</div>
         </div>
       </div>
@@ -112,14 +110,13 @@ export function StreakBadge({
         <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-center">
           <div className="text-sm text-green-700">
             {currentStreak >= 100
-              ? '🎉 太棒了！你已经坚持了100天以上！'
+              ? "🎉 太棒了！你已经坚持了100天以上！"
               : currentStreak >= 30
-                ? '💪 坚持了一个月，你真厉害！'
-                : '🌟 一周连续打卡，保持下去！'}
+                ? "💪 坚持了一个月，你真厉害！"
+                : "🌟 一周连续打卡，保持下去！"}
           </div>
         </div>
       )}
     </div>
   );
 }
-

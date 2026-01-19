@@ -1,9 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { taskRepository } from '@/lib/repositories/task-repository-singleton';
-import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions';
-import { hasPermission, Permission } from '@/lib/permissions';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { prisma } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { taskRepository } from "@/lib/repositories/task-repository-singleton";
+import {
+  withApiPermissions,
+  PERMISSION_CONFIGS,
+} from "@/middleware/permissions";
+import { hasPermission, Permission } from "@/lib/permissions";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Doc, Id } from "@/../convex/_generated/dataModel";
 
 /**
  * POST /api/families/:familyId/tasks/:taskId/assign
@@ -13,10 +16,10 @@ import { prisma } from '@/lib/db';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string; taskId: string }> }
+  { params }: { params: Promise<{ familyId: string; taskId: string }> },
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -29,34 +32,31 @@ export async function POST(
       // 验证必需字段
       if (!assigneeId) {
         return NextResponse.json(
-          { success: false, error: 'Missing required field: assigneeId' },
-          { status: 400 }
+          { success: false, error: "Missing required field: assigneeId" },
+          { status: 400 },
         );
       }
 
-      const supabase = SupabaseClientManager.getInstance();
-
-      // 验证用户权限并获取成员信息
-      const { data: member } = await supabase
-        .from('family_members')
-        .select('id, role')
-        .eq('user_id', userId)
-        .eq('family_id', familyId)
-        .is('deleted_at', null)
-        .maybeSingle();
+      const member = await convexClient.query<Doc<"familyMembers"> | null>(
+        api.members.getByClerkInFamily,
+        {
+          familyId: familyId as Id<"families">,
+          clerkId: userId,
+        },
+      );
 
       if (!member) {
         return NextResponse.json(
-          { success: false, error: 'Not a family member' },
-          { status: 403 }
+          { success: false, error: "Not a family member" },
+          { status: 403 },
         );
       }
 
       // 检查分配任务权限
       if (!hasPermission(member.role as any, Permission.ASSIGN_TASK)) {
         return NextResponse.json(
-          { success: false, error: 'Insufficient permissions' },
-          { status: 403 }
+          { success: false, error: "Insufficient permissions" },
+          { status: 403 },
         );
       }
 
@@ -65,61 +65,65 @@ export async function POST(
 
       if (!task) {
         return NextResponse.json(
-          { success: false, error: 'Task not found' },
-          { status: 404 }
+          { success: false, error: "Task not found" },
+          { status: 404 },
         );
       }
 
       // 验证被分配人是家庭成员
-      const { data: assignee } = await supabase
-        .from('family_members')
-        .select('id, name, role')
-        .eq('id', assigneeId)
-        .eq('family_id', familyId)
-        .is('deleted_at', null)
-        .maybeSingle();
+      const assignee = await convexClient.query<Doc<"familyMembers"> | null>(
+        api.families.getMemberById,
+        {
+          memberId: assigneeId as Id<"familyMembers">,
+        },
+      );
 
       if (!assignee) {
         return NextResponse.json(
-          { success: false, error: 'Assignee is not a family member' },
-          { status: 400 }
+          { success: false, error: "Assignee is not a family member" },
+          { status: 400 },
         );
       }
 
       // 使用 Repository 分配任务
-      const updatedTask = await taskRepository.assignTask(familyId, taskId, assigneeId);
+      const updatedTask = await taskRepository.assignTask(
+        familyId,
+        taskId,
+        assigneeId,
+      );
 
       // 记录活动日志
-      await prisma.activity.create({
-        data: {
-          familyId,
-          memberId: member.id,
-          activityType: 'TASK_UPDATED',
-          title: '分配了任务',
+      await convexClient
+        .mutation(api.activities.create, {
+          familyId: familyId as Id<"families">,
+          memberId: member._id,
+          type: "TASK_UPDATED",
+          title: "分配了任务",
           description: updatedTask.title,
           metadata: {
             taskId: task.id,
             taskTitle: task.title,
-            action: 'ASSIGNED',
+            action: "ASSIGNED",
             assigneeName: assignee.name,
           },
-        },
-      }).catch(err => {
-        console.error('Error logging activity:', err);
-      });
+        })
+        .catch((err: unknown) => {
+          console.error("Error logging activity:", err);
+        });
 
       return NextResponse.json({
         success: true,
         data: updatedTask,
       });
     } catch (error) {
-      console.error('Error assigning task:', error);
+      console.error("Error assigning task:", error);
       return NextResponse.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to assign task',
+          error:
+            error instanceof Error ? error.message : "Failed to assign task",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }, PERMISSION_CONFIGS.ASSIGN_TASK)(request as any, { params });

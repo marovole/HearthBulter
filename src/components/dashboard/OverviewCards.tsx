@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useSession } from "next-auth/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,17 +22,9 @@ interface OverviewCardsProps {
 }
 
 export function OverviewCards({ memberId }: OverviewCardsProps) {
-  const { data: session } = useSession();
-  const userEmail = session?.user?.email || "";
-  const data = useQuery(
-    api.dashboard.getOverview,
-    userEmail
-      ? {
-          memberId: memberId as Id<"familyMembers">,
-          userEmail,
-        }
-      : "skip",
-  );
+  const data = useQuery(api.dashboard.getOverview, {
+    memberId: memberId as Id<"familyMembers">,
+  });
 
   if (data === undefined) {
     return (

@@ -6,32 +6,37 @@
  * @module task
  */
 
-import { z } from 'zod';
-import type { SortInput } from './common';
+import { z } from "zod";
+import type { SortInput } from "./common";
 
 /**
  * 任务状态枚举
  */
-export const taskStatusSchema = z.enum(['TODO', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']);
+export const taskStatusSchema = z.enum([
+  "TODO",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+]);
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
 
 /**
  * 任务分类枚举
  */
 export const taskCategorySchema = z.enum([
-  'SHOPPING',
-  'COOKING',
-  'CLEANING',
-  'HEALTH',
-  'EXERCISE',
-  'OTHER',
+  "SHOPPING",
+  "COOKING",
+  "CLEANING",
+  "HEALTH",
+  "EXERCISE",
+  "OTHER",
 ]);
 export type TaskCategory = z.infer<typeof taskCategorySchema>;
 
 /**
  * 任务优先级枚举
  */
-export const taskPrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
+export const taskPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export type TaskPriority = z.infer<typeof taskPrioritySchema>;
 
 /**
@@ -142,7 +147,7 @@ export interface TaskListQuery {
   /**
    * 排序选项
    */
-  sort?: SortInput<'priority' | 'dueDate' | 'createdAt' | 'updatedAt'>;
+  sort?: SortInput<"priority" | "dueDate" | "createdAt" | "updatedAt">;
 }
 
 /**
@@ -170,7 +175,7 @@ export const createTaskSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().optional(),
   category: taskCategorySchema,
-  priority: taskPrioritySchema.default('MEDIUM'),
+  priority: taskPrioritySchema.default("MEDIUM"),
   assigneeId: z.string().uuid().optional(),
   dueDate: z.coerce.date().optional(),
 });

@@ -6,9 +6,9 @@
  * @module meal-plan-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseMealPlanRepository } from './implementations/supabase-meal-plan-repository';
-import type { MealPlanRepository } from './interfaces/meal-plan-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseMealPlanRepository } from "./implementations/supabase-meal-plan-repository";
+import type { MealPlanRepository } from "./interfaces/meal-plan-repository";
 
 let instance: MealPlanRepository | null = null;
 

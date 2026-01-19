@@ -25,9 +25,17 @@
     "eol-last": "warn",
     "comma-dangle": ["warn", "always-multiline"],
     "semi": ["error", "always"],
-    "quotes": ["error", "single"],
+    "quotes": ["error", "double"],
     "indent": ["error", 2],
-    "max-len": ["warn", { "code": 120, "ignoreUrls": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }],
+    "max-len": [
+      "warn",
+      {
+        "code": 120,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true
+      }
+    ],
     "complexity": ["warn", 15],
     "max-depth": ["warn", 4],
     "max-params": ["warn", 4]
@@ -39,7 +47,8 @@
         "no-console": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-var-requires": "off",
-        "max-len": "off"
+        "max-len": "off",
+        "@typescript-eslint/no-unused-vars": "off"
       }
     },
     {

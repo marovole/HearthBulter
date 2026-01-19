@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Check, X, ExternalLink, Clock, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { Check, X, ExternalLink, Clock, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface NotificationItemProps {
   notification: {
@@ -38,13 +38,14 @@ export function NotificationItem({
   showActions = true,
 }: NotificationItemProps) {
   const isUnread = !notification.readAt;
-  const isFailed = notification.status === 'FAILED';
-  const isPending = notification.status === 'PENDING' || notification.status === 'SENDING';
+  const isFailed = notification.status === "FAILED";
+  const isPending =
+    notification.status === "PENDING" || notification.status === "SENDING";
 
   const handleActionClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (notification.actionUrl) {
-      window.open(notification.actionUrl, '_blank');
+      window.open(notification.actionUrl, "_blank");
     }
   };
 
@@ -60,27 +61,27 @@ export function NotificationItem({
 
   const getPriorityBadge = () => {
     const colors = {
-      LOW: 'bg-gray-100 text-gray-600',
-      MEDIUM: 'bg-blue-100 text-blue-600',
-      HIGH: 'bg-yellow-100 text-yellow-600',
-      URGENT: 'bg-red-100 text-red-600',
+      LOW: "bg-gray-100 text-gray-600",
+      MEDIUM: "bg-blue-100 text-blue-600",
+      HIGH: "bg-yellow-100 text-yellow-600",
+      URGENT: "bg-red-100 text-red-600",
     };
 
     const labels = {
-      LOW: '低',
-      MEDIUM: '中',
-      HIGH: '高',
-      URGENT: '紧急',
+      LOW: "低",
+      MEDIUM: "中",
+      HIGH: "高",
+      URGENT: "紧急",
     };
 
     return (
       <span
         className={cn(
-          'px-2 py-0.5 text-xs font-medium rounded',
-          colors[notification.priority as keyof typeof colors] || colors.MEDIUM
+          "px-2 py-0.5 text-xs font-medium rounded",
+          colors[notification.priority as keyof typeof colors] || colors.MEDIUM,
         )}
       >
-        {labels[notification.priority as keyof typeof labels] || '中'}
+        {labels[notification.priority as keyof typeof labels] || "中"}
       </span>
     );
   };
@@ -101,9 +102,9 @@ export function NotificationItem({
   return (
     <div
       className={cn(
-        'px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer group',
-        isUnread && 'bg-blue-50/30',
-        selected && 'bg-blue-50'
+        "px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer group",
+        isUnread && "bg-blue-50/30",
+        selected && "bg-blue-50",
       )}
       onClick={onSelect}
     >
@@ -112,25 +113,23 @@ export function NotificationItem({
         <div className="pt-1">
           <div
             className={cn(
-              'h-4 w-4 border rounded transition-colors',
+              "h-4 w-4 border rounded transition-colors",
               selected
-                ? 'bg-blue-500 border-blue-500'
-                : 'border-gray-300 group-hover:border-gray-400'
+                ? "bg-blue-500 border-blue-500"
+                : "border-gray-300 group-hover:border-gray-400",
             )}
             onClick={(e) => {
               e.stopPropagation();
               onSelect?.();
             }}
           >
-            {selected && (
-              <Check className="h-3 w-3 text-white" />
-            )}
+            {selected && <Check className="h-3 w-3 text-white" />}
           </div>
         </div>
 
         {/* 通知图标 */}
         <div className="pt-1">
-          <span className="text-xl">{notification.typeIcon || '📄'}</span>
+          <span className="text-xl">{notification.typeIcon || "📄"}</span>
         </div>
 
         {/* 通知内容 */}
@@ -141,8 +140,8 @@ export function NotificationItem({
               <div className="flex items-center space-x-2 mb-1">
                 <h3
                   className={cn(
-                    'text-sm font-medium truncate',
-                    isUnread ? 'text-gray-900 font-semibold' : 'text-gray-700'
+                    "text-sm font-medium truncate",
+                    isUnread ? "text-gray-900 font-semibold" : "text-gray-700",
                   )}
                 >
                   {notification.title}
@@ -159,13 +158,11 @@ export function NotificationItem({
               {/* 元信息 */}
               <div className="flex items-center space-x-4 text-xs text-gray-500">
                 <span>{notification.typeName || notification.type}</span>
-                <span>{notification.formattedTime || notification.createdAt}</span>
-                {isFailed && (
-                  <span className="text-red-500">发送失败</span>
-                )}
-                {isPending && (
-                  <span className="text-yellow-500">发送中</span>
-                )}
+                <span>
+                  {notification.formattedTime || notification.createdAt}
+                </span>
+                {isFailed && <span className="text-red-500">发送失败</span>}
+                {isPending && <span className="text-yellow-500">发送中</span>}
               </div>
             </div>
 
@@ -181,7 +178,7 @@ export function NotificationItem({
                     <Check className="h-4 w-4" />
                   </button>
                 )}
-                
+
                 {notification.actionUrl && (
                   <button
                     onClick={handleActionClick}
@@ -191,7 +188,7 @@ export function NotificationItem({
                     <ExternalLink className="h-4 w-4" />
                   </button>
                 )}
-                
+
                 {onDelete && (
                   <button
                     onClick={handleDelete}
@@ -211,8 +208,8 @@ export function NotificationItem({
               <button
                 onClick={handleActionClick}
                 className={cn(
-                  'px-3 py-1 text-xs font-medium rounded transition-colors',
-                  'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  "px-3 py-1 text-xs font-medium rounded transition-colors",
+                  "bg-blue-100 text-blue-700 hover:bg-blue-200",
                 )}
               >
                 {notification.actionText}

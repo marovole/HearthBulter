@@ -3,10 +3,10 @@
  * 仪表盘性能测试
  */
 
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { performance } from 'perf_hooks';
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { performance } from "perf_hooks";
 
 // Mock components for performance testing
 type HeavyComponentProps = { dataCount: number };
@@ -20,7 +20,7 @@ const MockHeavyComponent: React.FC<HeavyComponentProps> = ({ dataCount }) => {
 
   return (
     <div data-testid="heavy-component">
-      {data.map(item => (
+      {data.map((item) => (
         <div key={item.id} data-testid={`item-${item.id}`}>
           {item.value.toFixed(2)}
         </div>
@@ -29,18 +29,18 @@ const MockHeavyComponent: React.FC<HeavyComponentProps> = ({ dataCount }) => {
   );
 };
 
-MockHeavyComponent.displayName = 'MockHeavyComponent';
+MockHeavyComponent.displayName = "MockHeavyComponent";
 
-describe('Dashboard Performance Tests', () => {
+describe("Dashboard Performance Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders large datasets efficiently', async () => {
+  it("renders large datasets efficiently", async () => {
     const startTime = performance.now();
-    
+
     render(<MockHeavyComponent dataCount={1000} />);
-    
+
     const endTime = performance.now();
     const renderTime = endTime - startTime;
 
@@ -48,24 +48,24 @@ describe('Dashboard Performance Tests', () => {
     expect(renderTime).toBeLessThan(100);
 
     await waitFor(() => {
-      expect(screen.getByTestId('heavy-component')).toBeInTheDocument();
+      expect(screen.getByTestId("heavy-component")).toBeInTheDocument();
     });
 
     // All items should be rendered
     expect(screen.getAllByTestId(/^item-/)).toHaveLength(1000);
   });
 
-  it('handles memory usage properly', async () => {
+  it("handles memory usage properly", async () => {
     const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
 
     // Render and unrender multiple times
     for (let i = 0; i < 10; i++) {
       const { unmount } = render(<MockHeavyComponent dataCount={500} />);
-      
+
       await waitFor(() => {
-        expect(screen.getByTestId('heavy-component')).toBeInTheDocument();
+        expect(screen.getByTestId("heavy-component")).toBeInTheDocument();
       });
-      
+
       unmount();
     }
 
@@ -81,17 +81,19 @@ describe('Dashboard Performance Tests', () => {
     expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024);
   });
 
-  it('performs well with concurrent updates', async () => {
+  it("performs well with concurrent updates", async () => {
     const startTime = performance.now();
-    
+
     // Simulate concurrent data updates
-    const promises = Array.from({ length: 5 }, (_, i) =>
-      new Promise<void>(resolve => {
-        setTimeout(() => {
-          render(<MockHeavyComponent dataCount={200} />);
-          resolve();
-        }, i * 10);
-      })
+    const promises = Array.from(
+      { length: 5 },
+      (_, i) =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            render(<MockHeavyComponent dataCount={200} />);
+            resolve();
+          }, i * 10);
+        }),
     );
 
     await Promise.all(promises);
@@ -103,7 +105,7 @@ describe('Dashboard Performance Tests', () => {
     expect(totalTime).toBeLessThan(200);
   });
 
-  it('optimizes re-renders with memoization', async () => {
+  it("optimizes re-renders with memoization", async () => {
     let renderCount = 0;
 
     type MemoizedData = { id: number; value: number }[];
@@ -113,14 +115,14 @@ describe('Dashboard Performance Tests', () => {
       return <div data-testid="memoized-component">{data.length} items</div>;
     });
 
-    MemoizedComponent.displayName = 'MemoizedComponent';
+    MemoizedComponent.displayName = "MemoizedComponent";
 
     const data = Array.from({ length: 100 }, (_, i) => ({ id: i, value: i }));
 
     const { rerender } = render(<MemoizedComponent data={data} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('memoized-component')).toBeInTheDocument();
+      expect(screen.getByTestId("memoized-component")).toBeInTheDocument();
     });
 
     const initialRenderCount = renderCount;
@@ -139,23 +141,26 @@ describe('Dashboard Performance Tests', () => {
     expect(renderCount).toBe(initialRenderCount + 1);
   });
 
-  it('handles large chart data efficiently', async () => {
+  it("handles large chart data efficiently", async () => {
     // Mock chart data optimization
     interface ChartPoint {
       x: number;
       y: number;
     }
 
-    const optimizeChartData = (data: ChartPoint[], maxPoints: number): ChartPoint[] => {
+    const optimizeChartData = (
+      data: ChartPoint[],
+      maxPoints: number,
+    ): ChartPoint[] => {
       if (data.length <= maxPoints) return data;
-      
+
       const step = Math.ceil(data.length / maxPoints);
       const optimized = [];
-      
+
       for (let i = 0; i < data.length; i += step) {
         optimized.push(data[i]);
       }
-      
+
       return optimized;
     };
 
@@ -165,9 +170,9 @@ describe('Dashboard Performance Tests', () => {
     }));
 
     const startTime = performance.now();
-    
+
     const optimizedData = optimizeChartData(largeData, 1000);
-    
+
     const endTime = performance.now();
     const optimizationTime = endTime - startTime;
 
@@ -176,7 +181,7 @@ describe('Dashboard Performance Tests', () => {
     expect(optimizedData.length).toBeLessThanOrEqual(1000);
   });
 
-  it('maintains smooth scrolling with virtualization', async () => {
+  it("maintains smooth scrolling with virtualization", async () => {
     // Mock virtual list implementation
     interface VirtualListItem {
       id: number;
@@ -189,30 +194,36 @@ describe('Dashboard Performance Tests', () => {
       containerHeight: number;
     }
 
-    const VirtualList: React.FC<VirtualListProps> = ({ items, itemHeight, containerHeight }) => {
+    const VirtualList: React.FC<VirtualListProps> = ({
+      items,
+      itemHeight,
+      containerHeight,
+    }) => {
       const [scrollTop, setScrollTop] = React.useState(0);
-      
+
       const startIndex = Math.floor(scrollTop / itemHeight);
       const endIndex = Math.min(
         startIndex + Math.ceil(containerHeight / itemHeight) + 1,
-        items.length
+        items.length,
       );
-      
+
       const visibleItems = items.slice(startIndex, endIndex);
-      
+
       return (
         <div
           data-testid="virtual-list"
-          style={{ height: containerHeight, overflow: 'auto' }}
+          style={{ height: containerHeight, overflow: "auto" }}
           onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
         >
-          <div style={{ height: items.length * itemHeight, position: 'relative' }}>
+          <div
+            style={{ height: items.length * itemHeight, position: "relative" }}
+          >
             {visibleItems.map((item, index) => (
               <div
                 key={item.id}
                 data-testid={`virtual-item-${item.id}`}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: (startIndex + index) * itemHeight,
                   height: itemHeight,
                 }}
@@ -225,23 +236,22 @@ describe('Dashboard Performance Tests', () => {
       );
     };
 
-    VirtualList.displayName = 'VirtualList';
+    VirtualList.displayName = "VirtualList";
 
-    const largeItems: VirtualListItem[] = Array.from({ length: 10000 }, (_, i) => ({
-      id: i,
-      value: `Item ${i}`,
-    }));
+    const largeItems: VirtualListItem[] = Array.from(
+      { length: 10000 },
+      (_, i) => ({
+        id: i,
+        value: `Item ${i}`,
+      }),
+    );
 
     const startTime = performance.now();
-    
+
     render(
-      <VirtualList 
-        items={largeItems} 
-        itemHeight={40} 
-        containerHeight={400} 
-      />
+      <VirtualList items={largeItems} itemHeight={40} containerHeight={400} />,
     );
-    
+
     const endTime = performance.now();
     const renderTime = endTime - startTime;
 
@@ -249,18 +259,21 @@ describe('Dashboard Performance Tests', () => {
     expect(renderTime).toBeLessThan(50);
 
     await waitFor(() => {
-      expect(screen.getByTestId('virtual-list')).toBeInTheDocument();
+      expect(screen.getByTestId("virtual-list")).toBeInTheDocument();
     });
 
     // Should only render visible items
     expect(screen.getAllByTestId(/^virtual-item-/).length).toBeLessThan(20);
   });
 
-  it('optimizes API calls with debouncing', async () => {
+  it("optimizes API calls with debouncing", async () => {
     const mockApiCall = jest.fn().mockResolvedValue({ data: [] });
-    
+
     // Mock debounce implementation
-    const debounce = <Args extends unknown[]>(fn: (...args: Args) => void | Promise<unknown>, delay: number) => {
+    const debounce = <Args extends unknown[]>(
+      fn: (...args: Args) => void | Promise<unknown>,
+      delay: number,
+    ) => {
       let timeoutId: ReturnType<typeof setTimeout>;
       return (...args: Args) => {
         clearTimeout(timeoutId);
@@ -271,35 +284,38 @@ describe('Dashboard Performance Tests', () => {
     const debouncedApiCall = debounce(mockApiCall, 100);
 
     // Make multiple rapid calls
-    debouncedApiCall('test1');
-    debouncedApiCall('test2');
-    debouncedApiCall('test3');
+    debouncedApiCall("test1");
+    debouncedApiCall("test2");
+    debouncedApiCall("test3");
 
     // Wait for debounce
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Should only call API once
     expect(mockApiCall).toHaveBeenCalledTimes(1);
-    expect(mockApiCall).toHaveBeenCalledWith('test3');
+    expect(mockApiCall).toHaveBeenCalledWith("test3");
   });
 
-  it('measures component performance correctly', async () => {
-    const performanceMetrics: Array<{ componentName: string; renderTime: number }> = [];
+  it("measures component performance correctly", async () => {
+    const performanceMetrics: Array<{
+      componentName: string;
+      renderTime: number;
+    }> = [];
 
     const withPerformanceMeasurement = <P extends Record<string, unknown>>(
       WrappedComponent: React.ComponentType<P>,
-      name: string
+      name: string,
     ) => {
       const ComponentWithMeasurement: React.FC<P> = (props) => {
         const startTime = performance.now();
         const result = <WrappedComponent {...props} />;
         const endTime = performance.now();
-        
+
         performanceMetrics.push({
           componentName: name,
           renderTime: endTime - startTime,
         });
-        
+
         return result;
       };
 
@@ -307,18 +323,25 @@ describe('Dashboard Performance Tests', () => {
       return ComponentWithMeasurement;
     };
 
-    const TestComponent: React.FC = () => <div data-testid="test-component">Test</div>;
-    TestComponent.displayName = 'TestComponent';
-    const MeasuredComponent = withPerformanceMeasurement(TestComponent, 'TestComponent');
-    MeasuredComponent.displayName = 'MeasuredComponent';
+    const TestComponent: React.FC = () => (
+      <div data-testid="test-component">Test</div>
+    );
+    TestComponent.displayName = "TestComponent";
+    const MeasuredComponent = withPerformanceMeasurement(
+      TestComponent,
+      "TestComponent",
+    );
+    MeasuredComponent.displayName = "MeasuredComponent";
 
     render(<MeasuredComponent />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('test-component')).toBeInTheDocument();
+      expect(screen.getByTestId("test-component")).toBeInTheDocument();
     });
 
-    const metric = performanceMetrics.find(m => m.componentName === 'TestComponent');
+    const metric = performanceMetrics.find(
+      (m) => m.componentName === "TestComponent",
+    );
     expect(metric).toBeDefined();
     expect(metric!.renderTime).toBeGreaterThan(0);
   });

@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { familyRepository } from '@/lib/repositories/family-repository-singleton';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { familyRepository } from "@/lib/repositories/family-repository-singleton";
+import { z } from "zod";
 
 // 创建家庭的验证 schema
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 const createFamilySchema = z.object({
-  name: z.string().min(2, '家庭名称至少需要2个字符'),
+  name: z.string().min(2, "家庭名称至少需要2个字符"),
   description: z.string().optional(),
 });
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       {
         offset,
         limit: validatedQuery.limit,
-      }
+      },
     );
 
     const total = result.total ?? 0;
@@ -62,14 +62,11 @@ export async function GET(request: NextRequest) {
           totalPages: Math.ceil(total / validatedQuery.limit),
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error('获取家庭列表失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("获取家庭列表失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -83,7 +80,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -92,8 +89,8 @@ export async function POST(request: NextRequest) {
     const validation = createFamilySchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: '输入数据无效', details: validation.error.errors },
-        { status: 400 }
+        { error: "输入数据无效", details: validation.error.errors },
+        { status: 400 },
       );
     }
 
@@ -124,16 +121,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: '家庭创建成功',
+        message: "家庭创建成功",
         family: familyWithMembers,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
-    console.error('创建家庭失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("创建家庭失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

@@ -1,159 +1,148 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-singleton';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id } from "@/../convex/_generated/dataModel";
+import { nutritionCalculator } from "@/lib/services/nutrition-calculator";
 
 // POST /api/meal-plans/meals/:mealId/ingredients/:ingredientId/replace
 //
 // 使用双写框架迁移（部分）
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ mealId: string; ingredientId: string }> }
+  { params }: { params: Promise<{ mealId: string; ingredientId: string }> },
 ) {
   try {
     const { mealId, ingredientId } = await params;
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     const body = await request.json();
     const { newFoodId, newAmount } = body;
 
     if (!newFoodId || !newAmount) {
-      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
+      return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
 
-    // 验证餐食权限（保留 Prisma 权限验证）
-    const meal = await prisma.meal.findUnique({
-      where: { id: mealId },
-      include: {
-        plan: {
-          include: {
-            member: {
-              include: {
-                family: {
-                  select: {
-                    creatorId: true,
-                    members: {
-                      where: { userId: session.user.id, deletedAt: null },
-                      select: { role: true },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+    const meal = await convexClient.query<{
+      _id: Id<"meals">;
+      planId: Id<"mealPlans">;
+    } | null>(api.meals.getMealById, {
+      mealId: mealId as Id<"meals">,
     });
 
     if (!meal) {
-      return NextResponse.json({ error: '餐食不存在' }, { status: 404 });
+      return NextResponse.json({ error: "餐食不存在" }, { status: 404 });
     }
 
-    const isCreator = meal.plan.member.family.creatorId === session.user.id;
-    const isAdmin = meal.plan.member.family.members[0]?.role === 'ADMIN' || isCreator;
-    const isSelf = meal.plan.member.userId === session.user.id;
-
-    if (!isAdmin && !isSelf) {
-      return NextResponse.json({ error: '无权限操作' }, { status: 403 });
-    }
-
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 查询原始 ingredient
-    const { data: originalIngredient, error: origError } = await supabase
-      .from('meal_ingredients')
-      .select('*, food:foods(*)')
-      .eq('id', ingredientId)
-      .eq('mealId', mealId)
-      .maybeSingle();
-
-    if (origError || !originalIngredient) {
-      return NextResponse.json({ error: '食材不存在' }, { status: 404 });
-    }
-
-    // 验证新食材存在
-    const { data: newFood, error: foodError } = await supabase
-      .from('foods')
-      .select('*')
-      .eq('id', newFoodId)
-      .maybeSingle();
-
-    if (foodError || !newFood) {
-      return NextResponse.json({ error: '新食材不存在' }, { status: 404 });
-    }
-
-    // 更新食材（使用 Supabase）
-    const { data: updatedIngredient, error: updateError } = await supabase
-      .from('meal_ingredients')
-      .update({
-        foodId: newFoodId,
-        amount: newAmount,
-      })
-      .eq('id', ingredientId)
-      .select('*, food:foods(*)')
-      .single();
-
-    if (updateError) {
-      console.error('更新食材失败:', updateError);
-      return NextResponse.json({ error: '更新食材失败' }, { status: 500 });
-    }
-
-    // 重新查询所有 ingredients 和对应的 foods
-    const { data: allIngredients, error: ingredientsError } = await supabase
-      .from('meal_ingredients')
-      .select('*, food:foods(*)')
-      .eq('mealId', mealId);
-
-    if (ingredientsError) {
-      console.error('查询食材失败:', ingredientsError);
-      return NextResponse.json({ error: '查询食材失败' }, { status: 500 });
-    }
-
-    // 计算总营养（假设营养数据是每100g）
-    const totalNutrition = (allIngredients || []).reduce((acc, ing: any) => {
-      const factor = ing.amount / 100;
-      const food = ing.food;
-      return {
-        calories: acc.calories + (food?.calories || 0) * factor,
-        protein: acc.protein + (food?.protein || 0) * factor,
-        carbs: acc.carbs + (food?.carbs || 0) * factor,
-        fat: acc.fat + (food?.fat || 0) * factor,
-      };
-    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-    // 使用 Repository 更新餐食营养数据
-    await mealPlanRepository.updateMeal(mealId, {
-      calories: totalNutrition.calories,
-      protein: totalNutrition.protein,
-      carbs: totalNutrition.carbs,
-      fat: totalNutrition.fat,
+    const plan = await convexClient.query<{
+      memberId: Id<"familyMembers">;
+    } | null>(api.meals.getPlanById, {
+      planId: meal.planId,
     });
 
-    return NextResponse.json({
-      message: '食材替换成功',
-      originalIngredient: {
-        id: originalIngredient.id,
-        food: originalIngredient.food,
-        amount: originalIngredient.amount,
-      },
-      newIngredient: {
-        id: updatedIngredient.id,
-        food: updatedIngredient.food,
-        amount: updatedIngredient.amount,
-      },
-      updatedNutrition: totalNutrition,
-    }, { status: 200 });
+    if (!plan) {
+      return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
+    }
 
+    const access = await convexClient.query<{ hasAccess: boolean }>(
+      api.members.verifyAccess,
+      {
+        memberId: plan.memberId as Id<"familyMembers">,
+        clerkId: session.user.id,
+      },
+    );
+
+    if (!access.hasAccess) {
+      return NextResponse.json({ error: "无权限操作" }, { status: 403 });
+    }
+
+    const originalIngredient = await convexClient.query<{
+      _id: Id<"mealIngredients">;
+      mealId: Id<"meals">;
+      foodId: Id<"foods">;
+      amount: number;
+    } | null>(api.meals.getMealIngredientById, {
+      ingredientId: ingredientId as Id<"mealIngredients">,
+    });
+
+    if (!originalIngredient || originalIngredient.mealId !== meal._id) {
+      return NextResponse.json({ error: "食材不存在" }, { status: 404 });
+    }
+
+    const originalFood = await convexClient.query<Record<
+      string,
+      unknown
+    > | null>(api.budget.getFoodById, { foodId: originalIngredient.foodId });
+
+    const newFood = await convexClient.query<Record<string, unknown> | null>(
+      api.budget.getFoodById,
+      { foodId: newFoodId as Id<"foods"> },
+    );
+
+    if (!newFood) {
+      return NextResponse.json({ error: "新食材不存在" }, { status: 404 });
+    }
+
+    await convexClient.mutation(api.meals.updateMealIngredient, {
+      ingredientId: ingredientId as Id<"mealIngredients">,
+      foodId: newFoodId as Id<"foods">,
+      amount: newAmount,
+    });
+
+    const allIngredients = await convexClient.query<
+      Array<{ foodId: Id<"foods">; amount: number }>
+    >(api.meals.listMealIngredients, {
+      mealId: mealId as Id<"meals">,
+    });
+
+    const totalNutrition = await nutritionCalculator.calculateBatch(
+      allIngredients.map((ingredient) => ({
+        foodId: ingredient.foodId as string,
+        amount: ingredient.amount,
+      })),
+    );
+
+    await convexClient.mutation(api.meals.updateMeal, {
+      mealId: mealId as Id<"meals">,
+      calories: totalNutrition.totalCalories,
+      protein: totalNutrition.totalProtein,
+      carbs: totalNutrition.totalCarbs,
+      fat: totalNutrition.totalFat,
+    });
+
+    return NextResponse.json(
+      {
+        message: "食材替换成功",
+        originalIngredient: {
+          id: originalIngredient._id,
+          food: {
+            id: originalIngredient.foodId,
+            name: (originalFood?.name as string | undefined) ?? "",
+          },
+          amount: originalIngredient.amount,
+        },
+        newIngredient: {
+          id: ingredientId,
+          food: newFood,
+          amount: newAmount,
+        },
+        updatedNutrition: {
+          calories: totalNutrition.totalCalories,
+          protein: totalNutrition.totalProtein,
+          carbs: totalNutrition.totalCarbs,
+          fat: totalNutrition.totalFat,
+        },
+      },
+      { status: 200 },
+    );
   } catch (error) {
-    console.error('替换食材失败:', error);
-    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
+    console.error("替换食材失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

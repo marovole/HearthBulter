@@ -36,9 +36,9 @@
  * @returns {boolean} `true` if user prefers reduced motion, `false` otherwise
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
 /**
  * Gets the initial prefers-reduced-motion value safely.
@@ -46,7 +46,10 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
  */
 function getInitialPrefersReducedMotion(): boolean {
   // Guard against SSR and environments without matchMedia
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+  if (
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function"
+  ) {
     return false;
   }
 
@@ -54,19 +57,22 @@ function getInitialPrefersReducedMotion(): boolean {
     return window.matchMedia(REDUCED_MOTION_QUERY).matches;
   } catch (error) {
     // Fallback for browsers that don't support matchMedia
-    console.warn('[usePrefersReducedMotion] matchMedia not supported:', error);
+    console.warn("[usePrefersReducedMotion] matchMedia not supported:", error);
     return false;
   }
 }
 
 export function usePrefersReducedMotion(): boolean {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(
-    getInitialPrefersReducedMotion
+    getInitialPrefersReducedMotion,
   );
 
   useEffect(() => {
     // Early return for SSR
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
       return;
     }
 
@@ -75,7 +81,10 @@ export function usePrefersReducedMotion(): boolean {
     try {
       mediaQueryList = window.matchMedia(REDUCED_MOTION_QUERY);
     } catch (error) {
-      console.warn('[usePrefersReducedMotion] Failed to create media query:', error);
+      console.warn(
+        "[usePrefersReducedMotion] Failed to create media query:",
+        error,
+      );
       return;
     }
 
@@ -89,10 +98,10 @@ export function usePrefersReducedMotion(): boolean {
     setPrefersReducedMotion(mediaQueryList.matches);
 
     // Modern browsers: addEventListener
-    if ('addEventListener' in mediaQueryList) {
-      mediaQueryList.addEventListener('change', handleChange);
+    if ("addEventListener" in mediaQueryList) {
+      mediaQueryList.addEventListener("change", handleChange);
       return () => {
-        mediaQueryList.removeEventListener('change', handleChange);
+        mediaQueryList.removeEventListener("change", handleChange);
       };
     }
 

@@ -1,48 +1,53 @@
 /**
  * 营养计算服务
- * 
+ *
  * 提供营养计算工具，包括批量计算、单位转换等功能
  */
 
-import { prisma } from '@/lib/db';
-import type { FoodCategory, DataSource } from '@prisma/client';
+import { convexClient, api } from "@/lib/convex-client";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 
 interface NutritionInput {
-  foodId: string
-  amount: number // 重量（单位：g）
+  foodId: string;
+  amount: number; // 重量（单位：g）
 }
 
 interface NutritionResult {
-  foodId: string
-  foodName: string
-  amount: number
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  fiber?: number
-  sugar?: number
-  sodium?: number
-  vitaminA?: number
-  vitaminC?: number
-  calcium?: number
-  iron?: number
+  foodId: string;
+  foodName: string;
+  amount: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+  vitaminA?: number;
+  vitaminC?: number;
+  calcium?: number;
+  iron?: number;
 }
 
 interface NutritionSummary {
-  totalCalories: number
-  totalProtein: number
-  totalCarbs: number
-  totalFat: number
-  totalFiber?: number
-  totalSugar?: number
-  totalSodium?: number
-  totalVitaminA?: number
-  totalVitaminC?: number
-  totalCalcium?: number
-  totalIron?: number
-  items: NutritionResult[]
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
+  totalFiber?: number;
+  totalSugar?: number;
+  totalSodium?: number;
+  totalVitaminA?: number;
+  totalVitaminC?: number;
+  totalCalcium?: number;
+  totalIron?: number;
+  items: NutritionResult[];
 }
+
+const roundTo = (value: number, decimals: number) => {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+};
 
 /**
  * 单位转换函数
@@ -53,18 +58,18 @@ export class UnitConverter {
    * @param amount 数量
    * @param unit 单位
    */
-  static toGrams(amount: number, unit: 'g' | 'kg' | 'oz' | 'lb'): number {
+  static toGrams(amount: number, unit: "g" | "kg" | "oz" | "lb"): number {
     switch (unit) {
-    case 'g':
-      return amount;
-    case 'kg':
-      return amount * 1000;
-    case 'oz':
-      return amount * 28.35; // 1 oz = 28.35g
-    case 'lb':
-      return amount * 453.592; // 1 lb = 453.592g
-    default:
-      return amount;
+      case "g":
+        return amount;
+      case "kg":
+        return amount * 1000;
+      case "oz":
+        return amount * 28.35; // 1 oz = 28.35g
+      case "lb":
+        return amount * 453.592; // 1 lb = 453.592g
+      default:
+        return amount;
     }
   }
 
@@ -74,8 +79,8 @@ export class UnitConverter {
    */
   static volumeToGrams(
     amount: number,
-    unit: 'cup' | 'tbsp' | 'tsp' | 'ml' | 'l',
-    foodType?: string
+    unit: "cup" | "tbsp" | "tsp" | "ml" | "l",
+    foodType?: string,
   ): number {
     // 常用食物的体积到重量转换（近似值）
     const conversionTable: Record<string, Record<string, number>> = {
@@ -87,24 +92,24 @@ export class UnitConverter {
       default: { cup: 200, tbsp: 12.5, tsp: 4.2, ml: 1, l: 1000 },
     };
 
-    const table =
-      foodType && conversionTable[foodType]
-        ? conversionTable[foodType]
-        : conversionTable.default;
+    const table: Record<string, number> = conversionTable[foodType ?? ""] ??
+      conversionTable.default ?? { cup: 0, tbsp: 0, tsp: 0, ml: 0, l: 0 };
+
+    const getValue = (key: string) => table[key] ?? 0;
 
     switch (unit) {
-    case 'cup':
-      return amount * table.cup;
-    case 'tbsp':
-      return amount * table.tbsp;
-    case 'tsp':
-      return amount * table.tsp;
-    case 'ml':
-      return amount * table.ml;
-    case 'l':
-      return amount * table.l;
-    default:
-      return amount;
+      case "cup":
+        return amount * getValue("cup");
+      case "tbsp":
+        return amount * getValue("tbsp");
+      case "tsp":
+        return amount * getValue("tsp");
+      case "ml":
+        return amount * getValue("ml");
+      case "l":
+        return amount * getValue("l");
+      default:
+        return amount;
     }
   }
 }
@@ -120,11 +125,12 @@ export class NutritionCalculator {
    */
   async calculateSingleFood(
     foodId: string,
-    amount: number
+    amount: number,
   ): Promise<NutritionResult | null> {
-    const food = await prisma.food.findUnique({
-      where: { id: foodId },
-    });
+    const food = await convexClient.query<Doc<"foods"> | null>(
+      api.budget.getFoodById,
+      { foodId: foodId as Id<"foods"> },
+    );
 
     if (!food) {
       return null;
@@ -133,32 +139,14 @@ export class NutritionCalculator {
     const ratio = amount / 100; // 数据库存储per 100g
 
     return {
-      foodId: food.id,
+      foodId: food._id,
       foodName: food.name,
       amount,
-      calories: Math.round(food.calories * ratio * 10) / 10,
-      protein: Math.round(food.protein * ratio * 10) / 10,
-      carbs: Math.round(food.carbs * ratio * 10) / 10,
-      fat: Math.round(food.fat * ratio * 10) / 10,
-      fiber: food.fiber
-        ? Math.round(food.fiber * ratio * 10) / 10
-        : undefined,
-      sugar: food.sugar
-        ? Math.round(food.sugar * ratio * 10) / 10
-        : undefined,
-      sodium: food.sodium
-        ? Math.round(food.sodium * ratio * 10) / 10
-        : undefined,
-      vitaminA: food.vitaminA
-        ? Math.round(food.vitaminA * ratio * 10) / 10
-        : undefined,
-      vitaminC: food.vitaminC
-        ? Math.round(food.vitaminC * ratio * 10) / 10
-        : undefined,
-      calcium: food.calcium
-        ? Math.round(food.calcium * ratio * 10) / 10
-        : undefined,
-      iron: food.iron ? Math.round(food.iron * ratio * 10) / 10 : undefined,
+      calories: roundTo(food.calories * ratio, 1),
+      protein: roundTo(food.protein * ratio, 1),
+      carbs: roundTo(food.carbs * ratio, 1),
+      fat: roundTo(food.fat * ratio, 1),
+      fiber: food.fiber != null ? roundTo(food.fiber * ratio, 1) : undefined,
     };
   }
 
@@ -169,119 +157,67 @@ export class NutritionCalculator {
   async calculateBatch(inputs: NutritionInput[]): Promise<NutritionSummary> {
     // 批量查询所有食物
     const foodIds = inputs.map((input) => input.foodId);
-    const foods = await prisma.food.findMany({
-      where: { id: { in: foodIds } },
-    });
+    const foods = await convexClient.query<Doc<"foods">[]>(
+      api.budget.getFoodsByIds,
+      { foodIds: foodIds as Id<"foods">[] },
+    );
 
     // 创建食物ID到食物对象的映射
-    const foodMap = new Map(foods.map((food) => [food.id, food]));
+    const foodMap = new Map<string, Doc<"foods">>(
+      foods.map((food) => [food._id as string, food]),
+    );
 
-    // 计算每个食物的营养
     const items: NutritionResult[] = [];
+    const totals = {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+    };
+
     for (const input of inputs) {
       const food = foodMap.get(input.foodId);
       if (!food) {
-        continue; // 跳过未找到的食物
+        continue;
       }
 
       const ratio = input.amount / 100;
+      const calories = food.calories * ratio;
+      const protein = food.protein * ratio;
+      const carbs = food.carbs * ratio;
+      const fat = food.fat * ratio;
+      const fiber = food.fiber != null ? food.fiber * ratio : 0;
+
+      totals.calories += calories;
+      totals.protein += protein;
+      totals.carbs += carbs;
+      totals.fat += fat;
+      totals.fiber += fiber;
+
       items.push({
-        foodId: food.id,
+        foodId: food._id,
         foodName: food.name,
         amount: input.amount,
-        calories: Math.round(food.calories * ratio * 10) / 10,
-        protein: Math.round(food.protein * ratio * 10) / 10,
-        carbs: Math.round(food.carbs * ratio * 10) / 10,
-        fat: Math.round(food.fat * ratio * 10) / 10,
-        fiber: food.fiber
-          ? Math.round(food.fiber * ratio * 10) / 10
-          : undefined,
-        sugar: food.sugar
-          ? Math.round(food.sugar * ratio * 10) / 10
-          : undefined,
-        sodium: food.sodium
-          ? Math.round(food.sodium * ratio * 10) / 10
-          : undefined,
-        vitaminA: food.vitaminA
-          ? Math.round(food.vitaminA * ratio * 10) / 10
-          : undefined,
-        vitaminC: food.vitaminC
-          ? Math.round(food.vitaminC * ratio * 10) / 10
-          : undefined,
-        calcium: food.calcium
-          ? Math.round(food.calcium * ratio * 10) / 10
-          : undefined,
-        iron: food.iron
-          ? Math.round(food.iron * ratio * 10) / 10
-          : undefined,
+        calories: roundTo(calories, 2),
+        protein: roundTo(protein, 2),
+        carbs: roundTo(carbs, 2),
+        fat: roundTo(fat, 2),
+        fiber: food.fiber != null ? roundTo(fiber, 2) : undefined,
       });
     }
 
-    // 计算总和
     const summary: NutritionSummary = {
-      totalCalories: Math.round(
-        items.reduce((sum, item) => sum + item.calories, 0) * 10
-      ) / 10,
-      totalProtein: Math.round(
-        items.reduce((sum, item) => sum + item.protein, 0) * 10
-      ) / 10,
-      totalCarbs: Math.round(
-        items.reduce((sum, item) => sum + item.carbs, 0) * 10
-      ) / 10,
-      totalFat: Math.round(
-        items.reduce((sum, item) => sum + item.fat, 0) * 10
-      ) / 10,
+      totalCalories: roundTo(totals.calories, 1),
+      totalProtein: roundTo(totals.protein, 1),
+      totalCarbs: roundTo(totals.carbs, 1),
+      totalFat: roundTo(totals.fat, 1),
       items,
     };
 
     // 可选营养素的总和
     if (items.some((item) => item.fiber !== undefined)) {
-      summary.totalFiber =
-        Math.round(
-          items.reduce((sum, item) => sum + (item.fiber || 0), 0) * 10
-        ) / 10;
-    }
-
-    if (items.some((item) => item.sugar !== undefined)) {
-      summary.totalSugar =
-        Math.round(
-          items.reduce((sum, item) => sum + (item.sugar || 0), 0) * 10
-        ) / 10;
-    }
-
-    if (items.some((item) => item.sodium !== undefined)) {
-      summary.totalSodium =
-        Math.round(
-          items.reduce((sum, item) => sum + (item.sodium || 0), 0) * 10
-        ) / 10;
-    }
-
-    if (items.some((item) => item.vitaminA !== undefined)) {
-      summary.totalVitaminA =
-        Math.round(
-          items.reduce((sum, item) => sum + (item.vitaminA || 0), 0) * 10
-        ) / 10;
-    }
-
-    if (items.some((item) => item.vitaminC !== undefined)) {
-      summary.totalVitaminC =
-        Math.round(
-          items.reduce((sum, item) => sum + (item.vitaminC || 0), 0) * 10
-        ) / 10;
-    }
-
-    if (items.some((item) => item.calcium !== undefined)) {
-      summary.totalCalcium =
-        Math.round(
-          items.reduce((sum, item) => sum + (item.calcium || 0), 0) * 10
-        ) / 10;
-    }
-
-    if (items.some((item) => item.iron !== undefined)) {
-      summary.totalIron =
-        Math.round(
-          items.reduce((sum, item) => sum + (item.iron || 0), 0) * 10
-        ) / 10;
+      summary.totalFiber = roundTo(totals.fiber, 1);
     }
 
     return summary;
@@ -293,4 +229,3 @@ export const nutritionCalculator = new NutritionCalculator();
 
 // 导出类型
 export type { NutritionInput, NutritionResult, NutritionSummary };
-

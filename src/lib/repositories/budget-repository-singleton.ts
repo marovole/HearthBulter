@@ -6,9 +6,8 @@
  * @module budget-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseBudgetRepository } from './implementations/supabase-budget-repository';
-import type { BudgetRepository } from './interfaces/budget-repository';
+import { ConvexBudgetRepository } from "./implementations/convex-budget-repository";
+import type { BudgetRepository } from "./interfaces/budget-repository";
 
 let instance: BudgetRepository | null = null;
 
@@ -19,8 +18,7 @@ let instance: BudgetRepository | null = null;
  */
 export function getBudgetRepository(): BudgetRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseBudgetRepository(supabaseClient);
+    instance = new ConvexBudgetRepository();
   }
   return instance;
 }

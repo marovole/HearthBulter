@@ -1,32 +1,32 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { MacroPieChart } from '@/components/dashboard/MacroPieChart';
+import { useState, useEffect } from "react";
+import { MacroPieChart } from "@/components/dashboard/MacroPieChart";
 
 interface NutritionData {
-  planId: string
+  planId: string;
   total: {
-    calories: number
-    protein: number
-    carbs: number
-    fat: number
-  }
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
   daily: {
-    calories: number
-    protein: number
-    carbs: number
-    fat: number
-  }
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
   target: {
-    calories: number
-    protein: number
-    carbs: number
-    fat: number
-  }
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
 }
 
 interface NutritionSummaryProps {
-  planId: string
+  planId: string;
 }
 
 function calculatePercentage(actual: number, target: number): number {
@@ -35,10 +35,10 @@ function calculatePercentage(actual: number, target: number): number {
 }
 
 function getProgressColor(percentage: number): string {
-  if (percentage >= 90 && percentage <= 110) return 'bg-green-600';
-  if (percentage >= 80 && percentage < 90) return 'bg-yellow-500';
-  if (percentage > 110) return 'bg-orange-500';
-  return 'bg-red-500';
+  if (percentage >= 90 && percentage <= 110) return "bg-green-600";
+  if (percentage >= 80 && percentage < 90) return "bg-yellow-500";
+  if (percentage > 110) return "bg-orange-500";
+  return "bg-red-500";
 }
 
 export function NutritionSummary({ planId }: NutritionSummaryProps) {
@@ -63,13 +63,13 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
       const response = await fetch(`/api/meal-plans/${planId}/nutrition`);
 
       if (!response.ok) {
-        throw new Error('获取营养汇总失败');
+        throw new Error("获取营养汇总失败");
       }
 
       const data = await response.json();
       setNutrition(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误');
+      setError(err instanceof Error ? err.message : "未知错误");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,10 +84,10 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
   const getNutritionAdvice = (
     actual: number,
     target: number,
-    nutrientName: string
+    nutrientName: string,
   ): string | null => {
     const percentage = (actual / target) * 100;
-    
+
     if (percentage < 80) {
       return `${nutrientName}摄入偏低，建议适当增加富含${nutrientName}的食物`;
     } else if (percentage > 120) {
@@ -143,45 +143,59 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
 
   const caloriesPercentage = calculatePercentage(
     nutrition.daily.calories,
-    nutrition.target.calories
+    nutrition.target.calories,
   );
   const proteinPercentage = calculatePercentage(
     nutrition.daily.protein,
-    nutrition.target.protein
+    nutrition.target.protein,
   );
   const carbsPercentage = calculatePercentage(
     nutrition.daily.carbs,
-    nutrition.target.carbs
+    nutrition.target.carbs,
   );
   const fatPercentage = calculatePercentage(
     nutrition.daily.fat,
-    nutrition.target.fat
+    nutrition.target.fat,
   );
 
   // 收集所有建议
   const adviceList = [
-    getNutritionAdvice(nutrition.daily.calories, nutrition.target.calories, '热量'),
-    getNutritionAdvice(nutrition.daily.protein, nutrition.target.protein, '蛋白质'),
-    getNutritionAdvice(nutrition.daily.carbs, nutrition.target.carbs, '碳水化合物'),
-    getNutritionAdvice(nutrition.daily.fat, nutrition.target.fat, '脂肪'),
+    getNutritionAdvice(
+      nutrition.daily.calories,
+      nutrition.target.calories,
+      "热量",
+    ),
+    getNutritionAdvice(
+      nutrition.daily.protein,
+      nutrition.target.protein,
+      "蛋白质",
+    ),
+    getNutritionAdvice(
+      nutrition.daily.carbs,
+      nutrition.target.carbs,
+      "碳水化合物",
+    ),
+    getNutritionAdvice(nutrition.daily.fat, nutrition.target.fat, "脂肪"),
   ].filter(Boolean);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">营养统计</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+          营养统计
+        </h2>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             refreshing
-              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-              : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+              ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+              : "bg-blue-50 text-blue-700 hover:bg-blue-100"
           }`}
           aria-label="刷新营养数据"
         >
-          <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
-          <span>{refreshing ? '刷新中...' : '刷新数据'}</span>
+          <span className={refreshing ? "animate-spin" : ""}>🔄</span>
+          <span>{refreshing ? "刷新中..." : "刷新数据"}</span>
         </button>
       </div>
 
@@ -209,7 +223,9 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-600 mb-3 text-center">🎯 目标分布</h4>
+            <h4 className="text-sm font-medium text-gray-600 mb-3 text-center">
+              🎯 目标分布
+            </h4>
             <MacroPieChart
               target={{
                 carbs: nutrition.target.carbs,
@@ -219,7 +235,9 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
             />
           </div>
           <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-600 mb-3 text-center">✅ 实际分布</h4>
+            <h4 className="text-sm font-medium text-gray-600 mb-3 text-center">
+              ✅ 实际分布
+            </h4>
             <MacroPieChart
               actual={{
                 carbs: nutrition.daily.carbs,
@@ -251,10 +269,10 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
               <span
                 className={`font-medium px-2 py-0.5 rounded ${
                   caloriesPercentage >= 90 && caloriesPercentage <= 110
-                    ? 'text-green-600 bg-green-50'
+                    ? "text-green-600 bg-green-50"
                     : caloriesPercentage < 90
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-orange-600 bg-orange-50'
+                      ? "text-yellow-600 bg-yellow-50"
+                      : "text-orange-600 bg-orange-50"
                 }`}
               >
                 {caloriesPercentage.toFixed(0)}%
@@ -283,10 +301,10 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
               <span
                 className={`font-medium px-2 py-0.5 rounded ${
                   proteinPercentage >= 90 && proteinPercentage <= 110
-                    ? 'text-green-600 bg-green-50'
+                    ? "text-green-600 bg-green-50"
                     : proteinPercentage < 90
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-orange-600 bg-orange-50'
+                      ? "text-yellow-600 bg-yellow-50"
+                      : "text-orange-600 bg-orange-50"
                 }`}
               >
                 {proteinPercentage.toFixed(0)}%
@@ -304,7 +322,9 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
         {/* 碳水化合物 */}
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-            <span className="text-sm font-medium text-gray-700">🍚 碳水化合物</span>
+            <span className="text-sm font-medium text-gray-700">
+              🍚 碳水化合物
+            </span>
             <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
               <span className="text-gray-600">
                 目标: {nutrition.target.carbs.toFixed(1)}g
@@ -315,10 +335,10 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
               <span
                 className={`font-medium px-2 py-0.5 rounded ${
                   carbsPercentage >= 90 && carbsPercentage <= 110
-                    ? 'text-green-600 bg-green-50'
+                    ? "text-green-600 bg-green-50"
                     : carbsPercentage < 90
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-orange-600 bg-orange-50'
+                      ? "text-yellow-600 bg-yellow-50"
+                      : "text-orange-600 bg-orange-50"
                 }`}
               >
                 {carbsPercentage.toFixed(0)}%
@@ -347,10 +367,10 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
               <span
                 className={`font-medium px-2 py-0.5 rounded ${
                   fatPercentage >= 90 && fatPercentage <= 110
-                    ? 'text-green-600 bg-green-50'
+                    ? "text-green-600 bg-green-50"
                     : fatPercentage < 90
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-orange-600 bg-orange-50'
+                      ? "text-yellow-600 bg-yellow-50"
+                      : "text-orange-600 bg-orange-50"
                 }`}
               >
                 {fatPercentage.toFixed(0)}%
@@ -368,7 +388,9 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
 
       {/* 总计数据 */}
       <div className="mt-6 pt-6 border-t border-gray-200">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">📊 总计数据</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
+          📊 总计数据
+        </h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="text-xs text-gray-600 mb-1">总热量</div>
@@ -403,4 +425,3 @@ export function NutritionSummary({ planId }: NutritionSummaryProps) {
     </div>
   );
 }
-

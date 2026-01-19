@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Search, Clock, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Search, Clock, TrendingUp } from "lucide-react";
 
 interface Food {
   id: string;
@@ -21,8 +21,13 @@ interface FoodSearchDialogProps {
   memberId: string;
 }
 
-export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: FoodSearchDialogProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+export function FoodSearchDialog({
+  isOpen,
+  onClose,
+  onSelectFood,
+  memberId,
+}: FoodSearchDialogProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Food[]>([]);
   const [recentFoods, setRecentFoods] = useState<Food[]>([]);
   const [commonFoods, setCommonFoods] = useState<Food[]>([]);
@@ -46,40 +51,44 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
 
   const loadRecentFoods = async () => {
     try {
-      const response = await fetch(`/api/tracking/meals/recent?memberId=${memberId}&limit=10`);
+      const response = await fetch(
+        `/api/tracking/meals/recent?memberId=${memberId}&limit=10`,
+      );
       if (response.ok) {
         const data = await response.json();
         setRecentFoods(data);
       }
     } catch (error) {
-      console.error('加载最近食物失败:', error);
+      console.error("加载最近食物失败:", error);
     }
   };
 
   const loadCommonFoods = async () => {
     try {
-      const response = await fetch('/api/tracking/meals/common?limit=15');
+      const response = await fetch("/api/tracking/meals/common?limit=15");
       if (response.ok) {
         const data = await response.json();
         setCommonFoods(data);
       }
     } catch (error) {
-      console.error('加载常用食物失败:', error);
+      console.error("加载常用食物失败:", error);
     }
   };
 
   const searchFoods = async () => {
     if (!searchQuery.trim()) return;
-    
+
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/tracking/meals/search?q=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(
+        `/api/tracking/meals/search?q=${encodeURIComponent(searchQuery)}`,
+      );
       if (response.ok) {
         const data = await response.json();
         setSearchResults(data);
       }
     } catch (error) {
-      console.error('搜索食物失败:', error);
+      console.error("搜索食物失败:", error);
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +100,7 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
       amount: selectedAmount,
     });
     onClose();
-    setSearchQuery('');
+    setSearchQuery("");
     setSearchResults([]);
   };
 
@@ -99,7 +108,9 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
     return ((value * amount) / 100).toFixed(1);
   };
 
-  const displayFoods = searchQuery.trim() ? searchResults : [...recentFoods, ...commonFoods];
+  const displayFoods = searchQuery.trim()
+    ? searchResults
+    : [...recentFoods, ...commonFoods];
 
   if (!isOpen) return null;
 
@@ -117,7 +128,7 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
               ✕
             </button>
           </div>
-          
+
           {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -144,7 +155,9 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
                 onChange={(e) => setSelectedAmount(Number(e.target.value))}
                 className="w-32"
               />
-              <span className="text-sm font-medium w-16">{selectedAmount}g</span>
+              <span className="text-sm font-medium w-16">
+                {selectedAmount}g
+              </span>
             </div>
           </div>
         </div>
@@ -159,7 +172,7 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
           ) : displayFoods.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">
-                {searchQuery.trim() ? '未找到相关食物' : '暂无最近食用的食物'}
+                {searchQuery.trim() ? "未找到相关食物" : "暂无最近食用的食物"}
               </p>
             </div>
           ) : (
@@ -171,7 +184,7 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
                   最近食用
                 </div>
               )}
-              
+
               {!searchQuery.trim() && commonFoods.length > 0 && (
                 <div className="flex items-center text-sm font-medium text-gray-600 mb-2 mt-4">
                   <TrendingUp className="w-4 h-4 mr-1" />
@@ -195,7 +208,9 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-medium text-gray-900">{food.name}</h3>
-                      <p className="text-sm text-gray-500">{food.category} • {food.unit}</p>
+                      <p className="text-sm text-gray-500">
+                        {food.category} • {food.unit}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-blue-600">
@@ -203,19 +218,25 @@ export function FoodSearchDialog({ isOpen, onClose, onSelectFood, memberId }: Fo
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
                       <span className="text-gray-500">蛋白质</span>
-                      <p className="font-medium">{formatNutrition(food.protein, selectedAmount)}g</p>
+                      <p className="font-medium">
+                        {formatNutrition(food.protein, selectedAmount)}g
+                      </p>
                     </div>
                     <div>
                       <span className="text-gray-500">碳水</span>
-                      <p className="font-medium">{formatNutrition(food.carbs, selectedAmount)}g</p>
+                      <p className="font-medium">
+                        {formatNutrition(food.carbs, selectedAmount)}g
+                      </p>
                     </div>
                     <div>
                       <span className="text-gray-500">脂肪</span>
-                      <p className="font-medium">{formatNutrition(food.fat, selectedAmount)}g</p>
+                      <p className="font-medium">
+                        {formatNutrition(food.fat, selectedAmount)}g
+                      </p>
                     </div>
                   </div>
                 </div>

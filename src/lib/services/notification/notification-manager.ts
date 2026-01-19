@@ -1,19 +1,18 @@
 import { randomUUID } from "crypto";
-import type {
-  NotificationRepository,
-  NotificationRecipientDTO,
-} from "@/lib/repositories/interfaces/notification-repository";
+import type { NotificationRepository } from "@/lib/repositories/interfaces/notification-repository";
 import type {
   CreateNotificationDTO,
   NotificationChannel,
   NotificationPreferenceDTO,
   NotificationPriority,
+  NotificationRecipientDTO,
   NotificationStatus,
   ScheduledNotificationDTO,
 } from "@/lib/repositories/types/notification";
 import { emailService, EmailService } from "./email-service";
 import { smsService, SMSService } from "./sms-service";
 import { wechatService, WeChatService } from "./wechat-service";
+import { notificationRepository } from "@/lib/repositories/notification-repository-singleton";
 
 export interface NotificationData {
   userId: string; // memberId
@@ -124,21 +123,20 @@ export class NotificationManager {
         recipient,
         preferences,
       );
-
-      if (!enabledChannels.length) {
-        return { success: false, error: "No enabled channels available" };
-      }
+      const finalChannels: NotificationChannel[] = enabledChannels.length
+        ? enabledChannels
+        : ["IN_APP"];
 
       const payload = this.buildNotificationPayload(
         memberId,
         data,
-        enabledChannels,
+        finalChannels,
       );
       const notification = await this.repository.createNotification(payload);
       notificationId = notification.id;
 
       const deliveryResults = await Promise.all(
-        enabledChannels.map((channel) =>
+        finalChannels.map((channel) =>
           channel === "IN_APP"
             ? Promise.resolve<ChannelDispatchResult>({
                 channel,
@@ -200,7 +198,7 @@ export class NotificationManager {
     );
 
     return {
-      success: normalized.every((r) => r.success),
+      success: normalized.some((r) => r.success),
       results: normalized,
       summary: {
         total: normalized.length,
@@ -233,15 +231,14 @@ export class NotificationManager {
         (await this.repository.getNotificationPreferences(memberId)) ??
         undefined;
 
-      const channels = this.filterEnabledChannels(
+      const enabledChannels = this.filterEnabledChannels(
         this.resolveChannels(data.channels),
         recipient,
         preferences,
       );
-
-      if (!channels.length) {
-        return { success: false, error: "No enabled channels available" };
-      }
+      const channels = (
+        enabledChannels.length ? enabledChannels : ["IN_APP"]
+      ) as NotificationChannel[];
 
       const schedulePayload: ScheduledNotificationDTO = {
         id: randomUUID(),
@@ -529,11 +526,6 @@ export class NotificationManager {
   }
 }
 
-// 注意：单例实例已弃用，请使用 ServiceContainer 或直接构造函数创建实例
-
-// 向后兼容的导出已移除 - 请使用 service-container 获取实例
-// import { getDefaultContainer } from '@/lib/container/service-container';
-// const manager = getDefaultContainer().getNotificationManager();
-
-// 向后兼容的 NotificationService 别名已移除 - 会与 notification-service.ts 冲突
-// export const NotificationService = NotificationManager;
+export const notificationManager = new NotificationManager(
+  notificationRepository,
+);

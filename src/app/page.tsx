@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Hero from "@/components/landing/Hero";
 import FeaturesSection from "@/components/landing/FeaturesSection";
@@ -14,14 +14,14 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { isSignedIn } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user?.id) {
+    if (isSignedIn) {
       router.push("/dashboard");
     }
-  }, [status, session, router]);
+  }, [isSignedIn, router]);
 
   return (
     <main className="min-h-screen bg-background">

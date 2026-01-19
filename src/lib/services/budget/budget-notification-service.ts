@@ -1,5 +1,6 @@
 import type { NotificationRepository } from "@/lib/repositories/interfaces/notification-repository";
 import type { BudgetRepository } from "@/lib/repositories/interfaces/budget-repository";
+import type { FamilyRepository } from "@/lib/repositories/interfaces/family-repository";
 import type { NotificationPriority } from "@/lib/repositories/types/notification";
 
 /**
@@ -21,6 +22,7 @@ export class BudgetNotificationService {
   constructor(
     private readonly notificationRepo: NotificationRepository,
     private readonly budgetRepo: BudgetRepository,
+    private readonly familyRepo: FamilyRepository,
     private readonly notificationManager: INotificationManager,
   ) {}
 
@@ -297,8 +299,8 @@ export class BudgetNotificationService {
    */
   private async getUserName(memberId: string): Promise<string> {
     try {
-      const member = await this.budgetRepo.getMemberById(memberId);
-      if (member && member.name) {
+      const member = await this.familyRepo.getFamilyMemberById(memberId);
+      if (member?.name) {
         return member.name;
       }
       return "用户";
@@ -312,8 +314,8 @@ export class BudgetNotificationService {
    */
   private async getFamilyMembers(familyId: string): Promise<string[]> {
     try {
-      const members = await this.budgetRepo.getFamilyMembers(familyId);
-      return members.map((m) => m.id);
+      const members = await this.familyRepo.listFamilyMembers(familyId);
+      return members.map((member) => member.id);
     } catch (error) {
       console.error("Failed to get family members:", error);
       return [];

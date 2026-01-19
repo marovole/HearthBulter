@@ -11,7 +11,7 @@
  * @module notification-repository
  */
 
-import type { PaginatedResult, PaginationInput } from '../types/common';
+import type { PaginatedResult, PaginationInput } from "../types/common";
 import type {
   CreateNotificationDTO,
   NotificationDTO,
@@ -21,7 +21,7 @@ import type {
   NotificationRecipientDTO,
   NotificationStatus,
   ScheduledNotificationDTO,
-} from '../types/notification';
+} from "../types/notification";
 
 /**
  * 通知 Repository 接口
@@ -58,7 +58,7 @@ export interface NotificationRepository {
    */
   listMemberNotifications(
     query: NotificationListQuery,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<NotificationDTO>>;
 
   /**
@@ -108,7 +108,9 @@ export interface NotificationRepository {
    * @param schedule - 计划通知对象
    * @returns 创建的计划通知
    */
-  createScheduledNotification(schedule: ScheduledNotificationDTO): Promise<ScheduledNotificationDTO>;
+  createScheduledNotification(
+    schedule: ScheduledNotificationDTO,
+  ): Promise<ScheduledNotificationDTO>;
 
   /**
    * 列出到期待派发的计划通知
@@ -117,7 +119,10 @@ export interface NotificationRepository {
    * @param limit - 返回数量限制
    * @returns 待派发计划通知列表
    */
-  listDueSchedules(before: Date, limit: number): Promise<ScheduledNotificationDTO[]>;
+  listDueSchedules(
+    before: Date,
+    limit: number,
+  ): Promise<ScheduledNotificationDTO[]>;
 
   /**
    * 更新计划任务状态
@@ -125,7 +130,10 @@ export interface NotificationRepository {
    * @param scheduleId - 计划任务ID
    * @param status - 新状态
    */
-  updateScheduleStatus(scheduleId: string, status: ScheduledNotificationDTO['status']): Promise<void>;
+  updateScheduleStatus(
+    scheduleId: string,
+    status: ScheduledNotificationDTO["status"],
+  ): Promise<void>;
 
   /**
    * 查询通知偏好
@@ -133,14 +141,18 @@ export interface NotificationRepository {
    * @param memberId - 成员ID
    * @returns 通知偏好对象，不存在时返回 null
    */
-  getNotificationPreferences(memberId: string): Promise<NotificationPreferenceDTO | null>;
+  getNotificationPreferences(
+    memberId: string,
+  ): Promise<NotificationPreferenceDTO | null>;
 
   /**
    * 更新或创建通知偏好
    *
    * @param preference - 通知偏好对象
    */
-  upsertNotificationPreferences(preference: NotificationPreferenceDTO): Promise<void>;
+  upsertNotificationPreferences(
+    preference: NotificationPreferenceDTO,
+  ): Promise<void>;
 
   /**
    * 获取通知接收者信息
@@ -148,7 +160,9 @@ export interface NotificationRepository {
    * @param memberId - 成员ID
    * @returns 通知接收者对象，不存在时返回 null
    */
-  getNotificationRecipient(memberId: string): Promise<NotificationRecipientDTO | null>;
+  getNotificationRecipient(
+    memberId: string,
+  ): Promise<NotificationRecipientDTO | null>;
 
   /**
    * 删除通知

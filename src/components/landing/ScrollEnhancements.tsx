@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { motion, useScroll, useSpring } from 'framer-motion';
-import { ArrowUp } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { motion, useScroll, useSpring } from "framer-motion";
+import { ArrowUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function ScrollEnhancements() {
   const { scrollYProgress } = useScroll();
@@ -20,14 +20,14 @@ export default function ScrollEnhancements() {
       setShowScrollTop(window.scrollY > 500);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth',
+      behavior: "smooth",
     });
   };
 

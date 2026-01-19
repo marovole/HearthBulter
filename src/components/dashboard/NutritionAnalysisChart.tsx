@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   PieChart,
   Pie,
@@ -13,50 +13,56 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-} from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, TrendingUp, TrendingDown, Target } from 'lucide-react';
-import { EmptyStateGuide } from './EmptyStateGuide';
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle, TrendingUp, TrendingDown, Target } from "lucide-react";
+import { EmptyStateGuide } from "./EmptyStateGuide";
 
 interface NutritionData {
-  carbs: number
-  protein: number
-  fat: number
-  calories: number
+  carbs: number;
+  protein: number;
+  fat: number;
+  calories: number;
 }
 
 interface NutritionAnalysis {
-  target: NutritionData
-  actual: NutritionData
-  adherenceRate: number
-  period: 'daily' | 'weekly' | 'monthly'
-  startDate: Date
-  endDate: Date
+  target: NutritionData;
+  actual: NutritionData;
+  adherenceRate: number;
+  period: "daily" | "weekly" | "monthly";
+  startDate: Date;
+  endDate: Date;
 }
 
 interface NutritionAnalysisChartProps {
-  memberId: string
-  period?: 'daily' | 'weekly' | 'monthly'
+  memberId: string;
+  period?: "daily" | "weekly" | "monthly";
 }
 
 const COLORS = {
-  carbs: '#3b82f6', // 蓝色
-  protein: '#10b981', // 绿色
-  fat: '#f59e0b', // 橙色
+  carbs: "#3b82f6", // 蓝色
+  protein: "#10b981", // 绿色
+  fat: "#f59e0b", // 橙色
 };
 
 const NUTRITION_LABELS = {
-  carbs: '碳水化合物',
-  protein: '蛋白质',
-  fat: '脂肪',
+  carbs: "碳水化合物",
+  protein: "蛋白质",
+  fat: "脂肪",
 };
 
 export function NutritionAnalysisChart({
   memberId,
-  period = 'daily',
+  period = "daily",
 }: NutritionAnalysisChartProps) {
   const [data, setData] = useState<NutritionAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,15 +77,15 @@ export function NutritionAnalysisChart({
       setLoading(true);
       setError(null);
       const response = await fetch(
-        `/api/dashboard/nutrition-analysis?memberId=${memberId}&period=${period}`
+        `/api/dashboard/nutrition-analysis?memberId=${memberId}&period=${period}`,
       );
       if (!response.ok) {
-        throw new Error('加载营养分析数据失败');
+        throw new Error("加载营养分析数据失败");
       }
       const result = await response.json();
       setData(result.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : "加载失败");
     } finally {
       setLoading(false);
     }
@@ -113,43 +119,85 @@ export function NutritionAnalysisChart({
   }
 
   if (!data) {
-    return <EmptyStateGuide memberId={memberId} type="nutrition" onInitialize={loadData} />;
+    return (
+      <EmptyStateGuide
+        memberId={memberId}
+        type="nutrition"
+        onInitialize={loadData}
+      />
+    );
   }
 
   // 准备饼图数据
   const macroData = [
-    { name: NUTRITION_LABELS.carbs, value: data.actual.carbs, target: data.target.carbs },
-    { name: NUTRITION_LABELS.protein, value: data.actual.protein, target: data.target.protein },
-    { name: NUTRITION_LABELS.fat, value: data.actual.fat, target: data.target.fat },
+    {
+      name: NUTRITION_LABELS.carbs,
+      value: data.actual.carbs,
+      target: data.target.carbs,
+    },
+    {
+      name: NUTRITION_LABELS.protein,
+      value: data.actual.protein,
+      target: data.target.protein,
+    },
+    {
+      name: NUTRITION_LABELS.fat,
+      value: data.actual.fat,
+      target: data.target.fat,
+    },
   ];
 
   // 准备对比数据
   const comparisonData = [
-    { nutrient: '碳水化合物', 实际: data.actual.carbs, 目标: data.target.carbs },
-    { nutrient: '蛋白质', 实际: data.actual.protein, 目标: data.target.protein },
-    { nutrient: '脂肪', 实际: data.actual.fat, 目标: data.target.fat },
+    {
+      nutrient: "碳水化合物",
+      实际: data.actual.carbs,
+      目标: data.target.carbs,
+    },
+    {
+      nutrient: "蛋白质",
+      实际: data.actual.protein,
+      目标: data.target.protein,
+    },
+    { nutrient: "脂肪", 实际: data.actual.fat, 目标: data.target.fat },
   ];
 
   // 计算营养不平衡检测
   const detectImbalance = () => {
     const issues = [];
-    
+
     if (data.actual.carbs < data.target.carbs * 0.8) {
-      issues.push({ type: 'carbs', message: '碳水化合物摄入偏低', severity: 'medium' });
+      issues.push({
+        type: "carbs",
+        message: "碳水化合物摄入偏低",
+        severity: "medium",
+      });
     } else if (data.actual.carbs > data.target.carbs * 1.2) {
-      issues.push({ type: 'carbs', message: '碳水化合物摄入偏高', severity: 'low' });
+      issues.push({
+        type: "carbs",
+        message: "碳水化合物摄入偏高",
+        severity: "low",
+      });
     }
 
     if (data.actual.protein < data.target.protein * 0.8) {
-      issues.push({ type: 'protein', message: '蛋白质摄入偏低', severity: 'high' });
+      issues.push({
+        type: "protein",
+        message: "蛋白质摄入偏低",
+        severity: "high",
+      });
     } else if (data.actual.protein > data.target.protein * 1.2) {
-      issues.push({ type: 'protein', message: '蛋白质摄入偏高', severity: 'medium' });
+      issues.push({
+        type: "protein",
+        message: "蛋白质摄入偏高",
+        severity: "medium",
+      });
     }
 
     if (data.actual.fat < data.target.fat * 0.8) {
-      issues.push({ type: 'fat', message: '脂肪摄入偏低', severity: 'low' });
+      issues.push({ type: "fat", message: "脂肪摄入偏低", severity: "low" });
     } else if (data.actual.fat > data.target.fat * 1.2) {
-      issues.push({ type: 'fat', message: '脂肪摄入偏高', severity: 'medium' });
+      issues.push({ type: "fat", message: "脂肪摄入偏高", severity: "medium" });
     }
 
     return issues;
@@ -164,8 +212,12 @@ export function NutritionAnalysisChart({
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-semibold">{data.nutrient || data.name}</p>
-          {data.value !== undefined && <p className="text-sm">实际: {data.value}g</p>}
-          {data.target !== undefined && <p className="text-sm text-gray-500">目标: {data.target}g</p>}
+          {data.value !== undefined && (
+            <p className="text-sm">实际: {data.value}g</p>
+          )}
+          {data.target !== undefined && (
+            <p className="text-sm text-gray-500">目标: {data.target}g</p>
+          )}
         </div>
       );
     }
@@ -179,12 +231,19 @@ export function NutritionAnalysisChart({
           <div>
             <CardTitle className="flex items-center gap-2">
               营养摄入分析
-              <Badge variant={data.adherenceRate >= 80 ? 'default' : 'destructive'}>
+              <Badge
+                variant={data.adherenceRate >= 80 ? "default" : "destructive"}
+              >
                 达标率 {data.adherenceRate.toFixed(1)}%
               </Badge>
             </CardTitle>
             <CardDescription>
-              {period === 'daily' ? '今日' : period === 'weekly' ? '本周' : '本月'}营养摄入情况
+              {period === "daily"
+                ? "今日"
+                : period === "weekly"
+                  ? "本周"
+                  : "本月"}
+              营养摄入情况
             </CardDescription>
           </div>
           <div className="text-right">
@@ -206,7 +265,9 @@ export function NutritionAnalysisChart({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 营养素分布饼图 */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-center">营养素分布</h3>
+                <h3 className="text-lg font-semibold mb-4 text-center">
+                  营养素分布
+                </h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
@@ -214,13 +275,27 @@ export function NutritionAnalysisChart({
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({
+                        name,
+                        percent,
+                      }: {
+                        name?: string;
+                        percent?: number;
+                      }) =>
+                        `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
+                      }
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
                       {macroData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS] || '#8884d8'} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            COLORS[entry.name as keyof typeof COLORS] ||
+                            "#8884d8"
+                          }
+                        />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -255,7 +330,12 @@ export function NutritionAnalysisChart({
                         />
                       </div>
                       <div className="text-xs text-gray-500">
-                        {percentage.toFixed(1)}% {percentage >= 100 ? '✅' : percentage >= 80 ? '🟡' : '🔴'}
+                        {percentage.toFixed(1)}%{" "}
+                        {percentage >= 100
+                          ? "✅"
+                          : percentage >= 80
+                            ? "🟡"
+                            : "🔴"}
                       </div>
                     </div>
                   );
@@ -286,7 +366,10 @@ export function NutritionAnalysisChart({
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 营养分析洞察
                 {imbalanceIssues.length > 0 && (
-                  <Badge variant="destructive" className="flex items-center gap-1">
+                  <Badge
+                    variant="destructive"
+                    className="flex items-center gap-1"
+                  >
                     <AlertTriangle className="w-3 h-3" />
                     {imbalanceIssues.length} 个问题
                   </Badge>
@@ -299,30 +382,32 @@ export function NutritionAnalysisChart({
                     <div
                       key={index}
                       className={`p-3 rounded-lg border ${
-                        issue.severity === 'high'
-                          ? 'bg-red-50 border-red-200 text-red-800'
-                          : issue.severity === 'medium'
-                            ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                            : 'bg-blue-50 border-blue-200 text-blue-800'
+                        issue.severity === "high"
+                          ? "bg-red-50 border-red-200 text-red-800"
+                          : issue.severity === "medium"
+                            ? "bg-yellow-50 border-yellow-200 text-yellow-800"
+                            : "bg-blue-50 border-blue-200 text-blue-800"
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
                         <span className="font-medium">{issue.message}</span>
                       </div>
-                      {issue.type === 'protein' && (
+                      {issue.type === "protein" && (
                         <div className="mt-2 text-sm">
                           建议：增加鸡胸肉、鱼类、豆制品等高蛋白食物摄入
                         </div>
                       )}
-                      {issue.type === 'carbs' && issue.message.includes('偏低') && (
+                      {issue.type === "carbs" &&
+                        issue.message.includes("偏低") && (
                         <div className="mt-2 text-sm">
-                          建议：适量增加全谷物、薯类等复合碳水化合物
+                            建议：适量增加全谷物、薯类等复合碳水化合物
                         </div>
                       )}
-                      {issue.type === 'fat' && issue.message.includes('偏高') && (
+                      {issue.type === "fat" &&
+                        issue.message.includes("偏高") && (
                         <div className="mt-2 text-sm">
-                          建议：选择橄榄油、坚果等健康脂肪，控制油炸食品
+                            建议：选择橄榄油、坚果等健康脂肪，控制油炸食品
                         </div>
                       )}
                     </div>

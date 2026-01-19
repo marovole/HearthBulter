@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 interface ReportUploaderProps {
-  memberId: string
-  onSuccess?: (reportId: string) => void
-  onCancel?: () => void
+  memberId: string;
+  onSuccess?: (reportId: string) => void;
+  onCancel?: () => void;
 }
 
-const SUPPORTED_FORMATS = ['application/pdf', 'image/jpeg', 'image/png'];
+const SUPPORTED_FORMATS = ["application/pdf", "image/jpeg", "image/png"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function ReportUploader({
@@ -28,7 +28,7 @@ export function ReportUploader({
   const validateFile = useCallback((file: File): string | null => {
     // 验证文件类型
     if (!SUPPORTED_FORMATS.includes(file.type)) {
-      return '不支持的文件格式，仅支持 PDF、JPG、PNG 格式';
+      return "不支持的文件格式，仅支持 PDF、JPG、PNG 格式";
     }
 
     // 验证文件大小
@@ -49,7 +49,7 @@ export function ReportUploader({
       }
       setFile(selectedFile);
     },
-    [validateFile]
+    [validateFile],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -75,7 +75,7 @@ export function ReportUploader({
         handleFileSelect(droppedFile);
       }
     },
-    [handleFileSelect]
+    [handleFileSelect],
   );
 
   const handleFileInputChange = useCallback(
@@ -85,12 +85,12 @@ export function ReportUploader({
         handleFileSelect(selectedFile);
       }
     },
-    [handleFileSelect]
+    [handleFileSelect],
   );
 
   const handleUpload = async () => {
     if (!file) {
-      setError('请选择要上传的文件');
+      setError("请选择要上传的文件");
       return;
     }
 
@@ -100,7 +100,7 @@ export function ReportUploader({
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       // 模拟上传进度
       const progressInterval = setInterval(() => {
@@ -114,7 +114,7 @@ export function ReportUploader({
       }, 200);
 
       const response = await fetch(`/api/members/${memberId}/reports`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
@@ -124,7 +124,7 @@ export function ReportUploader({
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || '上传失败');
+        setError(data.error || "上传失败");
         setUploading(false);
         setUploadProgress(0);
         return;
@@ -142,9 +142,7 @@ export function ReportUploader({
         router.push(`/dashboard/families/${memberId}/reports/${data.reportId}`);
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : '上传失败，请重试'
-      );
+      setError(err instanceof Error ? err.message : "上传失败，请重试");
       setUploading(false);
       setUploadProgress(0);
     }
@@ -164,8 +162,8 @@ export function ReportUploader({
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               dragging
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-300 hover:border-gray-400'
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-300 hover:border-gray-400"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -202,9 +200,7 @@ export function ReportUploader({
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={handleFileInputChange}
                 />
-                <p className="mt-2 text-sm text-gray-600">
-                  或拖拽文件到此区域
-                </p>
+                <p className="mt-2 text-sm text-gray-600">或拖拽文件到此区域</p>
               </div>
               <p className="text-xs text-gray-500">
                 支持 PDF、JPG、PNG 格式，最大 10MB
@@ -219,7 +215,7 @@ export function ReportUploader({
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
-                  {file.type.startsWith('image/') ? (
+                  {file.type.startsWith("image/") ? (
                     <svg
                       className="h-8 w-8 text-gray-400"
                       fill="none"
@@ -343,4 +339,3 @@ export function ReportUploader({
     </div>
   );
 }
-

@@ -22,7 +22,7 @@
  * }
  */
 export async function getParam<T extends Record<string, string>>(
-  params: Promise<T>
+  params: Promise<T>,
 ): Promise<T> {
   return await params;
 }
@@ -39,7 +39,7 @@ export async function getParam<T extends Record<string, string>>(
  * }
  */
 export async function getParams<T extends Record<string, string>>(
-  params: Promise<T>
+  params: Promise<T>,
 ): Promise<T> {
   return await params;
 }

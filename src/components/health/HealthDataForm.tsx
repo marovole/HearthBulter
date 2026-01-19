@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface HealthDataFormProps {
-  memberId: string
-  onSuccess?: () => void
-  onCancel?: () => void
+  memberId: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 export function HealthDataForm({
@@ -19,18 +19,18 @@ export function HealthDataForm({
   const [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [formData, setFormData] = useState({
-    weight: '',
-    bodyFat: '',
-    muscleMass: '',
-    bloodPressureSystolic: '',
-    bloodPressureDiastolic: '',
-    heartRate: '',
-    bloodSugar: '',
-    sleep: '',
-    exercise: '',
-    steps: '',
-    measuredAt: new Date().toISOString().split('T')[0],
-    notes: '',
+    weight: "",
+    bodyFat: "",
+    muscleMass: "",
+    bloodPressureSystolic: "",
+    bloodPressureDiastolic: "",
+    heartRate: "",
+    bloodSugar: "",
+    sleep: "",
+    exercise: "",
+    steps: "",
+    measuredAt: new Date().toISOString().split("T")[0],
+    notes: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +42,7 @@ export function HealthDataForm({
     try {
       const payload: any = {
         measuredAt: formData.measuredAt,
-        source: 'MANUAL',
+        source: "MANUAL",
       };
 
       // 只添加有值的字段
@@ -51,22 +51,25 @@ export function HealthDataForm({
       if (formData.muscleMass)
         payload.muscleMass = parseFloat(formData.muscleMass);
       if (formData.bloodPressureSystolic)
-        payload.bloodPressureSystolic = parseInt(formData.bloodPressureSystolic);
+        payload.bloodPressureSystolic = parseInt(
+          formData.bloodPressureSystolic,
+        );
       if (formData.bloodPressureDiastolic)
         payload.bloodPressureDiastolic = parseInt(
-          formData.bloodPressureDiastolic
+          formData.bloodPressureDiastolic,
         );
       if (formData.heartRate) payload.heartRate = parseInt(formData.heartRate);
-      if (formData.bloodSugar) payload.bloodSugar = parseFloat(formData.bloodSugar);
+      if (formData.bloodSugar)
+        payload.bloodSugar = parseFloat(formData.bloodSugar);
       if (formData.sleep) payload.sleep = parseFloat(formData.sleep);
       if (formData.exercise) payload.exercise = parseFloat(formData.exercise);
       if (formData.steps) payload.steps = parseInt(formData.steps);
       if (formData.notes) payload.notes = formData.notes;
 
       const response = await fetch(`/api/members/${memberId}/health-data`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
@@ -74,7 +77,7 @@ export function HealthDataForm({
       const data = await response.json();
 
       if (!response.ok) {
-        setErrors(data.details || [data.error || '录入失败']);
+        setErrors(data.details || [data.error || "录入失败"]);
         if (data.warnings) {
           setWarnings(data.warnings);
         }
@@ -90,18 +93,18 @@ export function HealthDataForm({
 
       // 重置表单
       setFormData({
-        weight: '',
-        bodyFat: '',
-        muscleMass: '',
-        bloodPressureSystolic: '',
-        bloodPressureDiastolic: '',
-        heartRate: '',
-        bloodSugar: '',
-        sleep: '',
-        exercise: '',
-        steps: '',
-        measuredAt: new Date().toISOString().split('T')[0],
-        notes: '',
+        weight: "",
+        bodyFat: "",
+        muscleMass: "",
+        bloodPressureSystolic: "",
+        bloodPressureDiastolic: "",
+        heartRate: "",
+        bloodSugar: "",
+        sleep: "",
+        exercise: "",
+        steps: "",
+        measuredAt: new Date().toISOString().split("T")[0],
+        notes: "",
       });
 
       if (onSuccess) {
@@ -110,8 +113,8 @@ export function HealthDataForm({
         router.refresh();
       }
     } catch (error) {
-      console.error('录入健康数据失败:', error);
-      setErrors(['网络错误，请稍后重试']);
+      console.error("录入健康数据失败:", error);
+      setErrors(["网络错误，请稍后重试"]);
     } finally {
       setLoading(false);
     }
@@ -469,7 +472,7 @@ export function HealthDataForm({
           disabled={loading}
           className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? '提交中...' : '提交'}
+          {loading ? "提交中..." : "提交"}
         </button>
       </div>
     </form>

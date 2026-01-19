@@ -1,5 +1,19 @@
-import { PrismaClient } from '@prisma/client';
-import { RecipeRecommendation, RecommendationContext } from './recommendation-engine';
+import type {
+  RecommendationRepository,
+  RecipeDetailDTO,
+  RecipeFavoriteDetailDTO,
+  RecipeRatingDetailDTO,
+} from "@/lib/repositories/interfaces/recommendation-repository";
+import type {
+  RecommendationRecipeFilter,
+  UserPreferenceDTO,
+  HealthGoalDTO,
+  RecipeSummaryDTO,
+} from "@/lib/repositories/types/recommendation";
+import {
+  RecipeRecommendation,
+  RecommendationContext,
+} from "./recommendation-engine";
 
 interface RecipeFeatures {
   recipeId: string;
@@ -14,7 +28,7 @@ interface RecipeFeatures {
   difficulty: string;
   category: string;
   tags: string[];
-  costLevel: string;
+  costLevel: "LOW" | "MEDIUM" | "HIGH";
 }
 
 interface UserProfile {
@@ -31,38 +45,32 @@ interface UserProfile {
     preferredDifficulty?: string;
     preferredCategories?: string[];
   };
-  costPreference: string;
+  costPreference: "LOW" | "MEDIUM" | "HIGH";
 }
 
+type RecipeSource = RecipeDetailDTO | RecipeSummaryDTO;
+
 export class ContentFilter {
-  private prisma: PrismaClient;
   private featureCache = new Map<string, RecipeFeatures>();
   private profileCache = new Map<string, UserProfile>();
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
-  }
+  constructor(private readonly repository: RecommendationRepository) {}
 
-  /**
-   * 基于内容的推荐
-   */
   async getRecommendations(
     context: RecommendationContext,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<RecipeRecommendation[]> {
-    // 获取用户偏好档案
     const userProfile = await this.getUserProfile(context.memberId);
-    
-    // 获取候选食谱
     const candidateRecipes = await this.getCandidateRecipes(context, limit * 3);
-    
-    // 提取食谱特征
     const recipeFeatures = await this.extractRecipeFeatures(candidateRecipes);
-    
-    // 计算内容相似度分数
-    const recommendations = recipeFeatures.map(features => {
-      const score = this.calculateContentSimilarity(features, userProfile, context);
-      
+
+    const recommendations = recipeFeatures.map((features) => {
+      const score = this.calculateContentSimilarity(
+        features,
+        userProfile,
+        context,
+      );
+
       return {
         recipeId: features.recipeId,
         score,
@@ -78,41 +86,32 @@ export class ContentFilter {
       };
     });
 
-    return recommendations
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    return recommendations.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 
-  /**
-   * 获取相似食谱推荐
-   */
   async getSimilarRecipes(
-    targetRecipe: any,
-    limit: number = 5
+    targetRecipe: RecipeDetailDTO,
+    limit: number = 5,
   ): Promise<RecipeRecommendation[]> {
     const targetFeatures = await this.extractSingleRecipeFeatures(targetRecipe);
-    
-    const similarRecipes = await this.prisma.recipe.findMany({
-      where: {
-        id: { not: targetRecipe.id },
-        status: 'PUBLISHED',
-        isPublic: true,
-      },
-      take: limit * 2,
-      include: {
-        ingredients: { include: { food: true } },
-      },
-    });
+
+    const similarRecipes = await this.repository.getSimilarRecipes(
+      targetRecipe.id,
+      limit * 2,
+    );
 
     const recommendations = await Promise.all(
-      similarRecipes.map(async recipe => {
+      similarRecipes.map(async (recipe) => {
         const features = await this.extractSingleRecipeFeatures(recipe);
-        const similarity = this.calculateRecipeSimilarity(targetFeatures, features);
-        
+        const similarity = this.calculateRecipeSimilarity(
+          targetFeatures,
+          features,
+        );
+
         return {
           recipeId: recipe.id,
           score: similarity * 100,
-          reasons: ['相似食谱'],
+          reasons: ["相似食谱"],
           explanation: `与《${targetRecipe.name}》食材和制作方法相似。`,
           metadata: {
             inventoryMatch: 0,
@@ -122,91 +121,82 @@ export class ContentFilter {
             seasonalMatch: 0,
           },
         };
-      })
+      }),
     );
 
-    return recommendations
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    return recommendations.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 
-  /**
-   * 获取用户偏好档案
-   */
   private async getUserProfile(memberId: string): Promise<UserProfile> {
-    // 检查缓存
     if (this.profileCache.has(memberId)) {
       return this.profileCache.get(memberId)!;
     }
 
-    const [userPreference, healthGoal, recentRatings, recentFavorites] = await Promise.all([
-      this.prisma.userPreference.findUnique({
-        where: { memberId },
-      }),
-      this.prisma.healthGoal.findFirst({
-        where: { memberId, status: 'ACTIVE' },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.recipeRating.findMany({
-        where: { memberId, rating: { gte: 4 } },
-        include: { recipe: { include: { ingredients: { include: { food: true } } } } },
-        orderBy: { ratedAt: 'desc' },
-        take: 20,
-      }),
-      this.prisma.recipeFavorite.findMany({
-        where: { memberId },
-        include: { recipe: { include: { ingredients: { include: { food: true } } } } },
-        orderBy: { favoritedAt: 'desc' },
-        take: 20,
+    const [userPreference, healthGoal, behavior] = await Promise.all([
+      this.repository.getUserPreference(memberId),
+      this.repository.getActiveHealthGoal(memberId),
+      this.repository.getDetailedRecipeBehavior(memberId, {
+        limit: 20,
+        minRating: 4,
       }),
     ]);
 
-    // 从用户行为中学习偏好
-    const learnedPreferences = this.learnFromUserBehavior(recentRatings, recentFavorites);
+    const learnedPreferences = this.learnFromUserBehavior(
+      behavior.ratings,
+      behavior.favorites,
+    );
 
     const profile: UserProfile = {
       preferredIngredients: [
-        ...(userPreference?.preferredIngredients ? JSON.parse(userPreference.preferredIngredients) : []),
+        ...(userPreference?.preferredIngredients ?? []),
         ...learnedPreferences.preferredIngredients,
       ],
-      avoidedIngredients: userPreference?.avoidedIngredients ? JSON.parse(userPreference.avoidedIngredients) : [],
-      nutritionPreferences: this.buildNutritionPreferences(healthGoal, userPreference),
+      avoidedIngredients: userPreference?.avoidedIngredients ?? [],
+      nutritionPreferences: this.buildNutritionPreferences(
+        healthGoal,
+        userPreference,
+      ),
       cookingPreferences: {
-        maxTime: userPreference?.maxCookTime,
-        preferredDifficulty: userPreference?.spiceLevel ? this.mapSpiceToDifficulty(userPreference.spiceLevel) : undefined,
+        maxTime: userPreference?.maxCookTimeMinutes ?? undefined,
+        preferredDifficulty: undefined,
         preferredCategories: learnedPreferences.preferredCategories,
       },
-      costPreference: userPreference?.costLevel || 'MEDIUM',
+      costPreference: userPreference?.costLevel || "MEDIUM",
     };
 
-    // 缓存档案
     this.profileCache.set(memberId, profile);
-    
+
     return profile;
   }
 
-  /**
-   * 从用户行为中学习偏好
-   */
-  private learnFromUserBehavior(ratings: any[], favorites: any[]): any {
-    const allRecipes = [...ratings.map(r => r.recipe), ...favorites.map(f => f.recipe)];
-    
+  private learnFromUserBehavior(
+    ratings: RecipeRatingDetailDTO[],
+    favorites: RecipeFavoriteDetailDTO[],
+  ) {
+    const allRecipes = [
+      ...ratings.map((rating) => rating.recipe),
+      ...favorites.map((favorite) => favorite.recipe),
+    ];
+
     const ingredientCount = new Map<string, number>();
     const categoryCount = new Map<string, number>();
 
-    allRecipes.forEach(recipe => {
-      // 统计食材偏好
-      recipe.ingredients?.forEach((ing: any) => {
-        ingredientCount.set(ing.food.name, (ingredientCount.get(ing.food.name) || 0) + 1);
+    allRecipes.forEach((recipe) => {
+      recipe.ingredientsDetailed?.forEach((ingredient) => {
+        ingredientCount.set(
+          ingredient.food.name,
+          (ingredientCount.get(ingredient.food.name) || 0) + 1,
+        );
       });
 
-      // 统计分类偏好
       if (recipe.category) {
-        categoryCount.set(recipe.category, (categoryCount.get(recipe.category) || 0) + 1);
+        categoryCount.set(
+          recipe.category,
+          (categoryCount.get(recipe.category) || 0) + 1,
+        );
       }
     });
 
-    // 提取最偏好的食材和分类
     const preferredIngredients = Array.from(ingredientCount.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 15)
@@ -223,232 +213,221 @@ export class ContentFilter {
     };
   }
 
-  /**
-   * 构建营养偏好
-   */
-  private buildNutritionPreferences(healthGoal: any, userPreference: any): any {
-    const preferences: any = {};
+  private buildNutritionPreferences(
+    healthGoal: HealthGoalDTO | null,
+    userPreference: UserPreferenceDTO | null,
+  ) {
+    const preferences: {
+      maxCalories?: number;
+      minProtein?: number;
+      maxCarbs?: number;
+      maxFat?: number;
+    } = {};
 
     if (healthGoal) {
       switch (healthGoal.goalType) {
-      case 'LOSE_WEIGHT':
+      case "LOSE_WEIGHT":
         preferences.maxCalories = 400;
-        preferences.maxCarbs = healthGoal.carbRatio ? 30 : undefined;
-        preferences.minProtein = healthGoal.proteinRatio ? 15 : undefined;
         break;
-      case 'GAIN_MUSCLE':
+      case "GAIN_MUSCLE":
         preferences.minProtein = 25;
         preferences.maxCalories = 800;
         break;
-      case 'MAINTAIN':
+      case "MAINTAIN":
         preferences.maxCalories = 600;
         preferences.minProtein = 15;
         break;
-      case 'IMPROVE_HEALTH':
+      case "IMPROVE_HEALTH":
         preferences.maxFat = 20;
         preferences.maxCalories = 500;
         break;
       }
     }
 
-    // 考虑用户饮食类型
     if (userPreference) {
-      if (userPreference.isLowCarb) preferences.maxCarbs = 15;
-      if (userPreference.isLowFat) preferences.maxFat = 10;
-      if (userPreference.isHighProtein) preferences.minProtein = 20;
+      if (userPreference.costLevel === "LOW") {
+        preferences.maxCalories = Math.min(
+          preferences.maxCalories ?? 9999,
+          500,
+        );
+      }
     }
 
     return preferences;
   }
 
-  /**
-   * 获取候选食谱
-   */
-  private async getCandidateRecipes(context: RecommendationContext, limit: number) {
-    const whereClause: any = {
-      status: 'PUBLISHED',
-      isPublic: true,
-      deletedAt: null,
+  private async getCandidateRecipes(
+    context: RecommendationContext,
+    limit: number,
+  ): Promise<RecipeDetailDTO[]> {
+    const filters: RecommendationRecipeFilter = {
+      memberId: context.memberId,
+      mealTypes: context.mealType ? [context.mealType] : undefined,
+      maxCookTimeMinutes: context.maxCookTime,
+      season: context.season,
+      dietaryRestrictions: context.dietaryRestrictions,
+      budgetLimit: context.budgetLimit,
+      excludeRecipeIds: context.excludeRecipeIds,
     };
 
-    if (context.mealType) {
-      whereClause.mealTypes = {
-        path: [],
-        string_contains: context.mealType,
-      };
-    }
-
-    if (context.maxCookTime) {
-      whereClause.totalTime = { lte: context.maxCookTime };
-    }
-
-    if (context.excludeRecipeIds?.length) {
-      whereClause.id = { notIn: context.excludeRecipeIds };
-    }
-
-    return this.prisma.recipe.findMany({
-      where: whereClause,
-      include: {
-        ingredients: { include: { food: true } },
-      },
-      take: limit,
+    const result = await this.repository.listDetailedCandidateRecipes(filters, {
+      limit,
+      offset: 0,
     });
+
+    return result.items;
   }
 
-  /**
-   * 提取食谱特征
-   */
-  private async extractRecipeFeatures(recipes: any[]): Promise<RecipeFeatures[]> {
+  private async extractRecipeFeatures(
+    recipes: RecipeDetailDTO[],
+  ): Promise<RecipeFeatures[]> {
     return Promise.all(
-      recipes.map(recipe => this.extractSingleRecipeFeatures(recipe))
+      recipes.map((recipe) => this.extractSingleRecipeFeatures(recipe)),
     );
   }
 
-  /**
-   * 提取单个食谱特征
-   */
-  private async extractSingleRecipeFeatures(recipe: any): Promise<RecipeFeatures> {
-    // 检查缓存
+  private async extractSingleRecipeFeatures(
+    recipe: RecipeSource,
+  ): Promise<RecipeFeatures> {
     if (this.featureCache.has(recipe.id)) {
       return this.featureCache.get(recipe.id)!;
     }
 
+    const ingredients = this.extractIngredientNames(recipe);
+    const nutritionProfile = this.extractNutritionProfile(recipe);
+
     const features: RecipeFeatures = {
       recipeId: recipe.id,
-      ingredients: recipe.ingredients?.map((ing: any) => ing.food.name) || [],
-      nutritionProfile: {
-        calories: recipe.calories,
-        protein: recipe.protein,
-        carbs: recipe.carbs,
-        fat: recipe.fat,
-      },
-      cookingTime: recipe.totalTime,
-      difficulty: recipe.difficulty,
-      category: recipe.category,
-      tags: recipe.tags
-        ? (typeof recipe.tags === 'string'
-          ? (recipe.tags.startsWith('[') ? JSON.parse(recipe.tags) : recipe.tags.split(',').map(t => t.trim()))
-          : recipe.tags)
-        : [],
-      costLevel: recipe.costLevel,
+      ingredients,
+      nutritionProfile,
+      cookingTime: this.resolveCookingTime(recipe),
+      difficulty: recipe.difficulty ?? "MEDIUM",
+      category: (recipe as RecipeDetailDTO).category ?? "UNKNOWN",
+      tags: this.normalizeTags(recipe),
+      costLevel: this.resolveCostLevel(recipe),
     };
 
-    // 缓存特征
     this.featureCache.set(recipe.id, features);
-    
+
     return features;
   }
 
-  /**
-   * 计算内容相似度
-   */
   private calculateContentSimilarity(
     features: RecipeFeatures,
     profile: UserProfile,
-    context: RecommendationContext
+    context: RecommendationContext,
   ): number {
     let score = 0;
 
-    // 1. 食材匹配 (40分)
-    const ingredientScore = this.calculateIngredientMatch(features.ingredients, profile);
+    const ingredientScore = this.calculateIngredientMatch(
+      features.ingredients,
+      profile,
+    );
     score += ingredientScore * 0.4;
 
-    // 2. 营养匹配 (25分)
     const nutritionScore = this.calculateNutritionMatch(features, profile);
     score += nutritionScore * 0.25;
 
-    // 3. 烹饪偏好匹配 (20分)
     const cookingScore = this.calculateCookingMatch(features, profile, context);
     score += cookingScore * 0.2;
 
-    // 4. 分类和标签匹配 (15分)
     const categoryScore = this.calculateCategoryMatch(features, profile);
     score += categoryScore * 0.15;
 
     return Math.round(score);
   }
 
-  /**
-   * 计算食材匹配分数
-   */
-  private calculateIngredientMatch(ingredients: string[], profile: UserProfile): number {
+  private calculateIngredientMatch(
+    ingredients: string[],
+    profile: UserProfile,
+  ): number {
     if (ingredients.length === 0) return 0;
 
     let matchScore = 0;
     let penaltyScore = 0;
 
-    // 计算偏好食材匹配
-    const preferredMatches = ingredients.filter(ing => 
-      profile.preferredIngredients.includes(ing)
+    const preferredMatches = ingredients.filter((ingredient) =>
+      profile.preferredIngredients.includes(ingredient),
     ).length;
-    
+
     matchScore += (preferredMatches / ingredients.length) * 50;
 
-    // 计算避开食材的惩罚
-    const avoidedMatches = ingredients.filter(ing => 
-      profile.avoidedIngredients.includes(ing)
+    const avoidedMatches = ingredients.filter((ingredient) =>
+      profile.avoidedIngredients.includes(ingredient),
     ).length;
-    
+
     penaltyScore = (avoidedMatches / ingredients.length) * 100;
 
     return Math.max(0, matchScore - penaltyScore);
   }
 
-  /**
-   * 计算营养匹配分数
-   */
-  private calculateNutritionMatch(features: RecipeFeatures, profile: UserProfile): number {
+  private calculateNutritionMatch(
+    features: RecipeFeatures,
+    profile: UserProfile,
+  ): number {
     const { nutritionProfile } = features;
     const { nutritionPreferences } = profile;
-    
-    let score = 50; // 基础分
 
-    if (nutritionPreferences.maxCalories && nutritionProfile.calories > nutritionPreferences.maxCalories) {
+    let score = 50;
+
+    if (
+      nutritionPreferences.maxCalories &&
+      nutritionProfile.calories > nutritionPreferences.maxCalories
+    ) {
       score -= 30;
     }
 
-    if (nutritionPreferences.minProtein && nutritionProfile.protein < nutritionPreferences.minProtein) {
+    if (
+      nutritionPreferences.minProtein &&
+      nutritionProfile.protein < nutritionPreferences.minProtein
+    ) {
       score -= 20;
     }
 
-    if (nutritionPreferences.maxCarbs && nutritionProfile.carbs > nutritionPreferences.maxCarbs) {
+    if (
+      nutritionPreferences.maxCarbs &&
+      nutritionProfile.carbs > nutritionPreferences.maxCarbs
+    ) {
       score -= 15;
     }
 
-    if (nutritionPreferences.maxFat && nutritionProfile.fat > nutritionPreferences.maxFat) {
+    if (
+      nutritionPreferences.maxFat &&
+      nutritionProfile.fat > nutritionPreferences.maxFat
+    ) {
       score -= 15;
     }
 
     return Math.max(0, Math.min(100, score));
   }
 
-  /**
-   * 计算烹饪偏好匹配
-   */
   private calculateCookingMatch(
     features: RecipeFeatures,
     profile: UserProfile,
-    context: RecommendationContext
+    context: RecommendationContext,
   ): number {
-    let score = 30; // 基础分
+    let score = 30;
 
-    // 时间匹配
     if (profile.cookingPreferences.maxTime) {
       if (features.cookingTime <= profile.cookingPreferences.maxTime) {
         score += 30;
-      } else if (features.cookingTime <= profile.cookingPreferences.maxTime * 1.5) {
+      } else if (
+        features.cookingTime <=
+        profile.cookingPreferences.maxTime * 1.5
+      ) {
         score += 15;
       } else {
         score -= 20;
       }
     }
 
-    // 难度匹配
     if (profile.cookingPreferences.preferredDifficulty) {
-      const difficultyOrder = ['EASY', 'MEDIUM', 'HARD'];
-      const preferredIndex = difficultyOrder.indexOf(profile.cookingPreferences.preferredDifficulty);
+      const difficultyOrder = ["EASY", "MEDIUM", "HARD"];
+      const preferredIndex = difficultyOrder.indexOf(
+        profile.cookingPreferences.preferredDifficulty,
+      );
       const recipeIndex = difficultyOrder.indexOf(features.difficulty);
-      
+
       if (preferredIndex === recipeIndex) {
         score += 20;
       } else if (Math.abs(preferredIndex - recipeIndex) === 1) {
@@ -456,7 +435,6 @@ export class ContentFilter {
       }
     }
 
-    // 上下文时间限制
     if (context.maxCookTime && features.cookingTime <= context.maxCookTime) {
       score += 20;
     }
@@ -464,66 +442,67 @@ export class ContentFilter {
     return Math.max(0, Math.min(100, score));
   }
 
-  /**
-   * 计算分类匹配分数
-   */
-  private calculateCategoryMatch(features: RecipeFeatures, profile: UserProfile): number {
+  private calculateCategoryMatch(
+    features: RecipeFeatures,
+    profile: UserProfile,
+  ): number {
     if (!profile.cookingPreferences.preferredCategories) {
-      return 50; // 无偏好时给中等分数
+      return 50;
     }
 
-    return profile.cookingPreferences.preferredCategories.includes(features.category) ? 100 : 30;
+    return profile.cookingPreferences.preferredCategories.includes(
+      features.category,
+    )
+      ? 100
+      : 30;
   }
 
-  /**
-   * 计算价格匹配
-   */
-  private calculatePriceMatch(features: RecipeFeatures, profile: UserProfile): number {
+  private calculatePriceMatch(
+    features: RecipeFeatures,
+    profile: UserProfile,
+  ): number {
     const costScores = {
       LOW: { LOW: 100, MEDIUM: 60, HIGH: 20 },
       MEDIUM: { LOW: 80, MEDIUM: 100, HIGH: 60 },
       HIGH: { LOW: 40, MEDIUM: 70, HIGH: 100 },
     };
 
-    return costScores[profile.costPreference as keyof typeof costScores][features.costLevel as keyof typeof costScores['LOW']] / 100;
+    return costScores[profile.costPreference][features.costLevel] / 100;
   }
 
-  /**
-   * 计算食谱间相似度
-   */
-  private calculateRecipeSimilarity(recipe1: RecipeFeatures, recipe2: RecipeFeatures): number {
-    // 食材相似度
+  private calculateRecipeSimilarity(
+    recipe1: RecipeFeatures,
+    recipe2: RecipeFeatures,
+  ): number {
     const ingredientSimilarity = this.calculateJaccardSimilarity(
       new Set(recipe1.ingredients),
-      new Set(recipe2.ingredients)
+      new Set(recipe2.ingredients),
     );
 
-    // 营养相似度
     const nutritionSimilarity = this.calculateNutritionSimilarity(
       recipe1.nutritionProfile,
-      recipe2.nutritionProfile
+      recipe2.nutritionProfile,
     );
 
-    // 综合相似度
     return ingredientSimilarity * 0.7 + nutritionSimilarity * 0.3;
   }
 
-  /**
-   * 计算Jaccard相似度
-   */
-  private calculateJaccardSimilarity(set1: Set<string>, set2: Set<string>): number {
-    const intersection = new Set([...set1].filter(x => set2.has(x)));
+  private calculateJaccardSimilarity(
+    set1: Set<string>,
+    set2: Set<string>,
+  ): number {
+    const intersection = new Set([...set1].filter((x) => set2.has(x)));
     const union = new Set([...set1, ...set2]);
-    
+
     return union.size === 0 ? 0 : intersection.size / union.size;
   }
 
-  /**
-   * 计算营养相似度
-   */
-  private calculateNutritionSimilarity(nutrition1: any, nutrition2: any): number {
+  private calculateNutritionSimilarity(
+    nutrition1: RecipeFeatures["nutritionProfile"],
+    nutrition2: RecipeFeatures["nutritionProfile"],
+  ): number {
     const normalize = (value: number, max: number) => Math.min(value / max, 1);
-    
+
     const normalized1 = {
       calories: normalize(nutrition1.calories, 1000),
       protein: normalize(nutrition1.protein, 50),
@@ -538,80 +517,145 @@ export class ContentFilter {
       fat: normalize(nutrition2.fat, 50),
     };
 
-    // 计算欧几里得距离的倒数
     const distance = Math.sqrt(
       Math.pow(normalized1.calories - normalized2.calories, 2) +
-      Math.pow(normalized1.protein - normalized2.protein, 2) +
-      Math.pow(normalized1.carbs - normalized2.carbs, 2) +
-      Math.pow(normalized1.fat - normalized2.fat, 2)
+        Math.pow(normalized1.protein - normalized2.protein, 2) +
+        Math.pow(normalized1.carbs - normalized2.carbs, 2) +
+        Math.pow(normalized1.fat - normalized2.fat, 2),
     );
 
     return Math.max(0, 1 - distance);
   }
 
-  /**
-   * 生成内容推荐理由
-   */
-  private generateContentReasons(features: RecipeFeatures, profile: UserProfile, score: number): string[] {
+  private generateContentReasons(
+    features: RecipeFeatures,
+    profile: UserProfile,
+    score: number,
+  ): string[] {
     const reasons: string[] = [];
 
     if (score >= 80) {
-      reasons.push('高度匹配您的偏好');
+      reasons.push("高度匹配您的偏好");
     } else if (score >= 60) {
-      reasons.push('比较符合您的口味');
+      reasons.push("比较符合您的口味");
     }
 
-    const ingredientMatches = features.ingredients.filter(ing => 
-      profile.preferredIngredients.includes(ing)
+    const ingredientMatches = features.ingredients.filter((ingredient) =>
+      profile.preferredIngredients.includes(ingredient),
     ).length;
 
     if (ingredientMatches > 0) {
       reasons.push(`包含${ingredientMatches}种您喜欢的食材`);
     }
 
-    if (profile.cookingPreferences.preferredCategories?.includes(features.category)) {
-      reasons.push('您偏好的菜系');
+    if (
+      profile.cookingPreferences.preferredCategories?.includes(
+        features.category,
+      )
+    ) {
+      reasons.push("您偏好的菜系");
     }
 
     return reasons;
   }
 
-  /**
-   * 生成内容推荐解释
-   */
-  private generateContentExplanation(features: RecipeFeatures, profile: UserProfile): string {
+  private generateContentExplanation(
+    features: RecipeFeatures,
+    profile: UserProfile,
+  ): string {
     const explanations: string[] = [];
 
-    const ingredientMatches = features.ingredients.filter(ing => 
-      profile.preferredIngredients.includes(ing)
+    const ingredientMatches = features.ingredients.filter((ingredient) =>
+      profile.preferredIngredients.includes(ingredient),
     );
 
     if (ingredientMatches.length > 0) {
-      explanations.push(`这道菜使用了您喜欢的${ingredientMatches.slice(0, 3).join('、')}等食材`);
+      explanations.push(
+        `这道菜使用了您喜欢的${ingredientMatches.slice(0, 3).join("、")}等食材`,
+      );
     }
 
     if (features.cookingTime <= 30) {
-      explanations.push('制作时间较短，适合快节奏生活');
+      explanations.push("制作时间较短，适合快节奏生活");
     }
 
-    if (features.difficulty === 'EASY') {
-      explanations.push('难度简单，适合厨房新手');
+    if (features.difficulty === "EASY") {
+      explanations.push("难度简单，适合厨房新手");
     }
 
-    return explanations.length > 0 ? `${explanations.join('，')}。` : '基于您的偏好分析推荐。';
+    return explanations.length > 0
+      ? `${explanations.join("，")}。`
+      : "基于您的偏好分析推荐。";
   }
 
-  /**
-   * 映射辣度到难度
-   */
-  private mapSpiceToDifficulty(spiceLevel: string): string {
-    const mapping: { [key: string]: string } = {
-      'NONE': 'EASY',
-      'LOW': 'EASY',
-      'MEDIUM': 'MEDIUM',
-      'HIGH': 'MEDIUM',
-      'EXTREME': 'HARD',
+  private extractIngredientNames(recipe: RecipeSource): string[] {
+    if ((recipe as RecipeDetailDTO).ingredientsDetailed?.length) {
+      return (recipe as RecipeDetailDTO)
+        .ingredientsDetailed!.map((ingredient) => ingredient.food.name)
+        .filter(Boolean);
+    }
+
+    return (recipe.ingredients ?? [])
+      .map((ingredient: { name: string }) => ingredient.name)
+      .filter(Boolean);
+  }
+
+  private extractNutritionProfile(recipe: RecipeSource) {
+    return {
+      calories:
+        recipe.caloriesPerServing ?? (recipe as RecipeDetailDTO).calories ?? 0,
+      protein:
+        recipe.proteinPerServing ?? (recipe as RecipeDetailDTO).protein ?? 0,
+      carbs: recipe.carbsPerServing ?? (recipe as RecipeDetailDTO).carbs ?? 0,
+      fat: recipe.fatPerServing ?? (recipe as RecipeDetailDTO).fat ?? 0,
     };
-    return mapping[spiceLevel] || 'MEDIUM';
+  }
+
+  private resolveCookingTime(recipe: RecipeSource): number {
+    const detail = recipe as RecipeDetailDTO;
+    if (detail.totalTime) return detail.totalTime;
+
+    const prepTime = recipe.prepTimeMinutes ?? 0;
+    const cookTime = recipe.cookTimeMinutes ?? 0;
+    return prepTime + cookTime;
+  }
+
+  private resolveCostLevel(recipe: RecipeSource): "LOW" | "MEDIUM" | "HIGH" {
+    const detail = recipe as RecipeDetailDTO;
+    if (detail.costLevel) return detail.costLevel;
+
+    const estimatedCost = recipe.estimatedCost ?? 0;
+    if (estimatedCost <= 20) return "LOW";
+    if (estimatedCost <= 50) return "MEDIUM";
+    return "HIGH";
+  }
+
+  private normalizeTags(recipe: RecipeSource): string[] {
+    if (recipe.tags && recipe.tags.length) {
+      return recipe.tags;
+    }
+
+    const rawTags = (recipe as RecipeDetailDTO).tagsRaw;
+    if (!rawTags) return [];
+
+    if (Array.isArray(rawTags)) {
+      return rawTags.filter((tag): tag is string => typeof tag === "string");
+    }
+
+    if (typeof rawTags === "string") {
+      try {
+        const parsed = JSON.parse(rawTags);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((tag): tag is string => typeof tag === "string");
+        }
+      } catch {
+        return rawTags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean);
+      }
+    }
+
+    return [];
   }
 }

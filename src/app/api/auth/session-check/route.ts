@@ -1,29 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
-/**
- * Session 验证 API 端点
- * 获取当前用户的会话信息
- */
-
-// Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-export async function GET(request: NextRequest) {
+
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     return NextResponse.json({
       authenticated: !!session,
       session: session
         ? {
-            user: {
-              id: session.user?.id,
-              email: session.user?.email,
-              name: session.user?.name,
-              role: session.user?.role || "USER",
-            },
-            expires: session.expires,
+            user: session.user,
+            expires: null,
           }
         : null,
       timestamp: new Date().toISOString(),
@@ -31,7 +20,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Session verification error:", error);
 
-    // 返回未认证状态而不是500错误
     return NextResponse.json(
       {
         authenticated: false,
@@ -44,9 +32,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * OPTIONS 方法支持 CORS 预检请求
- */
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,

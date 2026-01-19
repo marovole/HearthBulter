@@ -3,21 +3,24 @@
  * 实现可穿戴设备数据的智能去重，避免与手动录入冲突
  */
 
-import { addHours, subHours, isBefore, isAfter, isEqual } from 'date-fns';
-import type { HealthData, HealthDataSource, DeviceConnection } from '@prisma/client';
-import { prisma } from '@/lib/db';
-import type { HealthDataInput, HealthDataType } from '@/types/wearable-devices';
-import { DEDUPLICATION_WINDOWS } from '@/types/wearable-devices';
+import { addHours, subHours, isBefore, isAfter } from "date-fns";
+import type { HealthDataSource } from "@/types/wearable-devices";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Doc, Id } from "@/../convex/_generated/dataModel";
+import type { HealthDataInput } from "@/types/wearable-devices";
+import { DEDUPLICATION_WINDOWS } from "@/types/wearable-devices";
 
 /**
  * 去重结果类型
  */
 export interface DeduplicationResult {
-  shouldInsert: boolean
-  conflictingRecords: HealthData[]
-  recommendedAction: 'INSERT' | 'UPDATE' | 'SKIP'
-  reason?: string
+  shouldInsert: boolean;
+  conflictingRecords: HealthDataRecord[];
+  recommendedAction: "INSERT" | "UPDATE" | "SKIP";
+  reason?: string;
 }
+
+type HealthDataRecord = Doc<"healthData">;
 
 /**
  * 数据来源优先级
@@ -32,7 +35,16 @@ const SOURCE_PRIORITY: Record<HealthDataSource, number> = {
   FITBIT: 3,
   WEARABLE: 2,
   MEDICAL_REPORT: 1,
+  DEVICE: 1,
+  IMPORTED: 1,
   MANUAL: 0,
+};
+
+const getSourcePriority = (source: unknown): number => {
+  if (typeof source === "string" && source in SOURCE_PRIORITY) {
+    return SOURCE_PRIORITY[source as HealthDataSource] ?? 0;
+  }
+  return 0;
 };
 
 /**
@@ -40,40 +52,37 @@ const SOURCE_PRIORITY: Record<HealthDataSource, number> = {
  */
 export async function checkDataDuplication(
   inputData: HealthDataInput,
-  memberId: string
+  memberId: string,
 ): Promise<DeduplicationResult> {
   // 确定检查的时间窗口
   const timeWindow = getTimeWindowForData(inputData);
   const windowStart = subHours(inputData.measuredAt, timeWindow);
   const windowEnd = addHours(inputData.measuredAt, timeWindow);
 
-  // 查找时间窗口内的现有数据
-  const existingRecords = await prisma.healthData.findMany({
-    where: {
-      memberId,
-      measuredAt: {
-        gte: windowStart,
-        lte: windowEnd,
-      },
-      // 只检查有相同指标的数据
-      OR: getSameDataConditions(inputData),
+  const existingRecords = await convexClient.query<HealthDataRecord[]>(
+    api.health.listByMemberDateRange,
+    {
+      memberId: memberId as Id<"familyMembers">,
+      startDate: windowStart.getTime(),
+      endDate: windowEnd.getTime(),
     },
-    orderBy: {
-      measuredAt: 'desc',
-    },
-  });
+  );
 
-  if (existingRecords.length === 0) {
+  const filteredRecords = existingRecords.filter((record) =>
+    hasSameMetricsWithInput(record, inputData),
+  );
+
+  if (filteredRecords.length === 0) {
     return {
       shouldInsert: true,
       conflictingRecords: [],
-      recommendedAction: 'INSERT',
+      recommendedAction: "INSERT",
     };
   }
 
   // 分析冲突记录
   const analysis = analyzeConflicts(inputData, existingRecords);
-  
+
   return analysis;
 }
 
@@ -88,31 +97,38 @@ function getTimeWindowForData(data: HealthDataInput): number {
   if (data.heartRate !== null && data.heartRate !== undefined) {
     return DEDUPLICATION_WINDOWS.HEART_RATE;
   }
-  if (data.bloodPressureSystolic !== null && data.bloodPressureSystolic !== undefined) {
+  if (
+    data.bloodPressureSystolic !== null &&
+    data.bloodPressureSystolic !== undefined
+  ) {
     return DEDUPLICATION_WINDOWS.BLOOD_PRESSURE;
   }
-  
+
   // 默认时间窗口
   return 1;
 }
 
-/**
- * 构建相同数据的查询条件
- */
-function getSameDataConditions(data: HealthDataInput) {
-  const conditions = [];
-  
-  if (data.weight !== null && data.weight !== undefined) {
-    conditions.push({ weight: { not: null } });
-  }
-  if (data.heartRate !== null && data.heartRate !== undefined) {
-    conditions.push({ heartRate: { not: null } });
-  }
-  if (data.bloodPressureSystolic !== null && data.bloodPressureSystolic !== undefined) {
-    conditions.push({ bloodPressureSystolic: { not: null } });
-  }
-  
-  return conditions;
+function hasSameMetricsWithInput(
+  record: HealthDataRecord,
+  data: HealthDataInput,
+): boolean {
+  const hasWeight =
+    data.weight !== null &&
+    data.weight !== undefined &&
+    record.weight !== null &&
+    record.weight !== undefined;
+  const hasHeartRate =
+    data.heartRate !== null &&
+    data.heartRate !== undefined &&
+    record.heartRate !== null &&
+    record.heartRate !== undefined;
+  const hasBloodPressure =
+    data.bloodPressureSystolic !== null &&
+    data.bloodPressureSystolic !== undefined &&
+    record.bloodPressureSystolic !== null &&
+    record.bloodPressureSystolic !== undefined;
+
+  return hasWeight || hasHeartRate || hasBloodPressure;
 }
 
 /**
@@ -120,68 +136,76 @@ function getSameDataConditions(data: HealthDataInput) {
  */
 function analyzeConflicts(
   newData: HealthDataInput,
-  existingRecords: HealthData[]
+  existingRecords: HealthDataRecord[],
 ): DeduplicationResult {
-  // 按数据来源优先级排序
-  const sortedRecords = existingRecords.sort((a, b) => 
-    SOURCE_PRIORITY[b.source] - SOURCE_PRIORITY[a.source]
+  const sortedRecords = [...existingRecords].sort(
+    (a, b) => getSourcePriority(b.source) - getSourcePriority(a.source),
   );
 
-  // 找到优先级最高的记录
   const highestPriorityRecord = sortedRecords[0];
-  const newSourcePriority = SOURCE_PRIORITY[newData.source];
+  if (!highestPriorityRecord) {
+    return {
+      shouldInsert: true,
+      conflictingRecords: [],
+      recommendedAction: "INSERT",
+    };
+  }
+  const newSourcePriority = getSourcePriority(newData.source);
+  const highestSourcePriority = getSourcePriority(highestPriorityRecord.source);
 
-  // 如果新数据来源优先级更高，建议更新
-  if (newSourcePriority > SOURCE_PRIORITY[highestPriorityRecord.source]) {
+  if (newSourcePriority > highestSourcePriority) {
     return {
       shouldInsert: false,
       conflictingRecords: [highestPriorityRecord],
-      recommendedAction: 'UPDATE',
+      recommendedAction: "UPDATE",
       reason: `设备数据 (${newData.source}) 优先级高于现有数据 (${highestPriorityRecord.source})，建议更新`,
     };
   }
 
-  // 如果新数据来源优先级较低，跳过插入
-  if (newSourcePriority < SOURCE_PRIORITY[highestPriorityRecord.source]) {
+  if (newSourcePriority < highestSourcePriority) {
     return {
       shouldInsert: false,
       conflictingRecords: [highestPriorityRecord],
-      recommendedAction: 'SKIP',
+      recommendedAction: "SKIP",
       reason: `现有数据来源 (${highestPriorityRecord.source}) 优先级高于新数据 (${newData.source})，建议跳过`,
     };
   }
 
-  // 如果优先级相同，检查时间
   const samePriorityRecords = sortedRecords.filter(
-    record => SOURCE_PRIORITY[record.source] === newSourcePriority
+    (record) => getSourcePriority(record.source) === newSourcePriority,
   );
 
   if (samePriorityRecords.length > 0) {
     const mostRecentSamePriority = samePriorityRecords[0];
-    
-    // 如果新数据时间更新，建议更新
-    if (isAfter(newData.measuredAt, mostRecentSamePriority.measuredAt)) {
+    if (!mostRecentSamePriority) {
       return {
-        shouldInsert: false,
-        conflictingRecords: [mostRecentSamePriority],
-        recommendedAction: 'UPDATE',
-        reason: '新数据时间更新，建议更新现有记录',
-      };
-    } else {
-      return {
-        shouldInsert: false,
-        conflictingRecords: [mostRecentSamePriority],
-        recommendedAction: 'SKIP',
-        reason: '存在时间更新的相同优先级数据，建议跳过',
+        shouldInsert: true,
+        conflictingRecords: [],
+        recommendedAction: "INSERT",
       };
     }
+
+    const mostRecentDate = new Date(mostRecentSamePriority.measuredAt);
+    if (isAfter(newData.measuredAt, mostRecentDate)) {
+      return {
+        shouldInsert: false,
+        conflictingRecords: [mostRecentSamePriority],
+        recommendedAction: "UPDATE",
+        reason: "新数据时间更新，建议更新现有记录",
+      };
+    }
+    return {
+      shouldInsert: false,
+      conflictingRecords: [mostRecentSamePriority],
+      recommendedAction: "SKIP",
+      reason: "存在时间更新的相同优先级数据，建议跳过",
+    };
   }
 
-  // 默认情况下允许插入
   return {
     shouldInsert: true,
     conflictingRecords: [],
-    recommendedAction: 'INSERT',
+    recommendedAction: "INSERT",
   };
 }
 
@@ -190,13 +214,14 @@ function analyzeConflicts(
  */
 export async function batchDeduplicate(
   inputDataList: HealthDataInput[],
-  memberId: string
+  memberId: string,
 ): Promise<DeduplicationResult[]> {
   const results: DeduplicationResult[] = [];
-  
+
   // 按时间排序输入数据，确保较新的数据后处理
-  const sortedInput = inputDataList.sort((a, b) => 
-    new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime()
+  const sortedInput = inputDataList.sort(
+    (a, b) =>
+      new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime(),
   );
 
   for (const inputData of sortedInput) {
@@ -213,74 +238,75 @@ export async function batchDeduplicate(
 export async function cleanupDuplicateData(memberId: string) {
   // 查找最近30天的数据
   const thirtyDaysAgo = subHours(new Date(), 24 * 30);
-  
-  const recentData = await prisma.healthData.findMany({
-    where: {
-      memberId,
-      measuredAt: {
-        gte: thirtyDaysAgo,
-      },
+
+  const recentData = await convexClient.query<HealthDataRecord[]>(
+    api.health.listByMemberDateRange,
+    {
+      memberId: memberId as Id<"familyMembers">,
+      startDate: thirtyDaysAgo.getTime(),
     },
-    orderBy: {
-      measuredAt: 'asc',
-    },
-  });
+  );
 
   if (recentData.length === 0) {
     return { cleanedCount: 0, warnings: [] };
   }
 
-  const toDelete: string[] = [];
+  const toDelete: Array<Id<"healthData">> = [];
   const warnings: string[] = [];
 
-  // 按时间窗口分组检测重复
   for (let i = 0; i < recentData.length; i++) {
     const current = recentData[i];
-    const windowStart = subHours(current.measuredAt, 1);
-    const windowEnd = addHours(current.measuredAt, 1);
-    
-    // 查找同一时间窗口内的记录
-    const duplicates = recentData.filter(record => {
-      if (record.id === current.id) return false;
-      return isAfter(record.measuredAt, windowStart) && 
-             isBefore(record.measuredAt, windowEnd) &&
-             hasSameMetrics(record, current);
+    if (!current) {
+      continue;
+    }
+    const currentDate = new Date(current.measuredAt);
+    const windowStart = subHours(currentDate, 1);
+    const windowEnd = addHours(currentDate, 1);
+
+    const duplicates = recentData.filter((record) => {
+      if (record._id === current._id) return false;
+      const recordDate = new Date(record.measuredAt);
+      return (
+        isAfter(recordDate, windowStart) &&
+        isBefore(recordDate, windowEnd) &&
+        hasSameMetrics(record, current)
+      );
     });
 
     if (duplicates.length > 0) {
-      // 按优先级分组
       const allRecords = [current, ...duplicates];
-      const sortedByPriority = allRecords.sort((a, b) => 
-        SOURCE_PRIORITY[b.source] - SOURCE_PRIORITY[a.source]
-      );
+      const sortedByPriority = allRecords.sort((a, b) => {
+        const priorityA = getSourcePriority(a.source);
+        const priorityB = getSourcePriority(b.source);
+        return priorityB - priorityA;
+      });
 
-      // 保留优先级最高的，其他标记为删除
       const toKeep = sortedByPriority[0];
+      if (!toKeep) {
+        continue;
+      }
       const toDeleteFromGroup = sortedByPriority.slice(1);
-      
-      toDeleteFromGroup.forEach(record => {
-        if (!toDelete.includes(record.id)) {
-          toDelete.push(record.id);
+
+      toDeleteFromGroup.forEach((record) => {
+        if (!record) {
+          return;
+        }
+        if (!toDelete.some((id) => id === record._id)) {
+          toDelete.push(record._id);
         }
       });
 
-      // 记录警告
       if (toDeleteFromGroup.length > 0) {
         warnings.push(
-          `发现 ${toDeleteFromGroup.length + 1} 条重复数据于 ${current.measuredAt.toISOString()}，保留 ${toKeep.source} 来源的数据`
+          `发现 ${toDeleteFromGroup.length + 1} 条重复数据于 ${currentDate.toISOString()}，保留 ${toKeep.source} 来源的数据`,
         );
       }
     }
   }
 
-  // 执行删除
   if (toDelete.length > 0) {
-    await prisma.healthData.deleteMany({
-      where: {
-        id: {
-          in: toDelete,
-        },
-      },
+    await convexClient.mutation(api.health.deleteRecords, {
+      recordIds: toDelete,
     });
   }
 
@@ -293,13 +319,25 @@ export async function cleanupDuplicateData(memberId: string) {
 /**
  * 检查两条记录是否有相同的健康指标
  */
-function hasSameMetrics(record1: HealthData, record2: HealthData): boolean {
-  const metrics = ['weight', 'heartRate', 'bloodPressureSystolic'];
-  
-  return metrics.some(metric => {
-    const value1 = record1[metric as keyof HealthData];
-    const value2 = record2[metric as keyof HealthData];
-    return value1 !== null && value2 !== null && value1 !== undefined && value2 !== undefined;
+function hasSameMetrics(
+  record1: HealthDataRecord,
+  record2: HealthDataRecord,
+): boolean {
+  const metrics: Array<keyof HealthDataRecord> = [
+    "weight",
+    "heartRate",
+    "bloodPressureSystolic",
+  ];
+
+  return metrics.some((metric) => {
+    const value1 = record1[metric];
+    const value2 = record2[metric];
+    return (
+      value1 !== null &&
+      value2 !== null &&
+      value1 !== undefined &&
+      value2 !== undefined
+    );
   });
 }
 
@@ -308,28 +346,30 @@ function hasSameMetrics(record1: HealthData, record2: HealthData): boolean {
  */
 export async function getDeduplicationStats(memberId: string) {
   const thirtyDaysAgo = subHours(new Date(), 24 * 30);
-  
-  const stats = await prisma.healthData.groupBy({
-    by: ['source'],
-    where: {
-      memberId,
-      measuredAt: {
-        gte: thirtyDaysAgo,
-      },
-    },
-    _count: {
-      id: true,
-    },
-  });
 
-  const totalRecords = stats.reduce((sum, stat) => sum + stat._count.id, 0);
-  
+  const records = await convexClient.query<HealthDataRecord[]>(
+    api.health.listByMemberDateRange,
+    {
+      memberId: memberId as Id<"familyMembers">,
+      startDate: thirtyDaysAgo.getTime(),
+    },
+  );
+
+  const sourceCounts = records.reduce<Record<string, number>>((acc, record) => {
+    acc[record.source] = (acc[record.source] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const totalRecords = records.length;
+
   return {
     totalRecords,
-    sourceBreakdown: stats.map(stat => ({
-      source: stat.source,
-      count: stat._count.id,
-      percentage: ((stat._count.id / totalRecords) * 100).toFixed(1),
+    sourceBreakdown: Object.entries(sourceCounts).map(([source, count]) => ({
+      source,
+      count,
+      percentage: totalRecords
+        ? ((count / totalRecords) * 100).toFixed(1)
+        : "0.0",
     })),
   };
 }

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to prevent prerender errors with React Context
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
-import { useOnboarding } from '@/lib/context/OnboardingContext';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import { useOnboarding } from "@/lib/context/OnboardingContext";
 
 /**
  * Onboarding Page Component
@@ -22,7 +22,7 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     if (!loading && isOnboardingCompleted) {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }
   }, [isOnboardingCompleted, loading, router]);
 

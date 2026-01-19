@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
 import { format, startOfWeek, addDays, addWeeks, subWeeks } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { MealCalendarView } from "@/components/meal-planning/MealCalendarView";
 import { MealListView } from "@/components/meal-planning/MealListView";
 import { NutritionSummary } from "@/components/meal-planning/NutritionSummary";
+import { FavoriteMeals } from "@/components/meal-planning/FavoriteMeals";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,37 +27,70 @@ import { toast } from "@/lib/toast";
 
 type ViewMode = "day" | "week" | "month" | "list";
 
+type MealIngredient = {
+  id: string;
+  amount: number;
+  food: {
+    id: string;
+    name: string;
+  };
+};
+
+type Meal = {
+  id: string;
+  date: Date;
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  ingredients: MealIngredient[];
+  isFavorite?: boolean;
+  hasAllergens?: boolean;
+  allergens?: string[];
+};
+
+type MealPlan = {
+  id: string;
+  startDate: Date;
+  endDate: Date;
+  goalType: string;
+  targetCalories: number;
+  targetProtein: number;
+  targetCarbs: number;
+  targetFat: number;
+  meals: Meal[];
+};
+
+type MealPlanApi = Omit<MealPlan, "startDate" | "endDate" | "meals"> & {
+  startDate: string;
+  endDate: string;
+  meals: Array<Omit<Meal, "date"> & { date: string }>;
+};
+
 export default function MealPlanningPage() {
-  const { data: session, status } = useSession();
+  const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
 
-  // 1. Convex State
-  const userEmail = session?.user?.email || null;
-  const families = useQuery(
-    api.families.list,
-    userEmail ? { email: userEmail } : "skip",
-  );
-
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState("plan");
+  const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState(true);
 
-  // Mutations
-  const generatePlan = useMutation(api.meals.generatePlan);
+  const normalizeMealPlan = (plan: MealPlanApi | null): MealPlan | null => {
+    if (!plan) return null;
 
-  // Auto select member
-  useEffect(() => {
-    if (families && families.length > 0 && !selectedMemberId) {
-      const firstFamily = families[0];
-      if (firstFamily?.members && firstFamily.members.length > 0) {
-        const firstMember = firstFamily.members[0];
-        if (firstMember) {
-          setSelectedMemberId(firstMember._id);
-        }
-      }
-    }
-  }, [families, selectedMemberId]);
+    return {
+      ...plan,
+      startDate: new Date(plan.startDate),
+      endDate: new Date(plan.endDate),
+      meals: plan.meals.map((meal) => ({
+        ...meal,
+        date: new Date(meal.date),
+      })),
+    };
+  };
 
   // Calculate Date Range
   const dateRange = useMemo(() => {
@@ -83,23 +114,40 @@ export default function MealPlanningPage() {
     };
   }, [currentDate, viewMode]);
 
-  // 2. Fetch Meal Plan via Convex
-  const mealPlan = useQuery(
-    api.meals.getPlan,
-    selectedMemberId
-      ? {
-          memberId: selectedMemberId as Id<"familyMembers">,
-          startDate: dateRange.start,
-          endDate: dateRange.end,
-        }
-      : "skip",
-  );
+  const loadMealPlan = async () => {
+    try {
+      setLoadingPlan(true);
+      const response = await fetch(
+        `/api/meal-plans?startDate=${new Date(
+          dateRange.start,
+        ).toISOString()}&endDate=${new Date(dateRange.end).toISOString()}`,
+      );
+
+      if (!response.ok) {
+        throw new Error("获取食谱计划失败");
+      }
+
+      const data = await response.json();
+      const planPayload = "plan" in data ? data.plan : data;
+      setMealPlan(normalizeMealPlan(planPayload));
+    } catch (error) {
+      console.error("获取食谱计划失败:", error);
+      setMealPlan(null);
+    } finally {
+      setLoadingPlan(false);
+    }
+  };
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (isLoaded && !isSignedIn) {
       router.push("/auth/signin");
     }
-  }, [status, router]);
+  }, [isLoaded, isSignedIn, router]);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    loadMealPlan();
+  }, [isLoaded, isSignedIn, dateRange.start, dateRange.end]);
 
   const handleNavigateDate = (direction: "prev" | "next") => {
     const newDate =
@@ -119,17 +167,54 @@ export default function MealPlanningPage() {
   };
 
   const handleGenerateNewPlan = async () => {
-    if (!selectedMemberId) return;
     try {
-      await generatePlan({
-        memberId: selectedMemberId as Id<"familyMembers">,
-        startDate: currentDate.getTime(),
-        days: viewMode === "day" ? 1 : viewMode === "week" ? 7 : 30,
+      const response = await fetch("/api/meal-plans/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startDate: currentDate.toISOString(),
+          days: viewMode === "day" ? 1 : viewMode === "week" ? 7 : 30,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error("生成食谱计划失败");
+      }
+
+      await loadMealPlan();
       toast.success("食谱计划生成成功！");
     } catch (error) {
       console.error("生成食谱计划失败:", error);
       toast.error("生成食谱计划失败，请重试");
+    }
+  };
+
+  const handleQuickAdd = async (
+    recipeId: string,
+    mealType: Meal["mealType"],
+  ) => {
+    if (!mealPlan) return;
+
+    try {
+      const response = await fetch(`/api/meal-plans/${mealPlan.id}/meals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipeId,
+          mealType,
+          date: currentDate.toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("添加餐次失败");
+      }
+
+      await loadMealPlan();
+      toast.success("已加入食谱计划");
+    } catch (error) {
+      console.error("添加餐次失败:", error);
+      toast.error("添加餐次失败，请重试");
     }
   };
 
@@ -154,10 +239,9 @@ export default function MealPlanningPage() {
     toast.success("食谱计划已导出");
   };
 
-  const loading =
-    families === undefined || (selectedMemberId && mealPlan === undefined);
+  const loading = !isLoaded || loadingPlan;
 
-  if (status === "loading" || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -168,7 +252,7 @@ export default function MealPlanningPage() {
     );
   }
 
-  if (!session) return null;
+  if (!isSignedIn) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -306,10 +390,10 @@ export default function MealPlanningPage() {
                 {mealPlan ? (
                   <>
                     {viewMode === "list" ? (
-                      <MealListView meals={mealPlan.meals as any} />
+                      <MealListView meals={mealPlan.meals} />
                     ) : (
                       <MealCalendarView
-                        meals={mealPlan.meals as any}
+                        meals={mealPlan.meals}
                         viewMode={viewMode}
                         currentDate={currentDate}
                         onMealUpdate={() => {}}
@@ -337,7 +421,7 @@ export default function MealPlanningPage() {
 
           <TabsContent value="nutrition" className="space-y-6">
             {mealPlan ? (
-              <NutritionSummary planId={mealPlan._id as any} />
+              <NutritionSummary planId={mealPlan.id} />
             ) : (
               <Card>
                 <CardContent className="text-center py-12">
@@ -352,15 +436,7 @@ export default function MealPlanningPage() {
           </TabsContent>
 
           <TabsContent value="favorites" className="space-y-6">
-            <Card>
-              <CardContent className="text-center py-12">
-                <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  收藏功能开发中
-                </h3>
-                <p className="text-gray-500">敬请期待更多功能</p>
-              </CardContent>
-            </Card>
+            <FavoriteMeals onQuickAdd={handleQuickAdd} />
           </TabsContent>
         </Tabs>
       </div>

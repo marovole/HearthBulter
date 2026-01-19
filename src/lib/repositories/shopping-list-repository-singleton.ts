@@ -6,9 +6,8 @@
  * @module shopping-list-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseShoppingListRepository } from './implementations/supabase-shopping-list-repository';
-import type { ShoppingListRepository } from './interfaces/shopping-list-repository';
+import { ConvexShoppingListRepository } from "./implementations/convex-shopping-list-repository";
+import type { ShoppingListRepository } from "./interfaces/shopping-list-repository";
 
 let instance: ShoppingListRepository | null = null;
 
@@ -19,8 +18,7 @@ let instance: ShoppingListRepository | null = null;
  */
 export function getShoppingListRepository(): ShoppingListRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseShoppingListRepository(supabaseClient);
+    instance = new ConvexShoppingListRepository();
   }
   return instance;
 }

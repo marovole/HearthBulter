@@ -1,12 +1,12 @@
-import type { Food as PrismaFood, FoodCategory } from '@prisma/client';
-import { prisma } from '@/lib/db';
-import { safeParseArray } from '@/lib/utils/json-helpers';
+import type { Food as PrismaFood, FoodCategory } from "@prisma/client";
+import { prisma } from "@/lib/db";
+import { safeParseArray } from "@/lib/utils/json-helpers";
 import type {
   FoodRecord,
   FoodRepository,
   FoodSearchQuery,
   FoodSearchResult,
-} from '@/lib/repositories/interfaces/food-repository';
+} from "@/lib/repositories/interfaces/food-repository";
 
 /**
  * 将 Prisma Food 模型规范化为统一的 FoodRecord 格式
@@ -44,8 +44,8 @@ export class PrismaFoodRepository implements FoodRepository {
     // 构建 where 条件：name 或 nameEn 包含查询关键词（不区分大小写）
     const where = {
       OR: [
-        { name: { contains: query, mode: 'insensitive' as const } },
-        { nameEn: { contains: query, mode: 'insensitive' as const } },
+        { name: { contains: query, mode: "insensitive" as const } },
+        { nameEn: { contains: query, mode: "insensitive" as const } },
       ],
       ...(category && { category }),
     };
@@ -53,7 +53,7 @@ export class PrismaFoodRepository implements FoodRepository {
     const [foods, total] = await Promise.all([
       prisma.food.findMany({
         where,
-        orderBy: { name: 'asc' },
+        orderBy: { name: "asc" },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -70,17 +70,21 @@ export class PrismaFoodRepository implements FoodRepository {
 
   async findPopular(limit: number): Promise<FoodRecord[]> {
     const foods = await prisma.food.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: limit,
     });
 
     return foods.map(normalizePrismaFood);
   }
 
-  async listByCategory(category: FoodCategory, from: number, to: number): Promise<FoodRecord[]> {
+  async listByCategory(
+    category: FoodCategory,
+    from: number,
+    to: number,
+  ): Promise<FoodRecord[]> {
     const foods = await prisma.food.findMany({
       where: { category },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
       skip: from,
       take: to - from + 1,
     });

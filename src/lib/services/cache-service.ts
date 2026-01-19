@@ -1,23 +1,24 @@
 /**
  * 缓存服务
- * 
+ *
  * 提供食物数据的缓存功能，支持Redis和内存缓存降级
  */
 
-import { prisma } from '@/lib/db';
-import type { Food } from '@prisma/client';
+import { convexClient, api } from "@/lib/convex-client";
+import type { Doc, Id } from "@/../convex/_generated/dataModel";
+import type { FoodRecord } from "@/lib/repositories/interfaces/food-repository";
 
 interface CacheConfig {
-  useRedis: boolean
-  redisUrl?: string
-  defaultTTL: number // 默认TTL（秒）
+  useRedis: boolean;
+  redisUrl?: string;
+  defaultTTL: number; // 默认TTL（秒）
 }
 
 interface CacheStats {
-  hits: number // 缓存命中次数
-  misses: number // 缓存未命中次数
-  sets: number // 设置缓存次数
-  deletes: number // 删除缓存次数
+  hits: number; // 缓存命中次数
+  misses: number; // 缓存未命中次数
+  sets: number; // 设置缓存次数
+  deletes: number; // 删除缓存次数
 }
 
 // 内存缓存（当Redis不可用时使用）
@@ -54,14 +55,20 @@ export class CacheService {
    */
   private async initRedis() {
     try {
+      const redisUrl = this.config.redisUrl;
+      if (!redisUrl) {
+        this.config.useRedis = false;
+        return;
+      }
+
       // 动态导入redis（如果安装了）
-      const redis = await import('ioredis').catch(() => null);
+      const redis = await import("ioredis").catch(() => null);
       if (redis) {
-        this.redisClient = new redis.default(this.config.redisUrl, {
+        this.redisClient = new redis.default(redisUrl, {
           retryStrategy: (times) => {
             // 重试策略：最多重试3次
             if (times > 3) {
-              console.warn('Redis连接失败，切换到内存缓存');
+              console.warn("Redis连接失败，切换到内存缓存");
               this.config.useRedis = false;
               return null;
             }
@@ -69,20 +76,20 @@ export class CacheService {
           },
         });
 
-        this.redisClient.on('error', (err: Error) => {
-          console.error('Redis错误:', err);
+        this.redisClient.on("error", (err: Error) => {
+          console.error("Redis错误:", err);
           this.config.useRedis = false;
         });
 
-        this.redisClient.on('connect', () => {
-          console.log('Redis连接成功');
+        this.redisClient.on("connect", () => {
+          console.log("Redis连接成功");
         });
       } else {
-        console.warn('Redis未安装，使用内存缓存');
+        console.warn("Redis未安装，使用内存缓存");
         this.config.useRedis = false;
       }
     } catch (error) {
-      console.warn('Redis初始化失败，使用内存缓存:', error);
+      console.warn("Redis初始化失败，使用内存缓存:", error);
       this.config.useRedis = false;
     }
   }
@@ -101,7 +108,7 @@ export class CacheService {
         this.stats.misses++;
         return null;
       } catch (error) {
-        console.error('Redis get错误:', error);
+        console.error("Redis get错误:", error);
         // 降级到内存缓存
         return this.getFromMemory<T>(key);
       }
@@ -113,24 +120,16 @@ export class CacheService {
   /**
    * 设置缓存值
    */
-  async set(
-    key: string,
-    value: any,
-    ttl?: number
-  ): Promise<void> {
+  async set(key: string, value: any, ttl?: number): Promise<void> {
     this.stats.sets++;
     const ttlSeconds = ttl ?? this.config.defaultTTL;
 
     if (this.config.useRedis && this.redisClient) {
       try {
-        await this.redisClient.setex(
-          key,
-          ttlSeconds,
-          JSON.stringify(value)
-        );
+        await this.redisClient.setex(key, ttlSeconds, JSON.stringify(value));
         return;
       } catch (error) {
-        console.error('Redis set错误:', error);
+        console.error("Redis set错误:", error);
         // 降级到内存缓存
       }
     }
@@ -148,7 +147,7 @@ export class CacheService {
         await this.redisClient.del(key);
         return;
       } catch (error) {
-        console.error('Redis delete错误:', error);
+        console.error("Redis delete错误:", error);
       }
     }
 
@@ -245,7 +244,7 @@ export class FoodCacheKeys {
   }
 
   static foodSearch(query: string, category?: string): string {
-    return `food:search:${query}:${category || 'all'}`;
+    return `food:search:${query}:${category || "all"}`;
   }
 
   static foodCategory(category: string): string {
@@ -260,30 +259,49 @@ export class FoodCacheKeys {
 /**
  * 食物缓存服务（封装CacheService，提供食物特定的缓存方法）
  */
+export const cacheService = new CacheService({
+  useRedis: !!process.env.REDIS_URL,
+  defaultTTL: 7776000,
+});
+
 export class FoodCacheService {
   private cache: CacheService;
 
   constructor(cacheService?: CacheService) {
-    this.cache = cacheService ?? new CacheService({
-      useRedis: !!process.env.REDIS_URL,
-      defaultTTL: 7776000, // 90天
-    });
+    this.cache =
+      cacheService ??
+      new CacheService({
+        useRedis: !!process.env.REDIS_URL,
+        defaultTTL: 7776000, // 90天
+      });
   }
 
   /**
    * 获取食物缓存
    */
-  async getFood(id: string): Promise<Food | null> {
-    const cached = await this.cache.get<Food>(
-      FoodCacheKeys.food(id)
+  async getFood(id: string): Promise<FoodRecord | null> {
+    const cached = await this.cache.get<FoodRecord>(FoodCacheKeys.food(id));
+    if (cached) {
+      return cached;
+    }
+
+    const record = await convexClient.query<Doc<"foods"> | null>(
+      api.budget.getFoodById,
+      { foodId: id as Id<"foods"> },
     );
-    return cached;
+    if (!record) {
+      return null;
+    }
+
+    const mapped = mapFoodDocToRecord(record);
+    await this.setFood(mapped);
+    return mapped;
   }
 
   /**
    * 设置食物缓存
    */
-  async setFood(food: Food, ttl?: number): Promise<void> {
+  async setFood(food: FoodRecord, ttl?: number): Promise<void> {
     await this.cache.set(FoodCacheKeys.food(food.id), food, ttl);
   }
 
@@ -298,26 +316,22 @@ export class FoodCacheService {
    * 刷新USDA数据（当USDA数据超过90天时）
    */
   async refreshUSDAData(): Promise<void> {
-    const ninetyDaysAgo = new Date(
-      Date.now() - 90 * 24 * 60 * 60 * 1000
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+    const foods = await convexClient.query<Doc<"foods">[]>(
+      api.budget.getFoods,
+      { limit: 100 },
     );
 
-    const staleFoods = await prisma.food.findMany({
-      where: {
-        source: 'USDA',
-        OR: [
-          { cachedAt: null },
-          { cachedAt: { lt: ninetyDaysAgo } },
-        ],
-      },
-      take: 100, // 每次处理100条
-    });
+    const staleFoods = foods.filter(
+      (food) =>
+        food.source === "USDA" && food.updatedAt < ninetyDaysAgo.getTime(),
+    );
 
     console.log(`发现${staleFoods.length}条需要刷新的USDA数据`);
 
-    // 清除相关缓存
     for (const food of staleFoods) {
-      await this.deleteFood(food.id);
+      await this.deleteFood(food._id as string);
     }
 
     // 注意：实际的USDA数据刷新应该在后台任务中完成
@@ -325,9 +339,28 @@ export class FoodCacheService {
   }
 }
 
+function mapFoodDocToRecord(food: Doc<"foods">): FoodRecord {
+  return {
+    id: food._id as string,
+    name: food.name,
+    nameEn: food.nameEn ?? null,
+    aliases: food.aliases ?? [],
+    calories: food.calories,
+    protein: food.protein,
+    carbs: food.carbs,
+    fat: food.fat,
+    fiber: food.fiber ?? null,
+    category: food.category as FoodRecord["category"],
+    tags: food.tags ?? [],
+    source: food.source,
+    verified: food.verified,
+    createdAt: new Date(food.createdAt),
+    updatedAt: new Date(food.updatedAt),
+  };
+}
+
 // 导出单例实例
 export const foodCacheService = new FoodCacheService();
 
 // 导出类型
 export type { CacheConfig, CacheStats };
-

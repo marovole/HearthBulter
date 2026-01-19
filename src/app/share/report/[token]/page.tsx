@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { use } from 'react';
-import DOMPurify from 'dompurify';
+import { useState, useEffect } from "react";
+import { use } from "react";
+import DOMPurify from "dompurify";
 
 interface ReportData {
   id: string;
@@ -18,7 +18,11 @@ interface ReportData {
   };
 }
 
-export default function SharedReportPage({ params }: { params: Promise<{ token: string }> }) {
+export default function SharedReportPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
   const resolvedParams = use(params);
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,17 +31,19 @@ export default function SharedReportPage({ params }: { params: Promise<{ token: 
   useEffect(() => {
     const loadReport = async () => {
       try {
-        const response = await fetch(`/api/analytics/share/${resolvedParams.token}`);
+        const response = await fetch(
+          `/api/analytics/share/${resolvedParams.token}`,
+        );
         const data = await response.json();
 
         if (data.success) {
           setReport(data.data);
         } else {
-          setError(data.error || '报告不存在或已过期');
+          setError(data.error || "报告不存在或已过期");
         }
       } catch (err) {
-        console.error('Failed to load shared report:', err);
-        setError('加载报告失败');
+        console.error("Failed to load shared report:", err);
+        setError("加载报告失败");
       } finally {
         setLoading(false);
       }
@@ -62,7 +68,9 @@ export default function SharedReportPage({ params }: { params: Promise<{ token: 
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center bg-red-50 border border-red-200 rounded-lg p-8 max-w-md">
           <div className="text-4xl mb-4">❌</div>
-          <h2 className="text-xl font-semibold text-red-700 mb-2">无法访问报告</h2>
+          <h2 className="text-xl font-semibold text-red-700 mb-2">
+            无法访问报告
+          </h2>
           <p className="text-red-600">{error}</p>
         </div>
       </div>
@@ -70,10 +78,10 @@ export default function SharedReportPage({ params }: { params: Promise<{ token: 
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return new Date(dateStr).toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
@@ -128,7 +136,9 @@ export default function SharedReportPage({ params }: { params: Promise<{ token: 
           <div className="bg-white rounded-lg shadow-sm">
             <div
               className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(report.htmlContent) }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(report.htmlContent),
+              }}
             />
           </div>
         )}
@@ -136,12 +146,14 @@ export default function SharedReportPage({ params }: { params: Promise<{ token: 
         {/* 底部信息 */}
         <div className="mt-8 text-center">
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2">想要管理您的健康数据？</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              想要管理您的健康数据？
+            </h3>
             <p className="text-purple-100 mb-4">
               使用健康管家，轻松记录饮食、运动、睡眠数据，获取专业的健康分析和建议
             </p>
             <button
-              onClick={() => window.location.href = '/auth/signup'}
+              onClick={() => (window.location.href = "/auth/signup")}
               className="px-6 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
             >
               立即注册
@@ -160,4 +172,3 @@ export default function SharedReportPage({ params }: { params: Promise<{ token: 
     </div>
   );
 }
-

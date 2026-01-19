@@ -1,268 +1,210 @@
-/**
- * 批量设备同步API
- *
- * Migrated from Prisma to Supabase (endpoint layer)
- * Note: deviceSyncService still uses Prisma
- */
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id } from "@/../convex/_generated/dataModel";
+import { z } from "zod";
+import type { SyncResult } from "@/types/wearable-devices";
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { deviceSyncService } from '@/lib/services/device-sync-service';
-import { fetchDevicesForSync } from '@/lib/db/supabase-rpc-helpers';
-import { z } from 'zod';
-
-// Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 const BatchSyncSchema = z.object({
   memberId: z.string().optional(),
   platforms: z.array(z.string()).optional(),
 });
 
-/**
- * POST /api/devices/sync/all
- * 批量设备同步
- *
- * Migrated from Prisma to Supabase
- * Optimizations:
- * - 使用 RPC `fetch_devices_for_sync`（仅当有 memberId 时）
- * - 单次往返获取设备列表和统计
- * - 无 memberId 时保持现有逻辑（安全性优先）
- */
+type DeviceConnectionRecord = {
+  _id: Id<"deviceConnections">;
+  memberId: Id<"familyMembers">;
+  deviceId: string;
+  platform: string;
+  legacyId?: string;
+  lastSyncAt?: number;
+  retryCount?: number;
+  syncStatus?: string;
+  isAutoSync?: boolean;
+  isActive?: boolean;
+  member?: Record<string, unknown> | null;
+};
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     const body = await request.json();
     const validatedData = BatchSyncSchema.parse(body);
 
-    const supabase = SupabaseClientManager.getInstance();
+    let memberIds: Id<"familyMembers">[] = [];
 
     if (validatedData.memberId) {
-      // 验证用户权限 - 检查是否在同一家庭
-      const { data: member } = await supabase
-        .from('family_members')
-        .select('id, familyId')
-        .eq('id', validatedData.memberId)
-        .single();
+      const access = await convexClient.query<{ hasAccess: boolean }>(
+        api.members.verifyAccess,
+        {
+          memberId: validatedData.memberId as Id<"familyMembers">,
+          clerkId: session.user.id,
+        },
+      );
 
-      if (!member) {
+      if (!access.hasAccess) {
         return NextResponse.json(
-          { error: '无权限访问该家庭成员' },
-          { status: 403 }
+          { error: "无权限访问该家庭成员" },
+          { status: 403 },
         );
       }
 
-      // 检查是否在同一家庭
-      const { data: sameFamilyCheck } = await supabase
-        .from('family_members')
-        .select('id')
-        .eq('familyId', member.familyId)
-        .eq('userId', session.user.id)
-        .is('deletedAt', null)
-        .maybeSingle();
-
-      if (!sameFamilyCheck) {
-        return NextResponse.json(
-          { error: '无权限访问该家庭成员' },
-          { status: 403 }
-        );
-      }
-    }
-
-    // 获取需要同步的设备
-    let devicesToSync: any[] = [];
-
-    if (validatedData.memberId) {
-      // 有 memberId：使用优化的 RPC
-      // 优势：单次往返、服务端过滤、包含汇总统计
-      const devicesResult = await fetchDevicesForSync({
-        memberId: validatedData.memberId,
-        platforms: validatedData.platforms,
-        limit: 200, // RPC 最大限制
+      memberIds = [validatedData.memberId as Id<"familyMembers">];
+    } else {
+      const accessibleMembers = await convexClient.query<
+        Array<{ _id: string }>
+      >(api.members.listAccessibleByClerkId, {
+        clerkId: session.user.id,
       });
 
-      if (!devicesResult.success || !devicesResult.data) {
-        console.error('RPC fetch_devices_for_sync failed:', devicesResult.error);
-        return NextResponse.json(
-          { error: '查询设备失败' },
-          { status: 500 }
-        );
-      }
-
-      // 映射 RPC 数据结构到原有格式
-      devicesToSync = devicesResult.data.devices.map(d => ({
-        id: d.id,
-        deviceId: d.deviceId,
-        deviceName: d.deviceName,
-        platform: d.platform,
-        memberId: d.memberId,
-        syncStatus: d.syncStatus,
-        member: {
-          id: d.memberId,
-          name: d.memberName,
-        },
-      }));
-
-      if (devicesToSync.length === 0) {
-        return NextResponse.json({
-          success: true,
-          data: {
-            message: '没有需要同步的设备',
-            devices: [],
-            summary: {
-              total: 0,
-              success: 0,
-              failed: 0,
-              skipped: 0,
-            },
-          },
-        });
-      }
-    } else {
-      // 无 memberId：保持现有逻辑（避免安全问题）
-      // 先获取用户的所有家庭成员ID
-      const { data: userMembers } = await supabase
-        .from('family_members')
-        .select('id, familyId')
-        .eq('userId', session.user.id)
-        .is('deletedAt', null);
-
-      if (!userMembers || userMembers.length === 0) {
-        return NextResponse.json({
-          success: true,
-          data: {
-            message: '没有需要同步的设备',
-            devices: [],
-            summary: {
-              total: 0,
-              success: 0,
-              failed: 0,
-              skipped: 0,
-            },
-          },
-        });
-      }
-
-      const memberIds = userMembers.map(m => m.id);
-
-      // 手动查询设备
-      let devicesQuery = supabase
-        .from('device_connections')
-        .select(`
-          id,
-          deviceId,
-          deviceName,
-          platform,
-          memberId,
-          syncStatus,
-          member:family_members!inner(id, name)
-        `)
-        .eq('isActive', true)
-        .eq('isAutoSync', true)
-        .neq('syncStatus', 'DISABLED')
-        .in('memberId', memberIds);
-
-      if (validatedData.platforms && validatedData.platforms.length > 0) {
-        devicesQuery = devicesQuery.in('platform', validatedData.platforms);
-      }
-
-      const { data: devices, error: devicesError } = await devicesQuery;
-
-      if (devicesError) {
-        console.error('查询设备失败:', devicesError);
-        return NextResponse.json(
-          { error: '查询设备失败' },
-          { status: 500 }
-        );
-      }
-
-      if (!devices || devices.length === 0) {
-        return NextResponse.json({
-          success: true,
-          data: {
-            message: '没有需要同步的设备',
-            devices: [],
-            summary: {
-              total: 0,
-              success: 0,
-              failed: 0,
-              skipped: 0,
-            },
-          },
-        });
-      }
-
-      devicesToSync = devices;
+      memberIds = accessibleMembers.map(
+        (member) => member._id as Id<"familyMembers">,
+      );
     }
 
-    // 执行批量同步
-    const syncResults = await deviceSyncService.syncAllDevices();
+    if (memberIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          message: "没有需要同步的设备",
+          devices: [],
+          summary: { total: 0, success: 0, failed: 0, skipped: 0 },
+        },
+      });
+    }
 
-    // 更新设备状态
-    const deviceUpdatePromises = syncResults.results.map(async (result) => {
-      const device = devicesToSync.find(d => d.deviceId === result.deviceId);
-      if (!device) return null;
-
-      try {
-        const now = new Date().toISOString();
-
-        if (result.success && !result.skipped) {
-          await supabase
-            .from('device_connections')
-            .update({
-              syncStatus: 'SUCCESS',
-              lastSyncAt: result.endTime || now,
-              errorCount: 0,
-              lastError: null,
-              updatedAt: now,
-            })
-            .eq('id', device.id);
-        } else if (!result.success) {
-          // 获取当前 errorCount
-          const { data: currentDevice } = await supabase
-            .from('device_connections')
-            .select('errorCount')
-            .eq('id', device.id)
-            .single();
-
-          const newErrorCount = (currentDevice?.errorCount || 0) + 1;
-
-          await supabase
-            .from('device_connections')
-            .update({
-              syncStatus: 'FAILED',
-              lastError: result.errors?.[0] || 'Unknown error',
-              errorCount: newErrorCount,
-              updatedAt: now,
-            })
-            .eq('id', device.id);
-        }
-      } catch (updateError) {
-        console.error('更新设备状态失败:', updateError);
-      }
-
-      return {
-        ...result,
-        member: device.member,
-      };
+    const deviceResponse = await convexClient.query<{
+      data: DeviceConnectionRecord[];
+      total: number;
+    }>(api.devices.listConnections, {
+      memberIds,
+      isActive: true,
+      offset: 0,
+      limit: 200,
     });
+    const deviceConnections = deviceResponse.data as DeviceConnectionRecord[];
 
-    const updatedResults = (await Promise.all(deviceUpdatePromises))
-      .filter(result => result !== null);
+    let devicesToSync = (deviceConnections || []) as DeviceConnectionRecord[];
+    devicesToSync = devicesToSync.filter(
+      (device) =>
+        device.isAutoSync !== false && device.syncStatus !== "DISABLED",
+    );
 
-    // 统计结果
+    if (validatedData.platforms && validatedData.platforms.length > 0) {
+      const platforms = new Set(validatedData.platforms);
+      devicesToSync = devicesToSync.filter((device) =>
+        platforms.has(String(device.platform)),
+      );
+    }
+
+    if (devicesToSync.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          message: "没有需要同步的设备",
+          devices: [],
+          summary: { total: 0, success: 0, failed: 0, skipped: 0 },
+        },
+      });
+    }
+
+    const deviceUpdatePromises = devicesToSync.map(
+      async (deviceRecord: DeviceConnectionRecord) => {
+        let syncResult: SyncResult = {
+          success: false,
+          syncedCount: 0,
+          skippedCount: 0,
+          errors: ["该平台暂不支持自动同步"],
+          lastSyncDate: new Date(),
+        };
+
+        try {
+          await convexClient.mutation(api.devices.updateConnection, {
+            id: deviceRecord._id,
+            patch: { syncStatus: "SYNCING" },
+          });
+
+          const platform = String(deviceRecord.platform);
+          const legacyId = deviceRecord.legacyId as string | undefined;
+          const lastSyncAt = deviceRecord.lastSyncAt as number | undefined;
+          if (platform === "APPLE_HEALTHKIT" && legacyId) {
+            const { healthKitService } = await import(
+              "@/lib/services/healthkit-service"
+            );
+            syncResult = await healthKitService.syncAllData(
+              String(deviceRecord.memberId),
+              deviceRecord._id,
+              lastSyncAt ? new Date(lastSyncAt) : undefined,
+            );
+          } else if (platform === "HUAWEI_HEALTH" && legacyId) {
+            const { huaweiHealthService } = await import(
+              "@/lib/services/huawei-health-service"
+            );
+            syncResult = await huaweiHealthService.syncAllData(
+              String(deviceRecord.memberId),
+              deviceRecord._id,
+              lastSyncAt ? new Date(lastSyncAt) : undefined,
+            );
+          }
+
+          if (syncResult.success) {
+            await convexClient.mutation(api.devices.updateConnection, {
+              id: deviceRecord._id,
+              patch: {
+                syncStatus: "SUCCESS",
+                lastSyncAt: Date.now(),
+                errorCount: 0,
+                lastError: null,
+                retryCount: 0,
+              },
+            });
+          } else {
+            const retryCount = Number(deviceRecord.retryCount ?? 0) + 1;
+            await convexClient.mutation(api.devices.updateConnection, {
+              id: deviceRecord._id,
+              patch: {
+                syncStatus: "FAILED",
+                lastError: syncResult.errors[0] || "Unknown error",
+                retryCount,
+              },
+            });
+          }
+        } catch (updateError) {
+          console.error("更新设备状态失败:", updateError);
+          syncResult = {
+            success: false,
+            syncedCount: 0,
+            skippedCount: 0,
+            errors: [
+              updateError instanceof Error ? updateError.message : "同步失败",
+            ],
+            lastSyncDate: new Date(),
+          };
+        }
+
+        return {
+          deviceId: String(deviceRecord.deviceId),
+          platform: String(deviceRecord.platform),
+          success: syncResult.success,
+          skipped: syncResult.skippedCount && syncResult.skippedCount > 0,
+          errors: syncResult.errors,
+          endTime: syncResult.lastSyncDate?.toISOString(),
+          member: deviceRecord.member,
+        };
+      },
+    );
+
+    const updatedResults = await Promise.all(deviceUpdatePromises);
+
     const summary = {
       total: devicesToSync.length,
-      success: updatedResults.filter(r => r.success && !r.skipped).length,
-      failed: updatedResults.filter(r => !r.success).length,
-      skipped: updatedResults.filter(r => r.skipped).length,
+      success: updatedResults.filter((r) => r.success && !r.skipped).length,
+      failed: updatedResults.filter((r) => !r.success).length,
+      skipped: updatedResults.filter((r) => r.skipped).length,
     };
 
     return NextResponse.json({
@@ -271,58 +213,66 @@ export async function POST(request: NextRequest) {
         message: `完成 ${summary.total} 个设备的同步`,
         devices: updatedResults,
         summary,
-        duration: syncResults.duration,
       },
     });
-
   } catch (error) {
-    console.error('批量设备同步失败:', error);
+    console.error("批量设备同步失败:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: '参数错误', details: error.errors },
-        { status: 400 }
+        { error: "参数错误", details: error.errors },
+        { status: 400 },
       );
     }
 
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
-/**
- * GET /api/devices/sync/all
- * 获取同步历史记录
- *
- * Migrated from Prisma to Supabase
- */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return NextResponse.json(
-        { error: '未授权访问' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const memberId = searchParams.get("memberId");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const offset = parseInt(searchParams.get("offset") || "0");
 
-    const supabase = SupabaseClientManager.getInstance();
+    let memberIds: Id<"familyMembers">[] = [];
 
-    // 获取用户的所有家庭成员ID
-    const { data: userMembers } = await supabase
-      .from('family_members')
-      .select('id, familyId')
-      .eq('userId', session.user.id)
-      .is('deletedAt', null);
+    if (memberId) {
+      const access = await convexClient.query<{ hasAccess: boolean }>(
+        api.members.verifyAccess,
+        {
+          memberId: memberId as Id<"familyMembers">,
+          clerkId: session.user.id,
+        },
+      );
 
-    if (!userMembers || userMembers.length === 0) {
+      if (!access.hasAccess) {
+        return NextResponse.json(
+          { error: "无权限访问该家庭成员" },
+          { status: 403 },
+        );
+      }
+
+      memberIds = [memberId as Id<"familyMembers">];
+    } else {
+      const accessibleMembers = await convexClient.query<
+        Array<{ _id: string }>
+      >(api.members.listAccessibleByClerkId, {
+        clerkId: session.user.id,
+      });
+
+      memberIds = accessibleMembers.map(
+        (member) => member._id as Id<"familyMembers">,
+      );
+    }
+
+    if (memberIds.length === 0) {
       return NextResponse.json({
         success: true,
         data: {
@@ -338,57 +288,99 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const memberIds = userMembers.map(m => m.id);
+    const sources = ["APPLE_HEALTHKIT", "HUAWEI_HEALTH", "GOOGLE_FIT"];
 
-    // 构建查询条件
-    let syncQuery = supabase
-      .from('health_data')
-      .select(`
-        id,
-        dataType,
-        value,
-        unit,
-        measuredAt,
-        source,
-        createdAt,
-        memberId,
-        deviceConnectionId,
-        member:family_members!inner(id, name),
-        deviceConnection:device_connections(id, deviceId, deviceName, platform)
-      `, { count: 'exact' })
-      .in('memberId', memberIds)
-      .in('source', ['APPLE_HEALTHKIT', 'HUAWEI_HEALTH', 'GOOGLE_FIT'])
-      .order('createdAt', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const { data: syncHistory, total } = await convexClient.query<{
+      data: Array<Record<string, unknown>>;
+      total: number;
+    }>(api.health.listByMembers, {
+      memberIds,
+      sources,
+      offset,
+      limit,
+    });
 
-    if (memberId) {
-      syncQuery = syncQuery.eq('memberId', memberId);
-    }
+    const memberCache = new Map<string, { id: string; name: string }>();
+    const deviceCache = new Map<
+      string,
+      { id: string; deviceId: string; deviceName: string; platform: string }
+    >();
 
-    const { data: syncHistory, error: syncError, count: total } = await syncQuery;
+    const history = await Promise.all(
+      (syncHistory || []).map(async (record) => {
+        const memberIdValue = record.memberId as string;
+        const deviceIdValue = record.deviceConnectionId as string | undefined;
 
-    if (syncError) {
-      console.error('获取同步历史失败:', syncError);
-      return NextResponse.json(
-        { error: '获取同步历史失败' },
-        { status: 500 }
-      );
-    }
+        let member = memberCache.get(memberIdValue);
+        if (!member) {
+          const memberDoc = await convexClient.query<Record<
+            string,
+            unknown
+          > | null>(api.members.getById, {
+            memberId: memberIdValue as Id<"familyMembers">,
+          });
+          member = memberDoc
+            ? { id: String(memberDoc._id), name: String(memberDoc.name) }
+            : { id: memberIdValue, name: "" };
+          memberCache.set(memberIdValue, member);
+        }
 
-    // 获取最近30天的日统计数据
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        let deviceConnection:
+          | {
+              id: string;
+              deviceId: string;
+              deviceName: string;
+              platform: string;
+            }
+          | undefined;
+        if (deviceIdValue) {
+          deviceConnection = deviceCache.get(deviceIdValue);
+          if (!deviceConnection) {
+            const deviceDoc = await convexClient.query<Record<
+              string,
+              unknown
+            > | null>(api.devices.getById, {
+              id: deviceIdValue as Id<"deviceConnections">,
+            });
+            if (deviceDoc) {
+              deviceConnection = {
+                id: String(deviceDoc._id),
+                deviceId: String(deviceDoc.deviceId),
+                deviceName: String(deviceDoc.deviceName),
+                platform: String(deviceDoc.platform),
+              };
+              deviceCache.set(deviceIdValue, deviceConnection);
+            }
+          }
+        }
 
-    const { data: recentData } = await supabase
-      .from('health_data')
-      .select('createdAt')
-      .in('memberId', memberIds)
-      .in('source', ['APPLE_HEALTHKIT', 'HUAWEI_HEALTH', 'GOOGLE_FIT'])
-      .gte('createdAt', thirtyDaysAgo.toISOString());
+        return {
+          id: record._id,
+          measuredAt: record.measuredAt,
+          source: record.source,
+          createdAt: record.createdAt,
+          member,
+          deviceConnection: deviceConnection ?? null,
+        };
+      }),
+    );
 
-    // 客户端分组统计
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const { data: recentData } = await convexClient.query<{
+      data: Array<Record<string, unknown>>;
+      total: number;
+    }>(api.health.listByMembers, {
+      memberIds,
+      sources,
+      offset: 0,
+      limit: 1000,
+    });
+
     const dailyStatsMap: Record<string, number> = {};
-    (recentData || []).forEach(record => {
-      const date = new Date(record.createdAt).toISOString().split('T')[0];
+    (recentData || []).forEach((record) => {
+      const createdAt = record.createdAt as number | undefined;
+      if (!createdAt || createdAt < thirtyDaysAgo) return;
+      const date = new Date(createdAt).toISOString().slice(0, 10);
       dailyStatsMap[date] = (dailyStatsMap[date] || 0) + 1;
     });
 
@@ -402,22 +394,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        syncHistory: syncHistory || [],
+        syncHistory: history,
         dailyStats,
         pagination: {
           total: total || 0,
           limit,
           offset,
-          hasMore: offset + limit < (total || 0),
+          hasMore: offset + history.length < (total || 0),
         },
       },
     });
-
   } catch (error) {
-    console.error('获取同步历史失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("获取同步历史失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

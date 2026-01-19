@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { safeParseArray, safeParseObject } from '@/lib/utils/json-helpers';
+import { NextRequest, NextResponse } from "next/server";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { safeParseArray, safeParseObject } from "@/lib/utils/json-helpers";
 
 /**
  * GET /api/user/preferences
@@ -10,16 +10,16 @@ import { safeParseArray, safeParseObject } from '@/lib/utils/json-helpers';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
+    const memberId = searchParams.get("memberId");
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'memberId is required' },
-        { status: 400 }
+        { error: "memberId is required" },
+        { status: 400 },
       );
     }
 
@@ -27,17 +27,17 @@ export async function GET(request: NextRequest) {
 
     // 获取用户偏好
     const { data: preferences, error } = await supabase
-      .from('user_preferences')
-      .select('*')
-      .eq('memberId', memberId)
+      .from("user_preferences")
+      .select("*")
+      .eq("memberId", memberId)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error && error.code !== "PGRST116") {
       // PGRST116 = no rows returned, which is expected
-      console.error('Error getting user preferences:', error);
+      console.error("Error getting user preferences:", error);
       return NextResponse.json(
-        { error: 'Failed to fetch user preferences' },
-        { status: 500 }
+        { error: "Failed to fetch user preferences" },
+        { status: 500 },
       );
     }
 
@@ -47,18 +47,18 @@ export async function GET(request: NextRequest) {
         success: true,
         preferences: {
           memberId,
-          spiceLevel: 'MEDIUM',
-          sweetness: 'MEDIUM',
-          saltiness: 'MEDIUM',
+          spiceLevel: "MEDIUM",
+          sweetness: "MEDIUM",
+          saltiness: "MEDIUM",
           preferredCuisines: [],
           avoidedIngredients: [],
           preferredIngredients: [],
           maxCookTime: null,
           minServings: 1,
           maxServings: 10,
-          costLevel: 'MEDIUM',
+          costLevel: "MEDIUM",
           maxEstimatedCost: null,
-          dietType: 'OMNIVORE',
+          dietType: "OMNIVORE",
           isLowCarb: false,
           isLowFat: false,
           isHighProtein: false,
@@ -85,12 +85,11 @@ export async function GET(request: NextRequest) {
       success: true,
       preferences: normalizedPreferences,
     });
-
   } catch (error) {
-    console.error('Error getting user preferences:', error);
+    console.error("Error getting user preferences:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -108,8 +107,8 @@ export async function POST(request: NextRequest) {
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'memberId is required' },
-        { status: 400 }
+        { error: "memberId is required" },
+        { status: 400 },
       );
     }
 
@@ -118,18 +117,18 @@ export async function POST(request: NextRequest) {
     // 准备数据 - Supabase 可以直接存储 JSON 类型
     const data = {
       memberId,
-      spiceLevel: preferences.spiceLevel || 'MEDIUM',
-      sweetness: preferences.sweetness || 'MEDIUM',
-      saltiness: preferences.saltiness || 'MEDIUM',
+      spiceLevel: preferences.spiceLevel || "MEDIUM",
+      sweetness: preferences.sweetness || "MEDIUM",
+      saltiness: preferences.saltiness || "MEDIUM",
       preferredCuisines: preferences.preferredCuisines || [],
       avoidedIngredients: preferences.avoidedIngredients || [],
       preferredIngredients: preferences.preferredIngredients || [],
       maxCookTime: preferences.maxCookTime || null,
       minServings: preferences.minServings || 1,
       maxServings: preferences.maxServings || 10,
-      costLevel: preferences.costLevel || 'MEDIUM',
+      costLevel: preferences.costLevel || "MEDIUM",
       maxEstimatedCost: preferences.maxEstimatedCost || null,
-      dietType: preferences.dietType || 'OMNIVORE',
+      dietType: preferences.dietType || "OMNIVORE",
       isLowCarb: preferences.isLowCarb || false,
       isLowFat: preferences.isLowFat || false,
       isHighProtein: preferences.isHighProtein || false,
@@ -143,16 +142,16 @@ export async function POST(request: NextRequest) {
 
     // 使用 Supabase 的 upsert
     const { data: userPreference, error } = await supabase
-      .from('user_preferences')
-      .upsert(data, { onConflict: 'memberId' })
+      .from("user_preferences")
+      .upsert(data, { onConflict: "memberId" })
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating user preferences:', error);
+      console.error("Error updating user preferences:", error);
       return NextResponse.json(
-        { error: 'Failed to update user preferences' },
-        { status: 500 }
+        { error: "Failed to update user preferences" },
+        { status: 500 },
       );
     }
 
@@ -168,12 +167,11 @@ export async function POST(request: NextRequest) {
       success: true,
       preferences: normalizedPreference,
     });
-
   } catch (error) {
-    console.error('Error updating user preferences:', error);
+    console.error("Error updating user preferences:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }

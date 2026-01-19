@@ -1,54 +1,53 @@
 /**
  * List Generator Service
  * 购物清单生成服务
- * 
+ *
  * 从食谱计划自动提取食材、聚合去重、分类展示，并支持保质期标注
  */
 
-import { prisma } from '@/lib/db';
-import type { ListStatus } from '@prisma/client';
-// Import FoodCategory as value, not just type
-let FoodCategory: any;
-try {
-  // Try to import the actual enum from Prisma if available
-  const prismaModule = require('@prisma/client');
-  FoodCategory = prismaModule.FoodCategory;
-} catch {
-  // Fallback: Define FoodCategory locally if not available in Prisma
-  FoodCategory = {
-    VEGETABLES: 'VEGETABLES',
-    FRUITS: 'FRUITS',
-    PROTEIN: 'PROTEIN',
-    SEAFOOD: 'SEAFOOD',
-    DAIRY: 'DAIRY',
-    GRAINS: 'GRAINS',
-    OILS: 'OILS',
-    SNACKS: 'SNACKS',
-    BEVERAGES: 'BEVERAGES',
-  };
-}
-import type { FoodCategory as FoodCategoryType } from '@prisma/client';
+import { convexClient, api } from "@/lib/convex-client";
+import { FoodCategory } from "@/lib/types/meal";
+import type { FoodCategory as FoodCategoryType } from "@/lib/types/meal";
+import type { Id } from "@/../convex/_generated/dataModel";
 
 /**
  * 食材聚合结果
  */
 export interface AggregatedIngredient {
-  foodId: string
-  foodName: string
-  category: FoodCategoryType
-  totalAmount: number // 总重量（g）
-  perishableDays?: number // 保质期天数（可选）
+  foodId: string;
+  foodName: string;
+  category: FoodCategoryType;
+  totalAmount: number; // 总重量（g）
+  perishableDays?: number; // 保质期天数（可选）
 }
 
 /**
  * 购物清单生成结果
  */
 export interface GeneratedShoppingList {
-  planId: string
-  items: AggregatedIngredient[]
-  totalItems: number
-  categories: Record<FoodCategoryType, AggregatedIngredient[]>
+  planId: string;
+  items: AggregatedIngredient[];
+  totalItems: number;
+  categories: Record<FoodCategoryType, AggregatedIngredient[]>;
 }
+
+type PlanMeal = {
+  recipeId?: string | null;
+};
+
+type RecipeIngredient = {
+  foodId: string;
+  amount?: number | null;
+  food?: {
+    id?: string;
+    name?: string;
+    category?: string | null;
+  } | null;
+};
+
+type RecipeRecord = {
+  ingredients?: RecipeIngredient[];
+};
 
 /**
  * 保质期映射（基于食物分类）
@@ -76,28 +75,57 @@ export class ListGenerator {
    * @returns 生成的购物清单数据
    */
   async generateShoppingList(planId: string): Promise<GeneratedShoppingList> {
-    // 1. 查询食谱计划及所有餐食和食材
-    const plan = await prisma.mealPlan.findUnique({
-      where: { id: planId },
-      include: {
-        meals: {
-          include: {
-            ingredients: {
-              include: {
-                food: true, // 包含食物信息以获取分类
-              },
-            },
-          },
-        },
-      },
+    const plan = await convexClient.query<{
+      memberId: string;
+      startDate: number;
+      endDate: number;
+    } | null>(api.meals.getPlanById, {
+      planId: planId as Id<"mealPlans">,
     });
 
     if (!plan) {
       throw new Error(`食谱计划不存在: ${planId}`);
     }
 
-    // 2. 聚合相同食材
-    const aggregated = this.aggregateIngredients(plan.meals);
+    const planWithMeals = await convexClient.query<{
+      meals: PlanMeal[];
+    } | null>(api.meals.getPlan, {
+      memberId: plan.memberId as Id<"familyMembers">,
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+    });
+
+    const meals = planWithMeals?.meals ?? [];
+    const mealsWithIngredients = await Promise.all(
+      meals.map(async (meal) => {
+        if (!meal.recipeId) {
+          return { ingredients: [] };
+        }
+        const recipe = await convexClient.query<RecipeRecord | null>(
+          api.recipes.getById,
+          {
+            recipeId: meal.recipeId as Id<"recipes">,
+          },
+        );
+
+        const ingredients = (recipe?.ingredients ?? []).map(
+          (ingredient: RecipeIngredient) => ({
+            foodId: ingredient.foodId,
+            amount: ingredient.amount ?? 0,
+            food: {
+              id: ingredient.food?.id ?? ingredient.foodId,
+              name: ingredient.food?.name ?? "",
+              category: (ingredient.food?.category ??
+                "OTHER") as FoodCategoryType,
+            },
+          }),
+        );
+
+        return { ingredients };
+      }),
+    );
+
+    const aggregated = this.aggregateIngredients(mealsWithIngredients);
 
     // 3. 按分类分组
     const categories = this.groupByCategory(aggregated);
@@ -118,15 +146,15 @@ export class ListGenerator {
   private aggregateIngredients(
     meals: Array<{
       ingredients: Array<{
-        foodId: string
-        amount: number
+        foodId: string;
+        amount: number;
         food: {
-          id: string
-          name: string
-          category: FoodCategory
-        }
-      }>
-    }>
+          id: string;
+          name: string;
+          category: FoodCategoryType;
+        };
+      }>;
+    }>,
   ): AggregatedIngredient[] {
     // 使用 Map 按 foodId 聚合
     const ingredientMap = new Map<string, AggregatedIngredient>();
@@ -158,18 +186,20 @@ export class ListGenerator {
 
     // 过滤掉数量过小的食材（小于10g）
     const filteredIngredients = ingredients.filter(
-      ingredient => ingredient.totalAmount >= 10
+      (ingredient) => ingredient.totalAmount >= 10,
     );
 
     // 转换为数组并按分类和优先级排序
     return filteredIngredients.sort((a, b) => {
       // 优先按易腐性排序（易腐食材优先）
-      const aPerishable = a.perishableDays !== undefined && a.perishableDays <= 7;
-      const bPerishable = b.perishableDays !== undefined && b.perishableDays <= 7;
-      
+      const aPerishable =
+        a.perishableDays !== undefined && a.perishableDays <= 7;
+      const bPerishable =
+        b.perishableDays !== undefined && b.perishableDays <= 7;
+
       if (aPerishable && !bPerishable) return -1;
       if (!aPerishable && bPerishable) return 1;
-      
+
       // 然后按分类排序（使用分类枚举顺序）
       const categoryOrder = Object.values(FoodCategory);
       const categoryDiff =
@@ -188,28 +218,34 @@ export class ListGenerator {
    */
   private createAlternativeGroups(
     ingredients: AggregatedIngredient[],
-    groups: Map<string, AggregatedIngredient[]>
+    groups: Map<string, AggregatedIngredient[]>,
   ): void {
     // 按相似性分组食材（基于名称关键词）
     const similarityGroups = [
       // 蔬菜类
-      { keywords: ['番茄', '西红柿', '圣女果'], category: 'VEGETABLES' },
-      { keywords: ['土豆', '马铃薯', '洋芋'], category: 'VEGETABLES' },
-      { keywords: ['黄瓜', '青瓜'], category: 'VEGETABLES' },
+      { keywords: ["番茄", "西红柿", "圣女果"], category: "VEGETABLES" },
+      { keywords: ["土豆", "马铃薯", "洋芋"], category: "VEGETABLES" },
+      { keywords: ["黄瓜", "青瓜"], category: "VEGETABLES" },
       // 肉类
-      { keywords: ['鸡肉', '鸡胸', '鸡腿', '鸡翅'], category: 'PROTEIN' },
-      { keywords: ['猪肉', '五花肉', '里脊', '排骨'], category: 'PROTEIN' },
-      { keywords: ['牛肉', '牛腩', '牛排', '牛肉块'], category: 'PROTEIN' },
+      { keywords: ["鸡肉", "鸡胸", "鸡腿", "鸡翅"], category: "PROTEIN" },
+      { keywords: ["猪肉", "五花肉", "里脊", "排骨"], category: "PROTEIN" },
+      { keywords: ["牛肉", "牛腩", "牛排", "牛肉块"], category: "PROTEIN" },
     ];
 
-    similarityGroups.forEach(group => {
-      const similarIngredients = ingredients.filter(ingredient => 
-        group.category === ingredient.category &&
-        group.keywords.some(keyword => ingredient.foodName.includes(keyword))
+    similarityGroups.forEach((group) => {
+      const similarIngredients = ingredients.filter(
+        (ingredient) =>
+          group.category === ingredient.category &&
+          group.keywords.some((keyword) =>
+            ingredient.foodName.includes(keyword),
+          ),
       );
-      
+
       if (similarIngredients.length > 1) {
-        const groupKey = group.keywords[0];
+        const [groupKey] = group.keywords;
+        if (typeof groupKey !== "string" || !groupKey) {
+          return;
+        }
         groups.set(groupKey, similarIngredients);
       }
     });
@@ -221,9 +257,11 @@ export class ListGenerator {
    * @returns 按分类分组的食材
    */
   private groupByCategory(
-    items: AggregatedIngredient[]
-  ): Record<FoodCategory, AggregatedIngredient[]> {
-    const categories: Partial<Record<FoodCategory, AggregatedIngredient[]>> = {};
+    items: AggregatedIngredient[],
+  ): Record<FoodCategoryType, AggregatedIngredient[]> {
+    const categories: Partial<
+      Record<FoodCategoryType, AggregatedIngredient[]>
+    > = {};
 
     items.forEach((item) => {
       if (!categories[item.category]) {
@@ -233,8 +271,8 @@ export class ListGenerator {
     });
 
     // 确保所有分类都存在（即使为空数组）
-    const result: Record<FoodCategory, AggregatedIngredient[]> = {} as any;
-    Object.values(FoodCategory).forEach((category) => {
+    const result = {} as Record<FoodCategoryType, AggregatedIngredient[]>;
+    (Object.values(FoodCategory) as FoodCategoryType[]).forEach((category) => {
       result[category] = categories[category] || [];
     });
 
@@ -248,7 +286,7 @@ export class ListGenerator {
    */
   getPerishableItems(items: AggregatedIngredient[]): AggregatedIngredient[] {
     return items.filter(
-      (item) => item.perishableDays !== undefined && item.perishableDays <= 7
+      (item) => item.perishableDays !== undefined && item.perishableDays <= 7,
     );
   }
 
@@ -258,25 +296,24 @@ export class ListGenerator {
    * @param category 食材分类
    * @returns 采购建议文本
    */
-  getCategoryAdvice(category: FoodCategory): string {
+  getCategoryAdvice(category: FoodCategoryType): string {
     const perishableDays = PERISHABLE_DAYS[category];
 
     if (!perishableDays) {
-      return '建议尽快采购';
+      return "建议尽快采购";
     }
 
     if (perishableDays <= 3) {
-      return '建议3天内购买';
+      return "建议3天内购买";
     } else if (perishableDays <= 7) {
-      return '建议7天内购买';
+      return "建议7天内购买";
     } else if (perishableDays <= 30) {
-      return '建议30天内购买';
+      return "建议30天内购买";
     } else {
-      return '可长期保存';
+      return "可长期保存";
     }
   }
 }
 
 // 导出单例实例
 export const listGenerator = new ListGenerator();
-

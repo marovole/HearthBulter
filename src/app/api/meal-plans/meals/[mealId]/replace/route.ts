@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { mealPlanner } from '@/lib/services/meal-planner';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id } from "@/../convex/_generated/dataModel";
+import { mealPlanner } from "@/lib/services/meal-planner";
 
 /**
  * POST /api/meal-plans/meals/:mealId/replace
@@ -11,57 +12,58 @@ import { mealPlanner } from '@/lib/services/meal-planner';
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise<{ mealId: string }> }
+  { params }: { params: Promise<{ mealId: string }> },
 ) {
   try {
     const { mealId } = await params;
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    // 加载餐食并校验权限
-    const meal = await prisma.meal.findUnique({
-      where: { id: mealId },
-      include: {
-        plan: {
-          include: {
-            member: {
-              include: {
-                family: {
-                  select: {
-                    creatorId: true,
-                    members: {
-                      where: { userId: session.user.id, deletedAt: null },
-                      select: { role: true },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+    const meal = await convexClient.query<{
+      _id: Id<"meals">;
+      planId: Id<"mealPlans">;
+    } | null>(api.meals.getMealById, {
+      mealId: mealId as Id<"meals">,
     });
 
     if (!meal) {
-      return NextResponse.json({ error: '餐食不存在' }, { status: 404 });
+      return NextResponse.json({ error: "餐食不存在" }, { status: 404 });
     }
 
-    const isCreator = meal.plan.member.family.creatorId === session.user.id;
-    const isAdmin = meal.plan.member.family.members[0]?.role === 'ADMIN' || isCreator;
-    const isSelf = meal.plan.member.userId === session.user.id;
-    if (!isAdmin && !isSelf) {
-      return NextResponse.json({ error: '无权限操作' }, { status: 403 });
+    const plan = await convexClient.query<{
+      memberId: Id<"familyMembers">;
+    } | null>(api.meals.getPlanById, {
+      planId: meal.planId,
+    });
+
+    if (!plan) {
+      return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
-    const replaced = await mealPlanner.replaceMeal(mealId, meal.plan.memberId);
-    return NextResponse.json({ message: '替换成功', meal: replaced }, { status: 200 });
+    const access = await convexClient.query<{ hasAccess: boolean }>(
+      api.members.verifyAccess,
+      {
+        memberId: plan.memberId as Id<"familyMembers">,
+        clerkId: session.user.id,
+      },
+    );
+
+    if (!access.hasAccess) {
+      return NextResponse.json({ error: "无权限操作" }, { status: 403 });
+    }
+
+    const replaced = await mealPlanner.replaceMeal(mealId, plan.memberId);
+    return NextResponse.json(
+      { message: "替换成功", meal: replaced },
+      { status: 200 },
+    );
   } catch (error) {
-    console.error('替换餐食失败:', error);
-    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
+    console.error("替换餐食失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

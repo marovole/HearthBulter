@@ -4,7 +4,7 @@
  * 用于 API 输入验证和类型安全
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // 基础类型
 export const stringSchema = z.string();
@@ -24,7 +24,7 @@ export const userSchema = z.object({
   email: emailSchema,
   name: stringSchema.nullable(),
   image: urlSchema.nullable(),
-  role: z.enum(['USER', 'ADMIN']),
+  role: z.enum(["USER", "ADMIN"]),
   created_at: dateSchema,
   updated_at: dateSchema,
   deleted_at: dateSchema.nullable(),
@@ -62,8 +62,8 @@ export const familyInvitationSchema = z.object({
   id: uuidSchema,
   family_id: uuidSchema,
   email: emailSchema,
-  role: z.enum(['ADMIN', 'MEMBER', 'GUEST']),
-  status: z.enum(['PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED']),
+  role: z.enum(["ADMIN", "MEMBER", "GUEST"]),
+  status: z.enum(["PENDING", "ACCEPTED", "REJECTED", "EXPIRED"]),
   expires_at: dateSchema,
   accepted_at: dateSchema.nullable(),
   created_at: dateSchema,
@@ -73,14 +73,14 @@ export const familyInvitationSchema = z.object({
 export const createFamilyInvitationSchema = z.object({
   family_id: uuidSchema,
   email: emailSchema,
-  role: z.enum(['ADMIN', 'MEMBER', 'GUEST']).default('MEMBER'),
+  role: z.enum(["ADMIN", "MEMBER", "GUEST"]).default("MEMBER"),
 });
 
 export const acceptInvitationSchema = z.object({
   invitation_code: nonEmptyStringSchema,
   member_name: nonEmptyStringSchema,
-  gender: z.enum(['MALE', 'FEMALE', 'OTHER']).default('MALE'),
-  birth_date: stringSchema.default('2000-01-01'),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).default("MALE"),
+  birth_date: stringSchema.default("2000-01-01"),
 });
 
 // 成员相关模式
@@ -89,9 +89,9 @@ export const familyMemberSchema = z.object({
   family_id: uuidSchema,
   user_id: uuidSchema.nullable(),
   name: nonEmptyStringSchema,
-  gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   birth_date: stringSchema,
-  role: z.enum(['ADMIN', 'MEMBER', 'GUEST']),
+  role: z.enum(["ADMIN", "MEMBER", "GUEST"]),
   created_at: dateSchema,
   updated_at: dateSchema,
   deleted_at: dateSchema.nullable(),
@@ -99,9 +99,9 @@ export const familyMemberSchema = z.object({
 
 export const updateFamilyMemberSchema = z.object({
   name: stringSchema.min(1).optional(),
-  gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   birth_date: stringSchema.optional(),
-  role: z.enum(['ADMIN', 'MEMBER', 'GUEST']).optional(),
+  role: z.enum(["ADMIN", "MEMBER", "GUEST"]).optional(),
 });
 
 // 预算相关模式
@@ -109,11 +109,11 @@ export const budgetSchema = z.object({
   id: uuidSchema,
   user_id: uuidSchema,
   amount: positiveNumberSchema,
-  period: z.enum(['WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY', 'CUSTOM']),
+  period: z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY", "CUSTOM"]),
   start_date: stringSchema,
   end_date: stringSchema,
   category_limits: z.record(z.number()).nullable(),
-  status: z.enum(['ACTIVE', 'COMPLETED', 'CANCELLED', 'EXPIRED']),
+  status: z.enum(["ACTIVE", "COMPLETED", "CANCELLED", "EXPIRED"]),
   used_amount: numberSchema,
   created_at: dateSchema,
   updated_at: dateSchema,
@@ -121,7 +121,7 @@ export const budgetSchema = z.object({
 
 export const createBudgetSchema = z.object({
   amount: positiveNumberSchema,
-  period: z.enum(['WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY', 'CUSTOM']),
+  period: z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY", "CUSTOM"]),
   start_date: stringSchema,
   end_date: stringSchema,
   category_limits: z.record(z.number()).optional(),
@@ -129,7 +129,7 @@ export const createBudgetSchema = z.object({
 
 export const updateBudgetSchema = z.object({
   amount: positiveNumberSchema.optional(),
-  status: z.enum(['ACTIVE', 'COMPLETED', 'CANCELLED', 'EXPIRED']).optional(),
+  status: z.enum(["ACTIVE", "COMPLETED", "CANCELLED", "EXPIRED"]).optional(),
   category_limits: z.record(z.number()).optional(),
 });
 
@@ -171,8 +171,8 @@ export const notificationSchema = z.object({
   title: nonEmptyStringSchema,
   message: stringSchema,
   data: z.any().nullable(),
-  status: z.enum(['PENDING', 'SENT', 'READ', 'DISMISSED']),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
+  status: z.enum(["PENDING", "SENT", "READ", "DISMISSED"]),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
   created_at: dateSchema,
   updated_at: dateSchema,
 });
@@ -184,11 +184,11 @@ export const createNotificationSchema = z.object({
   title: nonEmptyStringSchema,
   message: stringSchema,
   data: z.any().optional(),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH"]).default("MEDIUM"),
 });
 
 export const updateNotificationSchema = z.object({
-  status: z.enum(['PENDING', 'SENT', 'READ', 'DISMISSED']).optional(),
+  status: z.enum(["PENDING", "SENT", "READ", "DISMISSED"]).optional(),
 });
 
 // 库存相关模式
@@ -202,7 +202,7 @@ export const inventoryItemSchema = z.object({
   expiry_date: stringSchema.nullable(),
   purchase_date: stringSchema.nullable(),
   location: stringSchema.nullable(),
-  status: z.enum(['IN_STOCK', 'LOW_STOCK', 'EXPIRED', 'OUT_OF_STOCK']),
+  status: z.enum(["IN_STOCK", "LOW_STOCK", "EXPIRED", "OUT_OF_STOCK"]),
   created_at: dateSchema,
   updated_at: dateSchema,
 });
@@ -225,7 +225,9 @@ export const updateInventoryItemSchema = z.object({
   expiry_date: stringSchema.optional(),
   purchase_date: stringSchema.optional(),
   location: stringSchema.optional(),
-  status: z.enum(['IN_STOCK', 'LOW_STOCK', 'EXPIRED', 'OUT_OF_STOCK']).optional(),
+  status: z
+    .enum(["IN_STOCK", "LOW_STOCK", "EXPIRED", "OUT_OF_STOCK"])
+    .optional(),
 });
 
 // 购物清单相关模式
@@ -294,7 +296,7 @@ export const foodSchema = z.object({
   calcium: numberSchema.nullable(),
   iron: numberSchema.nullable(),
   verified: booleanSchema,
-  source: z.enum(['USDA', 'LOCAL', 'USER_SUBMITTED']),
+  source: z.enum(["USDA", "LOCAL", "USER_SUBMITTED"]),
   created_at: dateSchema,
   updated_at: dateSchema,
 });
@@ -315,7 +317,7 @@ export const createFoodSchema = z.object({
   calcium: numberSchema.optional(),
   iron: numberSchema.optional(),
   verified: booleanSchema.default(false),
-  source: z.enum(['USDA', 'LOCAL', 'USER_SUBMITTED']).default('USER_SUBMITTED'),
+  source: z.enum(["USDA", "LOCAL", "USER_SUBMITTED"]).default("USER_SUBMITTED"),
 });
 
 // 食谱相关模式
@@ -327,7 +329,7 @@ export const recipeSchema = z.object({
   prep_time: numberSchema.nullable(),
   cook_time: numberSchema.nullable(),
   servings: numberSchema.nullable(),
-  difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
+  difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
   cuisine_type: stringSchema.nullable(),
   tags: z.array(stringSchema),
   image_url: urlSchema.nullable(),
@@ -347,7 +349,7 @@ export const createRecipeSchema = z.object({
   prep_time: numberSchema.optional(),
   cook_time: numberSchema.optional(),
   servings: numberSchema.optional(),
-  difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
+  difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
   cuisine_type: stringSchema.optional(),
   tags: z.array(stringSchema).default([]),
   image_url: urlSchema.optional(),
@@ -360,7 +362,7 @@ export const updateRecipeSchema = z.object({
   prep_time: numberSchema.optional(),
   cook_time: numberSchema.optional(),
   servings: numberSchema.optional(),
-  difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).optional(),
+  difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).optional(),
   cuisine_type: stringSchema.optional(),
   tags: z.array(stringSchema).optional(),
   image_url: urlSchema.optional(),
@@ -370,16 +372,18 @@ export const updateRecipeSchema = z.object({
 export const createInventoryNotificationsSchema = z.object({
   p_family_id: uuidSchema,
   p_notification_type: nonEmptyStringSchema,
-  p_items: z.array(z.object({
-    item_id: uuidSchema,
-    item_name: nonEmptyStringSchema,
-    current_quantity: numberSchema,
-    threshold_quantity: numberSchema,
-    expiry_date: stringSchema.optional(),
-    title: stringSchema.optional(),
-    message: stringSchema.optional(),
-    priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).default('MEDIUM'),
-  })),
+  p_items: z.array(
+    z.object({
+      item_id: uuidSchema,
+      item_name: nonEmptyStringSchema,
+      current_quantity: numberSchema,
+      threshold_quantity: numberSchema,
+      expiry_date: stringSchema.optional(),
+      title: stringSchema.optional(),
+      message: stringSchema.optional(),
+      priority: z.enum(["HIGH", "MEDIUM", "LOW"]).default("MEDIUM"),
+    }),
+  ),
 });
 
 // 接受邀请模式
@@ -387,8 +391,8 @@ export const acceptFamilyInviteSchema = z.object({
   p_invitation_id: uuidSchema,
   p_user_id: uuidSchema,
   p_member_name: nonEmptyStringSchema,
-  p_gender: z.enum(['MALE', 'FEMALE', 'OTHER']).default('MALE'),
-  p_birth_date: stringSchema.default('2000-01-01'),
+  p_gender: z.enum(["MALE", "FEMALE", "OTHER"]).default("MALE"),
+  p_birth_date: stringSchema.default("2000-01-01"),
 });
 
 // 类型导出

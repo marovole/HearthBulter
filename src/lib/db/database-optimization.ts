@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import { logger } from '@/lib/logging/structured-logger';
-import { securityAudit } from '@/lib/security/security-audit';
+import { Prisma, PrismaClient } from "@prisma/client";
+import { logger } from "@/lib/logging/structured-logger";
+import { SecuritySeverity, securityAudit } from "@/lib/security/security-audit";
 
 // 数据库连接池配置
 interface DatabasePoolConfig {
@@ -73,8 +73,8 @@ export class DatabaseOptimizer {
    * 获取默认配置
    */
   private getDefaultConfig(): DatabasePoolConfig {
-    const env = process.env.NODE_ENV || 'development';
-    const isProduction = env === 'production';
+    const env = process.env.NODE_ENV || "development";
+    const isProduction = env === "production";
 
     return {
       connectionLimit: isProduction ? 20 : 10,
@@ -94,7 +94,7 @@ export class DatabaseOptimizer {
   private createOptimizedClient(): PrismaClient {
     const datasourceUrl = process.env.DATABASE_URL;
     if (!datasourceUrl) {
-      throw new Error('DATABASE_URL环境变量未设置');
+      throw new Error("DATABASE_URL环境变量未设置");
     }
 
     // 解析数据库URL并添加连接池参数
@@ -102,9 +102,12 @@ export class DatabaseOptimizer {
     const searchParams = new URLSearchParams(url.search);
 
     // 添加连接池参数
-    searchParams.set('connection_limit', this.config.connectionLimit.toString());
-    searchParams.set('pool_timeout', this.config.idleTimeout.toString());
-    searchParams.set('connect_timeout', this.config.connectTimeout.toString());
+    searchParams.set(
+      "connection_limit",
+      this.config.connectionLimit.toString(),
+    );
+    searchParams.set("pool_timeout", this.config.idleTimeout.toString());
+    searchParams.set("connect_timeout", this.config.connectTimeout.toString());
 
     url.search = searchParams.toString();
 
@@ -118,20 +121,20 @@ export class DatabaseOptimizer {
       },
       log: [
         {
-          emit: 'event',
-          level: 'query',
+          emit: "event",
+          level: "query",
         },
         {
-          emit: 'event',
-          level: 'error',
+          emit: "event",
+          level: "error",
         },
         {
-          emit: 'event',
-          level: 'info',
+          emit: "event",
+          level: "info",
         },
         {
-          emit: 'event',
-          level: 'warn',
+          emit: "event",
+          level: "warn",
         },
       ],
     });
@@ -149,14 +152,20 @@ export class DatabaseOptimizer {
     this.setupEventListeners();
 
     // 定期清理统计数据
-    setInterval(() => {
-      this.cleanupStats();
-    }, 60 * 60 * 1000); // 每小时清理一次
+    setInterval(
+      () => {
+        this.cleanupStats();
+      },
+      60 * 60 * 1000,
+    ); // 每小时清理一次
 
     // 定期报告性能指标
-    setInterval(() => {
-      this.reportMetrics();
-    }, 5 * 60 * 1000); // 每5分钟报告一次
+    setInterval(
+      () => {
+        this.reportMetrics();
+      },
+      5 * 60 * 1000,
+    ); // 每5分钟报告一次
 
     // 定期检查连接健康状态
     setInterval(() => {
@@ -168,57 +177,68 @@ export class DatabaseOptimizer {
    * 设置事件监听器
    */
   private setupEventListeners(): void {
+    const prismaClient = this.prisma as unknown as {
+      $on: (
+        event: "query" | "error" | "info" | "warn",
+        callback: (event: Prisma.QueryEvent | Prisma.LogEvent) => void,
+      ) => void;
+    };
+
     // 查询事件
-    this.prisma.$on('query', (event) => {
+    prismaClient.$on("query", (event) => {
+      const queryEvent = event as Prisma.QueryEvent;
       this.recordQuery({
-        query: event.query,
-        duration: event.duration,
+        query: queryEvent.query,
+        duration: queryEvent.duration,
         timestamp: new Date(),
         success: true,
-        rowCount: this.extractRowCount(event.query),
-        cacheHit: false, // Prisma查询缓存需要额外实现
+        rowCount: this.extractRowCount(queryEvent.query),
+        cacheHit: false,
       });
 
       // 慢查询告警
-      if (event.duration > this.config.slowQueryThreshold) {
-        this.handleSlowQuery(event);
+      if (queryEvent.duration > this.config.slowQueryThreshold) {
+        this.handleSlowQuery(queryEvent);
       }
     });
 
     // 错误事件
-    this.prisma.$on('error', (event) => {
+    prismaClient.$on("error", (event) => {
+      const logEvent = event as Prisma.LogEvent;
       this.recordQuery({
-        query: event.target || 'unknown',
+        query: logEvent.target || "unknown",
         duration: 0,
         timestamp: new Date(),
         success: false,
-        error: event.message,
+        error: logEvent.message,
       });
 
-      logger.error('数据库查询错误', new Error(event.message), {
-        type: 'database',
-        query: event.target,
-        timestamp: event.timestamp,
+      logger.error("数据库查询错误", new Error(logEvent.message), {
+        type: "database",
+        query: logEvent.target,
+        timestamp: logEvent.timestamp,
       });
     });
 
     // 信息事件
-    this.prisma.$on('info', (event) => {
-      logger.debug('数据库信息', {
-        type: 'database',
-        message: event.message,
-        target: event.target,
-        timestamp: event.timestamp,
+    prismaClient.$on("info", (event) => {
+      const logEvent = event as Prisma.LogEvent;
+      logger.debug("数据库信息", {
+        type: "database",
+        message: logEvent.message,
+        target: logEvent.target,
+        timestamp: logEvent.timestamp,
       });
     });
 
     // 警告事件
-    this.prisma.$on('warn', (event) => {
-      logger.warn('数据库警告', {
-        type: 'database',
-        message: event.message,
-        target: event.target,
-        timestamp: event.timestamp,
+    prismaClient.$on("warn", (event) => {
+      const logEvent = event as Prisma.LogEvent;
+      logger.warn("数据库警告", {
+        type: "database",
+        message: logEvent.message,
+        target: logEvent.target,
+        timestamp: logEvent.timestamp,
       });
     });
   }
@@ -241,7 +261,7 @@ export class DatabaseOptimizer {
   private extractRowCount(query: string): number {
     // 这里可以实现更精确的行数提取逻辑
     // 目前返回估算值
-    if (query.toLowerCase().includes('select')) {
+    if (query.toLowerCase().includes("select")) {
       return 1; // 简化处理
     }
     return 0;
@@ -251,8 +271,8 @@ export class DatabaseOptimizer {
    * 处理慢查询
    */
   private handleSlowQuery(event: any): void {
-    logger.warn('检测到慢查询', {
-      type: 'database',
+    logger.warn("检测到慢查询", {
+      type: "database",
       query: event.query,
       duration: event.duration,
       threshold: this.config.slowQueryThreshold,
@@ -261,15 +281,15 @@ export class DatabaseOptimizer {
 
     // 记录到安全审计
     securityAudit.logSuspiciousActivity(
-      '数据库慢查询',
+      "数据库慢查询",
       `查询耗时 ${event.duration}ms，超过阈值 ${this.config.slowQueryThreshold}ms: ${event.query.substring(0, 100)}...`,
-      'medium',
+      SecuritySeverity.MEDIUM,
       {
         query: event.query,
         duration: event.duration,
         threshold: this.config.slowQueryThreshold,
         timestamp: event.timestamp,
-      }
+      },
     );
 
     // 这里可以添加慢查询优化建议
@@ -285,21 +305,21 @@ export class DatabaseOptimizer {
     // 检查常见的性能问题
     const issues = [];
 
-    if (lowerQuery.includes('select *')) {
-      issues.push('使用了SELECT *，建议指定具体字段');
+    if (lowerQuery.includes("select *")) {
+      issues.push("使用了SELECT *，建议指定具体字段");
     }
 
-    if (lowerQuery.includes('order by') && !lowerQuery.includes('index')) {
-      issues.push('ORDER BY可能需要索引支持');
+    if (lowerQuery.includes("order by") && !lowerQuery.includes("index")) {
+      issues.push("ORDER BY可能需要索引支持");
     }
 
-    if (lowerQuery.includes('like') && !lowerQuery.startsWith('select')) {
-      issues.push('LIKE查询可能影响性能，考虑使用全文索引');
+    if (lowerQuery.includes("like") && !lowerQuery.startsWith("select")) {
+      issues.push("LIKE查询可能影响性能，考虑使用全文索引");
     }
 
     if (issues.length > 0) {
-      logger.info('慢查询优化建议', {
-        type: 'database',
+      logger.info("慢查询优化建议", {
+        type: "database",
         query: query.substring(0, 100),
         suggestions: issues,
       });
@@ -311,10 +331,12 @@ export class DatabaseOptimizer {
    */
   private cleanupStats(): void {
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
-    this.queryStats = this.queryStats.filter(stats => stats.timestamp.getTime() > oneHourAgo);
+    this.queryStats = this.queryStats.filter(
+      (stats) => stats.timestamp.getTime() > oneHourAgo,
+    );
 
-    logger.debug('数据库统计数据已清理', {
-      type: 'database',
+    logger.debug("数据库统计数据已清理", {
+      type: "database",
       remainingStats: this.queryStats.length,
     });
   }
@@ -325,22 +347,23 @@ export class DatabaseOptimizer {
   private reportMetrics(): void {
     const metrics = this.getMetrics();
 
-    logger.info('数据库性能指标', {
-      type: 'database',
+    logger.info("数据库性能指标", {
+      type: "database",
       ...metrics,
     });
 
     // 检查是否需要告警
-    if (metrics.slowQueries > 10) { // 最近5分钟内超过10个慢查询
+    if (metrics.slowQueries > 10) {
+      // 最近5分钟内超过10个慢查询
       securityAudit.logSuspiciousActivity(
-        '数据库性能异常',
+        "数据库性能异常",
         `最近5分钟内检测到 ${metrics.slowQueries} 个慢查询`,
-        'medium',
+        SecuritySeverity.MEDIUM,
         {
           slowQueries: metrics.slowQueries,
           averageQueryTime: metrics.averageQueryTime,
           totalQueries: metrics.totalQueries,
-        }
+        },
       );
     }
   }
@@ -352,26 +375,26 @@ export class DatabaseOptimizer {
     try {
       await this.prisma.$queryRaw`SELECT 1`;
 
-      logger.debug('数据库连接健康检查通过', {
-        type: 'database',
-        check: 'health',
-        status: 'healthy',
+      logger.debug("数据库连接健康检查通过", {
+        type: "database",
+        check: "health",
+        status: "healthy",
       });
     } catch (error) {
-      logger.error('数据库连接健康检查失败', error as Error, {
-        type: 'database',
-        check: 'health',
-        status: 'unhealthy',
+      logger.error("数据库连接健康检查失败", error as Error, {
+        type: "database",
+        check: "health",
+        status: "unhealthy",
       });
 
       securityAudit.logSecurityViolation(
-        '数据库连接异常',
-        `数据库健康检查失败: ${error instanceof Error ? error.message : '未知错误'}`,
-        'high',
+        "数据库连接异常",
+        `数据库健康检查失败: ${error instanceof Error ? error.message : "未知错误"}`,
+        SecuritySeverity.HIGH,
         {
-          error: error instanceof Error ? error.message : '未知错误',
+          error: error instanceof Error ? error.message : "未知错误",
           timestamp: new Date().toISOString(),
-        }
+        },
       );
     }
   }
@@ -383,21 +406,28 @@ export class DatabaseOptimizer {
     const now = Date.now();
     const fiveMinutesAgo = now - 5 * 60 * 1000;
 
-    const recentStats = this.queryStats.filter(stats => stats.timestamp.getTime() > fiveMinutesAgo);
+    const recentStats = this.queryStats.filter(
+      (stats) => stats.timestamp.getTime() > fiveMinutesAgo,
+    );
 
     const totalQueries = recentStats.length;
-    const slowQueries = recentStats.filter(stats => stats.duration > this.config.slowQueryThreshold).length;
-    const failedQueries = recentStats.filter(stats => !stats.success).length;
+    const slowQueries = recentStats.filter(
+      (stats) => stats.duration > this.config.slowQueryThreshold,
+    ).length;
+    const failedQueries = recentStats.filter((stats) => !stats.success).length;
 
-    const averageQueryTime = totalQueries > 0
-      ? recentStats.reduce((sum, stats) => sum + stats.duration, 0) / totalQueries
-      : 0;
+    const averageQueryTime =
+      totalQueries > 0
+        ? recentStats.reduce((sum, stats) => sum + stats.duration, 0) /
+          totalQueries
+        : 0;
 
-    const cacheHits = recentStats.filter(stats => stats.cacheHit).length;
-    const cacheHitRate = totalQueries > 0 ? (cacheHits / totalQueries) * 100 : 0;
+    const cacheHits = recentStats.filter((stats) => stats.cacheHit).length;
+    const cacheHitRate =
+      totalQueries > 0 ? (cacheHits / totalQueries) * 100 : 0;
 
     const topSlowQueries = recentStats
-      .filter(stats => stats.duration > this.config.slowQueryThreshold)
+      .filter((stats) => stats.duration > this.config.slowQueryThreshold)
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 10);
 
@@ -418,7 +448,7 @@ export class DatabaseOptimizer {
    */
   async executeWithRetry<T>(
     operation: () => Promise<T>,
-    operationName: string = 'database_operation'
+    operationName: string = "database_operation",
   ): Promise<T> {
     let lastError: Error | undefined;
 
@@ -429,29 +459,29 @@ export class DatabaseOptimizer {
         lastError = error instanceof Error ? error : new Error(String(error));
 
         if (attempt === this.config.retryAttempts) {
-          logger.error('数据库操作重试失败', lastError, {
-            type: 'database',
+          logger.error("数据库操作重试失败", lastError, {
+            type: "database",
             operation: operationName,
             attempt,
             maxAttempts: this.config.retryAttempts,
           });
 
           securityAudit.logSuspiciousActivity(
-            '数据库操作失败',
+            "数据库操作失败",
             `操作 ${operationName} 在 ${attempt} 次重试后仍然失败: ${lastError.message}`,
-            'medium',
+            SecuritySeverity.MEDIUM,
             {
               operation: operationName,
               attempts: attempt,
               error: lastError.message,
-            }
+            },
           );
 
           throw lastError;
         }
 
         logger.warn(`数据库操作失败，准备第 ${attempt + 1} 次重试`, {
-          type: 'database',
+          type: "database",
           operation: operationName,
           attempt,
           error: lastError.message,
@@ -459,11 +489,11 @@ export class DatabaseOptimizer {
 
         // 指数退避延迟
         const delay = this.config.retryDelay * Math.pow(2, attempt - 1);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
-    throw lastError || new Error('未知错误');
+    throw lastError || new Error("未知错误");
   }
 
   /**
@@ -473,13 +503,13 @@ export class DatabaseOptimizer {
     items: T[],
     operation: (item: T) => Promise<R>,
     batchSize: number = 100,
-    operationName: string = 'batch_operation'
+    operationName: string = "batch_operation",
   ): Promise<R[]> {
     const results: R[] = [];
     const totalBatches = Math.ceil(items.length / batchSize);
 
-    logger.info('开始批量操作', {
-      type: 'database',
+    logger.info("开始批量操作", {
+      type: "database",
       operation: operationName,
       totalItems: items.length,
       batchSize,
@@ -492,22 +522,25 @@ export class DatabaseOptimizer {
 
       try {
         const batchResults = await Promise.all(
-          batch.map(item =>
-            this.executeWithRetry(() => operation(item), `${operationName}_batch_${batchNumber}`)
-          )
+          batch.map((item) =>
+            this.executeWithRetry(
+              () => operation(item),
+              `${operationName}_batch_${batchNumber}`,
+            ),
+          ),
         );
 
         results.push(...batchResults);
 
         logger.debug(`批量操作批次 ${batchNumber}/${totalBatches} 完成`, {
-          type: 'database',
+          type: "database",
           operation: operationName,
           batchNumber,
           batchSize: batch.length,
         });
       } catch (error) {
         logger.error(`批量操作批次 ${batchNumber} 失败`, error as Error, {
-          type: 'database',
+          type: "database",
           operation: operationName,
           batchNumber,
           batchSize: batch.length,
@@ -517,8 +550,8 @@ export class DatabaseOptimizer {
       }
     }
 
-    logger.info('批量操作完成', {
-      type: 'database',
+    logger.info("批量操作完成", {
+      type: "database",
       operation: operationName,
       totalItems: items.length,
       totalResults: results.length,
@@ -539,8 +572,8 @@ export class DatabaseOptimizer {
    */
   updateConfig(newConfig: Partial<DatabasePoolConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    logger.info('数据库配置已更新', {
-      type: 'database',
+    logger.info("数据库配置已更新", {
+      type: "database",
       newConfig,
     });
   }
@@ -551,12 +584,12 @@ export class DatabaseOptimizer {
   async disconnect(): Promise<void> {
     try {
       await this.prisma.$disconnect();
-      logger.info('数据库连接已关闭', {
-        type: 'database',
+      logger.info("数据库连接已关闭", {
+        type: "database",
       });
     } catch (error) {
-      logger.error('关闭数据库连接失败', error as Error, {
-        type: 'database',
+      logger.error("关闭数据库连接失败", error as Error, {
+        type: "database",
       });
     }
   }

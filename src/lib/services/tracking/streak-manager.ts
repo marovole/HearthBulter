@@ -3,7 +3,7 @@
  * 负责追踪用户的连续打卡天数、徽章管理和激励机制
  */
 
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 export interface Badge {
   id: string;
@@ -16,31 +16,31 @@ export interface Badge {
 // 徽章定义
 export const BADGES: Badge[] = [
   {
-    id: '7-days',
-    name: '初出茅庐',
-    description: '连续打卡7天',
-    icon: '🌱',
+    id: "7-days",
+    name: "初出茅庐",
+    description: "连续打卡7天",
+    icon: "🌱",
     requirement: 7,
   },
   {
-    id: '30-days',
-    name: '坚持不懈',
-    description: '连续打卡30天',
-    icon: '🔥',
+    id: "30-days",
+    name: "坚持不懈",
+    description: "连续打卡30天",
+    icon: "🔥",
     requirement: 30,
   },
   {
-    id: '100-days',
-    name: '百日筑基',
-    description: '连续打卡100天',
-    icon: '💪',
+    id: "100-days",
+    name: "百日筑基",
+    description: "连续打卡100天",
+    icon: "💪",
     requirement: 100,
   },
   {
-    id: '365-days',
-    name: '年度冠军',
-    description: '连续打卡365天',
-    icon: '👑',
+    id: "365-days",
+    name: "年度冠军",
+    description: "连续打卡365天",
+    icon: "👑",
     requirement: 365,
   },
 ];
@@ -61,7 +61,7 @@ export async function getTrackingStreak(memberId: string) {
         currentStreak: 0,
         longestStreak: 0,
         totalDays: 0,
-        badges: '[]',
+        badges: "[]",
       },
     });
   }
@@ -126,7 +126,7 @@ export async function checkStreakReminder(memberId: string): Promise<boolean> {
  */
 export async function getCheckInStats(
   memberId: string,
-  period: 'week' | 'month' | 'year' = 'week'
+  period: "week" | "month" | "year" = "week",
 ) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -135,15 +135,15 @@ export async function getCheckInStats(
   let totalDays = 7;
 
   switch (period) {
-  case 'week':
+  case "week":
     startDate.setDate(today.getDate() - 6); // 最近7天
     totalDays = 7;
     break;
-  case 'month':
+  case "month":
     startDate.setDate(today.getDate() - 29); // 最近30天
     totalDays = 30;
     break;
-  case 'year':
+  case "year":
     startDate.setDate(today.getDate() - 364); // 最近365天
     totalDays = 365;
     break;
@@ -176,7 +176,11 @@ export async function getCheckInStats(
 /**
  * 获取打卡日历（某月的打卡情况）
  */
-export async function getCheckInCalendar(memberId: string, year: number, month: number) {
+export async function getCheckInCalendar(
+  memberId: string,
+  year: number,
+  month: number,
+) {
   // 获取月份的第一天和最后一天
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
@@ -192,7 +196,7 @@ export async function getCheckInCalendar(memberId: string, year: number, month: 
       },
     },
     orderBy: {
-      date: 'asc',
+      date: "asc",
     },
   });
 
@@ -213,7 +217,7 @@ export async function getCheckInCalendar(memberId: string, year: number, month: 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month - 1, day);
     const target = targets.find(
-      (t) => t.date.getDate() === day && t.date.getMonth() === month - 1
+      (t) => t.date.getDate() === day && t.date.getMonth() === month - 1,
     );
 
     calendar.push({
@@ -313,4 +317,3 @@ export async function checkAndUnlockBadges(memberId: string) {
 
   return newBadges;
 }
-

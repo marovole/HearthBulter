@@ -1,13 +1,13 @@
-import { PrismaClient } from '@prisma/client';
+import { convexClient, api } from "@/lib/convex-client";
 
-interface UserItemRating {
+export interface UserItemRating {
   userId: string;
   itemId: string;
   rating: number;
   timestamp: Date;
 }
 
-interface UserItemMatrix {
+export interface UserItemMatrix {
   users: string[];
   items: string[];
   ratings: Map<string, Map<string, number>>; // userId -> itemId -> rating
@@ -17,7 +17,7 @@ interface UserItemMatrix {
   sparsity: number;
 }
 
-interface MatrixStatistics {
+export interface MatrixStatistics {
   totalUsers: number;
   totalItems: number;
   totalRatings: number;
@@ -28,13 +28,8 @@ interface MatrixStatistics {
 }
 
 export class UserItemMatrixBuilder {
-  private prisma: PrismaClient;
   private matrixCache = new Map<string, UserItemMatrix>();
   private cacheExpiry = 60 * 60 * 1000; // 1小时缓存
-
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
-  }
 
   /**
    * 构建用户-物品评分矩阵
@@ -42,31 +37,35 @@ export class UserItemMatrixBuilder {
   async buildMatrix(
     minRatingsPerUser: number = 5,
     minRatingsPerItem: number = 5,
-    maxAge?: Date
+    maxAge?: Date,
   ): Promise<UserItemMatrix> {
-    const cacheKey = `matrix_${minRatingsPerUser}_${minRatingsPerItem}_${maxAge?.getTime() || 'all'}`;
-    
+    const cacheKey = `matrix_${minRatingsPerUser}_${minRatingsPerItem}_${maxAge?.getTime() || "all"}`;
+
     // 检查缓存
     if (this.matrixCache.has(cacheKey)) {
       return this.matrixCache.get(cacheKey)!;
     }
 
     // 获取评分数据
-    const ratings = await this.fetchRatings(minRatingsPerUser, minRatingsPerItem, maxAge);
-    
+    const ratings = await this.fetchRatings(
+      minRatingsPerUser,
+      minRatingsPerItem,
+      maxAge,
+    );
+
     if (ratings.length === 0) {
-      throw new Error('No ratings found with the specified criteria');
+      throw new Error("No ratings found with the specified criteria");
     }
 
     // 构建矩阵
     const matrix = this.createMatrix(ratings);
-    
+
     // 计算统计信息
     this.calculateStatistics(matrix);
-    
+
     // 缓存结果
     this.matrixCache.set(cacheKey, matrix);
-    
+
     // 设置缓存过期
     setTimeout(() => {
       this.matrixCache.delete(cacheKey);
@@ -81,68 +80,26 @@ export class UserItemMatrixBuilder {
   private async fetchRatings(
     minRatingsPerUser: number,
     minRatingsPerItem: number,
-    maxAge?: Date
+    maxAge?: Date,
   ): Promise<UserItemRating[]> {
-    const whereClause: any = {
-      rating: { gte: 1, lte: 5 },
-    };
+    const ratings = await convexClient.query<
+      Array<{
+        userId: string;
+        itemId: string;
+        rating: number;
+        timestamp: number;
+      }>
+    >(api["recipe-interactions"].listRatingsForMatrix, {
+      minRatingsPerUser,
+      minRatingsPerItem,
+      maxAge: maxAge ? maxAge.getTime() : undefined,
+    });
 
-    if (maxAge) {
-      whereClause.ratedAt = { gte: maxAge };
-    }
-
-    // 获取活跃用户（满足最小评分数要求）
-    const activeUsers = await this.prisma.$queryRaw`
-      SELECT "memberId" as userId, COUNT(*) as rating_count
-      FROM "recipe_ratings"
-      WHERE "rating" >= 1 AND "rating" <= 5
-      ${maxAge ? this.prisma.$queryRaw`AND "ratedAt" >= ${maxAge}` : this.prisma.$queryRaw``}
-      GROUP BY "memberId"
-      HAVING COUNT(*) >= ${minRatingsPerUser}
-    `;
-
-    if (!Array.isArray(activeUsers) || activeUsers.length === 0) {
-      return [];
-    }
-
-    const userIds = (activeUsers as any[]).map(u => u.userId);
-
-    // 获取热门物品（满足最小评分数要求）
-    const popularItems = await this.prisma.$queryRaw`
-      SELECT "recipeId" as itemId, COUNT(*) as rating_count
-      FROM "recipe_ratings"
-      WHERE "memberId" = ANY(${userIds}) AND "rating" >= 1 AND "rating" <= 5
-      ${maxAge ? this.prisma.$queryRaw`AND "ratedAt" >= ${maxAge}` : this.prisma.$queryRaw``}
-      GROUP BY "recipeId"
-      HAVING COUNT(*) >= ${minRatingsPerItem}
-    `;
-
-    if (!Array.isArray(popularItems) || popularItems.length === 0) {
-      return [];
-    }
-
-    const itemIds = (popularItems as any[]).map(i => i.itemId);
-
-    // 获取最终的评分数据
-    const ratings = await this.prisma.$queryRaw`
-      SELECT 
-        "memberId" as userId,
-        "recipeId" as itemId,
-        "rating" as rating,
-        "ratedAt" as timestamp
-      FROM "recipe_ratings"
-      WHERE "memberId" = ANY(${userIds}) 
-        AND "recipeId" = ANY(${itemIds})
-        AND "rating" >= 1 AND "rating" <= 5
-      ${maxAge ? this.prisma.$queryRaw`AND "ratedAt" >= ${maxAge}` : this.prisma.$queryRaw``}
-      ORDER BY "ratedAt" DESC
-    `;
-
-    return (ratings as any[]).map(r => ({
-      userId: r.userId,
-      itemId: r.itemId,
-      rating: Number(r.rating),
-      timestamp: new Date(r.timestamp),
+    return ratings.map((rating) => ({
+      userId: rating.userId,
+      itemId: rating.itemId,
+      rating: Number(rating.rating),
+      timestamp: new Date(rating.timestamp),
     }));
   }
 
@@ -155,7 +112,7 @@ export class UserItemMatrixBuilder {
     const ratingMatrix = new Map<string, Map<string, number>>();
 
     // 填充矩阵
-    ratings.forEach(rating => {
+    ratings.forEach((rating) => {
       users.add(rating.userId);
       items.add(rating.itemId);
 
@@ -186,8 +143,8 @@ export class UserItemMatrixBuilder {
     let totalRating = 0;
     let ratingCount = 0;
 
-    matrix.ratings.forEach(userRatings => {
-      userRatings.forEach(rating => {
+    matrix.ratings.forEach((userRatings) => {
+      userRatings.forEach((rating) => {
         totalRating += rating;
         ratingCount++;
       });
@@ -200,19 +157,22 @@ export class UserItemMatrixBuilder {
       let userTotal = 0;
       let userCount = 0;
 
-      userRatings.forEach(rating => {
+      userRatings.forEach((rating) => {
         userTotal += rating;
         userCount++;
       });
 
-      matrix.userAverages.set(userId, userCount > 0 ? userTotal / userCount : 0);
+      matrix.userAverages.set(
+        userId,
+        userCount > 0 ? userTotal / userCount : 0,
+      );
     });
 
     // 计算物品平均分
     const itemTotals = new Map<string, number>();
     const itemCounts = new Map<string, number>();
 
-    matrix.ratings.forEach(userRatings => {
+    matrix.ratings.forEach((userRatings) => {
       userRatings.forEach((rating, itemId) => {
         itemTotals.set(itemId, (itemTotals.get(itemId) || 0) + rating);
         itemCounts.set(itemId, (itemCounts.get(itemId) || 0) + 1);
@@ -226,7 +186,8 @@ export class UserItemMatrixBuilder {
 
     // 计算稀疏度
     const possibleRatings = matrix.users.length * matrix.items.length;
-    matrix.sparsity = possibleRatings > 0 ? 1 - (ratingCount / possibleRatings) : 1;
+    matrix.sparsity =
+      possibleRatings > 0 ? 1 - ratingCount / possibleRatings : 1;
   }
 
   /**
@@ -234,7 +195,7 @@ export class UserItemMatrixBuilder {
    */
   async getMatrixStatistics(
     minRatingsPerUser: number = 5,
-    minRatingsPerItem: number = 5
+    minRatingsPerItem: number = 5,
   ): Promise<MatrixStatistics> {
     const matrix = await this.buildMatrix(minRatingsPerUser, minRatingsPerItem);
 
@@ -244,9 +205,12 @@ export class UserItemMatrixBuilder {
       ratingDistribution.set(i, 0);
     }
 
-    matrix.ratings.forEach(userRatings => {
-      userRatings.forEach(rating => {
-        ratingDistribution.set(rating, (ratingDistribution.get(rating) || 0) + 1);
+    matrix.ratings.forEach((userRatings) => {
+      userRatings.forEach((rating) => {
+        ratingDistribution.set(
+          rating,
+          (ratingDistribution.get(rating) || 0) + 1,
+        );
       });
     });
 
@@ -258,16 +222,22 @@ export class UserItemMatrixBuilder {
 
     // 计算物品流行度分布
     const itemPopularityDistribution = new Map<string, number>();
-    matrix.ratings.forEach(userRatings => {
+    matrix.ratings.forEach((userRatings) => {
       userRatings.forEach((_, itemId) => {
-        itemPopularityDistribution.set(itemId, (itemPopularityDistribution.get(itemId) || 0) + 1);
+        itemPopularityDistribution.set(
+          itemId,
+          (itemPopularityDistribution.get(itemId) || 0) + 1,
+        );
       });
     });
 
     return {
       totalUsers: matrix.users.length,
       totalItems: matrix.items.length,
-      totalRatings: Array.from(matrix.ratings.values()).reduce((sum, userRatings) => sum + userRatings.size, 0),
+      totalRatings: Array.from(matrix.ratings.values()).reduce(
+        (sum, userRatings) => sum + userRatings.size,
+        0,
+      ),
       sparsity: matrix.sparsity,
       ratingDistribution,
       userActivityDistribution,
@@ -278,14 +248,20 @@ export class UserItemMatrixBuilder {
   /**
    * 获取用户评分向量
    */
-  getUserRatingVector(matrix: UserItemMatrix, userId: string): Map<string, number> {
+  getUserRatingVector(
+    matrix: UserItemMatrix,
+    userId: string,
+  ): Map<string, number> {
     return matrix.ratings.get(userId) || new Map();
   }
 
   /**
    * 获取物品评分向量
    */
-  getItemRatingVector(matrix: UserItemMatrix, itemId: string): Map<string, number> {
+  getItemRatingVector(
+    matrix: UserItemMatrix,
+    itemId: string,
+  ): Map<string, number> {
     const itemRatings = new Map<string, number>();
 
     matrix.ratings.forEach((userRatings, userId) => {
@@ -300,7 +276,11 @@ export class UserItemMatrixBuilder {
   /**
    * 获取共同评分的物品
    */
-  getCommonlyRatedItems(matrix: UserItemMatrix, user1Id: string, user2Id: string): Map<string, [number, number]> {
+  getCommonlyRatedItems(
+    matrix: UserItemMatrix,
+    user1Id: string,
+    user2Id: string,
+  ): Map<string, [number, number]> {
     const user1Ratings = matrix.ratings.get(user1Id);
     const user2Ratings = matrix.ratings.get(user2Id);
 
@@ -322,12 +302,19 @@ export class UserItemMatrixBuilder {
   /**
    * 获取共同评分的用户
    */
-  getCommonRatingUsers(matrix: UserItemMatrix, item1Id: string, item2Id: string): Map<string, [number, number]> {
+  getCommonRatingUsers(
+    matrix: UserItemMatrix,
+    item1Id: string,
+    item2Id: string,
+  ): Map<string, [number, number]> {
     const commonUsers = new Map<string, [number, number]>();
 
     matrix.ratings.forEach((userRatings, userId) => {
       if (userRatings.has(item1Id) && userRatings.has(item2Id)) {
-        commonUsers.set(userId, [userRatings.get(item1Id)!, userRatings.get(item2Id)!]);
+        commonUsers.set(userId, [
+          userRatings.get(item1Id)!,
+          userRatings.get(item2Id)!,
+        ]);
       }
     });
 
@@ -339,11 +326,11 @@ export class UserItemMatrixBuilder {
    */
   async updateMatrix(
     matrix: UserItemMatrix,
-    newRatings: UserItemRating[]
+    newRatings: UserItemRating[],
   ): Promise<UserItemMatrix> {
     const updatedMatrix = { ...matrix };
 
-    newRatings.forEach(rating => {
+    newRatings.forEach((rating) => {
       // 添加新用户（如果需要）
       if (!updatedMatrix.users.includes(rating.userId)) {
         updatedMatrix.users.push(rating.userId);
@@ -358,7 +345,9 @@ export class UserItemMatrixBuilder {
       if (!updatedMatrix.ratings.has(rating.userId)) {
         updatedMatrix.ratings.set(rating.userId, new Map());
       }
-      updatedMatrix.ratings.get(rating.userId)!.set(rating.itemId, rating.rating);
+      updatedMatrix.ratings
+        .get(rating.userId)!
+        .set(rating.itemId, rating.rating);
     });
 
     // 重新计算统计信息
@@ -375,7 +364,7 @@ export class UserItemMatrixBuilder {
     factors: number = 20,
     iterations: number = 50,
     learningRate: number = 0.01,
-    regularization: number = 0.1
+    regularization: number = 0.1,
   ): Promise<{
     userFeatures: Map<string, number[]>;
     itemFeatures: Map<string, number[]>;
@@ -388,7 +377,7 @@ export class UserItemMatrixBuilder {
     const userFeatures = new Map<string, number[]>();
     const itemFeatures = new Map<string, number[]>();
 
-    users.forEach(userId => {
+    users.forEach((userId) => {
       const features = [];
       for (let i = 0; i < factors; i++) {
         features.push(Math.random() * 0.1 - 0.05); // 小随机值
@@ -396,7 +385,7 @@ export class UserItemMatrixBuilder {
       userFeatures.set(userId, features);
     });
 
-    items.forEach(itemId => {
+    items.forEach((itemId) => {
       const features = [];
       for (let i = 0; i < factors; i++) {
         features.push(Math.random() * 0.1 - 0.05);
@@ -417,7 +406,9 @@ export class UserItemMatrixBuilder {
           // 预测评分
           let predicted = 0;
           for (let f = 0; f < factors; f++) {
-            predicted += uFeatures[f] * iFeatures[f];
+            const uValue = uFeatures[f] ?? 0;
+            const iValue = iFeatures[f] ?? 0;
+            predicted += uValue * iValue;
           }
 
           // 计算误差
@@ -426,11 +417,13 @@ export class UserItemMatrixBuilder {
 
           // 更新特征
           for (let f = 0; f < factors; f++) {
-            const uGrad = error * iFeatures[f] - regularization * uFeatures[f];
-            const iGrad = error * uFeatures[f] - regularization * iFeatures[f];
+            const uValue = uFeatures[f] ?? 0;
+            const iValue = iFeatures[f] ?? 0;
+            const uGrad = error * iValue - regularization * uValue;
+            const iGrad = error * uValue - regularization * iValue;
 
-            uFeatures[f] += learningRate * uGrad;
-            iFeatures[f] += learningRate * iGrad;
+            uFeatures[f] = uValue + learningRate * uGrad;
+            iFeatures[f] = iValue + learningRate * iGrad;
           }
         });
       });

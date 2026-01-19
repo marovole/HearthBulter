@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { use } from 'react';
-import { ShoppingListView } from '@/components/shopping/ShoppingListView';
+import { use } from "react";
+import { ShoppingListView } from "@/components/shopping/ShoppingListView";
 
 interface ShoppingListDetailPageProps {
   params: Promise<{
-    id: string
-  }>
+    id: string;
+  }>;
 }
 
 /**

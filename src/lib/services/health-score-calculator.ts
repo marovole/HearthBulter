@@ -9,7 +9,8 @@
  * - 数据完整性评分（20分）
  */
 
-import { prisma } from "@/lib/db";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Doc, Id } from "@/../convex/_generated/dataModel";
 import { calculateBMI } from "@/lib/health-calculations";
 import { subDays } from "date-fns";
 
@@ -37,46 +38,57 @@ export class HealthScoreCalculator {
    * @param memberId 成员ID
    */
   async calculateHealthScore(memberId: string): Promise<HealthScore> {
-    const member = await prisma.familyMember.findUnique({
-      where: { id: memberId },
-      include: {
-        healthGoals: {
-          where: { status: "ACTIVE" },
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
-        healthData: {
-          where: {
-            measuredAt: {
-              gte: subDays(new Date(), 30),
-            },
-          },
-          orderBy: { measuredAt: "desc" },
-        },
-      },
-    });
+    const member = await convexClient.query<Doc<"familyMembers"> | null>(
+      api.members.getById,
+      { memberId: memberId as Id<"familyMembers"> },
+    );
 
     if (!member) {
       throw new Error("成员不存在");
     }
 
-    // 1. BMI评分（30分）
+    const goals = await convexClient.query<Doc<"healthGoals">[]>(
+      api.health.listGoals,
+      { memberId: memberId as Id<"familyMembers">, includeInactive: false },
+    );
+
+    const healthData = await convexClient.query<Doc<"healthData">[]>(
+      api.health.getMetrics,
+      { memberId: memberId as Id<"familyMembers"> },
+    );
+
+    const cutoff = subDays(new Date(), 30).getTime();
+    const recentHealthData = healthData.filter(
+      (record) => (record.measuredAt ?? record.createdAt ?? 0) >= cutoff,
+    );
+
+    const mappedHealthData = recentHealthData.map((record) => ({
+      measuredAt: new Date(record.measuredAt ?? record.createdAt ?? Date.now()),
+      weight: record.weight ?? null,
+      bodyFat: record.bodyFat ?? null,
+      muscleMass: record.muscleMass ?? null,
+      bloodPressureSystolic: record.bloodPressureSystolic ?? null,
+      bloodPressureDiastolic: record.bloodPressureDiastolic ?? null,
+      heartRate: record.heartRate ?? null,
+    }));
+
+    const activeGoal = goals[0];
+
     const bmiScore = this.calculateBMIScore(member);
     const bmi =
       member.height && member.weight
         ? calculateBMI(member.weight, member.height)
         : null;
 
-    // 2. 营养达标率评分（30分）
-    const nutritionScore = await this.calculateNutritionScore(memberId);
-
-    // 3. 运动频率评分（20分）
-    const activityScore = this.calculateActivityScore(member.healthData);
-
-    // 4. 数据完整性评分（20分）
-    const dataCompletenessScore = this.calculateDataCompletenessScore(
-      member.healthData,
+    const nutritionScore = await this.calculateNutritionScore(
+      memberId,
+      activeGoal,
     );
+
+    const activityScore = this.calculateActivityScore(mappedHealthData);
+
+    const dataCompletenessScore =
+      this.calculateDataCompletenessScore(mappedHealthData);
 
     const totalScore = Math.round(
       bmiScore.score +
@@ -116,8 +128,8 @@ export class HealthScoreCalculator {
    * 计算BMI评分（30分）
    */
   private calculateBMIScore(member: {
-    height: number | null;
-    weight: number | null;
+    height?: number | null;
+    weight?: number | null;
   }): {
     score: number;
     category: "underweight" | "normal" | "overweight" | "obese" | null;
@@ -151,37 +163,27 @@ export class HealthScoreCalculator {
   /**
    * 计算营养达标率评分（30分）
    */
-  private async calculateNutritionScore(memberId: string): Promise<{
+  private async calculateNutritionScore(
+    memberId: string,
+    activeGoal?: Doc<"healthGoals">,
+  ): Promise<{
     score: number;
     adherenceRate: number;
   }> {
-    // TODO: 实际营养数据到位后，基于实际摄入计算达标率
-    // 优化方案：查询 meal_logs 表计算实际营养摄入与目标的对比
-    // 实现逻辑：
-    // 1. 获取成员的目标宏量营养素 (targetCalories, targetProtein, targetCarbs, targetFat)
-    // 2. 查询过去7天的 meal_logs 计算实际摄入平均值
-    // 3. 计算各项的达标率 (实际/目标 * 100%)
-    // 4. 综合评分 = (热量达标率 * 0.3 + 蛋白质达标率 * 0.3 + 碳水达标率 * 0.2 + 脂肪达标率 * 0.2) * 30
+    const goal =
+      activeGoal ??
+      (
+        await convexClient.query<Doc<"healthGoals">[]>(api.health.listGoals, {
+          memberId: memberId as Id<"familyMembers">,
+          includeInactive: false,
+        })
+      )[0];
 
-    const member = await prisma.familyMember.findUnique({
-      where: { id: memberId },
-      include: {
-        healthGoals: {
-          where: { status: "ACTIVE" },
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
-      },
-    });
-
-    if (!member || !member.healthGoals[0]) {
+    if (!goal) {
       return { score: 0, adherenceRate: 0 };
     }
 
-    // 暂时返回中等评分，基于是否有活跃目标来判断
-    // 后续接入真实营养数据后可改为基于实际摄入计算
-    const hasActiveGoal = member.healthGoals[0] !== undefined;
-    const adherenceRate = hasActiveGoal ? 70 : 50; // 有目标假设70%达标率
+    const adherenceRate = 70;
     const score = Math.round((adherenceRate / 100) * 30);
 
     return { score, adherenceRate };

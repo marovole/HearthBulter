@@ -6,19 +6,10 @@ const nextConfig = {
   trailingSlash: false,
 
   eslint: {
-    // 禁用构建时 ESLint 检查（保留 - 还有大量格式问题需要修复）
-    // 使用 pre-commit hook 和 CI/CD 进行代码质量检查
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // 暂时禁用 TypeScript 构建检查
-    // 原因：Supabase 适配器类型定义不完整，导致多个类型推断问题
-    // 已完成的修复：
-    // ✅ updateStreakDays 重构到 src/lib/utils/streak.ts
-    // ✅ Sentry v10+ 配置更新
-    // ✅ scripts 文件夹类型错误修复
-    // TODO: 完善 Supabase 适配器类型定义或使用类型断言处理所有 Supabase 查询
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // 图片优化配置
@@ -129,11 +120,11 @@ const nextConfig = {
               "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; " +
               "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
               "img-src 'self' data: https:; " +
-              "connect-src 'self' https://openrouter.ai; " +
+              "connect-src 'self' https://openrouter.ai https://accounts.google.com; " +
               "font-src 'self' https://fonts.googleapis.com; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +
-              "form-action 'self'",
+              "form-action 'self' https://accounts.google.com",
           },
           {
             key: "X-Content-Type-Options",

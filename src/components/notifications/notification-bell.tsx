@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Check, Settings, X } from 'lucide-react';
-import { NotificationList } from './notification-list';
-import { useNotifications } from '@/hooks/use-notifications';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect, useRef } from "react";
+import { Bell, Check, Settings, X } from "lucide-react";
+import { NotificationList } from "./notification-list";
+import { useNotifications } from "@/hooks/use-notifications";
+import { cn } from "@/lib/utils";
 
 interface NotificationBellProps {
   memberId: string;
@@ -15,7 +15,7 @@ interface NotificationBellProps {
 
 export function NotificationBell({
   memberId,
-  className = '',
+  className = "",
   showSettings = true,
   maxDropdownItems = 5,
 }: NotificationBellProps) {
@@ -24,11 +24,12 @@ export function NotificationBell({
   const bellRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { unreadCount, notifications, markAllAsRead, refresh } = useNotifications({
-    memberId,
-    autoRefresh: true,
-    refreshInterval: 30000,
-  });
+  const { unreadCount, notifications, markAllAsRead, refresh } =
+    useNotifications({
+      memberId,
+      autoRefresh: true,
+      refreshInterval: 30000,
+    });
 
   // 计算下拉框位置
   const updatePosition = () => {
@@ -61,15 +62,15 @@ export function NotificationBell({
 
     if (isOpen) {
       updatePosition();
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('scroll', handleScroll);
-      window.addEventListener('resize', updatePosition);
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("scroll", handleScroll);
+      window.addEventListener("resize", updatePosition);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', updatePosition);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updatePosition);
     };
   }, [isOpen]);
 
@@ -84,7 +85,7 @@ export function NotificationBell({
       await markAllAsRead(memberId);
       await refresh();
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      console.error("Failed to mark all as read:", error);
     }
   };
 
@@ -98,17 +99,17 @@ export function NotificationBell({
         ref={bellRef}
         onClick={handleBellClick}
         className={cn(
-          'relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors',
-          className
+          "relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors",
+          className,
         )}
         title="通知中心"
       >
         <Bell className="h-5 w-5" />
-        
+
         {/* 未读数量徽章 */}
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
@@ -121,8 +122,8 @@ export function NotificationBell({
           style={{
             top: `${position.top}px`,
             right: `${position.right}px`,
-            maxHeight: '80vh',
-            overflow: 'hidden',
+            maxHeight: "80vh",
+            overflow: "hidden",
           }}
         >
           {/* 头部 */}
@@ -136,7 +137,7 @@ export function NotificationBell({
                 </span>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-1">
               {unreadCount > 0 && (
                 <button
@@ -147,7 +148,7 @@ export function NotificationBell({
                   <Check className="h-4 w-4" />
                 </button>
               )}
-              
+
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
@@ -185,7 +186,7 @@ export function NotificationBell({
               {notifications.length > maxDropdownItems && (
                 <button
                   onClick={() => {
-                    window.location.href = '/notifications';
+                    window.location.href = "/notifications";
                     setIsOpen(false);
                   }}
                   className="text-sm text-blue-600 hover:text-blue-700"
@@ -193,11 +194,11 @@ export function NotificationBell({
                   查看全部 {notifications.length} 条通知
                 </button>
               )}
-              
+
               {showSettings && (
                 <button
                   onClick={() => {
-                    window.location.href = '/notifications/settings';
+                    window.location.href = "/notifications/settings";
                     setIsOpen(false);
                   }}
                   className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800"
@@ -231,10 +232,10 @@ function NotificationDropdownItem({
   const handleClick = async () => {
     if (isUnread) {
       try {
-        await fetch('/api/notifications/read', {
-          method: 'PUT',
+        await fetch("/api/notifications/read", {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             notificationId: notification.id,
@@ -243,53 +244,53 @@ function NotificationDropdownItem({
         });
         await onRefresh();
       } catch (error) {
-        console.error('Failed to mark as read:', error);
+        console.error("Failed to mark as read:", error);
       }
     }
 
     if (notification.actionUrl) {
-      window.open(notification.actionUrl, '_blank');
+      window.open(notification.actionUrl, "_blank");
     }
-    
+
     onClose();
   };
 
   return (
     <div
       className={cn(
-        'px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors',
-        isUnread && 'bg-blue-50/30'
+        "px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors",
+        isUnread && "bg-blue-50/30",
       )}
       onClick={handleClick}
     >
       <div className="flex items-start space-x-3">
-        <span className="text-lg mt-0.5">{notification.typeIcon || '📄'}</span>
-        
+        <span className="text-lg mt-0.5">{notification.typeIcon || "📄"}</span>
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <h4
               className={cn(
-                'text-sm truncate',
-                isUnread ? 'font-semibold text-gray-900' : 'text-gray-700'
+                "text-sm truncate",
+                isUnread ? "font-semibold text-gray-900" : "text-gray-700",
               )}
             >
               {notification.title}
             </h4>
-            
+
             {isUnread && (
               <div className="h-2 w-2 bg-blue-500 rounded-full ml-2 flex-shrink-0" />
             )}
           </div>
-          
+
           <p className="text-sm text-gray-600 mb-1 line-clamp-2">
             {notification.formattedContent || notification.content}
           </p>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500">
               {notification.formattedTime || notification.createdAt}
             </span>
-            
+
             {notification.actionUrl && (
               <span className="text-xs text-blue-600 hover:text-blue-700">
                 查看详情 →

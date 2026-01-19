@@ -7,15 +7,22 @@
  * @module prisma-leaderboard-repository
  */
 
-import type { FamilyMember, HealthData, LeaderboardEntry, LeaderboardType } from '@prisma/client';
+import type { LeaderboardType } from "@/types/social-sharing";
 import type {
+  FamilyMemberRecord,
+  HealthDataRecord,
   HealthDataAggregationResult,
   HealthDataFilter,
   LeaderboardEntryCreateDTO,
   LeaderboardEntryQuery,
+  LeaderboardEntryRecord,
   LeaderboardRepository,
   MemberHealthData,
-} from '../interfaces/leaderboard-repository';
+} from "../interfaces/leaderboard-repository";
+
+type FamilyMember = FamilyMemberRecord;
+type HealthData = HealthDataRecord;
+type LeaderboardEntry = LeaderboardEntryRecord;
 
 /**
  * PrismaLeaderboardRepository
@@ -23,53 +30,100 @@ import type {
  * 占位符实现，待后续完成 Prisma 数据访问层
  */
 export class PrismaLeaderboardRepository implements LeaderboardRepository {
-  async aggregateHealthDataByMember(_filter: HealthDataFilter): Promise<HealthDataAggregationResult[]> {
-    throw new Error('PrismaLeaderboardRepository.aggregateHealthDataByMember not implemented');
+  async aggregateHealthDataByMember(
+    _filter: HealthDataFilter,
+  ): Promise<HealthDataAggregationResult[]> {
+    throw new Error(
+      "PrismaLeaderboardRepository.aggregateHealthDataByMember not implemented",
+    );
   }
 
-  async getMemberHealthData(_memberId: string, _filter?: HealthDataFilter): Promise<MemberHealthData> {
-    throw new Error('PrismaLeaderboardRepository.getMemberHealthData not implemented');
+  async getMemberHealthData(
+    _memberId: string,
+    _filter?: HealthDataFilter,
+  ): Promise<MemberHealthData> {
+    throw new Error(
+      "PrismaLeaderboardRepository.getMemberHealthData not implemented",
+    );
   }
 
-  async getMembersHealthData(_memberIds: string[], _filter?: HealthDataFilter): Promise<MemberHealthData[]> {
-    throw new Error('PrismaLeaderboardRepository.getMembersHealthData not implemented');
+  async getMembersHealthData(
+    _memberIds: string[],
+    _filter?: HealthDataFilter,
+  ): Promise<MemberHealthData[]> {
+    throw new Error(
+      "PrismaLeaderboardRepository.getMembersHealthData not implemented",
+    );
   }
 
-  async getMemberById(_memberId: string): Promise<Pick<FamilyMember, 'id' | 'name' | 'avatar'> | null> {
-    throw new Error('PrismaLeaderboardRepository.getMemberById not implemented');
+  async getMemberById(_memberId: string): Promise<FamilyMemberRecord | null> {
+    throw new Error(
+      "PrismaLeaderboardRepository.getMemberById not implemented",
+    );
   }
 
-  async getMembersWithHealthData(_filter: HealthDataFilter): Promise<MemberHealthData[]> {
-    throw new Error('PrismaLeaderboardRepository.getMembersWithHealthData not implemented');
+  async getMembersWithHealthData(
+    _filter: HealthDataFilter,
+  ): Promise<MemberHealthData[]> {
+    throw new Error(
+      "PrismaLeaderboardRepository.getMembersWithHealthData not implemented",
+    );
   }
 
-  async createLeaderboardEntry(_data: LeaderboardEntryCreateDTO): Promise<LeaderboardEntry> {
-    throw new Error('PrismaLeaderboardRepository.createLeaderboardEntry not implemented');
+  async createLeaderboardEntry(
+    _data: LeaderboardEntryCreateDTO,
+  ): Promise<LeaderboardEntry> {
+    throw new Error(
+      "PrismaLeaderboardRepository.createLeaderboardEntry not implemented",
+    );
   }
 
-  async createLeaderboardEntries(_entries: LeaderboardEntryCreateDTO[]): Promise<LeaderboardEntry[]> {
-    throw new Error('PrismaLeaderboardRepository.createLeaderboardEntries not implemented');
+  async createLeaderboardEntries(
+    _entries: LeaderboardEntryCreateDTO[],
+  ): Promise<LeaderboardEntry[]> {
+    throw new Error(
+      "PrismaLeaderboardRepository.createLeaderboardEntries not implemented",
+    );
   }
 
-  async getLeaderboardEntries(_query: LeaderboardEntryQuery): Promise<LeaderboardEntry[]> {
-    throw new Error('PrismaLeaderboardRepository.getLeaderboardEntries not implemented');
+  async getLeaderboardEntries(
+    _query: LeaderboardEntryQuery,
+  ): Promise<LeaderboardEntry[]> {
+    throw new Error(
+      "PrismaLeaderboardRepository.getLeaderboardEntries not implemented",
+    );
   }
 
   async getLatestLeaderboardEntry(
-    _query: Omit<LeaderboardEntryQuery, 'startDate' | 'endDate'>
+    _query: Omit<LeaderboardEntryQuery, "startDate" | "endDate">,
   ): Promise<LeaderboardEntry | null> {
-    throw new Error('PrismaLeaderboardRepository.getLatestLeaderboardEntry not implemented');
+    throw new Error(
+      "PrismaLeaderboardRepository.getLatestLeaderboardEntry not implemented",
+    );
   }
 
-  async getRankingHistory(_memberId: string, _type: LeaderboardType, _days?: number): Promise<LeaderboardEntry[]> {
-    throw new Error('PrismaLeaderboardRepository.getRankingHistory not implemented');
+  async getRankingHistory(
+    _memberId: string,
+    _type: LeaderboardType,
+    _days?: number,
+  ): Promise<LeaderboardEntry[]> {
+    throw new Error(
+      "PrismaLeaderboardRepository.getRankingHistory not implemented",
+    );
   }
 
-  async countMemberHealthData(_memberId: string, _filter?: HealthDataFilter): Promise<number> {
-    throw new Error('PrismaLeaderboardRepository.countMemberHealthData not implemented');
+  async countMemberHealthData(
+    _memberId: string,
+    _filter?: HealthDataFilter,
+  ): Promise<number> {
+    throw new Error(
+      "PrismaLeaderboardRepository.countMemberHealthData not implemented",
+    );
   }
 
   async calculateCheckinStreakDays(_memberId: string): Promise<number> {
-    throw new Error('PrismaLeaderboardRepository.calculateCheckinStreakDays not implemented');
+    throw new Error(
+      "PrismaLeaderboardRepository.calculateCheckinStreakDays not implemented",
+    );
   }
 }

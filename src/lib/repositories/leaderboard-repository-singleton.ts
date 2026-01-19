@@ -6,9 +6,9 @@
  * @module leaderboard-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseLeaderboardRepository } from './implementations/supabase-leaderboard-repository';
-import type { LeaderboardRepository } from './interfaces/leaderboard-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseLeaderboardRepository } from "./implementations/supabase-leaderboard-repository";
+import type { LeaderboardRepository } from "./interfaces/leaderboard-repository";
 
 let instance: LeaderboardRepository | null = null;
 

@@ -1,35 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { inventoryTracker } from '@/services/inventory-tracker';
-import { getCurrentUser } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import { inventoryTracker } from "@/services/inventory-tracker";
+import { getCurrentUser } from "@/lib/auth";
 
 // POST - 为食谱使用库存
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
     const body = await request.json();
-    
-    const requiredFields = ['memberId', 'ingredients', 'recipeName'];
+
+    const requiredFields = ["memberId", "ingredients", "recipeName"];
     for (const field of requiredFields) {
       if (!body[field]) {
-        return NextResponse.json({ error: `缺少必需字段: ${field}` }, { status: 400 });
+        return NextResponse.json(
+          { error: `缺少必需字段: ${field}` },
+          { status: 400 },
+        );
       }
     }
 
     if (!Array.isArray(body.ingredients) || body.ingredients.length === 0) {
-      return NextResponse.json({ error: '食材列表不能为空' }, { status: 400 });
+      return NextResponse.json({ error: "食材列表不能为空" }, { status: 400 });
     }
 
     // 验证食材格式
     for (const ingredient of body.ingredients) {
       if (!ingredient.foodId || !ingredient.quantity || !ingredient.unit) {
-        return NextResponse.json({ error: '食材格式不正确，需要包含foodId、quantity和unit' }, { status: 400 });
+        return NextResponse.json(
+          { error: "食材格式不正确，需要包含foodId、quantity和unit" },
+          { status: 400 },
+        );
       }
     }
 
@@ -40,7 +46,7 @@ export async function POST(request: NextRequest) {
         quantity: parseFloat(ing.quantity),
         unit: ing.unit,
       })),
-      body.recipeName
+      body.recipeName,
     );
 
     return NextResponse.json({
@@ -53,12 +59,11 @@ export async function POST(request: NextRequest) {
         skippedIngredients: body.ingredients.length - updatedItems.length,
       },
     });
-
   } catch (error) {
-    console.error('食谱使用库存失败:', error);
+    console.error("食谱使用库存失败:", error);
     return NextResponse.json(
-      { error: '食谱使用库存失败', details: error },
-      { status: 500 }
+      { error: "食谱使用库存失败", details: error },
+      { status: 500 },
     );
   }
 }

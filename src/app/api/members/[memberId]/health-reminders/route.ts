@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { z } from "zod";
 
 /**
  * 验证用户是否有权限访问成员的健康数据
@@ -10,7 +10,12 @@ import { z } from 'zod';
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
+const normalizeRecord = <T>(
+  value: T | T[] | null | undefined,
+): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+
 async function verifyMemberAccess(
   memberId: string,
   userId: string,
@@ -18,7 +23,7 @@ async function verifyMemberAccess(
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
-    .from('family_members')
+    .from("family_members")
     .select(
       `
       id,
@@ -30,25 +35,26 @@ async function verifyMemberAccess(
       )
     `,
     )
-    .eq('id', memberId)
-    .is('deletedAt', null)
+    .eq("id", memberId)
+    .is("deletedAt", null)
     .single();
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const isCreator = member.family?.creatorId === userId;
+  const family = normalizeRecord(member.family);
+  const isCreator = family?.creatorId === userId;
 
   let isAdmin = false;
   if (!isCreator) {
     const { data: adminMember } = await supabase
-      .from('family_members')
-      .select('id, role')
-      .eq('familyId', member.familyId)
-      .eq('userId', userId)
-      .eq('role', 'ADMIN')
-      .is('deletedAt', null)
+      .from("family_members")
+      .select("id, role")
+      .eq("familyId", member.familyId)
+      .eq("userId", userId)
+      .eq("role", "ADMIN")
+      .is("deletedAt", null)
       .maybeSingle();
 
     isAdmin = !!adminMember;
@@ -65,7 +71,7 @@ async function verifyMemberAccess(
  * 提醒配置验证schema
  */
 const reminderSchema = z.object({
-  reminderType: z.enum(['WEIGHT', 'BLOOD_PRESSURE', 'HEART_RATE', 'GENERAL']),
+  reminderType: z.enum(["WEIGHT", "BLOOD_PRESSURE", "HEART_RATE", "GENERAL"]),
   enabled: z.boolean().optional(),
   hour: z.number().int().min(0).max(23),
   minute: z.number().int().min(0).max(59).optional().default(0),
@@ -91,7 +97,7 @@ export async function GET(
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
@@ -99,7 +105,7 @@ export async function GET(
 
     if (!hasAccess) {
       return NextResponse.json(
-        { error: '无权限访问该成员的提醒配置' },
+        { error: "无权限访问该成员的提醒配置" },
         { status: 403 },
       );
     }
@@ -107,28 +113,28 @@ export async function GET(
     const supabase = SupabaseClientManager.getInstance();
 
     const { data: reminders, error } = await supabase
-      .from('health_reminders')
-      .select('*')
-      .eq('memberId', memberId)
-      .order('createdAt', { ascending: true });
+      .from("health_reminders")
+      .select("*")
+      .eq("memberId", memberId)
+      .order("createdAt", { ascending: true });
 
     if (error) {
-      console.error('获取提醒配置失败:', error);
-      return NextResponse.json({ error: '获取提醒配置失败' }, { status: 500 });
+      console.error("获取提醒配置失败:", error);
+      return NextResponse.json({ error: "获取提醒配置失败" }, { status: 500 });
     }
 
     return NextResponse.json(
       {
         reminders: (reminders || []).map((r) => ({
           ...r,
-          daysOfWeek: JSON.parse(r.daysOfWeek || '[]'),
+          daysOfWeek: JSON.parse(r.daysOfWeek || "[]"),
         })),
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error('获取提醒配置失败:', error);
-    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
+    console.error("获取提醒配置失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -147,7 +153,7 @@ export async function POST(
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
@@ -155,7 +161,7 @@ export async function POST(
 
     if (!hasAccess) {
       return NextResponse.json(
-        { error: '无权限设置该成员的提醒配置' },
+        { error: "无权限设置该成员的提醒配置" },
         { status: 403 },
       );
     }
@@ -165,7 +171,7 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: '输入数据无效', details: validation.error.errors },
+        { error: "输入数据无效", details: validation.error.errors },
         { status: 400 },
       );
     }
@@ -178,7 +184,7 @@ export async function POST(
 
     // 使用 upsert 创建或更新
     const { data: reminder, error: upsertError } = await supabase
-      .from('health_reminders')
+      .from("health_reminders")
       .upsert(
         {
           memberId,
@@ -192,7 +198,7 @@ export async function POST(
           createdAt: now,
         },
         {
-          onConflict: 'memberId,reminderType',
+          onConflict: "memberId,reminderType",
           ignoreDuplicates: false,
         },
       )
@@ -200,22 +206,22 @@ export async function POST(
       .single();
 
     if (upsertError) {
-      console.error('保存提醒配置失败:', upsertError);
-      return NextResponse.json({ error: '保存提醒配置失败' }, { status: 500 });
+      console.error("保存提醒配置失败:", upsertError);
+      return NextResponse.json({ error: "保存提醒配置失败" }, { status: 500 });
     }
 
     return NextResponse.json(
       {
-        message: '提醒配置保存成功',
+        message: "提醒配置保存成功",
         reminder: {
           ...reminder,
-          daysOfWeek: JSON.parse(reminder.daysOfWeek || '[]'),
+          daysOfWeek: JSON.parse(reminder.daysOfWeek || "[]"),
         },
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error('保存提醒配置失败:', error);
-    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
+    console.error("保存提醒配置失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

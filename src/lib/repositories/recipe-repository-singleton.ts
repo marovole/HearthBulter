@@ -6,9 +6,8 @@
  * @module recipe-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseRecipeRepository } from './implementations/supabase-recipe-repository';
-import type { RecipeRepository } from './interfaces/recipe-repository';
+import { ConvexRecipeRepository } from "./implementations/convex-recipe-repository";
+import type { RecipeRepository } from "./interfaces/recipe-repository";
 
 let instance: RecipeRepository | null = null;
 
@@ -19,8 +18,7 @@ let instance: RecipeRepository | null = null;
  */
 export function getRecipeRepository(): RecipeRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseRecipeRepository(supabaseClient);
+    instance = new ConvexRecipeRepository();
   }
   return instance;
 }

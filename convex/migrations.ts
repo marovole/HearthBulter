@@ -8,6 +8,7 @@ import { apiSuccess } from "./lib/response";
 export const insertUser = mutation({
   args: {
     email: v.string(),
+    clerkId: v.optional(v.string()),
     name: v.optional(v.string()),
     image: v.optional(v.string()),
     passwordHash: v.optional(v.string()),
@@ -22,7 +23,10 @@ export const insertUser = mutation({
       .unique();
 
     if (existing) return existing._id;
-    return await ctx.db.insert("users", args);
+    return await ctx.db.insert("users", {
+      ...args,
+      clerkId: args.clerkId ?? args.email,
+    });
   },
 });
 

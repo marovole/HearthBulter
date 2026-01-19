@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { SessionProvider as NextAuthSessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
@@ -21,7 +20,6 @@ interface ProvidersProps {
  *
  * Providers included:
  * - ThemeProvider: Manages light/dark theme state (from next-themes)
- * - SessionProvider: Manages authentication session state (from next-auth)
  * - Toaster: Global toast notification system (from sonner)
  *
  * IMPORTANT: This component must be rendered in a client boundary to avoid
@@ -40,17 +38,10 @@ export default function Providers({ children }: ProvidersProps): JSX.Element {
         enableSystem
         disableTransitionOnChange
       >
-        <NextAuthSessionProvider
-          // Enable session refresh on window focus for better UX
-          refetchOnWindowFocus={true}
-          // Refetch session every 5 minutes to keep it fresh
-          refetchInterval={5 * 60}
-        >
-          {children}
+        {children}
 
-          {/* Global toast notification system */}
-          <Toaster position="top-right" expand={false} richColors closeButton />
-        </NextAuthSessionProvider>
+        {/* Global toast notification system */}
+        <Toaster position="top-right" expand={false} richColors closeButton />
       </ThemeProvider>
     </ConvexClientProvider>
   );

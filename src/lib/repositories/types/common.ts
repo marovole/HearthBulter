@@ -9,7 +9,7 @@
  * @module common
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * 分页输入参数 Schema
@@ -76,7 +76,7 @@ export type StringFilter = z.infer<typeof stringFilterSchema>;
 /**
  * 排序方向
  */
-export type SortDirection = 'asc' | 'desc';
+export type SortDirection = "asc" | "desc";
 
 /**
  * 排序输入参数

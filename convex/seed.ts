@@ -13,6 +13,7 @@ export const seedDatabase = mutation({
 
     // 2. Create a test user
     const userId = await ctx.db.insert("users", {
+      clerkId: "test-clerk-id",
       email: "test@example.com",
       name: "测试用户",
       role: "ADMIN",

@@ -4,8 +4,8 @@
  */
 
 // Mock Web APIs for Node.js environment
-import { TextEncoder, TextDecoder } from 'util';
-import { URL, URLSearchParams } from 'url';
+import { TextEncoder, TextDecoder } from "util";
+import { URL, URLSearchParams } from "url";
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
@@ -18,16 +18,16 @@ global.URLSearchParams = URLSearchParams;
 global.fetch = jest.fn();
 
 // Mock Next.js Request and Response
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 // Mock Next.js APIs
-jest.mock('next/server', () => ({
+jest.mock("next/server", () => ({
   NextRequest: jest.fn().mockImplementation((url, init = {}) => ({
     url,
-    method: init.method || 'GET',
+    method: init.method || "GET",
     headers: new Map(Object.entries(init.headers || {})),
-    json: async () => init.body ? JSON.parse(init.body) : {},
-    text: async () => init.body || '',
+    json: async () => (init.body ? JSON.parse(init.body) : {}),
+    text: async () => init.body || "",
     clone: jest.fn(),
   })),
   NextResponse: {
@@ -46,8 +46,8 @@ global.crypto = {
   subtle: {
     digest: jest.fn(),
   },
-  randomUUID: jest.fn(() => 'test-uuid-12345'),
-  randomBytes: jest.fn(() => ({ toString: () => 'random-string' })),
+  randomUUID: jest.fn(() => "test-uuid-12345"),
+  randomBytes: jest.fn(() => ({ toString: () => "random-string" })),
 };
 
 // Mock performance API
@@ -63,10 +63,10 @@ global.File = jest.fn();
 global.FileReader = jest.fn();
 
 // Mock URL.createObjectURL and URL.revokeObjectURL for blob URLs
-if (global.URL && typeof global.URL.createObjectURL === 'undefined') {
-  global.URL.createObjectURL = jest.fn(() => 'mock-url');
+if (global.URL && typeof global.URL.createObjectURL === "undefined") {
+  global.URL.createObjectURL = jest.fn(() => "mock-url");
 }
-if (global.URL && typeof global.URL.revokeObjectURL === 'undefined') {
+if (global.URL && typeof global.URL.revokeObjectURL === "undefined") {
   global.URL.revokeObjectURL = jest.fn();
 }
 
@@ -85,13 +85,13 @@ global.localStorage = localStorageMock;
 global.sessionStorage = localStorageMock;
 
 // Setup environment variables
-process.env.NODE_ENV = 'test';
-process.env.OPENAI_API_KEY = 'test-openai-key';
-process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
-process.env.USDA_API_KEY = 'test-usda-key';
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
-process.env.NEXTAUTH_SECRET = 'test-secret-key';
-process.env.NEXTAUTH_URL = 'http://localhost:3000';
+process.env.NODE_ENV = "test";
+process.env.OPENAI_API_KEY = "test-openai-key";
+process.env.ANTHROPIC_API_KEY = "test-anthropic-key";
+process.env.USDA_API_KEY = "test-usda-key";
+process.env.DATABASE_URL = "postgresql://test:test@localhost:5432/testdb";
+process.env.NEXTAUTH_SECRET = "test-secret-key";
+process.env.NEXTAUTH_URL = "http://localhost:3000";
 
 // Mock console methods for cleaner test output
 const originalError = console.error;
@@ -100,10 +100,10 @@ const originalWarn = console.warn;
 console.error = (...args) => {
   // Allow specific error messages that are expected in tests
   if (
-    typeof args[0] === 'string' &&
-    (args[0].includes('Warning:') ||
-     args[0].includes('Test environment') ||
-     args[0].includes('Mock'))
+    typeof args[0] === "string" &&
+    (args[0].includes("Warning:") ||
+      args[0].includes("Test environment") ||
+      args[0].includes("Mock"))
   ) {
     return;
   }
@@ -113,10 +113,10 @@ console.error = (...args) => {
 console.warn = (...args) => {
   // Allow specific warning messages that are expected in tests
   if (
-    typeof args[0] === 'string' &&
-    (args[0].includes('Warning:') ||
-     args[0].includes('deprecated') ||
-     args[0].includes('Test environment'))
+    typeof args[0] === "string" &&
+    (args[0].includes("Warning:") ||
+      args[0].includes("deprecated") ||
+      args[0].includes("Test environment"))
   ) {
     return;
   }
@@ -124,7 +124,7 @@ console.warn = (...args) => {
 };
 
 // Reset all mocks before each test - define only if Jest is available
-if (typeof beforeEach !== 'undefined') {
+if (typeof beforeEach !== "undefined") {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorageMock.clear();

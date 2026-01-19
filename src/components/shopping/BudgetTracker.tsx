@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
 interface BudgetTrackerProps {
-  budget: number | null
-  estimatedCost: number | null
-  actualCost: number | null
+  budget: number | null;
+  estimatedCost: number | null;
+  actualCost: number | null;
 }
 
 export function BudgetTracker({
@@ -50,7 +50,7 @@ export function BudgetTracker({
             <span className="text-sm text-blue-700">估算成本</span>
             <span
               className={`text-sm font-medium ${
-                overBudget ? 'text-red-600' : 'text-blue-900'
+                overBudget ? "text-red-600" : "text-blue-900"
               }`}
             >
               ¥{estimatedCost.toFixed(2)}
@@ -72,9 +72,7 @@ export function BudgetTracker({
         {overBudget && (
           <div className="mt-3 pt-3 border-t border-blue-200">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-red-600">
-                超预算
-              </span>
+              <span className="text-sm font-medium text-red-600">超预算</span>
               <span className="text-sm font-medium text-red-600">
                 ¥{overBudget.toFixed(2)}
               </span>
@@ -92,11 +90,11 @@ export function BudgetTracker({
               <span className="text-sm text-blue-700">价格差异</span>
               <span
                 className={`text-sm font-medium ${
-                  priceDiff > 0 ? 'text-red-600' : 'text-green-600'
+                  priceDiff > 0 ? "text-red-600" : "text-green-600"
                 }`}
               >
-                {priceDiff > 0 ? '+' : ''}
-                {priceDiff.toFixed(2)} ({priceDiffPercent > 0 ? '+' : ''}
+                {priceDiff > 0 ? "+" : ""}
+                {priceDiff.toFixed(2)} ({priceDiffPercent > 0 ? "+" : ""}
                 {priceDiffPercent.toFixed(1)}%)
               </span>
             </div>
@@ -116,10 +114,10 @@ export function BudgetTracker({
               <div
                 className={`h-2 rounded-full transition-all ${
                   estimatedCost > budget
-                    ? 'bg-red-500'
+                    ? "bg-red-500"
                     : estimatedCost > budget * 0.9
-                      ? 'bg-yellow-500'
-                      : 'bg-blue-500'
+                      ? "bg-yellow-500"
+                      : "bg-blue-500"
                 }`}
                 style={{
                   width: `${Math.min((estimatedCost / budget) * 100, 100)}%`,
@@ -132,4 +130,3 @@ export function BudgetTracker({
     </div>
   );
 }
-

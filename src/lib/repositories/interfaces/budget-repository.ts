@@ -11,7 +11,7 @@
  * @module budget-repository
  */
 
-import type { PaginatedResult, PaginationInput } from '../types/common';
+import type { PaginatedResult, PaginationInput } from "../types/common";
 import type {
   BudgetAlertDTO,
   BudgetCreateDTO,
@@ -21,7 +21,7 @@ import type {
   SpendingCreateDTO,
   SpendingDTO,
   SpendingFilterDTO,
-} from '../types/budget';
+} from "../types/budget";
 
 /**
  * 预算 Repository 接口
@@ -67,8 +67,8 @@ export interface BudgetRepository {
    */
   listBudgets(
     memberId: string,
-    filter?: { status?: BudgetDTO['status'] },
-    pagination?: PaginationInput
+    filter?: { status?: BudgetDTO["status"] },
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<BudgetDTO>>;
 
   /**
@@ -92,7 +92,7 @@ export interface BudgetRepository {
    */
   listSpendings(
     filter: SpendingFilterDTO,
-    pagination?: PaginationInput
+    pagination?: PaginationInput,
   ): Promise<PaginatedResult<SpendingDTO>>;
 
   /**

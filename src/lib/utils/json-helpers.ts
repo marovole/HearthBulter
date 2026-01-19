@@ -30,7 +30,7 @@ export function safeParseArray(value: any, fallback: any[] = []): any[] {
   }
 
   // 尝试解析 JSON 字符串
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed : fallback;
@@ -59,10 +59,10 @@ export function safeParseArray(value: any, fallback: any[] = []): any[] {
  */
 export function safeParseObject(
   value: any,
-  fallback: Record<string, unknown> = {}
+  fallback: Record<string, unknown> = {},
 ): Record<string, unknown> {
   // 如果已经是对象（且不是数组），直接返回
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
     return value;
   }
 
@@ -72,10 +72,10 @@ export function safeParseObject(
   }
 
   // 尝试解析 JSON 字符串
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
         return parsed;
       }
     } catch {

@@ -1,14 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { notificationRepository } from '@/lib/repositories/notification-repository-singleton';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { notificationRepository } from "@/lib/repositories/notification-repository-singleton";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import type {
   NotificationType,
   NotificationChannel,
   NotificationPriority,
   CreateNotificationDTO,
-} from '@/lib/repositories/types/notification';
+} from "@/lib/repositories/types/notification";
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Utility functions for notifications
@@ -22,80 +24,83 @@ const NotificationFormatters = {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 1) return '刚刚';
+    if (minutes < 1) return "刚刚";
     if (minutes < 60) return `${minutes}分钟前`;
     if (hours < 24) return `${hours}小时前`;
     if (days < 7) return `${days}天前`;
-    return new Date(date).toLocaleDateString('zh-CN');
+    return new Date(date).toLocaleDateString("zh-CN");
   },
 
   getTypeIcon(type: NotificationType): string {
     const iconMap: Record<NotificationType, string> = {
-      CHECK_IN_REMINDER: '📝',
-      TASK_NOTIFICATION: '📋',
-      EXPIRY_ALERT: '⏰',
-      BUDGET_WARNING: '💰',
-      HEALTH_ALERT: '⚠️',
-      GOAL_ACHIEVEMENT: '🎉',
-      FAMILY_ACTIVITY: '👨‍👩‍👧‍👦',
-      SYSTEM_ANNOUNCEMENT: '📢',
-      MARKETING: '🎯',
-      OTHER: '📄',
+      CHECK_IN_REMINDER: "📝",
+      TASK_NOTIFICATION: "📋",
+      EXPIRY_ALERT: "⏰",
+      BUDGET_WARNING: "💰",
+      HEALTH_ALERT: "⚠️",
+      GOAL_ACHIEVEMENT: "🎉",
+      FAMILY_ACTIVITY: "👨‍👩‍👧‍👦",
+      SYSTEM_ANNOUNCEMENT: "📢",
+      MARKETING: "🎯",
+      OTHER: "📄",
     };
-    return iconMap[type] || '📄';
+    return iconMap[type] || "📄";
   },
 
   getTypeName(type: NotificationType): string {
     const nameMap: Record<NotificationType, string> = {
-      CHECK_IN_REMINDER: '打卡提醒',
-      TASK_NOTIFICATION: '任务通知',
-      EXPIRY_ALERT: '过期提醒',
-      BUDGET_WARNING: '预算预警',
-      HEALTH_ALERT: '健康异常提醒',
-      GOAL_ACHIEVEMENT: '目标达成',
-      FAMILY_ACTIVITY: '家庭活动',
-      SYSTEM_ANNOUNCEMENT: '系统公告',
-      MARKETING: '营销通知',
-      OTHER: '其他',
+      CHECK_IN_REMINDER: "打卡提醒",
+      TASK_NOTIFICATION: "任务通知",
+      EXPIRY_ALERT: "过期提醒",
+      BUDGET_WARNING: "预算预警",
+      HEALTH_ALERT: "健康异常提醒",
+      GOAL_ACHIEVEMENT: "目标达成",
+      FAMILY_ACTIVITY: "家庭活动",
+      SYSTEM_ANNOUNCEMENT: "系统公告",
+      MARKETING: "营销通知",
+      OTHER: "其他",
     };
-    return nameMap[type] || '其他';
+    return nameMap[type] || "其他";
   },
 
   getPriorityColor(priority: NotificationPriority): string {
     const colorMap: Record<NotificationPriority, string> = {
-      LOW: '#6c757d',
-      MEDIUM: '#28a745',
-      HIGH: '#ffc107',
-      URGENT: '#dc3545',
+      LOW: "#6c757d",
+      MEDIUM: "#28a745",
+      HIGH: "#ffc107",
+      URGENT: "#dc3545",
     };
-    return colorMap[priority] || '#6c757d';
+    return colorMap[priority] || "#6c757d";
   },
 
   formatContent(content: string, maxLength: number = 100): string {
-    if (!content) return '';
-    const formatted = content.replace(/\s+/g, ' ').trim();
+    if (!content) return "";
+    const formatted = content.replace(/\s+/g, " ").trim();
     if (formatted.length > maxLength) {
       return `${formatted.substring(0, maxLength)}...`;
     }
     return formatted;
   },
 
-  validateNotificationContent(title: string, content: string): {
+  validateNotificationContent(
+    title: string,
+    content: string,
+  ): {
     isValid: boolean;
     errors: string[];
   } {
     const errors: string[] = [];
 
     if (!title || title.trim().length === 0) {
-      errors.push('标题不能为空');
+      errors.push("标题不能为空");
     } else if (title.length > 200) {
-      errors.push('标题长度不能超过200字符');
+      errors.push("标题长度不能超过200字符");
     }
 
     if (!content || content.trim().length === 0) {
-      errors.push('内容不能为空');
+      errors.push("内容不能为空");
     } else if (content.length > 2000) {
-      errors.push('内容长度不能超过2000字符');
+      errors.push("内容长度不能超过2000字符");
     }
 
     return {
@@ -111,18 +116,34 @@ const NotificationFormatters = {
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const memberId = searchParams.get('memberId');
-    const type = searchParams.get('type') as NotificationType | null;
-    const status = searchParams.get('status') as any;
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
-    const includeRead = searchParams.get('includeRead') === 'true';
+    const memberId = searchParams.get("memberId");
+    const type = searchParams.get("type") as NotificationType | null;
+    const status = searchParams.get("status") as any;
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    const offset = parseInt(searchParams.get("offset") || "0");
+    const includeRead = searchParams.get("includeRead") === "true";
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID is required' },
-        { status: 400 }
+        { error: "Member ID is required" },
+        { status: 400 },
+      );
+    }
+
+    const access = await memberRepository.verifyMemberAccess(
+      memberId,
+      session.user.id,
+    );
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        { error: "无权限访问该成员的通知" },
+        { status: 403 },
       );
     }
 
@@ -137,11 +158,11 @@ export async function GET(request: NextRequest) {
       {
         limit,
         offset,
-      }
+      },
     );
 
     // 格式化通知列表
-    const formattedNotifications = result.items.map(notification => ({
+    const formattedNotifications = result.items.map((notification) => ({
       id: notification.id,
       type: notification.type,
       title: notification.title,
@@ -159,8 +180,12 @@ export async function GET(request: NextRequest) {
       formattedTime: NotificationFormatters.formatTime(notification.createdAt),
       typeIcon: NotificationFormatters.getTypeIcon(notification.type),
       typeName: NotificationFormatters.getTypeName(notification.type),
-      priorityColor: NotificationFormatters.getPriorityColor(notification.priority),
-      formattedContent: NotificationFormatters.formatContent(notification.content),
+      priorityColor: NotificationFormatters.getPriorityColor(
+        notification.priority,
+      ),
+      formattedContent: NotificationFormatters.formatContent(
+        notification.content,
+      ),
     }));
 
     return NextResponse.json({
@@ -172,10 +197,10 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    console.error("Error fetching notifications:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch notifications' },
-      { status: 500 }
+      { error: "Failed to fetch notifications" },
+      { status: 500 },
     );
   }
 }
@@ -189,14 +214,19 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+    }
+
     const body = await request.json();
     const {
       memberId,
       type,
       title,
       content,
-      priority = 'MEDIUM' as NotificationPriority,
-      channels = ['IN_APP'] as NotificationChannel[],
+      priority = "MEDIUM" as NotificationPriority,
+      channels = ["IN_APP"] as NotificationChannel[],
       metadata,
       actionUrl,
       actionText,
@@ -207,50 +237,61 @@ export async function POST(request: NextRequest) {
     // 验证必需字段
     if (!memberId || !type) {
       return NextResponse.json(
-        { error: 'Member ID and type are required' },
-        { status: 400 }
+        { error: "Member ID and type are required" },
+        { status: 400 },
+      );
+    }
+
+    const access = await memberRepository.verifyMemberAccess(
+      memberId,
+      session.user.id,
+    );
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        { error: "无权限为该成员创建通知" },
+        { status: 403 },
       );
     }
 
     // 验证通知类型
     const validTypes: NotificationType[] = [
-      'CHECK_IN_REMINDER',
-      'TASK_NOTIFICATION',
-      'EXPIRY_ALERT',
-      'BUDGET_WARNING',
-      'HEALTH_ALERT',
-      'GOAL_ACHIEVEMENT',
-      'FAMILY_ACTIVITY',
-      'SYSTEM_ANNOUNCEMENT',
-      'MARKETING',
-      'OTHER',
+      "CHECK_IN_REMINDER",
+      "TASK_NOTIFICATION",
+      "EXPIRY_ALERT",
+      "BUDGET_WARNING",
+      "HEALTH_ALERT",
+      "GOAL_ACHIEVEMENT",
+      "FAMILY_ACTIVITY",
+      "SYSTEM_ANNOUNCEMENT",
+      "MARKETING",
+      "OTHER",
     ];
 
     if (!validTypes.includes(type)) {
       return NextResponse.json(
-        { error: 'Invalid notification type' },
-        { status: 400 }
+        { error: "Invalid notification type" },
+        { status: 400 },
       );
     }
 
     // 验证渠道
     if (channels && !Array.isArray(channels)) {
       return NextResponse.json(
-        { error: 'Channels must be an array' },
-        { status: 400 }
+        { error: "Channels must be an array" },
+        { status: 400 },
       );
     }
 
     // 验证通知内容
     if (title || content) {
       const validation = NotificationFormatters.validateNotificationContent(
-        title || '',
-        content || ''
+        title || "",
+        content || "",
       );
       if (!validation.isValid) {
         return NextResponse.json(
-          { error: 'Invalid content', details: validation.errors },
-          { status: 400 }
+          { error: "Invalid content", details: validation.errors },
+          { status: 400 },
         );
       }
     }
@@ -259,10 +300,10 @@ export async function POST(request: NextRequest) {
     const notificationPayload: CreateNotificationDTO = {
       memberId,
       type,
-      title: title || '',
-      content: content || '',
+      title: title || "",
+      content: content || "",
       priority,
-      channels: Array.isArray(channels) ? channels : ['IN_APP'],
+      channels: Array.isArray(channels) ? channels : ["IN_APP"],
       metadata,
       actionUrl,
       actionText,
@@ -271,7 +312,8 @@ export async function POST(request: NextRequest) {
     };
 
     // 创建通知
-    const notification = await notificationRepository.createNotification(notificationPayload);
+    const notification =
+      await notificationRepository.createNotification(notificationPayload);
 
     return NextResponse.json({
       success: true,
@@ -294,10 +336,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error("Error creating notification:", error);
     return NextResponse.json(
-      { error: 'Failed to create notification' },
-      { status: 500 }
+      { error: "Failed to create notification" },
+      { status: 500 },
     );
   }
 }

@@ -6,9 +6,9 @@
  * @module food-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseFoodRepository } from './supabase/supabase-food-repository';
-import type { FoodRepository } from './interfaces/food-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseFoodRepository } from "./supabase/supabase-food-repository";
+import type { FoodRepository } from "./interfaces/food-repository";
 
 let instance: FoodRepository | null = null;
 

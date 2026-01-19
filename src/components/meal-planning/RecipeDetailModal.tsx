@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
-  DialogFooter, 
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Clock, 
-  Users, 
-  ChefHat, 
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Clock,
+  Users,
+  ChefHat,
   AlertTriangle,
   Heart,
   Share2,
@@ -24,92 +24,93 @@ import {
   Edit,
   ArrowLeftRight,
   X,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { NutritionChart } from './NutritionChart';
-import { MacroNutrientChart } from './MacroNutrientChart';
-import { IngredientSubstitutes } from './IngredientSubstitutes';
-import { EnhancedIngredientSubstitutes } from './EnhancedIngredientSubstitutes';
-import { AllergyAlert } from './AllergyAlert';
-import { AllergenIdentifier } from './AllergenIdentifier';
-import { UserAllergyWarning } from './UserAllergyWarning';
-import { CookingSteps } from './CookingSteps';
-import { MealAcceptance } from './MealAcceptance';
-import { toast } from '@/lib/toast';
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NutritionChart } from "./NutritionChart";
+import { MacroNutrientChart } from "./MacroNutrientChart";
+import { IngredientSubstitutes } from "./IngredientSubstitutes";
+import { EnhancedIngredientSubstitutes } from "./EnhancedIngredientSubstitutes";
+import { AllergyAlert } from "./AllergyAlert";
+import { AllergenIdentifier } from "./AllergenIdentifier";
+import { UserAllergyWarning } from "./UserAllergyWarning";
+import { CookingSteps } from "./CookingSteps";
+import { MealAcceptance } from "./MealAcceptance";
+import { toast } from "@/lib/toast";
 
 interface MealIngredient {
-  id: string
-  amount: number
+  id: string;
+  amount: number;
   food: {
-    id: string
-    name: string
-    unit?: string
-    category?: string
-  }
+    id: string;
+    name: string;
+    unit?: string;
+    category?: string;
+    allergens?: string[];
+  };
 }
 
 interface CookingStep {
-  id: string
-  order: number
-  title: string
-  description: string
-  duration?: number
-  temperature?: string
-  tips?: string[]
-  image?: string
+  id: string;
+  order: number;
+  title: string;
+  description: string;
+  duration?: number;
+  temperature?: string;
+  tips?: string[];
+  image?: string;
 }
 
 interface Meal {
-  id: string
-  date: Date
-  mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  ingredients: MealIngredient[]
-  isFavorite?: boolean
-  hasAllergens?: boolean
-  allergens?: string[]
-  cookingTime?: number
-  difficulty?: 'EASY' | 'MEDIUM' | 'HARD'
-  servings?: number
-  cookingSteps?: CookingStep[]
-  tags?: string[]
+  id: string;
+  date: Date;
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  ingredients: MealIngredient[];
+  isFavorite?: boolean;
+  hasAllergens?: boolean;
+  allergens?: string[];
+  cookingTime?: number;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
+  servings?: number;
+  cookingSteps?: CookingStep[];
+  tags?: string[];
 }
 
 interface RecipeDetailModalProps {
-  meal: Meal
-  isOpen: boolean
-  onClose: () => void
-  onReplace?: () => void
-  onToggleFavorite?: () => void
+  meal: Meal;
+  isOpen: boolean;
+  onClose: () => void;
+  onReplace?: () => void;
+  onToggleFavorite?: () => void;
 }
 
 const MEAL_TYPE_LABELS = {
-  BREAKFAST: '早餐',
-  LUNCH: '午餐',
-  DINNER: '晚餐',
-  SNACK: '加餐',
+  BREAKFAST: "早餐",
+  LUNCH: "午餐",
+  DINNER: "晚餐",
+  SNACK: "加餐",
 };
 
 const DIFFICULTY_LABELS = {
-  EASY: '简单',
-  MEDIUM: '中等',
-  HARD: '困难',
+  EASY: "简单",
+  MEDIUM: "中等",
+  HARD: "困难",
 };
 
 const DIFFICULTY_COLORS = {
-  EASY: 'bg-green-100 text-green-800',
-  MEDIUM: 'bg-yellow-100 text-yellow-800',
-  HARD: 'bg-red-100 text-red-800',
+  EASY: "bg-green-100 text-green-800",
+  MEDIUM: "bg-yellow-100 text-yellow-800",
+  HARD: "bg-red-100 text-red-800",
 };
 
 function formatAmount(amount: number, unit?: string): string {
   if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(1)}${unit || 'kg'}`;
+    return `${(amount / 1000).toFixed(1)}${unit || "kg"}`;
   }
-  return `${amount.toFixed(0)}${unit || 'g'}`;
+  return `${amount.toFixed(0)}${unit || "g"}`;
 }
 
 function formatCookingTime(minutes: number): string {
@@ -121,15 +122,16 @@ function formatCookingTime(minutes: number): string {
   return mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`;
 }
 
-export function RecipeDetailModal({ 
-  meal, 
-  isOpen, 
-  onClose, 
-  onReplace, 
-  onToggleFavorite, 
+export function RecipeDetailModal({
+  meal,
+  isOpen,
+  onClose,
+  onReplace,
+  onToggleFavorite,
 }: RecipeDetailModalProps) {
   const [isPrinting, setIsPrinting] = useState(false);
-  const [selectedIngredient, setSelectedIngredient] = useState<MealIngredient | null>(null);
+  const [selectedIngredient, setSelectedIngredient] =
+    useState<MealIngredient | null>(null);
   const [showSubstitutes, setShowSubstitutes] = useState(false);
   const [isFavorite, setIsFavorite] = useState(meal.isFavorite || false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
@@ -148,23 +150,26 @@ export function RecipeDetailModal({
         setIsFavorite(data.isFavorite);
       }
     } catch (error) {
-      console.error('获取收藏状态失败:', error);
+      console.error("获取收藏状态失败:", error);
     }
   };
 
   const handleToggleFavorite = async () => {
     if (favoriteLoading) return;
-    
+
     setFavoriteLoading(true);
     try {
-      const response = await fetch(`/api/meal-plans/meals/${meal.id}/favorite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isFavorite: !isFavorite }),
-      });
+      const response = await fetch(
+        `/api/meal-plans/meals/${meal.id}/favorite`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isFavorite: !isFavorite }),
+        },
+      );
 
       if (!response.ok) {
-        throw new Error('操作失败');
+        throw new Error("操作失败");
       }
 
       const data = await response.json();
@@ -172,7 +177,7 @@ export function RecipeDetailModal({
       onToggleFavorite?.();
       toast.success(data.message);
     } catch (error) {
-      toast.error('操作失败，请重试');
+      toast.error("操作失败，请重试");
     } finally {
       setFavoriteLoading(false);
     }
@@ -181,7 +186,7 @@ export function RecipeDetailModal({
   const handleShare = async () => {
     try {
       const shareData = {
-        title: `${MEAL_TYPE_LABELS[meal.mealType]} - ${format(new Date(meal.date), 'M月d日', { locale: zhCN })}`,
+        title: `${MEAL_TYPE_LABELS[meal.mealType]} - ${format(new Date(meal.date), "M月d日", { locale: zhCN })}`,
         text: `热量: ${meal.calories.toFixed(0)}kcal | 蛋白质: ${meal.protein.toFixed(1)}g`,
         url: window.location.href,
       };
@@ -191,11 +196,11 @@ export function RecipeDetailModal({
       } else {
         // 降级到复制链接
         await navigator.clipboard.writeText(window.location.href);
-        toast.success('链接已复制到剪贴板');
+        toast.success("链接已复制到剪贴板");
       }
     } catch (error) {
-      console.error('分享失败:', error);
-      toast.error('分享失败');
+      console.error("分享失败:", error);
+      toast.error("分享失败");
     }
   };
 
@@ -212,7 +217,26 @@ export function RecipeDetailModal({
     setShowSubstitutes(true);
   };
 
-  const totalWeight = meal.ingredients.reduce((sum, ing) => sum + ing.amount, 0);
+  const totalWeight = meal.ingredients.reduce(
+    (sum, ing) => sum + ing.amount,
+    0,
+  );
+
+  const allergyIngredients = meal.ingredients.map((ingredient) => ({
+    id: ingredient.id,
+    name: ingredient.food.name,
+    allergens: ingredient.food.allergens ?? [],
+  }));
+
+  const acceptanceIngredients = meal.ingredients.map((ingredient) => ({
+    id: ingredient.id,
+    amount: ingredient.amount,
+    food: {
+      id: ingredient.food.id,
+      name: ingredient.food.name,
+      unit: ingredient.food.unit ?? "g",
+    },
+  }));
 
   return (
     <>
@@ -222,29 +246,32 @@ export function RecipeDetailModal({
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-3 text-xl">
                 <div className="text-2xl">
-                  {meal.mealType === 'BREAKFAST' && '🍳'}
-                  {meal.mealType === 'LUNCH' && '🍱'}
-                  {meal.mealType === 'DINNER' && '🍽️'}
-                  {meal.mealType === 'SNACK' && '🍎'}
+                  {meal.mealType === "BREAKFAST" && "🍳"}
+                  {meal.mealType === "LUNCH" && "🍱"}
+                  {meal.mealType === "DINNER" && "🍽️"}
+                  {meal.mealType === "SNACK" && "🍎"}
                 </div>
                 <div>
                   <div className="font-bold">
-                    {MEAL_TYPE_LABELS[meal.mealType]} - {format(new Date(meal.date), 'M月d日', { locale: zhCN })}
+                    {MEAL_TYPE_LABELS[meal.mealType]} -{" "}
+                    {format(new Date(meal.date), "M月d日", { locale: zhCN })}
                   </div>
                   <div className="text-sm text-gray-500 font-normal">
-                    {format(new Date(meal.date), 'yyyy年M月d日 EEEE', { locale: zhCN })}
+                    {format(new Date(meal.date), "yyyy年M月d日 EEEE", {
+                      locale: zhCN,
+                    })}
                   </div>
                 </div>
               </DialogTitle>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onToggleFavorite}
                 className="mr-2"
               >
-                <Heart 
-                  className={`h-5 w-5 ${meal.isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'}`} 
+                <Heart
+                  className={`h-5 w-5 ${meal.isFavorite ? "text-red-500 fill-current" : "text-gray-400"}`}
                 />
               </Button>
             </div>
@@ -256,48 +283,46 @@ export function RecipeDetailModal({
               <Badge variant="outline" className="text-sm">
                 {MEAL_TYPE_LABELS[meal.mealType]}
               </Badge>
-              
+
               {meal.difficulty && (
                 <Badge className={DIFFICULTY_COLORS[meal.difficulty]}>
                   <ChefHat className="h-3 w-3 mr-1" />
                   {DIFFICULTY_LABELS[meal.difficulty]}
                 </Badge>
               )}
-              
+
               {meal.cookingTime && (
                 <Badge variant="outline">
                   <Clock className="h-3 w-3 mr-1" />
                   {formatCookingTime(meal.cookingTime)}
                 </Badge>
               )}
-              
+
               {meal.servings && (
                 <Badge variant="outline">
                   <Users className="h-3 w-3 mr-1" />
                   {meal.servings}人份
                 </Badge>
               )}
-              
-              <Badge variant="outline">
-                总重: {formatAmount(totalWeight)}
-              </Badge>
+
+              <Badge variant="outline">总重: {formatAmount(totalWeight)}</Badge>
             </div>
 
             {/* 过敏原分析 */}
             {/* 用户过敏警告 - 优先显示 */}
-            <UserAllergyWarning 
-              ingredients={meal.ingredients}
+            <UserAllergyWarning
+              ingredients={allergyIngredients}
               userAllergies={[]} // 这里可以从用户设置中获取过敏信息
               userId={meal.id}
-              onDismiss={() => toast.info('已忽略过敏警告')}
-              onEmergencyContact={() => toast.warning('正在联系紧急联系人...')}
+              onDismiss={() => toast.info("已忽略过敏警告")}
+              onEmergencyContact={() => toast.warning("正在联系紧急联系人...")}
               showEmergencyInfo={true}
               enableNotifications={true}
             />
 
             {/* 过敏原标识 */}
-            <AllergenIdentifier 
-              ingredients={meal.ingredients}
+            <AllergenIdentifier
+              ingredients={allergyIngredients}
               userAllergens={[]} // 这里可以从用户设置中获取过敏原
               showDetails={false}
               onAllergenClick={(allergen) => {
@@ -329,7 +354,9 @@ export function RecipeDetailModal({
                       <div className="text-2xl font-bold text-green-600">
                         {meal.carbs.toFixed(1)}
                       </div>
-                      <div className="text-sm text-gray-600">碳水化合物 (g)</div>
+                      <div className="text-sm text-gray-600">
+                        碳水化合物 (g)
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
@@ -338,32 +365,36 @@ export function RecipeDetailModal({
                       <div className="text-sm text-gray-600">脂肪 (g)</div>
                     </div>
                   </div>
-                  
+
                   <Separator className="my-4" />
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>热量密度</span>
                       <span className="font-medium">
-                        {(meal.calories / totalWeight * 100).toFixed(1)} kcal/100g
+                        {((meal.calories / totalWeight) * 100).toFixed(1)}{" "}
+                        kcal/100g
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>蛋白质占比</span>
                       <span className="font-medium">
-                        {((meal.protein * 4) / meal.calories * 100).toFixed(1)}%
+                        {(((meal.protein * 4) / meal.calories) * 100).toFixed(
+                          1,
+                        )}
+                        %
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>碳水占比</span>
                       <span className="font-medium">
-                        {((meal.carbs * 4) / meal.calories * 100).toFixed(1)}%
+                        {(((meal.carbs * 4) / meal.calories) * 100).toFixed(1)}%
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>脂肪占比</span>
                       <span className="font-medium">
-                        {((meal.fat * 9) / meal.calories * 100).toFixed(1)}%
+                        {(((meal.fat * 9) / meal.calories) * 100).toFixed(1)}%
                       </span>
                     </div>
                   </div>
@@ -392,7 +423,7 @@ export function RecipeDetailModal({
               mealId={meal.id}
               planId={meal.date.toISOString()} // 临时使用日期作为计划ID
               originalServings={meal.servings || 1}
-              originalIngredients={meal.ingredients}
+              originalIngredients={acceptanceIngredients}
               originalNutrition={{
                 calories: meal.calories,
                 protein: meal.protein,
@@ -400,14 +431,14 @@ export function RecipeDetailModal({
                 fat: meal.fat,
               }}
               onAccept={(customizations) => {
-                toast.success('食谱已接受');
+                toast.success("食谱已接受");
                 onToggleFavorite?.();
               }}
               onReject={(reason) => {
                 toast.success(`已拒绝食谱: ${reason}`);
               }}
               onCustomize={(customizations) => {
-                toast.info('已添加自定义修改');
+                toast.info("已添加自定义修改");
               }}
               onPortionAdjust={(servings, ingredients, nutrition) => {
                 toast.info(`份量已调整为 ${servings} 人份`);
@@ -442,16 +473,20 @@ export function RecipeDetailModal({
                       </div>
                       <div className="text-right">
                         <div className="font-medium text-gray-900">
-                          {formatAmount(ingredient.amount, ingredient.food.unit)}
+                          {formatAmount(
+                            ingredient.amount,
+                            ingredient.food.unit,
+                          )}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {((ingredient.amount / totalWeight) * 100).toFixed(1)}%
+                          {((ingredient.amount / totalWeight) * 100).toFixed(1)}
+                          %
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-                
+
                 <div className="mt-4 text-sm text-gray-600">
                   💡 点击食材可查看替代选项
                 </div>
@@ -466,10 +501,10 @@ export function RecipeDetailModal({
                 difficulty={meal.difficulty}
                 servings={meal.servings}
                 onStepComplete={(stepId) => {
-                  toast.success('步骤完成');
+                  toast.success("步骤完成");
                 }}
                 onReset={() => {
-                  toast.info('已重置烹饪进度');
+                  toast.info("已重置烹饪进度");
                 }}
               />
             )}
@@ -495,33 +530,31 @@ export function RecipeDetailModal({
               <Printer className="h-4 w-4 mr-2" />
               打印
             </Button>
-            
-            <Button
-              variant="outline"
-              onClick={handleShare}
-            >
+
+            <Button variant="outline" onClick={handleShare}>
               <Share2 className="h-4 w-4 mr-2" />
               分享
             </Button>
-            
+
             <Button
-              variant={isFavorite ? 'default' : 'outline'}
+              variant={isFavorite ? "default" : "outline"}
               onClick={handleToggleFavorite}
               disabled={favoriteLoading}
-              className={isFavorite ? 'text-white bg-red-500 hover:bg-red-600' : ''}
+              className={
+                isFavorite ? "text-white bg-red-500 hover:bg-red-600" : ""
+              }
             >
-              <Heart className={`h-4 w-4 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
-              {favoriteLoading ? '处理中...' : (isFavorite ? '已收藏' : '收藏')}
+              <Heart
+                className={`h-4 w-4 mr-2 ${isFavorite ? "fill-current" : ""}`}
+              />
+              {favoriteLoading ? "处理中..." : isFavorite ? "已收藏" : "收藏"}
             </Button>
-            
-            <Button
-              variant="outline"
-              onClick={onReplace}
-            >
+
+            <Button variant="outline" onClick={onReplace}>
               <ArrowLeftRight className="h-4 w-4 mr-2" />
               替换
             </Button>
-            
+
             <Button variant="outline" onClick={onClose}>
               关闭
             </Button>
@@ -541,7 +574,9 @@ export function RecipeDetailModal({
           }}
           onReplace={(newIngredient) => {
             // 处理食材替换逻辑
-            toast.success(`已将 ${selectedIngredient.food.name} 替换为 ${newIngredient.food.name}`);
+            toast.success(
+              `已将 ${selectedIngredient.food.name} 替换为 ${newIngredient.food.name}`,
+            );
             setShowSubstitutes(false);
             setSelectedIngredient(null);
             // 这里可以刷新餐食数据或调用回调

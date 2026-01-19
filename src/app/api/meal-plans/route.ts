@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-singleton';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id, Doc } from "@/../convex/_generated/dataModel";
 
 // GET /api/meal-plans?startDate=...&endDate=...&memberId=...
 // Returns meal plans for the authenticated user, optionally filtered by date range
@@ -9,115 +9,139 @@ import { mealPlanRepository } from '@/lib/repositories/meal-plan-repository-sing
 // 使用双写框架迁移（部分）
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const startDateParam = searchParams.get('startDate');
-    const endDateParam = searchParams.get('endDate');
-    const memberIdParam = searchParams.get('memberId');
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+    const memberIdParam = searchParams.get("memberId");
 
-    // 查找用户的 memberId
-    const member = await prisma.familyMember.findFirst({
-      where: { userId: session.user.id, deletedAt: null },
-      select: { id: true },
+    const members = await convexClient.query<Doc<"familyMembers">[]>(
+      api.members.listByClerkId,
+      { clerkId: session.user.id },
+    );
+
+    if (members.length === 0) {
+      return NextResponse.json({ error: "未找到关联的成员" }, { status: 404 });
+    }
+
+    const memberId = (memberIdParam || members[0]?._id) as string | undefined;
+    if (!memberId) {
+      return NextResponse.json({ error: "未找到关联的成员" }, { status: 404 });
+    }
+
+    const mapPlanResponse = (
+      plan: Doc<"mealPlans">,
+      meals: Array<Record<string, unknown>>,
+    ) => ({
+      id: plan._id,
+      startDate: new Date(plan.startDate),
+      endDate: new Date(plan.endDate),
+      goalType: plan.goalType,
+      targetCalories: plan.targetCalories,
+      targetProtein: plan.targetProtein ?? null,
+      targetCarbs: plan.targetCarbs ?? null,
+      targetFat: plan.targetFat ?? null,
+      meals: meals.map((meal) => ({
+        id: meal._id as string,
+        date: new Date(meal.date as number),
+        mealType: meal.mealType,
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        ingredients: (
+          (meal.ingredients as Array<Record<string, unknown>>) ?? []
+        ).map((ingredient) => ({
+          id: ingredient._id as string,
+          amount: ingredient.amount as number,
+          food: {
+            id: ingredient.foodId as string,
+            name:
+              (ingredient.food as Record<string, unknown> | undefined)?.name ??
+              "",
+          },
+        })),
+      })),
+      nutritionSummary: null,
     });
 
-    if (!member) {
-      return NextResponse.json({ error: '未找到关联的成员' }, { status: 404 });
-    }
-
-    const memberId = memberIdParam || member.id;
-
-    // 使用 Repository 查询
     if (startDateParam && endDateParam) {
-      // 按日期范围查询
-      const result = await mealPlanRepository.getPlansByDateRange(
-        memberId,
-        new Date(startDateParam),
-        new Date(endDateParam),
-        { page: 1, limit: 1 }
-      );
+      const plan = await convexClient.query<{
+        plan: Doc<"mealPlans">;
+        meals: Array<Record<string, unknown>>;
+      } | null>(api.meals.getPlan, {
+        memberId: memberId as Id<"familyMembers">,
+        startDate: new Date(startDateParam).getTime(),
+        endDate: new Date(endDateParam).getTime(),
+      });
 
-      const mealPlan = result.data[0] || null;
-
-      if (!mealPlan) {
-        return NextResponse.json({ message: '暂无食谱计划', plan: null }, { status: 200 });
+      if (!plan?.plan) {
+        return NextResponse.json(
+          { message: "暂无食谱计划", plan: null },
+          { status: 200 },
+        );
       }
 
-      // 保持原有响应格式
-      return NextResponse.json(
-        {
-          id: mealPlan.id,
-          startDate: mealPlan.startDate,
-          endDate: mealPlan.endDate,
-          goalType: mealPlan.goalType,
-          targetCalories: mealPlan.targetCalories,
-          targetProtein: mealPlan.targetProtein,
-          targetCarbs: mealPlan.targetCarbs,
-          targetFat: mealPlan.targetFat,
-          meals: mealPlan.meals.map((m) => ({
-            id: m.id,
-            date: m.date,
-            mealType: m.mealType,
-            calories: m.calories,
-            protein: m.protein,
-            carbs: m.carbs,
-            fat: m.fat,
-            ingredients: m.ingredients.map((ing) => ({
-              id: ing.id,
-              amount: ing.amount,
-              food: { id: ing.foodId, name: '' }, // Note: DTO 不包含 food name，需要额外查询
-            })),
-          })),
-          nutritionSummary: null,
-        },
-        { status: 200 }
-      );
-    } else {
-      // 获取当前活跃计划
-      const mealPlan = await mealPlanRepository.getActivePlanByMember(memberId);
+      const details = await convexClient.query<{
+        plan: Doc<"mealPlans">;
+        meals: Array<Record<string, unknown>>;
+      } | null>(api.meals.getPlanDetails, {
+        planId: plan.plan._id as Id<"mealPlans">,
+      });
 
-      if (!mealPlan) {
-        return NextResponse.json({ message: '暂无食谱计划', plan: null }, { status: 200 });
+      if (!details) {
+        return NextResponse.json(
+          { message: "暂无食谱计划", plan: null },
+          { status: 200 },
+        );
       }
 
+      return NextResponse.json(mapPlanResponse(details.plan, details.meals), {
+        status: 200,
+      });
+    }
+
+    const activePlan = await convexClient.query<Doc<"mealPlans"> | null>(
+      api.meals.getActivePlanByMember,
+      { memberId: memberId as Id<"familyMembers"> },
+    );
+
+    if (!activePlan) {
       return NextResponse.json(
-        {
-          id: mealPlan.id,
-          startDate: mealPlan.startDate,
-          endDate: mealPlan.endDate,
-          goalType: mealPlan.goalType,
-          targetCalories: mealPlan.targetCalories,
-          targetProtein: mealPlan.targetProtein,
-          targetCarbs: mealPlan.targetCarbs,
-          targetFat: mealPlan.targetFat,
-          meals: mealPlan.meals.map((m) => ({
-            id: m.id,
-            date: m.date,
-            mealType: m.mealType,
-            calories: m.calories,
-            protein: m.protein,
-            carbs: m.carbs,
-            fat: m.fat,
-            ingredients: m.ingredients.map((ing) => ({
-              id: ing.id,
-              amount: ing.amount,
-              food: { id: ing.foodId, name: '' },
-            })),
-          })),
-          nutritionSummary: null,
-        },
-        { status: 200 }
+        { message: "暂无食谱计划", plan: null },
+        { status: 200 },
       );
     }
+
+    const activeDetails = await convexClient.query<{
+      plan: Doc<"mealPlans">;
+      meals: Array<Record<string, unknown>>;
+    } | null>(api.meals.getPlanDetails, {
+      planId: activePlan._id as Id<"mealPlans">,
+    });
+
+    if (!activeDetails) {
+      return NextResponse.json(
+        { message: "暂无食谱计划", plan: null },
+        { status: 200 },
+      );
+    }
+
+    return NextResponse.json(
+      mapPlanResponse(activeDetails.plan, activeDetails.meals),
+      {
+        status: 200,
+      },
+    );
   } catch (error) {
-    console.error('获取食谱计划失败:', error);
-    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
+    console.error("获取食谱计划失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

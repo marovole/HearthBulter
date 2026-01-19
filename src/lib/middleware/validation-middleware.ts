@@ -58,7 +58,16 @@ export class ValidationMiddleware {
       if (schema.body) {
         const bodyResult = await this.validateBody(request, schema.body);
         if (!bodyResult.success) {
-          errors.body = bodyResult.errors;
+          if (Array.isArray(bodyResult.errors)) {
+            errors.body = bodyResult.errors;
+          } else {
+            Object.assign(
+              errors,
+              bodyResult.errors ?? {
+                body: ["请求体验证失败"],
+              },
+            );
+          }
         } else {
           result.body = bodyResult.data;
           result.sanitized = {
@@ -72,7 +81,16 @@ export class ValidationMiddleware {
       if (schema.query) {
         const queryResult = await this.validateQuery(request, schema.query);
         if (!queryResult.success) {
-          errors.query = queryResult.errors;
+          if (Array.isArray(queryResult.errors)) {
+            errors.query = queryResult.errors;
+          } else {
+            Object.assign(
+              errors,
+              queryResult.errors ?? {
+                query: ["查询参数验证失败"],
+              },
+            );
+          }
         } else {
           result.query = queryResult.data;
           result.sanitized = {
@@ -89,7 +107,16 @@ export class ValidationMiddleware {
           schema.params,
         );
         if (!paramsResult.success) {
-          errors.params = paramsResult.errors;
+          if (Array.isArray(paramsResult.errors)) {
+            errors.params = paramsResult.errors;
+          } else {
+            Object.assign(
+              errors,
+              paramsResult.errors ?? {
+                params: ["路径参数验证失败"],
+              },
+            );
+          }
         } else {
           result.params = paramsResult.data;
           result.sanitized = {
@@ -103,7 +130,16 @@ export class ValidationMiddleware {
       if (schema.files) {
         const filesResult = await this.validateFiles(request, schema.files);
         if (!filesResult.success) {
-          errors.files = filesResult.errors;
+          if (Array.isArray(filesResult.errors)) {
+            errors.files = filesResult.errors;
+          } else {
+            Object.assign(
+              errors,
+              filesResult.errors ?? {
+                files: ["文件验证失败"],
+              },
+            );
+          }
         } else {
           result.files = filesResult.data;
           result.sanitized = {
@@ -117,6 +153,10 @@ export class ValidationMiddleware {
 
       // 记录验证结果
       if (Object.keys(errors).length > 0) {
+        if (schema.body && !errors.body) {
+          errors.body = ["请求体验证失败"];
+        }
+
         logger.warn("请求验证失败", {
           requestId,
           errors,
@@ -184,7 +224,7 @@ export class ValidationMiddleware {
       if (!result.success) {
         return {
           success: false,
-          errors: this.formatZodErrors(result.error),
+          errors: { body: this.formatZodErrors(result.error) },
         };
       }
 
@@ -220,7 +260,7 @@ export class ValidationMiddleware {
       if (!result.success) {
         return {
           success: false,
-          errors: this.formatZodErrors(result.error),
+          errors: { query: this.formatZodErrors(result.error) },
         };
       }
 
@@ -253,7 +293,7 @@ export class ValidationMiddleware {
       if (!result.success) {
         return {
           success: false,
-          errors: this.formatZodErrors(result.error),
+          errors: { params: this.formatZodErrors(result.error) },
         };
       }
 

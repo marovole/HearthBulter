@@ -15,7 +15,6 @@ import { QuickActionsPanel } from "./QuickActionsPanel";
 import { WeightTrendChart } from "./WeightTrendChart";
 import { NutritionAnalysisChart } from "./NutritionAnalysisChart";
 import HealthScoreCard from "./HealthScoreCard";
-import type { FamilyMember, RawFamilyMember, RawFamily } from "@/types/family";
 
 interface EnhancedDashboardProps {
   userEmail: string;
@@ -23,15 +22,11 @@ interface EnhancedDashboardProps {
 }
 
 export function EnhancedDashboard({
-  userEmail,
+  userEmail: _userEmail,
   initialMemberId,
 }: EnhancedDashboardProps) {
-  // 1. Convex Queries
-  const resolvedEmail = userEmail || null;
-  const families = useQuery(
-    api.families.list,
-    resolvedEmail ? { email: resolvedEmail } : "skip",
-  );
+  void _userEmail;
+  const families = useQuery(api.families.list, {});
 
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
     initialMemberId || null,
@@ -69,10 +64,6 @@ export function EnhancedDashboard({
 
   const handleMemberChange = (memberId: string) => {
     setSelectedMemberId(memberId);
-  };
-
-  const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId);
   };
 
   // 缓存当前选中的成员

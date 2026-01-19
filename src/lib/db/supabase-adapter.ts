@@ -8,6 +8,9 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase-database";
 
+type SupabaseDatabase = Database;
+type SupabaseTableDefinition = SupabaseDatabase["public"]["Tables"][string];
+
 // 环境变量获取函数，支持多种环境
 function getSupabaseConfig() {
   const supabaseUrl =
@@ -39,13 +42,13 @@ function getSupabaseConfig() {
 
 // 单例模式的 Supabase 客户端
 export class SupabaseClientManager {
-  private static instance: SupabaseClient<Database>;
+  private static instance: SupabaseClient<SupabaseDatabase>;
 
-  static getInstance(): SupabaseClient<Database> {
+  static getInstance(): SupabaseClient<SupabaseDatabase> {
     if (!SupabaseClientManager.instance) {
       const { supabaseUrl, supabaseKey } = getSupabaseConfig();
 
-      SupabaseClientManager.instance = createClient<Database>(
+      SupabaseClientManager.instance = createClient<SupabaseDatabase>(
         supabaseUrl,
         supabaseKey,
         {
@@ -369,7 +372,10 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
     ) {
       const relationFilter =
         "some" in value ? "some" : "every" in value ? "every" : "none";
-      const condition = JSON.stringify(value[relationFilter]);
+      const relationValue = (
+        value as Record<"some" | "every" | "none", unknown>
+      )[relationFilter];
+      const condition = JSON.stringify(relationValue);
       throw new Error(
         "Relation filter not yet supported in Supabase adapter:\n" +
           `  Table: ${tableName}\n` +
@@ -576,10 +582,10 @@ function buildFilterExpressions(where: any): string[] {
 }
 
 // 通用模型适配器类
-class ModelAdapter<T = any> {
+class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
   constructor(
     private tableName: string,
-    private supabase: SupabaseClient<Database>,
+    private supabase: SupabaseClient<SupabaseDatabase>,
   ) {}
 
   async findUnique(args: {
@@ -686,7 +692,7 @@ class ModelAdapter<T = any> {
 
     const { error, count } = await this.supabase
       .from(this.tableName)
-      .insert(snakeData, {
+      .upsert(snakeData, {
         ignoreDuplicates: args.skipDuplicates,
       });
 
@@ -900,11 +906,26 @@ class ModelAdapter<T = any> {
       "Aggregate functions need to be implemented using Supabase RPC",
     );
   }
+
+  async groupBy(args: {
+    by: string[];
+    where?: any;
+    _count?: any;
+    _avg?: any;
+    _sum?: any;
+    _min?: any;
+    _max?: any;
+    orderBy?: any;
+    take?: number;
+    skip?: number;
+  }): Promise<any[]> {
+    throw new Error("GroupBy needs Supabase RPC or view support");
+  }
 }
 
 // 创建 Prisma 兼容的适配器实例
 export class SupabaseAdapter {
-  private supabase: SupabaseClient<Database>;
+  private supabase: SupabaseClient<SupabaseDatabase>;
 
   // 所有模型的适配器
   user: ModelAdapter;
@@ -918,8 +939,11 @@ export class SupabaseAdapter {
   mealPlan: ModelAdapter;
   medicalReport: ModelAdapter;
   mealLog: ModelAdapter;
+  mealLogFood: ModelAdapter;
+  foodPhoto: ModelAdapter;
   trackingStreak: ModelAdapter;
   quickTemplate: ModelAdapter;
+  templateFood: ModelAdapter;
   dailyNutritionTarget: ModelAdapter;
   auxiliaryTracking: ModelAdapter;
   healthReport: ModelAdapter;
@@ -931,6 +955,14 @@ export class SupabaseAdapter {
   budget: ModelAdapter;
   savingsRecommendation: ModelAdapter;
   userPreference: ModelAdapter;
+  food: ModelAdapter;
+  meal: ModelAdapter;
+  mealIngredient: ModelAdapter;
+  priceHistory: ModelAdapter;
+  order: ModelAdapter;
+  platformAccount: ModelAdapter;
+  platformProduct: ModelAdapter;
+  shoppingList: ModelAdapter;
   recipe: ModelAdapter;
   recipeRating: ModelAdapter;
   recipeFavorite: ModelAdapter;
@@ -942,6 +974,7 @@ export class SupabaseAdapter {
   familyGoal: ModelAdapter;
   shoppingItem: ModelAdapter;
   sharedContent: ModelAdapter;
+  shareTracking: ModelAdapter;
   achievement: ModelAdapter;
   leaderboardEntry: ModelAdapter;
   communityPost: ModelAdapter;
@@ -972,8 +1005,11 @@ export class SupabaseAdapter {
     this.mealPlan = new ModelAdapter("meal_plans", this.supabase);
     this.medicalReport = new ModelAdapter("medical_reports", this.supabase);
     this.mealLog = new ModelAdapter("meal_logs", this.supabase);
+    this.mealLogFood = new ModelAdapter("meal_log_foods", this.supabase);
+    this.foodPhoto = new ModelAdapter("food_photos", this.supabase);
     this.trackingStreak = new ModelAdapter("tracking_streaks", this.supabase);
     this.quickTemplate = new ModelAdapter("quick_templates", this.supabase);
+    this.templateFood = new ModelAdapter("template_foods", this.supabase);
     this.dailyNutritionTarget = new ModelAdapter(
       "daily_nutrition_targets",
       this.supabase,
@@ -994,6 +1030,14 @@ export class SupabaseAdapter {
       this.supabase,
     );
     this.userPreference = new ModelAdapter("user_preferences", this.supabase);
+    this.food = new ModelAdapter("foods", this.supabase);
+    this.meal = new ModelAdapter("meals", this.supabase);
+    this.mealIngredient = new ModelAdapter("meal_ingredients", this.supabase);
+    this.priceHistory = new ModelAdapter("price_histories", this.supabase);
+    this.order = new ModelAdapter("orders", this.supabase);
+    this.platformAccount = new ModelAdapter("platform_accounts", this.supabase);
+    this.platformProduct = new ModelAdapter("platform_products", this.supabase);
+    this.shoppingList = new ModelAdapter("shopping_lists", this.supabase);
     this.recipe = new ModelAdapter("recipes", this.supabase);
     this.recipeRating = new ModelAdapter("recipe_ratings", this.supabase);
     this.recipeFavorite = new ModelAdapter("recipe_favorites", this.supabase);
@@ -1008,6 +1052,7 @@ export class SupabaseAdapter {
     this.familyGoal = new ModelAdapter("family_goals", this.supabase);
     this.shoppingItem = new ModelAdapter("shopping_items", this.supabase);
     this.sharedContent = new ModelAdapter("shared_contents", this.supabase);
+    this.shareTracking = new ModelAdapter("share_tracking", this.supabase);
     this.achievement = new ModelAdapter("achievements", this.supabase);
     this.leaderboardEntry = new ModelAdapter(
       "leaderboard_entries",

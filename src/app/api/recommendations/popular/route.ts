@@ -1,38 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdapter } from '@/lib/db/supabase-adapter';
-import { RecommendationEngine } from '@/lib/services/recommendation/recommendation-engine';
+import { NextRequest, NextResponse } from "next/server";
+import { RecommendationEngine } from "@/lib/services/recommendation/recommendation-engine";
+import { getDefaultContainer } from "@/lib/container/service-container";
 
-// TODO: RecommendationEngine 使用 PrismaClient 类型，需要后续重构
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-const recommendationEngine = new RecommendationEngine(supabaseAdapter as any);
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
+    // Initialize recommendation engine lazily to avoid circular dependency issues
+    const { RecommendationEngine } = await import(
+      "@/lib/services/recommendation/recommendation-engine"
+    );
+    const { getDefaultContainer } = await import(
+      "@/lib/container/service-container"
+    );
+    const recommendationEngine = new RecommendationEngine(
+      getDefaultContainer().getRecommendationRepository(),
+    );
+
     const { searchParams } = request.nextUrl;
-    const limitParam = searchParams.get('limit');
-    const category = searchParams.get('category');
+    const limitParam = searchParams.get("limit");
+    const category = searchParams.get("category");
 
-    const limit = Math.max(1, Math.min(parseInt(limitParam || '10'), 50));
+    const limit = Math.max(1, Math.min(parseInt(limitParam || "10"), 50));
 
-    // 验证分类参数（如果提供）
     if (category) {
-      const validCategories = ['MAIN_DISH', 'SIDE_DISH', 'SOUP', 'SALAD', 'DESSERT', 'SNACK', 'BREAKFAST', 'BEVERAGE', 'SAUCE', 'OTHER'];
+      const validCategories = [
+        "MAIN_DISH",
+        "SIDE_DISH",
+        "SOUP",
+        "SALAD",
+        "DESSERT",
+        "SNACK",
+        "BREAKFAST",
+        "BEVERAGE",
+        "SAUCE",
+        "OTHER",
+      ];
       if (!validCategories.includes(category)) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Invalid category',
-            details: `Category must be one of: ${validCategories.join(', ')}`,
+            error: "Invalid category",
+            details: `Category must be one of: ${validCategories.join(", ")}`,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
-    // 获取热门食谱推荐
-    const recommendations = await recommendationEngine.getPopularRecipes(limit, category || undefined);
+    const recommendations = await recommendationEngine.getPopularRecipes(
+      limit,
+      category || undefined,
+    );
 
     if (recommendations.length === 0) {
       return NextResponse.json({
@@ -45,27 +64,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 获取推荐的食谱详细信息（使用Supabase）
-    const recipeIds = recommendations.map(rec => rec.recipeId);
-    const recipes = await supabaseAdapter.recipe.findMany({
-      where: {
-        id: { in: recipeIds },
-        status: 'PUBLISHED',
-        isPublic: true,
-        deletedAt: null,
-      },
-      include: {
-        ingredients: {
-          include: { food: true },
-        },
-      },
-    });
+    const recipeIds = recommendations.map((rec) => rec.recipeId);
+    const recipes = await getDefaultContainer()
+      .getRecommendationRepository()
+      .getRecipesByIds(recipeIds);
 
-    type RecipeWithRelations = Awaited<ReturnType<typeof supabaseAdapter.recipe.findMany>>[number];
-    const recipeMap = new Map<string, RecipeWithRelations>();
-    for (const recipe of recipes) {
-      recipeMap.set(recipe.id, recipe);
-    }
+    const recipeMap = new Map(recipes.map((recipe) => [recipe.id, recipe]));
 
     const enriched = recommendations.reduce<any[]>((acc, rec) => {
       const recipe = recipeMap.get(rec.recipeId);
@@ -75,7 +79,6 @@ export async function GET(request: NextRequest) {
       return acc;
     }, []);
 
-    // 按照推荐分数排序
     enriched.sort((a, b) => b.score - a.score);
 
     return NextResponse.json({
@@ -87,14 +90,14 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('GET /api/recommendations/popular error:', error);
+    console.error("GET /api/recommendations/popular error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to get popular recipes',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to get popular recipes",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

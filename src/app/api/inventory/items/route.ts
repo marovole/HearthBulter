@@ -46,7 +46,6 @@ export async function GET(request: NextRequest) {
       memberId: isValidId(memberIdValue)
         ? (memberIdValue as Id<"familyMembers">)
         : memberIdValue,
-      userEmail: user.email || "",
       status,
       storageLocation,
       category,

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -17,7 +17,7 @@ export function DashboardLayout({
   header,
 }: DashboardLayoutProps) {
   return (
-    <div className={cn('min-h-screen bg-background', className)}>
+    <div className={cn("min-h-screen bg-background", className)}>
       {header && (
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           {header}
@@ -32,9 +32,7 @@ export function DashboardLayout({
         )}
 
         <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
     </div>

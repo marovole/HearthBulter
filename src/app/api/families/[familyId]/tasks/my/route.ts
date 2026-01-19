@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { taskRepository } from '@/lib/repositories/task-repository-singleton';
-import { withApiPermissions, PERMISSION_CONFIGS } from '@/middleware/permissions';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import type { TaskStatus } from '@/lib/repositories/types/task';
+import { NextRequest, NextResponse } from "next/server";
+import { taskRepository } from "@/lib/repositories/task-repository-singleton";
+import {
+  withApiPermissions,
+  PERMISSION_CONFIGS,
+} from "@/middleware/permissions";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Doc, Id } from "@/../convex/_generated/dataModel";
+import type { TaskStatus } from "@/lib/repositories/types/task";
 
 /**
  * GET /api/families/:familyId/tasks/my
@@ -12,53 +16,55 @@ import type { TaskStatus } from '@/lib/repositories/types/task';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> }
+  { params }: { params: Promise<{ familyId: string }> },
 ) {
   return withApiPermissions(async (req, context) => {
     try {
       const { familyId } = await params;
       const userId = req.user!.id;
 
-      const supabase = SupabaseClientManager.getInstance();
-
-      // 验证用户权限并获取成员信息
-      const { data: member } = await supabase
-        .from('family_members')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('family_id', familyId)
-        .is('deleted_at', null)
-        .maybeSingle();
+      const member = await convexClient.query<Doc<"familyMembers"> | null>(
+        api.members.getByClerkInFamily,
+        {
+          familyId: familyId as Id<"families">,
+          clerkId: userId,
+        },
+      );
 
       if (!member) {
         return NextResponse.json(
-          { success: false, error: 'Not a family member' },
-          { status: 403 }
+          { success: false, error: "Not a family member" },
+          { status: 403 },
         );
       }
 
       // 获取查询参数
       const { searchParams } = new URL(request.url);
-      const status = searchParams.get('status') as TaskStatus | undefined;
+      const status = searchParams.get("status") as TaskStatus | undefined;
 
       // 使用 Repository 查询我的任务
-      const tasks = await taskRepository.getMyTasks(familyId, member.id, status);
+      const tasks = await taskRepository.getMyTasks(
+        familyId,
+        member._id,
+        status,
+      );
 
       return NextResponse.json({
         success: true,
         data: tasks,
       });
     } catch (error) {
-      console.error('Error getting my tasks:', error);
+      console.error("Error getting my tasks:", error);
       return NextResponse.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to get my tasks',
+          error:
+            error instanceof Error ? error.message : "Failed to get my tasks",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request as any, { params });

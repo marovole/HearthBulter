@@ -1,33 +1,33 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 interface MemberInfo {
-  id: string
-  name: string
+  id: string;
+  name: string;
   goals?: Array<{
-    id: string
-    goalType: string
-    targetWeight?: number
-    targetDate?: string
-  }>
+    id: string;
+    goalType: string;
+    targetWeight?: number;
+    targetDate?: string;
+  }>;
 }
 
 interface MealPlanGeneratorProps {
-  memberId: string
-  memberInfo?: MemberInfo
-  onSuccess?: (planId: string) => void
-  onCancel?: () => void
+  memberId: string;
+  memberInfo?: MemberInfo;
+  onSuccess?: (planId: string) => void;
+  onCancel?: () => void;
 }
 
 const GOAL_TYPE_LABELS: Record<string, string> = {
-  WEIGHT_LOSS: '减重',
-  WEIGHT_GAIN: '增肌',
-  MAINTENANCE: '维持',
-  HEALTH_MANAGEMENT: '健康管理',
+  WEIGHT_LOSS: "减重",
+  WEIGHT_GAIN: "增肌",
+  MAINTENANCE: "维持",
+  HEALTH_MANAGEMENT: "健康管理",
 };
 
 export function MealPlanGenerator({
@@ -40,12 +40,12 @@ export function MealPlanGenerator({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [memberInfo, setMemberInfo] = useState<MemberInfo | undefined>(
-    initialMemberInfo
+    initialMemberInfo,
   );
 
   const [formData, setFormData] = useState({
     days: 7,
-    startDate: format(new Date(), 'yyyy-MM-dd'),
+    startDate: format(new Date(), "yyyy-MM-dd"),
   });
 
   // 如果没有传入成员信息，则获取
@@ -60,32 +60,32 @@ export function MealPlanGenerator({
       // 这里可以调用API获取成员信息，如果需要的話
       // 目前先使用传入的memberInfo
     } catch (err) {
-      console.error('获取成员信息失败:', err);
+      console.error("获取成员信息失败:", err);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // 前端表单验证
     if (formData.startDate) {
       const selectedDate = new Date(formData.startDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (selectedDate < today) {
-        setError('开始日期不能早于今天');
+        setError("开始日期不能早于今天");
         return;
       }
     }
-    
+
     setLoading(true);
     setError(null);
 
     try {
       const payload: {
-        days: number
-        startDate?: string
+        days: number;
+        startDate?: string;
       } = {
         days: formData.days,
       };
@@ -95,29 +95,26 @@ export function MealPlanGenerator({
         payload.startDate = new Date(formData.startDate).toISOString();
       }
 
-      const response = await fetch(
-        `/api/members/${memberId}/meal-plans`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`/api/members/${memberId}/meal-plans`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         // 提供更友好的错误信息
-        let errorMessage = '生成食谱失败';
+        let errorMessage = "生成食谱失败";
         if (data.error) {
-          if (data.error.includes('未授权')) {
-            errorMessage = '您没有权限执行此操作，请重新登录';
-          } else if (data.error.includes('不存在')) {
-            errorMessage = '成员信息不存在，请刷新页面重试';
-          } else if (data.error.includes('无权限')) {
-            errorMessage = '您没有权限为该成员生成食谱';
+          if (data.error.includes("未授权")) {
+            errorMessage = "您没有权限执行此操作，请重新登录";
+          } else if (data.error.includes("不存在")) {
+            errorMessage = "成员信息不存在，请刷新页面重试";
+          } else if (data.error.includes("无权限")) {
+            errorMessage = "您没有权限为该成员生成食谱";
           } else {
             errorMessage = data.error;
           }
@@ -135,14 +132,14 @@ export function MealPlanGenerator({
         router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '生成食谱失败，请稍后重试');
+      setError(err instanceof Error ? err.message : "生成食谱失败，请稍后重试");
     } finally {
       setLoading(false);
     }
   };
 
   const activeGoal = memberInfo?.goals?.find(
-    (goal) => goal.goalType !== 'HEALTH_MANAGEMENT'
+    (goal) => goal.goalType !== "HEALTH_MANAGEMENT",
   );
 
   return (
@@ -158,8 +155,10 @@ export function MealPlanGenerator({
           </p>
           {activeGoal && (
             <p className="text-sm text-gray-600 mt-1">
-              当前目标: {GOAL_TYPE_LABELS[activeGoal.goalType] || activeGoal.goalType}
-              {activeGoal.targetWeight && ` (目标体重: ${activeGoal.targetWeight}kg)`}
+              当前目标:{" "}
+              {GOAL_TYPE_LABELS[activeGoal.goalType] || activeGoal.goalType}
+              {activeGoal.targetWeight &&
+                ` (目标体重: ${activeGoal.targetWeight}kg)`}
             </p>
           )}
         </div>
@@ -188,9 +187,7 @@ export function MealPlanGenerator({
             <option value={7}>7天</option>
             <option value={14}>14天</option>
           </select>
-          <p className="mt-1 text-sm text-gray-500">
-            选择食谱计划的持续时间
-          </p>
+          <p className="mt-1 text-sm text-gray-500">选择食谱计划的持续时间</p>
         </div>
 
         {/* 开始日期 */}
@@ -208,7 +205,7 @@ export function MealPlanGenerator({
             onChange={(e) =>
               setFormData({ ...formData, startDate: e.target.value })
             }
-            min={format(new Date(), 'yyyy-MM-dd')}
+            min={format(new Date(), "yyyy-MM-dd")}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <p className="mt-1 text-sm text-gray-500">
@@ -219,7 +216,8 @@ export function MealPlanGenerator({
         {/* 提示信息 */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-800">
-            💡 系统将根据成员的健康目标、营养需求和过敏信息自动生成个性化食谱计划。
+            💡
+            系统将根据成员的健康目标、营养需求和过敏信息自动生成个性化食谱计划。
           </p>
         </div>
 
@@ -239,9 +237,7 @@ export function MealPlanGenerator({
               <p className="text-xs text-blue-700 mb-1">
                 🍱 从模板库中选择最适合的食谱
               </p>
-              <p className="text-xs text-blue-700">
-                ✨ 平衡营养并避免过敏食材
-              </p>
+              <p className="text-xs text-blue-700">✨ 平衡营养并避免过敏食材</p>
             </div>
           </div>
         )}
@@ -252,7 +248,9 @@ export function MealPlanGenerator({
             <div className="flex items-start gap-2">
               <span className="text-red-600 text-lg">⚠️</span>
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-900 mb-1">生成失败</p>
+                <p className="text-sm font-medium text-red-900 mb-1">
+                  生成失败
+                </p>
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             </div>
@@ -277,11 +275,11 @@ export function MealPlanGenerator({
             disabled={loading}
             className={`px-6 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               loading
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
             }`}
             aria-busy={loading}
-            aria-label={loading ? '正在生成食谱计划' : '生成食谱计划'}
+            aria-label={loading ? "正在生成食谱计划" : "生成食谱计划"}
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -289,7 +287,7 @@ export function MealPlanGenerator({
                 生成中...
               </span>
             ) : (
-              '生成食谱计划'
+              "生成食谱计划"
             )}
           </button>
         </div>
@@ -297,4 +295,3 @@ export function MealPlanGenerator({
     </div>
   );
 }
-

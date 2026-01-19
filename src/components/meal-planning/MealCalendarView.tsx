@@ -1,86 +1,96 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { format, startOfWeek, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, getDay } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
-import { MealCard } from './MealCard';
-import { RecipeDetailModal } from './RecipeDetailModal';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
+import { useState } from "react";
+import {
+  format,
+  startOfWeek,
+  addDays,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  getDay,
+} from "date-fns";
+import { zhCN } from "date-fns/locale";
+import { MealCard } from "./MealCard";
+import { RecipeDetailModal } from "./RecipeDetailModal";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChevronLeft,
+  ChevronRight,
   Plus,
   AlertTriangle,
   Heart,
   Eye,
-} from 'lucide-react';
-import { toast } from '@/lib/toast';
+} from "lucide-react";
+import { toast } from "@/lib/toast";
 
-type ViewMode = 'day' | 'week' | 'month'
+type ViewMode = "day" | "week" | "month";
 
 interface Meal {
-  id: string
-  date: Date
-  mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
+  id: string;
+  date: Date;
+  mealType: "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
   ingredients: Array<{
-    id: string
-    amount: number
+    id: string;
+    amount: number;
     food: {
-      id: string
-      name: string
-    }
-  }>
-  isFavorite?: boolean
-  hasAllergens?: boolean
-  allergens?: string[]
+      id: string;
+      name: string;
+    };
+  }>;
+  isFavorite?: boolean;
+  hasAllergens?: boolean;
+  allergens?: string[];
 }
 
 interface MealCalendarViewProps {
-  meals: Meal[]
-  viewMode: ViewMode
-  currentDate: Date
-  onMealUpdate?: () => void
+  meals: Meal[];
+  viewMode: ViewMode;
+  currentDate: Date;
+  onMealUpdate?: () => void;
 }
 
 const MEAL_TYPE_LABELS = {
-  BREAKFAST: '早餐',
-  LUNCH: '午餐',
-  DINNER: '晚餐',
-  SNACK: '加餐',
+  BREAKFAST: "早餐",
+  LUNCH: "午餐",
+  DINNER: "晚餐",
+  SNACK: "加餐",
 };
 
 const MEAL_TYPE_COLORS = {
-  BREAKFAST: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  LUNCH: 'bg-blue-100 text-blue-800 border-blue-200',
-  DINNER: 'bg-purple-100 text-purple-800 border-purple-200',
-  SNACK: 'bg-green-100 text-green-800 border-green-200',
+  BREAKFAST: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  LUNCH: "bg-blue-100 text-blue-800 border-blue-200",
+  DINNER: "bg-purple-100 text-purple-800 border-purple-200",
+  SNACK: "bg-green-100 text-green-800 border-green-200",
 };
 
 const MEAL_TYPE_ICONS = {
-  BREAKFAST: '🍳',
-  LUNCH: '🍱',
-  DINNER: '🍽️',
-  SNACK: '🍎',
+  BREAKFAST: "🍳",
+  LUNCH: "🍱",
+  DINNER: "🍽️",
+  SNACK: "🍎",
 };
 
-export function MealCalendarView({ 
-  meals, 
-  viewMode, 
-  currentDate, 
-  onMealUpdate, 
+export function MealCalendarView({
+  meals,
+  viewMode,
+  currentDate,
+  onMealUpdate,
 }: MealCalendarViewProps) {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   // 按日期组织餐食
   const getMealsForDate = (date: Date) => {
-    return meals.filter(meal => isSameDay(new Date(meal.date), date));
+    return meals.filter((meal) => isSameDay(new Date(meal.date), date));
   };
 
   // 处理餐食点击
@@ -93,18 +103,18 @@ export function MealCalendarView({
   const handleReplaceMeal = async (mealId: string) => {
     try {
       const response = await fetch(`/api/meal-plans/meals/${mealId}/replace`, {
-        method: 'POST',
+        method: "POST",
       });
 
       if (!response.ok) {
-        throw new Error('替换餐食失败');
+        throw new Error("替换餐食失败");
       }
 
-      toast.success('餐食替换成功');
+      toast.success("餐食替换成功");
       onMealUpdate?.();
     } catch (error) {
-      console.error('替换餐食失败:', error);
-      toast.error('替换餐食失败，请重试');
+      console.error("替换餐食失败:", error);
+      toast.error("替换餐食失败，请重试");
     }
   };
 
@@ -112,55 +122,74 @@ export function MealCalendarView({
   const handleToggleFavorite = async (mealId: string) => {
     try {
       const response = await fetch(`/api/meal-plans/meals/${mealId}/favorite`, {
-        method: 'POST',
+        method: "POST",
       });
 
       if (!response.ok) {
-        throw new Error('操作失败');
+        throw new Error("操作失败");
       }
 
-      toast.success('收藏状态已更新');
+      toast.success("收藏状态已更新");
       onMealUpdate?.();
     } catch (error) {
-      console.error('更新收藏状态失败:', error);
-      toast.error('操作失败，请重试');
+      console.error("更新收藏状态失败:", error);
+      toast.error("操作失败，请重试");
     }
   };
 
   // 日视图渲染
   const renderDayView = () => {
     const dayMeals = getMealsForDate(currentDate);
-    const groupedMeals = dayMeals.reduce((acc, meal) => {
-      const key = meal.mealType as keyof typeof MEAL_TYPE_LABELS;
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key]!.push(meal);
-      return acc;
-    }, {} as Partial<Record<keyof typeof MEAL_TYPE_LABELS, Meal[]>>);
+    const groupedMeals = dayMeals.reduce(
+      (acc, meal) => {
+        const key = meal.mealType as keyof typeof MEAL_TYPE_LABELS;
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        acc[key]!.push(meal);
+        return acc;
+      },
+      {} as Partial<Record<keyof typeof MEAL_TYPE_LABELS, Meal[]>>,
+    );
 
     return (
       <div className="space-y-6">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            {format(currentDate, 'yyyy年M月d日 EEEE', { locale: zhCN })}
+            {format(currentDate, "yyyy年M月d日 EEEE", { locale: zhCN })}
           </h2>
           <p className="text-gray-600">
-            共 {dayMeals.length} 餐，总计 {dayMeals.reduce((sum, meal) => sum + meal.calories, 0).toFixed(0)} kcal
+            共 {dayMeals.length} 餐，总计{" "}
+            {dayMeals.reduce((sum, meal) => sum + meal.calories, 0).toFixed(0)}{" "}
+            kcal
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {Object.entries(MEAL_TYPE_LABELS).map(([mealType, label]) => {
-            const mealsForType = groupedMeals[mealType as keyof typeof MEAL_TYPE_LABELS] || [];
-            
+            const mealsForType =
+              groupedMeals[mealType as keyof typeof MEAL_TYPE_LABELS] || [];
+
             return (
               <Card key={mealType} className="h-fit">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <span className="text-2xl">{MEAL_TYPE_ICONS[mealType as keyof typeof MEAL_TYPE_ICONS]}</span>
+                    <span className="text-2xl">
+                      {
+                        MEAL_TYPE_ICONS[
+                          mealType as keyof typeof MEAL_TYPE_ICONS
+                        ]
+                      }
+                    </span>
                     {label}
-                    <Badge variant="outline" className={MEAL_TYPE_COLORS[mealType as keyof typeof MEAL_TYPE_COLORS]}>
+                    <Badge
+                      variant="outline"
+                      className={
+                        MEAL_TYPE_COLORS[
+                          mealType as keyof typeof MEAL_TYPE_COLORS
+                        ]
+                      }
+                    >
                       {mealsForType.length}
                     </Badge>
                   </CardTitle>
@@ -168,8 +197,8 @@ export function MealCalendarView({
                 <CardContent className="space-y-4">
                   {mealsForType.length > 0 ? (
                     mealsForType.map((meal) => (
-                      <div 
-                        key={meal.id} 
+                      <div
+                        key={meal.id}
                         className="cursor-pointer hover:shadow-md transition-shadow"
                         onClick={() => handleMealClick(meal)}
                       >
@@ -189,7 +218,7 @@ export function MealCalendarView({
                         {meal.hasAllergens && (
                           <div className="mt-2 flex items-center gap-2 text-amber-600 text-sm">
                             <AlertTriangle className="h-4 w-4" />
-                            <span>含过敏原: {meal.allergens?.join(', ')}</span>
+                            <span>含过敏原: {meal.allergens?.join(", ")}</span>
                           </div>
                         )}
                       </div>
@@ -198,11 +227,11 @@ export function MealCalendarView({
                     <div className="text-center py-8 text-gray-500">
                       <div className="text-4xl mb-2">🍽️</div>
                       <p>暂无{label}安排</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="mt-2"
-                        onClick={() => toast.info('添加餐食功能开发中')}
+                        onClick={() => toast.info("添加餐食功能开发中")}
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         添加{label}
@@ -227,10 +256,11 @@ export function MealCalendarView({
       <div className="space-y-6">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            第{Math.ceil((currentDate.getDate()) / 7)}周
+            第{Math.ceil(currentDate.getDate() / 7)}周
           </h2>
           <p className="text-gray-600">
-            {format(weekStart, 'M月d日', { locale: zhCN })} - {format(addDays(weekStart, 6), 'M月d日', { locale: zhCN })}
+            {format(weekStart, "M月d日", { locale: zhCN })} -{" "}
+            {format(addDays(weekStart, 6), "M月d日", { locale: zhCN })}
           </p>
         </div>
 
@@ -238,13 +268,13 @@ export function MealCalendarView({
           {weekDays.map((day, index) => {
             const dayMeals = getMealsForDate(day);
             const isToday = isSameDay(day, new Date());
-            const dayName = format(day, 'EEEE', { locale: zhCN });
-            const dayNumber = format(day, 'd');
+            const dayName = format(day, "EEEE", { locale: zhCN });
+            const dayNumber = format(day, "d");
 
             return (
-              <Card 
-                key={day.toISOString()} 
-                className={`h-fit ${isToday ? 'ring-2 ring-blue-500' : ''}`}
+              <Card
+                key={day.toISOString()}
+                className={`h-fit ${isToday ? "ring-2 ring-blue-500" : ""}`}
               >
                 <CardHeader className="pb-3 text-center">
                   <CardTitle className="text-sm">
@@ -266,11 +296,12 @@ export function MealCalendarView({
                         onClick={() => handleMealClick(meal)}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={`text-xs ${MEAL_TYPE_COLORS[meal.mealType]}`}
                           >
-                            {MEAL_TYPE_ICONS[meal.mealType]} {MEAL_TYPE_LABELS[meal.mealType]}
+                            {MEAL_TYPE_ICONS[meal.mealType]}{" "}
+                            {MEAL_TYPE_LABELS[meal.mealType]}
                           </Badge>
                           <div className="flex items-center gap-1">
                             {meal.isFavorite && (
@@ -283,11 +314,17 @@ export function MealCalendarView({
                         </div>
                         <div className="text-xs text-gray-600">
                           <div>🔥 {meal.calories.toFixed(0)} kcal</div>
-                          <div>🥩 {meal.protein.toFixed(1)}g | 🍚 {meal.carbs.toFixed(1)}g</div>
+                          <div>
+                            🥩 {meal.protein.toFixed(1)}g | 🍚{" "}
+                            {meal.carbs.toFixed(1)}g
+                          </div>
                         </div>
                         <div className="text-xs text-gray-500 mt-1 truncate">
-                          {meal.ingredients.slice(0, 2).map(ing => ing.food.name).join(', ')}
-                          {meal.ingredients.length > 2 && '...'}
+                          {meal.ingredients
+                            .slice(0, 2)
+                            .map((ing) => ing.food.name)
+                            .join(", ")}
+                          {meal.ingredients.length > 2 && "..."}
                         </div>
                       </div>
                     ))
@@ -321,19 +358,20 @@ export function MealCalendarView({
       <div className="space-y-6">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
-            {format(currentDate, 'yyyy年M月', { locale: zhCN })}
+            {format(currentDate, "yyyy年M月", { locale: zhCN })}
           </h2>
-          <p className="text-gray-600">
-            共 {monthDays.length} 天
-          </p>
+          <p className="text-gray-600">共 {monthDays.length} 天</p>
         </div>
 
         <Card>
           <CardContent className="p-4">
             {/* 星期标题 */}
             <div className="grid grid-cols-7 gap-2 mb-4">
-              {['一', '二', '三', '四', '五', '六', '日'].map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-gray-600">
+              {["一", "二", "三", "四", "五", "六", "日"].map((day) => (
+                <div
+                  key={day}
+                  className="text-center text-sm font-medium text-gray-600"
+                >
                   {day}
                 </div>
               ))}
@@ -343,7 +381,9 @@ export function MealCalendarView({
             <div className="grid grid-cols-7 gap-2">
               {calendarDays.map((day, index) => {
                 if (!day) {
-                  return <div key={`empty-${index}`} className="aspect-square" />;
+                  return (
+                    <div key={`empty-${index}`} className="aspect-square" />
+                  );
                 }
 
                 const dayMeals = getMealsForDate(day);
@@ -354,11 +394,11 @@ export function MealCalendarView({
                   <div
                     key={day.toISOString()}
                     className={`aspect-square border rounded-lg p-2 cursor-pointer transition-colors ${
-                      isToday 
-                        ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' 
-                        : isCurrentMonth 
-                          ? 'bg-white border-gray-200 hover:bg-gray-50'
-                          : 'bg-gray-50 border-gray-100 text-gray-400'
+                      isToday
+                        ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
+                        : isCurrentMonth
+                          ? "bg-white border-gray-200 hover:bg-gray-50"
+                          : "bg-gray-50 border-gray-100 text-gray-400"
                     }`}
                     onClick={() => {
                       if (dayMeals.length > 0) {
@@ -368,18 +408,24 @@ export function MealCalendarView({
                     }}
                   >
                     <div className="text-xs font-medium mb-1">
-                      {format(day, 'd')}
+                      {format(day, "d")}
                     </div>
-                    
+
                     {dayMeals.length > 0 && (
                       <div className="space-y-1">
                         <div className="text-xs text-center">
-                          <Badge variant="outline" className="text-xs px-1 py-0">
+                          <Badge
+                            variant="outline"
+                            className="text-xs px-1 py-0"
+                          >
                             {dayMeals.length}餐
                           </Badge>
                         </div>
                         <div className="text-xs text-center text-gray-600">
-                          🔥 {dayMeals.reduce((sum, meal) => sum + meal.calories, 0).toFixed(0)}
+                          🔥{" "}
+                          {dayMeals
+                            .reduce((sum, meal) => sum + meal.calories, 0)
+                            .toFixed(0)}
                         </div>
                         <div className="flex justify-center gap-1">
                           {dayMeals.slice(0, 3).map((meal, i) => (
@@ -406,9 +452,9 @@ export function MealCalendarView({
   return (
     <>
       <div className="space-y-6">
-        {viewMode === 'day' && renderDayView()}
-        {viewMode === 'week' && renderWeekView()}
-        {viewMode === 'month' && renderMonthView()}
+        {viewMode === "day" && renderDayView()}
+        {viewMode === "week" && renderWeekView()}
+        {viewMode === "month" && renderMonthView()}
       </div>
 
       {/* 食谱详情弹窗 */}

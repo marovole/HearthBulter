@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { Camera, Upload, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import {
+  Camera,
+  Upload,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 
 interface RecognizedFood {
+  photoId: string;
+  mealLogId: string;
+  foodId?: string | null;
   name: string;
   confidence: number;
   estimatedAmount: number;
@@ -13,6 +22,11 @@ interface RecognizedFood {
     carbs: number;
     fat: number;
   };
+  alternatives?: Array<{
+    id: string;
+    name: string;
+    confidence: number;
+  }>;
 }
 
 interface FoodPhotoUploadProps {
@@ -20,26 +34,50 @@ interface FoodPhotoUploadProps {
   onError: (error: string) => void;
 }
 
-export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadProps) {
+export function FoodPhotoUpload({
+  onFoodRecognized,
+  onError,
+}: FoodPhotoUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [recognitionResult, setRecognitionResult] = useState<RecognizedFood | null>(null);
+  const [recognitionResult, setRecognitionResult] =
+    useState<RecognizedFood | null>(null);
+  const [correctionFoodId, setCorrectionFoodId] = useState<string | null>(null);
+  const [correctionAmount, setCorrectionAmount] = useState<number | null>(null);
+  const [isCorrecting, setIsCorrecting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    if (!recognitionResult) {
+      setCorrectionFoodId(null);
+      setCorrectionAmount(null);
+      return;
+    }
+
+    const defaultFoodId =
+      recognitionResult.foodId ||
+      recognitionResult.alternatives?.[0]?.id ||
+      null;
+    setCorrectionFoodId(defaultFoodId);
+    setCorrectionAmount(recognitionResult.estimatedAmount);
+  }, [recognitionResult]);
+
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      onError('请选择图片文件');
+    if (!file.type.startsWith("image/")) {
+      onError("请选择图片文件");
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      onError('图片大小不能超过10MB');
+      onError("图片大小不能超过10MB");
       return;
     }
 
@@ -61,39 +99,41 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
     try {
       // Create FormData for file upload
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append("image", file);
 
       // Upload image
-      const uploadResponse = await fetch('/api/tracking/photo/upload', {
-        method: 'POST',
+      const uploadResponse = await fetch("/api/tracking/photo/upload", {
+        method: "POST",
         body: formData,
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('图片上传失败');
+        throw new Error("图片上传失败");
       }
 
-      const { imageUrl } = await uploadResponse.json();
+      const { photoId } = await uploadResponse.json();
 
-      // Recognize food
-      const recognizeResponse = await fetch('/api/tracking/recognize', {
-        method: 'POST',
+      if (!photoId) {
+        throw new Error("上传响应缺少照片信息");
+      }
+
+      const recognizeResponse = await fetch("/api/tracking/recognize", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ imageUrl }),
+        body: JSON.stringify({ photoId }),
       });
 
       if (!recognizeResponse.ok) {
-        throw new Error('食物识别失败');
+        throw new Error("食物识别失败");
       }
 
       const result = await recognizeResponse.json();
       setRecognitionResult(result);
-
     } catch (error) {
-      console.error('食物识别错误:', error);
-      onError(error instanceof Error ? error.message : '识别过程中出现错误');
+      console.error("食物识别错误:", error);
+      onError(error instanceof Error ? error.message : "识别过程中出现错误");
       setRecognitionResult(null);
     } finally {
       setIsUploading(false);
@@ -108,6 +148,48 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
     }
   };
 
+  const handleCorrection = async () => {
+    if (!recognitionResult || !correctionFoodId || !correctionAmount) {
+      onError("请选择要修正的食物并填写份量");
+      return;
+    }
+
+    setIsCorrecting(true);
+    try {
+      const response = await fetch("/api/tracking/recognize/correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          photoId: recognitionResult.photoId,
+          foodId: correctionFoodId,
+          amount: correctionAmount,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("修正失败");
+      }
+
+      const data = await response.json();
+      setRecognitionResult((prev) =>
+        prev
+          ? {
+            ...prev,
+            foodId: correctionFoodId,
+            name: data.name || prev.name,
+            confidence: 100,
+            estimatedAmount: correctionAmount,
+            nutrition: data.nutrition || prev.nutrition,
+          }
+          : prev,
+      );
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "修正失败");
+    } finally {
+      setIsCorrecting(false);
+    }
+  };
+
   const handleRetake = () => {
     resetState();
     fileInputRef.current?.click();
@@ -117,21 +199,36 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
     setPreview(null);
     setRecognitionResult(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 80) return 'text-green-600';
-    if (confidence >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (confidence >= 80) return "text-green-600";
+    if (confidence >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getConfidenceText = (confidence: number) => {
-    if (confidence >= 80) return '识别准确度很高';
-    if (confidence >= 60) return '识别准确度中等';
-    return '识别准确度较低，建议手动确认';
+    if (confidence >= 80) return "识别准确度很高";
+    if (confidence >= 60) return "识别准确度中等";
+    return "识别准确度较低，建议手动确认";
   };
+
+  const correctionOptions = recognitionResult
+    ? [
+      ...(recognitionResult.foodId
+        ? [
+          {
+            id: recognitionResult.foodId,
+            name: recognitionResult.name,
+            confidence: recognitionResult.confidence,
+          },
+        ]
+        : []),
+      ...(recognitionResult.alternatives ?? []),
+    ]
+    : [];
 
   return (
     <div className="space-y-4">
@@ -142,7 +239,7 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
             <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
               <Camera className="w-8 h-8 text-gray-400" />
             </div>
-            
+
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 拍照识别食物
@@ -185,7 +282,7 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
               alt="Food preview"
               className="w-full h-64 object-cover rounded-lg"
             />
-            
+
             {isRecognizing && (
               <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
                 <div className="text-center">
@@ -208,9 +305,11 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
                     估算份量: {recognitionResult.estimatedAmount}g
                   </p>
                 </div>
-                
+
                 <div className="text-right">
-                  <div className={`flex items-center space-x-1 ${getConfidenceColor(recognitionResult.confidence)}`}>
+                  <div
+                    className={`flex items-center space-x-1 ${getConfidenceColor(recognitionResult.confidence)}`}
+                  >
                     {recognitionResult.confidence >= 80 ? (
                       <CheckCircle className="w-5 h-5" />
                     ) : (
@@ -226,7 +325,6 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
                 </div>
               </div>
 
-              {/* Nutrition Info */}
               <div className="grid grid-cols-4 gap-3 mb-4">
                 <div className="text-center p-2 bg-white rounded">
                   <p className="text-xs text-gray-500">热量</p>
@@ -253,6 +351,51 @@ export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadPr
                   </p>
                 </div>
               </div>
+
+              {correctionOptions.length > 0 && (
+                <div className="border-t border-gray-200 pt-3 mb-4 space-y-2">
+                  <p className="text-sm font-medium text-gray-700">手动修正</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={correctionFoodId || ""}
+                      onChange={(event) =>
+                        setCorrectionFoodId(event.target.value)
+                      }
+                      className="px-3 py-1 border border-gray-200 rounded-md text-sm"
+                    >
+                      <option value="" disabled>
+                        选择食物
+                      </option>
+                      {correctionOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.name} ({option.confidence}%)
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min={1}
+                      value={correctionAmount ?? ""}
+                      onChange={(event) =>
+                        setCorrectionAmount(
+                          event.target.value
+                            ? Number(event.target.value)
+                            : null,
+                        )
+                      }
+                      className="w-24 px-3 py-1 border border-gray-200 rounded-md text-sm"
+                      placeholder="克数"
+                    />
+                    <button
+                      onClick={handleCorrection}
+                      disabled={isCorrecting}
+                      className="px-3 py-1 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {isCorrecting ? "修正中" : "应用修正"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex space-x-3">

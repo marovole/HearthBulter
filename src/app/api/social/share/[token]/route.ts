@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdapter } from "@/lib/db/supabase-adapter";
 import { auth } from "@/lib/auth";
 import { verifyShareToken } from "@/lib/security/token-generator";
 import { rateLimiter } from "@/lib/services/ai/rate-limiter";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id } from "@/../convex/_generated/dataModel";
 
-/**
- * GET /api/social/share/[token]
- * 通过分享token获取分享内容（公开访问）
- *
- * Migrated from Prisma to Supabase
- */
-
-// Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
@@ -55,65 +48,62 @@ export async function GET(
       return NextResponse.json({ error: "无效的分享类型" }, { status: 410 });
     }
 
-    // 查找分享内容
-    const sharedContent = await supabaseAdapter.sharedContent.findUnique({
-      where: { id: verification.payload.resourceId },
-      include: {
-        member: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-          },
-        },
-      },
+    const sharedContent = await convexClient.query<Record<
+      string,
+      unknown
+    > | null>(api.social.getSharedContentById, {
+      id: verification.payload.resourceId as Id<"sharedContents">,
     });
 
     if (!sharedContent) {
       return NextResponse.json({ error: "分享内容不存在" }, { status: 404 });
     }
 
-    // 检查分享状态
     if (sharedContent.status !== "ACTIVE") {
       return NextResponse.json({ error: "分享已失效" }, { status: 410 });
     }
 
-    // 检查是否过期
     if (
       sharedContent.expiresAt &&
-      new Date(sharedContent.expiresAt) < new Date()
+      Number(sharedContent.expiresAt) < Date.now()
     ) {
-      // 自动标记为过期
-      await supabaseAdapter.sharedContent.update({
-        where: { id: sharedContent.id },
-        data: { status: "EXPIRED" },
+      await convexClient.mutation(api.social.updateSharedContent, {
+        id: sharedContent._id as Id<"sharedContents">,
+        patch: { status: "EXPIRED" },
       });
 
       return NextResponse.json({ error: "分享已过期" }, { status: 410 });
     }
 
-    // 增加浏览次数
-    await supabaseAdapter.sharedContent.update({
-      where: { id: sharedContent.id },
-      data: {
-        viewCount: sharedContent.viewCount + 1,
-      },
+    await convexClient.mutation(api.social.recordShareEvent, {
+      id: sharedContent._id as Id<"sharedContents">,
+      action: "VIEW",
     });
 
-    // 返回分享内容
+    const member = await convexClient.query<Record<string, unknown> | null>(
+      api.members.getById,
+      { memberId: sharedContent.memberId as Id<"familyMembers"> },
+    );
+
     return NextResponse.json({
       success: true,
       data: {
-        id: sharedContent.id,
+        id: sharedContent._id,
         contentType: sharedContent.contentType,
         title: sharedContent.title,
         description: sharedContent.description,
         imageUrl: sharedContent.imageUrl,
-        member: sharedContent.member,
+        member: member
+          ? {
+              id: member._id,
+              name: member.name,
+              avatar: member.avatar,
+            }
+          : null,
         privacyLevel: sharedContent.privacyLevel,
         allowComment: sharedContent.allowComment,
         allowLike: sharedContent.allowLike,
-        viewCount: sharedContent.viewCount + 1,
+        viewCount: (sharedContent.viewCount as number) + 1,
         likeCount: sharedContent.likeCount,
         commentCount: sharedContent.commentCount,
         shareCount: sharedContent.shareCount,
@@ -127,10 +117,6 @@ export async function GET(
   }
 }
 
-/**
- * POST /api/social/share/[token]
- * 记录分享链接点击
- */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> },
@@ -171,27 +157,27 @@ export async function POST(
       return NextResponse.json({ error: "无效的分享类型" }, { status: 410 });
     }
 
-    // 查找分享内容
-    const sharedContent = await supabaseAdapter.sharedContent.findUnique({
-      where: { id: verification.payload.resourceId },
+    const sharedContent = await convexClient.query<Record<
+      string,
+      unknown
+    > | null>(api.social.getSharedContentById, {
+      id: verification.payload.resourceId as Id<"sharedContents">,
     });
 
     if (!sharedContent) {
       return NextResponse.json({ error: "分享内容不存在" }, { status: 404 });
     }
 
-    // 根据动作类型更新统计
-    const updateData: any = {};
-
+    let actionType: string;
     switch (action) {
       case "click":
-        updateData.clickCount = sharedContent.clickCount + 1;
+        actionType = "CLICK";
         break;
       case "share":
-        updateData.shareCount = sharedContent.shareCount + 1;
+        actionType = "SHARE";
         break;
       case "conversion":
-        updateData.conversionCount = sharedContent.conversionCount + 1;
+        actionType = "CONVERSION";
         break;
       default:
         return NextResponse.json(
@@ -200,9 +186,9 @@ export async function POST(
         );
     }
 
-    await supabaseAdapter.sharedContent.update({
-      where: { id: sharedContent.id },
-      data: updateData,
+    await convexClient.mutation(api.social.recordShareEvent, {
+      id: sharedContent._id as Id<"sharedContents">,
+      action: actionType,
     });
 
     return NextResponse.json({
@@ -215,10 +201,6 @@ export async function POST(
   }
 }
 
-/**
- * DELETE /api/social/share/[token]
- * 撤回分享（需要认证）
- */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> },
@@ -243,24 +225,24 @@ export async function DELETE(
       return NextResponse.json({ error: "无效的分享类型" }, { status: 410 });
     }
 
-    // 查找分享内容
-    const sharedContent = await supabaseAdapter.sharedContent.findUnique({
-      where: { id: verification.payload.resourceId },
+    const sharedContent = await convexClient.query<Record<
+      string,
+      unknown
+    > | null>(api.social.getSharedContentById, {
+      id: verification.payload.resourceId as Id<"sharedContents">,
     });
 
     if (!sharedContent) {
       return NextResponse.json({ error: "分享内容不存在" }, { status: 404 });
     }
 
-    // 验证权限
     if (verification.payload.ownerId !== session.user?.id) {
       return NextResponse.json({ error: "无权操作该分享" }, { status: 403 });
     }
 
-    // 撤回分享
-    await supabaseAdapter.sharedContent.update({
-      where: { id: sharedContent.id },
-      data: { status: "REVOKED" },
+    await convexClient.mutation(api.social.updateSharedContent, {
+      id: sharedContent._id as Id<"sharedContents">,
+      patch: { status: "REVOKED" },
     });
 
     return NextResponse.json({

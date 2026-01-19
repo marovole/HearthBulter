@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: "https://auth.example.com",
+      domain: "https://clerk.healthbutler.life",
       applicationID: "convex",
     },
   ],

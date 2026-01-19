@@ -1,8 +1,13 @@
-import { IPlatformAdapter, IPlatformAdapterFactory, PlatformError, PlatformErrorType } from './types';
-import { EcommercePlatform } from '@prisma/client';
-import { SamsClubAdapter } from './sams-adapter';
-import { HemaAdapter } from './hema-adapter';
-import { DingdongAdapter } from './dingdong-adapter';
+import {
+  IPlatformAdapter,
+  IPlatformAdapterFactory,
+  PlatformError,
+  PlatformErrorType,
+} from "./types";
+import { EcommercePlatform } from "./types";
+import { SamsClubAdapter } from "./sams-adapter";
+import { HemaAdapter } from "./hema-adapter";
+import { DingdongAdapter } from "./dingdong-adapter";
 
 export class PlatformAdapterFactory implements IPlatformAdapterFactory {
   private static instance: PlatformAdapterFactory;
@@ -27,13 +32,14 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
 
   createAdapter(platform: EcommercePlatform): IPlatformAdapter {
     const adapter = this.adapters.get(platform);
-    
+
     if (!adapter) {
-      throw new PlatformError({
-        type: PlatformErrorType.PLATFORM_ERROR,
-        message: `Unsupported platform: ${platform}`,
-        details: { platform },
-      });
+      throw new PlatformError(
+        PlatformErrorType.PLATFORM_ERROR,
+        `Unsupported platform: ${platform}`,
+        undefined,
+        { platform },
+      );
     }
 
     return adapter;
@@ -56,9 +62,9 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
 
   // 获取所有适配器信息
   getAllAdaptersInfo(): Array<{
-    platform: EcommercePlatform
-    platformName: string
-    baseUrl: string
+    platform: EcommercePlatform;
+    platformName: string;
+    baseUrl: string;
   }> {
     return Array.from(this.adapters.entries()).map(([platform, adapter]) => ({
       platform,
@@ -72,7 +78,9 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
 export const platformAdapterFactory = PlatformAdapterFactory.getInstance();
 
 // 便捷函数
-export function createPlatformAdapter(platform: EcommercePlatform): IPlatformAdapter {
+export function createPlatformAdapter(
+  platform: EcommercePlatform,
+): IPlatformAdapter {
   return platformAdapterFactory.createAdapter(platform);
 }
 

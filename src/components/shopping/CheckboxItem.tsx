@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
 interface ShoppingItem {
-  id: string
-  foodId: string
-  amount: number
-  category: string
-  purchased: boolean
-  estimatedPrice: number | null
+  id: string;
+  foodId: string;
+  amount: number;
+  category: string;
+  purchased: boolean;
+  estimatedPrice: number | null;
   food: {
-    id: string
-    name: string
-    category: string
-  }
+    id: string;
+    name: string;
+    category: string;
+  };
 }
 
 interface CheckboxItemProps {
-  item: ShoppingItem
-  onToggle: (purchased: boolean) => void
+  item: ShoppingItem;
+  onToggle: (purchased: boolean) => void;
 }
 
 /**
@@ -34,7 +34,7 @@ function formatAmount(amount: number): string {
  */
 function formatPrice(price: number | null): string {
   if (price === null) {
-    return '暂无价格';
+    return "暂无价格";
   }
   return `¥${price.toFixed(2)}`;
 }
@@ -43,7 +43,7 @@ export function CheckboxItem({ item, onToggle }: CheckboxItemProps) {
   return (
     <div
       className={`px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors ${
-        item.purchased ? 'bg-green-50' : ''
+        item.purchased ? "bg-green-50" : ""
       }`}
     >
       <div className="flex items-center flex-1">
@@ -60,7 +60,7 @@ export function CheckboxItem({ item, onToggle }: CheckboxItemProps) {
           <div className="flex items-center gap-2">
             <span
               className={`font-medium ${
-                item.purchased ? 'line-through text-gray-500' : 'text-gray-900'
+                item.purchased ? "line-through text-gray-500" : "text-gray-900"
               }`}
             >
               {item.food.name}
@@ -79,4 +79,3 @@ export function CheckboxItem({ item, onToggle }: CheckboxItemProps) {
     </div>
   );
 }
-

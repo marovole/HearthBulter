@@ -1,5 +1,5 @@
 interface ErrorStateProps {
-  error: string
+  error: string;
 }
 
 export function ErrorState({ error }: ErrorStateProps) {

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { HealthDataForm } from "@/components/health/HealthDataForm";
 import { HealthDataList } from "@/components/health/HealthDataList";
@@ -24,15 +23,11 @@ interface HealthDataDashboardProps {
 }
 
 export function HealthDataDashboard({
-  userEmail,
+  userEmail: _userEmail,
   initialMemberId,
 }: HealthDataDashboardProps) {
-  // Convex Hooks
-  const resolvedEmail = userEmail || null;
-  const families = useQuery(
-    api.families.list,
-    resolvedEmail ? { email: resolvedEmail } : "skip",
-  );
+  void _userEmail;
+  const families = useQuery(api.families.list, {});
 
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
     initialMemberId || null,
@@ -67,10 +62,6 @@ export function HealthDataDashboard({
   }, [familyMembers, selectedMemberId]);
 
   const loading = families === undefined;
-
-  const handleMemberChange = (memberId: string) => {
-    setSelectedMemberId(memberId);
-  };
 
   const handleDataAdded = () => {
     setActiveView("overview");

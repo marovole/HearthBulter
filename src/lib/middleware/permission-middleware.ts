@@ -3,34 +3,34 @@
  * 提供基于角色的访问控制(RBAC)和细粒度权限检查
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { Permission, FamilyMemberRole, hasPermission } from '@/lib/permissions';
-import { APIError, createErrorResponse } from '@/lib/errors/api-error';
-import { logger } from '@/lib/logger';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { Permission, FamilyMemberRole, hasPermission } from "@/lib/permissions";
+import { APIError, createErrorResponse } from "@/lib/errors/api-error";
+import { logger } from "@/lib/logger";
 
 export interface PermissionRequirement {
-  permissions: Permission[]
-  requireOwnership?: boolean
-  requireFamilyMembership?: boolean
-  customValidator?: (context: PermissionContext) => Promise<boolean>
+  permissions: Permission[];
+  requireOwnership?: boolean;
+  requireFamilyMembership?: boolean;
+  customValidator?: (context: PermissionContext) => Promise<boolean>;
 }
 
 export interface PermissionContext {
-  userId: string
-  familyId?: string
-  memberId?: string
-  userRole?: FamilyMemberRole
-  resourceOwnerId?: string
-  request: NextRequest
-  params?: Record<string, string>
+  userId: string;
+  familyId?: string;
+  memberId?: string;
+  userRole?: FamilyMemberRole | null;
+  resourceOwnerId?: string;
+  request: NextRequest;
+  params?: Record<string, string>;
 }
 
 export interface PermissionCheckResult {
-  allowed: boolean
-  reason?: string
-  context: PermissionContext
+  allowed: boolean;
+  reason?: string;
+  context: PermissionContext;
 }
 
 /**
@@ -38,7 +38,10 @@ export interface PermissionCheckResult {
  */
 export class PermissionMiddleware {
   private static instance: PermissionMiddleware;
-  private permissionCache = new Map<string, { role: FamilyMemberRole; timestamp: number }>();
+  private permissionCache = new Map<
+    string,
+    { role: FamilyMemberRole; timestamp: number }
+  >();
   private cacheTimeout = 5 * 60 * 1000; // 5分钟缓存
 
   static getInstance(): PermissionMiddleware {
@@ -55,11 +58,11 @@ export class PermissionMiddleware {
     request: NextRequest,
     requirements: PermissionRequirement[],
     context?: {
-      familyId?: string
-      memberId?: string
-      resourceOwnerId?: string
-      params?: Record<string, string>
-    }
+      familyId?: string;
+      memberId?: string;
+      resourceOwnerId?: string;
+      params?: Record<string, string>;
+    },
   ): Promise<PermissionCheckResult> {
     const requestId = this.generateRequestId();
     const startTime = Date.now();
@@ -70,8 +73,8 @@ export class PermissionMiddleware {
       if (!session?.user?.id) {
         return {
           allowed: false,
-          reason: '未授权访问',
-          context: { userId: '', request },
+          reason: "未授权访问",
+          context: { userId: "", request },
         };
       }
 
@@ -81,15 +84,15 @@ export class PermissionMiddleware {
       const permissionContext = await this.buildPermissionContext(
         request,
         userId,
-        context
+        context,
       );
 
       // 3. 检查家庭成员权限（如果需要）
-      if (requirements.some(req => req.requireFamilyMembership)) {
+      if (requirements.some((req) => req.requireFamilyMembership)) {
         if (!permissionContext.familyId) {
           return {
             allowed: false,
-            reason: '需要指定家庭ID',
+            reason: "需要指定家庭ID",
             context: permissionContext,
           };
         }
@@ -97,7 +100,7 @@ export class PermissionMiddleware {
         if (!permissionContext.memberId) {
           return {
             allowed: false,
-            reason: '不是该家庭成员',
+            reason: "不是该家庭成员",
             context: permissionContext,
           };
         }
@@ -107,13 +110,13 @@ export class PermissionMiddleware {
       for (const requirement of requirements) {
         const checkResult = await this.checkRequirement(
           permissionContext,
-          requirement
+          requirement,
         );
 
         if (!checkResult) {
           return {
             allowed: false,
-            reason: `权限不足，需要权限: ${requirement.permissions.join(', ')}`,
+            reason: `权限不足，需要权限: ${requirement.permissions.join(", ")}`,
             context: permissionContext,
           };
         }
@@ -122,11 +125,12 @@ export class PermissionMiddleware {
       // 5. 检查自定义验证器
       for (const requirement of requirements) {
         if (requirement.customValidator) {
-          const customResult = await requirement.customValidator(permissionContext);
+          const customResult =
+            await requirement.customValidator(permissionContext);
           if (!customResult) {
             return {
               allowed: false,
-              reason: '自定义权限验证失败',
+              reason: "自定义权限验证失败",
               context: permissionContext,
             };
           }
@@ -135,13 +139,13 @@ export class PermissionMiddleware {
 
       const duration = Date.now() - startTime;
 
-      logger.info('权限验证通过', {
+      logger.info("权限验证通过", {
         requestId,
         userId,
         familyId: permissionContext.familyId,
         role: permissionContext.userRole,
         duration,
-        permissions: requirements.flatMap(req => req.permissions),
+        permissions: requirements.flatMap((req) => req.permissions),
       });
 
       return {
@@ -151,7 +155,7 @@ export class PermissionMiddleware {
     } catch (error) {
       const duration = Date.now() - startTime;
 
-      logger.error('权限验证异常', {
+      logger.error("权限验证异常", {
         requestId,
         error: error instanceof Error ? error.message : String(error),
         duration,
@@ -159,8 +163,8 @@ export class PermissionMiddleware {
 
       return {
         allowed: false,
-        reason: '权限验证过程中发生错误',
-        context: { userId: '', request },
+        reason: "权限验证过程中发生错误",
+        context: { userId: "", request },
       };
     }
   }
@@ -172,11 +176,11 @@ export class PermissionMiddleware {
     request: NextRequest,
     userId: string,
     context?: {
-      familyId?: string
-      memberId?: string
-      resourceOwnerId?: string
-      params?: Record<string, string>
-    }
+      familyId?: string;
+      memberId?: string;
+      resourceOwnerId?: string;
+      params?: Record<string, string>;
+    },
   ): Promise<PermissionContext> {
     const permissionContext: PermissionContext = {
       userId,
@@ -205,7 +209,7 @@ export class PermissionMiddleware {
     if (permissionContext.familyId) {
       permissionContext.userRole = await this.getUserRole(
         userId,
-        permissionContext.familyId
+        permissionContext.familyId,
       );
     }
 
@@ -217,7 +221,7 @@ export class PermissionMiddleware {
    */
   private async getUserRole(
     userId: string,
-    familyId: string
+    familyId: string,
   ): Promise<FamilyMemberRole | null> {
     const cacheKey = `${userId}:${familyId}`;
     const cached = this.permissionCache.get(cacheKey);
@@ -240,20 +244,29 @@ export class PermissionMiddleware {
         },
       });
 
-      const role = member?.role || null;
+      const roleValue = typeof member?.role === "string" ? member.role : null;
+      const role = roleValue
+        ? Object.values(FamilyMemberRole).includes(
+            roleValue as FamilyMemberRole,
+        )
+          ? (roleValue as FamilyMemberRole)
+          : null
+        : null;
 
-      // 更新缓存
-      this.permissionCache.set(cacheKey, {
-        role: role!,
-        timestamp: Date.now(),
-      });
+      if (role) {
+        // 更新缓存
+        this.permissionCache.set(cacheKey, {
+          role,
+          timestamp: Date.now(),
+        });
+      }
 
       // 清理过期缓存
       this.cleanExpiredCache();
 
       return role;
     } catch (error) {
-      logger.error('获取用户角色失败', { userId, familyId, error });
+      logger.error("获取用户角色失败", { userId, familyId, error });
       return null;
     }
   }
@@ -263,7 +276,7 @@ export class PermissionMiddleware {
    */
   private async checkRequirement(
     context: PermissionContext,
-    requirement: PermissionRequirement
+    requirement: PermissionRequirement,
   ): Promise<boolean> {
     // 检查角色权限
     if (!context.userRole) {
@@ -276,7 +289,7 @@ export class PermissionMiddleware {
         context.userRole,
         permission,
         context.resourceOwnerId,
-        context.userId
+        context.userId,
       );
 
       if (!hasPermit) {
@@ -344,53 +357,70 @@ export class PermissionMiddleware {
 export const permissionMiddleware = PermissionMiddleware.getInstance();
 
 // 导出便捷方法
-export const requirePermissions = (permissions: Permission[]) => ({
-  permissions,
-  requireFamilyMembership: true,
-});
-
-export const requireOwnership = (permissions: Permission[]) => ({
-  permissions,
-  requireOwnership: true,
-  requireFamilyMembership: true,
-});
-
-export const requireAnyPermission = (permissions: Permission[]) => ({
-  permissions,
-  requireFamilyMembership: true,
-  customValidator: async (context: PermissionContext) => {
-    if (!context.userRole) return false;
-    
-    return permissions.some(permission => 
-      hasPermission(
-        context.userRole!,
-        permission,
-        context.resourceOwnerId,
-        context.userId
-      )
-    );
+export const requirePermissions = (
+  permissions: Permission[],
+): PermissionRequirement[] => [
+  {
+    permissions,
+    requireFamilyMembership: true,
   },
-});
+];
+
+export const requireOwnership = (
+  permissions: Permission[],
+): PermissionRequirement[] => [
+  {
+    permissions,
+    requireOwnership: true,
+    requireFamilyMembership: true,
+  },
+];
+
+export const requireAnyPermission = (
+  permissions: Permission[],
+): PermissionRequirement[] => [
+  {
+    permissions,
+    requireFamilyMembership: true,
+    customValidator: async (context: PermissionContext) => {
+      if (!context.userRole) return false;
+
+      return permissions.some((permission) =>
+        hasPermission(
+          context.userRole!,
+          permission,
+          context.resourceOwnerId,
+          context.userId,
+        ),
+      );
+    },
+  },
+];
+
+type PermissionHandler = (
+  request: NextRequest,
+  context: PermissionContext,
+) => Promise<Response>;
 
 // 创建权限验证高阶函数
 export function withPermissions(
   requirements: PermissionRequirement[],
-  handler: (
-    request: NextRequest,
-    context: PermissionContext
-  ) => Promise<NextResponse>
+  handler: PermissionHandler,
 ) {
-  return async (request: NextRequest, context?: { params?: Record<string, string> }) => {
+  return async (
+    request: NextRequest,
+    context?: { params?: Record<string, string> },
+  ) => {
     const result = await permissionMiddleware.checkPermissions(
       request,
       requirements,
       {
         params: context?.params,
-      }
+      },
     );
 
     if (!result.allowed) {
-      const error = APIError.forbidden(result.reason || '权限不足');
+      const error = APIError.forbidden(result.reason || "权限不足");
       return createErrorResponse(error);
     }
 
@@ -399,36 +429,41 @@ export function withPermissions(
 }
 
 // 快捷权限装饰器
-export const withAdminPermission = (handler: Function) =>
+export const withAdminPermission = (handler: PermissionHandler) =>
   withPermissions(requirePermissions([Permission.MANAGE_FAMILY]), handler);
 
-export const withMemberPermission = (handler: Function) =>
+export const withMemberPermission = (handler: PermissionHandler) =>
   withPermissions(requirePermissions([Permission.VIEW_FAMILY_DATA]), handler);
 
-export const withTaskPermission = (action: 'create' | 'read' | 'update' | 'delete') => 
-  (handler: Function) => {
-    const permissions = {
-      create: [Permission.CREATE_TASK],
-      read: [Permission.READ_TASK],
-      update: [Permission.UPDATE_TASK],
-      delete: [Permission.DELETE_TASK],
-    };
-    
-    return withPermissions(requirePermissions(permissions[action]!), handler);
-  };
+export const withTaskPermission =
+  (action: "create" | "read" | "update" | "delete") =>
+    (handler: PermissionHandler) => {
+      const permissions = {
+        create: [Permission.CREATE_TASK],
+        read: [Permission.READ_TASK],
+        update: [Permission.UPDATE_TASK],
+        delete: [Permission.DELETE_TASK],
+      };
 
-export const withOwnershipPermission = (
-  permissions: Permission[],
-  resourceOwnerId: string
-) => (handler: Function) =>
-  withPermissions([
-    {
-      permissions,
-      requireOwnership: true,
-      requireFamilyMembership: true,
-      customValidator: async (context: PermissionContext) => {
-        return context.resourceOwnerId === resourceOwnerId ||
-               context.userRole === FamilyMemberRole.ADMIN;
-      },
-    },
-  ], handler);
+      return withPermissions(requirePermissions(permissions[action]!), handler);
+    };
+
+export const withOwnershipPermission =
+  (permissions: Permission[], resourceOwnerId: string) =>
+    (handler: PermissionHandler) =>
+      withPermissions(
+        [
+          {
+            permissions,
+            requireOwnership: true,
+            requireFamilyMembership: true,
+            customValidator: async (context: PermissionContext) => {
+              return (
+                context.resourceOwnerId === resourceOwnerId ||
+              context.userRole === FamilyMemberRole.ADMIN
+              );
+            },
+          },
+        ],
+        handler,
+      );

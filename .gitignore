@@ -118,3 +118,4 @@ coverage/
 *.old
 .wrangler/
 .secrets.json
+.secrets.*

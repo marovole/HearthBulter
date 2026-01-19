@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { foodRepository } from '@/lib/repositories/food-repository-singleton';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { usdaService } from '@/lib/services/usda-service';
-import { foodCacheService } from '@/lib/services/cache-service';
-import type { FoodRecord } from '@/lib/repositories/interfaces/food-repository';
+import { NextRequest, NextResponse } from "next/server";
+import { foodRepository } from "@/lib/repositories/food-repository-singleton";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { usdaService } from "@/lib/services/usda-service";
+import { foodCacheService } from "@/lib/services/cache-service";
+import type { FoodRecord } from "@/lib/repositories/interfaces/food-repository";
 
 /**
  * GET /api/foods/:id
@@ -14,10 +14,10 @@ import type { FoodRecord } from '@/lib/repositories/interfaces/food-repository';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -45,7 +45,7 @@ export async function GET(
         // 保存到数据库（仅 Supabase，避免双写到外部数据源）
         const supabase = SupabaseClientManager.getInstance();
         const { data: savedFood, error: insertError } = await supabase
-          .from('foods')
+          .from("foods")
           .insert({
             name: usdaFood.name,
             nameEn: usdaFood.nameEn,
@@ -72,8 +72,8 @@ export async function GET(
           .single();
 
         if (insertError || !savedFood) {
-          console.error('保存USDA食物失败:', insertError);
-          throw insertError ?? new Error('保存USDA食物失败');
+          console.error("保存USDA食物失败:", insertError);
+          throw insertError ?? new Error("保存USDA食物失败");
         }
 
         // 缓存新保存的食物
@@ -81,17 +81,14 @@ export async function GET(
 
         return NextResponse.json(parseFoodResponse(savedFood), { status: 200 });
       } catch (usdaError) {
-        console.error('从USDA获取食物失败:', usdaError);
+        console.error("从USDA获取食物失败:", usdaError);
       }
     }
 
-    return NextResponse.json({ error: '食物不存在' }, { status: 404 });
+    return NextResponse.json({ error: "食物不存在" }, { status: 404 });
   } catch (error) {
-    console.error('获取食物详情失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("获取食物详情失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }
 
@@ -103,7 +100,9 @@ function parseFoodResponse(food: FoodRecord | any) {
     id: food.id,
     name: food.name,
     nameEn: food.nameEn,
-    aliases: Array.isArray(food.aliases) ? food.aliases : JSON.parse(food.aliases || '[]'),
+    aliases: Array.isArray(food.aliases)
+      ? food.aliases
+      : JSON.parse(food.aliases || "[]"),
     calories: food.calories,
     protein: food.protein,
     carbs: food.carbs,
@@ -116,7 +115,7 @@ function parseFoodResponse(food: FoodRecord | any) {
     calcium: food.calcium,
     iron: food.iron,
     category: food.category,
-    tags: Array.isArray(food.tags) ? food.tags : JSON.parse(food.tags || '[]'),
+    tags: Array.isArray(food.tags) ? food.tags : JSON.parse(food.tags || "[]"),
     source: food.source,
     usdaId: food.usdaId,
     verified: food.verified,
@@ -124,4 +123,3 @@ function parseFoodResponse(food: FoodRecord | any) {
     updatedAt: food.updatedAt,
   };
 }
-

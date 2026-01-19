@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface WaterTrackingProps {
   current: number;
@@ -56,15 +56,15 @@ interface ExerciseTrackingProps {
 
 export function ExerciseTracking({ onAdd }: ExerciseTrackingProps) {
   const [minutes, setMinutes] = useState(30);
-  const [exerciseType, setExerciseType] = useState('running');
+  const [exerciseType, setExerciseType] = useState("running");
 
   const exerciseTypes = [
-    { value: 'walking', label: '散步', icon: '🚶' },
-    { value: 'running', label: '跑步', icon: '🏃' },
-    { value: 'cycling', label: '骑行', icon: '🚴' },
-    { value: 'yoga', label: '瑜伽', icon: '🧘' },
-    { value: 'swimming', label: '游泳', icon: '🏊' },
-    { value: 'strength_training', label: '力量训练', icon: '💪' },
+    { value: "walking", label: "散步", icon: "🚶" },
+    { value: "running", label: "跑步", icon: "🏃" },
+    { value: "cycling", label: "骑行", icon: "🚴" },
+    { value: "yoga", label: "瑜伽", icon: "🧘" },
+    { value: "swimming", label: "游泳", icon: "🏊" },
+    { value: "strength_training", label: "力量训练", icon: "💪" },
   ];
 
   // 简单的卡路里估算（实际应该根据体重和运动类型计算）
@@ -86,7 +86,7 @@ export function ExerciseTracking({ onAdd }: ExerciseTrackingProps) {
       caloriesBurned: estimateCalories(exerciseType, minutes),
       exerciseType: [exerciseType],
     });
-    alert('运动打卡成功！');
+    alert("运动打卡成功！");
   };
 
   return (
@@ -103,8 +103,8 @@ export function ExerciseTracking({ onAdd }: ExerciseTrackingProps) {
                 onClick={() => setExerciseType(type.value)}
                 className={`p-3 rounded-lg border-2 transition-all ${
                   exerciseType === type.value
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300'
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
                 }`}
               >
                 <div className="text-2xl mb-1">{type.icon}</div>
@@ -152,12 +152,12 @@ interface WeightTrackingProps {
 }
 
 export function WeightTracking({ onAdd }: WeightTrackingProps) {
-  const [weight, setWeight] = useState('');
-  const [bodyFat, setBodyFat] = useState('');
+  const [weight, setWeight] = useState("");
+  const [bodyFat, setBodyFat] = useState("");
 
   const handleSubmit = () => {
     if (!weight) {
-      alert('请输入体重');
+      alert("请输入体重");
       return;
     }
 
@@ -166,9 +166,9 @@ export function WeightTracking({ onAdd }: WeightTrackingProps) {
       bodyFat: bodyFat ? parseFloat(bodyFat) : undefined,
     });
 
-    setWeight('');
-    setBodyFat('');
-    alert('体重打卡成功！');
+    setWeight("");
+    setBodyFat("");
+    alert("体重打卡成功！");
   };
 
   return (
@@ -219,18 +219,18 @@ interface SleepTrackingProps {
 
 export function SleepTracking({ onAdd }: SleepTrackingProps) {
   const [hours, setHours] = useState(7);
-  const [quality, setQuality] = useState('GOOD');
+  const [quality, setQuality] = useState("GOOD");
 
   const qualities = [
-    { value: 'EXCELLENT', label: '极好', icon: '😴', color: 'bg-green-500' },
-    { value: 'GOOD', label: '良好', icon: '😊', color: 'bg-blue-500' },
-    { value: 'FAIR', label: '一般', icon: '😐', color: 'bg-yellow-500' },
-    { value: 'POOR', label: '较差', icon: '😣', color: 'bg-red-500' },
+    { value: "EXCELLENT", label: "极好", icon: "😴", color: "bg-green-500" },
+    { value: "GOOD", label: "良好", icon: "😊", color: "bg-blue-500" },
+    { value: "FAIR", label: "一般", icon: "😐", color: "bg-yellow-500" },
+    { value: "POOR", label: "较差", icon: "😣", color: "bg-red-500" },
   ];
 
   const handleSubmit = () => {
     onAdd({ hours, quality });
-    alert('睡眠打卡成功！');
+    alert("睡眠打卡成功！");
   };
 
   return (
@@ -262,8 +262,8 @@ export function SleepTracking({ onAdd }: SleepTrackingProps) {
                 onClick={() => setQuality(q.value)}
                 className={`p-3 rounded-lg border-2 transition-all ${
                   quality === q.value
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300'
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
                 }`}
               >
                 <div className="text-2xl mb-1">{q.icon}</div>
@@ -283,4 +283,3 @@ export function SleepTracking({ onAdd }: SleepTrackingProps) {
     </div>
   );
 }
-

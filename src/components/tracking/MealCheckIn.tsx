@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { MealType } from '@prisma/client';
-import { FoodSearchDialog } from './FoodSearchDialog';
+import { useState } from "react";
+import { MealType } from "@prisma/client";
+import { FoodSearchDialog } from "./FoodSearchDialog";
 
 interface Food {
   id: string;
@@ -26,15 +26,15 @@ interface MealCheckInProps {
 export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
   const [mealType, setMealType] = useState<MealType>(MealType.BREAKFAST);
   const [selectedFoods, setSelectedFoods] = useState<Food[]>([]);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFoodSearch, setShowFoodSearch] = useState(false);
 
   const mealTypes = [
-    { value: MealType.BREAKFAST, label: '早餐', icon: '🌅' },
-    { value: MealType.LUNCH, label: '午餐', icon: '🌞' },
-    { value: MealType.DINNER, label: '晚餐', icon: '🌙' },
-    { value: MealType.SNACK, label: '加餐', icon: '🍎' },
+    { value: MealType.BREAKFAST, label: "早餐", icon: "🌅" },
+    { value: MealType.LUNCH, label: "午餐", icon: "🌞" },
+    { value: MealType.DINNER, label: "晚餐", icon: "🌙" },
+    { value: MealType.SNACK, label: "加餐", icon: "🍎" },
   ];
 
   const handleAddFood = (food: Food) => {
@@ -44,7 +44,9 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
 
   const handleUpdateAmount = (index: number, amount: number) => {
     const updated = [...selectedFoods];
-    updated[index].amount = amount;
+    const target = updated[index];
+    if (!target) return;
+    updated[index] = { ...target, amount };
     setSelectedFoods(updated);
   };
 
@@ -63,13 +65,13 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
           fat: total.fat + food.fat * ratio,
         };
       },
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
     );
   };
 
   const handleSubmit = async () => {
     if (selectedFoods.length === 0) {
-      alert('请至少添加一种食物');
+      alert("请至少添加一种食物");
       return;
     }
 
@@ -86,10 +88,10 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
 
       // 重置表单
       setSelectedFoods([]);
-      setNotes('');
-      alert('打卡成功！');
+      setNotes("");
+      alert("打卡成功！");
     } catch (error) {
-      alert('打卡失败，请重试');
+      alert("打卡失败，请重试");
     } finally {
       setIsSubmitting(false);
     }
@@ -111,8 +113,8 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
                 p-3 rounded-lg border-2 transition-all
                 ${
             mealType === type.value
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-200 hover:border-blue-300'
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-200 hover:border-blue-300"
             }
               `}
             >
@@ -225,7 +227,7 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
         disabled={isSubmitting || selectedFoods.length === 0}
         className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
       >
-        {isSubmitting ? '提交中...' : '完成打卡'}
+        {isSubmitting ? "提交中..." : "完成打卡"}
       </button>
 
       {/* 食物搜索对话框 */}
@@ -238,4 +240,3 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
     </div>
   );
 }
-

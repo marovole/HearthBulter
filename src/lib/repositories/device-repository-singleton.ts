@@ -6,9 +6,9 @@
  * @module device-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseDeviceRepository } from './implementations/supabase-device-repository';
-import type { DeviceRepository } from './interfaces/device-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseDeviceRepository } from "./implementations/supabase-device-repository";
+import type { DeviceRepository } from "./interfaces/device-repository";
 
 let instance: DeviceRepository | null = null;
 

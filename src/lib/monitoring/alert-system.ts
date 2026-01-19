@@ -1,13 +1,16 @@
-import { EnhancedPerformanceMonitor, AlertLevel } from './performance-monitor-v2';
+import {
+  EnhancedPerformanceMonitor,
+  AlertLevel,
+} from "./performance-monitor-v2";
 
 // 告警通知渠道
 export enum NotificationChannel {
-  EMAIL = 'email',
-  SLACK = 'slack',
-  DINGTALK = 'dingtalk',
-  WECHAT = 'wechat',
-  SMS = 'sms',
-  WEBHOOK = 'webhook',
+  EMAIL = "email",
+  SLACK = "slack",
+  DINGTALK = "dingtalk",
+  WECHAT = "wechat",
+  SMS = "sms",
+  WEBHOOK = "webhook",
 }
 
 // 告警配置接口
@@ -85,15 +88,17 @@ export class AlertSystem {
 
     // 检查冷却时间
     if (!this.checkCooldown(alertKey)) {
-      return [{
-        success: false,
-        channel: NotificationChannel.EMAIL,
-        error: 'Alert is in cooldown period',
-      }];
+      return [
+        {
+          success: false,
+          channel: NotificationChannel.EMAIL,
+          error: "Alert is in cooldown period",
+        },
+      ];
     }
 
-    const channels = this.config.channels.filter(channel =>
-      this.shouldSendToChannel(alert.level, channel)
+    const channels = this.config.channels.filter((channel) =>
+      this.shouldSendToChannel(alert.level, channel),
     );
 
     for (const channel of channels) {
@@ -109,7 +114,7 @@ export class AlertSystem {
         results.push({
           success: false,
           channel,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
@@ -128,7 +133,7 @@ export class AlertSystem {
       message: string;
       source: string;
       context: Record<string, any>;
-    }
+    },
   ): Promise<NotificationResult> {
     switch (channel) {
     case NotificationChannel.EMAIL:
@@ -166,14 +171,14 @@ export class AlertSystem {
         return {
           success: false,
           channel: NotificationChannel.EMAIL,
-          error: 'No recipients configured for this alert level',
+          error: "No recipients configured for this alert level",
         };
       }
 
       const emailContent = this.formatEmailAlert(alert);
 
       // 模拟邮件发送
-      console.log('📧 Email Alert:', {
+      console.log("📧 Email Alert:", {
         to: recipients,
         subject: `[${alert.level.toUpperCase()}] ${alert.title}`,
         body: emailContent,
@@ -188,7 +193,7 @@ export class AlertSystem {
       return {
         success: false,
         channel: NotificationChannel.EMAIL,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -209,16 +214,16 @@ export class AlertSystem {
         return {
           success: false,
           channel: NotificationChannel.SLACK,
-          error: 'Slack webhook URL not configured',
+          error: "Slack webhook URL not configured",
         };
       }
 
       const slackMessage = this.formatSlackAlert(alert);
 
       const response = await fetch(webhookUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(slackMessage),
       });
@@ -238,7 +243,7 @@ export class AlertSystem {
       return {
         success: false,
         channel: NotificationChannel.SLACK,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -259,16 +264,16 @@ export class AlertSystem {
         return {
           success: false,
           channel: NotificationChannel.DINGTALK,
-          error: 'DingTalk webhook URL not configured',
+          error: "DingTalk webhook URL not configured",
         };
       }
 
       const dingTalkMessage = this.formatDingTalkAlert(alert);
 
       const response = await fetch(webhookUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(dingTalkMessage),
       });
@@ -288,7 +293,7 @@ export class AlertSystem {
       return {
         success: false,
         channel: NotificationChannel.DINGTALK,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -309,7 +314,7 @@ export class AlertSystem {
         return {
           success: false,
           channel: NotificationChannel.WEBHOOK,
-          error: 'Webhook URL not configured',
+          error: "Webhook URL not configured",
         };
       }
 
@@ -325,10 +330,10 @@ export class AlertSystem {
       };
 
       const response = await fetch(webhookUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'HealthButler-AlertSystem/1.0',
+          "Content-Type": "application/json",
+          "User-Agent": "HealthButler-AlertSystem/1.0",
         },
         body: JSON.stringify(webhookPayload),
       });
@@ -346,7 +351,7 @@ export class AlertSystem {
       return {
         success: false,
         channel: NotificationChannel.WEBHOOK,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -361,7 +366,7 @@ export class AlertSystem {
     source: string;
     context: Record<string, any>;
   }): string {
-    const timestamp = new Date().toLocaleString('zh-CN');
+    const timestamp = new Date().toLocaleString("zh-CN");
 
     return `
 告警级别: ${alert.level.toUpperCase()}
@@ -375,7 +380,7 @@ ${alert.message}
 上下文信息:
 ${Object.entries(alert.context)
     .map(([key, value]) => `${key}: ${JSON.stringify(value, null, 2)}`)
-    .join('\n')}
+    .join("\n")}
 
 ---
 此邮件由 Health Butler 系统自动发送
@@ -403,22 +408,22 @@ ${Object.entries(alert.context)
           text: alert.message,
           fields: [
             {
-              title: '级别',
+              title: "级别",
               value: alert.level.toUpperCase(),
               short: true,
             },
             {
-              title: '来源',
+              title: "来源",
               value: alert.source,
               short: true,
             },
             {
-              title: '时间',
-              value: new Date().toLocaleString('zh-CN'),
+              title: "时间",
+              value: new Date().toLocaleString("zh-CN"),
               short: true,
             },
           ],
-          footer: 'Health Butler Alert System',
+          footer: "Health Butler Alert System",
           ts: Date.now(),
         },
       ],
@@ -438,13 +443,13 @@ ${Object.entries(alert.context)
     const color = this.getDingTalkColor(alert.level);
 
     return {
-      msgtype: 'markdown',
+      msgtype: "markdown",
       markdown: {
         title: `【${alert.level.toUpperCase()}】${alert.title}`,
         text: alert.message,
       },
       at: {
-        atMobiles: ['all'],
+        atMobiles: ["all"],
       },
     };
   }
@@ -455,14 +460,14 @@ ${Object.entries(alert.context)
   private getSlackColor(level: AlertLevel): string {
     switch (level) {
     case AlertLevel.CRITICAL:
-      return '#dc3545'; // red
+      return "#dc3545"; // red
     case AlertLevel.ERROR:
-      return '#f59e0b'; // orange
+      return "#f59e0b"; // orange
     case AlertLevel.WARNING:
-      return '#ffc107'; // yellow
+      return "#ffc107"; // yellow
     case AlertLevel.INFO:
     default:
-      return '#28a745'; // green
+      return "#28a745"; // green
     }
   }
 
@@ -472,14 +477,14 @@ ${Object.entries(alert.context)
   private getSlackEmoji(level: AlertLevel): string {
     switch (level) {
     case AlertLevel.CRITICAL:
-      return '🚨';
+      return "🚨";
     case AlertLevel.ERROR:
-      return '❌';
+      return "❌";
     case AlertLevel.WARNING:
-      return '⚠️';
+      return "⚠️";
     case AlertLevel.INFO:
     default:
-      return 'ℹ️';
+      return "ℹ️";
     }
   }
 
@@ -489,21 +494,24 @@ ${Object.entries(alert.context)
   private getDingTalkColor(level: AlertLevel): string {
     switch (level) {
     case AlertLevel.CRITICAL:
-      return 'red';
+      return "red";
     case AlertLevel.ERROR:
-      return 'orange';
+      return "orange";
     case AlertLevel.WARNING:
-      return 'yellow';
+      return "yellow";
     case AlertLevel.INFO:
     default:
-      return 'green';
+      return "green";
     }
   }
 
   /**
    * 检查是否应该发送到特定渠道
    */
-  private shouldSendToChannel(level: AlertLevel, channel: NotificationChannel): boolean {
+  private shouldSendToChannel(
+    level: AlertLevel,
+    channel: NotificationChannel,
+  ): boolean {
     const channelPreferences = {
       [AlertLevel.CRITICAL]: [
         NotificationChannel.EMAIL,
@@ -546,7 +554,8 @@ ${Object.entries(alert.context)
    */
   private checkCooldown(alertKey: string): boolean {
     const lastSentTime = this.lastSentTimes.get(alertKey);
-    const cooldownPeriod = this.config.cooldown[alertKey] || this.config.cooldown.default || 300; // 默认5分钟
+    const cooldownPeriod =
+      this.config.cooldown[alertKey] || this.config.cooldown.default || 300; // 默认5分钟
 
     if (!lastSentTime) {
       return true;
@@ -607,15 +616,15 @@ ${Object.entries(alert.context)
     try {
       // 从环境变量加载配置
       const envConfig = {
-        enabled: process.env.ALERT_SYSTEM_ENABLED === 'true',
+        enabled: process.env.ALERT_SYSTEM_ENABLED === "true",
         slackWebhook: process.env.SLACK_WEBHOOK_URL,
         dingtalkWebhook: process.env.DINGTALK_WEBHOOK_URL,
         webhookUrl: process.env.ALERT_WEBHOOK_URL,
         recipients: {
-          critical: process.env.ALERT_RECIPIENTS_CRITICAL?.split(',') || [],
-          error: process.env.ALERT_RECIPIENTS_ERROR?.split(',') || [],
-          warning: process.env.ALERT_RECIPIENTS_WARNING?.split(',') || [],
-          info: process.env.ALERT_RECIPIENTS_INFO?.split(',') || [],
+          critical: process.env.ALERT_RECIPIENTS_CRITICAL?.split(",") || [],
+          error: process.env.ALERT_RECIPIENTS_ERROR?.split(",") || [],
+          warning: process.env.ALERT_RECIPIENTS_WARNING?.split(",") || [],
+          info: process.env.ALERT_RECIPIENTS_INFO?.split(",") || [],
         },
       };
 
@@ -631,7 +640,7 @@ ${Object.entries(alert.context)
         },
       };
     } catch (error) {
-      console.error('Failed to load alert config:', error);
+      console.error("Failed to load alert config:", error);
     }
   }
 
@@ -648,7 +657,7 @@ ${Object.entries(alert.context)
    */
   private saveConfig(): void {
     // 这里可以将配置保存到文件或数据库
-    console.log('Alert config updated:', this.config);
+    console.log("Alert config updated:", this.config);
   }
 
   /**
@@ -664,9 +673,9 @@ ${Object.entries(alert.context)
   async testAlert(): Promise<NotificationResult[]> {
     const testAlert = {
       level: AlertLevel.INFO,
-      title: '测试告警',
-      message: '这是一个测试告警，用于验证告警系统是否正常工作。',
-      source: 'test',
+      title: "测试告警",
+      message: "这是一个测试告警，用于验证告警系统是否正常工作。",
+      source: "test",
       context: {
         timestamp: new Date().toISOString(),
         test: true,

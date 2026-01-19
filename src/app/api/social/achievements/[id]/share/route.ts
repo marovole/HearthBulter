@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { supabaseAdapter } from "@/lib/db/supabase-adapter";
 import { auth } from "@/lib/auth";
 import { shareAchievement } from "@/lib/services/social/achievement-system";
 import { shareContentGenerator } from "@/lib/services/social/share-generator";
 import { generateSecureShareToken } from "@/lib/security/token-generator";
-import { ShareContentType, SocialPlatform } from "@/types/social-sharing";
+import {
+  ShareContentType,
+  SharePrivacyLevel,
+  SocialPlatform,
+} from "@/types/social-sharing";
 import {
   validateBody,
   validationErrorResponse,
 } from "@/lib/validation/api-validator";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id } from "@/../convex/_generated/dataModel";
 
-/**
- * POST /api/social/achievements/[id]/share
- * 分享成就
- */
-
-// Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 export async function POST(
   request: NextRequest,
@@ -24,7 +23,7 @@ export async function POST(
 ) {
   try {
     const session = await auth();
-    if (!session) {
+    if (!session?.user) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
@@ -34,51 +33,62 @@ export async function POST(
       return validationErrorResponse(validation.error);
     }
 
-    const { customMessage, privacyLevel = "PUBLIC" } = validation.data;
+    const { customMessage, privacyLevel } = validation.data;
+    const normalizedPrivacyLevel: SharePrivacyLevel = Object.values(
+      SharePrivacyLevel,
+    ).includes(privacyLevel as SharePrivacyLevel)
+      ? (privacyLevel as SharePrivacyLevel)
+      : SharePrivacyLevel.PUBLIC;
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.NEXTAUTH_URL ||
       "http://localhost:3000";
 
-    const memberId = session.user?.id;
-    if (!memberId) {
-      return NextResponse.json({ error: "用户ID不存在" }, { status: 400 });
-    }
-
-    // 验证成就是否存在且属于该用户
-    const achievement = await supabaseAdapter.achievement.findFirst({
-      where: {
-        id: achievementId,
-        memberId,
-        isUnlocked: true,
-      },
+    const achievement = await convexClient.query<Record<
+      string,
+      unknown
+    > | null>(api.achievements.getById, {
+      id: achievementId as Id<"achievements">,
     });
 
-    if (!achievement) {
+    if (!achievement || !achievement.isUnlocked) {
       return NextResponse.json(
         { error: "成就不存在或未解锁" },
         { status: 404 },
       );
     }
 
-    // 先创建占位记录以获取 ID
-    const provisional = await supabaseAdapter.sharedContent.create({
-      data: {
-        memberId,
+    const access = await convexClient.query<{ hasAccess: boolean }>(
+      api.members.verifyAccess,
+      {
+        memberId: achievement.memberId as Id<"familyMembers">,
+        clerkId: session.user.id,
+      },
+    );
+
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        { error: "无权限访问该家庭成员" },
+        { status: 403 },
+      );
+    }
+
+    const provisionalId = await convexClient.mutation<string>(
+      api.social.createSharedContent,
+      {
+        memberId: achievement.memberId as Id<"familyMembers">,
         contentType: "ACHIEVEMENT",
-        title: "pending",
-        description: customMessage || "",
-        imageUrl: null,
+        privacyLevel: normalizedPrivacyLevel,
+        targetId: achievementId,
+        sharedPlatforms: [SocialPlatform.COPY_LINK],
         shareToken: "pending",
         shareUrl: "pending",
-        privacyLevel,
-        metadata: null,
-        sharedPlatforms: JSON.stringify([SocialPlatform.COPY_LINK]),
+        status: "ACTIVE",
       },
-    });
+    );
 
     const shareToken = await generateSecureShareToken(
-      provisional.id,
+      provisionalId,
       "social_share",
       session.user.id,
       7,
@@ -89,13 +99,13 @@ export async function POST(
 
     const shareContent = await shareContentGenerator.generateShareContent(
       {
-        memberId,
+        memberId: achievement.memberId as string,
         type: ShareContentType.ACHIEVEMENT_UNLOCKED,
-        title: achievement.title,
-        description: customMessage || achievement.description || "",
-        imageUrl: achievement.imageUrl || undefined,
+        title: achievement.title as string,
+        description: customMessage || (achievement.description as string) || "",
+        imageUrl: achievement.imageUrl as string | undefined,
         targetId: achievementId,
-        privacyLevel: privacyLevel as any,
+        privacyLevel: normalizedPrivacyLevel,
         platforms: [SocialPlatform.COPY_LINK],
         customMessage,
       },
@@ -106,32 +116,34 @@ export async function POST(
       },
     );
 
-    const sharedContent = await supabaseAdapter.sharedContent.update({
-      where: { id: provisional.id },
-      data: {
+    await convexClient.mutation(api.social.updateSharedContent, {
+      id: provisionalId as Id<"sharedContents">,
+      patch: {
         title: shareContent.content.title,
         description: shareContent.content.description,
         imageUrl: shareContent.imageUrl,
         shareToken,
         shareUrl,
-        metadata: shareContent.content.metadata,
+        metadata: shareContent.content.metadata ?? null,
       },
     });
 
-    // 标记成就已分享
-    await shareAchievement(achievementId);
+    await shareAchievement(achievementId, achievement.memberId as string, {
+      customMessage,
+      privacyLevel: normalizedPrivacyLevel,
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        id: sharedContent.id,
-        shareToken: sharedContent.shareToken,
-        shareUrl: sharedContent.shareUrl,
-        title: sharedContent.title,
-        description: sharedContent.description,
-        imageUrl: sharedContent.imageUrl,
+        id: provisionalId,
+        shareToken,
+        shareUrl,
+        title: shareContent.content.title,
+        description: shareContent.content.description,
+        imageUrl: shareContent.imageUrl,
         achievement: {
-          id: achievement.id,
+          id: achievementId,
           title: achievement.title,
           description: achievement.description,
           rarity: achievement.rarity,

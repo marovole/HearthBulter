@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   PieChart,
   Pie,
@@ -12,70 +12,76 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-} from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Heart, 
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Heart,
+  TrendingUp,
+  TrendingDown,
+  Target,
   Activity,
   AlertCircle,
   CheckCircle,
   Info,
-} from 'lucide-react';
-import { EmptyStateGuide } from './EmptyStateGuide';
+} from "lucide-react";
+import { EmptyStateGuide } from "./EmptyStateGuide";
 
 interface HealthScoreData {
-  totalScore: number
+  totalScore: number;
   breakdown: {
-    bmiScore: number
-    nutritionScore: number
-    activityScore: number
-    dataCompletenessScore: number
-  }
+    bmiScore: number;
+    nutritionScore: number;
+    activityScore: number;
+    dataCompletenessScore: number;
+  };
   details: {
-    bmi: number | null
-    bmiCategory: 'underweight' | 'normal' | 'overweight' | 'obese' | null
-    nutritionAdherenceRate: number
-    activityFrequency: number
-    dataCompletenessRate: number
-  }
-  recommendations: string[]
+    bmi: number | null;
+    bmiCategory: "underweight" | "normal" | "overweight" | "obese" | null;
+    nutritionAdherenceRate: number;
+    activityFrequency: number;
+    dataCompletenessRate: number;
+  };
+  recommendations: string[];
 }
 
 interface HealthScoreHistory {
-  date: string
-  score: number
+  date: string;
+  score: number;
 }
 
 interface HealthScoreCardProps {
-  memberId: string
+  memberId: string;
 }
 
 const SCORE_COLORS = {
-  excellent: '#10b981', // 绿色
-  good: '#3b82f6', // 蓝色
-  average: '#f59e0b', // 橙色
-  poor: '#ef4444', // 红色
+  excellent: "#10b981", // 绿色
+  good: "#3b82f6", // 蓝色
+  average: "#f59e0b", // 橙色
+  poor: "#ef4444", // 红色
 };
 
 const BREAKDOWN_LABELS = {
-  bmiScore: 'BMI指数',
-  nutritionScore: '营养达标',
-  activityScore: '运动频率',
-  dataCompletenessScore: '数据完整',
+  bmiScore: "BMI指数",
+  nutritionScore: "营养达标",
+  activityScore: "运动频率",
+  dataCompletenessScore: "数据完整",
 };
 
 const BREAKDOWN_COLORS = {
-  bmiScore: '#8b5cf6',
-  nutritionScore: '#10b981',
-  activityScore: '#f59e0b',
-  dataCompletenessScore: '#3b82f6',
+  bmiScore: "#8b5cf6",
+  nutritionScore: "#10b981",
+  activityScore: "#f59e0b",
+  dataCompletenessScore: "#3b82f6",
 };
 
 function HealthScoreCard({ memberId }: HealthScoreCardProps) {
@@ -92,17 +98,19 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/dashboard/health-score?memberId=${memberId}`);
+      const response = await fetch(
+        `/api/dashboard/health-score?memberId=${memberId}`,
+      );
       if (!response.ok) {
-        throw new Error('加载健康评分失败');
+        throw new Error("加载健康评分失败");
       }
       const result = await response.json();
       setData(result.data);
-      
+
       // 加载历史数据
       loadHistory();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : "加载失败");
     } finally {
       setLoading(false);
     }
@@ -110,13 +118,15 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
 
   const loadHistory = async () => {
     try {
-      const response = await fetch(`/api/dashboard/health-score/history?memberId=${memberId}`);
+      const response = await fetch(
+        `/api/dashboard/health-score/history?memberId=${memberId}`,
+      );
       if (response.ok) {
         const result = await response.json();
         setHistory(result.data || []);
       }
     } catch (err) {
-      console.error('加载健康评分历史失败:', err);
+      console.error("加载健康评分历史失败:", err);
     }
   };
 
@@ -148,15 +158,28 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
   }
 
   if (!data) {
-    return <EmptyStateGuide memberId={memberId} type="health-score" onInitialize={loadData} />;
+    return (
+      <EmptyStateGuide
+        memberId={memberId}
+        type="health-score"
+        onInitialize={loadData}
+      />
+    );
   }
 
   // 获取评分等级
   const getScoreGrade = (score: number) => {
-    if (score >= 80) return { grade: '优秀', color: SCORE_COLORS.excellent, icon: CheckCircle };
-    if (score >= 60) return { grade: '良好', color: SCORE_COLORS.good, icon: TrendingUp };
-    if (score >= 40) return { grade: '一般', color: SCORE_COLORS.average, icon: AlertCircle };
-    return { grade: '需改善', color: SCORE_COLORS.poor, icon: TrendingDown };
+    if (score >= 80)
+      return {
+        grade: "优秀",
+        color: SCORE_COLORS.excellent,
+        icon: CheckCircle,
+      };
+    if (score >= 60)
+      return { grade: "良好", color: SCORE_COLORS.good, icon: TrendingUp };
+    if (score >= 40)
+      return { grade: "一般", color: SCORE_COLORS.average, icon: AlertCircle };
+    return { grade: "需改善", color: SCORE_COLORS.poor, icon: TrendingDown };
   };
 
   const scoreGrade = getScoreGrade(data.totalScore);
@@ -193,9 +216,12 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
             <CardTitle className="flex items-center gap-2">
               <Heart className="w-5 h-5 text-red-500" />
               健康评分
-              <Badge 
-                variant="outline" 
-                style={{ borderColor: scoreGrade.color, color: scoreGrade.color }}
+              <Badge
+                variant="outline"
+                style={{
+                  borderColor: scoreGrade.color,
+                  color: scoreGrade.color,
+                }}
                 className="flex items-center gap-1"
               >
                 <GradeIcon className="w-3 h-3" />
@@ -207,7 +233,7 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
             </CardDescription>
           </div>
           <div className="text-right">
-            <div 
+            <div
               className="text-3xl font-bold"
               style={{ color: scoreGrade.color }}
             >
@@ -229,7 +255,9 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 评分环形图 */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-center">评分分布</h3>
+                <h3 className="text-lg font-semibold mb-4 text-center">
+                  评分分布
+                </h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
@@ -254,10 +282,13 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">各项指标</h3>
                 {Object.entries(data.breakdown).map(([key, value]) => {
-                  const maxScore = key === 'bmiScore' || key === 'nutritionScore' ? 30 : 20;
+                  const maxScore =
+                    key === "bmiScore" || key === "nutritionScore" ? 30 : 20;
                   const percentage = (value / maxScore) * 100;
-                  const label = BREAKDOWN_LABELS[key as keyof typeof BREAKDOWN_LABELS];
-                  const color = BREAKDOWN_COLORS[key as keyof typeof BREAKDOWN_COLORS];
+                  const label =
+                    BREAKDOWN_LABELS[key as keyof typeof BREAKDOWN_LABELS];
+                  const color =
+                    BREAKDOWN_COLORS[key as keyof typeof BREAKDOWN_COLORS];
 
                   return (
                     <div key={key} className="space-y-2">
@@ -267,12 +298,14 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
                           {value}/{maxScore}分
                         </span>
                       </div>
-                      <Progress 
-                        value={percentage} 
+                      <Progress
+                        value={percentage}
                         className="h-2"
-                        style={{ 
-                          '--progress-background': color, 
-                        } as React.CSSProperties}
+                        style={
+                          {
+                            "--progress-background": color,
+                          } as React.CSSProperties
+                        }
                       />
                     </div>
                   );
@@ -290,13 +323,13 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
                   BMI指数
                 </h4>
                 <div className="text-2xl font-bold mb-1">
-                  {data.details.bmi?.toFixed(1) || '--'}
+                  {data.details.bmi?.toFixed(1) || "--"}
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
-                  {data.details.bmiCategory === 'normal' && '正常范围'}
-                  {data.details.bmiCategory === 'underweight' && '偏瘦'}
-                  {data.details.bmiCategory === 'overweight' && '超重'}
-                  {data.details.bmiCategory === 'obese' && '肥胖'}
+                  {data.details.bmiCategory === "normal" && "正常范围"}
+                  {data.details.bmiCategory === "underweight" && "偏瘦"}
+                  {data.details.bmiCategory === "overweight" && "超重"}
+                  {data.details.bmiCategory === "obese" && "肥胖"}
                 </div>
                 <div className="text-xs text-gray-500">
                   得分: {data.breakdown.bmiScore}/30
@@ -312,9 +345,7 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
                 <div className="text-2xl font-bold mb-1">
                   {data.details.nutritionAdherenceRate.toFixed(1)}%
                 </div>
-                <div className="text-sm text-gray-600 mb-2">
-                  营养摄入达标率
-                </div>
+                <div className="text-sm text-gray-600 mb-2">营养摄入达标率</div>
                 <div className="text-xs text-gray-500">
                   得分: {data.breakdown.nutritionScore}/30
                 </div>
@@ -346,9 +377,7 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
                 <div className="text-2xl font-bold mb-1">
                   {data.details.dataCompletenessRate.toFixed(1)}%
                 </div>
-                <div className="text-sm text-gray-600 mb-2">
-                  健康指标完整度
-                </div>
+                <div className="text-sm text-gray-600 mb-2">健康指标完整度</div>
                 <div className="text-xs text-gray-500">
                   得分: {data.breakdown.dataCompletenessScore}/20
                 </div>
@@ -366,10 +395,15 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
               {data.recommendations.length > 0 ? (
                 <div className="space-y-3">
                   {data.recommendations.map((recommendation, index) => (
-                    <div key={index} className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div
+                      key={index}
+                      className="p-3 bg-blue-50 border border-blue-200 rounded-lg"
+                    >
                       <div className="flex items-start gap-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <p className="text-sm text-blue-800">{recommendation}</p>
+                        <p className="text-sm text-blue-800">
+                          {recommendation}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -394,8 +428,8 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={chartHistory}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis
+                      dataKey="date"
                       tick={{ fontSize: 12 }}
                       tickFormatter={(value) => {
                         const date = new Date(value);
@@ -403,13 +437,17 @@ function HealthScoreCard({ memberId }: HealthScoreCardProps) {
                       }}
                     />
                     <YAxis domain={[0, 100]} />
-                    <Tooltip 
+                    <Tooltip
                       labelFormatter={(label) => {
-                        return new Date(label).toLocaleDateString('zh-CN');
+                        return new Date(label).toLocaleDateString("zh-CN");
                       }}
-                      formatter={(value: number) => [`${value}分`, '健康评分']}
+                      formatter={(value: number) => [`${value}分`, "健康评分"]}
                     />
-                    <Bar dataKey="score" fill={scoreGrade.color} radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="score"
+                      fill={scoreGrade.color}
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -24,7 +24,7 @@
 export {
   usePrefersReducedMotion,
   useMotionConfig,
-} from './usePrefersReducedMotion';
+} from "./usePrefersReducedMotion";
 
 // Scroll animation hooks
 export {
@@ -32,4 +32,4 @@ export {
   useScrollAnimation,
   type UseAnimateOnViewOptions,
   type UseAnimateOnViewReturn,
-} from './useAnimateOnView';
+} from "./useAnimateOnView";

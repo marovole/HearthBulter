@@ -2,16 +2,19 @@ import { ConvexError } from "convex/values";
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
 
-/**
- * Resolve a Convex user id from email.
- */
-export async function getUserIdByEmail(
-  ctx: QueryCtx | MutationCtx,
-  userEmail: string,
-) {
+export async function getCurrentUserId(ctx: QueryCtx | MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+
+  if (!identity) {
+    throw new ConvexError({
+      code: "UNAUTHORIZED",
+      message: "未登录",
+    });
+  }
+
   const user = await ctx.db
     .query("users")
-    .withIndex("by_email", (q) => q.eq("email", userEmail))
+    .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
     .unique();
 
   if (!user) {
@@ -24,15 +27,11 @@ export async function getUserIdByEmail(
   return user._id;
 }
 
-/**
- * Helper to verify if a user has access to a family member's data.
- */
 export async function verifyMemberAccess(
   ctx: QueryCtx | MutationCtx,
   memberId: Id<"familyMembers">,
-  userEmail: string,
 ) {
-  const userId = await getUserIdByEmail(ctx, userEmail);
+  const userId = await getCurrentUserId(ctx);
 
   const member = await ctx.db.get(memberId);
   if (!member || member.deletedAt) {

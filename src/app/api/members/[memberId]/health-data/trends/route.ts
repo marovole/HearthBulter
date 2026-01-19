@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 
 /**
  * 验证用户是否有权限访问成员的健康数据
@@ -9,16 +9,22 @@ import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
  */
 
 // Force dynamic rendering for auth()
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
+const normalizeRecord = <T>(
+  value: T | T[] | null | undefined,
+): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+
 async function verifyMemberAccess(
   memberId: string,
-  userId: string
+  userId: string,
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { data: member } = await supabase
-    .from('family_members')
-    .select(`
+    .from("family_members")
+    .select(
+      `
       id,
       userId,
       familyId,
@@ -26,26 +32,28 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `)
-    .eq('id', memberId)
-    .is('deletedAt', null)
+    `,
+    )
+    .eq("id", memberId)
+    .is("deletedAt", null)
     .single();
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const isCreator = member.family?.creatorId === userId;
+  const family = normalizeRecord(member.family);
+  const isCreator = family?.creatorId === userId;
 
   let isAdmin = false;
   if (!isCreator) {
     const { data: adminMember } = await supabase
-      .from('family_members')
-      .select('id, role')
-      .eq('familyId', member.familyId)
-      .eq('userId', userId)
-      .eq('role', 'ADMIN')
-      .is('deletedAt', null)
+      .from("family_members")
+      .select("id, role")
+      .eq("familyId", member.familyId)
+      .eq("userId", userId)
+      .eq("role", "ADMIN")
+      .is("deletedAt", null)
       .maybeSingle();
 
     isAdmin = !!adminMember;
@@ -66,14 +74,14 @@ async function verifyMemberAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: Promise<{ memberId: string }> },
 ) {
   try {
     const { memberId } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '未授权访问' }, { status: 401 });
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
     // 验证权限
@@ -81,8 +89,8 @@ export async function GET(
 
     if (!hasAccess) {
       return NextResponse.json(
-        { error: '无权限访问该成员的健康数据' },
-        { status: 403 }
+        { error: "无权限访问该成员的健康数据" },
+        { status: 403 },
       );
     }
 
@@ -90,9 +98,9 @@ export async function GET(
 
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
-    const days = parseInt(searchParams.get('days') || '30'); // 默认30天
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const days = parseInt(searchParams.get("days") || "30"); // 默认30天
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
     // 计算日期范围
     const end = endDate ? new Date(endDate) : new Date();
@@ -102,19 +110,16 @@ export async function GET(
 
     // 查询数据
     const { data: healthData, error } = await supabase
-      .from('health_data')
-      .select('*')
-      .eq('memberId', memberId)
-      .gte('measuredAt', start.toISOString())
-      .lte('measuredAt', end.toISOString())
-      .order('measuredAt', { ascending: true });
+      .from("health_data")
+      .select("*")
+      .eq("memberId", memberId)
+      .gte("measuredAt", start.toISOString())
+      .lte("measuredAt", end.toISOString())
+      .order("measuredAt", { ascending: true });
 
     if (error) {
-      console.error('查询健康数据失败:', error);
-      return NextResponse.json(
-        { error: '查询健康数据失败' },
-        { status: 500 }
-      );
+      console.error("查询健康数据失败:", error);
+      return NextResponse.json({ error: "查询健康数据失败" }, { status: 500 });
     }
 
     // 计算趋势统计
@@ -165,7 +170,7 @@ export async function GET(
             end,
           },
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -175,14 +180,16 @@ export async function GET(
       .map((d) => ({ date: d.measuredAt, value: d.weight! }));
     if (weightData.length > 0) {
       const values = weightData.map((d) => d.value);
+      const firstWeight = weightData[0];
+      const lastWeight = weightData[weightData.length - 1];
       trends.weight = {
         data: weightData,
         average: values.reduce((a, b) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values),
         change:
-          weightData.length > 1
-            ? weightData[weightData.length - 1].value - weightData[0].value
+          weightData.length > 1 && firstWeight && lastWeight
+            ? lastWeight.value - firstWeight.value
             : null,
       };
     }
@@ -193,14 +200,16 @@ export async function GET(
       .map((d) => ({ date: d.measuredAt, value: d.bodyFat! }));
     if (bodyFatData.length > 0) {
       const values = bodyFatData.map((d) => d.value);
+      const firstBodyFat = bodyFatData[0];
+      const lastBodyFat = bodyFatData[bodyFatData.length - 1];
       trends.bodyFat = {
         data: bodyFatData,
         average: values.reduce((a, b) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values),
         change:
-          bodyFatData.length > 1
-            ? bodyFatData[bodyFatData.length - 1].value - bodyFatData[0].value
+          bodyFatData.length > 1 && firstBodyFat && lastBodyFat
+            ? lastBodyFat.value - firstBodyFat.value
             : null,
       };
     }
@@ -211,15 +220,16 @@ export async function GET(
       .map((d) => ({ date: d.measuredAt, value: d.muscleMass! }));
     if (muscleMassData.length > 0) {
       const values = muscleMassData.map((d) => d.value);
+      const firstMuscleMass = muscleMassData[0];
+      const lastMuscleMass = muscleMassData[muscleMassData.length - 1];
       trends.muscleMass = {
         data: muscleMassData,
         average: values.reduce((a, b) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values),
         change:
-          muscleMassData.length > 1
-            ? muscleMassData[muscleMassData.length - 1].value -
-              muscleMassData[0].value
+          muscleMassData.length > 1 && firstMuscleMass && lastMuscleMass
+            ? lastMuscleMass.value - firstMuscleMass.value
             : null,
       };
     }
@@ -228,8 +238,7 @@ export async function GET(
     const bloodPressureData = healthData
       .filter(
         (d) =>
-          d.bloodPressureSystolic !== null &&
-          d.bloodPressureDiastolic !== null
+          d.bloodPressureSystolic !== null && d.bloodPressureDiastolic !== null,
       )
       .map((d) => ({
         date: d.measuredAt,
@@ -239,14 +248,15 @@ export async function GET(
     if (bloodPressureData.length > 0) {
       const systolicValues = bloodPressureData.map((d) => d.systolic);
       const diastolicValues = bloodPressureData.map((d) => d.diastolic);
+      const firstBloodPressure = bloodPressureData[0];
+      const lastBloodPressure = bloodPressureData[bloodPressureData.length - 1];
       trends.bloodPressure = {
         data: bloodPressureData,
         average: {
           systolic:
             systolicValues.reduce((a, b) => a + b, 0) / systolicValues.length,
           diastolic:
-            diastolicValues.reduce((a, b) => a + b, 0) /
-            diastolicValues.length,
+            diastolicValues.reduce((a, b) => a + b, 0) / diastolicValues.length,
         },
         min: {
           systolic: Math.min(...systolicValues),
@@ -257,14 +267,14 @@ export async function GET(
           diastolic: Math.max(...diastolicValues),
         },
         change:
-          bloodPressureData.length > 1
+          bloodPressureData.length > 1 &&
+          firstBloodPressure &&
+          lastBloodPressure
             ? {
               systolic:
-                  bloodPressureData[bloodPressureData.length - 1].systolic -
-                  bloodPressureData[0].systolic,
+                  lastBloodPressure.systolic - firstBloodPressure.systolic,
               diastolic:
-                  bloodPressureData[bloodPressureData.length - 1].diastolic -
-                  bloodPressureData[0].diastolic,
+                  lastBloodPressure.diastolic - firstBloodPressure.diastolic,
             }
             : null,
       };
@@ -276,15 +286,16 @@ export async function GET(
       .map((d) => ({ date: d.measuredAt, value: d.heartRate! }));
     if (heartRateData.length > 0) {
       const values = heartRateData.map((d) => d.value);
+      const firstHeartRate = heartRateData[0];
+      const lastHeartRate = heartRateData[heartRateData.length - 1];
       trends.heartRate = {
         data: heartRateData,
         average: values.reduce((a, b) => a + b, 0) / values.length,
         min: Math.min(...values),
         max: Math.max(...values),
         change:
-          heartRateData.length > 1
-            ? heartRateData[heartRateData.length - 1].value -
-              heartRateData[0].value
+          heartRateData.length > 1 && firstHeartRate && lastHeartRate
+            ? lastHeartRate.value - firstHeartRate.value
             : null,
       };
     }
@@ -297,13 +308,10 @@ export async function GET(
           end,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error('获取健康数据趋势失败:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    console.error("获取健康数据趋势失败:", error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
   }
 }

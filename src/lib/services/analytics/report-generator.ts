@@ -1,26 +1,23 @@
-/**
- * 报告生成服务
- * 生成周报、月报、季报等健康分析报告
- */
+import { convexClient, api } from "@/lib/convex-client";
+import { analyzeTrend, TimeSeriesPoint } from "./trend-analyzer";
 
-import { PrismaClient, ReportType, FamilyMember } from '@prisma/client';
-import { analyzeTrend, TimeSeriesPoint } from './trend-analyzer';
-import { calculateHealthScore, getAverageScore } from './health-scorer';
-import { getPendingAnomalies } from './anomaly-detector';
+import { calculateHealthScore, getAverageScore } from "./health-scorer";
+import { getPendingAnomalies } from "./anomaly-detector";
 import {
   generateSecureShareToken,
   verifyShareToken,
-} from '@/lib/security/token-generator';
-import { logger } from '@/lib/logger';
-
-const prisma = new PrismaClient();
+} from "@/lib/security/token-generator";
+import { logger } from "@/lib/logger";
 
 export interface ReportData {
-  member: FamilyMember;
+  member: {
+    _id: string;
+    name: string;
+  };
   period: {
     startDate: Date;
     endDate: Date;
-    type: ReportType;
+    type: string;
   };
   summary: {
     totalDays: number;
@@ -43,66 +40,78 @@ export interface ReportData {
   }>;
 }
 
-/**
- * 生成报告数据
- */
 export async function generateReportData(
   memberId: string,
-  reportType: ReportType,
+  reportType: string,
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
 ): Promise<ReportData> {
-  // 确定时间范围
-  const period = calculatePeriod(reportType, startDate, endDate);
+  const period = calculatePeriod(reportType as any, startDate, endDate);
 
-  // 获取成员信息
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId },
-  });
+  const member = await convexClient.query<{
+    _id: string;
+    name: string;
+  } | null>(api.members.getById, { memberId: memberId });
 
   if (!member) {
-    throw new Error('Member not found');
+    throw new Error("Member not found");
   }
 
-  // 计算总天数和数据完整天数
   const totalDays = Math.ceil(
-    (period.endDate.getTime() - period.startDate.getTime()) / (1000 * 60 * 60 * 24)
+    (period.endDate.getTime() - period.startDate.getTime()) /
+      (1000 * 60 * 60 * 24),
   );
 
-  const mealLogsCount = await prisma.mealLog.count({
-    where: {
-      memberId,
-      date: {
-        gte: period.startDate,
-        lte: period.endDate,
-      },
+  const mealLogsCount = await convexClient.query<number>(
+    api.analytics.countMealLogs,
+    {
+      memberId: memberId,
+      startDate: period.startDate.getTime(),
+      endDate: period.endDate.getTime(),
     },
-  });
+  );
 
   const dataCompleteDays = Math.min(mealLogsCount, totalDays);
 
-  // 计算平均健康评分
-  const averageScore = await getAverageScore(memberId, period.startDate, period.endDate);
+  const averageScore = await getAverageScore(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
 
-  // 获取趋势数据
-  const trends = await getTrendsForReport(memberId, period.startDate, period.endDate);
+  const trends = await getTrendsForReport(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
 
-  // 生成成就、关注点和建议
-  const achievements = await generateAchievements(memberId, period.startDate, period.endDate);
-  const concerns = await generateConcerns(memberId, period.startDate, period.endDate);
-  const recommendations = await generateRecommendations(memberId, period.startDate, period.endDate);
+  const achievements = await generateAchievements(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
+  const concerns = await generateConcerns(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
+  const recommendations = await generateRecommendations(
+    memberId,
+    period.startDate,
+    period.endDate,
+  );
 
-  // 获取异常记录
-  const anomalies = await prisma.healthAnomaly.findMany({
-    where: {
-      memberId,
-      detectedAt: {
-        gte: period.startDate,
-        lte: period.endDate,
-      },
-    },
-    orderBy: { detectedAt: 'desc' },
-    take: 5,
+  const anomalies = await convexClient.query<
+    Array<{
+      title: string;
+      description: string;
+      severity: string;
+    }>
+  >(api.analytics.listAnomaliesByMember, {
+    memberId: memberId,
+    startDate: period.startDate.getTime(),
+    endDate: period.endDate.getTime(),
+    limit: 5,
   });
 
   return {
@@ -121,7 +130,7 @@ export async function generateReportData(
     achievements,
     concerns,
     recommendations,
-    anomalies: anomalies.map(a => ({
+    anomalies: anomalies.map((a) => ({
       title: a.title,
       description: a.description,
       severity: a.severity,
@@ -129,36 +138,39 @@ export async function generateReportData(
   };
 }
 
-/**
- * 生成HTML报告
- */
 export function generateHTMLReport(data: ReportData): string {
-  const periodName = {
-    WEEKLY: '周报',
-    MONTHLY: '月报',
-    QUARTERLY: '季报',
-    CUSTOM: '健康报告',
-  }[data.period.type];
+  const periodLabels = {
+    WEEKLY: "周报",
+    MONTHLY: "月报",
+    QUARTERLY: "季报",
+    CUSTOM: "健康报告",
+  };
+  const periodName =
+    periodLabels[data.period.type as keyof typeof periodLabels] || "报告";
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return date.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
   const gradeLabel = {
-    90: { text: '优秀', color: '#10b981' },
-    75: { text: '良好', color: '#3b82f6' },
-    60: { text: '一般', color: '#f59e0b' },
-    0: { text: '较差', color: '#ef4444' },
+    90: { text: "优秀", color: "#10b981" },
+    75: { text: "良好", color: "#3b82f6" },
+    60: { text: "一般", color: "#f59e0b" },
+    0: { text: "较差", color: "#ef4444" },
   };
 
-  const grade = data.summary.averageScore >= 90 ? gradeLabel[90]
-    : data.summary.averageScore >= 75 ? gradeLabel[75]
-      : data.summary.averageScore >= 60 ? gradeLabel[60]
-        : gradeLabel[0];
+  const grade =
+    data.summary.averageScore >= 90
+      ? gradeLabel[90]
+      : data.summary.averageScore >= 75
+        ? gradeLabel[75]
+        : data.summary.averageScore >= 60
+          ? gradeLabel[60]
+          : gradeLabel[0];
 
   return `
 <!DOCTYPE html>
@@ -201,7 +213,6 @@ export function generateHTMLReport(data: ReportData): string {
     </div>
     
     <div class="content">
-      <!-- 概览 -->
       <div class="section">
         <h2>📊 数据概览</h2>
         <div class="summary-grid">
@@ -225,53 +236,69 @@ export function generateHTMLReport(data: ReportData): string {
         </div>
       </div>
 
-      <!-- 成就 -->
-      ${data.achievements.length > 0 ? `
+      ${
+        data.achievements.length > 0
+          ? `
       <div class="section">
         <h2>🎉 本期成就</h2>
         <ul class="list">
-          ${data.achievements.map(a => `<li class="achievement">✅ ${a}</li>`).join('')}
+          ${data.achievements.map((a) => `<li class="achievement">✅ ${a}</li>`).join("")}
         </ul>
       </div>
-      ` : ''}
+      `
+          : ""
+      }
 
-      <!-- 关注点 -->
-      ${data.concerns.length > 0 ? `
+      ${
+        data.concerns.length > 0
+          ? `
       <div class="section">
         <h2>⚠️ 需要关注</h2>
         <ul class="list">
-          ${data.concerns.map(c => `<li class="concern">⚠️ ${c}</li>`).join('')}
+          ${data.concerns.map((c) => `<li class="concern">⚠️ ${c}</li>`).join("")}
         </ul>
       </div>
-      ` : ''}
+      `
+          : ""
+      }
 
-      <!-- 异常记录 -->
-      ${data.anomalies.length > 0 ? `
+      ${
+        data.anomalies.length > 0
+          ? `
       <div class="section">
         <h2>🚨 异常检测</h2>
-        ${data.anomalies.map(a => `
+        ${data.anomalies
+          .map(
+            (a) => `
           <div class="anomaly">
             <div class="anomaly-title">${a.title}</div>
             <div class="anomaly-desc">${a.description}</div>
           </div>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </div>
-      ` : ''}
+      `
+          : ""
+      }
 
-      <!-- 改进建议 -->
-      ${data.recommendations.length > 0 ? `
+      ${
+        data.recommendations.length > 0
+          ? `
       <div class="section">
         <h2>💡 改进建议</h2>
         <ul class="list">
-          ${data.recommendations.map(r => `<li class="recommendation">💡 ${r}</li>`).join('')}
+          ${data.recommendations.map((r) => `<li class="recommendation">💡 ${r}</li>`).join("")}
         </ul>
       </div>
-      ` : ''}
+      `
+          : ""
+      }
     </div>
 
     <div class="footer">
       <p>本报告由健康管家系统自动生成</p>
-      <p>生成时间：${new Date().toLocaleString('zh-CN')}</p>
+      <p>生成时间：${new Date().toLocaleString("zh-CN")}</p>
     </div>
   </div>
 </body>
@@ -279,95 +306,87 @@ export function generateHTMLReport(data: ReportData): string {
   `.trim();
 }
 
-/**
- * 创建并保存报告
- */
 export async function createReport(
   memberId: string,
-  reportType: ReportType,
+  reportType: string,
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
 ) {
-  // 生成报告数据
-  const data = await generateReportData(memberId, reportType, startDate, endDate);
+  const data = await generateReportData(
+    memberId,
+    reportType,
+    startDate,
+    endDate,
+  );
 
-  // 生成HTML内容
   const htmlContent = generateHTMLReport(data);
 
-  // 确定报告标题
-  const periodName = {
-    WEEKLY: '周报',
-    MONTHLY: '月报',
-    QUARTERLY: '季报',
-    CUSTOM: '健康报告',
-  }[reportType];
+  const periodLabels = {
+    WEEKLY: "周报",
+    MONTHLY: "月报",
+    QUARTERLY: "季报",
+    CUSTOM: "健康报告",
+  };
+  const periodName =
+    periodLabels[reportType as keyof typeof periodLabels] || "报告";
 
   const title = `${data.member.name}的健康${periodName} - ${data.period.startDate.toLocaleDateString()}`;
 
-  // 生成摘要
   const summary = `统计${data.summary.totalDays}天，记录${data.summary.dataCompleteDays}天，平均健康评分${data.summary.averageScore.toFixed(1)}分`;
 
-  // 保存到数据库
-  const report = await prisma.healthReport.create({
-    data: {
-      memberId,
-      reportType,
-      startDate: data.period.startDate,
-      endDate: data.period.endDate,
-      title,
-      summary,
-      dataSnapshot: JSON.stringify(data),
-      insights: JSON.stringify({
-        achievements: data.achievements,
-        concerns: data.concerns,
-        recommendations: data.recommendations,
-      }),
-      overallScore: data.summary.averageScore,
-      htmlContent,
-      status: 'COMPLETED',
-    },
+  const report = await convexClient.mutation(api.analytics.createHealthReport, {
+    memberId: memberId,
+    reportType,
+    startDate: data.period.startDate.getTime(),
+    endDate: data.period.endDate.getTime(),
+    title,
+    summary,
+    htmlContent,
+    dataSnapshot: JSON.stringify(data),
+    insights: JSON.stringify({
+      achievements: data.achievements,
+      concerns: data.concerns,
+      recommendations: data.recommendations,
+    }),
+    overallScore: data.summary.averageScore,
   });
 
   return report;
 }
 
-/**
- * 生成分享token
- * 使用安全的 JWT Token 替代不安全的 Math.random()
- */
-export async function generateShareToken(reportId: string, expiryDays: number = 7) {
-  // 获取报告信息以确认存在并获取所有者 ID
-  const report = await prisma.healthReport.findUnique({
-    where: { id: reportId },
-    select: { id: true, memberId: true },
+export async function generateShareToken(
+  reportId: string,
+  expiryDays: number = 7,
+) {
+  const report = await convexClient.query<{
+    _id: string;
+    memberId: string;
+  } | null>(api.analytics.getHealthReportById, {
+    reportId: reportId,
   });
 
   if (!report) {
-    throw new Error('Report not found');
+    throw new Error("Report not found");
   }
 
-  // 生成安全的 JWT Token
   const token = await generateSecureShareToken(
     reportId,
-    'health_report',
+    "health_report",
     report.memberId,
     expiryDays,
-    ['read']
+    ["read"],
   );
 
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expiryDays);
 
-  // 更新数据库记录
-  await prisma.healthReport.update({
-    where: { id: reportId },
-    data: {
-      shareToken: token,
-      shareExpiresAt: expiresAt,
-    },
+  await convexClient.mutation(api.analytics.updateHealthReportShareToken, {
+    reportId: reportId,
+    shareToken: token,
+    shareExpiresAt: expiresAt.getTime(),
   });
 
-  logger.info('生成报告分享Token', {
+  logger.info("生成报告分享Token", {
     reportId,
     expiryDays,
   });
@@ -375,16 +394,11 @@ export async function generateShareToken(reportId: string, expiryDays: number = 
   return token;
 }
 
-/**
- * 通过分享token获取报告
- * 使用 JWT 验证替代简单的数据库查询
- */
 export async function getReportByShareToken(token: string) {
-  // 首先验证 Token 的有效性
   const verificationResult = await verifyShareToken(token);
 
   if (!verificationResult.valid) {
-    logger.warn('无效的分享Token', {
+    logger.warn("无效的分享Token", {
       error: verificationResult.error,
     });
     return null;
@@ -392,32 +406,33 @@ export async function getReportByShareToken(token: string) {
 
   const payload = verificationResult.payload;
 
-  // 验证资源类型
-  if (payload?.resourceType !== 'health_report') {
-    logger.warn('Token资源类型不匹配', {
-      expected: 'health_report',
+  if (payload?.resourceType !== "health_report") {
+    logger.warn("Token资源类型不匹配", {
+      expected: "health_report",
       actual: payload?.resourceType,
     });
     return null;
   }
 
-  // 从 Token 中获取报告 ID
   const reportId = payload.resourceId;
 
-  // 查询报告
-  const report = await prisma.healthReport.findUnique({
-    where: { id: reportId },
-    include: { member: true },
+  const report = await convexClient.query<{
+    _id: string;
+    memberId: string;
+    title: string;
+    htmlContent: string;
+    createdAt: number;
+  } | null>(api.analytics.getHealthReportById, {
+    reportId: reportId,
   });
 
   if (!report) {
-    logger.warn('Token对应的报告不存在', { reportId });
+    logger.warn("Token对应的报告不存在", { reportId });
     return null;
   }
 
-  // 验证所有权（Token 中的 ownerId 应该与报告的 memberId 匹配）
   if (payload.ownerId !== report.memberId) {
-    logger.warn('Token所有权验证失败', {
+    logger.warn("Token所有权验证失败", {
       tokenOwnerId: payload.ownerId,
       reportMemberId: report.memberId,
     });
@@ -427,17 +442,12 @@ export async function getReportByShareToken(token: string) {
   return report;
 }
 
-// ==================== 私有辅助函数 ====================
-
-/**
- * 计算报告时间范围
- */
 function calculatePeriod(
-  reportType: ReportType,
+  reportType: string,
   customStartDate?: Date,
-  customEndDate?: Date
+  customEndDate?: Date,
 ): { startDate: Date; endDate: Date } {
-  if (reportType === 'CUSTOM' && customStartDate && customEndDate) {
+  if (reportType === "CUSTOM" && customStartDate && customEndDate) {
     return { startDate: customStartDate, endDate: customEndDate };
   }
 
@@ -445,50 +455,58 @@ function calculatePeriod(
   const startDate = new Date();
 
   switch (reportType) {
-  case 'WEEKLY':
-    startDate.setDate(endDate.getDate() - 7);
-    break;
-  case 'MONTHLY':
-    startDate.setMonth(endDate.getMonth() - 1);
-    break;
-  case 'QUARTERLY':
-    startDate.setMonth(endDate.getMonth() - 3);
-    break;
+    case "WEEKLY":
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case "MONTHLY":
+      startDate.setMonth(endDate.getMonth() - 1);
+      break;
+    case "QUARTERLY":
+      startDate.setMonth(endDate.getMonth() - 3);
+      break;
   }
 
   return { startDate, endDate };
 }
 
-/**
- * 获取趋势数据
- */
 async function getTrendsForReport(
   memberId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) {
   const trends: any = {};
 
-  // 体重趋势
-  const weightTrend = await analyzeTrend(memberId, 'WEIGHT', startDate, endDate);
+  const weightTrend = await analyzeTrend(
+    memberId,
+    "WEIGHT",
+    startDate,
+    endDate,
+  );
   if (weightTrend.dataPoints.length > 0) {
     trends.weight = weightTrend.dataPoints;
   }
 
-  // 卡路里趋势
-  const caloriesTrend = await analyzeTrend(memberId, 'CALORIES', startDate, endDate);
+  const caloriesTrend = await analyzeTrend(
+    memberId,
+    "CALORIES",
+    startDate,
+    endDate,
+  );
   if (caloriesTrend.dataPoints.length > 0) {
     trends.calories = caloriesTrend.dataPoints;
   }
 
-  // 运动趋势
-  const exerciseTrend = await analyzeTrend(memberId, 'EXERCISE', startDate, endDate);
+  const exerciseTrend = await analyzeTrend(
+    memberId,
+    "EXERCISE",
+    startDate,
+    endDate,
+  );
   if (exerciseTrend.dataPoints.length > 0) {
     trends.exercise = exerciseTrend.dataPoints;
   }
 
-  // 睡眠趋势
-  const sleepTrend = await analyzeTrend(memberId, 'SLEEP', startDate, endDate);
+  const sleepTrend = await analyzeTrend(memberId, "SLEEP", startDate, endDate);
   if (sleepTrend.dataPoints.length > 0) {
     trends.sleep = sleepTrend.dataPoints;
   }
@@ -496,49 +514,63 @@ async function getTrendsForReport(
   return trends;
 }
 
-/**
- * 生成成就列表
- */
 async function generateAchievements(
   memberId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<string[]> {
   const achievements: string[] = [];
 
-  // 检查连续打卡
-  const streak = await prisma.trackingStreak.findUnique({
-    where: { memberId },
+  const streak = await convexClient.query<{
+    currentStreak: number;
+    longestStreak: number;
+    totalDays: number;
+    badges: string;
+  } | null>(api.analytics.getTrackingStreak, {
+    memberId: memberId,
   });
 
   if (streak && streak.currentStreak >= 7) {
     achievements.push(`连续打卡${streak.currentStreak}天，坚持不懈！`);
   }
 
-  // 检查健康评分
   const avgScore = await getAverageScore(memberId, startDate, endDate);
   if (avgScore >= 90) {
     achievements.push(`平均健康评分达到${avgScore.toFixed(1)}分，表现优秀！`);
   }
 
-  // 检查体重目标
-  const goal = await prisma.healthGoal.findFirst({
-    where: {
-      memberId,
-      status: 'ACTIVE',
-      goalType: { in: ['LOSE_WEIGHT', 'GAIN_MUSCLE'] },
-    },
+  const goals = await convexClient.query<
+    Array<{
+      _id: string;
+      goalType: string;
+      targetWeight: number | null;
+      startWeight: number | null;
+      status: string;
+    }>
+  >(api.health.listGoals, {
+    memberId: memberId,
+    includeInactive: false,
   });
 
+  const goal = goals.find(
+    (g) => g.goalType === "LOSE_WEIGHT" || g.goalType === "GAIN_MUSCLE",
+  );
+
   if (goal) {
-    const latestWeight = await prisma.healthData.findFirst({
-      where: {
-        memberId,
-        weight: { not: null },
-        measuredAt: { lte: endDate },
-      },
-      orderBy: { measuredAt: 'desc' },
+    const healthData = await convexClient.query<
+      Array<{
+        weight: number | null;
+        measuredAt: number;
+      }>
+    >(api.health.listByMemberDateRange, {
+      memberId: memberId,
+      startDate: 0,
+      endDate: endDate.getTime(),
     });
+
+    const latestWeight = healthData
+      .filter((d) => d.weight !== null)
+      .sort((a, b) => b.measuredAt - a.measuredAt)[0];
 
     if (latestWeight?.weight && goal.startWeight && goal.targetWeight) {
       const progress = Math.abs(latestWeight.weight - goal.startWeight);
@@ -546,7 +578,9 @@ async function generateAchievements(
       const percentage = (progress / target) * 100;
 
       if (percentage >= 25) {
-        achievements.push(`体重目标已完成${percentage.toFixed(0)}%，继续加油！`);
+        achievements.push(
+          `体重目标已完成${percentage.toFixed(0)}%，继续加油！`,
+        );
       }
     }
   }
@@ -554,103 +588,103 @@ async function generateAchievements(
   return achievements;
 }
 
-/**
- * 生成关注点列表
- */
 async function generateConcerns(
   memberId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<string[]> {
   const concerns: string[] = [];
 
-  // 检查异常记录
-  const highSeverityAnomalies = await prisma.healthAnomaly.count({
-    where: {
-      memberId,
-      detectedAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-      severity: { in: ['HIGH', 'CRITICAL'] },
-      status: 'PENDING',
+  const highSeverityAnomalies = await convexClient.query<number>(
+    api.analytics.countAnomaliesByMember,
+    {
+      memberId: memberId,
+      startDate: startDate.getTime(),
+      endDate: endDate.getTime(),
+      severities: ["HIGH", "CRITICAL"],
+      status: "PENDING",
     },
-  });
+  );
 
   if (highSeverityAnomalies > 0) {
     concerns.push(`发现${highSeverityAnomalies}个需要关注的健康异常`);
   }
 
-  // 检查数据记录完整度
-  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-  const recordedDays = await prisma.mealLog.groupBy({
-    by: ['date'],
-    where: {
-      memberId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-  });
+  const totalDays = Math.ceil(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
-  const completeness = (recordedDays.length / totalDays) * 100;
+  const recordedDays = await convexClient.query<number>(
+    api.analytics.groupMealLogsByDate,
+    {
+      memberId: memberId,
+      startDate: startDate.getTime(),
+      endDate: endDate.getTime(),
+    },
+  );
+
+  const completeness = (recordedDays / totalDays) * 100;
   if (completeness < 50) {
-    concerns.push(`数据记录完整度仅${completeness.toFixed(0)}%，建议提高记录频率`);
+    concerns.push(
+      `数据记录完整度仅${completeness.toFixed(0)}%，建议提高记录频率`,
+    );
   }
 
   return concerns;
 }
 
-/**
- * 生成改进建议
- */
 async function generateRecommendations(
   memberId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<string[]> {
   const recommendations: string[] = [];
 
-  // 基于平均评分给出建议
   const avgScore = await getAverageScore(memberId, startDate, endDate);
-  
+
   if (avgScore < 70) {
-    // 获取最近的评分详情
-    const recentScores = await prisma.healthScore.findMany({
-      where: {
-        memberId,
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      orderBy: { date: 'desc' },
-      take: 7,
+    const recentScores = await convexClient.query<
+      Array<{
+        nutritionScore: number;
+        exerciseScore: number;
+        sleepScore: number;
+        date: number;
+      }>
+    >(api.analytics.listHealthScores, {
+      memberId: memberId,
+      startDate: startDate.getTime(),
+      endDate: endDate.getTime(),
     });
 
     if (recentScores.length > 0) {
-      const avgNutrition = recentScores.reduce((sum, s) => sum + (s.nutritionScore || 0), 0) / recentScores.length;
-      const avgExercise = recentScores.reduce((sum, s) => sum + (s.exerciseScore || 0), 0) / recentScores.length;
-      const avgSleep = recentScores.reduce((sum, s) => sum + (s.sleepScore || 0), 0) / recentScores.length;
+      const sortedScores = recentScores
+        .sort((a, b) => b.date - a.date)
+        .slice(0, 7);
+
+      const avgNutrition =
+        sortedScores.reduce((sum, s) => sum + (s.nutritionScore || 0), 0) /
+        sortedScores.length;
+      const avgExercise =
+        sortedScores.reduce((sum, s) => sum + (s.exerciseScore || 0), 0) /
+        sortedScores.length;
+      const avgSleep =
+        sortedScores.reduce((sum, s) => sum + (s.sleepScore || 0), 0) /
+        sortedScores.length;
 
       if (avgNutrition < 70) {
-        recommendations.push('建议优化饮食结构，确保三大营养素均衡摄入');
+        recommendations.push("建议优化饮食结构，确保三大营养素均衡摄入");
       }
       if (avgExercise < 70) {
-        recommendations.push('建议增加运动量，每周至少进行150分钟中等强度运动');
+        recommendations.push("建议增加运动量，每周至少进行150分钟中等强度运动");
       }
       if (avgSleep < 70) {
-        recommendations.push('建议改善睡眠质量，保持规律作息，每晚7-9小时睡眠');
+        recommendations.push("建议改善睡眠质量，保持规律作息，每晚7-9小时睡眠");
       }
     }
   }
 
-  // 添加通用建议
-  recommendations.push('定期记录健康数据，帮助系统提供更准确的分析');
-  recommendations.push('遇到异常情况请及时咨询专业医生');
+  recommendations.push("定期记录健康数据，帮助系统提供更准确的分析");
+  recommendations.push("遇到异常情况请及时咨询专业医生");
 
   return recommendations;
 }
-
-

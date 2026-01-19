@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { testDatabaseConnection } from '@/lib/db/supabase-adapter';
-import { getCurrentUser } from '@/lib/auth';
-import { requireAdmin } from '@/lib/middleware/authorization';
+import { NextResponse } from "next/server";
+import { testDatabaseConnection } from "@/lib/db/supabase-adapter";
+import { getCurrentUser } from "@/lib/auth";
+import { requireAdmin } from "@/lib/middleware/authorization";
 
 /**
  * 数据库连接测试 API
@@ -11,11 +11,11 @@ import { requireAdmin } from '@/lib/middleware/authorization';
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === "production";
 
     // 生产环境需要管理员权限
     if (isProduction) {
@@ -23,8 +23,8 @@ export async function GET() {
 
       if (!user?.id) {
         return NextResponse.json(
-          { status: 'error', error: '未授权访问' },
-          { status: 401 }
+          { status: "error", error: "未授权访问" },
+          { status: 401 },
         );
       }
 
@@ -32,8 +32,8 @@ export async function GET() {
 
       if (!authResult.authorized) {
         return NextResponse.json(
-          { status: 'error', error: '需要管理员权限' },
-          { status: 403 }
+          { status: "error", error: "需要管理员权限" },
+          { status: 403 },
         );
       }
     }
@@ -42,29 +42,32 @@ export async function GET() {
     const isConnected = await testDatabaseConnection();
 
     if (!isConnected) {
-      return NextResponse.json({
-        status: 'error',
-        error: 'Database connection test failed',
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          status: "error",
+          error: "Database connection test failed",
+        },
+        { status: 500 },
+      );
     }
 
     // 返回简化的状态信息（不暴露敏感配置）
     return NextResponse.json({
-      status: 'success',
-      message: 'Database connection is healthy',
+      status: "success",
+      message: "Database connection is healthy",
       timestamp: new Date().toISOString(),
       connection: {
-        adapter: 'Supabase',
+        adapter: "Supabase",
         healthy: true,
       },
     });
   } catch (error) {
     return NextResponse.json(
       {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        status: "error",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

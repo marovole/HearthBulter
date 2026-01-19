@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface CalendarDay {
   date: Date;
@@ -29,16 +29,16 @@ export function TrackingCalendar({
 }: TrackingCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-  
-  const monthName = new Date(year, month - 1).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
+  const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
+
+  const monthName = new Date(year, month - 1).toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
   });
 
   const getDayClassName = (day: CalendarDay) => {
     const baseClass =
-      'aspect-square flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all';
+      "aspect-square flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all";
 
     if (!day.isChecked) {
       return `${baseClass} bg-gray-50 hover:bg-gray-100`;
@@ -93,9 +93,7 @@ export function TrackingCalendar({
           >
             <div className="text-sm font-medium">{day.date.getDate()}</div>
             {day.isChecked && (
-              <div className="text-xs mt-1">
-                {day.isCompleted ? '✓' : '◐'}
-              </div>
+              <div className="text-xs mt-1">{day.isCompleted ? "✓" : "◐"}</div>
             )}
           </div>
         ))}
@@ -125,4 +123,3 @@ export function TrackingCalendar({
     </div>
   );
 }
-

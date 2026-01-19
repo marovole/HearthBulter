@@ -1,6 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { budgetRepository } from '@/lib/repositories/budget-repository-singleton';
-import { foodCategorySchema, type FoodCategory, type SpendingCreateDTO } from '@/lib/repositories/types/budget';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { budgetRepository } from "@/lib/repositories/budget-repository-singleton";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
+import {
+  foodCategorySchema,
+  type FoodCategory,
+  type SpendingCreateDTO,
+} from "@/lib/repositories/types/budget";
 
 /**
  * POST /api/budget/record-spending
@@ -11,9 +17,14 @@ import { foodCategorySchema, type FoodCategory, type SpendingCreateDTO } from '@
  */
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const {
@@ -30,26 +41,39 @@ export async function POST(request: NextRequest) {
     // 验证必需字段
     if (!budgetId || !amount || !category || !description) {
       return NextResponse.json(
-        { error: '缺少必需字段：budgetId, amount, category, description' },
-        { status: 400 }
+        { error: "缺少必需字段：budgetId, amount, category, description" },
+        { status: 400 },
       );
     }
 
     // 验证金额
     const spendAmount = parseFloat(amount);
     if (spendAmount <= 0) {
-      return NextResponse.json(
-        { error: '支出金额必须大于0' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "支出金额必须大于0" }, { status: 400 });
     }
 
     // 验证分类
     const categoryValidation = foodCategorySchema.safeParse(category);
     if (!categoryValidation.success) {
+      return NextResponse.json({ error: "无效的食材分类" }, { status: 400 });
+    }
+
+    const budget = await budgetRepository.getBudgetById(budgetId);
+    if (!budget) {
       return NextResponse.json(
-        { error: '无效的食材分类' },
-        { status: 400 }
+        { error: "预算不存在或已不活跃" },
+        { status: 404 },
+      );
+    }
+
+    const access = await memberRepository.verifyMemberAccess(
+      budget.memberId,
+      session.user.id,
+    );
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        { error: "无权限记录该预算的支出" },
+        { status: 403 },
       );
     }
 
@@ -74,58 +98,62 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(spending);
   } catch (error) {
-    console.error('记录支出失败:', error);
+    console.error("记录支出失败:", error);
 
     if (error instanceof Error) {
       // 根据 RPC 函数返回的错误类型，映射到合适的 HTTP 状态码
       const message = error.message;
 
-      if (message.includes('BUDGET_NOT_FOUND') || message.includes('预算不存在')) {
+      if (
+        message.includes("BUDGET_NOT_FOUND") ||
+        message.includes("预算不存在")
+      ) {
         return NextResponse.json(
-          { error: '预算不存在或已不活跃' },
-          { status: 404 }
+          { error: "预算不存在或已不活跃" },
+          { status: 404 },
         );
       }
 
-      if (message.includes('DATE_OUT_OF_RANGE') || message.includes('不在预算周期内')) {
+      if (
+        message.includes("DATE_OUT_OF_RANGE") ||
+        message.includes("不在预算周期内")
+      ) {
         return NextResponse.json(
-          { error: '支出日期不在预算周期内' },
-          { status: 400 }
+          { error: "支出日期不在预算周期内" },
+          { status: 400 },
         );
       }
 
-      if (message.includes('BUDGET_EXCEEDED') || message.includes('超出预算')) {
+      if (message.includes("BUDGET_EXCEEDED") || message.includes("超出预算")) {
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+
+      if (
+        message.includes("CATEGORY_LIMIT_EXCEEDED") ||
+        message.includes("分类预算")
+      ) {
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+
+      if (message.includes("BUDGET_INACTIVE")) {
         return NextResponse.json(
-          { error: message },
-          { status: 400 }
+          { error: "预算已结束或不可用" },
+          { status: 400 },
         );
       }
 
-      if (message.includes('CATEGORY_LIMIT_EXCEEDED') || message.includes('分类预算')) {
+      if (message.includes("ID 与请求不一致")) {
         return NextResponse.json(
-          { error: message },
-          { status: 400 }
-        );
-      }
-
-      if (message.includes('ID 与请求不一致')) {
-        return NextResponse.json(
-          { error: '系统错误：预算 ID 不一致' },
-          { status: 500 }
+          { error: "系统错误：预算 ID 不一致" },
+          { status: 500 },
         );
       }
 
       // 其他错误
-      return NextResponse.json(
-        { error: message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: '记录支出失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "记录支出失败" }, { status: 500 });
   }
 }
 
@@ -137,14 +165,35 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const budgetId = searchParams.get('budgetId');
-    const category = searchParams.get('category') as FoodCategory | null;
+    const budgetId = searchParams.get("budgetId");
+    const category = searchParams.get("category") as FoodCategory | null;
 
     if (!budgetId) {
+      return NextResponse.json({ error: "缺少budgetId参数" }, { status: 400 });
+    }
+
+    const budget = await budgetRepository.getBudgetById(budgetId);
+    if (!budget) {
       return NextResponse.json(
-        { error: '缺少budgetId参数' },
-        { status: 400 }
+        { error: "预算不存在或已不活跃" },
+        { status: 404 },
+      );
+    }
+
+    const access = await memberRepository.verifyMemberAccess(
+      budget.memberId,
+      session.user.id,
+    );
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        { error: "无权限访问该预算的支出记录" },
+        { status: 403 },
       );
     }
 
@@ -154,15 +203,12 @@ export async function GET(request: NextRequest) {
         budgetId,
         category: category || undefined,
       },
-      undefined // 不使用分页，返回所有结果
+      undefined, // 不使用分页，返回所有结果
     );
 
     return NextResponse.json(result.items || []);
   } catch (error) {
-    console.error('获取支出历史失败:', error);
-    return NextResponse.json(
-      { error: '获取支出历史失败' },
-      { status: 500 }
-    );
+    console.error("获取支出历史失败:", error);
+    return NextResponse.json({ error: "获取支出历史失败" }, { status: 500 });
   }
 }

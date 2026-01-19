@@ -7,9 +7,8 @@
  * 因为通知系统已迁移至 Supabase
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseNotificationRepository } from './implementations/supabase-notification-repository';
-import type { NotificationRepository } from './interfaces/notification-repository';
+import { ConvexNotificationRepository } from "./implementations/convex-notification-repository";
+import type { NotificationRepository } from "./interfaces/notification-repository";
 
 let instance: NotificationRepository | null = null;
 
@@ -20,8 +19,7 @@ let instance: NotificationRepository | null = null;
  */
 export function getNotificationRepository(): NotificationRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseNotificationRepository(supabaseClient);
+    instance = new ConvexNotificationRepository();
   }
   return instance;
 }

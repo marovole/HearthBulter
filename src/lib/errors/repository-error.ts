@@ -3,21 +3,21 @@
  */
 export enum RepositoryErrorCode {
   /** 数据库操作错误 */
-  DATABASE_ERROR = 'DATABASE_ERROR',
+  DATABASE_ERROR = "DATABASE_ERROR",
   /** 记录未找到 */
-  NOT_FOUND = 'NOT_FOUND',
+  NOT_FOUND = "NOT_FOUND",
   /** 验证错误 */
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  VALIDATION_ERROR = "VALIDATION_ERROR",
   /** 冲突错误（如唯一约束冲突） */
-  CONFLICT = 'CONFLICT',
+  CONFLICT = "CONFLICT",
   /** 未知错误 */
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  UNKNOWN_ERROR = "UNKNOWN_ERROR",
   /** 创建失败 */
-  CREATE_FAILED = 'CREATE_FAILED',
+  CREATE_FAILED = "CREATE_FAILED",
   /** 更新失败 */
-  UPDATE_FAILED = 'UPDATE_FAILED',
+  UPDATE_FAILED = "UPDATE_FAILED",
   /** 删除失败 */
-  DELETE_FAILED = 'DELETE_FAILED',
+  DELETE_FAILED = "DELETE_FAILED",
 }
 
 /**
@@ -49,7 +49,7 @@ export class RepositoryError extends Error {
 
   constructor(params: RepositoryErrorParams) {
     super(params.message);
-    this.name = 'RepositoryError';
+    this.name = "RepositoryError";
     this.code = params.code;
     this.operation = params.operation;
     this.metadata = params.metadata;
@@ -85,27 +85,34 @@ export class RepositoryError extends Error {
   static fromSupabaseError(
     operation: string,
     error: unknown,
-    defaultCode: RepositoryErrorCode = RepositoryErrorCode.DATABASE_ERROR
+    defaultCode: RepositoryErrorCode = RepositoryErrorCode.DATABASE_ERROR,
   ): RepositoryError {
-    const supabaseError = error as { code?: string; message?: string; details?: string };
+    const supabaseError = error as {
+      code?: string;
+      message?: string;
+      details?: string;
+    };
 
     // 根据 Supabase 错误代码映射到 RepositoryErrorCode
     let code = defaultCode;
 
-    if (supabaseError?.code === 'PGRST116' || supabaseError?.code === 'PGRST404') {
+    if (
+      supabaseError?.code === "PGRST116" ||
+      supabaseError?.code === "PGRST404"
+    ) {
       // PostgREST 未找到错误
       code = RepositoryErrorCode.NOT_FOUND;
-    } else if (supabaseError?.code === '23505') {
+    } else if (supabaseError?.code === "23505") {
       // PostgreSQL 唯一约束冲突
       code = RepositoryErrorCode.CONFLICT;
-    } else if (supabaseError?.code === '23503') {
+    } else if (supabaseError?.code === "23503") {
       // PostgreSQL 外键约束错误
       code = RepositoryErrorCode.VALIDATION_ERROR;
     }
 
     return new RepositoryError({
       code,
-      message: `Repository.${operation} failed: ${supabaseError?.message || 'Unknown error'}`,
+      message: `Repository.${operation} failed: ${supabaseError?.message || "Unknown error"}`,
       operation,
       cause: error,
       metadata: {
@@ -133,7 +140,11 @@ export class RepositoryErrorUtils {
   /**
    * 创建 NOT_FOUND 错误
    */
-  static notFound(operation: string, message: string, metadata?: Record<string, unknown>): RepositoryError {
+  static notFound(
+    operation: string,
+    message: string,
+    metadata?: Record<string, unknown>,
+  ): RepositoryError {
     return new RepositoryError({
       code: RepositoryErrorCode.NOT_FOUND,
       message,
@@ -148,7 +159,7 @@ export class RepositoryErrorUtils {
   static validationError(
     operation: string,
     message: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): RepositoryError {
     return new RepositoryError({
       code: RepositoryErrorCode.VALIDATION_ERROR,
@@ -165,7 +176,7 @@ export class RepositoryErrorUtils {
     operation: string,
     message: string,
     cause?: unknown,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): RepositoryError {
     return new RepositoryError({
       code: RepositoryErrorCode.DATABASE_ERROR,

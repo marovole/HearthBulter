@@ -6,9 +6,8 @@
  * @module inventory-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseInventoryRepository } from './implementations/supabase-inventory-repository';
-import type { InventoryRepository } from './interfaces/inventory-repository';
+import { ConvexInventoryRepository } from "./implementations/convex-inventory-repository";
+import type { InventoryRepository } from "./interfaces/inventory-repository";
 
 let instance: InventoryRepository | null = null;
 
@@ -19,8 +18,7 @@ let instance: InventoryRepository | null = null;
  */
 export function getInventoryRepository(): InventoryRepository {
   if (!instance) {
-    const supabaseClient = SupabaseClientManager.getInstance();
-    instance = new SupabaseInventoryRepository(supabaseClient);
+    instance = new ConvexInventoryRepository();
   }
   return instance;
 }

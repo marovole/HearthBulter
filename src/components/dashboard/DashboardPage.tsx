@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { OverviewCards } from '@/components/dashboard/OverviewCards';
-import { TrendsSection } from '@/components/dashboard/TrendsSection';
-import { InsightsPanel } from '@/components/dashboard/InsightsPanel';
+import { OverviewCards } from "@/components/dashboard/OverviewCards";
+import { TrendsSection } from "@/components/dashboard/TrendsSection";
+import { InsightsPanel } from "@/components/dashboard/InsightsPanel";
 
 interface HealthDashboardPageProps {
-  memberId: string
+  memberId: string;
 }
 
 export function HealthDashboardPage({ memberId }: HealthDashboardPageProps) {
@@ -42,4 +42,3 @@ export function HealthDashboardPage({ memberId }: HealthDashboardPageProps) {
     </div>
   );
 }
-

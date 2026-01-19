@@ -1,48 +1,48 @@
 // 餐饮相关类型定义
 
 export enum MealType {
-  BREAKFAST = 'BREAKFAST',
-  LUNCH = 'LUNCH',
-  DINNER = 'DINNER',
-  SNACK = 'SNACK',
+  BREAKFAST = "BREAKFAST",
+  LUNCH = "LUNCH",
+  DINNER = "DINNER",
+  SNACK = "SNACK",
 }
 
 export enum FoodCategory {
-  VEGETABLES = 'VEGETABLES',
-  FRUITS = 'FRUITS',
-  GRAINS = 'GRAINS',
-  PROTEIN = 'PROTEIN',
-  SEAFOOD = 'SEAFOOD',
-  DAIRY = 'DAIRY',
-  OILS = 'OILS',
-  SNACKS = 'SNACKS',
-  BEVERAGES = 'BEVERAGES',
-  OTHER = 'OTHER',
+  VEGETABLES = "VEGETABLES",
+  FRUITS = "FRUITS",
+  GRAINS = "GRAINS",
+  PROTEIN = "PROTEIN",
+  SEAFOOD = "SEAFOOD",
+  DAIRY = "DAIRY",
+  OILS = "OILS",
+  SNACKS = "SNACKS",
+  BEVERAGES = "BEVERAGES",
+  OTHER = "OTHER",
 }
 
 export enum DataSource {
-  USDA = 'USDA',
-  LOCAL = 'LOCAL',
-  USER_SUBMITTED = 'USER_SUBMITTED',
+  USDA = "USDA",
+  LOCAL = "LOCAL",
+  USER_SUBMITTED = "USER_SUBMITTED",
 }
 
 // 食物接口
 export interface Food {
   id: string;
   name: string;
-  nameEn?: string;
+  nameEn?: string | null;
   aliases: string; // JSON string
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  fiber?: number;
-  sugar?: number;
-  sodium?: number;
-  vitaminA?: number;
-  vitaminC?: number;
-  calcium?: number;
-  iron?: number;
+  fiber?: number | null;
+  sugar?: number | null;
+  sodium?: number | null;
+  vitaminA?: number | null;
+  vitaminC?: number | null;
+  calcium?: number | null;
+  iron?: number | null;
   category: FoodCategory;
   tags: string; // JSON string
   source: DataSource;

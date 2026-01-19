@@ -383,20 +383,32 @@ SUPABASE_SERVICE_KEY=your-service-key
 # USDA 营养数据 API
 USDA_API_KEY=your-usda-api-key
 
-# Redis 缓存 (Upstash)
+# Redis 缓存 (Upstash, 可选)
 UPSTASH_REDIS_REST_URL=https://[ref].upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-redis-token
+
+# Redis (可选，本地或自建)
+REDIS_URL=redis://localhost:6379
+
+# Web Push (可选)
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
 
 # OAuth 登录
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# AI 服务 (OpenAI)
+# AI 服务 (OpenAI / OpenRouter)
 OPENAI_API_KEY=your-openai-api-key
+OPENROUTER_API_KEY=your-openrouter-api-key
+
+# 日志级别 (可选)
+LOG_LEVEL=info
 
 # 错误追踪 (Sentry)
 SENTRY_DSN=your-sentry-dsn
 ```
+
+Upstash Redis 未配置时，缓存会降级为内存或跳过；如需自建 Redis，请配置 REDIS_URL。
 
 </details>
 

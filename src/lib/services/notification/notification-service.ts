@@ -1,16 +1,49 @@
-import { PrismaClient, Notification, NotificationStatus, NotificationType } from '@prisma/client';
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id, Doc } from "@/../convex/_generated/dataModel";
+
+export type NotificationType =
+  | "CHECK_IN_REMINDER"
+  | "TASK_NOTIFICATION"
+  | "EXPIRY_ALERT"
+  | "BUDGET_WARNING"
+  | "HEALTH_ALERT"
+  | "GOAL_ACHIEVEMENT"
+  | "FAMILY_ACTIVITY"
+  | "SYSTEM_ANNOUNCEMENT"
+  | "MARKETING"
+  | "OTHER";
+
+export type NotificationStatus =
+  | "PENDING"
+  | "SENDING"
+  | "SENT"
+  | "FAILED"
+  | "CANCELLED";
+
+interface Notification {
+  id: string;
+  memberId: string;
+  type: NotificationType;
+  title: string;
+  content: string;
+  priority: string;
+  channels: string[];
+  metadata?: Record<string, unknown>;
+  actionUrl?: string;
+  actionText?: string;
+  dedupKey?: string;
+  batchId?: string;
+  status: NotificationStatus;
+  readAt: number | null;
+  sentAt: number | null;
+  createdAt: number;
+  updatedAt: number;
+}
 
 export class NotificationService {
-  private prisma: PrismaClient;
+  private constructor() {}
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
-  }
-
-  /**
-   * 创建通知
-   */
-  async create(data: {
+  static async create(data: {
     memberId: string;
     type: NotificationType;
     title: string;
@@ -23,41 +56,41 @@ export class NotificationService {
     dedupKey?: string;
     batchId?: string;
   }): Promise<Notification> {
-    return await this.prisma.notification.create({
-      data: {
-        ...data,
-        status: NotificationStatus.PENDING,
-        metadata: data.metadata || undefined,
-      },
+    const id = await convexClient.mutation(api.notifications.create, {
+      memberId: data.memberId as Id<"familyMembers">,
+      type: data.type,
+      title: data.title,
+      content: data.content,
+      priority: data.priority ?? "MEDIUM",
+      channels:
+        typeof data.channels === "string"
+          ? JSON.parse(data.channels)
+          : (data.channels ?? ["IN_APP"]),
+      metadata: data.metadata,
+      actionUrl: data.actionUrl,
+      actionText: data.actionText,
+      dedupKey: data.dedupKey,
+      batchId: data.batchId,
     });
+
+    const result = await convexClient.query<Doc<"notifications"> | null>(
+      api.notifications.getById,
+      { id: id as Id<"notifications"> },
+    );
+
+    return this.mapNotification(result!);
   }
 
-  /**
-   * 根据ID查找通知
-   */
-  async findById(id: string): Promise<Notification | null> {
-    return await this.prisma.notification.findUnique({
-      where: { id },
-      include: {
-        member: {
-          select: {
-            id: true,
-            name: true,
-            user: {
-              select: {
-                email: true,
-              },
-            },
-          },
-        },
-      },
-    });
+  static async findById(id: string): Promise<Notification | null> {
+    const notification = await convexClient.query<Doc<"notifications"> | null>(
+      api.notifications.getById,
+      { id: id as Id<"notifications"> },
+    );
+
+    return notification ? this.mapNotification(notification) : null;
   }
 
-  /**
-   * 获取用户通知列表
-   */
-  async getUserNotifications(
+  static async getUserNotifications(
     memberId: string,
     options: {
       type?: NotificationType;
@@ -65,312 +98,191 @@ export class NotificationService {
       limit?: number;
       offset?: number;
       includeRead?: boolean;
-    } = {}
-  ) {
-    const where: any = { memberId };
-
-    if (options.type) {
-      where.type = options.type;
-    }
-
-    if (!options.includeRead) {
-      where.readAt = null;
-    }
-
-    if (options.status) {
-      where.status = options.status;
-    }
-
-    const [notifications, total] = await Promise.all([
-      this.prisma.notification.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: options.limit || 20,
-        skip: options.offset || 0,
-        include: {
-          logs: {
-            select: {
-              channel: true,
-              status: true,
-              sentAt: true,
-            },
-          },
-        },
-      }),
-      this.prisma.notification.count({ where }),
-    ]);
+    } = {},
+  ): Promise<{
+    notifications: Notification[];
+    total: number;
+    hasMore: boolean;
+  }> {
+    const result = await convexClient.query<{
+      data: Doc<"notifications">[];
+      total: number;
+    }>(api.notifications.list, {
+      memberId: memberId as Id<"familyMembers">,
+      type: options.type,
+      status: options.status,
+      includeRead: options.includeRead ?? false,
+      offset: options.offset,
+      limit: options.limit ?? 20,
+    });
 
     return {
-      notifications,
-      total,
-      hasMore: (options.offset || 0) + notifications.length < total,
+      notifications: result.data.map(this.mapNotification),
+      total: result.total,
+      hasMore: (options.offset ?? 0) + result.data.length < result.total,
     };
   }
 
-  /**
-   * 标记通知为已读
-   */
-  async markAsRead(notificationId: string, memberId: string): Promise<void> {
-    const notification = await this.prisma.notification.findFirst({
-      where: {
-        id: notificationId,
-        memberId,
-      },
-    });
+  static async markAsRead(
+    notificationId: string,
+    memberId: string,
+  ): Promise<void> {
+    const notification = await convexClient.query<Doc<"notifications"> | null>(
+      api.notifications.getById,
+      { id: notificationId as Id<"notifications"> },
+    );
 
     if (!notification) {
-      throw new Error('Notification not found or access denied');
+      throw new Error("Notification not found or access denied");
     }
 
-    await this.prisma.notification.update({
-      where: { id: notificationId },
-      data: {
-        readAt: new Date(),
-      },
+    await convexClient.mutation(api.notifications.markAsRead, {
+      id: notificationId as Id<"notifications">,
     });
   }
 
-  /**
-   * 标记所有通知为已读
-   */
-  async markAllAsRead(memberId: string): Promise<void> {
-    await this.prisma.notification.updateMany({
-      where: {
-        memberId,
-        readAt: null,
-      },
-      data: {
-        readAt: new Date(),
-      },
+  static async markAllAsRead(memberId: string): Promise<void> {
+    await convexClient.mutation(api.notifications.markAllAsRead, {
+      memberId: memberId as Id<"familyMembers">,
     });
   }
 
-  /**
-   * 删除通知
-   */
-  async delete(notificationId: string, memberId: string): Promise<void> {
-    const notification = await this.prisma.notification.findFirst({
-      where: {
-        id: notificationId,
-        memberId,
-      },
-    });
+  static async delete(notificationId: string, memberId: string): Promise<void> {
+    const notification = await convexClient.query<Doc<"notifications"> | null>(
+      api.notifications.getById,
+      { id: notificationId as Id<"notifications"> },
+    );
 
     if (!notification) {
-      throw new Error('Notification not found or access denied');
+      throw new Error("Notification not found or access denied");
     }
 
-    await this.prisma.notification.delete({
-      where: { id: notificationId },
+    await convexClient.mutation(api.notifications.deleteNotification, {
+      id: notificationId as Id<"notifications">,
     });
   }
 
-  /**
-   * 获取未读通知数量
-   */
-  async getUnreadCount(memberId: string): Promise<number> {
-    return await this.prisma.notification.count({
-      where: {
-        memberId,
-        readAt: null,
-        status: {
-          in: [NotificationStatus.SENT, NotificationStatus.SENDING],
-        },
-      },
+  static async getUnreadCount(memberId: string): Promise<number> {
+    return await convexClient.query<number>(api.notifications.getUnreadCount, {
+      memberId: memberId as Id<"familyMembers">,
     });
   }
 
-  /**
-   * 更新通知状态
-   */
-  async updateStatus(id: string, status: NotificationStatus): Promise<void> {
-    const updateData: any = { status };
-
-    if (status === NotificationStatus.SENT) {
-      updateData.sentAt = new Date();
-    }
-
-    await this.prisma.notification.update({
-      where: { id },
-      data: updateData,
+  static async updateStatus(
+    id: string,
+    status: NotificationStatus,
+  ): Promise<void> {
+    await convexClient.mutation(api.notifications.updateStatus, {
+      id: id as Id<"notifications">,
+      status,
     });
   }
 
-  /**
-   * 更新发送结果
-   */
-  async updateDeliveryResults(id: string, results: string): Promise<void> {
-    await this.prisma.notification.update({
-      where: { id },
-      data: {
-        deliveryResults: results,
-      },
+  static async updateDeliveryResults(
+    id: string,
+    results: string,
+  ): Promise<void> {
+    await convexClient.mutation(api.notifications.updateDeliveryResults, {
+      id: id as Id<"notifications">,
+      results,
     });
   }
 
-  /**
-   * 安排重试
-   */
-  async scheduleRetry(id: string, nextRetryAt: Date): Promise<void> {
-    await this.prisma.notification.update({
-      where: { id },
-      data: {
-        retryCount: {
-          increment: 1,
-        },
-        nextRetryAt,
-      },
+  static async scheduleRetry(id: string, nextRetryAt: Date): Promise<void> {
+    await convexClient.mutation(api.notifications.scheduleRetry, {
+      id: id as Id<"notifications">,
+      nextRetryAt: nextRetryAt.getTime(),
     });
   }
 
-  /**
-   * 获取待重试的通知
-   */
-  async getPendingRetryNotifications(): Promise<Notification[]> {
-    return await this.prisma.notification.findMany({
-      where: {
-        status: NotificationStatus.FAILED,
-        retryCount: {
-          lt: this.prisma.notification.fields.maxRetries,
-        },
-        nextRetryAt: {
-          lte: new Date(),
-        },
-      },
-      orderBy: {
-        nextRetryAt: 'asc',
-      },
-      take: 50, // 限制批次大小
-    });
+  static async getPendingRetryNotifications(): Promise<Notification[]> {
+    const items = await convexClient.query<Doc<"notifications">[]>(
+      api.notifications.listPendingRetry,
+      { limit: 50 },
+    );
+
+    return items.map(this.mapNotification);
   }
 
-  /**
-   * 获取待发送的通知
-   */
-  async getPendingNotifications(limit: number = 50): Promise<Notification[]> {
-    return await this.prisma.notification.findMany({
-      where: {
-        status: NotificationStatus.PENDING,
-        OR: [
-          { nextRetryAt: null },
-          { nextRetryAt: { lte: new Date() } },
-        ],
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-      take: limit,
-    });
+  static async getPendingNotifications(
+    limit: number = 50,
+  ): Promise<Notification[]> {
+    const items = await convexClient.query<Doc<"notifications">[]>(
+      api.notifications.listPending,
+      { limit },
+    );
+
+    return items.map(this.mapNotification);
   }
 
-  /**
-   * 获取用户通知统计
-   */
-  async getUserNotificationStats(memberId: string, days: number = 30) {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const stats = await this.prisma.notification.groupBy({
-      by: ['type', 'status'],
-      where: {
-        memberId,
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      _count: {
-        id: true,
-      },
+  static async getUserNotificationStats(
+    memberId: string,
+    days: number = 30,
+  ): Promise<{
+    total: number;
+    sent: number;
+    failed: number;
+    pending: number;
+    byType: Record<
+      string,
+      { total: number; sent: number; failed: number; pending: number }
+    >;
+  }> {
+    const stats = await convexClient.query<{
+      summary: {
+        total: number;
+        sent: number;
+        failed: number;
+        pending: number;
+      };
+      dailyStats: Array<{
+        date: string;
+        total: number;
+        sent: number;
+        failed: number;
+        pending: number;
+      }>;
+      channelStats: Record<
+        string,
+        { total: number; sent: number; failed: number; successRate: number }
+      >;
+    }>(api.notifications.getStats, {
+      memberId: memberId as Id<"familyMembers">,
+      days,
+      dailyDays: days,
     });
 
-    const result: Record<string, any> = {
-      total: 0,
-      sent: 0,
-      failed: 0,
-      pending: 0,
+    return {
+      total: stats.summary.total,
+      sent: stats.summary.sent,
+      failed: stats.summary.failed,
+      pending: stats.summary.pending,
       byType: {},
     };
-
-    stats.forEach(stat => {
-      const count = stat._count.id;
-      result.total += count;
-
-      switch (stat.status) {
-      case NotificationStatus.SENT:
-        result.sent += count;
-        break;
-      case NotificationStatus.FAILED:
-        result.failed += count;
-        break;
-      case NotificationStatus.PENDING:
-      case NotificationStatus.SENDING:
-        result.pending += count;
-        break;
-      }
-
-      if (!result.byType[stat.type]) {
-        result.byType[stat.type] = {
-          total: 0,
-          sent: 0,
-          failed: 0,
-          pending: 0,
-        };
-      }
-
-      result.byType[stat.type].total += count;
-      result.byType[stat.type][stat.status.toLowerCase()] += count;
-    });
-
-    return result;
   }
 
-  /**
-   * 清理过期通知
-   */
-  async cleanupOldNotifications(daysToKeep: number = 90): Promise<number> {
+  static async cleanupOldNotifications(
+    daysToKeep: number = 90,
+  ): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-    const result = await this.prisma.notification.deleteMany({
-      where: {
-        createdAt: {
-          lt: cutoffDate,
-        },
-        status: {
-          in: [NotificationStatus.SENT, NotificationStatus.FAILED, NotificationStatus.CANCELLED],
-        },
-      },
+    return await convexClient.mutation(api.notifications.cleanupOld, {
+      cutoffTime: cutoffDate.getTime(),
     });
-
-    return result.count;
   }
 
-  /**
-   * 批量更新通知状态
-   */
-  async batchUpdateStatus(
+  static async batchUpdateStatus(
     notificationIds: string[],
-    status: NotificationStatus
+    status: NotificationStatus,
   ): Promise<number> {
-    const result = await this.prisma.notification.updateMany({
-      where: {
-        id: {
-          in: notificationIds,
-        },
-      },
-      data: {
-        status,
-        ...(status === NotificationStatus.SENT ? { sentAt: new Date() } : {}),
-      },
+    return await convexClient.mutation(api.notifications.batchUpdateStatus, {
+      ids: notificationIds.map((id) => id as Id<"notifications">),
+      status,
     });
-
-    return result.count;
   }
 
-  /**
-   * 搜索通知
-   */
-  async searchNotifications(
+  static async searchNotifications(
     memberId: string,
     query: string,
     options: {
@@ -378,54 +290,50 @@ export class NotificationService {
       offset?: number;
       dateFrom?: Date;
       dateTo?: Date;
-    } = {}
-  ) {
-    const where: any = {
-      memberId,
-      OR: [
-        {
-          title: {
-            contains: query,
-            mode: 'insensitive',
-          },
-        },
-        {
-          content: {
-            contains: query,
-            mode: 'insensitive',
-          },
-        },
-      ],
-    };
-
-    if (options.dateFrom) {
-      where.createdAt = {
-        ...where.createdAt,
-        gte: options.dateFrom,
-      };
-    }
-
-    if (options.dateTo) {
-      where.createdAt = {
-        ...where.createdAt,
-        lte: options.dateTo,
-      };
-    }
-
-    const [notifications, total] = await Promise.all([
-      this.prisma.notification.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: options.limit || 20,
-        skip: options.offset || 0,
-      }),
-      this.prisma.notification.count({ where }),
-    ]);
+    } = {},
+  ): Promise<{
+    notifications: Notification[];
+    total: number;
+    hasMore: boolean;
+  }> {
+    const result = await convexClient.query<{
+      data: Doc<"notifications">[];
+      total: number;
+    }>(api.notifications.searchNotifications, {
+      memberId: memberId as Id<"familyMembers">,
+      query,
+      limit: options.limit ?? 20,
+      offset: options.offset,
+      dateFrom: options.dateFrom?.getTime(),
+      dateTo: options.dateTo?.getTime(),
+    });
 
     return {
-      notifications,
-      total,
-      hasMore: (options.offset || 0) + notifications.length < total,
+      notifications: result.data.map(this.mapNotification),
+      total: result.total,
+      hasMore: (options.offset ?? 0) + result.data.length < result.total,
+    };
+  }
+
+  private static mapNotification(doc: Doc<"notifications">): Notification {
+    return {
+      id: doc._id,
+      memberId: doc.memberId,
+      type: doc.type as NotificationType,
+      title: doc.title,
+      content: doc.content,
+      priority: doc.priority,
+      channels: doc.channels ?? [],
+      metadata: doc.metadata as Record<string, unknown> | undefined,
+      actionUrl: doc.actionUrl ?? undefined,
+      actionText: doc.actionText ?? undefined,
+      dedupKey: doc.dedupKey ?? undefined,
+      batchId: doc.batchId ?? undefined,
+      status: doc.status as NotificationStatus,
+      readAt: doc.readAt ?? null,
+      sentAt: doc.sentAt ?? null,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     };
   }
 }

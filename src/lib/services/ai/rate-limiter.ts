@@ -1,10 +1,10 @@
 /**
  * AI 调用限流器
- * 
+ *
  * 实现基于用户的调用频率限制，防止滥用和成本失控
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger";
 
 // 限流配置
 export interface RateLimitConfig {
@@ -28,7 +28,12 @@ export interface RateLimitResult {
 }
 
 // AI 调用类型
-export type AICallType = 'chat' | 'analysis' | 'report' | 'recommendation' | 'image';
+export type AICallType =
+  | "chat"
+  | "analysis"
+  | "report"
+  | "recommendation"
+  | "image";
 
 // 默认限流配置（每种调用类型）
 const DEFAULT_CONFIGS: Record<AICallType, RateLimitConfig> = {
@@ -59,6 +64,18 @@ const DEFAULT_CONFIGS: Record<AICallType, RateLimitConfig> = {
   },
 };
 
+const DEFAULT_ENDPOINT_CONFIGS: Record<string, RateLimitConfig> = {
+  ai_chat: DEFAULT_CONFIGS.chat,
+  ai_analyze_health: DEFAULT_CONFIGS.analysis,
+  ai_generate_report: DEFAULT_CONFIGS.report,
+  ai_optimize_recipe: DEFAULT_CONFIGS.recommendation,
+  ai_general: DEFAULT_CONFIGS.chat,
+};
+
+export function getDefaultRateLimitConfig(endpoint: string): RateLimitConfig {
+  return DEFAULT_ENDPOINT_CONFIGS[endpoint] ?? DEFAULT_CONFIGS.chat;
+}
+
 // 用户限流存储（内存存储，生产环境应使用 Redis）
 const userLimits = new Map<string, Map<AICallType, UserRateLimit>>();
 
@@ -78,7 +95,7 @@ function getUserRateLimit(userId: string, callType: AICallType): UserRateLimit {
   }
 
   const userMap = userLimits.get(userId)!;
-  
+
   if (!userMap.has(callType)) {
     userMap.set(callType, {
       requests: [],
@@ -92,10 +109,13 @@ function getUserRateLimit(userId: string, callType: AICallType): UserRateLimit {
 /**
  * 清理过期的请求记录
  */
-function cleanupExpiredRequests(rateLimit: UserRateLimit, windowMs: number): void {
+function cleanupExpiredRequests(
+  rateLimit: UserRateLimit,
+  windowMs: number,
+): void {
   const now = Date.now();
   const windowStart = now - windowMs;
-  rateLimit.requests = rateLimit.requests.filter(ts => ts > windowStart);
+  rateLimit.requests = rateLimit.requests.filter((ts) => ts > windowStart);
 }
 
 /**
@@ -104,7 +124,7 @@ function cleanupExpiredRequests(rateLimit: UserRateLimit, windowMs: number): voi
 export function checkRateLimit(
   userId: string,
   callType: AICallType,
-  config?: Partial<RateLimitConfig>
+  config?: Partial<RateLimitConfig>,
 ): RateLimitResult {
   const finalConfig = { ...DEFAULT_CONFIGS[callType], ...config };
   const rateLimit = getUserRateLimit(userId, callType);
@@ -113,12 +133,12 @@ export function checkRateLimit(
   // 检查是否被阻止
   if (rateLimit.blockedUntil && rateLimit.blockedUntil > now) {
     const retryAfter = Math.ceil((rateLimit.blockedUntil - now) / 1000);
-    logger.warn('AI 调用被限流', {
+    logger.warn("AI 调用被限流", {
       userId,
       callType,
       retryAfter,
     });
-    
+
     return {
       allowed: false,
       remaining: 0,
@@ -135,14 +155,15 @@ export function checkRateLimit(
 
   // 检查是否超过限制
   if (rateLimit.requests.length >= finalConfig.maxRequests) {
-    rateLimit.blockedUntil = now + finalConfig.blockDurationMs;
-    const retryAfter = Math.ceil(finalConfig.blockDurationMs / 1000);
-    
-    logger.warn('AI 调用触发限流阻止', {
+    const blockDurationMs = finalConfig.blockDurationMs ?? finalConfig.windowMs;
+    rateLimit.blockedUntil = now + blockDurationMs;
+    const retryAfter = Math.ceil(blockDurationMs / 1000);
+
+    logger.warn("AI 调用触发限流阻止", {
       userId,
       callType,
       requestCount: rateLimit.requests.length,
-      blockDuration: finalConfig.blockDurationMs,
+      blockDuration: blockDurationMs,
     });
 
     return {
@@ -177,7 +198,7 @@ export function recordAICall(userId: string, callType: AICallType): void {
  */
 export function getUserRateLimitStatus(
   userId: string,
-  callType: AICallType
+  callType: AICallType,
 ): {
   requestsInWindow: number;
   isBlocked: boolean;
@@ -185,20 +206,27 @@ export function getUserRateLimitStatus(
 } {
   const config = DEFAULT_CONFIGS[callType];
   const rateLimit = getUserRateLimit(userId, callType);
-  
+
   cleanupExpiredRequests(rateLimit, config.windowMs);
 
   return {
     requestsInWindow: rateLimit.requests.length,
-    isBlocked: rateLimit.blockedUntil ? rateLimit.blockedUntil > Date.now() : false,
-    blockedUntil: rateLimit.blockedUntil ? new Date(rateLimit.blockedUntil) : null,
+    isBlocked: rateLimit.blockedUntil
+      ? rateLimit.blockedUntil > Date.now()
+      : false,
+    blockedUntil: rateLimit.blockedUntil
+      ? new Date(rateLimit.blockedUntil)
+      : null,
   };
 }
 
 /**
  * 重置用户限流状态（管理员功能）
  */
-export function resetUserRateLimit(userId: string, callType?: AICallType): void {
+export function resetUserRateLimit(
+  userId: string,
+  callType?: AICallType,
+): void {
   if (callType) {
     const userMap = userLimits.get(userId);
     if (userMap) {
@@ -207,8 +235,8 @@ export function resetUserRateLimit(userId: string, callType?: AICallType): void 
   } else {
     userLimits.delete(userId);
   }
-  
-  logger.info('重置用户限流状态', { userId, callType });
+
+  logger.info("重置用户限流状态", { userId, callType });
 }
 
 /**
@@ -223,7 +251,7 @@ export function cleanupAllExpiredRecords(): void {
     for (const [callType, rateLimit] of userMap.entries()) {
       const config = DEFAULT_CONFIGS[callType];
       const originalLength = rateLimit.requests.length;
-      
+
       cleanupExpiredRequests(rateLimit, config.windowMs);
       cleanedRecords += originalLength - rateLimit.requests.length;
 
@@ -246,7 +274,7 @@ export function cleanupAllExpiredRecords(): void {
   }
 
   if (cleanedRecords > 0 || cleanedUsers > 0) {
-    logger.debug('清理限流记录', { cleanedUsers, cleanedRecords });
+    logger.debug("清理限流记录", { cleanedUsers, cleanedRecords });
   }
 }
 
@@ -256,14 +284,14 @@ export function cleanupAllExpiredRecords(): void {
 export async function withRateLimit<T>(
   userId: string,
   callType: AICallType,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   const result = checkRateLimit(userId, callType);
 
   if (!result.allowed) {
     throw new RateLimitError(
       `AI 调用频率超限，请 ${result.retryAfter} 秒后重试`,
-      result.retryAfter || 60
+      result.retryAfter || 60,
     );
   }
 
@@ -279,7 +307,7 @@ export class RateLimitError extends Error {
 
   constructor(message: string, retryAfter: number) {
     super(message);
-    this.name = 'RateLimitError';
+    this.name = "RateLimitError";
     this.retryAfter = retryAfter;
   }
 }
@@ -287,28 +315,109 @@ export class RateLimitError extends Error {
 /**
  * 类风格的限流器（兼容旧 API）
  */
+type RateLimiterStats = {
+  totalRequests: number;
+  allowedRequests: number;
+  blockedRequests: number;
+  timestamps: number[];
+  lastRequestAt: number | null;
+};
+
+type RateLimiterMemoryUsage = {
+  activeUsers: number;
+  totalEntries: number;
+  totalRequests: number;
+};
+
+type RateLimiterStatsResult = {
+  totalRequests: number;
+  allowedRequests: number;
+  blockedRequests: number;
+  blockRate: number;
+  currentUsage: number;
+  remainingRequests: number;
+  lastRequestAt: Date | null;
+};
+
+type RateLimiterSummary = {
+  activeRecords: number;
+  totalRecords: number;
+  totalRequests: number;
+  allowedRequests: number;
+  blockedRequests: number;
+  blockRate: number;
+};
+
+type RateLimiterGlobalStats = {
+  totalUsers: number;
+  totalRequests: number;
+  allowedRequests: number;
+  blockedRequests: number;
+  averageRequestsPerUser: number;
+};
+
 export class RateLimiter {
-  private limits = new Map<string, { requests: number[]; blockedUntil: number | null }>();
+  private limits = new Map<
+    string,
+    { requests: number[]; blockedUntil: number | null }
+  >();
+  private stats = new Map<string, RateLimiterStats>();
+  private lastConfigs = new Map<string, RateLimitConfig>();
+  private lastAccess = new Map<string, number>();
 
   private getKey(userId: string, endpoint: string): string {
     return `${userId}:${endpoint}`;
   }
 
+  private getStatsEntry(key: string): RateLimiterStats {
+    if (!this.stats.has(key)) {
+      this.stats.set(key, {
+        totalRequests: 0,
+        allowedRequests: 0,
+        blockedRequests: 0,
+        timestamps: [],
+        lastRequestAt: null,
+      });
+    }
+
+    return this.stats.get(key)!;
+  }
+
+  private recordStats(key: string, allowed: boolean, now: number): void {
+    const stats = this.getStatsEntry(key);
+    stats.totalRequests += 1;
+    stats.lastRequestAt = now;
+    stats.timestamps.push(now);
+
+    if (allowed) {
+      stats.allowedRequests += 1;
+    } else {
+      stats.blockedRequests += 1;
+    }
+  }
+
   async checkLimit(
     userId: string,
     endpoint: string,
-    config: RateLimitConfig
+    config: RateLimitConfig,
   ): Promise<{
     allowed: boolean;
     remaining: number;
     resetTime: Date;
     retryAfter?: number;
   }> {
+    if (config.windowMs <= 0 || config.maxRequests < 0) {
+      throw new Error("Invalid rate limit config");
+    }
+
     const key = this.getKey(userId, endpoint);
     const now = Date.now();
     const windowMs = config.windowMs;
     const maxRequests = config.maxRequests;
-    const blockDurationMs = config.blockDurationMs || 60000;
+    const blockDurationMs = config.blockDurationMs ?? windowMs;
+
+    this.lastConfigs.set(key, config);
+    this.lastAccess.set(key, now);
 
     if (!this.limits.has(key)) {
       this.limits.set(key, { requests: [], blockedUntil: null });
@@ -316,9 +425,24 @@ export class RateLimiter {
 
     const limit = this.limits.get(key)!;
 
+    // 清理过期请求
+    const windowStart = now - windowMs;
+    limit.requests = limit.requests.filter((ts) => ts > windowStart);
+
+    if (config.maxRequests === 0) {
+      this.recordStats(key, false, now);
+      return {
+        allowed: false,
+        remaining: 0,
+        resetTime: new Date(now + windowMs),
+        retryAfter: Math.ceil(blockDurationMs / 1000),
+      };
+    }
+
     // 检查是否被阻止
     if (limit.blockedUntil && limit.blockedUntil > now) {
       const retryAfter = Math.ceil((limit.blockedUntil - now) / 1000);
+      this.recordStats(key, false, now);
       return {
         allowed: false,
         remaining: 0,
@@ -329,13 +453,10 @@ export class RateLimiter {
 
     limit.blockedUntil = null;
 
-    // 清理过期请求
-    const windowStart = now - windowMs;
-    limit.requests = limit.requests.filter(ts => ts > windowStart);
-
     // 检查是否超过限制
     if (limit.requests.length >= maxRequests) {
       limit.blockedUntil = now + blockDurationMs;
+      this.recordStats(key, false, now);
       return {
         allowed: false,
         remaining: 0,
@@ -346,6 +467,7 @@ export class RateLimiter {
 
     // 记录请求
     limit.requests.push(now);
+    this.recordStats(key, true, now);
 
     const oldestRequest = limit.requests[0] || now;
     const resetTime = new Date(oldestRequest + windowMs);
@@ -357,14 +479,185 @@ export class RateLimiter {
     };
   }
 
+  getStats(): RateLimiterSummary;
+  getStats(userId: string, endpoint: string): RateLimiterStatsResult;
+  getStats(
+    userId?: string,
+    endpoint?: string,
+  ): RateLimiterSummary | RateLimiterStatsResult {
+    if (!userId || !endpoint) {
+      const globalStats = this.getGlobalStats();
+      const totalRecords = this.stats.size;
+      const activeRecords = this.limits.size;
+      const blockRate =
+        globalStats.totalRequests > 0
+          ? Math.round(
+            (globalStats.blockedRequests / globalStats.totalRequests) * 100,
+          )
+          : 0;
+      return {
+        activeRecords,
+        totalRecords,
+        totalRequests: globalStats.totalRequests,
+        allowedRequests: globalStats.allowedRequests,
+        blockedRequests: globalStats.blockedRequests,
+        blockRate,
+      };
+    }
+
+    const key = this.getKey(userId, endpoint);
+    const stats = this.getStatsEntry(key);
+    const limit = this.limits.get(key);
+    const lastConfig = this.lastConfigs.get(key);
+    const currentUsage = limit ? limit.requests.length : 0;
+    const remainingRequests = lastConfig
+      ? Math.max(0, lastConfig.maxRequests - currentUsage)
+      : 0;
+
+    return {
+      totalRequests: stats.totalRequests,
+      allowedRequests: stats.allowedRequests,
+      blockedRequests: stats.blockedRequests,
+      blockRate:
+        stats.totalRequests > 0
+          ? Math.round((stats.blockedRequests / stats.totalRequests) * 100)
+          : 0,
+      currentUsage,
+      remainingRequests,
+      lastRequestAt: stats.lastRequestAt ? new Date(stats.lastRequestAt) : null,
+    };
+  }
+
+  getGlobalStats(endpoint?: string): RateLimiterGlobalStats {
+    let totalRequests = 0;
+    let allowedRequests = 0;
+    let blockedRequests = 0;
+    const userIds = new Set<string>();
+
+    for (const [key, stats] of this.stats.entries()) {
+      const [, entryEndpoint] = key.split(":");
+      if (endpoint && entryEndpoint !== endpoint) {
+        continue;
+      }
+      const [userId] = key.split(":");
+      if (userId) {
+        userIds.add(userId);
+      }
+      totalRequests += stats.totalRequests;
+      allowedRequests += stats.allowedRequests;
+      blockedRequests += stats.blockedRequests;
+    }
+
+    return {
+      totalUsers: userIds.size,
+      totalRequests,
+      allowedRequests,
+      blockedRequests,
+      averageRequestsPerUser:
+        userIds.size > 0 ? totalRequests / userIds.size : 0,
+    };
+  }
+
+  getStatsByTimeRange(
+    userId: string,
+    endpoint: string,
+    rangeMs: number,
+  ): RateLimiterStatsResult {
+    const key = this.getKey(userId, endpoint);
+    const stats = this.getStatsEntry(key);
+    const now = Date.now();
+    const startTime = rangeMs === Infinity ? 0 : now - rangeMs;
+    const rangeRequests = stats.timestamps.filter((ts) => ts >= startTime);
+    const lastConfig = this.lastConfigs.get(key);
+    const limit = this.limits.get(key);
+    const currentUsage = limit ? limit.requests.length : 0;
+    const remainingRequests = lastConfig
+      ? Math.max(0, lastConfig.maxRequests - currentUsage)
+      : 0;
+
+    return {
+      totalRequests: rangeRequests.length,
+      allowedRequests: Math.min(rangeRequests.length, stats.allowedRequests),
+      blockedRequests: Math.max(
+        0,
+        rangeRequests.length - stats.allowedRequests,
+      ),
+      blockRate:
+        rangeRequests.length > 0
+          ? Math.round(
+            ((rangeRequests.length - stats.allowedRequests) /
+                rangeRequests.length) *
+                100,
+          )
+          : 0,
+      currentUsage,
+      remainingRequests,
+      lastRequestAt: stats.lastRequestAt ? new Date(stats.lastRequestAt) : null,
+    };
+  }
+
+  hasUserData(userId: string, endpoint: string): boolean {
+    const key = this.getKey(userId, endpoint);
+    return this.limits.has(key) || this.stats.has(key);
+  }
+
+  cleanup(): void {
+    const now = Date.now();
+    for (const [key, lastAccess] of this.lastAccess.entries()) {
+      const config = this.lastConfigs.get(key);
+      if (!config) {
+        continue;
+      }
+      if (now - lastAccess > config.windowMs) {
+        this.limits.delete(key);
+        this.stats.delete(key);
+        this.lastConfigs.delete(key);
+        this.lastAccess.delete(key);
+      }
+    }
+  }
+
+  getMemoryUsage(): RateLimiterMemoryUsage {
+    let totalRequests = 0;
+    for (const stats of this.stats.values()) {
+      totalRequests += stats.totalRequests;
+    }
+
+    return {
+      activeUsers: this.limits.size,
+      totalEntries: this.stats.size,
+      totalRequests,
+    };
+  }
+
+  getCircuitBreakerStatus(endpoint: string): {
+    enabled: boolean;
+    totalUsers: number;
+    totalRequests: number;
+  } {
+    const stats = this.getGlobalStats(endpoint);
+    const enabled = stats.totalRequests > 1000;
+    return {
+      enabled,
+      totalUsers: stats.totalUsers,
+      totalRequests: stats.totalRequests,
+    };
+  }
+
   clearAll(): void {
     this.limits.clear();
+    this.stats.clear();
+    this.lastConfigs.clear();
+    this.lastAccess.clear();
   }
 
   clearUser(userId: string): void {
     for (const key of this.limits.keys()) {
       if (key.startsWith(`${userId}:`)) {
         this.limits.delete(key);
+        this.stats.delete(key);
+        this.lastConfigs.delete(key);
+        this.lastAccess.delete(key);
       }
     }
   }

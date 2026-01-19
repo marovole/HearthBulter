@@ -6,13 +6,9 @@ import { verifyMemberAccess } from "./lib/auth";
  * Get dashboard overview data for a member
  */
 export const getOverview = query({
-  args: { memberId: v.id("familyMembers"), userEmail: v.string() },
+  args: { memberId: v.id("familyMembers") },
   handler: async (ctx, args) => {
-    const { hasAccess, member } = await verifyMemberAccess(
-      ctx,
-      args.memberId,
-      args.userEmail,
-    );
+    const { hasAccess, member } = await verifyMemberAccess(ctx, args.memberId);
 
     if (!hasAccess || !member) {
       return null;

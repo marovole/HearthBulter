@@ -11,28 +11,32 @@
 import {
   validateEnvironmentVariables,
   validateOptionalEnvironmentVariables,
-} from '../env-validator';
+} from "../env-validator";
 import {
   supabaseAdapter,
   testDatabaseConnection as supabaseTestConnection,
   ensureDatabaseConnection as supabaseEnsureConnection,
-} from './supabase-adapter';
+} from "./supabase-adapter";
 
 // 检测是否在构建阶段
 // Cloudflare Workers 环境：CF_PAGES 变量存在时为运行时
 const isBuildTime =
-  process.env.NEXT_PHASE === 'phase-production-build' ||
-  process.env.npm_lifecycle_event === 'build' ||
-  (typeof process.env.CF_PAGES === 'undefined' &&
+  process.env.NEXT_PHASE === "phase-production-build" ||
+  process.env.npm_lifecycle_event === "build" ||
+  (typeof process.env.CF_PAGES === "undefined" &&
     process.env.VERCEL_ENV === undefined &&
     process.env.DATABASE_URL === undefined);
 
+const globalEnv = globalThis as typeof globalThis & {
+  __envValidated?: boolean;
+};
+
 // 验证环境变量（仅在运行时执行，构建时跳过）
-if (!globalThis.__envValidated && !isBuildTime) {
+if (!globalEnv.__envValidated && !isBuildTime) {
   try {
     validateEnvironmentVariables();
     validateOptionalEnvironmentVariables();
-    globalThis.__envValidated = true;
+    globalEnv.__envValidated = true;
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     // 生产环境仅警告，不阻止启动（避免在 Workers 环境出问题）

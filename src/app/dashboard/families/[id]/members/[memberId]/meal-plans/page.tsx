@@ -1,82 +1,93 @@
-'use client';
+import { auth } from "@/lib/auth";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Doc, Id } from "@/../convex/_generated/dataModel";
+import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/db';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+type MealPlanSummary = {
+  id: string;
+  startDate: Date;
+  endDate: Date;
+  status: string;
+  goalType: string;
+  targetCalories: number;
+  mealCount: number;
+};
 
 export default async function MealPlansPage({
   params,
 }: {
-  params: Promise<{ id: string; memberId: string }>
+  params: Promise<{ id: string; memberId: string }>;
 }) {
   const { id, memberId } = await params;
   const session = await auth();
 
   if (!session) {
-    redirect('/auth/signin');
+    redirect("/auth/signin");
   }
 
-  // 获取成员信息
-  const member = await prisma.familyMember.findUnique({
-    where: { id: memberId, deletedAt: null },
-    include: {
+  const access = await convexClient.query<{
+    hasAccess: boolean;
+    member: {
+      id: string;
+      name: string;
+      familyId: string;
+      userId?: string;
+      role: string;
       family: {
-        select: {
-          id: true,
-          name: true,
-          creatorId: true,
-          members: {
-            where: { userId: session.user.id, deletedAt: null },
-            select: { role: true },
-          },
-        },
-      },
-      mealPlans: {
-        where: { deletedAt: null },
-        include: {
-          meals: {
-            take: 1, // 只取第一个餐食用于统计
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      },
-    },
+        id: string;
+        creatorId: string;
+      };
+    } | null;
+  }>(api.members.verifyAccess, {
+    memberId: memberId as Id<"familyMembers">,
+    clerkId: session.user.id,
   });
 
-  if (!member) {
+  if (!access.member) {
     notFound();
   }
 
-  // 验证权限
-  const isCreator = member.family.creatorId === session.user.id;
-  const isAdmin = member.family.members[0]?.role === 'ADMIN' || isCreator;
-  const isSelf = member.userId === session.user.id;
-
-  if (!isAdmin && !isSelf) {
+  if (!access.hasAccess) {
     redirect(`/dashboard/families/${id}/members/${memberId}`);
   }
 
+  const member = access.member;
+
+  const mealPlans = await convexClient.query<
+    Array<Doc<"mealPlans"> & { mealCount: number }>
+  >(api.meals.listPlansByMember, {
+    memberId: memberId as Id<"familyMembers">,
+  });
+
+  const planSummaries: MealPlanSummary[] = mealPlans.map((plan) => ({
+    id: plan._id,
+    startDate: new Date(plan.startDate),
+    endDate: new Date(plan.endDate),
+    status: plan.status,
+    goalType: plan.goalType,
+    targetCalories: plan.targetCalories,
+    mealCount: plan.mealCount,
+  }));
   const GOAL_TYPE_LABELS: Record<string, string> = {
-    WEIGHT_LOSS: '减重',
-    WEIGHT_GAIN: '增肌',
-    MAINTENANCE: '维持',
-    HEALTH_MANAGEMENT: '健康管理',
+    WEIGHT_LOSS: "减重",
+    WEIGHT_GAIN: "增肌",
+    MAINTENANCE: "维持",
+    HEALTH_MANAGEMENT: "健康管理",
   };
 
   const STATUS_LABELS: Record<string, string> = {
-    ACTIVE: '进行中',
-    COMPLETED: '已完成',
-    CANCELLED: '已取消',
+    ACTIVE: "进行中",
+    COMPLETED: "已完成",
+    CANCELLED: "已取消",
   };
 
   const STATUS_COLORS: Record<string, string> = {
-    ACTIVE: 'bg-blue-100 text-blue-800',
-    COMPLETED: 'bg-green-100 text-green-800',
-    CANCELLED: 'bg-gray-100 text-gray-800',
+    ACTIVE: "bg-blue-100 text-blue-800",
+    COMPLETED: "bg-green-100 text-green-800",
+    CANCELLED: "bg-gray-100 text-gray-800",
   };
 
   return (
@@ -97,7 +108,7 @@ export default async function MealPlansPage({
                 href={`/dashboard/families/${id}/members/${memberId}`}
                 className="hover:text-gray-900"
               >
-                {member.name || '成员'}
+                {member.name || "成员"}
               </Link>
               <span>/</span>
               <span className="text-gray-900">食谱规划</span>
@@ -116,7 +127,7 @@ export default async function MealPlansPage({
           </div>
 
           {/* 食谱列表 */}
-          {member.mealPlans.length === 0 ? (
+          {planSummaries.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
               <p className="text-gray-600 mb-4">还没有创建任何食谱计划</p>
               <Link
@@ -128,11 +139,12 @@ export default async function MealPlansPage({
             </div>
           ) : (
             <div className="space-y-4">
-              {member.mealPlans.map((plan) => {
-                const days = Math.ceil(
-                  (plan.endDate.getTime() - plan.startDate.getTime()) /
-                    (1000 * 60 * 60 * 24)
-                ) + 1;
+              {planSummaries.map((plan: MealPlanSummary) => {
+                const days =
+                  Math.ceil(
+                    (plan.endDate.getTime() - plan.startDate.getTime()) /
+                      (1000 * 60 * 60 * 24),
+                  ) + 1;
 
                 return (
                   <Link
@@ -144,11 +156,11 @@ export default async function MealPlansPage({
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {format(plan.startDate, 'yyyy年M月d日', {
+                            {format(plan.startDate, "yyyy年M月d日", {
                               locale: zhCN,
-                            })}{' '}
-                            -{' '}
-                            {format(plan.endDate, 'M月d日', {
+                            })}{" "}
+                            -{" "}
+                            {format(plan.endDate, "M月d日", {
                               locale: zhCN,
                             })}
                           </h3>
@@ -159,18 +171,15 @@ export default async function MealPlansPage({
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span>时长: {days}天</span>
                           <span>
-                            时长: {days}天
-                          </span>
-                          <span>
-                            目标: {GOAL_TYPE_LABELS[plan.goalType] || plan.goalType}
+                            目标:{" "}
+                            {GOAL_TYPE_LABELS[plan.goalType] || plan.goalType}
                           </span>
                           <span>
                             目标热量: {plan.targetCalories.toFixed(0)} kcal/天
                           </span>
-                          <span>
-                            餐食数: {plan.meals.length}
-                          </span>
+                          <span>餐食数: {plan.mealCount}</span>
                         </div>
                       </div>
                       <div className="text-gray-400">→</div>
@@ -185,4 +194,3 @@ export default async function MealPlansPage({
     </div>
   );
 }
-

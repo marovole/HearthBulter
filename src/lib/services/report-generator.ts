@@ -14,6 +14,8 @@ import {
   startOfMonth,
   endOfMonth,
 } from "date-fns";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Doc, Id } from "@/../convex/_generated/dataModel";
 
 export interface WeeklyReport {
   period: {
@@ -201,30 +203,37 @@ export class ReportGenerator {
 
     try {
       // 查询该时间段内的健康数据
-      const healthData = await prisma.healthData.findMany({
-        where: {
-          memberId,
-          measuredAt: {
-            gte: thirtyDaysAgo,
-            lte: now,
-          },
-        },
-        orderBy: { measuredAt: "asc" },
-      });
+      const healthData = await convexClient.query<Doc<"healthData">[]>(
+        api.health.getMetrics,
+        { memberId: memberId as Id<"familyMembers"> },
+      );
 
-      if (healthData.length === 0) {
+      const filteredHealthData = healthData
+        .filter((data) => {
+          const measuredAt = data.measuredAt ?? data.createdAt ?? 0;
+          return (
+            measuredAt >= thirtyDaysAgo.getTime() && measuredAt <= now.getTime()
+          );
+        })
+        .sort(
+          (a, b) =>
+            (a.measuredAt ?? a.createdAt ?? 0) -
+            (b.measuredAt ?? b.createdAt ?? 0),
+        );
+
+      if (filteredHealthData.length === 0) {
         return [];
       }
 
-      // 按周分组
       const weeklyData = new Map<
         string,
         { weights: number[]; totalDays: Set<string> }
       >();
 
-      healthData.forEach((data) => {
-        const date = new Date(data.measuredAt);
-        const weekNum = Math.ceil(date.getDate() / 7); // 第几周
+      filteredHealthData.forEach((data) => {
+        const timestamp = data.measuredAt ?? data.createdAt ?? 0;
+        const date = new Date(timestamp);
+        const weekNum = Math.ceil(date.getDate() / 7);
         const weekKey = `第${weekNum}周`;
 
         if (!weeklyData.has(weekKey)) {
@@ -232,10 +241,13 @@ export class ReportGenerator {
         }
 
         const week = weeklyData.get(weekKey)!;
-        if (data.weight !== null) {
+        if (data.weight != null) {
           week.weights.push(data.weight);
         }
-        week.totalDays.add(date.toISOString().split("T")[0]);
+        const dateKey = date.toISOString().split("T")[0];
+        if (dateKey) {
+          week.totalDays.add(dateKey);
+        }
       });
 
       // 计算每周的平均值

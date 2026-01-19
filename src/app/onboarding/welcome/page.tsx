@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to prevent prerender errors with React Context
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Users, Heart, Brain, ShoppingBag } from 'lucide-react';
-import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Users, Heart, Brain, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 
 /**
  * Welcome Page Component
@@ -21,23 +27,23 @@ export default function WelcomePage() {
   const features = [
     {
       icon: <Users className="h-8 w-8 text-blue-600" />,
-      title: '家庭健康管理',
-      description: '为全家成员创建健康档案，统一管理每个人的健康数据',
+      title: "家庭健康管理",
+      description: "为全家成员创建健康档案，统一管理每个人的健康数据",
     },
     {
       icon: <Heart className="h-8 w-8 text-red-600" />,
-      title: '健康数据追踪',
-      description: '记录体重、血压、血糖等关键指标，可视化健康趋势',
+      title: "健康数据追踪",
+      description: "记录体重、血压、血糖等关键指标，可视化健康趋势",
     },
     {
       icon: <Brain className="h-8 w-8 text-purple-600" />,
-      title: 'AI营养建议',
-      description: '基于健康数据和偏好，获得个性化的营养指导和食谱推荐',
+      title: "AI营养建议",
+      description: "基于健康数据和偏好，获得个性化的营养指导和食谱推荐",
     },
     {
       icon: <ShoppingBag className="h-8 w-8 text-green-600" />,
-      title: '智能购物清单',
-      description: '根据食谱自动生成购物清单，让健康饮食更简单',
+      title: "智能购物清单",
+      description: "根据食谱自动生成购物清单，让健康饮食更简单",
     },
   ];
 
@@ -59,7 +65,10 @@ export default function WelcomePage() {
 
         <div className="grid md:grid-cols-2 gap-6 mb-12">
           {features.map((feature, index) => (
-            <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <Card
+              key={index}
+              className="border-0 shadow-lg hover:shadow-xl transition-shadow"
+            >
               <CardHeader>
                 <div className="flex items-center space-x-3">
                   {feature.icon}
@@ -103,9 +112,12 @@ export default function WelcomePage() {
               </Button>
             </Link>
           </div>
-          
+
           <p className="text-sm text-gray-500">
-            已经设置过了？<Link href="/dashboard" className="text-blue-600 hover:underline">跳过引导</Link>
+            已经设置过了？
+            <Link href="/dashboard" className="text-blue-600 hover:underline">
+              跳过引导
+            </Link>
           </p>
         </div>
       </div>

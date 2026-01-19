@@ -58,11 +58,11 @@
  * - No performance impact for users who prefer reduced motion
  */
 
-import { useInView } from 'react-intersection-observer';
-import { Transition, Variants } from 'framer-motion';
-import { useMemo } from 'react';
-import { usePrefersReducedMotion } from './usePrefersReducedMotion';
-import { fadeInUp } from '../design-tokens';
+import { useInView } from "react-intersection-observer";
+import { Transition, Variants } from "framer-motion";
+import { useMemo } from "react";
+import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
+import { fadeInUp } from "../design-tokens";
 
 /**
  * Configuration options for useAnimateOnView hook
@@ -167,15 +167,15 @@ export interface UseAnimateOnViewReturn {
  * ```
  */
 export function useAnimateOnView(
-  options: UseAnimateOnViewOptions = {}
+  options: UseAnimateOnViewOptions = {},
 ): UseAnimateOnViewReturn {
   const {
     threshold = 0.15,
-    rootMargin = '0px',
+    rootMargin = "0px",
     triggerOnce = true,
     variants = fadeInUp,
-    initialState = 'hidden',
-    visibleState = 'visible',
+    initialState = "hidden",
+    visibleState = "visible",
     transition,
   } = options;
 

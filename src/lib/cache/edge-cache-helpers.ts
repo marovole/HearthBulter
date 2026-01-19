@@ -54,23 +54,22 @@ export interface EdgeCacheOptions {
  * const cacheControl = buildCacheControlHeader({ maxAge: 60, staleWhileRevalidate: 30 });
  * // "public, s-maxage=60, stale-while-revalidate=30"
  */
-export function buildCacheControlHeader(options: EdgeCacheOptions = {}): string {
+export function buildCacheControlHeader(
+  options: EdgeCacheOptions = {},
+): string {
   const {
     maxAge = 60,
     staleWhileRevalidate = 30,
     private: isPrivate = false,
   } = options;
 
-  const directives = [
-    isPrivate ? 'private' : 'public',
-    `s-maxage=${maxAge}`,
-  ];
+  const directives = [isPrivate ? "private" : "public", `s-maxage=${maxAge}`];
 
   if (staleWhileRevalidate > 0) {
     directives.push(`stale-while-revalidate=${staleWhileRevalidate}`);
   }
 
-  return directives.join(', ');
+  return directives.join(", ");
 }
 
 /**
@@ -84,7 +83,7 @@ export function buildCacheControlHeader(options: EdgeCacheOptions = {}): string 
  * // "Authorization, X-Member-Id"
  */
 export function buildVaryHeader(varyBy: string[] = []): string {
-  return varyBy.join(', ');
+  return varyBy.join(", ");
 }
 
 /**
@@ -107,22 +106,22 @@ export function buildVaryHeader(varyBy: string[] = []): string {
 export function buildCacheKey(
   path: string,
   userId: string,
-  params: Record<string, string | number | boolean | null | undefined> = {}
+  params: Record<string, string | number | boolean | null | undefined> = {},
 ): string {
-  const cleanPath = path.replace(/^\//, '');
+  const cleanPath = path.replace(/^\//, "");
 
   const sortedParams = Object.entries(params)
     .filter(([_, value]) => value !== null && value !== undefined)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
-    .join('&');
+    .join("&");
 
-  const parts = ['edge-cache', cleanPath, userId];
+  const parts = ["edge-cache", cleanPath, userId];
   if (sortedParams) {
     parts.push(sortedParams);
   }
 
-  return parts.join(':');
+  return parts.join(":");
 }
 
 /**
@@ -138,7 +137,7 @@ export const EDGE_CACHE_PRESETS = {
     maxAge: 60,
     staleWhileRevalidate: 30,
     private: true, // P0 修复：避免 CDN 缓存用户数据
-    varyBy: ['Cookie'], // 基于 Cookie 变化
+    varyBy: ["Cookie"], // 基于 Cookie 变化
   } as EdgeCacheOptions,
 
   /**
@@ -148,7 +147,7 @@ export const EDGE_CACHE_PRESETS = {
     maxAge: 120,
     staleWhileRevalidate: 60,
     private: false,
-    varyBy: ['Authorization'],
+    varyBy: ["Authorization"],
   } as EdgeCacheOptions,
 
   /**
@@ -158,7 +157,7 @@ export const EDGE_CACHE_PRESETS = {
     maxAge: 30,
     staleWhileRevalidate: 15,
     private: true,
-    varyBy: ['Authorization'],
+    varyBy: ["Authorization"],
   } as EdgeCacheOptions,
 
   /**
@@ -186,12 +185,12 @@ export const EDGE_CACHE_PRESETS = {
  */
 export function addCacheHeaders(
   headers: Headers,
-  options: EdgeCacheOptions = {}
+  options: EdgeCacheOptions = {},
 ): void {
-  headers.set('Cache-Control', buildCacheControlHeader(options));
+  headers.set("Cache-Control", buildCacheControlHeader(options));
 
   if (options.varyBy && options.varyBy.length > 0) {
-    headers.set('Vary', buildVaryHeader(options.varyBy));
+    headers.set("Vary", buildVaryHeader(options.varyBy));
   }
 }
 
@@ -213,15 +212,15 @@ export function addCacheHeaders(
  */
 export function canUseCache(request: Request): boolean {
   // 只有 GET 请求可以缓存
-  if (request.method !== 'GET') {
+  if (request.method !== "GET") {
     return false;
   }
 
-  const cacheControl = request.headers.get('Cache-Control');
-  const pragma = request.headers.get('Pragma');
+  const cacheControl = request.headers.get("Cache-Control");
+  const pragma = request.headers.get("Pragma");
 
   // 检查客户端是否禁用缓存
-  if (cacheControl?.includes('no-cache') || pragma?.includes('no-cache')) {
+  if (cacheControl?.includes("no-cache") || pragma?.includes("no-cache")) {
     return false;
   }
 

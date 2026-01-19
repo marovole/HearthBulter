@@ -126,7 +126,12 @@ async function verifyJwt(
   }
 
   const [encodedHeader, encodedPayload, signature] = parts;
-  const signingInput = `${encodedHeader}.${encodedPayload}`;
+  const payloadValue: string = encodedPayload ?? "";
+  const signatureValue: string = signature ?? "";
+  if (!encodedHeader || !payloadValue || !signatureValue) {
+    throw new Error("Token格式无效");
+  }
+  const signingInput = `${encodedHeader}.${payloadValue}`;
 
   const key = await cryptoApi.subtle.importKey(
     "raw",
@@ -143,11 +148,11 @@ async function verifyJwt(
   );
 
   const expected = base64UrlEncode(new Uint8Array(expectedSignature));
-  if (!timingSafeEqualString(expected, signature)) {
+  if (!timingSafeEqualString(expected, signatureValue)) {
     throw new Error("Token签名无效");
   }
 
-  const payloadBytes = base64UrlDecode(encodedPayload);
+  const payloadBytes = base64UrlDecode(payloadValue);
   const payloadJson = new TextDecoder().decode(payloadBytes);
   const payload = JSON.parse(payloadJson) as JWTPayload &
     Record<string, unknown>;

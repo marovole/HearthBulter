@@ -1,28 +1,21 @@
-/**
- * 分享内容生成服务
- * 生成各种类型的分享内容和描述
- */
-
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import type {
-  ShareContentInput,
-  ShareContentResult,
-  ShareMetadata,
-  OpenGraphMetadata,
-  TwitterCardMetadata,
-} from "@/types/social-sharing";
+import { convexClient, api } from "@/lib/convex-client";
+import type { Id } from "@/../convex/_generated/dataModel";
 import {
-  ShareContentType,
   SHARE_CONTENT_TYPE_LABELS,
   SHARE_TEMPLATE_CONFIGS,
+  ShareContentType,
+  SharePrivacyLevel,
   ShareTemplate,
+  SocialPlatform,
+  type OpenGraphMetadata,
+  type TwitterCardMetadata,
+  type ShareContentInput,
+  type ShareContentResult,
+  type ShareMetadata,
 } from "@/types/social-sharing";
-import { prisma } from "@/lib/db";
 
-/**
- * 分享内容生成器类
- */
 export class ShareContentGenerator {
   private static instance: ShareContentGenerator;
 
@@ -33,9 +26,6 @@ export class ShareContentGenerator {
     return ShareContentGenerator.instance;
   }
 
-  /**
-   * 生成分享内容
-   */
   async generateShareContent(
     input: ShareContentInput,
     options: { shareToken?: string; baseUrl?: string; shareUrl?: string } = {},
@@ -47,238 +37,330 @@ export class ShareContentGenerator {
       "https://health-butler.com";
     const shareUrl = options.shareUrl || `${baseUrl}/share/${shareToken}`;
 
-    // 根据类型生成内容
-    const content = await this.generateContentByType(input, shareUrl);
+    const contentResult = await this.generateContentByType(
+      input,
+      shareUrl,
+      shareToken,
+    );
 
-    // 生成元数据
     const metadata = this.generateMetadata(input, shareUrl);
 
+    const contentObj = contentResult as { content: any; imageUrl: string };
+
     return {
-      content: content.content,
-      imageUrl: content.imageUrl,
+      content: contentObj.content,
+      imageUrl: contentObj.imageUrl,
       shareUrl,
       platforms: input.platforms,
       metadata,
-    };
+    } as ShareContentResult;
   }
 
-  /**
-   * 根据类型生成内容
-   */
-  private async generateContentByType(
-    input: ShareContentInput,
-    shareUrl: string,
-  ) {
-    switch (input.type) {
+  private mapToConvexContentType(type: ShareContentType): string {
+    switch (type) {
       case ShareContentType.HEALTH_REPORT:
-        return this.generateHealthReportContent(input, shareUrl);
+        return "HEALTH_REPORT";
       case ShareContentType.GOAL_ACHIEVED:
-        return this.generateGoalAchievedContent(input, shareUrl);
+        return "GOAL_ACHIEVEMENT";
       case ShareContentType.RECIPE_CREATED:
-        return this.generateRecipeCreatedContent(input, shareUrl);
+        return "RECIPE";
       case ShareContentType.ACHIEVEMENT_UNLOCKED:
-        return this.generateAchievementUnlockedContent(input, shareUrl);
-      case ShareContentType.CHECKIN_STREAK:
-        return this.generateCheckinStreakContent(input, shareUrl);
+        return "ACHIEVEMENT";
+      case ShareContentType.MEAL_PLAN_COMPLETED:
+        return "MEAL_LOG";
       case ShareContentType.WEIGHT_MILESTONE:
-        return this.generateWeightMilestoneContent(input, shareUrl);
+        return "WEIGHT_MILESTONE";
+      case ShareContentType.CHECKIN_STREAK:
+        return "CHECK_IN_STREAK";
       case ShareContentType.PERSONAL_RECORD:
-        return this.generatePersonalRecordContent(input, shareUrl);
+        return "WEEKLY_SUMMARY";
       case ShareContentType.COMMUNITY_POST:
-        return this.generateCommunityPostContent(input, shareUrl);
+        return "WEEKLY_SUMMARY";
       default:
-        return this.generateDefaultContent(input, shareUrl);
+        return "HEALTH_REPORT";
     }
   }
 
-  /**
-   * 生成健康报告分享内容
-   */
+  private buildSharedContent(
+    input: ShareContentInput,
+    shareUrl: string,
+    shareToken: string,
+    data: {
+      title: string;
+      description?: string;
+      imageUrl?: string;
+      targetId?: string;
+      communityPostId?: string;
+      metadata?: Record<string, unknown>;
+    },
+  ): unknown {
+    const now = Date.now();
+    const metadata = {
+      ...(data.metadata ?? {}),
+      ...(data.targetId ? { targetId: data.targetId } : {}),
+    };
+
+    return {
+      id: "",
+      memberId: input.memberId,
+      contentType: this.mapToConvexContentType(input.type),
+      title: data.title,
+      description: data.description ?? null,
+      imageUrl: data.imageUrl ?? null,
+      metadata: Object.keys(metadata).length ? metadata : null,
+      shareToken,
+      shareUrl,
+      inviteCode: null,
+      sharedPlatforms: JSON.stringify(input.platforms),
+      privacyLevel: input.privacyLevel,
+      allowComment: true,
+      allowLike: true,
+      viewCount: 0,
+      likeCount: 0,
+      commentCount: 0,
+      shareCount: 0,
+      clickCount: 0,
+      downloadCount: 0,
+      conversionCount: 0,
+      status: "ACTIVE",
+      expiresAt: null,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      communityPostId: data.communityPostId ?? null,
+    };
+  }
+
+  private async generateContentByType(
+    input: ShareContentInput,
+    shareUrl: string,
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
+    switch (input.type) {
+      case ShareContentType.HEALTH_REPORT:
+        return this.generateHealthReportContent(input, shareUrl, shareToken);
+      case ShareContentType.GOAL_ACHIEVED:
+        return this.generateGoalAchievedContent(input, shareUrl, shareToken);
+      case ShareContentType.RECIPE_CREATED:
+        return this.generateRecipeCreatedContent(input, shareUrl, shareToken);
+      case ShareContentType.ACHIEVEMENT_UNLOCKED:
+        return this.generateAchievementUnlockedContent(
+          input,
+          shareUrl,
+          shareToken,
+        );
+      case ShareContentType.CHECKIN_STREAK:
+        return this.generateCheckinStreakContent(input, shareUrl, shareToken);
+      case ShareContentType.WEIGHT_MILESTONE:
+        return this.generateWeightMilestoneContent(input, shareUrl, shareToken);
+      case ShareContentType.PERSONAL_RECORD:
+        return this.generatePersonalRecordContent(input, shareUrl, shareToken);
+      case ShareContentType.COMMUNITY_POST:
+        return this.generateCommunityPostContent(input, shareUrl, shareToken);
+      default:
+        return this.generateDefaultContent(input, shareUrl, shareToken);
+    }
+  }
+
   private async generateHealthReportContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
-    // 获取用户健康数据
-    const member = await prisma.familyMember.findUnique({
-      where: { id: input.memberId },
-      include: {
-        healthData: {
-          orderBy: { measuredAt: "desc" },
-          take: 30,
-        },
-        healthGoals: {
-          where: { status: "ACTIVE" },
-          take: 1,
-        },
-      },
-    });
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+    const member = await convexClient.query<Record<string, unknown> | null>(
+      api.members.getById,
+      { memberId: input.memberId as Id<"familyMembers"> },
+    );
 
     if (!member) {
       throw new Error("用户未找到");
     }
 
-    // 计算健康指标
-    const latestData = member.healthData[0];
-    const healthScore = this.calculateHealthScore(member.healthData);
-    const weightChange = this.calculateWeightChange(member.healthData);
+    const healthDataResult = await convexClient.query<{
+      data: Array<Record<string, unknown>>;
+      total: number;
+    }>(api.health.listHealthData, {
+      memberId: input.memberId as Id<"familyMembers">,
+      startDate: thirtyDaysAgo,
+      endDate: undefined,
+      page: 1,
+      limit: 30,
+      sortOrder: "desc",
+    });
+
+    const healthData = healthDataResult.data;
+
+    const goalsResult = await convexClient.query<
+      Array<Record<string, unknown>>
+    >(api.health.listGoals, {
+      memberId: input.memberId as Id<"familyMembers">,
+      includeInactive: false,
+    });
+
+    const activeGoals = goalsResult.filter(
+      (g) => (g as Record<string, unknown>).status === "ACTIVE",
+    );
+
+    const latestData = healthData[0] as Record<string, unknown> | undefined;
+    const healthScore = this.calculateHealthScore(healthData);
+    const weightChange = this.calculateWeightChange(healthData);
 
     const title = "我的健康报告";
     const description = this.generateHealthDescription(
       healthScore,
       weightChange,
-      member.healthData.length,
+      healthData.length,
     );
     const imageUrl = await this.generateHealthReportImage({
-      memberName: member.name,
+      memberName: (member as Record<string, unknown>).name as string,
       healthScore,
       weightChange,
-      dataPoints: member.healthData.length,
+      dataPoints: healthData.length,
       latestData,
       period: "最近30天",
     });
 
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+      targetId: input.targetId,
+    });
+
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        targetId: input.targetId,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成目标达成分享内容
-   */
   private async generateGoalAchievedContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
     if (!input.targetId) {
       throw new Error("目标ID不能为空");
     }
 
-    const healthGoal = await prisma.healthGoal.findUnique({
-      where: { id: input.targetId },
-      include: {
-        member: {
-          select: { name: true },
-        },
+    const healthGoal = await convexClient.query<Record<string, unknown> | null>(
+      api.health.getGoalById,
+      {
+        goalId: input.targetId as Id<"healthGoals">,
       },
-    });
+    );
 
     if (!healthGoal) {
       throw new Error("健康目标未找到");
     }
 
-    const title = `🎯 ${healthGoal.title} 目标达成！`;
-    const description = this.generateGoalAchievementDescription(healthGoal);
+    const member = await convexClient.query<Record<string, unknown> | null>(
+      api.members.getById,
+      { memberId: input.memberId as Id<"familyMembers"> },
+    );
+
+    const title = `🎯 ${(healthGoal as Record<string, unknown>).title} 目标达成！`;
+    const description = this.generateGoalAchievementDescription(
+      healthGoal as Record<string, unknown>,
+    );
     const imageUrl = await this.generateGoalAchievedImage({
-      memberName: healthGoal.member.name,
-      goalTitle: healthGoal.title,
+      memberName: member
+        ? ((member as Record<string, unknown>).name as string)
+        : "用户",
+      goalTitle: (healthGoal as Record<string, unknown>).title as string,
       progress: 100,
-      achievedDate: healthGoal.endDate || new Date(),
-      metric: healthGoal.goalType,
+      achievedDate:
+        (healthGoal as Record<string, unknown>).endDate || new Date(),
+      metric: (healthGoal as Record<string, unknown>).goalType as string,
+    });
+
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+      targetId: input.targetId,
     });
 
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        targetId: input.targetId,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成食谱分享内容
-   */
   private async generateRecipeCreatedContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
     if (!input.targetId) {
       throw new Error("食谱ID不能为空");
     }
 
-    const recipe = await prisma.recipe.findUnique({
-      where: { id: input.targetId },
-      include: {
-        member: {
-          select: { name: true },
-        },
-        ingredients: {
-          include: {
-            food: {
-              select: { name: true, imageUrl: true },
-            },
-          },
-        },
-      },
-    });
+    const recipe = await convexClient.query<Record<string, unknown> | null>(
+      api.recipes.getById,
+      { recipeId: input.targetId as Id<"recipes"> },
+    );
 
     if (!recipe) {
       throw new Error("食谱未找到");
     }
 
-    const title = `🍽️ 我创建的健康食谱：${recipe.name}`;
-    const description = this.generateRecipeDescription(recipe);
+    const member = await convexClient.query<Record<string, unknown> | null>(
+      api.members.getById,
+      { memberId: input.memberId as Id<"familyMembers"> },
+    );
+
+    const title = `🍽️ 我创建的健康食谱：${(recipe as Record<string, unknown>).name}`;
+    const description = this.generateRecipeDescription(
+      recipe as Record<string, unknown>,
+    );
+
+    const ingredients = (recipe as Record<string, unknown>).ingredients as
+      | Array<{
+          food: { name: string };
+        }>
+      | undefined;
+    const ingredientNames = ingredients?.map((i) => i.food.name) ?? [];
+
     const imageUrl = await this.generateRecipeImage({
-      recipeName: recipe.name,
-      memberName: recipe.member.name,
-      calories: recipe.calories,
-      protein: recipe.protein,
-      ingredients: recipe.ingredients.map((i) => i.food.name),
-      createdAt: recipe.createdAt,
+      recipeName: (recipe as Record<string, unknown>).name as string,
+      memberName: member
+        ? ((member as Record<string, unknown>).name as string)
+        : "用户",
+      calories: (recipe as Record<string, unknown>).calories as number,
+      protein: (recipe as Record<string, unknown>).protein as number,
+      ingredients: ingredientNames,
+      createdAt: (recipe as Record<string, unknown>).createdAt as number,
+    });
+
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+      targetId: input.targetId,
     });
 
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        targetId: input.targetId,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成成就解锁分享内容
-   */
   private async generateAchievementUnlockedContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
     if (!input.targetId) {
       throw new Error("成就ID不能为空");
     }
 
-    const achievement = await prisma.achievement.findUnique({
-      where: { id: input.targetId },
-      include: {
-        member: {
-          select: { name: true },
-        },
-      },
+    const achievement = await convexClient.query<Record<
+      string,
+      unknown
+    > | null>(api.achievements.getById, {
+      id: input.targetId as Id<"achievements">,
     });
 
     if (!achievement) {
@@ -286,68 +368,80 @@ export class ShareContentGenerator {
     }
 
     const { ACHIEVEMENT_TYPE_CONFIGS } = await import("@/types/social-sharing");
-    const config = ACHIEVEMENT_TYPE_CONFIGS[achievement.type];
+    const type = (achievement as Record<string, unknown>).type as string;
+    const config =
+      ACHIEVEMENT_TYPE_CONFIGS[type as keyof typeof ACHIEVEMENT_TYPE_CONFIGS];
+
+    const member = await convexClient.query<Record<string, unknown> | null>(
+      api.members.getById,
+      { memberId: input.memberId as Id<"familyMembers"> },
+    );
 
     const title = `🏆 解锁成就：${config.label}`;
-    const description = `${config.description} - ${achievement.points}积分`;
+    const description = `${config.description} - ${(achievement as Record<string, unknown>).points}积分`;
     const imageUrl = await this.generateAchievementImage({
-      memberName: achievement.member.name,
-      achievementType: achievement.type,
+      memberName: member
+        ? ((member as Record<string, unknown>).name as string)
+        : "用户",
+      achievementType: type,
       achievementTitle: config.label,
       achievementDescription: config.description,
-      points: achievement.points,
-      rarity: achievement.rarity,
-      unlockedAt: achievement.unlockedAt || new Date(),
+      points: (achievement as Record<string, unknown>).points as number,
+      rarity: (achievement as Record<string, unknown>).rarity as string,
+      unlockedAt:
+        (achievement as Record<string, unknown>).unlockedAt || new Date(),
       icon: config.icon,
       color: config.color,
     });
 
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+      targetId: input.targetId,
+    });
+
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        targetId: input.targetId,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成连续打卡分享内容
-   */
   private async generateCheckinStreakContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
-    const member = await prisma.familyMember.findUnique({
-      where: { id: input.memberId },
-      include: {
-        healthData: {
-          where: {
-            measuredAt: {
-              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 最近30天
-            },
-          },
-          orderBy: { measuredAt: "desc" },
-        },
-      },
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+    const healthDataResult = await convexClient.query<{
+      data: Array<Record<string, unknown>>;
+      total: number;
+    }>(api.health.listHealthData, {
+      memberId: input.memberId as Id<"familyMembers">,
+      startDate: thirtyDaysAgo,
+      endDate: undefined,
+      page: 1,
+      limit: 100,
+      sortOrder: "desc",
     });
+
+    const healthData = healthDataResult.data;
+
+    const member = await convexClient.query<Record<string, unknown> | null>(
+      api.members.getById,
+      { memberId: input.memberId as Id<"familyMembers"> },
+    );
 
     if (!member) {
       throw new Error("用户未找到");
     }
 
-    const streakDays = this.calculateStreakDays(member.healthData);
+    const streakDays = this.calculateStreakDays(healthData);
     const title = `🔥 连续打卡${streakDays}天！`;
     const description = `坚持记录健康数据${streakDays}天，继续保持！`;
     const imageUrl = await this.generateStreakImage({
-      memberName: member.name,
+      memberName: (member as Record<string, unknown>).name as string,
       streakDays,
       currentStreak: streakDays,
       bestStreak: streakDays,
@@ -355,57 +449,68 @@ export class ShareContentGenerator {
       icon: "🔥",
     });
 
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+    });
+
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成体重里程碑分享内容
-   */
   private async generateWeightMilestoneContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
-    const member = await prisma.familyMember.findUnique({
-      where: { id: input.memberId },
-      include: {
-        healthData: {
-          where: { weight: { not: null } },
-          orderBy: { measuredAt: "desc" },
-          take: 100,
-        },
-      },
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
+    const healthDataResult = await convexClient.query<{
+      data: Array<Record<string, unknown>>;
+      total: number;
+    }>(api.health.listHealthData, {
+      memberId: input.memberId as Id<"familyMembers">,
+      startDate: undefined,
+      endDate: undefined,
+      page: 1,
+      limit: 100,
+      sortOrder: "desc",
     });
+
+    const healthData = healthDataResult.data;
+
+    const member = await convexClient.query<Record<string, unknown> | null>(
+      api.members.getById,
+      { memberId: input.memberId as Id<"familyMembers"> },
+    );
 
     if (!member) {
       throw new Error("用户未找到");
     }
 
-    const weightData = member.healthData.filter((d) => d.weight !== null);
+    const weightData = healthData.filter(
+      (d) => (d as Record<string, unknown>).weight !== null,
+    );
     if (weightData.length < 2) {
       throw new Error("体重数据不足");
     }
 
-    const currentWeight = weightData[0].weight!;
-    const initialWeight = weightData[weightData.length - 1].weight!;
+    const currentWeight = weightData[0]?.weight as number | null;
+    const initialWeight = weightData[weightData.length - 1]?.weight as
+      | number
+      | null;
+
+    if (currentWeight == null || initialWeight == null) {
+      throw new Error("体重数据不足");
+    }
     const weightLoss = initialWeight - currentWeight;
     const weightLossPercent = (weightLoss / initialWeight) * 100;
 
     const title = `🎯 减重${weightLoss.toFixed(1)}kg里程碑达成！`;
     const description = `从${initialWeight.toFixed(1)}kg减到${currentWeight.toFixed(1)}kg，减重${weightLossPercent.toFixed(1)}%`;
     const imageUrl = await this.generateWeightMilestoneImage({
-      memberName: member.name,
+      memberName: (member as Record<string, unknown>).name as string,
       initialWeight,
       currentWeight,
       weightLoss,
@@ -414,34 +519,27 @@ export class ShareContentGenerator {
       icon: "📉",
     });
 
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+    });
+
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成个人记录分享内容
-   */
   private async generatePersonalRecordContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
-    // 这里可以根据具体的记录类型生成不同内容
-    // 暂时生成通用的个人记录内容
-    const member = await prisma.familyMember.findUnique({
-      where: { id: input.memberId },
-      select: { name: true },
-    });
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
+    const member = await convexClient.query<Record<string, unknown> | null>(
+      api.members.getById,
+      { memberId: input.memberId as Id<"familyMembers"> },
+    );
 
     if (!member) {
       throw new Error("用户未找到");
@@ -451,86 +549,71 @@ export class ShareContentGenerator {
     const description =
       input.customMessage || "在健康管理的道路上又迈出了重要一步";
     const imageUrl = await this.generatePersonalRecordImage({
-      memberName: member.name,
+      memberName: (member as Record<string, unknown>).name as string,
       title,
       description,
       recordDate: new Date(),
       icon: "⭐",
     });
 
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+    });
+
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成社区帖子分享内容
-   */
   private async generateCommunityPostContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
-    // 社区帖子通常已经有完整内容，这里主要是生成分享卡片
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
     const title = input.title || "分享到社区";
     const description = input.customMessage || "分享我的健康生活";
-    const imageUrl = input.imageUrl || "/images/default-community-share.jpg";
+    const imageUrl = (input.imageUrl ||
+      "/images/default-community-share.jpg") as string;
+
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+      targetId: input.targetId,
+      communityPostId: input.targetId,
+    });
 
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        targetId: input.targetId,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成默认分享内容
-   */
   private async generateDefaultContent(
     input: ShareContentInput,
     shareUrl: string,
-  ) {
+    shareToken: string,
+  ): Promise<{ content: unknown; imageUrl: string }> {
     const title = input.title || "健康生活分享";
     const description = input.customMessage || "分享我的健康数据";
-    const imageUrl = input.imageUrl || "/images/default-share.jpg";
+    const imageUrl = (input.imageUrl || "/images/default-share.jpg") as string;
+
+    const content = this.buildSharedContent(input, shareUrl, shareToken, {
+      title,
+      description,
+      imageUrl,
+      targetId: input.targetId,
+    });
 
     return {
-      content: {
-        id: "", // 会在API中生成
-        memberId: input.memberId,
-        type: input.type,
-        title,
-        description,
-        imageUrl,
-        targetId: input.targetId,
-        privacyLevel: input.privacyLevel,
-        createdAt: new Date(),
-      },
+      content,
       imageUrl,
     };
   }
 
-  /**
-   * 生成分享元数据
-   */
   private generateMetadata(
     input: ShareContentInput,
     shareUrl: string,
@@ -549,9 +632,6 @@ export class ShareContentGenerator {
     };
   }
 
-  /**
-   * 生成Open Graph元数据
-   */
   private generateOpenGraphMetadata(
     input: ShareContentInput,
     shareUrl: string,
@@ -561,16 +641,13 @@ export class ShareContentGenerator {
       description:
         input.description ||
         `Health Butler - ${SHARE_CONTENT_TYPE_LABELS[input.type]}`,
-      image: input.imageUrl || "/images/og-default.jpg",
+      image: (input.imageUrl || "/images/og-default.jpg") as string,
       url: shareUrl,
       type: "website",
       siteName: "Health Butler",
     };
   }
 
-  /**
-   * 生成Twitter Card元数据
-   */
   private generateTwitterCardMetadata(
     input: ShareContentInput,
     shareUrl: string,
@@ -581,52 +658,44 @@ export class ShareContentGenerator {
       description:
         input.description ||
         `Health Butler - ${SHARE_CONTENT_TYPE_LABELS[input.type]}`,
-      image: input.imageUrl || "/images/og-default.jpg",
+      image: (input.imageUrl || "/images/og-default.jpg") as string,
       site: "@healthbutler",
     };
   }
 
-  /**
-   * 生成分享令牌
-   */
   private generateShareToken(): string {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 15);
     return `${timestamp}_${random}`;
   }
 
-  /**
-   * 计算健康评分
-   */
-  private calculateHealthScore(healthData: any[]): number {
+  private calculateHealthScore(
+    healthData: Array<Record<string, unknown>>,
+  ): number {
     if (healthData.length === 0) return 50;
 
-    // 简化的健康评分算法
-    const latestData = healthData[0];
+    const latestData = healthData[0] as Record<string, unknown>;
     let score = 50;
 
-    // 体重指标
     if (
       latestData.weight &&
-      latestData.weight > 40 &&
-      latestData.weight < 100
+      (latestData.weight as number) > 40 &&
+      (latestData.weight as number) < 100
     ) {
       score += 10;
     }
 
-    // 心率指标
     if (
       latestData.heartRate &&
-      latestData.heartRate > 60 &&
-      latestData.heartRate < 100
+      (latestData.heartRate as number) > 60 &&
+      (latestData.heartRate as number) < 100
     ) {
       score += 10;
     }
 
-    // 血压指标
     if (latestData.bloodPressureSystolic && latestData.bloodPressureDiastolic) {
-      const systolic = latestData.bloodPressureSystolic;
-      const diastolic = latestData.bloodPressureDiastolic;
+      const systolic = latestData.bloodPressureSystolic as number;
+      const diastolic = latestData.bloodPressureDiastolic as number;
       if (
         systolic >= 90 &&
         systolic <= 120 &&
@@ -637,7 +706,6 @@ export class ShareContentGenerator {
       }
     }
 
-    // 数据连续性
     if (healthData.length >= 7) {
       score += 15;
     }
@@ -645,24 +713,23 @@ export class ShareContentGenerator {
     return Math.min(score, 100);
   }
 
-  /**
-   * 计算体重变化
-   */
-  private calculateWeightChange(healthData: any[]): {
+  private calculateWeightChange(healthData: Array<Record<string, unknown>>): {
     lost: number;
     period: string;
   } {
     const weightData = healthData.filter((d) => d.weight !== null);
     if (weightData.length < 2) return { lost: 0, period: "暂无数据" };
 
-    const currentWeight = weightData[0].weight;
-    const initialWeight = weightData[weightData.length - 1].weight;
+    const currentWeight = weightData[0]?.weight as number;
+    const initialWeight = weightData[weightData.length - 1]?.weight as number;
     const weightLoss = initialWeight - currentWeight;
 
+    const latestMeasuredAt = weightData[0]?.measuredAt as number;
+    const earliestMeasuredAt = weightData[weightData.length - 1]
+      ?.measuredAt as number;
+
     const daysDiff = Math.floor(
-      (new Date(weightData[0].measuredAt).getTime() -
-        new Date(weightData[weightData.length - 1].measuredAt).getTime()) /
-        (1000 * 60 * 60 * 24),
+      (latestMeasuredAt - earliestMeasuredAt) / (1000 * 60 * 60 * 24),
     );
 
     return {
@@ -671,15 +738,12 @@ export class ShareContentGenerator {
     };
   }
 
-  /**
-   * 生成健康描述
-   */
   private generateHealthDescription(
     healthScore: number,
-    weightChange: any,
+    weightChange: { lost: number; period: string },
     dataPoints: number,
   ): string {
-    const descriptions = [];
+    const descriptions: string[] = [];
 
     descriptions.push(`健康评分${healthScore}分`);
 
@@ -694,42 +758,42 @@ export class ShareContentGenerator {
     return `${descriptions.join("，")}。`;
   }
 
-  /**
-   * 生成目标达成描述
-   */
-  private generateGoalAchievementDescription(goal: any): string {
+  private generateGoalAchievementDescription(
+    goal: Record<string, unknown>,
+  ): string {
     const achievedDate = goal.endDate || new Date();
-    const dateStr = format(achievedDate, "yyyy年MM月dd日", { locale: zhCN });
+    const dateStr = format(achievedDate as Date, "yyyy年MM月dd日", {
+      locale: zhCN,
+    });
 
     return `在${dateStr}成功达成了"${goal.title}"目标，为我的健康管理增添了动力！`;
   }
 
-  /**
-   * 生成食谱描述
-   */
-  private generateRecipeDescription(recipe: any): string {
-    const nutrition = [];
+  private generateRecipeDescription(recipe: Record<string, unknown>): string {
+    const nutrition: string[] = [];
 
-    if (recipe.calories) nutrition.push(`${Math.round(recipe.calories)}卡路里`);
-    if (recipe.protein) nutrition.push(`${Math.round(recipe.protein)}g蛋白质`);
-    if (recipe.carbs) nutrition.push(`${Math.round(recipe.carbs)}g碳水`);
-    if (recipe.fat) nutrition.push(`${Math.round(recipe.fat)}g脂肪`);
+    if (recipe.calories)
+      nutrition.push(`${Math.round(recipe.calories as number)}卡路里`);
+    if (recipe.protein)
+      nutrition.push(`${Math.round(recipe.protein as number)}g蛋白质`);
+    if (recipe.carbs)
+      nutrition.push(`${Math.round(recipe.carbs as number)}g碳水`);
+    if (recipe.fat) nutrition.push(`${Math.round(recipe.fat as number)}g脂肪`);
 
     const nutritionText = nutrition.join("，");
-    const ingredientsCount = recipe.ingredients.length;
+    const ingredients = recipe.ingredients as Array<unknown>;
+    const ingredientsCount = ingredients?.length ?? 0;
 
     return `营养丰富的${recipe.name}，${ingredientsCount}种食材，${nutritionText}。快来试试这道健康美食吧！`;
   }
 
-  /**
-   * 计算连续打卡天数
-   */
-  private calculateStreakDays(healthData: any[]): number {
+  private calculateStreakDays(
+    healthData: Array<Record<string, unknown>>,
+  ): number {
     if (healthData.length === 0) return 0;
 
     const sortedData = healthData.sort(
-      (a, b) =>
-        new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime(),
+      (a, b) => (b.measuredAt as number) - (a.measuredAt as number),
     );
 
     let streak = 0;
@@ -737,7 +801,9 @@ export class ShareContentGenerator {
     today.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < sortedData.length; i++) {
-      const dataDate = new Date(sortedData[i].measuredAt);
+      const dataPoint = sortedData[i];
+      if (!dataPoint) break;
+      const dataDate = new Date(dataPoint.measuredAt as number);
       dataDate.setHours(0, 0, 0, 0);
 
       const daysDiff = Math.floor(
@@ -754,41 +820,37 @@ export class ShareContentGenerator {
     return streak;
   }
 
-  // 图片生成方法（简化版本，实际实现中会调用图片生成服务）
-  private async generateHealthReportImage(data: any): Promise<string> {
-    // 临时返回默认图片URL，实际会生成个性化图片
+  private async generateHealthReportImage(_data: unknown): Promise<string> {
     return "/images/share/health-report.jpg";
   }
 
-  private async generateGoalAchievedImage(data: any): Promise<string> {
+  private async generateGoalAchievedImage(_data: unknown): Promise<string> {
     return "/images/share/goal-achieved.jpg";
   }
 
-  private async generateRecipeImage(data: any): Promise<string> {
+  private async generateRecipeImage(_data: unknown): Promise<string> {
     return "/images/share/recipe-card.jpg";
   }
 
-  private async generateAchievementImage(data: any): Promise<string> {
+  private async generateAchievementImage(_data: unknown): Promise<string> {
     return "/images/share/achievement-unlocked.jpg";
   }
 
-  private async generateStreakImage(data: any): Promise<string> {
+  private async generateStreakImage(_data: unknown): Promise<string> {
     return "/images/share/checkin-streak.jpg";
   }
 
-  private async generateWeightMilestoneImage(data: any): Promise<string> {
+  private async generateWeightMilestoneImage(_data: unknown): Promise<string> {
     return "/images/share/weight-milestone.jpg";
   }
 
-  private async generatePersonalRecordImage(data: any): Promise<string> {
+  private async generatePersonalRecordImage(_data: unknown): Promise<string> {
     return "/images/share/personal-record.jpg";
   }
 }
 
-// 导出单例实例
 export const shareContentGenerator = ShareContentGenerator.getInstance();
 
-// 导出工具函数
 export async function createShareContent(
   input: ShareContentInput,
   options: { shareToken?: string; baseUrl?: string; shareUrl?: string } = {},
@@ -797,20 +859,19 @@ export async function createShareContent(
   return generator.generateShareContent(input, options);
 }
 
-// 别名导出，用于测试和向后兼容
 export const generateShareContent = createShareContent;
 
 export async function generateSharePreview(
   input: Partial<ShareContentInput>,
-): Promise<any> {
+): Promise<ShareContentResult> {
   const generator = ShareContentGenerator.getInstance();
   const fullInput: ShareContentInput = {
-    memberId: input.memberId || "preview",
+    memberId: (input.memberId || "preview") as Id<"familyMembers">,
     type: input.type || ShareContentType.HEALTH_REPORT,
     title: input.title || "预览标题",
     description: input.description,
-    privacyLevel: input.privacyLevel || "PUBLIC",
-    platforms: input.platforms || ["COPY_LINK"],
+    privacyLevel: input.privacyLevel || SharePrivacyLevel.PUBLIC,
+    platforms: input.platforms || [SocialPlatform.COPY_LINK],
     ...input,
   };
 

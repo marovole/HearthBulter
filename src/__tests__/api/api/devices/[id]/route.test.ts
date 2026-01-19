@@ -3,38 +3,38 @@
  * Generated test file - please expand with actual test cases
  */
 
-import { NextRequest } from 'next/server';
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { createMocks } from 'node-mocks-http';
-import { GET } from '@/app/api/devices/[id]/route';
+import { NextRequest } from "next/server";
+import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import { createMocks } from "node-mocks-http";
+import { GET } from "@/app/api/devices/[id]/route";
 
 // Mock Next.js auth
-jest.mock('@/lib/auth', () => ({
+jest.mock("@/lib/auth", () => ({
   auth: jest.fn(),
 }));
 
 // Mock database
-jest.mock('@/lib/db', () => ({
+jest.mock("@/lib/db", () => ({
   prisma: {
     // Add mock implementations based on the API requirements
   },
 }));
 
-describe('api_devices_[id]_route', () => {
+describe("api_devices_[id]_route", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('GET', () => {
-    it('should handle GET request', async () => {
+  describe("GET", () => {
+    it("should handle GET request", async () => {
       // Route handler is imported at top of file
 
       // Setup mocks
       // TODO: Configure mocks based on actual API logic
 
       const { req, res } = createMocks({
-        method: 'GET',
-        url: '/devices/$1/route.ts',
+        method: "GET",
+        url: "/devices/$1/route.ts",
       });
 
       // Execute
@@ -47,23 +47,22 @@ describe('api_devices_[id]_route', () => {
     });
   });
 
-  describe('POST', () => {
-    it('should handle POST request', async () => {
+  describe("POST", () => {
+    it("should handle POST request", async () => {
       // Import the route handler if POST exists
       // const { POST } = require('@/app/api/devices/[id]/route');
-
       // TODO: Implement POST test
     });
   });
 
-  describe('PUT', () => {
-    it('should handle PUT request', async () => {
+  describe("PUT", () => {
+    it("should handle PUT request", async () => {
       // TODO: Implement PUT test if applicable
     });
   });
 
-  describe('DELETE', () => {
-    it('should handle DELETE request', async () => {
+  describe("DELETE", () => {
+    it("should handle DELETE request", async () => {
       // TODO: Implement DELETE test if applicable
     });
   });

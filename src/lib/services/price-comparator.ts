@@ -1,67 +1,64 @@
-import { PrismaClient } from '@prisma/client';
-import { SKUMatcher, MatchConfig } from './sku-matcher';
-import { 
-  PriceComparisonResult, 
-  SKUMatchResult, 
+import { SKUMatcher, MatchConfig } from "./sku-matcher";
+import {
+  PriceComparisonResult,
+  SKUMatchResult,
   PlatformProductInfo,
   PlatformError,
-  PlatformErrorType, 
-} from './ecommerce/types';
-import { EcommercePlatform, Food } from '@prisma/client';
+  PlatformErrorType,
+} from "./ecommerce/types";
+import type { Food } from "@/lib/types/meal";
+import { EcommercePlatform } from "./ecommerce/types";
+import { convexEcommerceRepository } from "@/lib/repositories/implementations/convex-ecommerce-repository";
 
 export interface PriceComparisonConfig {
-  includeShipping: boolean
-  minConfidence: number
-  maxResultsPerFood: number
-  considerDiscounts: boolean
-  preferInStock: boolean
+  includeShipping: boolean;
+  minConfidence: number;
+  maxResultsPerFood: number;
+  considerDiscounts: boolean;
+  preferInStock: boolean;
 }
 
 export interface PriceAnalysis {
-  platform: EcommercePlatform
-  averagePrice: number
-  lowestPrice: number
-  highestPrice: number
-  productCount: number
-  inStockRate: number
+  platform: EcommercePlatform;
+  averagePrice: number;
+  lowestPrice: number;
+  highestPrice: number;
+  productCount: number;
+  inStockRate: number;
 }
 
 export interface ProductWithDiscount extends PlatformProductInfo {
-  discountAmount?: number
-  discountPercentage?: string
-  shippingFee?: number
-  unitPrice?: number
-  valueScore?: number
-  totalPrice?: number
+  discountAmount?: number;
+  discountPercentage?: string;
+  shippingFee?: number;
+  unitPrice?: number;
+  valueScore?: number;
+  totalPrice?: number;
 }
 
 export class PriceComparator {
-  private prisma: PrismaClient;
   private skuMatcher: SKUMatcher;
 
-  // 平台权重配置（用于综合评分）
   private platformWeights: Record<EcommercePlatform, number> = {
     [EcommercePlatform.SAMS_CLUB]: 0.8,
     [EcommercePlatform.HEMA]: 0.9,
     [EcommercePlatform.DINGDONG]: 0.7,
   };
 
-  // 配送费配置
   private shippingFees: Record<EcommercePlatform, number> = {
     [EcommercePlatform.SAMS_CLUB]: 6,
     [EcommercePlatform.HEMA]: 0,
     [EcommercePlatform.DINGDONG]: 3,
   };
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
-    this.skuMatcher = new SKUMatcher(prisma);
+  constructor() {
+    this.skuMatcher = new SKUMatcher();
   }
 
   // 主要价格比较方法
   async comparePrices(
     foods: Food[],
-    config: Partial<PriceComparisonConfig> = {}
+    config: Partial<PriceComparisonConfig> = {},
   ): Promise<PriceComparisonResult[]> {
     const finalConfig: PriceComparisonConfig = {
       includeShipping: true,
@@ -82,18 +79,20 @@ export class PriceComparator {
 
       return results;
     } catch (error) {
-      throw new PlatformError({
-        type: PlatformErrorType.PLATFORM_ERROR,
-        message: `Failed to compare prices: ${error.message}`,
-        details: { originalError: error },
-      });
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new PlatformError(
+        PlatformErrorType.PLATFORM_ERROR,
+        `Failed to compare prices: ${message}`,
+        undefined,
+        { originalError: error },
+      );
     }
   }
 
   // 比较单个食材的价格
-  private async compareSingleFood(
+  async compareSingleFood(
     food: Food,
-    config: PriceComparisonConfig
+    config: PriceComparisonConfig,
   ): Promise<PriceComparisonResult> {
     // 1. 获取匹配的SKU
     const matches = await this.skuMatcher.matchFoodToSKUs(food, {
@@ -103,7 +102,10 @@ export class PriceComparator {
     });
 
     // 2. 过滤和增强匹配结果
-    const enhancedMatches = await this.enhanceMatchesWithPricing(matches, config);
+    const enhancedMatches = await this.enhanceMatchesWithPricing(
+      matches,
+      config,
+    );
 
     // 3. 找出最优价格
     const bestPrice = this.findBestPrice(enhancedMatches, config);
@@ -119,7 +121,7 @@ export class PriceComparator {
   // 增强匹配结果的价格信息
   private async enhanceMatchesWithPricing(
     matches: SKUMatchResult[],
-    config: PriceComparisonConfig
+    config: PriceComparisonConfig,
   ): Promise<SKUMatchResult[]> {
     const enhancedMatches: SKUMatchResult[] = [];
 
@@ -132,8 +134,10 @@ export class PriceComparator {
 
     // 按总价排序
     enhancedMatches.sort((a, b) => {
-      const priceA = (a.platformProduct as any).totalPrice || a.platformProduct.price;
-      const priceB = (b.platformProduct as any).totalPrice || b.platformProduct.price;
+      const priceA =
+        (a.platformProduct as any).totalPrice || a.platformProduct.price;
+      const priceB =
+        (b.platformProduct as any).totalPrice || b.platformProduct.price;
       return priceA - priceB;
     });
 
@@ -143,35 +147,42 @@ export class PriceComparator {
   // 计算总价（包含配送费等）
   private async calculateTotalPrice(
     match: SKUMatchResult,
-    config: PriceComparisonConfig
+    config: PriceComparisonConfig,
   ): Promise<SKUMatchResult | null> {
     const product = { ...match.platformProduct };
     let totalPrice = product.price;
 
     // 考虑折扣
-    if (config.considerDiscounts && product.originalPrice && product.originalPrice > product.price) {
-      (product as ProductWithDiscount).discountAmount = product.originalPrice - product.price;
-      const discountPercent = ((product.originalPrice - product.price) / product.originalPrice * 100).toFixed(1)
-      ;(product as ProductWithDiscount).discountPercentage = discountPercent;
+    if (
+      config.considerDiscounts &&
+      product.originalPrice &&
+      product.originalPrice > product.price
+    ) {
+      (product as ProductWithDiscount).discountAmount =
+        product.originalPrice - product.price;
+      const discountPercent = (
+        ((product.originalPrice - product.price) / product.originalPrice) *
+        100
+      ).toFixed(1);
+      (product as ProductWithDiscount).discountPercentage = discountPercent;
     }
 
     // 添加配送费
     if (config.includeShipping) {
       const shippingFee = this.calculateShippingFee(product);
-      totalPrice += shippingFee
+      totalPrice += shippingFee;
       (product as ProductWithDiscount).shippingFee = shippingFee;
     }
 
     // 计算单位价格
     const unitPrice = this.calculateUnitPrice(product);
-    if (unitPrice) {
+    if (unitPrice !== null) {
       (product as ProductWithDiscount).unitPrice = unitPrice;
     }
 
     // 计算性价比评分
-    const valueScore = this.calculateValueScore(product, match.confidence)
-    (product as ProductWithDiscount).valueScore = valueScore
-
+    const valueScore = this.calculateValueScore(product, match.confidence);
+    (product as ProductWithDiscount).valueScore = valueScore;
     (product as ProductWithDiscount).totalPrice = totalPrice;
 
     return {
@@ -194,7 +205,7 @@ export class PriceComparator {
   // 计算单位价格
   private calculateUnitPrice(product: PlatformProductInfo): number | null {
     const price = (product as any).totalPrice || product.price;
-    
+
     if (product.weight && product.weight > 0) {
       // 按重量计算（元/kg）
       return price / (product.weight / 1000);
@@ -208,18 +219,18 @@ export class PriceComparator {
     if (product.priceUnit) {
       // 根据价格单位计算
       switch (product.priceUnit) {
-      case 'kg':
-        return price;
-      case '500g':
-        return price * 2;
-      case '100g':
-        return price * 10;
-      case 'l':
-        return price;
-      case 'ml':
-        return price * 1000;
-      default:
-        return null;
+        case "kg":
+          return price;
+        case "500g":
+          return price * 2;
+        case "100g":
+          return price * 10;
+        case "l":
+          return price;
+        case "ml":
+          return price * 1000;
+        default:
+          return null;
       }
     }
 
@@ -227,14 +238,17 @@ export class PriceComparator {
   }
 
   // 计算性价比评分
-  private calculateValueScore(product: PlatformProductInfo, confidence: number): number {
+  private calculateValueScore(
+    product: PlatformProductInfo,
+    confidence: number,
+  ): number {
     let score = 0;
 
     // 基础分数（基于匹配置信度）
     score += confidence * 0.3;
 
     // 价格分数（价格越低分数越高）
-    const priceScore = Math.max(0, 1 - (product.price / 100)); // 假设100元为基准高价
+    const priceScore = Math.max(0, 1 - product.price / 100); // 假设100元为基准高价
     score += priceScore * 0.4;
 
     // 库存分数
@@ -248,7 +262,8 @@ export class PriceComparator {
     }
 
     // 平台权重
-    const platformWeight = this.platformWeights[product.platform as EcommercePlatform] || 0.5;
+    const platformWeight =
+      this.platformWeights[product.platform as EcommercePlatform] || 0.5;
     score *= platformWeight;
 
     return Math.min(score, 1);
@@ -257,18 +272,27 @@ export class PriceComparator {
   // 找出最优价格
   private findBestPrice(
     matches: SKUMatchResult[],
-    config: PriceComparisonConfig
-  ): PriceComparisonResult['bestPrice'] {
+    config: PriceComparisonConfig,
+  ): PriceComparisonResult["bestPrice"] {
     if (matches.length === 0) {
       return undefined;
     }
 
+    const [firstMatch] = matches;
+    if (!firstMatch) {
+      return undefined;
+    }
+
     // 找出总价最低的商品
-    let bestMatch = matches[0];
-    let lowestTotalPrice = (bestMatch.platformProduct as any).totalPrice || bestMatch.platformProduct.price;
+    let bestMatch = firstMatch;
+    let lowestTotalPrice =
+      (bestMatch.platformProduct as any).totalPrice ||
+      bestMatch.platformProduct.price;
 
     for (const match of matches) {
-      const totalPrice = (match.platformProduct as any).totalPrice || match.platformProduct.price;
+      const totalPrice =
+        (match.platformProduct as any).totalPrice ||
+        match.platformProduct.price;
       if (totalPrice < lowestTotalPrice) {
         lowestTotalPrice = totalPrice;
         bestMatch = match;
@@ -286,7 +310,7 @@ export class PriceComparator {
   // 获取平台价格分析
   async getPlatformPriceAnalysis(
     foods: Food[],
-    platform: EcommercePlatform
+    platform: EcommercePlatform,
   ): Promise<PriceAnalysis> {
     const matches: SKUMatchResult[] = [];
 
@@ -296,8 +320,8 @@ export class PriceComparator {
         maxResults: 10,
       });
 
-      const platformMatches = foodMatches.filter(match => 
-        match.platformProduct.platform === platform
+      const platformMatches = foodMatches.filter(
+        (match) => match.platformProduct.platform === platform,
       );
 
       matches.push(...platformMatches);
@@ -314,12 +338,15 @@ export class PriceComparator {
       };
     }
 
-    const prices = matches.map(match => match.platformProduct.price);
-    const inStockCount = matches.filter(match => match.platformProduct.isInStock).length;
+    const prices = matches.map((match) => match.platformProduct.price);
+    const inStockCount = matches.filter(
+      (match) => match.platformProduct.isInStock,
+    ).length;
 
     return {
       platform,
-      averagePrice: prices.reduce((sum, price) => sum + price, 0) / prices.length,
+      averagePrice:
+        prices.reduce((sum, price) => sum + price, 0) / prices.length,
       lowestPrice: Math.min(...prices),
       highestPrice: Math.max(...prices),
       productCount: matches.length,
@@ -328,8 +355,14 @@ export class PriceComparator {
   }
 
   // 获取跨平台价格对比
-  async getCrossPlatformComparison(foods: Food[]): Promise<Map<EcommercePlatform, PriceAnalysis>> {
-    const platforms = [EcommercePlatform.SAMS_CLUB, EcommercePlatform.HEMA, EcommercePlatform.DINGDONG];
+  async getCrossPlatformComparison(
+    foods: Food[],
+  ): Promise<Map<EcommercePlatform, PriceAnalysis>> {
+    const platforms = [
+      EcommercePlatform.SAMS_CLUB,
+      EcommercePlatform.HEMA,
+      EcommercePlatform.DINGDONG,
+    ];
     const results = new Map<EcommercePlatform, PriceAnalysis>();
 
     for (const platform of platforms) {
@@ -343,34 +376,30 @@ export class PriceComparator {
   // 获取价格趋势
   async getPriceTrends(
     foodId: string,
-    days: number = 30
-  ): Promise<Array<{
-    date: string
-    platforms: Record<EcommercePlatform, number | null>
-  }>> {
+    days: number = 30,
+  ): Promise<
+    Array<{
+      date: string;
+      platforms: Record<EcommercePlatform, number | null>;
+    }>
+  > {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
     try {
-      const priceHistories = await this.prisma.priceHistory.findMany({
-        where: {
-          foodId,
-          recordedAt: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
-        orderBy: {
-          recordedAt: 'asc',
-        },
+      const histories = await convexEcommerceRepository.getPriceHistory({
+        foodId,
+        days,
       });
 
-      // 按日期分组
-      const dailyPrices = new Map<string, Record<EcommercePlatform, number | null>>();
-      
-      priceHistories.forEach(history => {
-        const dateKey = history.recordedAt.toISOString().split('T')[0];
-        
+      const dailyPrices = new Map<
+        string,
+        Record<EcommercePlatform, number | null>
+      >();
+
+      histories.forEach((history) => {
+        const dateKey = new Date(history.recordedAt).toISOString().slice(0, 10);
+
         if (!dailyPrices.has(dateKey)) {
           const platforms: Record<EcommercePlatform, number | null> = {
             [EcommercePlatform.SAMS_CLUB]: null,
@@ -379,7 +408,7 @@ export class PriceComparator {
           };
           dailyPrices.set(dateKey, platforms);
         }
-        
+
         const dailyPrice = dailyPrices.get(dateKey)!;
         dailyPrice[history.platform as EcommercePlatform] = history.unitPrice;
       });
@@ -389,35 +418,39 @@ export class PriceComparator {
         platforms,
       }));
     } catch (error) {
-      throw new PlatformError({
-        type: PlatformErrorType.PLATFORM_ERROR,
-        message: `Failed to get price trends for food ${foodId}: ${error.message}`,
-        details: { foodId, originalError: error },
-      });
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new PlatformError(
+        PlatformErrorType.PLATFORM_ERROR,
+        `Failed to get price trends for food ${foodId}: ${message}`,
+        undefined,
+        { foodId, originalError: error },
+      );
     }
   }
 
   // 获取价格提醒
   async getPriceAlerts(
     foods: Food[],
-    threshold: number = 0.2 // 20%价格变化阈值
-  ): Promise<Array<{
-    foodId: string
-    foodName: string
-    platform: EcommercePlatform
-    currentPrice: number
-    previousPrice: number
-    changePercentage: number
-    alertType: 'price_drop' | 'price_increase'
-  }>> {
+    threshold: number = 0.2, // 20%价格变化阈值
+  ): Promise<
+    Array<{
+      foodId: string;
+      foodName: string;
+      platform: EcommercePlatform;
+      currentPrice: number;
+      previousPrice: number;
+      changePercentage: number;
+      alertType: "price_drop" | "price_increase";
+    }>
+  > {
     const alerts: Array<{
-      foodId: string
-      foodName: string
-      platform: EcommercePlatform
-      currentPrice: number
-      previousPrice: number
-      changePercentage: number
-      alertType: 'price_drop' | 'price_increase'
+      foodId: string;
+      foodName: string;
+      platform: EcommercePlatform;
+      currentPrice: number;
+      previousPrice: number;
+      changePercentage: number;
+      alertType: "price_drop" | "price_increase";
     }> = [];
 
     for (const food of foods) {
@@ -435,10 +468,11 @@ export class PriceComparator {
 
         // 获取历史价格
         const previousPrice = await this.getPreviousPrice(food.id, platform);
-        
+
         if (previousPrice && previousPrice > 0) {
-          const changePercentage = (currentPrice - previousPrice) / previousPrice;
-          
+          const changePercentage =
+            (currentPrice - previousPrice) / previousPrice;
+
           if (Math.abs(changePercentage) >= threshold) {
             alerts.push({
               foodId: food.id,
@@ -447,7 +481,7 @@ export class PriceComparator {
               currentPrice,
               previousPrice,
               changePercentage: changePercentage * 100,
-              alertType: changePercentage < 0 ? 'price_drop' : 'price_increase',
+              alertType: changePercentage < 0 ? "price_drop" : "price_increase",
             });
           }
         }
@@ -458,22 +492,25 @@ export class PriceComparator {
   }
 
   // 获取历史价格
-  private async getPreviousPrice(foodId: string, platform: EcommercePlatform): Promise<number | null> {
+  private async getPreviousPrice(
+    foodId: string,
+    platform: EcommercePlatform,
+  ): Promise<number | null> {
     try {
-      const previousHistory = await this.prisma.priceHistory.findFirst({
-        where: {
-          foodId,
-          platform: platform as any,
-        },
-        orderBy: {
-          recordedAt: 'desc',
-        },
-        skip: 1, // 跳过最新的记录
+      const histories = await convexEcommerceRepository.getPriceHistory({
+        foodId,
+        platform: platform as string,
       });
 
-      return previousHistory?.unitPrice || null;
+      if (histories.length > 1) {
+        return histories[1]?.unitPrice ?? null;
+      }
+      return null;
     } catch (error) {
-      console.error(`Failed to get previous price for food ${foodId} on ${platform}:`, error);
+      console.error(
+        `Failed to get previous price for food ${foodId} on ${platform}:`,
+        error,
+      );
       return null;
     }
   }
@@ -483,22 +520,23 @@ export class PriceComparator {
     foodId: string,
     platform: EcommercePlatform,
     price: number,
-    unitPrice: number
+    unitPrice: number,
+    unit: string = "kg",
   ): Promise<void> {
     try {
-      await this.prisma.priceHistory.create({
-        data: {
-          foodId,
-          price,
-          unit,
-          unitPrice,
-          platform: platform as any,
-          recordedAt: new Date(),
-          source: 'API',
-        },
+      await convexEcommerceRepository.addPriceHistory({
+        foodId,
+        price,
+        unitPrice,
+        unit,
+        platform: platform as string,
+        source: "API",
       });
     } catch (error) {
-      console.error(`Failed to update price history for food ${foodId}:`, error);
+      console.error(
+        `Failed to update price history for food ${foodId}:`,
+        error,
+      );
     }
   }
 }

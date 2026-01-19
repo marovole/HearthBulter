@@ -1,38 +1,48 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { costOptimizer } from '@/lib/services/budget/cost-optimizer';
-import { priceAnalyzer } from '@/lib/services/budget/price-analyzer';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { costOptimizer } from "@/lib/services/budget/cost-optimizer";
+import { priceAnalyzer } from "@/lib/services/budget/price-analyzer";
+import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 
 // Force dynamic rendering
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+    }
+
     const body = await request.json();
-    
-    const {
-      memberId,
-      foodIds,
-      optimizationType,
-      constraints,
-    } = body;
+
+    const { memberId, foodIds, optimizationType, constraints } = body;
 
     if (!memberId || !foodIds || !Array.isArray(foodIds)) {
       return NextResponse.json(
-        { error: '缺少必需参数: memberId, foodIds' },
-        { status: 400 }
+        { error: "缺少必需参数: memberId, foodIds" },
+        { status: 400 },
+      );
+    }
+
+    const access = await memberRepository.verifyMemberAccess(
+      memberId,
+      session.user.id,
+    );
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        { error: "无权限访问该成员的优化建议" },
+        { status: 403 },
       );
     }
 
     if (foodIds.length === 0) {
-      return NextResponse.json(
-        { error: 'foodIds不能为空' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "foodIds不能为空" }, { status: 400 });
     }
 
     let result;
 
     switch (optimizationType) {
-    case 'shoppingList':
+    case "shoppingList":
       result = await costOptimizer.optimizeShoppingList(foodIds, {
         nutritionTargets: constraints?.nutritionTargets || {
           calories: 2000,
@@ -49,34 +59,41 @@ export async function POST(request: NextRequest) {
       });
       break;
 
-    case 'multiObjective':
+    case "multiObjective":
+      const originalFoods =
+          await costOptimizer.getFoodOptionsForOptimization(foodIds);
+      const substituteOptions =
+          await costOptimizer.findSubstituteOptionsForOptimization(
+            originalFoods,
+            constraints || {},
+          );
       result = await costOptimizer.multiObjectiveOptimization(
-        await costOptimizer.getFoodOptions(foodIds),
-        await costOptimizer.findSubstituteOptions(
-          await costOptimizer.getFoodOptions(foodIds),
-          constraints || {}
-        ),
-        constraints || {}
+        originalFoods,
+        substituteOptions,
+        constraints || {},
       );
       break;
 
-    case 'platformComparison':
+    case "platformComparison":
       if (foodIds.length === 1) {
         result = await priceAnalyzer.getPlatformComparison(
           foodIds[0],
-          constraints?.quantity || 1
+          constraints?.quantity || 1,
         );
       } else {
         result = await priceAnalyzer.optimizeBulkPurchase(foodIds);
       }
       break;
 
-    case 'bulkPurchase':
+    case "bulkPurchase":
       result = await priceAnalyzer.optimizeBulkPurchase(foodIds);
       break;
 
     default:
-      result = await costOptimizer.optimizeShoppingList(foodIds, constraints || {});
+      result = await costOptimizer.optimizeShoppingList(
+        foodIds,
+        constraints || {},
+      );
     }
 
     return NextResponse.json({
@@ -85,44 +102,39 @@ export async function POST(request: NextRequest) {
       result,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error('成本优化失败:', error);
-    
+    console.error("成本优化失败:", error);
+
     if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: '成本优化失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "成本优化失败" }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const foodId = searchParams.get('foodId');
-    const type = searchParams.get('type');
+    const foodId = searchParams.get("foodId");
+    const type = searchParams.get("type");
 
     if (!foodId) {
-      return NextResponse.json(
-        { error: '缺少foodId参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "缺少foodId参数" }, { status: 400 });
     }
 
     let result;
 
     switch (type) {
-    case 'platform':
+    case "platform":
       result = await priceAnalyzer.getPlatformComparison(foodId);
       break;
-    case 'priceHistory':
+    case "priceHistory":
       result = await priceAnalyzer.getPriceTrend(foodId);
       break;
     default:
@@ -131,18 +143,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('获取优化信息失败:', error);
-    
+    console.error("获取优化信息失败:", error);
+
     if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: '获取优化信息失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "获取优化信息失败" }, { status: 500 });
   }
 }

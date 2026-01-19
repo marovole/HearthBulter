@@ -6,9 +6,9 @@
  * @module meal-tracking-repository-singleton
  */
 
-import { SupabaseClientManager } from '@/lib/db/supabase-adapter';
-import { SupabaseMealTrackingRepository } from './implementations/supabase-meal-tracking-repository';
-import type { MealTrackingRepository } from './interfaces/meal-tracking-repository';
+import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { SupabaseMealTrackingRepository } from "./implementations/supabase-meal-tracking-repository";
+import type { MealTrackingRepository } from "./interfaces/meal-tracking-repository";
 
 let instance: MealTrackingRepository | null = null;
 

@@ -1,44 +1,54 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useOnboarding } from '@/lib/context/OnboardingContext';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useOnboarding } from "@/lib/context/OnboardingContext";
 
 interface OnboardingStep {
-  id: string
-  title: string
-  description: string
-  component: React.ComponentType<{ onNext: () => void; onPrevious: () => void; onSkip: () => void }>
+  id: string;
+  title: string;
+  description: string;
+  component?: React.ComponentType<{
+    onNext: () => void;
+    onPrevious: () => void;
+    onSkip: () => void;
+  }> | null;
 }
 
 const steps: OnboardingStep[] = [
   {
-    id: 'welcome',
-    title: '欢迎使用 Health Butler',
-    description: '了解您的智能家庭健康管家',
+    id: "welcome",
+    title: "欢迎使用 Health Butler",
+    description: "了解您的智能家庭健康管家",
     component: () => null, // Will be handled by welcome page
   },
   {
-    id: 'family-setup',
-    title: '家庭设置',
-    description: '创建家庭成员档案',
+    id: "family-setup",
+    title: "家庭设置",
+    description: "创建家庭成员档案",
     component: null, // Will be implemented
   },
   {
-    id: 'health-goals',
-    title: '健康目标',
-    description: '设置个人健康目标',
+    id: "health-goals",
+    title: "健康目标",
+    description: "设置个人健康目标",
     component: null, // Will be implemented
   },
   {
-    id: 'feature-tour',
-    title: '功能导览',
-    description: '了解核心功能使用',
+    id: "feature-tour",
+    title: "功能导览",
+    description: "了解核心功能使用",
     component: null, // Will be implemented
   },
 ];
@@ -71,14 +81,14 @@ export function OnboardingWizard() {
 
   const handleSkip = () => {
     completeOnboarding();
-    router.push('/dashboard');
+    router.push("/dashboard");
   };
 
   const handleComplete = () => {
     completeOnboarding();
     setIsCompleted(true);
     setTimeout(() => {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }, 2000);
   };
 
@@ -92,10 +102,10 @@ export function OnboardingWizard() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-green-600">设置完成！</CardTitle>
-            <CardDescription>
-              欢迎开始使用 Health Butler
-            </CardDescription>
+            <CardTitle className="text-2xl text-green-600">
+              设置完成！
+            </CardTitle>
+            <CardDescription>欢迎开始使用 Health Butler</CardDescription>
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-gray-600 mb-4">
@@ -109,6 +119,9 @@ export function OnboardingWizard() {
   }
 
   const currentStepData = steps[currentStep];
+  if (!currentStepData) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
@@ -151,10 +164,10 @@ export function OnboardingWizard() {
                 onClick={() => goToStep(index)}
                 className={`w-3 h-3 rounded-full transition-colors ${
                   index === currentStep
-                    ? 'bg-blue-600'
+                    ? "bg-blue-600"
                     : index < currentStep
-                      ? 'bg-green-500'
-                      : 'bg-gray-300'
+                      ? "bg-green-500"
+                      : "bg-gray-300"
                 }`}
                 aria-label={`转到步骤 ${index + 1}`}
               />
@@ -175,28 +188,40 @@ export function OnboardingWizard() {
                     您的智能家庭健康管家，让健康管理变得简单而有趣。
                   </p>
                 </div>
-                
+
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
                   <div className="text-left p-6 bg-blue-50 rounded-lg">
-                    <h3 className="font-semibold text-lg mb-2">🏥 家庭健康管理</h3>
-                    <p className="text-gray-600">为全家成员创建健康档案，统一管理健康数据</p>
+                    <h3 className="font-semibold text-lg mb-2">
+                      🏥 家庭健康管理
+                    </h3>
+                    <p className="text-gray-600">
+                      为全家成员创建健康档案，统一管理健康数据
+                    </p>
                   </div>
                   <div className="text-left p-6 bg-green-50 rounded-lg">
-                    <h3 className="font-semibold text-lg mb-2">📊 健康数据追踪</h3>
-                    <p className="text-gray-600">记录关键指标，可视化健康趋势</p>
+                    <h3 className="font-semibold text-lg mb-2">
+                      📊 健康数据追踪
+                    </h3>
+                    <p className="text-gray-600">
+                      记录关键指标，可视化健康趋势
+                    </p>
                   </div>
                   <div className="text-left p-6 bg-purple-50 rounded-lg">
-                    <h3 className="font-semibold text-lg mb-2">🤖 AI营养建议</h3>
+                    <h3 className="font-semibold text-lg mb-2">
+                      🤖 AI营养建议
+                    </h3>
                     <p className="text-gray-600">个性化营养指导和食谱推荐</p>
                   </div>
                   <div className="text-left p-6 bg-orange-50 rounded-lg">
-                    <h3 className="font-semibold text-lg mb-2">🛒 智能购物清单</h3>
+                    <h3 className="font-semibold text-lg mb-2">
+                      🛒 智能购物清单
+                    </h3>
                     <p className="text-gray-600">根据食谱自动生成购物清单</p>
                   </div>
                 </div>
               </div>
             )}
-            
+
             {currentStep === 1 && (
               <div>
                 <h2 className="text-2xl font-semibold text-center mb-6">
@@ -210,7 +235,7 @@ export function OnboardingWizard() {
                 </div>
               </div>
             )}
-            
+
             {currentStep === 2 && (
               <div>
                 <h2 className="text-2xl font-semibold text-center mb-6">
@@ -220,11 +245,13 @@ export function OnboardingWizard() {
                   为您和您的家人设置个性化的健康目标
                 </p>
                 <div className="text-center py-12">
-                  <p className="text-gray-500">健康目标设置组件将在这里实现...</p>
+                  <p className="text-gray-500">
+                    健康目标设置组件将在这里实现...
+                  </p>
                 </div>
               </div>
             )}
-            
+
             {currentStep === 3 && (
               <div>
                 <h2 className="text-2xl font-semibold text-center mb-6">
@@ -251,9 +278,9 @@ export function OnboardingWizard() {
             <ChevronLeft className="h-4 w-4 mr-2" />
             上一步
           </Button>
-          
+
           <Button onClick={handleNext}>
-            {currentStep === steps.length - 1 ? '完成设置' : '下一步'}
+            {currentStep === steps.length - 1 ? "完成设置" : "下一步"}
             <ChevronRight className="h-4 w-4 ml-2" />
           </Button>
         </div>

@@ -10,35 +10,46 @@
  * @module budget
  */
 
-import { z } from 'zod';
-import { dateRangeFilterSchema } from './common';
+import { z } from "zod";
+import { dateRangeFilterSchema } from "./common";
 
 /**
  * 预算周期枚举
  */
-export const budgetPeriodSchema = z.enum(['WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY', 'CUSTOM']);
+export const budgetPeriodSchema = z.enum([
+  "WEEKLY",
+  "MONTHLY",
+  "QUARTERLY",
+  "YEARLY",
+  "CUSTOM",
+]);
 export type BudgetPeriod = z.infer<typeof budgetPeriodSchema>;
 
 /**
  * 预算状态枚举
  */
-export const budgetStatusSchema = z.enum(['ACTIVE', 'COMPLETED', 'CANCELLED', 'EXPIRED']);
+export const budgetStatusSchema = z.enum([
+  "ACTIVE",
+  "COMPLETED",
+  "CANCELLED",
+  "EXPIRED",
+]);
 export type BudgetStatus = z.infer<typeof budgetStatusSchema>;
 
 /**
  * 食品类别枚举（完整列表）
  */
 export const foodCategorySchema = z.enum([
-  'VEGETABLES',
-  'FRUITS',
-  'GRAINS',
-  'PROTEIN',
-  'SEAFOOD',
-  'DAIRY',
-  'OILS',
-  'SNACKS',
-  'BEVERAGES',
-  'OTHER',
+  "VEGETABLES",
+  "FRUITS",
+  "GRAINS",
+  "PROTEIN",
+  "SEAFOOD",
+  "DAIRY",
+  "OILS",
+  "SNACKS",
+  "BEVERAGES",
+  "OTHER",
 ]);
 export type FoodCategory = z.infer<typeof foodCategorySchema>;
 
@@ -85,7 +96,7 @@ export const budgetSchema = z.object({
   usedAmount: z.number().nonnegative().default(0),
   remainingAmount: z.number().nonnegative().default(0),
   usagePercentage: z.number().min(0).max(100).default(0),
-  status: budgetStatusSchema.default('ACTIVE'),
+  status: budgetStatusSchema.default("ACTIVE"),
   alertThreshold80: z.boolean().default(true),
   alertThreshold100: z.boolean().default(true),
   alertThreshold110: z.boolean().default(true),
@@ -141,7 +152,12 @@ export type SpendingDTO = z.infer<typeof spendingSchema>;
  */
 export const spendingCreateSchema = spendingSchema
   .omit({ id: true, createdAt: true })
-  .partial({ description: true, transactionId: true, platform: true, items: true });
+  .partial({
+    description: true,
+    transactionId: true,
+    platform: true,
+    items: true,
+  });
 
 export type SpendingCreateDTO = z.infer<typeof spendingCreateSchema>;
 
@@ -162,12 +178,18 @@ export type SpendingFilterDTO = z.infer<typeof spendingFilterSchema>;
 export const budgetAlertSchema = z.object({
   id: z.string().uuid(),
   budgetId: z.string().uuid(),
-  type: z.enum(['WARNING_80', 'WARNING_100', 'OVER_BUDGET_110', 'CATEGORY_BUDGET_ALERT', 'DAILY_EXCESS']),
+  type: z.enum([
+    "WARNING_80",
+    "WARNING_100",
+    "OVER_BUDGET_110",
+    "CATEGORY_BUDGET_ALERT",
+    "DAILY_EXCESS",
+  ]),
   threshold: z.number(),
   currentValue: z.number(),
   message: z.string().min(1),
   category: foodCategorySchema.optional(),
-  status: z.enum(['ACTIVE', 'CLEARED']).default('ACTIVE'),
+  status: z.enum(["ACTIVE", "CLEARED"]).default("ACTIVE"),
   createdAt: z.coerce.date(),
 });
 
@@ -189,7 +211,7 @@ export const budgetStatusPayloadSchema = z.object({
       used: z.number().nonnegative(),
       remaining: z.number().nonnegative(),
       percentage: z.number().min(0).max(100),
-    })
+    }),
   ),
 });
 
