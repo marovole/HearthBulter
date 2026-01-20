@@ -3,7 +3,7 @@ import { logger } from "@/lib/logging/structured-logger";
 // 敏感环境变量列表
 const SENSITIVE_KEYS = [
   "DATABASE_URL",
-  "NEXTAUTH_SECRET",
+  "CLERK_SECRET_KEY",
   "SUPABASE_SERVICE_KEY",
   "SUPABASE_JWT_SECRET",
   "GOOGLE_CLIENT_SECRET",

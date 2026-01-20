@@ -26,7 +26,7 @@ const TEST_SECRET = "test-secret-key-for-token-generation-minimum-32-chars";
 describe("Token Generator", () => {
   beforeAll(() => {
     process.env.TOKEN_SECRET_KEY = TEST_SECRET;
-    process.env.NEXTAUTH_SECRET = TEST_SECRET;
+    process.env.CLERK_SECRET_KEY = TEST_SECRET;
   });
 
   afterAll(() => {

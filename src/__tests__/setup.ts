@@ -358,7 +358,7 @@ const MockResponse = class {
 global.Response = MockResponse as unknown as typeof Response;
 
 // Mock environment variables
-process.env.NEXTAUTH_SECRET = "test-secret";
+process.env.CLERK_SECRET_KEY = "test-secret-for-clerk-auth-min32";
 process.env.ENCRYPTION_KEY = "dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVzLWxvbmc="; // base64 encoded
 
 // Mock rate limiter

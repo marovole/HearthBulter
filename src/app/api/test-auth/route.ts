@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     // 仅检查配置是否存在（不暴露实际值）
     const configStatus = {
-      auth: process.env.NEXTAUTH_SECRET ? "configured" : "missing",
+      auth: process.env.CLERK_SECRET_KEY ? "configured" : "missing",
       database:
         process.env.DATABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
           ? "configured"
