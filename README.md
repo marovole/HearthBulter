@@ -31,7 +31,7 @@
     <img src="https://img.shields.io/badge/TypeScript-5.6+-3178C6?style=flat-square&logo=typescript" alt="TypeScript" />
   </a>
   <a href="#">
-    <img src="https://img.shields.io/badge/Database-Supabase-3ECF8E?style=flat-square&logo=supabase" alt="Supabase" />
+    <img src="https://img.shields.io/badge/Database-Neon-00E599?style=flat-square&logo=postgresql" alt="Neon" />
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License" />
@@ -51,7 +51,7 @@
 
 > 💡 **让个人与家庭的健康管理从「主观感性」走向「客观数据驱动」**
 
-**Health Butler** 是一个开源的家庭健康管理平台，通过 AI 营养规划、智能食谱生成和电商自动采购，帮助家庭建立可持续的健康管理习惯。项目采用 **Cloudflare Pages + Supabase** 的 Serverless 架构，实现**完全免费**部署。
+**Health Butler** 是一个开源的家庭健康管理平台，通过 AI 营养规划、智能食谱生成和电商自动采购，帮助家庭建立可持续的健康管理习惯。项目采用 **Cloudflare Pages + Neon PostgreSQL** 的 Serverless 架构，实现**完全免费**部署。
 
 ---
 
@@ -61,7 +61,7 @@
 | ------------ | --------- | -------------------------------------------------------- | ------------------------------ |
 | **生产环境** | ✅ 运行中 | [hearthbulter.pages.dev](https://hearthbulter.pages.dev) | 主站点，自动从 `main` 分支部署 |
 | **预览环境** | ✅ 可用   | `*.hearthbulter.pages.dev`                               | 每个 PR 自动生成预览链接       |
-| **数据库**   | ✅ 在线   | Supabase PostgreSQL                                      | 71 张数据表，500MB 免费配额    |
+| **数据库**   | ✅ 在线   | Neon Serverless PostgreSQL                               | 71 张数据表，0.5GB 免费配额    |
 | **CI/CD**    | ✅ 激活   | GitHub Actions                                           | 7 个 Job 自动化流水线          |
 
 ### CI/CD 流水线
@@ -190,23 +190,13 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
           ┌───────────────────────┼───────────────────────┐
           ▼                       ▼                       ▼
 ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
-│  Supabase 平台   │   │  Upstash Redis   │   │  第三方 API 服务  │
+│  Neon Database   │   │  Upstash Redis   │   │  第三方 API 服务  │
 │                  │   │                  │   │                  │
 │ ┌──────────────┐ │   │ ┌──────────────┐ │   │ • OpenAI GPT-4  │
 │ │ PostgreSQL   │ │   │ │ Session/Cache │ │   │ • USDA FoodData │
 │ │ (71 张数据表) │ │   │ │ Rate Limit   │ │   │ • Tesseract OCR │
-│ │ 500MB 免费   │ │   │ └──────────────┘ │   │ • 微信支付       │
-│ └──────────────┘ │   └──────────────────┘   └──────────────────┘
-│                  │
-│ ┌──────────────┐ │
-│ │   Storage    │ │
-│ │ (文件存储)    │ │
-│ │ 1GB 免费     │ │
-│ └──────────────┘ │
-│                  │
-│ ┌──────────────┐ │
-│ │   Auth       │ │
-│ │ (认证服务)    │ │
+│ │ Serverless   │ │   │ └──────────────┘ │   │ • Clerk Auth    │
+│ │ 自动扩展     │ │   └──────────────────┘   └──────────────────┘
 │ └──────────────┘ │
 └──────────────────┘
 ```
@@ -241,8 +231,8 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 | ------------------------ | ------ | -------------- |
 | **Cloudflare Functions** | Latest | Serverless API |
 | **Prisma**               | 6.0+   | ORM + 类型生成 |
-| **NextAuth.js**          | 4.24+  | 认证授权       |
-| **Supabase**             | 2.80+  | BaaS 平台      |
+| **Clerk**                | 6.0+   | 认证授权       |
+| **Neon**                 | Latest | Serverless PG  |
 | **PostgreSQL**           | 16     | 关系型数据库   |
 | **Upstash Redis**        | 1.35+  | 边缘缓存       |
 | **OpenAI**               | 6.7+   | AI 服务        |
@@ -317,9 +307,8 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 | ------------------------ | ------------------------ | -------------- | ------- |
 | **Cloudflare Pages**     | 无限请求 / 500 次构建/月 | ~50 次构建/月  | ✅ 免费 |
 | **Cloudflare Functions** | 100,000 请求/天          | ~1,000 请求/天 | ✅ 免费 |
-| **Supabase PostgreSQL**  | 500MB                    | ~50MB          | ✅ 免费 |
-| **Supabase Storage**     | 1GB                      | ~100MB         | ✅ 免费 |
-| **Supabase Auth**        | 50,000 MAU               | ~100 用户      | ✅ 免费 |
+| **Neon PostgreSQL**      | 0.5GB storage, 191h/月   | ~50MB          | ✅ 免费 |
+| **Clerk Auth**           | 10,000 MAU               | ~100 用户      | ✅ 免费 |
 | **GitHub Actions**       | 2,000 分钟/月            | ~200 分钟/月   | ✅ 免费 |
 | **Upstash Redis**        | 10,000 请求/天           | ~500 请求/天   | ✅ 免费 |
 
@@ -333,7 +322,7 @@ Push to main → 代码质量检查 → TypeScript 类型检查 → 单元测试
 
 - **Node.js** 20.0+ LTS
 - **pnpm** 8.0+ (推荐) 或 npm
-- **PostgreSQL** 16+ (或使用 Supabase)
+- **PostgreSQL** 16+ (或使用 Neon)
 
 ### 安装步骤
 
@@ -366,17 +355,12 @@ pnpm dev
 ```env
 # ========== 必需配置 ==========
 
-# 数据库连接 (Supabase PostgreSQL)
-DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-[region].pooler.supabase.com:6543/postgres
+# 数据库连接 (Neon Serverless PostgreSQL)
+DATABASE_URL=postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/neondb?sslmode=require
 
-# NextAuth.js 配置
-NEXTAUTH_SECRET=your-secret-key-at-least-32-characters
-NEXTAUTH_URL=http://localhost:3000  # 生产环境: https://your-domain.com
-
-# Supabase 配置
-NEXT_PUBLIC_SUPABASE_URL=https://[ref].supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-key
+# Clerk 认证配置
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+CLERK_SECRET_KEY=sk_test_xxx
 
 # ========== 可选配置 ==========
 
@@ -393,9 +377,8 @@ REDIS_URL=redis://localhost:6379
 # Web Push (可选)
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
 
-# OAuth 登录
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+# OAuth 登录 (通过 Clerk 配置)
+# GOOGLE_CLIENT_ID 和 GOOGLE_CLIENT_SECRET 在 Clerk Dashboard 配置
 
 # AI 服务 (OpenAI / OpenRouter)
 OPENAI_API_KEY=your-openai-api-key
@@ -534,7 +517,7 @@ chore: 构建过程或辅助工具变动
 ### MVP 阶段 ✅ (已完成)
 
 - [x] 项目初始化 + 架构设计
-- [x] Cloudflare Pages + Supabase 部署
+- [x] Cloudflare Pages + Neon 部署
 - [x] 用户认证 (邮箱 + Google + GitHub OAuth)
 - [x] 家庭档案管理 + 邀请系统
 - [x] 健康数据录入与可视化
@@ -608,7 +591,8 @@ chore: 构建过程或辅助工具变动
 
 - [Next.js](https://nextjs.org/) - React 全栈框架
 - [Cloudflare Pages](https://pages.cloudflare.com/) - 边缘部署平台
-- [Supabase](https://supabase.com/) - 开源 Firebase 替代
+- [Neon](https://neon.tech/) - Serverless PostgreSQL
+- [Clerk](https://clerk.com/) - 现代认证平台
 - [shadcn/ui](https://ui.shadcn.com/) - 精美的 UI 组件库
 - [Prisma](https://www.prisma.io/) - 下一代 ORM
 - [USDA FoodData Central](https://fdc.nal.usda.gov/) - 营养数据 API
