@@ -1,5 +1,8 @@
 # Cloudflare Pages + Supabase 混合架构配置文件
 # 适配 Next.js 15 静态导出 + Supabase 后端
+#
+# ⚠️ 重要: 敏感变量已移至 Cloudflare Dashboard Secrets
+# 参见: docs/deployment/cloudflare-secrets.md
 
 pages_build_output_dir = ".open-next"
 
@@ -20,7 +23,7 @@ compatibility_flags = ["nodejs_compat", "nodejs_als"]
 binding = "CACHE_KV"
 id = "dd47f27d131a466db34838dd247df983"
 
-# Preview 环境配置（替换 staging 和 development）
+# Preview 环境配置
 [env.preview]
 name = "hearthbutler-supabase-preview"
 compatibility_date = "2024-09-23"
@@ -31,44 +34,34 @@ compatibility_flags = ["nodejs_compat", "nodejs_als"]
 binding = "CACHE_KV"
 id = "3416fc31333f449194c9e8e3c00fafec"
 
-# 环境变量配置
+# 非敏感环境变量（公开配置）
 [vars]
 NODE_ENV = "production"
-NEXT_PUBLIC_ALLOWED_ORIGINS = "https://healthbutler.life"
-NEXT_PUBLIC_SITE_URL = "https://healthbutler.life"
-NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwbWxpcHRqdnp1cmV3c2l3c3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODQ0MzEsImV4cCI6MjA3ODE2MDQzMX0.r1_kuC6ekX1u1omuxjdf4c7ZQ_e70ciqwKGGqK6mkP0"
-UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
 
 # 生产环境变量
 [env.production.vars]
 NODE_ENV = "production"
-NEXT_PUBLIC_ALLOWED_ORIGINS = "https://healthbutler.life"
 NEXT_PUBLIC_SITE_URL = "https://healthbutler.life"
-NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwbWxpcHRqdnp1cmV3c2l3c3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODQ0MzEsImV4cCI6MjA3ODE2MDQzMX0.r1_kuC6ekX1u1omuxjdf4c7ZQ_e70ciqwKGGqK6mkP0"
-UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
+NEXT_PUBLIC_ALLOWED_ORIGINS = "https://healthbutler.life"
 
 # Preview 环境变量
 [env.preview.vars]
 NODE_ENV = "preview"
-NEXT_PUBLIC_ALLOWED_ORIGINS = "https://preview.hearthbulter.pages.dev"
 NEXT_PUBLIC_SITE_URL = "https://preview.hearthbulter.pages.dev"
-NEXT_PUBLIC_SUPABASE_URL = "https://ppmliptjvzurewsiwswb.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwbWxpcHRqdnp1cmV3c2l3c3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1ODQ0MzEsImV4cCI6MjA3ODE2MDQzMX0.r1_kuC6ekX1u1omuxjdf4c7ZQ_e70ciqwKGGqK6mkP0"
-UPSTASH_REDIS_REST_URL = "https://teaching-eagle-34132.upstash.io"
+NEXT_PUBLIC_ALLOWED_ORIGINS = "https://preview.hearthbulter.pages.dev"
 
-# KV 存储配置已移至各环境配置中
-# 生产环境: env.production.kv_namespaces
-# 预览环境: env.preview.kv_namespaces
-
-# D1 数据库 (如果需要)
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "hearthbutler-db"
-# database_id = "your-database-id"
-
-# R2 存储 (如果需要)
-# [[r2_buckets]]
-# binding = "ASSETS"
-# bucket_name = "hearthbutler-assets"
+# ============================================================
+# 以下变量必须通过 Cloudflare Dashboard 或 wrangler secret 设置:
+#
+# 必需 (生产环境):
+# - DATABASE_URL
+# - SUPABASE_SERVICE_KEY
+# - CLERK_SECRET_KEY
+# - UPSTASH_REDIS_REST_TOKEN
+# - NEXTAUTH_SECRET (如果仍需要)
+#
+# 公开变量 (也需要设置):
+# - NEXT_PUBLIC_SUPABASE_URL
+# - NEXT_PUBLIC_SUPABASE_ANON_KEY
+# - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+# ============================================================
