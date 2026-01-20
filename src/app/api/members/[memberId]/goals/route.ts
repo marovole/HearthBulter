@@ -134,18 +134,21 @@ export async function POST(
     // 为了计算 BMR/TDEE，需要获取成员的详细信息
     // 注意：verifyMemberAccess 返回的 member 对象不包含这些字段
     // 这里需要单独查询（保留业务逻辑层）
-    const { SupabaseClientManager } = await import("@/lib/db/supabase-adapter");
-    const supabase = SupabaseClientManager.getInstance();
-    const { data: memberDetails } = await supabase
-      .from("family_members")
-      .select("birthDate, gender, weight, height")
-      .eq("id", memberId)
-      .is("deletedAt", null)
-      .single();
+    const { neonAdapter } = await import("@/lib/db/neon-adapter");
+    const memberDetailsRaw = await neonAdapter.familyMember.findUnique({
+      where: { id: memberId, deletedAt: null },
+    });
 
-    if (!memberDetails) {
+    if (!memberDetailsRaw) {
       return NextResponse.json({ error: "无法获取成员详细信息" }, { status: 500 });
     }
+
+    const memberDetails = memberDetailsRaw as {
+      birthDate: string | Date;
+      gender: string;
+      weight: number | null;
+      height: number | null;
+    };
 
     // 计算年龄（业务逻辑）
     const birthDate = new Date(memberDetails.birthDate);
@@ -171,8 +174,8 @@ export async function POST(
     const goal = await memberRepository.createHealthGoal(memberId, {
       goalType,
       targetWeight,
-      currentWeight: memberDetails.weight,
-      startWeight: memberDetails.weight,
+      currentWeight: memberDetails.weight ?? undefined,
+      startWeight: memberDetails.weight ?? undefined,
       targetWeeks,
       startDate,
       targetDate,

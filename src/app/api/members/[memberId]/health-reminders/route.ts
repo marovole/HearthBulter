@@ -1,61 +1,71 @@
-// @ts-nocheck - Legacy Supabase code pending migration to Neon
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { z } from "zod";
-
-/**
- * 验证用户是否有权限访问成员的健康数据
- *
- * Migrated from Prisma to Supabase
- */
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
-  Array.isArray(value) ? value[0] : (value ?? undefined);
+interface FamilyMember {
+  id: string;
+  userId: string | null;
+  familyId: string;
+  role?: string;
+}
 
+interface Family {
+  id: string;
+  creatorId: string;
+}
+
+interface HealthReminder {
+  id: string;
+  memberId: string;
+  reminderType: string;
+  enabled: boolean;
+  hour: number;
+  minute: number;
+  daysOfWeek: string;
+  message: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 验证用户是否有权限访问成员的健康数据
+ *
+ * Migrated from Supabase to Neon
+ */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  const { data: member } = await supabase
-    .from("family_members")
-    .select(
-      `
-      id,
-      userId,
-      familyId,
-      family:families!inner(
-        id,
-        creatorId
-      )
-    `
-    )
-    .eq("id", memberId)
-    .is("deletedAt", null)
-    .single();
+  // 查询成员信息
+  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { id: memberId, deletedAt: null },
+  });
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const family = normalizeRecord(member.family);
+  // 查询家庭信息
+  const family = await neonAdapter.family.findFirst<Family>({
+    where: { id: member.familyId },
+  });
+
   const isCreator = family?.creatorId === userId;
 
   let isAdmin = false;
   if (!isCreator) {
-    const { data: adminMember } = await supabase
-      .from("family_members")
-      .select("id, role")
-      .eq("familyId", member.familyId)
-      .eq("userId", userId)
-      .eq("role", "ADMIN")
-      .is("deletedAt", null)
-      .maybeSingle();
+    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
+      where: {
+        familyId: member.familyId,
+        userId: userId,
+        role: "ADMIN",
+        deletedAt: null,
+      },
+    });
 
     isAdmin = !!adminMember;
   }
@@ -83,7 +93,7 @@ const reminderSchema = z.object({
  * GET /api/members/:memberId/health-reminders
  * 获取成员的健康数据提醒配置
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function GET(
   request: NextRequest,
@@ -104,18 +114,10 @@ export async function GET(
       return NextResponse.json({ error: "无权限访问该成员的提醒配置" }, { status: 403 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    const { data: reminders, error } = await supabase
-      .from("health_reminders")
-      .select("*")
-      .eq("memberId", memberId)
-      .order("createdAt", { ascending: true });
-
-    if (error) {
-      console.error("获取提醒配置失败:", error);
-      return NextResponse.json({ error: "获取提醒配置失败" }, { status: 500 });
-    }
+    const reminders = await neonAdapter.healthReminder.findMany<HealthReminder>({
+      where: { memberId },
+      orderBy: { createdAt: "asc" },
+    });
 
     return NextResponse.json(
       {
@@ -136,7 +138,7 @@ export async function GET(
  * POST /api/members/:memberId/health-reminders
  * 创建或更新健康数据提醒配置
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function POST(
   request: NextRequest,
@@ -169,36 +171,26 @@ export async function POST(
 
     const { reminderType, enabled, hour, minute, daysOfWeek, message } = validation.data;
 
-    const supabase = SupabaseClientManager.getInstance();
-    const now = new Date().toISOString();
-
     // 使用 upsert 创建或更新
-    const { data: reminder, error: upsertError } = await supabase
-      .from("health_reminders")
-      .upsert(
-        {
-          memberId,
-          reminderType,
-          enabled: enabled ?? true,
-          hour,
-          minute: minute ?? 0,
-          daysOfWeek: JSON.stringify(daysOfWeek || [0, 1, 2, 3, 4, 5, 6]),
-          message: message || null,
-          updatedAt: now,
-          createdAt: now,
-        },
-        {
-          onConflict: "memberId,reminderType",
-          ignoreDuplicates: false,
-        }
-      )
-      .select()
-      .single();
-
-    if (upsertError) {
-      console.error("保存提醒配置失败:", upsertError);
-      return NextResponse.json({ error: "保存提醒配置失败" }, { status: 500 });
-    }
+    const reminder = await neonAdapter.healthReminder.upsert<HealthReminder>({
+      where: { memberId, reminderType },
+      create: {
+        memberId,
+        reminderType,
+        enabled: enabled ?? true,
+        hour,
+        minute: minute ?? 0,
+        daysOfWeek: JSON.stringify(daysOfWeek || [0, 1, 2, 3, 4, 5, 6]),
+        message: message || null,
+      },
+      update: {
+        enabled: enabled ?? true,
+        hour,
+        minute: minute ?? 0,
+        daysOfWeek: JSON.stringify(daysOfWeek || [0, 1, 2, 3, 4, 5, 6]),
+        message: message || null,
+      },
+    });
 
     return NextResponse.json(
       {

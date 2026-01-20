@@ -1,12 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { z } from "zod";
-
-// 更新健康目标的验证 schema
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
+
+interface FamilyMember {
+  id: string;
+  userId: string | null;
+  familyId: string;
+  role?: string;
+}
+
+interface Family {
+  id: string;
+  creatorId: string;
+}
+
+interface HealthGoal {
+  id: string;
+  memberId: string;
+  startWeight: number | null;
+  currentWeight: number | null;
+  targetWeight: number | null;
+  startDate: string;
+  targetDate: string | null;
+  progress: number;
+  status: string;
+  carbRatio: number | null;
+  proteinRatio: number | null;
+  fatRatio: number | null;
+  targetWeeks: number | null;
+  deletedAt: string | null;
+}
+
+// 更新健康目标的验证 schema
 const updateGoalSchema = z.object({
   currentWeight: z.number().min(20).max(300).optional(),
   status: z.enum(["ACTIVE", "COMPLETED", "PAUSED", "CANCELLED"]).optional(),
@@ -37,61 +66,56 @@ function calculateProgress(
 /**
  * 验证用户是否有权限访问健康目标
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 async function verifyGoalAccess(
   goalId: string,
   memberId: string,
   userId: string
-): Promise<{ hasAccess: boolean; goal: any }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  // 获取健康目标及其成员信息
-  const { data: goal } = await supabase
-    .from("health_goals")
-    .select(
-      `
-      *,
-      member:family_members!inner(
-        id,
-        userId,
-        familyId,
-        family:families!inner(
-          id,
-          creatorId
-        )
-      )
-    `
-    )
-    .eq("id", goalId)
-    .eq("memberId", memberId)
-    .is("deletedAt", null)
-    .single();
+): Promise<{ hasAccess: boolean; goal: HealthGoal | null }> {
+  // 获取健康目标
+  const goal = await neonAdapter.healthGoal.findFirst<HealthGoal>({
+    where: { id: goalId, memberId: memberId, deletedAt: null },
+  });
 
   if (!goal) {
     return { hasAccess: false, goal: null };
   }
 
+  // 查询成员信息
+  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { id: memberId, deletedAt: null },
+  });
+
+  if (!member) {
+    return { hasAccess: false, goal: null };
+  }
+
+  // 查询家庭信息
+  const family = await neonAdapter.family.findFirst<Family>({
+    where: { id: member.familyId },
+  });
+
   // 检查是否是家庭创建者
-  const isCreator = goal.member?.family?.creatorId === userId;
+  const isCreator = family?.creatorId === userId;
 
   // 检查是否是管理员
   let isAdmin = false;
-  if (!isCreator && goal.member?.familyId) {
-    const { data: adminMember } = await supabase
-      .from("family_members")
-      .select("id, role")
-      .eq("familyId", goal.member.familyId)
-      .eq("userId", userId)
-      .eq("role", "ADMIN")
-      .is("deletedAt", null)
-      .maybeSingle();
+  if (!isCreator && member.familyId) {
+    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
+      where: {
+        familyId: member.familyId,
+        userId: userId,
+        role: "ADMIN",
+        deletedAt: null,
+      },
+    });
 
     isAdmin = !!adminMember;
   }
 
   // 检查是否是本人
-  const isSelf = goal.member?.userId === userId;
+  const isSelf = member.userId === userId;
 
   return {
     hasAccess: isCreator || isAdmin || isSelf,
@@ -103,7 +127,7 @@ async function verifyGoalAccess(
  * GET /api/members/:memberId/goals/:goalId
  * 获取单个健康目标
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function GET(
   request: NextRequest,
@@ -134,7 +158,7 @@ export async function GET(
  * PATCH /api/members/:memberId/goals/:goalId
  * 更新健康目标
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function PATCH(
   request: NextRequest,
@@ -165,7 +189,7 @@ export async function PATCH(
       return NextResponse.json({ error: "健康目标不存在" }, { status: 404 });
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     // 处理更新字段
     if (validation.data.currentWeight !== undefined) {
@@ -189,26 +213,15 @@ export async function PATCH(
     if (validation.data.fatRatio !== undefined) updateData.fatRatio = validation.data.fatRatio;
 
     // 重新计算进度
-    const currentWeight = updateData.currentWeight ?? goal.currentWeight;
-    const targetWeight = updateData.targetWeight ?? goal.targetWeight;
+    const currentWeight = (updateData.currentWeight as number) ?? goal.currentWeight;
+    const targetWeight = (updateData.targetWeight as number) ?? goal.targetWeight;
     updateData.progress = calculateProgress(goal.startWeight, currentWeight, targetWeight);
 
-    const supabase = SupabaseClientManager.getInstance();
-    const now = new Date().toISOString();
-    updateData.updatedAt = now;
-
     // 更新目标
-    const { data: updatedGoal, error: updateError } = await supabase
-      .from("health_goals")
-      .update(updateData)
-      .eq("id", goalId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error("更新健康目标失败:", updateError);
-      return NextResponse.json({ error: "更新健康目标失败" }, { status: 500 });
-    }
+    const updatedGoal = await neonAdapter.healthGoal.update<HealthGoal>({
+      where: { id: goalId },
+      data: updateData,
+    });
 
     return NextResponse.json(
       {
@@ -227,7 +240,7 @@ export async function PATCH(
  * DELETE /api/members/:memberId/goals/:goalId
  * 删除健康目标（软删除）
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function DELETE(
   request: NextRequest,
@@ -247,19 +260,13 @@ export async function DELETE(
       return NextResponse.json({ error: "健康目标不存在" }, { status: 404 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
     const now = new Date().toISOString();
 
     // 软删除目标
-    const { error: deleteError } = await supabase
-      .from("health_goals")
-      .update({ deletedAt: now, updatedAt: now })
-      .eq("id", goalId);
-
-    if (deleteError) {
-      console.error("删除健康目标失败:", deleteError);
-      return NextResponse.json({ error: "删除健康目标失败" }, { status: 500 });
-    }
+    await neonAdapter.healthGoal.update({
+      where: { id: goalId },
+      data: { deletedAt: now },
+    });
 
     return NextResponse.json({ message: "健康目标删除成功" }, { status: 200 });
   } catch (error) {

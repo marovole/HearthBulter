@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import {
   initializeMemberHealthData,
   checkIfMemberNeedsInitialization,
@@ -9,54 +9,52 @@ import {
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
-  Array.isArray(value) ? value[0] : (value ?? undefined);
+interface FamilyMember {
+  id: string;
+  userId: string | null;
+  familyId: string;
+}
+
+interface Family {
+  id: string;
+  creatorId: string;
+}
 
 /**
  * 验证用户是否有权限初始化成员数据
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
-): Promise<{ hasAccess: boolean; member: any }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  const { data: member } = await supabase
-    .from("family_members")
-    .select(
-      `
-      id,
-      userId,
-      familyId,
-      family:families!inner(
-        id,
-        creatorId
-      )
-    `
-    )
-    .eq("id", memberId)
-    .is("deletedAt", null)
-    .single();
+): Promise<{ hasAccess: boolean; member: FamilyMember | null }> {
+  // 查询成员信息
+  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { id: memberId, deletedAt: null },
+  });
 
   if (!member) {
     return { hasAccess: false, member: null };
   }
 
-  const family = normalizeRecord(member.family);
+  // 查询家庭信息
+  const family = await neonAdapter.family.findFirst<Family>({
+    where: { id: member.familyId },
+  });
+
   const isCreator = family?.creatorId === userId;
 
   let isAdmin = false;
   if (!isCreator) {
-    const { data: adminMember } = await supabase
-      .from("family_members")
-      .select("id, role")
-      .eq("familyId", member.familyId)
-      .eq("userId", userId)
-      .eq("role", "ADMIN")
-      .is("deletedAt", null)
-      .maybeSingle();
+    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
+      where: {
+        familyId: member.familyId,
+        userId: userId,
+        role: "ADMIN",
+        deletedAt: null,
+      },
+    });
 
     isAdmin = !!adminMember;
   }
@@ -73,8 +71,7 @@ async function verifyMemberAccess(
  * GET /api/members/[memberId]/initialize
  * 检查成员是否需要初始化
  *
- * Migrated from Prisma to Supabase (endpoint layer)
- * Note: checkIfMemberNeedsInitialization service still uses Prisma
+ * Migrated from Supabase to Neon
  */
 export async function GET(
   request: NextRequest,
@@ -97,7 +94,6 @@ export async function GET(
     }
 
     // 检查是否需要初始化
-    // Note: Service function still uses Prisma
     const needsInitialization = await checkIfMemberNeedsInitialization(memberId);
 
     return NextResponse.json(
@@ -117,8 +113,7 @@ export async function GET(
  * POST /api/members/[memberId]/initialize
  * 初始化成员的健康数据
  *
- * Migrated from Prisma to Supabase (endpoint layer)
- * Note: initializeMemberHealthData service still uses Prisma
+ * Migrated from Supabase to Neon
  */
 export async function POST(
   request: NextRequest,
@@ -141,7 +136,6 @@ export async function POST(
     }
 
     // 执行初始化
-    // Note: Service function still uses Prisma for complex initialization logic
     const result = await initializeMemberHealthData(memberId);
 
     if (!result.success) {

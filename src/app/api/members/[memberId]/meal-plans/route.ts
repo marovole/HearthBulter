@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { mealPlanner } from "@/lib/services/meal-planner";
 import { mealPlanRepository } from "@/lib/repositories/meal-plan-repository-singleton";
 import { z } from "zod";
 
-// 创建食谱计划的验证 schema
-
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
-  Array.isArray(value) ? value[0] : (value ?? undefined);
+interface FamilyMember {
+  id: string;
+  userId: string | null;
+  familyId: string;
+  role?: string;
+}
 
+interface Family {
+  id: string;
+  creatorId: string;
+}
+
+// 创建食谱计划的验证 schema
 const createMealPlanSchema = z.object({
   days: z.number().min(1).max(14).default(7), // 默认7天
   startDate: z.string().datetime().optional(), // ISO 8601 格式
@@ -21,48 +29,38 @@ const createMealPlanSchema = z.object({
 /**
  * 验证用户是否有权限访问成员的膳食计划
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 async function verifyMemberAccess(
   memberId: string,
   userId: string
-): Promise<{ hasAccess: boolean; member: any }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  const { data: member } = await supabase
-    .from("family_members")
-    .select(
-      `
-      id,
-      userId,
-      familyId,
-      family:families!inner(
-        id,
-        creatorId
-      )
-    `
-    )
-    .eq("id", memberId)
-    .is("deletedAt", null)
-    .single();
+): Promise<{ hasAccess: boolean; member: FamilyMember | null }> {
+  // 查询成员信息
+  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { id: memberId, deletedAt: null },
+  });
 
   if (!member) {
     return { hasAccess: false, member: null };
   }
 
-  const family = normalizeRecord(member.family);
+  // 查询家庭信息
+  const family = await neonAdapter.family.findFirst<Family>({
+    where: { id: member.familyId },
+  });
+
   const isCreator = family?.creatorId === userId;
 
   let isAdmin = false;
   if (!isCreator) {
-    const { data: adminMember } = await supabase
-      .from("family_members")
-      .select("id, role")
-      .eq("familyId", member.familyId)
-      .eq("userId", userId)
-      .eq("role", "ADMIN")
-      .is("deletedAt", null)
-      .maybeSingle();
+    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
+      where: {
+        familyId: member.familyId,
+        userId: userId,
+        role: "ADMIN",
+        deletedAt: null,
+      },
+    });
 
     isAdmin = !!adminMember;
   }
@@ -79,8 +77,7 @@ async function verifyMemberAccess(
  * POST /api/members/:memberId/meal-plans
  * 生成新食谱计划
  *
- * Migrated from Prisma to Supabase (endpoint layer)
- * Note: mealPlanner service still uses Prisma
+ * Migrated from Supabase to Neon
  */
 export async function POST(
   request: NextRequest,
@@ -107,7 +104,6 @@ export async function POST(
     const startDate = validatedData.startDate ? new Date(validatedData.startDate) : undefined;
 
     // 生成食谱计划
-    // Note: mealPlanner service still uses Prisma for complex business logic
     const planData = await mealPlanner.generateMealPlan(memberId, validatedData.days, startDate);
 
     return NextResponse.json(
@@ -134,7 +130,7 @@ export async function POST(
  * GET /api/members/:memberId/meal-plans
  * 查询历史食谱
  *
- * 使用双写框架迁移
+ * Migrated from Supabase to Neon
  */
 export async function GET(
   request: NextRequest,

@@ -1,12 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { z } from "zod";
-
-// 更新过敏记录的验证 schema
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
+
+interface FamilyMember {
+  id: string;
+  userId: string | null;
+  familyId: string;
+  role?: string;
+}
+
+interface Family {
+  id: string;
+  creatorId: string;
+}
+
+interface Allergy {
+  id: string;
+  memberId: string;
+  allergenType: string;
+  allergenName: string;
+  severity: string;
+  description: string | null;
+  deletedAt: string | null;
+}
+
+// 更新过敏记录的验证 schema
 const updateAllergySchema = z.object({
   allergenType: z.enum(["FOOD", "ENVIRONMENTAL", "MEDICATION", "OTHER"]).optional(),
   allergenName: z.string().min(1).optional(),
@@ -17,61 +39,56 @@ const updateAllergySchema = z.object({
 /**
  * 验证用户是否有权限访问过敏记录
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 async function verifyAllergyAccess(
   allergyId: string,
   memberId: string,
   userId: string
-): Promise<{ hasAccess: boolean; allergy: any }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  // 获取过敏记录及其成员信息
-  const { data: allergy } = await supabase
-    .from("allergies")
-    .select(
-      `
-      *,
-      member:family_members!inner(
-        id,
-        userId,
-        familyId,
-        family:families!inner(
-          id,
-          creatorId
-        )
-      )
-    `
-    )
-    .eq("id", allergyId)
-    .eq("memberId", memberId)
-    .is("deletedAt", null)
-    .single();
+): Promise<{ hasAccess: boolean; allergy: Allergy | null }> {
+  // 获取过敏记录
+  const allergy = await neonAdapter.allergy.findFirst<Allergy>({
+    where: { id: allergyId, memberId: memberId, deletedAt: null },
+  });
 
   if (!allergy) {
     return { hasAccess: false, allergy: null };
   }
 
+  // 查询成员信息
+  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { id: memberId, deletedAt: null },
+  });
+
+  if (!member) {
+    return { hasAccess: false, allergy: null };
+  }
+
+  // 查询家庭信息
+  const family = await neonAdapter.family.findFirst<Family>({
+    where: { id: member.familyId },
+  });
+
   // 检查是否是家庭创建者
-  const isCreator = allergy.member?.family?.creatorId === userId;
+  const isCreator = family?.creatorId === userId;
 
   // 检查是否是管理员
   let isAdmin = false;
-  if (!isCreator && allergy.member?.familyId) {
-    const { data: adminMember } = await supabase
-      .from("family_members")
-      .select("id, role")
-      .eq("familyId", allergy.member.familyId)
-      .eq("userId", userId)
-      .eq("role", "ADMIN")
-      .is("deletedAt", null)
-      .maybeSingle();
+  if (!isCreator && member.familyId) {
+    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
+      where: {
+        familyId: member.familyId,
+        userId: userId,
+        role: "ADMIN",
+        deletedAt: null,
+      },
+    });
 
     isAdmin = !!adminMember;
   }
 
   // 检查是否是本人
-  const isSelf = allergy.member?.userId === userId;
+  const isSelf = member.userId === userId;
 
   return {
     hasAccess: isCreator || isAdmin || isSelf,
@@ -83,7 +100,7 @@ async function verifyAllergyAccess(
  * GET /api/members/:memberId/allergies/:allergyId
  * 获取单个过敏记录
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function GET(
   request: NextRequest,
@@ -114,7 +131,7 @@ export async function GET(
  * PATCH /api/members/:memberId/allergies/:allergyId
  * 更新过敏记录
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function PATCH(
   request: NextRequest,
@@ -145,24 +162,11 @@ export async function PATCH(
       return NextResponse.json({ error: "过敏记录不存在" }, { status: 404 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-    const now = new Date().toISOString();
-
     // 更新过敏记录
-    const { data: updatedAllergy, error: updateError } = await supabase
-      .from("allergies")
-      .update({
-        ...validation.data,
-        updatedAt: now,
-      })
-      .eq("id", allergyId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error("更新过敏记录失败:", updateError);
-      return NextResponse.json({ error: "更新过敏记录失败" }, { status: 500 });
-    }
+    const updatedAllergy = await neonAdapter.allergy.update<Allergy>({
+      where: { id: allergyId },
+      data: validation.data,
+    });
 
     return NextResponse.json(
       {
@@ -181,7 +185,7 @@ export async function PATCH(
  * DELETE /api/members/:memberId/allergies/:allergyId
  * 删除过敏记录（软删除）
  *
- * Migrated from Prisma to Supabase
+ * Migrated from Supabase to Neon
  */
 export async function DELETE(
   request: NextRequest,
@@ -201,19 +205,13 @@ export async function DELETE(
       return NextResponse.json({ error: "过敏记录不存在" }, { status: 404 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
     const now = new Date().toISOString();
 
     // 软删除过敏记录
-    const { error: deleteError } = await supabase
-      .from("allergies")
-      .update({ deletedAt: now, updatedAt: now })
-      .eq("id", allergyId);
-
-    if (deleteError) {
-      console.error("删除过敏记录失败:", deleteError);
-      return NextResponse.json({ error: "删除过敏记录失败" }, { status: 500 });
-    }
+    await neonAdapter.allergy.update({
+      where: { id: allergyId },
+      data: { deletedAt: now },
+    });
 
     return NextResponse.json({ message: "过敏记录删除成功" }, { status: 200 });
   } catch (error) {

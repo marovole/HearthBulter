@@ -2,7 +2,7 @@
 
 **Created**: 2026-01-20
 **Updated**: 2026-01-20
-**Status**: ✅ TypeScript Compilation Complete
+**Status**: 🔄 API Route Migration In Progress
 **Priority**: High
 **Estimated Effort**: 3-5 days
 
@@ -16,6 +16,46 @@
 | Final TypeScript Errors   | 0          |
 | Errors Resolved           | 764 (100%) |
 | Build Status              | ✅ SUCCESS |
+
+### Phase 2: API Route Migration 🔄 IN PROGRESS
+
+| Metric            | Value      |
+| ----------------- | ---------- |
+| Total API Routes  | 26         |
+| Routes Migrated   | 16 (62%)   |
+| Routes Remaining  | 10         |
+| TypeScript Status | ✅ PASSING |
+
+**Migrated Routes (16):**
+
+- `/api/ai/advice-history`
+- `/api/ai/analyze-health`
+- `/api/ai/chat`
+- `/api/ai/feedback`
+- `/api/analytics/anomalies`
+- `/api/analytics/reports`
+- `/api/analytics/reports/[id]`
+- `/api/cleanup/expired-invitations`
+- `/api/foods/[id]`
+- `/api/foods/search`
+- `/api/invite/[code]`
+- `/api/monitoring`
+- `/api/test-db`
+- `/api/tracking/reminders`
+- `/api/user/preferences`
+
+**Remaining Routes (10) - All in `/api/members/*`:**
+
+- `/api/members/[memberId]/meal-plans`
+- `/api/members/[memberId]/health-data/[dataId]`
+- `/api/members/[memberId]/health-data/trends`
+- `/api/members/[memberId]/goals/[goalId]`
+- `/api/members/[memberId]/initialize`
+- `/api/members/[memberId]/health-reminders`
+- `/api/members/[memberId]/allergies/[allergyId]`
+- `/api/members/[memberId]/reports`
+- `/api/members/[memberId]/reports/[reportId]`
+- `/api/members/[memberId]/reports/[reportId]/compare`
 
 ### Files Modified with @ts-nocheck (Technical Debt)
 
@@ -163,14 +203,7 @@ Convert `prisma/schema.prisma` to Drizzle schema format:
 
 ```typescript
 // src/lib/db/schema.ts
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-  real,
-  pgEnum,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, real, pgEnum } from "drizzle-orm/pg-core";
 
 export const userRoleEnum = pgEnum("user_role", ["USER", "ADMIN"]);
 export const genderEnum = pgEnum("gender", ["MALE", "FEMALE", "OTHER"]);
@@ -311,11 +344,7 @@ import type { FamilyRepository } from "../interfaces/family-repository";
 
 export class NeonFamilyRepository implements FamilyRepository {
   async findById(id: string) {
-    const result = await db
-      .select()
-      .from(families)
-      .where(eq(families.id, id))
-      .limit(1);
+    const result = await db.select().from(families).where(eq(families.id, id)).limit(1);
     return result[0] || null;
   }
 

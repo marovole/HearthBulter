@@ -1,60 +1,61 @@
-// @ts-nocheck - Legacy Supabase code pending migration to Neon
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 
-/**
- * 验证用户是否有权限访问成员的健康数据
- *
- * Migrated from Prisma to Supabase
- */
-
-// Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
-  Array.isArray(value) ? value[0] : (value ?? undefined);
+interface FamilyMember {
+  id: string;
+  userId: string | null;
+  familyId: string;
+  role?: string;
+}
+
+interface Family {
+  id: string;
+  creatorId: string;
+}
+
+interface HealthData {
+  id: string;
+  memberId: string;
+  measuredAt: string;
+  weight: number | null;
+  bodyFat: number | null;
+  muscleMass: number | null;
+  bloodPressureSystolic: number | null;
+  bloodPressureDiastolic: number | null;
+  heartRate: number | null;
+}
 
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  const { data: member } = await supabase
-    .from("family_members")
-    .select(
-      `
-      id,
-      userId,
-      familyId,
-      family:families!inner(
-        id,
-        creatorId
-      )
-    `
-    )
-    .eq("id", memberId)
-    .is("deletedAt", null)
-    .single();
+  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { id: memberId, deletedAt: null },
+  });
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const family = normalizeRecord(member.family);
+  const family = await neonAdapter.family.findFirst<Family>({
+    where: { id: member.familyId },
+  });
+
   const isCreator = family?.creatorId === userId;
 
   let isAdmin = false;
   if (!isCreator) {
-    const { data: adminMember } = await supabase
-      .from("family_members")
-      .select("id, role")
-      .eq("familyId", member.familyId)
-      .eq("userId", userId)
-      .eq("role", "ADMIN")
-      .is("deletedAt", null)
-      .maybeSingle();
+    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
+      where: {
+        familyId: member.familyId,
+        userId: userId,
+        role: "ADMIN",
+        deletedAt: null,
+      },
+    });
 
     isAdmin = !!adminMember;
   }
@@ -66,12 +67,6 @@ async function verifyMemberAccess(
   };
 }
 
-/**
- * GET /api/members/:memberId/health-data/trends
- * 获取健康数据趋势分析
- *
- * Migrated from Prisma to Supabase
- */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ memberId: string }> }
@@ -84,94 +79,42 @@ export async function GET(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    // 验证权限
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限访问该成员的健康数据" }, { status: 403 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
-    const days = parseInt(searchParams.get("days") || "30"); // 默认30天
+    const days = parseInt(searchParams.get("days") || "30");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    // 计算日期范围
     const end = endDate ? new Date(endDate) : new Date();
     const start = startDate
       ? new Date(startDate)
       : new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
 
-    // 查询数据
-    const { data: healthData, error } = await supabase
-      .from("health_data")
-      .select("*")
-      .eq("memberId", memberId)
-      .gte("measuredAt", start.toISOString())
-      .lte("measuredAt", end.toISOString())
-      .order("measuredAt", { ascending: true });
+    const healthData = await neonAdapter.healthData.findMany<HealthData>({
+      where: {
+        memberId,
+        measuredAt: { gte: start.toISOString(), lte: end.toISOString() },
+      },
+      orderBy: { measuredAt: "asc" },
+    });
 
-    if (error) {
-      console.error("查询健康数据失败:", error);
-      return NextResponse.json({ error: "查询健康数据失败" }, { status: 500 });
-    }
-
-    // 计算趋势统计
-    const trends: any = {
-      weight: {
-        data: [],
-        average: null,
-        min: null,
-        max: null,
-        change: null,
-      },
-      bodyFat: {
-        data: [],
-        average: null,
-        min: null,
-        max: null,
-        change: null,
-      },
-      muscleMass: {
-        data: [],
-        average: null,
-        min: null,
-        max: null,
-        change: null,
-      },
-      bloodPressure: {
-        data: [],
-        average: null,
-        min: null,
-        max: null,
-        change: null,
-      },
-      heartRate: {
-        data: [],
-        average: null,
-        min: null,
-        max: null,
-        change: null,
-      },
+    const trends: Record<string, unknown> = {
+      weight: { data: [], average: null, min: null, max: null, change: null },
+      bodyFat: { data: [], average: null, min: null, max: null, change: null },
+      muscleMass: { data: [], average: null, min: null, max: null, change: null },
+      bloodPressure: { data: [], average: null, min: null, max: null, change: null },
+      heartRate: { data: [], average: null, min: null, max: null, change: null },
     };
 
     if (!healthData || healthData.length === 0) {
-      return NextResponse.json(
-        {
-          trends,
-          period: {
-            start,
-            end,
-          },
-        },
-        { status: 200 }
-      );
+      return NextResponse.json({ trends, period: { start, end } }, { status: 200 });
     }
 
-    // 处理体重数据
     const weightData = healthData
       .filter((d) => d.weight !== null)
       .map((d) => ({ date: d.measuredAt, value: d.weight! }));
@@ -191,7 +134,6 @@ export async function GET(
       };
     }
 
-    // 处理体脂率数据
     const bodyFatData = healthData
       .filter((d) => d.bodyFat !== null)
       .map((d) => ({ date: d.measuredAt, value: d.bodyFat! }));
@@ -211,7 +153,6 @@ export async function GET(
       };
     }
 
-    // 处理肌肉量数据
     const muscleMassData = healthData
       .filter((d) => d.muscleMass !== null)
       .map((d) => ({ date: d.measuredAt, value: d.muscleMass! }));
@@ -231,7 +172,6 @@ export async function GET(
       };
     }
 
-    // 处理血压数据
     const bloodPressureData = healthData
       .filter((d) => d.bloodPressureSystolic !== null && d.bloodPressureDiastolic !== null)
       .map((d) => ({
@@ -268,7 +208,6 @@ export async function GET(
       };
     }
 
-    // 处理心率数据
     const heartRateData = healthData
       .filter((d) => d.heartRate !== null)
       .map((d) => ({ date: d.measuredAt, value: d.heartRate! }));
@@ -288,16 +227,7 @@ export async function GET(
       };
     }
 
-    return NextResponse.json(
-      {
-        trends,
-        period: {
-          start,
-          end,
-        },
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ trends, period: { start, end } }, { status: 200 });
   } catch (error) {
     console.error("获取健康数据趋势失败:", error);
     return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });

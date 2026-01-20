@@ -1,61 +1,76 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { neonAdapter } from "@/lib/db/neon-adapter";
 import { FileStorageService } from "@/lib/services/file-storage-service";
-import type { IndicatorType, IndicatorStatus } from "@prisma/client";
 
-/**
- * 验证用户是否有权限访问成员的健康数据
- *
- * Migrated from Prisma to Supabase
- */
-
-// Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
-  Array.isArray(value) ? value[0] : (value ?? undefined);
+interface FamilyMember {
+  id: string;
+  userId: string | null;
+  familyId: string;
+  role?: string;
+}
+
+interface Family {
+  id: string;
+  creatorId: string;
+}
+
+interface MedicalReport {
+  id: string;
+  memberId: string;
+  fileUrl: string | null;
+  reportDate: string | null;
+  institution: string | null;
+  reportType: string | null;
+  isCorrected: boolean;
+  correctedAt: string | null;
+  deletedAt: string | null;
+}
+
+interface MedicalIndicator {
+  id: string;
+  reportId: string;
+  indicatorType: string;
+  name: string;
+  value: number;
+  unit: string;
+  referenceRange: string | null;
+  isAbnormal: boolean;
+  status: string;
+  isCorrected: boolean;
+  originalValue: number | null;
+}
 
 async function verifyMemberAccess(
   memberId: string,
   userId: string
 ): Promise<{ hasAccess: boolean }> {
-  const supabase = SupabaseClientManager.getInstance();
-
-  const { data: member } = await supabase
-    .from("family_members")
-    .select(
-      `
-      id,
-      userId,
-      familyId,
-      family:families!inner(
-        id,
-        creatorId
-      )
-    `
-    )
-    .eq("id", memberId)
-    .is("deletedAt", null)
-    .single();
+  const member = await neonAdapter.familyMember.findFirst<FamilyMember>({
+    where: { id: memberId, deletedAt: null },
+  });
 
   if (!member) {
     return { hasAccess: false };
   }
 
-  const family = normalizeRecord(member.family);
+  const family = await neonAdapter.family.findFirst<Family>({
+    where: { id: member.familyId },
+  });
+
   const isCreator = family?.creatorId === userId;
 
   let isAdmin = false;
   if (!isCreator) {
-    const { data: adminMember } = await supabase
-      .from("family_members")
-      .select("id, role")
-      .eq("familyId", member.familyId)
-      .eq("userId", userId)
-      .eq("role", "ADMIN")
-      .is("deletedAt", null)
-      .maybeSingle();
+    const adminMember = await neonAdapter.familyMember.findFirst<FamilyMember>({
+      where: {
+        familyId: member.familyId,
+        userId: userId,
+        role: "ADMIN",
+        deletedAt: null,
+      },
+    });
 
     isAdmin = !!adminMember;
   }
@@ -67,12 +82,6 @@ async function verifyMemberAccess(
   };
 }
 
-/**
- * GET /api/members/:memberId/reports/:reportId
- * 获取报告详情和指标数据
- *
- * Migrated from Prisma to Supabase
- */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ memberId: string; reportId: string }> }
@@ -85,52 +94,27 @@ export async function GET(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    // 验证权限
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限查看该报告" }, { status: 403 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 查询报告详情
-    const { data: report, error: reportError } = await supabase
-      .from("medical_reports")
-      .select("*")
-      .eq("id", reportId)
-      .eq("memberId", memberId)
-      .is("deletedAt", null)
-      .maybeSingle();
-
-    if (reportError) {
-      console.error("查询报告失败:", reportError);
-      return NextResponse.json({ error: "查询报告失败" }, { status: 500 });
-    }
+    const report = await neonAdapter.medicalReport.findFirst<MedicalReport>({
+      where: { id: reportId, memberId, deletedAt: null },
+    });
 
     if (!report) {
       return NextResponse.json({ error: "报告不存在" }, { status: 404 });
     }
 
-    // 查询指标数据
-    const { data: indicators, error: indicatorsError } = await supabase
-      .from("medical_indicators")
-      .select("*")
-      .eq("reportId", reportId)
-      .order("indicatorType", { ascending: true })
-      .order("createdAt", { ascending: true });
-
-    if (indicatorsError) {
-      console.error("查询指标失败:", indicatorsError);
-    }
+    const indicators = await neonAdapter.medicalIndicator.findMany<MedicalIndicator>({
+      where: { reportId },
+      orderBy: [{ indicatorType: "asc" }, { createdAt: "asc" }],
+    });
 
     return NextResponse.json(
-      {
-        data: {
-          ...report,
-          indicators: indicators || [],
-        },
-      },
+      { data: { ...report, indicators: indicators || [] } },
       { status: 200 }
     );
   } catch (error) {
@@ -139,12 +123,6 @@ export async function GET(
   }
 }
 
-/**
- * PATCH /api/members/:memberId/reports/:reportId
- * 手动修正OCR识别结果
- *
- * Migrated from Prisma to Supabase
- */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ memberId: string; reportId: string }> }
@@ -157,28 +135,15 @@ export async function PATCH(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    // 验证权限
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限修改该报告" }, { status: 403 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 查询报告
-    const { data: report, error: reportError } = await supabase
-      .from("medical_reports")
-      .select("id")
-      .eq("id", reportId)
-      .eq("memberId", memberId)
-      .is("deletedAt", null)
-      .maybeSingle();
-
-    if (reportError) {
-      console.error("查询报告失败:", reportError);
-      return NextResponse.json({ error: "查询报告失败" }, { status: 500 });
-    }
+    const report = await neonAdapter.medicalReport.findFirst<MedicalReport>({
+      where: { id: reportId, memberId, deletedAt: null },
+    });
 
     if (!report) {
       return NextResponse.json({ error: "报告不存在" }, { status: 404 });
@@ -186,9 +151,7 @@ export async function PATCH(
 
     const body = await request.json();
     const now = new Date().toISOString();
-
-    // 更新报告元数据
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (body.reportDate !== undefined) {
       updateData.reportDate = body.reportDate ? new Date(body.reportDate).toISOString() : null;
@@ -205,114 +168,68 @@ export async function PATCH(
     if (Object.keys(updateData).length > 0) {
       updateData.isCorrected = true;
       updateData.correctedAt = now;
-      updateData.updatedAt = now;
     }
 
-    // 更新指标
     if (body.indicators && Array.isArray(body.indicators)) {
       for (const indicatorUpdate of body.indicators) {
         const { id, value, unit, referenceRange, status } = indicatorUpdate;
 
-        if (!id) {
-          continue;
-        }
+        if (!id) continue;
 
-        // 查询原始指标
-        const { data: indicator, error: indicatorError } = await supabase
-          .from("medical_indicators")
-          .select("*")
-          .eq("id", id)
-          .eq("reportId", reportId)
-          .maybeSingle();
-
-        if (indicatorError) {
-          console.error("查询指标失败:", indicatorError);
-          continue;
-        }
+        const indicator = await neonAdapter.medicalIndicator.findFirst<MedicalIndicator>({
+          where: { id, reportId },
+        });
 
         if (indicator) {
-          // 更新指标
-          const { error: updateIndicatorError } = await supabase
-            .from("medical_indicators")
-            .update({
+          await neonAdapter.medicalIndicator.update({
+            where: { id },
+            data: {
               value: value !== undefined ? value : indicator.value,
               unit: unit || indicator.unit,
               referenceRange:
                 referenceRange !== undefined ? referenceRange : indicator.referenceRange,
-              status: (status as IndicatorStatus) || indicator.status,
+              status: status || indicator.status,
               isAbnormal: status !== "NORMAL",
               isCorrected: true,
               originalValue: indicator.originalValue || indicator.value,
-              updatedAt: now,
-            })
-            .eq("id", id);
-
-          if (updateIndicatorError) {
-            console.error("更新指标失败:", updateIndicatorError);
-          }
+            },
+          });
         }
       }
 
       updateData.isCorrected = true;
       updateData.correctedAt = now;
-      updateData.updatedAt = now;
     }
 
-    // 更新报告
     if (Object.keys(updateData).length > 0) {
-      const { error: updateReportError } = await supabase
-        .from("medical_reports")
-        .update(updateData)
-        .eq("id", reportId);
-
-      if (updateReportError) {
-        console.error("更新报告失败:", updateReportError);
-        return NextResponse.json({ error: "更新报告失败" }, { status: 500 });
-      }
+      await neonAdapter.medicalReport.update({
+        where: { id: reportId },
+        data: updateData,
+      });
     }
 
-    // 重新查询完整数据
-    const { data: updatedReport } = await supabase
-      .from("medical_reports")
-      .select("*")
-      .eq("id", reportId)
-      .single();
+    const updatedReport = await neonAdapter.medicalReport.findFirst<MedicalReport>({
+      where: { id: reportId },
+    });
 
-    const { data: updatedIndicators } = await supabase
-      .from("medical_indicators")
-      .select("*")
-      .eq("reportId", reportId)
-      .order("indicatorType", { ascending: true })
-      .order("createdAt", { ascending: true });
+    const updatedIndicators = await neonAdapter.medicalIndicator.findMany<MedicalIndicator>({
+      where: { reportId },
+      orderBy: [{ indicatorType: "asc" }, { createdAt: "asc" }],
+    });
 
     return NextResponse.json(
-      {
-        message: "报告修正成功",
-        data: {
-          ...updatedReport,
-          indicators: updatedIndicators || [],
-        },
-      },
+      { message: "报告修正成功", data: { ...updatedReport, indicators: updatedIndicators || [] } },
       { status: 200 }
     );
   } catch (error) {
     console.error("修正报告失败:", error);
     return NextResponse.json(
-      {
-        error: "服务器内部错误",
-        details: error instanceof Error ? error.message : "未知错误",
-      },
+      { error: "服务器内部错误", details: error instanceof Error ? error.message : "未知错误" },
       { status: 500 }
     );
   }
 }
 
-/**
- * DELETE /api/members/:memberId/reports/:reportId
- * 删除报告（同时删除云存储文件）
- *
- * Migrated from Prisma to Supabase
- */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ memberId: string; reportId: string }> }
@@ -325,38 +242,26 @@ export async function DELETE(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    // 验证权限
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
       return NextResponse.json({ error: "无权限删除该报告" }, { status: 403 });
     }
 
-    const supabase = SupabaseClientManager.getInstance();
-
-    // 查询报告
-    const { data: report, error: reportError } = await supabase
-      .from("medical_reports")
-      .select("id, fileUrl")
-      .eq("id", reportId)
-      .eq("memberId", memberId)
-      .is("deletedAt", null)
-      .maybeSingle();
-
-    if (reportError) {
-      console.error("查询报告失败:", reportError);
-      return NextResponse.json({ error: "查询报告失败" }, { status: 500 });
-    }
+    const report = await neonAdapter.medicalReport.findFirst<MedicalReport>({
+      where: { id: reportId, memberId, deletedAt: null },
+    });
 
     if (!report) {
       return NextResponse.json({ error: "报告不存在" }, { status: 404 });
     }
 
-    // 从云存储删除文件
     try {
-      const pathname = FileStorageService.extractPathnameFromUrl(report.fileUrl);
-      if (pathname) {
-        await FileStorageService.deleteFile(pathname);
+      if (report.fileUrl) {
+        const pathname = FileStorageService.extractPathnameFromUrl(report.fileUrl);
+        if (pathname) {
+          await FileStorageService.deleteFile(pathname);
+        }
       }
     } catch (error) {
       console.warn("删除云存储文件失败（继续删除数据库记录）:", error);
@@ -364,29 +269,12 @@ export async function DELETE(
 
     const now = new Date().toISOString();
 
-    // 软删除报告（标记deletedAt）
-    const { error: deleteReportError } = await supabase
-      .from("medical_reports")
-      .update({
-        deletedAt: now,
-        updatedAt: now,
-      })
-      .eq("id", reportId);
+    await neonAdapter.medicalReport.update({
+      where: { id: reportId },
+      data: { deletedAt: now },
+    });
 
-    if (deleteReportError) {
-      console.error("软删除报告失败:", deleteReportError);
-      return NextResponse.json({ error: "删除报告失败" }, { status: 500 });
-    }
-
-    // 删除关联的指标记录（硬删除）
-    const { error: deleteIndicatorsError } = await supabase
-      .from("medical_indicators")
-      .delete()
-      .eq("reportId", reportId);
-
-    if (deleteIndicatorsError) {
-      console.error("删除指标记录失败:", deleteIndicatorsError);
-    }
+    await neonAdapter.medicalIndicator.deleteMany({ where: { reportId } });
 
     return NextResponse.json({ message: "报告删除成功" }, { status: 200 });
   } catch (error) {
