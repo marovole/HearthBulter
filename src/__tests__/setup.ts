@@ -260,6 +260,31 @@ jest.mock("convex/react", () => ({
   })),
 }));
 
+// Mock convex-client to avoid NEXT_PUBLIC_CONVEX_URL requirement in tests
+jest.mock("@/lib/convex-client", () => {
+  const mockConvexClient = {
+    query: jest.fn().mockResolvedValue([]),
+    mutation: jest.fn().mockResolvedValue({}),
+    action: jest.fn().mockResolvedValue({}),
+  };
+  return {
+    getConvexClient: jest.fn().mockReturnValue(mockConvexClient),
+    convexClient: mockConvexClient,
+    api: new Proxy(
+      {},
+      {
+        get: (_target, prop) =>
+          new Proxy(
+            {},
+            {
+              get: (_innerTarget, innerProp) => `${String(prop)}:${String(innerProp)}`,
+            }
+          ),
+      }
+    ),
+  };
+});
+
 jest.mock("convex/react-clerk", () => ({
   ConvexProviderWithClerk: ({ children }: { children: React.ReactNode }) => children,
 }));
