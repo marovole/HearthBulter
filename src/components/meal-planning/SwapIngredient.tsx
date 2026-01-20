@@ -39,13 +39,7 @@ const MEAL_TYPE_LABELS: Record<MealType, string> = {
   SNACK: "加餐",
 };
 
-export function SwapIngredient({
-  planId,
-  meal,
-  isOpen,
-  onClose,
-  onSuccess,
-}: SwapIngredientProps) {
+export function SwapIngredient({ planId, meal, isOpen, onClose, onSuccess }: SwapIngredientProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -57,15 +51,12 @@ export function SwapIngredient({
       setError(null);
       setSuccessMessage(null);
 
-      const response = await fetch(
-        `/api/meal-plans/${planId}/meals/${meal.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`/api/meal-plans/${planId}/meals/${meal.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -132,7 +123,7 @@ export function SwapIngredient({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === e.currentTarget && !loading) {
           handleClose();
@@ -140,22 +131,20 @@ export function SwapIngredient({
       }}
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in duration-200"
+        className="animate-in fade-in max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-xl duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 头部 */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-gray-900">替换餐食</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                选择更适合您的替代餐食
-              </p>
+              <p className="mt-1 text-sm text-gray-600">选择更适合您的替代餐食</p>
             </div>
             <button
               onClick={handleClose}
               disabled={loading}
-              className="text-gray-400 hover:text-gray-600 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-2xl font-bold text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               aria-label="关闭"
             >
               ×
@@ -167,11 +156,11 @@ export function SwapIngredient({
         <div className="px-6 py-4">
           {/* 当前餐食信息 */}
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-700">
               <span>🍽️</span>
               <span>当前{MEAL_TYPE_LABELS[meal.mealType]}</span>
               {replaceCount > 0 && (
-                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                <span className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-600">
                   已替换 {replaceCount} 次
                 </span>
               )}
@@ -181,16 +170,12 @@ export function SwapIngredient({
 
           {/* 加载状态 */}
           {loading && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="mb-4 rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
               <div className="flex items-center gap-3">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-600"></div>
                 <div>
-                  <p className="text-sm font-medium text-blue-900">
-                    正在寻找替代餐食...
-                  </p>
-                  <p className="text-xs text-blue-700 mt-1">
-                    系统正在匹配相似营养价值的食谱
-                  </p>
+                  <p className="text-sm font-medium text-blue-900">正在寻找替代餐食...</p>
+                  <p className="mt-1 text-xs text-blue-700">系统正在匹配相似营养价值的食谱</p>
                 </div>
               </div>
             </div>
@@ -198,25 +183,21 @@ export function SwapIngredient({
 
           {/* 成功提示 */}
           {successMessage && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 animate-in fade-in duration-200">
+            <div className="animate-in fade-in mb-4 rounded-lg border border-green-200 bg-green-50 p-4 duration-200">
               <div className="flex items-center gap-2">
-                <span className="text-green-600 text-lg">✓</span>
-                <p className="text-sm font-medium text-green-900">
-                  {successMessage}
-                </p>
+                <span className="text-lg text-green-600">✓</span>
+                <p className="text-sm font-medium text-green-900">{successMessage}</p>
               </div>
             </div>
           )}
 
           {/* 错误提示 */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
               <div className="flex items-start gap-2">
-                <span className="text-red-600 text-lg">⚠️</span>
+                <span className="text-lg text-red-600">⚠️</span>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-red-900 mb-1">
-                    替换失败
-                  </p>
+                  <p className="mb-1 text-sm font-medium text-red-900">替换失败</p>
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               </div>
@@ -225,8 +206,8 @@ export function SwapIngredient({
 
           {/* 提示信息 */}
           {!loading && !successMessage && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800 flex items-start gap-2">
+            <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="flex items-start gap-2 text-sm text-blue-800">
                 <span className="text-base">💡</span>
                 <span>
                   系统将自动为您选择一个相似营养价值的替代餐食。如果不满意，可以点击“再换一个”继续替换。
@@ -236,11 +217,11 @@ export function SwapIngredient({
           )}
 
           {/* 操作按钮 */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+          <div className="flex flex-col items-stretch justify-end gap-3 sm:flex-row sm:items-center">
             <button
               onClick={handleClose}
               disabled={loading}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 order-3 sm:order-1"
+              className="order-3 rounded-lg bg-gray-100 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:order-1"
             >
               {successMessage ? "完成" : "取消"}
             </button>
@@ -248,7 +229,7 @@ export function SwapIngredient({
               <button
                 onClick={handleReplaceAndContinue}
                 disabled={loading}
-                className="px-4 py-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg font-medium hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 order-2"
+                className="order-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 font-medium text-blue-700 transition-colors hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 🔄 再换一个
               </button>
@@ -257,16 +238,16 @@ export function SwapIngredient({
               <button
                 onClick={handleReplaceAndClose}
                 disabled={loading}
-                className={`px-4 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 order-1 sm:order-2 ${
+                className={`order-1 rounded-lg px-4 py-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 sm:order-2 ${
                   loading
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    ? "cursor-not-allowed bg-gray-300 text-gray-500"
                     : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
                 }`}
                 aria-busy={loading}
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                    <span className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></span>
                     替换中...
                   </span>
                 ) : (

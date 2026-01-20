@@ -199,11 +199,7 @@ export class SecurityInitializer {
     logger.info("应用开发环境安全策略", {
       type: "security",
       environment: "development",
-      policies: [
-        "security_headers_basic",
-        "file_validation_normal",
-        "audit_standard",
-      ],
+      policies: ["security_headers_basic", "file_validation_normal", "audit_standard"],
     });
   }
 
@@ -228,7 +224,7 @@ export class SecurityInitializer {
 
     if (failures.length > 0) {
       const errors = failures.map((failure) =>
-        failure.status === "rejected" ? failure.reason.message : "未知错误",
+        failure.status === "rejected" ? failure.reason.message : "未知错误"
       );
 
       securityAudit.logSecurityViolation(
@@ -238,7 +234,7 @@ export class SecurityInitializer {
         {
           failedChecks: failures.length,
           errors,
-        },
+        }
       );
 
       logger.warn("部分安全检查失败", {
@@ -269,9 +265,7 @@ export class SecurityInitializer {
         status: "passed",
       });
     } catch (error) {
-      throw new Error(
-        `依赖安全检查失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      throw new Error(`依赖安全检查失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
   }
 
@@ -304,7 +298,7 @@ export class SecurityInitializer {
       });
     } catch (error) {
       throw new Error(
-        `文件系统权限检查失败: ${error instanceof Error ? error.message : "未知错误"}`,
+        `文件系统权限检查失败: ${error instanceof Error ? error.message : "未知错误"}`
       );
     }
   }
@@ -326,9 +320,7 @@ export class SecurityInitializer {
         hasSecureHeaders,
       });
     } catch (error) {
-      throw new Error(
-        `网络配置检查失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      throw new Error(`网络配置检查失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
   }
 
@@ -346,9 +338,7 @@ export class SecurityInitializer {
         status: "passed",
       });
     } catch (error) {
-      throw new Error(
-        `数据库安全检查失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      throw new Error(`数据库安全检查失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
   }
 

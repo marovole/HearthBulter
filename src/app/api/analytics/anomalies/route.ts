@@ -31,21 +31,15 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "缺少必要参数：memberId" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少必要参数：memberId" }, { status: 400 });
     }
 
     // 验证用户对该成员数据的访问权限
-    const accessResult = await requireMemberDataAccess(
-      session.user.id,
-      memberId,
-    );
+    const accessResult = await requireMemberDataAccess(session.user.id, memberId);
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || "无权访问此成员数据" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -98,44 +92,35 @@ export async function PATCH(request: NextRequest) {
     const { anomalyId, action, resolution, memberId } = body;
 
     if (!anomalyId || !action) {
-      return NextResponse.json(
-        { error: "缺少必要参数：anomalyId, action" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少必要参数：anomalyId, action" }, { status: 400 });
     }
 
     // 如果提供了 memberId，验证访问权限
     if (memberId) {
-      const accessResult = await requireMemberDataAccess(
-        session.user.id,
-        memberId,
-      );
+      const accessResult = await requireMemberDataAccess(session.user.id, memberId);
       if (!accessResult.authorized) {
         return NextResponse.json(
           { error: accessResult.reason || "无权访问此成员数据" },
-          { status: 403 },
+          { status: 403 }
         );
       }
     }
 
     switch (action) {
-    case "acknowledge":
-      await acknowledgeAnomaly(anomalyId);
-      break;
-    case "resolve":
-      if (!resolution) {
-        return NextResponse.json(
-          { error: "解决异常需要提供resolution参数" },
-          { status: 400 },
-        );
-      }
-      await resolveAnomaly(anomalyId, resolution);
-      break;
-    case "ignore":
-      await ignoreAnomaly(anomalyId);
-      break;
-    default:
-      return NextResponse.json({ error: "无效的action值" }, { status: 400 });
+      case "acknowledge":
+        await acknowledgeAnomaly(anomalyId);
+        break;
+      case "resolve":
+        if (!resolution) {
+          return NextResponse.json({ error: "解决异常需要提供resolution参数" }, { status: 400 });
+        }
+        await resolveAnomaly(anomalyId, resolution);
+        break;
+      case "ignore":
+        await ignoreAnomaly(anomalyId);
+        break;
+      default:
+        return NextResponse.json({ error: "无效的action值" }, { status: 400 });
     }
 
     return NextResponse.json({

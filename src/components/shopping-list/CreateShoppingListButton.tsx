@@ -18,9 +18,7 @@ interface CreateShoppingListButtonProps {
   onListCreated: (newList: ShoppingList) => void;
 }
 
-export function CreateShoppingListButton({
-  onListCreated,
-}: CreateShoppingListButtonProps) {
+export function CreateShoppingListButton({ onListCreated }: CreateShoppingListButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
@@ -81,16 +79,13 @@ export function CreateShoppingListButton({
         requestBody.budget = budgetValue;
       }
 
-      const response = await fetch(
-        `/api/meal-plans/${selectedPlanId}/shopping-list`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
+      const response = await fetch(`/api/meal-plans/${selectedPlanId}/shopping-list`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(requestBody),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -111,7 +106,7 @@ export function CreateShoppingListButton({
     return (
       <button
         onClick={handleOpen}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
       >
         创建购物清单
       </button>
@@ -119,14 +114,11 @@ export function CreateShoppingListButton({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex items-center justify-between mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="w-full max-w-md rounded-lg bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900">创建购物清单</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
             ✕
           </button>
         </div>
@@ -134,27 +126,23 @@ export function CreateShoppingListButton({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* 清单名称 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              清单名称（可选）
-            </label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">清单名称（可选）</label>
             <input
               type="text"
               value={listName}
               onChange={(e) => setListName(e.target.value)}
               placeholder="例如：本周采购清单"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* 食谱计划选择 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              选择食谱计划
-            </label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">选择食谱计划</label>
             <select
               value={selectedPlanId}
               onChange={(e) => setSelectedPlanId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="">请选择食谱计划</option>
@@ -170,9 +158,7 @@ export function CreateShoppingListButton({
 
           {/* 预算设置 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              预算（可选）
-            </label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">预算（可选）</label>
             <input
               type="number"
               value={budget}
@@ -180,14 +166,14 @@ export function CreateShoppingListButton({
               placeholder="输入预算金额"
               step="0.01"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* 错误信息 */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
@@ -196,14 +182,14 @@ export function CreateShoppingListButton({
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "创建中..." : "创建"}
             </button>

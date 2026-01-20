@@ -12,9 +12,7 @@ jest.mock("@/components/dashboard/WeightTrendChart", () => ({
 
 jest.mock("@/components/dashboard/NutritionAnalysisChart", () => ({
   NutritionAnalysisChart: ({ memberId }: { memberId: string }) => (
-    <div data-testid="nutrition-analysis-chart">
-      Nutrition Analysis for {memberId}
-    </div>
+    <div data-testid="nutrition-analysis-chart">Nutrition Analysis for {memberId}</div>
   ),
 }));
 
@@ -110,9 +108,7 @@ describe("Dashboard Integration Tests", () => {
     });
 
     // Initially should show first member's data
-    expect(screen.getByTestId("weight-trend-chart")).toHaveTextContent(
-      "Weight Trend for 1",
-    );
+    expect(screen.getByTestId("weight-trend-chart")).toHaveTextContent("Weight Trend for 1");
 
     // TODO: Add member selection interaction test when implemented
   });
@@ -180,9 +176,7 @@ describe("Dashboard Integration Tests", () => {
   });
 
   it("maintains component state on re-render", async () => {
-    const { rerender } = render(
-      <EnhancedDashboard userEmail="test@example.com" />,
-    );
+    const { rerender } = render(<EnhancedDashboard userEmail="test@example.com" />);
 
     await waitFor(() => {
       expect(screen.getByTestId("weight-trend-chart")).toBeInTheDocument();

@@ -15,7 +15,7 @@ import { mealPlanner } from "@/lib/services/meal-planner";
 export const dynamic = "force-dynamic";
 export async function POST(
   _request: NextRequest,
-  { params }: { params: Promise<{ mealId: string }> },
+  { params }: { params: Promise<{ mealId: string }> }
 ) {
   try {
     const { mealId } = await params;
@@ -45,23 +45,17 @@ export async function POST(
       return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: plan.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: plan.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限操作" }, { status: 403 });
     }
 
     const replaced = await mealPlanner.replaceMeal(mealId, plan.memberId);
-    return NextResponse.json(
-      { message: "替换成功", meal: replaced },
-      { status: 200 },
-    );
+    return NextResponse.json({ message: "替换成功", meal: replaced }, { status: 200 });
   } catch (error) {
     console.error("替换餐食失败:", error);
     return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });

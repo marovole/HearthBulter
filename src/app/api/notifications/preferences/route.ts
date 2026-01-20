@@ -38,15 +38,11 @@ export async function GET(request: NextRequest) {
     const memberId = searchParams.get("memberId");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Member ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
     // 使用双写框架查询通知偏好
-    let preferences =
-      await notificationRepository.getNotificationPreferences(memberId);
+    let preferences = await notificationRepository.getNotificationPreferences(memberId);
 
     // 如果没有偏好设置，创建默认设置
     if (!preferences) {
@@ -57,9 +53,7 @@ export async function GET(request: NextRequest) {
         lastUpdatedAt: new Date(),
       };
 
-      await notificationRepository.upsertNotificationPreferences(
-        defaultPreference,
-      );
+      await notificationRepository.upsertNotificationPreferences(defaultPreference);
 
       preferences = defaultPreference;
     }
@@ -72,7 +66,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching notification preferences:", error);
     return NextResponse.json(
       { error: "Failed to fetch notification preferences" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -88,10 +82,7 @@ export async function PUT(request: NextRequest) {
     const { memberId, channelPreferences, quietHours, mutedTypes } = body;
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Member ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
     // 验证 quietHours 格式
@@ -99,27 +90,20 @@ export async function PUT(request: NextRequest) {
       if (!quietHours.start || !quietHours.end) {
         return NextResponse.json(
           { error: "Quiet hours must have both start and end times" },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
       const timeRegex = /^\d{2}:\d{2}$/;
-      if (
-        !timeRegex.test(quietHours.start) ||
-        !timeRegex.test(quietHours.end)
-      ) {
-        return NextResponse.json(
-          { error: "Quiet hours must be in HH:MM format" },
-          { status: 400 },
-        );
+      if (!timeRegex.test(quietHours.start) || !timeRegex.test(quietHours.end)) {
+        return NextResponse.json({ error: "Quiet hours must be in HH:MM format" }, { status: 400 });
       }
     }
 
     // 准备偏好数据
     const preferenceData: NotificationPreferenceDTO = {
       memberId,
-      channelPreferences:
-        channelPreferences || DEFAULT_PREFERENCES.channelPreferences,
+      channelPreferences: channelPreferences || DEFAULT_PREFERENCES.channelPreferences,
       quietHours: quietHours || undefined,
       mutedTypes: mutedTypes || undefined,
       lastUpdatedAt: new Date(),
@@ -137,7 +121,7 @@ export async function PUT(request: NextRequest) {
     console.error("Error updating notification preferences:", error);
     return NextResponse.json(
       { error: "Failed to update notification preferences" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

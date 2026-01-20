@@ -23,12 +23,9 @@ export class ConvexFamilyRepository implements FamilyRepository {
       clerkId: payload.creatorId,
     });
 
-    const family = await convexClient.query<ConvexFamilyWithMembers | null>(
-      api.families.getById,
-      {
-        familyId: familyId as Id<"families">,
-      },
-    );
+    const family = await convexClient.query<ConvexFamilyWithMembers | null>(api.families.getById, {
+      familyId: familyId as Id<"families">,
+    });
 
     if (!family) {
       throw new Error("家庭创建失败");
@@ -38,12 +35,9 @@ export class ConvexFamilyRepository implements FamilyRepository {
   }
 
   async getFamilyById(id: string): Promise<FamilyDTO | null> {
-    const family = await convexClient.query<ConvexFamilyWithMembers | null>(
-      api.families.getById,
-      {
-        familyId: id as Id<"families">,
-      },
-    );
+    const family = await convexClient.query<ConvexFamilyWithMembers | null>(api.families.getById, {
+      familyId: id as Id<"families">,
+    });
 
     if (!family) {
       return null;
@@ -55,7 +49,7 @@ export class ConvexFamilyRepository implements FamilyRepository {
   async getFamilyByInviteCode(inviteCode: string): Promise<FamilyDTO | null> {
     const family = await convexClient.query<ConvexFamilyWithMembers | null>(
       api.families.getByInviteCode,
-      { inviteCode },
+      { inviteCode }
     );
 
     if (!family) {
@@ -67,12 +61,11 @@ export class ConvexFamilyRepository implements FamilyRepository {
 
   async listUserFamilies(
     _query: FamilyListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<FamilyWithMembersDTO>> {
-    const families = await convexClient.query<ConvexFamilyWithMembers[]>(
-      api.families.list,
-      { clerkId: _query.userId },
-    );
+    const families = await convexClient.query<ConvexFamilyWithMembers[]>(api.families.list, {
+      clerkId: _query.userId,
+    });
 
     const limit = pagination?.limit ?? DEFAULT_PAGE_LIMIT;
     const offset = pagination?.offset ?? 0;
@@ -91,12 +84,9 @@ export class ConvexFamilyRepository implements FamilyRepository {
       description: payload.description ?? undefined,
     });
 
-    const family = await convexClient.query<ConvexFamilyWithMembers | null>(
-      api.families.getById,
-      {
-        familyId: id as Id<"families">,
-      },
-    );
+    const family = await convexClient.query<ConvexFamilyWithMembers | null>(api.families.getById, {
+      familyId: id as Id<"families">,
+    });
 
     if (!family) {
       throw new Error("家庭不存在");
@@ -111,9 +101,7 @@ export class ConvexFamilyRepository implements FamilyRepository {
     });
   }
 
-  async addFamilyMember(
-    payload: CreateFamilyMemberDTO,
-  ): Promise<FamilyMemberDTO> {
+  async addFamilyMember(payload: CreateFamilyMemberDTO): Promise<FamilyMemberDTO> {
     const memberId = await convexClient.mutation(api.families.addMember, {
       familyId: payload.familyId as Id<"families">,
       name: payload.name,
@@ -126,12 +114,9 @@ export class ConvexFamilyRepository implements FamilyRepository {
       weight: payload.weight ?? undefined,
     });
 
-    const member = await convexClient.query<ConvexFamilyMember | null>(
-      api.families.getMemberById,
-      {
-        memberId: memberId as Id<"familyMembers">,
-      },
-    );
+    const member = await convexClient.query<ConvexFamilyMember | null>(api.families.getMemberById, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     if (!member) {
       throw new Error("成员创建失败");
@@ -140,36 +125,24 @@ export class ConvexFamilyRepository implements FamilyRepository {
     return mapMember(member);
   }
 
-  async listFamilyMembers(
-    familyId: string,
-    includeDeleted?: boolean,
-  ): Promise<FamilyMemberDTO[]> {
-    const members = await convexClient.query<ConvexFamilyMember[]>(
-      api.families.listMembers,
-      {
-        familyId: familyId as Id<"families">,
-        includeDeleted: includeDeleted ?? false,
-      },
-    );
+  async listFamilyMembers(familyId: string, includeDeleted?: boolean): Promise<FamilyMemberDTO[]> {
+    const members = await convexClient.query<ConvexFamilyMember[]>(api.families.listMembers, {
+      familyId: familyId as Id<"families">,
+      includeDeleted: includeDeleted ?? false,
+    });
 
     return members.map(mapMember);
   }
 
   async getFamilyMemberById(id: string): Promise<FamilyMemberDTO | null> {
-    const member = await convexClient.query<ConvexFamilyMember | null>(
-      api.families.getMemberById,
-      {
-        memberId: id as Id<"familyMembers">,
-      },
-    );
+    const member = await convexClient.query<ConvexFamilyMember | null>(api.families.getMemberById, {
+      memberId: id as Id<"familyMembers">,
+    });
 
     return member ? mapMember(member) : null;
   }
 
-  async updateFamilyMember(
-    id: string,
-    payload: UpdateFamilyMemberDTO,
-  ): Promise<FamilyMemberDTO> {
+  async updateFamilyMember(id: string, payload: UpdateFamilyMemberDTO): Promise<FamilyMemberDTO> {
     await convexClient.mutation(api.families.updateMember, {
       memberId: id as Id<"familyMembers">,
       name: payload.name ?? undefined,
@@ -177,12 +150,9 @@ export class ConvexFamilyRepository implements FamilyRepository {
       role: payload.role ?? undefined,
     });
 
-    const member = await convexClient.query<ConvexFamilyMember | null>(
-      api.families.getMemberById,
-      {
-        memberId: id as Id<"familyMembers">,
-      },
-    );
+    const member = await convexClient.query<ConvexFamilyMember | null>(api.families.getMemberById, {
+      memberId: id as Id<"familyMembers">,
+    });
 
     if (!member) {
       throw new Error("成员不存在");
@@ -204,17 +174,11 @@ export class ConvexFamilyRepository implements FamilyRepository {
     });
   }
 
-  async getUserFamilyRole(
-    familyId: string,
-    userId: string,
-  ): Promise<string | null> {
-    return await convexClient.query<string | null>(
-      api.families.getUserFamilyRole,
-      {
-        familyId: familyId as Id<"families">,
-        userId: userId as Id<"users">,
-      },
-    );
+  async getUserFamilyRole(familyId: string, userId: string): Promise<string | null> {
+    return await convexClient.query<string | null>(api.families.getUserFamilyRole, {
+      familyId: familyId as Id<"families">,
+      userId: userId as Id<"users">,
+    });
   }
 }
 
@@ -261,9 +225,7 @@ function normalizeRole(role: string): FamilyMemberDTO["role"] {
   return "MEMBER";
 }
 
-function normalizeGender(
-  gender: string | null | undefined,
-): FamilyMemberDTO["gender"] {
+function normalizeGender(gender: string | null | undefined): FamilyMemberDTO["gender"] {
   if (gender === "MALE" || gender === "FEMALE" || gender === "OTHER") {
     return gender;
   }
@@ -272,7 +234,7 @@ function normalizeGender(
 
 function mapFamilyWithMembers(
   family: ConvexFamilyWithMembers,
-  members: ConvexFamilyMember[],
+  members: ConvexFamilyMember[]
 ): FamilyWithMembersDTO {
   return {
     ...mapFamily(family),

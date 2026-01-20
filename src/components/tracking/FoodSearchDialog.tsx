@@ -51,9 +51,7 @@ export function FoodSearchDialog({
 
   const loadRecentFoods = async () => {
     try {
-      const response = await fetch(
-        `/api/tracking/meals/recent?memberId=${memberId}&limit=10`,
-      );
+      const response = await fetch(`/api/tracking/meals/recent?memberId=${memberId}&limit=10`);
       if (response.ok) {
         const data = await response.json();
         setRecentFoods(data);
@@ -81,7 +79,7 @@ export function FoodSearchDialog({
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/tracking/meals/search?q=${encodeURIComponent(searchQuery)}`,
+        `/api/tracking/meals/search?q=${encodeURIComponent(searchQuery)}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -108,36 +106,31 @@ export function FoodSearchDialog({
     return ((value * amount) / 100).toFixed(1);
   };
 
-  const displayFoods = searchQuery.trim()
-    ? searchResults
-    : [...recentFoods, ...commonFoods];
+  const displayFoods = searchQuery.trim() ? searchResults : [...recentFoods, ...commonFoods];
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-lg bg-white">
         {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between mb-4">
+        <div className="border-b p-6">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold">搜索食物</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
               ✕
             </button>
           </div>
 
           {/* Search Input */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜索食物，如：鸡蛋、鸡胸肉、米饭..."
-              className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
           </div>
@@ -155,9 +148,7 @@ export function FoodSearchDialog({
                 onChange={(e) => setSelectedAmount(Number(e.target.value))}
                 className="w-32"
               />
-              <span className="text-sm font-medium w-16">
-                {selectedAmount}g
-              </span>
+              <span className="w-16 text-sm font-medium">{selectedAmount}g</span>
             </div>
           </div>
         </div>
@@ -165,12 +156,12 @@ export function FoodSearchDialog({
         {/* Food List */}
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="text-gray-500 mt-2">搜索中...</p>
+            <div className="py-8 text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
+              <p className="mt-2 text-gray-500">搜索中...</p>
             </div>
           ) : displayFoods.length === 0 ? (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <p className="text-gray-500">
                 {searchQuery.trim() ? "未找到相关食物" : "暂无最近食用的食物"}
               </p>
@@ -179,21 +170,21 @@ export function FoodSearchDialog({
             <div className="space-y-3">
               {/* Section Headers */}
               {!searchQuery.trim() && recentFoods.length > 0 && (
-                <div className="flex items-center text-sm font-medium text-gray-600 mb-2">
-                  <Clock className="w-4 h-4 mr-1" />
+                <div className="mb-2 flex items-center text-sm font-medium text-gray-600">
+                  <Clock className="mr-1 h-4 w-4" />
                   最近食用
                 </div>
               )}
 
               {!searchQuery.trim() && commonFoods.length > 0 && (
-                <div className="flex items-center text-sm font-medium text-gray-600 mb-2 mt-4">
-                  <TrendingUp className="w-4 h-4 mr-1" />
+                <div className="mb-2 mt-4 flex items-center text-sm font-medium text-gray-600">
+                  <TrendingUp className="mr-1 h-4 w-4" />
                   常用食物
                 </div>
               )}
 
               {searchQuery.trim() && displayFoods.length > 0 && (
-                <div className="text-sm font-medium text-gray-600 mb-2">
+                <div className="mb-2 text-sm font-medium text-gray-600">
                   搜索结果 ({displayFoods.length})
                 </div>
               )}
@@ -203,9 +194,9 @@ export function FoodSearchDialog({
                 <div
                   key={food.id}
                   onClick={() => handleSelectFood(food)}
-                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="cursor-pointer rounded-lg border p-4 transition-colors hover:bg-gray-50"
                 >
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="mb-2 flex items-start justify-between">
                     <div>
                       <h3 className="font-medium text-gray-900">{food.name}</h3>
                       <p className="text-sm text-gray-500">
@@ -228,15 +219,11 @@ export function FoodSearchDialog({
                     </div>
                     <div>
                       <span className="text-gray-500">碳水</span>
-                      <p className="font-medium">
-                        {formatNutrition(food.carbs, selectedAmount)}g
-                      </p>
+                      <p className="font-medium">{formatNutrition(food.carbs, selectedAmount)}g</p>
                     </div>
                     <div>
                       <span className="text-gray-500">脂肪</span>
-                      <p className="font-medium">
-                        {formatNutrition(food.fat, selectedAmount)}g
-                      </p>
+                      <p className="font-medium">{formatNutrition(food.fat, selectedAmount)}g</p>
                     </div>
                   </div>
                 </div>
@@ -246,15 +233,10 @@ export function FoodSearchDialog({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t bg-gray-50">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">
-              选择食物后将自动添加到当前餐次
-            </p>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
-            >
+        <div className="border-t bg-gray-50 p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">选择食物后将自动添加到当前餐次</p>
+            <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-800">
               取消
             </button>
           </div>

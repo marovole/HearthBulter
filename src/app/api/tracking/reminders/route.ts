@@ -14,7 +14,7 @@ import { reminderService } from "@/lib/services/tracking/reminder-service";
 export const dynamic = "force-dynamic";
 async function verifyTrackingAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -30,7 +30,7 @@ async function verifyTrackingAccess(
         id,
         creatorId
       )
-    `,
+    `
     )
     .eq("id", memberId)
     .is("deletedAt", null)
@@ -69,16 +69,11 @@ const reminderConfigSchema = z.object({
   enabled: z.boolean().optional(),
   hour: z.number().int().min(0).max(23),
   minute: z.number().int().min(0).max(59).optional().default(0),
-  daysOfWeek: z
-    .array(z.number().int().min(0).max(6))
-    .optional()
-    .default([0, 1, 2, 3, 4, 5, 6]),
+  daysOfWeek: z.array(z.number().int().min(0).max(6)).optional().default([0, 1, 2, 3, 4, 5, 6]),
   message: z.string().max(200).optional().nullable(),
 });
 
-const normalizeReminderConfig = (
-  config: z.infer<typeof reminderConfigSchema>,
-) => ({
+const normalizeReminderConfig = (config: z.infer<typeof reminderConfigSchema>) => ({
   ...config,
   message: config.message ?? undefined,
 });
@@ -110,10 +105,7 @@ export async function GET(request: NextRequest) {
     const { hasAccess } = await verifyTrackingAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的提醒配置" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的提醒配置" }, { status: 403 });
     }
 
     const reminders = await reminderService.getReminderConfigs(memberId);
@@ -150,10 +142,7 @@ export async function POST(request: NextRequest) {
     const { hasAccess } = await verifyTrackingAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限设置该成员的提醒配置" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限设置该成员的提醒配置" }, { status: 403 });
     }
 
     const validation = reminderConfigSchema.safeParse(config);
@@ -161,13 +150,13 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json(
         { error: "输入数据无效", details: validation.error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const reminder = await reminderService.upsertReminderConfig(
       memberId,
-      normalizeReminderConfig(validation.data),
+      normalizeReminderConfig(validation.data)
     );
 
     return NextResponse.json(
@@ -175,7 +164,7 @@ export async function POST(request: NextRequest) {
         message: "提醒配置保存成功",
         reminder,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("保存提醒配置失败:", error);
@@ -195,10 +184,7 @@ export async function PUT(request: NextRequest) {
     const { memberId, configs } = body;
 
     if (!memberId || !Array.isArray(configs)) {
-      return NextResponse.json(
-        { error: "缺少memberId参数或configs数组" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少memberId参数或configs数组" }, { status: 400 });
     }
 
     const session = await auth();
@@ -211,10 +197,7 @@ export async function PUT(request: NextRequest) {
     const { hasAccess } = await verifyTrackingAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限设置该成员的提醒配置" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限设置该成员的提醒配置" }, { status: 403 });
     }
 
     const updatedReminders = [];
@@ -225,13 +208,13 @@ export async function PUT(request: NextRequest) {
       if (!validation.success) {
         return NextResponse.json(
           { error: "配置数据无效", details: validation.error.errors },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
       const reminder = await reminderService.upsertReminderConfig(
         memberId,
-        normalizeReminderConfig(validation.data),
+        normalizeReminderConfig(validation.data)
       );
       updatedReminders.push(reminder);
     }
@@ -241,7 +224,7 @@ export async function PUT(request: NextRequest) {
         message: "批量更新提醒配置成功",
         reminders: updatedReminders,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("批量更新提醒配置失败:", error);

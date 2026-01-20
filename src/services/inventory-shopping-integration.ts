@@ -30,7 +30,7 @@ export class InventoryShoppingIntegration {
 
   async createInventoryBasedShoppingList(
     memberId: string,
-    listName: string = "智能购物清单",
+    listName: string = "智能购物清单"
   ): Promise<InventoryBasedShoppingList> {
     return {
       id: "",
@@ -96,7 +96,7 @@ export class InventoryShoppingIntegration {
       totalItems: number;
       completedItems: number;
     }[]
-    > {
+  > {
     return [];
   }
 }

@@ -50,15 +50,12 @@ export default async function NewReportPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* 面包屑导航 */}
           <nav className="mb-6">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Link
-                href={`/dashboard/families/${id}`}
-                className="hover:text-gray-900"
-              >
+              <Link href={`/dashboard/families/${id}`} className="hover:text-gray-900">
                 家庭
               </Link>
               <span>/</span>
@@ -84,9 +81,7 @@ export default async function NewReportPage({
           <ReportUploader
             memberId={memberId}
             onSuccess={(reportId) => {
-              redirect(
-                `/dashboard/families/${id}/members/${memberId}/reports/${reportId}`,
-              );
+              redirect(`/dashboard/families/${id}/members/${memberId}/reports/${reportId}`);
             }}
             onCancel={() => {
               redirect(`/dashboard/families/${id}/members/${memberId}/reports`);

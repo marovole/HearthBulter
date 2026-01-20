@@ -60,7 +60,7 @@ export function useSwipe(options: SwipeOptions = {}) {
         time: Date.now(),
       };
     },
-    [preventDefault],
+    [preventDefault]
   );
 
   const onTouchEnd = useCallback(
@@ -77,11 +77,7 @@ export function useSwipe(options: SwipeOptions = {}) {
       const deltaTime = Date.now() - touchStart.current.time;
 
       // 检查是否为有效的滑动（距离和时间）
-      if (
-        Math.abs(deltaX) < minSwipeDistance &&
-        Math.abs(deltaY) < minSwipeDistance
-      )
-        return;
+      if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) return;
       if (deltaTime > 500) return; // 超过500ms不算滑动
 
       const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
@@ -100,7 +96,7 @@ export function useSwipe(options: SwipeOptions = {}) {
         }
       }
     },
-    [minSwipeDistance, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown],
+    [minSwipeDistance, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown]
   );
 
   const addEventListeners = useCallback(
@@ -113,7 +109,7 @@ export function useSwipe(options: SwipeOptions = {}) {
       });
       element.addEventListener("touchend", onTouchEnd);
     },
-    [onTouchStart, onTouchMove, onTouchEnd, preventDefault],
+    [onTouchStart, onTouchMove, onTouchEnd, preventDefault]
   );
 
   const removeEventListeners = useCallback(
@@ -122,7 +118,7 @@ export function useSwipe(options: SwipeOptions = {}) {
       element.removeEventListener("touchmove", onTouchMove);
       element.removeEventListener("touchend", onTouchEnd);
     },
-    [onTouchStart, onTouchMove, onTouchEnd],
+    [onTouchStart, onTouchMove, onTouchEnd]
   );
 
   return {
@@ -192,13 +188,7 @@ interface PinchZoomOptions {
 }
 
 export function usePinchZoom(options: PinchZoomOptions = {}) {
-  const {
-    onPinchZoom,
-    onPinchStart,
-    onPinchEnd,
-    minScale = 0.5,
-    maxScale = 3,
-  } = options;
+  const { onPinchZoom, onPinchStart, onPinchEnd, minScale = 0.5, maxScale = 3 } = options;
 
   const initialDistance = useRef<number | null>(null);
   const initialScale = useRef(1);
@@ -222,7 +212,7 @@ export function usePinchZoom(options: PinchZoomOptions = {}) {
         onPinchStart?.();
       }
     },
-    [onPinchStart],
+    [onPinchStart]
   );
 
   const onTouchMove = useCallback(
@@ -234,7 +224,7 @@ export function usePinchZoom(options: PinchZoomOptions = {}) {
         onPinchZoom?.(clampedScale);
       }
     },
-    [onPinchZoom, minScale, maxScale],
+    [onPinchZoom, minScale, maxScale]
   );
 
   const onTouchEnd = useCallback(
@@ -244,7 +234,7 @@ export function usePinchZoom(options: PinchZoomOptions = {}) {
         onPinchEnd?.();
       }
     },
-    [onPinchEnd],
+    [onPinchEnd]
   );
 
   const addEventListeners = useCallback(
@@ -253,7 +243,7 @@ export function usePinchZoom(options: PinchZoomOptions = {}) {
       element.addEventListener("touchmove", onTouchMove);
       element.addEventListener("touchend", onTouchEnd);
     },
-    [onTouchStart, onTouchMove, onTouchEnd],
+    [onTouchStart, onTouchMove, onTouchEnd]
   );
 
   const removeEventListeners = useCallback(
@@ -262,7 +252,7 @@ export function usePinchZoom(options: PinchZoomOptions = {}) {
       element.removeEventListener("touchmove", onTouchMove);
       element.removeEventListener("touchend", onTouchEnd);
     },
-    [onTouchStart, onTouchMove, onTouchEnd],
+    [onTouchStart, onTouchMove, onTouchEnd]
   );
 
   return {

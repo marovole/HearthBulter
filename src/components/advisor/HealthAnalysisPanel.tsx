@@ -1,23 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AlertCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AIThinkingIndicator } from "@/components/ui/loading-indicator";
-import {
-  FeedbackButtons,
-  FeedbackData,
-} from "@/components/ui/feedback-buttons";
+import { FeedbackButtons, FeedbackData } from "@/components/ui/feedback-buttons";
 
 interface HealthAnalysisResult {
   overall_score: number;
@@ -46,13 +37,9 @@ interface HealthAnalysisPanelProps {
   onAnalysisComplete?: (result: HealthAnalysisResult) => void;
 }
 
-export function HealthAnalysisPanel({
-  memberId,
-  onAnalysisComplete,
-}: HealthAnalysisPanelProps) {
+export function HealthAnalysisPanel({ memberId, onAnalysisComplete }: HealthAnalysisPanelProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] =
-    useState<HealthAnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<HealthAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adviceId, setAdviceId] = useState<string | null>(null);
 
@@ -89,27 +76,27 @@ export function HealthAnalysisPanel({
 
   const getRiskBadgeVariant = (level: string) => {
     switch (level) {
-    case "low":
-      return "default";
-    case "medium":
-      return "secondary";
-    case "high":
-      return "destructive";
-    default:
-      return "outline";
+      case "low":
+        return "default";
+      case "medium":
+        return "secondary";
+      case "high":
+        return "destructive";
+      default:
+        return "outline";
     }
   };
 
   const getRiskIcon = (level: string) => {
     switch (level) {
-    case "low":
-      return <TrendingDown className="w-4 h-4" />;
-    case "medium":
-      return <Minus className="w-4 h-4" />;
-    case "high":
-      return <TrendingUp className="w-4 h-4" />;
-    default:
-      return <AlertCircle className="w-4 h-4" />;
+      case "low":
+        return <TrendingDown className="h-4 w-4" />;
+      case "medium":
+        return <Minus className="h-4 w-4" />;
+      case "high":
+        return <TrendingUp className="h-4 w-4" />;
+      default:
+        return <AlertCircle className="h-4 w-4" />;
     }
   };
 
@@ -145,13 +132,13 @@ export function HealthAnalysisPanel({
           <AIThinkingIndicator
             size="lg"
             message="AI正在深度分析您的健康数据..."
-            className="w-full max-w-2xl mx-auto"
+            className="mx-auto w-full max-w-2xl"
           />
-          <div className="mt-6 text-center text-sm text-muted-foreground space-y-1">
+          <div className="mt-6 space-y-1 text-center text-sm text-muted-foreground">
             <p>• 分析您的体检指标和健康记录</p>
             <p>• 评估健康风险和营养状况</p>
             <p>• 生成个性化健康建议</p>
-            <p className="text-xs mt-2">预计需要10-30秒，请耐心等待</p>
+            <p className="mt-2 text-xs">预计需要10-30秒，请耐心等待</p>
           </div>
         </CardContent>
       </Card>
@@ -163,9 +150,7 @@ export function HealthAnalysisPanel({
       <Card>
         <CardHeader>
           <CardTitle>AI健康分析</CardTitle>
-          <CardDescription>
-            基于体检数据和健康记录，获得个性化的健康洞察和营养建议
-          </CardDescription>
+          <CardDescription>基于体检数据和健康记录，获得个性化的健康洞察和营养建议</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
@@ -175,11 +160,7 @@ export function HealthAnalysisPanel({
             </Alert>
           )}
 
-          <Button
-            onClick={startAnalysis}
-            disabled={isAnalyzing}
-            className="w-full"
-          >
+          <Button onClick={startAnalysis} disabled={isAnalyzing} className="w-full">
             开始AI健康分析
           </Button>
 
@@ -212,7 +193,7 @@ export function HealthAnalysisPanel({
         </CardHeader>
         <CardContent>
           <div className="text-center">
-            <div className="text-4xl font-bold text-primary mb-2">
+            <div className="mb-2 text-4xl font-bold text-primary">
               {analysisResult.overall_score}
             </div>
             <Progress value={analysisResult.overall_score} className="mb-2" />
@@ -237,7 +218,7 @@ export function HealthAnalysisPanel({
           <ul className="space-y-2">
             {analysisResult.key_findings.map((finding, index) => (
               <li key={index} className="flex items-start">
-                <AlertCircle className="w-4 h-4 mt-0.5 mr-2 text-blue-500" />
+                <AlertCircle className="mr-2 mt-0.5 h-4 w-4 text-blue-500" />
                 <span className="text-sm">{finding}</span>
               </li>
             ))}
@@ -258,47 +239,34 @@ export function HealthAnalysisPanel({
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {
-                  analysisResult.nutritional_recommendations.macro_distribution
-                    .carbs_percent
-                }
-                %
+                {analysisResult.nutritional_recommendations.macro_distribution.carbs_percent}%
               </div>
               <div className="text-sm text-muted-foreground">碳水化合物</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {
-                  analysisResult.nutritional_recommendations.macro_distribution
-                    .protein_percent
-                }
-                %
+                {analysisResult.nutritional_recommendations.macro_distribution.protein_percent}%
               </div>
               <div className="text-sm text-muted-foreground">蛋白质</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {
-                  analysisResult.nutritional_recommendations.macro_distribution
-                    .fat_percent
-                }
-                %
+                {analysisResult.nutritional_recommendations.macro_distribution.fat_percent}%
               </div>
               <div className="text-sm text-muted-foreground">脂肪</div>
             </div>
           </div>
 
-          {analysisResult.nutritional_recommendations.micronutrients.length >
-            0 && (
+          {analysisResult.nutritional_recommendations.micronutrients.length > 0 && (
             <div>
-              <h4 className="font-medium mb-2">重点关注微量营养素：</h4>
+              <h4 className="mb-2 font-medium">重点关注微量营养素：</h4>
               <div className="flex flex-wrap gap-2">
                 {analysisResult.nutritional_recommendations.micronutrients.map(
                   (nutrient, index) => (
                     <Badge key={index} variant="outline">
                       {nutrient}
                     </Badge>
-                  ),
+                  )
                 )}
               </div>
             </div>
@@ -315,7 +283,7 @@ export function HealthAnalysisPanel({
           <ul className="space-y-2">
             {analysisResult.lifestyle_modifications.map((suggestion, index) => (
               <li key={index} className="flex items-start">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0" />
+                <div className="mr-3 mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-green-500" />
                 <span className="text-sm">{suggestion}</span>
               </li>
             ))}
@@ -327,20 +295,16 @@ export function HealthAnalysisPanel({
       {analysisResult.risk_assessment.urgent_actions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-red-600">
-              ⚠️ 需要立即关注的健康风险
-            </CardTitle>
+            <CardTitle className="text-red-600">⚠️ 需要立即关注的健康风险</CardTitle>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <ul className="space-y-1 mt-2">
-                  {analysisResult.risk_assessment.urgent_actions.map(
-                    (action, index) => (
-                      <li key={index}>• {action}</li>
-                    ),
-                  )}
+                <ul className="mt-2 space-y-1">
+                  {analysisResult.risk_assessment.urgent_actions.map((action, index) => (
+                    <li key={index}>• {action}</li>
+                  ))}
                 </ul>
               </AlertDescription>
             </Alert>
@@ -351,7 +315,7 @@ export function HealthAnalysisPanel({
       {/* 反馈区域 */}
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center space-y-4">
+          <div className="space-y-4 text-center">
             <p className="text-sm text-muted-foreground">
               这份健康分析对您有帮助吗？您的反馈将帮助我们改进AI分析质量。
             </p>

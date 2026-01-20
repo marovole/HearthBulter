@@ -1,9 +1,5 @@
 import { convexClient, api } from "@/lib/convex-client";
-import type {
-  AnomalyType,
-  AnomalySeverity,
-  TrendDataType,
-} from "@/lib/types/analytics";
+import type { AnomalyType, AnomalySeverity, TrendDataType } from "@/lib/types/analytics";
 
 import { aggregateTimeSeriesData, calculateStatistics } from "./trend-analyzer";
 
@@ -23,19 +19,14 @@ export async function detectSuddenChange(
   memberId: string,
   dataType: TrendDataType,
   newValue: number,
-  date: Date,
+  date: Date
 ): Promise<AnomalyDetectionResult | null> {
   const endDate = new Date(date);
   endDate.setDate(endDate.getDate() - 1);
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - 30);
 
-  const historicalData = await aggregateTimeSeriesData(
-    memberId,
-    dataType,
-    startDate,
-    endDate,
-  );
+  const historicalData = await aggregateTimeSeriesData(memberId, dataType, startDate, endDate);
 
   if (historicalData.length < 7) {
     return null;
@@ -82,7 +73,7 @@ export async function detectSuddenChange(
 export async function detectWeightAnomaly(
   memberId: string,
   newWeight: number,
-  date: Date,
+  date: Date
 ): Promise<AnomalyDetectionResult | null> {
   const yesterday = new Date(date);
   yesterday.setDate(yesterday.getDate() - 1);
@@ -141,7 +132,7 @@ export async function detectWeightAnomaly(
 
 export async function detectNutritionImbalance(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
@@ -165,14 +156,10 @@ export async function detectNutritionImbalance(
     return anomalies;
   }
 
-  const proteinDeficient = targets.every(
-    (t) => t.actualProtein < t.targetProtein * 0.5,
-  );
+  const proteinDeficient = targets.every((t) => t.actualProtein < t.targetProtein * 0.5);
   if (proteinDeficient) {
-    const avgProtein =
-      targets.reduce((sum, t) => sum + t.actualProtein, 0) / targets.length;
-    const avgTarget =
-      targets.reduce((sum, t) => sum + t.targetProtein, 0) / targets.length;
+    const avgProtein = targets.reduce((sum, t) => sum + t.actualProtein, 0) / targets.length;
+    const avgTarget = targets.reduce((sum, t) => sum + t.targetProtein, 0) / targets.length;
 
     anomalies.push({
       detected: true,
@@ -186,14 +173,10 @@ export async function detectNutritionImbalance(
     });
   }
 
-  const caloriesExcessive = targets.every(
-    (t) => t.actualCalories > t.targetCalories * 1.3,
-  );
+  const caloriesExcessive = targets.every((t) => t.actualCalories > t.targetCalories * 1.3);
   if (caloriesExcessive) {
-    const avgCalories =
-      targets.reduce((sum, t) => sum + t.actualCalories, 0) / targets.length;
-    const avgTarget =
-      targets.reduce((sum, t) => sum + t.targetCalories, 0) / targets.length;
+    const avgCalories = targets.reduce((sum, t) => sum + t.actualCalories, 0) / targets.length;
+    const avgTarget = targets.reduce((sum, t) => sum + t.targetCalories, 0) / targets.length;
 
     anomalies.push({
       detected: true,
@@ -212,7 +195,7 @@ export async function detectNutritionImbalance(
 
 export async function detectGoalDeviation(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<AnomalyDetectionResult | null> {
   const goals = await convexClient.query<
     Array<{
@@ -227,9 +210,7 @@ export async function detectGoalDeviation(
     includeInactive: false,
   });
 
-  const goal = goals.find(
-    (g) => g.goalType === "LOSE_WEIGHT" || g.goalType === "GAIN_MUSCLE",
-  );
+  const goal = goals.find((g) => g.goalType === "LOSE_WEIGHT" || g.goalType === "GAIN_MUSCLE");
 
   if (!goal || !goal.targetWeight || !goal.startWeight) {
     return null;
@@ -282,21 +263,18 @@ export async function detectGoalDeviation(
 
 export async function detectMissingData(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
   const sevenDaysAgo = new Date(date);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const mealLogsCount = await convexClient.query<number>(
-    api.analytics.countMealLogs,
-    {
-      memberId: memberId,
-      startDate: sevenDaysAgo.getTime(),
-      endDate: date.getTime(),
-    },
-  );
+  const mealLogsCount = await convexClient.query<number>(api.analytics.countMealLogs, {
+    memberId: memberId,
+    startDate: sevenDaysAgo.getTime(),
+    endDate: date.getTime(),
+  });
 
   if (mealLogsCount === 0) {
     anomalies.push({
@@ -319,9 +297,7 @@ export async function detectMissingData(
     endDate: date.getTime(),
   });
 
-  const exerciseCount = exerciseTrackings.filter(
-    (t) => t.exerciseMinutes !== null,
-  ).length;
+  const exerciseCount = exerciseTrackings.filter((t) => t.exerciseMinutes !== null).length;
 
   if (exerciseCount === 0) {
     anomalies.push({
@@ -339,7 +315,7 @@ export async function detectMissingData(
 
 export async function detectAllAnomalies(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<AnomalyDetectionResult[]> {
   const anomalies: AnomalyDetectionResult[] = [];
 
@@ -360,7 +336,7 @@ export async function detectAllAnomalies(
 export async function saveAnomaly(
   memberId: string,
   anomaly: AnomalyDetectionResult,
-  dataType: TrendDataType,
+  dataType: TrendDataType
 ) {
   await convexClient.mutation(api.analytics.createHealthAnomaly, {
     memberId: memberId,
@@ -377,10 +353,7 @@ export async function saveAnomaly(
   });
 }
 
-export async function getPendingAnomalies(
-  memberId: string,
-  limit: number = 10,
-) {
+export async function getPendingAnomalies(memberId: string, limit: number = 10) {
   return await convexClient.query<
     Array<{
       _id: string;
@@ -460,8 +433,6 @@ function getDataTypeUnit(dataType: TrendDataType): string {
   return units[dataType] || "";
 }
 
-export async function detectAnomalies(
-  memberId: string,
-): Promise<AnomalyDetectionResult[]> {
+export async function detectAnomalies(memberId: string): Promise<AnomalyDetectionResult[]> {
   return await detectAllAnomalies(memberId, new Date());
 }

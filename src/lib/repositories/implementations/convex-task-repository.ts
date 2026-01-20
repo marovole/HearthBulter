@@ -19,7 +19,7 @@ const DEFAULT_LIMIT = 20;
 export class ConvexTaskRepository implements TaskRepository {
   async listTasks(
     query: TaskListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<TaskDTO>> {
     const tasks = await convexClient.query<Doc<"tasks">[]>(api.tasks.list, {
       familyId: query.familyId as Id<"families">,
@@ -29,8 +29,7 @@ export class ConvexTaskRepository implements TaskRepository {
       if (query.status && task.status !== query.status) return false;
       if (query.category && task.category !== query.category) return false;
       if (query.priority && task.priority !== query.priority) return false;
-      if (query.assigneeId && task.assigneeId !== query.assigneeId)
-        return false;
+      if (query.assigneeId && task.assigneeId !== query.assigneeId) return false;
       if (query.creatorId && task.creatorId !== query.creatorId) return false;
       if (!query.includeDeleted && task.deletedAt) return false;
 
@@ -59,24 +58,17 @@ export class ConvexTaskRepository implements TaskRepository {
   async getTaskById(
     familyId: string,
     taskId: string,
-    _options?: TaskGetOptions,
+    _options?: TaskGetOptions
   ): Promise<TaskDTO | null> {
-    const task = await convexClient.query<Doc<"tasks"> | null>(
-      api.tasks.getById,
-      {
-        familyId: familyId as Id<"families">,
-        taskId: taskId as Id<"tasks">,
-      },
-    );
+    const task = await convexClient.query<Doc<"tasks"> | null>(api.tasks.getById, {
+      familyId: familyId as Id<"families">,
+      taskId: taskId as Id<"tasks">,
+    });
 
     return task ? mapTask(task) : null;
   }
 
-  async getMyTasks(
-    familyId: string,
-    memberId: string,
-    status?: TaskStatus,
-  ): Promise<TaskDTO[]> {
+  async getMyTasks(familyId: string, memberId: string, status?: TaskStatus): Promise<TaskDTO[]> {
     const tasks = await convexClient.query<Doc<"tasks">[]>(api.tasks.list, {
       familyId: familyId as Id<"families">,
     });
@@ -88,11 +80,7 @@ export class ConvexTaskRepository implements TaskRepository {
       .map(mapTask);
   }
 
-  async createTask(
-    familyId: string,
-    creatorId: string,
-    payload: CreateTaskDTO,
-  ): Promise<TaskDTO> {
+  async createTask(familyId: string, creatorId: string, payload: CreateTaskDTO): Promise<TaskDTO> {
     const taskId = await convexClient.mutation(api.tasks.create, {
       familyId: familyId as Id<"families">,
       creatorId: creatorId as Id<"familyMembers">,
@@ -100,19 +88,14 @@ export class ConvexTaskRepository implements TaskRepository {
       description: payload.description ?? undefined,
       category: payload.category,
       priority: payload.priority ?? "MEDIUM",
-      assigneeId: payload.assigneeId
-        ? (payload.assigneeId as Id<"familyMembers">)
-        : undefined,
+      assigneeId: payload.assigneeId ? (payload.assigneeId as Id<"familyMembers">) : undefined,
       dueDate: payload.dueDate?.getTime(),
     });
 
-    const task = await convexClient.query<Doc<"tasks"> | null>(
-      api.tasks.getById,
-      {
-        familyId: familyId as Id<"families">,
-        taskId: taskId as Id<"tasks">,
-      },
-    );
+    const task = await convexClient.query<Doc<"tasks"> | null>(api.tasks.getById, {
+      familyId: familyId as Id<"families">,
+      taskId: taskId as Id<"tasks">,
+    });
 
     if (!task) {
       throw new Error("任务创建失败");
@@ -121,11 +104,7 @@ export class ConvexTaskRepository implements TaskRepository {
     return mapTask(task);
   }
 
-  async updateTask(
-    familyId: string,
-    taskId: string,
-    payload: UpdateTaskDTO,
-  ): Promise<TaskDTO> {
+  async updateTask(familyId: string, taskId: string, payload: UpdateTaskDTO): Promise<TaskDTO> {
     await convexClient.mutation(api.tasks.update, {
       taskId: taskId as Id<"tasks">,
       title: payload.title,
@@ -135,13 +114,10 @@ export class ConvexTaskRepository implements TaskRepository {
       dueDate: payload.dueDate?.getTime(),
     });
 
-    const task = await convexClient.query<Doc<"tasks"> | null>(
-      api.tasks.getById,
-      {
-        familyId: familyId as Id<"families">,
-        taskId: taskId as Id<"tasks">,
-      },
-    );
+    const task = await convexClient.query<Doc<"tasks"> | null>(api.tasks.getById, {
+      familyId: familyId as Id<"families">,
+      taskId: taskId as Id<"tasks">,
+    });
 
     if (!task) {
       throw new Error("任务不存在");
@@ -153,20 +129,17 @@ export class ConvexTaskRepository implements TaskRepository {
   async updateTaskStatus(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskStatusDTO,
+    payload: UpdateTaskStatusDTO
   ): Promise<TaskDTO> {
     await convexClient.mutation(api.tasks.updateStatus, {
       taskId: taskId as Id<"tasks">,
       status: payload.status,
     });
 
-    const task = await convexClient.query<Doc<"tasks"> | null>(
-      api.tasks.getById,
-      {
-        familyId: familyId as Id<"families">,
-        taskId: taskId as Id<"tasks">,
-      },
-    );
+    const task = await convexClient.query<Doc<"tasks"> | null>(api.tasks.getById, {
+      familyId: familyId as Id<"families">,
+      taskId: taskId as Id<"tasks">,
+    });
 
     if (!task) {
       throw new Error("任务不存在");
@@ -175,23 +148,16 @@ export class ConvexTaskRepository implements TaskRepository {
     return mapTask(task);
   }
 
-  async assignTask(
-    familyId: string,
-    taskId: string,
-    assigneeId: string,
-  ): Promise<TaskDTO> {
+  async assignTask(familyId: string, taskId: string, assigneeId: string): Promise<TaskDTO> {
     await convexClient.mutation(api.tasks.assign, {
       taskId: taskId as Id<"tasks">,
       assigneeId: assigneeId as Id<"familyMembers">,
     });
 
-    const task = await convexClient.query<Doc<"tasks"> | null>(
-      api.tasks.getById,
-      {
-        familyId: familyId as Id<"families">,
-        taskId: taskId as Id<"tasks">,
-      },
-    );
+    const task = await convexClient.query<Doc<"tasks"> | null>(api.tasks.getById, {
+      familyId: familyId as Id<"families">,
+      taskId: taskId as Id<"tasks">,
+    });
 
     if (!task) {
       throw new Error("任务不存在");
@@ -256,10 +222,8 @@ function applyTaskSort(tasks: Doc<"tasks">[], query: TaskListQuery) {
     return [...tasks].sort((a, b) => {
       const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 } as const;
       const priorityDiff =
-        (priorityOrder[a.priority as "URGENT" | "HIGH" | "MEDIUM" | "LOW"] ??
-          2) -
-        (priorityOrder[b.priority as "URGENT" | "HIGH" | "MEDIUM" | "LOW"] ??
-          2);
+        (priorityOrder[a.priority as "URGENT" | "HIGH" | "MEDIUM" | "LOW"] ?? 2) -
+        (priorityOrder[b.priority as "URGENT" | "HIGH" | "MEDIUM" | "LOW"] ?? 2);
 
       if (priorityDiff !== 0) return priorityDiff;
 
@@ -281,20 +245,17 @@ function applyTaskSort(tasks: Doc<"tasks">[], query: TaskListQuery) {
   });
 }
 
-function taskSortValue(
-  task: Doc<"tasks">,
-  field: NonNullable<TaskListQuery["sort"]>["field"],
-) {
+function taskSortValue(task: Doc<"tasks">, field: NonNullable<TaskListQuery["sort"]>["field"]) {
   switch (field) {
-  case "priority":
-    return task.priority ?? "MEDIUM";
-  case "dueDate":
-    return task.dueDate ?? 0;
-  case "createdAt":
-    return task.createdAt;
-  case "updatedAt":
-    return task.updatedAt;
-  default:
-    return task.createdAt;
+    case "priority":
+      return task.priority ?? "MEDIUM";
+    case "dueDate":
+      return task.dueDate ?? 0;
+    case "createdAt":
+      return task.createdAt;
+    case "updatedAt":
+      return task.updatedAt;
+    default:
+      return task.createdAt;
   }
 }

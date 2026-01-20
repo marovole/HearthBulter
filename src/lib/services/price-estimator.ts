@@ -95,11 +95,9 @@ export class PriceEstimator {
   /**
    * 批量估算价格
    */
-  async estimatePrices(
-    items: Array<{ foodId: string; amount: number }>,
-  ): Promise<PriceEstimate[]> {
+  async estimatePrices(items: Array<{ foodId: string; amount: number }>): Promise<PriceEstimate[]> {
     const estimates = await Promise.all(
-      items.map((item) => this.estimatePrice(item.foodId, item.amount)),
+      items.map((item) => this.estimatePrice(item.foodId, item.amount))
     );
 
     return estimates;
@@ -146,26 +144,18 @@ export class PriceEstimator {
    * 计算总估算成本
    */
   calculateTotalCost(estimates: PriceEstimate[]): number {
-    return estimates.reduce(
-      (total, estimate) => total + estimate.estimatedPrice,
-      0,
-    );
+    return estimates.reduce((total, estimate) => total + estimate.estimatedPrice, 0);
   }
 
   /**
    * 更新实际花费
    */
-  async updateActualCost(
-    shoppingListId: string,
-    actualCost: number,
-  ): Promise<void> {
+  async updateActualCost(shoppingListId: string, actualCost: number): Promise<void> {
     const orders = await convexEcommerceRepository.getOrders({
       memberId: "" as any,
     });
 
-    const order = orders.orders.find(
-      (o) => (o as any).shoppingListId === shoppingListId,
-    );
+    const order = orders.orders.find((o) => (o as any).shoppingListId === shoppingListId);
 
     if (order) {
       await convexEcommerceRepository.updateOrderStatus(order._id, "COMPLETED");

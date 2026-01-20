@@ -34,10 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 获取特定食物的价格趋势
-    const trend = await priceAnalyzer.getPriceTrend(
-      foodId,
-      days ? parseInt(days) : undefined,
-    );
+    const trend = await priceAnalyzer.getPriceTrend(foodId, days ? parseInt(days) : undefined);
 
     return NextResponse.json({
       type: "single",
@@ -82,22 +79,16 @@ export async function POST(request: NextRequest) {
             error: error instanceof Error ? error.message : "未知错误",
           };
         }
-      }),
+      })
     );
 
     // 生成价格预警
     let alerts: Awaited<ReturnType<typeof priceAnalyzer.getPriceAlerts>> = [];
     if (memberId) {
       try {
-        const access = await memberRepository.verifyMemberAccess(
-          memberId,
-          session.user.id,
-        );
+        const access = await memberRepository.verifyMemberAccess(memberId, session.user.id);
         if (!access.hasAccess) {
-          return NextResponse.json(
-            { error: "无权限访问该成员的价格预警" },
-            { status: 403 },
-          );
+          return NextResponse.json({ error: "无权限访问该成员的价格预警" }, { status: 403 });
         }
         alerts = await priceAnalyzer.getPriceAlerts(memberId);
       } catch (error) {
@@ -121,9 +112,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: "批量获取价格趋势失败" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "批量获取价格趋势失败" }, { status: 500 });
   }
 }

@@ -68,18 +68,15 @@ export function CorrectionForm({
         status: data.status,
       }));
 
-      const response = await fetch(
-        `/api/members/${memberId}/reports/${reportId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            indicators: indicatorsUpdate,
-          }),
+      const response = await fetch(`/api/members/${memberId}/reports/${reportId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          indicators: indicatorsUpdate,
+        }),
+      });
 
       const data = await response.json();
 
@@ -102,11 +99,7 @@ export function CorrectionForm({
     }
   };
 
-  const updateIndicator = (
-    id: string,
-    field: keyof (typeof formData)[string],
-    value: any,
-  ) => {
+  const updateIndicator = (id: string, field: keyof (typeof formData)[string], value: any) => {
     setFormData((prev) => {
       const current = prev[id];
       if (!current) return prev;
@@ -122,7 +115,7 @@ export function CorrectionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white border rounded-lg divide-y">
+      <div className="divide-y rounded-lg border bg-white">
         {indicators.map((indicator) => {
           const formValue = formData[indicator.id];
           if (!formValue) return null;
@@ -131,43 +124,33 @@ export function CorrectionForm({
             <div key={indicator.id} className="p-4">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
                     {indicator.name}
                   </label>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      数值
-                    </label>
+                    <label className="mb-1 block text-xs text-gray-500">数值</label>
                     <input
                       type="number"
                       step="0.01"
                       value={formValue.value}
                       onChange={(e) =>
-                        updateIndicator(
-                          indicator.id,
-                          "value",
-                          parseFloat(e.target.value) || 0,
-                        )
+                        updateIndicator(indicator.id, "value", parseFloat(e.target.value) || 0)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      单位
-                    </label>
+                    <label className="mb-1 block text-xs text-gray-500">单位</label>
                     <input
                       type="text"
                       value={formValue.unit}
-                      onChange={(e) =>
-                        updateIndicator(indicator.id, "unit", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onChange={(e) => updateIndicator(indicator.id, "unit", e.target.value)}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -175,38 +158,26 @@ export function CorrectionForm({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      参考范围
-                    </label>
+                    <label className="mb-1 block text-xs text-gray-500">参考范围</label>
                     <input
                       type="text"
                       value={formValue.referenceRange || ""}
                       onChange={(e) =>
-                        updateIndicator(
-                          indicator.id,
-                          "referenceRange",
-                          e.target.value,
-                        )
+                        updateIndicator(indicator.id, "referenceRange", e.target.value)
                       }
                       placeholder="如: <5.2"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">
-                      状态
-                    </label>
+                    <label className="mb-1 block text-xs text-gray-500">状态</label>
                     <select
                       value={formValue.status}
                       onChange={(e) =>
-                        updateIndicator(
-                          indicator.id,
-                          "status",
-                          e.target.value as IndicatorStatus,
-                        )
+                        updateIndicator(indicator.id, "status", e.target.value as IndicatorStatus)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       {STATUS_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -223,7 +194,7 @@ export function CorrectionForm({
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
@@ -233,7 +204,7 @@ export function CorrectionForm({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             取消
           </button>
@@ -241,7 +212,7 @@ export function CorrectionForm({
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "保存中..." : "保存修正"}
         </button>

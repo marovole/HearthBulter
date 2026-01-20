@@ -1,12 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  beforeEach,
-  afterEach,
-  jest,
-} from "@jest/globals";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, jest } from "@jest/globals";
 import { NextRequest } from "next/server";
 
 const mockRecommendationRepository: any = {
@@ -47,15 +39,11 @@ jest.mock("@/lib/db/supabase-adapter", () => ({
   },
 }));
 
-jest.mock(
-  "@/lib/repositories/implementations/supabase-recommendation-repository",
-  () => ({
-    SupabaseRecommendationRepository: jest.fn().mockImplementation(() => ({
-      getRecipeById: (...args: any[]) =>
-        mockRecommendationRepository.getRecipeById(...args),
-    })),
-  }),
-);
+jest.mock("@/lib/repositories/implementations/supabase-recommendation-repository", () => ({
+  SupabaseRecommendationRepository: jest.fn().mockImplementation(() => ({
+    getRecipeById: (...args: any[]) => mockRecommendationRepository.getRecipeById(...args),
+  })),
+}));
 
 // Mock the recommendation engine to return simple mock data
 jest.mock("@/lib/services/recommendation/recommendation-engine", () => {
@@ -101,9 +89,7 @@ describe("/api/recommendations", () => {
 
   describe("GET /api/recommendations", () => {
     it("should return recommendations successfully", async () => {
-      const url = new URL(
-        "http://localhost:3000/api/recommendations?memberId=test-user&limit=10",
-      );
+      const url = new URL("http://localhost:3000/api/recommendations?memberId=test-user&limit=10");
       const request = { url: url.toString() } as NextRequest;
 
       getRecommendationsMock.mockResolvedValue([
@@ -161,7 +147,7 @@ describe("/api/recommendations", () => {
 
     it("should handle invalid limit parameter", async () => {
       const url = new URL(
-        "http://localhost:3000/api/recommendations?memberId=test-user&limit=invalid",
+        "http://localhost:3000/api/recommendations?memberId=test-user&limit=invalid"
       );
       const request = { url: url.toString() } as NextRequest;
 
@@ -173,14 +159,10 @@ describe("/api/recommendations", () => {
     });
 
     it("should handle recommendation engine errors", async () => {
-      const url = new URL(
-        "http://localhost:3000/api/recommendations?memberId=test-user",
-      );
+      const url = new URL("http://localhost:3000/api/recommendations?memberId=test-user");
       const request = { url: url.toString() } as NextRequest;
 
-      getRecommendationsMock.mockRejectedValueOnce(
-        new Error("Recommendation engine failed"),
-      );
+      getRecommendationsMock.mockRejectedValueOnce(new Error("Recommendation engine failed"));
 
       const response = await GET(request);
       const data = await response.json();
@@ -194,7 +176,7 @@ describe("/api/recommendations", () => {
         "http://localhost:3000/api/recommendations?" +
           "memberId=test-user&mealType=DINNER&servings=4&maxCookTime=90&" +
           "budgetLimit=80&dietaryRestrictions=low-sugar,gluten-free&" +
-          "excludedIngredients=garlic,onion&preferredCuisines=Italian,Chinese&season=SUMMER&limit=5",
+          "excludedIngredients=garlic,onion&preferredCuisines=Italian,Chinese&season=SUMMER&limit=5"
       );
       const request = { url: url.toString() } as NextRequest;
 
@@ -332,9 +314,7 @@ describe("/api/recommendations", () => {
     });
 
     it("should handle database errors during interaction recording", async () => {
-      mockSupabaseAdapter.recipeRating.create.mockRejectedValue(
-        new Error("Database error"),
-      );
+      mockSupabaseAdapter.recipeRating.create.mockRejectedValue(new Error("Database error"));
 
       mockRequest.json.mockResolvedValue({
         type: "rating",
@@ -356,9 +336,7 @@ describe("/api/recommendations", () => {
 
   describe("Edge Cases", () => {
     it("should handle empty results gracefully", async () => {
-      const url = new URL(
-        "http://localhost:3000/api/recommendations?memberId=test-user",
-      );
+      const url = new URL("http://localhost:3000/api/recommendations?memberId=test-user");
       const request = { url: url.toString() } as NextRequest;
 
       getRecommendationsMock.mockResolvedValue([]);
@@ -373,7 +351,7 @@ describe("/api/recommendations", () => {
 
     it("should handle malformed query parameters", async () => {
       const url = new URL(
-        "http://localhost:3000/api/recommendations?memberId=test-user&servings=abc&budgetLimit=def",
+        "http://localhost:3000/api/recommendations?memberId=test-user&servings=abc&budgetLimit=def"
       );
       const request = { url: url.toString() } as NextRequest;
 

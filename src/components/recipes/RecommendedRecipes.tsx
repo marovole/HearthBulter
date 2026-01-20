@@ -1,25 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Star,
-  Clock,
-  DollarSign,
-  Users,
-  Heart,
-  Eye,
-  ChefHat,
-  RefreshCw,
-} from "lucide-react";
+import { Star, Clock, DollarSign, Users, Heart, Eye, ChefHat, RefreshCw } from "lucide-react";
 import { RecipeCard } from "./RecipeCard";
 
 interface Recipe {
@@ -157,7 +142,7 @@ export function RecommendedRecipes({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
           <p className="text-muted-foreground">正在为您推荐食谱...</p>
         </div>
       </div>
@@ -168,7 +153,7 @@ export function RecommendedRecipes({
     return (
       <Card className="p-6">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="mb-4 text-red-600">{error}</p>
           <Button onClick={() => loadRecommendations()} variant="outline">
             重新加载
           </Button>
@@ -181,8 +166,8 @@ export function RecommendedRecipes({
     return (
       <Card className="p-6">
         <div className="text-center">
-          <ChefHat className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground mb-4">
+          <ChefHat className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <p className="mb-4 text-muted-foreground">
             暂无符合条件的食谱推荐，请调整筛选条件或稍后查看。
           </p>
           <Button onClick={() => loadRecommendations()} variant="outline">
@@ -198,19 +183,10 @@ export function RecommendedRecipes({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">为您推荐</h2>
-          <p className="text-muted-foreground">
-            基于您的偏好和历史行为精心挑选
-          </p>
+          <p className="text-muted-foreground">基于您的偏好和历史行为精心挑选</p>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          variant="outline"
-          size="sm"
-        >
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-          />
+        <Button onClick={handleRefresh} disabled={refreshing} variant="outline" size="sm">
+          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
           换一批
         </Button>
       </div>

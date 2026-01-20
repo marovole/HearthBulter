@@ -21,34 +21,28 @@ export async function POST(request: NextRequest) {
           error:
             "Missing required parameters: originalIngredientId, substituteFoodId, substitutionType",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    const originalIngredient = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.recipes.getIngredientById, {
-      id: originalIngredientId as Id<"recipeIngredients">,
-    });
+    const originalIngredient = await convexClient.query<Record<string, unknown> | null>(
+      api.recipes.getIngredientById,
+      {
+        id: originalIngredientId as Id<"recipeIngredients">,
+      }
+    );
 
     if (!originalIngredient) {
-      return NextResponse.json(
-        { error: "Original ingredient not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Original ingredient not found" }, { status: 404 });
     }
 
-    const substituteFood = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.recipes.getFoodById, { id: substituteFoodId as Id<"foods"> });
+    const substituteFood = await convexClient.query<Record<string, unknown> | null>(
+      api.recipes.getFoodById,
+      { id: substituteFoodId as Id<"foods"> }
+    );
 
     if (!substituteFood) {
-      return NextResponse.json(
-        { error: "Substitute food not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Substitute food not found" }, { status: 404 });
     }
 
     const substitutionId = await convexClient.mutation<string>(
@@ -61,7 +55,7 @@ export async function POST(request: NextRequest) {
         nutritionDelta: nutritionDelta || undefined,
         costDelta: costDelta || undefined,
         tasteSimilarity: tasteSimilarity || undefined,
-      },
+      }
     );
 
     return NextResponse.json({
@@ -75,10 +69,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating ingredient substitution:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -90,26 +81,24 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
 
     if (!originalIngredientId) {
-      return NextResponse.json(
-        { error: "originalIngredientId is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "originalIngredientId is required" }, { status: 400 });
     }
 
-    const substitutions = await convexClient.query<
-      Array<Record<string, unknown>>
-    >(api.recipes.listIngredientSubstitutions, {
-      originalIngredientId: originalIngredientId as Id<"recipeIngredients">,
-      substitutionType: substitutionType || undefined,
-      limit,
-    });
+    const substitutions = await convexClient.query<Array<Record<string, unknown>>>(
+      api.recipes.listIngredientSubstitutions,
+      {
+        originalIngredientId: originalIngredientId as Id<"recipeIngredients">,
+        substitutionType: substitutionType || undefined,
+        limit,
+      }
+    );
 
-    const originalIngredient = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.recipes.getIngredientById, {
-      id: originalIngredientId as Id<"recipeIngredients">,
-    });
+    const originalIngredient = await convexClient.query<Record<string, unknown> | null>(
+      api.recipes.getIngredientById,
+      {
+        id: originalIngredientId as Id<"recipeIngredients">,
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -122,9 +111,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error getting ingredient substitutions:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

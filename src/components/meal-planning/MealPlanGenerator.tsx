@@ -39,9 +39,7 @@ export function MealPlanGenerator({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [memberInfo, setMemberInfo] = useState<MemberInfo | undefined>(
-    initialMemberInfo,
-  );
+  const [memberInfo, setMemberInfo] = useState<MemberInfo | undefined>(initialMemberInfo);
 
   const [formData, setFormData] = useState({
     days: 7,
@@ -138,27 +136,21 @@ export function MealPlanGenerator({
     }
   };
 
-  const activeGoal = memberInfo?.goals?.find(
-    (goal) => goal.goalType !== "HEALTH_MANAGEMENT",
-  );
+  const activeGoal = memberInfo?.goals?.find((goal) => goal.goalType !== "HEALTH_MANAGEMENT");
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">生成食谱计划</h2>
+    <div className="rounded-lg bg-white p-6 shadow-md">
+      <h2 className="mb-6 text-2xl font-bold text-gray-900">生成食谱计划</h2>
 
       {/* 成员信息 */}
       {memberInfo && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">成员信息</h3>
-          <p className="text-lg font-semibold text-gray-900">
-            {memberInfo.name}
-          </p>
+        <div className="mb-6 rounded-lg bg-gray-50 p-4">
+          <h3 className="mb-2 text-sm font-medium text-gray-700">成员信息</h3>
+          <p className="text-lg font-semibold text-gray-900">{memberInfo.name}</p>
           {activeGoal && (
-            <p className="text-sm text-gray-600 mt-1">
-              当前目标:{" "}
-              {GOAL_TYPE_LABELS[activeGoal.goalType] || activeGoal.goalType}
-              {activeGoal.targetWeight &&
-                ` (目标体重: ${activeGoal.targetWeight}kg)`}
+            <p className="mt-1 text-sm text-gray-600">
+              当前目标: {GOAL_TYPE_LABELS[activeGoal.goalType] || activeGoal.goalType}
+              {activeGoal.targetWeight && ` (目标体重: ${activeGoal.targetWeight}kg)`}
             </p>
           )}
         </div>
@@ -168,19 +160,14 @@ export function MealPlanGenerator({
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 食谱天数 */}
         <div>
-          <label
-            htmlFor="days"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
+          <label htmlFor="days" className="mb-2 block text-sm font-medium text-gray-700">
             食谱天数
           </label>
           <select
             id="days"
             value={formData.days}
-            onChange={(e) =>
-              setFormData({ ...formData, days: parseInt(e.target.value) })
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={(e) => setFormData({ ...formData, days: parseInt(e.target.value) })}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             required
           >
             <option value={3}>3天</option>
@@ -192,51 +179,37 @@ export function MealPlanGenerator({
 
         {/* 开始日期 */}
         <div>
-          <label
-            htmlFor="startDate"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
+          <label htmlFor="startDate" className="mb-2 block text-sm font-medium text-gray-700">
             开始日期（可选）
           </label>
           <input
             type="date"
             id="startDate"
             value={formData.startDate}
-            onChange={(e) =>
-              setFormData({ ...formData, startDate: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
             min={format(new Date(), "yyyy-MM-dd")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
           />
-          <p className="mt-1 text-sm text-gray-500">
-            留空则从今天开始，或选择未来的日期
-          </p>
+          <p className="mt-1 text-sm text-gray-500">留空则从今天开始，或选择未来的日期</p>
         </div>
 
         {/* 提示信息 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
           <p className="text-sm text-blue-800">
-            💡
-            系统将根据成员的健康目标、营养需求和过敏信息自动生成个性化食谱计划。
+            💡 系统将根据成员的健康目标、营养需求和过敏信息自动生成个性化食谱计划。
           </p>
         </div>
 
         {/* 加载进度提示 */}
         {loading && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <p className="text-sm font-medium text-blue-900">
-                正在生成食谱计划...
-              </p>
+          <div className="rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
+            <div className="mb-2 flex items-center gap-3">
+              <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-600"></div>
+              <p className="text-sm font-medium text-blue-900">正在生成食谱计划...</p>
             </div>
             <div className="ml-8">
-              <p className="text-xs text-blue-700 mb-1">
-                ⚡ 计算营养需求和宏量分配
-              </p>
-              <p className="text-xs text-blue-700 mb-1">
-                🍱 从模板库中选择最适合的食谱
-              </p>
+              <p className="mb-1 text-xs text-blue-700">⚡ 计算营养需求和宏量分配</p>
+              <p className="mb-1 text-xs text-blue-700">🍱 从模板库中选择最适合的食谱</p>
               <p className="text-xs text-blue-700">✨ 平衡营养并避免过敏食材</p>
             </div>
           </div>
@@ -244,13 +217,11 @@ export function MealPlanGenerator({
 
         {/* 错误提示 */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
             <div className="flex items-start gap-2">
-              <span className="text-red-600 text-lg">⚠️</span>
+              <span className="text-lg text-red-600">⚠️</span>
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-900 mb-1">
-                  生成失败
-                </p>
+                <p className="mb-1 text-sm font-medium text-red-900">生成失败</p>
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             </div>
@@ -264,7 +235,7 @@ export function MealPlanGenerator({
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              className="rounded-lg bg-gray-100 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="取消"
             >
               取消
@@ -273,9 +244,9 @@ export function MealPlanGenerator({
           <button
             type="submit"
             disabled={loading}
-            className={`px-6 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            className={`rounded-lg px-6 py-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               loading
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                ? "cursor-not-allowed bg-gray-300 text-gray-500"
                 : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
             }`}
             aria-busy={loading}
@@ -283,7 +254,7 @@ export function MealPlanGenerator({
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                <span className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></span>
                 生成中...
               </span>
             ) : (

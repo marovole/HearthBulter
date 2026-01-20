@@ -31,7 +31,7 @@ jest.mock("@/lib/auth", () => ({
     Promise.resolve({
       id: "test-user-id",
       email: "test@example.com",
-    }),
+    })
   ),
 }));
 
@@ -78,7 +78,7 @@ describe("/api/inventory/items", () => {
   describe("GET", () => {
     it("should return inventory items for valid member", async () => {
       const request = new NextRequest(
-        `http://localhost:3000/api/inventory/items?memberId=${testMemberId}`,
+        `http://localhost:3000/api/inventory/items?memberId=${testMemberId}`
       );
       const response = await GET(request);
 
@@ -95,13 +95,13 @@ describe("/api/inventory/items", () => {
         expect.objectContaining({
           memberId: testMemberId,
           userEmail: "test@example.com",
-        }),
+        })
       );
     });
 
     it("should filter items by status", async () => {
       const request = new NextRequest(
-        `http://localhost:3000/api/inventory/items?memberId=${testMemberId}&status=FRESH`,
+        `http://localhost:3000/api/inventory/items?memberId=${testMemberId}&status=FRESH`
       );
       const response = await GET(request);
 
@@ -116,13 +116,13 @@ describe("/api/inventory/items", () => {
           memberId: testMemberId,
           status: "FRESH",
           userEmail: "test@example.com",
-        }),
+        })
       );
     });
 
     it("should filter items by storage location", async () => {
       const request = new NextRequest(
-        `http://localhost:3000/api/inventory/items?memberId=${testMemberId}&storageLocation=REFRIGERATOR`,
+        `http://localhost:3000/api/inventory/items?memberId=${testMemberId}&storageLocation=REFRIGERATOR`
       );
       const response = await GET(request);
 
@@ -137,7 +137,7 @@ describe("/api/inventory/items", () => {
           memberId: testMemberId,
           storageLocation: "REFRIGERATOR",
           userEmail: "test@example.com",
-        }),
+        })
       );
     });
 
@@ -145,7 +145,7 @@ describe("/api/inventory/items", () => {
       mockConvexQuery.mockResolvedValueOnce([]);
 
       const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items?memberId=non-existent-member",
+        "http://localhost:3000/api/inventory/items?memberId=non-existent-member"
       );
       const response = await GET(request);
 
@@ -157,9 +157,7 @@ describe("/api/inventory/items", () => {
     });
 
     it("should return error for missing memberId", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-      );
+      const request = new NextRequest("http://localhost:3000/api/inventory/items");
       const response = await GET(request);
 
       expect(response.status).toBe(400);
@@ -188,23 +186,18 @@ describe("/api/inventory/items", () => {
         unit: "个",
         purchasePrice: 12.5,
         purchaseSource: "Test Store",
-        expiryDate: new Date(
-          Date.now() + 5 * 24 * 60 * 60 * 1000,
-        ).toISOString(),
+        expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         storageLocation: "PANTRY",
         minStockThreshold: 1,
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       const response = await POST(request);
 
@@ -226,16 +219,13 @@ describe("/api/inventory/items", () => {
         unit: "个",
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       const response = await POST(request);
 
@@ -253,16 +243,13 @@ describe("/api/inventory/items", () => {
         unit: "个",
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       const response = await POST(request);
 
@@ -272,9 +259,7 @@ describe("/api/inventory/items", () => {
     });
 
     it("should handle service errors gracefully", async () => {
-      mockCreateInventoryItem.mockRejectedValueOnce(
-        new Error("Database error"),
-      );
+      mockCreateInventoryItem.mockRejectedValueOnce(new Error("Database error"));
 
       const requestBody = {
         memberId: testMemberId,
@@ -283,16 +268,13 @@ describe("/api/inventory/items", () => {
         unit: "个",
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       const response = await POST(request);
 
@@ -303,16 +285,13 @@ describe("/api/inventory/items", () => {
     });
 
     it("should handle invalid JSON", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          body: "invalid json",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        body: "invalid json",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       const response = await POST(request);
 

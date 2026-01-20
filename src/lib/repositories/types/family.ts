@@ -11,12 +11,7 @@ import { z } from "zod";
 /**
  * 家庭成员角色枚举
  */
-export const familyMemberRoleSchema = z.enum([
-  "OWNER",
-  "ADMIN",
-  "MEMBER",
-  "GUEST",
-]);
+export const familyMemberRoleSchema = z.enum(["OWNER", "ADMIN", "MEMBER", "GUEST"]);
 export type FamilyMemberRole = z.infer<typeof familyMemberRoleSchema>;
 
 /**
@@ -64,13 +59,7 @@ export type Gender = z.infer<typeof genderSchema>;
 /**
  * 年龄段枚举
  */
-export const ageGroupSchema = z.enum([
-  "INFANT",
-  "CHILD",
-  "TEEN",
-  "ADULT",
-  "SENIOR",
-]);
+export const ageGroupSchema = z.enum(["INFANT", "CHILD", "TEEN", "ADULT", "SENIOR"]);
 export type AgeGroup = z.infer<typeof ageGroupSchema>;
 
 /**

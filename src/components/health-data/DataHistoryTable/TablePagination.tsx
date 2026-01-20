@@ -21,15 +21,14 @@ export function TablePagination({
     <div className="flex items-center justify-between">
       <div className="text-sm text-gray-500">
         显示第 {(currentPage - 1) * itemsPerPage + 1} -{" "}
-        {Math.min(currentPage * itemsPerPage, totalItems)} 条，共 {totalItems}{" "}
-        条
+        {Math.min(currentPage * itemsPerPage, totalItems)} 条，共 {totalItems} 条
       </div>
 
       <div className="flex items-center space-x-2">
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center space-x-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ChevronLeft className="h-4 w-4" />
           <span>上一页</span>
@@ -42,10 +41,10 @@ export function TablePagination({
               <button
                 key={page}
                 onClick={() => onPageChange(page)}
-                className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                className={`rounded-lg px-3 py-2 text-sm font-medium ${
                   currentPage === page
                     ? "bg-blue-600 text-white"
-                    : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                    : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 {page}
@@ -57,7 +56,7 @@ export function TablePagination({
         <button
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center space-x-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span>下一页</span>
           <ChevronRight className="h-4 w-4" />

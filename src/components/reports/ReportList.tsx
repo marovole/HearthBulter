@@ -28,11 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
   FAILED: "bg-red-100 text-red-800",
 };
 
-export function ReportList({
-  memberId,
-  familyId,
-  onReportSelect,
-}: ReportListProps) {
+export function ReportList({ memberId, familyId, onReportSelect }: ReportListProps) {
   const router = useRouter();
   const [reports, setReports] = useState<ReportWithIndicators[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,10 +38,7 @@ export function ReportList({
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const url = new URL(
-        `/api/members/${memberId}/reports`,
-        window.location.origin,
-      );
+      const url = new URL(`/api/members/${memberId}/reports`, window.location.origin);
       if (filter !== "all") {
         url.searchParams.set("status", filter.toUpperCase());
       }
@@ -91,12 +84,9 @@ export function ReportList({
     }
 
     try {
-      const response = await fetch(
-        `/api/members/${memberId}/reports/${reportId}`,
-        {
-          method: "DELETE",
-        },
-      );
+      const response = await fetch(`/api/members/${memberId}/reports/${reportId}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -115,7 +105,7 @@ export function ReportList({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
           <p className="text-sm text-gray-600">加载中...</p>
         </div>
       </div>
@@ -124,7 +114,7 @@ export function ReportList({
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+      <div className="rounded-md border border-red-200 bg-red-50 p-4">
         <p className="text-sm text-red-800">{error}</p>
       </div>
     );
@@ -136,7 +126,7 @@ export function ReportList({
       <div className="flex items-center space-x-2">
         <button
           onClick={() => setFilter("all")}
-          className={`px-3 py-1 text-sm rounded-md ${
+          className={`rounded-md px-3 py-1 text-sm ${
             filter === "all"
               ? "bg-blue-600 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -146,7 +136,7 @@ export function ReportList({
         </button>
         <button
           onClick={() => setFilter("completed")}
-          className={`px-3 py-1 text-sm rounded-md ${
+          className={`rounded-md px-3 py-1 text-sm ${
             filter === "completed"
               ? "bg-blue-600 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -156,7 +146,7 @@ export function ReportList({
         </button>
         <button
           onClick={() => setFilter("processing")}
-          className={`px-3 py-1 text-sm rounded-md ${
+          className={`rounded-md px-3 py-1 text-sm ${
             filter === "processing"
               ? "bg-blue-600 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -166,7 +156,7 @@ export function ReportList({
         </button>
         <button
           onClick={() => setFilter("failed")}
-          className={`px-3 py-1 text-sm rounded-md ${
+          className={`rounded-md px-3 py-1 text-sm ${
             filter === "failed"
               ? "bg-blue-600 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -184,26 +174,20 @@ export function ReportList({
       ) : (
         <div className="space-y-3">
           {reports.map((report) => {
-            const abnormalCount = report.indicators.filter(
-              (ind) => ind.isAbnormal,
-            ).length;
+            const abnormalCount = report.indicators.filter((ind) => ind.isAbnormal).length;
 
             return (
               <div
                 key={report.id}
                 onClick={() => handleReportClick(report.id)}
-                className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                className="cursor-pointer rounded-lg border bg-white p-4 transition-shadow hover:shadow-md"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-medium text-gray-900">
-                        {report.fileName}
-                      </h3>
+                    <div className="mb-2 flex items-center space-x-3">
+                      <h3 className="font-medium text-gray-900">{report.fileName}</h3>
                       <span
-                        className={`px-2 py-1 text-xs rounded ${
-                          STATUS_COLORS[report.ocrStatus]
-                        }`}
+                        className={`rounded px-2 py-1 text-xs ${STATUS_COLORS[report.ocrStatus]}`}
                       >
                         {STATUS_LABELS[report.ocrStatus]}
                       </span>
@@ -212,37 +196,29 @@ export function ReportList({
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       {report.reportDate && (
                         <span>
-                          报告日期:{" "}
-                          {new Date(report.reportDate).toLocaleDateString(
-                            "zh-CN",
-                          )}
+                          报告日期: {new Date(report.reportDate).toLocaleDateString("zh-CN")}
                         </span>
                       )}
-                      {report.institution && (
-                        <span>机构: {report.institution}</span>
-                      )}
+                      {report.institution && <span>机构: {report.institution}</span>}
                       {report.ocrStatus === "COMPLETED" && (
                         <span>
                           识别到 {report.indicators.length} 项指标
                           {abnormalCount > 0 && (
-                            <span className="text-red-600 ml-1">
-                              （{abnormalCount} 项异常）
-                            </span>
+                            <span className="ml-1 text-red-600">（{abnormalCount} 项异常）</span>
                           )}
                         </span>
                       )}
                     </div>
 
                     <div className="mt-2 text-xs text-gray-500">
-                      上传时间:{" "}
-                      {new Date(report.createdAt).toLocaleString("zh-CN")}
+                      上传时间: {new Date(report.createdAt).toLocaleString("zh-CN")}
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={(e) => handleDelete(report.id, e)}
-                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                      className="p-2 text-gray-400 transition-colors hover:text-red-600"
                       title="删除报告"
                     >
                       <svg

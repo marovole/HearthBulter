@@ -82,7 +82,7 @@ export const mealLogCreateInputSchema = z.object({
       z.object({
         foodId: z.string().uuid(),
         amount: z.number().positive(),
-      }),
+      })
     )
     .min(1),
   notes: z.string().max(500).optional(),
@@ -101,7 +101,7 @@ export const mealLogUpdateInputSchema = z.object({
       z.object({
         foodId: z.string().uuid(),
         amount: z.number().positive(),
-      }),
+      })
     )
     .optional(),
   notes: z.string().max(500).optional(),
@@ -151,9 +151,7 @@ export const quickTemplateCreateInputSchema = z.object({
   mealType: mealTypeSchema,
   mealLogId: z.string().uuid(), // 基于哪个记录创建模板
 });
-export type QuickTemplateCreateInputDTO = z.infer<
-  typeof quickTemplateCreateInputSchema
->;
+export type QuickTemplateCreateInputDTO = z.infer<typeof quickTemplateCreateInputSchema>;
 
 /**
  * 连续打卡统计 Schema
@@ -190,9 +188,7 @@ export const dailyNutritionSummarySchema = z.object({
     SNACK: z.number().int().nonnegative(),
   }),
 });
-export type DailyNutritionSummaryDTO = z.infer<
-  typeof dailyNutritionSummarySchema
->;
+export type DailyNutritionSummaryDTO = z.infer<typeof dailyNutritionSummarySchema>;
 
 /**
  * 营养计算输入 Schema
@@ -201,11 +197,9 @@ export const nutritionCalculationInputSchema = z.array(
   z.object({
     foodId: z.string().uuid(),
     amount: z.number().positive(),
-  }),
+  })
 );
-export type NutritionCalculationInputDTO = z.infer<
-  typeof nutritionCalculationInputSchema
->;
+export type NutritionCalculationInputDTO = z.infer<typeof nutritionCalculationInputSchema>;
 
 /**
  * 营养计算结果 Schema
@@ -219,6 +213,4 @@ export const nutritionCalculationResultSchema = z.object({
   sugar: z.number().nonnegative(),
   sodium: z.number().nonnegative(),
 });
-export type NutritionCalculationResultDTO = z.infer<
-  typeof nutritionCalculationResultSchema
->;
+export type NutritionCalculationResultDTO = z.infer<typeof nutritionCalculationResultSchema>;

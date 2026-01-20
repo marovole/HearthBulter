@@ -138,14 +138,12 @@ export function NutritionChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <p className="font-medium text-gray-900">{data.name}</p>
           <p className="text-sm text-gray-600">
             热量: {data.value.toFixed(0)} kcal ({data.percentage}%)
           </p>
-          <p className="text-sm text-gray-600">
-            重量: {data.grams.toFixed(1)} g
-          </p>
+          <p className="text-sm text-gray-600">重量: {data.grams.toFixed(1)} g</p>
         </div>
       );
     }
@@ -160,7 +158,7 @@ export function NutritionChart({
       const achievement = ((actual / target) * 100).toFixed(1);
 
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <p className="font-medium text-gray-900">{label}</p>
           <p className="text-sm text-blue-600">
             实际: {actual.toFixed(1)} {unit}
@@ -179,7 +177,7 @@ export function NutritionChart({
     <div className="space-y-6">
       {/* 宏量营养素分布饼图 */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">营养素分布</h3>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">营养素分布</h3>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie
@@ -213,14 +211,9 @@ export function NutritionChart({
       {/* 营养目标对比柱状图 */}
       {(targetCalories || targetProtein || targetCarbs || targetFat) && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            目标达成情况
-          </h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">目标达成情况</h3>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart
-              data={barData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
+            <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -235,16 +228,16 @@ export function NutritionChart({
 
       {/* 营养质量指标 */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">营养密度</h4>
+        <div className="rounded-lg bg-gray-50 p-4">
+          <h4 className="mb-2 text-sm font-medium text-gray-700">营养密度</h4>
           <div className="text-2xl font-bold text-gray-900">
             {((calories / (protein + carbs + fat)) * 100).toFixed(1)}
           </div>
           <div className="text-xs text-gray-500">kcal/100g营养素</div>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">蛋白质质量</h4>
+        <div className="rounded-lg bg-gray-50 p-4">
+          <h4 className="mb-2 text-sm font-medium text-gray-700">蛋白质质量</h4>
           <div className="text-2xl font-bold text-blue-600">
             {(((protein * 4) / calories) * 100).toFixed(1)}%
           </div>
@@ -253,14 +246,12 @@ export function NutritionChart({
       </div>
 
       {/* 营养建议 */}
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <h4 className="text-sm font-medium text-blue-900 mb-2">💡 营养建议</h4>
-        <div className="text-sm text-blue-800 space-y-1">
+      <div className="rounded-lg bg-blue-50 p-4">
+        <h4 className="mb-2 text-sm font-medium text-blue-900">💡 营养建议</h4>
+        <div className="space-y-1 text-sm text-blue-800">
           {protein < 20 && <div>• 蛋白质摄入偏低，建议增加优质蛋白质来源</div>}
           {fat > 35 && <div>• 脂肪含量较高，可考虑减少油脂使用</div>}
-          {carbs > 65 && (
-            <div>• 碳水化合物占比较高，建议增加蛋白质和蔬菜比例</div>
-          )}
+          {carbs > 65 && <div>• 碳水化合物占比较高，建议增加蛋白质和蔬菜比例</div>}
           {calories > 800 && <div>• 热量较高，适合运动后食用或作为主餐</div>}
           {protein >= 20 && fat <= 35 && carbs <= 65 && calories <= 800 && (
             <div>• 营养搭配均衡，符合健康饮食标准</div>

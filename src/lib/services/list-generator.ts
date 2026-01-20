@@ -101,28 +101,22 @@ export class ListGenerator {
         if (!meal.recipeId) {
           return { ingredients: [] };
         }
-        const recipe = await convexClient.query<RecipeRecord | null>(
-          api.recipes.getById,
-          {
-            recipeId: meal.recipeId as Id<"recipes">,
-          },
-        );
+        const recipe = await convexClient.query<RecipeRecord | null>(api.recipes.getById, {
+          recipeId: meal.recipeId as Id<"recipes">,
+        });
 
-        const ingredients = (recipe?.ingredients ?? []).map(
-          (ingredient: RecipeIngredient) => ({
-            foodId: ingredient.foodId,
-            amount: ingredient.amount ?? 0,
-            food: {
-              id: ingredient.food?.id ?? ingredient.foodId,
-              name: ingredient.food?.name ?? "",
-              category: (ingredient.food?.category ??
-                "OTHER") as FoodCategoryType,
-            },
-          }),
-        );
+        const ingredients = (recipe?.ingredients ?? []).map((ingredient: RecipeIngredient) => ({
+          foodId: ingredient.foodId,
+          amount: ingredient.amount ?? 0,
+          food: {
+            id: ingredient.food?.id ?? ingredient.foodId,
+            name: ingredient.food?.name ?? "",
+            category: (ingredient.food?.category ?? "OTHER") as FoodCategoryType,
+          },
+        }));
 
         return { ingredients };
-      }),
+      })
     );
 
     const aggregated = this.aggregateIngredients(mealsWithIngredients);
@@ -154,7 +148,7 @@ export class ListGenerator {
           category: FoodCategoryType;
         };
       }>;
-    }>,
+    }>
   ): AggregatedIngredient[] {
     // 使用 Map 按 foodId 聚合
     const ingredientMap = new Map<string, AggregatedIngredient>();
@@ -185,25 +179,20 @@ export class ListGenerator {
     this.createAlternativeGroups(ingredients, alternativeGroups);
 
     // 过滤掉数量过小的食材（小于10g）
-    const filteredIngredients = ingredients.filter(
-      (ingredient) => ingredient.totalAmount >= 10,
-    );
+    const filteredIngredients = ingredients.filter((ingredient) => ingredient.totalAmount >= 10);
 
     // 转换为数组并按分类和优先级排序
     return filteredIngredients.sort((a, b) => {
       // 优先按易腐性排序（易腐食材优先）
-      const aPerishable =
-        a.perishableDays !== undefined && a.perishableDays <= 7;
-      const bPerishable =
-        b.perishableDays !== undefined && b.perishableDays <= 7;
+      const aPerishable = a.perishableDays !== undefined && a.perishableDays <= 7;
+      const bPerishable = b.perishableDays !== undefined && b.perishableDays <= 7;
 
       if (aPerishable && !bPerishable) return -1;
       if (!aPerishable && bPerishable) return 1;
 
       // 然后按分类排序（使用分类枚举顺序）
       const categoryOrder = Object.values(FoodCategory);
-      const categoryDiff =
-        categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+      const categoryDiff = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
       if (categoryDiff !== 0) return categoryDiff;
 
       // 最后按数量降序排列（大数量优先）
@@ -218,7 +207,7 @@ export class ListGenerator {
    */
   private createAlternativeGroups(
     ingredients: AggregatedIngredient[],
-    groups: Map<string, AggregatedIngredient[]>,
+    groups: Map<string, AggregatedIngredient[]>
   ): void {
     // 按相似性分组食材（基于名称关键词）
     const similarityGroups = [
@@ -236,9 +225,7 @@ export class ListGenerator {
       const similarIngredients = ingredients.filter(
         (ingredient) =>
           group.category === ingredient.category &&
-          group.keywords.some((keyword) =>
-            ingredient.foodName.includes(keyword),
-          ),
+          group.keywords.some((keyword) => ingredient.foodName.includes(keyword))
       );
 
       if (similarIngredients.length > 1) {
@@ -257,11 +244,9 @@ export class ListGenerator {
    * @returns 按分类分组的食材
    */
   private groupByCategory(
-    items: AggregatedIngredient[],
+    items: AggregatedIngredient[]
   ): Record<FoodCategoryType, AggregatedIngredient[]> {
-    const categories: Partial<
-      Record<FoodCategoryType, AggregatedIngredient[]>
-    > = {};
+    const categories: Partial<Record<FoodCategoryType, AggregatedIngredient[]>> = {};
 
     items.forEach((item) => {
       if (!categories[item.category]) {
@@ -285,9 +270,7 @@ export class ListGenerator {
    * @returns 易腐食材列表（保质期 <= 7天）
    */
   getPerishableItems(items: AggregatedIngredient[]): AggregatedIngredient[] {
-    return items.filter(
-      (item) => item.perishableDays !== undefined && item.perishableDays <= 7,
-    );
+    return items.filter((item) => item.perishableDays !== undefined && item.perishableDays <= 7);
   }
 
   /**

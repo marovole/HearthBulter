@@ -21,10 +21,7 @@
  */
 
 // Motion preference hooks
-export {
-  usePrefersReducedMotion,
-  useMotionConfig,
-} from "./usePrefersReducedMotion";
+export { usePrefersReducedMotion, useMotionConfig } from "./usePrefersReducedMotion";
 
 // Scroll animation hooks
 export {

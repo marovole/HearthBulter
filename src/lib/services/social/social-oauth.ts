@@ -72,10 +72,7 @@ export class SocialOAuthService {
   private static instance: SocialOAuthService;
   private configs: Map<SocialPlatform, SocialOAuthConfig> = new Map();
   private tokens: Map<string, SocialAccessToken> = new Map();
-  private stateStore: Map<
-    string,
-    { platform: SocialPlatform; timestamp: number }
-  > = new Map();
+  private stateStore: Map<string, { platform: SocialPlatform; timestamp: number }> = new Map();
 
   static getInstance(): SocialOAuthService {
     if (!SocialOAuthService.instance) {
@@ -95,8 +92,7 @@ export class SocialOAuthService {
         appId: process.env.WECHAT_APP_ID,
         appSecret: process.env.WECHAT_APP_SECRET,
         redirectUri:
-          process.env.WECHAT_REDIRECT_URI ||
-          "https://health-butler.com/auth/wechat/callback",
+          process.env.WECHAT_REDIRECT_URI || "https://health-butler.com/auth/wechat/callback",
         scope: ["snsapi_userinfo"],
         tokenEndpoint: "https://api.weixin.qq.com/sns/oauth2/access_token",
         userInfoEndpoint: "https://api.weixin.qq.com/sns/userinfo",
@@ -109,8 +105,7 @@ export class SocialOAuthService {
         appId: process.env.WEIBO_APP_KEY,
         appSecret: process.env.WEIBO_APP_SECRET,
         redirectUri:
-          process.env.WEIBO_REDIRECT_URI ||
-          "https://health-butler.com/auth/weibo/callback",
+          process.env.WEIBO_REDIRECT_URI || "https://health-butler.com/auth/weibo/callback",
         scope: ["all"],
         tokenEndpoint: "https://api.weibo.com/oauth2/access_token",
         userInfoEndpoint: "https://api.weibo.com/2/users/show.json",
@@ -123,8 +118,7 @@ export class SocialOAuthService {
         appId: process.env.TWITTER_API_KEY,
         appSecret: process.env.TWITTER_API_SECRET,
         redirectUri:
-          process.env.TWITTER_REDIRECT_URI ||
-          "https://health-butler.com/auth/twitter/callback",
+          process.env.TWITTER_REDIRECT_URI || "https://health-butler.com/auth/twitter/callback",
         scope: ["read", "write"],
         tokenEndpoint: "https://api.twitter.com/oauth/access_token",
         userInfoEndpoint: "https://api.twitter.com/2/users/me",
@@ -137,8 +131,7 @@ export class SocialOAuthService {
         appId: process.env.FACEBOOK_APP_ID,
         appSecret: process.env.FACEBOOK_APP_SECRET,
         redirectUri:
-          process.env.FACEBOOK_REDIRECT_URI ||
-          "https://health-butler.com/auth/facebook/callback",
+          process.env.FACEBOOK_REDIRECT_URI || "https://health-butler.com/auth/facebook/callback",
         scope: ["email", "public_profile"],
         tokenEndpoint: "https://graph.facebook.com/oauth/access_token",
         userInfoEndpoint: "https://graph.facebook.com/me",
@@ -162,16 +155,16 @@ export class SocialOAuthService {
     });
 
     switch (platform) {
-    case SocialPlatform.WECHAT:
-      return this.generateWechatAuthUrl(config, authState);
-    case SocialPlatform.WEIBO:
-      return this.generateWeiboAuthUrl(config, authState);
-    case SocialPlatform.TWITTER:
-      return this.generateTwitterAuthUrl(config, authState);
-    case SocialPlatform.FACEBOOK:
-      return this.generateFacebookAuthUrl(config, authState);
-    default:
-      throw new Error(`不支持的平台: ${platform}`);
+      case SocialPlatform.WECHAT:
+        return this.generateWechatAuthUrl(config, authState);
+      case SocialPlatform.WEIBO:
+        return this.generateWeiboAuthUrl(config, authState);
+      case SocialPlatform.TWITTER:
+        return this.generateTwitterAuthUrl(config, authState);
+      case SocialPlatform.FACEBOOK:
+        return this.generateFacebookAuthUrl(config, authState);
+      default:
+        throw new Error(`不支持的平台: ${platform}`);
     }
   }
 
@@ -181,7 +174,7 @@ export class SocialOAuthService {
   async handleOAuthCallback(
     platform: SocialPlatform,
     code: string,
-    state: string,
+    state: string
   ): Promise<SocialAccessToken> {
     // 验证state
     const storedState = this.stateStore.get(state);
@@ -241,7 +234,7 @@ export class SocialOAuthService {
    */
   async shareToSocialPlatform(
     accessToken: SocialAccessToken,
-    content: SocialShareContent,
+    content: SocialShareContent
   ): Promise<SocialShareResult> {
     const config = this.configs.get(accessToken.platform);
     if (!config) {
@@ -250,16 +243,16 @@ export class SocialOAuthService {
 
     try {
       switch (accessToken.platform) {
-      case SocialPlatform.WECHAT:
-        return await this.shareToWechat(accessToken, content);
-      case SocialPlatform.WEIBO:
-        return await this.shareToWeibo(accessToken, content);
-      case SocialPlatform.TWITTER:
-        return await this.shareToTwitter(accessToken, content);
-      case SocialPlatform.FACEBOOK:
-        return await this.shareToFacebook(accessToken, content);
-      default:
-        throw new Error(`不支持的平台: ${accessToken.platform}`);
+        case SocialPlatform.WECHAT:
+          return await this.shareToWechat(accessToken, content);
+        case SocialPlatform.WEIBO:
+          return await this.shareToWeibo(accessToken, content);
+        case SocialPlatform.TWITTER:
+          return await this.shareToTwitter(accessToken, content);
+        case SocialPlatform.FACEBOOK:
+          return await this.shareToFacebook(accessToken, content);
+        default:
+          throw new Error(`不支持的平台: ${accessToken.platform}`);
       }
     } catch (error) {
       console.error(`分享到${accessToken.platform}失败:`, error);
@@ -274,10 +267,7 @@ export class SocialOAuthService {
   /**
    * 生成微信授权URL
    */
-  private generateWechatAuthUrl(
-    config: SocialOAuthConfig,
-    state: string,
-  ): string {
+  private generateWechatAuthUrl(config: SocialOAuthConfig, state: string): string {
     const params = new URLSearchParams({
       appid: config.appId,
       redirect_uri: config.redirectUri,
@@ -292,10 +282,7 @@ export class SocialOAuthService {
   /**
    * 生成微博授权URL
    */
-  private generateWeiboAuthUrl(
-    config: SocialOAuthConfig,
-    state: string,
-  ): string {
+  private generateWeiboAuthUrl(config: SocialOAuthConfig, state: string): string {
     const params = new URLSearchParams({
       client_id: config.appId,
       redirect_uri: config.redirectUri,
@@ -311,10 +298,7 @@ export class SocialOAuthService {
   /**
    * 生成Twitter授权URL
    */
-  private generateTwitterAuthUrl(
-    config: SocialOAuthConfig,
-    state: string,
-  ): string {
+  private generateTwitterAuthUrl(config: SocialOAuthConfig, state: string): string {
     const params = new URLSearchParams({
       client_id: config.appId,
       redirect_uri: config.redirectUri,
@@ -331,10 +315,7 @@ export class SocialOAuthService {
   /**
    * 生成Facebook授权URL
    */
-  private generateFacebookAuthUrl(
-    config: SocialOAuthConfig,
-    state: string,
-  ): string {
+  private generateFacebookAuthUrl(config: SocialOAuthConfig, state: string): string {
     const params = new URLSearchParams({
       client_id: config.appId,
       redirect_uri: config.redirectUri,
@@ -352,53 +333,53 @@ export class SocialOAuthService {
   private async exchangeCodeForToken(
     platform: SocialPlatform,
     config: SocialOAuthConfig,
-    code: string,
+    code: string
   ): Promise<SocialAccessToken> {
     let tokenUrl = config.tokenEndpoint;
     let body: any;
 
     switch (platform) {
-    case SocialPlatform.WECHAT:
-      tokenUrl = "https://api.weixin.qq.com/sns/oauth2/access_token";
-      body = {
-        appid: config.appId,
-        secret: config.appSecret,
-        code,
-        grant_type: "authorization_code",
-      };
-      break;
+      case SocialPlatform.WECHAT:
+        tokenUrl = "https://api.weixin.qq.com/sns/oauth2/access_token";
+        body = {
+          appid: config.appId,
+          secret: config.appSecret,
+          code,
+          grant_type: "authorization_code",
+        };
+        break;
 
-    case SocialPlatform.WEIBO:
-      body = {
-        client_id: config.appId,
-        client_secret: config.appSecret,
-        grant_type: "authorization_code",
-        redirect_uri: config.redirectUri,
-        code,
-      };
-      break;
+      case SocialPlatform.WEIBO:
+        body = {
+          client_id: config.appId,
+          client_secret: config.appSecret,
+          grant_type: "authorization_code",
+          redirect_uri: config.redirectUri,
+          code,
+        };
+        break;
 
-    case SocialPlatform.TWITTER:
-      body = {
-        grant_type: "authorization_code",
-        client_id: config.appId,
-        code,
-        redirect_uri: config.redirectUri,
-        code_verifier: this.generateCodeVerifier(),
-      };
-      break;
+      case SocialPlatform.TWITTER:
+        body = {
+          grant_type: "authorization_code",
+          client_id: config.appId,
+          code,
+          redirect_uri: config.redirectUri,
+          code_verifier: this.generateCodeVerifier(),
+        };
+        break;
 
-    case SocialPlatform.FACEBOOK:
-      body = {
-        client_id: config.appId,
-        client_secret: config.appSecret,
-        redirect_uri: config.redirectUri,
-        code,
-      };
-      break;
+      case SocialPlatform.FACEBOOK:
+        body = {
+          client_id: config.appId,
+          client_secret: config.appSecret,
+          redirect_uri: config.redirectUri,
+          code,
+        };
+        break;
 
-    default:
-      throw new Error(`不支持的平台: ${platform}`);
+      default:
+        throw new Error(`不支持的平台: ${platform}`);
     }
 
     const response = await fetch(tokenUrl, {
@@ -420,119 +401,103 @@ export class SocialOAuthService {
   /**
    * 解析访问令牌
    */
-  private parseAccessToken(
-    tokenData: any,
-    platform: SocialPlatform,
-  ): SocialAccessToken {
+  private parseAccessToken(tokenData: any, platform: SocialPlatform): SocialAccessToken {
     switch (platform) {
-    case SocialPlatform.WECHAT:
-      return {
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token,
-        expiresIn: tokenData.expires_in,
-        scope: tokenData.scope,
-        tokenType: tokenData.token_type || "Bearer",
-        platform,
-      };
+      case SocialPlatform.WECHAT:
+        return {
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          expiresIn: tokenData.expires_in,
+          scope: tokenData.scope,
+          tokenType: tokenData.token_type || "Bearer",
+          platform,
+        };
 
-    case SocialPlatform.WEIBO:
-      return {
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token,
-        expiresIn: tokenData.expires_in,
-        scope: tokenData.scope || "",
-        tokenType: "Bearer",
-        platform,
-      };
+      case SocialPlatform.WEIBO:
+        return {
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          expiresIn: tokenData.expires_in,
+          scope: tokenData.scope || "",
+          tokenType: "Bearer",
+          platform,
+        };
 
-    case SocialPlatform.TWITTER:
-      return {
-        accessToken: tokenData.access_token,
-        expiresIn: tokenData.expires_in,
-        scope: tokenData.scope || "",
-        tokenType: tokenData.token_type || "Bearer",
-        platform,
-      };
+      case SocialPlatform.TWITTER:
+        return {
+          accessToken: tokenData.access_token,
+          expiresIn: tokenData.expires_in,
+          scope: tokenData.scope || "",
+          tokenType: tokenData.token_type || "Bearer",
+          platform,
+        };
 
-    case SocialPlatform.FACEBOOK:
-      return {
-        accessToken: tokenData.access_token,
-        expiresIn: tokenData.expires_in,
-        scope: tokenData.scope || "",
-        tokenType: tokenData.token_type || "Bearer",
-        platform,
-      };
+      case SocialPlatform.FACEBOOK:
+        return {
+          accessToken: tokenData.access_token,
+          expiresIn: tokenData.expires_in,
+          scope: tokenData.scope || "",
+          tokenType: tokenData.token_type || "Bearer",
+          platform,
+        };
 
-    default:
-      throw new Error(`不支持的平台: ${platform}`);
+      default:
+        throw new Error(`不支持的平台: ${platform}`);
     }
   }
 
   /**
    * 解析用户信息
    */
-  private parseUserInfo(
-    userData: any,
-    platform: SocialPlatform,
-  ): SocialUserInfo {
+  private parseUserInfo(userData: any, platform: SocialPlatform): SocialUserInfo {
     switch (platform) {
-    case SocialPlatform.WECHAT:
-      return {
-        id: userData.openid,
-        nickname: userData.nickname,
-        avatar: userData.headimgurl,
-        gender:
-            userData.sex === 1
-              ? "male"
-              : userData.sex === 2
-                ? "female"
-                : "unknown",
-        location: `${userData.province} ${userData.city}`,
-        platform,
-      };
+      case SocialPlatform.WECHAT:
+        return {
+          id: userData.openid,
+          nickname: userData.nickname,
+          avatar: userData.headimgurl,
+          gender: userData.sex === 1 ? "male" : userData.sex === 2 ? "female" : "unknown",
+          location: `${userData.province} ${userData.city}`,
+          platform,
+        };
 
-    case SocialPlatform.WEIBO:
-      return {
-        id: userData.idstr,
-        nickname: userData.screen_name,
-        avatar: userData.profile_image_url,
-        gender:
-            userData.gender === "m"
-              ? "male"
-              : userData.gender === "f"
-                ? "female"
-                : "unknown",
-        location: userData.location,
-        platform,
-      };
+      case SocialPlatform.WEIBO:
+        return {
+          id: userData.idstr,
+          nickname: userData.screen_name,
+          avatar: userData.profile_image_url,
+          gender: userData.gender === "m" ? "male" : userData.gender === "f" ? "female" : "unknown",
+          location: userData.location,
+          platform,
+        };
 
-    case SocialPlatform.TWITTER:
-      return {
-        id: userData.id.toString(),
-        nickname: userData.name,
-        avatar: userData.profile_image_url,
-        gender: "unknown",
-        location: userData.location,
-        platform,
-      };
+      case SocialPlatform.TWITTER:
+        return {
+          id: userData.id.toString(),
+          nickname: userData.name,
+          avatar: userData.profile_image_url,
+          gender: "unknown",
+          location: userData.location,
+          platform,
+        };
 
-    case SocialPlatform.FACEBOOK:
-      return {
-        id: userData.id,
-        nickname: userData.name,
-        avatar: userData.picture?.data?.url,
-        gender:
+      case SocialPlatform.FACEBOOK:
+        return {
+          id: userData.id,
+          nickname: userData.name,
+          avatar: userData.picture?.data?.url,
+          gender:
             userData.gender === "male"
               ? "male"
               : userData.gender === "female"
                 ? "female"
                 : "unknown",
-        location: userData.location?.name,
-        platform,
-      };
+          location: userData.location?.name,
+          platform,
+        };
 
-    default:
-      throw new Error(`不支持的平台: ${platform}`);
+      default:
+        throw new Error(`不支持的平台: ${platform}`);
     }
   }
 
@@ -541,7 +506,7 @@ export class SocialOAuthService {
    */
   private async shareToWechat(
     accessToken: SocialAccessToken,
-    content: SocialShareContent,
+    content: SocialShareContent
   ): Promise<SocialShareResult> {
     // 微信朋友圈分享需要通过微信JS-SDK在客户端完成
     // 这里只能模拟服务端处理
@@ -559,7 +524,7 @@ export class SocialOAuthService {
    */
   private async shareToWeibo(
     accessToken: SocialAccessToken,
-    content: SocialShareContent,
+    content: SocialShareContent
   ): Promise<SocialShareResult> {
     try {
       const status = `${content.title}\n${content.description}`;
@@ -572,16 +537,13 @@ export class SocialOAuthService {
         params.append("pic", content.imageUrl);
       }
 
-      const response = await fetch(
-        "https://api.weibo.com/2/statuses/update.json",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: params.toString(),
+      const response = await fetch("https://api.weibo.com/2/statuses/update.json", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-      );
+        body: params.toString(),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -609,7 +571,7 @@ export class SocialOAuthService {
    */
   private async shareToTwitter(
     accessToken: SocialAccessToken,
-    content: SocialShareContent,
+    content: SocialShareContent
   ): Promise<SocialShareResult> {
     try {
       const tweet = `${content.title}\n${content.description}`;
@@ -618,19 +580,16 @@ export class SocialOAuthService {
       };
 
       if (content.imageUrl) {
-        const mediaResponse = await fetch(
-          "https://upload.twitter.com/1.1/media/upload.json",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${accessToken.accessToken}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              media_data: content.imageUrl,
-            }).toString(),
+        const mediaResponse = await fetch("https://upload.twitter.com/1.1/media/upload.json", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken.accessToken}`,
+            "Content-Type": "application/x-www-form-urlencoded",
           },
-        );
+          body: new URLSearchParams({
+            media_data: content.imageUrl,
+          }).toString(),
+        });
 
         if (mediaResponse.ok) {
           const mediaData = await mediaResponse.json();
@@ -672,7 +631,7 @@ export class SocialOAuthService {
    */
   private async shareToFacebook(
     accessToken: SocialAccessToken,
-    content: SocialShareContent,
+    content: SocialShareContent
   ): Promise<SocialShareResult> {
     try {
       const body: any = {
@@ -751,10 +710,7 @@ export class SocialOAuthService {
   /**
    * 令牌刷新
    */
-  async refreshToken(
-    platform: SocialPlatform,
-    refreshToken: string,
-  ): Promise<SocialAccessToken> {
+  async refreshToken(platform: SocialPlatform, refreshToken: string): Promise<SocialAccessToken> {
     const config = this.configs.get(platform);
     if (!config) {
       throw new Error(`平台 ${platform} 未配置`);
@@ -763,25 +719,25 @@ export class SocialOAuthService {
     let body: any;
 
     switch (platform) {
-    case SocialPlatform.WECHAT:
-      body = {
-        appid: config.appId,
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
-      };
-      break;
+      case SocialPlatform.WECHAT:
+        body = {
+          appid: config.appId,
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        };
+        break;
 
-    case SocialPlatform.WEIBO:
-      body = {
-        client_id: config.appId,
-        client_secret: config.appSecret,
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
-      };
-      break;
+      case SocialPlatform.WEIBO:
+        body = {
+          client_id: config.appId,
+          client_secret: config.appSecret,
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        };
+        break;
 
-    default:
-      throw new Error(`平台 ${platform} 不支持令牌刷新`);
+      default:
+        throw new Error(`平台 ${platform} 不支持令牌刷新`);
     }
 
     const response = await fetch(config.tokenEndpoint, {
@@ -803,26 +759,23 @@ export class SocialOAuthService {
   /**
    * 撤销授权
    */
-  async revokeAuthorization(
-    platform: SocialPlatform,
-    accessToken: string,
-  ): Promise<boolean> {
+  async revokeAuthorization(platform: SocialPlatform, accessToken: string): Promise<boolean> {
     try {
       let revokeUrl: string;
       let body: any;
 
       switch (platform) {
-      case SocialPlatform.WECHAT:
-        revokeUrl = "https://api.weixin.qq.com/sns/auth";
-        body = {
-          access_token: accessToken,
-          openid: "user_openid", // 需要用户的openid
-        };
-        break;
+        case SocialPlatform.WECHAT:
+          revokeUrl = "https://api.weixin.qq.com/sns/auth";
+          body = {
+            access_token: accessToken,
+            openid: "user_openid", // 需要用户的openid
+          };
+          break;
 
-      default:
-        // 其他平台可能需要不同的撤销端点
-        return true;
+        default:
+          // 其他平台可能需要不同的撤销端点
+          return true;
       }
 
       const response = await fetch(revokeUrl, {
@@ -845,10 +798,7 @@ export class SocialOAuthService {
 export const socialOAuthService = SocialOAuthService.getInstance();
 
 // 导出工具函数
-export function getSocialAuthUrl(
-  platform: SocialPlatform,
-  state?: string,
-): string {
+export function getSocialAuthUrl(platform: SocialPlatform, state?: string): string {
   const service = SocialOAuthService.getInstance();
   return service.generateAuthUrl(platform, state);
 }
@@ -856,22 +806,20 @@ export function getSocialAuthUrl(
 export async function handleSocialAuthCallback(
   platform: SocialPlatform,
   code: string,
-  state: string,
+  state: string
 ): Promise<SocialAccessToken> {
   const service = SocialOAuthService.getInstance();
   return service.handleOAuthCallback(platform, code, state);
 }
 
-export async function getSocialUserInfo(
-  accessToken: SocialAccessToken,
-): Promise<SocialUserInfo> {
+export async function getSocialUserInfo(accessToken: SocialAccessToken): Promise<SocialUserInfo> {
   const service = SocialOAuthService.getInstance();
   return service.getUserInfo(accessToken);
 }
 
 export async function shareToSocial(
   accessToken: SocialAccessToken,
-  content: SocialShareContent,
+  content: SocialShareContent
 ): Promise<SocialShareResult> {
   const service = SocialOAuthService.getInstance();
   return service.shareToSocialPlatform(accessToken, content);

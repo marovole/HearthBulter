@@ -11,13 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ArrowRight,
-  AlertTriangle,
-  CheckCircle,
-  DollarSign,
-  Scale,
-} from "lucide-react";
+import { ArrowRight, AlertTriangle, CheckCircle, DollarSign, Scale } from "lucide-react";
 
 interface SubstituteFood {
   id: string;
@@ -71,7 +65,7 @@ export function SubstituteModal({
       setError(null);
 
       const response = await fetch(
-        `/api/recipes/substitute?originalIngredientId=${originalIngredientId}`,
+        `/api/recipes/substitute?originalIngredientId=${originalIngredientId}`
       );
       const data = await response.json();
 
@@ -89,20 +83,20 @@ export function SubstituteModal({
 
   const getSubstitutionTypeColor = (type: string) => {
     switch (type) {
-    case "ALLERGY":
-      return "bg-red-100 text-red-800";
-    case "STOCK_OUT":
-      return "bg-orange-100 text-orange-800";
-    case "BUDGET":
-      return "bg-green-100 text-green-800";
-    case "PREFERENCE":
-      return "bg-blue-100 text-blue-800";
-    case "NUTRITION":
-      return "bg-purple-100 text-purple-800";
-    case "SEASONAL":
-      return "bg-yellow-100 text-yellow-800";
-    default:
-      return "bg-gray-100 text-gray-800";
+      case "ALLERGY":
+        return "bg-red-100 text-red-800";
+      case "STOCK_OUT":
+        return "bg-orange-100 text-orange-800";
+      case "BUDGET":
+        return "bg-green-100 text-green-800";
+      case "PREFERENCE":
+        return "bg-blue-100 text-blue-800";
+      case "NUTRITION":
+        return "bg-purple-100 text-purple-800";
+      case "SEASONAL":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -120,19 +114,16 @@ export function SubstituteModal({
 
   const formatNutritionDelta = (delta: { [key: string]: number }) => {
     const parts = [];
-    if (delta.calories)
-      parts.push(`${delta.calories > 0 ? "+" : ""}${delta.calories}kcal`);
-    if (delta.protein)
-      parts.push(`${delta.protein > 0 ? "+" : ""}${delta.protein}g蛋白质`);
-    if (delta.carbs)
-      parts.push(`${delta.carbs > 0 ? "+" : ""}${delta.carbs}g碳水`);
+    if (delta.calories) parts.push(`${delta.calories > 0 ? "+" : ""}${delta.calories}kcal`);
+    if (delta.protein) parts.push(`${delta.protein > 0 ? "+" : ""}${delta.protein}g蛋白质`);
+    if (delta.carbs) parts.push(`${delta.carbs > 0 ? "+" : ""}${delta.carbs}g碳水`);
     if (delta.fat) parts.push(`${delta.fat > 0 ? "+" : ""}${delta.fat}g脂肪`);
     return parts.length > 0 ? parts.join(", ") : "营养成分无变化";
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>食材替换建议</DialogTitle>
           <DialogDescription>
@@ -143,43 +134,37 @@ export function SubstituteModal({
         <div className="space-y-4">
           {loading && (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
               <span className="ml-2">正在加载替换建议...</span>
             </div>
           )}
 
           {error && (
-            <div className="text-center py-8">
-              <AlertTriangle className="h-8 w-8 text-red-600 mx-auto mb-2" />
+            <div className="py-8 text-center">
+              <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-600" />
               <p className="text-red-600">{error}</p>
             </div>
           )}
 
           {!loading && !error && substitutions.length === 0 && (
-            <div className="text-center py-8">
-              <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <p className="text-muted-foreground">
-                该食材无需替换或暂无替代建议
-              </p>
+            <div className="py-8 text-center">
+              <CheckCircle className="mx-auto mb-2 h-8 w-8 text-green-600" />
+              <p className="text-muted-foreground">该食材无需替换或暂无替代建议</p>
             </div>
           )}
 
           {substitutions.map((sub) => (
-            <Card key={sub.id} className="hover:shadow-md transition-shadow">
+            <Card key={sub.id} className="transition-shadow hover:shadow-md">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-lg font-medium">
-                      {originalIngredientName}
-                    </div>
+                    <div className="text-lg font-medium">{originalIngredientName}</div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     <div className="text-lg font-medium text-primary">
                       {sub.substituteFood.name}
                     </div>
                   </div>
-                  <Badge
-                    className={getSubstitutionTypeColor(sub.substitutionType)}
-                  >
+                  <Badge className={getSubstitutionTypeColor(sub.substitutionType)}>
                     {getSubstitutionTypeLabel(sub.substitutionType)}
                   </Badge>
                 </div>
@@ -188,14 +173,12 @@ export function SubstituteModal({
               <CardContent className="space-y-3">
                 {sub.reason && (
                   <div>
-                    <h4 className="text-sm font-medium mb-1">替换原因</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {sub.reason}
-                    </p>
+                    <h4 className="mb-1 text-sm font-medium">替换原因</h4>
+                    <p className="text-sm text-muted-foreground">{sub.reason}</p>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div className="flex items-center gap-2">
                     <Scale className="h-4 w-4 text-muted-foreground" />
                     <div>
@@ -213,14 +196,13 @@ export function SubstituteModal({
                       <div
                         className={`text-sm ${sub.costDelta > 0 ? "text-red-600" : sub.costDelta < 0 ? "text-green-600" : "text-muted-foreground"}`}
                       >
-                        {sub.costDelta > 0 ? "+" : ""}¥
-                        {sub.costDelta.toFixed(2)}
+                        {sub.costDelta > 0 ? "+" : ""}¥{sub.costDelta.toFixed(2)}
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-sm font-medium mb-1">营养变化</div>
+                    <div className="mb-1 text-sm font-medium">营养变化</div>
                     <div className="text-xs text-muted-foreground">
                       {formatNutritionDelta(sub.nutritionDelta || {})}
                     </div>
@@ -229,14 +211,10 @@ export function SubstituteModal({
 
                 {sub.conditions && sub.conditions.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium mb-2">适用条件</h4>
+                    <h4 className="mb-2 text-sm font-medium">适用条件</h4>
                     <div className="flex flex-wrap gap-1">
                       {sub.conditions.map((condition, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs"
-                        >
+                        <Badge key={index} variant="outline" className="text-xs">
                           {condition}
                         </Badge>
                       ))}
@@ -257,7 +235,7 @@ export function SubstituteModal({
           ))}
         </div>
 
-        <div className="flex justify-end pt-4 border-t">
+        <div className="flex justify-end border-t pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             关闭
           </Button>

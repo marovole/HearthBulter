@@ -6,26 +6,18 @@ interface TableFiltersProps {
   onFilterChange: (filters: Filters | ((prev: Filters) => Filters)) => void;
 }
 
-export function TableFilters({
-  filters,
-  show,
-  onFilterChange,
-}: TableFiltersProps) {
+export function TableFilters({ filters, show, onFilterChange }: TableFiltersProps) {
   if (!show) return null;
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            数据来源
-          </label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">数据来源</label>
           <select
             value={filters.source}
-            onChange={(e) =>
-              onFilterChange((prev) => ({ ...prev, source: e.target.value }))
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={(e) => onFilterChange((prev) => ({ ...prev, source: e.target.value }))}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">全部</option>
             <option value="MANUAL">手动录入</option>
@@ -45,12 +37,9 @@ export function TableFilters({
                 hasWeight: e.target.checked,
               }))
             }
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
-          <label
-            htmlFor="hasWeight"
-            className="text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="hasWeight" className="text-sm font-medium text-gray-700">
             包含体重
           </label>
         </div>
@@ -66,12 +55,9 @@ export function TableFilters({
                 hasBloodPressure: e.target.checked,
               }))
             }
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
-          <label
-            htmlFor="hasBloodPressure"
-            className="text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="hasBloodPressure" className="text-sm font-medium text-gray-700">
             包含血压
           </label>
         </div>
@@ -87,12 +73,9 @@ export function TableFilters({
                 hasHeartRate: e.target.checked,
               }))
             }
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
-          <label
-            htmlFor="hasHeartRate"
-            className="text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="hasHeartRate" className="text-sm font-medium text-gray-700">
             包含心率
           </label>
         </div>

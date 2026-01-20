@@ -46,10 +46,7 @@ const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
  */
 function getInitialPrefersReducedMotion(): boolean {
   // Guard against SSR and environments without matchMedia
-  if (
-    typeof window === "undefined" ||
-    typeof window.matchMedia !== "function"
-  ) {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
     return false;
   }
 
@@ -64,15 +61,12 @@ function getInitialPrefersReducedMotion(): boolean {
 
 export function usePrefersReducedMotion(): boolean {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(
-    getInitialPrefersReducedMotion,
+    getInitialPrefersReducedMotion
   );
 
   useEffect(() => {
     // Early return for SSR
-    if (
-      typeof window === "undefined" ||
-      typeof window.matchMedia !== "function"
-    ) {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
       return;
     }
 
@@ -81,10 +75,7 @@ export function usePrefersReducedMotion(): boolean {
     try {
       mediaQueryList = window.matchMedia(REDUCED_MOTION_QUERY);
     } catch (error) {
-      console.warn(
-        "[usePrefersReducedMotion] Failed to create media query:",
-        error,
-      );
+      console.warn("[usePrefersReducedMotion] Failed to create media query:", error);
       return;
     }
 

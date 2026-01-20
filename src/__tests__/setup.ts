@@ -13,9 +13,7 @@ try {
   // Set up URLSearchParams if not available
   if (typeof global.URLSearchParams === "undefined") {
     global.URLSearchParams = URLSearchParams as any;
-    console.debug(
-      "✅ URLSearchParams polyfill applied from Node.js url module",
-    );
+    console.debug("✅ URLSearchParams polyfill applied from Node.js url module");
   }
 
   // Verify URL constructor works correctly
@@ -54,23 +52,11 @@ jest.mock("next/navigation", () => ({
 
 // Mock Recharts
 jest.mock("recharts", () => ({
-  ResponsiveContainer: function ResponsiveContainer({
-    children,
-  }: {
-    children: React.ReactNode;
-  }) {
-    return React.createElement(
-      "div",
-      { "data-testid": "responsive-container" },
-      children,
-    );
+  ResponsiveContainer: function ResponsiveContainer({ children }: { children: React.ReactNode }) {
+    return React.createElement("div", { "data-testid": "responsive-container" }, children);
   },
   LineChart: function LineChart({ children }: { children: React.ReactNode }) {
-    return React.createElement(
-      "div",
-      { "data-testid": "line-chart" },
-      children,
-    );
+    return React.createElement("div", { "data-testid": "line-chart" }, children);
   },
   Line: function Line() {
     return React.createElement("div", { "data-testid": "line" });
@@ -91,11 +77,7 @@ jest.mock("recharts", () => ({
     return React.createElement("div", { "data-testid": "legend" });
   },
   AreaChart: function AreaChart({ children }: { children: React.ReactNode }) {
-    return React.createElement(
-      "div",
-      { "data-testid": "area-chart" },
-      children,
-    );
+    return React.createElement("div", { "data-testid": "area-chart" }, children);
   },
   Area: function Area() {
     return React.createElement("div", { "data-testid": "area" });
@@ -119,11 +101,7 @@ jest.mock("recharts", () => ({
     return React.createElement("div", { "data-testid": "bar" });
   },
   RadarChart: function RadarChart({ children }: { children: React.ReactNode }) {
-    return React.createElement(
-      "div",
-      { "data-testid": "radar-chart" },
-      children,
-    );
+    return React.createElement("div", { "data-testid": "radar-chart" }, children);
   },
   PolarGrid: function PolarGrid() {
     return React.createElement("div", { "data-testid": "polar-grid" });
@@ -164,7 +142,7 @@ jest.mock("recharts", () => ({
       type: "basic" as ResponseType,
       url: typeof url === "string" ? url : url.toString(),
     } as unknown as Response);
-  },
+  }
 );
 
 // Mock IntersectionObserver
@@ -188,7 +166,7 @@ Object.defineProperty(window, "Touch", {
     constructor(
       public identifier: number,
       public clientX: number,
-      public clientY: number,
+      public clientY: number
     ) {}
   },
 });
@@ -219,15 +197,13 @@ Object.defineProperty(window, "TouchEvent", {
 
     constructor(type: string, eventInitDict?: TouchEventInit) {
       if (eventInitDict?.targetTouches) {
-        this.targetTouches =
-          eventInitDict.targetTouches as unknown as TouchList;
+        this.targetTouches = eventInitDict.targetTouches as unknown as TouchList;
       }
       if (eventInitDict?.touches) {
         this.touches = eventInitDict.touches as unknown as TouchList;
       }
       if (eventInitDict?.changedTouches) {
-        this.changedTouches =
-          eventInitDict.changedTouches as unknown as TouchList;
+        this.changedTouches = eventInitDict.changedTouches as unknown as TouchList;
       }
     }
   },
@@ -251,8 +227,7 @@ jest.mock("@clerk/nextjs", () => ({
   ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
   SignIn: () => React.createElement("div", { "data-testid": "clerk-signin" }),
   SignUp: () => React.createElement("div", { "data-testid": "clerk-signup" }),
-  UserButton: () =>
-    React.createElement("div", { "data-testid": "clerk-userbutton" }),
+  UserButton: () => React.createElement("div", { "data-testid": "clerk-userbutton" }),
 }));
 
 jest.mock("@clerk/nextjs/server", () => ({
@@ -286,8 +261,7 @@ jest.mock("convex/react", () => ({
 }));
 
 jest.mock("convex/react-clerk", () => ({
-  ConvexProviderWithClerk: ({ children }: { children: React.ReactNode }) =>
-    children,
+  ConvexProviderWithClerk: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 jest.mock("../../convex/_generated/api", () => ({
@@ -298,11 +272,10 @@ jest.mock("../../convex/_generated/api", () => ({
         new Proxy(
           {},
           {
-            get: (_innerTarget, innerProp) =>
-              `${String(prop)}:${String(innerProp)}`,
-          },
+            get: (_innerTarget, innerProp) => `${String(prop)}:${String(innerProp)}`,
+          }
         ),
-    },
+    }
   ),
 }));
 
@@ -393,15 +366,9 @@ jest.mock("@/lib/services/ai/rate-limiter", () => ({
     getRemainingRequests: jest.fn().mockResolvedValue(10),
     clearAll: jest.fn(),
     isAllowedSync: jest.fn().mockReturnValue(true),
-    getStats: jest
-      .fn()
-      .mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
-    getUserStats: jest
-      .fn()
-      .mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
-    getStatsByTimeRange: jest
-      .fn()
-      .mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
+    getStats: jest.fn().mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
+    getUserStats: jest.fn().mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
+    getStatsByTimeRange: jest.fn().mockReturnValue({ totalRequests: 0, blockedRequests: 0 }),
     getGlobalStats: jest.fn().mockReturnValue({
       totalRequests: 0,
       blockedRequests: 0,
@@ -432,7 +399,7 @@ jest.mock("@/lib/services/ai/rate-limiter", () => ({
 }));
 
 jest.mock("@/lib/services/device-sync-service", () =>
-  jest.requireActual("@/lib/services/device-sync-service"),
+  jest.requireActual("@/lib/services/device-sync-service")
 );
 
 // Mock performance testing utilities
@@ -447,9 +414,7 @@ jest.mock("@/lib/performance/performance-testing", () => ({
 // Mock tracking services
 jest.mock("@/lib/services/tracking/meal-tracker", () => ({
   mealTracker: {
-    logMeal: jest
-      .fn()
-      .mockResolvedValue({ id: "test-meal-log-id", loggedAt: new Date() }),
+    logMeal: jest.fn().mockResolvedValue({ id: "test-meal-log-id", loggedAt: new Date() }),
     updateMeal: jest.fn().mockResolvedValue({ id: "test-meal-log-id" }),
     deleteMeal: jest.fn().mockResolvedValue(true),
     getMealsByDate: jest.fn().mockResolvedValue([]),
@@ -466,27 +431,19 @@ jest.mock("@/lib/services/tracking/meal-tracker", () => ({
 // Mock AI conversation manager
 jest.mock("@/lib/services/ai/conversation-manager", () => ({
   conversationManager: {
-    createSession: jest
-      .fn()
-      .mockResolvedValue({ sessionId: "test-session-id" }),
-    getSession: jest
-      .fn()
-      .mockResolvedValue({ sessionId: "test-session-id", messages: [] }),
-    updateSession: jest
-      .fn()
-      .mockResolvedValue({ sessionId: "test-session-id" }),
+    createSession: jest.fn().mockResolvedValue({ sessionId: "test-session-id" }),
+    getSession: jest.fn().mockResolvedValue({ sessionId: "test-session-id", messages: [] }),
+    updateSession: jest.fn().mockResolvedValue({ sessionId: "test-session-id" }),
     deleteSession: jest.fn().mockResolvedValue(true),
     clearAllSessions: jest.fn().mockResolvedValue(true),
     addMessage: jest.fn().mockResolvedValue({ messageId: "test-message-id" }),
     getMessages: jest.fn().mockResolvedValue([]),
-    generateResponse: jest
-      .fn()
-      .mockResolvedValue({ response: "Test AI response" }),
+    generateResponse: jest.fn().mockResolvedValue({ response: "Test AI response" }),
   },
 }));
 
 jest.mock("@/lib/services/notification/notification-manager", () =>
-  jest.requireActual("@/lib/services/notification/notification-manager"),
+  jest.requireActual("@/lib/services/notification/notification-manager")
 );
 
 // Mock USDA service
@@ -800,9 +757,7 @@ jest.mock("@/lib/services/tracking/template-manager", () => ({
 }));
 
 jest.mock("@/lib/services/tracking/deviation-analyzer", () => {
-  const actual = jest.requireActual(
-    "@/lib/services/tracking/deviation-analyzer",
-  );
+  const actual = jest.requireActual("@/lib/services/tracking/deviation-analyzer");
   return {
     ...actual,
     deviationAnalyzer: {
@@ -826,10 +781,7 @@ const originalLog = console.log;
 
 beforeAll(() => {
   console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === "string" &&
-      args[0].includes("Warning: ReactDOM.render is deprecated")
-    ) {
+    if (typeof args[0] === "string" && args[0].includes("Warning: ReactDOM.render is deprecated")) {
       return;
     }
     // Suppress Prisma Client browser warnings in tests
@@ -855,10 +807,7 @@ beforeAll(() => {
 
   console.log = (...args: any[]) => {
     // Suppress environment validation messages in tests
-    if (
-      typeof args[0] === "string" &&
-      args[0].includes("✅ 环境变量验证通过")
-    ) {
+    if (typeof args[0] === "string" && args[0].includes("✅ 环境变量验证通过")) {
       return;
     }
     originalLog.call(console, ...args);

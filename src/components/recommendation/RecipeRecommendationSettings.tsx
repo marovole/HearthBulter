@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -46,10 +40,7 @@ export interface RecommendationSettings {
   isDairyFree?: boolean;
 }
 
-type ArraySettingKey =
-  | "dietaryRestrictions"
-  | "excludedIngredients"
-  | "preferredCuisines";
+type ArraySettingKey = "dietaryRestrictions" | "excludedIngredients" | "preferredCuisines";
 
 interface RecipeRecommendationSettingsProps {
   settings: RecommendationSettings;
@@ -134,7 +125,7 @@ export default function RecipeRecommendationSettings({
 
   const updateSetting = <K extends keyof RecommendationSettings>(
     key: K,
-    value: RecommendationSettings[K],
+    value: RecommendationSettings[K]
   ) => {
     onSettingsChange({ ...settings, [key]: value });
   };
@@ -148,10 +139,7 @@ export default function RecipeRecommendationSettings({
   };
 
   const addDietaryRestriction = () => {
-    if (
-      newRestriction.trim() &&
-      !settings.dietaryRestrictions.includes(newRestriction.trim())
-    ) {
+    if (newRestriction.trim() && !settings.dietaryRestrictions.includes(newRestriction.trim())) {
       updateSetting("dietaryRestrictions", [
         ...settings.dietaryRestrictions,
         newRestriction.trim(),
@@ -180,14 +168,12 @@ export default function RecipeRecommendationSettings({
           <Settings className="h-5 w-5" />
           <CardTitle>推荐设置</CardTitle>
         </div>
-        <CardDescription>
-          调整您的偏好设置以获得更精准的个性化推荐
-        </CardDescription>
+        <CardDescription>调整您的偏好设置以获得更精准的个性化推荐</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* 基础设置 */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium flex items-center gap-2">
+          <h3 className="flex items-center gap-2 text-lg font-medium">
             <ChefHat className="h-4 w-4" />
             基础设置
           </h3>
@@ -200,7 +186,7 @@ export default function RecipeRecommendationSettings({
                 onValueChange={(value) =>
                   updateSetting(
                     "mealType",
-                    (value as RecommendationSettings["mealType"]) || undefined,
+                    (value as RecommendationSettings["mealType"]) || undefined
                   )
                 }
               >
@@ -223,10 +209,7 @@ export default function RecipeRecommendationSettings({
               <Select
                 value={settings.season || ""}
                 onValueChange={(value) =>
-                  updateSetting(
-                    "season",
-                    (value as RecommendationSettings["season"]) || undefined,
-                  )
+                  updateSetting("season", (value as RecommendationSettings["season"]) || undefined)
                 }
               >
                 <SelectTrigger>
@@ -305,10 +288,7 @@ export default function RecipeRecommendationSettings({
               <Select
                 value={settings.spiceLevel || "MEDIUM"}
                 onValueChange={(value) =>
-                  updateSetting(
-                    "spiceLevel",
-                    value as RecommendationSettings["spiceLevel"],
-                  )
+                  updateSetting("spiceLevel", value as RecommendationSettings["spiceLevel"])
                 }
               >
                 <SelectTrigger>
@@ -329,10 +309,7 @@ export default function RecipeRecommendationSettings({
               <Select
                 value={settings.sweetness || "MEDIUM"}
                 onValueChange={(value) =>
-                  updateSetting(
-                    "sweetness",
-                    value as RecommendationSettings["sweetness"],
-                  )
+                  updateSetting("sweetness", value as RecommendationSettings["sweetness"])
                 }
               >
                 <SelectTrigger>
@@ -353,10 +330,7 @@ export default function RecipeRecommendationSettings({
               <Select
                 value={settings.saltiness || "MEDIUM"}
                 onValueChange={(value) =>
-                  updateSetting(
-                    "saltiness",
-                    value as RecommendationSettings["saltiness"],
-                  )
+                  updateSetting("saltiness", value as RecommendationSettings["saltiness"])
                 }
               >
                 <SelectTrigger>
@@ -381,15 +355,11 @@ export default function RecipeRecommendationSettings({
           <h3 className="text-lg font-medium">菜系偏好</h3>
           <div className="space-y-2">
             <Label>选择您喜欢的菜系</Label>
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-4">
               {cuisines.map((cuisine) => (
                 <Button
                   key={cuisine}
-                  variant={
-                    settings.preferredCuisines.includes(cuisine)
-                      ? "default"
-                      : "outline"
-                  }
+                  variant={settings.preferredCuisines.includes(cuisine) ? "default" : "outline"}
                   size="sm"
                   onClick={() => toggleArrayItem("preferredCuisines", cuisine)}
                   className="justify-start"
@@ -412,9 +382,7 @@ export default function RecipeRecommendationSettings({
               <Label>低碳水</Label>
               <Switch
                 checked={settings.isLowCarb || false}
-                onCheckedChange={(checked) =>
-                  updateSetting("isLowCarb", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("isLowCarb", checked)}
               />
             </div>
 
@@ -422,9 +390,7 @@ export default function RecipeRecommendationSettings({
               <Label>低脂肪</Label>
               <Switch
                 checked={settings.isLowFat || false}
-                onCheckedChange={(checked) =>
-                  updateSetting("isLowFat", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("isLowFat", checked)}
               />
             </div>
 
@@ -432,9 +398,7 @@ export default function RecipeRecommendationSettings({
               <Label>高蛋白</Label>
               <Switch
                 checked={settings.isHighProtein || false}
-                onCheckedChange={(checked) =>
-                  updateSetting("isHighProtein", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("isHighProtein", checked)}
               />
             </div>
 
@@ -442,9 +406,7 @@ export default function RecipeRecommendationSettings({
               <Label>素食</Label>
               <Switch
                 checked={settings.isVegetarian || false}
-                onCheckedChange={(checked) =>
-                  updateSetting("isVegetarian", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("isVegetarian", checked)}
               />
             </div>
 
@@ -460,9 +422,7 @@ export default function RecipeRecommendationSettings({
               <Label>无麸质</Label>
               <Switch
                 checked={settings.isGlutenFree || false}
-                onCheckedChange={(checked) =>
-                  updateSetting("isGlutenFree", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("isGlutenFree", checked)}
               />
             </div>
 
@@ -470,9 +430,7 @@ export default function RecipeRecommendationSettings({
               <Label>无乳制品</Label>
               <Switch
                 checked={settings.isDairyFree || false}
-                onCheckedChange={(checked) =>
-                  updateSetting("isDairyFree", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("isDairyFree", checked)}
               />
             </div>
           </div>
@@ -491,10 +449,7 @@ export default function RecipeRecommendationSettings({
                 <Select
                   value={settings.costLevel || "MEDIUM"}
                   onValueChange={(value) =>
-                    updateSetting(
-                      "costLevel",
-                      value as RecommendationSettings["costLevel"],
-                    )
+                    updateSetting("costLevel", value as RecommendationSettings["costLevel"])
                   }
                 >
                   <SelectTrigger>
@@ -518,27 +473,19 @@ export default function RecipeRecommendationSettings({
                     value={newRestriction}
                     onChange={(e) => setNewRestriction(e.target.value)}
                     placeholder="添加饮食限制"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && addDietaryRestriction()
-                    }
+                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    onKeyPress={(e) => e.key === "Enter" && addDietaryRestriction()}
                   />
                   <Button onClick={addDietaryRestriction} size="sm">
                     添加
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="mt-2 flex flex-wrap gap-1">
                   {settings.dietaryRestrictions.map((restriction) => (
-                    <Badge
-                      key={restriction}
-                      variant="secondary"
-                      className="cursor-pointer"
-                    >
+                    <Badge key={restriction} variant="secondary" className="cursor-pointer">
                       {restriction}
                       <button
-                        onClick={() =>
-                          toggleArrayItem("dietaryRestrictions", restriction)
-                        }
+                        onClick={() => toggleArrayItem("dietaryRestrictions", restriction)}
                         className="ml-1 text-xs"
                       >
                         ×
@@ -556,27 +503,19 @@ export default function RecipeRecommendationSettings({
                     value={newExcludedIngredient}
                     onChange={(e) => setNewExcludedIngredient(e.target.value)}
                     placeholder="添加要排除的食材"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && addExcludedIngredient()
-                    }
+                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    onKeyPress={(e) => e.key === "Enter" && addExcludedIngredient()}
                   />
                   <Button onClick={addExcludedIngredient} size="sm">
                     添加
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="mt-2 flex flex-wrap gap-1">
                   {settings.excludedIngredients.map((ingredient) => (
-                    <Badge
-                      key={ingredient}
-                      variant="destructive"
-                      className="cursor-pointer"
-                    >
+                    <Badge key={ingredient} variant="destructive" className="cursor-pointer">
                       {ingredient}
                       <button
-                        onClick={() =>
-                          toggleArrayItem("excludedIngredients", ingredient)
-                        }
+                        onClick={() => toggleArrayItem("excludedIngredients", ingredient)}
                         className="ml-1 text-xs"
                       >
                         ×
@@ -592,11 +531,7 @@ export default function RecipeRecommendationSettings({
         {/* 应用按钮 */}
         {onApplySettings && (
           <div className="pt-4">
-            <Button
-              onClick={onApplySettings}
-              className="w-full"
-              disabled={loading}
-            >
+            <Button onClick={onApplySettings} className="w-full" disabled={loading}>
               {loading ? "应用中..." : "应用设置并获取推荐"}
             </Button>
           </div>

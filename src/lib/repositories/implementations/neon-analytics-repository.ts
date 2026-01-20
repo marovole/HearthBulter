@@ -26,11 +26,7 @@ import type {
   TrendQueryDTO,
   TrendSeriesDTO,
 } from "../types/analytics";
-import type {
-  DateRangeFilter,
-  PaginatedResult,
-  PaginationInput,
-} from "../types/common";
+import type { DateRangeFilter, PaginatedResult, PaginationInput } from "../types/common";
 
 interface FamilyMemberRow {
   id: string;
@@ -96,7 +92,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
 
   async aggregateMealLogs(
     memberId: string,
-    range: DateRangeFilter,
+    range: DateRangeFilter
   ): Promise<{ totalDays: number; dataCompleteDays: number }> {
     const data = await neonAdapter.mealLog.findMany<{ recordedAt: string }>({
       where: { memberId },
@@ -109,16 +105,11 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
       return true;
     });
 
-    const uniqueDays = new Set(
-      filteredData.map((row) => row.recordedAt?.split("T")[0]),
-    );
+    const uniqueDays = new Set(filteredData.map((row) => row.recordedAt?.split("T")[0]));
 
     const totalDays =
       range.start && range.end
-        ? Math.ceil(
-          (range.end.getTime() - range.start.getTime()) /
-              (1000 * 60 * 60 * 24),
-        )
+        ? Math.ceil((range.end.getTime() - range.start.getTime()) / (1000 * 60 * 60 * 24))
         : uniqueDays.size;
 
     return {
@@ -138,11 +129,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     };
   }
 
-  async listAnomalies(
-    memberId: string,
-    range: DateRangeFilter,
-    limit = 10,
-  ): Promise<AnomalyDTO[]> {
+  async listAnomalies(memberId: string, range: DateRangeFilter, limit = 10): Promise<AnomalyDTO[]> {
     const data = await neonAdapter.healthAnomaly.findMany<HealthAnomalyRow>({
       where: { memberId },
       orderBy: { detectedAt: "desc" },
@@ -161,7 +148,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
 
   async getReportSummary(
     memberId: string,
-    period: ReportSummaryDTO["period"],
+    period: ReportSummaryDTO["period"]
   ): Promise<ReportSummaryDTO> {
     const member = await this.getMemberProfile(memberId);
     if (!member) {
@@ -206,7 +193,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
 
   async listReportSnapshots(
     memberId: string,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<ReportSnapshotDTO>> {
     const data = await neonAdapter.healthReport.findMany<ReportSnapshotRow>({
       where: { memberId },
@@ -221,31 +208,25 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     return {
       items,
       total,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < total
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < total : false,
     };
   }
 
-  private async fetchTrendPoints(
-    query: TrendQueryDTO,
-  ): Promise<TimeSeriesPointDTO[]> {
+  private async fetchTrendPoints(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
     switch (query.metric) {
-    case "CALORIES":
-    case "PROTEIN":
-    case "CARBS":
-    case "FAT":
-      return this.fetchNutritionTrend(query);
-    case "HEALTH_SCORE":
-      return this.fetchScoreTrend(query);
-    default:
-      return this.fetchHealthMetricTrend(query);
+      case "CALORIES":
+      case "PROTEIN":
+      case "CARBS":
+      case "FAT":
+        return this.fetchNutritionTrend(query);
+      case "HEALTH_SCORE":
+        return this.fetchScoreTrend(query);
+      default:
+        return this.fetchHealthMetricTrend(query);
     }
   }
 
-  private async fetchNutritionTrend(
-    query: TrendQueryDTO,
-  ): Promise<TimeSeriesPointDTO[]> {
+  private async fetchNutritionTrend(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
     const data = await neonAdapter.mealLog.findMany<MealRecordRow>({
       where: { memberId: query.memberId },
       orderBy: { recordedAt: "asc" },
@@ -282,9 +263,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     }));
   }
 
-  private async fetchScoreTrend(
-    query: TrendQueryDTO,
-  ): Promise<TimeSeriesPointDTO[]> {
+  private async fetchScoreTrend(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
     const data = await neonAdapter.healthScore.findMany<HealthScoreRow>({
       where: { memberId: query.memberId },
       orderBy: { date: "asc" },
@@ -303,9 +282,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     }));
   }
 
-  private async fetchHealthMetricTrend(
-    query: TrendQueryDTO,
-  ): Promise<TimeSeriesPointDTO[]> {
+  private async fetchHealthMetricTrend(query: TrendQueryDTO): Promise<TimeSeriesPointDTO[]> {
     const data = await neonAdapter.healthData.findMany<HealthDataRow>({
       where: { memberId: query.memberId },
       orderBy: { measuredAt: "asc" },
@@ -347,14 +324,11 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     const middleIndex = Math.floor(values.length / 2);
     const median =
       values.length % 2 === 0
-        ? ((values[values.length / 2 - 1] ?? 0) +
-            (values[values.length / 2] ?? 0)) /
-          2
+        ? ((values[values.length / 2 - 1] ?? 0) + (values[values.length / 2] ?? 0)) / 2
         : (values[middleIndex] ?? 0);
     const min = values[0] ?? 0;
     const max = values[values.length - 1] ?? min;
-    const variance =
-      values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
     const stdDev = Math.sqrt(variance);
 
     return { mean, median, min, max, stdDev };
@@ -435,7 +409,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     options?: {
       healthDataLimit?: number;
       medicalReportsLimit?: number;
-    },
+    }
   ): Promise<MemberHealthContext | null> {
     const healthDataLimit = options?.healthDataLimit ?? 30;
     const medicalReportsLimit = options?.medicalReportsLimit ?? 5;
@@ -456,68 +430,63 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
 
     if (!member) return null;
 
-    const [
-      healthGoals,
-      allergies,
-      dietaryPreference,
-      healthData,
-      medicalReports,
-    ] = await Promise.all([
-      neonAdapter.healthGoal.findMany({
-        where: { memberId, deletedAt: null },
-      }) as Promise<
-        Array<{
-          id: string;
-          goalType: string;
-          targetWeight: number | null;
-          status: string;
-        }>
-      >,
-      neonAdapter.allergy.findMany({
-        where: { memberId, deletedAt: null },
-      }) as Promise<
-        Array<{
-          id: string;
-          allergenName: string;
-          severity: string;
-        }>
-      >,
-      neonAdapter.dietaryPreference.findFirst({
-        where: { memberId, deletedAt: null },
-      }) as Promise<{
-        dietType: string;
-        isVegetarian: boolean;
-        isVegan: boolean;
-      } | null>,
-      neonAdapter.healthData.findMany({
-        where: { memberId, deletedAt: null },
-        orderBy: { measuredAt: "desc" },
-        take: healthDataLimit,
-      }) as Promise<
-        Array<{
-          id: string;
-          measuredAt: Date;
-          weight: number | null;
-          bodyFat: number | null;
-          bloodPressureSystolic: number | null;
-          bloodPressureDiastolic: number | null;
-        }>
-      >,
-      medicalReportsLimit > 0
-        ? (neonAdapter.healthReport.findMany({
+    const [healthGoals, allergies, dietaryPreference, healthData, medicalReports] =
+      await Promise.all([
+        neonAdapter.healthGoal.findMany({
           where: { memberId, deletedAt: null },
-          orderBy: { reportDate: "desc" },
-          take: medicalReportsLimit,
         }) as Promise<
-            Array<{
-              id: string;
-              reportType: string;
-              reportDate: Date;
-              indicators: unknown[];
-            }>
-          >)
-        : Promise.resolve([]),
-    ]);
+          Array<{
+            id: string;
+            goalType: string;
+            targetWeight: number | null;
+            status: string;
+          }>
+        >,
+        neonAdapter.allergy.findMany({
+          where: { memberId, deletedAt: null },
+        }) as Promise<
+          Array<{
+            id: string;
+            allergenName: string;
+            severity: string;
+          }>
+        >,
+        neonAdapter.dietaryPreference.findFirst({
+          where: { memberId, deletedAt: null },
+        }) as Promise<{
+          dietType: string;
+          isVegetarian: boolean;
+          isVegan: boolean;
+        } | null>,
+        neonAdapter.healthData.findMany({
+          where: { memberId, deletedAt: null },
+          orderBy: { measuredAt: "desc" },
+          take: healthDataLimit,
+        }) as Promise<
+          Array<{
+            id: string;
+            measuredAt: Date;
+            weight: number | null;
+            bodyFat: number | null;
+            bloodPressureSystolic: number | null;
+            bloodPressureDiastolic: number | null;
+          }>
+        >,
+        medicalReportsLimit > 0
+          ? (neonAdapter.healthReport.findMany({
+              where: { memberId, deletedAt: null },
+              orderBy: { reportDate: "desc" },
+              take: medicalReportsLimit,
+            }) as Promise<
+              Array<{
+                id: string;
+                reportType: string;
+                reportDate: Date;
+                indicators: unknown[];
+              }>
+            >)
+          : Promise.resolve([]),
+      ]);
 
     return {
       member,
@@ -529,9 +498,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     };
   }
 
-  async saveHealthAdvice(
-    advice: HealthAdviceInput,
-  ): Promise<SavedHealthAdvice | null> {
+  async saveHealthAdvice(advice: HealthAdviceInput): Promise<SavedHealthAdvice | null> {
     const result = (await neonAdapter.aiAdvice.create({
       data: {
         memberId: advice.memberId,
@@ -546,10 +513,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     return result;
   }
 
-  async getMemberHealthHistory(
-    memberId: string,
-    days: number = 30,
-  ): Promise<MemberHealthHistory> {
+  async getMemberHealthHistory(memberId: string, days: number = 30): Promise<MemberHealthHistory> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -597,9 +561,7 @@ export class NeonAnalyticsRepository implements AnalyticsRepository {
     };
   }
 
-  async saveConversation(
-    conversation: ConversationInput,
-  ): Promise<SavedConversation> {
+  async saveConversation(conversation: ConversationInput): Promise<SavedConversation> {
     const now = new Date();
     const data = {
       memberId: conversation.memberId,

@@ -93,13 +93,11 @@ export const CreateInventoryNotificationsParams = z.object({
       title: z.string().optional(),
       message: z.string().optional(),
       priority: z.enum(["HIGH", "MEDIUM", "LOW"]).default("MEDIUM"),
-    }),
+    })
   ),
 });
 
-export type CreateInventoryNotificationsParams = z.infer<
-  typeof CreateInventoryNotificationsParams
->;
+export type CreateInventoryNotificationsParams = z.infer<typeof CreateInventoryNotificationsParams>;
 
 export interface CreateInventoryNotificationsResult {
   success: boolean;
@@ -126,9 +124,7 @@ export const UpdateShoppingListItemParams = z.object({
   p_expected_version: z.number().optional(),
 });
 
-export type UpdateShoppingListItemParams = z.infer<
-  typeof UpdateShoppingListItemParams
->;
+export type UpdateShoppingListItemParams = z.infer<typeof UpdateShoppingListItemParams>;
 
 export interface UpdateShoppingListItemResult {
   success: boolean;

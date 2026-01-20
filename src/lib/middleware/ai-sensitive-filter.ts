@@ -28,7 +28,7 @@ export interface FilteredContent {
  */
 export function filterUserInput(
   content: string,
-  options: AISensitiveFilterOptions = {},
+  options: AISensitiveFilterOptions = {}
 ): FilteredContent {
   const filterResult = sensitiveFilter.filter(content, {
     maskMode: options.maskMode || "partial",
@@ -59,7 +59,7 @@ export function filterUserInput(
  */
 export function filterAIOutput(
   content: string,
-  options: AISensitiveFilterOptions = {},
+  options: AISensitiveFilterOptions = {}
 ): FilteredContent {
   const filterResult = sensitiveFilter.filter(content, {
     maskMode: options.maskMode || "partial",
@@ -90,7 +90,7 @@ export function filterAIOutput(
  */
 export function filterStructuredData<T extends Record<string, unknown>>(
   data: T,
-  options: AISensitiveFilterOptions = {},
+  options: AISensitiveFilterOptions = {}
 ): T {
   const filteredData = { ...data };
 
@@ -118,9 +118,7 @@ export function filterStructuredData<T extends Record<string, unknown>>(
 /**
  * 创建敏感信息过滤中间件函数
  */
-export function createSensitiveFilterMiddleware(
-  options: AISensitiveFilterOptions = {},
-) {
+export function createSensitiveFilterMiddleware(options: AISensitiveFilterOptions = {}) {
   return {
     filterUserInput: (content: string) => filterUserInput(content, options),
     filterAIOutput: (content: string) => filterAIOutput(content, options),

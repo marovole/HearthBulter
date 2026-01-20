@@ -13,7 +13,7 @@ const createMealLogSchema = z.object({
     z.object({
       foodId: z.string(),
       amount: z.number().positive(),
-    }),
+    })
   ),
   notes: z.string().optional(),
 });
@@ -44,10 +44,7 @@ export async function POST(req: NextRequest) {
     console.error("Error creating meal log:", error);
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "无效的请求数据", details: error.errors },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "无效的请求数据", details: error.errors }, { status: 400 });
     }
 
     return NextResponse.json({ error: "创建餐饮记录失败" }, { status: 500 });
@@ -97,7 +94,7 @@ export async function GET(req: NextRequest) {
       const result = await mealTrackingRepository.getMealLogHistory(
         memberId,
         Object.keys(filter).length > 0 ? filter : undefined,
-        Object.keys(pagination).length > 0 ? pagination : undefined,
+        Object.keys(pagination).length > 0 ? pagination : undefined
       );
 
       return NextResponse.json(result);

@@ -35,7 +35,7 @@ export default function ScrollEnhancements() {
     <>
       {/* Scroll progress bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-primary z-50 origin-left"
+        className="fixed left-0 right-0 top-0 z-50 h-1 origin-left bg-gradient-primary"
         style={{ scaleX }}
       />
 
@@ -52,11 +52,11 @@ export default function ScrollEnhancements() {
         <Button
           size="icon"
           variant="glow"
-          className="h-12 w-12 rounded-full shadow-soft-lg group"
+          className="group h-12 w-12 rounded-full shadow-soft-lg"
           onClick={scrollToTop}
           aria-label="返回顶部"
         >
-          <ArrowUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+          <ArrowUp className="h-5 w-5 transition-transform group-hover:-translate-y-1" />
         </Button>
       </motion.div>
     </>

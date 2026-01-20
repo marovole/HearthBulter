@@ -65,7 +65,7 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
           fat: total.fat + food.fat * ratio,
         };
       },
-      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
   };
 
@@ -100,25 +100,22 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
   const totalNutrition = calculateTotalNutrition();
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 space-y-6">
+    <div className="space-y-6 rounded-lg bg-white p-6 shadow">
       {/* 餐食类型选择 */}
       <div>
-        <h3 className="text-lg font-semibold mb-3">选择餐食类型</h3>
+        <h3 className="mb-3 text-lg font-semibold">选择餐食类型</h3>
         <div className="grid grid-cols-4 gap-2">
           {mealTypes.map((type) => (
             <button
               key={type.value}
               onClick={() => setMealType(type.value)}
-              className={`
-                p-3 rounded-lg border-2 transition-all
-                ${
-            mealType === type.value
-              ? "border-blue-500 bg-blue-50"
-              : "border-gray-200 hover:border-blue-300"
-            }
-              `}
+              className={`rounded-lg border-2 p-3 transition-all ${
+                mealType === type.value
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 hover:border-blue-300"
+              } `}
             >
-              <div className="text-2xl mb-1">{type.icon}</div>
+              <div className="mb-1 text-2xl">{type.icon}</div>
               <div className="text-sm font-medium">{type.label}</div>
             </button>
           ))}
@@ -127,27 +124,22 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
 
       {/* 已选食物列表 */}
       <div>
-        <div className="flex justify-between items-center mb-3">
+        <div className="mb-3 flex items-center justify-between">
           <h3 className="text-lg font-semibold">已添加食物</h3>
           <button
             onClick={() => setShowFoodSearch(true)}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            className="text-sm font-medium text-blue-600 hover:text-blue-700"
           >
             + 添加食物
           </button>
         </div>
 
         {selectedFoods.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            还没有添加食物，点击上方按钮添加
-          </div>
+          <div className="py-8 text-center text-gray-400">还没有添加食物，点击上方按钮添加</div>
         ) : (
           <div className="space-y-2">
             {selectedFoods.map((food, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 p-3 border rounded-lg"
-              >
+              <div key={index} className="flex items-center gap-3 rounded-lg border p-3">
                 <div className="flex-1">
                   <div className="font-medium">{food.name}</div>
                   <div className="text-sm text-gray-500">
@@ -157,10 +149,8 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
                 <input
                   type="number"
                   value={food.amount}
-                  onChange={(e) =>
-                    handleUpdateAmount(index, Number(e.target.value))
-                  }
-                  className="w-20 px-2 py-1 border rounded text-center"
+                  onChange={(e) => handleUpdateAmount(index, Number(e.target.value))}
+                  className="w-20 rounded border px-2 py-1 text-center"
                   min="1"
                 />
                 <span className="text-sm text-gray-500">g</span>
@@ -178,8 +168,8 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
 
       {/* 营养摘要 */}
       {selectedFoods.length > 0 && (
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="font-semibold mb-3">营养摘要</h4>
+        <div className="rounded-lg bg-gray-50 p-4">
+          <h4 className="mb-3 font-semibold">营养摘要</h4>
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-blue-600">
@@ -211,11 +201,11 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
 
       {/* 备注 */}
       <div>
-        <label className="block text-sm font-medium mb-2">备注（可选）</label>
+        <label className="mb-2 block text-sm font-medium">备注（可选）</label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg"
+          className="w-full rounded-lg border px-3 py-2"
           rows={3}
           placeholder="记录今天吃饭的感受..."
         />
@@ -225,7 +215,7 @@ export function MealCheckIn({ memberId, onSubmit }: MealCheckInProps) {
       <button
         onClick={handleSubmit}
         disabled={isSubmitting || selectedFoods.length === 0}
-        className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
       >
         {isSubmitting ? "提交中..." : "完成打卡"}
       </button>

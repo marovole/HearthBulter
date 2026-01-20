@@ -37,7 +37,7 @@ export class UserItemMatrixBuilder {
   async buildMatrix(
     minRatingsPerUser: number = 5,
     minRatingsPerItem: number = 5,
-    maxAge?: Date,
+    maxAge?: Date
   ): Promise<UserItemMatrix> {
     const cacheKey = `matrix_${minRatingsPerUser}_${minRatingsPerItem}_${maxAge?.getTime() || "all"}`;
 
@@ -47,11 +47,7 @@ export class UserItemMatrixBuilder {
     }
 
     // 获取评分数据
-    const ratings = await this.fetchRatings(
-      minRatingsPerUser,
-      minRatingsPerItem,
-      maxAge,
-    );
+    const ratings = await this.fetchRatings(minRatingsPerUser, minRatingsPerItem, maxAge);
 
     if (ratings.length === 0) {
       throw new Error("No ratings found with the specified criteria");
@@ -80,7 +76,7 @@ export class UserItemMatrixBuilder {
   private async fetchRatings(
     minRatingsPerUser: number,
     minRatingsPerItem: number,
-    maxAge?: Date,
+    maxAge?: Date
   ): Promise<UserItemRating[]> {
     const ratings = await convexClient.query<
       Array<{
@@ -162,10 +158,7 @@ export class UserItemMatrixBuilder {
         userCount++;
       });
 
-      matrix.userAverages.set(
-        userId,
-        userCount > 0 ? userTotal / userCount : 0,
-      );
+      matrix.userAverages.set(userId, userCount > 0 ? userTotal / userCount : 0);
     });
 
     // 计算物品平均分
@@ -186,8 +179,7 @@ export class UserItemMatrixBuilder {
 
     // 计算稀疏度
     const possibleRatings = matrix.users.length * matrix.items.length;
-    matrix.sparsity =
-      possibleRatings > 0 ? 1 - ratingCount / possibleRatings : 1;
+    matrix.sparsity = possibleRatings > 0 ? 1 - ratingCount / possibleRatings : 1;
   }
 
   /**
@@ -195,7 +187,7 @@ export class UserItemMatrixBuilder {
    */
   async getMatrixStatistics(
     minRatingsPerUser: number = 5,
-    minRatingsPerItem: number = 5,
+    minRatingsPerItem: number = 5
   ): Promise<MatrixStatistics> {
     const matrix = await this.buildMatrix(minRatingsPerUser, minRatingsPerItem);
 
@@ -207,10 +199,7 @@ export class UserItemMatrixBuilder {
 
     matrix.ratings.forEach((userRatings) => {
       userRatings.forEach((rating) => {
-        ratingDistribution.set(
-          rating,
-          (ratingDistribution.get(rating) || 0) + 1,
-        );
+        ratingDistribution.set(rating, (ratingDistribution.get(rating) || 0) + 1);
       });
     });
 
@@ -224,10 +213,7 @@ export class UserItemMatrixBuilder {
     const itemPopularityDistribution = new Map<string, number>();
     matrix.ratings.forEach((userRatings) => {
       userRatings.forEach((_, itemId) => {
-        itemPopularityDistribution.set(
-          itemId,
-          (itemPopularityDistribution.get(itemId) || 0) + 1,
-        );
+        itemPopularityDistribution.set(itemId, (itemPopularityDistribution.get(itemId) || 0) + 1);
       });
     });
 
@@ -236,7 +222,7 @@ export class UserItemMatrixBuilder {
       totalItems: matrix.items.length,
       totalRatings: Array.from(matrix.ratings.values()).reduce(
         (sum, userRatings) => sum + userRatings.size,
-        0,
+        0
       ),
       sparsity: matrix.sparsity,
       ratingDistribution,
@@ -248,20 +234,14 @@ export class UserItemMatrixBuilder {
   /**
    * 获取用户评分向量
    */
-  getUserRatingVector(
-    matrix: UserItemMatrix,
-    userId: string,
-  ): Map<string, number> {
+  getUserRatingVector(matrix: UserItemMatrix, userId: string): Map<string, number> {
     return matrix.ratings.get(userId) || new Map();
   }
 
   /**
    * 获取物品评分向量
    */
-  getItemRatingVector(
-    matrix: UserItemMatrix,
-    itemId: string,
-  ): Map<string, number> {
+  getItemRatingVector(matrix: UserItemMatrix, itemId: string): Map<string, number> {
     const itemRatings = new Map<string, number>();
 
     matrix.ratings.forEach((userRatings, userId) => {
@@ -279,7 +259,7 @@ export class UserItemMatrixBuilder {
   getCommonlyRatedItems(
     matrix: UserItemMatrix,
     user1Id: string,
-    user2Id: string,
+    user2Id: string
   ): Map<string, [number, number]> {
     const user1Ratings = matrix.ratings.get(user1Id);
     const user2Ratings = matrix.ratings.get(user2Id);
@@ -305,16 +285,13 @@ export class UserItemMatrixBuilder {
   getCommonRatingUsers(
     matrix: UserItemMatrix,
     item1Id: string,
-    item2Id: string,
+    item2Id: string
   ): Map<string, [number, number]> {
     const commonUsers = new Map<string, [number, number]>();
 
     matrix.ratings.forEach((userRatings, userId) => {
       if (userRatings.has(item1Id) && userRatings.has(item2Id)) {
-        commonUsers.set(userId, [
-          userRatings.get(item1Id)!,
-          userRatings.get(item2Id)!,
-        ]);
+        commonUsers.set(userId, [userRatings.get(item1Id)!, userRatings.get(item2Id)!]);
       }
     });
 
@@ -326,7 +303,7 @@ export class UserItemMatrixBuilder {
    */
   async updateMatrix(
     matrix: UserItemMatrix,
-    newRatings: UserItemRating[],
+    newRatings: UserItemRating[]
   ): Promise<UserItemMatrix> {
     const updatedMatrix = { ...matrix };
 
@@ -345,9 +322,7 @@ export class UserItemMatrixBuilder {
       if (!updatedMatrix.ratings.has(rating.userId)) {
         updatedMatrix.ratings.set(rating.userId, new Map());
       }
-      updatedMatrix.ratings
-        .get(rating.userId)!
-        .set(rating.itemId, rating.rating);
+      updatedMatrix.ratings.get(rating.userId)!.set(rating.itemId, rating.rating);
     });
 
     // 重新计算统计信息
@@ -364,7 +339,7 @@ export class UserItemMatrixBuilder {
     factors: number = 20,
     iterations: number = 50,
     learningRate: number = 0.01,
-    regularization: number = 0.1,
+    regularization: number = 0.1
   ): Promise<{
     userFeatures: Map<string, number[]>;
     itemFeatures: Map<string, number[]>;

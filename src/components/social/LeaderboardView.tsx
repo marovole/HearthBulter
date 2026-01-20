@@ -67,8 +67,7 @@ export function LeaderboardView({
   showUserRank = true,
   limit = 50,
 }: LeaderboardViewProps) {
-  const [leaderboardData, setLeaderboardData] =
-    useState<LeaderboardData | null>(null);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState<LeaderboardType>("HEALTH_SCORE");
   const [activePeriod, setActivePeriod] = useState<LeaderboardPeriod>("WEEKLY");
@@ -78,7 +77,7 @@ export function LeaderboardView({
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/social/leaderboard?type=${activeType}&period=${activePeriod}&limit=${limit}&includeUser=${showUserRank}`,
+        `/api/social/leaderboard?type=${activeType}&period=${activePeriod}&limit=${limit}&includeUser=${showUserRank}`
       );
       const result = await response.json();
 
@@ -126,18 +125,14 @@ export function LeaderboardView({
   // 获取排名图标
   const getRankIcon = (rank: number) => {
     switch (rank) {
-    case 1:
-      return <Crown className="h-5 w-5 text-yellow-500" />;
-    case 2:
-      return <Trophy className="h-5 w-5 text-gray-400" />;
-    case 3:
-      return <Medal className="h-5 w-5 text-orange-600" />;
-    default:
-      return (
-        <span className="text-sm font-medium text-muted-foreground">
-            #{rank}
-        </span>
-      );
+      case 1:
+        return <Crown className="h-5 w-5 text-yellow-500" />;
+      case 2:
+        return <Trophy className="h-5 w-5 text-gray-400" />;
+      case 3:
+        return <Medal className="h-5 w-5 text-orange-600" />;
+      default:
+        return <span className="text-sm font-medium text-muted-foreground">#{rank}</span>;
     }
   };
 
@@ -155,17 +150,17 @@ export function LeaderboardView({
   // 格式化分数
   const formatScore = (type: LeaderboardType, score: number) => {
     switch (type) {
-    case "HEALTH_SCORE":
-    case "NUTRITION_SCORE":
-      return `${score.toFixed(1)}分`;
-    case "CHECK_IN_STREAK":
-      return `${score}天`;
-    case "WEIGHT_LOSS":
-      return `${score.toFixed(1)}kg`;
-    case "EXERCISE_MINUTES":
-      return `${score}分钟`;
-    default:
-      return score.toString();
+      case "HEALTH_SCORE":
+      case "NUTRITION_SCORE":
+        return `${score.toFixed(1)}分`;
+      case "CHECK_IN_STREAK":
+        return `${score}天`;
+      case "WEIGHT_LOSS":
+        return `${score.toFixed(1)}kg`;
+      case "EXERCISE_MINUTES":
+        return `${score}分钟`;
+      default:
+        return score.toString();
     }
   };
 
@@ -173,16 +168,16 @@ export function LeaderboardView({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="h-6 bg-gray-200 rounded w-32"></div>
-          <div className="h-6 bg-gray-200 rounded w-24"></div>
+          <div className="h-6 w-32 rounded bg-gray-200"></div>
+          <div className="h-6 w-24 rounded bg-gray-200"></div>
         </div>
         {[...Array(5)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded flex-1"></div>
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-8 w-8 rounded bg-gray-200"></div>
+                <div className="h-4 flex-1 rounded bg-gray-200"></div>
+                <div className="h-4 w-16 rounded bg-gray-200"></div>
               </div>
             </CardContent>
           </Card>
@@ -195,7 +190,7 @@ export function LeaderboardView({
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <Trophy className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <p className="text-muted-foreground">暂无排行榜数据</p>
         </CardContent>
       </Card>
@@ -205,8 +200,8 @@ export function LeaderboardView({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* 控制栏 */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Select
             value={activeType}
             onValueChange={(value) => setActiveType(value as LeaderboardType)}
@@ -225,9 +220,7 @@ export function LeaderboardView({
 
           <Select
             value={activePeriod}
-            onValueChange={(value) =>
-              setActivePeriod(value as LeaderboardPeriod)
-            }
+            onValueChange={(value) => setActivePeriod(value as LeaderboardPeriod)}
           >
             <SelectTrigger className="w-24">
               <SelectValue />
@@ -251,7 +244,7 @@ export function LeaderboardView({
       {showUserRank && leaderboardData.userRank && (
         <Card className="border-primary">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center space-x-2">
+            <CardTitle className="flex items-center space-x-2 text-base">
               <Star className="h-4 w-4 text-primary" />
               <span>我的排名</span>
             </CardTitle>
@@ -261,27 +254,22 @@ export function LeaderboardView({
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
                   {getRankIcon(leaderboardData.userRank.rank)}
-                  <span className="font-medium">
-                    {leaderboardData.userRank.member.name}
-                  </span>
+                  <span className="font-medium">{leaderboardData.userRank.member.name}</span>
                 </div>
 
                 <div className="flex items-center space-x-1">
                   {getRankChangeIcon(leaderboardData.userRank.rankChange)}
                   {leaderboardData.userRank.rankChange !== undefined &&
                     leaderboardData.userRank.rankChange !== 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      {Math.abs(leaderboardData.userRank.rankChange)}
-                    </span>
-                  )}
+                      <span className="text-xs text-muted-foreground">
+                        {Math.abs(leaderboardData.userRank.rankChange)}
+                      </span>
+                    )}
                 </div>
               </div>
 
               <div className="text-lg font-bold text-primary">
-                {formatScore(
-                  leaderboardData.type,
-                  leaderboardData.userRank.score,
-                )}
+                {formatScore(leaderboardData.type, leaderboardData.userRank.score)}
               </div>
             </div>
           </CardContent>
@@ -293,12 +281,10 @@ export function LeaderboardView({
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>
-              {getTypeLabel(leaderboardData.type)} -{" "}
-              {getPeriodLabel(leaderboardData.period)}
+              {getTypeLabel(leaderboardData.type)} - {getPeriodLabel(leaderboardData.period)}
             </span>
             <Badge variant="secondary">
-              {leaderboardData.entries.length} /{" "}
-              {leaderboardData.totalParticipants}
+              {leaderboardData.entries.length} / {leaderboardData.totalParticipants}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -307,7 +293,7 @@ export function LeaderboardView({
             {leaderboardData.entries.map((entry) => (
               <div
                 key={entry.member.id}
-                className={`flex items-center justify-between p-3 rounded-lg ${
+                className={`flex items-center justify-between rounded-lg p-3 ${
                   entry.rank <= 3
                     ? "bg-gradient-to-r from-yellow-50 to-transparent"
                     : "hover:bg-gray-50"
@@ -315,7 +301,7 @@ export function LeaderboardView({
               >
                 <div className="flex items-center space-x-3">
                   {/* 排名 */}
-                  <div className="flex items-center justify-center w-8">
+                  <div className="flex w-8 items-center justify-center">
                     {getRankIcon(entry.rank)}
                   </div>
 
@@ -323,13 +309,11 @@ export function LeaderboardView({
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={entry.member.avatar} />
-                      <AvatarFallback>
-                        {entry.member.name.charAt(0)}
-                      </AvatarFallback>
+                      <AvatarFallback>{entry.member.name.charAt(0)}</AvatarFallback>
                     </Avatar>
 
                     <div>
-                      <p className="font-medium text-sm">
+                      <p className="text-sm font-medium">
                         {entry.isAnonymous ? "匿名用户" : entry.member.name}
                       </p>
                       {entry.rankChange !== undefined && (
@@ -350,7 +334,7 @@ export function LeaderboardView({
 
                 {/* 分数 */}
                 <div className="text-right">
-                  <div className="font-bold text-lg">
+                  <div className="text-lg font-bold">
                     {formatScore(leaderboardData.type, entry.score)}
                   </div>
                   {entry.metadata && (
@@ -364,8 +348,8 @@ export function LeaderboardView({
           </div>
 
           {leaderboardData.entries.length === 0 && (
-            <div className="text-center py-8">
-              <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <div className="py-8 text-center">
+              <Trophy className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <p className="text-muted-foreground">暂无排行数据</p>
             </div>
           )}
@@ -374,8 +358,7 @@ export function LeaderboardView({
 
       {/* 更新时间 */}
       <div className="text-center text-xs text-muted-foreground">
-        更新时间:{" "}
-        {new Date(leaderboardData.lastUpdated).toLocaleString("zh-CN")}
+        更新时间: {new Date(leaderboardData.lastUpdated).toLocaleString("zh-CN")}
       </div>
     </div>
   );
@@ -384,19 +367,13 @@ export function LeaderboardView({
 // 获取元数据显示
 function getMetadataDisplay(type: LeaderboardType, metadata: any): string {
   switch (type) {
-  case "EXERCISE_MINUTES":
-    return metadata.averageMinutes
-      ? `日均${metadata.averageMinutes}分钟`
-      : "";
-  case "NUTRITION_SCORE":
-    return metadata.averageScore
-      ? `平均${metadata.averageScore.toFixed(1)}分`
-      : "";
-  case "WEIGHT_LOSS":
-    return metadata.weightLoss
-      ? `减重${metadata.weightLoss.toFixed(1)}kg`
-      : "";
-  default:
-    return "";
+    case "EXERCISE_MINUTES":
+      return metadata.averageMinutes ? `日均${metadata.averageMinutes}分钟` : "";
+    case "NUTRITION_SCORE":
+      return metadata.averageScore ? `平均${metadata.averageScore.toFixed(1)}分` : "";
+    case "WEIGHT_LOSS":
+      return metadata.weightLoss ? `减重${metadata.weightLoss.toFixed(1)}kg` : "";
+    default:
+      return "";
   }
 }

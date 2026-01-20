@@ -24,12 +24,9 @@ export class RecommendationRanker {
   async rankRecipes(
     candidates: RecipeRecommendation[],
     context: RecommendationContext,
-    weights: RecommendationWeights,
+    weights: RecommendationWeights
   ): Promise<RecipeRecommendation[]> {
-    const { features, recipeDetails } = await this.extractRankingFeatures(
-      candidates,
-      context,
-    );
+    const { features, recipeDetails } = await this.extractRankingFeatures(candidates, context);
 
     const rankedRecipes = features.map((feature) => {
       const finalScore = this.calculateFinalScore(feature, weights);
@@ -54,7 +51,7 @@ export class RecommendationRanker {
 
   private async extractRankingFeatures(
     candidates: RecipeRecommendation[],
-    context: RecommendationContext,
+    context: RecommendationContext
   ): Promise<{
     features: RankingFeatures[];
     recipeDetails: Map<string, RecipeDetailDTO | undefined>;
@@ -72,10 +69,7 @@ export class RecommendationRanker {
         popularityScore: this.calculatePopularityScore(recipe),
         freshnessScore: this.calculateFreshnessScore(recipe),
         diversityScore: 0,
-        personalizationScore: this.calculatePersonalizationScore(
-          recipe,
-          context,
-        ),
+        personalizationScore: this.calculatePersonalizationScore(recipe, context),
         qualityScore: this.calculateQualityScore(recipe),
       };
     });
@@ -90,8 +84,7 @@ export class RecommendationRanker {
 
     const ratingScore = (averageRating / 5) * 40;
     const reviewScore = Math.min(ratingCount / 100, 1) * 30;
-    const viewScore =
-      Math.min(Math.log(viewCount + 1) / Math.log(10000), 1) * 30;
+    const viewScore = Math.min(Math.log(viewCount + 1) / Math.log(10000), 1) * 30;
 
     return ratingScore + reviewScore + viewScore;
   }
@@ -102,8 +95,7 @@ export class RecommendationRanker {
     }
 
     const daysSinceCreation = Math.floor(
-      (Date.now() - new Date(recipe.createdAt).getTime()) /
-        (1000 * 60 * 60 * 24),
+      (Date.now() - new Date(recipe.createdAt).getTime()) / (1000 * 60 * 60 * 24)
     );
 
     if (daysSinceCreation <= 7) {
@@ -123,7 +115,7 @@ export class RecommendationRanker {
 
   private calculatePersonalizationScore(
     recipe: RecipeDetailDTO | undefined,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): number {
     if (!recipe) {
       return 50;
@@ -186,10 +178,7 @@ export class RecommendationRanker {
     return Math.min(score, 100);
   }
 
-  private calculateFinalScore(
-    features: RankingFeatures,
-    weights: RecommendationWeights,
-  ): number {
+  private calculateFinalScore(features: RankingFeatures, weights: RecommendationWeights): number {
     const rankingWeights = {
       base: 0.3,
       popularity: 0.2,
@@ -212,9 +201,7 @@ export class RecommendationRanker {
     return Math.round(weightedScore * userWeightAdjustment);
   }
 
-  private calculateUserWeightAdjustment(
-    weights: RecommendationWeights,
-  ): number {
+  private calculateUserWeightAdjustment(weights: RecommendationWeights): number {
     if (weights.inventory > 0.4) {
       return 1.1;
     }
@@ -228,7 +215,7 @@ export class RecommendationRanker {
 
   private applyDiversityAdjustment(
     rankedRecipes: RecipeRecommendation[],
-    recipeDetails: Map<string, RecipeDetailDTO | undefined>,
+    recipeDetails: Map<string, RecipeDetailDTO | undefined>
   ): RecipeRecommendation[] {
     const adjusted = [...rankedRecipes];
     const usedCategories = new Set<string>();
@@ -318,7 +305,7 @@ export class RecommendationRanker {
 
   private generateRankingExplanation(
     features: RankingFeatures,
-    weights: RecommendationWeights,
+    weights: RecommendationWeights
   ): string {
     const explanations: string[] = [];
 
@@ -334,9 +321,7 @@ export class RecommendationRanker {
       explanations.push("经过用户验证的高质量食谱");
     }
 
-    const weightEntries = Object.entries(weights) as Array<
-      [keyof RecommendationWeights, number]
-    >;
+    const weightEntries = Object.entries(weights) as Array<[keyof RecommendationWeights, number]>;
     const [firstEntry, ...restEntries] = weightEntries;
     const topWeight = firstEntry
       ? restEntries.reduce((a, b) => (a[1] > b[1] ? a : b), firstEntry)
@@ -355,8 +340,7 @@ export class RecommendationRanker {
       number,
     ];
     if (topValue > 0.3) {
-      const explanation =
-        weightExplanations[topKey] ?? weightExplanations.inventory ?? "";
+      const explanation = weightExplanations[topKey] ?? weightExplanations.inventory ?? "";
       explanations.push(explanation);
     }
 

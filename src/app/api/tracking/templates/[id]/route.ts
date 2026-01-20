@@ -18,7 +18,7 @@ const updateTemplateSchema = z.object({
       z.object({
         foodId: z.string(),
         amount: z.number().positive(),
-      }),
+      })
     )
     .optional(),
 });
@@ -27,10 +27,7 @@ const updateTemplateSchema = z.object({
  * PATCH /api/tracking/templates/[id]
  * 更新模板
  */
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await auth();
@@ -49,10 +46,7 @@ export async function PATCH(
     console.error("Error updating template:", error);
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "无效的请求数据", details: error.errors },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "无效的请求数据", details: error.errors }, { status: 400 });
     }
 
     return NextResponse.json({ error: "更新模板失败" }, { status: 500 });
@@ -65,10 +59,7 @@ export async function PATCH(
  *
  * 使用双写框架迁移
  */
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await auth();
@@ -95,10 +86,7 @@ export async function DELETE(
  * Note: 此端点用于更新模板使用统计，不创建膳食记录
  * 要使用模板创建膳食记录，请调用 POST /api/tracking/meals 并传入 templateId
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await auth();

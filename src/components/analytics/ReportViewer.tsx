@@ -29,11 +29,7 @@ const reportTypeLabels = {
   CUSTOM: "自定义报告",
 };
 
-export default function ReportViewer({
-  report,
-  onShare,
-  onDelete,
-}: ReportViewerProps) {
+export default function ReportViewer({ report, onShare, onDelete }: ReportViewerProps) {
   const [showActions, setShowActions] = useState(false);
 
   const formatDate = (date: Date | string) => {
@@ -54,24 +50,22 @@ export default function ReportViewer({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="overflow-hidden rounded-lg bg-white shadow-md">
       {/* 报告头部 */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6">
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
         <div className="flex items-start justify-between">
           <div>
-            <div className="inline-block px-3 py-1 bg-white/20 rounded-full text-sm mb-2">
+            <div className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-sm">
               {reportTypeLabels[report.reportType]}
             </div>
-            <h2 className="text-2xl font-bold mb-2">{report.title}</h2>
+            <h2 className="mb-2 text-2xl font-bold">{report.title}</h2>
             <p className="text-purple-100">
               {formatDate(report.startDate)} 至 {formatDate(report.endDate)}
             </p>
           </div>
           {report.overallScore && (
             <div className="text-center">
-              <div className="text-4xl font-bold">
-                {report.overallScore.toFixed(1)}
-              </div>
+              <div className="text-4xl font-bold">{report.overallScore.toFixed(1)}</div>
               <div className="text-sm text-purple-100">综合评分</div>
             </div>
           )}
@@ -80,7 +74,7 @@ export default function ReportViewer({
 
       {/* 报告摘要 */}
       {report.summary && (
-        <div className="p-6 border-b border-gray-200">
+        <div className="border-b border-gray-200 p-6">
           <p className="text-gray-700">{report.summary}</p>
         </div>
       )}
@@ -88,7 +82,7 @@ export default function ReportViewer({
       {/* 报告内容 */}
       {report.htmlContent && (
         <div
-          className="p-6 prose max-w-none"
+          className="prose max-w-none p-6"
           dangerouslySetInnerHTML={{
             __html: DOMPurify.sanitize(report.htmlContent),
           }}
@@ -96,15 +90,13 @@ export default function ReportViewer({
       )}
 
       {/* 操作按钮 */}
-      <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
-        <div className="text-sm text-gray-500">
-          生成时间：{formatDate(report.createdAt)}
-        </div>
+      <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 p-4">
+        <div className="text-sm text-gray-500">生成时间：{formatDate(report.createdAt)}</div>
         <div className="flex gap-2">
           {onShare && (
             <button
               onClick={() => onShare(report.id)}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700"
             >
               分享报告
             </button>
@@ -116,7 +108,7 @@ export default function ReportViewer({
                   onDelete(report.id);
                 }
               }}
-              className="px-4 py-2 text-sm text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
+              className="rounded-md border border-red-300 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
             >
               删除
             </button>

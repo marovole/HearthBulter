@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Share2,
-  Copy,
-  Download,
-  MessageCircle,
-  Heart,
-  MoreHorizontal,
-} from "lucide-react";
+import { Share2, Copy, Download, MessageCircle, Heart, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -172,29 +165,29 @@ export function ShareButton({
             onClick={handleCreateShare}
             disabled={isSharing}
           >
-            <Share2 className="h-4 w-4 mr-2" />
+            <Share2 className="mr-2 h-4 w-4" />
             {isSharing ? "生成中..." : "分享"}
           </Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onClick={handleCopyLink}>
-            <Copy className="h-4 w-4 mr-2" />
+            <Copy className="mr-2 h-4 w-4" />
             复制链接
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={handleDownloadImage}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             下载图片
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={handleShareToWechat}>
-            <MessageCircle className="h-4 w-4 mr-2" />
+            <MessageCircle className="mr-2 h-4 w-4" />
             分享到微信
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={handleShareToWeibo}>
-            <Heart className="h-4 w-4 mr-2" />
+            <Heart className="mr-2 h-4 w-4" />
             分享到微博
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -209,71 +202,47 @@ export function ShareButton({
           <div className="space-y-4">
             {/* 分享图片预览 */}
             {shareData.imageUrl && (
-              <div className="rounded-lg overflow-hidden border">
-                <img
-                  src={shareData.imageUrl}
-                  alt="分享图片"
-                  className="w-full h-auto"
-                />
+              <div className="overflow-hidden rounded-lg border">
+                <img src={shareData.imageUrl} alt="分享图片" className="h-auto w-full" />
               </div>
             )}
 
             {/* 分享信息 */}
             <div className="space-y-2">
-              <h3 className="font-semibold text-lg">{shareData.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {shareData.description}
-              </p>
+              <h3 className="text-lg font-semibold">{shareData.title}</h3>
+              <p className="text-sm text-muted-foreground">{shareData.description}</p>
             </div>
 
             {/* 分享链接 */}
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">分享链接</p>
-              <p className="text-sm font-mono break-all">
-                {shareData.shareUrl}
-              </p>
+            <div className="rounded-lg bg-muted p-3">
+              <p className="mb-1 text-xs text-muted-foreground">分享链接</p>
+              <p className="break-all font-mono text-sm">{shareData.shareUrl}</p>
             </div>
 
             {/* 操作按钮 */}
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                onClick={handleCopyLink}
-                className="w-full"
-              >
-                <Copy className="h-4 w-4 mr-2" />
+              <Button variant="outline" onClick={handleCopyLink} className="w-full">
+                <Copy className="mr-2 h-4 w-4" />
                 复制链接
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={handleDownloadImage}
-                className="w-full"
-              >
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" onClick={handleDownloadImage} className="w-full">
+                <Download className="mr-2 h-4 w-4" />
                 下载图片
               </Button>
             </div>
 
             {/* 社交媒体分享 */}
-            <div className="pt-2 border-t">
-              <p className="text-sm text-muted-foreground mb-2">分享到</p>
+            <div className="border-t pt-2">
+              <p className="mb-2 text-sm text-muted-foreground">分享到</p>
               <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleShareToWechat}
-                  className="w-full"
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
+                <Button variant="outline" onClick={handleShareToWechat} className="w-full">
+                  <MessageCircle className="mr-2 h-4 w-4" />
                   微信
                 </Button>
 
-                <Button
-                  variant="outline"
-                  onClick={handleShareToWeibo}
-                  className="w-full"
-                >
-                  <Heart className="h-4 w-4 mr-2" />
+                <Button variant="outline" onClick={handleShareToWeibo} className="w-full">
+                  <Heart className="mr-2 h-4 w-4" />
                   微博
                 </Button>
               </div>

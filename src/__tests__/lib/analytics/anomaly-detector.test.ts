@@ -79,9 +79,7 @@ describe("Anomaly Detector", () => {
         { actualProtein: 40, targetProtein: 100 },
       ];
 
-      const proteinDeficient = targets.every(
-        (t) => t.actualProtein < t.targetProtein * 0.5,
-      );
+      const proteinDeficient = targets.every((t) => t.actualProtein < t.targetProtein * 0.5);
 
       expect(proteinDeficient).toBe(true);
     });
@@ -93,9 +91,7 @@ describe("Anomaly Detector", () => {
         { actualCalories: 2650, targetCalories: 2000 },
       ];
 
-      const caloriesExcessive = targets.every(
-        (t) => t.actualCalories > t.targetCalories * 1.3,
-      );
+      const caloriesExcessive = targets.every((t) => t.actualCalories > t.targetCalories * 1.3);
 
       expect(caloriesExcessive).toBe(true);
     });

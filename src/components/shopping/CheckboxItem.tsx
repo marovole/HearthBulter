@@ -42,17 +42,17 @@ function formatPrice(price: number | null): string {
 export function CheckboxItem({ item, onToggle }: CheckboxItemProps) {
   return (
     <div
-      className={`px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors ${
+      className={`flex items-center justify-between px-4 py-3 transition-colors hover:bg-gray-50 ${
         item.purchased ? "bg-green-50" : ""
       }`}
     >
-      <div className="flex items-center flex-1">
+      <div className="flex flex-1 items-center">
         {/* 复选框 */}
         <input
           type="checkbox"
           checked={item.purchased}
           onChange={(e) => onToggle(e.target.checked)}
-          className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
+          className="h-5 w-5 rounded text-blue-600 focus:ring-2 focus:ring-blue-500"
         />
 
         {/* 食材信息 */}
@@ -60,7 +60,7 @@ export function CheckboxItem({ item, onToggle }: CheckboxItemProps) {
           <div className="flex items-center gap-2">
             <span
               className={`font-medium ${
-                item.purchased ? "line-through text-gray-500" : "text-gray-900"
+                item.purchased ? "text-gray-500 line-through" : "text-gray-900"
               }`}
             >
               {item.food.name}
@@ -69,9 +69,7 @@ export function CheckboxItem({ item, onToggle }: CheckboxItemProps) {
           <div className="mt-1 flex items-center gap-4 text-sm text-gray-600">
             <span>{formatAmount(item.amount)}</span>
             {item.estimatedPrice !== null && (
-              <span className="text-gray-500">
-                {formatPrice(item.estimatedPrice)}
-              </span>
+              <span className="text-gray-500">{formatPrice(item.estimatedPrice)}</span>
             )}
           </div>
         </div>

@@ -28,11 +28,7 @@ import type {
   RecipeSummaryDTO,
   UserPreferenceDTO,
 } from "../types/recommendation";
-import type {
-  DateRangeFilter,
-  PaginatedResult,
-  PaginationInput,
-} from "../types/common";
+import type { DateRangeFilter, PaginatedResult, PaginationInput } from "../types/common";
 
 type RecipeRow = Database["public"]["Tables"]["recipes"]["Row"];
 
@@ -59,11 +55,9 @@ type RecipeIngredientRow = {
 type RecipeDetailRow = RecipeRow & {
   ingredients?: RecipeIngredientRow[] | null;
 };
-type UserPreferenceRow =
-  Database["public"]["Tables"]["user_preferences"]["Row"];
+type UserPreferenceRow = Database["public"]["Tables"]["user_preferences"]["Row"];
 type RecipeRatingRow = Database["public"]["Tables"]["recipe_ratings"]["Row"];
-type RecipeFavoriteRow =
-  Database["public"]["Tables"]["recipe_favorites"]["Row"];
+type RecipeFavoriteRow = Database["public"]["Tables"]["recipe_favorites"]["Row"];
 type RecipeViewRow = Database["public"]["Tables"]["recipe_views"]["Row"];
 type HealthGoalRow = Database["public"]["Tables"]["health_goals"]["Row"];
 type InventoryItemRow = Database["public"]["Tables"]["inventory_items"]["Row"];
@@ -77,15 +71,11 @@ type InventoryItemRow = Database["public"]["Tables"]["inventory_items"]["Row"];
  * - 批量并发查询
  * - 完善的错误处理
  */
-export class SupabaseRecommendationRepository
-implements RecommendationRepository
-{
+export class SupabaseRecommendationRepository implements RecommendationRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = "[SupabaseRecommendationRepository]";
 
-  constructor(
-    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
-  ) {
+  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
     this.client = client;
   }
 
@@ -113,7 +103,7 @@ implements RecommendationRepository
    */
   async listCandidateRecipes(
     filters: RecommendationRecipeFilter,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<RecipeSummaryDTO>> {
     let query = this.client
       .from("recipes")
@@ -135,7 +125,7 @@ implements RecommendationRepository
         tags,
         ingredients
       `,
-        { count: "exact" },
+        { count: "exact" }
       )
       .eq("status", "PUBLISHED")
       .eq("is_public", true);
@@ -183,9 +173,7 @@ implements RecommendationRepository
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
     };
   }
 
@@ -196,7 +184,7 @@ implements RecommendationRepository
    */
   async getRecipeBehavior(
     memberId: string,
-    range?: DateRangeFilter,
+    range?: DateRangeFilter
   ): Promise<RecommendationBehaviorDTO> {
     const [ratingsRes, favoritesRes, viewsRes] = await Promise.all([
       this.selectWithRange("recipe_ratings", "rated_at", memberId, range),
@@ -204,12 +192,9 @@ implements RecommendationRepository
       this.selectWithRange("recipe_views", "viewed_at", memberId, range),
     ]);
 
-    if (ratingsRes.error)
-      this.handleError("getRecipeBehavior:ratings", ratingsRes.error);
-    if (favoritesRes.error)
-      this.handleError("getRecipeBehavior:favorites", favoritesRes.error);
-    if (viewsRes.error)
-      this.handleError("getRecipeBehavior:views", viewsRes.error);
+    if (ratingsRes.error) this.handleError("getRecipeBehavior:ratings", ratingsRes.error);
+    if (favoritesRes.error) this.handleError("getRecipeBehavior:favorites", favoritesRes.error);
+    if (viewsRes.error) this.handleError("getRecipeBehavior:views", viewsRes.error);
 
     return {
       ratings: (ratingsRes.data || []).map((row) => ({
@@ -230,7 +215,7 @@ implements RecommendationRepository
 
   async getDetailedRecipeBehavior(
     memberId: string,
-    options?: BehaviorDetailQueryOptions,
+    options?: BehaviorDetailQueryOptions
   ): Promise<RecommendationBehaviorWithDetailsDTO> {
     const limit = options?.limit ?? 50;
     const minRating = options?.minRating ?? 4;
@@ -280,13 +265,13 @@ implements RecommendationRepository
               food:foods(id, name, category)
             )
           )
-        `,
+        `
         )
         .eq("member_id", memberId)
         .gte("rating", minRating)
         .order("rated_at", { ascending: false })
         .limit(limit),
-      "rated_at",
+      "rated_at"
     );
 
     const favoritesQuery = buildRange(
@@ -325,12 +310,12 @@ implements RecommendationRepository
               food:foods(id, name, category)
             )
           )
-        `,
+        `
         )
         .eq("member_id", memberId)
         .order("favorited_at", { ascending: false })
         .limit(limit),
-      "favorited_at",
+      "favorited_at"
     );
 
     const viewsQuery = buildRange(
@@ -369,12 +354,12 @@ implements RecommendationRepository
               food:foods(id, name, category)
             )
           )
-        `,
+        `
         )
         .eq("member_id", memberId)
         .order("viewed_at", { ascending: false })
         .limit(limit),
-      "viewed_at",
+      "viewed_at"
     );
 
     const [ratingsRes, favoritesRes, viewsRes] = await Promise.all([
@@ -383,15 +368,10 @@ implements RecommendationRepository
       viewsQuery,
     ]);
 
-    if (ratingsRes.error)
-      this.handleError("getDetailedRecipeBehavior:ratings", ratingsRes.error);
+    if (ratingsRes.error) this.handleError("getDetailedRecipeBehavior:ratings", ratingsRes.error);
     if (favoritesRes.error)
-      this.handleError(
-        "getDetailedRecipeBehavior:favorites",
-        favoritesRes.error,
-      );
-    if (viewsRes.error)
-      this.handleError("getDetailedRecipeBehavior:views", viewsRes.error);
+      this.handleError("getDetailedRecipeBehavior:favorites", favoritesRes.error);
+    if (viewsRes.error) this.handleError("getDetailedRecipeBehavior:views", viewsRes.error);
 
     const ratingRows = (ratingsRes.data || []) as Array<
       RecipeRatingRow & { recipe: RecipeDetailRow }
@@ -399,9 +379,7 @@ implements RecommendationRepository
     const favoriteRows = (favoritesRes.data || []) as Array<
       RecipeFavoriteRow & { recipe: RecipeDetailRow }
     >;
-    const viewRows = (viewsRes.data || []) as Array<
-      RecipeViewRow & { recipe: RecipeDetailRow }
-    >;
+    const viewRows = (viewsRes.data || []) as Array<RecipeViewRow & { recipe: RecipeDetailRow }>;
 
     return {
       ratings: ratingRows.map((row) => ({
@@ -458,7 +436,7 @@ implements RecommendationRepository
           optional,
           food:foods(id, name, category)
         )
-      `,
+      `
       )
       .eq("id", recipeId)
       .eq("status", "PUBLISHED")
@@ -474,10 +452,7 @@ implements RecommendationRepository
     return this.mapRecipeDetail(data as RecipeDetailRow);
   }
 
-  async listPopularRecipes(
-    limit = 10,
-    category?: string,
-  ): Promise<RecipeDetailDTO[]> {
+  async listPopularRecipes(limit = 10, category?: string): Promise<RecipeDetailDTO[]> {
     let query = this.client
       .from("recipes")
       .select(
@@ -512,7 +487,7 @@ implements RecommendationRepository
           optional,
           food:foods(id, name, category)
         )
-      `,
+      `
       )
       .eq("status", "PUBLISHED")
       .eq("is_public", true)
@@ -530,14 +505,12 @@ implements RecommendationRepository
       this.handleError("listPopularRecipes", error);
     }
 
-    return (data || []).map((row) =>
-      this.mapRecipeDetail(row as RecipeDetailRow),
-    );
+    return (data || []).map((row) => this.mapRecipeDetail(row as RecipeDetailRow));
   }
 
   async upsertLearnedUserPreferences(
     memberId: string,
-    payload: LearnedPreferenceInsightsDTO,
+    payload: LearnedPreferenceInsightsDTO
   ): Promise<void> {
     const learnedPreferences = {
       ...payload,
@@ -554,7 +527,7 @@ implements RecommendationRepository
         last_analyzed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "member_id" },
+      { onConflict: "member_id" }
     );
 
     if (error) {
@@ -599,7 +572,7 @@ implements RecommendationRepository
           optional,
           food:foods(id, name, category)
         )
-      `,
+      `
       )
       .in("id", ids)
       .eq("status", "PUBLISHED")
@@ -609,17 +582,13 @@ implements RecommendationRepository
       this.handleError("getRecipesByIds", error);
     }
 
-    return (data || []).map((row) =>
-      this.mapRecipeDetail(row as RecipeDetailRow),
-    );
+    return (data || []).map((row) => this.mapRecipeDetail(row as RecipeDetailRow));
   }
 
   async listMemberBehaviorSamples(options: {
     excludeMemberId?: string;
     limit?: number;
-  }): Promise<
-    Array<{ memberId: string; behavior: RecommendationBehaviorDTO }>
-  > {
+  }): Promise<Array<{ memberId: string; behavior: RecommendationBehaviorDTO }>> {
     const limit = options.limit ?? 50;
 
     const [ratingsRes, favoritesRes] = await Promise.all([
@@ -640,10 +609,7 @@ implements RecommendationRepository
     }
 
     if (favoritesRes.error) {
-      this.handleError(
-        "listMemberBehaviorSamples:favorites",
-        favoritesRes.error,
-      );
+      this.handleError("listMemberBehaviorSamples:favorites", favoritesRes.error);
     }
 
     const memberIds = new Set<string>();
@@ -660,7 +626,7 @@ implements RecommendationRepository
       slicedMemberIds.map(async (memberId) => ({
         memberId,
         behavior: await this.getRecipeBehavior(memberId),
-      })),
+      }))
     );
 
     return behaviors;
@@ -668,7 +634,7 @@ implements RecommendationRepository
 
   async getRecipeCooccurrence(
     recipeId: string,
-    limit = 10,
+    limit = 10
   ): Promise<Array<{ recipeId: string; count: number }>> {
     const { data: baseFavorites, error: baseError } = await this.client
       .from("recipe_favorites")
@@ -679,9 +645,7 @@ implements RecommendationRepository
       this.handleError("getRecipeCooccurrence:base", baseError);
     }
 
-    const memberIds = (baseFavorites || [])
-      .map((row) => row.member_id)
-      .filter(Boolean);
+    const memberIds = (baseFavorites || []).map((row) => row.member_id).filter(Boolean);
 
     if (memberIds.length === 0) return [];
 
@@ -709,7 +673,7 @@ implements RecommendationRepository
 
   async listDetailedCandidateRecipes(
     filters: RecommendationRecipeFilter,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<RecipeDetailDTO>> {
     let query = this.client
       .from("recipes")
@@ -746,7 +710,7 @@ implements RecommendationRepository
           food:foods(id, name, category)
         )
       `,
-        { count: "exact" },
+        { count: "exact" }
       )
       .eq("status", "PUBLISHED")
       .eq("is_public", true);
@@ -786,16 +750,12 @@ implements RecommendationRepository
       this.handleError("listDetailedCandidateRecipes", error);
     }
 
-    const items = (data || []).map((row) =>
-      this.mapRecipeDetail(row as RecipeDetailRow),
-    );
+    const items = (data || []).map((row) => this.mapRecipeDetail(row as RecipeDetailRow));
 
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
     };
   }
 
@@ -804,10 +764,7 @@ implements RecommendationRepository
    *
    * 基于菜系和标签计算相似度
    */
-  async getSimilarRecipes(
-    recipeId: string,
-    limit = 10,
-  ): Promise<RecipeSummaryDTO[]> {
+  async getSimilarRecipes(recipeId: string, limit = 10): Promise<RecipeSummaryDTO[]> {
     // 1. 获取目标食谱
     const { data: baseRecipe, error } = await this.client
       .from("recipes")
@@ -842,7 +799,7 @@ implements RecommendationRepository
         fat_per_serving,
         tags,
         ingredients
-      `,
+      `
       )
       .neq("id", recipeId)
       .eq("status", "PUBLISHED")
@@ -864,9 +821,7 @@ implements RecommendationRepository
       this.handleError("getSimilarRecipes:list", listError);
     }
 
-    return (data || [])
-      .map((row) => this.mapRecipe(row as RecipeRow))
-      .slice(0, limit);
+    return (data || []).map((row) => this.mapRecipe(row as RecipeRow)).slice(0, limit);
   }
 
   /**
@@ -940,7 +895,7 @@ implements RecommendationRepository
    */
   async upsertRecommendationWeights(
     memberId: string,
-    weights: RecommendationWeightsDTO,
+    weights: RecommendationWeightsDTO
   ): Promise<void> {
     const { error } = await this.client.from("user_preferences").upsert(
       {
@@ -948,7 +903,7 @@ implements RecommendationRepository
         recommendation_weight: weights as unknown as Json,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "member_id" },
+      { onConflict: "member_id" }
     );
 
     if (error) {
@@ -979,9 +934,7 @@ implements RecommendationRepository
       viewCount: row.view_count ?? null,
       estimatedCost: row.estimated_cost ?? null,
       tags: this.parseStringArray(row.tags ?? null),
-      ingredients: this.normalizeIngredients(
-        row.ingredients as unknown as Json,
-      ),
+      ingredients: this.normalizeIngredients(row.ingredients as unknown as Json),
       description: row.description ?? undefined,
       cuisine: row.cuisine_type ?? undefined,
       category: row.category ?? undefined,
@@ -1001,9 +954,7 @@ implements RecommendationRepository
                 name?: string | null;
                 category?: string | null;
               }
-            | undefined = Array.isArray(ingredient.food)
-              ? ingredient.food[0]
-              : ingredient.food;
+            | undefined = Array.isArray(ingredient.food) ? ingredient.food[0] : ingredient.food;
           if (!ingredient.food_id && !foodValue?.id) return null;
           const foodId = foodValue?.id ?? ingredient.food_id ?? "";
           return {
@@ -1021,7 +972,7 @@ implements RecommendationRepository
           };
         })
         .filter((ingredient): ingredient is NonNullable<typeof ingredient> =>
-          Boolean(ingredient?.foodId),
+          Boolean(ingredient?.foodId)
         ),
       createdAt: row.created_at ? new Date(row.created_at) : undefined,
       updatedAt: row.updated_at ? new Date(row.updated_at) : undefined,
@@ -1055,8 +1006,7 @@ implements RecommendationRepository
    * 数据映射：UserPreferenceRow → UserPreferenceDTO
    */
   private mapUserPreference(row: UserPreferenceRow): UserPreferenceDTO {
-    const weights =
-      row.recommendation_weight as RecommendationWeightsDTO | null;
+    const weights = row.recommendation_weight as RecommendationWeightsDTO | null;
     return {
       memberId: row.member_id,
       preferredIngredients: this.parseStringArray(row.preferred_ingredients),
@@ -1087,9 +1037,7 @@ implements RecommendationRepository
     };
   }
 
-  private parseTagsRaw(
-    value: Json | null | undefined,
-  ): string | string[] | null {
+  private parseTagsRaw(value: Json | null | undefined): string | string[] | null {
     if (!value) return null;
     if (typeof value === "string") return value;
     if (Array.isArray(value)) {
@@ -1124,26 +1072,15 @@ implements RecommendationRepository
    */
   private normalizeIngredients(value: Json | null | undefined) {
     if (!value) return [];
-    const array = Array.isArray(value)
-      ? value
-      : typeof value === "string"
-        ? JSON.parse(value)
-        : [];
+    const array = Array.isArray(value) ? value : typeof value === "string" ? JSON.parse(value) : [];
     if (!Array.isArray(array)) return [];
     return array
       .map((item) => {
         if (typeof item !== "object" || !item) return null;
         return {
-          name:
-            "name" in item && typeof item.name === "string" ? item.name : "",
-          amount:
-            "amount" in item && typeof item.amount === "number"
-              ? item.amount
-              : undefined,
-          unit:
-            "unit" in item && typeof item.unit === "string"
-              ? item.unit
-              : undefined,
+          name: "name" in item && typeof item.name === "string" ? item.name : "",
+          amount: "amount" in item && typeof item.amount === "number" ? item.amount : undefined,
+          unit: "unit" in item && typeof item.unit === "string" ? item.unit : undefined,
         };
       })
       .filter((item): item is NonNullable<typeof item> => !!item?.name);
@@ -1156,7 +1093,7 @@ implements RecommendationRepository
     table: keyof Database["public"]["Tables"],
     column: string,
     memberId: string,
-    range?: DateRangeFilter,
+    range?: DateRangeFilter
   ) {
     let query = this.client
       .from(table as string)

@@ -13,12 +13,7 @@ export type NotificationType =
   | "MARKETING"
   | "OTHER";
 
-export type NotificationStatus =
-  | "PENDING"
-  | "SENDING"
-  | "SENT"
-  | "FAILED"
-  | "CANCELLED";
+export type NotificationStatus = "PENDING" | "SENDING" | "SENT" | "FAILED" | "CANCELLED";
 
 interface Notification {
   id: string;
@@ -75,7 +70,7 @@ export class NotificationService {
 
     const result = await convexClient.query<Doc<"notifications"> | null>(
       api.notifications.getById,
-      { id: id as Id<"notifications"> },
+      { id: id as Id<"notifications"> }
     );
 
     return this.mapNotification(result!);
@@ -84,7 +79,7 @@ export class NotificationService {
   static async findById(id: string): Promise<Notification | null> {
     const notification = await convexClient.query<Doc<"notifications"> | null>(
       api.notifications.getById,
-      { id: id as Id<"notifications"> },
+      { id: id as Id<"notifications"> }
     );
 
     return notification ? this.mapNotification(notification) : null;
@@ -98,7 +93,7 @@ export class NotificationService {
       limit?: number;
       offset?: number;
       includeRead?: boolean;
-    } = {},
+    } = {}
   ): Promise<{
     notifications: Notification[];
     total: number;
@@ -123,13 +118,10 @@ export class NotificationService {
     };
   }
 
-  static async markAsRead(
-    notificationId: string,
-    memberId: string,
-  ): Promise<void> {
+  static async markAsRead(notificationId: string, memberId: string): Promise<void> {
     const notification = await convexClient.query<Doc<"notifications"> | null>(
       api.notifications.getById,
-      { id: notificationId as Id<"notifications"> },
+      { id: notificationId as Id<"notifications"> }
     );
 
     if (!notification) {
@@ -150,7 +142,7 @@ export class NotificationService {
   static async delete(notificationId: string, memberId: string): Promise<void> {
     const notification = await convexClient.query<Doc<"notifications"> | null>(
       api.notifications.getById,
-      { id: notificationId as Id<"notifications"> },
+      { id: notificationId as Id<"notifications"> }
     );
 
     if (!notification) {
@@ -168,20 +160,14 @@ export class NotificationService {
     });
   }
 
-  static async updateStatus(
-    id: string,
-    status: NotificationStatus,
-  ): Promise<void> {
+  static async updateStatus(id: string, status: NotificationStatus): Promise<void> {
     await convexClient.mutation(api.notifications.updateStatus, {
       id: id as Id<"notifications">,
       status,
     });
   }
 
-  static async updateDeliveryResults(
-    id: string,
-    results: string,
-  ): Promise<void> {
+  static async updateDeliveryResults(id: string, results: string): Promise<void> {
     await convexClient.mutation(api.notifications.updateDeliveryResults, {
       id: id as Id<"notifications">,
       results,
@@ -198,35 +184,29 @@ export class NotificationService {
   static async getPendingRetryNotifications(): Promise<Notification[]> {
     const items = await convexClient.query<Doc<"notifications">[]>(
       api.notifications.listPendingRetry,
-      { limit: 50 },
+      { limit: 50 }
     );
 
     return items.map(this.mapNotification);
   }
 
-  static async getPendingNotifications(
-    limit: number = 50,
-  ): Promise<Notification[]> {
-    const items = await convexClient.query<Doc<"notifications">[]>(
-      api.notifications.listPending,
-      { limit },
-    );
+  static async getPendingNotifications(limit: number = 50): Promise<Notification[]> {
+    const items = await convexClient.query<Doc<"notifications">[]>(api.notifications.listPending, {
+      limit,
+    });
 
     return items.map(this.mapNotification);
   }
 
   static async getUserNotificationStats(
     memberId: string,
-    days: number = 30,
+    days: number = 30
   ): Promise<{
     total: number;
     sent: number;
     failed: number;
     pending: number;
-    byType: Record<
-      string,
-      { total: number; sent: number; failed: number; pending: number }
-    >;
+    byType: Record<string, { total: number; sent: number; failed: number; pending: number }>;
   }> {
     const stats = await convexClient.query<{
       summary: {
@@ -261,9 +241,7 @@ export class NotificationService {
     };
   }
 
-  static async cleanupOldNotifications(
-    daysToKeep: number = 90,
-  ): Promise<number> {
+  static async cleanupOldNotifications(daysToKeep: number = 90): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
@@ -274,7 +252,7 @@ export class NotificationService {
 
   static async batchUpdateStatus(
     notificationIds: string[],
-    status: NotificationStatus,
+    status: NotificationStatus
   ): Promise<number> {
     return await convexClient.mutation(api.notifications.batchUpdateStatus, {
       ids: notificationIds.map((id) => id as Id<"notifications">),
@@ -290,7 +268,7 @@ export class NotificationService {
       offset?: number;
       dateFrom?: Date;
       dateTo?: Date;
-    } = {},
+    } = {}
   ): Promise<{
     notifications: Notification[];
     total: number;

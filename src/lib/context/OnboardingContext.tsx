@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 interface OnboardingContextType {
   isOnboardingCompleted: boolean;
@@ -17,9 +11,7 @@ interface OnboardingContextType {
   resetOnboarding: () => void;
 }
 
-const OnboardingContext = createContext<OnboardingContextType | undefined>(
-  undefined,
-);
+const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export function useOnboarding() {
   const context = useContext(OnboardingContext);
@@ -100,9 +92,5 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     resetOnboarding,
   };
 
-  return (
-    <OnboardingContext.Provider value={value}>
-      {children}
-    </OnboardingContext.Provider>
-  );
+  return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { taskRepository } from "@/lib/repositories/task-repository-singleton";
-import {
-  withApiPermissions,
-  PERMISSION_CONFIGS,
-} from "@/middleware/permissions";
+import { withApiPermissions, PERMISSION_CONFIGS } from "@/middleware/permissions";
 import { hasPermission, Permission } from "@/lib/permissions";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
@@ -19,7 +16,7 @@ import type { Doc, Id } from "@/../convex/_generated/dataModel";
 export const dynamic = "force-dynamic";
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string; taskId: string }> },
+  { params }: { params: Promise<{ familyId: string; taskId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -33,7 +30,7 @@ export async function POST(
       if (!assigneeId) {
         return NextResponse.json(
           { success: false, error: "Missing required field: assigneeId" },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -42,21 +39,18 @@ export async function POST(
         {
           familyId: familyId as Id<"families">,
           clerkId: userId,
-        },
+        }
       );
 
       if (!member) {
-        return NextResponse.json(
-          { success: false, error: "Not a family member" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Not a family member" }, { status: 403 });
       }
 
       // 检查分配任务权限
       if (!hasPermission(member.role as any, Permission.ASSIGN_TASK)) {
         return NextResponse.json(
           { success: false, error: "Insufficient permissions" },
-          { status: 403 },
+          { status: 403 }
         );
       }
 
@@ -64,10 +58,7 @@ export async function POST(
       const task = await taskRepository.getTaskById(familyId, taskId);
 
       if (!task) {
-        return NextResponse.json(
-          { success: false, error: "Task not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ success: false, error: "Task not found" }, { status: 404 });
       }
 
       // 验证被分配人是家庭成员
@@ -75,22 +66,18 @@ export async function POST(
         api.families.getMemberById,
         {
           memberId: assigneeId as Id<"familyMembers">,
-        },
+        }
       );
 
       if (!assignee) {
         return NextResponse.json(
           { success: false, error: "Assignee is not a family member" },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
       // 使用 Repository 分配任务
-      const updatedTask = await taskRepository.assignTask(
-        familyId,
-        taskId,
-        assigneeId,
-      );
+      const updatedTask = await taskRepository.assignTask(familyId, taskId, assigneeId);
 
       // 记录活动日志
       await convexClient
@@ -120,10 +107,9 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to assign task",
+          error: error instanceof Error ? error.message : "Failed to assign task",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.ASSIGN_TASK)(request as any, { params });

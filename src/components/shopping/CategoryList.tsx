@@ -46,7 +46,7 @@ export function CategoryList({ items, onItemToggle }: CategoryListProps) {
       acc[category].push(item);
       return acc;
     },
-    {} as Record<string, ShoppingItem[]>,
+    {} as Record<string, ShoppingItem[]>
   );
 
   // 获取分类顺序（优先显示易腐食材）
@@ -72,15 +72,13 @@ export function CategoryList({ items, onItemToggle }: CategoryListProps) {
           return null;
         }
 
-        const purchasedCount = categoryItems.filter(
-          (item) => item.purchased,
-        ).length;
+        const purchasedCount = categoryItems.filter((item) => item.purchased).length;
         const totalCount = categoryItems.length;
 
         return (
-          <div key={category} className="border border-gray-200 rounded-lg">
+          <div key={category} className="rounded-lg border border-gray-200">
             {/* 分类标题 */}
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
                   {CATEGORY_LABELS[category] || category}

@@ -19,8 +19,7 @@ export async function POST(request: NextRequest) {
 
     // 检查是否为系统调用或定时任务
     const authHeader = request.headers.get("authorization");
-    const isSystemCall =
-      authHeader === `Bearer ${process.env.REMINDER_SERVICE_SECRET}`;
+    const isSystemCall = authHeader === `Bearer ${process.env.REMINDER_SERVICE_SECRET}`;
 
     if (!isSystemCall) {
       // 如果不是系统调用，检查用户权限
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
           priority: r.priority,
         })),
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("触发提醒检查失败:", error);
@@ -69,8 +68,7 @@ export async function GET(request: NextRequest) {
 
     // 检查权限
     const authHeader = request.headers.get("authorization");
-    const isSystemCall =
-      authHeader === `Bearer ${process.env.REMINDER_SERVICE_SECRET}`;
+    const isSystemCall = authHeader === `Bearer ${process.env.REMINDER_SERVICE_SECRET}`;
 
     if (!isSystemCall) {
       return NextResponse.json({ error: "无权限执行此操作" }, { status: 403 });
@@ -85,7 +83,7 @@ export async function GET(request: NextRequest) {
         count: pendingReminders.length,
         reminders: pendingReminders,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取待触发提醒失败:", error);

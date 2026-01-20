@@ -37,7 +37,7 @@ export interface MealMacro {
  * 计算基础代谢率 (BMR) - Mifflin-St Jeor 公式
  */
 export function calculateBMR(
-  profile: Pick<UserProfile, "weight" | "height" | "age" | "gender">,
+  profile: Pick<UserProfile, "weight" | "height" | "age" | "gender">
 ): number {
   const { weight, height, age, gender } = profile;
 
@@ -51,10 +51,7 @@ export function calculateBMR(
 /**
  * 计算每日总能量消耗 (TDEE)
  */
-export function calculateTDEE(
-  bmr: number,
-  activityLevel: UserProfile["activityLevel"],
-): number {
+export function calculateTDEE(bmr: number, activityLevel: UserProfile["activityLevel"]): number {
   const activityMultipliers = {
     sedentary: 1.2,
     light: 1.375,
@@ -81,10 +78,7 @@ export function calculateBMI(weight: number, height: number): number {
 /**
  * 计算理想体重 - Devine 公式
  */
-export function calculateIdealWeight(
-  height: number,
-  gender: "male" | "female",
-): number {
+export function calculateIdealWeight(height: number, gender: "male" | "female"): number {
   const heightInInches = height * 0.393701 - 60; // Convert to inches and subtract 5 feet
 
   if (gender === "male") {
@@ -110,15 +104,15 @@ export function calculateDailyMacros(profile: UserProfile): MacroGoals {
 
   // 根据目标调整卡路里
   switch (profile.goal) {
-  case "weight_loss":
-    targetCalories = tdee * 0.85; // 15% deficit
-    break;
-  case "muscle_gain":
-    targetCalories = tdee * 1.1; // 10% surplus
-    break;
-  case "maintain":
-  default:
-    targetCalories = tdee;
+    case "weight_loss":
+      targetCalories = tdee * 0.85; // 15% deficit
+      break;
+    case "muscle_gain":
+      targetCalories = tdee * 1.1; // 10% surplus
+      break;
+    case "maintain":
+    default:
+      targetCalories = tdee;
   }
 
   // 蛋白质需求 (g/kg body weight)
@@ -158,9 +152,7 @@ export function calculateDailyMacros(profile: UserProfile): MacroGoals {
 /**
  * 获取营养素推荐摄入量
  */
-export function getNutrientRecommendations(
-  profile: UserProfile,
-): NutrientRecommendations {
+export function getNutrientRecommendations(profile: UserProfile): NutrientRecommendations {
   const macros = calculateDailyMacros(profile);
 
   // 纤维推荐 (14g per 1000 calories)
@@ -183,29 +175,26 @@ export function getNutrientRecommendations(
 /**
  * 将每日宏量营养素分配到各餐
  */
-export function calculateMealMacros(
-  dailyMacros: MacroGoals,
-  mealCount: number,
-): MealMacro[] {
+export function calculateMealMacros(dailyMacros: MacroGoals, mealCount: number): MealMacro[] {
   const meals: MealMacro[] = [];
 
   // 默认分配比例
   let distributions: number[];
 
   switch (mealCount) {
-  case 3:
-    distributions = [0.35, 0.35, 0.3]; // 早餐、午餐、晚餐
-    break;
-  case 4:
-    distributions = [0.25, 0.3, 0.3, 0.15]; // 早餐、午餐、晚餐、加餐
-    break;
-  case 5:
-    distributions = [0.2, 0.25, 0.3, 0.15, 0.1]; // 早餐、上午加餐、午餐、下午加餐、晚餐
-    break;
-  default:
-    // 平均分配
-    const equalShare = 1 / mealCount;
-    distributions = Array(mealCount).fill(equalShare);
+    case 3:
+      distributions = [0.35, 0.35, 0.3]; // 早餐、午餐、晚餐
+      break;
+    case 4:
+      distributions = [0.25, 0.3, 0.3, 0.15]; // 早餐、午餐、晚餐、加餐
+      break;
+    case 5:
+      distributions = [0.2, 0.25, 0.3, 0.15, 0.1]; // 早餐、上午加餐、午餐、下午加餐、晚餐
+      break;
+    default:
+      // 平均分配
+      const equalShare = 1 / mealCount;
+      distributions = Array(mealCount).fill(equalShare);
   }
 
   for (let i = 0; i < mealCount; i++) {

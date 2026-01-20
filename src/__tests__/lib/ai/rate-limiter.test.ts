@@ -87,32 +87,16 @@ describe("Rate Limiter", () => {
       const config = { windowMs: 60000, maxRequests: 2 };
 
       // 用户1的请求
-      const user1Result1 = await rateLimiter.checkLimit(
-        "user-1",
-        endpoint,
-        config,
-      );
-      const user1Result2 = await rateLimiter.checkLimit(
-        "user-1",
-        endpoint,
-        config,
-      );
-      const user1Result3 = await rateLimiter.checkLimit(
-        "user-1",
-        endpoint,
-        config,
-      );
+      const user1Result1 = await rateLimiter.checkLimit("user-1", endpoint, config);
+      const user1Result2 = await rateLimiter.checkLimit("user-1", endpoint, config);
+      const user1Result3 = await rateLimiter.checkLimit("user-1", endpoint, config);
 
       expect(user1Result1.allowed).toBe(true);
       expect(user1Result2.allowed).toBe(true);
       expect(user1Result3.allowed).toBe(false); // 超出限制
 
       // 用户2的请求（应该不受用户1影响）
-      const user2Result1 = await rateLimiter.checkLimit(
-        "user-2",
-        endpoint,
-        config,
-      );
+      const user2Result1 = await rateLimiter.checkLimit("user-2", endpoint, config);
       expect(user2Result1.allowed).toBe(true);
     });
 
@@ -121,27 +105,15 @@ describe("Rate Limiter", () => {
       const config = { windowMs: 60000, maxRequests: 1 };
 
       // 聊天端点
-      const chatResult = await rateLimiter.checkLimit(
-        userId,
-        "ai_chat",
-        config,
-      );
+      const chatResult = await rateLimiter.checkLimit(userId, "ai_chat", config);
       expect(chatResult.allowed).toBe(true);
 
       // 分析端点（应该不受聊天端点影响）
-      const analysisResult = await rateLimiter.checkLimit(
-        userId,
-        "ai_analyze_health",
-        config,
-      );
+      const analysisResult = await rateLimiter.checkLimit(userId, "ai_analyze_health", config);
       expect(analysisResult.allowed).toBe(true);
 
       // 再次请求聊天端点（应该被拒绝）
-      const chatResult2 = await rateLimiter.checkLimit(
-        userId,
-        "ai_chat",
-        config,
-      );
+      const chatResult2 = await rateLimiter.checkLimit(userId, "ai_chat", config);
       expect(chatResult2.allowed).toBe(false);
     });
   });
@@ -210,35 +182,23 @@ describe("Rate Limiter", () => {
 
       // 聊天端点限制
       for (let i = 0; i < 10; i++) {
-        const result = await rateLimiter.checkLimit(
-          userId,
-          "ai_chat",
-          chatConfig,
-        );
+        const result = await rateLimiter.checkLimit(userId, "ai_chat", chatConfig);
         expect(result.allowed).toBe(true);
       }
 
-      const chatOverflow = await rateLimiter.checkLimit(
-        userId,
-        "ai_chat",
-        chatConfig,
-      );
+      const chatOverflow = await rateLimiter.checkLimit(userId, "ai_chat", chatConfig);
       expect(chatOverflow.allowed).toBe(false);
 
       // 分析端点限制（独立计算）
       for (let i = 0; i < 5; i++) {
-        const result = await rateLimiter.checkLimit(
-          userId,
-          "ai_analyze_health",
-          analysisConfig,
-        );
+        const result = await rateLimiter.checkLimit(userId, "ai_analyze_health", analysisConfig);
         expect(result.allowed).toBe(true);
       }
 
       const analysisOverflow = await rateLimiter.checkLimit(
         userId,
         "ai_analyze_health",
-        analysisConfig,
+        analysisConfig
       );
       expect(analysisOverflow.allowed).toBe(false);
     });
@@ -251,18 +211,10 @@ describe("Rate Limiter", () => {
       await rateLimiter.checkLimit("user-1", "ai_chat", globalConfig);
       await rateLimiter.checkLimit("user-1", "ai_analyze_health", globalConfig);
       await rateLimiter.checkLimit("user-1", "ai_analyze_health", globalConfig);
-      await rateLimiter.checkLimit(
-        "user-1",
-        "ai_generate_report",
-        globalConfig,
-      );
+      await rateLimiter.checkLimit("user-1", "ai_generate_report", globalConfig);
 
       // 第6个请求（任何端点）都应该被拒绝
-      const overflowResult = await rateLimiter.checkLimit(
-        "user-1",
-        "ai_chat",
-        globalConfig,
-      );
+      const overflowResult = await rateLimiter.checkLimit("user-1", "ai_chat", globalConfig);
       expect(overflowResult.allowed).toBe(false);
     });
   });
@@ -297,36 +249,20 @@ describe("Rate Limiter", () => {
 
       // 基础用户限制
       for (let i = 0; i < 5; i++) {
-        const result = await rateLimiter.checkLimit(
-          baseUserId,
-          "ai_chat",
-          baseConfig,
-        );
+        const result = await rateLimiter.checkLimit(baseUserId, "ai_chat", baseConfig);
         expect(result.allowed).toBe(true);
       }
 
-      const baseOverflow = await rateLimiter.checkLimit(
-        baseUserId,
-        "ai_chat",
-        baseConfig,
-      );
+      const baseOverflow = await rateLimiter.checkLimit(baseUserId, "ai_chat", baseConfig);
       expect(baseOverflow.allowed).toBe(false);
 
       // 高级用户限制
       for (let i = 0; i < 20; i++) {
-        const result = await rateLimiter.checkLimit(
-          premiumUserId,
-          "ai_chat",
-          premiumConfig,
-        );
+        const result = await rateLimiter.checkLimit(premiumUserId, "ai_chat", premiumConfig);
         expect(result.allowed).toBe(true);
       }
 
-      const premiumOverflow = await rateLimiter.checkLimit(
-        premiumUserId,
-        "ai_chat",
-        premiumConfig,
-      );
+      const premiumOverflow = await rateLimiter.checkLimit(premiumUserId, "ai_chat", premiumConfig);
       expect(premiumOverflow.allowed).toBe(false);
     });
   });
@@ -388,19 +324,11 @@ describe("Rate Limiter", () => {
       await rateLimiter.checkLimit(userId, "ai_chat", config);
 
       // 获取最近60秒的统计
-      const recentStats = rateLimiter.getStatsByTimeRange(
-        userId,
-        "ai_chat",
-        60000,
-      );
+      const recentStats = rateLimiter.getStatsByTimeRange(userId, "ai_chat", 60000);
       expect(recentStats.totalRequests).toBe(2); // 只有最近60秒内的请求
 
       // 获取所有时间的统计
-      const allTimeStats = rateLimiter.getStatsByTimeRange(
-        userId,
-        "ai_chat",
-        Infinity,
-      );
+      const allTimeStats = rateLimiter.getStatsByTimeRange(userId, "ai_chat", Infinity);
       expect(allTimeStats.totalRequests).toBe(3);
     });
   });
@@ -414,7 +342,7 @@ describe("Rate Limiter", () => {
         rateLimiter.checkLimit(userId, "ai_chat", {
           windowMs: -1,
           maxRequests: -1,
-        }),
+        })
       ).rejects.toThrow();
 
       // 零限制
@@ -428,15 +356,13 @@ describe("Rate Limiter", () => {
     it("应该处理内存不足情况", async () => {
       // Mock内存不足
       const originalCheckLimit = rateLimiter.checkLimit;
-      rateLimiter.checkLimit = jest
-        .fn()
-        .mockRejectedValue(new Error("Out of memory"));
+      rateLimiter.checkLimit = jest.fn().mockRejectedValue(new Error("Out of memory"));
 
       await expect(
         rateLimiter.checkLimit("user-123", "ai_chat", {
           windowMs: 60000,
           maxRequests: 10,
-        }),
+        })
       ).rejects.toThrow("Out of memory");
     });
 
@@ -552,8 +478,7 @@ describe("Rate Limiter", () => {
       await Promise.all(promises);
 
       // 检查断路器状态
-      const circuitBreakerStatus =
-        rateLimiter.getCircuitBreakerStatus("ai_chat");
+      const circuitBreakerStatus = rateLimiter.getCircuitBreakerStatus("ai_chat");
       expect(circuitBreakerStatus).toBeDefined();
     });
   });

@@ -19,28 +19,21 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") as ShoppingListStatus | null;
 
     if (planId) {
-      const plan = await convexClient.query<Record<string, unknown> | null>(
-        api.meals.getPlanById,
-        { planId: planId as Id<"mealPlans"> },
-      );
+      const plan = await convexClient.query<Record<string, unknown> | null>(api.meals.getPlanById, {
+        planId: planId as Id<"mealPlans">,
+      });
 
       if (!plan) {
         return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
       }
 
-      const access = await convexClient.query<{ hasAccess: boolean }>(
-        api.members.verifyAccess,
-        {
-          memberId: plan.memberId as Id<"familyMembers">,
-          clerkId: session.user.id,
-        },
-      );
+      const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+        memberId: plan.memberId as Id<"familyMembers">,
+        clerkId: session.user.id,
+      });
 
       if (!access.hasAccess) {
-        return NextResponse.json(
-          { error: "无权限查看该购物清单" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "无权限查看该购物清单" }, { status: 403 });
       }
 
       const result = await shoppingListRepository.listShoppingLists({
@@ -50,28 +43,21 @@ export async function GET(request: NextRequest) {
         includeItems: true,
       });
 
-      return NextResponse.json(
-        { shoppingLists: result.items },
-        { status: 200 },
-      );
+      return NextResponse.json({ shoppingLists: result.items }, { status: 200 });
     }
 
-    const members = await convexClient.query<Array<{ _id: string }>>(
-      api.members.listByClerkId,
-      { clerkId: session.user.id },
-    );
+    const members = await convexClient.query<Array<{ _id: string }>>(api.members.listByClerkId, {
+      clerkId: session.user.id,
+    });
 
     if (!members.length) {
       return NextResponse.json({ shoppingLists: [] }, { status: 200 });
     }
 
-    const memberIds = members.map(
-      (member) => member._id as Id<"familyMembers">,
-    );
-    const plans = await convexClient.query<Array<{ _id: string }>>(
-      api.meals.listByMembers,
-      { memberIds },
-    );
+    const memberIds = members.map((member) => member._id as Id<"familyMembers">);
+    const plans = await convexClient.query<Array<{ _id: string }>>(api.meals.listByMembers, {
+      memberIds,
+    });
 
     if (!plans.length) {
       return NextResponse.json({ shoppingLists: [] }, { status: 200 });

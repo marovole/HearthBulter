@@ -57,7 +57,7 @@ export interface KvMetadata {
 type KVNamespace = {
   getWithMetadata<Metadata = unknown>(
     key: string,
-    options?: { type?: "text" | "json" | "arrayBuffer" | "stream" },
+    options?: { type?: "text" | "json" | "arrayBuffer" | "stream" }
   ): Promise<{
     value: unknown;
     metadata: Metadata | null;
@@ -69,14 +69,10 @@ type KVNamespace = {
       expirationTtl?: number;
       expiration?: number;
       metadata?: unknown;
-    },
+    }
   ): Promise<void>;
   delete(key: string): Promise<void>;
-  list(options?: {
-    prefix?: string;
-    limit?: number;
-    cursor?: string;
-  }): Promise<{
+  list(options?: { prefix?: string; limit?: number; cursor?: string }): Promise<{
     keys: Array<{ name: string }>;
     list_complete: boolean;
     cursor?: string;
@@ -156,14 +152,11 @@ export class KvCache {
       }
 
       // 检查是否过期（客户端验证）
-      if (
-        result.metadata?.expiresAt &&
-        result.metadata.expiresAt < Date.now() / 1000
-      ) {
+      if (result.metadata?.expiresAt && result.metadata.expiresAt < Date.now() / 1000) {
         this.log(`KV expired: ${key}`);
         // 异步删除过期键
         this.kv!.delete(fullKey).catch((err: unknown) =>
-          console.error("[KvCache] Failed to delete expired key:", err),
+          console.error("[KvCache] Failed to delete expired key:", err)
         );
         return {
           success: false,
@@ -279,7 +272,7 @@ export class KvCache {
       do {
         const result = await this.kv!.list({ prefix: fullPrefix, cursor });
         const deletePromises = result.keys.map((key: { name: string }) =>
-          this.kv!.delete(key.name),
+          this.kv!.delete(key.name)
         );
         await Promise.all(deletePromises);
         count += result.keys.length;
@@ -313,7 +306,7 @@ export class KvCache {
     // 开发环境或不支持 KV
     if (this.options.debug) {
       console.warn(
-        "[KvCache] KV binding not available (development mode or not deployed to Cloudflare)",
+        "[KvCache] KV binding not available (development mode or not deployed to Cloudflare)"
       );
     }
 

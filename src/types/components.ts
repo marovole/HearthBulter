@@ -37,11 +37,7 @@ export interface ChartDataPoint {
 }
 
 // 图表 Tooltip Props
-type TooltipFormatter = (
-  value: any,
-  name: string,
-  props: any,
-) => [string, string];
+type TooltipFormatter = (value: any, name: string, props: any) => [string, string];
 
 export interface CustomTooltipProps extends TooltipProps<any, any> {
   active?: boolean;

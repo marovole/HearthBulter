@@ -204,11 +204,7 @@ describe("Authorization Middleware", () => {
         memberId,
       });
 
-      const result = await requireOwnership(
-        userId,
-        "inventory_item",
-        "item-123",
-      );
+      const result = await requireOwnership(userId, "inventory_item", "item-123");
 
       expect(result.authorized).toBe(true);
     });
@@ -216,11 +212,7 @@ describe("Authorization Middleware", () => {
     it("应该在资源不存在时返回未授权", async () => {
       mockSupabaseAdapter.inventoryItem.findUnique.mockResolvedValue(null);
 
-      const result = await requireOwnership(
-        userId,
-        "inventory_item",
-        "item-123",
-      );
+      const result = await requireOwnership(userId, "inventory_item", "item-123");
 
       expect(result.authorized).toBe(false);
       expect(result.reason).toBe("资源不存在");
@@ -248,11 +240,7 @@ describe("Authorization Middleware", () => {
     });
 
     it("应该返回不支持的资源类型错误", async () => {
-      const result = await requireOwnership(
-        userId,
-        "unknown_type" as any,
-        "id-123",
-      );
+      const result = await requireOwnership(userId, "unknown_type" as any, "id-123");
 
       expect(result.authorized).toBe(false);
       expect(result.reason).toContain("不支持的资源类型");

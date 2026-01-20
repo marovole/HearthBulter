@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  Camera,
-  Upload,
-  AlertCircle,
-  CheckCircle,
-  Loader2,
-} from "lucide-react";
+import { Camera, Upload, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 
 interface RecognizedFood {
   photoId: string;
@@ -34,15 +28,11 @@ interface FoodPhotoUploadProps {
   onError: (error: string) => void;
 }
 
-export function FoodPhotoUpload({
-  onFoodRecognized,
-  onError,
-}: FoodPhotoUploadProps) {
+export function FoodPhotoUpload({ onFoodRecognized, onError }: FoodPhotoUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [recognitionResult, setRecognitionResult] =
-    useState<RecognizedFood | null>(null);
+  const [recognitionResult, setRecognitionResult] = useState<RecognizedFood | null>(null);
   const [correctionFoodId, setCorrectionFoodId] = useState<string | null>(null);
   const [correctionAmount, setCorrectionAmount] = useState<number | null>(null);
   const [isCorrecting, setIsCorrecting] = useState(false);
@@ -56,16 +46,12 @@ export function FoodPhotoUpload({
     }
 
     const defaultFoodId =
-      recognitionResult.foodId ||
-      recognitionResult.alternatives?.[0]?.id ||
-      null;
+      recognitionResult.foodId || recognitionResult.alternatives?.[0]?.id || null;
     setCorrectionFoodId(defaultFoodId);
     setCorrectionAmount(recognitionResult.estimatedAmount);
   }, [recognitionResult]);
 
-  const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -174,14 +160,14 @@ export function FoodPhotoUpload({
       setRecognitionResult((prev) =>
         prev
           ? {
-            ...prev,
-            foodId: correctionFoodId,
-            name: data.name || prev.name,
-            confidence: 100,
-            estimatedAmount: correctionAmount,
-            nutrition: data.nutrition || prev.nutrition,
-          }
-          : prev,
+              ...prev,
+              foodId: correctionFoodId,
+              name: data.name || prev.name,
+              confidence: 100,
+              estimatedAmount: correctionAmount,
+              nutrition: data.nutrition || prev.nutrition,
+            }
+          : prev
       );
     } catch (error) {
       onError(error instanceof Error ? error.message : "修正失败");
@@ -217,34 +203,32 @@ export function FoodPhotoUpload({
 
   const correctionOptions = recognitionResult
     ? [
-      ...(recognitionResult.foodId
-        ? [
-          {
-            id: recognitionResult.foodId,
-            name: recognitionResult.name,
-            confidence: recognitionResult.confidence,
-          },
-        ]
-        : []),
-      ...(recognitionResult.alternatives ?? []),
-    ]
+        ...(recognitionResult.foodId
+          ? [
+              {
+                id: recognitionResult.foodId,
+                name: recognitionResult.name,
+                confidence: recognitionResult.confidence,
+              },
+            ]
+          : []),
+        ...(recognitionResult.alternatives ?? []),
+      ]
     : [];
 
   return (
     <div className="space-y-4">
       {/* Upload Area */}
       {!preview && (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+        <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
           <div className="space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-              <Camera className="w-8 h-8 text-gray-400" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+              <Camera className="h-8 w-8 text-gray-400" />
             </div>
 
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                拍照识别食物
-              </h3>
-              <p className="text-sm text-gray-500 mb-4">
+              <h3 className="mb-2 text-lg font-medium text-gray-900">拍照识别食物</h3>
+              <p className="mb-4 text-sm text-gray-500">
                 上传食物照片，AI将自动识别食物种类和估算份量
               </p>
             </div>
@@ -253,9 +237,9 @@ export function FoodPhotoUpload({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Upload className="w-5 h-5" />
+                <Upload className="h-5 w-5" />
                 <span>选择图片</span>
               </button>
             </div>
@@ -277,16 +261,12 @@ export function FoodPhotoUpload({
         <div className="space-y-4">
           {/* Image Preview */}
           <div className="relative">
-            <img
-              src={preview}
-              alt="Food preview"
-              className="w-full h-64 object-cover rounded-lg"
-            />
+            <img src={preview} alt="Food preview" className="h-64 w-full rounded-lg object-cover" />
 
             {isRecognizing && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black bg-opacity-50">
                 <div className="text-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-2" />
+                  <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin text-white" />
                   <p className="text-white">AI正在识别食物...</p>
                 </div>
               </div>
@@ -295,12 +275,10 @@ export function FoodPhotoUpload({
 
           {/* Recognition Result */}
           {recognitionResult && (
-            <div className="border rounded-lg p-4 bg-gray-50">
-              <div className="flex items-start justify-between mb-3">
+            <div className="rounded-lg border bg-gray-50 p-4">
+              <div className="mb-3 flex items-start justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 text-lg">
-                    {recognitionResult.name}
-                  </h4>
+                  <h4 className="text-lg font-medium text-gray-900">{recognitionResult.name}</h4>
                   <p className="text-sm text-gray-500">
                     估算份量: {recognitionResult.estimatedAmount}g
                   </p>
@@ -311,57 +289,49 @@ export function FoodPhotoUpload({
                     className={`flex items-center space-x-1 ${getConfidenceColor(recognitionResult.confidence)}`}
                   >
                     {recognitionResult.confidence >= 80 ? (
-                      <CheckCircle className="w-5 h-5" />
+                      <CheckCircle className="h-5 w-5" />
                     ) : (
-                      <AlertCircle className="w-5 h-5" />
+                      <AlertCircle className="h-5 w-5" />
                     )}
-                    <span className="font-medium">
-                      {recognitionResult.confidence}%
-                    </span>
+                    <span className="font-medium">{recognitionResult.confidence}%</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="mt-1 text-xs text-gray-500">
                     {getConfidenceText(recognitionResult.confidence)}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-3 mb-4">
-                <div className="text-center p-2 bg-white rounded">
+              <div className="mb-4 grid grid-cols-4 gap-3">
+                <div className="rounded bg-white p-2 text-center">
                   <p className="text-xs text-gray-500">热量</p>
                   <p className="font-medium text-orange-600">
                     {recognitionResult.nutrition.calories} kcal
                   </p>
                 </div>
-                <div className="text-center p-2 bg-white rounded">
+                <div className="rounded bg-white p-2 text-center">
                   <p className="text-xs text-gray-500">蛋白质</p>
                   <p className="font-medium text-blue-600">
                     {recognitionResult.nutrition.protein}g
                   </p>
                 </div>
-                <div className="text-center p-2 bg-white rounded">
+                <div className="rounded bg-white p-2 text-center">
                   <p className="text-xs text-gray-500">碳水</p>
-                  <p className="font-medium text-green-600">
-                    {recognitionResult.nutrition.carbs}g
-                  </p>
+                  <p className="font-medium text-green-600">{recognitionResult.nutrition.carbs}g</p>
                 </div>
-                <div className="text-center p-2 bg-white rounded">
+                <div className="rounded bg-white p-2 text-center">
                   <p className="text-xs text-gray-500">脂肪</p>
-                  <p className="font-medium text-yellow-600">
-                    {recognitionResult.nutrition.fat}g
-                  </p>
+                  <p className="font-medium text-yellow-600">{recognitionResult.nutrition.fat}g</p>
                 </div>
               </div>
 
               {correctionOptions.length > 0 && (
-                <div className="border-t border-gray-200 pt-3 mb-4 space-y-2">
+                <div className="mb-4 space-y-2 border-t border-gray-200 pt-3">
                   <p className="text-sm font-medium text-gray-700">手动修正</p>
                   <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={correctionFoodId || ""}
-                      onChange={(event) =>
-                        setCorrectionFoodId(event.target.value)
-                      }
-                      className="px-3 py-1 border border-gray-200 rounded-md text-sm"
+                      onChange={(event) => setCorrectionFoodId(event.target.value)}
+                      className="rounded-md border border-gray-200 px-3 py-1 text-sm"
                     >
                       <option value="" disabled>
                         选择食物
@@ -377,19 +347,15 @@ export function FoodPhotoUpload({
                       min={1}
                       value={correctionAmount ?? ""}
                       onChange={(event) =>
-                        setCorrectionAmount(
-                          event.target.value
-                            ? Number(event.target.value)
-                            : null,
-                        )
+                        setCorrectionAmount(event.target.value ? Number(event.target.value) : null)
                       }
-                      className="w-24 px-3 py-1 border border-gray-200 rounded-md text-sm"
+                      className="w-24 rounded-md border border-gray-200 px-3 py-1 text-sm"
                       placeholder="克数"
                     />
                     <button
                       onClick={handleCorrection}
                       disabled={isCorrecting}
-                      className="px-3 py-1 border border-gray-300 text-gray-700 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50"
+                      className="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                     >
                       {isCorrecting ? "修正中" : "应用修正"}
                     </button>
@@ -401,13 +367,13 @@ export function FoodPhotoUpload({
               <div className="flex space-x-3">
                 <button
                   onClick={handleConfirm}
-                  className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  className="flex-1 rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
                 >
                   确认添加
                 </button>
                 <button
                   onClick={handleRetake}
-                  className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="flex-1 rounded-lg border border-gray-300 py-2 text-gray-700 hover:bg-gray-50"
                 >
                   重新拍照
                 </button>
@@ -417,24 +383,24 @@ export function FoodPhotoUpload({
 
           {/* Error State */}
           {!recognitionResult && !isRecognizing && (
-            <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
               <div className="flex items-center space-x-2 text-red-600">
-                <AlertCircle className="w-5 h-5" />
+                <AlertCircle className="h-5 w-5" />
                 <p className="font-medium">识别失败</p>
               </div>
-              <p className="text-sm text-red-500 mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 无法识别图片中的食物，请尝试重新拍照或手动搜索添加
               </p>
-              <div className="flex space-x-3 mt-3">
+              <div className="mt-3 flex space-x-3">
                 <button
                   onClick={handleRetake}
-                  className="flex-1 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-100"
+                  className="flex-1 rounded-lg border border-red-300 py-2 text-red-700 hover:bg-red-100"
                 >
                   重新拍照
                 </button>
                 <button
                   onClick={resetState}
-                  className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="flex-1 rounded-lg border border-gray-300 py-2 text-gray-700 hover:bg-gray-50"
                 >
                   取消
                 </button>

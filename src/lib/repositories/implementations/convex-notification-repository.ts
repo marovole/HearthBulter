@@ -16,29 +16,24 @@ import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 const DEFAULT_LIMIT = 50;
 
 export class ConvexNotificationRepository implements NotificationRepository {
-  async createNotification(
-    payload: CreateNotificationDTO,
-  ): Promise<NotificationDTO> {
-    const notificationId = await convexClient.mutation(
-      api.notifications.create,
-      {
-        memberId: payload.memberId as Id<"familyMembers">,
-        type: payload.type,
-        title: payload.title,
-        content: payload.content,
-        priority: payload.priority ?? "MEDIUM",
-        channels: payload.channels ?? ["IN_APP"],
-        metadata: payload.metadata,
-        actionUrl: payload.actionUrl,
-        actionText: payload.actionText,
-        dedupKey: payload.dedupKey,
-        batchId: payload.batchId,
-      },
-    );
+  async createNotification(payload: CreateNotificationDTO): Promise<NotificationDTO> {
+    const notificationId = await convexClient.mutation(api.notifications.create, {
+      memberId: payload.memberId as Id<"familyMembers">,
+      type: payload.type,
+      title: payload.title,
+      content: payload.content,
+      priority: payload.priority ?? "MEDIUM",
+      channels: payload.channels ?? ["IN_APP"],
+      metadata: payload.metadata,
+      actionUrl: payload.actionUrl,
+      actionText: payload.actionText,
+      dedupKey: payload.dedupKey,
+      batchId: payload.batchId,
+    });
 
     const notification = await convexClient.query<Doc<"notifications"> | null>(
       api.notifications.getById,
-      { id: notificationId as Id<"notifications"> },
+      { id: notificationId as Id<"notifications"> }
     );
 
     if (!notification) {
@@ -51,7 +46,7 @@ export class ConvexNotificationRepository implements NotificationRepository {
   async getNotificationById(id: string): Promise<NotificationDTO | null> {
     const notification = await convexClient.query<Doc<"notifications"> | null>(
       api.notifications.getById,
-      { id: id as Id<"notifications"> },
+      { id: id as Id<"notifications"> }
     );
 
     return notification ? mapNotification(notification) : null;
@@ -59,7 +54,7 @@ export class ConvexNotificationRepository implements NotificationRepository {
 
   async listMemberNotifications(
     query: NotificationListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<NotificationDTO>> {
     const result = await convexClient.query<{
       data: Doc<"notifications">[];
@@ -95,12 +90,9 @@ export class ConvexNotificationRepository implements NotificationRepository {
   }
 
   async markAllAsRead(memberId: string): Promise<number> {
-    return await convexClient.mutation<number>(
-      api.notifications.markAllAsRead,
-      {
-        memberId: memberId as Id<"familyMembers">,
-      },
-    );
+    return await convexClient.mutation<number>(api.notifications.markAllAsRead, {
+      memberId: memberId as Id<"familyMembers">,
+    });
   }
 
   async appendDeliveryLog(log: NotificationLogDTO): Promise<void> {
@@ -114,30 +106,26 @@ export class ConvexNotificationRepository implements NotificationRepository {
   }
 
   async listPendingNotifications(limit: number): Promise<NotificationDTO[]> {
-    const items = await convexClient.query<Doc<"notifications">[]>(
-      api.notifications.listPending,
-      { limit },
-    );
+    const items = await convexClient.query<Doc<"notifications">[]>(api.notifications.listPending, {
+      limit,
+    });
 
     return items.map(mapNotification);
   }
 
   async createScheduledNotification(
-    schedule: ScheduledNotificationDTO,
+    schedule: ScheduledNotificationDTO
   ): Promise<ScheduledNotificationDTO> {
-    const scheduleId = await convexClient.mutation(
-      api.notifications.createSchedule,
-      {
-        memberId: schedule.memberId as Id<"familyMembers">,
-        notificationId: schedule.notificationId
-          ? (schedule.notificationId as Id<"notifications">)
-          : undefined,
-        payload: schedule.payload,
-        scheduledTime: schedule.scheduledTime.getTime(),
-        status: schedule.status ?? "SCHEDULED",
-        retryCount: schedule.retryCount ?? 0,
-      },
-    );
+    const scheduleId = await convexClient.mutation(api.notifications.createSchedule, {
+      memberId: schedule.memberId as Id<"familyMembers">,
+      notificationId: schedule.notificationId
+        ? (schedule.notificationId as Id<"notifications">)
+        : undefined,
+      payload: schedule.payload,
+      scheduledTime: schedule.scheduledTime.getTime(),
+      status: schedule.status ?? "SCHEDULED",
+      retryCount: schedule.retryCount ?? 0,
+    });
 
     return {
       ...schedule,
@@ -145,13 +133,10 @@ export class ConvexNotificationRepository implements NotificationRepository {
     };
   }
 
-  async listDueSchedules(
-    before: Date,
-    limit: number,
-  ): Promise<ScheduledNotificationDTO[]> {
+  async listDueSchedules(before: Date, limit: number): Promise<ScheduledNotificationDTO[]> {
     const items = await convexClient.query<Doc<"scheduledNotifications">[]>(
       api.notifications.listDueSchedules,
-      { before: before.getTime(), limit },
+      { before: before.getTime(), limit }
     );
 
     return items.map(mapSchedule);
@@ -159,7 +144,7 @@ export class ConvexNotificationRepository implements NotificationRepository {
 
   async updateScheduleStatus(
     scheduleId: string,
-    status: ScheduledNotificationDTO["status"],
+    status: ScheduledNotificationDTO["status"]
   ): Promise<void> {
     await convexClient.mutation(api.notifications.updateScheduleStatus, {
       scheduleId: scheduleId as Id<"scheduledNotifications">,
@@ -167,23 +152,18 @@ export class ConvexNotificationRepository implements NotificationRepository {
     });
   }
 
-  async getNotificationPreferences(
-    memberId: string,
-  ): Promise<NotificationPreferenceDTO | null> {
-    const preferences =
-      await convexClient.query<Doc<"notificationPreferences"> | null>(
-        api.notifications.getPreferences,
-        {
-          memberId: memberId as Id<"familyMembers">,
-        },
-      );
+  async getNotificationPreferences(memberId: string): Promise<NotificationPreferenceDTO | null> {
+    const preferences = await convexClient.query<Doc<"notificationPreferences"> | null>(
+      api.notifications.getPreferences,
+      {
+        memberId: memberId as Id<"familyMembers">,
+      }
+    );
 
     return preferences ? mapPreference(preferences) : null;
   }
 
-  async upsertNotificationPreferences(
-    preference: NotificationPreferenceDTO,
-  ): Promise<void> {
+  async upsertNotificationPreferences(preference: NotificationPreferenceDTO): Promise<void> {
     await convexClient.mutation(api.notifications.upsertPreferences, {
       memberId: preference.memberId as Id<"familyMembers">,
       channelPreferences: preference.channelPreferences,
@@ -193,13 +173,10 @@ export class ConvexNotificationRepository implements NotificationRepository {
     });
   }
 
-  async getNotificationRecipient(
-    memberId: string,
-  ): Promise<NotificationRecipientDTO | null> {
-    const member = await convexClient.query<Doc<"familyMembers"> | null>(
-      api.members.getById,
-      { memberId: memberId as Id<"familyMembers"> },
-    );
+  async getNotificationRecipient(memberId: string): Promise<NotificationRecipientDTO | null> {
+    const member = await convexClient.query<Doc<"familyMembers"> | null>(api.members.getById, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     if (!member) {
       return null;
@@ -207,17 +184,16 @@ export class ConvexNotificationRepository implements NotificationRepository {
 
     const user = member.userId
       ? await convexClient.query<Doc<"users"> | null>(api.users.getById, {
-        userId: member.userId,
-      })
+          userId: member.userId,
+        })
       : null;
 
-    const preferencesDoc =
-      await convexClient.query<Doc<"notificationPreferences"> | null>(
-        api.notifications.getPreferences,
-        {
-          memberId: memberId as Id<"familyMembers">,
-        },
-      );
+    const preferencesDoc = await convexClient.query<Doc<"notificationPreferences"> | null>(
+      api.notifications.getPreferences,
+      {
+        memberId: memberId as Id<"familyMembers">,
+      }
+    );
     const preferences = preferencesDoc ? mapPreference(preferencesDoc) : null;
 
     return {
@@ -230,10 +206,7 @@ export class ConvexNotificationRepository implements NotificationRepository {
     };
   }
 
-  async deleteNotification(
-    notificationId: string,
-    _memberId: string,
-  ): Promise<void> {
+  async deleteNotification(notificationId: string, _memberId: string): Promise<void> {
     await convexClient.mutation(api.notifications.deleteNotification, {
       id: notificationId as Id<"notifications">,
     });
@@ -261,19 +234,14 @@ function mapNotification(notification: Doc<"notifications">): NotificationDTO {
   };
 }
 
-function mapPreference(
-  preference: Doc<"notificationPreferences">,
-): NotificationPreferenceDTO {
+function mapPreference(preference: Doc<"notificationPreferences">): NotificationPreferenceDTO {
   return {
     memberId: preference.memberId,
     channelPreferences: preference.channelPreferences as
       | NotificationPreferenceDTO["channelPreferences"]
       | undefined,
-    quietHours: preference.quietHours as
-      | NotificationPreferenceDTO["quietHours"]
-      | undefined,
-    mutedTypes: (preference.mutedTypes ??
-      []) as NotificationPreferenceDTO["mutedTypes"],
+    quietHours: preference.quietHours as NotificationPreferenceDTO["quietHours"] | undefined,
+    mutedTypes: (preference.mutedTypes ?? []) as NotificationPreferenceDTO["mutedTypes"],
     lastUpdatedAt: new Date(preference.lastUpdatedAt),
   };
 }
@@ -331,9 +299,7 @@ function normalizePushTokens(raw?: unknown): string[] | undefined {
   return undefined;
 }
 
-function mapSchedule(
-  schedule: Doc<"scheduledNotifications">,
-): ScheduledNotificationDTO {
+function mapSchedule(schedule: Doc<"scheduledNotifications">): ScheduledNotificationDTO {
   return {
     id: schedule._id,
     notificationId: schedule.notificationId ?? undefined,

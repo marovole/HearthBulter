@@ -51,7 +51,7 @@ export function QuickTemplates({
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/tracking/templates?memberId=${memberId}&mealType=${mealType}`,
+        `/api/tracking/templates?memberId=${memberId}&mealType=${mealType}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -100,12 +100,12 @@ export function QuickTemplates({
         <h3 className="text-lg font-medium text-gray-900">快速模板</h3>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="border rounded-lg p-4 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+            <div key={i} className="animate-pulse rounded-lg border p-4">
+              <div className="mb-2 h-4 w-1/3 rounded bg-gray-200"></div>
+              <div className="mb-3 h-3 w-1/2 rounded bg-gray-200"></div>
               <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 rounded bg-gray-200"></div>
+                <div className="h-3 w-3/4 rounded bg-gray-200"></div>
               </div>
             </div>
           ))}
@@ -120,18 +120,16 @@ export function QuickTemplates({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-medium text-gray-900">快速模板</h3>
-          <span className="text-sm text-gray-500">
-            ({getMealTypeLabel(mealType)})
-          </span>
+          <span className="text-sm text-gray-500">({getMealTypeLabel(mealType)})</span>
         </div>
 
         <div className="flex items-center space-x-2">
           {onCreateTemplate && (
             <button
               onClick={onCreateTemplate}
-              className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="flex items-center space-x-1 rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               <span>新建模板</span>
             </button>
           )}
@@ -149,15 +147,13 @@ export function QuickTemplates({
 
       {/* Templates List */}
       {displayTemplates.length === 0 ? (
-        <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
-          <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 mb-2">
-            暂无{getMealTypeLabel(mealType)}模板
-          </p>
+        <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center">
+          <Clock className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+          <p className="mb-2 text-gray-500">暂无{getMealTypeLabel(mealType)}模板</p>
           {onCreateTemplate && (
             <button
               onClick={onCreateTemplate}
-              className="text-blue-600 hover:text-blue-700 text-sm"
+              className="text-sm text-blue-600 hover:text-blue-700"
             >
               创建第一个模板
             </button>
@@ -168,20 +164,18 @@ export function QuickTemplates({
           {displayTemplates.map((template) => (
             <div
               key={template.id}
-              className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+              className="rounded-lg border p-4 transition-shadow hover:shadow-md"
             >
               {/* Template Header */}
-              <div className="flex items-start justify-between mb-3">
+              <div className="mb-3 flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <h4 className="font-medium text-gray-900">
-                      {template.name}
-                    </h4>
+                    <h4 className="font-medium text-gray-900">{template.name}</h4>
                     {template.isRecommended && (
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      <Star className="h-4 w-4 fill-current text-yellow-500" />
                     )}
                   </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                  <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
                     <span>{template.foods.length} 种食物</span>
                     <span>{template.totalCalories} kcal</span>
                     <span>使用 {template.usageCount} 次</span>
@@ -195,7 +189,7 @@ export function QuickTemplates({
                       className="p-1 text-gray-400 hover:text-blue-600"
                       title="编辑模板"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="h-4 w-4" />
                     </button>
                   )}
                   <button
@@ -203,18 +197,15 @@ export function QuickTemplates({
                     className="p-1 text-gray-400 hover:text-red-600"
                     title="删除模板"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
               {/* Food List */}
-              <div className="space-y-2 mb-3">
+              <div className="mb-3 space-y-2">
                 {template.foods.slice(0, 3).map((food, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between text-sm"
-                  >
+                  <div key={index} className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">
                       {food.name} × {food.amount}g
                     </span>
@@ -229,42 +220,29 @@ export function QuickTemplates({
               </div>
 
               {/* Nutrition Summary */}
-              <div className="grid grid-cols-4 gap-2 mb-3 text-xs">
-                <div className="text-center p-2 bg-gray-50 rounded">
+              <div className="mb-3 grid grid-cols-4 gap-2 text-xs">
+                <div className="rounded bg-gray-50 p-2 text-center">
                   <p className="text-gray-500">热量</p>
                   <p className="font-medium text-orange-600">
-                    {template.foods.reduce(
-                      (sum, food) => sum + food.calories,
-                      0,
-                    )}{" "}
-                    kcal
+                    {template.foods.reduce((sum, food) => sum + food.calories, 0)} kcal
                   </p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded">
+                <div className="rounded bg-gray-50 p-2 text-center">
                   <p className="text-gray-500">蛋白质</p>
                   <p className="font-medium text-blue-600">
-                    {template.foods
-                      .reduce((sum, food) => sum + food.protein, 0)
-                      .toFixed(1)}
-                    g
+                    {template.foods.reduce((sum, food) => sum + food.protein, 0).toFixed(1)}g
                   </p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded">
+                <div className="rounded bg-gray-50 p-2 text-center">
                   <p className="text-gray-500">碳水</p>
                   <p className="font-medium text-green-600">
-                    {template.foods
-                      .reduce((sum, food) => sum + food.carbs, 0)
-                      .toFixed(1)}
-                    g
+                    {template.foods.reduce((sum, food) => sum + food.carbs, 0).toFixed(1)}g
                   </p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded">
+                <div className="rounded bg-gray-50 p-2 text-center">
                   <p className="text-gray-500">脂肪</p>
                   <p className="font-medium text-yellow-600">
-                    {template.foods
-                      .reduce((sum, food) => sum + food.fat, 0)
-                      .toFixed(1)}
-                    g
+                    {template.foods.reduce((sum, food) => sum + food.fat, 0).toFixed(1)}g
                   </p>
                 </div>
               </div>
@@ -272,7 +250,7 @@ export function QuickTemplates({
               {/* Action Button */}
               <button
                 onClick={() => onSelectTemplate(template)}
-                className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+                className="w-full rounded bg-green-600 py-2 text-sm font-medium text-white hover:bg-green-700"
               >
                 一键添加到餐食
               </button>
@@ -286,7 +264,7 @@ export function QuickTemplates({
         <div className="text-center">
           <button
             onClick={() => setShowAll(!showAll)}
-            className="text-blue-600 hover:text-blue-700 text-sm"
+            className="text-sm text-blue-600 hover:text-blue-700"
           >
             {showAll ? "收起模板" : `查看全部 ${templates.length} 个模板`}
           </button>

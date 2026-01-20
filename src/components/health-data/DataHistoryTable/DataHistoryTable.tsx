@@ -69,11 +69,7 @@ export function DataHistoryTable(props: DataHistoryTableProps) {
       />
 
       {/* 筛选面板 */}
-      <TableFilters
-        filters={filters}
-        show={showFilters}
-        onFilterChange={setFilters}
-      />
+      <TableFilters filters={filters} show={showFilters} onFilterChange={setFilters} />
 
       {/* 数据表格 */}
       <div className="overflow-x-auto">
@@ -86,7 +82,7 @@ export function DataHistoryTable(props: DataHistoryTableProps) {
             onSort={handleSort}
           />
 
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {data.map((item) => (
               <TableRow
                 key={item.id}

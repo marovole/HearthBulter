@@ -1,9 +1,5 @@
 import { callOpenAI, RECOMMENDED_MODELS } from "./openai-client";
-import {
-  getActivePrompt,
-  renderPrompt,
-  validatePromptParameters,
-} from "./prompt-templates";
+import { getActivePrompt, renderPrompt, validatePromptParameters } from "./prompt-templates";
 import { aiResponseCache, AICacheKeys } from "./response-cache";
 import { createHash } from "crypto";
 
@@ -59,22 +55,13 @@ export interface IntentRecognition {
     foods: string[];
     conditions: string[];
   };
-  suggested_response_type:
-    | "factual"
-    | "advice"
-    | "clarification"
-    | "confirmation";
+  suggested_response_type: "factual" | "advice" | "clarification" | "confirmation";
 }
 
 // 预设问题类型
 export interface PresetQuestion {
   id: string;
-  category:
-    | "general"
-    | "nutrition"
-    | "health"
-    | "meal_planning"
-    | "weight_management";
+  category: "general" | "nutrition" | "health" | "meal_planning" | "weight_management";
   question: string;
   description: string;
   tags: string[];
@@ -98,7 +85,7 @@ export class ConversationManager {
    */
   createSession(
     memberId: string,
-    context?: Partial<ConversationSession["context"]>,
+    context?: Partial<ConversationSession["context"]>
   ): ConversationSession {
     const session: ConversationSession = {
       id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -140,7 +127,7 @@ export class ConversationManager {
     sessionId: string,
     role: "user" | "assistant",
     content: string,
-    metadata?: ConversationMessage["metadata"],
+    metadata?: ConversationMessage["metadata"]
   ): Promise<ConversationSession> {
     const session = this.activeSessions.get(sessionId);
     if (!session) {
@@ -170,65 +157,31 @@ export class ConversationManager {
   /**
    * 意图识别
    */
-  async recognizeIntent(
-    message: string,
-    context?: any,
-  ): Promise<IntentRecognition> {
+  async recognizeIntent(message: string, context?: any): Promise<IntentRecognition> {
     // 使用简单的关键词识别，也可以使用AI进行更精确的意图识别
     const lowerMessage = message.toLowerCase();
 
     // 问题关键词
-    const questionKeywords = [
-      "什么",
-      "怎么",
-      "为什么",
-      "如何",
-      "能不能",
-      "可不可以",
-      "?",
-      "？",
-    ];
-    const hasQuestion = questionKeywords.some((keyword) =>
-      lowerMessage.includes(keyword),
-    );
+    const questionKeywords = ["什么", "怎么", "为什么", "如何", "能不能", "可不可以", "?", "？"];
+    const hasQuestion = questionKeywords.some((keyword) => lowerMessage.includes(keyword));
 
     // 建议请求关键词
-    const adviceKeywords = [
-      "建议",
-      "推荐",
-      "应该",
-      "最好",
-      "如何改善",
-      "怎么调整",
-    ];
-    const hasAdviceRequest = adviceKeywords.some((keyword) =>
-      lowerMessage.includes(keyword),
-    );
+    const adviceKeywords = ["建议", "推荐", "应该", "最好", "如何改善", "怎么调整"];
+    const hasAdviceRequest = adviceKeywords.some((keyword) => lowerMessage.includes(keyword));
 
     // 澄清关键词
-    const clarificationKeywords = [
-      "具体点",
-      "详细点",
-      "不清楚",
-      "没明白",
-      "再解释",
-      "举例",
-    ];
+    const clarificationKeywords = ["具体点", "详细点", "不清楚", "没明白", "再解释", "举例"];
     const hasClarification = clarificationKeywords.some((keyword) =>
-      lowerMessage.includes(keyword),
+      lowerMessage.includes(keyword)
     );
 
     // 纠正关键词
     const correctionKeywords = ["不对", "错了", "不是", "纠正", "修改"];
-    const hasCorrection = correctionKeywords.some((keyword) =>
-      lowerMessage.includes(keyword),
-    );
+    const hasCorrection = correctionKeywords.some((keyword) => lowerMessage.includes(keyword));
 
     // 反馈关键词
     const feedbackKeywords = ["有用", "喜欢", "不喜欢", "感谢", "谢谢"];
-    const hasFeedback = feedbackKeywords.some((keyword) =>
-      lowerMessage.includes(keyword),
-    );
+    const hasFeedback = feedbackKeywords.some((keyword) => lowerMessage.includes(keyword));
 
     // 确定主要意图
     let intent: IntentRecognition["intent"] = "general_chat";
@@ -255,8 +208,7 @@ export class ConversationManager {
     const entities = this.extractEntities(message);
 
     // 确定响应类型
-    let suggested_response_type: IntentRecognition["suggested_response_type"] =
-      "factual";
+    let suggested_response_type: IntentRecognition["suggested_response_type"] = "factual";
     if (intent === "advice_request") {
       suggested_response_type = "advice";
     } else if (intent === "clarification") {
@@ -279,7 +231,7 @@ export class ConversationManager {
   async generateResponse(
     sessionId: string,
     userMessage: string,
-    intent: IntentRecognition,
+    intent: IntentRecognition
   ): Promise<string> {
     const session = this.activeSessions.get(sessionId);
     if (!session) {
@@ -288,11 +240,7 @@ export class ConversationManager {
 
     // 生成缓存键
     const messageHash = createHash("md5")
-      .update(
-        userMessage +
-          JSON.stringify(intent) +
-          session.context.userProfile?.name || "",
-      )
+      .update(userMessage + JSON.stringify(intent) + session.context.userProfile?.name || "")
       .digest("hex");
     const cacheKey = AICacheKeys.chatResponse(sessionId, messageHash);
 
@@ -303,18 +251,13 @@ export class ConversationManager {
       return cachedResponse;
     }
 
-    const prompt = getActivePrompt(
-      "nutrition_consultation",
-      "general_consultation",
-    );
+    const prompt = getActivePrompt("nutrition_consultation", "general_consultation");
     if (!prompt) {
       throw new Error("Consultation prompt template not found");
     }
 
     // 构建对话历史
-    const conversationHistory = this.formatConversationHistory(
-      session.messages.slice(-10),
-    );
+    const conversationHistory = this.formatConversationHistory(session.messages.slice(-10));
 
     // 准备Prompt变量
     const variables = {
@@ -329,9 +272,7 @@ export class ConversationManager {
     // 验证参数
     const validation = validatePromptParameters(prompt, variables);
     if (!validation.valid) {
-      throw new Error(
-        `Missing prompt parameters: ${validation.missing.join(", ")}`,
-      );
+      throw new Error(`Missing prompt parameters: ${validation.missing.join(", ")}`);
     }
 
     // 渲染Prompt
@@ -346,7 +287,7 @@ export class ConversationManager {
         model,
         1000, // 控制回复长度
         0.7,
-        true,
+        true
       );
 
       // 缓存响应（根据对话类型设置不同的TTL）
@@ -365,7 +306,7 @@ export class ConversationManager {
    */
   getConversationContext(
     sessionId: string,
-    maxMessages: number = 10,
+    maxMessages: number = 10
   ): {
     recentMessages: ConversationMessage[];
     keyTopics: string[];
@@ -400,25 +341,17 @@ export class ConversationManager {
   async *generateStreamingResponse(
     sessionId: string,
     userMessage: string,
-    intent: IntentRecognition,
+    intent: IntentRecognition
   ): AsyncGenerator<string, void, unknown> {
-    const fullResponse = await this.generateResponse(
-      sessionId,
-      userMessage,
-      intent,
-    );
+    const fullResponse = await this.generateResponse(sessionId, userMessage, intent);
 
     // 模拟流式输出，按句子分割
-    const sentences = fullResponse
-      .split(/[。！？.!?]+/)
-      .filter((s) => s.trim().length > 0);
+    const sentences = fullResponse.split(/[。！？.!?]+/).filter((s) => s.trim().length > 0);
 
     for (const sentence of sentences) {
       yield `${sentence.trim()}。`;
       // 模拟打字效果延迟
-      await new Promise((resolve) =>
-        setTimeout(resolve, 100 + Math.random() * 200),
-      );
+      await new Promise((resolve) => setTimeout(resolve, 100 + Math.random() * 200));
     }
   }
 
@@ -537,14 +470,7 @@ export class ConversationManager {
     const lowerMessage = message.toLowerCase();
 
     // 健康指标关键词
-    const healthMetricKeywords = [
-      "体重",
-      "血糖",
-      "血压",
-      "胆固醇",
-      "BMI",
-      "体脂率",
-    ];
+    const healthMetricKeywords = ["体重", "血糖", "血压", "胆固醇", "BMI", "体脂率"];
     healthMetricKeywords.forEach((keyword) => {
       if (lowerMessage.includes(keyword)) {
         health_metrics.push(keyword);
@@ -552,16 +478,7 @@ export class ConversationManager {
     });
 
     // 食物关键词
-    const foodKeywords = [
-      "肉",
-      "鱼",
-      "蔬菜",
-      "水果",
-      "米饭",
-      "面条",
-      "牛奶",
-      "鸡蛋",
-    ];
+    const foodKeywords = ["肉", "鱼", "蔬菜", "水果", "米饭", "面条", "牛奶", "鸡蛋"];
     foodKeywords.forEach((keyword) => {
       if (lowerMessage.includes(keyword)) {
         foods.push(keyword);
@@ -599,26 +516,26 @@ export class ConversationManager {
   private selectModelForIntent(intent: IntentRecognition): string {
     // 根据意图选择合适的模型
     switch (intent.intent) {
-    case "advice_request":
-      return RECOMMENDED_MODELS.PAID[0]; // 使用更强的付费模型
-    case "question":
-      return RECOMMENDED_MODELS.FREE[0]; // 简单问题用免费模型
-    default:
-      return RECOMMENDED_MODELS.FREE[0];
+      case "advice_request":
+        return RECOMMENDED_MODELS.PAID[0]; // 使用更强的付费模型
+      case "question":
+        return RECOMMENDED_MODELS.FREE[0]; // 简单问题用免费模型
+      default:
+        return RECOMMENDED_MODELS.FREE[0];
     }
   }
 
   private getCacheTTL(intent: IntentRecognition): number {
     // 根据意图类型设置不同的缓存时间
     switch (intent.intent) {
-    case "question":
-      return 7200; // 2小时 - 事实性问题缓存更久
-    case "advice_request":
-      return 3600; // 1小时 - 建议类问题缓存适中
-    case "general_chat":
-      return 1800; // 30分钟 - 通用聊天缓存较短
-    default:
-      return 3600; // 默认1小时
+      case "question":
+        return 7200; // 2小时 - 事实性问题缓存更久
+      case "advice_request":
+        return 3600; // 1小时 - 建议类问题缓存适中
+      case "general_chat":
+        return 1800; // 30分钟 - 通用聊天缓存较短
+      default:
+        return 3600; // 默认1小时
     }
   }
 
@@ -628,14 +545,10 @@ export class ConversationManager {
         "这是一个很好的问题。基于您的健康数据，我建议您咨询专业医生获取更准确的建议。同时，我可以为您提供一些通用的健康指导。",
       advice_request:
         "我理解您需要健康建议。不过，为了确保建议的安全性和准确性，建议您先咨询专业医生。我可以为您提供一些基于普遍健康原则的通用建议。",
-      clarification:
-        "我需要更多信息来更好地帮助您。您能具体描述一下您的健康状况或饮食习惯吗？",
-      correction:
-        "感谢您指出我的错误。我会根据您的反馈改进回答。请问您希望我如何调整建议？",
-      feedback:
-        "感谢您的反馈！我会继续努力为您提供更好的健康建议。有任何其他问题都可以随时询问。",
-      general_chat:
-        "很高兴与您交流健康话题！如果您有具体的健康或营养问题，我很乐意为您提供建议。",
+      clarification: "我需要更多信息来更好地帮助您。您能具体描述一下您的健康状况或饮食习惯吗？",
+      correction: "感谢您指出我的错误。我会根据您的反馈改进回答。请问您希望我如何调整建议？",
+      feedback: "感谢您的反馈！我会继续努力为您提供更好的健康建议。有任何其他问题都可以随时询问。",
+      general_chat: "很高兴与您交流健康话题！如果您有具体的健康或营养问题，我很乐意为您提供建议。",
     };
 
     return fallbacks[intent.intent] || fallbacks.general_chat;

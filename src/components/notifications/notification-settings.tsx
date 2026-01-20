@@ -50,12 +50,8 @@ const NOTIFICATION_CHANNELS = [
   { key: "PUSH", label: "推送", icon: "🔔" },
 ];
 
-export function NotificationSettings({
-  memberId,
-  onClose,
-}: NotificationSettingsProps) {
-  const [preferences, setPreferences] =
-    useState<NotificationPreferences | null>(null);
+export function NotificationSettings({ memberId, onClose }: NotificationSettingsProps) {
+  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,9 +63,7 @@ export function NotificationSettings({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/notifications/preferences?memberId=${memberId}`,
-      );
+      const response = await fetch(`/api/notifications/preferences?memberId=${memberId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -78,9 +72,7 @@ export function NotificationSettings({
         throw new Error(data.error || "Failed to load preferences");
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load preferences",
-      );
+      setError(err instanceof Error ? err.message : "Failed to load preferences");
     } finally {
       setLoading(false);
     }
@@ -90,8 +82,7 @@ export function NotificationSettings({
   const savePreferences = async () => {
     if (!preferences) return;
 
-    const shouldEnablePush =
-      preferences.enableNotifications && hasPushChannel(preferences);
+    const shouldEnablePush = preferences.enableNotifications && hasPushChannel(preferences);
 
     try {
       setSaving(true);
@@ -123,9 +114,7 @@ export function NotificationSettings({
         throw new Error(data.error || "Failed to save preferences");
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to save preferences",
-      );
+      setError(err instanceof Error ? err.message : "Failed to save preferences");
     } finally {
       setSaving(false);
     }
@@ -175,7 +164,7 @@ export function NotificationSettings({
   // 更新偏好设置
   const updatePreference = <K extends keyof NotificationPreferences>(
     key: K,
-    value: NotificationPreferences[K],
+    value: NotificationPreferences[K]
   ) => {
     if (!preferences) return;
     setPreferences({ ...preferences, [key]: value });
@@ -194,11 +183,7 @@ export function NotificationSettings({
   };
 
   // 更新渠道偏好
-  const updateChannelPreference = (
-    type: string,
-    channel: string,
-    enabled: boolean,
-  ) => {
+  const updateChannelPreference = (type: string, channel: string, enabled: boolean) => {
     if (!preferences) return;
 
     const currentChannels = preferences.channelPreferences[type] || [];
@@ -217,15 +202,12 @@ export function NotificationSettings({
 
   const hasPushChannel = (data: NotificationPreferences) =>
     Object.entries(data.channelPreferences || {}).some(
-      ([type, channels]) =>
-        (data.typeSettings?.[type] ?? true) && channels.includes("PUSH"),
+      ([type, channels]) => (data.typeSettings?.[type] ?? true) && channels.includes("PUSH")
     );
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
     const rawData = window.atob(base64);
     return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
   };
@@ -318,7 +300,7 @@ export function NotificationSettings({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-blue-500"></div>
         <span className="ml-2 text-sm text-gray-500">加载设置中...</span>
       </div>
     );
@@ -326,11 +308,11 @@ export function NotificationSettings({
 
   if (error || !preferences) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-500 text-sm mb-3">{error || "设置加载失败"}</p>
+      <div className="py-8 text-center">
+        <p className="mb-3 text-sm text-red-500">{error || "设置加载失败"}</p>
         <button
           onClick={loadPreferences}
-          className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+          className="rounded bg-blue-50 px-3 py-1 text-sm text-blue-600 hover:bg-blue-100"
         >
           重试
         </button>
@@ -347,7 +329,7 @@ export function NotificationSettings({
           {success && <span className="text-sm text-green-600">保存成功</span>}
           <button
             onClick={resetToDefaults}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+            className="rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
             title="重置为默认设置"
           >
             <RotateCcw className="h-4 w-4" />
@@ -355,7 +337,7 @@ export function NotificationSettings({
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+              className="rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
             >
               <X className="h-4 w-4" />
             </button>
@@ -372,28 +354,24 @@ export function NotificationSettings({
           <input
             type="checkbox"
             checked={preferences.enableNotifications}
-            onChange={(e) =>
-              updatePreference("enableNotifications", e.target.checked)
-            }
-            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            onChange={(e) => updatePreference("enableNotifications", e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
         </div>
 
         {/* 勿扰时间 */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              勿扰开始时间
-            </label>
+            <label className="mb-1 block text-sm text-gray-600">勿扰开始时间</label>
             <select
               value={preferences.globalQuietHoursStart || ""}
               onChange={(e) =>
                 updatePreference(
                   "globalQuietHoursStart",
-                  e.target.value ? parseInt(e.target.value) : null,
+                  e.target.value ? parseInt(e.target.value) : null
                 )
               }
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">关闭</option>
               {Array.from({ length: 24 }, (_, i) => (
@@ -405,18 +383,16 @@ export function NotificationSettings({
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              勿扰结束时间
-            </label>
+            <label className="mb-1 block text-sm text-gray-600">勿扰结束时间</label>
             <select
               value={preferences.globalQuietHoursEnd || ""}
               onChange={(e) =>
                 updatePreference(
                   "globalQuietHoursEnd",
-                  e.target.value ? parseInt(e.target.value) : null,
+                  e.target.value ? parseInt(e.target.value) : null
                 )
               }
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">关闭</option>
               {Array.from({ length: 24 }, (_, i) => (
@@ -431,53 +407,40 @@ export function NotificationSettings({
         {/* 每日限额 */}
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              每日最大通知数
-            </label>
+            <label className="mb-1 block text-sm text-gray-600">每日最大通知数</label>
             <input
               type="number"
               min="0"
               max="100"
               value={preferences.dailyMaxNotifications}
               onChange={(e) =>
-                updatePreference(
-                  "dailyMaxNotifications",
-                  parseInt(e.target.value) || 0,
-                )
+                updatePreference("dailyMaxNotifications", parseInt(e.target.value) || 0)
               }
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              每日最大短信数
-            </label>
+            <label className="mb-1 block text-sm text-gray-600">每日最大短信数</label>
             <input
               type="number"
               min="0"
               max="50"
               value={preferences.dailyMaxSMS}
-              onChange={(e) =>
-                updatePreference("dailyMaxSMS", parseInt(e.target.value) || 0)
-              }
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => updatePreference("dailyMaxSMS", parseInt(e.target.value) || 0)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              每日最大邮件数
-            </label>
+            <label className="mb-1 block text-sm text-gray-600">每日最大邮件数</label>
             <input
               type="number"
               min="0"
               max="100"
               value={preferences.dailyMaxEmail}
-              onChange={(e) =>
-                updatePreference("dailyMaxEmail", parseInt(e.target.value) || 0)
-              }
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => updatePreference("dailyMaxEmail", parseInt(e.target.value) || 0)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -489,10 +452,8 @@ export function NotificationSettings({
             <input
               type="checkbox"
               checked={preferences.enableSmartScheduling}
-              onChange={(e) =>
-                updatePreference("enableSmartScheduling", e.target.checked)
-              }
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              onChange={(e) => updatePreference("enableSmartScheduling", e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
           </div>
 
@@ -501,10 +462,8 @@ export function NotificationSettings({
             <input
               type="checkbox"
               checked={preferences.enableDeduplication}
-              onChange={(e) =>
-                updatePreference("enableDeduplication", e.target.checked)
-              }
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              onChange={(e) => updatePreference("enableDeduplication", e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -518,7 +477,7 @@ export function NotificationSettings({
           {NOTIFICATION_TYPES.map((type) => (
             <div
               key={type.key}
-              className="flex items-center justify-between p-2 hover:bg-gray-50 rounded"
+              className="flex items-center justify-between rounded p-2 hover:bg-gray-50"
             >
               <div className="flex items-center space-x-2">
                 <span className="text-lg">{type.icon}</span>
@@ -528,7 +487,7 @@ export function NotificationSettings({
                 type="checkbox"
                 checked={preferences.typeSettings[type.key] || false}
                 onChange={(e) => updateTypeSetting(type.key, e.target.checked)}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
             </div>
           ))}
@@ -544,33 +503,27 @@ export function NotificationSettings({
             if (!preferences.typeSettings[type.key]) return null;
 
             return (
-              <div key={type.key} className="border rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-2">
+              <div key={type.key} className="rounded-lg border p-3">
+                <div className="mb-2 flex items-center space-x-2">
                   <span className="text-lg">{type.icon}</span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {type.label}
-                  </span>
+                  <span className="text-sm font-medium text-gray-700">{type.label}</span>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                   {NOTIFICATION_CHANNELS.map((channel) => (
                     <label
                       key={channel.key}
-                      className="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer"
+                      className="flex cursor-pointer items-center space-x-2 text-sm text-gray-600"
                     >
                       <input
                         type="checkbox"
-                        checked={(
-                          preferences.channelPreferences[type.key] || []
-                        ).includes(channel.key)}
+                        checked={(preferences.channelPreferences[type.key] || []).includes(
+                          channel.key
+                        )}
                         onChange={(e) =>
-                          updateChannelPreference(
-                            type.key,
-                            channel.key,
-                            e.target.checked,
-                          )
+                          updateChannelPreference(type.key, channel.key, e.target.checked)
                         }
-                        className="h-3 w-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="h-3 w-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <span>
                         {channel.icon} {channel.label}
@@ -585,17 +538,14 @@ export function NotificationSettings({
       </div>
 
       {/* 保存按钮 */}
-      <div className="flex justify-end space-x-3 pt-4 border-t">
-        <button
-          onClick={onClose}
-          className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-        >
+      <div className="flex justify-end space-x-3 border-t pt-4">
+        <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
           取消
         </button>
         <button
           onClick={savePreferences}
           disabled={saving}
-          className="flex items-center space-x-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
           <span>{saving ? "保存中..." : "保存设置"}</span>

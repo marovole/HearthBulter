@@ -51,9 +51,7 @@ export function DashboardGrid({
   autoFit = false,
   minItemWidth = "280px",
 }: DashboardGridProps) {
-  const [screenSize, setScreenSize] = useState<
-    "xs" | "sm" | "md" | "lg" | "xl" | "2xl"
-  >("lg");
+  const [screenSize, setScreenSize] = useState<"xs" | "sm" | "md" | "lg" | "xl" | "2xl">("lg");
 
   useEffect(() => {
     const updateScreenSize = () => {
@@ -101,7 +99,7 @@ export function DashboardGrid({
         getGridCols(),
         getGapClass(),
         "transition-all duration-300 ease-in-out",
-        className,
+        className
       )}
     >
       {children}
@@ -118,9 +116,7 @@ export function DashboardGridItem({
   span = { xs: 1, sm: 1, md: 1, lg: 1, xl: 1, "2xl": 1 },
   order,
 }: GridItemProps) {
-  const [screenSize, setScreenSize] = useState<
-    "xs" | "sm" | "md" | "lg" | "xl" | "2xl"
-  >("lg");
+  const [screenSize, setScreenSize] = useState<"xs" | "sm" | "md" | "lg" | "xl" | "2xl">("lg");
 
   useEffect(() => {
     const updateScreenSize = () => {
@@ -153,7 +149,7 @@ export function DashboardGridItem({
         getSpanClass(),
         getOrderClass(),
         "transition-all duration-300 ease-in-out",
-        className,
+        className
       )}
     >
       {children}
@@ -207,7 +203,7 @@ export const DashboardLayouts = {
       const childrenArray = React.Children.toArray(children);
 
       return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* 主内容区域 */}
           <div className="lg:col-span-8">
             <DashboardGrid cols={{ xs: 1, sm: 1, md: 1, lg: 1, xl: 2 }} gap={6}>
@@ -216,9 +212,7 @@ export const DashboardLayouts = {
           </div>
 
           {/* 侧边栏 */}
-          <div className="lg:col-span-4">
-            {childrenArray[childrenArray.length - 1]}
-          </div>
+          <div className="lg:col-span-4">{childrenArray[childrenArray.length - 1]}</div>
         </div>
       );
     },
@@ -249,9 +243,9 @@ export function DashboardContainer({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex min-h-96 items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <p className="mt-2 text-sm text-gray-500">加载中...</p>
         </div>
       </div>
@@ -260,11 +254,11 @@ export function DashboardContainer({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex min-h-96 items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 mb-4">
+          <div className="mb-4 text-red-500">
             <svg
-              className="w-12 h-12 mx-auto"
+              className="mx-auto h-12 w-12"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -277,12 +271,12 @@ export function DashboardContainer({
               />
             </svg>
           </div>
-          <p className="text-red-600 mb-2">加载失败</p>
-          <p className="text-sm text-gray-500 mb-4">{error}</p>
+          <p className="mb-2 text-red-600">加载失败</p>
+          <p className="mb-4 text-sm text-gray-500">{error}</p>
           {onRetry && (
             <button
               onClick={onRetry}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
             >
               重试
             </button>

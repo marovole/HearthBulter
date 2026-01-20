@@ -13,10 +13,7 @@ export class TaskNotificationService {
   private readonly notificationManager: NotificationManager;
   private readonly familyRepository: FamilyRepository;
 
-  constructor(
-    notificationRepository: NotificationRepository,
-    familyRepository: FamilyRepository,
-  ) {
+  constructor(notificationRepository: NotificationRepository, familyRepository: FamilyRepository) {
     this.notificationManager = new NotificationManager(notificationRepository);
     this.familyRepository = familyRepository;
   }
@@ -31,7 +28,7 @@ export class TaskNotificationService {
       description: string;
       dueDate: string;
       assignerName: string;
-    },
+    }
   ): Promise<void> {
     try {
       const channels: NotificationChannel[] = ["IN_APP", "EMAIL"];
@@ -65,14 +62,12 @@ export class TaskNotificationService {
       taskTitle: string;
       dueDate: string;
       hoursRemaining: number;
-    },
+    }
   ): Promise<void> {
     try {
       const priority = taskData.hoursRemaining <= 24 ? "high" : "medium";
       const channels: Array<"IN_APP" | "EMAIL" | "SMS"> =
-        taskData.hoursRemaining <= 24
-          ? ["IN_APP", "EMAIL", "SMS"]
-          : ["IN_APP", "EMAIL"];
+        taskData.hoursRemaining <= 24 ? ["IN_APP", "EMAIL", "SMS"] : ["IN_APP", "EMAIL"];
 
       await this.notificationManager.sendNotification({
         userId: memberId,
@@ -103,7 +98,7 @@ export class TaskNotificationService {
       taskTitle: string;
       completedAt: string;
       pointsEarned?: number;
-    },
+    }
   ): Promise<void> {
     try {
       let content = `恭喜！您已完成任务"${taskData.taskTitle}"。`;
@@ -143,29 +138,27 @@ export class TaskNotificationService {
       description: string;
       dueDate: string;
       creatorName: string;
-    },
+    }
   ): Promise<void> {
     try {
       const familyMembers = await this.getFamilyMembers(familyId);
       const channels: NotificationChannel[] = ["IN_APP", "EMAIL"];
 
-      const notifications: NotificationData[] = familyMembers.map(
-        (memberId) => ({
-          userId: memberId,
-          type: "TASK_NOTIFICATION",
-          title: "团队任务",
-          content: `${taskData.creatorName}发布了团队任务"${taskData.taskTitle}"，截止${taskData.dueDate}。`,
-          priority: "medium",
-          channels,
-          metadata: {
-            taskId: taskData.taskTitle,
-            taskType: "TEAM_TASK",
-            creatorName: taskData.creatorName,
-          },
-          actionUrl: "/tasks",
-          actionText: "查看团队任务",
-        }),
-      );
+      const notifications: NotificationData[] = familyMembers.map((memberId) => ({
+        userId: memberId,
+        type: "TASK_NOTIFICATION",
+        title: "团队任务",
+        content: `${taskData.creatorName}发布了团队任务"${taskData.taskTitle}"，截止${taskData.dueDate}。`,
+        priority: "medium",
+        channels,
+        metadata: {
+          taskId: taskData.taskTitle,
+          taskType: "TEAM_TASK",
+          creatorName: taskData.creatorName,
+        },
+        actionUrl: "/tasks",
+        actionText: "查看团队任务",
+      }));
 
       await this.notificationManager.sendBulkNotifications(notifications);
     } catch (error) {
@@ -181,7 +174,7 @@ export class TaskNotificationService {
     taskData: {
       taskTitle: string;
       overdueDays: number;
-    },
+    }
   ): Promise<void> {
     try {
       const channels: NotificationChannel[] = ["IN_APP", "EMAIL", "SMS"];
@@ -227,10 +220,7 @@ export class TaskNotificationService {
 export async function exampleUsage() {
   const notificationRepository = new ConvexNotificationRepository();
   const familyRepository = new ConvexFamilyRepository();
-  const taskService = new TaskNotificationService(
-    notificationRepository,
-    familyRepository,
-  );
+  const taskService = new TaskNotificationService(notificationRepository, familyRepository);
 
   // 示例1: 发送任务分配通知
   await taskService.sendTaskAssignment("member-123", {

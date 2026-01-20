@@ -78,9 +78,7 @@ describe("Health Data Validator", () => {
 
       const result = validateHealthData(invalidData);
       expect(result.valid).toBe(false);
-      expect(
-        result.errors.some((e) => e.includes("至少需要录入一个健康指标")),
-      ).toBe(true);
+      expect(result.errors.some((e) => e.includes("至少需要录入一个健康指标"))).toBe(true);
     });
 
     it("should validate heart rate range", () => {
@@ -178,9 +176,7 @@ describe("Health Data Validator", () => {
     });
 
     it("should handle errors gracefully", async () => {
-      (prisma.healthData.findFirst as jest.Mock).mockRejectedValue(
-        new Error("Database error"),
-      );
+      (prisma.healthData.findFirst as jest.Mock).mockRejectedValue(new Error("Database error"));
 
       const newData: HealthDataInput = {
         weight: 75,

@@ -91,9 +91,7 @@ describe("Prompt Templates", () => {
       };
       const result = renderPrompt(template, variables);
 
-      expect(result).toBe(
-        "Goals: weight_loss, muscle_gain, Allergies: nuts, dairy",
-      );
+      expect(result).toBe("Goals: weight_loss, muscle_gain, Allergies: nuts, dairy");
     });
 
     it("应该处理嵌套对象", () => {
@@ -182,10 +180,7 @@ describe("Prompt Templates", () => {
 
   describe("getActivePrompt", () => {
     it("应该返回活跃的健康分析提示模板", () => {
-      const template = getActivePrompt(
-        "health_analysis",
-        "basic_health_analysis",
-      );
+      const template = getActivePrompt("health_analysis", "basic_health_analysis");
 
       expect(template).toBeDefined();
       expect(template?.id).toBe("health_analysis_v1");
@@ -195,19 +190,13 @@ describe("Prompt Templates", () => {
     });
 
     it("应该返回null对于不存在的模板", () => {
-      const template = getActivePrompt(
-        "health_analysis",
-        "non_existent_template",
-      );
+      const template = getActivePrompt("health_analysis", "non_existent_template");
 
       expect(template).toBeNull();
     });
 
     it("应该返回null对于不活跃的模板", () => {
-      const template = getActivePrompt(
-        "health_analysis",
-        "advanced_health_analysis",
-      );
+      const template = getActivePrompt("health_analysis", "advanced_health_analysis");
 
       expect(template).toBeNull();
     });
@@ -219,9 +208,7 @@ describe("Prompt Templates", () => {
 
       expect(Object.keys(healthPrompts)).toContain("basic_health_analysis");
       expect(Object.keys(healthPrompts)).toContain("advanced_health_analysis");
-      expect(Object.keys(healthPrompts)).toContain(
-        "chronic_disease_management",
-      );
+      expect(Object.keys(healthPrompts)).toContain("chronic_disease_management");
 
       Object.values(healthPrompts).forEach((prompt) => {
         expect(prompt.category).toBe("health_analysis");

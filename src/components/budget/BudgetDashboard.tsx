@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,11 +18,7 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import {
-  BudgetStatus as BudgetStatusType,
-  FoodCategory,
-  BudgetPeriod,
-} from "@prisma/client";
+import { BudgetStatus as BudgetStatusType, FoodCategory, BudgetPeriod } from "@prisma/client";
 
 interface BudgetStatus {
   budget: any;
@@ -138,11 +128,8 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
   };
 
   const getAlertVariant = (alerts: string[]) => {
-    if (alerts.some((alert) => alert.includes("严重超支")))
-      return "destructive";
-    if (
-      alerts.some((alert) => alert.includes("已用完") || alert.includes("超支"))
-    )
+    if (alerts.some((alert) => alert.includes("严重超支"))) return "destructive";
+    if (alerts.some((alert) => alert.includes("已用完") || alert.includes("超支")))
       return "destructive";
     if (alerts.some((alert) => alert.includes("即将用完"))) return "default";
     return "default";
@@ -151,14 +138,14 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader className="pb-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 w-3/4 rounded bg-gray-200"></div>
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-8 w-1/2 rounded bg-gray-200"></div>
               </CardContent>
             </Card>
           ))}
@@ -220,16 +207,14 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
       )}
 
       {/* 核心指标卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">总预算</CardTitle>
             <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ¥{budget.totalAmount.toFixed(2)}
-            </div>
+            <div className="text-2xl font-bold">¥{budget.totalAmount.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">预算周期内可用总额</p>
           </CardContent>
         </Card>
@@ -240,14 +225,10 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
             <ShoppingCartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div
-              className={`text-2xl font-bold ${getUsageColor(usagePercentage)}`}
-            >
+            <div className={`text-2xl font-bold ${getUsageColor(usagePercentage)}`}>
               ¥{usedAmount.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              使用率 {usagePercentage.toFixed(1)}%
-            </p>
+            <p className="text-xs text-muted-foreground">使用率 {usagePercentage.toFixed(1)}%</p>
           </CardContent>
         </Card>
 
@@ -262,9 +243,7 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
             >
               ¥{remainingAmount.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              还剩 {daysRemaining} 天
-            </p>
+            <p className="text-xs text-muted-foreground">还剩 {daysRemaining} 天</p>
           </CardContent>
         </Card>
 
@@ -275,9 +254,7 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">¥{dailyAverage.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              预计总支出 ¥{projectedSpend.toFixed(2)}
-            </p>
+            <p className="text-xs text-muted-foreground">预计总支出 ¥{projectedSpend.toFixed(2)}</p>
           </CardContent>
         </Card>
       </div>
@@ -304,10 +281,7 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
                     {usagePercentage.toFixed(1)}%
                   </span>
                 </div>
-                <Progress
-                  value={Math.min(usagePercentage, 100)}
-                  className="h-2"
-                />
+                <Progress value={Math.min(usagePercentage, 100)} className="h-2" />
                 {usagePercentage > 100 && (
                   <p className="text-xs text-red-600">
                     预算已超支 {(usagePercentage - 100).toFixed(1)}%
@@ -316,22 +290,20 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4">
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <div className="rounded-lg bg-muted/50 p-4 text-center">
                   <div className="text-2xl font-bold text-blue-600">
                     {((remainingAmount / budget.totalAmount) * 100).toFixed(1)}%
                   </div>
                   <p className="text-sm text-muted-foreground">预算剩余比例</p>
                 </div>
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <div className="rounded-lg bg-muted/50 p-4 text-center">
                   <div
                     className={`text-2xl font-bold ${projectedSpend > budget.totalAmount ? "text-red-600" : "text-green-600"}`}
                   >
                     {projectedSpend > budget.totalAmount ? "+" : ""}
-                    {(
-                      ((projectedSpend - budget.totalAmount) /
-                        budget.totalAmount) *
-                      100
-                    ).toFixed(1)}
+                    {(((projectedSpend - budget.totalAmount) / budget.totalAmount) * 100).toFixed(
+                      1
+                    )}
                     %
                   </div>
                   <p className="text-sm text-muted-foreground">预计超支/节省</p>
@@ -353,15 +325,11 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
                   <div key={category} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">
-                          {categoryIcons[category as FoodCategory]}
-                        </span>
+                        <span className="text-lg">{categoryIcons[category as FoodCategory]}</span>
                         <span className="font-medium">{category}</span>
                       </div>
                       <div className="text-right">
-                        <div
-                          className={`font-medium ${getUsageColor(usage.percentage)}`}
-                        >
+                        <div className={`font-medium ${getUsageColor(usage.percentage)}`}>
                           ¥{usage.used.toFixed(2)} / ¥{usage.budget.toFixed(2)}
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -369,10 +337,7 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
                         </div>
                       </div>
                     </div>
-                    <Progress
-                      value={Math.min(usage.percentage, 100)}
-                      className="h-2"
-                    />
+                    <Progress value={Math.min(usage.percentage, 100)} className="h-2" />
                     {usage.percentage > 100 && (
                       <p className="text-xs text-red-600">
                         超支 ¥{(usage.used - usage.budget).toFixed(2)}
@@ -382,9 +347,7 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
                 ))}
 
                 {Object.keys(categoryUsage).length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    暂无分类预算设定
-                  </div>
+                  <div className="py-8 text-center text-muted-foreground">暂无分类预算设定</div>
                 )}
               </div>
             </CardContent>
@@ -398,23 +361,21 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
               <CardDescription>基于当前支出速度的预测分析</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <CalendarIcon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="rounded-lg bg-blue-50 p-4 text-center">
+                  <CalendarIcon className="mx-auto mb-2 h-8 w-8 text-blue-600" />
                   <div className="text-lg font-bold">{daysRemaining}</div>
                   <p className="text-sm text-muted-foreground">剩余天数</p>
                 </div>
 
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <TrendingDownIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-lg font-bold">
-                    ¥{dailyAverage.toFixed(2)}
-                  </div>
+                <div className="rounded-lg bg-green-50 p-4 text-center">
+                  <TrendingDownIcon className="mx-auto mb-2 h-8 w-8 text-green-600" />
+                  <div className="text-lg font-bold">¥{dailyAverage.toFixed(2)}</div>
                   <p className="text-sm text-muted-foreground">日均支出</p>
                 </div>
 
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <TrendingUpIcon className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                <div className="rounded-lg bg-orange-50 p-4 text-center">
+                  <TrendingUpIcon className="mx-auto mb-2 h-8 w-8 text-orange-600" />
                   <div
                     className={`text-lg font-bold ${projectedSpend > budget.totalAmount ? "text-red-600" : "text-green-600"}`}
                   >
@@ -428,16 +389,14 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
                 <Alert>
                   <AlertTriangleIcon className="h-4 w-4" />
                   <AlertDescription>
-                    按当前支出速度，预计将超支 ¥
-                    {(projectedSpend - budget.totalAmount).toFixed(2)}。
+                    按当前支出速度，预计将超支 ¥{(projectedSpend - budget.totalAmount).toFixed(2)}。
                     建议控制日均支出在 ¥
                     {(
                       budget.totalAmount /
                       (daysRemaining +
                         Math.ceil(
-                          (new Date().getTime() -
-                            new Date(budget.startDate).getTime()) /
-                            (1000 * 60 * 60 * 24),
+                          (new Date().getTime() - new Date(budget.startDate).getTime()) /
+                            (1000 * 60 * 60 * 24)
                         ))
                     ).toFixed(2)}{" "}
                     以内。
@@ -449,8 +408,7 @@ export function BudgetDashboard({ memberId, budgetId }: BudgetDashboardProps) {
                 <Alert>
                   <AlertTriangleIcon className="h-4 w-4" />
                   <AlertDescription>
-                    按当前支出速度，预计将节省 ¥
-                    {(budget.totalAmount - projectedSpend).toFixed(2)}。
+                    按当前支出速度，预计将节省 ¥{(budget.totalAmount - projectedSpend).toFixed(2)}。
                     可以考虑增加营养品质或尝试新的食材。
                   </AlertDescription>
                 </Alert>

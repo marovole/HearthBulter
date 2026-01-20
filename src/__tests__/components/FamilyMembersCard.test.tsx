@@ -349,7 +349,7 @@ describe("FamilyMembersCard", () => {
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/dashboard/family-members?familyId=test-family-1",
+        "/api/dashboard/family-members?familyId=test-family-1"
       );
     });
   });

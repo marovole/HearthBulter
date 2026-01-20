@@ -11,10 +11,7 @@ import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ code: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   try {
     const { code } = await params;
     const supabase = SupabaseClientManager.getInstance();
@@ -30,7 +27,7 @@ export async function GET(
           name,
           description
         )
-      `,
+      `
       )
       .eq("inviteCode", code)
       .single();
@@ -81,7 +78,7 @@ export async function GET(
           memberCount: memberCount || 0,
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取邀请信息失败:", error);
@@ -97,27 +94,20 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ code: string }> },
+  { params }: { params: Promise<{ code: string }> }
 ) {
   try {
     const { code } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "请先登录后再接受邀请" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "请先登录后再接受邀请" }, { status: 401 });
     }
 
     const body = await request.json();
     const { memberName, gender, birthDate } = body;
 
-    if (
-      !memberName ||
-      typeof memberName !== "string" ||
-      memberName.trim() === ""
-    ) {
+    if (!memberName || typeof memberName !== "string" || memberName.trim() === "") {
       return NextResponse.json({ error: "请提供成员名称" }, { status: 400 });
     }
 
@@ -141,16 +131,13 @@ export async function POST(
     // - 用户是否已是成员
     // - 用户是否在其他家庭
     // 并且原子地创建成员和更新邀请状态
-    const { data: result, error: rpcError } = await supabase.rpc(
-      "accept_family_invite",
-      {
-        p_invitation_id: invitation.id,
-        p_user_id: session.user.id,
-        p_member_name: memberName.trim(),
-        p_gender: gender || "MALE",
-        p_birth_date: birthDate || "2000-01-01",
-      },
-    );
+    const { data: result, error: rpcError } = await supabase.rpc("accept_family_invite", {
+      p_invitation_id: invitation.id,
+      p_user_id: session.user.id,
+      p_member_name: memberName.trim(),
+      p_gender: gender || "MALE",
+      p_birth_date: birthDate || "2000-01-01",
+    });
 
     if (rpcError) {
       console.error("RPC 调用失败:", rpcError);
@@ -198,7 +185,7 @@ export async function POST(
         family: result.data.family,
         member: result.data.member,
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error) {
     console.error("加入家庭失败:", error);

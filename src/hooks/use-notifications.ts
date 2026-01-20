@@ -102,16 +102,9 @@ export function useNotifications(options: UseNotificationsOptions) {
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [filters, setFilters] = useState<NotificationFilters>(
-    options.initialFilters || {},
-  );
+  const [filters, setFilters] = useState<NotificationFilters>(options.initialFilters || {});
 
-  const {
-    memberId,
-    autoRefresh = false,
-    refreshInterval = 30000,
-    pageSize = 20,
-  } = options;
+  const { memberId, autoRefresh = false, refreshInterval = 30000, pageSize = 20 } = options;
 
   // 获取通知列表
   const fetchNotifications = useCallback(
@@ -127,7 +120,7 @@ export function useNotifications(options: UseNotificationsOptions) {
         limit?: number;
         offset?: number;
         includeRead?: boolean;
-      } = {},
+      } = {}
     ) => {
       try {
         setError(null);
@@ -135,9 +128,7 @@ export function useNotifications(options: UseNotificationsOptions) {
         const params = new URLSearchParams({
           memberId,
           ...Object.fromEntries(
-            Object.entries(options).filter(
-              ([_, value]) => value !== undefined && value !== "",
-            ),
+            Object.entries(options).filter(([_, value]) => value !== undefined && value !== "")
           ),
         });
 
@@ -150,40 +141,33 @@ export function useNotifications(options: UseNotificationsOptions) {
           throw new Error(data.error || "Failed to fetch notifications");
         }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to fetch notifications";
+        const errorMessage = err instanceof Error ? err.message : "Failed to fetch notifications";
         setError(errorMessage);
         throw err;
       }
     },
-    [],
+    []
   );
 
   // 获取通知统计
-  const fetchStats = useCallback(
-    async (memberId: string, days: number = 30) => {
-      try {
-        setError(null);
+  const fetchStats = useCallback(async (memberId: string, days: number = 30) => {
+    try {
+      setError(null);
 
-        const response = await fetch(
-          `/api/notifications/stats?memberId=${memberId}&days=${days}`,
-        );
-        const data = await response.json();
+      const response = await fetch(`/api/notifications/stats?memberId=${memberId}&days=${days}`);
+      const data = await response.json();
 
-        if (data.success) {
-          return data.data;
-        } else {
-          throw new Error(data.error || "Failed to fetch stats");
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to fetch stats";
-        setError(errorMessage);
-        throw err;
+      if (data.success) {
+        return data.data;
+      } else {
+        throw new Error(data.error || "Failed to fetch stats");
       }
-    },
-    [],
-  );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch stats";
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
 
   // 创建通知
   const createNotification = useCallback(
@@ -222,46 +206,41 @@ export function useNotifications(options: UseNotificationsOptions) {
           throw new Error(result.error || "Failed to create notification");
         }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to create notification";
+        const errorMessage = err instanceof Error ? err.message : "Failed to create notification";
         setError(errorMessage);
         throw err;
       }
     },
-    [],
+    []
   );
 
   // 标记为已读
-  const markAsRead = useCallback(
-    async (notificationId: string, memberId: string) => {
-      try {
-        setError(null);
+  const markAsRead = useCallback(async (notificationId: string, memberId: string) => {
+    try {
+      setError(null);
 
-        const response = await fetch("/api/notifications/read", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            notificationId,
-            memberId,
-          }),
-        });
+      const response = await fetch("/api/notifications/read", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notificationId,
+          memberId,
+        }),
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (!result.success) {
-          throw new Error(result.error || "Failed to mark as read");
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to mark as read";
-        setError(errorMessage);
-        throw err;
+      if (!result.success) {
+        throw new Error(result.error || "Failed to mark as read");
       }
-    },
-    [],
-  );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to mark as read";
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
 
   // 标记全部为已读
   const markAllAsRead = useCallback(async (memberId: string) => {
@@ -285,152 +264,129 @@ export function useNotifications(options: UseNotificationsOptions) {
         throw new Error(result.error || "Failed to mark all as read");
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to mark all as read";
+      const errorMessage = err instanceof Error ? err.message : "Failed to mark all as read";
       setError(errorMessage);
       throw err;
     }
   }, []);
 
   // 删除通知
-  const deleteNotification = useCallback(
-    async (notificationId: string, memberId: string) => {
-      try {
-        setError(null);
+  const deleteNotification = useCallback(async (notificationId: string, memberId: string) => {
+    try {
+      setError(null);
 
-        const response = await fetch(
-          `/api/notifications/${notificationId}?memberId=${memberId}`,
-          {
-            method: "DELETE",
-          },
-        );
+      const response = await fetch(`/api/notifications/${notificationId}?memberId=${memberId}`, {
+        method: "DELETE",
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (!result.success) {
-          throw new Error(result.error || "Failed to delete notification");
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to delete notification";
-        setError(errorMessage);
-        throw err;
+      if (!result.success) {
+        throw new Error(result.error || "Failed to delete notification");
       }
-    },
-    [],
-  );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete notification";
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
 
   // 批量标记已读
-  const batchMarkRead = useCallback(
-    async (notificationIds: string[], memberId: string) => {
-      try {
-        setError(null);
+  const batchMarkRead = useCallback(async (notificationIds: string[], memberId: string) => {
+    try {
+      setError(null);
 
-        const response = await fetch("/api/notifications/batch", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      const response = await fetch("/api/notifications/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          operation: "markRead",
+          data: {
+            notificationIds,
+            memberId,
           },
-          body: JSON.stringify({
-            operation: "markRead",
-            data: {
-              notificationIds,
-              memberId,
-            },
-          }),
-        });
+        }),
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (!result.success) {
-          throw new Error(result.error || "Failed to batch mark as read");
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to batch mark as read";
-        setError(errorMessage);
-        throw err;
+      if (!result.success) {
+        throw new Error(result.error || "Failed to batch mark as read");
       }
-    },
-    [],
-  );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to batch mark as read";
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
 
   // 批量删除
-  const batchDelete = useCallback(
-    async (notificationIds: string[], memberId: string) => {
-      try {
-        setError(null);
+  const batchDelete = useCallback(async (notificationIds: string[], memberId: string) => {
+    try {
+      setError(null);
 
-        const response = await fetch("/api/notifications/batch", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      const response = await fetch("/api/notifications/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          operation: "delete",
+          data: {
+            notificationIds,
+            memberId,
           },
-          body: JSON.stringify({
-            operation: "delete",
-            data: {
-              notificationIds,
-              memberId,
-            },
-          }),
-        });
+        }),
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (!result.success) {
-          throw new Error(result.error || "Failed to batch delete");
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to batch delete";
-        setError(errorMessage);
-        throw err;
+      if (!result.success) {
+        throw new Error(result.error || "Failed to batch delete");
       }
-    },
-    [],
-  );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to batch delete";
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
 
   // 批量创建通知
-  const createBulkNotifications = useCallback(
-    async (notifications: BulkNotificationRequest[]) => {
-      try {
-        setError(null);
+  const createBulkNotifications = useCallback(async (notifications: BulkNotificationRequest[]) => {
+    try {
+      setError(null);
 
-        const response = await fetch("/api/notifications/batch", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      const response = await fetch("/api/notifications/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          operation: "create",
+          data: {
+            notifications,
           },
-          body: JSON.stringify({
-            operation: "create",
-            data: {
-              notifications,
-            },
-          }),
-        });
+        }),
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (result.success) {
-          // 刷新通知列表
-          await loadNotifications();
-          return result.data;
-        } else {
-          throw new Error(
-            result.error || "Failed to create bulk notifications",
-          );
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Failed to create bulk notifications";
-        setError(errorMessage);
-        throw err;
+      if (result.success) {
+        // 刷新通知列表
+        await loadNotifications();
+        return result.data;
+      } else {
+        throw new Error(result.error || "Failed to create bulk notifications");
       }
-    },
-    [],
-  );
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to create bulk notifications";
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
 
   // 清空所有通知
   const deleteAll = useCallback(async (memberId: string) => {
@@ -458,9 +414,7 @@ export function useNotifications(options: UseNotificationsOptions) {
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to delete all notifications";
+        err instanceof Error ? err.message : "Failed to delete all notifications";
       setError(errorMessage);
       throw err;
     }
@@ -499,15 +453,7 @@ export function useNotifications(options: UseNotificationsOptions) {
     } finally {
       setLoading(false);
     }
-  }, [
-    memberId,
-    currentPage,
-    filters,
-    pageSize,
-    hasMore,
-    loading,
-    fetchNotifications,
-  ]);
+  }, [memberId, currentPage, filters, pageSize, hasMore, loading, fetchNotifications]);
 
   // 加载通知列表
   const loadNotifications = useCallback(async () => {

@@ -38,10 +38,7 @@ export interface PermissionCheckResult {
  */
 export class PermissionMiddleware {
   private static instance: PermissionMiddleware;
-  private permissionCache = new Map<
-    string,
-    { role: FamilyMemberRole; timestamp: number }
-  >();
+  private permissionCache = new Map<string, { role: FamilyMemberRole; timestamp: number }>();
   private cacheTimeout = 5 * 60 * 1000; // 5分钟缓存
 
   static getInstance(): PermissionMiddleware {
@@ -62,7 +59,7 @@ export class PermissionMiddleware {
       memberId?: string;
       resourceOwnerId?: string;
       params?: Record<string, string>;
-    },
+    }
   ): Promise<PermissionCheckResult> {
     const requestId = this.generateRequestId();
     const startTime = Date.now();
@@ -81,11 +78,7 @@ export class PermissionMiddleware {
       const userId = session.user.id;
 
       // 2. 获取用户权限上下文
-      const permissionContext = await this.buildPermissionContext(
-        request,
-        userId,
-        context,
-      );
+      const permissionContext = await this.buildPermissionContext(request, userId, context);
 
       // 3. 检查家庭成员权限（如果需要）
       if (requirements.some((req) => req.requireFamilyMembership)) {
@@ -108,10 +101,7 @@ export class PermissionMiddleware {
 
       // 4. 检查权限要求
       for (const requirement of requirements) {
-        const checkResult = await this.checkRequirement(
-          permissionContext,
-          requirement,
-        );
+        const checkResult = await this.checkRequirement(permissionContext, requirement);
 
         if (!checkResult) {
           return {
@@ -125,8 +115,7 @@ export class PermissionMiddleware {
       // 5. 检查自定义验证器
       for (const requirement of requirements) {
         if (requirement.customValidator) {
-          const customResult =
-            await requirement.customValidator(permissionContext);
+          const customResult = await requirement.customValidator(permissionContext);
           if (!customResult) {
             return {
               allowed: false,
@@ -180,7 +169,7 @@ export class PermissionMiddleware {
       memberId?: string;
       resourceOwnerId?: string;
       params?: Record<string, string>;
-    },
+    }
   ): Promise<PermissionContext> {
     const permissionContext: PermissionContext = {
       userId,
@@ -207,10 +196,7 @@ export class PermissionMiddleware {
 
     // 获取用户角色（带缓存）
     if (permissionContext.familyId) {
-      permissionContext.userRole = await this.getUserRole(
-        userId,
-        permissionContext.familyId,
-      );
+      permissionContext.userRole = await this.getUserRole(userId, permissionContext.familyId);
     }
 
     return permissionContext;
@@ -219,10 +205,7 @@ export class PermissionMiddleware {
   /**
    * 获取用户角色（带缓存）
    */
-  private async getUserRole(
-    userId: string,
-    familyId: string,
-  ): Promise<FamilyMemberRole | null> {
+  private async getUserRole(userId: string, familyId: string): Promise<FamilyMemberRole | null> {
     const cacheKey = `${userId}:${familyId}`;
     const cached = this.permissionCache.get(cacheKey);
 
@@ -246,9 +229,7 @@ export class PermissionMiddleware {
 
       const roleValue = typeof member?.role === "string" ? member.role : null;
       const role = roleValue
-        ? Object.values(FamilyMemberRole).includes(
-            roleValue as FamilyMemberRole,
-        )
+        ? Object.values(FamilyMemberRole).includes(roleValue as FamilyMemberRole)
           ? (roleValue as FamilyMemberRole)
           : null
         : null;
@@ -276,7 +257,7 @@ export class PermissionMiddleware {
    */
   private async checkRequirement(
     context: PermissionContext,
-    requirement: PermissionRequirement,
+    requirement: PermissionRequirement
   ): Promise<boolean> {
     // 检查角色权限
     if (!context.userRole) {
@@ -289,7 +270,7 @@ export class PermissionMiddleware {
         context.userRole,
         permission,
         context.resourceOwnerId,
-        context.userId,
+        context.userId
       );
 
       if (!hasPermit) {
@@ -357,18 +338,14 @@ export class PermissionMiddleware {
 export const permissionMiddleware = PermissionMiddleware.getInstance();
 
 // 导出便捷方法
-export const requirePermissions = (
-  permissions: Permission[],
-): PermissionRequirement[] => [
+export const requirePermissions = (permissions: Permission[]): PermissionRequirement[] => [
   {
     permissions,
     requireFamilyMembership: true,
   },
 ];
 
-export const requireOwnership = (
-  permissions: Permission[],
-): PermissionRequirement[] => [
+export const requireOwnership = (permissions: Permission[]): PermissionRequirement[] => [
   {
     permissions,
     requireOwnership: true,
@@ -376,9 +353,7 @@ export const requireOwnership = (
   },
 ];
 
-export const requireAnyPermission = (
-  permissions: Permission[],
-): PermissionRequirement[] => [
+export const requireAnyPermission = (permissions: Permission[]): PermissionRequirement[] => [
   {
     permissions,
     requireFamilyMembership: true,
@@ -386,38 +361,20 @@ export const requireAnyPermission = (
       if (!context.userRole) return false;
 
       return permissions.some((permission) =>
-        hasPermission(
-          context.userRole!,
-          permission,
-          context.resourceOwnerId,
-          context.userId,
-        ),
+        hasPermission(context.userRole!, permission, context.resourceOwnerId, context.userId)
       );
     },
   },
 ];
 
-type PermissionHandler = (
-  request: NextRequest,
-  context: PermissionContext,
-) => Promise<Response>;
+type PermissionHandler = (request: NextRequest, context: PermissionContext) => Promise<Response>;
 
 // 创建权限验证高阶函数
-export function withPermissions(
-  requirements: PermissionRequirement[],
-  handler: PermissionHandler,
-) {
-  return async (
-    request: NextRequest,
-    context?: { params?: Record<string, string> },
-  ) => {
-    const result = await permissionMiddleware.checkPermissions(
-      request,
-      requirements,
-      {
-        params: context?.params,
-      },
-    );
+export function withPermissions(requirements: PermissionRequirement[], handler: PermissionHandler) {
+  return async (request: NextRequest, context?: { params?: Record<string, string> }) => {
+    const result = await permissionMiddleware.checkPermissions(request, requirements, {
+      params: context?.params,
+    });
 
     if (!result.allowed) {
       const error = APIError.forbidden(result.reason || "权限不足");
@@ -436,34 +393,32 @@ export const withMemberPermission = (handler: PermissionHandler) =>
   withPermissions(requirePermissions([Permission.VIEW_FAMILY_DATA]), handler);
 
 export const withTaskPermission =
-  (action: "create" | "read" | "update" | "delete") =>
-    (handler: PermissionHandler) => {
-      const permissions = {
-        create: [Permission.CREATE_TASK],
-        read: [Permission.READ_TASK],
-        update: [Permission.UPDATE_TASK],
-        delete: [Permission.DELETE_TASK],
-      };
-
-      return withPermissions(requirePermissions(permissions[action]!), handler);
+  (action: "create" | "read" | "update" | "delete") => (handler: PermissionHandler) => {
+    const permissions = {
+      create: [Permission.CREATE_TASK],
+      read: [Permission.READ_TASK],
+      update: [Permission.UPDATE_TASK],
+      delete: [Permission.DELETE_TASK],
     };
 
+    return withPermissions(requirePermissions(permissions[action]!), handler);
+  };
+
 export const withOwnershipPermission =
-  (permissions: Permission[], resourceOwnerId: string) =>
-    (handler: PermissionHandler) =>
-      withPermissions(
-        [
-          {
-            permissions,
-            requireOwnership: true,
-            requireFamilyMembership: true,
-            customValidator: async (context: PermissionContext) => {
-              return (
-                context.resourceOwnerId === resourceOwnerId ||
+  (permissions: Permission[], resourceOwnerId: string) => (handler: PermissionHandler) =>
+    withPermissions(
+      [
+        {
+          permissions,
+          requireOwnership: true,
+          requireFamilyMembership: true,
+          customValidator: async (context: PermissionContext) => {
+            return (
+              context.resourceOwnerId === resourceOwnerId ||
               context.userRole === FamilyMemberRole.ADMIN
-              );
-            },
+            );
           },
-        ],
-        handler,
-      );
+        },
+      ],
+      handler
+    );

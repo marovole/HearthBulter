@@ -4,9 +4,7 @@ import type { RecommendationRepository } from "../lib/repositories/interfaces/re
 import type { RecipeDetailDTO } from "../lib/repositories/interfaces/recommendation-repository";
 import type { RecipeSummaryDTO } from "../lib/repositories/types/recommendation";
 
-const buildRecipeDetail = (
-  overrides?: Partial<RecipeDetailDTO>,
-): RecipeDetailDTO => ({
+const buildRecipeDetail = (overrides?: Partial<RecipeDetailDTO>): RecipeDetailDTO => ({
   id: "recipe-1",
   name: "测试食谱1",
   cuisineType: "中式",
@@ -50,9 +48,7 @@ const buildRecipeDetail = (
   ...overrides,
 });
 
-const buildRecipeSummary = (
-  overrides?: Partial<RecipeSummaryDTO>,
-): RecipeSummaryDTO => ({
+const buildRecipeSummary = (overrides?: Partial<RecipeSummaryDTO>): RecipeSummaryDTO => ({
   id: "recipe-2",
   name: "测试食谱2",
   cuisineType: "中式",
@@ -84,9 +80,7 @@ describe("RecommendationEngine", () => {
   beforeEach(() => {
     mockRepository = {
       getUserPreference:
-        createMock<
-          RecommendationRepository["getUserPreference"]
-        >().mockResolvedValue(null),
+        createMock<RecommendationRepository["getUserPreference"]>().mockResolvedValue(null),
       listCandidateRecipes: createMock<
         RecommendationRepository["listCandidateRecipes"]
       >().mockResolvedValue({ items: [], total: 0, hasMore: false }),
@@ -100,16 +94,12 @@ describe("RecommendationEngine", () => {
         RecommendationRepository["getSimilarRecipes"]
       >().mockResolvedValue([]),
       getRecipeById:
-        createMock<
-          RecommendationRepository["getRecipeById"]
-        >().mockResolvedValue(null),
+        createMock<RecommendationRepository["getRecipeById"]>().mockResolvedValue(null),
       listPopularRecipes: createMock<
         RecommendationRepository["listPopularRecipes"]
       >().mockResolvedValue([]),
       getActiveHealthGoal:
-        createMock<
-          RecommendationRepository["getActiveHealthGoal"]
-        >().mockResolvedValue(null),
+        createMock<RecommendationRepository["getActiveHealthGoal"]>().mockResolvedValue(null),
       getInventorySnapshot: createMock<
         RecommendationRepository["getInventorySnapshot"]
       >().mockResolvedValue({
@@ -118,20 +108,20 @@ describe("RecommendationEngine", () => {
         items: [],
       }),
       saveRecommendationLog:
-        createMock<
-          RecommendationRepository["saveRecommendationLog"]
-        >().mockResolvedValue(undefined),
+        createMock<RecommendationRepository["saveRecommendationLog"]>().mockResolvedValue(
+          undefined
+        ),
       upsertRecommendationWeights:
-        createMock<
-          RecommendationRepository["upsertRecommendationWeights"]
-        >().mockResolvedValue(undefined),
+        createMock<RecommendationRepository["upsertRecommendationWeights"]>().mockResolvedValue(
+          undefined
+        ),
       upsertLearnedUserPreferences:
-        createMock<
-          RecommendationRepository["upsertLearnedUserPreferences"]
-        >().mockResolvedValue(undefined),
-      getRecipesByIds: createMock<
-        RecommendationRepository["getRecipesByIds"]
-      >().mockResolvedValue([]),
+        createMock<RecommendationRepository["upsertLearnedUserPreferences"]>().mockResolvedValue(
+          undefined
+        ),
+      getRecipesByIds: createMock<RecommendationRepository["getRecipesByIds"]>().mockResolvedValue(
+        []
+      ),
       listMemberBehaviorSamples: createMock<
         RecommendationRepository["listMemberBehaviorSamples"]
       >().mockResolvedValue([]),
@@ -217,9 +207,7 @@ describe("RecommendationEngine", () => {
 
       mockRepository.getRecipeById.mockResolvedValue(null);
 
-      await expect(engine.getSimilarRecipes(recipeId, 5)).rejects.toThrow(
-        "Recipe not found",
-      );
+      await expect(engine.getSimilarRecipes(recipeId, 5)).rejects.toThrow("Recipe not found");
     });
   });
 

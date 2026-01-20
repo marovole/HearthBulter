@@ -32,9 +32,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = "[SupabaseMealTrackingRepository]";
 
-  constructor(
-    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
-  ) {
+  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
     this.client = client;
   }
 
@@ -83,17 +81,13 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
     return (await this.getMealLogById(mealLog!.id)) as MealLogDTO;
   }
 
-  async updateMealLog(
-    id: string,
-    input: MealLogUpdateInputDTO,
-  ): Promise<MealLogDTO> {
+  async updateMealLog(id: string, input: MealLogUpdateInputDTO): Promise<MealLogDTO> {
     const updateData: any = {};
 
     if (input.date) updateData.date = input.date.toISOString();
     if (input.mealType) updateData.meal_type = input.mealType;
     if (input.notes !== undefined) updateData.notes = input.notes;
-    if (input.isTemplate !== undefined)
-      updateData.is_template = input.isTemplate;
+    if (input.isTemplate !== undefined) updateData.is_template = input.isTemplate;
 
     // 如果更新了食物列表，重新计算营养
     if (input.foods) {
@@ -118,10 +112,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
       await this.client.from("meal_log_foods").insert(foodInserts as any);
     }
 
-    const { error } = await this.client
-      .from("meal_logs")
-      .update(updateData)
-      .eq("id", id);
+    const { error } = await this.client.from("meal_logs").update(updateData).eq("id", id);
 
     if (error) this.handleError("updateMealLog", error);
 
@@ -143,21 +134,20 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
           updated_at,
           food:foods(id, name, name_en, category, calories, protein, carbs, fat)
         )
-      `,
+      `
       )
       .eq("id", id)
       .is("deleted_at", null)
       .maybeSingle();
 
-    if (error && error.code !== "PGRST116")
-      this.handleError("getMealLogById", error);
+    if (error && error.code !== "PGRST116") this.handleError("getMealLogById", error);
     return data ? this.mapMealLogRow(data as any) : null;
   }
 
   async listMealLogs(
     memberId: string,
     filter?: MealLogFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<MealLogDTO>> {
     let query = this.client
       .from("meal_logs")
@@ -174,19 +164,16 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
           food:foods(id, name, name_en, category, calories, protein, carbs, fat)
         )
       `,
-        { count: "exact" },
+        { count: "exact" }
       )
       .eq("member_id", memberId)
       .is("deleted_at", null);
 
     if (filter) {
-      if (filter.startDate)
-        query = query.gte("date", filter.startDate.toISOString());
-      if (filter.endDate)
-        query = query.lte("date", filter.endDate.toISOString());
+      if (filter.startDate) query = query.gte("date", filter.startDate.toISOString());
+      if (filter.endDate) query = query.lte("date", filter.endDate.toISOString());
       if (filter.mealType) query = query.eq("meal_type", filter.mealType);
-      if (filter.isTemplate !== undefined)
-        query = query.eq("is_template", filter.isTemplate);
+      if (filter.isTemplate !== undefined) query = query.eq("is_template", filter.isTemplate);
     }
 
     query = query.order("date", { ascending: false });
@@ -205,9 +192,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
     };
   }
 
@@ -239,7 +224,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
   async getMealLogHistory(
     memberId: string,
     filter?: MealLogFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<MealLogDTO>> {
     return this.listMealLogs(memberId, filter, pagination);
   }
@@ -247,7 +232,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
   // ==================== 营养计算 ====================
 
   async calculateNutrition(
-    foods: NutritionCalculationInputDTO,
+    foods: NutritionCalculationInputDTO
   ): Promise<NutritionCalculationResultDTO> {
     const foodIds = foods.map((f) => f.foodId);
     const { data: foodData, error } = await this.client
@@ -286,10 +271,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
     return nutrition;
   }
 
-  async getDailySummary(
-    memberId: string,
-    date: Date,
-  ): Promise<DailyNutritionSummaryDTO> {
+  async getDailySummary(memberId: string, date: Date): Promise<DailyNutritionSummaryDTO> {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
@@ -330,9 +312,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
 
   // ==================== 快速模板 ====================
 
-  async createQuickTemplate(
-    input: QuickTemplateCreateInputDTO,
-  ): Promise<QuickTemplateDTO> {
+  async createQuickTemplate(input: QuickTemplateCreateInputDTO): Promise<QuickTemplateDTO> {
     const mealLog = await this.getMealLogById(input.mealLogId);
     if (!mealLog) throw new Error("Meal log not found");
 
@@ -355,10 +335,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
     return this.mapQuickTemplateRow(data!);
   }
 
-  async listQuickTemplates(
-    memberId: string,
-    mealType?: string,
-  ): Promise<QuickTemplateDTO[]> {
+  async listQuickTemplates(memberId: string, mealType?: string): Promise<QuickTemplateDTO[]> {
     let query = this.client
       .from("quick_templates")
       .select("*")
@@ -398,8 +375,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
       .eq("member_id", memberId)
       .maybeSingle();
 
-    if (error && error.code !== "PGRST116")
-      this.handleError("getTrackingStreak", error);
+    if (error && error.code !== "PGRST116") this.handleError("getTrackingStreak", error);
 
     if (!data) {
       return {
@@ -417,10 +393,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
     return this.mapTrackingStreakRow(data as any);
   }
 
-  async updateTrackingStreak(
-    memberId: string,
-    date: Date,
-  ): Promise<TrackingStreakDTO> {
+  async updateTrackingStreak(memberId: string, date: Date): Promise<TrackingStreakDTO> {
     const existing = await this.getTrackingStreak(memberId);
     const today = new Date(date);
     today.setHours(0, 0, 0, 0);
@@ -432,7 +405,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
       const lastCheckIn = new Date(existing.lastCheckIn);
       lastCheckIn.setHours(0, 0, 0, 0);
       const daysDiff = Math.floor(
-        (today.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24),
+        (today.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24)
       );
 
       if (daysDiff === 1) {
@@ -463,9 +436,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
 
       if (error) this.handleError("updateTrackingStreak:update", error);
     } else {
-      const { error } = await this.client
-        .from("tracking_streaks")
-        .insert(updateData as any);
+      const { error } = await this.client.from("tracking_streaks").insert(updateData as any);
 
       if (error) this.handleError("updateTrackingStreak:insert", error);
     }
@@ -477,7 +448,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
 
   async getRecentFoods(
     memberId: string,
-    limit: number = 10,
+    limit: number = 10
   ): Promise<Array<{ foodId: string; useCount: number }>> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -499,7 +470,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
   async getNutritionTrends(
     memberId: string,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<DailyNutritionSummaryDTO[]> {
     const trends: DailyNutritionSummaryDTO[] = [];
     const current = new Date(startDate);
@@ -581,11 +552,7 @@ export class SupabaseMealTrackingRepository implements MealTrackingRepository {
       longestStreak: row.longest_streak ?? 0,
       totalDays: row.total_days ?? 0,
       lastCheckIn: row.last_check_in ? new Date(row.last_check_in) : undefined,
-      badges: Array.isArray(row.badges)
-        ? row.badges
-        : row.badges
-          ? JSON.parse(row.badges)
-          : [],
+      badges: Array.isArray(row.badges) ? row.badges : row.badges ? JSON.parse(row.badges) : [],
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     };

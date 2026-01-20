@@ -6,14 +6,8 @@
 import { describe, test, expect, beforeAll, afterAll } from "@jest/globals";
 import { z } from "zod";
 import { NextRequest } from "next/server";
-import {
-  validationMiddleware,
-  commonSchemas,
-} from "@/lib/middleware/validation-middleware";
-import {
-  SQLInjectionDetector,
-  XSSDetector,
-} from "@/lib/security/security-middleware";
+import { validationMiddleware, commonSchemas } from "@/lib/middleware/validation-middleware";
+import { SQLInjectionDetector, XSSDetector } from "@/lib/security/security-middleware";
 import { checkSecurity } from "@/lib/security/security-middleware";
 
 describe("输入验证测试", () => {
@@ -189,7 +183,7 @@ describe("输入验证测试", () => {
     test("应该验证搜索参数", () => {
       const testCases = [
         { query: "term=John&filters={}", valid: true },
-        { query: "term=张三&filters={\"status\":\"active\"}", valid: true },
+        { query: 'term=张三&filters={"status":"active"}', valid: true },
         { query: "term=", valid: true },
         { query: `term=${"a".repeat(101)}`, valid: false },
         { query: "filters=invalid-json", valid: false },
@@ -419,16 +413,12 @@ describe("输入验证测试", () => {
       expect(sqlSanitized.name).not.toContain(";");
       expect(sqlSanitized.name).not.toContain("DROP");
       expect((sqlSanitized.profile as any).bio).not.toContain("'");
-      expect(((sqlSanitized.profile as any).metadata as any).sql).not.toContain(
-        "'",
-      );
+      expect(((sqlSanitized.profile as any).metadata as any).sql).not.toContain("'");
 
       // 检查XSS清理
       expect(xssSanitized.name).not.toContain("<script>");
       expect((xssSanitized.profile as any).bio).not.toContain("<script>");
-      expect(((xssSanitized.profile as any).metadata as any).xss).not.toContain(
-        "<script>",
-      );
+      expect(((xssSanitized.profile as any).metadata as any).xss).not.toContain("<script>");
       expect((xssSanitized.array as string[])[2]).not.toContain("<script>");
     });
   });
@@ -476,12 +466,9 @@ describe("输入验证测试", () => {
         }),
       });
 
-      const result = await validationMiddleware.validateRequest(
-        invalidRequest,
-        {
-          body: schema,
-        },
-      );
+      const result = await validationMiddleware.validateRequest(invalidRequest, {
+        body: schema,
+      });
 
       expect(result.success).toBe(false);
       expect(result.errors?.body).toBeDefined();
@@ -494,21 +481,15 @@ describe("输入验证测试", () => {
         email: z.string().email(),
       });
 
-      const invalidJsonRequest = new NextRequest(
-        "http://localhost:3000/api/test",
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: "invalid json",
-        },
-      );
+      const invalidJsonRequest = new NextRequest("http://localhost:3000/api/test", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "invalid json",
+      });
 
-      const result = await validationMiddleware.validateRequest(
-        invalidJsonRequest,
-        {
-          body: schema,
-        },
-      );
+      const result = await validationMiddleware.validateRequest(invalidJsonRequest, {
+        body: schema,
+      });
 
       expect(result.success).toBe(false);
       expect(result.errors?.body).toBeDefined();
@@ -522,7 +503,7 @@ describe("输入验证测试", () => {
         {
           method: "GET",
           headers: { "content-type": "application/json" },
-        },
+        }
       );
 
       const securityResult = await checkSecurity(maliciousRequest, {
@@ -532,25 +513,20 @@ describe("输入验证测试", () => {
 
       expect(securityResult.safe).toBe(false);
       expect(securityResult.threats).toBeDefined();
-      expect(securityResult.threats!.some((t) => t.includes("SQL注入"))).toBe(
-        true,
-      );
+      expect(securityResult.threats!.some((t) => t.includes("SQL注入"))).toBe(true);
       expect(securityResult.audit).toBeDefined();
       expect(securityResult.audit!.blocked).toBe(true);
     });
 
     test("应该检测和阻止XSS攻击", async () => {
-      const maliciousRequest = new NextRequest(
-        "http://localhost:3000/api/profile",
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            name: "<script>alert('XSS')</script>",
-            bio: "<img src=x onerror=alert('XSS')>",
-          }),
-        },
-      );
+      const maliciousRequest = new NextRequest("http://localhost:3000/api/profile", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: "<script>alert('XSS')</script>",
+          bio: "<img src=x onerror=alert('XSS')>",
+        }),
+      });
 
       const securityResult = await checkSecurity(maliciousRequest, {
         preventXSS: true,
@@ -713,16 +689,13 @@ describe("输入验证测试", () => {
         expect(result.success).toBe(true);
       }
 
-      const avgTime =
-        validationTimes.reduce((a, b) => a + b, 0) / validationTimes.length;
+      const avgTime = validationTimes.reduce((a, b) => a + b, 0) / validationTimes.length;
       const maxTime = Math.max(...validationTimes);
 
       expect(avgTime).toBeLessThan(50); // 平均验证时间应小于50ms
       expect(maxTime).toBeLessThan(100); // 最大验证时间应小于100ms
 
-      console.log(
-        `输入验证平均时间: ${avgTime.toFixed(2)}ms, 最大时间: ${maxTime.toFixed(2)}ms`,
-      );
+      console.log(`输入验证平均时间: ${avgTime.toFixed(2)}ms, 最大时间: ${maxTime.toFixed(2)}ms`);
     });
   });
 

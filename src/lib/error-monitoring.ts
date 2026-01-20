@@ -82,14 +82,11 @@ export class ErrorMonitoringService {
         userId: error.userId,
         timestamp: error.timestamp,
         details: error.details,
-      },
+      }
     );
 
     // 高级别错误触发额外的告警机制
-    if (
-      error.level === ErrorLevel.HIGH ||
-      error.level === ErrorLevel.CRITICAL
-    ) {
+    if (error.level === ErrorLevel.HIGH || error.level === ErrorLevel.CRITICAL) {
       this.triggerAlert(error);
     }
   }
@@ -107,13 +104,13 @@ export class ErrorMonitoringService {
     // 性能告警
     if (metrics.responseTime > 5000) {
       console.warn(
-        `\x1b[33m[PERFORMANCE ALERT] Slow response: ${metrics.responseTime}ms - ${metrics.method} ${metrics.endpoint}\x1b[0m`,
+        `\x1b[33m[PERFORMANCE ALERT] Slow response: ${metrics.responseTime}ms - ${metrics.method} ${metrics.endpoint}\x1b[0m`
       );
     }
 
     if (metrics.statusCode >= 500) {
       console.warn(
-        `\x1b[31m[ERROR RATE ALERT] Server error: ${metrics.statusCode} - ${metrics.method} ${metrics.endpoint}\x1b[0m`,
+        `\x1b[31m[ERROR RATE ALERT] Server error: ${metrics.statusCode} - ${metrics.method} ${metrics.endpoint}\x1b[0m`
       );
     }
   }
@@ -126,7 +123,7 @@ export class ErrorMonitoringService {
     byLevel: Record<ErrorLevel, number>;
     recent: ApiError[];
     criticalIssues: ApiError[];
-    } {
+  } {
     const byLevel = {
       [ErrorLevel.LOW]: 0,
       [ErrorLevel.MEDIUM]: 0,
@@ -140,11 +137,7 @@ export class ErrorMonitoringService {
 
     const recent = this.errors.slice(-10);
     const criticalIssues = this.errors
-      .filter(
-        (error) =>
-          error.level === ErrorLevel.HIGH ||
-          error.level === ErrorLevel.CRITICAL,
-      )
+      .filter((error) => error.level === ErrorLevel.HIGH || error.level === ErrorLevel.CRITICAL)
       .slice(-20);
 
     return {
@@ -164,7 +157,7 @@ export class ErrorMonitoringService {
     slowestRequests: PerformanceMetrics[];
     errorRate: number;
     recent: PerformanceMetrics[];
-    } {
+  } {
     if (this.performance.length === 0) {
       return {
         total: 0,
@@ -175,14 +168,9 @@ export class ErrorMonitoringService {
       };
     }
 
-    const totalTime = this.performance.reduce(
-      (sum, p) => sum + p.responseTime,
-      0,
-    );
+    const totalTime = this.performance.reduce((sum, p) => sum + p.responseTime, 0);
     const averageResponseTime = totalTime / this.performance.length;
-    const errorCount = this.performance.filter(
-      (p) => p.statusCode >= 400,
-    ).length;
+    const errorCount = this.performance.filter((p) => p.statusCode >= 400).length;
     const errorRate = (errorCount / this.performance.length) * 100;
 
     const slowestRequests = this.performance
@@ -253,7 +241,7 @@ export function withApiHandler(
     endpoint?: string;
     requireAuth?: boolean;
     timeout?: number;
-  } = {},
+  } = {}
 ) {
   return async (req: NextRequest, context?: any): Promise<NextResponse> => {
     const startTime = Date.now();
@@ -271,10 +259,7 @@ export function withApiHandler(
       });
 
       // 执行处理器
-      const response = await Promise.race([
-        handler(req, context),
-        timeoutPromise,
-      ]);
+      const response = await Promise.race([handler(req, context), timeoutPromise]);
 
       // 记录性能指标
       const responseTime = Date.now() - startTime;
@@ -298,8 +283,7 @@ export function withApiHandler(
       return response;
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
 
       // 确定错误级别和状态码
       let level: ErrorLevel;
@@ -310,24 +294,15 @@ export function withApiHandler(
         level = ErrorLevel.HIGH;
         statusCode = 504;
         code = "API_TIMEOUT";
-      } else if (
-        errorMessage.includes("database") ||
-        errorMessage.includes("Database")
-      ) {
+      } else if (errorMessage.includes("database") || errorMessage.includes("Database")) {
         level = ErrorLevel.HIGH;
         statusCode = 503;
         code = "DATABASE_ERROR";
-      } else if (
-        errorMessage.includes("auth") ||
-        errorMessage.includes("Auth")
-      ) {
+      } else if (errorMessage.includes("auth") || errorMessage.includes("Auth")) {
         level = ErrorLevel.MEDIUM;
         statusCode = 401;
         code = "AUTHENTICATION_ERROR";
-      } else if (
-        errorMessage.includes("validation") ||
-        errorMessage.includes("Invalid")
-      ) {
+      } else if (errorMessage.includes("validation") || errorMessage.includes("Invalid")) {
         level = ErrorLevel.LOW;
         statusCode = 400;
         code = "VALIDATION_ERROR";

@@ -11,10 +11,7 @@ import type {
 } from "../types/budget";
 import type { BudgetRepository } from "../interfaces/budget-repository";
 import { convexClient, api } from "@/lib/convex-client";
-import {
-  asConvexMutationReference,
-  asConvexQueryReference,
-} from "@/lib/convex-reference";
+import { asConvexMutationReference, asConvexQueryReference } from "@/lib/convex-reference";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 type BudgetDoc = Doc<"budgets"> & {
@@ -57,10 +54,9 @@ export class ConvexBudgetRepository implements BudgetRepository {
       otherBudget: payload.categoryBudgets?.OTHER,
     });
 
-    const budget = await convexClient.query<BudgetDoc | null>(
-      api.budget.getBudgetById,
-      { budgetId: budgetId as Id<"budgets"> },
-    );
+    const budget = await convexClient.query<BudgetDoc | null>(api.budget.getBudgetById, {
+      budgetId: budgetId as Id<"budgets">,
+    });
 
     if (!budget) {
       throw new Error("预算创建失败");
@@ -77,10 +73,9 @@ export class ConvexBudgetRepository implements BudgetRepository {
       status: payload.status,
     });
 
-    const budget = await convexClient.query<BudgetDoc | null>(
-      api.budget.getBudgetById,
-      { budgetId: id as Id<"budgets"> },
-    );
+    const budget = await convexClient.query<BudgetDoc | null>(api.budget.getBudgetById, {
+      budgetId: id as Id<"budgets">,
+    });
 
     if (!budget) {
       throw new Error("预算不存在");
@@ -90,10 +85,9 @@ export class ConvexBudgetRepository implements BudgetRepository {
   }
 
   async getBudgetById(id: string): Promise<BudgetDTO | null> {
-    const budget = await convexClient.query<BudgetDoc | null>(
-      api.budget.getBudgetById,
-      { budgetId: id as Id<"budgets"> },
-    );
+    const budget = await convexClient.query<BudgetDoc | null>(api.budget.getBudgetById, {
+      budgetId: id as Id<"budgets">,
+    });
 
     return budget ? mapBudget(budget) : null;
   }
@@ -101,15 +95,12 @@ export class ConvexBudgetRepository implements BudgetRepository {
   async listBudgets(
     memberId: string,
     filter?: { status?: BudgetDTO["status"] },
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<BudgetDTO>> {
-    const budgets = await convexClient.query<BudgetDoc[]>(
-      api.budget.getBudgets,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        includeDeleted: false,
-      },
-    );
+    const budgets = await convexClient.query<BudgetDoc[]>(api.budget.getBudgets, {
+      memberId: memberId as Id<"familyMembers">,
+      includeDeleted: false,
+    });
 
     let items = budgets.map(mapBudget);
     if (filter?.status) {
@@ -139,15 +130,13 @@ export class ConvexBudgetRepository implements BudgetRepository {
       category: payload.category,
       transactionId: payload.transactionId,
       platform: payload.platform,
-      purchaseDate: payload.purchaseDate
-        ? payload.purchaseDate.getTime()
-        : Date.now(),
+      purchaseDate: payload.purchaseDate ? payload.purchaseDate.getTime() : Date.now(),
       items: payload.items,
     });
 
     const spending = await convexClient.query<SpendingDoc | null>(
       asConvexQueryReference("budget:getSpendingById"),
-      { spendingId: spendingResult.id },
+      { spendingId: spendingResult.id }
     );
 
     if (!spending) {
@@ -159,16 +148,13 @@ export class ConvexBudgetRepository implements BudgetRepository {
 
   async listSpendings(
     filter: SpendingFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<SpendingDTO>> {
-    const spendings = await convexClient.query<SpendingDoc[]>(
-      api.budget.getSpendings,
-      {
-        budgetId: filter.budgetId as Id<"budgets">,
-        startDate: filter.range?.start?.getTime(),
-        endDate: filter.range?.end?.getTime(),
-      },
-    );
+    const spendings = await convexClient.query<SpendingDoc[]>(api.budget.getSpendings, {
+      budgetId: filter.budgetId as Id<"budgets">,
+      startDate: filter.range?.start?.getTime(),
+      endDate: filter.range?.end?.getTime(),
+    });
 
     let items = spendings.map(mapSpending);
     if (filter.category) {
@@ -197,36 +183,29 @@ export class ConvexBudgetRepository implements BudgetRepository {
     }
 
     const spendings = await this.listSpendings({ budgetId }, undefined);
-    const usedAmount = spendings.items.reduce(
-      (sum, spending) => sum + spending.amount,
-      0,
-    );
+    const usedAmount = spendings.items.reduce((sum, spending) => sum + spending.amount, 0);
     const remainingAmount = Math.max(0, budget.totalAmount - usedAmount);
-    const usagePercentage =
-      budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
+    const usagePercentage = budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
 
     return { usedAmount, remainingAmount, usagePercentage };
   }
 
   async createBudgetAlert(alert: BudgetAlertDTO): Promise<void> {
-    await convexClient.mutation(
-      asConvexMutationReference("budget:createBudgetAlert"),
-      {
-        budgetId: alert.budgetId as Id<"budgets">,
-        type: alert.type,
-        threshold: alert.threshold,
-        currentValue: alert.currentValue,
-        message: alert.message,
-        category: alert.category,
-        status: alert.status,
-      },
-    );
+    await convexClient.mutation(asConvexMutationReference("budget:createBudgetAlert"), {
+      budgetId: alert.budgetId as Id<"budgets">,
+      type: alert.type,
+      threshold: alert.threshold,
+      currentValue: alert.currentValue,
+      message: alert.message,
+      category: alert.category,
+      status: alert.status,
+    });
   }
 
   async listActiveAlerts(budgetId: string): Promise<BudgetAlertDTO[]> {
     const alerts = await convexClient.query<BudgetAlertDoc[]>(
       asConvexQueryReference("budget:listActiveBudgetAlerts"),
-      { budgetId: budgetId as Id<"budgets"> },
+      { budgetId: budgetId as Id<"budgets"> }
     );
 
     return alerts.map(mapAlert);
@@ -245,14 +224,11 @@ export class ConvexBudgetRepository implements BudgetRepository {
     ]);
 
     const totalDays = Math.ceil(
-      (budget.endDate.getTime() - budget.startDate.getTime()) /
-        (1000 * 60 * 60 * 24),
+      (budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
     const elapsedDays = Math.max(
       1,
-      Math.ceil(
-        (Date.now() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24),
-      ),
+      Math.ceil((Date.now() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24))
     );
 
     const dailyAverage = usage.usedAmount / elapsedDays;
@@ -293,9 +269,7 @@ function mapBudget(budget: BudgetDoc): BudgetDTO {
     usedAmount: budget.usedAmount ?? 0,
     remainingAmount: Math.max(0, budget.totalAmount - (budget.usedAmount ?? 0)),
     usagePercentage:
-      budget.totalAmount > 0
-        ? ((budget.usedAmount ?? 0) / budget.totalAmount) * 100
-        : 0,
+      budget.totalAmount > 0 ? ((budget.usedAmount ?? 0) / budget.totalAmount) * 100 : 0,
     status: (budget.status as BudgetDTO["status"]) ?? "ACTIVE",
     alertThreshold80: budget.alertThreshold80 ?? true,
     alertThreshold100: budget.alertThreshold100 ?? true,
@@ -347,16 +321,14 @@ function mapAlert(alert: BudgetAlertDoc): BudgetAlertDTO {
 
 function calculateCategoryUsage(
   budget: BudgetDTO,
-  spendings: SpendingDTO[],
+  spendings: SpendingDTO[]
 ): BudgetStatusDTO["categoryUsage"] {
   const usage: BudgetStatusDTO["categoryUsage"] = {};
   const categories = Object.keys(budget.categoryBudgets ?? {});
 
   for (const category of categories) {
     const categoryBudget =
-      budget.categoryBudgets?.[
-        category as keyof NonNullable<BudgetDTO["categoryBudgets"]>
-      ] ?? 0;
+      budget.categoryBudgets?.[category as keyof NonNullable<BudgetDTO["categoryBudgets"]>] ?? 0;
     const categorySpent = spendings
       .filter((s) => s.category === category)
       .reduce((sum, row) => sum + row.amount, 0);
@@ -364,8 +336,7 @@ function calculateCategoryUsage(
       budget: categoryBudget,
       used: categorySpent,
       remaining: Math.max(0, categoryBudget - categorySpent),
-      percentage:
-        categoryBudget > 0 ? (categorySpent / categoryBudget) * 100 : 0,
+      percentage: categoryBudget > 0 ? (categorySpent / categoryBudget) * 100 : 0,
     };
   }
 

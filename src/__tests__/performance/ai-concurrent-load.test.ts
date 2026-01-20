@@ -63,28 +63,24 @@ describe("AI Concurrent Load Tests", () => {
       consentedAt: new Date(),
     });
 
-    (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
-      async () => {
-        // Simulate realistic AI response time
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.random() * 1000 + 500),
-        );
-        return {
-          choices: [
-            {
-              message: {
-                content: "AI生成的营养建议",
-              },
+    (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async () => {
+      // Simulate realistic AI response time
+      await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000 + 500));
+      return {
+        choices: [
+          {
+            message: {
+              content: "AI生成的营养建议",
             },
-          ],
-          usage: {
-            prompt_tokens: 150,
-            completion_tokens: 80,
-            total_tokens: 230,
           },
-        };
-      },
-    );
+        ],
+        usage: {
+          prompt_tokens: 150,
+          completion_tokens: 80,
+          total_tokens: 230,
+        },
+      };
+    });
 
     (aiReviewService.reviewContent as jest.Mock).mockResolvedValue({
       approved: true,
@@ -137,9 +133,7 @@ describe("AI Concurrent Load Tests", () => {
       expect(endTime - startTime).toBeLessThan(5000);
 
       // Verify all AI calls were made
-      expect(openaiClient.chat.completions.create).toHaveBeenCalledTimes(
-        concurrentRequests,
-      );
+      expect(openaiClient.chat.completions.create).toHaveBeenCalledTimes(concurrentRequests);
     });
 
     it("应该处理50个并发聊天请求", async () => {
@@ -161,19 +155,15 @@ describe("AI Concurrent Load Tests", () => {
       });
 
       const startTime = Date.now();
-      const responses = await Promise.allSettled(
-        requests.map((req) => POST(req)),
-      );
+      const responses = await Promise.allSettled(requests.map((req) => POST(req)));
       const endTime = Date.now();
 
       // Analyze results
-      const successful = responses.filter(
-        (r) => r.status === "fulfilled",
-      ).length;
+      const successful = responses.filter((r) => r.status === "fulfilled").length;
       const failed = responses.filter((r) => r.status === "rejected").length;
 
       console.log(
-        `并发测试结果: 成功 ${successful}, 失败 ${failed}, 耗时 ${endTime - startTime}ms`,
+        `并发测试结果: 成功 ${successful}, 失败 ${failed}, 耗时 ${endTime - startTime}ms`
       );
 
       // At least 90% should succeed
@@ -300,22 +290,18 @@ describe("AI Concurrent Load Tests", () => {
       const responses = await Promise.allSettled(
         allRequests.map((req) => {
           if (req.url.includes("/chat")) return POST(req);
-          if (req.url.includes("/analyze-health"))
-            return AnalyzeHealthPOST(req);
-          if (req.url.includes("/optimize-recipe"))
-            return OptimizeRecipePOST(req);
+          if (req.url.includes("/analyze-health")) return AnalyzeHealthPOST(req);
+          if (req.url.includes("/optimize-recipe")) return OptimizeRecipePOST(req);
           return Promise.reject(new Error("Unknown endpoint"));
-        }),
+        })
       );
       const endTime = Date.now();
 
-      const successful = responses.filter(
-        (r) => r.status === "fulfilled",
-      ).length;
+      const successful = responses.filter((r) => r.status === "fulfilled").length;
       const failed = responses.filter((r) => r.status === "rejected").length;
 
       console.log(
-        `混合API并发测试: 总请求 ${allRequests.length}, 成功 ${successful}, 失败 ${failed}, 耗时 ${endTime - startTime}ms`,
+        `混合API并发测试: 总请求 ${allRequests.length}, 成功 ${successful}, 失败 ${failed}, 耗时 ${endTime - startTime}ms`
       );
 
       expect(successful).toBeGreaterThan(allRequests.length * 0.9);
@@ -380,12 +366,8 @@ describe("AI Concurrent Load Tests", () => {
       const dbCallCount = jest.fn();
 
       // Mock database operations to track calls
-      (prisma.aIConversation.create as jest.Mock).mockImplementation(
-        dbCallCount,
-      );
-      (prisma.userConsent.findUnique as jest.Mock).mockImplementation(
-        dbCallCount,
-      );
+      (prisma.aIConversation.create as jest.Mock).mockImplementation(dbCallCount);
+      (prisma.userConsent.findUnique as jest.Mock).mockImplementation(dbCallCount);
 
       const concurrentRequests = 30;
       const requests = Array.from({ length: concurrentRequests }, (_, i) => {
@@ -412,24 +394,22 @@ describe("AI Concurrent Load Tests", () => {
   describe("错误恢复测试", () => {
     it("应该在部分AI服务失败时继续处理其他请求", async () => {
       let failureCount = 0;
-      (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
-        async () => {
-          failureCount++;
-          if (failureCount % 3 === 0) {
-            throw new Error("AI service temporarily unavailable");
-          }
+      (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async () => {
+        failureCount++;
+        if (failureCount % 3 === 0) {
+          throw new Error("AI service temporarily unavailable");
+        }
 
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          return {
-            choices: [{ message: { content: "成功响应" } }],
-            usage: {
-              prompt_tokens: 100,
-              completion_tokens: 50,
-              total_tokens: 150,
-            },
-          };
-        },
-      );
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return {
+          choices: [{ message: { content: "成功响应" } }],
+          usage: {
+            prompt_tokens: 100,
+            completion_tokens: 50,
+            total_tokens: 150,
+          },
+        };
+      });
 
       const concurrentRequests = 15;
       const requests = Array.from({ length: concurrentRequests }, (_, i) => {
@@ -446,21 +426,17 @@ describe("AI Concurrent Load Tests", () => {
         });
       });
 
-      const responses = await Promise.allSettled(
-        requests.map((req) => POST(req)),
-      );
+      const responses = await Promise.allSettled(requests.map((req) => POST(req)));
 
       const successful = responses.filter(
-        (r) => r.status === "fulfilled" && r.value.status === 200,
+        (r) => r.status === "fulfilled" && r.value.status === 200
       ).length;
 
       const fallbackResponses = responses.filter(
-        (r) => r.status === "fulfilled" && r.value.status === 503,
+        (r) => r.status === "fulfilled" && r.value.status === 503
       ).length;
 
-      console.log(
-        `错误恢复测试: 成功响应 ${successful}, 降级响应 ${fallbackResponses}`,
-      );
+      console.log(`错误恢复测试: 成功响应 ${successful}, 降级响应 ${fallbackResponses}`);
 
       // Some requests should succeed, others should get fallback responses
       expect(successful + fallbackResponses).toBe(concurrentRequests);
@@ -496,14 +472,13 @@ describe("AI Concurrent Load Tests", () => {
           const requestEnd = Date.now();
           responseTimes.push(requestEnd - requestStart);
           return response;
-        }),
+        })
       );
 
       const endTime = Date.now();
 
       // Calculate performance metrics
-      const avgResponseTime =
-        responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+      const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
       const maxResponseTime = Math.max(...responseTimes);
       const minResponseTime = Math.min(...responseTimes);
       const p95ResponseTime = responseTimes.sort((a, b) => a - b)[

@@ -9,7 +9,7 @@ import type { Id } from "@/../convex/_generated/dataModel";
 export const dynamic = "force-dynamic";
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ mealId: string }> },
+  { params }: { params: Promise<{ mealId: string }> }
 ) {
   try {
     const { mealId } = await params;
@@ -43,13 +43,10 @@ export async function POST(
       return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: plan.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: plan.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限操作" }, { status: 403 });
@@ -65,7 +62,7 @@ export async function POST(
         message: isFavorite ? "已添加到收藏" : "已取消收藏",
         isFavorite: Boolean(isFavorite),
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("更新收藏状态失败:", error);
@@ -76,7 +73,7 @@ export async function POST(
 // GET /api/meal-plans/meals/:mealId/favorite - 获取收藏状态
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ mealId: string }> },
+  { params }: { params: Promise<{ mealId: string }> }
 ) {
   try {
     const { mealId } = await params;
@@ -108,13 +105,10 @@ export async function GET(
       return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: plan.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: plan.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限操作" }, { status: 403 });
@@ -124,7 +118,7 @@ export async function GET(
       {
         isFavorite: meal.isFavorite ?? false,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取收藏状态失败:", error);

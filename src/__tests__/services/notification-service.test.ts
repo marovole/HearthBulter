@@ -59,8 +59,7 @@ describe("Notification Service", () => {
         channels: ["email", "wechat"],
       };
 
-      const result =
-        await notificationService.sendNotification(notificationData);
+      const result = await notificationService.sendNotification(notificationData);
 
       expect(result.success).toBe(true);
       expect(result.notificationId).toBe("test-notification-id");
@@ -75,8 +74,7 @@ describe("Notification Service", () => {
         channels: ["email", "sms", "wechat"],
       };
 
-      const result =
-        await notificationService.sendNotification(notificationData);
+      const result = await notificationService.sendNotification(notificationData);
 
       expect(result.success).toBe(true);
       // SMS should be skipped due to user preferences
@@ -92,8 +90,7 @@ describe("Notification Service", () => {
         content: "Time to log your meal!",
       };
 
-      const result =
-        await notificationService.sendNotification(notificationData);
+      const result = await notificationService.sendNotification(notificationData);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain("User not found");
@@ -178,8 +175,7 @@ describe("Notification Service", () => {
         channels: ["push"],
       };
 
-      const result =
-        await notificationService.scheduleNotification(scheduleData);
+      const result = await notificationService.scheduleNotification(scheduleData);
 
       expect(result.success).toBe(true);
       expect(result.scheduleId).toBeDefined();
@@ -197,13 +193,10 @@ describe("Notification Service", () => {
         channels: ["push"],
       };
 
-      const result =
-        await notificationService.scheduleNotification(scheduleData);
+      const result = await notificationService.scheduleNotification(scheduleData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain(
-        "Cannot schedule notification in the past",
-      );
+      expect(result.error).toContain("Cannot schedule notification in the past");
     });
   });
 
@@ -222,8 +215,7 @@ describe("Notification Service", () => {
         },
       ]);
 
-      const result =
-        await notificationService.getUserNotifications("test-user-id");
+      const result = await notificationService.getUserNotifications("test-user-id");
 
       expect(result.success).toBe(true);
       expect(result.notifications).toHaveLength(1);
@@ -244,10 +236,9 @@ describe("Notification Service", () => {
         },
       ]);
 
-      const result = await notificationService.getUserNotifications(
-        "test-user-id",
-        { type: "meal_reminder" },
-      );
+      const result = await notificationService.getUserNotifications("test-user-id", {
+        type: "meal_reminder",
+      });
 
       expect(result.success).toBe(true);
       expect(result.notifications).toHaveLength(1);
@@ -263,8 +254,7 @@ describe("Notification Service", () => {
         readAt: new Date(),
       });
 
-      const result =
-        await notificationService.markNotificationAsRead("notif-1");
+      const result = await notificationService.markNotificationAsRead("notif-1");
 
       expect(result.success).toBe(true);
       expect(prisma.notification.update).toHaveBeenCalledWith({
@@ -285,10 +275,7 @@ describe("Notification Service", () => {
       });
       prisma.notification.delete.mockResolvedValue({});
 
-      const result = await notificationService.deleteNotification(
-        "notif-1",
-        "test-user-id",
-      );
+      const result = await notificationService.deleteNotification("notif-1", "test-user-id");
 
       expect(result.success).toBe(true);
     });
@@ -299,10 +286,7 @@ describe("Notification Service", () => {
         userId: "different-user-id",
       });
 
-      const result = await notificationService.deleteNotification(
-        "notif-1",
-        "test-user-id",
-      );
+      const result = await notificationService.deleteNotification("notif-1", "test-user-id");
 
       expect(result.success).toBe(false);
       expect(result.error).toContain("Unauthorized");

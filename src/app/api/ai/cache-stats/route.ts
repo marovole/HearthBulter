@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { aiResponseCache } from "@/lib/services/ai/response-cache";
-import {
-  getDefaultRateLimitConfig,
-  rateLimiter,
-} from "@/lib/services/ai/rate-limiter";
+import { getDefaultRateLimitConfig, rateLimiter } from "@/lib/services/ai/rate-limiter";
 
 // 管理员权限检查
 
@@ -26,17 +23,14 @@ export async function GET(request: NextRequest) {
     // 检查管理员权限
     const isAdmin = await checkAdminPermission(session.user.id);
     if (!isAdmin) {
-      return NextResponse.json(
-        { error: "Admin permission required" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "Admin permission required" }, { status: 403 });
     }
 
     // 速率限制检查
     const rateLimitResult = await rateLimiter.checkLimit(
       session.user.id,
       "ai_general",
-      getDefaultRateLimitConfig("ai_general"),
+      getDefaultRateLimitConfig("ai_general")
     );
 
     if (!rateLimitResult.allowed) {
@@ -53,7 +47,7 @@ export async function GET(request: NextRequest) {
             "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
             "Retry-After": rateLimitResult.retryAfter?.toString() || "60",
           },
-        },
+        }
       );
     }
 
@@ -75,20 +69,14 @@ export async function GET(request: NextRequest) {
       cache: {
         stats: cacheStats,
         topEntries: cacheInfo.slice(0, 10), // 前10个最常用的缓存条目
-        totalSizeKB: Math.round(
-          cacheInfo.reduce((sum, entry) => sum + entry.size, 0) / 1024,
-        ),
+        totalSizeKB: Math.round(cacheInfo.reduce((sum, entry) => sum + entry.size, 0) / 1024),
       },
       rateLimit: rateLimitStats,
       performance: {
         hitRatePercent: cacheStats.hitRate,
         estimatedSavings,
         cacheEfficiency:
-          cacheStats.hits > 0
-            ? "good"
-            : cacheStats.totalSize > 0
-              ? "moderate"
-              : "poor",
+          cacheStats.hits > 0 ? "good" : cacheStats.totalSize > 0 ? "moderate" : "poor",
       },
       recommendations: generateRecommendations(cacheStats, rateLimitStats),
     };
@@ -96,10 +84,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Cache stats API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -113,10 +98,7 @@ export async function DELETE(request: NextRequest) {
     // 检查管理员权限
     const isAdmin = await checkAdminPermission(session.user.id);
     if (!isAdmin) {
-      return NextResponse.json(
-        { error: "Admin permission required" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "Admin permission required" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -133,25 +115,19 @@ export async function DELETE(request: NextRequest) {
     } else {
       return NextResponse.json(
         { error: "Invalid action. Use ?action=clear or ?action=reset-stats" },
-        { status: 400 },
+        { status: 400 }
       );
     }
   } catch (error) {
     console.error("Cache management API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 /**
  * 生成缓存优化建议
  */
-function generateRecommendations(
-  cacheStats: any,
-  rateLimitStats: any,
-): string[] {
+function generateRecommendations(cacheStats: any, rateLimitStats: any): string[] {
   const recommendations: string[] = [];
 
   // 缓存命中率建议

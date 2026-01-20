@@ -93,9 +93,7 @@ export class SKUMatcher {
     }
   }
 
-  private createPlatformAdapter(
-    platform: EcommercePlatform,
-  ): IPlatformAdapter | null {
+  private createPlatformAdapter(platform: EcommercePlatform): IPlatformAdapter | null {
     try {
       const { createPlatformAdapter } = require("./ecommerce");
       return createPlatformAdapter(platform);
@@ -105,10 +103,7 @@ export class SKUMatcher {
   }
 
   // 主要匹配方法
-  async matchFoodToSKUs(
-    food: Food,
-    config: Partial<MatchConfig> = {},
-  ): Promise<SKUMatchResult[]> {
+  async matchFoodToSKUs(food: Food, config: Partial<MatchConfig> = {}): Promise<SKUMatchResult[]> {
     const finalConfig: MatchConfig = {
       minConfidence: 0.6,
       maxResults: 10,
@@ -121,16 +116,13 @@ export class SKUMatcher {
       const normalizedFood = this.normalizeFoodText(food);
 
       // 2. 从缓存中搜索匹配的商品
-      const cachedProducts = await this.searchCachedProducts(
-        normalizedFood,
-        finalConfig,
-      );
+      const cachedProducts = await this.searchCachedProducts(normalizedFood, finalConfig);
 
       // 3. 计算匹配置信度
       const matchResults = await this.calculateMatchConfidence(
         normalizedFood,
         cachedProducts,
-        finalConfig,
+        finalConfig
       );
 
       // 4. 过滤和排序结果
@@ -141,7 +133,7 @@ export class SKUMatcher {
         PlatformErrorType.PLATFORM_ERROR,
         `Failed to match food ${food.name} to SKUs: ${message}`,
         undefined,
-        { foodId: food.id, originalError: error },
+        { foodId: food.id, originalError: error }
       );
     }
   }
@@ -149,7 +141,7 @@ export class SKUMatcher {
   // 批量匹配多个食材
   async matchMultipleFoods(
     foods: Food[],
-    config: Partial<MatchConfig> = {},
+    config: Partial<MatchConfig> = {}
   ): Promise<Map<string, SKUMatchResult[]>> {
     const results = new Map<string, SKUMatchResult[]>();
 
@@ -176,10 +168,7 @@ export class SKUMatcher {
 
     // 分词
     const tokens = this.tokenizeText(normalized);
-    const keywords = this.extractKeywords(
-      tokens,
-      food.aliases ? JSON.parse(food.aliases) : [],
-    );
+    const keywords = this.extractKeywords(tokens, food.aliases ? JSON.parse(food.aliases) : []);
 
     return {
       original,
@@ -193,9 +182,7 @@ export class SKUMatcher {
   private tokenizeText(text: string): string[] {
     // 简单的分词实现，实际项目中可以使用更专业的分词库
     return text
-      .split(
-        /[\s\u3000\u3001\u3002\uff0c\uff1a\uff1b\uff1f\uff01\u300a\u300b]+/,
-      )
+      .split(/[\s\u3000\u3001\u3002\uff0c\uff1a\uff1b\uff1f\uff01\u300a\u300b]+/)
       .filter((token) => token.length > 0)
       .map((token) => token.trim());
   }
@@ -226,7 +213,7 @@ export class SKUMatcher {
 
   private async searchCachedProducts(
     normalizedFood: NormalizedText,
-    config: MatchConfig,
+    config: MatchConfig
   ): Promise<PlatformProductInfo[]> {
     const products: PlatformProductInfo[] = [];
     const searchQueries = this.buildSearchQueries(normalizedFood);
@@ -239,9 +226,7 @@ export class SKUMatcher {
           inStock: !config.includeOutOfStock,
         });
 
-        products.push(
-          ...result.products.map((p) => this.mapDbProductToPlatformInfo(p)),
-        );
+        products.push(...result.products.map((p) => this.mapDbProductToPlatformInfo(p)));
       } catch (error) {
         console.error(`Failed to search products for query "${query}":`, error);
       }
@@ -284,7 +269,7 @@ export class SKUMatcher {
   private async calculateMatchConfidence(
     normalizedFood: NormalizedText,
     products: PlatformProductInfo[],
-    config: MatchConfig,
+    config: MatchConfig
   ): Promise<SKUMatchResult[]> {
     const results: SKUMatchResult[] = [];
 
@@ -295,7 +280,7 @@ export class SKUMatcher {
         const { matchedKeywords, matchReasons } = this.analyzeMatch(
           normalizedFood,
           product,
-          confidence,
+          confidence
         );
 
         results.push({
@@ -313,7 +298,7 @@ export class SKUMatcher {
   // 计算置信度分数
   private calculateConfidenceScore(
     normalizedFood: NormalizedText,
-    product: PlatformProductInfo,
+    product: PlatformProductInfo
   ): number {
     let score = 0;
     let maxScore = 0;
@@ -321,16 +306,13 @@ export class SKUMatcher {
     // 1. 名称匹配 (权重: 0.4)
     const nameScore = this.calculateTextSimilarity(
       normalizedFood.normalized,
-      product.name.toLowerCase(),
+      product.name.toLowerCase()
     );
     score += nameScore * 0.4;
     maxScore += 0.4;
 
     // 2. 关键词匹配 (权重: 0.3)
-    const keywordScore = this.calculateKeywordScore(
-      normalizedFood.keywords,
-      product,
-    );
+    const keywordScore = this.calculateKeywordScore(normalizedFood.keywords, product);
     score += keywordScore * 0.3;
     maxScore += 0.3;
 
@@ -340,10 +322,7 @@ export class SKUMatcher {
     maxScore += 0.2;
 
     // 4. 品牌和规格匹配 (权重: 0.1)
-    const attributeScore = this.calculateAttributeScore(
-      normalizedFood,
-      product,
-    );
+    const attributeScore = this.calculateAttributeScore(normalizedFood, product);
     score += attributeScore * 0.1;
     maxScore += 0.1;
 
@@ -363,10 +342,7 @@ export class SKUMatcher {
   }
 
   // 计算关键词分数
-  private calculateKeywordScore(
-    keywords: string[],
-    product: PlatformProductInfo,
-  ): number {
+  private calculateKeywordScore(keywords: string[], product: PlatformProductInfo): number {
     if (keywords.length === 0) return 0;
 
     const productText =
@@ -385,7 +361,7 @@ export class SKUMatcher {
   // 计算分类分数
   private calculateCategoryScore(
     normalizedFood: NormalizedText,
-    product: PlatformProductInfo,
+    product: PlatformProductInfo
   ): number {
     // 这里可以根据食材分类和商品分类进行匹配
     // 简化实现：检查商品名称是否包含分类相关信息
@@ -404,7 +380,7 @@ export class SKUMatcher {
   // 计算属性分数
   private calculateAttributeScore(
     normalizedFood: NormalizedText,
-    product: PlatformProductInfo,
+    product: PlatformProductInfo
   ): number {
     let score = 0;
 
@@ -427,20 +403,15 @@ export class SKUMatcher {
   }
 
   // 判断品牌相关性
-  private isBrandRelevant(
-    normalizedFood: NormalizedText,
-    brand: string,
-  ): boolean {
+  private isBrandRelevant(normalizedFood: NormalizedText, brand: string): boolean {
     const normalizedBrand = brand.toLowerCase();
-    return normalizedFood.keywords.some((keyword) =>
-      normalizedBrand.includes(keyword),
-    );
+    return normalizedFood.keywords.some((keyword) => normalizedBrand.includes(keyword));
   }
 
   // 判断规格相关性
   private isSpecificationRelevant(
     normalizedFood: NormalizedText,
-    product: PlatformProductInfo,
+    product: PlatformProductInfo
   ): boolean {
     // 简化实现：检查规格是否合理
     return product.weight != null || product.unit != null;
@@ -456,7 +427,7 @@ export class SKUMatcher {
   private analyzeMatch(
     normalizedFood: NormalizedText,
     product: PlatformProductInfo,
-    confidence: number,
+    confidence: number
   ): { matchedKeywords: string[]; matchReasons: string[] } {
     const matchedKeywords: string[] = [];
     const matchReasons: string[] = [];
@@ -492,10 +463,7 @@ export class SKUMatcher {
   }
 
   // 过滤和排序结果
-  private filterAndSortResults(
-    results: SKUMatchResult[],
-    config: MatchConfig,
-  ): SKUMatchResult[] {
+  private filterAndSortResults(results: SKUMatchResult[], config: MatchConfig): SKUMatchResult[] {
     // 按置信度排序
     results.sort((a, b) => b.confidence - a.confidence);
 
@@ -503,9 +471,7 @@ export class SKUMatcher {
     return results.slice(0, config.maxResults);
   }
 
-  private mapDbProductToPlatformInfo(
-    p: PlatformProductInfo,
-  ): PlatformProductInfo {
+  private mapDbProductToPlatformInfo(p: PlatformProductInfo): PlatformProductInfo {
     return {
       platformProductId: p.platformProductId,
       platform: p.platform as EcommercePlatform,
@@ -537,10 +503,7 @@ export class SKUMatcher {
   }
 
   // 更新匹配缓存
-  async updateMatchCache(
-    foodId: string,
-    matches: SKUMatchResult[],
-  ): Promise<void> {
+  async updateMatchCache(foodId: string, matches: SKUMatchResult[]): Promise<void> {
     // 这里可以实现匹配结果的缓存逻辑
     // 例如将匹配结果存储到Redis或数据库中
   }
@@ -556,7 +519,7 @@ export class SKUMatcher {
     foodId: string,
     platformProductId: string,
     platform: EcommercePlatform,
-    isCorrect: boolean,
+    isCorrect: boolean
   ): Promise<void> {
     // 这里可以实现手动纠正匹配的逻辑
     // 将纠正结果记录到数据库中，用于改进匹配算法

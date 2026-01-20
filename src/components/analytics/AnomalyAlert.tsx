@@ -68,26 +68,22 @@ export default function AnomalyAlert({
   };
 
   return (
-    <div
-      className={`rounded-lg border-2 ${config.borderColor} ${config.bgColor} p-4 mb-3`}
-    >
+    <div className={`rounded-lg border-2 ${config.borderColor} ${config.bgColor} mb-3 p-4`}>
       {/* 标题行 */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-start gap-2 flex-1">
+      <div className="mb-2 flex items-start justify-between">
+        <div className="flex flex-1 items-start gap-2">
           <span className="text-2xl">{config.icon}</span>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className={`font-semibold ${config.color}`}>
-                {anomaly.title}
-              </h4>
+              <h4 className={`font-semibold ${config.color}`}>{anomaly.title}</h4>
               <span
-                className={`text-xs px-2 py-0.5 rounded-full ${config.bgColor} ${config.color} border ${config.borderColor}`}
+                className={`rounded-full px-2 py-0.5 text-xs ${config.bgColor} ${config.color} border ${config.borderColor}`}
               >
                 {config.label}
               </span>
             </div>
-            <p className="text-sm text-gray-700 mt-1">{anomaly.description}</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="mt-1 text-sm text-gray-700">{anomaly.description}</p>
+            <p className="mt-1 text-xs text-gray-500">
               检测时间：{new Date(anomaly.detectedAt).toLocaleString("zh-CN")}
             </p>
           </div>
@@ -96,11 +92,11 @@ export default function AnomalyAlert({
 
       {/* 操作按钮 */}
       {!showResolution && (
-        <div className="flex gap-2 mt-3">
+        <div className="mt-3 flex gap-2">
           {onAcknowledge && (
             <button
               onClick={() => onAcknowledge(anomaly.id)}
-              className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm transition-colors hover:bg-gray-50"
             >
               已确认
             </button>
@@ -108,7 +104,7 @@ export default function AnomalyAlert({
           {onResolve && (
             <button
               onClick={() => setShowResolution(true)}
-              className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              className="rounded-md bg-green-600 px-3 py-1 text-sm text-white transition-colors hover:bg-green-700"
             >
               标记解决
             </button>
@@ -116,7 +112,7 @@ export default function AnomalyAlert({
           {onIgnore && (
             <button
               onClick={() => onIgnore(anomaly.id)}
-              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+              className="px-3 py-1 text-sm text-gray-600 transition-colors hover:text-gray-800"
             >
               忽略
             </button>
@@ -126,19 +122,19 @@ export default function AnomalyAlert({
 
       {/* 解决说明输入框 */}
       {showResolution && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
+        <div className="mt-3 border-t border-gray-200 pt-3">
           <textarea
             value={resolution}
             onChange={(e) => setResolution(e.target.value)}
             placeholder="请输入解决方案或说明..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500"
             rows={3}
           />
-          <div className="flex gap-2 mt-2">
+          <div className="mt-2 flex gap-2">
             <button
               onClick={handleResolve}
               disabled={!resolution.trim()}
-              className="px-4 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="rounded-md bg-green-600 px-4 py-1 text-sm text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               提交
             </button>
@@ -147,7 +143,7 @@ export default function AnomalyAlert({
                 setShowResolution(false);
                 setResolution("");
               }}
-              className="px-4 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="rounded-md border border-gray-300 bg-white px-4 py-1 text-sm transition-colors hover:bg-gray-50"
             >
               取消
             </button>

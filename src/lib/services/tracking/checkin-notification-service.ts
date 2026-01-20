@@ -17,9 +17,7 @@ export class CheckInNotificationService {
 
   constructor() {
     this.notificationRepository = new ConvexNotificationRepository();
-    this.notificationManager = new NotificationManager(
-      this.notificationRepository,
-    );
+    this.notificationManager = new NotificationManager(this.notificationRepository);
   }
 
   async sendCheckInReminder(memberId: string, mealType: string): Promise<void> {
@@ -41,10 +39,7 @@ export class CheckInNotificationService {
     }
   }
 
-  async sendStreakAchievement(
-    memberId: string,
-    streakDays: number,
-  ): Promise<void> {
+  async sendStreakAchievement(memberId: string, streakDays: number): Promise<void> {
     try {
       const channels: NotificationChannel[] = ["IN_APP", "EMAIL", "SMS"];
 
@@ -73,7 +68,7 @@ export class CheckInNotificationService {
       metric: string;
       value: string;
       recommendation: string;
-    },
+    }
   ): Promise<void> {
     try {
       const channels: NotificationChannel[] = ["IN_APP", "EMAIL"];
@@ -104,7 +99,7 @@ export class CheckInNotificationService {
       goalTitle: string;
       completedValue: string;
       targetValue: string;
-    },
+    }
   ): Promise<void> {
     try {
       const channels: NotificationChannel[] = ["IN_APP", "EMAIL", "SMS"];
@@ -134,16 +129,13 @@ export class CheckInNotificationService {
       memberName: string;
       activity: string;
       mealType?: string;
-    },
+    }
   ): Promise<void> {
     try {
       const { convexClient, api } = await import("@/lib/convex-client");
-      const members = await convexClient.query<FamilyMemberDoc[]>(
-        api.families.listMembers,
-        {
-          familyId,
-        },
-      );
+      const members = await convexClient.query<FamilyMemberDoc[]>(api.families.listMembers, {
+        familyId,
+      });
 
       const channels: NotificationChannel[] = ["IN_APP"];
 

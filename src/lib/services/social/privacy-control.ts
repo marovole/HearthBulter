@@ -40,20 +40,17 @@ const createDefaultPrivacySettings = (memberId: string): PrivacySettings => ({
   requireApproval: false,
 });
 
-export async function getUserPrivacySettings(
-  memberId: string,
-): Promise<PrivacySettings | null> {
+export async function getUserPrivacySettings(memberId: string): Promise<PrivacySettings | null> {
   const cached = privacySettingsCache.get(memberId);
   return cached ?? createDefaultPrivacySettings(memberId);
 }
 
 export async function updateUserPrivacySettings(
   memberId: string,
-  settings: Partial<PrivacySettings>,
+  settings: Partial<PrivacySettings>
 ): Promise<boolean> {
   const currentSettings =
-    (await getUserPrivacySettings(memberId)) ??
-    createDefaultPrivacySettings(memberId);
+    (await getUserPrivacySettings(memberId)) ?? createDefaultPrivacySettings(memberId);
 
   const updatedSettings: PrivacySettings = {
     ...currentSettings,
@@ -68,7 +65,7 @@ export async function updateUserPrivacySettings(
 
 export async function checkShareAccess(
   shareToken: string,
-  viewerId?: string,
+  viewerId?: string
 ): Promise<{
   hasAccess: boolean;
   reason?: string;
@@ -77,7 +74,7 @@ export async function checkShareAccess(
   try {
     const share = await convexClient.query<Record<string, unknown> | null>(
       api.social.getSharedContentByToken,
-      { token: shareToken },
+      { token: shareToken }
     );
 
     if (!share) {
@@ -88,16 +85,13 @@ export async function checkShareAccess(
       return { hasAccess: false, reason: "分享已失效" };
     }
 
-    const expiresAt = (share as Record<string, unknown>).expiresAt as
-      | number
-      | null
-      | undefined;
+    const expiresAt = (share as Record<string, unknown>).expiresAt as number | null | undefined;
     if (expiresAt && expiresAt < Date.now()) {
       return { hasAccess: false, reason: "分享已过期" };
     }
 
     const privacySettings = await getUserPrivacySettings(
-      (share as Record<string, unknown>).memberId as string,
+      (share as Record<string, unknown>).memberId as string
     );
     if (!privacySettings) {
       return { hasAccess: false, reason: "无法获取隐私设置" };
@@ -113,32 +107,32 @@ export async function checkShareAccess(
       | "PRIVATE";
 
     switch (privacyLevel) {
-    case "PUBLIC": {
-      if (!privacySettings.allowStrangerView && !viewerId) {
-        return { hasAccess: false, reason: "不允许陌生人访问" };
+      case "PUBLIC": {
+        if (!privacySettings.allowStrangerView && !viewerId) {
+          return { hasAccess: false, reason: "不允许陌生人访问" };
+        }
+        break;
       }
-      break;
-    }
-    case "FRIENDS": {
-      if (!viewerId) {
-        return { hasAccess: false, reason: "需要登录才能查看" };
-      }
+      case "FRIENDS": {
+        if (!viewerId) {
+          return { hasAccess: false, reason: "需要登录才能查看" };
+        }
 
-      const isFriend = await checkFriendship(
+        const isFriend = await checkFriendship(
           (share as Record<string, unknown>).memberId as string,
-          viewerId,
-      );
-      if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
-        return { hasAccess: false, reason: "仅好友可见" };
+          viewerId
+        );
+        if (!isFriend && !privacySettings.trustedFriends.includes(viewerId)) {
+          return { hasAccess: false, reason: "仅好友可见" };
+        }
+        break;
       }
-      break;
-    }
-    case "PRIVATE": {
-      if (!viewerId) {
-        return { hasAccess: false, reason: "需要授权才能查看" };
+      case "PRIVATE": {
+        if (!viewerId) {
+          return { hasAccess: false, reason: "需要授权才能查看" };
+        }
+        return { hasAccess: false, reason: "无权访问此分享" };
       }
-      return { hasAccess: false, reason: "无权访问此分享" };
-    }
     }
 
     return {
@@ -151,22 +145,17 @@ export async function checkShareAccess(
   }
 }
 
-async function checkFriendship(
-  memberId1: string,
-  memberId2: string,
-): Promise<boolean> {
+async function checkFriendship(memberId1: string, memberId2: string): Promise<boolean> {
   return false;
 }
 
-async function getSharePrivacyRule(
-  shareId: string,
-): Promise<SharePrivacyRule | null> {
+async function getSharePrivacyRule(shareId: string): Promise<SharePrivacyRule | null> {
   return null;
 }
 
 export async function setSharePrivacyRule(
   shareId: string,
-  rule: Omit<SharePrivacyRule, "id" | "memberId" | "contentType">,
+  rule: Omit<SharePrivacyRule, "id" | "memberId" | "contentType">
 ): Promise<boolean> {
   try {
     const patch: Record<string, unknown> = {
@@ -187,10 +176,7 @@ export async function setSharePrivacyRule(
   }
 }
 
-export async function blockUser(
-  memberId: string,
-  blockedUserId: string,
-): Promise<boolean> {
+export async function blockUser(memberId: string, blockedUserId: string): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -211,10 +197,7 @@ export async function blockUser(
   }
 }
 
-export async function unblockUser(
-  memberId: string,
-  blockedUserId: string,
-): Promise<boolean> {
+export async function unblockUser(memberId: string, blockedUserId: string): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -236,10 +219,7 @@ export async function unblockUser(
   }
 }
 
-export async function addTrustedFriend(
-  memberId: string,
-  friendId: string,
-): Promise<boolean> {
+export async function addTrustedFriend(memberId: string, friendId: string): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -260,10 +240,7 @@ export async function addTrustedFriend(
   }
 }
 
-export async function removeTrustedFriend(
-  memberId: string,
-  friendId: string,
-): Promise<boolean> {
+export async function removeTrustedFriend(memberId: string, friendId: string): Promise<boolean> {
   try {
     const settings = await getUserPrivacySettings(memberId);
     if (!settings) {
@@ -285,10 +262,7 @@ export async function removeTrustedFriend(
   }
 }
 
-export async function setShareExpiration(
-  memberId: string,
-  days: number,
-): Promise<boolean> {
+export async function setShareExpiration(memberId: string, days: number): Promise<boolean> {
   try {
     const updated = await updateUserPrivacySettings(memberId, {
       autoExpireDays: days,
@@ -347,10 +321,7 @@ export async function cleanupExpiredShares(): Promise<number> {
     const now = Date.now();
 
     for (const content of contents) {
-      const expiresAt = (content as Record<string, unknown>).expiresAt as
-        | number
-        | null
-        | undefined;
+      const expiresAt = (content as Record<string, unknown>).expiresAt as number | null | undefined;
       if (expiresAt && expiresAt < now) {
         await convexClient.mutation(api.social.updateSharedContent, {
           id: content._id as Id<"sharedContents">,
@@ -396,8 +367,7 @@ export async function getSharePrivacyStats(memberId: string): Promise<{
 
     for (const content of contents) {
       result.totalShares++;
-      const privacyLevel = (content as Record<string, unknown>)
-        .privacyLevel as string;
+      const privacyLevel = (content as Record<string, unknown>).privacyLevel as string;
       const status = (content as Record<string, unknown>).status as string;
 
       if (privacyLevel === "PUBLIC") result.publicShares++;

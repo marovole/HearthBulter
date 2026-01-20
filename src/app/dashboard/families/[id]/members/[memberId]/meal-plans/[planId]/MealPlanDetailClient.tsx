@@ -48,9 +48,7 @@ export function MealPlanDetailClient({
       const response = await fetch(`/api/members/${memberId}/meal-plans`);
       if (response.ok) {
         const data = await response.json();
-        const updatedPlan = data.mealPlans.find(
-          (p: MealPlanWithMeals) => p.id === mealPlan.id,
-        );
+        const updatedPlan = data.mealPlans.find((p: MealPlanWithMeals) => p.id === mealPlan.id);
         if (updatedPlan) {
           setMealPlan(updatedPlan);
         }
@@ -75,9 +73,7 @@ export function MealPlanDetailClient({
       }
 
       // 导航回列表页
-      router.push(
-        `/dashboard/families/${familyId}/members/${memberId}/meal-plans`,
-      );
+      router.push(`/dashboard/families/${familyId}/members/${memberId}/meal-plans`);
     } catch (err) {
       alert(err instanceof Error ? err.message : "删除失败");
     }
@@ -85,12 +81,9 @@ export function MealPlanDetailClient({
 
   const handleGenerateShoppingList = async () => {
     try {
-      const response = await fetch(
-        `/api/meal-plans/${mealPlan.id}/shopping-list`,
-        {
-          method: "POST",
-        },
-      );
+      const response = await fetch(`/api/meal-plans/${mealPlan.id}/shopping-list`, {
+        method: "POST",
+      });
 
       if (!response.ok) {
         throw new Error("生成购物清单失败");
@@ -99,20 +92,18 @@ export function MealPlanDetailClient({
       const data = await response.json();
       // 导航到购物清单页面
       router.push(
-        `/dashboard/families/${familyId}/members/${memberId}/shopping-lists/${data.shoppingList.id}`,
+        `/dashboard/families/${familyId}/members/${memberId}/shopping-lists/${data.shoppingList.id}`
       );
     } catch (err) {
       alert(err instanceof Error ? err.message : "生成失败");
     }
   };
 
-  const selectedMeal = swapMealId
-    ? mealPlan.meals.find((m) => m.id === swapMealId)
-    : null;
+  const selectedMeal = swapMealId ? mealPlan.meals.find((m) => m.id === swapMealId) : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* 面包屑导航 */}
           <nav className="mb-6" aria-label="面包屑导航">
@@ -120,7 +111,7 @@ export function MealPlanDetailClient({
               <li>
                 <Link
                   href={`/dashboard/families/${familyId}`}
-                  className="hover:text-gray-900 transition-colors"
+                  className="transition-colors hover:text-gray-900"
                 >
                   家庭
                 </Link>
@@ -129,7 +120,7 @@ export function MealPlanDetailClient({
               <li>
                 <Link
                   href={`/dashboard/families/${familyId}/members/${memberId}`}
-                  className="hover:text-gray-900 transition-colors"
+                  className="transition-colors hover:text-gray-900"
                 >
                   {memberName}
                 </Link>
@@ -138,7 +129,7 @@ export function MealPlanDetailClient({
               <li>
                 <Link
                   href={`/dashboard/families/${familyId}/members/${memberId}/meal-plans`}
-                  className="hover:text-gray-900 transition-colors"
+                  className="transition-colors hover:text-gray-900"
                 >
                   食谱规划
                 </Link>
@@ -151,12 +142,12 @@ export function MealPlanDetailClient({
           </nav>
 
           {/* 标题和操作 */}
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-2xl font-bold text-gray-900">食谱计划详情</h1>
             <div className="flex gap-2">
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 text-red-700 bg-red-50 rounded-lg font-medium hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="rounded-lg bg-red-50 px-4 py-2 font-medium text-red-700 transition-colors hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 aria-label="删除食谱计划"
               >
                 删除

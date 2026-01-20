@@ -28,21 +28,15 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "缺少必要参数：memberId" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少必要参数：memberId" }, { status: 400 });
     }
 
     // 验证用户对该成员数据的访问权限
-    const accessResult = await requireMemberDataAccess(
-      session.user.id,
-      memberId,
-    );
+    const accessResult = await requireMemberDataAccess(session.user.id, memberId);
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || "无权访问此成员数据" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -63,7 +57,7 @@ export async function GET(request: NextRequest) {
         status,
         createdAt
       `,
-        { count: "exact" },
+        { count: "exact" }
       )
       .eq("memberId", memberId)
       .is("deletedAt", null)
@@ -116,33 +110,22 @@ export async function POST(request: NextRequest) {
     const { memberId, reportType, startDate, endDate } = body;
 
     if (!memberId || !reportType) {
-      return NextResponse.json(
-        { error: "缺少必要参数：memberId, reportType" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少必要参数：memberId, reportType" }, { status: 400 });
     }
 
     // 验证用户对该成员数据的访问权限
-    const accessResult = await requireMemberDataAccess(
-      session.user.id,
-      memberId,
-    );
+    const accessResult = await requireMemberDataAccess(session.user.id, memberId);
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || "无权访问此成员数据" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
 
-    const report = await createReport(
-      memberId,
-      reportType as ReportType,
-      start,
-      end,
-    );
+    const report = await createReport(memberId, reportType as ReportType, start, end);
 
     return NextResponse.json({
       success: true,

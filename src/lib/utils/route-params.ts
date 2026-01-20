@@ -21,9 +21,7 @@
  *   const { id } = await params;
  * }
  */
-export async function getParam<T extends Record<string, string>>(
-  params: Promise<T>,
-): Promise<T> {
+export async function getParam<T extends Record<string, string>>(params: Promise<T>): Promise<T> {
   return await params;
 }
 
@@ -38,9 +36,7 @@ export async function getParam<T extends Record<string, string>>(
  *   const { familyId, taskId } = await getParams(params);
  * }
  */
-export async function getParams<T extends Record<string, string>>(
-  params: Promise<T>,
-): Promise<T> {
+export async function getParams<T extends Record<string, string>>(params: Promise<T>): Promise<T> {
   return await params;
 }
 

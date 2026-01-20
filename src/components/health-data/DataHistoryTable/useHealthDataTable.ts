@@ -59,15 +59,11 @@ export function useHealthDataTable({
         sort: sortField,
         order: sortDirection,
         ...Object.fromEntries(
-          Object.entries(filters).filter(
-            ([_, value]) => value !== false && value !== "all",
-          ),
+          Object.entries(filters).filter(([_, value]) => value !== false && value !== "all")
         ),
       });
 
-      const response = await fetch(
-        `/api/members/${memberId}/health-data?${params}`,
-      );
+      const response = await fetch(`/api/members/${memberId}/health-data?${params}`);
       if (!response.ok) {
         throw new Error("加载数据失败");
       }
@@ -80,15 +76,7 @@ export function useHealthDataTable({
     } finally {
       setLoading(false);
     }
-  }, [
-    memberId,
-    currentPage,
-    searchTerm,
-    dateRange,
-    sortField,
-    sortDirection,
-    filters,
-  ]);
+  }, [memberId, currentPage, searchTerm, dateRange, sortField, sortDirection, filters]);
 
   // 自动加载数据
   useEffect(() => {
@@ -105,7 +93,7 @@ export function useHealthDataTable({
         setSortDirection("desc");
       }
     },
-    [sortField],
+    [sortField]
   );
 
   // 全选处理
@@ -117,7 +105,7 @@ export function useHealthDataTable({
         setSelectedItems([]);
       }
     },
-    [data],
+    [data]
   );
 
   // 单选处理
@@ -137,12 +125,9 @@ export function useHealthDataTable({
       }
 
       try {
-        const response = await fetch(
-          `/api/members/${memberId}/health-data/${id}`,
-          {
-            method: "DELETE",
-          },
-        );
+        const response = await fetch(`/api/members/${memberId}/health-data/${id}`, {
+          method: "DELETE",
+        });
 
         if (!response.ok) {
           throw new Error("删除失败");
@@ -158,7 +143,7 @@ export function useHealthDataTable({
         alert(err instanceof Error ? err.message : "删除失败");
       }
     },
-    [memberId, onDataDeleted],
+    [memberId, onDataDeleted]
   );
 
   // 批量删除
@@ -171,14 +156,12 @@ export function useHealthDataTable({
       const deletePromises = selectedItems.map((id) =>
         fetch(`/api/members/${memberId}/health-data/${id}`, {
           method: "DELETE",
-        }),
+        })
       );
 
       await Promise.all(deletePromises);
 
-      setData((prev) =>
-        prev.filter((item) => !selectedItems.includes(item.id)),
-      );
+      setData((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
       setSelectedItems([]);
     } catch (err) {
       alert("批量删除失败");

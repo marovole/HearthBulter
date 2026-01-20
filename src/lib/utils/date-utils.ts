@@ -90,10 +90,7 @@ export function getWeekEnd(date: Date): Date {
 /**
  * 计算年龄
  */
-export function calculateAge(
-  birthDate: Date,
-  currentDate: Date = new Date(),
-): number {
+export function calculateAge(birthDate: Date, currentDate: Date = new Date()): number {
   if (isNaN(birthDate.getTime())) {
     return NaN;
   }
@@ -101,10 +98,7 @@ export function calculateAge(
   let age = currentDate.getFullYear() - birthDate.getFullYear();
   const monthDiff = currentDate.getMonth() - birthDate.getMonth();
 
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && currentDate.getDate() < birthDate.getDate())
-  ) {
+  if (monthDiff < 0 || (monthDiff === 0 && currentDate.getDate() < birthDate.getDate())) {
     age--;
   }
 

@@ -14,18 +14,14 @@ jest.mock("recharts", () => ({
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
   Tooltip: () => <div data-testid="tooltip" />,
   Legend: () => <div data-testid="legend" />,
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   ReferenceLine: () => <div data-testid="reference-line" />,
   Dot: () => <div data-testid="dot" />,
 }));
 
 // Mock UI components
 jest.mock("@/components/ui/card", () => ({
-  Card: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="card">{children}</div>
-  ),
+  Card: ({ children }: { children: React.ReactNode }) => <div data-testid="card">{children}</div>,
   CardContent: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="card-content">{children}</div>
   ),
@@ -41,9 +37,7 @@ jest.mock("@/components/ui/card", () => ({
 }));
 
 jest.mock("@/components/ui/badge", () => ({
-  Badge: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="badge">{children}</div>
-  ),
+  Badge: ({ children }: { children: React.ReactNode }) => <div data-testid="badge">{children}</div>,
 }));
 
 // Mock fetch
@@ -71,9 +65,7 @@ describe("WeightTrendChart", () => {
   });
 
   it("renders loading state initially", () => {
-    (global.fetch as jest.Mock).mockImplementationOnce(
-      () => new Promise(() => {}),
-    );
+    (global.fetch as jest.Mock).mockImplementationOnce(() => new Promise(() => {}));
 
     render(<WeightTrendChart memberId="test-member" />);
 
@@ -145,7 +137,7 @@ describe("WeightTrendChart", () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
-        "/api/dashboard/weight-trend?memberId=test-member&days=30",
+        "/api/dashboard/weight-trend?memberId=test-member&days=30"
       );
     });
   });

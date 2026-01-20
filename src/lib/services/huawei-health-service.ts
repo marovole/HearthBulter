@@ -5,11 +5,7 @@
 
 import { addHours, startOfDay, endOfDay, subDays } from "date-fns";
 import { randomUUID } from "crypto";
-import type {
-  HuaweiHealthData,
-  DeviceConnectionInput,
-  SyncResult,
-} from "@/types/wearable-devices";
+import type { HuaweiHealthData, DeviceConnectionInput, SyncResult } from "@/types/wearable-devices";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { checkDataDuplication } from "./data-deduplication";
@@ -128,7 +124,7 @@ export class HuaweiHealthService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const stepsData: Array<Id<"healthData">> = [];
 
@@ -140,15 +136,10 @@ export class HuaweiHealthService {
         measuredAt: dayData.date,
         source: "HUAWEI_HEALTH" as const,
         notes: `步数: ${dayData.steps}`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -175,14 +166,11 @@ export class HuaweiHealthService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const heartRateData: Array<Id<"healthData">> = [];
 
-    const mockHeartRateData = this.generateMockHeartRateData(
-      startDate,
-      endDate,
-    );
+    const mockHeartRateData = this.generateMockHeartRateData(startDate, endDate);
 
     for (const record of mockHeartRateData) {
       const healthInput = {
@@ -191,15 +179,10 @@ export class HuaweiHealthService {
         measuredAt: record.timestamp,
         source: "HUAWEI_HEALTH" as const,
         notes: `心率: ${record.value} bpm`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -227,7 +210,7 @@ export class HuaweiHealthService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const sleepData: Array<Id<"healthData">> = [];
 
@@ -239,15 +222,10 @@ export class HuaweiHealthService {
         measuredAt: record.date,
         source: "HUAWEI_HEALTH" as const,
         notes: `睡眠时长: ${record.duration}小时, 质量: ${record.quality}分`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -274,7 +252,7 @@ export class HuaweiHealthService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const weightData: Array<Id<"healthData">> = [];
 
@@ -287,15 +265,10 @@ export class HuaweiHealthService {
         measuredAt: record.timestamp,
         source: "HUAWEI_HEALTH" as const,
         notes: `体重: ${record.weight}kg`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -323,7 +296,7 @@ export class HuaweiHealthService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const bodyFatData: Array<Id<"healthData">> = [];
 
@@ -336,15 +309,10 @@ export class HuaweiHealthService {
         measuredAt: record.timestamp,
         source: "HUAWEI_HEALTH" as const,
         notes: `体脂率: ${record.value}%`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -372,14 +340,11 @@ export class HuaweiHealthService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const bloodPressureData: Array<Id<"healthData">> = [];
 
-    const mockBloodPressureData = this.generateMockBloodPressureData(
-      startDate,
-      endDate,
-    );
+    const mockBloodPressureData = this.generateMockBloodPressureData(startDate, endDate);
 
     for (const record of mockBloodPressureData) {
       const healthInput = {
@@ -389,15 +354,10 @@ export class HuaweiHealthService {
         measuredAt: record.timestamp,
         source: "HUAWEI_HEALTH" as const,
         notes: `血压: ${record.systolic}/${record.diastolic} mmHg`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -425,7 +385,7 @@ export class HuaweiHealthService {
   async syncAllData(
     memberId: string,
     deviceConnectionId: Id<"deviceConnections">,
-    lastSyncDate?: Date,
+    lastSyncDate?: Date
   ): Promise<SyncResult> {
     const startDate = lastSyncDate || subDays(new Date(), 7);
     const endDate = new Date();
@@ -439,35 +399,25 @@ export class HuaweiHealthService {
         throw new Error("华为Health SDK初始化失败");
       }
 
-      const stepsData = await this.syncStepsData(
-        memberId,
-        startDate,
-        endDate,
-        deviceConnectionId,
-      );
+      const stepsData = await this.syncStepsData(memberId, startDate, endDate, deviceConnectionId);
       totalSynced += stepsData.length;
 
       const heartRateData = await this.syncHeartRateData(
         memberId,
         startDate,
         endDate,
-        deviceConnectionId,
+        deviceConnectionId
       );
       totalSynced += heartRateData.length;
 
-      const sleepData = await this.syncSleepData(
-        memberId,
-        startDate,
-        endDate,
-        deviceConnectionId,
-      );
+      const sleepData = await this.syncSleepData(memberId, startDate, endDate, deviceConnectionId);
       totalSynced += sleepData.length;
 
       const weightData = await this.syncWeightData(
         memberId,
         startDate,
         endDate,
-        deviceConnectionId,
+        deviceConnectionId
       );
       totalSynced += weightData.length;
 
@@ -475,7 +425,7 @@ export class HuaweiHealthService {
         memberId,
         startDate,
         endDate,
-        deviceConnectionId,
+        deviceConnectionId
       );
       totalSynced += bodyFatData.length;
 
@@ -483,13 +433,11 @@ export class HuaweiHealthService {
         memberId,
         startDate,
         endDate,
-        deviceConnectionId,
+        deviceConnectionId
       );
       totalSynced += bloodPressureData.length;
     } catch (error) {
-      errors.push(
-        `华为Health同步失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      errors.push(`华为Health同步失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
 
     return {
@@ -504,10 +452,7 @@ export class HuaweiHealthService {
   /**
    * 生成模拟步数数据
    */
-  private generateMockStepsData(
-    startDate: Date,
-    endDate: Date,
-  ): HuaweiHealthData[] {
+  private generateMockStepsData(startDate: Date, endDate: Date): HuaweiHealthData[] {
     const data: HuaweiHealthData[] = [];
     const currentDate = new Date(startDate);
 
@@ -528,7 +473,7 @@ export class HuaweiHealthService {
    */
   private generateMockHeartRateData(
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Array<{ timestamp: Date; value: number }> {
     const data: Array<{ timestamp: Date; value: number }> = [];
     const currentTimestamp = new Date(startDate);
@@ -556,7 +501,7 @@ export class HuaweiHealthService {
    */
   private generateMockSleepData(
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Array<{ date: Date; duration: number; quality: number }> {
     const data: Array<{ date: Date; duration: number; quality: number }> = [];
     const currentDate = new Date(startDate);
@@ -579,7 +524,7 @@ export class HuaweiHealthService {
    */
   private generateMockWeightData(
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Array<{ timestamp: Date; weight: number }> {
     const data: Array<{ timestamp: Date; weight: number }> = [];
     const currentTimestamp = new Date(startDate);
@@ -605,7 +550,7 @@ export class HuaweiHealthService {
    */
   private generateMockBodyFatData(
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Array<{ timestamp: Date; value: number }> {
     const data: Array<{ timestamp: Date; value: number }> = [];
     const currentTimestamp = new Date(startDate);
@@ -630,7 +575,7 @@ export class HuaweiHealthService {
    */
   private generateMockBloodPressureData(
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Array<{ timestamp: Date; systolic: number; diastolic: number }> {
     const data: Array<{
       timestamp: Date;
@@ -714,7 +659,7 @@ type PlatformConnectionInfo = {
 
 export async function connectHuaweiHealthDevice(
   memberId: string,
-  deviceInfo: Partial<DeviceConnectionInput>,
+  deviceInfo: Partial<DeviceConnectionInput>
 ): Promise<PlatformConnectionInfo> {
   const service = HuaweiHealthService.getInstance();
 
@@ -733,8 +678,6 @@ export async function connectHuaweiHealthDevice(
   };
 }
 
-export async function disconnectHuaweiHealthDevice(
-  deviceId: string,
-): Promise<void> {
+export async function disconnectHuaweiHealthDevice(deviceId: string): Promise<void> {
   void deviceId;
 }

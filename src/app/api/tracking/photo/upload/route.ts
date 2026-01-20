@@ -27,57 +27,41 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      !FileStorageService.validateFileType(file.type, [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-      ])
+      !FileStorageService.validateFileType(file.type, ["image/jpeg", "image/png", "image/webp"])
     ) {
       return NextResponse.json({ error: "不支持的图片格式" }, { status: 400 });
     }
 
     if (!FileStorageService.validateFileSize(file.size)) {
-      return NextResponse.json(
-        { error: "图片大小不能超过10MB" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "图片大小不能超过10MB" }, { status: 400 });
     }
 
-    const members = await convexClient.query<Array<{ _id: string }>>(
-      api.members.listByClerkId,
-      { clerkId: session.user.id },
-    );
+    const members = await convexClient.query<Array<{ _id: string }>>(api.members.listByClerkId, {
+      clerkId: session.user.id,
+    });
     const member = members[0];
 
     if (!member) {
       return NextResponse.json({ error: "未找到关联的成员" }, { status: 404 });
     }
 
-    const mealType = MEAL_TYPES.includes(
-      mealTypeParam as (typeof MEAL_TYPES)[number],
-    )
+    const mealType = MEAL_TYPES.includes(mealTypeParam as (typeof MEAL_TYPES)[number])
       ? (mealTypeParam as (typeof MEAL_TYPES)[number])
       : "SNACK";
 
-    const mealLogId = await convexClient.mutation<Id<"mealLogs">>(
-      api.tracking.createMealLog,
-      {
-        memberId: member._id as Id<"familyMembers">,
-        date: (dateParam ? new Date(dateParam) : new Date()).getTime(),
-        mealType,
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-      },
-    );
+    const mealLogId = await convexClient.mutation<Id<"mealLogs">>(api.tracking.createMealLog, {
+      memberId: member._id as Id<"familyMembers">,
+      date: (dateParam ? new Date(dateParam) : new Date()).getTime(),
+      mealType,
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+    });
 
-    const uploadResult = await FileStorageService.uploadFile(
-      file,
-      file.name,
-      member._id,
-      { contentType: file.type },
-    );
+    const uploadResult = await FileStorageService.uploadFile(file, file.name, member._id, {
+      contentType: file.type,
+    });
 
     const photoId = await convexClient.mutation<Id<"foodPhotos">>(
       asConvexMutationReference("tracking:createFoodPhoto"),
@@ -88,7 +72,7 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         fileSize: file.size,
         recognitionStatus: "PENDING",
-      },
+      }
     );
 
     return NextResponse.json({

@@ -20,8 +20,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少成员ID" }, { status: 400 });
     }
 
-    const config =
-      await inventoryNotificationService.getNotificationConfig(memberId);
+    const config = await inventoryNotificationService.getNotificationConfig(memberId);
 
     return NextResponse.json({
       success: true,
@@ -29,10 +28,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("获取通知配置失败:", error);
-    return NextResponse.json(
-      { error: "获取通知配置失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "获取通知配置失败", details: error }, { status: 500 });
   }
 }
 
@@ -55,10 +51,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "缺少配置信息" }, { status: 400 });
     }
 
-    const success = await inventoryNotificationService.updateNotificationConfig(
-      memberId,
-      config,
-    );
+    const success = await inventoryNotificationService.updateNotificationConfig(memberId, config);
 
     return NextResponse.json({
       success,
@@ -66,9 +59,6 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error("更新通知配置失败:", error);
-    return NextResponse.json(
-      { error: "更新通知配置失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "更新通知配置失败", details: error }, { status: 500 });
   }
 }

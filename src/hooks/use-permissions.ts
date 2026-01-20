@@ -1,11 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import {
-  FamilyMemberRole,
-  Permission,
-  ROLE_PERMISSIONS,
-} from "@/lib/permissions";
+import { FamilyMemberRole, Permission, ROLE_PERMISSIONS } from "@/lib/permissions";
 
 export type PermissionChange = {
   permission: Permission;
@@ -23,10 +19,7 @@ export function usePermissions() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const permissionMatrix = useMemo<PermissionMatrix>(
-    () => ROLE_PERMISSIONS,
-    [],
-  );
+  const permissionMatrix = useMemo<PermissionMatrix>(() => ROLE_PERMISSIONS, []);
 
   const updateMemberPermissions = useCallback(
     async (_memberId: string, _input: UpdateMemberPermissionsInput) => {
@@ -38,7 +31,7 @@ export function usePermissions() {
         setLoading(false);
       }
     },
-    [],
+    []
   );
 
   return { permissions, loading, updateMemberPermissions, permissionMatrix };

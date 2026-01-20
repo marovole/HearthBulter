@@ -60,16 +60,16 @@ export class UnitConverter {
    */
   static toGrams(amount: number, unit: "g" | "kg" | "oz" | "lb"): number {
     switch (unit) {
-    case "g":
-      return amount;
-    case "kg":
-      return amount * 1000;
-    case "oz":
-      return amount * 28.35; // 1 oz = 28.35g
-    case "lb":
-      return amount * 453.592; // 1 lb = 453.592g
-    default:
-      return amount;
+      case "g":
+        return amount;
+      case "kg":
+        return amount * 1000;
+      case "oz":
+        return amount * 28.35; // 1 oz = 28.35g
+      case "lb":
+        return amount * 453.592; // 1 lb = 453.592g
+      default:
+        return amount;
     }
   }
 
@@ -80,7 +80,7 @@ export class UnitConverter {
   static volumeToGrams(
     amount: number,
     unit: "cup" | "tbsp" | "tsp" | "ml" | "l",
-    foodType?: string,
+    foodType?: string
   ): number {
     // 常用食物的体积到重量转换（近似值）
     const conversionTable: Record<string, Record<string, number>> = {
@@ -98,18 +98,18 @@ export class UnitConverter {
     const getValue = (key: string) => table[key] ?? 0;
 
     switch (unit) {
-    case "cup":
-      return amount * getValue("cup");
-    case "tbsp":
-      return amount * getValue("tbsp");
-    case "tsp":
-      return amount * getValue("tsp");
-    case "ml":
-      return amount * getValue("ml");
-    case "l":
-      return amount * getValue("l");
-    default:
-      return amount;
+      case "cup":
+        return amount * getValue("cup");
+      case "tbsp":
+        return amount * getValue("tbsp");
+      case "tsp":
+        return amount * getValue("tsp");
+      case "ml":
+        return amount * getValue("ml");
+      case "l":
+        return amount * getValue("l");
+      default:
+        return amount;
     }
   }
 }
@@ -123,14 +123,10 @@ export class NutritionCalculator {
    * @param foodId 食物ID
    * @param amount 重量（g）
    */
-  async calculateSingleFood(
-    foodId: string,
-    amount: number,
-  ): Promise<NutritionResult | null> {
-    const food = await convexClient.query<Doc<"foods"> | null>(
-      api.budget.getFoodById,
-      { foodId: foodId as Id<"foods"> },
-    );
+  async calculateSingleFood(foodId: string, amount: number): Promise<NutritionResult | null> {
+    const food = await convexClient.query<Doc<"foods"> | null>(api.budget.getFoodById, {
+      foodId: foodId as Id<"foods">,
+    });
 
     if (!food) {
       return null;
@@ -157,15 +153,12 @@ export class NutritionCalculator {
   async calculateBatch(inputs: NutritionInput[]): Promise<NutritionSummary> {
     // 批量查询所有食物
     const foodIds = inputs.map((input) => input.foodId);
-    const foods = await convexClient.query<Doc<"foods">[]>(
-      api.budget.getFoodsByIds,
-      { foodIds: foodIds as Id<"foods">[] },
-    );
+    const foods = await convexClient.query<Doc<"foods">[]>(api.budget.getFoodsByIds, {
+      foodIds: foodIds as Id<"foods">[],
+    });
 
     // 创建食物ID到食物对象的映射
-    const foodMap = new Map<string, Doc<"foods">>(
-      foods.map((food) => [food._id as string, food]),
-    );
+    const foodMap = new Map<string, Doc<"foods">>(foods.map((food) => [food._id as string, food]));
 
     const items: NutritionResult[] = [];
     const totals = {

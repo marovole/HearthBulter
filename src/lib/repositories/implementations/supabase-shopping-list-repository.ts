@@ -21,8 +21,7 @@ import type {
 import type { PaginatedResult, PaginationInput } from "../types/common";
 
 type ShoppingListRow = Database["public"]["Tables"]["shopping_lists"]["Row"];
-type ShoppingListItemRow =
-  Database["public"]["Tables"]["shopping_list_items"]["Row"];
+type ShoppingListItemRow = Database["public"]["Tables"]["shopping_list_items"]["Row"];
 
 /**
  * Supabase 购物清单 Repository 实现
@@ -31,15 +30,13 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = "[SupabaseShoppingListRepository]";
 
-  constructor(
-    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
-  ) {
+  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
     this.client = client;
   }
 
   async listShoppingLists(
     query: ShoppingListListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<ShoppingListDTO>> {
     const {
       planId,
@@ -55,17 +52,14 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
     // 构建 select 字符串
     let selectStr = "*";
     if (includePlan) {
-      selectStr +=
-        ", plan:meal_plans(id, name, member:family_members(id, name))";
+      selectStr += ", plan:meal_plans(id, name, member:family_members(id, name))";
     }
     if (includeItems) {
       selectStr += ", items:shopping_list_items(*, food:foods(*))";
     }
 
     // 构建查询
-    let supabaseQuery = this.client
-      .from("shopping_lists")
-      .select(selectStr, { count: "exact" });
+    let supabaseQuery = this.client.from("shopping_lists").select(selectStr, { count: "exact" });
 
     // 应用筛选条件
     if (planId) {
@@ -87,10 +81,7 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
     // 排序
     if (sort) {
       const direction = { ascending: sort.direction === "asc" };
-      supabaseQuery = supabaseQuery.order(
-        this.mapSortField(sort.field),
-        direction,
-      );
+      supabaseQuery = supabaseQuery.order(this.mapSortField(sort.field), direction);
     } else {
       supabaseQuery = supabaseQuery.order("created_at", { ascending: false });
     }
@@ -127,15 +118,14 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
 
   async getShoppingListById(
     id: string,
-    options?: ShoppingListGetOptions,
+    options?: ShoppingListGetOptions
   ): Promise<ShoppingListDTO | null> {
     const { includePlan = false, includeItems = false } = options || {};
 
     // 构建 select 字符串
     let selectStr = "*";
     if (includePlan) {
-      selectStr +=
-        ", plan:meal_plans(id, name, member:family_members(id, name))";
+      selectStr += ", plan:meal_plans(id, name, member:family_members(id, name))";
     }
     if (includeItems) {
       selectStr += ", items:shopping_list_items(*, food:foods(*))";
@@ -166,10 +156,7 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
     return mapped;
   }
 
-  async updateShoppingList(
-    id: string,
-    payload: UpdateShoppingListDTO,
-  ): Promise<ShoppingListDTO> {
+  async updateShoppingList(id: string, payload: UpdateShoppingListDTO): Promise<ShoppingListDTO> {
     const updateData: Partial<ShoppingListRow> = {
       updated_at: new Date().toISOString(),
     };
@@ -194,10 +181,7 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
 
   async deleteShoppingList(id: string): Promise<void> {
     // Supabase 使用外键级联删除配置，直接删除购物清单即可
-    const { error } = await this.client
-      .from("shopping_lists")
-      .delete()
-      .eq("id", id);
+    const { error } = await this.client.from("shopping_lists").delete().eq("id", id);
 
     if (error) {
       this.handleError("deleteShoppingList", error);
@@ -207,14 +191,13 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
   async updateShoppingListItem(
     listId: string,
     itemId: string,
-    payload: UpdateShoppingListItemDTO,
+    payload: UpdateShoppingListItemDTO
   ): Promise<ShoppingListItemDTO> {
     const updateData: Partial<ShoppingListItemRow> = {
       updated_at: new Date().toISOString(),
     };
 
-    if (payload.purchased !== undefined)
-      updateData.purchased = payload.purchased;
+    if (payload.purchased !== undefined) updateData.purchased = payload.purchased;
     if (payload.quantity !== undefined) updateData.quantity = payload.quantity;
     if (payload.notes !== undefined) updateData.notes = payload.notes;
 
@@ -235,7 +218,7 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
 
   async completeShoppingList(
     listId: string,
-    payload: CompleteShoppingListDTO,
+    payload: CompleteShoppingListDTO
   ): Promise<ShoppingListDTO> {
     const updateData: Partial<ShoppingListRow> = {
       status: "COMPLETED",
@@ -286,9 +269,7 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
    * 排序购物项
    * 按 category -> purchased -> food.name
    */
-  private sortShoppingListItems(
-    items: ShoppingListItemDTO[],
-  ): ShoppingListItemDTO[] {
+  private sortShoppingListItems(items: ShoppingListItemDTO[]): ShoppingListItemDTO[] {
     return items.sort((a, b) => {
       // 按分类排序
       if (a.category !== b.category) {
@@ -322,15 +303,15 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
       deletedAt: row.deleted_at ? new Date(row.deleted_at) : undefined,
       plan: rowWithRelations.plan
         ? {
-          id: rowWithRelations.plan.id,
-          name: rowWithRelations.plan.name,
-          member: rowWithRelations.plan.member
-            ? {
-              id: rowWithRelations.plan.member.id,
-              name: rowWithRelations.plan.member.name,
-            }
-            : undefined,
-        }
+            id: rowWithRelations.plan.id,
+            name: rowWithRelations.plan.name,
+            member: rowWithRelations.plan.member
+              ? {
+                  id: rowWithRelations.plan.member.id,
+                  name: rowWithRelations.plan.member.name,
+                }
+              : undefined,
+          }
         : undefined,
       items: rowWithRelations.items
         ? rowWithRelations.items.map(this.mapShoppingListItemRow)
@@ -341,9 +322,7 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
   /**
    * 映射 ShoppingListItemRow -> ShoppingListItemDTO
    */
-  private mapShoppingListItemRow(
-    row: ShoppingListItemRow,
-  ): ShoppingListItemDTO {
+  private mapShoppingListItemRow(row: ShoppingListItemRow): ShoppingListItemDTO {
     const rowWithFood = row as any;
 
     return {
@@ -359,12 +338,12 @@ export class SupabaseShoppingListRepository implements ShoppingListRepository {
       updatedAt: new Date(row.updated_at),
       food: rowWithFood.food
         ? {
-          id: rowWithFood.food.id,
-          name: rowWithFood.food.name,
-          category: rowWithFood.food.category || undefined,
-          defaultUnit: rowWithFood.food.default_unit || undefined,
-          imageUrl: rowWithFood.food.image_url || undefined,
-        }
+            id: rowWithFood.food.id,
+            name: rowWithFood.food.name,
+            category: rowWithFood.food.category || undefined,
+            defaultUnit: rowWithFood.food.default_unit || undefined,
+            imageUrl: rowWithFood.food.image_url || undefined,
+          }
         : undefined,
     };
   }

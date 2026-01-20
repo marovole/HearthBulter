@@ -5,12 +5,7 @@ import type { SyncResult } from "@/types/wearable-devices";
 import { healthKitService } from "./healthkit-service";
 import { huaweiHealthService } from "./huawei-health-service";
 
-export type SyncStatus =
-  | "PENDING"
-  | "SYNCING"
-  | "SUCCESS"
-  | "FAILED"
-  | "DISABLED";
+export type SyncStatus = "PENDING" | "SYNCING" | "SUCCESS" | "FAILED" | "DISABLED";
 
 type DeviceConnectionRecord = {
   _id: Id<"deviceConnections">;
@@ -57,7 +52,7 @@ export class DeviceSyncService {
       () => {
         this.syncAllDevices();
       },
-      intervalMinutes * 60 * 1000,
+      intervalMinutes * 60 * 1000
     );
 
     this.isRunning = true;
@@ -82,14 +77,12 @@ export class DeviceSyncService {
     try {
       const activeDevices = await convexClient.query<DeviceConnectionRecord[]>(
         api.devices.listActiveAutoSync,
-        {},
+        {}
       );
 
       console.log(`找到 ${activeDevices.length} 个活跃设备`);
 
-      const syncPromises = activeDevices.map((device) =>
-        this.syncSingleDevice(device),
-      );
+      const syncPromises = activeDevices.map((device) => this.syncSingleDevice(device));
 
       const deviceResults = await Promise.all(syncPromises);
       results.push(...deviceResults);
@@ -99,7 +92,7 @@ export class DeviceSyncService {
       const duration = endTime.getTime() - startTime.getTime();
 
       console.log(
-        `设备同步完成，耗时 ${duration}ms，成功 ${summary.successCount}/${summary.totalCount}`,
+        `设备同步完成，耗时 ${duration}ms，成功 ${summary.successCount}/${summary.totalCount}`
       );
 
       const errors = results.flatMap((result) => result.errors ?? []);
@@ -137,9 +130,7 @@ export class DeviceSyncService {
     }
   }
 
-  private async syncSingleDevice(
-    device: DeviceConnectionRecord,
-  ): Promise<DeviceSyncResult> {
+  private async syncSingleDevice(device: DeviceConnectionRecord): Promise<DeviceSyncResult> {
     const startTime = new Date();
 
     try {
@@ -166,20 +157,18 @@ export class DeviceSyncService {
       });
 
       let syncResult: SyncResult;
-      const lastSyncDate = device.lastSyncAt
-        ? new Date(device.lastSyncAt)
-        : undefined;
+      const lastSyncDate = device.lastSyncAt ? new Date(device.lastSyncAt) : undefined;
       if (device.platform === "APPLE_HEALTHKIT") {
         syncResult = await healthKitService.syncAllData(
           device.memberId as string,
           device._id,
-          lastSyncDate,
+          lastSyncDate
         );
       } else if (device.platform === "HUAWEI_HEALTH") {
         syncResult = await huaweiHealthService.syncAllData(
           device.memberId as string,
           device._id,
-          lastSyncDate,
+          lastSyncDate
         );
       } else {
         throw new Error(`不支持的平台: ${device.platform}`);
@@ -285,10 +274,7 @@ export class DeviceSyncService {
     const totalCount = results.length;
     const successCount = results.filter((r) => r.success).length;
     const errorCount = totalCount - successCount;
-    const syncedDataCount = results.reduce(
-      (sum, result) => sum + result.syncedDataCount,
-      0,
-    );
+    const syncedDataCount = results.reduce((sum, result) => sum + result.syncedDataCount, 0);
 
     return {
       totalCount,
@@ -303,28 +289,22 @@ export class DeviceSyncService {
 
     const devices = await convexClient.query<DeviceConnectionRecord[]>(
       api.devices.listActiveAutoSync,
-      {},
+      {}
     );
 
     const recentSyncs = devices.filter((device) =>
-      device.lastSyncAt
-        ? isAfter(new Date(device.lastSyncAt), thirtyMinutesAgo)
-        : false,
+      device.lastSyncAt ? isAfter(new Date(device.lastSyncAt), thirtyMinutesAgo) : false
     );
 
     const staleDevices = devices.filter((device) =>
-      device.lastSyncAt
-        ? isAfter(thirtyMinutesAgo, new Date(device.lastSyncAt))
-        : true,
+      device.lastSyncAt ? isAfter(thirtyMinutesAgo, new Date(device.lastSyncAt)) : true
     );
 
     return {
       totalDevices: devices.length,
       recentlySynced: recentSyncs.length,
       staleDevices: staleDevices.length,
-      lastSyncTime: devices[0]?.lastSyncAt
-        ? new Date(devices[0].lastSyncAt)
-        : null,
+      lastSyncTime: devices[0]?.lastSyncAt ? new Date(devices[0].lastSyncAt) : null,
       status: this.isRunning ? "RUNNING" : "STOPPED",
       devices: devices.map((device) => ({
         id: device._id,

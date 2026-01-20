@@ -11,12 +11,7 @@ export interface ConsentType {
   name: string;
   description: string;
   required: boolean;
-  category:
-    | "data_processing"
-    | "ai_analysis"
-    | "health_sharing"
-    | "marketing"
-    | "research";
+  category: "data_processing" | "ai_analysis" | "health_sharing" | "marketing" | "research";
   version: string;
   content: {
     summary: string;
@@ -87,8 +82,7 @@ class ConsentManagerService {
         version: "1.0",
         validDays: 365, // 一年有效
         content: {
-          summary:
-            "我们将使用AI技术分析您的健康数据，为您提供个性化的营养和健康建议。",
+          summary: "我们将使用AI技术分析您的健康数据，为您提供个性化的营养和健康建议。",
           details: `
             1. 数据处理：您的健康数据将被匿名化处理，仅用于AI分析
             2. AI分析：使用先进的AI模型分析您的健康状况和饮食习惯
@@ -171,7 +165,7 @@ class ConsentManagerService {
   async requestConsent(
     userId: string,
     request: ConsentRequest,
-    context?: { ipAddress?: string; userAgent?: string },
+    context?: { ipAddress?: string; userAgent?: string }
   ): Promise<ConsentResult> {
     const consentType = request.type;
     const existingConsent = await this.getUserConsent(userId, consentType.id);
@@ -203,7 +197,7 @@ class ConsentManagerService {
     userId: string,
     consentId: string,
     context?: Record<string, any>,
-    clientInfo?: { ipAddress?: string; userAgent?: string },
+    clientInfo?: { ipAddress?: string; userAgent?: string }
   ): Promise<UserConsent> {
     const consentType = this.consentTypes.get(consentId);
     if (!consentType) {
@@ -223,9 +217,7 @@ class ConsentManagerService {
     // 设置过期时间
     if (consentType.validDays > 0) {
       consent.expiresAt = new Date();
-      consent.expiresAt.setDate(
-        consent.expiresAt.getDate() + consentType.validDays,
-      );
+      consent.expiresAt.setDate(consent.expiresAt.getDate() + consentType.validDays);
     }
 
     // 在实际应用中，这里会保存到数据库
@@ -268,7 +260,7 @@ class ConsentManagerService {
    */
   async checkMultipleConsents(
     userId: string,
-    consentIds: string[],
+    consentIds: string[]
   ): Promise<Record<string, boolean>> {
     const results: Record<string, boolean> = {};
 
@@ -298,7 +290,7 @@ class ConsentManagerService {
    */
   getConsentTypesByCategory(category: ConsentType["category"]): ConsentType[] {
     return Array.from(this.consentTypes.values()).filter(
-      (consent) => consent.category === category,
+      (consent) => consent.category === category
     );
   }
 
@@ -315,17 +307,14 @@ class ConsentManagerService {
   /**
    * 获取用户同意（数据库操作）
    */
-  private async getUserConsent(
-    userId: string,
-    consentId: string,
-  ): Promise<UserConsent | null> {
+  private async getUserConsent(userId: string, consentId: string): Promise<UserConsent | null> {
     try {
       const dbConsent = await convexClient.query<Doc<"userConsents"> | null>(
         api.consents.getByUserAndConsent,
         {
           userId: userId as Id<"users">,
           consentId,
-        },
+        }
       );
 
       if (!dbConsent) {
@@ -337,9 +326,7 @@ class ConsentManagerService {
         userId: dbConsent.userId,
         granted: dbConsent.granted,
         grantedAt: new Date(dbConsent.grantedAt),
-        expiresAt: dbConsent.expiresAt
-          ? new Date(dbConsent.expiresAt)
-          : undefined,
+        expiresAt: dbConsent.expiresAt ? new Date(dbConsent.expiresAt) : undefined,
         ipAddress: dbConsent.ipAddress,
         userAgent: dbConsent.userAgent,
         context: dbConsent.context as Record<string, any> | undefined,
@@ -374,10 +361,7 @@ class ConsentManagerService {
   /**
    * 删除用户同意（数据库操作）
    */
-  private async deleteUserConsent(
-    userId: string,
-    consentId: string,
-  ): Promise<void> {
+  private async deleteUserConsent(userId: string, consentId: string): Promise<void> {
     try {
       await convexClient.mutation(api.consents.deleteConsent, {
         userId: userId as Id<"users">,
@@ -397,7 +381,7 @@ export const consentManager = new ConsentManagerService();
 export async function requireConsent(
   userId: string,
   consentId: string,
-  context?: Record<string, any>,
+  context?: Record<string, any>
 ): Promise<boolean> {
   const consentType = consentManager.getConsentType(consentId);
   if (!consentType) {
@@ -415,7 +399,7 @@ export async function requireConsent(
 export async function grantUserConsent(
   userId: string,
   consentId: string,
-  context?: Record<string, any>,
+  context?: Record<string, any>
 ): Promise<void> {
   await consentManager.grantConsent(userId, consentId, context);
 }

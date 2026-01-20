@@ -24,9 +24,7 @@ export async function runAnomalyDetection(): Promise<void> {
       return;
     }
 
-    logger.info(
-      `Running anomaly detection for ${activeMembers.length} active members`,
-    );
+    logger.info(`Running anomaly detection for ${activeMembers.length} active members`);
 
     let totalAnomalies = 0;
     let successCount = 0;
@@ -39,9 +37,7 @@ export async function runAnomalyDetection(): Promise<void> {
         totalAnomalies += anomalies.length;
 
         if (anomalies.length > 0) {
-          logger.info(
-            `Found ${anomalies.length} anomalies for member ${member.name}`,
-          );
+          logger.info(`Found ${anomalies.length} anomalies for member ${member.name}`);
 
           // 记录异常到数据库（如果detectAnomalies还没有做的话）
           for (const anomaly of anomalies) {
@@ -51,16 +47,13 @@ export async function runAnomalyDetection(): Promise<void> {
 
         successCount++;
       } catch (error) {
-        logger.error(
-          `Failed to run anomaly detection for member ${member.id}:`,
-          error,
-        );
+        logger.error(`Failed to run anomaly detection for member ${member.id}:`, error);
         errorCount++;
       }
     }
 
     logger.info(
-      `Anomaly detection completed: ${successCount} success, ${errorCount} errors, ${totalAnomalies} total anomalies found`,
+      `Anomaly detection completed: ${successCount} success, ${errorCount} errors, ${totalAnomalies} total anomalies found`
     );
   } catch (error) {
     logger.error("Anomaly detection scan failed:", error);
@@ -73,21 +66,17 @@ export async function runAnomalyDetection(): Promise<void> {
  */
 async function getActiveMembers() {
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const members = await convexClient.query<Doc<"familyMembers">[]>(
-    api.members.listAll,
-    {},
-  );
+  const members = await convexClient.query<Doc<"familyMembers">[]>(api.members.listAll, {});
 
   const activeMembers: Array<{ id: string; name: string }> = [];
 
   for (const member of members) {
-    const healthData = await convexClient.query<Doc<"healthData">[]>(
-      api.health.getMetrics,
-      { memberId: member._id as Id<"familyMembers"> },
-    );
+    const healthData = await convexClient.query<Doc<"healthData">[]>(api.health.getMetrics, {
+      memberId: member._id as Id<"familyMembers">,
+    });
 
     const hasRecentData = healthData.some(
-      (record) => (record.measuredAt ?? record.createdAt ?? 0) >= cutoff,
+      (record) => (record.measuredAt ?? record.createdAt ?? 0) >= cutoff
     );
 
     if (hasRecentData) {
@@ -113,7 +102,7 @@ async function saveAnomaly(
     expectedMin?: number;
     expectedMax?: number;
     deviation?: number;
-  },
+  }
 ) {
   // 检查是否已存在相同的异常
   const now = Date.now();
@@ -124,17 +113,15 @@ async function saveAnomaly(
       startDate: now - 24 * 60 * 60 * 1000,
       endDate: now,
       limit: 50,
-    },
+    }
   );
 
   const existingAnomaly = recentAnomalies.find(
-    (record) => record.title === anomaly.title && record.status === "PENDING",
+    (record) => record.title === anomaly.title && record.status === "PENDING"
   );
 
   if (existingAnomaly) {
-    logger.debug(
-      `Anomaly already exists for member ${memberId}: ${anomaly.title}`,
-    );
+    logger.debug(`Anomaly already exists for member ${memberId}: ${anomaly.title}`);
     return;
   }
 
@@ -152,7 +139,5 @@ async function saveAnomaly(
     detectedAt: now,
   });
 
-  logger.debug(
-    `Saved anomaly for member ${memberId}: ${anomaly.title} (${anomaly.severity})`,
-  );
+  logger.debug(`Saved anomaly for member ${memberId}: ${anomaly.title} (${anomaly.severity})`);
 }

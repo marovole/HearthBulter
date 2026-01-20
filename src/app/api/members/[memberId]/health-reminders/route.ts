@@ -13,13 +13,12 @@ import { z } from "zod";
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(
-  value: T | T[] | null | undefined,
-): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
+  Array.isArray(value) ? value[0] : (value ?? undefined);
 
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -34,7 +33,7 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `,
+    `
     )
     .eq("id", memberId)
     .is("deletedAt", null)
@@ -76,10 +75,7 @@ const reminderSchema = z.object({
   enabled: z.boolean().optional(),
   hour: z.number().int().min(0).max(23),
   minute: z.number().int().min(0).max(59).optional().default(0),
-  daysOfWeek: z
-    .array(z.number().int().min(0).max(6))
-    .optional()
-    .default([0, 1, 2, 3, 4, 5, 6]),
+  daysOfWeek: z.array(z.number().int().min(0).max(6)).optional().default([0, 1, 2, 3, 4, 5, 6]),
   message: z.string().max(200).optional().nullable(),
 });
 
@@ -91,7 +87,7 @@ const reminderSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -105,10 +101,7 @@ export async function GET(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的提醒配置" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的提醒配置" }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -131,7 +124,7 @@ export async function GET(
           daysOfWeek: JSON.parse(r.daysOfWeek || "[]"),
         })),
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取提醒配置失败:", error);
@@ -147,7 +140,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -161,10 +154,7 @@ export async function POST(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限设置该成员的提醒配置" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限设置该成员的提醒配置" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -173,12 +163,11 @@ export async function POST(
     if (!validation.success) {
       return NextResponse.json(
         { error: "输入数据无效", details: validation.error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    const { reminderType, enabled, hour, minute, daysOfWeek, message } =
-      validation.data;
+    const { reminderType, enabled, hour, minute, daysOfWeek, message } = validation.data;
 
     const supabase = SupabaseClientManager.getInstance();
     const now = new Date().toISOString();
@@ -201,7 +190,7 @@ export async function POST(
         {
           onConflict: "memberId,reminderType",
           ignoreDuplicates: false,
-        },
+        }
       )
       .select()
       .single();
@@ -219,7 +208,7 @@ export async function POST(
           daysOfWeek: JSON.parse(reminder.daysOfWeek || "[]"),
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("保存提醒配置失败:", error);

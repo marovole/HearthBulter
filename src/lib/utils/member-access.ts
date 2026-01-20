@@ -26,7 +26,7 @@ interface MemberAccessResult {
 
 export async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<MemberAccessResult> {
   const member = (await neonAdapter.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },

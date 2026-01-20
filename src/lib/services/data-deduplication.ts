@@ -52,7 +52,7 @@ const getSourcePriority = (source: unknown): number => {
  */
 export async function checkDataDuplication(
   inputData: HealthDataInput,
-  memberId: string,
+  memberId: string
 ): Promise<DeduplicationResult> {
   // 确定检查的时间窗口
   const timeWindow = getTimeWindowForData(inputData);
@@ -65,11 +65,11 @@ export async function checkDataDuplication(
       memberId: memberId as Id<"familyMembers">,
       startDate: windowStart.getTime(),
       endDate: windowEnd.getTime(),
-    },
+    }
   );
 
   const filteredRecords = existingRecords.filter((record) =>
-    hasSameMetricsWithInput(record, inputData),
+    hasSameMetricsWithInput(record, inputData)
   );
 
   if (filteredRecords.length === 0) {
@@ -97,10 +97,7 @@ function getTimeWindowForData(data: HealthDataInput): number {
   if (data.heartRate !== null && data.heartRate !== undefined) {
     return DEDUPLICATION_WINDOWS.HEART_RATE;
   }
-  if (
-    data.bloodPressureSystolic !== null &&
-    data.bloodPressureSystolic !== undefined
-  ) {
+  if (data.bloodPressureSystolic !== null && data.bloodPressureSystolic !== undefined) {
     return DEDUPLICATION_WINDOWS.BLOOD_PRESSURE;
   }
 
@@ -108,10 +105,7 @@ function getTimeWindowForData(data: HealthDataInput): number {
   return 1;
 }
 
-function hasSameMetricsWithInput(
-  record: HealthDataRecord,
-  data: HealthDataInput,
-): boolean {
+function hasSameMetricsWithInput(record: HealthDataRecord, data: HealthDataInput): boolean {
   const hasWeight =
     data.weight !== null &&
     data.weight !== undefined &&
@@ -136,10 +130,10 @@ function hasSameMetricsWithInput(
  */
 function analyzeConflicts(
   newData: HealthDataInput,
-  existingRecords: HealthDataRecord[],
+  existingRecords: HealthDataRecord[]
 ): DeduplicationResult {
   const sortedRecords = [...existingRecords].sort(
-    (a, b) => getSourcePriority(b.source) - getSourcePriority(a.source),
+    (a, b) => getSourcePriority(b.source) - getSourcePriority(a.source)
   );
 
   const highestPriorityRecord = sortedRecords[0];
@@ -172,7 +166,7 @@ function analyzeConflicts(
   }
 
   const samePriorityRecords = sortedRecords.filter(
-    (record) => getSourcePriority(record.source) === newSourcePriority,
+    (record) => getSourcePriority(record.source) === newSourcePriority
   );
 
   if (samePriorityRecords.length > 0) {
@@ -214,14 +208,13 @@ function analyzeConflicts(
  */
 export async function batchDeduplicate(
   inputDataList: HealthDataInput[],
-  memberId: string,
+  memberId: string
 ): Promise<DeduplicationResult[]> {
   const results: DeduplicationResult[] = [];
 
   // 按时间排序输入数据，确保较新的数据后处理
   const sortedInput = inputDataList.sort(
-    (a, b) =>
-      new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime(),
+    (a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime()
   );
 
   for (const inputData of sortedInput) {
@@ -244,7 +237,7 @@ export async function cleanupDuplicateData(memberId: string) {
     {
       memberId: memberId as Id<"familyMembers">,
       startDate: thirtyDaysAgo.getTime(),
-    },
+    }
   );
 
   if (recentData.length === 0) {
@@ -298,7 +291,7 @@ export async function cleanupDuplicateData(memberId: string) {
 
       if (toDeleteFromGroup.length > 0) {
         warnings.push(
-          `发现 ${toDeleteFromGroup.length + 1} 条重复数据于 ${currentDate.toISOString()}，保留 ${toKeep.source} 来源的数据`,
+          `发现 ${toDeleteFromGroup.length + 1} 条重复数据于 ${currentDate.toISOString()}，保留 ${toKeep.source} 来源的数据`
         );
       }
     }
@@ -319,25 +312,13 @@ export async function cleanupDuplicateData(memberId: string) {
 /**
  * 检查两条记录是否有相同的健康指标
  */
-function hasSameMetrics(
-  record1: HealthDataRecord,
-  record2: HealthDataRecord,
-): boolean {
-  const metrics: Array<keyof HealthDataRecord> = [
-    "weight",
-    "heartRate",
-    "bloodPressureSystolic",
-  ];
+function hasSameMetrics(record1: HealthDataRecord, record2: HealthDataRecord): boolean {
+  const metrics: Array<keyof HealthDataRecord> = ["weight", "heartRate", "bloodPressureSystolic"];
 
   return metrics.some((metric) => {
     const value1 = record1[metric];
     const value2 = record2[metric];
-    return (
-      value1 !== null &&
-      value2 !== null &&
-      value1 !== undefined &&
-      value2 !== undefined
-    );
+    return value1 !== null && value2 !== null && value1 !== undefined && value2 !== undefined;
   });
 }
 
@@ -347,13 +328,10 @@ function hasSameMetrics(
 export async function getDeduplicationStats(memberId: string) {
   const thirtyDaysAgo = subHours(new Date(), 24 * 30);
 
-  const records = await convexClient.query<HealthDataRecord[]>(
-    api.health.listByMemberDateRange,
-    {
-      memberId: memberId as Id<"familyMembers">,
-      startDate: thirtyDaysAgo.getTime(),
-    },
-  );
+  const records = await convexClient.query<HealthDataRecord[]>(api.health.listByMemberDateRange, {
+    memberId: memberId as Id<"familyMembers">,
+    startDate: thirtyDaysAgo.getTime(),
+  });
 
   const sourceCounts = records.reduce<Record<string, number>>((acc, record) => {
     acc[record.source] = (acc[record.source] ?? 0) + 1;
@@ -367,9 +345,7 @@ export async function getDeduplicationStats(memberId: string) {
     sourceBreakdown: Object.entries(sourceCounts).map(([source, count]) => ({
       source,
       count,
-      percentage: totalRecords
-        ? ((count / totalRecords) * 100).toFixed(1)
-        : "0.0",
+      percentage: totalRecords ? ((count / totalRecords) * 100).toFixed(1) : "0.0",
     })),
   };
 }

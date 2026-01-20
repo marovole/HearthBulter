@@ -80,10 +80,7 @@ const FOOD_TRANSLATIONS: Record<string, string> = {
 /**
  * 根据营养物ID获取营养素值
  */
-function getNutrientValue(
-  nutrients: USDAFoodNutrient[],
-  nutrientId: number,
-): number | undefined {
+function getNutrientValue(nutrients: USDAFoodNutrient[], nutrientId: number): number | undefined {
   const nutrient = nutrients.find((n) => n.nutrientId === nutrientId);
   return nutrient?.value;
 }
@@ -157,7 +154,7 @@ function mapUSDAToLocal(usdaFood: USDAFood): Omit<FoodData, "id"> {
 function translateToChinese(englishName: string): string {
   // 反转映射表查找
   const entry = Object.entries(FOOD_TRANSLATIONS).find(
-    ([_, en]) => en.toLowerCase() === englishName.toLowerCase(),
+    ([_, en]) => en.toLowerCase() === englishName.toLowerCase()
   );
   return entry ? entry[0] : englishName;
 }
@@ -174,46 +171,22 @@ function translateToEnglish(chineseName: string): string {
  */
 function inferCategory(description: string): string {
   const desc = description.toLowerCase();
-  if (
-    desc.includes("chicken") ||
-    desc.includes("beef") ||
-    desc.includes("pork")
-  ) {
+  if (desc.includes("chicken") || desc.includes("beef") || desc.includes("pork")) {
     return "PROTEIN";
   }
-  if (
-    desc.includes("salmon") ||
-    desc.includes("shrimp") ||
-    desc.includes("fish")
-  ) {
+  if (desc.includes("salmon") || desc.includes("shrimp") || desc.includes("fish")) {
     return "SEAFOOD";
   }
-  if (
-    desc.includes("milk") ||
-    desc.includes("cheese") ||
-    desc.includes("yogurt")
-  ) {
+  if (desc.includes("milk") || desc.includes("cheese") || desc.includes("yogurt")) {
     return "DAIRY";
   }
-  if (
-    desc.includes("broccoli") ||
-    desc.includes("spinach") ||
-    desc.includes("lettuce")
-  ) {
+  if (desc.includes("broccoli") || desc.includes("spinach") || desc.includes("lettuce")) {
     return "VEGETABLES";
   }
-  if (
-    desc.includes("apple") ||
-    desc.includes("banana") ||
-    desc.includes("orange")
-  ) {
+  if (desc.includes("apple") || desc.includes("banana") || desc.includes("orange")) {
     return "FRUITS";
   }
-  if (
-    desc.includes("rice") ||
-    desc.includes("wheat") ||
-    desc.includes("oats")
-  ) {
+  if (desc.includes("rice") || desc.includes("wheat") || desc.includes("oats")) {
     return "GRAINS";
   }
   return "OTHER";
@@ -242,9 +215,7 @@ export class USDAService {
   constructor(apiKey?: string) {
     this.apiKey = apiKey || process.env.USDA_API_KEY || "";
     if (!this.apiKey) {
-      console.warn(
-        "USDA_API_KEY not configured. USDA features will be limited.",
-      );
+      console.warn("USDA_API_KEY not configured. USDA features will be limited.");
     }
   }
 
@@ -254,11 +225,7 @@ export class USDAService {
    * @param pageSize 每页结果数（默认50）
    * @param pageNumber 页码（默认1）
    */
-  async searchFoods(
-    query: string,
-    pageSize = 50,
-    pageNumber = 1,
-  ): Promise<USDASearchResponse> {
+  async searchFoods(query: string, pageSize = 50, pageNumber = 1): Promise<USDASearchResponse> {
     if (!this.apiKey) {
       throw new Error("USDA API key is not configured");
     }
@@ -287,16 +254,12 @@ export class USDAService {
           if (response.status === 429) {
             // Rate limit exceeded
             const retryAfter = response.headers.get("Retry-After");
-            const delay = retryAfter
-              ? parseInt(retryAfter) * 1000
-              : this.retryDelay * attempt;
+            const delay = retryAfter ? parseInt(retryAfter) * 1000 : this.retryDelay * attempt;
             await this.sleep(delay);
             continue;
           }
 
-          throw new Error(
-            `USDA API error: ${response.status} ${response.statusText}`,
-          );
+          throw new Error(`USDA API error: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -310,7 +273,7 @@ export class USDAService {
     }
 
     throw new Error(
-      `Failed to search USDA API after ${this.maxRetries} attempts: ${lastError?.message}`,
+      `Failed to search USDA API after ${this.maxRetries} attempts: ${lastError?.message}`
     );
   }
 
@@ -338,16 +301,12 @@ export class USDAService {
         if (!response.ok) {
           if (response.status === 429) {
             const retryAfter = response.headers.get("Retry-After");
-            const delay = retryAfter
-              ? parseInt(retryAfter) * 1000
-              : this.retryDelay * attempt;
+            const delay = retryAfter ? parseInt(retryAfter) * 1000 : this.retryDelay * attempt;
             await this.sleep(delay);
             continue;
           }
 
-          throw new Error(
-            `USDA API error: ${response.status} ${response.statusText}`,
-          );
+          throw new Error(`USDA API error: ${response.status} ${response.statusText}`);
         }
 
         return (await response.json()) as USDAFood;
@@ -360,17 +319,14 @@ export class USDAService {
     }
 
     throw new Error(
-      `Failed to fetch USDA food after ${this.maxRetries} attempts: ${lastError?.message}`,
+      `Failed to fetch USDA food after ${this.maxRetries} attempts: ${lastError?.message}`
     );
   }
 
   /**
    * 搜索食物并映射为本地格式
    */
-  async searchAndMapFoods(
-    query: string,
-    limit = 10,
-  ): Promise<Omit<FoodData, "id">[]> {
+  async searchAndMapFoods(query: string, limit = 10): Promise<Omit<FoodData, "id">[]> {
     const response = await this.searchFoods(query, limit, 1);
     return response.foods.map(mapUSDAToLocal);
   }

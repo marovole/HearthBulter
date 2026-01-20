@@ -10,10 +10,7 @@ import type {
   HealthGoalDTO,
   RecipeSummaryDTO,
 } from "@/lib/repositories/types/recommendation";
-import {
-  RecipeRecommendation,
-  RecommendationContext,
-} from "./recommendation-engine";
+import { RecipeRecommendation, RecommendationContext } from "./recommendation-engine";
 
 interface RecipeFeatures {
   recipeId: string;
@@ -58,18 +55,14 @@ export class ContentFilter {
 
   async getRecommendations(
     context: RecommendationContext,
-    limit: number = 10,
+    limit: number = 10
   ): Promise<RecipeRecommendation[]> {
     const userProfile = await this.getUserProfile(context.memberId);
     const candidateRecipes = await this.getCandidateRecipes(context, limit * 3);
     const recipeFeatures = await this.extractRecipeFeatures(candidateRecipes);
 
     const recommendations = recipeFeatures.map((features) => {
-      const score = this.calculateContentSimilarity(
-        features,
-        userProfile,
-        context,
-      );
+      const score = this.calculateContentSimilarity(features, userProfile, context);
 
       return {
         recipeId: features.recipeId,
@@ -91,22 +84,16 @@ export class ContentFilter {
 
   async getSimilarRecipes(
     targetRecipe: RecipeDetailDTO,
-    limit: number = 5,
+    limit: number = 5
   ): Promise<RecipeRecommendation[]> {
     const targetFeatures = await this.extractSingleRecipeFeatures(targetRecipe);
 
-    const similarRecipes = await this.repository.getSimilarRecipes(
-      targetRecipe.id,
-      limit * 2,
-    );
+    const similarRecipes = await this.repository.getSimilarRecipes(targetRecipe.id, limit * 2);
 
     const recommendations = await Promise.all(
       similarRecipes.map(async (recipe) => {
         const features = await this.extractSingleRecipeFeatures(recipe);
-        const similarity = this.calculateRecipeSimilarity(
-          targetFeatures,
-          features,
-        );
+        const similarity = this.calculateRecipeSimilarity(targetFeatures, features);
 
         return {
           recipeId: recipe.id,
@@ -121,7 +108,7 @@ export class ContentFilter {
             seasonalMatch: 0,
           },
         };
-      }),
+      })
     );
 
     return recommendations.sort((a, b) => b.score - a.score).slice(0, limit);
@@ -141,10 +128,7 @@ export class ContentFilter {
       }),
     ]);
 
-    const learnedPreferences = this.learnFromUserBehavior(
-      behavior.ratings,
-      behavior.favorites,
-    );
+    const learnedPreferences = this.learnFromUserBehavior(behavior.ratings, behavior.favorites);
 
     const profile: UserProfile = {
       preferredIngredients: [
@@ -152,10 +136,7 @@ export class ContentFilter {
         ...learnedPreferences.preferredIngredients,
       ],
       avoidedIngredients: userPreference?.avoidedIngredients ?? [],
-      nutritionPreferences: this.buildNutritionPreferences(
-        healthGoal,
-        userPreference,
-      ),
+      nutritionPreferences: this.buildNutritionPreferences(healthGoal, userPreference),
       cookingPreferences: {
         maxTime: userPreference?.maxCookTimeMinutes ?? undefined,
         preferredDifficulty: undefined,
@@ -171,7 +152,7 @@ export class ContentFilter {
 
   private learnFromUserBehavior(
     ratings: RecipeRatingDetailDTO[],
-    favorites: RecipeFavoriteDetailDTO[],
+    favorites: RecipeFavoriteDetailDTO[]
   ) {
     const allRecipes = [
       ...ratings.map((rating) => rating.recipe),
@@ -185,15 +166,12 @@ export class ContentFilter {
       recipe.ingredientsDetailed?.forEach((ingredient) => {
         ingredientCount.set(
           ingredient.food.name,
-          (ingredientCount.get(ingredient.food.name) || 0) + 1,
+          (ingredientCount.get(ingredient.food.name) || 0) + 1
         );
       });
 
       if (recipe.category) {
-        categoryCount.set(
-          recipe.category,
-          (categoryCount.get(recipe.category) || 0) + 1,
-        );
+        categoryCount.set(recipe.category, (categoryCount.get(recipe.category) || 0) + 1);
       }
     });
 
@@ -215,7 +193,7 @@ export class ContentFilter {
 
   private buildNutritionPreferences(
     healthGoal: HealthGoalDTO | null,
-    userPreference: UserPreferenceDTO | null,
+    userPreference: UserPreferenceDTO | null
   ) {
     const preferences: {
       maxCalories?: number;
@@ -226,30 +204,27 @@ export class ContentFilter {
 
     if (healthGoal) {
       switch (healthGoal.goalType) {
-      case "LOSE_WEIGHT":
-        preferences.maxCalories = 400;
-        break;
-      case "GAIN_MUSCLE":
-        preferences.minProtein = 25;
-        preferences.maxCalories = 800;
-        break;
-      case "MAINTAIN":
-        preferences.maxCalories = 600;
-        preferences.minProtein = 15;
-        break;
-      case "IMPROVE_HEALTH":
-        preferences.maxFat = 20;
-        preferences.maxCalories = 500;
-        break;
+        case "LOSE_WEIGHT":
+          preferences.maxCalories = 400;
+          break;
+        case "GAIN_MUSCLE":
+          preferences.minProtein = 25;
+          preferences.maxCalories = 800;
+          break;
+        case "MAINTAIN":
+          preferences.maxCalories = 600;
+          preferences.minProtein = 15;
+          break;
+        case "IMPROVE_HEALTH":
+          preferences.maxFat = 20;
+          preferences.maxCalories = 500;
+          break;
       }
     }
 
     if (userPreference) {
       if (userPreference.costLevel === "LOW") {
-        preferences.maxCalories = Math.min(
-          preferences.maxCalories ?? 9999,
-          500,
-        );
+        preferences.maxCalories = Math.min(preferences.maxCalories ?? 9999, 500);
       }
     }
 
@@ -258,7 +233,7 @@ export class ContentFilter {
 
   private async getCandidateRecipes(
     context: RecommendationContext,
-    limit: number,
+    limit: number
   ): Promise<RecipeDetailDTO[]> {
     const filters: RecommendationRecipeFilter = {
       memberId: context.memberId,
@@ -278,17 +253,11 @@ export class ContentFilter {
     return result.items;
   }
 
-  private async extractRecipeFeatures(
-    recipes: RecipeDetailDTO[],
-  ): Promise<RecipeFeatures[]> {
-    return Promise.all(
-      recipes.map((recipe) => this.extractSingleRecipeFeatures(recipe)),
-    );
+  private async extractRecipeFeatures(recipes: RecipeDetailDTO[]): Promise<RecipeFeatures[]> {
+    return Promise.all(recipes.map((recipe) => this.extractSingleRecipeFeatures(recipe)));
   }
 
-  private async extractSingleRecipeFeatures(
-    recipe: RecipeSource,
-  ): Promise<RecipeFeatures> {
+  private async extractSingleRecipeFeatures(recipe: RecipeSource): Promise<RecipeFeatures> {
     if (this.featureCache.has(recipe.id)) {
       return this.featureCache.get(recipe.id)!;
     }
@@ -315,14 +284,11 @@ export class ContentFilter {
   private calculateContentSimilarity(
     features: RecipeFeatures,
     profile: UserProfile,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): number {
     let score = 0;
 
-    const ingredientScore = this.calculateIngredientMatch(
-      features.ingredients,
-      profile,
-    );
+    const ingredientScore = this.calculateIngredientMatch(features.ingredients, profile);
     score += ingredientScore * 0.4;
 
     const nutritionScore = this.calculateNutritionMatch(features, profile);
@@ -337,23 +303,20 @@ export class ContentFilter {
     return Math.round(score);
   }
 
-  private calculateIngredientMatch(
-    ingredients: string[],
-    profile: UserProfile,
-  ): number {
+  private calculateIngredientMatch(ingredients: string[], profile: UserProfile): number {
     if (ingredients.length === 0) return 0;
 
     let matchScore = 0;
     let penaltyScore = 0;
 
     const preferredMatches = ingredients.filter((ingredient) =>
-      profile.preferredIngredients.includes(ingredient),
+      profile.preferredIngredients.includes(ingredient)
     ).length;
 
     matchScore += (preferredMatches / ingredients.length) * 50;
 
     const avoidedMatches = ingredients.filter((ingredient) =>
-      profile.avoidedIngredients.includes(ingredient),
+      profile.avoidedIngredients.includes(ingredient)
     ).length;
 
     penaltyScore = (avoidedMatches / ingredients.length) * 100;
@@ -361,10 +324,7 @@ export class ContentFilter {
     return Math.max(0, matchScore - penaltyScore);
   }
 
-  private calculateNutritionMatch(
-    features: RecipeFeatures,
-    profile: UserProfile,
-  ): number {
+  private calculateNutritionMatch(features: RecipeFeatures, profile: UserProfile): number {
     const { nutritionProfile } = features;
     const { nutritionPreferences } = profile;
 
@@ -384,17 +344,11 @@ export class ContentFilter {
       score -= 20;
     }
 
-    if (
-      nutritionPreferences.maxCarbs &&
-      nutritionProfile.carbs > nutritionPreferences.maxCarbs
-    ) {
+    if (nutritionPreferences.maxCarbs && nutritionProfile.carbs > nutritionPreferences.maxCarbs) {
       score -= 15;
     }
 
-    if (
-      nutritionPreferences.maxFat &&
-      nutritionProfile.fat > nutritionPreferences.maxFat
-    ) {
+    if (nutritionPreferences.maxFat && nutritionProfile.fat > nutritionPreferences.maxFat) {
       score -= 15;
     }
 
@@ -404,17 +358,14 @@ export class ContentFilter {
   private calculateCookingMatch(
     features: RecipeFeatures,
     profile: UserProfile,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): number {
     let score = 30;
 
     if (profile.cookingPreferences.maxTime) {
       if (features.cookingTime <= profile.cookingPreferences.maxTime) {
         score += 30;
-      } else if (
-        features.cookingTime <=
-        profile.cookingPreferences.maxTime * 1.5
-      ) {
+      } else if (features.cookingTime <= profile.cookingPreferences.maxTime * 1.5) {
         score += 15;
       } else {
         score -= 20;
@@ -424,7 +375,7 @@ export class ContentFilter {
     if (profile.cookingPreferences.preferredDifficulty) {
       const difficultyOrder = ["EASY", "MEDIUM", "HARD"];
       const preferredIndex = difficultyOrder.indexOf(
-        profile.cookingPreferences.preferredDifficulty,
+        profile.cookingPreferences.preferredDifficulty
       );
       const recipeIndex = difficultyOrder.indexOf(features.difficulty);
 
@@ -442,25 +393,15 @@ export class ContentFilter {
     return Math.max(0, Math.min(100, score));
   }
 
-  private calculateCategoryMatch(
-    features: RecipeFeatures,
-    profile: UserProfile,
-  ): number {
+  private calculateCategoryMatch(features: RecipeFeatures, profile: UserProfile): number {
     if (!profile.cookingPreferences.preferredCategories) {
       return 50;
     }
 
-    return profile.cookingPreferences.preferredCategories.includes(
-      features.category,
-    )
-      ? 100
-      : 30;
+    return profile.cookingPreferences.preferredCategories.includes(features.category) ? 100 : 30;
   }
 
-  private calculatePriceMatch(
-    features: RecipeFeatures,
-    profile: UserProfile,
-  ): number {
+  private calculatePriceMatch(features: RecipeFeatures, profile: UserProfile): number {
     const costScores = {
       LOW: { LOW: 100, MEDIUM: 60, HIGH: 20 },
       MEDIUM: { LOW: 80, MEDIUM: 100, HIGH: 60 },
@@ -470,27 +411,21 @@ export class ContentFilter {
     return costScores[profile.costPreference][features.costLevel] / 100;
   }
 
-  private calculateRecipeSimilarity(
-    recipe1: RecipeFeatures,
-    recipe2: RecipeFeatures,
-  ): number {
+  private calculateRecipeSimilarity(recipe1: RecipeFeatures, recipe2: RecipeFeatures): number {
     const ingredientSimilarity = this.calculateJaccardSimilarity(
       new Set(recipe1.ingredients),
-      new Set(recipe2.ingredients),
+      new Set(recipe2.ingredients)
     );
 
     const nutritionSimilarity = this.calculateNutritionSimilarity(
       recipe1.nutritionProfile,
-      recipe2.nutritionProfile,
+      recipe2.nutritionProfile
     );
 
     return ingredientSimilarity * 0.7 + nutritionSimilarity * 0.3;
   }
 
-  private calculateJaccardSimilarity(
-    set1: Set<string>,
-    set2: Set<string>,
-  ): number {
+  private calculateJaccardSimilarity(set1: Set<string>, set2: Set<string>): number {
     const intersection = new Set([...set1].filter((x) => set2.has(x)));
     const union = new Set([...set1, ...set2]);
 
@@ -499,7 +434,7 @@ export class ContentFilter {
 
   private calculateNutritionSimilarity(
     nutrition1: RecipeFeatures["nutritionProfile"],
-    nutrition2: RecipeFeatures["nutritionProfile"],
+    nutrition2: RecipeFeatures["nutritionProfile"]
   ): number {
     const normalize = (value: number, max: number) => Math.min(value / max, 1);
 
@@ -521,7 +456,7 @@ export class ContentFilter {
       Math.pow(normalized1.calories - normalized2.calories, 2) +
         Math.pow(normalized1.protein - normalized2.protein, 2) +
         Math.pow(normalized1.carbs - normalized2.carbs, 2) +
-        Math.pow(normalized1.fat - normalized2.fat, 2),
+        Math.pow(normalized1.fat - normalized2.fat, 2)
     );
 
     return Math.max(0, 1 - distance);
@@ -530,7 +465,7 @@ export class ContentFilter {
   private generateContentReasons(
     features: RecipeFeatures,
     profile: UserProfile,
-    score: number,
+    score: number
   ): string[] {
     const reasons: string[] = [];
 
@@ -541,38 +476,29 @@ export class ContentFilter {
     }
 
     const ingredientMatches = features.ingredients.filter((ingredient) =>
-      profile.preferredIngredients.includes(ingredient),
+      profile.preferredIngredients.includes(ingredient)
     ).length;
 
     if (ingredientMatches > 0) {
       reasons.push(`包含${ingredientMatches}种您喜欢的食材`);
     }
 
-    if (
-      profile.cookingPreferences.preferredCategories?.includes(
-        features.category,
-      )
-    ) {
+    if (profile.cookingPreferences.preferredCategories?.includes(features.category)) {
       reasons.push("您偏好的菜系");
     }
 
     return reasons;
   }
 
-  private generateContentExplanation(
-    features: RecipeFeatures,
-    profile: UserProfile,
-  ): string {
+  private generateContentExplanation(features: RecipeFeatures, profile: UserProfile): string {
     const explanations: string[] = [];
 
     const ingredientMatches = features.ingredients.filter((ingredient) =>
-      profile.preferredIngredients.includes(ingredient),
+      profile.preferredIngredients.includes(ingredient)
     );
 
     if (ingredientMatches.length > 0) {
-      explanations.push(
-        `这道菜使用了您喜欢的${ingredientMatches.slice(0, 3).join("、")}等食材`,
-      );
+      explanations.push(`这道菜使用了您喜欢的${ingredientMatches.slice(0, 3).join("、")}等食材`);
     }
 
     if (features.cookingTime <= 30) {
@@ -583,9 +509,7 @@ export class ContentFilter {
       explanations.push("难度简单，适合厨房新手");
     }
 
-    return explanations.length > 0
-      ? `${explanations.join("，")}。`
-      : "基于您的偏好分析推荐。";
+    return explanations.length > 0 ? `${explanations.join("，")}。` : "基于您的偏好分析推荐。";
   }
 
   private extractIngredientNames(recipe: RecipeSource): string[] {
@@ -602,10 +526,8 @@ export class ContentFilter {
 
   private extractNutritionProfile(recipe: RecipeSource) {
     return {
-      calories:
-        recipe.caloriesPerServing ?? (recipe as RecipeDetailDTO).calories ?? 0,
-      protein:
-        recipe.proteinPerServing ?? (recipe as RecipeDetailDTO).protein ?? 0,
+      calories: recipe.caloriesPerServing ?? (recipe as RecipeDetailDTO).calories ?? 0,
+      protein: recipe.proteinPerServing ?? (recipe as RecipeDetailDTO).protein ?? 0,
       carbs: recipe.carbsPerServing ?? (recipe as RecipeDetailDTO).carbs ?? 0,
       fat: recipe.fatPerServing ?? (recipe as RecipeDetailDTO).fat ?? 0,
     };

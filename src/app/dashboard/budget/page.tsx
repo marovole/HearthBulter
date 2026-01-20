@@ -1,22 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  PlusIcon,
-  SettingsIcon,
-  TrendingDownIcon,
-  TrendingUpIcon,
-} from "lucide-react";
+import { PlusIcon, SettingsIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -27,11 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  BudgetDashboard,
-  BudgetSetting,
-  BudgetStatusIndicator,
-} from "@/components/budget";
+import { BudgetDashboard, BudgetSetting, BudgetStatusIndicator } from "@/components/budget";
 import type { FoodCategory } from "@/lib/repositories/types/budget";
 
 // 模拟用户ID，实际应用中从认证系统获取
@@ -128,11 +113,8 @@ export default function BudgetManagementPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [analysisPeriod, setAnalysisPeriod] =
-    useState<AnalysisPeriod>("MONTHLY");
-  const [analysisData, setAnalysisData] = useState<SpendingAnalysis | null>(
-    null,
-  );
+  const [analysisPeriod, setAnalysisPeriod] = useState<AnalysisPeriod>("MONTHLY");
+  const [analysisData, setAnalysisData] = useState<SpendingAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [historyPage, setHistoryPage] = useState(1);
@@ -154,7 +136,7 @@ export default function BudgetManagementPage() {
     try {
       setAnalysisLoading(true);
       const response = await fetch(
-        `/api/budget/analyze?memberId=${MOCK_MEMBER_ID}&period=${analysisPeriod}`,
+        `/api/budget/analyze?memberId=${MOCK_MEMBER_ID}&period=${analysisPeriod}`
       );
       if (!response.ok) {
         throw new Error("获取支出分析失败");
@@ -163,9 +145,7 @@ export default function BudgetManagementPage() {
       setAnalysisData(data);
       setAnalysisError(null);
     } catch (error) {
-      setAnalysisError(
-        error instanceof Error ? error.message : "获取支出分析失败",
-      );
+      setAnalysisError(error instanceof Error ? error.message : "获取支出分析失败");
     } finally {
       setAnalysisLoading(false);
     }
@@ -180,7 +160,7 @@ export default function BudgetManagementPage() {
     try {
       setHistoryLoading(true);
       const response = await fetch(
-        `/api/budget/spending-history?budgetId=${selectedBudgetId}&page=${historyPage}&limit=10`,
+        `/api/budget/spending-history?budgetId=${selectedBudgetId}&page=${historyPage}&limit=10`
       );
       if (!response.ok) {
         throw new Error("获取历史记录失败");
@@ -189,9 +169,7 @@ export default function BudgetManagementPage() {
       setHistoryData(data);
       setHistoryError(null);
     } catch (error) {
-      setHistoryError(
-        error instanceof Error ? error.message : "获取历史记录失败",
-      );
+      setHistoryError(error instanceof Error ? error.message : "获取历史记录失败");
     } finally {
       setHistoryLoading(false);
     }
@@ -210,29 +188,25 @@ export default function BudgetManagementPage() {
   }, [selectedBudgetId, historyPage, refreshKey]);
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto space-y-6 py-6">
       {/* 页面头部 */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">预算管理</h1>
-          <p className="text-muted-foreground">
-            设定和追踪您的饮食预算，优化支出结构
-          </p>
+          <p className="text-muted-foreground">设定和追踪您的饮食预算，优化支出结构</p>
         </div>
 
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button>
-              <PlusIcon className="h-4 w-4 mr-2" />
+              <PlusIcon className="mr-2 h-4 w-4" />
               创建预算
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>创建新预算</DialogTitle>
-              <DialogDescription>
-                设定您的饮食预算计划，包括总预算和分类预算
-              </DialogDescription>
+              <DialogDescription>设定您的饮食预算计划，包括总预算和分类预算</DialogDescription>
             </DialogHeader>
             <BudgetSetting
               memberId={MOCK_MEMBER_ID}
@@ -244,7 +218,7 @@ export default function BudgetManagementPage() {
       </div>
 
       {/* 预算状态概览 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <BudgetStatusIndicator
             key={refreshKey}
@@ -269,7 +243,7 @@ export default function BudgetManagementPage() {
                 className="w-full justify-start"
                 onClick={() => setShowCreateDialog(true)}
               >
-                <PlusIcon className="h-4 w-4 mr-2" />
+                <PlusIcon className="mr-2 h-4 w-4" />
                 创建新预算
               </Button>
               <Button
@@ -277,7 +251,7 @@ export default function BudgetManagementPage() {
                 className="w-full justify-start"
                 onClick={() => setRefreshKey((prev) => prev + 1)}
               >
-                <TrendingUpIcon className="h-4 w-4 mr-2" />
+                <TrendingUpIcon className="mr-2 h-4 w-4" />
                 刷新数据
               </Button>
             </CardContent>
@@ -326,18 +300,14 @@ export default function BudgetManagementPage() {
                 <span className="text-sm text-muted-foreground">分析周期</span>
                 <select
                   value={analysisPeriod}
-                  onChange={(event) =>
-                    setAnalysisPeriod(event.target.value as AnalysisPeriod)
-                  }
-                  className="px-3 py-1 border border-gray-200 rounded-md text-sm"
+                  onChange={(event) => setAnalysisPeriod(event.target.value as AnalysisPeriod)}
+                  className="rounded-md border border-gray-200 px-3 py-1 text-sm"
                 >
-                  {Object.entries(ANALYSIS_PERIOD_LABELS).map(
-                    ([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ),
-                  )}
+                  {Object.entries(ANALYSIS_PERIOD_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
                 </select>
                 <Button
                   variant="outline"
@@ -350,8 +320,8 @@ export default function BudgetManagementPage() {
               </div>
 
               {analysisLoading && (
-                <div className="text-center py-10 text-muted-foreground">
-                  <TrendingUpIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                <div className="py-10 text-center text-muted-foreground">
+                  <TrendingUpIcon className="mx-auto mb-3 h-10 w-10 opacity-50" />
                   <p>正在生成分析...</p>
                 </div>
               )}
@@ -364,7 +334,7 @@ export default function BudgetManagementPage() {
 
               {!analysisLoading && !analysisError && analysisData && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">总支出</CardTitle>
@@ -386,40 +356,32 @@ export default function BudgetManagementPage() {
                       <CardContent>
                         {analysisData.comparisonWithPrevious.length > 0 ? (
                           <div className="space-y-2">
-                            {analysisData.comparisonWithPrevious.map(
-                              (comparison) => (
-                                <div
-                                  key={comparison.period}
-                                  className="flex items-center justify-between text-sm"
+                            {analysisData.comparisonWithPrevious.map((comparison) => (
+                              <div
+                                key={comparison.period}
+                                className="flex items-center justify-between text-sm"
+                              >
+                                <span className="text-muted-foreground">{comparison.period}</span>
+                                <span className="font-medium">
+                                  ¥{comparison.spending.toFixed(2)}
+                                </span>
+                                <span
+                                  className={`flex items-center gap-1 ${
+                                    comparison.change >= 0 ? "text-red-600" : "text-green-600"
+                                  }`}
                                 >
-                                  <span className="text-muted-foreground">
-                                    {comparison.period}
-                                  </span>
-                                  <span className="font-medium">
-                                    ¥{comparison.spending.toFixed(2)}
-                                  </span>
-                                  <span
-                                    className={`flex items-center gap-1 ${
-                                      comparison.change >= 0
-                                        ? "text-red-600"
-                                        : "text-green-600"
-                                    }`}
-                                  >
-                                    {comparison.change >= 0 ? (
-                                      <TrendingUpIcon className="h-4 w-4" />
-                                    ) : (
-                                      <TrendingDownIcon className="h-4 w-4" />
-                                    )}
-                                    {comparison.changePercentage.toFixed(1)}%
-                                  </span>
-                                </div>
-                              ),
-                            )}
+                                  {comparison.change >= 0 ? (
+                                    <TrendingUpIcon className="h-4 w-4" />
+                                  ) : (
+                                    <TrendingDownIcon className="h-4 w-4" />
+                                  )}
+                                  {comparison.changePercentage.toFixed(1)}%
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-muted-foreground">
-                            暂无对比数据
-                          </p>
+                          <p className="text-sm text-muted-foreground">暂无对比数据</p>
                         )}
                       </CardContent>
                     </Card>
@@ -433,9 +395,7 @@ export default function BudgetManagementPage() {
                           analysisData.budgetUtilization.map((budget) => (
                             <div key={budget.budgetId} className="space-y-1">
                               <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                  {budget.budgetName}
-                                </span>
+                                <span className="text-muted-foreground">{budget.budgetName}</span>
                                 <Badge
                                   variant={
                                     budget.status === "OVER_BUDGET"
@@ -455,9 +415,7 @@ export default function BudgetManagementPage() {
                             </div>
                           ))
                         ) : (
-                          <p className="text-sm text-muted-foreground">
-                            暂无预算数据
-                          </p>
+                          <p className="text-sm text-muted-foreground">暂无预算数据</p>
                         )}
                       </CardContent>
                     </Card>
@@ -474,58 +432,44 @@ export default function BudgetManagementPage() {
                             <div className="flex items-center justify-between text-sm">
                               <span>{CATEGORY_LABELS[category.category]}</span>
                               <span className="text-muted-foreground">
-                                ¥{category.amount.toFixed(2)} ·
-                                {category.percentage.toFixed(1)}%
+                                ¥{category.amount.toFixed(2)} ·{category.percentage.toFixed(1)}%
                               </span>
                             </div>
-                            <Progress
-                              value={category.percentage}
-                              className="h-2"
-                            />
+                            <Progress value={category.percentage} className="h-2" />
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm text-muted-foreground">
-                          暂无分类支出数据
-                        </p>
+                        <p className="text-sm text-muted-foreground">暂无分类支出数据</p>
                       )}
                     </CardContent>
                   </Card>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <Card>
                       <CardHeader>
                         <CardTitle>高支出项目</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {analysisData.topExpenses.length > 0 ? (
-                          analysisData.topExpenses
-                            .slice(0, 5)
-                            .map((expense, index) => (
-                              <div
-                                key={`${expense.description}-${index}`}
-                                className="flex items-center justify-between text-sm"
-                              >
-                                <div>
-                                  <div className="font-medium">
-                                    {expense.description || "未命名支出"}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {CATEGORY_LABELS[expense.category]} ·
-                                    {new Date(expense.date).toLocaleDateString(
-                                      "zh-CN",
-                                    )}
-                                  </div>
+                          analysisData.topExpenses.slice(0, 5).map((expense, index) => (
+                            <div
+                              key={`${expense.description}-${index}`}
+                              className="flex items-center justify-between text-sm"
+                            >
+                              <div>
+                                <div className="font-medium">
+                                  {expense.description || "未命名支出"}
                                 </div>
-                                <span className="font-medium">
-                                  ¥{expense.amount.toFixed(2)}
-                                </span>
+                                <div className="text-xs text-muted-foreground">
+                                  {CATEGORY_LABELS[expense.category]} ·
+                                  {new Date(expense.date).toLocaleDateString("zh-CN")}
+                                </div>
                               </div>
-                            ))
+                              <span className="font-medium">¥{expense.amount.toFixed(2)}</span>
+                            </div>
+                          ))
                         ) : (
-                          <p className="text-sm text-muted-foreground">
-                            暂无高支出记录
-                          </p>
+                          <p className="text-sm text-muted-foreground">暂无高支出记录</p>
                         )}
                       </CardContent>
                     </Card>
@@ -542,9 +486,7 @@ export default function BudgetManagementPage() {
                             </div>
                           ))
                         ) : (
-                          <p className="text-sm text-muted-foreground">
-                            暂无建议，预算表现良好
-                          </p>
+                          <p className="text-sm text-muted-foreground">暂无建议，预算表现良好</p>
                         )}
                       </CardContent>
                     </Card>
@@ -553,8 +495,8 @@ export default function BudgetManagementPage() {
               )}
 
               {!analysisLoading && !analysisError && !analysisData && (
-                <div className="text-center py-10 text-muted-foreground">
-                  <TrendingUpIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                <div className="py-10 text-center text-muted-foreground">
+                  <TrendingUpIcon className="mx-auto mb-3 h-10 w-10 opacity-50" />
                   <p>暂无支出分析数据</p>
                 </div>
               )}
@@ -576,8 +518,8 @@ export default function BudgetManagementPage() {
               )}
 
               {selectedBudgetId && historyLoading && (
-                <div className="text-center py-10 text-muted-foreground">
-                  <SettingsIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                <div className="py-10 text-center text-muted-foreground">
+                  <SettingsIcon className="mx-auto mb-3 h-10 w-10 opacity-50" />
                   <p>加载历史记录中...</p>
                 </div>
               )}
@@ -588,19 +530,16 @@ export default function BudgetManagementPage() {
                 </Alert>
               )}
 
-              {selectedBudgetId &&
-                !historyLoading &&
-                !historyError &&
-                historyData && (
+              {selectedBudgetId && !historyLoading && !historyError && historyData && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">总支出</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                            ¥{historyData.statistics.totalAmount.toFixed(2)}
+                          ¥{historyData.statistics.totalAmount.toFixed(2)}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {historyData.statistics.totalTransactions} 笔记录
@@ -613,11 +552,9 @@ export default function BudgetManagementPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                            ¥{historyData.statistics.averageAmount.toFixed(2)}
+                          ¥{historyData.statistics.averageAmount.toFixed(2)}
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            当前预算周期
-                        </p>
+                        <p className="text-xs text-muted-foreground">当前预算周期</p>
                       </CardContent>
                     </Card>
                     <Card>
@@ -628,9 +565,7 @@ export default function BudgetManagementPage() {
                         <div className="text-2xl font-bold">
                           {historyData.statistics.categoryBreakdown.length}
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            覆盖分类数
-                        </p>
+                        <p className="text-xs text-muted-foreground">覆盖分类数</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -641,32 +576,26 @@ export default function BudgetManagementPage() {
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {historyData.statistics.categoryBreakdown.length > 0 ? (
-                        historyData.statistics.categoryBreakdown.map(
-                          (item) => (
-                            <div key={item.category} className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span>{CATEGORY_LABELS[item.category]}</span>
-                                <span className="text-muted-foreground">
-                                    ¥{item.amount.toFixed(2)} · {item.count} 笔
-                                </span>
-                              </div>
-                              <Progress
-                                value={
-                                  historyData.statistics.totalAmount > 0
-                                    ? (item.amount /
-                                          historyData.statistics.totalAmount) *
-                                        100
-                                    : 0
-                                }
-                                className="h-2"
-                              />
+                        historyData.statistics.categoryBreakdown.map((item) => (
+                          <div key={item.category} className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span>{CATEGORY_LABELS[item.category]}</span>
+                              <span className="text-muted-foreground">
+                                ¥{item.amount.toFixed(2)} · {item.count} 笔
+                              </span>
                             </div>
-                          ),
-                        )
+                            <Progress
+                              value={
+                                historyData.statistics.totalAmount > 0
+                                  ? (item.amount / historyData.statistics.totalAmount) * 100
+                                  : 0
+                              }
+                              className="h-2"
+                            />
+                          </div>
+                        ))
                       ) : (
-                        <p className="text-sm text-muted-foreground">
-                            暂无分类统计
-                        </p>
+                        <p className="text-sm text-muted-foreground">暂无分类统计</p>
                       )}
                     </CardContent>
                   </Card>
@@ -676,8 +605,7 @@ export default function BudgetManagementPage() {
                       <div>
                         <CardTitle>支出明细</CardTitle>
                         <CardDescription>
-                            第 {historyData.pagination.page} /{" "}
-                          {historyData.pagination.totalPages} 页
+                          第 {historyData.pagination.page} / {historyData.pagination.totalPages} 页
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
@@ -685,22 +613,19 @@ export default function BudgetManagementPage() {
                           variant="outline"
                           size="sm"
                           disabled={historyData.pagination.page <= 1}
-                          onClick={() =>
-                            setHistoryPage((prev) => Math.max(prev - 1, 1))
-                          }
+                          onClick={() => setHistoryPage((prev) => Math.max(prev - 1, 1))}
                         >
-                            上一页
+                          上一页
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           disabled={
-                            historyData.pagination.page >=
-                              historyData.pagination.totalPages
+                            historyData.pagination.page >= historyData.pagination.totalPages
                           }
                           onClick={() => setHistoryPage((prev) => prev + 1)}
                         >
-                            下一页
+                          下一页
                         </Button>
                       </div>
                     </CardHeader>
@@ -717,32 +642,23 @@ export default function BudgetManagementPage() {
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {CATEGORY_LABELS[spending.category]} ·{" "}
-                                {new Date(
-                                  spending.purchaseDate,
-                                ).toLocaleDateString("zh-CN")}
+                                {new Date(spending.purchaseDate).toLocaleDateString("zh-CN")}
                               </div>
                             </div>
-                            <span className="font-medium">
-                                ¥{spending.amount.toFixed(2)}
-                            </span>
+                            <span className="font-medium">¥{spending.amount.toFixed(2)}</span>
                           </div>
                         ))
                       ) : (
-                        <div className="text-center text-muted-foreground py-6">
-                            暂无支出记录
-                        </div>
+                        <div className="py-6 text-center text-muted-foreground">暂无支出记录</div>
                       )}
                     </CardContent>
                   </Card>
                 </div>
               )}
 
-              {selectedBudgetId &&
-                !historyLoading &&
-                !historyError &&
-                !historyData && (
-                <div className="text-center py-10 text-muted-foreground">
-                  <SettingsIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
+              {selectedBudgetId && !historyLoading && !historyError && !historyData && (
+                <div className="py-10 text-center text-muted-foreground">
+                  <SettingsIcon className="mx-auto mb-3 h-10 w-10 opacity-50" />
                   <p>暂无历史记录</p>
                 </div>
               )}
@@ -757,10 +673,10 @@ export default function BudgetManagementPage() {
           <CardTitle>功能说明</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <h3 className="font-medium mb-2">预算设定功能</h3>
-              <ul className="text-sm text-muted-foreground space-y-1">
+              <h3 className="mb-2 font-medium">预算设定功能</h3>
+              <ul className="space-y-1 text-sm text-muted-foreground">
                 <li>• 支持周、月、季度、年等多种预算周期</li>
                 <li>• 可设定总预算和分类预算（蔬菜、肉类、水果等）</li>
                 <li>• 智能验证预算合理性，防止超支</li>
@@ -769,8 +685,8 @@ export default function BudgetManagementPage() {
             </div>
 
             <div>
-              <h3 className="font-medium mb-2">支出追踪功能</h3>
-              <ul className="text-sm text-muted-foreground space-y-1">
+              <h3 className="mb-2 font-medium">支出追踪功能</h3>
+              <ul className="space-y-1 text-sm text-muted-foreground">
                 <li>• 实时显示预算使用情况和剩余金额</li>
                 <li>• 分类支出追踪，了解各类别消费情况</li>
                 <li>• 智能预警提醒，防止预算超支</li>

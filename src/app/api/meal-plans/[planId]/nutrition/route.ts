@@ -16,7 +16,7 @@ import { nutritionCalculator } from "@/lib/services/nutrition-calculator";
 export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ planId: string }> },
+  { params }: { params: Promise<{ planId: string }> }
 ) {
   try {
     const { planId } = await params;
@@ -36,24 +36,17 @@ export async function GET(
       return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: planDetails.plan.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: planDetails.plan.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限查看该食谱的营养汇总" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限查看该食谱的营养汇总" }, { status: 403 });
     }
 
     const allIngredients = planDetails.meals.flatMap((meal) => {
-      const ingredients =
-        (meal.ingredients as Array<Record<string, unknown>> | undefined) ?? [];
+      const ingredients = (meal.ingredients as Array<Record<string, unknown>> | undefined) ?? [];
       return ingredients.map((ingredient) => ({
         foodId: ingredient.foodId as string,
         amount: ingredient.amount as number,
@@ -64,10 +57,7 @@ export async function GET(
 
     const planStart = new Date(planDetails.plan.startDate);
     const planEnd = new Date(planDetails.plan.endDate);
-    const days =
-      Math.ceil(
-        (planEnd.getTime() - planStart.getTime()) / (1000 * 60 * 60 * 24),
-      ) + 1;
+    const days = Math.ceil((planEnd.getTime() - planStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     return NextResponse.json(
       {
@@ -91,7 +81,7 @@ export async function GET(
           fat: planDetails.plan.targetFat ?? null,
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取营养汇总失败:", error);

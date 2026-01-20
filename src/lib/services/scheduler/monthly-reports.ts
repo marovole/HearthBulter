@@ -23,9 +23,7 @@ export async function generateMonthlyReports(): Promise<void> {
       return;
     }
 
-    logger.info(
-      `Found ${activeMembers.length} active members for monthly reports`,
-    );
+    logger.info(`Found ${activeMembers.length} active members for monthly reports`);
 
     let successCount = 0;
     let errorCount = 0;
@@ -35,9 +33,7 @@ export async function generateMonthlyReports(): Promise<void> {
         // 检查本月是否已经生成过报告
         const existingReport = await checkExistingReport(member.id, "MONTHLY");
         if (existingReport) {
-          logger.debug(
-            `Monthly report already exists for member ${member.id}, skipping`,
-          );
+          logger.debug(`Monthly report already exists for member ${member.id}, skipping`);
           continue;
         }
 
@@ -46,16 +42,13 @@ export async function generateMonthlyReports(): Promise<void> {
         logger.info(`Generated monthly report for member ${member.name}`);
         successCount++;
       } catch (error) {
-        logger.error(
-          `Failed to generate monthly report for member ${member.id}:`,
-          error,
-        );
+        logger.error(`Failed to generate monthly report for member ${member.id}:`, error);
         errorCount++;
       }
     }
 
     logger.info(
-      `Monthly report generation completed: ${successCount} success, ${errorCount} errors`,
+      `Monthly report generation completed: ${successCount} success, ${errorCount} errors`
     );
   } catch (error) {
     logger.error("Monthly report generation failed:", error);
@@ -68,21 +61,17 @@ export async function generateMonthlyReports(): Promise<void> {
  */
 async function getActiveMembers() {
   const cutoff = Date.now() - 60 * 24 * 60 * 60 * 1000;
-  const members = await convexClient.query<Doc<"familyMembers">[]>(
-    api.members.listAll,
-    {},
-  );
+  const members = await convexClient.query<Doc<"familyMembers">[]>(api.members.listAll, {});
 
   const activeMembers: Array<{ id: string; name: string }> = [];
 
   for (const member of members) {
-    const healthData = await convexClient.query<Doc<"healthData">[]>(
-      api.health.getMetrics,
-      { memberId: member._id as Id<"familyMembers"> },
-    );
+    const healthData = await convexClient.query<Doc<"healthData">[]>(api.health.getMetrics, {
+      memberId: member._id as Id<"familyMembers">,
+    });
 
     const hasRecentData = healthData.some(
-      (record) => (record.measuredAt ?? record.createdAt ?? 0) >= cutoff,
+      (record) => (record.measuredAt ?? record.createdAt ?? 0) >= cutoff
     );
 
     if (hasRecentData) {
@@ -109,7 +98,7 @@ async function checkExistingReport(memberId: string, reportType: string) {
       startDate: monthStart.getTime(),
       endDate: now,
       limit: 10,
-    },
+    }
   );
 
   return reports.find((report) => report.reportType === reportType) ?? null;

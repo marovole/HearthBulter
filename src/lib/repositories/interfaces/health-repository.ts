@@ -108,7 +108,7 @@ export interface HealthRepository {
       healthDataLimit?: number;
       /** 体检报告数量限制 */
       medicalReportsLimit?: number;
-    },
+    }
   ): Promise<MemberHealthContext | null>;
 
   /**
@@ -118,10 +118,7 @@ export interface HealthRepository {
    * @param limit - 返回记录数量限制
    * @returns AI 建议历史记录列表
    */
-  getMemberHealthHistory(
-    memberId: string,
-    limit?: number,
-  ): Promise<AIAdviceHistoryRecord[]>;
+  getMemberHealthHistory(memberId: string, limit?: number): Promise<AIAdviceHistoryRecord[]>;
 
   /**
    * 保存 AI 健康建议

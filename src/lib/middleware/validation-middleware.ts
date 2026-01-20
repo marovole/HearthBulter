@@ -45,7 +45,7 @@ export class ValidationMiddleware {
       params?: Record<string, string>;
       userId?: string;
       sessionId?: string;
-    },
+    }
   ): Promise<ValidationResult<T>> {
     const startTime = Date.now();
     const requestId = this.generateRequestId();
@@ -65,7 +65,7 @@ export class ValidationMiddleware {
               errors,
               bodyResult.errors ?? {
                 body: ["请求体验证失败"],
-              },
+              }
             );
           }
         } else {
@@ -88,7 +88,7 @@ export class ValidationMiddleware {
               errors,
               queryResult.errors ?? {
                 query: ["查询参数验证失败"],
-              },
+              }
             );
           }
         } else {
@@ -102,10 +102,7 @@ export class ValidationMiddleware {
 
       // 验证路径参数
       if (schema.params) {
-        const paramsResult = await this.validateParams(
-          context?.params || {},
-          schema.params,
-        );
+        const paramsResult = await this.validateParams(context?.params || {}, schema.params);
         if (!paramsResult.success) {
           if (Array.isArray(paramsResult.errors)) {
             errors.params = paramsResult.errors;
@@ -114,7 +111,7 @@ export class ValidationMiddleware {
               errors,
               paramsResult.errors ?? {
                 params: ["路径参数验证失败"],
-              },
+              }
             );
           }
         } else {
@@ -137,7 +134,7 @@ export class ValidationMiddleware {
               errors,
               filesResult.errors ?? {
                 files: ["文件验证失败"],
-              },
+              }
             );
           }
         } else {
@@ -211,7 +208,7 @@ export class ValidationMiddleware {
    */
   private async validateBody<T>(
     request: NextRequest,
-    schema: z.ZodSchema,
+    schema: z.ZodSchema
   ): Promise<ValidationResult<T>> {
     try {
       const body = await request.json();
@@ -246,7 +243,7 @@ export class ValidationMiddleware {
    */
   private async validateQuery<T>(
     request: NextRequest,
-    schema: z.ZodSchema,
+    schema: z.ZodSchema
   ): Promise<ValidationResult<T>> {
     try {
       const { searchParams } = new URL(request.url);
@@ -282,7 +279,7 @@ export class ValidationMiddleware {
    */
   private async validateParams<T>(
     params: Record<string, string>,
-    schema: z.ZodSchema,
+    schema: z.ZodSchema
   ): Promise<ValidationResult<T>> {
     try {
       // 基本安全检查
@@ -315,7 +312,7 @@ export class ValidationMiddleware {
    */
   private async validateFiles<T>(
     request: NextRequest,
-    schema: z.ZodSchema,
+    schema: z.ZodSchema
   ): Promise<ValidationResult<T>> {
     try {
       // 检查是否是multipart/form-data
@@ -435,7 +432,7 @@ export const validationMiddleware = ValidationMiddleware.getInstance();
 export const validateRequest = <T>(
   request: NextRequest,
   schema: ValidationSchema,
-  context?: { params?: Record<string, string>; userId?: string },
+  context?: { params?: Record<string, string>; userId?: string }
 ) => validationMiddleware.validateRequest<T>(request, schema, context);
 
 // 导出预定义的验证模式
@@ -474,7 +471,7 @@ export const commonSchemas = {
             return false;
           }
         },
-        { message: "filters必须是有效的JSON格式" },
+        { message: "filters必须是有效的JSON格式" }
       ),
   }),
 
@@ -496,14 +493,11 @@ export const commonSchemas = {
 // 创建高阶验证函数
 export function withValidation<T>(
   schema: ValidationSchema,
-  handler: (
-    request: NextRequest,
-    context: { data: T; sanitized: any },
-  ) => Promise<NextResponse>,
+  handler: (request: NextRequest, context: { data: T; sanitized: any }) => Promise<NextResponse>
 ) {
   return async (
     request: NextRequest,
-    context?: { params?: Record<string, string>; userId?: string },
+    context?: { params?: Record<string, string>; userId?: string }
   ) => {
     const validationResult = await validateRequest<T>(request, schema, context);
 

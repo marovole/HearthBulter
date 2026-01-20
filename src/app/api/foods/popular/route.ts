@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         foods,
         total: foods.length,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取热门食材失败:", error);

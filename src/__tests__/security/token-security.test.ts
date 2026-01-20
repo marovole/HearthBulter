@@ -91,7 +91,7 @@ describe("Token 安全测试", () => {
         "health_report",
         "owner-456",
         7,
-        ["read"],
+        ["read"]
       );
 
       // Token 是 JWT，解码 payload 不应直接暴露敏感信息
@@ -115,9 +115,7 @@ describe("Token 安全测试", () => {
     it("应拒绝被篡改的 Token", async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const jose = require("jose");
-      jose.jwtVerify.mockRejectedValueOnce(
-        new Error("signature verification failed"),
-      );
+      jose.jwtVerify.mockRejectedValueOnce(new Error("signature verification failed"));
 
       const result = await verifyShareToken("tampered.jwt.token");
       expect(result.valid).toBe(false);
@@ -149,7 +147,7 @@ describe("Token 安全测试", () => {
         "health_report",
         "owner-456",
         expiryDays,
-        ["read"],
+        ["read"]
       );
 
       // Token 应该在指定天数后过期

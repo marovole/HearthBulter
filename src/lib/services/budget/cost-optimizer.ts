@@ -64,41 +64,28 @@ export interface OptimizationConstraints {
 export class CostOptimizer {
   async optimizeShoppingList(
     foodIds: string[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<OptimizationResult> {
     const originalFoods = await this.getFoodOptions(foodIds);
 
-    const originalCost = originalFoods.reduce(
-      (sum, food) => sum + food.cost,
-      0,
-    );
+    const originalCost = originalFoods.reduce((sum, food) => sum + food.cost, 0);
     const originalNutrition = this.calculateTotalNutrition(originalFoods);
 
-    const substituteOptions = await this.findSubstituteOptions(
-      originalFoods,
-      constraints,
-    );
+    const substituteOptions = await this.findSubstituteOptions(originalFoods, constraints);
 
     const optimizedFoods = await this.runOptimization(
       originalFoods,
       substituteOptions,
-      constraints,
+      constraints
     );
 
-    const optimizedCost = optimizedFoods.reduce(
-      (sum, food) => sum + food.cost,
-      0,
-    );
+    const optimizedCost = optimizedFoods.reduce((sum, food) => sum + food.cost, 0);
     const optimizedNutrition = this.calculateTotalNutrition(optimizedFoods);
 
-    const substitutions = this.generateSubstitutions(
-      originalFoods,
-      optimizedFoods,
-    );
+    const substitutions = this.generateSubstitutions(originalFoods, optimizedFoods);
 
     const savings = originalCost - optimizedCost;
-    const savingsPercentage =
-      originalCost > 0 ? (savings / originalCost) * 100 : 0;
+    const savingsPercentage = originalCost > 0 ? (savings / originalCost) * 100 : 0;
 
     return {
       originalCost,
@@ -113,21 +100,19 @@ export class CostOptimizer {
         optimized: optimizedNutrition,
         meetsRequirements: this.meetsNutritionRequirements(
           optimizedNutrition,
-          constraints.nutritionTargets,
+          constraints.nutritionTargets
         ),
       },
     };
   }
 
-  async getFoodOptionsForOptimization(
-    foodIds: string[],
-  ): Promise<FoodOption[]> {
+  async getFoodOptionsForOptimization(foodIds: string[]): Promise<FoodOption[]> {
     return this.getFoodOptions(foodIds);
   }
 
   async findSubstituteOptionsForOptimization(
     originalFoods: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<FoodOption[]> {
     return this.findSubstituteOptions(originalFoods, constraints);
   }
@@ -178,25 +163,21 @@ export class CostOptimizer {
 
   private async findSubstituteOptions(
     originalFoods: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<FoodOption[]> {
     const substitutes: FoodOption[] = [];
 
     for (const original of originalFoods) {
-      const similarFoods = (await convexClient.query(
-        api.budget.getFoodsByCategory,
-        {
-          category: original.food.category,
-          excludeIds: [original.food.id as Id<"foods">],
-          limit: 10,
-        },
-      )) as Doc<"foods">[];
+      const similarFoods = (await convexClient.query(api.budget.getFoodsByCategory, {
+        category: original.food.category,
+        excludeIds: [original.food.id as Id<"foods">],
+        limit: 10,
+      })) as Doc<"foods">[];
 
       for (const food of similarFoods) {
-        const latestPrice = (await convexClient.query(
-          api.budget.getLatestPrice,
-          { foodId: food._id },
-        )) as Doc<"priceHistories"> | null;
+        const latestPrice = (await convexClient.query(api.budget.getLatestPrice, {
+          foodId: food._id,
+        })) as Doc<"priceHistories"> | null;
 
         if (!latestPrice) continue;
 
@@ -235,14 +216,10 @@ export class CostOptimizer {
   private async runOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<FoodOption[]> {
     if (constraints.economyMode) {
-      return this.economyModeOptimization(
-        originalFoods,
-        substitutes,
-        constraints,
-      );
+      return this.economyModeOptimization(originalFoods, substitutes, constraints);
     } else {
       return this.balancedOptimization(originalFoods, substitutes, constraints);
     }
@@ -251,13 +228,13 @@ export class CostOptimizer {
   private economyModeOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<FoodOption[]> {
     const result: FoodOption[] = [];
     const targetNutrition = constraints.nutritionTargets;
 
     const sortedOptions = [...originalFoods, ...substitutes].sort(
-      (a, b) => a.cost / a.nutrition.calories - b.cost / b.nutrition.calories,
+      (a, b) => a.cost / a.nutrition.calories - b.cost / b.nutrition.calories
     );
 
     const currentNutrition = { calories: 0, protein: 0, carbs: 0, fat: 0 };
@@ -266,11 +243,10 @@ export class CostOptimizer {
     for (const option of sortedOptions) {
       if (currentNutrition.calories >= targetNutrition.calories) break;
 
-      const remainingCalories =
-        targetNutrition.calories - currentNutrition.calories;
+      const remainingCalories = targetNutrition.calories - currentNutrition.calories;
       const neededAmount = Math.min(
         (remainingCalories / option.nutrition.calories) * option.amount,
-        option.amount * 2,
+        option.amount * 2
       );
 
       const scaledOption = {
@@ -304,7 +280,7 @@ export class CostOptimizer {
   private balancedOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<FoodOption[]> {
     const result = [...originalFoods];
 
@@ -313,16 +289,12 @@ export class CostOptimizer {
       if (!original) continue;
 
       const cheaperSubstitutes = substitutes.filter(
-        (s) =>
-          s.food.category === original.food.category && s.cost < original.cost,
+        (s) => s.food.category === original.food.category && s.cost < original.cost
       );
       const bestSubstitute = cheaperSubstitutes[0];
       if (!bestSubstitute) continue;
 
-      const nutritionSimilarity = this.calculateNutritionSimilarity(
-        original,
-        bestSubstitute,
-      );
+      const nutritionSimilarity = this.calculateNutritionSimilarity(original, bestSubstitute);
 
       if (nutritionSimilarity > 0.7) {
         result[i] = bestSubstitute;
@@ -332,16 +304,9 @@ export class CostOptimizer {
     return Promise.resolve(result);
   }
 
-  private calculateNutritionSimilarity(
-    food1: FoodOption,
-    food2: FoodOption,
-  ): number {
+  private calculateNutritionSimilarity(food1: FoodOption, food2: FoodOption): number {
     const normalizeNutrition = (nutrition: any) => {
-      const total =
-        nutrition.calories +
-        nutrition.protein +
-        nutrition.carbs +
-        nutrition.fat;
+      const total = nutrition.calories + nutrition.protein + nutrition.carbs + nutrition.fat;
       return {
         calories: nutrition.calories / total,
         protein: nutrition.protein / total,
@@ -357,7 +322,7 @@ export class CostOptimizer {
       Math.pow(norm1.calories - norm2.calories, 2) +
         Math.pow(norm1.protein - norm2.protein, 2) +
         Math.pow(norm1.carbs - norm2.carbs, 2) +
-        Math.pow(norm1.fat - norm2.fat, 2),
+        Math.pow(norm1.fat - norm2.fat, 2)
     );
 
     return 1 - distance;
@@ -371,14 +336,11 @@ export class CostOptimizer {
         carbs: total.carbs + food.nutrition.carbs,
         fat: total.fat + food.nutrition.fat,
       }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
   }
 
-  private meetsNutritionRequirements(
-    actual: NutritionTarget,
-    targets: NutritionTarget,
-  ): boolean {
+  private meetsNutritionRequirements(actual: NutritionTarget, targets: NutritionTarget): boolean {
     const tolerance = 0.1;
 
     return (
@@ -391,7 +353,7 @@ export class CostOptimizer {
 
   private generateSubstitutions(
     original: FoodOption[],
-    optimized: FoodOption[],
+    optimized: FoodOption[]
   ): Array<{
     original: FoodOption;
     substitute: FoodOption;
@@ -402,9 +364,7 @@ export class CostOptimizer {
 
     for (const origFood of original) {
       const replacement = optimized.find(
-        (opt) =>
-          opt.food.category === origFood.food.category &&
-          opt.food.id !== origFood.food.id,
+        (opt) => opt.food.category === origFood.food.category && opt.food.id !== origFood.food.id
       );
 
       if (replacement && replacement.cost < origFood.cost) {
@@ -423,7 +383,7 @@ export class CostOptimizer {
   async multiObjectiveOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<OptimizationResult> {
     const weights = {
       cost: constraints.economyMode ? 0.6 : 0.4,
@@ -434,15 +394,12 @@ export class CostOptimizer {
     const candidates = await this.generateCandidateSolutions(
       originalFoods,
       substitutes,
-      constraints,
+      constraints
     );
 
     const scoredCandidates = candidates.map((candidate) => {
       const costScore = this.calculateCostScore(candidate, constraints);
-      const nutritionScore = this.calculateNutritionScore(
-        candidate,
-        constraints,
-      );
+      const nutritionScore = this.calculateNutritionScore(candidate, constraints);
       const varietyScore = this.calculateVarietyScore(candidate);
 
       const totalScore =
@@ -462,42 +419,29 @@ export class CostOptimizer {
     });
 
     const bestSolution = scoredCandidates.reduce((best, current) =>
-      current.totalScore > best.totalScore ? current : best,
+      current.totalScore > best.totalScore ? current : best
     );
 
-    const originalCost = originalFoods.reduce(
-      (sum, food) => sum + food.cost,
-      0,
-    );
+    const originalCost = originalFoods.reduce((sum, food) => sum + food.cost, 0);
     const originalNutrition = this.calculateTotalNutrition(originalFoods);
-    const optimizedNutrition = this.calculateTotalNutrition(
-      bestSolution.candidate,
-    );
-    const optimizedCost = bestSolution.candidate.reduce(
-      (sum, food) => sum + food.cost,
-      0,
-    );
+    const optimizedNutrition = this.calculateTotalNutrition(bestSolution.candidate);
+    const optimizedCost = bestSolution.candidate.reduce((sum, food) => sum + food.cost, 0);
 
     return {
       originalCost,
       optimizedCost,
       savings: originalCost - optimizedCost,
       savingsPercentage:
-        originalCost > 0
-          ? ((originalCost - optimizedCost) / originalCost) * 100
-          : 0,
+        originalCost > 0 ? ((originalCost - optimizedCost) / originalCost) * 100 : 0,
       originalFoods,
       optimizedFoods: bestSolution.candidate,
-      substitutions: this.generateSubstitutions(
-        originalFoods,
-        bestSolution.candidate,
-      ),
+      substitutions: this.generateSubstitutions(originalFoods, bestSolution.candidate),
       nutritionComparison: {
         original: originalNutrition,
         optimized: optimizedNutrition,
         meetsRequirements: this.meetsNutritionRequirements(
           optimizedNutrition,
-          constraints.nutritionTargets,
+          constraints.nutritionTargets
         ),
       },
     };
@@ -506,39 +450,19 @@ export class CostOptimizer {
   private async generateCandidateSolutions(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<FoodOption[][]> {
     const candidates: FoodOption[][] = [];
 
     candidates.push([...originalFoods]);
 
-    candidates.push(
-      await this.economyModeOptimization(
-        originalFoods,
-        substitutes,
-        constraints,
-      ),
-    );
+    candidates.push(await this.economyModeOptimization(originalFoods, substitutes, constraints));
 
-    candidates.push(
-      await this.balancedOptimization(originalFoods, substitutes, constraints),
-    );
+    candidates.push(await this.balancedOptimization(originalFoods, substitutes, constraints));
 
-    candidates.push(
-      await this.nutritionFirstOptimization(
-        originalFoods,
-        substitutes,
-        constraints,
-      ),
-    );
+    candidates.push(await this.nutritionFirstOptimization(originalFoods, substitutes, constraints));
 
-    candidates.push(
-      await this.varietyFirstOptimization(
-        originalFoods,
-        substitutes,
-        constraints,
-      ),
-    );
+    candidates.push(await this.varietyFirstOptimization(originalFoods, substitutes, constraints));
 
     return candidates.filter((candidate) => candidate.length > 0);
   }
@@ -546,7 +470,7 @@ export class CostOptimizer {
   private async nutritionFirstOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<FoodOption[]> {
     const result: FoodOption[] = [];
     const targetNutrition = constraints.nutritionTargets;
@@ -590,13 +514,9 @@ export class CostOptimizer {
   private async varietyFirstOptimization(
     originalFoods: FoodOption[],
     substitutes: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): Promise<FoodOption[]> {
-    const categories = [
-      ...new Set(
-        [...originalFoods, ...substitutes].map((f) => f.food.category),
-      ),
-    ];
+    const categories = [...new Set([...originalFoods, ...substitutes].map((f) => f.food.category))];
     const result: FoodOption[] = [];
 
     for (const category of categories) {
@@ -613,24 +533,20 @@ export class CostOptimizer {
     return result;
   }
 
-  private calculateCostScore(
-    foods: FoodOption[],
-    constraints: OptimizationConstraints,
-  ): number {
+  private calculateCostScore(foods: FoodOption[], constraints: OptimizationConstraints): number {
     const totalCost = foods.reduce((sum, food) => sum + food.cost, 0);
 
     if (constraints.maxCost) {
       return Math.max(0, 1 - totalCost / constraints.maxCost);
     }
 
-    const avgCost =
-      foods.reduce((sum, food) => sum + food.cost, 0) / foods.length;
+    const avgCost = foods.reduce((sum, food) => sum + food.cost, 0) / foods.length;
     return Math.max(0, 1 - avgCost / 50);
   }
 
   private calculateNutritionScore(
     foods: FoodOption[],
-    constraints: OptimizationConstraints,
+    constraints: OptimizationConstraints
   ): number {
     const nutrition = this.calculateTotalNutrition(foods);
     const targets = constraints.nutritionTargets;
@@ -672,14 +588,11 @@ export class CostOptimizer {
       throw new Error("食物不存在");
     }
 
-    const priceHistories = (await convexClient.query(
-      api.budget.getPriceHistories,
-      {
-        foodId: foodId as Id<"foods">,
-        isValid: true,
-        limit: 20,
-      },
-    )) as Doc<"priceHistories">[];
+    const priceHistories = (await convexClient.query(api.budget.getPriceHistories, {
+      foodId: foodId as Id<"foods">,
+      isValid: true,
+      limit: 20,
+    })) as Doc<"priceHistories">[];
 
     const platformPrices: { [key: string]: any } = {};
 
@@ -710,13 +623,9 @@ export class CostOptimizer {
       throw new Error("价格数据不足");
     }
 
-    const avgPrice =
-      sortedPrices.reduce((sum, p) => sum + p.unitPrice, 0) /
-      sortedPrices.length;
+    const avgPrice = sortedPrices.reduce((sum, p) => sum + p.unitPrice, 0) / sortedPrices.length;
     const savings =
-      sortedPrices.length > 1
-        ? ((avgPrice - bestPrice.unitPrice) / avgPrice) * 100
-        : 0;
+      sortedPrices.length > 1 ? ((avgPrice - bestPrice.unitPrice) / avgPrice) * 100 : 0;
 
     return {
       food: {

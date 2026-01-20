@@ -22,19 +22,13 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get("token");
 
     if (memberId) {
-      const access = await convexClient.query<{ hasAccess: boolean }>(
-        api.members.verifyAccess,
-        {
-          memberId: memberId as Id<"familyMembers">,
-          clerkId: session.user.id,
-        },
-      );
+      const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+        memberId: memberId as Id<"familyMembers">,
+        clerkId: session.user.id,
+      });
 
       if (!access.hasAccess) {
-        return NextResponse.json(
-          { error: "无权限访问该家庭成员" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "无权限访问该家庭成员" }, { status: 403 });
       }
     }
 
@@ -43,7 +37,7 @@ export async function GET(request: NextRequest) {
       if (!verification.valid || !verification.payload) {
         return NextResponse.json(
           { error: verification.error || "分享链接已失效" },
-          { status: 410 },
+          { status: 410 }
         );
       }
 
@@ -53,30 +47,23 @@ export async function GET(request: NextRequest) {
 
       const shareStats = await shareTrackingService.getShareStatistics(token);
 
-      const shareContent = await convexClient.query<Record<
-        string,
-        unknown
-      > | null>(api.social.getSharedContentById, {
-        id: verification.payload.resourceId as Id<"sharedContents">,
-      });
+      const shareContent = await convexClient.query<Record<string, unknown> | null>(
+        api.social.getSharedContentById,
+        {
+          id: verification.payload.resourceId as Id<"sharedContents">,
+        }
+      );
 
       if (!shareContent) {
         return NextResponse.json({ error: "分享内容不存在" }, { status: 404 });
       }
 
-      const member = await convexClient.query<Record<string, unknown> | null>(
-        api.members.getById,
-        { memberId: shareContent.memberId as Id<"familyMembers"> },
-      );
+      const member = await convexClient.query<Record<string, unknown> | null>(api.members.getById, {
+        memberId: shareContent.memberId as Id<"familyMembers">,
+      });
 
-      if (
-        member?.userId !== session.user.id &&
-        shareContent.privacyLevel === "PRIVATE"
-      ) {
-        return NextResponse.json(
-          { error: "无权限查看该分享统计" },
-          { status: 403 },
-        );
+      if (member?.userId !== session.user.id && shareContent.privacyLevel === "PRIVATE") {
+        return NextResponse.json({ error: "无权限查看该分享统计" }, { status: 403 });
       }
 
       return NextResponse.json({
@@ -94,16 +81,13 @@ export async function GET(request: NextRequest) {
     const additionalStats: Record<string, unknown> = {};
 
     if (analysisType === "user" && memberId) {
-      analytics = await shareTrackingService.getUserShareAnalytics(
-        memberId,
-        period,
-      );
+      analytics = await shareTrackingService.getUserShareAnalytics(memberId, period);
     } else if (analysisType === "global") {
       analytics = await shareTrackingService.getGlobalShareAnalytics(period);
     } else {
       return NextResponse.json(
         { error: "memberId is required for user analytics" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 

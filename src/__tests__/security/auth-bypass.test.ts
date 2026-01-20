@@ -54,30 +54,27 @@ describe("认证绕过测试", () => {
       { path: "/api/admin/scheduler", method: "POST" },
     ];
 
-    it.each(protectedEndpoints)(
-      "应拒绝未认证的 $method $path 请求",
-      async ({ path, method }) => {
-        // 动态导入路由处理器
-        const routePath = path.replace("/api/", "").replace(/\//g, "/");
+    it.each(protectedEndpoints)("应拒绝未认证的 $method $path 请求", async ({ path, method }) => {
+      // 动态导入路由处理器
+      const routePath = path.replace("/api/", "").replace(/\//g, "/");
 
-        try {
-          const routeModule = await import(`@/app/api/${routePath}/route`);
-          const handler = routeModule[method];
+      try {
+        const routeModule = await import(`@/app/api/${routePath}/route`);
+        const handler = routeModule[method];
 
-          if (handler) {
-            const request = new NextRequest(`http://localhost${path}`, {
-              method,
-            });
+        if (handler) {
+          const request = new NextRequest(`http://localhost${path}`, {
+            method,
+          });
 
-            const response = await handler(request);
+          const response = await handler(request);
 
-            expect(response.status).toBe(401);
-          }
-        } catch {
-          // 路由不存在或无法导入，跳过
+          expect(response.status).toBe(401);
         }
-      },
-    );
+      } catch {
+        // 路由不存在或无法导入，跳过
+      }
+    });
   });
 
   describe("认证但无权限应返回 403", () => {

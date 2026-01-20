@@ -87,7 +87,7 @@ describe("Nutrition Calculator Service", () => {
           gender: "male",
           activityLevel: "moderate",
           goal: "maintain",
-        }),
+        })
       ).toThrow();
 
       expect(() =>
@@ -98,7 +98,7 @@ describe("Nutrition Calculator Service", () => {
           gender: "male",
           activityLevel: "moderate",
           goal: "maintain",
-        }),
+        })
       ).toThrow();
     });
   });
@@ -245,14 +245,8 @@ describe("Nutrition Calculator Service", () => {
       expect(mealPlan).toHaveLength(3);
 
       // Check that totals match daily targets
-      const totalCalories = mealPlan.reduce(
-        (sum, meal) => sum + meal.calories,
-        0,
-      );
-      const totalProtein = mealPlan.reduce(
-        (sum, meal) => sum + meal.protein,
-        0,
-      );
+      const totalCalories = mealPlan.reduce((sum, meal) => sum + meal.calories, 0);
+      const totalProtein = mealPlan.reduce((sum, meal) => sum + meal.protein, 0);
       const totalCarbs = mealPlan.reduce((sum, meal) => sum + meal.carbs, 0);
       const totalFat = mealPlan.reduce((sum, meal) => sum + meal.fat, 0);
 

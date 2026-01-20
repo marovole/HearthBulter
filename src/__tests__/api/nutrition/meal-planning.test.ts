@@ -49,9 +49,7 @@ jest.mock("@/lib/db", () => ({
 
 // Mock JWT verification
 jest.mock("jose", () => ({
-  jwtVerify: jest
-    .fn()
-    .mockResolvedValue({ sub: "user-123", email: "test@example.com" }),
+  jwtVerify: jest.fn().mockResolvedValue({ sub: "user-123", email: "test@example.com" }),
 }));
 
 // Mock nutrition calculator
@@ -126,7 +124,7 @@ describe("/api/nutrition API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {
@@ -160,7 +158,7 @@ describe("/api/nutrition API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {
@@ -174,7 +172,7 @@ describe("/api/nutrition API", () => {
             where: expect.objectContaining({
               isActive: true,
             }),
-          }),
+          })
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -208,17 +206,14 @@ describe("/api/nutrition API", () => {
 
       prisma.mealPlan.create.mockResolvedValue(createdMealPlan);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/meal-plans",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(newMealPlan),
+      const request = new NextRequest("http://localhost:3000/api/nutrition/meal-plans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(newMealPlan),
+      });
 
       try {
         const { POST } = await import("@/app/api/nutrition/meal-plans/route");
@@ -258,17 +253,14 @@ describe("/api/nutrition API", () => {
         targetFat: 10,
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/meal-plans",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidMealPlan),
+      const request = new NextRequest("http://localhost:3000/api/nutrition/meal-plans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidMealPlan),
+      });
 
       try {
         const { POST } = await import("@/app/api/nutrition/meal-plans/route");
@@ -294,17 +286,14 @@ describe("/api/nutrition API", () => {
         targetFat: 65,
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/meal-plans",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidDateMealPlan),
+      const request = new NextRequest("http://localhost:3000/api/nutrition/meal-plans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidDateMealPlan),
+      });
 
       try {
         const { POST } = await import("@/app/api/nutrition/meal-plans/route");
@@ -377,13 +366,11 @@ describe("/api/nutrition API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {
-        const { GET } = await import(
-          "@/app/api/nutrition/meal-plans/[id]/meals/route"
-        );
+        const { GET } = await import("@/app/api/nutrition/meal-plans/[id]/meals/route");
         const response = await GET(request, {
           params: Promise.resolve({ id: "plan-1" }),
         });
@@ -415,13 +402,11 @@ describe("/api/nutrition API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {
-        const { GET } = await import(
-          "@/app/api/nutrition/meal-plans/[id]/meals/route"
-        );
+        const { GET } = await import("@/app/api/nutrition/meal-plans/[id]/meals/route");
         const response = await GET(request, {
           params: Promise.resolve({ id: "plan-1" }),
         });
@@ -434,7 +419,7 @@ describe("/api/nutrition API", () => {
               mealPlanId: "plan-1",
               type: "breakfast",
             }),
-          }),
+          })
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -484,13 +469,11 @@ describe("/api/nutrition API", () => {
             Authorization: "Bearer valid-jwt-token",
           },
           body: JSON.stringify(newMeal),
-        },
+        }
       );
 
       try {
-        const { POST } = await import(
-          "@/app/api/nutrition/meal-plans/[id]/meals/route"
-        );
+        const { POST } = await import("@/app/api/nutrition/meal-plans/[id]/meals/route");
         const response = await POST(request, {
           params: Promise.resolve({ id: "plan-1" }),
         });
@@ -544,13 +527,11 @@ describe("/api/nutrition API", () => {
             Authorization: "Bearer valid-jwt-token",
           },
           body: JSON.stringify(invalidMeal),
-        },
+        }
       );
 
       try {
-        const { POST } = await import(
-          "@/app/api/nutrition/meal-plans/[id]/meals/route"
-        );
+        const { POST } = await import("@/app/api/nutrition/meal-plans/[id]/meals/route");
         const response = await POST(request, {
           params: Promise.resolve({ id: "plan-1" }),
         });
@@ -605,7 +586,7 @@ describe("/api/nutrition API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {
@@ -661,17 +642,14 @@ describe("/api/nutrition API", () => {
 
       prisma.nutritionLog.create.mockResolvedValue(createdLog);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/logs",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(newNutritionLog),
+      const request = new NextRequest("http://localhost:3000/api/nutrition/logs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(newNutritionLog),
+      });
 
       try {
         const { POST } = await import("@/app/api/nutrition/logs/route");
@@ -706,17 +684,14 @@ describe("/api/nutrition API", () => {
         waterIntake: 2000,
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/logs",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(duplicateLog),
+      const request = new NextRequest("http://localhost:3000/api/nutrition/logs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(duplicateLog),
+      });
 
       try {
         const { POST } = await import("@/app/api/nutrition/logs/route");
@@ -770,19 +745,14 @@ describe("/api/nutrition API", () => {
       });
 
       nutritionCalculator.calculateNutritionScore.mockReturnValue(82);
-      nutritionCalculator.analyzeNutritionBalance.mockReturnValue(
-        mockAnalytics,
-      );
+      nutritionCalculator.analyzeNutritionBalance.mockReturnValue(mockAnalytics);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/analytics?period=30",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/nutrition/analytics?period=30", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/nutrition/analytics/route");
@@ -805,19 +775,14 @@ describe("/api/nutrition API", () => {
 
   describe("Error handling", () => {
     it("should handle database errors gracefully", async () => {
-      prisma.mealPlan.findMany.mockRejectedValue(
-        new Error("Database connection failed"),
-      );
+      prisma.mealPlan.findMany.mockRejectedValue(new Error("Database connection failed"));
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/meal-plans",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/nutrition/meal-plans", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/nutrition/meal-plans/route");
@@ -832,12 +797,9 @@ describe("/api/nutrition API", () => {
     });
 
     it("should require authentication", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/meal-plans",
-        {
-          method: "GET",
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/nutrition/meal-plans", {
+        method: "GET",
+      });
 
       try {
         const { GET } = await import("@/app/api/nutrition/meal-plans/route");
@@ -865,17 +827,14 @@ describe("/api/nutrition API", () => {
         targetFat: 5,
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/meal-plans",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidMealPlan),
+      const request = new NextRequest("http://localhost:3000/api/nutrition/meal-plans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidMealPlan),
+      });
 
       try {
         const { POST } = await import("@/app/api/nutrition/meal-plans/route");
@@ -901,17 +860,14 @@ describe("/api/nutrition API", () => {
         targetFat: 20,
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/nutrition/meal-plans",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(imbalancedMealPlan),
+      const request = new NextRequest("http://localhost:3000/api/nutrition/meal-plans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(imbalancedMealPlan),
+      });
 
       try {
         const { POST } = await import("@/app/api/nutrition/meal-plans/route");

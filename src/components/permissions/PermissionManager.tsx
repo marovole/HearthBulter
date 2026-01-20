@@ -184,10 +184,7 @@ export function PermissionManager() {
   };
 
   // 更新成员角色
-  const handleRoleChange = async (
-    memberId: string,
-    newRole: FamilyMemberRole,
-  ) => {
+  const handleRoleChange = async (memberId: string, newRole: FamilyMemberRole) => {
     setIsLoading(true);
     try {
       await updateMemberPermissions(memberId, { role: newRole });
@@ -204,7 +201,7 @@ export function PermissionManager() {
   const handlePermissionToggle = async (
     memberId: string,
     permission: Permission,
-    granted: boolean,
+    granted: boolean
   ) => {
     setIsLoading(true);
     try {
@@ -288,7 +285,7 @@ export function PermissionManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">权限管理</h1>
           <p className="text-muted-foreground">管理家庭成员权限和访问控制</p>
@@ -296,14 +293,14 @@ export function PermissionManager() {
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportPermissions}>
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             导出配置
           </Button>
 
           <label className="cursor-pointer">
             <Button variant="outline" asChild>
               <span>
-                <Upload className="w-4 h-4 mr-2" />
+                <Upload className="mr-2 h-4 w-4" />
                 导入配置
               </span>
             </Button>
@@ -319,7 +316,7 @@ export function PermissionManager() {
           </label>
 
           <Button variant="outline" onClick={() => window.location.reload()}>
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             刷新
           </Button>
         </div>
@@ -335,7 +332,7 @@ export function PermissionManager() {
 
         {/* 概览标签页 */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">总成员数</CardTitle>
@@ -349,18 +346,14 @@ export function PermissionManager() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  管理员数量
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">管理员数量</CardTitle>
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {
-                    members.filter(
-                      (m: FamilyMemberInfo) =>
-                        m.role === FamilyMemberRole.ADMIN,
-                    ).length
+                    members.filter((m: FamilyMemberInfo) => m.role === FamilyMemberRole.ADMIN)
+                      .length
                   }
                 </div>
                 <p className="text-xs text-muted-foreground">具有管理权限</p>
@@ -387,33 +380,23 @@ export function PermissionManager() {
             <CardContent>
               <div className="space-y-4">
                 {Object.values(FamilyMemberRole).map((role) => {
-                  const count = members.filter(
-                    (m: FamilyMemberInfo) => m.role === role,
-                  ).length;
-                  const percentage =
-                    members.length > 0 ? (count / members.length) * 100 : 0;
+                  const count = members.filter((m: FamilyMemberInfo) => m.role === role).length;
+                  const percentage = members.length > 0 ? (count / members.length) * 100 : 0;
 
                   return (
-                    <div
-                      key={role}
-                      className="flex items-center justify-between"
-                    >
+                    <div key={role} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          {getRoleDisplayName(role)}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {count} 成员
-                        </span>
+                        <Badge variant="outline">{getRoleDisplayName(role)}</Badge>
+                        <span className="text-sm text-muted-foreground">{count} 成员</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-32 bg-secondary rounded-full h-2">
+                        <div className="h-2 w-32 rounded-full bg-secondary">
                           <div
-                            className="bg-primary h-2 rounded-full transition-all"
+                            className="h-2 rounded-full bg-primary transition-all"
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
-                        <span className="text-sm text-muted-foreground w-10">
+                        <span className="w-10 text-sm text-muted-foreground">
                           {percentage.toFixed(0)}%
                         </span>
                       </div>
@@ -433,7 +416,7 @@ export function PermissionManager() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="text-center py-8">加载中...</div>
+                <div className="py-8 text-center">加载中...</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -449,22 +432,15 @@ export function PermissionManager() {
                     {members.map((member: FamilyMemberInfo) => (
                       <TableRow
                         key={member.id}
-                        className={
-                          selectedMember === member.id ? "bg-muted/50" : ""
-                        }
+                        className={selectedMember === member.id ? "bg-muted/50" : ""}
                         onClick={() => setSelectedMember(member.id)}
                       >
-                        <TableCell className="font-medium">
-                          {member.name}
-                        </TableCell>
+                        <TableCell className="font-medium">{member.name}</TableCell>
                         <TableCell>
                           <Select
                             value={member.role}
                             onValueChange={(value) =>
-                              handleRoleChange(
-                                member.id,
-                                value as FamilyMemberRole,
-                              )
+                              handleRoleChange(member.id, value as FamilyMemberRole)
                             }
                           >
                             <SelectTrigger>
@@ -480,18 +456,12 @@ export function PermissionManager() {
                           </Select>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              member.deletedAt ? "destructive" : "default"
-                            }
-                          >
+                          <Badge variant={member.deletedAt ? "destructive" : "default"}>
                             {member.deletedAt ? "已删除" : "活跃"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {member.updatedAt
-                            ? new Date(member.updatedAt).toLocaleString()
-                            : "未知"}
+                          {member.updatedAt ? new Date(member.updatedAt).toLocaleString() : "未知"}
                         </TableCell>
                         <TableCell>
                           <Button
@@ -499,7 +469,7 @@ export function PermissionManager() {
                             size="sm"
                             onClick={() => setSelectedMember(member.id)}
                           >
-                            <Settings className="w-4 h-4" />
+                            <Settings className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -516,9 +486,7 @@ export function PermissionManager() {
           <Card>
             <CardHeader>
               <CardTitle>权限矩阵</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                查看各角色在不同功能区域的权限配置
-              </p>
+              <p className="text-sm text-muted-foreground">查看各角色在不同功能区域的权限配置</p>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -534,43 +502,34 @@ export function PermissionManager() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Object.entries(permissionGroups).map(
-                      ([groupName, groupPermissions]) => (
-                        <React.Fragment key={groupName}>
-                          <TableRow>
-                            <TableCell
-                              colSpan={
-                                Object.values(FamilyMemberRole).length + 1
-                              }
-                              className="bg-muted/50 font-medium"
-                            >
-                              {groupName}
+                    {Object.entries(permissionGroups).map(([groupName, groupPermissions]) => (
+                      <React.Fragment key={groupName}>
+                        <TableRow>
+                          <TableCell
+                            colSpan={Object.values(FamilyMemberRole).length + 1}
+                            className="bg-muted/50 font-medium"
+                          >
+                            {groupName}
+                          </TableCell>
+                        </TableRow>
+                        {groupPermissions.map((permission) => (
+                          <TableRow key={permission}>
+                            <TableCell className="font-medium">
+                              {getPermissionDisplayName(permission)}
                             </TableCell>
-                          </TableRow>
-                          {groupPermissions.map((permission) => (
-                            <TableRow key={permission}>
-                              <TableCell className="font-medium">
-                                {getPermissionDisplayName(permission)}
+                            {Object.values(FamilyMemberRole).map((role) => (
+                              <TableCell key={`${role}-${permission}`} className="text-center">
+                                {permissionMatrix[role]?.includes(permission) ? (
+                                  <CheckCircle className="mx-auto h-5 w-5 text-green-500" />
+                                ) : (
+                                  <XCircle className="mx-auto h-5 w-5 text-red-500" />
+                                )}
                               </TableCell>
-                              {Object.values(FamilyMemberRole).map((role) => (
-                                <TableCell
-                                  key={`${role}-${permission}`}
-                                  className="text-center"
-                                >
-                                  {permissionMatrix[role]?.includes(
-                                    permission,
-                                  ) ? (
-                                      <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                                    ) : (
-                                      <XCircle className="w-5 h-5 text-red-500 mx-auto" />
-                                    )}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))}
-                        </React.Fragment>
-                      ),
-                    )}
+                            ))}
+                          </TableRow>
+                        ))}
+                      </React.Fragment>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
@@ -583,9 +542,7 @@ export function PermissionManager() {
           <Card>
             <CardHeader>
               <CardTitle>权限审计日志</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                查看权限变更的详细记录
-              </p>
+              <p className="text-sm text-muted-foreground">查看权限变更的详细记录</p>
             </CardHeader>
             <CardContent>
               {auditLogs.length === 0 ? (
@@ -599,8 +556,8 @@ export function PermissionManager() {
               ) : (
                 <div className="space-y-4">
                   {auditLogs.map((log) => (
-                    <div key={log.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
+                    <div key={log.id} className="rounded-lg border p-4">
+                      <div className="mb-2 flex items-start justify-between">
                         <div>
                           <p className="font-medium">{log.action}</p>
                           <p className="text-sm text-muted-foreground">
@@ -617,10 +574,8 @@ export function PermissionManager() {
                       </div>
 
                       {log.oldRole && log.newRole && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline">
-                            {getRoleDisplayName(log.oldRole)}
-                          </Badge>
+                        <div className="mt-2 flex items-center gap-2">
+                          <Badge variant="outline">{getRoleDisplayName(log.oldRole)}</Badge>
                           <span>→</span>
                           <Badge>{getRoleDisplayName(log.newRole)}</Badge>
                         </div>
@@ -628,14 +583,10 @@ export function PermissionManager() {
 
                       {log.permissions.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-sm font-medium mb-1">权限变更:</p>
+                          <p className="mb-1 text-sm font-medium">权限变更:</p>
                           <div className="flex flex-wrap gap-1">
                             {log.permissions.map((permission) => (
-                              <Badge
-                                key={permission}
-                                variant="secondary"
-                                className="text-xs"
-                              >
+                              <Badge key={permission} variant="secondary" className="text-xs">
                                 {getPermissionDisplayName(permission)}
                               </Badge>
                             ))}

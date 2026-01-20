@@ -21,10 +21,7 @@ export const registerSchema = z.object({
   password: z
     .string()
     .min(8, "密码至少需要8个字符")
-    .regex(
-      /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
-      "密码必须包含字母和数字",
-    ),
+    .regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/, "密码必须包含字母和数字"),
 });
 
 /**
@@ -84,21 +81,10 @@ export const memberSchema = z.object({
  * Validate health goal data
  */
 export const healthGoalSchema = z.object({
-  goalType: z.enum([
-    "LOSE_WEIGHT",
-    "GAIN_MUSCLE",
-    "MAINTAIN",
-    "IMPROVE_HEALTH",
-  ]),
+  goalType: z.enum(["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN", "IMPROVE_HEALTH"]),
   targetWeight: z.number().min(20).max(300).optional(),
   targetWeeks: z.number().min(1).max(52).optional(),
-  activityLevel: z.enum([
-    "SEDENTARY",
-    "LIGHT",
-    "MODERATE",
-    "ACTIVE",
-    "VERY_ACTIVE",
-  ]),
+  activityLevel: z.enum(["SEDENTARY", "LIGHT", "MODERATE", "ACTIVE", "VERY_ACTIVE"]),
   carbRatio: z.number().min(0).max(1).default(0.5),
   proteinRatio: z.number().min(0).max(1).default(0.2),
   fatRatio: z.number().min(0).max(1).default(0.3),
@@ -131,10 +117,8 @@ export function formatValidationError(error: z.ZodError) {
 // 通用验证函数
 export async function validateRequestBody<T>(
   request: NextRequest,
-  schema: z.ZodSchema<T>,
-): Promise<
-  { success: true; data: T } | { success: false; response: NextResponse }
-> {
+  schema: z.ZodSchema<T>
+): Promise<{ success: true; data: T } | { success: false; response: NextResponse }> {
   try {
     const body = await request.json();
     const result = schema.safeParse(body);
@@ -195,11 +179,7 @@ export const commonSchemas = {
   email: z.string().email("请输入有效的邮箱地址"),
 
   // 姓名
-  name: z
-    .string()
-    .min(1, "姓名不能为空")
-    .max(50, "姓名不能超过50个字符")
-    .trim(),
+  name: z.string().min(1, "姓名不能为空").max(50, "姓名不能超过50个字符").trim(),
 
   // 性别 (更新为包含OTHER选项)
   gender: z.enum(["MALE", "FEMALE", "OTHER"], {
@@ -210,10 +190,7 @@ export const commonSchemas = {
   date: z.string().datetime("请输入有效的日期时间"),
 
   // 正数
-  positiveNumber: z
-    .number()
-    .positive("必须是正数")
-    .max(10000, "数值不能超过10000"),
+  positiveNumber: z.number().positive("必须是正数").max(10000, "数值不能超过10000"),
 
   // 体重 (kg)
   weight: z
@@ -230,11 +207,7 @@ export const commonSchemas = {
     .max(250, "身高不能大于250cm"),
 
   // 年龄
-  age: z
-    .number()
-    .int("年龄必须是整数")
-    .min(0, "年龄不能小于0")
-    .max(150, "年龄不能大于150"),
+  age: z.number().int("年龄必须是整数").min(0, "年龄不能小于0").max(150, "年龄不能大于150"),
 };
 
 // API响应格式化函数
@@ -306,7 +279,7 @@ export const healthDataSchemas = {
 export function validatePermission(
   userRole: string,
   requiredRole: string,
-  isCreator: boolean = false,
+  isCreator: boolean = false
 ): boolean {
   if (isCreator) return true;
   if (requiredRole === "ADMIN" && userRole === "ADMIN") return true;

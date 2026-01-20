@@ -18,21 +18,12 @@ export async function POST(request: NextRequest) {
     const { memberId, foodIds, optimizationType, constraints } = body;
 
     if (!memberId || !foodIds || !Array.isArray(foodIds)) {
-      return NextResponse.json(
-        { error: "缺少必需参数: memberId, foodIds" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少必需参数: memberId, foodIds" }, { status: 400 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(memberId, session.user.id);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的优化建议" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的优化建议" }, { status: 403 });
     }
 
     if (foodIds.length === 0) {
@@ -42,58 +33,53 @@ export async function POST(request: NextRequest) {
     let result;
 
     switch (optimizationType) {
-    case "shoppingList":
-      result = await costOptimizer.optimizeShoppingList(foodIds, {
-        nutritionTargets: constraints?.nutritionTargets || {
-          calories: 2000,
-          protein: 60,
-          carbs: 250,
-          fat: 65,
-        },
-        maxCost: constraints?.maxCost,
-        minSavings: constraints?.minSavings,
-        allowedCategories: constraints?.allowedCategories,
-        excludedFoodIds: constraints?.excludedFoodIds,
-        preferSeasonal: constraints?.preferSeasonal || false,
-        economyMode: constraints?.economyMode || false,
-      });
-      break;
+      case "shoppingList":
+        result = await costOptimizer.optimizeShoppingList(foodIds, {
+          nutritionTargets: constraints?.nutritionTargets || {
+            calories: 2000,
+            protein: 60,
+            carbs: 250,
+            fat: 65,
+          },
+          maxCost: constraints?.maxCost,
+          minSavings: constraints?.minSavings,
+          allowedCategories: constraints?.allowedCategories,
+          excludedFoodIds: constraints?.excludedFoodIds,
+          preferSeasonal: constraints?.preferSeasonal || false,
+          economyMode: constraints?.economyMode || false,
+        });
+        break;
 
-    case "multiObjective":
-      const originalFoods =
-          await costOptimizer.getFoodOptionsForOptimization(foodIds);
-      const substituteOptions =
-          await costOptimizer.findSubstituteOptionsForOptimization(
-            originalFoods,
-            constraints || {},
-          );
-      result = await costOptimizer.multiObjectiveOptimization(
-        originalFoods,
-        substituteOptions,
-        constraints || {},
-      );
-      break;
-
-    case "platformComparison":
-      if (foodIds.length === 1) {
-        result = await priceAnalyzer.getPlatformComparison(
-          foodIds[0],
-          constraints?.quantity || 1,
+      case "multiObjective":
+        const originalFoods = await costOptimizer.getFoodOptionsForOptimization(foodIds);
+        const substituteOptions = await costOptimizer.findSubstituteOptionsForOptimization(
+          originalFoods,
+          constraints || {}
         );
-      } else {
+        result = await costOptimizer.multiObjectiveOptimization(
+          originalFoods,
+          substituteOptions,
+          constraints || {}
+        );
+        break;
+
+      case "platformComparison":
+        if (foodIds.length === 1) {
+          result = await priceAnalyzer.getPlatformComparison(
+            foodIds[0],
+            constraints?.quantity || 1
+          );
+        } else {
+          result = await priceAnalyzer.optimizeBulkPurchase(foodIds);
+        }
+        break;
+
+      case "bulkPurchase":
         result = await priceAnalyzer.optimizeBulkPurchase(foodIds);
-      }
-      break;
+        break;
 
-    case "bulkPurchase":
-      result = await priceAnalyzer.optimizeBulkPurchase(foodIds);
-      break;
-
-    default:
-      result = await costOptimizer.optimizeShoppingList(
-        foodIds,
-        constraints || {},
-      );
+      default:
+        result = await costOptimizer.optimizeShoppingList(foodIds, constraints || {});
     }
 
     return NextResponse.json({
@@ -131,14 +117,14 @@ export async function GET(request: NextRequest) {
     let result;
 
     switch (type) {
-    case "platform":
-      result = await priceAnalyzer.getPlatformComparison(foodId);
-      break;
-    case "priceHistory":
-      result = await priceAnalyzer.getPriceTrend(foodId);
-      break;
-    default:
-      result = await costOptimizer.getPlatformPriceComparison(foodId);
+      case "platform":
+        result = await priceAnalyzer.getPlatformComparison(foodId);
+        break;
+      case "priceHistory":
+        result = await priceAnalyzer.getPriceTrend(foodId);
+        break;
+      default:
+        result = await costOptimizer.getPlatformPriceComparison(foodId);
     }
 
     return NextResponse.json(result);

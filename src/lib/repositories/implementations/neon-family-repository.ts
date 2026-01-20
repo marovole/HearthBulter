@@ -92,15 +92,13 @@ export class NeonFamilyRepository implements FamilyRepository {
 
   async listUserFamilies(
     query: FamilyListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<FamilyWithMembersDTO>> {
     const { userId, includeDeleted = false, includeMembers = true } = query;
 
     // 查询用户创建的家庭
     const createdFamilies = await neonAdapter.family.findMany<FamilyRow>({
-      where: includeDeleted
-        ? { creatorId: userId }
-        : { creatorId: userId, deletedAt: null },
+      where: includeDeleted ? { creatorId: userId } : { creatorId: userId, deletedAt: null },
     });
 
     // 查询用户作为成员加入的家庭
@@ -116,9 +114,7 @@ export class NeonFamilyRepository implements FamilyRepository {
     const memberFamilies: FamilyRow[] = [];
     for (const familyId of memberFamilyIds) {
       const family = await neonAdapter.family.findFirst<FamilyRow>({
-        where: includeDeleted
-          ? { id: familyId }
-          : { id: familyId, deletedAt: null },
+        where: includeDeleted ? { id: familyId } : { id: familyId, deletedAt: null },
       });
       if (family) memberFamilies.push(family);
     }
@@ -131,12 +127,11 @@ export class NeonFamilyRepository implements FamilyRepository {
 
       let members: FamilyMemberDTO[] = [];
       if (includeMembers) {
-        const memberRows =
-          await neonAdapter.familyMember.findMany<FamilyMemberRow>({
-            where: includeDeleted
-              ? { familyId: family.id }
-              : { familyId: family.id, deletedAt: null },
-          });
+        const memberRows = await neonAdapter.familyMember.findMany<FamilyMemberRow>({
+          where: includeDeleted
+            ? { familyId: family.id }
+            : { familyId: family.id, deletedAt: null },
+        });
         members = memberRows.map((m) => this.mapFamilyMemberRow(m));
       }
 
@@ -155,7 +150,7 @@ export class NeonFamilyRepository implements FamilyRepository {
     }
 
     const allFamilies = Array.from(familyMap.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
     );
 
     // 应用分页
@@ -174,8 +169,7 @@ export class NeonFamilyRepository implements FamilyRepository {
     const updateData: Record<string, unknown> = {};
 
     if (payload.name !== undefined) updateData.name = payload.name;
-    if (payload.description !== undefined)
-      updateData.description = payload.description;
+    if (payload.description !== undefined) updateData.description = payload.description;
 
     const data = await neonAdapter.family.update<FamilyRow>({
       where: { id },
@@ -194,9 +188,7 @@ export class NeonFamilyRepository implements FamilyRepository {
 
   // ==================== 家庭成员管理 ====================
 
-  async addFamilyMember(
-    payload: CreateFamilyMemberDTO,
-  ): Promise<FamilyMemberDTO> {
+  async addFamilyMember(payload: CreateFamilyMemberDTO): Promise<FamilyMemberDTO> {
     const now = new Date();
     const data = await neonAdapter.familyMember.create<FamilyMemberRow>({
       data: {
@@ -219,10 +211,7 @@ export class NeonFamilyRepository implements FamilyRepository {
     return this.mapFamilyMemberRow(data);
   }
 
-  async listFamilyMembers(
-    familyId: string,
-    includeDeleted = false,
-  ): Promise<FamilyMemberDTO[]> {
+  async listFamilyMembers(familyId: string, includeDeleted = false): Promise<FamilyMemberDTO[]> {
     const data = await neonAdapter.familyMember.findMany<FamilyMemberRow>({
       where: includeDeleted ? { familyId } : { familyId, deletedAt: null },
     });
@@ -238,10 +227,7 @@ export class NeonFamilyRepository implements FamilyRepository {
     return data ? this.mapFamilyMemberRow(data) : null;
   }
 
-  async updateFamilyMember(
-    id: string,
-    payload: UpdateFamilyMemberDTO,
-  ): Promise<FamilyMemberDTO> {
+  async updateFamilyMember(id: string, payload: UpdateFamilyMemberDTO): Promise<FamilyMemberDTO> {
     const updateData: Record<string, unknown> = {};
 
     if (payload.name !== undefined) updateData.name = payload.name;
@@ -271,10 +257,7 @@ export class NeonFamilyRepository implements FamilyRepository {
     return !!data;
   }
 
-  async getUserFamilyRole(
-    familyId: string,
-    userId: string,
-  ): Promise<string | null> {
+  async getUserFamilyRole(familyId: string, userId: string): Promise<string | null> {
     const data = await neonAdapter.familyMember.findFirst<{ role: string }>({
       where: { familyId, userId, deletedAt: null },
     });
@@ -318,10 +301,8 @@ export class NeonFamilyRepository implements FamilyRepository {
       description: row.description || undefined,
       inviteCode: row.inviteCode,
       creatorId: row.creatorId,
-      createdAt:
-        row.createdAt instanceof Date ? row.createdAt : new Date(row.createdAt),
-      updatedAt:
-        row.updatedAt instanceof Date ? row.updatedAt : new Date(row.updatedAt),
+      createdAt: row.createdAt instanceof Date ? row.createdAt : new Date(row.createdAt),
+      updatedAt: row.updatedAt instanceof Date ? row.updatedAt : new Date(row.updatedAt),
       deletedAt: row.deletedAt
         ? row.deletedAt instanceof Date
           ? row.deletedAt
@@ -342,20 +323,15 @@ export class NeonFamilyRepository implements FamilyRepository {
       email: row.email || undefined,
       avatar: row.avatar || undefined,
       role: row.role as FamilyMemberDTO["role"],
-      joinedAt:
-        row.joinedAt instanceof Date ? row.joinedAt : new Date(row.joinedAt),
-      createdAt:
-        row.createdAt instanceof Date ? row.createdAt : new Date(row.createdAt),
-      updatedAt:
-        row.updatedAt instanceof Date ? row.updatedAt : new Date(row.updatedAt),
+      joinedAt: row.joinedAt instanceof Date ? row.joinedAt : new Date(row.joinedAt),
+      createdAt: row.createdAt instanceof Date ? row.createdAt : new Date(row.createdAt),
+      updatedAt: row.updatedAt instanceof Date ? row.updatedAt : new Date(row.updatedAt),
       deletedAt: row.deletedAt
         ? row.deletedAt instanceof Date
           ? row.deletedAt
           : new Date(row.deletedAt)
         : undefined,
-      gender: row.gender
-        ? (row.gender as "MALE" | "FEMALE" | "OTHER")
-        : undefined,
+      gender: row.gender ? (row.gender as "MALE" | "FEMALE" | "OTHER") : undefined,
       birthDate: row.birthDate
         ? row.birthDate instanceof Date
           ? row.birthDate

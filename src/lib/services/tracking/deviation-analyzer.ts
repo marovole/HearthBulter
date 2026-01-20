@@ -43,14 +43,14 @@ export interface WeeklyReport {
 
 export async function analyzeDailyDeviation(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<DeviationAnalysis[]> {
   const targetDate = new Date(date);
   targetDate.setHours(0, 0, 0, 0);
 
   const target = (await convexTracking.getDailyNutritionTarget(
     memberId,
-    targetDate,
+    targetDate
   )) as DailyNutritionTargetDoc | null;
 
   if (!target) {
@@ -139,7 +139,7 @@ function generateSuggestion(
   nutrient: "calories" | "protein" | "carbs" | "fat",
   deviation: number,
   target: number,
-  actual: number,
+  actual: number
 ): string | undefined {
   const diff = Math.abs(target - actual);
 
@@ -179,10 +179,7 @@ function generateSuggestion(
   }
 }
 
-export async function analyzePeriodDeviation(
-  memberId: string,
-  days: number = 7,
-) {
+export async function analyzePeriodDeviation(memberId: string, days: number = 7) {
   const endDate = new Date();
   endDate.setHours(0, 0, 0, 0);
 
@@ -192,7 +189,7 @@ export async function analyzePeriodDeviation(
   const targets = (await convexTracking.getDailyNutritionTargetsForPeriod(
     memberId,
     startDate,
-    endDate,
+    endDate
   )) as DailyNutritionTargetDoc[];
 
   if (targets.length === 0) {
@@ -212,30 +209,26 @@ export async function analyzePeriodDeviation(
   for (const nutrient of nutrients) {
     const deviations = targets.map((t) => {
       switch (nutrient) {
-      case "calories":
-        return t.caloriesDeviation;
-      case "protein":
-        return t.proteinDeviation;
-      case "carbs":
-        return t.carbsDeviation;
-      case "fat":
-        return t.fatDeviation;
-      default:
-        return 0;
+        case "calories":
+          return t.caloriesDeviation;
+        case "protein":
+          return t.proteinDeviation;
+        case "carbs":
+          return t.carbsDeviation;
+        case "fat":
+          return t.fatDeviation;
+        default:
+          return 0;
       }
     });
 
-    const avgDeviation =
-      deviations.reduce((sum, d) => sum + d, 0) / deviations.length;
+    const avgDeviation = deviations.reduce((sum, d) => sum + d, 0) / deviations.length;
 
     let consecutiveDays = 0;
     let currentStreak = 0;
 
     deviations.forEach((deviation) => {
-      if (
-        Math.abs(deviation) > 15 &&
-        Math.sign(deviation) === Math.sign(avgDeviation)
-      ) {
+      if (Math.abs(deviation) > 15 && Math.sign(deviation) === Math.sign(avgDeviation)) {
         currentStreak++;
         consecutiveDays = Math.max(consecutiveDays, currentStreak);
       } else {
@@ -263,11 +256,7 @@ export async function analyzePeriodDeviation(
         avgDeviation,
         consecutiveDays,
         severity,
-        suggestion: generatePeriodSuggestion(
-          nutrient,
-          avgDeviation,
-          consecutiveDays,
-        ),
+        suggestion: generatePeriodSuggestion(nutrient, avgDeviation, consecutiveDays),
       });
     }
   }
@@ -282,7 +271,7 @@ export async function analyzePeriodDeviation(
 function generatePeriodSuggestion(
   nutrient: "calories" | "protein" | "carbs" | "fat",
   avgDeviation: number,
-  days: number,
+  days: number
 ): string {
   const nutrientNames = {
     calories: "热量",
@@ -301,13 +290,11 @@ function generatePeriodSuggestion(
     if (avgDeviation > 0) {
       suggestion += "建议调整饮食结构，减少肉类摄入，增加蔬菜水果比例。";
     } else {
-      suggestion +=
-        "蛋白质摄入不足可能影响肌肉合成，建议每餐增加鸡蛋、瘦肉或豆制品。";
+      suggestion += "蛋白质摄入不足可能影响肌肉合成，建议每餐增加鸡蛋、瘦肉或豆制品。";
     }
   } else if (nutrient === "carbs") {
     if (avgDeviation > 0) {
-      suggestion +=
-        "碳水摄入过多可能导致体重增加，建议减少精制主食，选择全谷物。";
+      suggestion += "碳水摄入过多可能导致体重增加，建议减少精制主食，选择全谷物。";
     } else {
       suggestion += "碳水不足可能导致能量不足，建议适当增加主食摄入。";
     }
@@ -315,25 +302,20 @@ function generatePeriodSuggestion(
     if (avgDeviation > 0) {
       suggestion += "脂肪摄入过多不利于心血管健康，建议减少油炸食物和肥肉。";
     } else {
-      suggestion +=
-        "适量脂肪有助于维生素吸收，建议增加坚果、深海鱼等健康脂肪。";
+      suggestion += "适量脂肪有助于维生素吸收，建议增加坚果、深海鱼等健康脂肪。";
     }
   } else {
     if (avgDeviation > 0) {
-      suggestion +=
-        "热量摄入持续超标可能导致体重增加，建议适当减少食量或增加运动。";
+      suggestion += "热量摄入持续超标可能导致体重增加，建议适当减少食量或增加运动。";
     } else {
-      suggestion +=
-        "热量摄入不足可能影响健康，建议适当增加食量，保证营养充足。";
+      suggestion += "热量摄入不足可能影响健康，建议适当增加食量，保证营养充足。";
     }
   }
 
   return suggestion;
 }
 
-export async function generateWeeklyReport(
-  memberId: string,
-): Promise<WeeklyReport> {
+export async function generateWeeklyReport(memberId: string): Promise<WeeklyReport> {
   const endDate = new Date();
   endDate.setHours(0, 0, 0, 0);
 
@@ -343,17 +325,13 @@ export async function generateWeeklyReport(
   const targets = (await convexTracking.getDailyNutritionTargetsForPeriod(
     memberId,
     startDate,
-    endDate,
+    endDate
   )) as DailyNutritionTargetDoc[];
 
-  const avgCalories =
-    targets.reduce((sum, t) => sum + t.actualCalories, 0) / targets.length || 0;
-  const avgProtein =
-    targets.reduce((sum, t) => sum + t.actualProtein, 0) / targets.length || 0;
-  const avgCarbs =
-    targets.reduce((sum, t) => sum + t.actualCarbs, 0) / targets.length || 0;
-  const avgFat =
-    targets.reduce((sum, t) => sum + t.actualFat, 0) / targets.length || 0;
+  const avgCalories = targets.reduce((sum, t) => sum + t.actualCalories, 0) / targets.length || 0;
+  const avgProtein = targets.reduce((sum, t) => sum + t.actualProtein, 0) / targets.length || 0;
+  const avgCarbs = targets.reduce((sum, t) => sum + t.actualCarbs, 0) / targets.length || 0;
+  const avgFat = targets.reduce((sum, t) => sum + t.actualFat, 0) / targets.length || 0;
 
   const checkInDays = targets.filter((t) => t.isCompleted).length;
   const checkInRate = (checkInDays / 7) * 100;
@@ -363,9 +341,7 @@ export async function generateWeeklyReport(
   const recommendations: string[] = [];
 
   if (checkInRate < 70) {
-    recommendations.push(
-      "本周打卡率较低，建议坚持每日记录饮食，以便更好地追踪营养摄入。",
-    );
+    recommendations.push("本周打卡率较低，建议坚持每日记录饮食，以便更好地追踪营养摄入。");
   } else if (checkInRate === 100) {
     recommendations.push("恭喜！本周打卡率100%，继续保持！");
   }
@@ -382,7 +358,7 @@ export async function generateWeeklyReport(
   const previousWeekTargets = (await convexTracking.getPreviousWeekTargets(
     memberId,
     previousWeekStart,
-    previousWeekEnd,
+    previousWeekEnd
   )) as DailyNutritionTargetDoc[];
 
   let trend: "improving" | "stable" | "declining" = "stable";
@@ -396,7 +372,7 @@ export async function generateWeeklyReport(
           Math.abs(t.proteinDeviation) +
           Math.abs(t.carbsDeviation) +
           Math.abs(t.fatDeviation),
-        0,
+        0
       ) /
       (targets.length * 4);
 
@@ -408,7 +384,7 @@ export async function generateWeeklyReport(
           Math.abs(t.proteinDeviation) +
           Math.abs(t.carbsDeviation) +
           Math.abs(t.fatDeviation),
-        0,
+        0
       ) /
       (previousWeekTargets.length * 4);
 
@@ -447,7 +423,7 @@ export async function generateWeeklyReport(
 
 export async function getRemainingMealSuggestion(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<{
   calories: number;
   protein: number;
@@ -460,7 +436,7 @@ export async function getRemainingMealSuggestion(
 
   const target = (await convexTracking.getDailyNutritionTarget(
     memberId,
-    targetDate,
+    targetDate
   )) as DailyNutritionTargetDoc | null;
 
   if (!target) {
@@ -488,20 +464,16 @@ export async function getRemainingMealSuggestion(
 
   if (remaining.protein > 10) {
     suggestions.push(
-      `蛋白质还差${Math.round(remaining.protein)}g，建议增加鸡蛋、鸡胸肉等高蛋白食物`,
+      `蛋白质还差${Math.round(remaining.protein)}g，建议增加鸡蛋、鸡胸肉等高蛋白食物`
     );
   }
 
   if (remaining.carbs > 20) {
-    suggestions.push(
-      `碳水化合物还差${Math.round(remaining.carbs)}g，建议适当增加主食摄入`,
-    );
+    suggestions.push(`碳水化合物还差${Math.round(remaining.carbs)}g，建议适当增加主食摄入`);
   }
 
   if (remaining.fat > 5) {
-    suggestions.push(
-      `脂肪还差${Math.round(remaining.fat)}g，建议增加坚果或橄榄油等健康脂肪`,
-    );
+    suggestions.push(`脂肪还差${Math.round(remaining.fat)}g，建议增加坚果或橄榄油等健康脂肪`);
   }
 
   if (suggestions.length === 0) {
@@ -526,7 +498,7 @@ export function analyzeNutritionDeviations(
     protein: number;
     carbs: number;
     fat: number;
-  },
+  }
 ): Array<{
   nutrient: "calories" | "protein" | "carbs" | "fat";
   type: "DEFICIENCY" | "EXCESS";
@@ -539,24 +511,14 @@ export function analyzeNutritionDeviations(
     return [];
   }
 
-  const nutrients: Array<keyof typeof nutritionGoals> = [
-    "calories",
-    "protein",
-    "carbs",
-    "fat",
-  ];
+  const nutrients: Array<keyof typeof nutritionGoals> = ["calories", "protein", "carbs", "fat"];
 
   return nutrients
     .map((nutrient) => {
       const target = nutritionGoals[nutrient];
-      const deviations = nutritionData.map(
-        (entry) => ((entry[nutrient] - target) / target) * 100,
-      );
+      const deviations = nutritionData.map((entry) => ((entry[nutrient] - target) / target) * 100);
       const weightTotal = (deviations.length * (deviations.length + 1)) / 2;
-      const weightedSum = deviations.reduce(
-        (sum, value, index) => sum + value * (index + 1),
-        0,
-      );
+      const weightedSum = deviations.reduce((sum, value, index) => sum + value * (index + 1), 0);
       const averageDeviation = weightTotal ? weightedSum / weightTotal : 0;
 
       const severity = getDeviationSeverity(averageDeviation);
@@ -564,15 +526,11 @@ export function analyzeNutritionDeviations(
         return null;
       }
 
-      const trend = calculateTrendDirection(
-        nutritionData.map((entry) => entry[nutrient]),
-      );
+      const trend = calculateTrendDirection(nutritionData.map((entry) => entry[nutrient]));
 
       return {
         nutrient,
-        type: (averageDeviation < 0 ? "DEFICIENCY" : "EXCESS") as
-          | "DEFICIENCY"
-          | "EXCESS",
+        type: (averageDeviation < 0 ? "DEFICIENCY" : "EXCESS") as "DEFICIENCY" | "EXCESS",
         severity,
         days: nutritionData.length,
         averageDeviation,
@@ -597,8 +555,7 @@ export function calculateTrendDirection(data: number[]): {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min;
-  const strength =
-    range === 0 ? 0 : Math.min(1, Math.abs(last - first) / range);
+  const strength = range === 0 ? 0 : Math.min(1, Math.abs(last - first) / range);
 
   if (strength < 0.3) {
     return { direction: "STABLE", slope: 0, strength: 0 };
@@ -619,7 +576,7 @@ export function detectAnomalyPatterns(
     carbs: number;
     fat: number;
     mealsCount?: number;
-  }>,
+  }>
 ): Array<{
   type: "WEEKEND_OVEREATING" | "MEAL_SKIPPING" | "BINGE_EATING";
   description: string;
@@ -651,11 +608,9 @@ export function detectAnomalyPatterns(
 
   if (weekendCalories.length >= 2 && weekdayCalories.length > 0) {
     const weekendAvg =
-      weekendCalories.reduce((sum, value) => sum + value, 0) /
-      weekendCalories.length;
+      weekendCalories.reduce((sum, value) => sum + value, 0) / weekendCalories.length;
     const weekdayAvg =
-      weekdayCalories.reduce((sum, value) => sum + value, 0) /
-      weekdayCalories.length;
+      weekdayCalories.reduce((sum, value) => sum + value, 0) / weekdayCalories.length;
 
     if (weekendAvg > weekdayAvg * 1.2) {
       patterns.push({
@@ -668,7 +623,7 @@ export function detectAnomalyPatterns(
   }
 
   const skippedMeals = data.filter((entry) =>
-    entry.mealsCount !== undefined ? entry.mealsCount < 3 : false,
+    entry.mealsCount !== undefined ? entry.mealsCount < 3 : false
   );
 
   if (skippedMeals.length >= 2) {
@@ -680,8 +635,7 @@ export function detectAnomalyPatterns(
     });
   }
 
-  const avgCalories =
-    data.reduce((sum, entry) => sum + entry.calories, 0) / data.length;
+  const avgCalories = data.reduce((sum, entry) => sum + entry.calories, 0) / data.length;
   const bingeDays = data.filter((entry) => entry.calories >= avgCalories * 1.4);
 
   if (bingeDays.length >= 2) {
@@ -715,7 +669,7 @@ export function generateDeviationReport(
     protein: number;
     carbs: number;
     fat: number;
-  }>,
+  }>
 ): {
   summary: {
     totalDeviations: number;
@@ -766,10 +720,8 @@ export function generateDeviationReport(
     const action =
       deviation.type === "DEFICIENCY"
         ? (nutrientActions[deviation.nutrient] ?? "增加营养摄入")
-        : (nutrientActions[deviation.nutrient]?.replace("增加", "减少") ??
-          "减少营养摄入");
-    const priority: "HIGH" | "MEDIUM" =
-      deviation.severity === "HIGH" ? "HIGH" : "MEDIUM";
+        : (nutrientActions[deviation.nutrient]?.replace("增加", "减少") ?? "减少营养摄入");
+    const priority: "HIGH" | "MEDIUM" = deviation.severity === "HIGH" ? "HIGH" : "MEDIUM";
 
     return {
       nutrient: deviation.nutrient,
@@ -787,17 +739,12 @@ export function generateDeviationReport(
   }
 
   const avgCalories =
-    weeklyData.reduce((sum, entry) => sum + entry.calories, 0) /
-    (weeklyData.length || 1);
+    weeklyData.reduce((sum, entry) => sum + entry.calories, 0) / (weeklyData.length || 1);
   const avgProtein =
-    weeklyData.reduce((sum, entry) => sum + entry.protein, 0) /
-    (weeklyData.length || 1);
+    weeklyData.reduce((sum, entry) => sum + entry.protein, 0) / (weeklyData.length || 1);
   const avgCarbs =
-    weeklyData.reduce((sum, entry) => sum + entry.carbs, 0) /
-    (weeklyData.length || 1);
-  const avgFat =
-    weeklyData.reduce((sum, entry) => sum + entry.fat, 0) /
-    (weeklyData.length || 1);
+    weeklyData.reduce((sum, entry) => sum + entry.carbs, 0) / (weeklyData.length || 1);
+  const avgFat = weeklyData.reduce((sum, entry) => sum + entry.fat, 0) / (weeklyData.length || 1);
 
   return {
     summary: {
@@ -816,9 +763,7 @@ export function generateDeviationReport(
   };
 }
 
-export function getDeviationSeverity(
-  deviation: number,
-): "HIGH" | "MEDIUM" | "LOW" | "NORMAL" {
+export function getDeviationSeverity(deviation: number): "HIGH" | "MEDIUM" | "LOW" | "NORMAL" {
   const absDeviation = Math.abs(deviation);
 
   if (deviation < 0) {
@@ -848,7 +793,7 @@ export function getDeviationSeverity(
 
 function generateNutritionSuggestion(
   nutrient: "calories" | "protein" | "carbs" | "fat",
-  deviation: number,
+  deviation: number
 ): string {
   const nutrientNames = {
     calories: "热量",

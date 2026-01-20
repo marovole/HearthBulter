@@ -6,8 +6,7 @@ function getNeonConfig() {
   const databaseUrl = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
 
   if (!databaseUrl) {
-    const error =
-      "Missing Neon configuration. Please set DATABASE_URL environment variable";
+    const error = "Missing Neon configuration. Please set DATABASE_URL environment variable";
     console.error("❌ Neon 配置错误:", error);
     console.error("环境变量状态:", {
       DATABASE_URL: process.env.DATABASE_URL ? "✅" : "❌",
@@ -32,14 +31,11 @@ export class NeonClientManager {
 
   static async query<T = Record<string, unknown>>(
     queryText: string,
-    params?: unknown[],
+    params?: unknown[]
   ): Promise<T[]> {
     const sql = NeonClientManager.getInstance();
     try {
-      const result = await sql(
-        queryText as unknown as TemplateStringsArray,
-        params as never,
-      );
+      const result = await sql(queryText as unknown as TemplateStringsArray, params as never);
       return result as T[];
     } catch (error) {
       console.error("Neon query error:", error);
@@ -68,7 +64,7 @@ export function keysToCamelCase<T>(obj: unknown): T {
     return Object.keys(obj as object).reduce((result, key) => {
       const camelKey = toCamelCase(key);
       (result as Record<string, unknown>)[camelKey] = keysToCamelCase(
-        (obj as Record<string, unknown>)[key],
+        (obj as Record<string, unknown>)[key]
       );
       return result;
     }, {} as T);
@@ -86,7 +82,7 @@ export function keysToSnakeCase<T>(obj: unknown): T {
     return Object.keys(obj as object).reduce((result, key) => {
       const snakeKey = toSnakeCase(key);
       (result as Record<string, unknown>)[snakeKey] = keysToSnakeCase(
-        (obj as Record<string, unknown>)[key],
+        (obj as Record<string, unknown>)[key]
       );
       return result;
     }, {} as T);

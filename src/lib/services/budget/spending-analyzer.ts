@@ -86,15 +86,11 @@ export interface BudgetAlertConfig {
 export class SpendingAnalyzer {
   async analyzeSpending(
     memberId: string,
-    periodType: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY" = "MONTHLY",
+    periodType: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY" = "MONTHLY"
   ): Promise<SpendingAnalysis> {
     const period = this.getPeriod(periodType);
 
-    const spendings = await this.getSpendings(
-      memberId,
-      period.start,
-      period.end,
-    );
+    const spendings = await this.getSpendings(memberId, period.start, period.end);
 
     const totalSpending = spendings.reduce((sum, s) => sum + s.amount, 0);
 
@@ -103,10 +99,7 @@ export class SpendingAnalyzer {
     const days = Math.ceil((period.end - period.start) / (1000 * 60 * 60 * 24));
     const dailyAverage = totalSpending / days;
 
-    const comparisonWithPrevious = await this.getPreviousPeriodComparison(
-      memberId,
-      periodType,
-    );
+    const comparisonWithPrevious = await this.getPreviousPeriodComparison(memberId, periodType);
 
     const topExpenses = spendings
       .sort((a, b) => b.amount - a.amount)
@@ -124,7 +117,7 @@ export class SpendingAnalyzer {
       totalSpending,
       categorySpending,
       dailyAverage,
-      budgetUtilization,
+      budgetUtilization
     );
 
     return {
@@ -163,61 +156,29 @@ export class SpendingAnalyzer {
       createdAt: number;
     }> = [];
 
-    const activeBudgets = await convexClient.query<BudgetDoc[]>(
-      api.budget.getActiveBudgets,
-      {
-        memberId,
-      },
-    );
+    const activeBudgets = await convexClient.query<BudgetDoc[]>(api.budget.getActiveBudgets, {
+      memberId,
+    });
 
     for (const budget of activeBudgets) {
       const budgetId = budget._id;
-      const spendings = await convexClient.query<SpendingForBudgetDoc[]>(
-        api.budget.getSpendings,
-        {
-          budgetId,
-        },
-      );
+      const spendings = await convexClient.query<SpendingForBudgetDoc[]>(api.budget.getSpendings, {
+        budgetId,
+      });
 
-      const usedAmount = spendings.reduce(
-        (sum: number, s) => sum + s.amount,
-        0,
-      );
+      const usedAmount = spendings.reduce((sum: number, s) => sum + s.amount, 0);
       const utilizationRate = (usedAmount / budget.totalAmount) * 100;
 
-      if (
-        budget.alertThreshold80 &&
-        utilizationRate >= 80 &&
-        utilizationRate < 100
-      ) {
-        await this.createBudgetAlert(
-          budgetId,
-          "WARNING_80",
-          utilizationRate,
-          usedAmount,
-        );
+      if (budget.alertThreshold80 && utilizationRate >= 80 && utilizationRate < 100) {
+        await this.createBudgetAlert(budgetId, "WARNING_80", utilizationRate, usedAmount);
       }
 
-      if (
-        budget.alertThreshold100 &&
-        utilizationRate >= 100 &&
-        utilizationRate < 110
-      ) {
-        await this.createBudgetAlert(
-          budgetId,
-          "WARNING_100",
-          utilizationRate,
-          usedAmount,
-        );
+      if (budget.alertThreshold100 && utilizationRate >= 100 && utilizationRate < 110) {
+        await this.createBudgetAlert(budgetId, "WARNING_100", utilizationRate, usedAmount);
       }
 
       if (budget.alertThreshold110 && utilizationRate >= 110) {
-        await this.createBudgetAlert(
-          budgetId,
-          "OVER_BUDGET_110",
-          utilizationRate,
-          usedAmount,
-        );
+        await this.createBudgetAlert(budgetId, "OVER_BUDGET_110", utilizationRate, usedAmount);
       }
     }
 
@@ -229,7 +190,7 @@ export class SpendingAnalyzer {
 
   async getSpendingTrends(
     memberId: string,
-    months: number = 6,
+    months: number = 6
   ): Promise<{
     monthlyData: Array<{
       month: string;
@@ -249,17 +210,13 @@ export class SpendingAnalyzer {
     const endDate = Date.now();
     const startDate = new Date().setMonth(new Date().getMonth() - months + 1);
 
-    const spendings = await convexClient.query<SpendingDoc[]>(
-      api.budget.getSpendingsByMember,
-      {
-        memberId,
-        startDate,
-        endDate,
-      },
-    );
+    const spendings = await convexClient.query<SpendingDoc[]>(api.budget.getSpendingsByMember, {
+      memberId,
+      startDate,
+      endDate,
+    });
 
-    const monthlyData: { [key: string]: { spending: number; budget: number } } =
-      {};
+    const monthlyData: { [key: string]: { spending: number; budget: number } } = {};
     const categoryTrends: { [key: string]: { [key: string]: number } } = {};
 
     for (let i = 0; i < months; i++) {
@@ -270,9 +227,7 @@ export class SpendingAnalyzer {
     }
 
     for (const spending of spendings) {
-      const monthKey = new Date(spending.purchaseDate)
-        .toISOString()
-        .slice(0, 7);
+      const monthKey = new Date(spending.purchaseDate).toISOString().slice(0, 7);
 
       const monthData = monthlyData[monthKey];
       if (monthData) {
@@ -282,8 +237,7 @@ export class SpendingAnalyzer {
       if (!spending.category) continue;
       const categoryKey = spending.category;
       const categoryTrend = categoryTrends[categoryKey] ?? {};
-      categoryTrend[monthKey] =
-        (categoryTrend[monthKey] ?? 0) + spending.amount;
+      categoryTrend[monthKey] = (categoryTrend[monthKey] ?? 0) + spending.amount;
       categoryTrends[categoryKey] = categoryTrend;
     }
 
@@ -316,7 +270,7 @@ export class SpendingAnalyzer {
 
   async getHighSpendingCategories(
     memberId: string,
-    limit: number = 5,
+    limit: number = 5
   ): Promise<{
     categories: Array<{
       category: string;
@@ -331,14 +285,11 @@ export class SpendingAnalyzer {
   }> {
     const last30Days = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-    const spendings = await convexClient.query<SpendingDoc[]>(
-      api.budget.getSpendingsByMember,
-      {
-        memberId,
-        startDate: last30Days,
-        endDate: Date.now(),
-      },
-    );
+    const spendings = await convexClient.query<SpendingDoc[]>(api.budget.getSpendingsByMember, {
+      memberId,
+      startDate: last30Days,
+      endDate: Date.now(),
+    });
 
     const totalSpending = spendings.reduce((sum, s) => sum + s.amount, 0);
 
@@ -389,14 +340,11 @@ export class SpendingAnalyzer {
   }> {
     const last30Days = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-    const spendings = await convexClient.query<SpendingDoc[]>(
-      api.budget.getSpendingsByMember,
-      {
-        memberId,
-        startDate: last30Days,
-        endDate: Date.now(),
-      },
-    );
+    const spendings = await convexClient.query<SpendingDoc[]>(api.budget.getSpendingsByMember, {
+      memberId,
+      startDate: last30Days,
+      endDate: Date.now(),
+    });
 
     const monthlySpending = spendings.reduce((sum, s) => sum + s.amount, 0);
     const dailyCost = monthlySpending / 30;
@@ -423,16 +371,13 @@ export class SpendingAnalyzer {
   private async getSpendings(
     memberId: string,
     startDate: number,
-    endDate: number,
+    endDate: number
   ): Promise<SpendingDoc[]> {
-    return await convexClient.query<SpendingDoc[]>(
-      api.budget.getSpendingsByMember,
-      {
-        memberId,
-        startDate,
-        endDate,
-      },
-    );
+    return await convexClient.query<SpendingDoc[]>(api.budget.getSpendingsByMember, {
+      memberId,
+      startDate,
+      endDate,
+    });
   }
 
   private async analyzeCategorySpending(spendings: any[]) {
@@ -454,36 +399,26 @@ export class SpendingAnalyzer {
     }));
   }
 
-  private async getPreviousPeriodComparison(
-    memberId: string,
-    periodType: string,
-  ) {
+  private async getPreviousPeriodComparison(memberId: string, periodType: string) {
     const currentPeriod = this.getPeriod(periodType as any);
-    const previousPeriod = this.getPreviousPeriod(
-      currentPeriod,
-      periodType as any,
-    );
+    const previousPeriod = this.getPreviousPeriod(currentPeriod, periodType as any);
 
     const currentSpendings = await this.getSpendings(
       memberId,
       currentPeriod.start,
-      currentPeriod.end,
+      currentPeriod.end
     );
     const previousSpendings = await this.getSpendings(
       memberId,
       previousPeriod.start,
-      previousPeriod.end,
+      previousPeriod.end
     );
 
     const currentTotal = currentSpendings.reduce((sum, s) => sum + s.amount, 0);
-    const previousTotal = previousSpendings.reduce(
-      (sum, s) => sum + s.amount,
-      0,
-    );
+    const previousTotal = previousSpendings.reduce((sum, s) => sum + s.amount, 0);
 
     const change = currentTotal - previousTotal;
-    const changePercentage =
-      previousTotal > 0 ? (change / previousTotal) * 100 : 0;
+    const changePercentage = previousTotal > 0 ? (change / previousTotal) * 100 : 0;
 
     return [
       {
@@ -495,16 +430,10 @@ export class SpendingAnalyzer {
     ];
   }
 
-  private async getBudgetUtilization(
-    memberId: string,
-    period: { start: number; end: number },
-  ) {
-    const budgets = await convexClient.query<BudgetDoc[]>(
-      api.budget.getActiveBudgets,
-      {
-        memberId,
-      },
-    );
+  private async getBudgetUtilization(memberId: string, period: { start: number; end: number }) {
+    const budgets = await convexClient.query<BudgetDoc[]>(api.budget.getActiveBudgets, {
+      memberId,
+    });
 
     return budgets.map((budget) => {
       const used = budget.usedAmount ?? 0;
@@ -533,7 +462,7 @@ export class SpendingAnalyzer {
     totalSpending: number,
     categorySpending: any[],
     dailyAverage: number,
-    budgetUtilization: any[],
+    budgetUtilization: any[]
   ): string[] {
     const recommendations: string[] = [];
 
@@ -545,18 +474,12 @@ export class SpendingAnalyzer {
 
     const highCategory = categorySpending.find((c) => c.percentage > 40);
     if (highCategory) {
-      recommendations.push(
-        `${highCategory.category}类支出占比过高，建议优化采购结构`,
-      );
+      recommendations.push(`${highCategory.category}类支出占比过高，建议优化采购结构`);
     }
 
-    const overBudget = budgetUtilization.find(
-      (b) => b.status === "OVER_BUDGET",
-    );
+    const overBudget = budgetUtilization.find((b) => b.status === "OVER_BUDGET");
     if (overBudget) {
-      recommendations.push(
-        `${overBudget.budgetName}已超支，建议严格控制后续支出`,
-      );
+      recommendations.push(`${overBudget.budgetName}已超支，建议严格控制后续支出`);
     }
 
     return recommendations;
@@ -566,38 +489,30 @@ export class SpendingAnalyzer {
     budgetId: string,
     type: string,
     currentValue: number,
-    usedAmount: number,
+    usedAmount: number
   ): Promise<void> {
     const threshold = this.getThresholdValue(type as any);
-    const message = this.generateAlertMessage(
-      "预算",
-      type as any,
-      currentValue,
-      usedAmount,
-    );
+    const message = this.generateAlertMessage("预算", type as any, currentValue, usedAmount);
 
-    await convexClient.mutation(
-      asConvexMutationReference("budget:createBudgetAlert"),
-      {
-        budgetId,
-        type,
-        threshold,
-        currentValue,
-        message,
-      },
-    );
+    await convexClient.mutation(asConvexMutationReference("budget:createBudgetAlert"), {
+      budgetId,
+      type,
+      threshold,
+      currentValue,
+      message,
+    });
   }
 
   private getThresholdValue(type: string): number {
     switch (type) {
-    case "WARNING_80":
-      return 80;
-    case "WARNING_100":
-      return 100;
-    case "OVER_BUDGET_110":
-      return 110;
-    default:
-      return 100;
+      case "WARNING_80":
+        return 80;
+      case "WARNING_100":
+        return 100;
+      case "OVER_BUDGET_110":
+        return 110;
+      default:
+        return 100;
     }
   }
 
@@ -605,17 +520,17 @@ export class SpendingAnalyzer {
     budgetName: string,
     type: string,
     currentValue: number,
-    usedAmount: number,
+    usedAmount: number
   ): string {
     switch (type) {
-    case "WARNING_80":
-      return `${budgetName}已使用${currentValue.toFixed(1)}%，请注意控制支出`;
-    case "WARNING_100":
-      return `${budgetName}已用完预算，当前支出${usedAmount.toFixed(2)}元`;
-    case "OVER_BUDGET_110":
-      return `${budgetName}已超支${(currentValue - 100).toFixed(1)}%，请立即控制支出`;
-    default:
-      return `${budgetName}支出异常`;
+      case "WARNING_80":
+        return `${budgetName}已使用${currentValue.toFixed(1)}%，请注意控制支出`;
+      case "WARNING_100":
+        return `${budgetName}已用完预算，当前支出${usedAmount.toFixed(2)}元`;
+      case "OVER_BUDGET_110":
+        return `${budgetName}已超支${(currentValue - 100).toFixed(1)}%，请立即控制支出`;
+      default:
+        return `${budgetName}支出异常`;
     }
   }
 
@@ -624,18 +539,18 @@ export class SpendingAnalyzer {
     let start = now;
 
     switch (type) {
-    case "WEEKLY":
-      start = now - 7 * 24 * 60 * 60 * 1000;
-      break;
-    case "MONTHLY":
-      start = now - 30 * 24 * 60 * 60 * 1000;
-      break;
-    case "QUARTERLY":
-      start = now - 90 * 24 * 60 * 60 * 1000;
-      break;
-    case "YEARLY":
-      start = now - 365 * 24 * 60 * 60 * 1000;
-      break;
+      case "WEEKLY":
+        start = now - 7 * 24 * 60 * 60 * 1000;
+        break;
+      case "MONTHLY":
+        start = now - 30 * 24 * 60 * 60 * 1000;
+        break;
+      case "QUARTERLY":
+        start = now - 90 * 24 * 60 * 60 * 1000;
+        break;
+      case "YEARLY":
+        start = now - 365 * 24 * 60 * 60 * 1000;
+        break;
     }
 
     return { start, end: now, type };
@@ -646,26 +561,26 @@ export class SpendingAnalyzer {
     const end = current.end;
 
     switch (type) {
-    case "WEEKLY":
-      return {
-        start: start - 7 * 24 * 60 * 60 * 1000,
-        end: end - 7 * 24 * 60 * 60 * 1000,
-      };
-    case "MONTHLY":
-      return {
-        start: start - 30 * 24 * 60 * 60 * 1000,
-        end: end - 30 * 24 * 60 * 60 * 1000,
-      };
-    case "QUARTERLY":
-      return {
-        start: start - 90 * 24 * 60 * 60 * 1000,
-        end: end - 90 * 24 * 60 * 60 * 1000,
-      };
-    case "YEARLY":
-      return {
-        start: start - 365 * 24 * 60 * 60 * 1000,
-        end: end - 365 * 24 * 60 * 60 * 1000,
-      };
+      case "WEEKLY":
+        return {
+          start: start - 7 * 24 * 60 * 60 * 1000,
+          end: end - 7 * 24 * 60 * 60 * 1000,
+        };
+      case "MONTHLY":
+        return {
+          start: start - 30 * 24 * 60 * 60 * 1000,
+          end: end - 30 * 24 * 60 * 60 * 1000,
+        };
+      case "QUARTERLY":
+        return {
+          start: start - 90 * 24 * 60 * 60 * 1000,
+          end: end - 90 * 24 * 60 * 60 * 1000,
+        };
+      case "YEARLY":
+        return {
+          start: start - 365 * 24 * 60 * 60 * 1000,
+          end: end - 365 * 24 * 60 * 60 * 1000,
+        };
     }
     return { start, end };
   }
@@ -688,9 +603,7 @@ export class SpendingAnalyzer {
     return (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
   }
 
-  private calculateCategoryTrend(
-    transactions: number[],
-  ): "UP" | "DOWN" | "STABLE" {
+  private calculateCategoryTrend(transactions: number[]): "UP" | "DOWN" | "STABLE" {
     if (transactions.length < 3) return "STABLE";
 
     const recent = transactions.slice(-3);
@@ -698,9 +611,7 @@ export class SpendingAnalyzer {
 
     const recentAvg = recent.reduce((sum, val) => sum + val, 0) / recent.length;
     const earlierAvg =
-      earlier.length > 0
-        ? earlier.reduce((sum, val) => sum + val, 0) / earlier.length
-        : recentAvg;
+      earlier.length > 0 ? earlier.reduce((sum, val) => sum + val, 0) / earlier.length : recentAvg;
 
     const change = (recentAvg - earlierAvg) / earlierAvg;
 
@@ -709,10 +620,7 @@ export class SpendingAnalyzer {
     return "STABLE";
   }
 
-  private generateCategoryRecommendations(
-    category: string,
-    data: any,
-  ): string[] {
+  private generateCategoryRecommendations(category: string, data: any): string[] {
     const recommendations: string[] = [];
 
     if (data.averagePerTransaction > 100) {

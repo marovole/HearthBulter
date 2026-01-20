@@ -61,15 +61,12 @@ export default async function NewMealPlanPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* 面包屑导航 */}
           <nav className="mb-6">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Link
-                href={`/dashboard/families/${id}`}
-                className="hover:text-gray-900"
-              >
+              <Link href={`/dashboard/families/${id}`} className="hover:text-gray-900">
                 家庭
               </Link>
               <span>/</span>
@@ -105,14 +102,10 @@ export default async function NewMealPlanPage({
               })),
             }}
             onSuccess={(planId) => {
-              redirect(
-                `/dashboard/families/${id}/members/${memberId}/meal-plans/${planId}`,
-              );
+              redirect(`/dashboard/families/${id}/members/${memberId}/meal-plans/${planId}`);
             }}
             onCancel={() => {
-              redirect(
-                `/dashboard/families/${id}/members/${memberId}/meal-plans`,
-              );
+              redirect(`/dashboard/families/${id}/members/${memberId}/meal-plans`);
             }}
           />
         </div>

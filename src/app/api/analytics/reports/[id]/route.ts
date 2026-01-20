@@ -11,10 +11,7 @@ import { auth } from "@/lib/auth";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await auth();
@@ -35,7 +32,7 @@ export async function GET(
           name,
           avatar
         )
-      `,
+      `
       )
       .eq("id", id)
       .is("deletedAt", null)
@@ -68,7 +65,7 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;

@@ -28,14 +28,14 @@ export async function GET(request: NextRequest) {
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || "无权访问此成员数据" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
     const analysis = await inventoryAnalyzer.generateInventoryAnalysis(
       memberId,
       startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
+      endDate ? new Date(endDate) : undefined
     );
 
     return NextResponse.json({
@@ -44,9 +44,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("获取库存分析失败:", error);
-    return NextResponse.json(
-      { error: "获取库存分析失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "获取库存分析失败", details: error }, { status: 500 });
   }
 }

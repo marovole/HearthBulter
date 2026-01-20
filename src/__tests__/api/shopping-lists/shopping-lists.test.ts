@@ -41,9 +41,7 @@ jest.mock("@/lib/db", () => ({
 
 // Mock JWT verification
 jest.mock("jose", () => ({
-  jwtVerify: jest
-    .fn()
-    .mockResolvedValue({ sub: "user-123", email: "test@example.com" }),
+  jwtVerify: jest.fn().mockResolvedValue({ sub: "user-123", email: "test@example.com" }),
 }));
 
 // Mock notification service
@@ -128,15 +126,12 @@ describe("/api/shopping-lists API", () => {
       prisma.shoppingList.findMany.mockResolvedValue(mockShoppingLists);
       prisma.shoppingList.count.mockResolvedValue(mockTotal);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists?limit=2&page=1",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists?limit=2&page=1", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/shopping-lists/route");
@@ -163,15 +158,12 @@ describe("/api/shopping-lists API", () => {
       prisma.shoppingList.findMany.mockResolvedValue([]);
       prisma.shoppingList.count.mockResolvedValue(0);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists?status=ACTIVE",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists?status=ACTIVE", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/shopping-lists/route");
@@ -184,7 +176,7 @@ describe("/api/shopping-lists API", () => {
             where: expect.objectContaining({
               status: "ACTIVE",
             }),
-          }),
+          })
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -195,15 +187,12 @@ describe("/api/shopping-lists API", () => {
       prisma.shoppingList.findMany.mockResolvedValue([]);
       prisma.shoppingList.count.mockResolvedValue(0);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists?priority=HIGH",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists?priority=HIGH", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/shopping-lists/route");
@@ -216,7 +205,7 @@ describe("/api/shopping-lists API", () => {
             where: expect.objectContaining({
               priority: "HIGH",
             }),
-          }),
+          })
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -224,12 +213,9 @@ describe("/api/shopping-lists API", () => {
     });
 
     it("should require authentication", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists",
-        {
-          method: "GET",
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists", {
+        method: "GET",
+      });
 
       try {
         const { GET } = await import("@/app/api/shopping-lists/route");
@@ -269,17 +255,14 @@ describe("/api/shopping-lists API", () => {
 
       prisma.shoppingList.create.mockResolvedValue(createdList);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(newList),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(newList),
+      });
 
       try {
         const { POST } = await import("@/app/api/shopping-lists/route");
@@ -312,17 +295,14 @@ describe("/api/shopping-lists API", () => {
         // Missing required name field
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(incompleteList),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(incompleteList),
+      });
 
       try {
         const { POST } = await import("@/app/api/shopping-lists/route");
@@ -344,17 +324,14 @@ describe("/api/shopping-lists API", () => {
         priority: "NORMAL",
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidList),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidList),
+      });
 
       try {
         const { POST } = await import("@/app/api/shopping-lists/route");
@@ -423,15 +400,12 @@ describe("/api/shopping-lists API", () => {
 
       prisma.shoppingList.findUnique.mockResolvedValue(mockShoppingList);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/list-1",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/list-1", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/shopping-lists/[id]/route");
@@ -454,15 +428,12 @@ describe("/api/shopping-lists API", () => {
     it("should return 404 for non-existent list", async () => {
       prisma.shoppingList.findUnique.mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/nonexistent",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/nonexistent", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/shopping-lists/[id]/route");
@@ -504,22 +475,19 @@ describe("/api/shopping-lists API", () => {
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
       prisma.shoppingList.update.mockResolvedValue(updatedList);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/list-1",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            name: "更新后的购物清单",
-            description: "更新后的描述",
-            status: "ACTIVE",
-            priority: "HIGH",
-          }),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/list-1", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          name: "更新后的购物清单",
+          description: "更新后的描述",
+          status: "ACTIVE",
+          priority: "HIGH",
+        }),
+      });
 
       try {
         const { PUT } = await import("@/app/api/shopping-lists/[id]/route");
@@ -577,22 +545,17 @@ describe("/api/shopping-lists API", () => {
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
       prisma.shoppingListItem.create.mockResolvedValue(createdItem);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/list-1/items",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(newItem),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/list-1/items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(newItem),
+      });
 
       try {
-        const { POST } = await import(
-          "@/app/api/shopping-lists/[id]/items/route"
-        );
+        const { POST } = await import("@/app/api/shopping-lists/[id]/items/route");
         const response = await POST(request, {
           params: Promise.resolve({ id: "list-1" }),
         });
@@ -636,22 +599,17 @@ describe("/api/shopping-lists API", () => {
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/list-1/items",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidItem),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/list-1/items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidItem),
+      });
 
       try {
-        const { POST } = await import(
-          "@/app/api/shopping-lists/[id]/items/route"
-        );
+        const { POST } = await import("@/app/api/shopping-lists/[id]/items/route");
         const response = await POST(request, {
           params: Promise.resolve({ id: "list-1" }),
         });
@@ -708,13 +666,11 @@ describe("/api/shopping-lists API", () => {
             status: "COMPLETED",
             actualPrice: 18.5,
           }),
-        },
+        }
       );
 
       try {
-        const { PUT } = await import(
-          "@/app/api/shopping-lists/[id]/items/[itemId]/route"
-        );
+        const { PUT } = await import("@/app/api/shopping-lists/[id]/items/[itemId]/route");
         const response = await PUT(request, {
           params: Promise.resolve({ id: "list-1", itemId: "item-1" }),
         });
@@ -770,13 +726,11 @@ describe("/api/shopping-lists API", () => {
             status: "COMPLETED",
             actualPrice: 9.2,
           }),
-        },
+        }
       );
 
       try {
-        const { PUT } = await import(
-          "@/app/api/shopping-lists/[id]/items/[itemId]/route"
-        );
+        const { PUT } = await import("@/app/api/shopping-lists/[id]/items/[itemId]/route");
         const response = await PUT(request, {
           params: Promise.resolve({ id: "list-1", itemId: "item-1" }),
         });
@@ -820,13 +774,11 @@ describe("/api/shopping-lists API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {
-        const { DELETE } = await import(
-          "@/app/api/shopping-lists/[id]/items/[itemId]/route"
-        );
+        const { DELETE } = await import("@/app/api/shopping-lists/[id]/items/[itemId]/route");
         const response = await DELETE(request, {
           params: Promise.resolve({ id: "list-1", itemId: "item-1" }),
         });
@@ -887,13 +839,11 @@ describe("/api/shopping-lists API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {
-        const { GET } = await import(
-          "@/app/api/shopping-lists/[id]/suggestions/route"
-        );
+        const { GET } = await import("@/app/api/shopping-lists/[id]/suggestions/route");
         const response = await GET(request, {
           params: Promise.resolve({ id: "list-1" }),
         });
@@ -930,24 +880,19 @@ describe("/api/shopping-lists API", () => {
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
       prisma.shoppingList.update.mockResolvedValue(completedList);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/list-1/complete",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            actualTotalPrice: 25.7,
-          }),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/list-1/complete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          actualTotalPrice: 25.7,
+        }),
+      });
 
       try {
-        const { POST } = await import(
-          "@/app/api/shopping-lists/[id]/complete/route"
-        );
+        const { POST } = await import("@/app/api/shopping-lists/[id]/complete/route");
         const response = await POST(request, {
           params: Promise.resolve({ id: "list-1" }),
         });
@@ -977,24 +922,19 @@ describe("/api/shopping-lists API", () => {
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/list-1/complete",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            actualTotalPrice: 25.7,
-          }),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/list-1/complete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          actualTotalPrice: 25.7,
+        }),
+      });
 
       try {
-        const { POST } = await import(
-          "@/app/api/shopping-lists/[id]/complete/route"
-        );
+        const { POST } = await import("@/app/api/shopping-lists/[id]/complete/route");
         const response = await POST(request, {
           params: Promise.resolve({ id: "list-1" }),
         });
@@ -1042,20 +982,15 @@ describe("/api/shopping-lists API", () => {
         _sum: { estimatedTotalPrice: 580.5, actualTotalPrice: 545.2 },
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/analytics",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/analytics", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
-        const { GET } = await import(
-          "@/app/api/shopping-lists/analytics/route"
-        );
+        const { GET } = await import("@/app/api/shopping-lists/analytics/route");
         const response = await GET(request);
 
         expect(response.status).toBe(200);
@@ -1074,19 +1009,14 @@ describe("/api/shopping-lists API", () => {
 
   describe("Error handling", () => {
     it("should handle database errors gracefully", async () => {
-      prisma.shoppingList.findMany.mockRejectedValue(
-        new Error("Database connection failed"),
-      );
+      prisma.shoppingList.findMany.mockRejectedValue(new Error("Database connection failed"));
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/shopping-lists/route");
@@ -1101,17 +1031,14 @@ describe("/api/shopping-lists API", () => {
     });
 
     it("should handle malformed JSON", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: "invalid-json",
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: "invalid-json",
+      });
 
       try {
         const { POST } = await import("@/app/api/shopping-lists/route");
@@ -1134,17 +1061,14 @@ describe("/api/shopping-lists API", () => {
         priority: "INVALID_PRIORITY",
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidList),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidList),
+      });
 
       try {
         const { POST } = await import("@/app/api/shopping-lists/route");
@@ -1171,17 +1095,14 @@ describe("/api/shopping-lists API", () => {
 
       prisma.shoppingList.findUnique.mockResolvedValue(existingList);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/shopping-lists/list-1",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidUpdate),
+      const request = new NextRequest("http://localhost:3000/api/shopping-lists/list-1", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidUpdate),
+      });
 
       try {
         const { PUT } = await import("@/app/api/shopping-lists/[id]/route");

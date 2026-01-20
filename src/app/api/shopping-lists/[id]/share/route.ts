@@ -7,10 +7,7 @@ import type { Id } from "@/../convex/_generated/dataModel";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: listId } = await params;
     const session = await auth();
@@ -18,29 +15,22 @@ export async function POST(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const shoppingList = await shoppingListRepository.getShoppingListById(
-      listId,
-      { includePlan: true },
-    );
+    const shoppingList = await shoppingListRepository.getShoppingListById(listId, {
+      includePlan: true,
+    });
 
     const memberId = shoppingList?.plan?.member?.id;
     if (!shoppingList || !memberId) {
       return NextResponse.json({ error: "购物清单不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限分享该购物清单" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限分享该购物清单" }, { status: 403 });
     }
 
     const shareToken = randomBytes(32).toString("hex");

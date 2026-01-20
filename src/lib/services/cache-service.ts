@@ -285,10 +285,9 @@ export class FoodCacheService {
       return cached;
     }
 
-    const record = await convexClient.query<Doc<"foods"> | null>(
-      api.budget.getFoodById,
-      { foodId: id as Id<"foods"> },
-    );
+    const record = await convexClient.query<Doc<"foods"> | null>(api.budget.getFoodById, {
+      foodId: id as Id<"foods">,
+    });
     if (!record) {
       return null;
     }
@@ -318,14 +317,10 @@ export class FoodCacheService {
   async refreshUSDAData(): Promise<void> {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
-    const foods = await convexClient.query<Doc<"foods">[]>(
-      api.budget.getFoods,
-      { limit: 100 },
-    );
+    const foods = await convexClient.query<Doc<"foods">[]>(api.budget.getFoods, { limit: 100 });
 
     const staleFoods = foods.filter(
-      (food) =>
-        food.source === "USDA" && food.updatedAt < ninetyDaysAgo.getTime(),
+      (food) => food.source === "USDA" && food.updatedAt < ninetyDaysAgo.getTime()
     );
 
     console.log(`发现${staleFoods.length}条需要刷新的USDA数据`);

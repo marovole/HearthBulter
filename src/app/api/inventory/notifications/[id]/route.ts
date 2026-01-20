@@ -6,10 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -28,16 +25,13 @@ export async function PUT(
     let message = "";
 
     switch (action) {
-    case "mark_as_read":
-      success = await inventoryNotificationService.markNotificationAsRead(
-        id,
-        memberId,
-      );
-      message = success ? "标记已读成功" : "标记已读失败";
-      break;
+      case "mark_as_read":
+        success = await inventoryNotificationService.markNotificationAsRead(id, memberId);
+        message = success ? "标记已读成功" : "标记已读失败";
+        break;
 
-    default:
-      return NextResponse.json({ error: "无效的操作" }, { status: 400 });
+      default:
+        return NextResponse.json({ error: "无效的操作" }, { status: 400 });
     }
 
     return NextResponse.json({
@@ -46,17 +40,14 @@ export async function PUT(
     });
   } catch (error) {
     console.error("更新通知失败:", error);
-    return NextResponse.json(
-      { error: "更新通知失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "更新通知失败", details: error }, { status: 500 });
   }
 }
 
 // DELETE - 删除通知
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -73,10 +64,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const success = await inventoryNotificationService.deleteNotification(
-      id,
-      memberId,
-    );
+    const success = await inventoryNotificationService.deleteNotification(id, memberId);
 
     return NextResponse.json({
       success,
@@ -84,9 +72,6 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("删除通知失败:", error);
-    return NextResponse.json(
-      { error: "删除通知失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "删除通知失败", details: error }, { status: 500 });
   }
 }

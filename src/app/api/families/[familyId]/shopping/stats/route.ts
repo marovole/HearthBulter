@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ShoppingListService } from "@/services/shopping-list";
-import {
-  withApiPermissions,
-  PERMISSION_CONFIGS,
-} from "@/middleware/permissions";
+import { withApiPermissions, PERMISSION_CONFIGS } from "@/middleware/permissions";
 
 // GET /api/families/[familyId]/shopping/stats - 获取购物统计
 
@@ -11,17 +8,14 @@ import {
 export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> },
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
       const { familyId } = await params;
       const userId = req.user!.id;
 
-      const stats = await ShoppingListService.getShoppingStats(
-        familyId,
-        userId,
-      );
+      const stats = await ShoppingListService.getShoppingStats(familyId, userId);
 
       return NextResponse.json({
         success: true,
@@ -32,12 +26,9 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to get shopping stats",
+          error: error instanceof Error ? error.message : "Failed to get shopping stats",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request as any, { params });

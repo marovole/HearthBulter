@@ -49,10 +49,7 @@ export function HealthScoreGauge({ score, breakdown }: HealthScoreGaugeProps) {
             dataKey="value"
           >
             {data.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={index === 0 ? getScoreColor(score) : "#e5e7eb"}
-              />
+              <Cell key={`cell-${index}`} fill={index === 0 ? getScoreColor(score) : "#e5e7eb"} />
             ))}
           </Pie>
           <Tooltip
@@ -68,17 +65,11 @@ export function HealthScoreGauge({ score, breakdown }: HealthScoreGaugeProps) {
 
       {/* 分数显示 */}
       <div className="mt-4 text-center">
-        <div
-          className="text-4xl font-bold"
-          style={{ color: getScoreColor(score) }}
-        >
+        <div className="text-4xl font-bold" style={{ color: getScoreColor(score) }}>
           {score}
         </div>
-        <div className="text-sm text-gray-600 mt-1">总分</div>
-        <div
-          className="text-sm font-medium mt-2"
-          style={{ color: getScoreColor(score) }}
-        >
+        <div className="mt-1 text-sm text-gray-600">总分</div>
+        <div className="mt-2 text-sm font-medium" style={{ color: getScoreColor(score) }}>
           {getScoreLabel(score)}
         </div>
       </div>
@@ -86,29 +77,25 @@ export function HealthScoreGauge({ score, breakdown }: HealthScoreGaugeProps) {
       {/* 评分明细 */}
       {breakdown && (
         <div className="mt-6 space-y-2">
-          <div className="text-xs font-medium text-gray-700 mb-2">
-            评分明细：
-          </div>
+          <div className="mb-2 text-xs font-medium text-gray-700">评分明细：</div>
           <div className="space-y-1">
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-600">BMI评分</span>
-              <span className="text-xs font-semibold text-gray-900">
-                {breakdown.bmiScore}/30
-              </span>
+              <span className="text-xs font-semibold text-gray-900">{breakdown.bmiScore}/30</span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-600">营养达标率</span>
               <span className="text-xs font-semibold text-gray-900">
                 {breakdown.nutritionScore}/30
               </span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-600">运动频率</span>
               <span className="text-xs font-semibold text-gray-900">
                 {breakdown.activityScore}/20
               </span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span className="text-xs text-gray-600">数据完整性</span>
               <span className="text-xs font-semibold text-gray-900">
                 {breakdown.dataCompletenessScore}/20

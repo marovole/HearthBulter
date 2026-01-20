@@ -65,29 +65,23 @@ export async function GET(request: NextRequest) {
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的仪表盘数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的仪表盘数据" }, { status: 403 });
     }
 
     // 从 Convex 获取数据
     // 注意：如果是新用户，可能需要先通过迁移脚本确保数据在 Convex 中存在
     // 这里我们尝试通过邮箱查找 Convex 中的 member
-    const convexOverview = (await convexClient.query(
-      api.dashboard.getOverview,
-      {
-        memberId: memberId,
-        userEmail: session.user.email || "",
-      },
-    )) as { healthScore?: number } | null;
+    const convexOverview = (await convexClient.query(api.dashboard.getOverview, {
+      memberId: memberId,
+      userEmail: session.user.email || "",
+    })) as { healthScore?: number } | null;
 
     return NextResponse.json(
       {
         overview: convexOverview,
         healthScore: convexOverview?.healthScore,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取仪表盘概览失败:", error);

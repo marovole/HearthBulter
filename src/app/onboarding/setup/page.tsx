@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -72,15 +66,9 @@ export default function SetupPage() {
     }
   };
 
-  const updateFamilyMember = (
-    id: string,
-    field: keyof FamilyMember,
-    value: any,
-  ) => {
+  const updateFamilyMember = (id: string, field: keyof FamilyMember, value: any) => {
     setFamilyMembers(
-      familyMembers.map((member) =>
-        member.id === id ? { ...member, [field]: value } : member,
-      ),
+      familyMembers.map((member) => (member.id === id ? { ...member, [field]: value } : member))
     );
   };
 
@@ -106,25 +94,23 @@ export default function SetupPage() {
   const currentStepData = steps[currentStep] ?? steps[0]!;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
+        <div className="mb-8 text-center">
+          <div className="mb-4 flex items-center justify-center space-x-2">
             {steps.map((step, index) => (
               <div key={index} className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    index <= currentStep
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-600"
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                    index <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   {index + 1}
                 </div>
                 {index < steps.length - 1 && (
                   <div
-                    className={`w-12 h-1 mx-2 ${
+                    className={`mx-2 h-1 w-12 ${
                       index < currentStep ? "bg-blue-600" : "bg-gray-200"
                     }`}
                   />
@@ -132,16 +118,14 @@ export default function SetupPage() {
               </div>
             ))}
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {currentStepData.title}
-          </h1>
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">{currentStepData.title}</h1>
           <p className="text-gray-600">{currentStepData.description}</p>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
+        <div className="mb-8 h-2 w-full rounded-full bg-gray-200">
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="h-2 rounded-full bg-blue-600 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -151,24 +135,21 @@ export default function SetupPage() {
           <CardContent className="p-8">
             {currentStep === 0 && (
               <div>
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <User className="h-5 w-5 text-blue-600" />
                     <h2 className="text-xl font-semibold">家庭成员设置</h2>
                   </div>
                   <Button onClick={addFamilyMember} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="mr-2 h-4 w-4" />
                     添加成员
                   </Button>
                 </div>
 
                 <div className="space-y-4">
                   {familyMembers.map((member, index) => (
-                    <div
-                      key={member.id}
-                      className="border rounded-lg p-4 bg-gray-50"
-                    >
-                      <div className="flex items-center justify-between mb-4">
+                    <div key={member.id} className="rounded-lg border bg-gray-50 p-4">
+                      <div className="mb-4 flex items-center justify-between">
                         <Badge variant="outline">成员 {index + 1}</Badge>
                         {familyMembers.length > 1 && (
                           <Button
@@ -182,19 +163,13 @@ export default function SetupPage() {
                         )}
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid gap-4 md:grid-cols-2">
                         <div>
                           <Label htmlFor={`name-${member.id}`}>姓名 *</Label>
                           <Input
                             id={`name-${member.id}`}
                             value={member.name}
-                            onChange={(e) =>
-                              updateFamilyMember(
-                                member.id,
-                                "name",
-                                e.target.value,
-                              )
-                            }
+                            onChange={(e) => updateFamilyMember(member.id, "name", e.target.value)}
                             placeholder="请输入姓名"
                           />
                         </div>
@@ -204,13 +179,7 @@ export default function SetupPage() {
                           <Input
                             id={`age-${member.id}`}
                             value={member.age}
-                            onChange={(e) =>
-                              updateFamilyMember(
-                                member.id,
-                                "age",
-                                e.target.value,
-                              )
-                            }
+                            onChange={(e) => updateFamilyMember(member.id, "age", e.target.value)}
                             placeholder="请输入年龄"
                             type="number"
                           />
@@ -235,17 +204,11 @@ export default function SetupPage() {
                         </div>
 
                         <div>
-                          <Label htmlFor={`relationship-${member.id}`}>
-                            关系 *
-                          </Label>
+                          <Label htmlFor={`relationship-${member.id}`}>关系 *</Label>
                           <Select
                             value={member.relationship}
                             onValueChange={(value) =>
-                              updateFamilyMember(
-                                member.id,
-                                "relationship",
-                                value,
-                              )
+                              updateFamilyMember(member.id, "relationship", value)
                             }
                           >
                             <SelectTrigger>
@@ -269,7 +232,7 @@ export default function SetupPage() {
 
             {currentStep === 1 && (
               <div>
-                <div className="flex items-center space-x-2 mb-6">
+                <div className="mb-6 flex items-center space-x-2">
                   <Target className="h-5 w-5 text-blue-600" />
                   <h2 className="text-xl font-semibold">健康目标设置</h2>
                 </div>
@@ -286,9 +249,9 @@ export default function SetupPage() {
                     />
                   </div>
 
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h3 className="font-medium mb-2">常见的健康目标参考：</h3>
-                    <ul className="text-sm text-gray-600 space-y-1">
+                  <div className="rounded-lg bg-blue-50 p-4">
+                    <h3 className="mb-2 font-medium">常见的健康目标参考：</h3>
+                    <ul className="space-y-1 text-sm text-gray-600">
                       <li>• 体重管理：达到理想体重或维持健康体重</li>
                       <li>• 血压控制：维持血压在正常范围内</li>
                       <li>• 血糖管理：控制血糖水平，预防糖尿病</li>
@@ -302,34 +265,29 @@ export default function SetupPage() {
 
             {currentStep === 2 && (
               <div>
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="mb-8 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                     <Target className="h-8 w-8 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                    设置完成！
-                  </h2>
+                  <h2 className="mb-2 text-2xl font-semibold text-gray-900">设置完成！</h2>
                   <p className="text-gray-600">请确认您的设置信息</p>
                 </div>
 
                 <div className="space-y-6">
                   <div>
-                    <h3 className="font-medium mb-3 flex items-center">
-                      <User className="h-4 w-4 mr-2 text-blue-600" />
+                    <h3 className="mb-3 flex items-center font-medium">
+                      <User className="mr-2 h-4 w-4 text-blue-600" />
                       家庭成员 ({familyMembers.length}人)
                     </h3>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="rounded-lg bg-gray-50 p-4">
                       {familyMembers.map((member, index) => (
                         <div
                           key={member.id}
-                          className="flex items-center justify-between py-2 border-b last:border-b-0"
+                          className="flex items-center justify-between border-b py-2 last:border-b-0"
                         >
-                          <span className="font-medium">
-                            {member.name || `成员${index + 1}`}
-                          </span>
+                          <span className="font-medium">{member.name || `成员${index + 1}`}</span>
                           <span className="text-sm text-gray-500">
-                            {member.age}岁 •{" "}
-                            {member.gender === "male" ? "男" : "女"} •{" "}
+                            {member.age}岁 • {member.gender === "male" ? "男" : "女"} •{" "}
                             {member.relationship || "未设置"}
                           </span>
                         </div>
@@ -339,20 +297,19 @@ export default function SetupPage() {
 
                   {healthGoals && (
                     <div>
-                      <h3 className="font-medium mb-3 flex items-center">
-                        <Target className="h-4 w-4 mr-2 text-blue-600" />
+                      <h3 className="mb-3 flex items-center font-medium">
+                        <Target className="mr-2 h-4 w-4 text-blue-600" />
                         健康目标
                       </h3>
-                      <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="rounded-lg bg-gray-50 p-4">
                         <p className="text-gray-700">{healthGoals}</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="rounded-lg bg-green-50 p-4">
                     <p className="text-sm text-green-800">
-                      ✅ 设置已完成！您现在可以开始使用 Health Butler
-                      的所有功能了。
+                      ✅ 设置已完成！您现在可以开始使用 Health Butler 的所有功能了。
                     </p>
                   </div>
                 </div>
@@ -376,10 +333,7 @@ export default function SetupPage() {
             )}
           </div>
 
-          <Button
-            onClick={handleNext}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
+          <Button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700">
             {currentStep === steps.length - 1 ? "完成设置" : "下一步"}
           </Button>
         </div>

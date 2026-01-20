@@ -126,7 +126,7 @@ export class EnhancedPerformanceMonitor {
     statusCode: number,
     responseSize?: number,
     databaseMetrics?: PerformanceMetrics["databaseMetrics"],
-    cacheMetrics?: PerformanceMetrics["cacheMetrics"],
+    cacheMetrics?: PerformanceMetrics["cacheMetrics"]
   ): PerformanceMetrics | null {
     const metricList = this.metrics.get(requestId);
     if (!metricList || metricList.length === 0) return null;
@@ -191,7 +191,7 @@ export class EnhancedPerformanceMonitor {
           query,
           duration,
           requestId,
-        },
+        }
       );
     }
   }
@@ -227,7 +227,7 @@ export class EnhancedPerformanceMonitor {
           url: metrics.requestInfo.url,
           method: metrics.requestInfo.method,
           duration,
-        },
+        }
       );
     } else if (duration > responseTime.error) {
       this.createAlert(
@@ -239,7 +239,7 @@ export class EnhancedPerformanceMonitor {
           url: metrics.requestInfo.url,
           method: metrics.requestInfo.method,
           duration,
-        },
+        }
       );
     } else if (duration > responseTime.warning) {
       this.createAlert(
@@ -251,7 +251,7 @@ export class EnhancedPerformanceMonitor {
           url: metrics.requestInfo.url,
           method: metrics.requestInfo.method,
           duration,
-        },
+        }
       );
     }
   }
@@ -275,7 +275,7 @@ export class EnhancedPerformanceMonitor {
           usedMemory,
           totalMemory,
           usageRatio,
-        },
+        }
       );
     } else if (usageRatio > thresholds.error) {
       this.createAlert(
@@ -287,7 +287,7 @@ export class EnhancedPerformanceMonitor {
           usedMemory,
           totalMemory,
           usageRatio,
-        },
+        }
       );
     }
   }
@@ -300,7 +300,7 @@ export class EnhancedPerformanceMonitor {
 
     if (slowQueries.length > 0) {
       const slowestQuery = slowQueries.reduce((prev, curr) =>
-        curr.duration > prev.duration ? curr : prev,
+        curr.duration > prev.duration ? curr : prev
       );
 
       this.createAlert(
@@ -312,9 +312,8 @@ export class EnhancedPerformanceMonitor {
           queryCount: slowQueries.length,
           slowestQuery,
           averageDuration:
-            metrics.databaseMetrics.queryDuration /
-            metrics.databaseMetrics.queryCount,
-        },
+            metrics.databaseMetrics.queryDuration / metrics.databaseMetrics.queryCount,
+        }
       );
     }
   }
@@ -335,7 +334,7 @@ export class EnhancedPerformanceMonitor {
           hitRate,
           hits: metrics.cacheMetrics.hits,
           misses: metrics.cacheMetrics.misses,
-        },
+        }
       );
     } else if (hitRate < cacheHitRate.warning) {
       this.createAlert(
@@ -347,7 +346,7 @@ export class EnhancedPerformanceMonitor {
           hitRate,
           hits: metrics.cacheMetrics.hits,
           misses: metrics.cacheMetrics.misses,
-        },
+        }
       );
     }
   }
@@ -360,7 +359,7 @@ export class EnhancedPerformanceMonitor {
     title: string,
     message: string,
     source: string,
-    context: Record<string, any>,
+    context: Record<string, any>
   ): void {
     const alert: Alert = {
       id: this.generateAlertId(),
@@ -440,8 +439,7 @@ export class EnhancedPerformanceMonitor {
   private saveMetrics(metrics: PerformanceMetrics): void {
     // 这里可以将指标保存到数据库、文件或监控系统
     // 为了演示，我们只是记录到控制台
-    const logLevel =
-      metrics.duration > this.thresholds.responseTime.error ? "error" : "info";
+    const logLevel = metrics.duration > this.thresholds.responseTime.error ? "error" : "info";
     console.log(`[${logLevel.toUpperCase()}] Performance:`, {
       url: metrics.requestInfo.url,
       method: metrics.requestInfo.method,
@@ -482,9 +480,7 @@ export class EnhancedPerformanceMonitor {
       averageResponseTime: 0,
       errorRate: 0,
       alerts: this.alerts.filter(
-        (alert) =>
-          alert.timestamp >= timeRange.start &&
-          alert.timestamp <= timeRange.end,
+        (alert) => alert.timestamp >= timeRange.start && alert.timestamp <= timeRange.end
       ),
     };
   }
@@ -499,9 +495,7 @@ export class EnhancedPerformanceMonitor {
         const oneHourAgo = Date.now() - 60 * 60 * 1000;
 
         for (const [key, metricList] of this.metrics.entries()) {
-          const filteredMetrics = metricList.filter(
-            (m) => m.timestamp > oneHourAgo,
-          );
+          const filteredMetrics = metricList.filter((m) => m.timestamp > oneHourAgo);
           if (filteredMetrics.length === 0) {
             this.metrics.delete(key);
           } else {
@@ -511,11 +505,9 @@ export class EnhancedPerformanceMonitor {
 
         // 清理过期的告警（保留最近24小时）
         const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-        this.alerts = this.alerts.filter(
-          (alert) => alert.timestamp > oneDayAgo,
-        );
+        this.alerts = this.alerts.filter((alert) => alert.timestamp > oneDayAgo);
       },
-      5 * 60 * 1000,
+      5 * 60 * 1000
     ); // 每5分钟清理一次
   }
 
@@ -528,13 +520,11 @@ export class EnhancedPerformanceMonitor {
     currentMemoryUsage: number;
     activeAlerts: number;
     alertsByLevel: Record<AlertLevel, number>;
-    } {
+  } {
     const allMetrics = Array.from(this.metrics.values()).flat();
     const totalRequests = allMetrics.length;
     const averageResponseTime =
-      totalRequests > 0
-        ? allMetrics.reduce((sum, m) => sum + m.duration, 0) / totalRequests
-        : 0;
+      totalRequests > 0 ? allMetrics.reduce((sum, m) => sum + m.duration, 0) / totalRequests : 0;
 
     const currentMemoryUsage = this.getMemoryUsage();
     const memoryUsagePercent = currentMemoryUsage

@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -19,15 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Star,
-  Clock,
-  DollarSign,
-  Users,
-  Heart,
-  Eye,
-  ChefHat,
-} from "lucide-react";
+import { Star, Clock, DollarSign, Users, Heart, Eye, ChefHat } from "lucide-react";
 
 interface Recipe {
   id: string;
@@ -89,16 +75,7 @@ export default function RecipeRecommendationDemo() {
 
   const mealTypes = ["早餐", "午餐", "晚餐", "加餐"];
   const seasons = ["春", "夏", "秋", "冬"];
-  const cuisines = [
-    "中式",
-    "川菜",
-    "粤菜",
-    "湘菜",
-    "日式",
-    "韩式",
-    "意式",
-    "法式",
-  ];
+  const cuisines = ["中式", "川菜", "粤菜", "湘菜", "日式", "韩式", "意式", "法式"];
   const difficulties = ["EASY", "MEDIUM", "HARD"];
 
   const getRecommendations = async () => {
@@ -131,11 +108,7 @@ export default function RecipeRecommendationDemo() {
     }
   };
 
-  const recordInteraction = async (
-    type: string,
-    recipeId: string,
-    data: any = {},
-  ) => {
+  const recordInteraction = async (type: string, recipeId: string, data: any = {}) => {
     try {
       await fetch("/api/recommendations", {
         method: "POST",
@@ -181,37 +154,35 @@ export default function RecipeRecommendationDemo() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-    case "EASY":
-      return "bg-green-100 text-green-800";
-    case "MEDIUM":
-      return "bg-yellow-100 text-yellow-800";
-    case "HARD":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
+      case "EASY":
+        return "bg-green-100 text-green-800";
+      case "MEDIUM":
+        return "bg-yellow-100 text-yellow-800";
+      case "HARD":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getDifficultyText = (difficulty: string) => {
     switch (difficulty) {
-    case "EASY":
-      return "简单";
-    case "MEDIUM":
-      return "中等";
-    case "HARD":
-      return "困难";
-    default:
-      return "未知";
+      case "EASY":
+        return "简单";
+      case "MEDIUM":
+        return "中等";
+      case "HARD":
+        return "困难";
+      default:
+        return "未知";
     }
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="text-center space-y-2">
+    <div className="container mx-auto space-y-6 p-6">
+      <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold">智能食谱推荐系统演示</h1>
-        <p className="text-muted-foreground">
-          基于多策略融合的个性化食谱推荐引擎
-        </p>
+        <p className="text-muted-foreground">基于多策略融合的个性化食谱推荐引擎</p>
       </div>
 
       <Tabs defaultValue="recommendations" className="space-y-4">
@@ -221,7 +192,7 @@ export default function RecipeRecommendationDemo() {
         </TabsList>
 
         <TabsContent value="recommendations" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold">为您推荐的食谱</h2>
             <Button onClick={getRecommendations} disabled={loading}>
               {loading ? "获取中..." : "刷新推荐"}
@@ -230,9 +201,9 @@ export default function RecipeRecommendationDemo() {
 
           {recommendations.length === 0 ? (
             <Card>
-              <CardContent className="flex items-center justify-center h-64">
-                <div className="text-center space-y-2">
-                  <ChefHat className="h-12 w-12 mx-auto text-muted-foreground" />
+              <CardContent className="flex h-64 items-center justify-center">
+                <div className="space-y-2 text-center">
+                  <ChefHat className="mx-auto h-12 w-12 text-muted-foreground" />
                   <p className="text-muted-foreground">
                     {loading ? "正在获取推荐..." : "暂无推荐结果"}
                   </p>
@@ -242,15 +213,10 @@ export default function RecipeRecommendationDemo() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {recommendations.map((rec) => (
-                <Card
-                  key={rec.recipeId}
-                  className="hover:shadow-lg transition-shadow"
-                >
+                <Card key={rec.recipeId} className="transition-shadow hover:shadow-lg">
                   <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">
-                        {rec.recipe.name}
-                      </CardTitle>
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-lg">{rec.recipe.name}</CardTitle>
                       <Badge variant="secondary" className="ml-2">
                         {Math.round(rec.score)}分
                       </Badge>
@@ -260,11 +226,7 @@ export default function RecipeRecommendationDemo() {
                   <CardContent className="space-y-4">
                     <div className="flex flex-wrap gap-2">
                       {rec.reasons.map((reason, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs"
-                        >
+                        <Badge key={index} variant="outline" className="text-xs">
                           {reason}
                         </Badge>
                       ))}
@@ -284,9 +246,7 @@ export default function RecipeRecommendationDemo() {
                         <span>{context.servings}人份</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Badge
-                          className={getDifficultyColor(rec.recipe.difficulty)}
-                        >
+                        <Badge className={getDifficultyColor(rec.recipe.difficulty)}>
                           {getDifficultyText(rec.recipe.difficulty)}
                         </Badge>
                       </div>
@@ -295,13 +255,11 @@ export default function RecipeRecommendationDemo() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs">
                         <span>库存匹配</span>
-                        <span>
-                          {Math.round(rec.metadata.inventoryMatch * 100)}%
-                        </span>
+                        <span>{Math.round(rec.metadata.inventoryMatch * 100)}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="h-2 w-full rounded-full bg-gray-200">
                         <div
-                          className="bg-blue-600 h-2 rounded-full"
+                          className="h-2 rounded-full bg-blue-600"
                           style={{
                             width: `${rec.metadata.inventoryMatch * 100}%`,
                           }}
@@ -314,7 +272,7 @@ export default function RecipeRecommendationDemo() {
                         <span>营养信息</span>
                         <span>{rec.recipe.calories}卡路里</span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-xs text-center">
+                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
                         <div>
                           <div className="font-medium">蛋白质</div>
                           <div>{rec.recipe.protein}g</div>
@@ -331,12 +289,8 @@ export default function RecipeRecommendationDemo() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleView(rec.recipeId)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
+                      <Button size="sm" variant="outline" onClick={() => handleView(rec.recipeId)}>
+                        <Eye className="mr-1 h-4 w-4" />
                         查看
                       </Button>
                       <Button
@@ -344,7 +298,7 @@ export default function RecipeRecommendationDemo() {
                         variant="outline"
                         onClick={() => handleFavorite(rec.recipeId)}
                       >
-                        <Heart className="h-4 w-4 mr-1" />
+                        <Heart className="mr-1 h-4 w-4" />
                         收藏
                       </Button>
                     </div>
@@ -357,7 +311,7 @@ export default function RecipeRecommendationDemo() {
                             key={star}
                             size="sm"
                             variant="ghost"
-                            className="p-1 h-8"
+                            className="h-8 p-1"
                             onClick={() => handleRating(rec.recipeId, star)}
                           >
                             <Star
@@ -382,9 +336,7 @@ export default function RecipeRecommendationDemo() {
           <Card>
             <CardHeader>
               <CardTitle>推荐设置</CardTitle>
-              <CardDescription>
-                调整您的偏好设置以获得更精准的推荐
-              </CardDescription>
+              <CardDescription>调整您的偏好设置以获得更精准的推荐</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
@@ -440,9 +392,7 @@ export default function RecipeRecommendationDemo() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  用餐人数: {context.servings}人
-                </label>
+                <label className="text-sm font-medium">用餐人数: {context.servings}人</label>
                 <Slider
                   value={[context.servings]}
                   onValueChange={(value: number[]) =>
@@ -478,9 +428,7 @@ export default function RecipeRecommendationDemo() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  预算限制: ¥{context.budgetLimit}
-                </label>
+                <label className="text-sm font-medium">预算限制: ¥{context.budgetLimit}</label>
                 <Slider
                   value={[context.budgetLimit]}
                   onValueChange={(value: number[]) =>
@@ -502,21 +450,13 @@ export default function RecipeRecommendationDemo() {
                   {cuisines.map((cuisine) => (
                     <Button
                       key={cuisine}
-                      variant={
-                        context.preferredCuisines.includes(cuisine)
-                          ? "default"
-                          : "outline"
-                      }
+                      variant={context.preferredCuisines.includes(cuisine) ? "default" : "outline"}
                       size="sm"
                       onClick={() => {
                         setContext((prev) => ({
                           ...prev,
-                          preferredCuisines: prev.preferredCuisines.includes(
-                            cuisine,
-                          )
-                            ? prev.preferredCuisines.filter(
-                              (c) => c !== cuisine,
-                            )
+                          preferredCuisines: prev.preferredCuisines.includes(cuisine)
+                            ? prev.preferredCuisines.filter((c) => c !== cuisine)
                             : [...prev.preferredCuisines, cuisine],
                         }));
                       }}

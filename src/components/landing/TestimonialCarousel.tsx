@@ -91,35 +91,33 @@ export default function TestimonialCarousel() {
   }, [api]);
 
   const StarRating = ({ rating }: { rating: number }) => (
-    <div className="flex gap-0.5 mb-4">
+    <div className="mb-4 flex gap-0.5">
       {[...Array(5)].map((_, i) => (
         <Star
           key={i}
-          className={`w-4 h-4 ${
-            i < rating ? "fill-accent text-accent" : "text-muted"
-          }`}
+          className={`h-4 w-4 ${i < rating ? "fill-accent text-accent" : "text-muted"}`}
         />
       ))}
     </div>
   );
 
   return (
-    <section id="testimonials" className="py-24 md:py-32 bg-muted/30">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="testimonials" className="bg-muted/30 py-24 md:py-32">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <motion.div
           ref={ref}
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="mb-16 text-center"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-4">
+          <span className="mb-4 inline-block rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent">
             用户评价
           </span>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-4">
+          <h2 className="mb-4 font-display text-3xl font-bold text-foreground sm:text-4xl">
             他们的故事
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+          <p className="mx-auto max-w-xl text-muted-foreground">
             看看其他用户如何通过 Health Butler 改善健康生活
           </p>
         </motion.div>
@@ -132,53 +130,41 @@ export default function TestimonialCarousel() {
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          <Carousel
-            opts={{ align: "center", loop: true }}
-            setApi={setApi}
-            className="w-full"
-          >
+          <Carousel opts={{ align: "center", loop: true }} setApi={setApi} className="w-full">
             <CarouselContent className="-ml-4">
               {testimonials.map((testimonial) => (
-                <CarouselItem
-                  key={testimonial.id}
-                  className="pl-4 md:basis-1/2 lg:basis-1/3"
-                >
+                <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                   <Card variant="elevated" className="h-full">
-                    <CardContent className="p-6 flex flex-col h-full">
+                    <CardContent className="flex h-full flex-col p-6">
                       {/* Quote icon */}
-                      <div className="inline-flex self-start p-2.5 rounded-xl bg-primary/10 mb-4">
-                        <Quote className="w-5 h-5 text-primary" />
+                      <div className="mb-4 inline-flex self-start rounded-xl bg-primary/10 p-2.5">
+                        <Quote className="h-5 w-5 text-primary" />
                       </div>
 
                       <StarRating rating={testimonial.rating} />
 
-                      <p className="text-foreground/80 text-sm leading-relaxed mb-6 flex-grow">
+                      <p className="mb-6 flex-grow text-sm leading-relaxed text-foreground/80">
                         &ldquo;{testimonial.content}&rdquo;
                       </p>
 
                       {testimonial.achievement && (
-                        <div className="inline-flex self-start px-3 py-1 rounded-full bg-success/10 text-success text-xs font-medium mb-4">
+                        <div className="mb-4 inline-flex self-start rounded-full bg-success/10 px-3 py-1 text-xs font-medium text-success">
                           {testimonial.achievement}
                         </div>
                       )}
 
-                      <div className="flex items-center gap-3 mt-auto pt-4 border-t border-border">
-                        <Avatar className="w-10 h-10">
-                          <AvatarImage
-                            src={testimonial.avatar}
-                            alt={testimonial.name}
-                          />
-                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                      <div className="mt-auto flex items-center gap-3 border-t border-border pt-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                          <AvatarFallback className="bg-primary text-sm text-primary-foreground">
                             {testimonial.name[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-semibold text-foreground text-sm">
+                          <div className="text-sm font-semibold text-foreground">
                             {testimonial.name}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {testimonial.role}
-                          </div>
+                          <div className="text-xs text-muted-foreground">{testimonial.role}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -186,13 +172,13 @@ export default function TestimonialCarousel() {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-4" />
-            <CarouselNext className="hidden md:flex -right-4" />
+            <CarouselPrevious className="-left-4 hidden md:flex" />
+            <CarouselNext className="-right-4 hidden md:flex" />
           </Carousel>
         </motion.div>
 
         {/* Pagination dots */}
-        <div className="flex justify-center mt-8 gap-2">
+        <div className="mt-8 flex justify-center gap-2">
           {testimonials.map((_, index) => (
             <button
               key={index}

@@ -114,8 +114,7 @@ export class SupabaseTrendCache {
    */
   private get supabase(): SupabaseClient<Database> {
     if (!this._supabase) {
-      this._supabase =
-        SupabaseClientManager.getInstance() as SupabaseClient<Database>;
+      this._supabase = SupabaseClientManager.getInstance() as SupabaseClient<Database>;
     }
     return this._supabase;
   }
@@ -156,20 +155,14 @@ export class SupabaseTrendCache {
         console.log("[SupabaseTrendCache] Cache expired, deleting");
         // 异步删除过期缓存
         this.delete(query).catch((err) =>
-          console.error(
-            "[SupabaseTrendCache] Failed to delete expired cache:",
-            err,
-          ),
+          console.error("[SupabaseTrendCache] Failed to delete expired cache:", err)
         );
         return null;
       }
 
       // 增加命中次数（异步，不阻塞）
       this.incrementHitCount(data.id).catch((err) =>
-        console.warn(
-          "[SupabaseTrendCache] Failed to increment hit count:",
-          err,
-        ),
+        console.warn("[SupabaseTrendCache] Failed to increment hit count:", err)
       );
 
       return {
@@ -211,11 +204,7 @@ export class SupabaseTrendCache {
    *   trendDirection: 'UP',
    * }, 600);
    */
-  async set(
-    query: TrendCacheQuery,
-    data: TrendCacheData,
-    ttl = 300,
-  ): Promise<boolean> {
+  async set(query: TrendCacheQuery, data: TrendCacheData, ttl = 300): Promise<boolean> {
     try {
       const now = new Date();
       const expiresAt = new Date(now.getTime() + ttl * 1000);
@@ -247,16 +236,14 @@ export class SupabaseTrendCache {
           trend_direction: data.trendDirection ?? null,
           slope: data.slope ?? null,
           r_squared: data.rSquared ?? null,
-          predictions: data.predictions
-            ? JSON.stringify(data.predictions)
-            : null,
+          predictions: data.predictions ? JSON.stringify(data.predictions) : null,
           expires_at: expiresAt.toISOString(),
           hit_count: currentHitCount, // 保留现有命中次数
           updated_at: now.toISOString(),
         },
         {
           onConflict: "member_id,data_type,start_date,end_date",
-        },
+        }
       );
 
       if (error) {
@@ -308,15 +295,9 @@ export class SupabaseTrendCache {
    * @param dataType - 可选的数据类型过滤
    * @returns 删除的行数
    */
-  async deleteByMember(
-    memberId: string,
-    dataType?: TrendDataType,
-  ): Promise<number> {
+  async deleteByMember(memberId: string, dataType?: TrendDataType): Promise<number> {
     try {
-      let query = this.supabase
-        .from("trend_data")
-        .delete()
-        .eq("member_id", memberId);
+      let query = this.supabase.from("trend_data").delete().eq("member_id", memberId);
 
       if (dataType) {
         query = query.eq("data_type", dataType);
@@ -330,9 +311,7 @@ export class SupabaseTrendCache {
       }
 
       const deletedCount = data?.length ?? 0;
-      console.log(
-        `[SupabaseTrendCache] Deleted ${deletedCount} cache entries for member`,
-      );
+      console.log(`[SupabaseTrendCache] Deleted ${deletedCount} cache entries for member`);
       return deletedCount;
     } catch (error) {
       console.error("[SupabaseTrendCache] Delete by member error:", error);
@@ -359,9 +338,7 @@ export class SupabaseTrendCache {
       }
 
       const deletedCount = data?.length ?? 0;
-      console.log(
-        `[SupabaseTrendCache] Cleaned up ${deletedCount} expired cache entries`,
-      );
+      console.log(`[SupabaseTrendCache] Cleaned up ${deletedCount} expired cache entries`);
       return deletedCount;
     } catch (error) {
       console.error("[SupabaseTrendCache] Cleanup expired error:", error);
@@ -385,7 +362,7 @@ export class SupabaseTrendCache {
       // 如果 RPC 不存在，降级为读-修改-写操作
       if (error && error.message?.includes("function")) {
         console.warn(
-          "[SupabaseTrendCache] RPC increment_trend_cache_hit not found, using fallback",
+          "[SupabaseTrendCache] RPC increment_trend_cache_hit not found, using fallback"
         );
 
         // 读取当前值
@@ -406,17 +383,11 @@ export class SupabaseTrendCache {
           .eq("id", id);
 
         if (updateError) {
-          console.error(
-            "[SupabaseTrendCache] Increment hit count error:",
-            updateError,
-          );
+          console.error("[SupabaseTrendCache] Increment hit count error:", updateError);
           return false;
         }
       } else if (error) {
-        console.error(
-          "[SupabaseTrendCache] Increment hit count RPC error:",
-          error,
-        );
+        console.error("[SupabaseTrendCache] Increment hit count RPC error:", error);
         return false;
       }
 

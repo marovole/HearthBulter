@@ -22,10 +22,9 @@ export async function GET(request: NextRequest) {
     const endDateParam = searchParams.get("endDate");
     const memberIdParam = searchParams.get("memberId");
 
-    const members = await convexClient.query<Doc<"familyMembers">[]>(
-      api.members.listByClerkId,
-      { clerkId: session.user.id },
-    );
+    const members = await convexClient.query<Doc<"familyMembers">[]>(api.members.listByClerkId, {
+      clerkId: session.user.id,
+    });
 
     if (members.length === 0) {
       return NextResponse.json({ error: "未找到关联的成员" }, { status: 404 });
@@ -36,10 +35,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "未找到关联的成员" }, { status: 404 });
     }
 
-    const mapPlanResponse = (
-      plan: Doc<"mealPlans">,
-      meals: Array<Record<string, unknown>>,
-    ) => ({
+    const mapPlanResponse = (plan: Doc<"mealPlans">, meals: Array<Record<string, unknown>>) => ({
       id: plan._id,
       startDate: new Date(plan.startDate),
       endDate: new Date(plan.endDate),
@@ -56,18 +52,16 @@ export async function GET(request: NextRequest) {
         protein: meal.protein,
         carbs: meal.carbs,
         fat: meal.fat,
-        ingredients: (
-          (meal.ingredients as Array<Record<string, unknown>>) ?? []
-        ).map((ingredient) => ({
-          id: ingredient._id as string,
-          amount: ingredient.amount as number,
-          food: {
-            id: ingredient.foodId as string,
-            name:
-              (ingredient.food as Record<string, unknown> | undefined)?.name ??
-              "",
-          },
-        })),
+        ingredients: ((meal.ingredients as Array<Record<string, unknown>>) ?? []).map(
+          (ingredient) => ({
+            id: ingredient._id as string,
+            amount: ingredient.amount as number,
+            food: {
+              id: ingredient.foodId as string,
+              name: (ingredient.food as Record<string, unknown> | undefined)?.name ?? "",
+            },
+          })
+        ),
       })),
       nutritionSummary: null,
     });
@@ -83,10 +77,7 @@ export async function GET(request: NextRequest) {
       });
 
       if (!plan?.plan) {
-        return NextResponse.json(
-          { message: "暂无食谱计划", plan: null },
-          { status: 200 },
-        );
+        return NextResponse.json({ message: "暂无食谱计划", plan: null }, { status: 200 });
       }
 
       const details = await convexClient.query<{
@@ -97,10 +88,7 @@ export async function GET(request: NextRequest) {
       });
 
       if (!details) {
-        return NextResponse.json(
-          { message: "暂无食谱计划", plan: null },
-          { status: 200 },
-        );
+        return NextResponse.json({ message: "暂无食谱计划", plan: null }, { status: 200 });
       }
 
       return NextResponse.json(mapPlanResponse(details.plan, details.meals), {
@@ -110,14 +98,11 @@ export async function GET(request: NextRequest) {
 
     const activePlan = await convexClient.query<Doc<"mealPlans"> | null>(
       api.meals.getActivePlanByMember,
-      { memberId: memberId as Id<"familyMembers"> },
+      { memberId: memberId as Id<"familyMembers"> }
     );
 
     if (!activePlan) {
-      return NextResponse.json(
-        { message: "暂无食谱计划", plan: null },
-        { status: 200 },
-      );
+      return NextResponse.json({ message: "暂无食谱计划", plan: null }, { status: 200 });
     }
 
     const activeDetails = await convexClient.query<{
@@ -128,18 +113,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (!activeDetails) {
-      return NextResponse.json(
-        { message: "暂无食谱计划", plan: null },
-        { status: 200 },
-      );
+      return NextResponse.json({ message: "暂无食谱计划", plan: null }, { status: 200 });
     }
 
-    return NextResponse.json(
-      mapPlanResponse(activeDetails.plan, activeDetails.meals),
-      {
-        status: 200,
-      },
-    );
+    return NextResponse.json(mapPlanResponse(activeDetails.plan, activeDetails.meals), {
+      status: 200,
+    });
   } catch (error) {
     console.error("获取食谱计划失败:", error);
     return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });

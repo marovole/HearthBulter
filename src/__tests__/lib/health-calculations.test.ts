@@ -149,11 +149,7 @@ describe("Health Calculations", () => {
 
     it("should handle birthday not yet occurred this year", () => {
       const today = new Date();
-      const nextMonthBirthDate = new Date(
-        today.getFullYear() - 30,
-        today.getMonth() + 1,
-        1,
-      );
+      const nextMonthBirthDate = new Date(today.getFullYear() - 30, today.getMonth() + 1, 1);
 
       const age = calculateAge(nextMonthBirthDate);
       expect(age).toBe(29); // Not 30 yet

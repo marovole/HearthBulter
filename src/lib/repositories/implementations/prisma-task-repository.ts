@@ -37,7 +37,7 @@ export class PrismaTaskRepository implements TaskRepository {
    */
   async listTasks(
     query: TaskListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<TaskDTO>> {
     return this.notImplemented("listTasks");
   }
@@ -48,7 +48,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async getTaskById(
     familyId: string,
     taskId: string,
-    options?: TaskGetOptions,
+    options?: TaskGetOptions
   ): Promise<TaskDTO | null> {
     return this.notImplemented("getTaskById");
   }
@@ -56,33 +56,21 @@ export class PrismaTaskRepository implements TaskRepository {
   /**
    * 获取我的任务
    */
-  async getMyTasks(
-    familyId: string,
-    memberId: string,
-    status?: TaskStatus,
-  ): Promise<TaskDTO[]> {
+  async getMyTasks(familyId: string, memberId: string, status?: TaskStatus): Promise<TaskDTO[]> {
     return this.notImplemented("getMyTasks");
   }
 
   /**
    * 创建任务
    */
-  async createTask(
-    familyId: string,
-    creatorId: string,
-    payload: CreateTaskDTO,
-  ): Promise<TaskDTO> {
+  async createTask(familyId: string, creatorId: string, payload: CreateTaskDTO): Promise<TaskDTO> {
     return this.notImplemented("createTask");
   }
 
   /**
    * 更新任务详情
    */
-  async updateTask(
-    familyId: string,
-    taskId: string,
-    payload: UpdateTaskDTO,
-  ): Promise<TaskDTO> {
+  async updateTask(familyId: string, taskId: string, payload: UpdateTaskDTO): Promise<TaskDTO> {
     return this.notImplemented("updateTask");
   }
 
@@ -92,7 +80,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async updateTaskStatus(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskStatusDTO,
+    payload: UpdateTaskStatusDTO
   ): Promise<TaskDTO> {
     return this.notImplemented("updateTaskStatus");
   }
@@ -100,11 +88,7 @@ export class PrismaTaskRepository implements TaskRepository {
   /**
    * 分配任务
    */
-  async assignTask(
-    familyId: string,
-    taskId: string,
-    assigneeId: string,
-  ): Promise<TaskDTO> {
+  async assignTask(familyId: string, taskId: string, assigneeId: string): Promise<TaskDTO> {
     return this.notImplemented("assignTask");
   }
 

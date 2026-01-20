@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { taskRepository } from "@/lib/repositories/task-repository-singleton";
-import {
-  withApiPermissions,
-  PERMISSION_CONFIGS,
-} from "@/middleware/permissions";
+import { withApiPermissions, PERMISSION_CONFIGS } from "@/middleware/permissions";
 import { hasPermission, Permission } from "@/lib/permissions";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
-import type {
-  TaskStatus,
-  TaskCategory,
-  TaskPriority,
-} from "@/lib/repositories/types/task";
+import type { TaskStatus, TaskCategory, TaskPriority } from "@/lib/repositories/types/task";
 
 /**
  * GET /api/families/:familyId/tasks
@@ -24,7 +17,7 @@ import type {
 export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> },
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -36,14 +29,11 @@ export async function GET(
         {
           familyId: familyId as Id<"families">,
           clerkId: userId,
-        },
+        }
       );
 
       if (!member) {
-        return NextResponse.json(
-          { success: false, error: "Not a family member" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Not a family member" }, { status: 403 });
       }
 
       // 获取查询参数
@@ -55,12 +45,8 @@ export async function GET(
         assigneeId: searchParams.get("assigneeId") || undefined,
         priority: searchParams.get("priority") as TaskPriority | undefined,
         dueDate: {
-          from: searchParams.get("dueFrom")
-            ? new Date(searchParams.get("dueFrom")!)
-            : undefined,
-          to: searchParams.get("dueTo")
-            ? new Date(searchParams.get("dueTo")!)
-            : undefined,
+          from: searchParams.get("dueFrom") ? new Date(searchParams.get("dueFrom")!) : undefined,
+          to: searchParams.get("dueTo") ? new Date(searchParams.get("dueTo")!) : undefined,
         },
         includeAssignee: true,
         includeCreator: true,
@@ -78,19 +64,16 @@ export async function GET(
             member.role as any,
             Permission.UPDATE_TASK,
             task.creatorId,
-            member._id,
+            member._id
           ),
           canDelete: hasPermission(
             member.role as any,
             Permission.DELETE_TASK,
             task.creatorId,
-            member._id,
+            member._id
           ),
           canAssign: hasPermission(member.role as any, Permission.ASSIGN_TASK),
-          canComment: hasPermission(
-            member.role as any,
-            Permission.CREATE_COMMENT,
-          ),
+          canComment: hasPermission(member.role as any, Permission.CREATE_COMMENT),
         },
       }));
 
@@ -105,7 +88,7 @@ export async function GET(
           success: false,
           error: error instanceof Error ? error.message : "Failed to get tasks",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request as any, { params });
@@ -119,7 +102,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> },
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -127,14 +110,13 @@ export async function POST(
       const userId = req.user!.id;
       const body = await request.json();
 
-      const { title, description, category, assigneeId, priority, dueDate } =
-        body;
+      const { title, description, category, assigneeId, priority, dueDate } = body;
 
       // 验证必需字段
       if (!title || !category) {
         return NextResponse.json(
           { success: false, error: "Missing required fields: title, category" },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -143,20 +125,17 @@ export async function POST(
         {
           familyId: familyId as Id<"families">,
           clerkId: userId,
-        },
+        }
       );
 
       if (!member) {
-        return NextResponse.json(
-          { success: false, error: "Not a family member" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Not a family member" }, { status: 403 });
       }
 
       if (!hasPermission(member.role as any, Permission.CREATE_TASK)) {
         return NextResponse.json(
           { success: false, error: "Insufficient permissions" },
-          { status: 403 },
+          { status: 403 }
         );
       }
 
@@ -165,13 +144,13 @@ export async function POST(
           api.families.getMemberById,
           {
             memberId: assigneeId as Id<"familyMembers">,
-          },
+          }
         );
 
         if (!assignee || assignee.familyId !== (familyId as Id<"families">)) {
           return NextResponse.json(
             { success: false, error: "Assignee is not a family member" },
-            { status: 400 },
+            { status: 400 }
           );
         }
       }
@@ -213,10 +192,9 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to create task",
+          error: error instanceof Error ? error.message : "Failed to create task",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.CREATE_TASK)(request as any, { params });

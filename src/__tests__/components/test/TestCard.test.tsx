@@ -18,13 +18,7 @@ describe("TestCard Component", () => {
   it("should handle click events", () => {
     const handleClick = jest.fn();
 
-    render(
-      <TestCard
-        title="Clickable Card"
-        content="Click me"
-        onClick={handleClick}
-      />,
-    );
+    render(<TestCard title="Clickable Card" content="Click me" onClick={handleClick} />);
 
     const card = screen.getByText("Clickable Card").closest("div");
     fireEvent.click(card);
@@ -41,7 +35,7 @@ describe("TestCard Component", () => {
         content="Cannot click"
         onClick={handleClick}
         disabled={true}
-      />,
+      />
     );
 
     const card = screen.getByText("Disabled Card").closest("div");
@@ -51,30 +45,18 @@ describe("TestCard Component", () => {
   });
 
   it("should render with different variants", () => {
-    const { rerender } = render(
-      <TestCard title="Default" content="Default variant" />,
-    );
+    const { rerender } = render(<TestCard title="Default" content="Default variant" />);
     expect(screen.getByText("Default")).toBeInTheDocument();
 
-    rerender(
-      <TestCard title="Primary" content="Primary variant" variant="primary" />,
-    );
+    rerender(<TestCard title="Primary" content="Primary variant" variant="primary" />);
     expect(screen.getByText("Primary")).toBeInTheDocument();
 
-    rerender(
-      <TestCard
-        title="Secondary"
-        content="Secondary variant"
-        variant="secondary"
-      />,
-    );
+    rerender(<TestCard title="Secondary" content="Secondary variant" variant="secondary" />);
     expect(screen.getByText("Secondary")).toBeInTheDocument();
   });
 
   it("should have correct CSS classes", () => {
-    render(
-      <TestCard title="Styled Card" content="With variant" variant="primary" />,
-    );
+    render(<TestCard title="Styled Card" content="With variant" variant="primary" />);
 
     const card = screen.getByText("Styled Card").closest("div");
     expect(card).toHaveClass("test-card");
@@ -93,11 +75,7 @@ describe("TestCard Component", () => {
     const handleClick = jest.fn();
 
     render(
-      <TestCard
-        title="Keyboard Card"
-        content="Navigate with keyboard"
-        onClick={handleClick}
-      />,
+      <TestCard title="Keyboard Card" content="Navigate with keyboard" onClick={handleClick} />
     );
 
     const card = screen.getByText("Keyboard Card").closest("div");
@@ -111,13 +89,7 @@ describe("TestCard Component", () => {
   });
 
   it("should have proper disabled styling", () => {
-    render(
-      <TestCard
-        title="Disabled Styled Card"
-        content="Should be faded"
-        disabled={true}
-      />,
-    );
+    render(<TestCard title="Disabled Styled Card" content="Should be faded" disabled={true} />);
 
     const card = screen.getByText("Disabled Styled Card").closest("div");
     expect(card).toHaveStyle("opacity: 0.5");
@@ -147,7 +119,7 @@ describe("TestCard Component", () => {
             </ul>
           </div>
         }
-      />,
+      />
     );
 
     expect(screen.getByText("Complex Card")).toBeInTheDocument();
@@ -157,13 +129,7 @@ describe("TestCard Component", () => {
   });
 
   it("should support custom styling via inline styles", () => {
-    render(
-      <TestCard
-        title="Styled Card"
-        content="Custom styles"
-        variant="secondary"
-      />,
-    );
+    render(<TestCard title="Styled Card" content="Custom styles" variant="secondary" />);
 
     const card = screen.getByText("Styled Card").closest("div");
     expect(card).toHaveStyle({
@@ -178,11 +144,7 @@ describe("TestCard Component", () => {
     const handleClick = jest.fn();
 
     render(
-      <TestCard
-        title="Rapid Click Card"
-        content="Click me multiple times"
-        onClick={handleClick}
-      />,
+      <TestCard title="Rapid Click Card" content="Click me multiple times" onClick={handleClick} />
     );
 
     const card = screen.getByText("Rapid Click Card").closest("div");
@@ -196,15 +158,11 @@ describe("TestCard Component", () => {
   });
 
   it("should be responsive to prop changes", () => {
-    const { rerender } = render(
-      <TestCard title="Initial" content="Initial content" />,
-    );
+    const { rerender } = render(<TestCard title="Initial" content="Initial content" />);
 
     expect(screen.getByText("Initial")).toBeInTheDocument();
 
-    rerender(
-      <TestCard title="Updated" content="Updated content" variant="primary" />,
-    );
+    rerender(<TestCard title="Updated" content="Updated content" variant="primary" />);
 
     expect(screen.getByText("Updated")).toBeInTheDocument();
     expect(screen.queryByText("Initial")).not.toBeInTheDocument();

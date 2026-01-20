@@ -174,12 +174,10 @@ export function UseInventoryItem({
           <Card>
             <CardContent className="p-4">
               <div className="space-y-2">
-                <h3 className="font-medium text-lg">
+                <h3 className="text-lg font-medium">
                   {item.food.name}
                   {item.food.nameEn && (
-                    <span className="text-gray-500 text-sm ml-2">
-                      ({item.food.nameEn})
-                    </span>
+                    <span className="ml-2 text-sm text-gray-500">({item.food.nameEn})</span>
                   )}
                 </h3>
 
@@ -211,11 +209,7 @@ export function UseInventoryItem({
             >
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription
-                className={
-                  expiryWarning.type === "error"
-                    ? "text-red-800"
-                    : "text-yellow-800"
-                }
+                className={expiryWarning.type === "error" ? "text-red-800" : "text-yellow-800"}
               >
                 {expiryWarning.message}
               </AlertDescription>
@@ -243,13 +237,13 @@ export function UseInventoryItem({
                   }
                   required
                 />
-                <div className="flex items-center px-3 bg-gray-100 rounded-md text-sm">
+                <div className="flex items-center rounded-md bg-gray-100 px-3 text-sm">
                   {item.unit}
                 </div>
               </div>
 
               {/* 快速选择按钮 */}
-              <div className="flex space-x-2 mt-2">
+              <div className="mt-2 flex space-x-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -283,9 +277,7 @@ export function UseInventoryItem({
               <Label>使用类型</Label>
               <Select
                 value={formData.usageType}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, usageType: value }))
-                }
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, usageType: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -300,8 +292,7 @@ export function UseInventoryItem({
               </Select>
             </div>
 
-            {(formData.usageType === "COOKING" ||
-              formData.usageType === "RECIPE") && (
+            {(formData.usageType === "COOKING" || formData.usageType === "RECIPE") && (
               <div>
                 <Label htmlFor="recipeName">食谱名称</Label>
                 <Input
@@ -324,9 +315,7 @@ export function UseInventoryItem({
                 id="notes"
                 placeholder="添加使用备注..."
                 value={formData.notes}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                 rows={3}
               />
             </div>
@@ -334,16 +323,12 @@ export function UseInventoryItem({
 
           {/* 剩余库存预览 */}
           {formData.usedQuantity && parseFloat(formData.usedQuantity) > 0 && (
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="border-blue-200 bg-blue-50">
               <CardContent className="p-3">
                 <div className="text-sm text-blue-800">
                   <span className="font-medium">使用后剩余：</span>
                   <span className="font-bold">
-                    {Math.max(
-                      0,
-                      item.quantity - parseFloat(formData.usedQuantity),
-                    )}{" "}
-                    {item.unit}
+                    {Math.max(0, item.quantity - parseFloat(formData.usedQuantity))} {item.unit}
                   </span>
                 </div>
               </CardContent>
@@ -356,11 +341,7 @@ export function UseInventoryItem({
             </Button>
             <Button
               type="submit"
-              disabled={
-                loading ||
-                !formData.usedQuantity ||
-                parseFloat(formData.usedQuantity) <= 0
-              }
+              disabled={loading || !formData.usedQuantity || parseFloat(formData.usedQuantity) <= 0}
             >
               {loading ? "使用中..." : "确认使用"}
             </Button>

@@ -4,8 +4,7 @@ export const EcommercePlatform = {
   DINGDONG: "DINGDONG",
 } as const;
 
-export type EcommercePlatform =
-  (typeof EcommercePlatform)[keyof typeof EcommercePlatform];
+export type EcommercePlatform = (typeof EcommercePlatform)[keyof typeof EcommercePlatform];
 
 export const OrderStatus = {
   PENDING_PAYMENT: "PENDING_PAYMENT",
@@ -30,8 +29,7 @@ export const DeliveryStatus = {
   READY_FOR_PICKUP: "READY_FOR_PICKUP",
 } as const;
 
-export type DeliveryStatus =
-  (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
+export type DeliveryStatus = (typeof DeliveryStatus)[keyof typeof DeliveryStatus];
 
 // 平台商品信息接口
 export interface PlatformProductInfo {
@@ -202,44 +200,26 @@ export interface IPlatformAdapter {
   refreshToken(refreshToken: string): Promise<TokenInfo>;
 
   // 商品搜索
-  searchProducts(
-    request: ProductSearchRequest,
-    token: string,
-  ): Promise<ProductSearchResponse>;
-  getProduct(
-    productId: string,
-    token: string,
-  ): Promise<PlatformProductInfo | null>;
+  searchProducts(request: ProductSearchRequest, token: string): Promise<ProductSearchResponse>;
+  getProduct(productId: string, token: string): Promise<PlatformProductInfo | null>;
 
   // 库存查询
-  queryStock(
-    request: StockQueryRequest,
-    token: string,
-  ): Promise<StockQueryResponse>;
+  queryStock(request: StockQueryRequest, token: string): Promise<StockQueryResponse>;
 
   // 订单管理
-  createOrder(
-    request: CreateOrderRequest,
-    token: string,
-  ): Promise<CreateOrderResponse>;
+  createOrder(request: CreateOrderRequest, token: string): Promise<CreateOrderResponse>;
   getOrderStatus(orderId: string, token: string): Promise<OrderStatusResponse>;
   cancelOrder(orderId: string, token: string): Promise<boolean>;
 
   // 价格查询
-  getProductPrices(
-    productIds: string[],
-    token: string,
-  ): Promise<Record<string, number>>;
+  getProductPrices(productIds: string[], token: string): Promise<Record<string, number>>;
 
   // 配送信息
-  getDeliveryOptions(
-    address: DeliveryAddress,
-    token: string,
-  ): Promise<Record<string, any>>;
+  getDeliveryOptions(address: DeliveryAddress, token: string): Promise<Record<string, any>>;
   estimateDeliveryTime(
     orderItems: OrderItem[],
     address: DeliveryAddress,
-    token: string,
+    token: string
   ): Promise<string>;
 
   // 工具方法
@@ -277,7 +257,7 @@ export class PlatformError extends Error {
         },
     message?: string,
     code?: string,
-    details?: Record<string, any>,
+    details?: Record<string, any>
   ) {
     const resolved =
       typeof typeOrInit === "object"

@@ -32,10 +32,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching notification templates:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch notification templates" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch notification templates" }, { status: 500 });
   }
 }
 
@@ -60,7 +57,7 @@ export async function POST(request: NextRequest) {
     if (!type || !titleTemplate || !contentTemplate) {
       return NextResponse.json(
         { error: "Type, title template, and content template are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -68,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!validation.isValid) {
       return NextResponse.json(
         { error: "Invalid template content", details: validation.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -76,9 +73,7 @@ export async function POST(request: NextRequest) {
       type,
       titleTemplate,
       contentTemplate,
-      channelTemplates: channelTemplates
-        ? JSON.stringify(channelTemplates)
-        : null,
+      channelTemplates: channelTemplates ? JSON.stringify(channelTemplates) : null,
       variables: variables ? JSON.stringify(variables) : null,
       isActive: isActive !== undefined ? isActive : true,
       version: version || "1.0",
@@ -96,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     const template = await convexClient.query<Record<string, unknown> | null>(
       api["notification-templates"].getByType,
-      { type },
+      { type }
     );
 
     return NextResponse.json({
@@ -106,10 +101,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error saving notification template:", error);
-    return NextResponse.json(
-      { error: "Failed to save notification template" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to save notification template" }, { status: 500 });
   }
 }
 
@@ -119,22 +111,16 @@ export async function PUT(request: NextRequest) {
     const { type, data } = body;
 
     if (!type) {
-      return NextResponse.json(
-        { error: "Template type is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Template type is required" }, { status: 400 });
     }
 
     const template = await convexClient.query<Record<string, unknown> | null>(
       api["notification-templates"].getByType,
-      { type },
+      { type }
     );
 
     if (!template) {
-      return NextResponse.json(
-        { error: "Template not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Template not found" }, { status: 404 });
     }
 
     const rendered = {
@@ -150,10 +136,7 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error previewing template:", error);
-    return NextResponse.json(
-      { error: "Failed to preview template" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to preview template" }, { status: 500 });
   }
 }
 
@@ -165,7 +148,7 @@ function renderTemplate(template: string, data: Record<string, any>): string {
 
 function validateTemplateContent(
   titleTemplate: string,
-  contentTemplate: string,
+  contentTemplate: string
 ): {
   isValid: boolean;
   errors: string[];

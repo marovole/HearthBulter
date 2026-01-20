@@ -9,11 +9,7 @@ interface EmptyStateGuideProps {
   type: "overview" | "weight" | "nutrition" | "health-score";
 }
 
-export function EmptyStateGuide({
-  memberId,
-  onInitialize,
-  type,
-}: EmptyStateGuideProps) {
+export function EmptyStateGuide({ memberId, onInitialize, type }: EmptyStateGuideProps) {
   const [isInitializing, setIsInitializing] = useState(false);
 
   const handleAutoInitialize = async () => {
@@ -100,10 +96,7 @@ export function EmptyStateGuide({
   const config = configs[type];
   const Icon = config.icon;
 
-  const handleActionClick = (action: {
-    action?: () => void | Promise<void>;
-    href?: string;
-  }) => {
+  const handleActionClick = (action: { action?: () => void | Promise<void>; href?: string }) => {
     if (action.action) {
       action.action();
       return;
@@ -114,42 +107,33 @@ export function EmptyStateGuide({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4">
-      <div className="bg-blue-50 rounded-full p-6 mb-6">
+    <div className="flex flex-col items-center justify-center px-4 py-12">
+      <div className="mb-6 rounded-full bg-blue-50 p-6">
         <Icon className="h-12 w-12 text-blue-600" />
       </div>
 
-      <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">
-        {config.title}
-      </h3>
+      <h3 className="mb-2 text-center text-xl font-semibold text-gray-900">{config.title}</h3>
 
-      <p className="text-gray-600 mb-8 text-center max-w-md">
-        {config.description}
-      </p>
+      <p className="mb-8 max-w-md text-center text-gray-600">{config.description}</p>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         {config.actions.map((action, index) => {
-          const hasAction =
-            "action" in action && typeof action.action === "function";
+          const hasAction = "action" in action && typeof action.action === "function";
           return (
             <button
               key={index}
               onClick={() => handleActionClick(action)}
               disabled={isInitializing && hasAction}
-              className={`
-                px-6 py-3 rounded-lg font-medium transition-colors
-                ${
-            action.primary
-              ? "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400"
-              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-            }
-                ${isInitializing ? "cursor-not-allowed opacity-50" : ""}
-              `}
+              className={`rounded-lg px-6 py-3 font-medium transition-colors ${
+                action.primary
+                  ? "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400"
+                  : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              } ${isInitializing ? "cursor-not-allowed opacity-50" : ""} `}
             >
               {isInitializing && hasAction ? (
                 <span className="flex items-center">
                   <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    className="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"

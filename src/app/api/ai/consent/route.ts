@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
 
     if (consentId) {
       // 获取特定同意状态
-      const hasConsent = await consentManager.checkConsent(
-        session.user.id,
-        consentId,
-      );
+      const hasConsent = await consentManager.checkConsent(session.user.id, consentId);
       const consentType = getConsentType(consentId);
 
       return NextResponse.json({
@@ -39,11 +36,8 @@ export async function GET(request: NextRequest) {
           description: type.description,
           required: type.required,
           category: type.category,
-          hasConsent: await consentManager.checkConsent(
-            session.user.id,
-            type.id,
-          ),
-        })),
+          hasConsent: await consentManager.checkConsent(session.user.id, type.id),
+        }))
       );
 
       return NextResponse.json({
@@ -52,10 +46,7 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error("Consent GET error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -71,18 +62,12 @@ export async function POST(request: NextRequest) {
     const { consentId, action, context } = body;
 
     if (!consentId) {
-      return NextResponse.json(
-        { error: "Consent ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Consent ID is required" }, { status: 400 });
     }
 
     const consentType = getConsentType(consentId);
     if (!consentType) {
-      return NextResponse.json(
-        { error: "Invalid consent ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid consent ID" }, { status: 400 });
     }
 
     if (action === "request") {
@@ -96,7 +81,7 @@ export async function POST(request: NextRequest) {
         {
           ipAddress: request.ip,
           userAgent: request.headers.get("user-agent") || undefined,
-        },
+        }
       );
 
       return NextResponse.json({
@@ -112,15 +97,10 @@ export async function POST(request: NextRequest) {
       });
     } else if (action === "grant") {
       // 授予同意
-      const consent = await consentManager.grantConsent(
-        session.user.id,
-        consentId,
-        context,
-        {
-          ipAddress: request.ip,
-          userAgent: request.headers.get("user-agent") || undefined,
-        },
-      );
+      const consent = await consentManager.grantConsent(session.user.id, consentId, context, {
+        ipAddress: request.ip,
+        userAgent: request.headers.get("user-agent") || undefined,
+      });
 
       return NextResponse.json({
         granted: true,
@@ -129,16 +109,13 @@ export async function POST(request: NextRequest) {
       });
     } else {
       return NextResponse.json(
-        { error: "Invalid action. Use \"request\" or \"grant\"." },
-        { status: 400 },
+        { error: 'Invalid action. Use "request" or "grant".' },
+        { status: 400 }
       );
     }
   } catch (error) {
     console.error("Consent POST error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -154,10 +131,7 @@ export async function DELETE(request: NextRequest) {
     const consentId = searchParams.get("consentId");
 
     if (!consentId) {
-      return NextResponse.json(
-        { error: "Consent ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Consent ID is required" }, { status: 400 });
     }
 
     await consentManager.revokeConsent(session.user.id, consentId);
@@ -168,9 +142,6 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error("Consent DELETE error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

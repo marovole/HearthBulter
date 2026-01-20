@@ -19,7 +19,7 @@ import { mealPlanner } from "@/lib/services/meal-planner";
 export const dynamic = "force-dynamic";
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ planId: string; mealId: string }> },
+  { params }: { params: Promise<{ planId: string; mealId: string }> }
 ) {
   try {
     const { planId, mealId } = await params;
@@ -40,10 +40,7 @@ export async function PATCH(
     }
 
     if (meal.planId !== (planId as Id<"mealPlans">)) {
-      return NextResponse.json(
-        { error: "餐食不属于指定的食谱计划" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "餐食不属于指定的食谱计划" }, { status: 400 });
     }
 
     const plan = await convexClient.query<{
@@ -56,13 +53,10 @@ export async function PATCH(
       return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: plan.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: plan.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限替换此餐食" }, { status: 403 });
@@ -75,7 +69,7 @@ export async function PATCH(
         message: "餐食替换成功",
         meal: replacedMeal,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     if (error instanceof Error) {

@@ -12,7 +12,7 @@ export class APIError extends Error {
     message: string,
     statusCode: number = 500,
     code: string = "INTERNAL_ERROR",
-    details?: any,
+    details?: any
   ) {
     super(message);
     this.name = "APIError";
@@ -74,11 +74,7 @@ export function handleAPIError(error: unknown): APIError {
 /**
  * 统一的API响应格式
  */
-export function createAPIResponse<T>(
-  data: T,
-  message?: string,
-  status: number = 200,
-) {
+export function createAPIResponse<T>(data: T, message?: string, status: number = 200) {
   return Response.json(
     {
       success: true,
@@ -86,7 +82,7 @@ export function createAPIResponse<T>(
       message,
       timestamp: new Date().toISOString(),
     },
-    { status },
+    { status }
   );
 }
 

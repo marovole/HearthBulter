@@ -57,9 +57,7 @@ export function RecipeRatingWidget({
 
   const loadUserRating = async () => {
     try {
-      const response = await fetch(
-        `/api/recipes/${recipeId}/rate?memberId=${memberId}`,
-      );
+      const response = await fetch(`/api/recipes/${recipeId}/rate?memberId=${memberId}`);
       const data = await response.json();
 
       if (data.success && data.rating) {
@@ -130,7 +128,7 @@ export function RecipeRatingWidget({
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
@@ -178,9 +176,9 @@ export function RecipeRatingWidget({
 
       {/* 评分表单 */}
       {showForm && (
-        <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
+        <div className="space-y-3 rounded-lg border bg-muted/50 p-3">
           <div>
-            <label className="text-sm font-medium block mb-2">快速标签</label>
+            <label className="mb-2 block text-sm font-medium">快速标签</label>
             <div className="flex flex-wrap gap-1">
               {QUICK_TAGS.map((tag) => (
                 <Badge
@@ -196,7 +194,7 @@ export function RecipeRatingWidget({
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-2">评价内容</label>
+            <label className="mb-2 block text-sm font-medium">评价内容</label>
             <Textarea
               placeholder="分享您的制作体验和建议..."
               value={comment}
@@ -206,18 +204,10 @@ export function RecipeRatingWidget({
           </div>
 
           <div className="flex gap-2">
-            <Button
-              onClick={handleSubmitRating}
-              disabled={loading || rating === 0}
-              size="sm"
-            >
+            <Button onClick={handleSubmitRating} disabled={loading || rating === 0} size="sm">
               {loading ? "提交中..." : "提交评价"}
             </Button>
-            <Button
-              onClick={() => setShowForm(false)}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={() => setShowForm(false)} variant="outline" size="sm">
               收起
             </Button>
           </div>
@@ -226,13 +216,8 @@ export function RecipeRatingWidget({
 
       {/* 展开按钮 */}
       {!showForm && !userRating && (
-        <Button
-          onClick={() => setShowForm(true)}
-          variant="outline"
-          size="sm"
-          className="w-full"
-        >
-          <MessageSquare className="h-4 w-4 mr-2" />
+        <Button onClick={() => setShowForm(true)} variant="outline" size="sm" className="w-full">
+          <MessageSquare className="mr-2 h-4 w-4" />
           写评价
         </Button>
       )}

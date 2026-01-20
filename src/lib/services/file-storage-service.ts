@@ -1,8 +1,5 @@
 import { convexClient } from "@/lib/convex-client";
-import {
-  asConvexMutationReference,
-  asConvexQueryReference,
-} from "@/lib/convex-reference";
+import { asConvexMutationReference, asConvexQueryReference } from "@/lib/convex-reference";
 
 export interface UploadResult {
   url: string;
@@ -23,16 +20,13 @@ export class FileStorageService {
   }
 
   private static async getUploadUrl(): Promise<string> {
-    return await convexClient.mutation(
-      asConvexMutationReference("files:generateUploadUrl"),
-      {},
-    );
+    return await convexClient.mutation(asConvexMutationReference("files:generateUploadUrl"), {});
   }
 
   private static async getFileUrl(storageId: string): Promise<string> {
     const url = await convexClient.query<string | null>(
       asConvexQueryReference("files:getFileUrl"),
-      { storageId },
+      { storageId }
     );
     if (!url) {
       throw new Error("Failed to resolve file URL");
@@ -47,7 +41,7 @@ export class FileStorageService {
     options?: {
       contentType?: string;
       addRandomSuffix?: boolean;
-    },
+    }
   ): Promise<UploadResult> {
     const uploadUrl = await this.getUploadUrl();
 
@@ -105,9 +99,7 @@ export class FileStorageService {
   static extractPathnameFromUrl(url: string): string | null {
     try {
       const urlObj = new URL(url);
-      const supabaseMatch = urlObj.pathname.match(
-        /\/storage\/v1\/object\/public\/[^/]+\/(.+)$/,
-      );
+      const supabaseMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/);
 
       if (supabaseMatch?.[1]) {
         return null;
@@ -120,10 +112,7 @@ export class FileStorageService {
     }
   }
 
-  static async createSignedUrl(
-    pathname: string,
-    _expiresIn: number = 3600,
-  ): Promise<string> {
+  static async createSignedUrl(pathname: string, _expiresIn: number = 3600): Promise<string> {
     return await this.getFileUrl(pathname);
   }
 }

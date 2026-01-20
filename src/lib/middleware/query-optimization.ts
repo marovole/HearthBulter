@@ -113,7 +113,7 @@ class QueryOptimizer {
     query: string,
     duration: number,
     resultCount: number,
-    params?: any,
+    params?: any
   ): void {
     const metric: QueryMetrics = {
       query,
@@ -145,7 +145,7 @@ class QueryOptimizer {
    */
   async optimizedFindMany<T>(
     model: string,
-    options: QueryOptions & { useCache?: boolean; cacheKey?: string } = {},
+    options: QueryOptions & { useCache?: boolean; cacheKey?: string } = {}
   ): Promise<T[]> {
     const startTime = Date.now();
 
@@ -169,12 +169,7 @@ class QueryOptimizer {
       if (useCache && cacheKey) {
         const cached = this.checkCache<T[]>(cacheKey);
         if (cached) {
-          this.recordQueryMetrics(
-            model,
-            Date.now() - startTime,
-            cached.length,
-            { cached: true },
-          );
+          this.recordQueryMetrics(model, Date.now() - startTime, cached.length, { cached: true });
           return cached;
         }
       }
@@ -183,7 +178,7 @@ class QueryOptimizer {
       // 执行查询（带超时）
       const result = await this.executeWithTimeout<T[]>(
         () => modelClient.findMany(optimizedOptions),
-        timeout,
+        timeout
       );
 
       const duration = Date.now() - startTime;
@@ -215,7 +210,7 @@ class QueryOptimizer {
   async optimizedCount(
     model: string,
     where: any,
-    options: { useCache?: boolean; cacheKey?: string } = {},
+    options: { useCache?: boolean; cacheKey?: string } = {}
   ): Promise<number> {
     const startTime = Date.now();
     const { useCache = false, cacheKey } = options;
@@ -235,7 +230,7 @@ class QueryOptimizer {
       const modelClient = this.getModelClient<unknown>(model);
       const result = await this.executeWithTimeout<number>(
         () => modelClient.count({ where }),
-        10000, // count查询10秒超时
+        10000 // count查询10秒超时
       );
 
       const duration = Date.now() - startTime;
@@ -260,10 +255,7 @@ class QueryOptimizer {
   /**
    * 带超时的查询执行
    */
-  private async executeWithTimeout<T>(
-    queryFn: () => Promise<T>,
-    timeoutMs: number,
-  ): Promise<T> {
+  private async executeWithTimeout<T>(queryFn: () => Promise<T>, timeoutMs: number): Promise<T> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error(`QueryTimeoutError: 查询超时 ${timeoutMs}ms`));
@@ -295,13 +287,10 @@ class QueryOptimizer {
     }
 
     const totalQueries = this.queryMetrics.length;
-    const totalDuration = this.queryMetrics.reduce(
-      (sum, m) => sum + m.duration,
-      0,
-    );
+    const totalDuration = this.queryMetrics.reduce((sum, m) => sum + m.duration, 0);
     const avgDuration = Math.round(totalDuration / totalQueries);
     const slowQueries = this.queryMetrics.filter(
-      (m) => m.duration > this.slowQueryThreshold,
+      (m) => m.duration > this.slowQueryThreshold
     ).length;
     const slowQueryRatio = Math.round((slowQueries / totalQueries) * 100);
 
@@ -328,8 +317,7 @@ class QueryOptimizer {
       .slice(0, limit)
       .map((m) => ({
         ...m,
-        severity:
-          m.duration > 500 ? "critical" : m.duration > 200 ? "high" : "medium",
+        severity: m.duration > 500 ? "critical" : m.duration > 200 ? "high" : "medium",
       }));
   }
 
@@ -356,11 +344,8 @@ export const optimizedQuery = {
   findMany: <T>(model: string, options?: QueryOptions) =>
     queryOptimizer.optimizedFindMany<T>(model, options),
 
-  count: (
-    model: string,
-    where: any,
-    options?: { useCache?: boolean; cacheKey?: string },
-  ) => queryOptimizer.optimizedCount(model, where, options),
+  count: (model: string, where: any, options?: { useCache?: boolean; cacheKey?: string }) =>
+    queryOptimizer.optimizedCount(model, where, options),
 
   getStats: () => queryOptimizer.getQueryStats(),
 
@@ -374,13 +359,7 @@ export const optimizedQuery = {
 // 类型声明
 declare global {
   interface Prisma {
-    $queryRawUnsafe<T = any>(
-      query: TemplateStringsArray | string,
-      ...values: any[]
-    ): Promise<T>;
-    $executeRawUnsafe<T = any>(
-      query: TemplateStringsArray | string,
-      ...values: any[]
-    ): Promise<T>;
+    $queryRawUnsafe<T = any>(query: TemplateStringsArray | string, ...values: any[]): Promise<T>;
+    $executeRawUnsafe<T = any>(query: TemplateStringsArray | string, ...values: any[]): Promise<T>;
   }
 }

@@ -96,7 +96,7 @@ export async function trackExercise(
     minutes: number;
     caloriesBurned: number;
     exerciseType: string[];
-  },
+  }
 ) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -133,7 +133,7 @@ export async function trackExercise(
 export function estimateCaloriesBurned(
   exerciseType: string,
   minutes: number,
-  weight: number,
+  weight: number
 ): number {
   // 简化的MET值（代谢当量）计算
   // MET = 每公斤体重每分钟消耗的热量（单位：kcal/kg/min）
@@ -163,7 +163,7 @@ export async function trackSleep(
   data: {
     hours: number;
     quality: "EXCELLENT" | "GOOD" | "FAIR" | "POOR";
-  },
+  }
 ) {
   // 睡眠记录的日期应该是前一天（因为睡眠是前一晚的）
   const yesterday = new Date();
@@ -198,7 +198,7 @@ export async function trackWeight(
   data: {
     weight: number;
     bodyFat?: number;
-  },
+  }
 ) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -258,7 +258,7 @@ export async function getAuxiliaryTrackingHistory(
     startDate?: Date;
     endDate?: Date;
     limit?: number;
-  } = {},
+  } = {}
 ) {
   const { startDate, endDate, limit = 30 } = options;
 
@@ -325,8 +325,7 @@ export async function getWeightTrend(memberId: string, days: number = 30) {
   const lastWeight = trackings[trackings.length - 1].weight!;
   const change = lastWeight - firstWeight;
 
-  const avgWeight =
-    trackings.reduce((sum, t) => sum + (t.weight || 0), 0) / trackings.length;
+  const avgWeight = trackings.reduce((sum, t) => sum + (t.weight || 0), 0) / trackings.length;
 
   let trend: "increasing" | "decreasing" | "stable" = "stable";
   if (Math.abs(change) > 1) {
@@ -381,15 +380,12 @@ export async function getSleepStats(memberId: string, days: number = 7) {
     };
   }
 
-  const avgHours =
-    trackings.reduce((sum, t) => sum + (t.sleepHours || 0), 0) /
-    trackings.length;
+  const avgHours = trackings.reduce((sum, t) => sum + (t.sleepHours || 0), 0) / trackings.length;
 
   const qualityDistribution: { [key: string]: number } = {};
   trackings.forEach((t) => {
     if (t.sleepQuality) {
-      qualityDistribution[t.sleepQuality] =
-        (qualityDistribution[t.sleepQuality] || 0) + 1;
+      qualityDistribution[t.sleepQuality] = (qualityDistribution[t.sleepQuality] || 0) + 1;
     }
   });
 
@@ -433,14 +429,8 @@ export async function getExerciseStats(memberId: string, days: number = 7) {
     },
   });
 
-  const totalMinutes = trackings.reduce(
-    (sum, t) => sum + (t.exerciseMinutes || 0),
-    0,
-  );
-  const totalCalories = trackings.reduce(
-    (sum, t) => sum + (t.caloriesBurned || 0),
-    0,
-  );
+  const totalMinutes = trackings.reduce((sum, t) => sum + (t.exerciseMinutes || 0), 0);
+  const totalCalories = trackings.reduce((sum, t) => sum + (t.caloriesBurned || 0), 0);
   const activeDays = trackings.length;
 
   // 统计运动类型分布
@@ -496,14 +486,11 @@ export async function getWaterStats(memberId: string, days: number = 7) {
     },
   });
 
-  const totalIntake = trackings.reduce(
-    (sum, t) => sum + (t.waterIntake || 0),
-    0,
-  );
+  const totalIntake = trackings.reduce((sum, t) => sum + (t.waterIntake || 0), 0);
   const avgIntake = Math.round(totalIntake / days);
 
   const targetReachedDays = trackings.filter(
-    (t) => (t.waterIntake || 0) >= (t.waterTarget || 2000),
+    (t) => (t.waterIntake || 0) >= (t.waterTarget || 2000)
   ).length;
 
   const completionRate = (targetReachedDays / days) * 100;

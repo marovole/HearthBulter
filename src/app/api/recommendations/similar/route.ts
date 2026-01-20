@@ -10,11 +10,9 @@ export async function GET(request: NextRequest) {
     const { RecommendationEngine } = await import(
       "@/lib/services/recommendation/recommendation-engine"
     );
-    const { getDefaultContainer } = await import(
-      "@/lib/container/service-container"
-    );
+    const { getDefaultContainer } = await import("@/lib/container/service-container");
     const recommendationEngine = new RecommendationEngine(
-      getDefaultContainer().getRecommendationRepository(),
+      getDefaultContainer().getRecommendationRepository()
     );
 
     const { searchParams } = request.nextUrl;
@@ -28,16 +26,15 @@ export async function GET(request: NextRequest) {
           error: "recipeId is required",
           details: "Please provide a recipeId parameter",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const limit = Math.max(1, Math.min(parseInt(limitParam || "5"), 20));
 
-    const recipe = await convexClient.query<Record<string, unknown> | null>(
-      api.recipes.getById,
-      { recipeId: recipeId as Id<"recipes"> },
-    );
+    const recipe = await convexClient.query<Record<string, unknown> | null>(api.recipes.getById, {
+      recipeId: recipeId as Id<"recipes">,
+    });
 
     if (!recipe) {
       return NextResponse.json(
@@ -46,7 +43,7 @@ export async function GET(request: NextRequest) {
           error: "Recipe not found",
           details: "The specified recipe does not exist",
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -57,7 +54,7 @@ export async function GET(request: NextRequest) {
           error: "Recipe not available",
           details: "The recipe is not published or has been deleted",
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -68,14 +65,11 @@ export async function GET(request: NextRequest) {
           error: "Recipe not available",
           details: "The recipe is not published or has been deleted",
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
-    const recommendations = await recommendationEngine.getSimilarRecipes(
-      recipeId,
-      limit,
-    );
+    const recommendations = await recommendationEngine.getSimilarRecipes(recipeId, limit);
 
     if (recommendations.length === 0) {
       return NextResponse.json({
@@ -119,7 +113,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to get similar recipes",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

@@ -102,7 +102,7 @@ export class EmailService {
         content: Buffer | string;
         contentType?: string;
       }>;
-    } = {},
+    } = {}
   ): Promise<string> {
     await this.ensureInitialized();
 
@@ -139,7 +139,7 @@ export class EmailService {
   async sendTemplate(
     memberId: string,
     templateName: string,
-    data: Record<string, any>,
+    data: Record<string, any>
   ): Promise<string> {
     const template = await this.getEmailTemplate(templateName);
     if (!template) {
@@ -161,7 +161,7 @@ export class EmailService {
       subject: string;
       content: string;
       html?: boolean;
-    }>,
+    }>
   ): Promise<EmailSendResult[]> {
     const results: EmailSendResult[] = [];
 
@@ -173,12 +173,9 @@ export class EmailService {
       const batchResults = await Promise.allSettled(
         batch.map(async (email) => {
           try {
-            const messageId = await this.send(
-              email.memberId,
-              email.subject,
-              email.content,
-              { html: email.html },
-            );
+            const messageId = await this.send(email.memberId, email.subject, email.content, {
+              html: email.html,
+            });
             return {
               memberId: email.memberId,
               messageId,
@@ -193,7 +190,7 @@ export class EmailService {
               error: error instanceof Error ? error.message : "Unknown error",
             };
           }
-        }),
+        })
       );
 
       batchResults.forEach((result) => {
@@ -233,7 +230,7 @@ export class EmailService {
       filename: string;
       content: Buffer | string;
       contentType?: string;
-    }>,
+    }>
   ): Promise<string> {
     return await this.send(memberId, subject, content, {
       html: true,
@@ -286,17 +283,16 @@ export class EmailService {
         api.families.getMemberById,
         {
           memberId: memberId as Id<"familyMembers">,
-        },
+        }
       );
 
       if (!member?.userId) {
         return null;
       }
 
-      const user = await convexClient.query<Doc<"users"> | null>(
-        api.users.getById,
-        { userId: member.userId },
-      );
+      const user = await convexClient.query<Doc<"users"> | null>(api.users.getById, {
+        userId: member.userId,
+      });
 
       return user?.email || null;
     } catch (error) {

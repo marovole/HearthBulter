@@ -8,27 +8,23 @@ import type { Id } from "@/../convex/_generated/dataModel";
 export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> },
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const { token } = await params;
 
-    const rate = await rateLimiter.checkLimit(
-      getClientId(request),
-      "social-share-view",
-      {
-        maxRequests: 30,
-        windowMs: 60_000,
-        blockDurationMs: 2 * 60_000,
-      },
-    );
+    const rate = await rateLimiter.checkLimit(getClientId(request), "social-share-view", {
+      maxRequests: 30,
+      windowMs: 60_000,
+      blockDurationMs: 2 * 60_000,
+    });
     if (!rate.allowed) {
       return NextResponse.json(
         { error: "请求过于频繁" },
         {
           status: 429,
           headers: { "Retry-After": String(rate.retryAfter || 60) },
-        },
+        }
       );
     }
 
@@ -38,22 +34,19 @@ export async function GET(
 
     const verification = await verifyShareToken(token);
     if (!verification.valid || !verification.payload) {
-      return NextResponse.json(
-        { error: verification.error || "分享链接已失效" },
-        { status: 410 },
-      );
+      return NextResponse.json({ error: verification.error || "分享链接已失效" }, { status: 410 });
     }
 
     if (verification.payload.resourceType !== "social_share") {
       return NextResponse.json({ error: "无效的分享类型" }, { status: 410 });
     }
 
-    const sharedContent = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.social.getSharedContentById, {
-      id: verification.payload.resourceId as Id<"sharedContents">,
-    });
+    const sharedContent = await convexClient.query<Record<string, unknown> | null>(
+      api.social.getSharedContentById,
+      {
+        id: verification.payload.resourceId as Id<"sharedContents">,
+      }
+    );
 
     if (!sharedContent) {
       return NextResponse.json({ error: "分享内容不存在" }, { status: 404 });
@@ -63,10 +56,7 @@ export async function GET(
       return NextResponse.json({ error: "分享已失效" }, { status: 410 });
     }
 
-    if (
-      sharedContent.expiresAt &&
-      Number(sharedContent.expiresAt) < Date.now()
-    ) {
+    if (sharedContent.expiresAt && Number(sharedContent.expiresAt) < Date.now()) {
       await convexClient.mutation(api.social.updateSharedContent, {
         id: sharedContent._id as Id<"sharedContents">,
         patch: { status: "EXPIRED" },
@@ -80,10 +70,9 @@ export async function GET(
       action: "VIEW",
     });
 
-    const member = await convexClient.query<Record<string, unknown> | null>(
-      api.members.getById,
-      { memberId: sharedContent.memberId as Id<"familyMembers"> },
-    );
+    const member = await convexClient.query<Record<string, unknown> | null>(api.members.getById, {
+      memberId: sharedContent.memberId as Id<"familyMembers">,
+    });
 
     return NextResponse.json({
       success: true,
@@ -95,10 +84,10 @@ export async function GET(
         imageUrl: sharedContent.imageUrl,
         member: member
           ? {
-            id: member._id,
-            name: member.name,
-            avatar: member.avatar,
-          }
+              id: member._id,
+              name: member.name,
+              avatar: member.avatar,
+            }
           : null,
         privacyLevel: sharedContent.privacyLevel,
         allowComment: sharedContent.allowComment,
@@ -119,50 +108,43 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> },
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const { token } = await params;
     const body = await request.json();
     const { action = "click" } = body;
 
-    const rate = await rateLimiter.checkLimit(
-      getClientId(request),
-      "social-share-event",
-      {
-        maxRequests: 60,
-        windowMs: 60_000,
-        blockDurationMs: 2 * 60_000,
-      },
-    );
+    const rate = await rateLimiter.checkLimit(getClientId(request), "social-share-event", {
+      maxRequests: 60,
+      windowMs: 60_000,
+      blockDurationMs: 2 * 60_000,
+    });
     if (!rate.allowed) {
       return NextResponse.json(
         { error: "请求过于频繁" },
         {
           status: 429,
           headers: { "Retry-After": String(rate.retryAfter || 60) },
-        },
+        }
       );
     }
 
     const verification = await verifyShareToken(token);
     if (!verification.valid || !verification.payload) {
-      return NextResponse.json(
-        { error: verification.error || "分享链接已失效" },
-        { status: 410 },
-      );
+      return NextResponse.json({ error: verification.error || "分享链接已失效" }, { status: 410 });
     }
 
     if (verification.payload.resourceType !== "social_share") {
       return NextResponse.json({ error: "无效的分享类型" }, { status: 410 });
     }
 
-    const sharedContent = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.social.getSharedContentById, {
-      id: verification.payload.resourceId as Id<"sharedContents">,
-    });
+    const sharedContent = await convexClient.query<Record<string, unknown> | null>(
+      api.social.getSharedContentById,
+      {
+        id: verification.payload.resourceId as Id<"sharedContents">,
+      }
+    );
 
     if (!sharedContent) {
       return NextResponse.json({ error: "分享内容不存在" }, { status: 404 });
@@ -170,20 +152,17 @@ export async function POST(
 
     let actionType: string;
     switch (action) {
-    case "click":
-      actionType = "CLICK";
-      break;
-    case "share":
-      actionType = "SHARE";
-      break;
-    case "conversion":
-      actionType = "CONVERSION";
-      break;
-    default:
-      return NextResponse.json(
-        { error: "不支持的动作类型" },
-        { status: 400 },
-      );
+      case "click":
+        actionType = "CLICK";
+        break;
+      case "share":
+        actionType = "SHARE";
+        break;
+      case "conversion":
+        actionType = "CONVERSION";
+        break;
+      default:
+        return NextResponse.json({ error: "不支持的动作类型" }, { status: 400 });
     }
 
     await convexClient.mutation(api.social.recordShareEvent, {
@@ -203,7 +182,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> },
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const session = await auth();
@@ -215,22 +194,19 @@ export async function DELETE(
 
     const verification = await verifyShareToken(token);
     if (!verification.valid || !verification.payload) {
-      return NextResponse.json(
-        { error: verification.error || "分享链接已失效" },
-        { status: 410 },
-      );
+      return NextResponse.json({ error: verification.error || "分享链接已失效" }, { status: 410 });
     }
 
     if (verification.payload.resourceType !== "social_share") {
       return NextResponse.json({ error: "无效的分享类型" }, { status: 410 });
     }
 
-    const sharedContent = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.social.getSharedContentById, {
-      id: verification.payload.resourceId as Id<"sharedContents">,
-    });
+    const sharedContent = await convexClient.query<Record<string, unknown> | null>(
+      api.social.getSharedContentById,
+      {
+        id: verification.payload.resourceId as Id<"sharedContents">,
+      }
+    );
 
     if (!sharedContent) {
       return NextResponse.json({ error: "分享内容不存在" }, { status: 404 });

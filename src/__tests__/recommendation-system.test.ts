@@ -12,9 +12,7 @@ import type { RecipeSummaryDTO } from "../lib/repositories/types/recommendation"
 const createMock = <T extends (...args: any[]) => any>() =>
   jest.fn() as unknown as jest.MockedFunction<T>;
 
-const buildRecipeDetail = (
-  overrides?: Partial<RecipeDetailDTO>,
-): RecipeDetailDTO => ({
+const buildRecipeDetail = (overrides?: Partial<RecipeDetailDTO>): RecipeDetailDTO => ({
   id: "recipe1",
   name: "番茄炒蛋",
   cuisineType: "中式",
@@ -65,9 +63,7 @@ const buildRecipeDetail = (
   ...overrides,
 });
 
-const buildRecipeSummary = (
-  overrides?: Partial<RecipeSummaryDTO>,
-): RecipeSummaryDTO => ({
+const buildRecipeSummary = (overrides?: Partial<RecipeSummaryDTO>): RecipeSummaryDTO => ({
   id: "recipe2",
   name: "鸡蛋汤",
   cuisineType: "中式",
@@ -96,9 +92,7 @@ describe("RecommendationEngine", () => {
   beforeEach(() => {
     mockRepository = {
       getUserPreference:
-        createMock<
-          RecommendationRepository["getUserPreference"]
-        >().mockResolvedValue(null),
+        createMock<RecommendationRepository["getUserPreference"]>().mockResolvedValue(null),
       listCandidateRecipes: createMock<
         RecommendationRepository["listCandidateRecipes"]
       >().mockResolvedValue({ items: [], total: 0, hasMore: false }),
@@ -112,16 +106,12 @@ describe("RecommendationEngine", () => {
         RecommendationRepository["getSimilarRecipes"]
       >().mockResolvedValue([]),
       getRecipeById:
-        createMock<
-          RecommendationRepository["getRecipeById"]
-        >().mockResolvedValue(null),
+        createMock<RecommendationRepository["getRecipeById"]>().mockResolvedValue(null),
       listPopularRecipes: createMock<
         RecommendationRepository["listPopularRecipes"]
       >().mockResolvedValue([]),
       getActiveHealthGoal:
-        createMock<
-          RecommendationRepository["getActiveHealthGoal"]
-        >().mockResolvedValue(null),
+        createMock<RecommendationRepository["getActiveHealthGoal"]>().mockResolvedValue(null),
       getInventorySnapshot: createMock<
         RecommendationRepository["getInventorySnapshot"]
       >().mockResolvedValue({
@@ -130,20 +120,20 @@ describe("RecommendationEngine", () => {
         items: [],
       }),
       saveRecommendationLog:
-        createMock<
-          RecommendationRepository["saveRecommendationLog"]
-        >().mockResolvedValue(undefined),
+        createMock<RecommendationRepository["saveRecommendationLog"]>().mockResolvedValue(
+          undefined
+        ),
       upsertRecommendationWeights:
-        createMock<
-          RecommendationRepository["upsertRecommendationWeights"]
-        >().mockResolvedValue(undefined),
+        createMock<RecommendationRepository["upsertRecommendationWeights"]>().mockResolvedValue(
+          undefined
+        ),
       upsertLearnedUserPreferences:
-        createMock<
-          RecommendationRepository["upsertLearnedUserPreferences"]
-        >().mockResolvedValue(undefined),
-      getRecipesByIds: createMock<
-        RecommendationRepository["getRecipesByIds"]
-      >().mockResolvedValue([]),
+        createMock<RecommendationRepository["upsertLearnedUserPreferences"]>().mockResolvedValue(
+          undefined
+        ),
+      getRecipesByIds: createMock<RecommendationRepository["getRecipesByIds"]>().mockResolvedValue(
+        []
+      ),
       listMemberBehaviorSamples: createMock<
         RecommendationRepository["listMemberBehaviorSamples"]
       >().mockResolvedValue([]),
@@ -182,10 +172,7 @@ describe("RecommendationEngine", () => {
         season: "SPRING",
       };
 
-      const recommendations = await recommendationEngine.getRecommendations(
-        context,
-        5,
-      );
+      const recommendations = await recommendationEngine.getRecommendations(context, 5);
 
       expect(recommendations).toHaveLength(1);
       expect(recommendations[0]).toHaveProperty("recipeId");
@@ -214,10 +201,7 @@ describe("RecommendationEngine", () => {
         season: "SPRING",
       };
 
-      const recommendations = await recommendationEngine.getRecommendations(
-        context,
-        5,
-      );
+      const recommendations = await recommendationEngine.getRecommendations(context, 5);
 
       expect(recommendations).toHaveLength(0);
     });
@@ -231,10 +215,7 @@ describe("RecommendationEngine", () => {
       mockRepository.getRecipeById.mockResolvedValue(mockRecipe);
       mockRepository.getSimilarRecipes.mockResolvedValue([mockSimilarRecipe]);
 
-      const similarRecipes = await recommendationEngine.getSimilarRecipes(
-        "recipe1",
-        3,
-      );
+      const similarRecipes = await recommendationEngine.getSimilarRecipes("recipe1", 3);
 
       expect(similarRecipes).toHaveLength(1);
       expect(similarRecipes[0].recipeId).toBe("recipe2");
@@ -291,7 +272,7 @@ describe("RecommendationEngine", () => {
   describe("Error Handling", () => {
     it("should handle database errors gracefully", async () => {
       mockRepository.listDetailedCandidateRecipes.mockRejectedValue(
-        new Error("Database connection failed"),
+        new Error("Database connection failed")
       );
 
       const context: RecommendationContext = {
@@ -306,9 +287,9 @@ describe("RecommendationEngine", () => {
         season: "SPRING",
       };
 
-      await expect(
-        recommendationEngine.getRecommendations(context, 5),
-      ).rejects.toThrow("Database connection failed");
+      await expect(recommendationEngine.getRecommendations(context, 5)).rejects.toThrow(
+        "Database connection failed"
+      );
     });
   });
 });

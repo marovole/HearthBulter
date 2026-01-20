@@ -86,7 +86,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(dashboardResponse.ok).toBe(true);
@@ -95,25 +95,22 @@ describe("Nutrition Tracking E2E Tests", () => {
       expect(dashboardData).toHaveProperty("weeklyProgress");
 
       // 2. User starts meal check-in
-      const checkInResponse = await fetch(
-        "http://localhost:3000/api/tracking/meals",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: authCookie,
-          },
-          body: JSON.stringify({
-            memberId: testMember.id,
-            mealType: "BREAKFAST",
-            foods: [
-              { foodId: "test-food-1", amount: 100 },
-              { foodId: "test-food-2", amount: 50 },
-            ],
-            notes: "Healthy breakfast",
-          }),
+      const checkInResponse = await fetch("http://localhost:3000/api/tracking/meals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: authCookie,
         },
-      );
+        body: JSON.stringify({
+          memberId: testMember.id,
+          mealType: "BREAKFAST",
+          foods: [
+            { foodId: "test-food-1", amount: 100 },
+            { foodId: "test-food-2", amount: 50 },
+          ],
+          notes: "Healthy breakfast",
+        }),
+      });
 
       expect(checkInResponse.ok).toBe(true);
       const checkInData = await checkInResponse.json();
@@ -127,7 +124,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(progressResponse.ok).toBe(true);
@@ -136,25 +133,22 @@ describe("Nutrition Tracking E2E Tests", () => {
       expect(progressData.mealsCount).toBe(1);
 
       // 4. User creates quick template
-      const templateResponse = await fetch(
-        "http://localhost:3000/api/tracking/templates",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: authCookie,
-          },
-          body: JSON.stringify({
-            memberId: testMember.id,
-            name: "My Breakfast Template",
-            mealType: "BREAKFAST",
-            foods: [
-              { foodId: "test-food-1", amount: 100 },
-              { foodId: "test-food-2", amount: 50 },
-            ],
-          }),
+      const templateResponse = await fetch("http://localhost:3000/api/tracking/templates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: authCookie,
         },
-      );
+        body: JSON.stringify({
+          memberId: testMember.id,
+          name: "My Breakfast Template",
+          mealType: "BREAKFAST",
+          foods: [
+            { foodId: "test-food-1", amount: 100 },
+            { foodId: "test-food-2", amount: 50 },
+          ],
+        }),
+      });
 
       expect(templateResponse.ok).toBe(true);
       const templateData = await templateResponse.json();
@@ -174,7 +168,7 @@ describe("Nutrition Tracking E2E Tests", () => {
             memberId: testMember.id,
             templateId,
           }),
-        },
+        }
       );
 
       expect(lunchFromTemplateResponse.ok).toBe(true);
@@ -188,7 +182,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(historyResponse.ok).toBe(true);
@@ -203,7 +197,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(streakResponse.ok).toBe(true);
@@ -217,7 +211,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(deviationResponse.ok).toBe(true);
@@ -225,24 +219,21 @@ describe("Nutrition Tracking E2E Tests", () => {
       expect(Array.isArray(deviationData.deviations)).toBe(true);
 
       // 9. User sets up reminders
-      const reminderResponse = await fetch(
-        "http://localhost:3000/api/tracking/reminders",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: authCookie,
-          },
-          body: JSON.stringify({
-            memberId: testMember.id,
-            type: "GENERAL",
-            enabled: true,
-            hour: 8,
-            minute: 0,
-            daysOfWeek: [1, 2, 3, 4, 5],
-          }),
+      const reminderResponse = await fetch("http://localhost:3000/api/tracking/reminders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: authCookie,
         },
-      );
+        body: JSON.stringify({
+          memberId: testMember.id,
+          type: "GENERAL",
+          enabled: true,
+          hour: 8,
+          minute: 0,
+          daysOfWeek: [1, 2, 3, 4, 5],
+        }),
+      });
 
       expect(reminderResponse.ok).toBe(true);
       const reminderData = await reminderResponse.json();
@@ -255,7 +246,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       const finalProgress = await finalProgressResponse.json();
@@ -324,7 +315,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(weeklyStatsResponse.ok).toBe(true);
@@ -339,7 +330,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       const streakData = await streakResponse.json();
@@ -352,7 +343,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(calendarResponse.ok).toBe(true);
@@ -367,25 +358,22 @@ describe("Nutrition Tracking E2E Tests", () => {
       // Create multiple templates
       const templates = [];
       for (let i = 0; i < 3; i++) {
-        const response = await fetch(
-          "http://localhost:3000/api/tracking/templates",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Cookie: authCookie,
-            },
-            body: JSON.stringify({
-              memberId: testMember.id,
-              name: `Template ${i + 1}`,
-              mealType: "BREAKFAST",
-              foods: [
-                { foodId: "test-food-1", amount: 100 + i * 10 },
-                { foodId: "test-food-2", amount: 50 + i * 5 },
-              ],
-            }),
+        const response = await fetch("http://localhost:3000/api/tracking/templates", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: authCookie,
           },
-        );
+          body: JSON.stringify({
+            memberId: testMember.id,
+            name: `Template ${i + 1}`,
+            mealType: "BREAKFAST",
+            foods: [
+              { foodId: "test-food-1", amount: 100 + i * 10 },
+              { foodId: "test-food-2", amount: 50 + i * 5 },
+            ],
+          }),
+        });
 
         const data = await response.json();
         templates.push(data.template);
@@ -398,7 +386,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(allTemplatesResponse.ok).toBe(true);
@@ -427,7 +415,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(templateStatsResponse.ok).toBe(true);
@@ -441,7 +429,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       expect(recommendedResponse.ok).toBe(true);
@@ -450,31 +438,25 @@ describe("Nutrition Tracking E2E Tests", () => {
       expect(recommended.templates[0].usageCount).toBe(5);
 
       // Update template
-      await fetch(
-        `http://localhost:3000/api/tracking/templates/${templates[1].id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: authCookie,
-          },
-          body: JSON.stringify({
-            name: "Updated Template",
-            foods: [{ foodId: "test-food-3", amount: 200 }],
-          }),
+      await fetch(`http://localhost:3000/api/tracking/templates/${templates[1].id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: authCookie,
         },
-      );
+        body: JSON.stringify({
+          name: "Updated Template",
+          foods: [{ foodId: "test-food-3", amount: 200 }],
+        }),
+      });
 
       // Delete a template
-      await fetch(
-        `http://localhost:3000/api/tracking/templates/${templates[2].id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Cookie: authCookie,
-          },
+      await fetch(`http://localhost:3000/api/tracking/templates/${templates[2].id}`, {
+        method: "DELETE",
+        headers: {
+          Cookie: authCookie,
         },
-      );
+      });
 
       // Verify deletion
       const finalTemplatesResponse = await fetch(
@@ -483,7 +465,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       const finalTemplates = await finalTemplatesResponse.json();
@@ -494,49 +476,43 @@ describe("Nutrition Tracking E2E Tests", () => {
   describe("Error Handling and Validation", () => {
     it("should handle invalid requests gracefully", async () => {
       // Test invalid meal type
-      const invalidMealResponse = await fetch(
-        "http://localhost:3000/api/tracking/meals",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: authCookie,
-          },
-          body: JSON.stringify({
-            memberId: testMember.id,
-            mealType: "INVALID_MEAL",
-            foods: [{ foodId: "test-food-1", amount: 100 }],
-          }),
+      const invalidMealResponse = await fetch("http://localhost:3000/api/tracking/meals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: authCookie,
         },
-      );
+        body: JSON.stringify({
+          memberId: testMember.id,
+          mealType: "INVALID_MEAL",
+          foods: [{ foodId: "test-food-1", amount: 100 }],
+        }),
+      });
 
       expect(invalidMealResponse.ok).toBe(false);
       expect(invalidMealResponse.status).toBe(400);
 
       // Test unauthorized access
       const unauthorizedResponse = await fetch(
-        `http://localhost:3000/api/tracking/meals?memberId=${testMember.id}`,
+        `http://localhost:3000/api/tracking/meals?memberId=${testMember.id}`
       );
 
       expect(unauthorizedResponse.ok).toBe(false);
       expect(unauthorizedResponse.status).toBe(401);
 
       // Test invalid food amount
-      const invalidAmountResponse = await fetch(
-        "http://localhost:3000/api/tracking/meals",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: authCookie,
-          },
-          body: JSON.stringify({
-            memberId: testMember.id,
-            mealType: "BREAKFAST",
-            foods: [{ foodId: "test-food-1", amount: -10 }],
-          }),
+      const invalidAmountResponse = await fetch("http://localhost:3000/api/tracking/meals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: authCookie,
         },
-      );
+        body: JSON.stringify({
+          memberId: testMember.id,
+          mealType: "BREAKFAST",
+          foods: [{ foodId: "test-food-1", amount: -10 }],
+        }),
+      });
 
       expect(invalidAmountResponse.ok).toBe(false);
       expect(invalidAmountResponse.status).toBe(400);
@@ -560,7 +536,7 @@ describe("Nutrition Tracking E2E Tests", () => {
             mealType: "BREAKFAST",
             foods: [{ foodId: "test-food-1", amount: 100 }],
           }),
-        }),
+        })
       );
 
       const responses = await Promise.all(concurrentRequests);
@@ -581,7 +557,7 @@ describe("Nutrition Tracking E2E Tests", () => {
           headers: {
             Cookie: authCookie,
           },
-        },
+        }
       );
 
       const mealsData = await mealsResponse.json();

@@ -58,9 +58,7 @@ export async function uploadFoodPhoto(data: {
     console.error("Food recognition failed:", error);
   });
 
-  return convexTracking.getFoodPhotoById(
-    photoId as string,
-  ) as Promise<FoodPhotoDoc | null>;
+  return convexTracking.getFoodPhotoById(photoId as string) as Promise<FoodPhotoDoc | null>;
 }
 
 export async function recognizeFoodPhoto(photoId: string) {
@@ -69,9 +67,7 @@ export async function recognizeFoodPhoto(photoId: string) {
       recognitionStatus: "PROCESSING",
     });
 
-    const photo = (await convexTracking.getFoodPhotoById(
-      photoId,
-    )) as FoodPhotoDoc | null;
+    const photo = (await convexTracking.getFoodPhotoById(photoId)) as FoodPhotoDoc | null;
     if (!photo) {
       throw new Error("Photo not found");
     }
@@ -100,8 +96,7 @@ export async function recognizeFoodPhoto(photoId: string) {
   } catch (error) {
     await convexTracking.updateFoodPhoto(photoId, {
       recognitionStatus: "FAILED",
-      recognitionError:
-        error instanceof Error ? error.message : "Unknown error",
+      recognitionError: error instanceof Error ? error.message : "Unknown error",
     });
 
     throw error;
@@ -136,22 +131,16 @@ async function mockRecognition(imageUrl: string): Promise<{
   };
 }
 
-async function findMatchingFoods(
-  foodName: string,
-): Promise<Array<{ name: string; _id: string }>> {
+async function findMatchingFoods(foodName: string): Promise<Array<{ name: string; _id: string }>> {
   const foods = (await convexTracking.getFoodsByIds([])) as FoodDoc[];
   return foods
-    .filter(
-      (food) => food.name.includes(foodName) || foodName.includes(food.name),
-    )
+    .filter((food) => food.name.includes(foodName) || foodName.includes(food.name))
     .slice(0, 5)
     .map((food) => ({ name: food.name, _id: food._id as string }));
 }
 
 export async function getRecognitionResult(photoId: string) {
-  const photo = (await convexTracking.getFoodPhotoById(
-    photoId,
-  )) as FoodPhotoDoc | null;
+  const photo = (await convexTracking.getFoodPhotoById(photoId)) as FoodPhotoDoc | null;
 
   if (!photo) {
     throw new Error("Photo not found");
@@ -164,9 +153,7 @@ export async function getRecognitionResult(photoId: string) {
     };
   }
 
-  const result = JSON.parse(
-    photo.recognitionResult || "{}",
-  ) as RecognitionResult;
+  const result = JSON.parse(photo.recognitionResult || "{}") as RecognitionResult;
 
   return {
     status: photo.recognitionStatus,
@@ -178,38 +165,26 @@ export async function getRecognitionResult(photoId: string) {
 export async function correctRecognitionResult(
   photoId: string,
   correctedFoodId: string,
-  amount: number,
+  amount: number
 ) {
-  const photo = (await convexTracking.getFoodPhotoById(
-    photoId,
-  )) as FoodPhotoDoc | null;
+  const photo = (await convexTracking.getFoodPhotoById(photoId)) as FoodPhotoDoc | null;
   if (!photo) {
     throw new Error("Photo not found");
   }
 
   const mealLog = (await convexTracking.getMealLogById(
-    photo.mealLogId as string,
+    photo.mealLogId as string
   )) as MealLogDoc | null;
   if (!mealLog) {
     throw new Error("Meal log not found");
   }
 
-  const existingFood = mealLog.foods.find(
-    (food) => food.foodId === correctedFoodId,
-  );
+  const existingFood = mealLog.foods.find((food) => food.foodId === correctedFoodId);
 
   if (existingFood) {
-    await convexTracking.addMealLogFood(
-      photo.mealLogId as string,
-      correctedFoodId,
-      amount,
-    );
+    await convexTracking.addMealLogFood(photo.mealLogId as string, correctedFoodId, amount);
   } else {
-    await convexTracking.addMealLogFood(
-      photo.mealLogId as string,
-      correctedFoodId,
-      amount,
-    );
+    await convexTracking.addMealLogFood(photo.mealLogId as string, correctedFoodId, amount);
   }
 
   const correctedFood = mealLog.foods.find((f) => f._id === correctedFoodId);
@@ -246,8 +221,8 @@ export async function uploadMultiplePhotos(data: {
         fileUrl: photo.fileUrl,
         fileName: photo.fileName,
         fileSize: photo.fileSize,
-      }),
-    ),
+      })
+    )
   );
 
   return uploadedPhotos;

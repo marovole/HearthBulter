@@ -3,16 +3,13 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { platformAdapterFactory } from "@/lib/services/ecommerce";
 import { EcommercePlatform } from "@/lib/services/ecommerce/types";
-import {
-  PlatformError,
-  PlatformErrorType,
-} from "@/lib/services/ecommerce/types";
+import { PlatformError, PlatformErrorType } from "@/lib/services/ecommerce/types";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ platform: string }> },
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
     const { platform: platformParam } = await params;
@@ -23,10 +20,7 @@ export async function GET(
 
     const platform = platformParam?.toUpperCase() as EcommercePlatform;
     if (!platformAdapterFactory.isPlatformSupported(platform)) {
-      return NextResponse.json(
-        { error: "Unsupported platform" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Unsupported platform" }, { status: 400 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -34,10 +28,7 @@ export async function GET(
     const state = searchParams.get("state");
 
     if (!redirectUri) {
-      return NextResponse.json(
-        { error: "redirect_uri is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "redirect_uri is required" }, { status: 400 });
     }
 
     const adapter = platformAdapterFactory.createAdapter(platform);
@@ -50,16 +41,13 @@ export async function GET(
     return NextResponse.json(authResponse);
   } catch (error) {
     console.error("Get authorization URL error:", error);
-    return NextResponse.json(
-      { error: "Failed to get authorization URL" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to get authorization URL" }, { status: 500 });
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ platform: string }> },
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
     const { platform: platformParam } = await params;
@@ -70,20 +58,14 @@ export async function POST(
 
     const platform = platformParam?.toUpperCase() as EcommercePlatform;
     if (!platformAdapterFactory.isPlatformSupported(platform)) {
-      return NextResponse.json(
-        { error: "Unsupported platform" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Unsupported platform" }, { status: 400 });
     }
 
     const body = await request.json();
     const { code, redirectUri, state } = body;
 
     if (!code || !redirectUri) {
-      return NextResponse.json(
-        { error: "code and redirect_uri are required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "code and redirect_uri are required" }, { status: 400 });
     }
 
     const adapter = platformAdapterFactory.createAdapter(platform);
@@ -136,15 +118,9 @@ export async function POST(
     console.error("Token exchange error:", error);
 
     if (error instanceof PlatformError) {
-      return NextResponse.json(
-        { error: error.message, type: error.type },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: error.message, type: error.type }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: "Failed to exchange token" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to exchange token" }, { status: 500 });
   }
 }

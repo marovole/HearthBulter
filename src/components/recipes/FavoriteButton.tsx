@@ -28,9 +28,7 @@ export function FavoriteButton({
 
   const checkFavoriteStatus = async () => {
     try {
-      const response = await fetch(
-        `/api/recipes/${recipeId}/favorite?memberId=${memberId}`,
-      );
+      const response = await fetch(`/api/recipes/${recipeId}/favorite?memberId=${memberId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -63,9 +61,7 @@ export function FavoriteButton({
       setIsFavorited(!isFavorited);
       toast({
         title: isFavorited ? "已取消收藏" : "已收藏",
-        description: isFavorited
-          ? "食谱已从收藏中移除"
-          : "食谱已添加到收藏列表",
+        description: isFavorited ? "食谱已从收藏中移除" : "食谱已添加到收藏列表",
       });
     } catch (error) {
       toast({
@@ -85,20 +81,14 @@ export function FavoriteButton({
       variant="ghost"
       size={size}
       className={`${
-        isFavorited
-          ? "text-red-600 hover:text-red-700"
-          : "text-muted-foreground hover:text-red-600"
+        isFavorited ? "text-red-600 hover:text-red-700" : "text-muted-foreground hover:text-red-600"
       } transition-colors`}
     >
       <Heart
-        className={`h-4 w-4 ${isFavorited ? "fill-current" : ""} ${
-          loading ? "animate-pulse" : ""
-        }`}
+        className={`h-4 w-4 ${isFavorited ? "fill-current" : ""} ${loading ? "animate-pulse" : ""}`}
       />
       {showText && (
-        <span className="ml-2">
-          {loading ? "处理中..." : isFavorited ? "已收藏" : "收藏"}
-        </span>
+        <span className="ml-2">{loading ? "处理中..." : isFavorited ? "已收藏" : "收藏"}</span>
       )}
     </Button>
   );

@@ -11,9 +11,7 @@ jest.mock("../../../lib/services/file-storage-service", () => ({
   FileStorageService: {
     validateFileType: jest.fn().mockReturnValue(true),
     validateFileSize: jest.fn().mockReturnValue(true),
-    uploadFile: jest
-      .fn()
-      .mockResolvedValue({ url: "https://example.com/img.png" }),
+    uploadFile: jest.fn().mockResolvedValue({ url: "https://example.com/img.png" }),
   },
 }));
 
@@ -69,13 +67,10 @@ describe("food recognition persistence", () => {
     formData.set("image", file);
     formData.set("mealType", "LUNCH");
 
-    const request = new NextRequest(
-      "http://localhost:3000/api/tracking/photo/upload",
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/tracking/photo/upload", {
+      method: "POST",
+      body: formData,
+    });
 
     const response = await uploadPOST(request);
     const data = await response.json();
@@ -89,7 +84,7 @@ describe("food recognition persistence", () => {
           fileName: "meal.jpg",
           fileSize: file.size,
         }),
-      }),
+      })
     );
     expect(data.photoId).toBe("photo-1");
   });
@@ -115,13 +110,10 @@ describe("food recognition persistence", () => {
       name: "鸡蛋",
     });
 
-    const request = new NextRequest(
-      "http://localhost:3000/api/tracking/recognize",
-      {
-        method: "POST",
-        body: JSON.stringify({ photoId: "photo-1" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/tracking/recognize", {
+      method: "POST",
+      body: JSON.stringify({ photoId: "photo-1" }),
+    });
 
     const response = await recognizePOST(request);
     const data = await response.json();
@@ -133,7 +125,7 @@ describe("food recognition persistence", () => {
         data: expect.objectContaining({
           recognitionStatus: "COMPLETED",
         }),
-      }),
+      })
     );
     expect(prismaMock.mealLogFood.create).toHaveBeenCalled();
     expect(prismaMock.mealLog.update).toHaveBeenCalled();
@@ -158,17 +150,14 @@ describe("food recognition persistence", () => {
     });
     prismaMock.foodPhoto.update.mockResolvedValue({});
 
-    const request = new NextRequest(
-      "http://localhost:3000/api/tracking/recognize/correct",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          photoId: "photo-1",
-          foodId: "food-1",
-          amount: 120,
-        }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/tracking/recognize/correct", {
+      method: "POST",
+      body: JSON.stringify({
+        photoId: "photo-1",
+        foodId: "food-1",
+        amount: 120,
+      }),
+    });
 
     const response = await correctPOST(request);
     const data = await response.json();
@@ -181,7 +170,7 @@ describe("food recognition persistence", () => {
         data: expect.objectContaining({
           confidence: 1,
         }),
-      }),
+      })
     );
     expect(data.success).toBe(true);
   });

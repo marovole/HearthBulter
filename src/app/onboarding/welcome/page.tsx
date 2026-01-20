@@ -4,13 +4,7 @@
 export const dynamic = "force-dynamic";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Users, Heart, Brain, ShoppingBag } from "lucide-react";
 import Link from "next/link";
@@ -48,27 +42,21 @@ export default function WelcomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-12 text-center">
           <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-100">
             欢迎使用 Health Butler
           </Badge>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            您的智能家庭健康管家
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            让健康管理变得简单而有趣。通过AI驱动的个性化建议，
-            帮助您的全家养成更健康的饮食习惯。
+          <h1 className="mb-4 text-4xl font-bold text-gray-900">您的智能家庭健康管家</h1>
+          <p className="mx-auto max-w-2xl text-xl text-gray-600">
+            让健康管理变得简单而有趣。通过AI驱动的个性化建议， 帮助您的全家养成更健康的饮食习惯。
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="mb-12 grid gap-6 md:grid-cols-2">
           {features.map((feature, index) => (
-            <Card
-              key={index}
-              className="border-0 shadow-lg hover:shadow-xl transition-shadow"
-            >
+            <Card key={index} className="border-0 shadow-lg transition-shadow hover:shadow-xl">
               <CardHeader>
                 <div className="flex items-center space-x-3">
                   {feature.icon}
@@ -76,7 +64,7 @@ export default function WelcomePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <CardDescription className="text-gray-600 text-base">
+                <CardDescription className="text-base text-gray-600">
                   {feature.description}
                 </CardDescription>
               </CardContent>
@@ -85,24 +73,22 @@ export default function WelcomePage() {
         </div>
 
         <div className="text-center">
-          <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              准备开始您的健康之旅？
-            </h2>
-            <p className="text-gray-600 mb-6">
+          <div className="mb-8 rounded-lg bg-white p-8 shadow-lg">
+            <h2 className="mb-4 text-2xl font-semibold text-gray-900">准备开始您的健康之旅？</h2>
+            <p className="mb-6 text-gray-600">
               只需几个简单步骤，我们就能为您和您的家人提供个性化的健康管理服务。
             </p>
-            <div className="flex items-center justify-center space-x-4 mb-6">
+            <div className="mb-6 flex items-center justify-center space-x-4">
               <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
                 <span className="text-sm text-gray-600">创建家庭档案</span>
               </div>
               <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
                 <span className="text-sm text-gray-600">设置健康目标</span>
               </div>
               <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
                 <span className="text-sm text-gray-600">了解核心功能</span>
               </div>
             </div>

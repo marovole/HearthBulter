@@ -141,7 +141,7 @@ export function hasPermission(
   userRole: FamilyMemberRole,
   permission: Permission,
   resourceOwnerId?: string,
-  currentUserId?: string,
+  currentUserId?: string
 ): boolean {
   // 检查角色是否拥有该权限
   const permissions = ROLE_PERMISSIONS[userRole];
@@ -183,7 +183,7 @@ export function canPerformAction(
   action: string,
   userRole: FamilyMemberRole,
   resourceOwnerId?: string,
-  currentUserId?: string,
+  currentUserId?: string
 ): boolean {
   const permission = action as Permission;
   return hasPermission(userRole, permission, resourceOwnerId, currentUserId);
@@ -193,7 +193,7 @@ export function canPerformAction(
 export async function getUserFamilyRole(
   userId: string,
   familyId: string,
-  prisma: any,
+  prisma: any
 ): Promise<FamilyMemberRole | null> {
   const member = await prisma.familyMember.findFirst({
     where: {
@@ -213,7 +213,7 @@ export async function getUserFamilyRole(
 export async function isFamilyAdmin(
   userId: string,
   familyId: string,
-  prisma: any,
+  prisma: any
 ): Promise<boolean> {
   const role = await getUserFamilyRole(userId, familyId, prisma);
   return role === FamilyMemberRole.ADMIN;
@@ -223,7 +223,7 @@ export async function isFamilyAdmin(
 export async function isFamilyCreator(
   userId: string,
   familyId: string,
-  prisma: any,
+  prisma: any
 ): Promise<boolean> {
   const family = await prisma.family.findFirst({
     where: {
@@ -246,11 +246,7 @@ export class PermissionError extends Error {
 
 // 权限检查装饰器（用于API路由）
 export function requirePermission(permission: Permission) {
-  return function (
-    target: any,
-    propertyName: string,
-    descriptor: PropertyDescriptor,
-  ) {
+  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {

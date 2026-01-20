@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ShoppingListService } from "@/services/shopping-list";
-import {
-  withApiPermissions,
-  PERMISSION_CONFIGS,
-} from "@/middleware/permissions";
+import { withApiPermissions, PERMISSION_CONFIGS } from "@/middleware/permissions";
 
 // POST /api/families/[familyId]/shopping/[itemId]/assign - 分配购物项
 
@@ -11,7 +8,7 @@ import {
 export const dynamic = "force-dynamic";
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string; itemId: string }> },
+  { params }: { params: Promise<{ familyId: string; itemId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -25,7 +22,7 @@ export async function POST(
       if (!assigneeId) {
         return NextResponse.json(
           { success: false, error: "Missing required field: assigneeId" },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -33,7 +30,7 @@ export async function POST(
         familyId,
         userId,
         itemId,
-        assigneeId,
+        assigneeId
       );
 
       return NextResponse.json({
@@ -45,12 +42,9 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to assign shopping item",
+          error: error instanceof Error ? error.message : "Failed to assign shopping item",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.ASSIGN_SHOPPING_ITEM)(request as any, { params });

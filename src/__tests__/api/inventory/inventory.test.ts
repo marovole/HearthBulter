@@ -45,9 +45,7 @@ jest.mock("@/lib/db", () => ({
 
 // Mock JWT verification
 jest.mock("jose", () => ({
-  jwtVerify: jest
-    .fn()
-    .mockResolvedValue({ sub: "user-123", email: "test@example.com" }),
+  jwtVerify: jest.fn().mockResolvedValue({ sub: "user-123", email: "test@example.com" }),
 }));
 
 // Mock notification service
@@ -111,15 +109,12 @@ describe("/api/inventory API", () => {
       prisma.inventoryItem.findMany.mockResolvedValue(mockInventoryItems);
       prisma.inventoryItem.count.mockResolvedValue(mockTotal);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items?limit=2&page=1",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items?limit=2&page=1", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/inventory/items/route");
@@ -145,15 +140,12 @@ describe("/api/inventory API", () => {
       prisma.inventoryItem.findMany.mockResolvedValue([]);
       prisma.inventoryItem.count.mockResolvedValue(0);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items?category=DAIRY",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items?category=DAIRY", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/inventory/items/route");
@@ -166,7 +158,7 @@ describe("/api/inventory API", () => {
             where: expect.objectContaining({
               category: "DAIRY",
             }),
-          }),
+          })
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -177,15 +169,12 @@ describe("/api/inventory API", () => {
       prisma.inventoryItem.findMany.mockResolvedValue([]);
       prisma.inventoryItem.count.mockResolvedValue(0);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items?lowStock=true",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items?lowStock=true", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/inventory/items/route");
@@ -198,7 +187,7 @@ describe("/api/inventory API", () => {
             where: expect.objectContaining({
               isLowStock: true,
             }),
-          }),
+          })
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -206,12 +195,9 @@ describe("/api/inventory API", () => {
     });
 
     it("should require authentication", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "GET",
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "GET",
+      });
 
       try {
         const { GET } = await import("@/app/api/inventory/items/route");
@@ -256,17 +242,14 @@ describe("/api/inventory API", () => {
 
       prisma.inventoryItem.create.mockResolvedValue(createdItem);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(newItem),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(newItem),
+      });
 
       try {
         const { POST } = await import("@/app/api/inventory/items/route");
@@ -299,17 +282,14 @@ describe("/api/inventory API", () => {
         // Missing required fields
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(incompleteItem),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(incompleteItem),
+      });
 
       try {
         const { POST } = await import("@/app/api/inventory/items/route");
@@ -334,17 +314,14 @@ describe("/api/inventory API", () => {
         location: "测试",
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidItem),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidItem),
+      });
 
       try {
         const { POST } = await import("@/app/api/inventory/items/route");
@@ -381,20 +358,17 @@ describe("/api/inventory API", () => {
       prisma.inventoryItem.findUnique.mockResolvedValue(existingItem);
       prisma.inventoryItem.update.mockResolvedValue(updatedItem);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items/item-1",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            quantity: 1,
-            notes: "脱脂牛奶",
-          }),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items/item-1", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          quantity: 1,
+          notes: "脱脂牛奶",
+        }),
+      });
 
       try {
         const { PUT } = await import("@/app/api/inventory/items/[id]/route");
@@ -415,19 +389,16 @@ describe("/api/inventory API", () => {
     it("should return 404 for non-existent item", async () => {
       prisma.inventoryItem.findUnique.mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items/nonexistent",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            quantity: 1,
-          }),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items/nonexistent", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          quantity: 1,
+        }),
+      });
 
       try {
         const { PUT } = await import("@/app/api/inventory/items/[id]/route");
@@ -459,15 +430,12 @@ describe("/api/inventory API", () => {
       prisma.inventoryItem.findUnique.mockResolvedValue(existingItem);
       prisma.inventoryItem.delete.mockResolvedValue(existingItem);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items/item-1",
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items/item-1", {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { DELETE } = await import("@/app/api/inventory/items/[id]/route");
@@ -509,15 +477,12 @@ describe("/api/inventory API", () => {
 
       prisma.inventoryItem.findMany.mockResolvedValue(mockExpiringItems);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/expiring-soon?days=7",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/expiring-soon?days=7", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/inventory/expiring-soon/route");
@@ -560,15 +525,12 @@ describe("/api/inventory API", () => {
 
       prisma.inventoryItem.findMany.mockResolvedValue(mockLowStockItems);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/low-stock",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/low-stock", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/inventory/low-stock/route");
@@ -607,25 +569,20 @@ describe("/api/inventory API", () => {
       prisma.inventoryItem.findUnique.mockResolvedValue(existingItem);
       prisma.inventoryItem.update.mockResolvedValue(updatedItem);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items/item-1/use",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            quantity: 0.5,
-            notes: "制作咖啡使用",
-          }),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items/item-1/use", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          quantity: 0.5,
+          notes: "制作咖啡使用",
+        }),
+      });
 
       try {
-        const { POST } = await import(
-          "@/app/api/inventory/items/[id]/use/route"
-        );
+        const { POST } = await import("@/app/api/inventory/items/[id]/use/route");
         const response = await POST(request, {
           params: Promise.resolve({ id: "item-1" }),
         });
@@ -653,25 +610,20 @@ describe("/api/inventory API", () => {
 
       prisma.inventoryItem.findUnique.mockResolvedValue(existingItem);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items/item-1/use",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            quantity: 1, // More than available
-            notes: "尝试使用过量",
-          }),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items/item-1/use", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          quantity: 1, // More than available
+          notes: "尝试使用过量",
+        }),
+      });
 
       try {
-        const { POST } = await import(
-          "@/app/api/inventory/items/[id]/use/route"
-        );
+        const { POST } = await import("@/app/api/inventory/items/[id]/use/route");
         const response = await POST(request, {
           params: Promise.resolve({ id: "item-1" }),
         });
@@ -713,15 +665,12 @@ describe("/api/inventory API", () => {
         _count: { id: 25 },
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/analytics",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/analytics", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/inventory/analytics/route");
@@ -742,19 +691,14 @@ describe("/api/inventory API", () => {
 
   describe("Error handling", () => {
     it("should handle database errors gracefully", async () => {
-      prisma.inventoryItem.findMany.mockRejectedValue(
-        new Error("Database connection failed"),
-      );
+      prisma.inventoryItem.findMany.mockRejectedValue(new Error("Database connection failed"));
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/inventory/items/route");
@@ -769,17 +713,14 @@ describe("/api/inventory API", () => {
     });
 
     it("should handle malformed JSON", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: "invalid-json",
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: "invalid-json",
+      });
 
       try {
         const { POST } = await import("@/app/api/inventory/items/route");
@@ -806,17 +747,14 @@ describe("/api/inventory API", () => {
         location: "测试",
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidItem),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidItem),
+      });
 
       try {
         const { POST } = await import("@/app/api/inventory/items/route");
@@ -841,17 +779,14 @@ describe("/api/inventory API", () => {
         location: "测试",
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/inventory/items",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify(invalidItem),
+      const request = new NextRequest("http://localhost:3000/api/inventory/items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify(invalidItem),
+      });
 
       try {
         const { POST } = await import("@/app/api/inventory/items/route");

@@ -50,11 +50,7 @@ class Logger {
   /**
    * 格式化日志条目
    */
-  private formatLog(
-    level: LogLevel,
-    message: string,
-    context?: Record<string, any>,
-  ): LogEntry {
+  private formatLog(level: LogLevel, message: string, context?: Record<string, any>): LogEntry {
     return {
       level,
       message,
@@ -68,11 +64,7 @@ class Logger {
   /**
    * 输出日志
    */
-  private log(
-    level: LogLevel,
-    message: string,
-    context?: Record<string, any>,
-  ): void {
+  private log(level: LogLevel, message: string, context?: Record<string, any>): void {
     const entry = this.formatLog(level, message, context);
 
     // 开发环境输出到控制台
@@ -80,16 +72,16 @@ class Logger {
       const prefix = `[${entry.timestamp.toISOString()}] [${level.toUpperCase()}]`;
       const contextStr = context ? ` ${JSON.stringify(context)}` : "";
       switch (level) {
-      case "debug":
-      case "info":
-        console.log(`${prefix} ${message}${contextStr}`);
-        break;
-      case "warn":
-        console.warn(`${prefix} ${message}${contextStr}`);
-        break;
-      case "error":
-        console.error(`${prefix} ${message}${contextStr}`);
-        break;
+        case "debug":
+        case "info":
+          console.log(`${prefix} ${message}${contextStr}`);
+          break;
+        case "warn":
+          console.warn(`${prefix} ${message}${contextStr}`);
+          break;
+        case "error":
+          console.error(`${prefix} ${message}${contextStr}`);
+          break;
       }
     }
 
@@ -140,11 +132,7 @@ class Logger {
   /**
    * 性能日志
    */
-  performance(
-    operation: string,
-    duration: number,
-    context?: Record<string, any>,
-  ): void {
+  performance(operation: string, duration: number, context?: Record<string, any>): void {
     this.info(`Performance: ${operation} completed in ${duration}ms`, {
       operation,
       duration,
@@ -172,7 +160,7 @@ class Logger {
     url: string,
     status: number,
     duration: number,
-    context?: Record<string, any>,
+    context?: Record<string, any>
   ): void {
     this.info(`API: ${method} ${url} - ${status} (${duration}ms)`, {
       method,

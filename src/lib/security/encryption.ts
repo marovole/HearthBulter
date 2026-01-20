@@ -37,9 +37,7 @@ async function getEncryptionKey(): Promise<CryptoKey> {
 
   // 验证密钥长度（32 字节 = 256 位）
   if (keyData.byteLength !== 32) {
-    throw new Error(
-      `加密密钥长度无效: 期望 32 字节，实际 ${keyData.byteLength} 字节`,
-    );
+    throw new Error(`加密密钥长度无效: 期望 32 字节，实际 ${keyData.byteLength} 字节`);
   }
 
   return cryptoApi.subtle.importKey(
@@ -47,7 +45,7 @@ async function getEncryptionKey(): Promise<CryptoKey> {
     keyData,
     { name: ALGORITHM, length: KEY_LENGTH },
     false,
-    ["encrypt", "decrypt"],
+    ["encrypt", "decrypt"]
   );
 }
 
@@ -74,7 +72,7 @@ export async function encrypt(plaintext: string): Promise<string> {
         tagLength: TAG_LENGTH,
       },
       key,
-      plaintextBuffer,
+      plaintextBuffer
     );
 
     // GCM 模式下，加密结果包含密文 + 认证标签
@@ -96,8 +94,7 @@ export async function encrypt(plaintext: string): Promise<string> {
   } catch (error) {
     if (
       error instanceof Error &&
-      (error.message.includes("ENCRYPTION_KEY") ||
-        error.message.includes("密钥长度无效"))
+      (error.message.includes("ENCRYPTION_KEY") || error.message.includes("密钥长度无效"))
     ) {
       throw error;
     }
@@ -140,9 +137,7 @@ export async function decrypt(encryptedString: string): Promise<string> {
     const tag = base64ToArrayBuffer(tagBase64);
 
     // GCM 需要将密文和标签合并
-    const encryptedData = new Uint8Array(
-      ciphertext.byteLength + tag.byteLength,
-    );
+    const encryptedData = new Uint8Array(ciphertext.byteLength + tag.byteLength);
     encryptedData.set(new Uint8Array(ciphertext), 0);
     encryptedData.set(new Uint8Array(tag), ciphertext.byteLength);
 
@@ -154,7 +149,7 @@ export async function decrypt(encryptedString: string): Promise<string> {
         tagLength: TAG_LENGTH,
       },
       key,
-      encryptedData,
+      encryptedData
     );
 
     const decoder = new TextDecoder();
@@ -169,9 +164,7 @@ export async function decrypt(encryptedString: string): Promise<string> {
  * 加密对象（自动序列化为 JSON）
  * @param data 要加密的对象
  */
-export async function encryptObject<T extends object>(
-  data: T,
-): Promise<string> {
+export async function encryptObject<T extends object>(data: T): Promise<string> {
   const jsonString = JSON.stringify(data);
   return encrypt(jsonString);
 }
@@ -196,7 +189,7 @@ export async function generateEncryptionKey(): Promise<string> {
       length: KEY_LENGTH,
     },
     true,
-    ["encrypt", "decrypt"],
+    ["encrypt", "decrypt"]
   );
 
   const exportedKey = await cryptoApi.subtle.exportKey("raw", key);

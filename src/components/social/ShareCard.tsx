@@ -61,20 +61,20 @@ export function ShareCard({
   // 获取内容类型图标
   const getContentIcon = (type: ShareContentType) => {
     switch (type) {
-    case "HEALTH_REPORT":
-      return <TrendingUp className="h-4 w-4" />;
-    case "GOAL_ACHIEVEMENT":
-      return <Target className="h-4 w-4" />;
-    case "MEAL_LOG":
-      return <Utensils className="h-4 w-4" />;
-    case "ACHIEVEMENT":
-      return <Trophy className="h-4 w-4" />;
-    case "CHECK_IN_STREAK":
-      return <Calendar className="h-4 w-4" />;
-    case "WEIGHT_MILESTONE":
-      return <TrendingUp className="h-4 w-4" />;
-    default:
-      return <Share2 className="h-4 w-4" />;
+      case "HEALTH_REPORT":
+        return <TrendingUp className="h-4 w-4" />;
+      case "GOAL_ACHIEVEMENT":
+        return <Target className="h-4 w-4" />;
+      case "MEAL_LOG":
+        return <Utensils className="h-4 w-4" />;
+      case "ACHIEVEMENT":
+        return <Trophy className="h-4 w-4" />;
+      case "CHECK_IN_STREAK":
+        return <Calendar className="h-4 w-4" />;
+      case "WEIGHT_MILESTONE":
+        return <TrendingUp className="h-4 w-4" />;
+      default:
+        return <Share2 className="h-4 w-4" />;
     }
   };
 
@@ -179,13 +179,9 @@ export function ShareCard({
               <AvatarFallback>{share.member.name.charAt(0)}</AvatarFallback>
             </Avatar>
 
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {share.member.name}
-              </p>
-              <p className="text-xs text-gray-500">
-                {formatDate(share.createdAt)}
-              </p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-gray-900">{share.member.name}</p>
+              <p className="text-xs text-gray-500">{formatDate(share.createdAt)}</p>
             </div>
           </div>
 
@@ -206,13 +202,13 @@ export function ShareCard({
         {/* 分享图片 */}
         {share.imageUrl && (
           <div
-            className="rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+            className="cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-90"
             onClick={handleView}
           >
             <img
               src={share.imageUrl}
               alt={share.title}
-              className="w-full h-auto max-h-96 object-cover"
+              className="h-auto max-h-96 w-full object-cover"
             />
           </div>
         )}
@@ -220,16 +216,14 @@ export function ShareCard({
         {/* 标题和描述 */}
         <div className="space-y-2">
           <h3
-            className="font-semibold text-lg leading-tight cursor-pointer hover:text-primary transition-colors"
+            className="cursor-pointer text-lg font-semibold leading-tight transition-colors hover:text-primary"
             onClick={handleView}
           >
             {share.title}
           </h3>
 
           {share.description && (
-            <p className="text-sm text-gray-600 leading-relaxed">
-              {share.description}
-            </p>
+            <p className="text-sm leading-relaxed text-gray-600">{share.description}</p>
           )}
         </div>
 
@@ -273,41 +267,24 @@ export function ShareCard({
             </span>
           </div>
 
-          {share.expiresAt && (
-            <span>过期时间: {formatDate(share.expiresAt)}</span>
-          )}
+          {share.expiresAt && <span>过期时间: {formatDate(share.expiresAt)}</span>}
         </div>
 
         {/* 操作按钮 */}
         {showActions && (
-          <div className="flex items-center space-x-2 pt-2 border-t">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLike}
-              className="flex-1"
-            >
-              <Heart className="h-4 w-4 mr-2" />
+          <div className="flex items-center space-x-2 border-t pt-2">
+            <Button variant="ghost" size="sm" onClick={handleLike} className="flex-1">
+              <Heart className="mr-2 h-4 w-4" />
               点赞
             </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleComment}
-              className="flex-1"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
+            <Button variant="ghost" size="sm" onClick={handleComment} className="flex-1">
+              <MessageCircle className="mr-2 h-4 w-4" />
               评论
             </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleShare}
-              className="flex-1"
-            >
-              <Share2 className="h-4 w-4 mr-2" />
+            <Button variant="ghost" size="sm" onClick={handleShare} className="flex-1">
+              <Share2 className="mr-2 h-4 w-4" />
               分享
             </Button>
           </div>

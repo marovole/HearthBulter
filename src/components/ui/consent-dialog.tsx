@@ -14,13 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Shield,
@@ -75,12 +69,8 @@ export function ConsentDialog({
     setIsSubmitting(true);
     try {
       await consentManager.grantConsent(userId, consentType.id, context, {
-        ipAddress:
-          typeof window !== "undefined" ? window.location.hostname : undefined,
-        userAgent:
-          typeof window !== "undefined"
-            ? window.navigator.userAgent
-            : undefined,
+        ipAddress: typeof window !== "undefined" ? window.location.hostname : undefined,
+        userAgent: typeof window !== "undefined" ? window.navigator.userAgent : undefined,
       });
 
       onConsentGranted(consentType.id);
@@ -100,33 +90,33 @@ export function ConsentDialog({
 
   const getCategoryIcon = (category: ConsentType["category"]) => {
     switch (category) {
-    case "ai_analysis":
-      return <Brain className="w-5 h-5" />;
-    case "data_processing":
-      return <Database className="w-5 h-5" />;
-    case "health_sharing":
-      return <Users className="w-5 h-5" />;
-    case "research":
-      return <Shield className="w-5 h-5" />;
-    default:
-      return <Info className="w-5 h-5" />;
+      case "ai_analysis":
+        return <Brain className="h-5 w-5" />;
+      case "data_processing":
+        return <Database className="h-5 w-5" />;
+      case "health_sharing":
+        return <Users className="h-5 w-5" />;
+      case "research":
+        return <Shield className="h-5 w-5" />;
+      default:
+        return <Info className="h-5 w-5" />;
     }
   };
 
   const getCategoryColor = (category: ConsentType["category"]) => {
     switch (category) {
-    case "ai_analysis":
-      return "text-blue-600 bg-blue-50 border-blue-200";
-    case "data_processing":
-      return "text-green-600 bg-green-50 border-green-200";
-    case "health_sharing":
-      return "text-purple-600 bg-purple-50 border-purple-200";
-    case "research":
-      return "text-orange-600 bg-orange-50 border-orange-200";
-    case "marketing":
-      return "text-pink-600 bg-pink-50 border-pink-200";
-    default:
-      return "text-gray-600 bg-gray-50 border-gray-200";
+      case "ai_analysis":
+        return "text-blue-600 bg-blue-50 border-blue-200";
+      case "data_processing":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "health_sharing":
+        return "text-purple-600 bg-purple-50 border-purple-200";
+      case "research":
+        return "text-orange-600 bg-orange-50 border-orange-200";
+      case "marketing":
+        return "text-pink-600 bg-pink-50 border-pink-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 
@@ -134,7 +124,7 @@ export function ConsentDialog({
     if (consentType.required) {
       return (
         <Badge variant="destructive" className="text-xs">
-          <AlertTriangle className="w-3 h-3 mr-1" />
+          <AlertTriangle className="mr-1 h-3 w-3" />
           必需同意
         </Badge>
       );
@@ -148,7 +138,7 @@ export function ConsentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             {getCategoryIcon(consentType.category)}
@@ -161,19 +151,15 @@ export function ConsentDialog({
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-4">
             {/* 摘要卡片 */}
-            <Card
-              className={cn("border-2", getCategoryColor(consentType.category))}
-            >
+            <Card className={cn("border-2", getCategoryColor(consentType.category))}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center">
-                  <Info className="w-4 h-4 mr-2" />
+                <CardTitle className="flex items-center text-lg">
+                  <Info className="mr-2 h-4 w-4" />
                   同意概述
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {consentType.content.summary}
-                </p>
+                <p className="text-sm text-muted-foreground">{consentType.content.summary}</p>
               </CardContent>
             </Card>
 
@@ -189,7 +175,7 @@ export function ConsentDialog({
               </Button>
               {consentType.validDays > 0 && (
                 <div className="flex items-center text-xs text-muted-foreground">
-                  <Clock className="w-3 h-3 mr-1" />
+                  <Clock className="mr-1 h-3 w-3" />
                   同意有效期：{consentType.validDays}天
                 </div>
               )}
@@ -210,17 +196,14 @@ export function ConsentDialog({
                 </Card>
 
                 {/* 风险和益处 */}
-                {(consentType.content.risks ||
-                  consentType.content.benefits) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(consentType.content.risks || consentType.content.benefits) && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {consentType.content.risks && (
                       <Alert className="border-amber-200 bg-amber-50">
                         <AlertTriangle className="h-4 w-4 text-amber-600" />
                         <AlertDescription className="text-amber-800">
-                          <strong className="block mb-1">潜在风险</strong>
-                          <span className="text-sm">
-                            {consentType.content.risks}
-                          </span>
+                          <strong className="mb-1 block">潜在风险</strong>
+                          <span className="text-sm">{consentType.content.risks}</span>
                         </AlertDescription>
                       </Alert>
                     )}
@@ -229,10 +212,8 @@ export function ConsentDialog({
                       <Alert className="border-green-200 bg-green-50">
                         <CheckCircle className="h-4 w-4 text-green-600" />
                         <AlertDescription className="text-green-800">
-                          <strong className="block mb-1">预期益处</strong>
-                          <span className="text-sm">
-                            {consentType.content.benefits}
-                          </span>
+                          <strong className="mb-1 block">预期益处</strong>
+                          <span className="text-sm">{consentType.content.benefits}</span>
                         </AlertDescription>
                       </Alert>
                     )}
@@ -244,7 +225,7 @@ export function ConsentDialog({
             <Separator />
 
             {/* 同意复选框 */}
-            <div className="flex items-start space-x-3 p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-start space-x-3 rounded-lg bg-muted/50 p-4">
               <Checkbox
                 id="consent-accept"
                 checked={isAccepted}
@@ -258,7 +239,7 @@ export function ConsentDialog({
                 >
                   我已仔细阅读并理解上述内容
                 </label>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {consentType.required
                     ? "这是必需的同意项目，必须同意才能继续使用相关功能。"
                     : "这是可选的同意项目，您可以选择同意或拒绝。"}
@@ -269,7 +250,7 @@ export function ConsentDialog({
         </ScrollArea>
 
         <DialogFooter className="flex-col space-y-3">
-          <div className="flex space-x-2 w-full">
+          <div className="flex w-full space-x-2">
             <Button
               variant="outline"
               onClick={handleDecline}
@@ -287,7 +268,7 @@ export function ConsentDialog({
             </Button>
           </div>
 
-          <div className="text-xs text-muted-foreground text-center">
+          <div className="text-center text-xs text-muted-foreground">
             同意版本：{consentType.version} | 最后更新：
             {new Date().toLocaleDateString("zh-CN")}
           </div>
@@ -300,15 +281,13 @@ export function ConsentDialog({
 // 同意管理器 Hook
 export function useConsentManager(userId: string) {
   const [pendingConsents, setPendingConsents] = useState<ConsentType[]>([]);
-  const [currentConsent, setCurrentConsent] = useState<ConsentType | null>(
-    null,
-  );
+  const [currentConsent, setCurrentConsent] = useState<ConsentType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const requestConsent = async (
     consentId: string,
     context?: Record<string, any>,
-    forceRefresh = false,
+    forceRefresh = false
   ): Promise<boolean> => {
     const consentType = consentManager.getConsentType(consentId);
     if (!consentType) {
@@ -335,10 +314,7 @@ export function useConsentManager(userId: string) {
     }
   };
 
-  const grantConsent = async (
-    consentId: string,
-    context?: Record<string, any>,
-  ) => {
+  const grantConsent = async (consentId: string, context?: Record<string, any>) => {
     await consentManager.grantConsent(userId, consentId, context);
     setCurrentConsent(null);
   };
@@ -347,9 +323,7 @@ export function useConsentManager(userId: string) {
     return await consentManager.checkConsent(userId, consentId);
   };
 
-  const checkMultipleConsents = async (
-    consentIds: string[],
-  ): Promise<Record<string, boolean>> => {
+  const checkMultipleConsents = async (consentIds: string[]): Promise<Record<string, boolean>> => {
     return await consentManager.checkMultipleConsents(userId, consentIds);
   };
 
@@ -368,19 +342,11 @@ export function useConsentManager(userId: string) {
 interface ConsentCheckerProps {
   userId: string;
   consentId: string;
-  children: (
-    hasConsent: boolean,
-    requestConsent: () => Promise<boolean>,
-  ) => React.ReactNode;
+  children: (hasConsent: boolean, requestConsent: () => Promise<boolean>) => React.ReactNode;
   context?: Record<string, any>;
 }
 
-export function ConsentChecker({
-  userId,
-  consentId,
-  children,
-  context,
-}: ConsentCheckerProps) {
+export function ConsentChecker({ userId, consentId, children, context }: ConsentCheckerProps) {
   const [hasConsent, setHasConsent] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
 
@@ -423,9 +389,7 @@ export function ConsentChecker({
   };
 
   if (isChecking) {
-    return (
-      <div className="flex items-center justify-center p-4">检查权限中...</div>
-    );
+    return <div className="flex items-center justify-center p-4">检查权限中...</div>;
   }
 
   return <>{children(hasConsent || false, requestConsent)}</>;

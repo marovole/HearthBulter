@@ -25,10 +25,8 @@ import type {
 import type { PaginatedResult, PaginationInput } from "../types/common";
 
 type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
-type NotificationPreferenceRow =
-  Database["public"]["Tables"]["notification_preferences"]["Row"];
-type ScheduledNotificationRow =
-  Database["public"]["Tables"]["scheduled_notifications"]["Row"];
+type NotificationPreferenceRow = Database["public"]["Tables"]["notification_preferences"]["Row"];
+type ScheduledNotificationRow = Database["public"]["Tables"]["scheduled_notifications"]["Row"];
 
 /**
  * Supabase 通知 Repository 实现
@@ -44,18 +42,14 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = "[SupabaseNotificationRepository]";
 
-  constructor(
-    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
-  ) {
+  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
     this.client = client;
   }
 
   /**
    * 创建通知记录
    */
-  async createNotification(
-    payload: CreateNotificationDTO,
-  ): Promise<NotificationDTO> {
+  async createNotification(payload: CreateNotificationDTO): Promise<NotificationDTO> {
     const row = this.mapNotificationDtoToRow(payload);
     const { data, error } = await this.client
       .from("notifications")
@@ -94,7 +88,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
    */
   async listMemberNotifications(
     query: NotificationListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<NotificationDTO>> {
     let listQuery = this.client
       .from("notifications")
@@ -106,8 +100,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
     if (query.type) listQuery = listQuery.eq("type", query.type);
     if (query.status) listQuery = listQuery.eq("status", query.status);
     if (!query.includeRead) listQuery = listQuery.is("read_at", null);
-    if (query.channel)
-      listQuery = listQuery.contains("channels", [query.channel]);
+    if (query.channel) listQuery = listQuery.contains("channels", [query.channel]);
 
     // 应用分页
     if (pagination?.limit) {
@@ -124,9 +117,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
     };
   }
 
@@ -139,10 +130,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
       update.sent_at = new Date().toISOString();
     }
 
-    const { error } = await this.client
-      .from("notifications")
-      .update(update)
-      .eq("id", id);
+    const { error } = await this.client.from("notifications").update(update).eq("id", id);
     if (error) this.handleError("updateStatus", error);
   }
 
@@ -212,7 +200,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
    * 创建计划通知（延时任务）
    */
   async createScheduledNotification(
-    schedule: ScheduledNotificationDTO,
+    schedule: ScheduledNotificationDTO
   ): Promise<ScheduledNotificationDTO> {
     const { data, error } = await this.client
       .from("scheduled_notifications")
@@ -235,10 +223,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   /**
    * 列出到期待派发的计划通知
    */
-  async listDueSchedules(
-    before: Date,
-    limit: number,
-  ): Promise<ScheduledNotificationDTO[]> {
+  async listDueSchedules(before: Date, limit: number): Promise<ScheduledNotificationDTO[]> {
     const { data, error } = await this.client
       .from("scheduled_notifications")
       .select("*")
@@ -257,7 +242,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
    */
   async updateScheduleStatus(
     scheduleId: string,
-    status: ScheduledNotificationDTO["status"],
+    status: ScheduledNotificationDTO["status"]
   ): Promise<void> {
     const { error } = await this.client
       .from("scheduled_notifications")
@@ -270,9 +255,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   /**
    * 查询通知偏好
    */
-  async getNotificationPreferences(
-    memberId: string,
-  ): Promise<NotificationPreferenceDTO | null> {
+  async getNotificationPreferences(memberId: string): Promise<NotificationPreferenceDTO | null> {
     const { data, error } = await this.client
       .from("notification_preferences")
       .select("*")
@@ -289,9 +272,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   /**
    * 更新或创建通知偏好
    */
-  async upsertNotificationPreferences(
-    preference: NotificationPreferenceDTO,
-  ): Promise<void> {
+  async upsertNotificationPreferences(preference: NotificationPreferenceDTO): Promise<void> {
     const { error } = await this.client.from("notification_preferences").upsert(
       {
         member_id: preference.memberId,
@@ -300,34 +281,25 @@ export class SupabaseNotificationRepository implements NotificationRepository {
         muted_types: preference.mutedTypes ?? null,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "member_id" },
+      { onConflict: "member_id" }
     );
 
     if (error) this.handleError("upsertNotificationPreferences", error);
   }
 
-  async getNotificationRecipient(
-    memberId: string,
-  ): Promise<NotificationRecipientDTO | null> {
+  async getNotificationRecipient(memberId: string): Promise<NotificationRecipientDTO | null> {
     type RecipientRow = {
       id: string;
       user?: { email?: string | null } | { email?: string | null }[] | null;
-      notification_preferences?:
-        | NotificationPreferenceRow
-        | NotificationPreferenceRow[]
-        | null;
+      notification_preferences?: NotificationPreferenceRow | NotificationPreferenceRow[] | null;
     };
 
-    const normalizeRecord = <T>(
-      value: T | T[] | null | undefined,
-    ): T | undefined =>
-        Array.isArray(value) ? value[0] : (value ?? undefined);
+    const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
+      Array.isArray(value) ? value[0] : (value ?? undefined);
 
     const { data, error } = await this.client
       .from("family_members")
-      .select(
-        "id, user:users(email), notification_preferences:notification_preferences(*)",
-      )
+      .select("id, user:users(email), notification_preferences:notification_preferences(*)")
       .eq("id", memberId)
       .maybeSingle();
 
@@ -341,9 +313,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
 
     const record = data as RecipientRow;
     const preferencesRow = normalizeRecord(record.notification_preferences);
-    const preferences = preferencesRow
-      ? this.mapPreferenceRow(preferencesRow)
-      : undefined;
+    const preferences = preferencesRow ? this.mapPreferenceRow(preferencesRow) : undefined;
     const user = normalizeRecord(record.user);
 
     return {
@@ -356,10 +326,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
     };
   }
 
-  async deleteNotification(
-    notificationId: string,
-    memberId: string,
-  ): Promise<void> {
+  async deleteNotification(notificationId: string, memberId: string): Promise<void> {
     const { error } = await this.client
       .from("notifications")
       .delete()
@@ -374,9 +341,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   /**
    * 数据映射：CreateNotificationDTO → NotificationRow
    */
-  private mapNotificationDtoToRow(
-    dto: CreateNotificationDTO,
-  ): Partial<NotificationRow> {
+  private mapNotificationDtoToRow(dto: CreateNotificationDTO): Partial<NotificationRow> {
     return {
       member_id: dto.memberId,
       type: dto.type,
@@ -420,9 +385,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   /**
    * 数据映射：ScheduledNotificationRow → ScheduledNotificationDTO
    */
-  private mapScheduleRow(
-    row: ScheduledNotificationRow,
-  ): ScheduledNotificationDTO {
+  private mapScheduleRow(row: ScheduledNotificationRow): ScheduledNotificationDTO {
     return {
       id: row.id,
       notificationId: row.notification_id ?? undefined,
@@ -437,17 +400,13 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   /**
    * 数据映射：NotificationPreferenceRow → NotificationPreferenceDTO
    */
-  private mapPreferenceRow(
-    row: NotificationPreferenceRow,
-  ): NotificationPreferenceDTO {
+  private mapPreferenceRow(row: NotificationPreferenceRow): NotificationPreferenceDTO {
     return {
       memberId: row.member_id,
       channelPreferences: (row.channel_preferences ??
         undefined) as NotificationPreferenceDTO["channelPreferences"],
-      quietHours: (row.quiet_hours ??
-        undefined) as NotificationPreferenceDTO["quietHours"],
-      mutedTypes: (row.muted_types ??
-        undefined) as NotificationPreferenceDTO["mutedTypes"],
+      quietHours: (row.quiet_hours ?? undefined) as NotificationPreferenceDTO["quietHours"],
+      mutedTypes: (row.muted_types ?? undefined) as NotificationPreferenceDTO["mutedTypes"],
       lastUpdatedAt: new Date(row.updated_at),
     };
   }
@@ -475,9 +434,7 @@ function normalizePushTokens(raw?: string | null): string[] | undefined {
   if (!raw) return undefined;
 
   const parsed = safeParseArray<string>(raw);
-  const tokens = parsed.filter(
-    (value): value is string => typeof value === "string",
-  );
+  const tokens = parsed.filter((value): value is string => typeof value === "string");
 
   return tokens.length > 0 ? tokens : [raw];
 }

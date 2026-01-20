@@ -56,7 +56,5 @@ export type User = Database["public"]["Tables"]["users"]["Row"];
 export type HealthData = Database["public"]["Tables"]["health_data"]["Row"];
 export type MealRecord = Database["public"]["Tables"]["meal_records"]["Row"];
 export type Recipe = Database["public"]["Tables"]["recipes"]["Row"];
-export type InventoryItem =
-  Database["public"]["Tables"]["inventory_items"]["Row"];
-export type ShoppingList =
-  Database["public"]["Tables"]["shopping_lists"]["Row"];
+export type InventoryItem = Database["public"]["Tables"]["inventory_items"]["Row"];
+export type ShoppingList = Database["public"]["Tables"]["shopping_lists"]["Row"];

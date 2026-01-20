@@ -1,9 +1,4 @@
-import {
-  NeonClientManager,
-  keysToCamelCase,
-  keysToSnakeCase,
-  toSnakeCase,
-} from "./neon-client";
+import { NeonClientManager, keysToCamelCase, keysToSnakeCase, toSnakeCase } from "./neon-client";
 
 type WhereClause = Record<string, unknown>;
 type OrderByClause = Record<string, "asc" | "desc">;
@@ -46,7 +41,7 @@ interface CountArgs {
 
 function buildWhereClause(
   where: WhereClause | undefined,
-  startIndex: number = 1,
+  startIndex: number = 1
 ): { sql: string; params: unknown[]; nextIndex: number } {
   if (!where || Object.keys(where).length === 0) {
     return { sql: "", params: [], nextIndex: startIndex };
@@ -78,9 +73,7 @@ function buildWhereClause(
         conditions.push(`${snakeKey} IN (${placeholders})`);
         params.push(...(op.in as unknown[]));
       } else if ("notIn" in op && Array.isArray(op.notIn)) {
-        const placeholders = (op.notIn as unknown[])
-          .map(() => `$${paramIndex++}`)
-          .join(", ");
+        const placeholders = (op.notIn as unknown[]).map(() => `$${paramIndex++}`).join(", ");
         conditions.push(`${snakeKey} NOT IN (${placeholders})`);
         params.push(...(op.notIn as unknown[]));
       } else if ("contains" in op) {
@@ -130,9 +123,7 @@ function buildWhereClause(
   };
 }
 
-function buildOrderByClause(
-  orderBy: OrderByClause | OrderByClause[] | undefined,
-): string {
+function buildOrderByClause(orderBy: OrderByClause | OrderByClause[] | undefined): string {
   if (!orderBy) return "";
 
   const orders = Array.isArray(orderBy) ? orderBy : [orderBy];
@@ -160,11 +151,7 @@ class NeonModelAdapter {
   }
 
   async findFirst<T>(args?: FindManyArgs): Promise<T | null> {
-    const {
-      sql: whereClause,
-      params,
-      nextIndex,
-    } = buildWhereClause(args?.where);
+    const { sql: whereClause, params, nextIndex } = buildWhereClause(args?.where);
     const orderByClause = buildOrderByClause(args?.orderBy);
 
     let query = `SELECT * FROM ${this.tableName} ${whereClause} ${orderByClause}`;
@@ -181,11 +168,7 @@ class NeonModelAdapter {
   }
 
   async findMany<T>(args?: FindManyArgs): Promise<T[]> {
-    const {
-      sql: whereClause,
-      params,
-      nextIndex,
-    } = buildWhereClause(args?.where);
+    const { sql: whereClause, params, nextIndex } = buildWhereClause(args?.where);
     const orderByClause = buildOrderByClause(args?.orderBy);
 
     let query = `SELECT * FROM ${this.tableName} ${whereClause} ${orderByClause}`;
@@ -218,14 +201,10 @@ class NeonModelAdapter {
     return keysToCamelCase<T>(results[0]);
   }
 
-  async createMany(args: {
-    data: Record<string, unknown>[];
-  }): Promise<{ count: number }> {
+  async createMany(args: { data: Record<string, unknown>[] }): Promise<{ count: number }> {
     if (args.data.length === 0) return { count: 0 };
 
-    const snakeDataArray = args.data.map((d) =>
-      keysToSnakeCase<Record<string, unknown>>(d),
-    );
+    const snakeDataArray = args.data.map((d) => keysToSnakeCase<Record<string, unknown>>(d));
     const firstRow = snakeDataArray[0];
     if (!firstRow) return { count: 0 };
     const keys = Object.keys(firstRow);
@@ -251,17 +230,11 @@ class NeonModelAdapter {
     const values = Object.values(snakeData);
 
     const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(", ");
-    const { sql: whereClause, params: whereParams } = buildWhereClause(
-      args.where,
-      keys.length + 1,
-    );
+    const { sql: whereClause, params: whereParams } = buildWhereClause(args.where, keys.length + 1);
 
     const query = `UPDATE ${this.tableName} SET ${setClause}, updated_at = NOW() ${whereClause} RETURNING *`;
 
-    const results = await NeonClientManager.query<T>(query, [
-      ...values,
-      ...whereParams,
-    ]);
+    const results = await NeonClientManager.query<T>(query, [...values, ...whereParams]);
     return keysToCamelCase<T>(results[0]);
   }
 
@@ -274,10 +247,7 @@ class NeonModelAdapter {
     const values = Object.values(snakeData);
 
     const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(", ");
-    const { sql: whereClause, params: whereParams } = buildWhereClause(
-      args.where,
-      keys.length + 1,
-    );
+    const { sql: whereClause, params: whereParams } = buildWhereClause(args.where, keys.length + 1);
 
     const query = `UPDATE ${this.tableName} SET ${setClause}, updated_at = NOW() ${whereClause}`;
 
@@ -305,10 +275,7 @@ class NeonModelAdapter {
     const { sql: whereClause, params } = buildWhereClause(args?.where);
     const query = `SELECT COUNT(*)::int as count FROM ${this.tableName} ${whereClause}`;
 
-    const results = await NeonClientManager.query<{ count: number }>(
-      query,
-      params,
-    );
+    const results = await NeonClientManager.query<{ count: number }>(query, params);
     return results[0]?.count ?? 0;
   }
 

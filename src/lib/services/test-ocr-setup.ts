@@ -53,9 +53,7 @@ async function testOcrSetup() {
   const hasBlobToken = !!process.env.BLOB_READ_WRITE_TOKEN;
 
   console.log(`   DATABASE_URL: ${hasDatabaseUrl ? "✅ 已配置" : "❌ 未配置"}`);
-  console.log(
-    `   BLOB_READ_WRITE_TOKEN: ${hasBlobToken ? "✅ 已配置" : "❌ 未配置"}`,
-  );
+  console.log(`   BLOB_READ_WRITE_TOKEN: ${hasBlobToken ? "✅ 已配置" : "❌ 未配置"}`);
 
   if (!hasDatabaseUrl) {
     console.log("\n   ⚠️  请设置 DATABASE_URL 环境变量");

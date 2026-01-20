@@ -55,19 +55,13 @@ const MEAL_TYPE_LABELS: Record<MealType, string> = {
   SNACK: "加餐",
 };
 
-const DIFFICULTY_LABELS: Record<
-  NonNullable<FavoriteMeal["difficulty"]>,
-  string
-> = {
+const DIFFICULTY_LABELS: Record<NonNullable<FavoriteMeal["difficulty"]>, string> = {
   EASY: "简单",
   MEDIUM: "中等",
   HARD: "困难",
 };
 
-const DIFFICULTY_COLORS: Record<
-  NonNullable<FavoriteMeal["difficulty"]>,
-  string
-> = {
+const DIFFICULTY_COLORS: Record<NonNullable<FavoriteMeal["difficulty"]>, string> = {
   EASY: "bg-green-100 text-green-800",
   MEDIUM: "bg-yellow-100 text-yellow-800",
   HARD: "bg-red-100 text-red-800",
@@ -83,9 +77,7 @@ export function FavoriteMeals({
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [sortBy, setSortBy] = useState<"date" | "calories" | "cookingTime">(
-    "date",
-  );
+  const [sortBy, setSortBy] = useState<"date" | "calories" | "cookingTime">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
@@ -101,7 +93,7 @@ export function FavoriteMeals({
       const apiSortBy = sortBy === "date" ? "favoritedAt" : "name";
       const memberParam = memberId ? `memberId=${memberId}&` : "";
       const response = await fetch(
-        `/api/recipes/favorites?${memberParam}page=1&limit=50&sortBy=${apiSortBy}&sortOrder=${sortOrder}`,
+        `/api/recipes/favorites?${memberParam}page=1&limit=50&sortBy=${apiSortBy}&sortOrder=${sortOrder}`
       );
       if (!response.ok) {
         throw new Error("加载收藏列表失败");
@@ -144,8 +136,7 @@ export function FavoriteMeals({
           carbs: null,
           fat: null,
           servings: favorite.recipe.servings ?? null,
-          cookingTime:
-            favorite.recipe.cookTime ?? favorite.recipe.prepTime ?? null,
+          cookingTime: favorite.recipe.cookTime ?? favorite.recipe.prepTime ?? null,
           difficulty,
           mealType: "DINNER",
           date: new Date(favorite.favoritedAt),
@@ -167,10 +158,9 @@ export function FavoriteMeals({
   const handleRemoveFavorite = async (meal: FavoriteMeal) => {
     try {
       const memberParam = memberId ? `?memberId=${memberId}` : "";
-      const response = await fetch(
-        `/api/recipes/${meal.recipeId}/favorite${memberParam}`,
-        { method: "DELETE" },
-      );
+      const response = await fetch(`/api/recipes/${meal.recipeId}/favorite${memberParam}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         throw new Error("取消收藏失败");
@@ -186,10 +176,7 @@ export function FavoriteMeals({
 
   const filteredAndSorted = favorites
     .filter((meal) => {
-      if (
-        searchTerm &&
-        !meal.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ) {
+      if (searchTerm && !meal.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
       if (filterType !== "all" && meal.mealType !== filterType) {
@@ -205,20 +192,20 @@ export function FavoriteMeals({
       let bValue = 0;
 
       switch (sortBy) {
-      case "date":
-        aValue = a.date.getTime();
-        bValue = b.date.getTime();
-        break;
-      case "calories":
-        aValue = a.calories ?? 0;
-        bValue = b.calories ?? 0;
-        break;
-      case "cookingTime":
-        aValue = a.cookingTime ?? 0;
-        bValue = b.cookingTime ?? 0;
-        break;
-      default:
-        return 0;
+        case "date":
+          aValue = a.date.getTime();
+          bValue = b.date.getTime();
+          break;
+        case "calories":
+          aValue = a.calories ?? 0;
+          bValue = b.calories ?? 0;
+          break;
+        case "cookingTime":
+          aValue = a.cookingTime ?? 0;
+          bValue = b.cookingTime ?? 0;
+          break;
+        default:
+          return 0;
       }
 
       return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
@@ -246,19 +233,14 @@ export function FavoriteMeals({
   };
 
   const renderGridView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {filteredAndSorted.map((meal) => (
-        <Card
-          key={meal.id}
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-        >
+        <Card key={meal.id} className="cursor-pointer transition-shadow hover:shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="text-lg line-clamp-1">
-                  {meal.name}
-                </CardTitle>
-                <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                <CardTitle className="line-clamp-1 text-lg">{meal.name}</CardTitle>
+                <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                   {meal.description || "暂无描述"}
                 </p>
               </div>
@@ -269,7 +251,7 @@ export function FavoriteMeals({
                   e.stopPropagation();
                   handleRemoveFavorite(meal);
                 }}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                className="text-red-500 hover:bg-red-50 hover:text-red-700"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -279,12 +261,8 @@ export function FavoriteMeals({
           <CardContent className="space-y-3">
             {/* 图片 */}
             {meal.image && (
-              <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
-                <img
-                  src={meal.image}
-                  alt={meal.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="h-32 w-full overflow-hidden rounded-lg bg-gray-100">
+                <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />
               </div>
             )}
 
@@ -294,15 +272,13 @@ export function FavoriteMeals({
                 {MEAL_TYPE_LABELS[meal.mealType]}
               </Badge>
               {meal.difficulty && (
-                <Badge
-                  className={`text-xs ${DIFFICULTY_COLORS[meal.difficulty]}`}
-                >
+                <Badge className={`text-xs ${DIFFICULTY_COLORS[meal.difficulty]}`}>
                   {DIFFICULTY_LABELS[meal.difficulty]}
                 </Badge>
               )}
               {meal.cookingTime && (
                 <Badge variant="outline" className="text-xs">
-                  <Clock className="h-3 w-3 mr-1" />
+                  <Clock className="mr-1 h-3 w-3" />
                   {meal.cookingTime}分钟
                 </Badge>
               )}
@@ -311,27 +287,19 @@ export function FavoriteMeals({
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">热量</span>
-                <span className="font-medium">
-                  {formatMetric(meal.calories, " kcal")}
-                </span>
+                <span className="font-medium">{formatMetric(meal.calories, " kcal")}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">蛋白质</span>
-                <span className="font-medium">
-                  {formatMetric(meal.protein, "g")}
-                </span>
+                <span className="font-medium">{formatMetric(meal.protein, "g")}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">碳水</span>
-                <span className="font-medium">
-                  {formatMetric(meal.carbs, "g")}
-                </span>
+                <span className="font-medium">{formatMetric(meal.carbs, "g")}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">脂肪</span>
-                <span className="font-medium">
-                  {formatMetric(meal.fat, "g")}
-                </span>
+                <span className="font-medium">{formatMetric(meal.fat, "g")}</span>
               </div>
             </div>
 
@@ -367,10 +335,8 @@ export function FavoriteMeals({
               <div className="flex items-center gap-2">
                 <select
                   value={quickAddMealType}
-                  onChange={(event) =>
-                    setQuickAddMealType(event.target.value as MealType)
-                  }
-                  className="flex-1 px-2 py-1 border border-gray-200 rounded-md text-xs"
+                  onChange={(event) => setQuickAddMealType(event.target.value as MealType)}
+                  className="flex-1 rounded-md border border-gray-200 px-2 py-1 text-xs"
                 >
                   {Object.entries(MEAL_TYPE_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -400,28 +366,22 @@ export function FavoriteMeals({
   const renderListView = () => (
     <div className="space-y-3">
       {filteredAndSorted.map((meal) => (
-        <Card key={meal.id} className="hover:shadow-md transition-shadow">
+        <Card key={meal.id} className="transition-shadow hover:shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-4">
               {/* 图片 */}
               {meal.image && (
-                <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                  <img
-                    src={meal.image}
-                    alt={meal.name}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                  <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />
                 </div>
               )}
 
               {/* 主要信息 */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between mb-2">
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-lg line-clamp-1">
-                      {meal.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-1">
+                    <h3 className="line-clamp-1 text-lg font-semibold">{meal.name}</h3>
+                    <p className="line-clamp-1 text-sm text-gray-600">
                       {meal.description || "暂无描述"}
                     </p>
                   </div>
@@ -429,7 +389,7 @@ export function FavoriteMeals({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRemoveFavorite(meal)}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                    className="flex-shrink-0 text-red-500 hover:bg-red-50 hover:text-red-700"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -460,9 +420,7 @@ export function FavoriteMeals({
                     {MEAL_TYPE_LABELS[meal.mealType]}
                   </Badge>
                   {meal.difficulty && (
-                    <Badge
-                      className={`text-xs ${DIFFICULTY_COLORS[meal.difficulty]}`}
-                    >
+                    <Badge className={`text-xs ${DIFFICULTY_COLORS[meal.difficulty]}`}>
                       {DIFFICULTY_LABELS[meal.difficulty]}
                     </Badge>
                   )}
@@ -490,7 +448,7 @@ export function FavoriteMeals({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
         <span className="ml-2 text-gray-600">加载收藏列表...</span>
       </div>
     );
@@ -509,8 +467,8 @@ export function FavoriteMeals({
         {/* 搜索和筛选 */}
         <div className="space-y-4">
           <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
                 placeholder="搜索收藏的食谱..."
                 value={searchTerm}
@@ -522,11 +480,7 @@ export function FavoriteMeals({
               variant="outline"
               onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
             >
-              {viewMode === "grid" ? (
-                <List className="h-4 w-4" />
-              ) : (
-                <Grid className="h-4 w-4" />
-              )}
+              {viewMode === "grid" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
             </Button>
           </div>
 
@@ -535,7 +489,7 @@ export function FavoriteMeals({
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-1 border border-gray-200 rounded-md text-sm"
+              className="rounded-md border border-gray-200 px-3 py-1 text-sm"
             >
               <option value="all">全部餐型</option>
               <option value="BREAKFAST">早餐</option>
@@ -547,7 +501,7 @@ export function FavoriteMeals({
             <select
               value={filterDifficulty}
               onChange={(e) => setFilterDifficulty(e.target.value)}
-              className="px-3 py-1 border border-gray-200 rounded-md text-sm"
+              className="rounded-md border border-gray-200 px-3 py-1 text-sm"
             >
               <option value="all">全部难度</option>
               <option value="EASY">简单</option>
@@ -558,7 +512,7 @@ export function FavoriteMeals({
             <select
               value={quickAddMealType}
               onChange={(e) => setQuickAddMealType(e.target.value as MealType)}
-              className="px-3 py-1 border border-gray-200 rounded-md text-sm"
+              className="rounded-md border border-gray-200 px-3 py-1 text-sm"
             >
               {Object.entries(MEAL_TYPE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -618,9 +572,9 @@ export function FavoriteMeals({
 
         {/* 收藏列表 */}
         {filteredAndSorted.length === 0 ? (
-          <div className="text-center py-12">
-            <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="py-12 text-center">
+            <Heart className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+            <h3 className="mb-2 text-lg font-medium text-gray-900">
               {searchTerm || filterType !== "all" || filterDifficulty !== "all"
                 ? "没有找到匹配的收藏"
                 : "还没有收藏任何食谱"}

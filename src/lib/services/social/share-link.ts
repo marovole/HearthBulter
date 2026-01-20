@@ -33,20 +33,15 @@ export async function generateInviteCode(length: number = 8): Promise<string> {
  * 生成分享链接
  */
 export function generateShareUrl(token: string, baseUrl?: string): string {
-  const base =
-    baseUrl || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const base = baseUrl || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${base}/share/${token}`;
 }
 
 /**
  * 生成邀请链接
  */
-export function generateInviteUrl(
-  inviteCode: string,
-  baseUrl?: string,
-): string {
-  const base =
-    baseUrl || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+export function generateInviteUrl(inviteCode: string, baseUrl?: string): string {
+  const base = baseUrl || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${base}/invite/${inviteCode}`;
 }
 
@@ -72,7 +67,7 @@ export function isValidInviteCode(code: string): boolean {
 export function generateParametrizedShareUrl(
   token: string,
   params: Record<string, string>,
-  baseUrl?: string,
+  baseUrl?: string
 ): string {
   const base = generateShareUrl(token, baseUrl);
   const url = new URL(base);
@@ -125,10 +120,7 @@ export function extractInviteCodeFromUrl(url: string): string | null {
 /**
  * 生成短链接（可选功能）
  */
-export async function generateShortUrl(
-  longUrl: string,
-  customAlias?: string,
-): Promise<string> {
+export async function generateShortUrl(longUrl: string, customAlias?: string): Promise<string> {
   // 这里可以集成短链接服务，如 bit.ly、tinyurl 等
   // 暂时返回原链接
   return longUrl;
@@ -148,7 +140,7 @@ export function generateQRCodeData(url: string): string {
 export function generateSocialShareUrls(
   shareUrl: string,
   title: string,
-  description: string,
+  description: string
 ): Record<string, string> {
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
@@ -182,7 +174,7 @@ export function generateOpenGraphMetadata(
   title: string,
   description: string,
   imageUrl?: string,
-  url?: string,
+  url?: string
 ): Record<string, string> {
   return {
     "og:title": title,

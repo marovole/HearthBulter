@@ -52,12 +52,7 @@ export const healthDataSchema = z.object({
     .max(300, "体重不能超过300kg")
     .nullable()
     .optional(),
-  bodyFat: z
-    .number()
-    .min(3, "体脂率不能低于3%")
-    .max(50, "体脂率不能超过50%")
-    .nullable()
-    .optional(),
+  bodyFat: z.number().min(3, "体脂率不能低于3%").max(50, "体脂率不能超过50%").nullable().optional(),
   muscleMass: z
     .number()
     .min(0, "肌肉量不能为负数")
@@ -118,8 +113,7 @@ export function validateHealthData(data: HealthDataInput): ValidationResult {
     (data.weight !== null && data.weight !== undefined) ||
     (data.bodyFat !== null && data.bodyFat !== undefined) ||
     (data.muscleMass !== null && data.muscleMass !== undefined) ||
-    (data.bloodPressureSystolic !== null &&
-      data.bloodPressureSystolic !== undefined) ||
+    (data.bloodPressureSystolic !== null && data.bloodPressureSystolic !== undefined) ||
     (data.heartRate !== null && data.heartRate !== undefined);
 
   if (!hasAnyData) {
@@ -135,16 +129,13 @@ export function validateHealthData(data: HealthDataInput): ValidationResult {
  */
 export async function detectAnomaly(
   memberId: string,
-  newData: HealthDataInput,
+  newData: HealthDataInput
 ): Promise<AnomalyDetectionResult> {
   try {
-    const records = await convexClient.query<Doc<"healthData">[]>(
-      api.health.getMetrics,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        limit: 1,
-      },
-    );
+    const records = await convexClient.query<Doc<"healthData">[]>(api.health.getMetrics, {
+      memberId: memberId as Id<"familyMembers">,
+      limit: 1,
+    });
 
     const lastRecord = records[0];
     if (!lastRecord) {
@@ -152,26 +143,21 @@ export async function detectAnomaly(
     }
 
     const warnings: string[] = [];
-    const measuredAt = newData.measuredAt
-      ? new Date(newData.measuredAt)
-      : new Date();
-    const daysDiff = Math.abs(
-      differenceInDays(measuredAt, new Date(lastRecord.measuredAt)),
-    );
+    const measuredAt = newData.measuredAt ? new Date(newData.measuredAt) : new Date();
+    const daysDiff = Math.abs(differenceInDays(measuredAt, new Date(lastRecord.measuredAt)));
 
     // 检测体重异常变化（>5kg/天）
     if (newData.weight && lastRecord.weight) {
       const weightChange = Math.abs(newData.weight - lastRecord.weight);
-      const weightChangePerDay =
-        daysDiff > 0 ? weightChange / daysDiff : weightChange;
+      const weightChangePerDay = daysDiff > 0 ? weightChange / daysDiff : weightChange;
 
       if (weightChangePerDay > 5) {
         warnings.push(
-          `体重变化异常：${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)}kg，请确认数据准确性`,
+          `体重变化异常：${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)}kg，请确认数据准确性`
         );
       } else if (weightChangePerDay > 3) {
         warnings.push(
-          `体重变化较大：${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)}kg，请确认是否正常`,
+          `体重变化较大：${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)}kg，请确认是否正常`
         );
       }
     }
@@ -179,21 +165,18 @@ export async function detectAnomaly(
     // 检测体脂率异常变化（>5%/天）
     if (newData.bodyFat && lastRecord.bodyFat) {
       const bodyFatChange = Math.abs(newData.bodyFat - lastRecord.bodyFat);
-      const bodyFatChangePerDay =
-        daysDiff > 0 ? bodyFatChange / daysDiff : bodyFatChange;
+      const bodyFatChangePerDay = daysDiff > 0 ? bodyFatChange / daysDiff : bodyFatChange;
 
       if (bodyFatChangePerDay > 5) {
         warnings.push(
-          `体脂率变化异常：${bodyFatChange > 0 ? "+" : ""}${bodyFatChange.toFixed(1)}%，请确认数据准确性`,
+          `体脂率变化异常：${bodyFatChange > 0 ? "+" : ""}${bodyFatChange.toFixed(1)}%，请确认数据准确性`
         );
       }
     }
 
     // 检测血压异常变化
     if (newData.bloodPressureSystolic && lastRecord.bloodPressureSystolic) {
-      const bpChange = Math.abs(
-        newData.bloodPressureSystolic - lastRecord.bloodPressureSystolic,
-      );
+      const bpChange = Math.abs(newData.bloodPressureSystolic - lastRecord.bloodPressureSystolic);
       if (bpChange > 30) {
         warnings.push(`收缩压变化较大：${bpChange}mmHg，请确认数据准确性`);
       }
@@ -228,7 +211,7 @@ export async function detectAnomaly(
  */
 export async function validateAndDetectAnomaly(
   memberId: string,
-  data: HealthDataInput,
+  data: HealthDataInput
 ): Promise<ValidationResult & { anomaly?: AnomalyDetectionResult }> {
   const validation = validateHealthData(data);
 

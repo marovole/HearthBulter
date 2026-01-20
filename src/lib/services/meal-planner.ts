@@ -6,11 +6,7 @@
 
 import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
-import {
-  MacroCalculator,
-  type MealMacroTargets,
-  type MemberMacroInput,
-} from "./macro-calculator";
+import { MacroCalculator, type MealMacroTargets, type MemberMacroInput } from "./macro-calculator";
 import { nutritionCalculator } from "./nutrition-calculator";
 import type { GoalType, MealType } from "@/lib/repositories/types/meal-plan";
 import { addDays, startOfDay } from "date-fns";
@@ -64,10 +60,7 @@ interface FavoriteMealCandidate {
  * 季节性食材映射
  * 定义每个季节的时令食材关键词
  */
-const SEASONAL_FOODS: Record<
-  "SPRING" | "SUMMER" | "AUTUMN" | "WINTER",
-  string[]
-> = {
+const SEASONAL_FOODS: Record<"SPRING" | "SUMMER" | "AUTUMN" | "WINTER", string[]> = {
   SPRING: ["春笋", "菠菜", "韭菜", "芹菜", "莴笋", "豌豆"],
   SUMMER: ["西瓜", "黄瓜", "番茄", "茄子", "冬瓜", "苦瓜", "丝瓜"],
   AUTUMN: ["南瓜", "红薯", "山药", "栗子", "莲藕", "萝卜"],
@@ -87,23 +80,16 @@ function getCurrentSeason(): "SPRING" | "SUMMER" | "AUTUMN" | "WINTER" {
 
 const normalizeFoodLabel = (value: string) => value.trim().toLowerCase();
 
-function findFoodMatch(
-  foods: Doc<"foods">[],
-  foodName: string,
-): Doc<"foods"> | undefined {
+function findFoodMatch(foods: Doc<"foods">[], foodName: string): Doc<"foods"> | undefined {
   const target = normalizeFoodLabel(foodName);
   return foods.find((food) => {
     const candidates = [food.name, food.nameEn ?? "", ...food.aliases].filter(
-      (candidate) => candidate.trim().length > 0,
+      (candidate) => candidate.trim().length > 0
     );
 
     return candidates.some((candidate) => {
       const normalized = normalizeFoodLabel(candidate);
-      return (
-        normalized === target ||
-        normalized.includes(target) ||
-        target.includes(normalized)
-      );
+      return normalized === target || normalized.includes(target) || target.includes(normalized);
     });
   });
 }
@@ -120,23 +106,14 @@ export class MealPlanner {
     try {
       // 根据餐食类型确定文件名
       const fileName = `${mealType.toLowerCase()}.json`;
-      const filePath = join(
-        process.cwd(),
-        "src",
-        "data",
-        "meal-templates",
-        fileName,
-      );
+      const filePath = join(process.cwd(), "src", "data", "meal-templates", fileName);
 
       // 读取 JSON 文件
       const fileContent = readFileSync(filePath, "utf-8");
       const templatesJSON: MealTemplateJSON[] = JSON.parse(fileContent);
 
       const templates: MealTemplate[] = [];
-      const foods = await convexClient.query<Doc<"foods">[]>(
-        api.budget.getFoods,
-        { limit: 1000 },
-      );
+      const foods = await convexClient.query<Doc<"foods">[]>(api.budget.getFoods, { limit: 1000 });
 
       for (const templateJSON of templatesJSON) {
         const ingredientFoodIds: Array<{ foodId: string; amount: number }> = [];
@@ -158,7 +135,7 @@ export class MealPlanner {
             ingredientFoodIds.map((ing) => ({
               foodId: ing.foodId,
               amount: ing.amount,
-            })),
+            }))
           );
 
           templates.push({
@@ -189,34 +166,25 @@ export class MealPlanner {
    * 获取成员的过敏食材列表
    */
   private async getMemberAllergies(memberId: string): Promise<string[]> {
-    const allergies = await convexClient.query<Doc<"allergies">[]>(
-      api.health.listAllergies,
-      { memberId: memberId as Id<"familyMembers"> },
-    );
+    const allergies = await convexClient.query<Doc<"allergies">[]>(api.health.listAllergies, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     return allergies
-      .filter(
-        (allergy) => !allergy.deletedAt && allergy.allergenType === "FOOD",
-      )
+      .filter((allergy) => !allergy.deletedAt && allergy.allergenType === "FOOD")
       .map((allergy) => allergy.allergenName);
   }
 
   /**
    * 检查食材是否过敏
    */
-  private isAllergenic(
-    foodName: string,
-    foodAliases: string[],
-    allergies: string[],
-  ): boolean {
+  private isAllergenic(foodName: string, foodAliases: string[], allergies: string[]): boolean {
     const foodNameLower = foodName.toLowerCase();
 
     return allergies.some((allergen) => {
       const allergenLower = allergen.toLowerCase();
       if (foodNameLower.includes(allergenLower)) return true;
-      return foodAliases.some((alias) =>
-        alias.toLowerCase().includes(allergenLower),
-      );
+      return foodAliases.some((alias) => alias.toLowerCase().includes(allergenLower));
     });
   }
 
@@ -225,11 +193,9 @@ export class MealPlanner {
    */
   private filterAllergenicFoods(
     foods: Array<{ id: string; name: string; aliases: string[] }>,
-    allergies: string[],
+    allergies: string[]
   ): Array<{ id: string; name: string; aliases: string[] }> {
-    return foods.filter(
-      (food) => !this.isAllergenic(food.name, food.aliases, allergies),
-    );
+    return foods.filter((food) => !this.isAllergenic(food.name, food.aliases, allergies));
   }
 
   private normalizeMealTypes(raw?: string[] | null): MealType[] {
@@ -243,12 +209,7 @@ export class MealPlanner {
   }
 
   private normalizeGoalType(raw: string): GoalType {
-    const allowed: GoalType[] = [
-      "LOSE_WEIGHT",
-      "GAIN_MUSCLE",
-      "MAINTAIN",
-      "IMPROVE_HEALTH",
-    ];
+    const allowed: GoalType[] = ["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN", "IMPROVE_HEALTH"];
 
     if (allowed.includes(raw as GoalType)) {
       return raw as GoalType;
@@ -259,16 +220,14 @@ export class MealPlanner {
 
   private pickFavoriteMeal(
     candidates: FavoriteMealCandidate[],
-    usedRecipeIds: Set<string>,
+    usedRecipeIds: Set<string>
   ): FavoriteMealCandidate | null {
-    const candidate = candidates.find(
-      (item) => !usedRecipeIds.has(item.recipeId),
-    );
+    const candidate = candidates.find((item) => !usedRecipeIds.has(item.recipeId));
     return candidate || null;
   }
 
   private async getFavoriteMealsByType(
-    memberId: string,
+    memberId: string
   ): Promise<Record<MealType, FavoriteMealCandidate[]>> {
     const favoritesByType: Record<MealType, FavoriteMealCandidate[]> = {
       BREAKFAST: [],
@@ -311,7 +270,7 @@ export class MealPlanner {
         ingredients.map((ingredient) => ({
           foodId: ingredient.foodId,
           amount: ingredient.amount,
-        })),
+        }))
       );
 
       const candidate: Omit<FavoriteMealCandidate, "mealType"> = {
@@ -343,7 +302,7 @@ export class MealPlanner {
   private getSeasonalScore(
     foodName: string,
     foodAliases: string[],
-    season: "SPRING" | "SUMMER" | "AUTUMN" | "WINTER",
+    season: "SPRING" | "SUMMER" | "AUTUMN" | "WINTER"
   ): number {
     const seasonalFoods = SEASONAL_FOODS[season];
     const foodNameLower = foodName.toLowerCase();
@@ -354,11 +313,7 @@ export class MealPlanner {
       if (foodNameLower.includes(seasonalFood.toLowerCase())) {
         return 10; // 高优先级
       }
-      if (
-        aliases.some((alias) =>
-          alias.toLowerCase().includes(seasonalFood.toLowerCase()),
-        )
-      ) {
+      if (aliases.some((alias) => alias.toLowerCase().includes(seasonalFood.toLowerCase()))) {
         return 10;
       }
     }
@@ -373,14 +328,11 @@ export class MealPlanner {
   private calculateNutritionDifference(
     actual: { calories: number; protein: number; carbs: number; fat: number },
     target: { calories: number; protein: number; carbs: number; fat: number },
-    tolerance: number = 0.05, // 5% 误差容忍度
+    tolerance: number = 0.05 // 5% 误差容忍度
   ): number {
-    const calorieDiff =
-      Math.abs(actual.calories - target.calories) / target.calories;
-    const proteinDiff =
-      Math.abs(actual.protein - target.protein) / Math.max(target.protein, 1);
-    const carbsDiff =
-      Math.abs(actual.carbs - target.carbs) / Math.max(target.carbs, 1);
+    const calorieDiff = Math.abs(actual.calories - target.calories) / target.calories;
+    const proteinDiff = Math.abs(actual.protein - target.protein) / Math.max(target.protein, 1);
+    const carbsDiff = Math.abs(actual.carbs - target.carbs) / Math.max(target.carbs, 1);
     const fatDiff = Math.abs(actual.fat - target.fat) / Math.max(target.fat, 1);
 
     // 如果超过容忍度，返回较大的差异值
@@ -404,12 +356,10 @@ export class MealPlanner {
     target: { calories: number; protein: number; carbs: number; fat: number },
     allergies: string[],
     season: "SPRING" | "SUMMER" | "AUTUMN" | "WINTER",
-    usedTemplateIds: Set<string>, // 已使用的模板ID，避免重复
+    usedTemplateIds: Set<string> // 已使用的模板ID，避免重复
   ): MealTemplate | null {
     // 过滤掉已使用的模板
-    const availableTemplates = templates.filter(
-      (t) => !usedTemplateIds.has(t.id),
-    );
+    const availableTemplates = templates.filter((t) => !usedTemplateIds.has(t.id));
 
     if (availableTemplates.length === 0) {
       return null;
@@ -418,10 +368,7 @@ export class MealPlanner {
     // 对模板进行评分排序
     const scoredTemplates = availableTemplates.map((template) => {
       // 计算营养差异
-      const nutritionDiff = this.calculateNutritionDifference(
-        template.nutrition,
-        target,
-      );
+      const nutritionDiff = this.calculateNutritionDifference(template.nutrition, target);
 
       // 计算季节性优先级
       const seasonalScore = template.ingredients.reduce<number>(
@@ -430,7 +377,7 @@ export class MealPlanner {
           // 这里简化处理，假设食材已包含季节性信息
           return score;
         },
-        0,
+        0
       );
 
       // 综合评分（营养差异越小越好，季节性分数越高越好）
@@ -455,7 +402,7 @@ export class MealPlanner {
     memberId: string,
     usedTemplateIds: Set<string>,
     favoriteMealsByType: Record<MealType, FavoriteMealCandidate[]>,
-    usedFavoriteRecipeIds: Set<string>,
+    usedFavoriteRecipeIds: Set<string>
   ): Promise<
     Array<{
       date: Date;
@@ -484,25 +431,25 @@ export class MealPlanner {
         fat: number;
       };
       switch (mealType) {
-      case "BREAKFAST":
-        target = mealTargets.breakfast;
-        break;
-      case "LUNCH":
-        target = mealTargets.lunch;
-        break;
-      case "DINNER":
-        target = mealTargets.dinner;
-        break;
-      case "SNACK":
-        target = mealTargets.snack;
-        break;
-      default:
-        throw new Error(`未知的餐食类型: ${mealType}`);
+        case "BREAKFAST":
+          target = mealTargets.breakfast;
+          break;
+        case "LUNCH":
+          target = mealTargets.lunch;
+          break;
+        case "DINNER":
+          target = mealTargets.dinner;
+          break;
+        case "SNACK":
+          target = mealTargets.snack;
+          break;
+        default:
+          throw new Error(`未知的餐食类型: ${mealType}`);
       }
 
       const favoriteMeal = this.pickFavoriteMeal(
         favoriteMealsByType[mealType],
-        usedFavoriteRecipeIds,
+        usedFavoriteRecipeIds
       );
 
       if (favoriteMeal) {
@@ -519,9 +466,7 @@ export class MealPlanner {
 
       // 加载对应类型的模板
       const templates = await this.loadTemplates(mealType);
-      const suitableTemplates = templates.filter((t) =>
-        t.suitableGoals.includes(goalType),
-      );
+      const suitableTemplates = templates.filter((t) => t.suitableGoals.includes(goalType));
 
       // 选择最佳模板
       const selectedTemplate = this.selectBestTemplate(
@@ -529,7 +474,7 @@ export class MealPlanner {
         target,
         allergies,
         season,
-        usedTemplateIds,
+        usedTemplateIds
       );
 
       if (selectedTemplate) {
@@ -552,7 +497,7 @@ export class MealPlanner {
   async generateMealPlan(
     memberId: string,
     days: number = 7,
-    startDate?: Date,
+    startDate?: Date
   ): Promise<{
     planId: string;
     memberId: string;
@@ -577,10 +522,9 @@ export class MealPlanner {
     }>;
   }> {
     // 获取成员信息
-    const member = await convexClient.query<Doc<"familyMembers"> | null>(
-      api.members.getById,
-      { memberId: memberId as Id<"familyMembers"> },
-    );
+    const member = await convexClient.query<Doc<"familyMembers"> | null>(api.members.getById, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     if (!member || member.deletedAt) {
       throw new Error("成员不存在");
@@ -590,10 +534,10 @@ export class MealPlanner {
       throw new Error("成员体重或身高信息不完整");
     }
 
-    const goals = await convexClient.query<Doc<"healthGoals">[]>(
-      api.health.listGoals,
-      { memberId: memberId as Id<"familyMembers">, includeInactive: false },
-    );
+    const goals = await convexClient.query<Doc<"healthGoals">[]>(api.health.listGoals, {
+      memberId: memberId as Id<"familyMembers">,
+      includeInactive: false,
+    });
 
     const activeGoal = goals[0];
     if (!activeGoal) {
@@ -606,8 +550,7 @@ export class MealPlanner {
       : "MODERATE";
 
     const goalType = this.normalizeGoalType(activeGoal.goalType);
-    const gender: "MALE" | "FEMALE" =
-      member.gender === "FEMALE" ? "FEMALE" : "MALE";
+    const gender: "MALE" | "FEMALE" = member.gender === "FEMALE" ? "FEMALE" : "MALE";
 
     const macroInput: MemberMacroInput = {
       weight: member.weight,
@@ -624,9 +567,7 @@ export class MealPlanner {
     const macroTargets = MacroCalculator.calculateFullMacroTargets(macroInput);
 
     // 确定开始日期
-    const planStartDate = startDate
-      ? startOfDay(startDate)
-      : startOfDay(new Date());
+    const planStartDate = startDate ? startOfDay(startDate) : startOfDay(new Date());
     const planEndDate = addDays(planStartDate, days - 1);
 
     // 生成每日餐食
@@ -644,7 +585,7 @@ export class MealPlanner {
         memberId,
         usedTemplateIds,
         favoriteMealsByType,
-        usedFavoriteRecipeIds,
+        usedFavoriteRecipeIds
       );
       allMeals.push(...dailyMeals);
     }
@@ -705,7 +646,7 @@ export class MealPlanner {
    */
   async replaceMeal(
     mealId: string,
-    memberId: string,
+    memberId: string
   ): Promise<{
     id: string;
     date: Date;
@@ -718,28 +659,26 @@ export class MealPlanner {
       fat: number;
     };
   }> {
-    const currentMeal = await convexClient.query<Doc<"meals"> | null>(
-      api.meals.getMealById,
-      { mealId: mealId as Id<"meals"> },
-    );
+    const currentMeal = await convexClient.query<Doc<"meals"> | null>(api.meals.getMealById, {
+      mealId: mealId as Id<"meals">,
+    });
 
     if (!currentMeal) {
       throw new Error("餐食不存在");
     }
 
-    const plan = await convexClient.query<Doc<"mealPlans"> | null>(
-      api.meals.getPlanById,
-      { planId: currentMeal.planId },
-    );
+    const plan = await convexClient.query<Doc<"mealPlans"> | null>(api.meals.getPlanById, {
+      planId: currentMeal.planId,
+    });
 
     if (!plan || plan.memberId !== (memberId as Id<"familyMembers">)) {
       throw new Error("无权限替换此餐食");
     }
 
-    const goals = await convexClient.query<Doc<"healthGoals">[]>(
-      api.health.listGoals,
-      { memberId: memberId as Id<"familyMembers">, includeInactive: false },
-    );
+    const goals = await convexClient.query<Doc<"healthGoals">[]>(api.health.listGoals, {
+      memberId: memberId as Id<"familyMembers">,
+      includeInactive: false,
+    });
 
     const activeGoal = goals[0];
     if (!activeGoal) {
@@ -759,16 +698,14 @@ export class MealPlanner {
     const season = getCurrentSeason();
 
     const templates = await this.loadTemplates(currentMeal.mealType);
-    const suitableTemplates = templates.filter((t) =>
-      t.suitableGoals.includes(goalType),
-    );
+    const suitableTemplates = templates.filter((t) => t.suitableGoals.includes(goalType));
 
     const replacementTemplate = this.selectBestTemplate(
       suitableTemplates,
       targetNutrition,
       allergies,
       season,
-      new Set(),
+      new Set()
     );
 
     if (!replacementTemplate) {
@@ -805,7 +742,7 @@ export class MealPlanner {
    * 将活动系数映射到活动级别
    */
   private mapActivityFactorToLevel(
-    activityFactor: number,
+    activityFactor: number
   ): "SEDENTARY" | "LIGHT" | "MODERATE" | "ACTIVE" | "VERY_ACTIVE" {
     if (activityFactor <= 1.2) return "SEDENTARY";
     if (activityFactor <= 1.375) return "LIGHT";

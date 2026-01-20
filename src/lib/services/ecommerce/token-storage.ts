@@ -68,9 +68,7 @@ export async function decryptToken(encryptedToken: string): Promise<string> {
 /**
  * 加密 TokenInfo 对象
  */
-export async function encryptTokenInfo(
-  tokenInfo: TokenInfo,
-): Promise<TokenInfo> {
+export async function encryptTokenInfo(tokenInfo: TokenInfo): Promise<TokenInfo> {
   const encrypted: TokenInfo = {
     ...tokenInfo,
     accessToken: await encryptToken(tokenInfo.accessToken),
@@ -86,9 +84,7 @@ export async function encryptTokenInfo(
 /**
  * 解密 TokenInfo 对象
  */
-export async function decryptTokenInfo(
-  tokenInfo: TokenInfo,
-): Promise<TokenInfo> {
+export async function decryptTokenInfo(tokenInfo: TokenInfo): Promise<TokenInfo> {
   const decrypted: TokenInfo = {
     ...tokenInfo,
     accessToken: await decryptToken(tokenInfo.accessToken),
@@ -106,7 +102,7 @@ export async function decryptTokenInfo(
  */
 export async function prepareTokenForStorage(
   accessToken: string,
-  refreshToken?: string | null,
+  refreshToken?: string | null
 ): Promise<{
   accessToken: string;
   refreshToken: string | null;
@@ -122,27 +118,21 @@ export async function prepareTokenForStorage(
  */
 export async function readTokenFromStorage(
   encryptedAccessToken: string | null,
-  encryptedRefreshToken?: string | null,
+  encryptedRefreshToken?: string | null
 ): Promise<{
   accessToken: string | null;
   refreshToken: string | null;
 }> {
   return {
-    accessToken: encryptedAccessToken
-      ? await decryptToken(encryptedAccessToken)
-      : null,
-    refreshToken: encryptedRefreshToken
-      ? await decryptToken(encryptedRefreshToken)
-      : null,
+    accessToken: encryptedAccessToken ? await decryptToken(encryptedAccessToken) : null,
+    refreshToken: encryptedRefreshToken ? await decryptToken(encryptedRefreshToken) : null,
   };
 }
 
 /**
  * 检查并迁移未加密的 Token（用于数据迁移）
  */
-export async function migrateUnencryptedToken(
-  token: string | null,
-): Promise<string | null> {
+export async function migrateUnencryptedToken(token: string | null): Promise<string | null> {
   if (!token) return null;
 
   if (isTokenEncrypted(token)) {

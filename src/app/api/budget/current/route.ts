@@ -24,10 +24,7 @@ export async function GET(request: NextRequest) {
     const budgetId = searchParams.get("budgetId");
 
     if (!memberId && !budgetId) {
-      return NextResponse.json(
-        { error: "必须提供memberId或budgetId参数" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "必须提供memberId或budgetId参数" }, { status: 400 });
     }
 
     let targetBudgetId: string;
@@ -36,50 +33,35 @@ export async function GET(request: NextRequest) {
     if (budgetId) {
       const budget = await budgetRepository.getBudgetById(budgetId);
       if (!budget) {
-        return NextResponse.json(
-          { error: "预算不存在或已不活跃" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "预算不存在或已不活跃" }, { status: 404 });
       }
 
       const { hasAccess } = await memberRepository.verifyMemberAccess(
         budget.memberId,
-        session.user.id,
+        session.user.id
       );
       if (!hasAccess) {
-        return NextResponse.json(
-          { error: "无权限访问该预算" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "无权限访问该预算" }, { status: 403 });
       }
 
       targetBudgetId = budgetId;
     } else {
-      const access = await memberRepository.verifyMemberAccess(
-        memberId!,
-        session.user.id,
-      );
+      const access = await memberRepository.verifyMemberAccess(memberId!, session.user.id);
       if (!access.hasAccess) {
-        return NextResponse.json(
-          { error: "无权限访问该成员的预算" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "无权限访问该成员的预算" }, { status: 403 });
       }
 
       // 如果只提供了memberId，获取当前活跃预算
       const budgets = await budgetRepository.listBudgets(
         memberId!,
         { status: "ACTIVE" },
-        { offset: 0, limit: 1 },
+        { offset: 0, limit: 1 }
       );
 
       const [activeBudget] = budgets.items ?? [];
 
       if (!activeBudget) {
-        return NextResponse.json(
-          { error: "没有找到活跃的预算" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "没有找到活跃的预算" }, { status: 404 });
       }
 
       targetBudgetId = activeBudget.id;
@@ -95,10 +77,7 @@ export async function GET(request: NextRequest) {
 
     if (usagePercentage >= 110 && budgetStatus.budget.alertThreshold110) {
       alerts.push("预算超支10%，请注意控制支出");
-    } else if (
-      usagePercentage >= 100 &&
-      budgetStatus.budget.alertThreshold100
-    ) {
+    } else if (usagePercentage >= 100 && budgetStatus.budget.alertThreshold100) {
       alerts.push("预算已用完，请控制支出");
     } else if (usagePercentage >= 80 && budgetStatus.budget.alertThreshold80) {
       alerts.push("预算已使用80%，接近限额");

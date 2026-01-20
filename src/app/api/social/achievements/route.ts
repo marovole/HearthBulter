@@ -20,8 +20,7 @@ export async function GET(request: NextRequest) {
     const all = searchParams.get("all") === "true";
 
     if (all) {
-      const availableAchievements =
-        achievementSystem.getAvailableAchievements();
+      const availableAchievements = achievementSystem.getAvailableAchievements();
 
       return NextResponse.json({
         success: true,
@@ -44,28 +43,23 @@ export async function GET(request: NextRequest) {
     const targetMemberIds: Id<"familyMembers">[] = [];
 
     if (memberId) {
-      const access = await convexClient.query<{ hasAccess: boolean }>(
-        api.members.verifyAccess,
-        {
-          memberId: memberId as Id<"familyMembers">,
-          clerkId: session.user.id,
-        },
-      );
+      const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+        memberId: memberId as Id<"familyMembers">,
+        clerkId: session.user.id,
+      });
 
       if (!access.hasAccess) {
-        return NextResponse.json(
-          { error: "无权限访问该家庭成员" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "无权限访问该家庭成员" }, { status: 403 });
       }
 
       targetMemberIds.push(memberId as Id<"familyMembers">);
     } else {
-      const accessibleMembers = await convexClient.query<
-        Array<{ _id: Id<"familyMembers"> }>
-      >(api.members.listAccessibleByClerkId, {
-        clerkId: session.user.id,
-      });
+      const accessibleMembers = await convexClient.query<Array<{ _id: Id<"familyMembers"> }>>(
+        api.members.listAccessibleByClerkId,
+        {
+          clerkId: session.user.id,
+        }
+      );
       targetMemberIds.push(...accessibleMembers.map((member) => member._id));
     }
 
@@ -80,13 +74,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const userAchievements = await convexClient.query<
-      Array<Record<string, unknown>>
-    >(api.achievements.listByMembers, {
-      memberIds: targetMemberIds,
-      type: type || undefined,
-      rarity: rarity || undefined,
-    });
+    const userAchievements = await convexClient.query<Array<Record<string, unknown>>>(
+      api.achievements.listByMembers,
+      {
+        memberIds: targetMemberIds,
+        type: type || undefined,
+        rarity: rarity || undefined,
+      }
+    );
 
     const stats = buildAchievementStats(userAchievements);
 
@@ -123,37 +118,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "无管理员权限" }, { status: 403 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该家庭成员" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该家庭成员" }, { status: 403 });
     }
 
-    const existingAchievement = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.achievements.findByMemberTypeLevel, {
-      memberId: memberId as Id<"familyMembers">,
-      type: type as string,
-      level: 1,
-    });
+    const existingAchievement = await convexClient.query<Record<string, unknown> | null>(
+      api.achievements.findByMemberTypeLevel,
+      {
+        memberId: memberId as Id<"familyMembers">,
+        type: type as string,
+        level: 1,
+      }
+    );
 
     if (existingAchievement) {
       return NextResponse.json({ error: "该成就已经解锁" }, { status: 409 });
     }
 
-    const achievementType = (
-      Object.values(AchievementType) as string[]
-    ).includes(type)
+    const achievementType = (Object.values(AchievementType) as string[]).includes(type)
       ? (type as AchievementType)
       : AchievementType.CHECK_IN_STREAK;
 
@@ -171,7 +158,7 @@ export async function POST(request: NextRequest) {
         checkFunction: async () => true,
       },
       "MANUAL_UNLOCK",
-      { reason, adminId: session.user.id },
+      { reason, adminId: session.user.id }
     );
 
     return NextResponse.json({
@@ -185,7 +172,7 @@ export async function POST(request: NextRequest) {
     console.error("手动解锁成就失败:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "服务器内部错误" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -193,10 +180,7 @@ export async function POST(request: NextRequest) {
 function buildAchievementStats(achievements: Array<Record<string, unknown>>) {
   const stats = {
     total: achievements.length,
-    totalPoints: achievements.reduce(
-      (sum, achievement) => sum + (achievement.points as number),
-      0,
-    ),
+    totalPoints: achievements.reduce((sum, achievement) => sum + (achievement.points as number), 0),
     byRarity: {
       BRONZE: 0,
       SILVER: 0,
@@ -209,8 +193,7 @@ function buildAchievementStats(achievements: Array<Record<string, unknown>>) {
       .slice()
       .sort(
         (a, b) =>
-          ((b.unlockedAt as number | undefined) ?? 0) -
-          ((a.unlockedAt as number | undefined) ?? 0),
+          ((b.unlockedAt as number | undefined) ?? 0) - ((a.unlockedAt as number | undefined) ?? 0)
       )
       .slice(0, 5),
   };
@@ -228,10 +211,7 @@ function buildAchievementStats(achievements: Array<Record<string, unknown>>) {
   return stats;
 }
 
-async function checkAdminPermission(
-  _userId: string,
-  adminCode?: string,
-): Promise<boolean> {
+async function checkAdminPermission(_userId: string, adminCode?: string): Promise<boolean> {
   if (!adminCode) {
     return false;
   }

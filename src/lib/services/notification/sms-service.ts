@@ -68,20 +68,20 @@ export class SMSService {
       let messageId: string;
 
       switch (this.config.provider) {
-      case "aliyun":
-        messageId = await this.sendAliyunSMS(phone, content);
-        break;
-      case "tencent":
-        messageId = await this.sendTencentSMS(phone, content);
-        break;
-      case "huawei":
-        messageId = await this.sendHuaweiSMS(phone, content);
-        break;
-      case "mock":
-        messageId = await this.sendMockSMS(phone, content);
-        break;
-      default:
-        throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
+        case "aliyun":
+          messageId = await this.sendAliyunSMS(phone, content);
+          break;
+        case "tencent":
+          messageId = await this.sendTencentSMS(phone, content);
+          break;
+        case "huawei":
+          messageId = await this.sendHuaweiSMS(phone, content);
+          break;
+        case "mock":
+          messageId = await this.sendMockSMS(phone, content);
+          break;
+        default:
+          throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
       }
 
       return messageId;
@@ -97,7 +97,7 @@ export class SMSService {
   async sendTemplate(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>,
+    templateParams: Record<string, string>
   ): Promise<string> {
     if (!this.isConfigured) {
       throw new Error("SMS service is not configured");
@@ -107,36 +107,20 @@ export class SMSService {
       let messageId: string;
 
       switch (this.config.provider) {
-      case "aliyun":
-        messageId = await this.sendAliyunTemplateSMS(
-          phone,
-          templateCode,
-          templateParams,
-        );
-        break;
-      case "tencent":
-        messageId = await this.sendTencentTemplateSMS(
-          phone,
-          templateCode,
-          templateParams,
-        );
-        break;
-      case "huawei":
-        messageId = await this.sendHuaweiTemplateSMS(
-          phone,
-          templateCode,
-          templateParams,
-        );
-        break;
-      case "mock":
-        messageId = await this.sendMockTemplateSMS(
-          phone,
-          templateCode,
-          templateParams,
-        );
-        break;
-      default:
-        throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
+        case "aliyun":
+          messageId = await this.sendAliyunTemplateSMS(phone, templateCode, templateParams);
+          break;
+        case "tencent":
+          messageId = await this.sendTencentTemplateSMS(phone, templateCode, templateParams);
+          break;
+        case "huawei":
+          messageId = await this.sendHuaweiTemplateSMS(phone, templateCode, templateParams);
+          break;
+        case "mock":
+          messageId = await this.sendMockTemplateSMS(phone, templateCode, templateParams);
+          break;
+        default:
+          throw new Error(`Unsupported SMS provider: ${this.config.provider}`);
       }
 
       return messageId;
@@ -162,10 +146,10 @@ export class SMSService {
           try {
             const messageId = message.templateCode
               ? await this.sendTemplate(
-                message.phone,
-                message.templateCode,
-                message.templateParams || {},
-              )
+                  message.phone,
+                  message.templateCode,
+                  message.templateParams || {}
+                )
               : await this.send(message.phone, message.content);
 
             return {
@@ -182,7 +166,7 @@ export class SMSService {
               provider: this.config.provider,
             };
           }
-        }),
+        })
       );
 
       batchResults.forEach((result) => {
@@ -260,10 +244,7 @@ export class SMSService {
   /**
    * 腾讯云短信发送
    */
-  private async sendTencentSMS(
-    phone: string,
-    content: string,
-  ): Promise<string> {
+  private async sendTencentSMS(phone: string, content: string): Promise<string> {
     // 这里应该集成腾讯云短信SDK
     console.log("Tencent SMS:", {
       phone,
@@ -315,7 +296,7 @@ export class SMSService {
   private async sendAliyunTemplateSMS(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>,
+    templateParams: Record<string, string>
   ): Promise<string> {
     console.log("Aliyun Template SMS:", {
       phone,
@@ -333,7 +314,7 @@ export class SMSService {
   private async sendTencentTemplateSMS(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>,
+    templateParams: Record<string, string>
   ): Promise<string> {
     console.log("Tencent Template SMS:", {
       phone,
@@ -351,7 +332,7 @@ export class SMSService {
   private async sendHuaweiTemplateSMS(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>,
+    templateParams: Record<string, string>
   ): Promise<string> {
     console.log("Huawei Template SMS:", {
       phone,
@@ -369,7 +350,7 @@ export class SMSService {
   private async sendMockTemplateSMS(
     phone: string,
     templateCode: string,
-    templateParams: Record<string, string>,
+    templateParams: Record<string, string>
   ): Promise<string> {
     console.log("Mock Template SMS:", { phone, templateCode, templateParams });
 
@@ -430,7 +411,7 @@ export class SMSService {
   getStatus(): {
     isConfigured: boolean;
     provider: string;
-    } {
+  } {
     return {
       isConfigured: this.isConfigured,
       provider: this.config.provider,
@@ -447,7 +428,7 @@ export class SMSService {
       content: string;
       variables: string[];
     }>
-    > {
+  > {
     // 这里应该调用提供商API获取模板列表
     // 暂时返回模拟数据
     return [

@@ -88,7 +88,7 @@ export class InventoryAnalyzer {
   async generateInventoryAnalysis(
     memberId: string,
     startDate?: Date,
-    endDate?: Date,
+    endDate?: Date
   ): Promise<InventoryAnalysis> {
     const period = {
       startDate: startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -103,11 +103,7 @@ export class InventoryAnalyzer {
     ]);
 
     // 生成汇总数据
-    const summary = this.generateSummary(
-      inventoryItems,
-      usageRecords,
-      wasteRecords,
-    );
+    const summary = this.generateSummary(inventoryItems, usageRecords, wasteRecords);
 
     // 分类分析
     const categoryAnalysis = await this.analyzeByCategory(memberId, period);
@@ -119,11 +115,7 @@ export class InventoryAnalyzer {
     const wasteAnalysis = await this.analyzeWaste(memberId, period);
 
     // 生成建议
-    const recommendations = this.generateRecommendations(
-      summary,
-      categoryAnalysis,
-      wasteAnalysis,
-    );
+    const recommendations = this.generateRecommendations(summary, categoryAnalysis, wasteAnalysis);
 
     return {
       memberId,
@@ -139,9 +131,7 @@ export class InventoryAnalyzer {
   /**
    * 生成采购建议
    */
-  async generatePurchaseSuggestions(
-    memberId: string,
-  ): Promise<PurchaseSuggestion[]> {
+  async generatePurchaseSuggestions(memberId: string): Promise<PurchaseSuggestion[]> {
     const suggestions: PurchaseSuggestion[] = [];
 
     // 1. 基于库存不足的建议
@@ -163,8 +153,7 @@ export class InventoryAnalyzer {
     });
 
     for (const item of lowStockItems) {
-      const suggestedQuantity =
-        (item.minStockThreshold || 0) * 2 - item.quantity;
+      const suggestedQuantity = (item.minStockThreshold || 0) * 2 - item.quantity;
       suggestions.push({
         foodId: item.foodId,
         foodName: item.food.name,
@@ -173,11 +162,7 @@ export class InventoryAnalyzer {
         unit: item.unit,
         reason: "库存不足，建议补货",
         priority: "HIGH",
-        estimatedCost: this.estimateCost(
-          item.foodId,
-          suggestedQuantity,
-          item.unit,
-        ),
+        estimatedCost: this.estimateCost(item.foodId, suggestedQuantity, item.unit),
       });
     }
 
@@ -203,11 +188,7 @@ export class InventoryAnalyzer {
           unit: item.unit,
           reason: "基于历史使用频率，建议定期采购",
           priority: "MEDIUM",
-          estimatedCost: this.estimateCost(
-            item.foodId,
-            item.averageUsage * 14,
-            item.unit,
-          ),
+          estimatedCost: this.estimateCost(item.foodId, item.averageUsage * 14, item.unit),
         });
       }
     }
@@ -219,8 +200,7 @@ export class InventoryAnalyzer {
     // 去重并按优先级排序
     const uniqueSuggestions = suggestions
       .filter(
-        (suggestion, index, self) =>
-          index === self.findIndex((s) => s.foodId === suggestion.foodId),
+        (suggestion, index, self) => index === self.findIndex((s) => s.foodId === suggestion.foodId)
       )
       .sort((a, b) => {
         const priorityOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
@@ -260,49 +240,28 @@ export class InventoryAnalyzer {
     ]);
 
     // 使用效率 (0-100)
-    const totalUsage = usageRecords.reduce(
-      (sum, record) => sum + record.usedQuantity,
-      0,
-    );
+    const totalUsage = usageRecords.reduce((sum, record) => sum + record.usedQuantity, 0);
     const totalInitialQuantity = inventoryItems.reduce(
       (sum, item) => sum + item.originalQuantity,
-      0,
+      0
     );
     const usageEfficiency =
       totalInitialQuantity > 0 ? (totalUsage / totalInitialQuantity) * 100 : 0;
 
     // 浪费减少 (0-100, 浪费越少分数越高)
-    const totalWaste = wasteRecords.reduce(
-      (sum, record) => sum + record.wastedQuantity,
-      0,
-    );
-    const wasteRate =
-      totalInitialQuantity > 0 ? (totalWaste / totalInitialQuantity) * 100 : 0;
+    const totalWaste = wasteRecords.reduce((sum, record) => sum + record.wastedQuantity, 0);
+    const wasteRate = totalInitialQuantity > 0 ? (totalWaste / totalInitialQuantity) * 100 : 0;
     const wasteReduction = Math.max(0, 100 - wasteRate * 2); // 浪费率每增加1%，分数减少2分
 
     // 存储优化 (0-100)
-    const expiredItems = inventoryItems.filter(
-      (item) => item.status === "EXPIRED",
-    ).length;
-    const expiringItems = inventoryItems.filter(
-      (item) => item.status === "EXPIRING",
-    ).length;
-    const storageOptimization = Math.max(
-      0,
-      100 - (expiredItems * 10 + expiringItems * 5),
-    );
+    const expiredItems = inventoryItems.filter((item) => item.status === "EXPIRED").length;
+    const expiringItems = inventoryItems.filter((item) => item.status === "EXPIRING").length;
+    const storageOptimization = Math.max(0, 100 - (expiredItems * 10 + expiringItems * 5));
 
     // 采购规划 (0-100)
-    const lowStockItems = inventoryItems.filter(
-      (item) => item.isLowStock,
-    ).length;
-    const outOfStockItems = inventoryItems.filter(
-      (item) => item.status === "OUT_OF_STOCK",
-    ).length;
-    const purchasePlanning = Math.max(
-      0,
-      100 - (lowStockItems * 8 + outOfStockItems * 15),
-    );
+    const lowStockItems = inventoryItems.filter((item) => item.isLowStock).length;
+    const outOfStockItems = inventoryItems.filter((item) => item.status === "OUT_OF_STOCK").length;
+    const purchasePlanning = Math.max(0, 100 - (lowStockItems * 8 + outOfStockItems * 15));
 
     // 总体评分
     const overallScore =
@@ -317,7 +276,7 @@ export class InventoryAnalyzer {
       wasteReduction,
       storageOptimization,
       purchasePlanning,
-      { usageRecords, wasteRecords, inventoryItems },
+      { usageRecords, wasteRecords, inventoryItems }
     );
 
     return {
@@ -335,7 +294,7 @@ export class InventoryAnalyzer {
    */
   async getInventoryTrends(
     memberId: string,
-    days: number = 30,
+    days: number = 30
   ): Promise<{
     dailyInventory: Array<{
       date: string;
@@ -376,20 +335,13 @@ export class InventoryAnalyzer {
       });
 
       const freshItems = items.filter((item) => item.status === "FRESH").length;
-      const expiringItems = items.filter(
-        (item) => item.status === "EXPIRING",
-      ).length;
-      const expiredItems = items.filter(
-        (item) => item.status === "EXPIRED",
-      ).length;
+      const expiringItems = items.filter((item) => item.status === "EXPIRING").length;
+      const expiredItems = items.filter((item) => item.status === "EXPIRED").length;
 
       dailyInventory.push({
         date: dateStr,
         totalItems: items.length,
-        totalValue: items.reduce(
-          (sum, item) => sum + (item.purchasePrice || 0),
-          0,
-        ),
+        totalValue: items.reduce((sum, item) => sum + (item.purchasePrice || 0), 0),
         freshItems,
         expiringItems,
         expiredItems,
@@ -446,10 +398,7 @@ export class InventoryAnalyzer {
 
   // 私有方法
 
-  private async getInventoryItems(
-    memberId: string,
-    period: { startDate: Date; endDate: Date },
-  ) {
+  private async getInventoryItems(memberId: string, period: { startDate: Date; endDate: Date }) {
     return prisma.inventoryItem.findMany({
       where: {
         memberId,
@@ -467,10 +416,7 @@ export class InventoryAnalyzer {
     });
   }
 
-  private async getUsageRecords(
-    memberId: string,
-    period: { startDate: Date; endDate: Date },
-  ) {
+  private async getUsageRecords(memberId: string, period: { startDate: Date; endDate: Date }) {
     return prisma.inventoryUsage.findMany({
       where: {
         memberId,
@@ -492,10 +438,7 @@ export class InventoryAnalyzer {
     });
   }
 
-  private async getWasteRecords(
-    memberId: string,
-    period: { startDate: Date; endDate: Date },
-  ) {
+  private async getWasteRecords(memberId: string, period: { startDate: Date; endDate: Date }) {
     return prisma.wasteLog.findMany({
       where: {
         memberId,
@@ -517,30 +460,14 @@ export class InventoryAnalyzer {
     });
   }
 
-  private generateSummary(
-    items: any[],
-    usageRecords: any[],
-    wasteRecords: any[],
-  ) {
+  private generateSummary(items: any[], usageRecords: any[], wasteRecords: any[]) {
     const totalItems = items.length;
-    const totalValue = items.reduce(
-      (sum, item) => sum + (item.purchasePrice || 0),
-      0,
-    );
+    const totalValue = items.reduce((sum, item) => sum + (item.purchasePrice || 0), 0);
     const usedItems = usageRecords.length;
     const wastedItems = wasteRecords.length;
-    const totalQuantity = items.reduce(
-      (sum, item) => sum + item.originalQuantity,
-      0,
-    );
-    const usedQuantity = usageRecords.reduce(
-      (sum, record) => sum + record.usedQuantity,
-      0,
-    );
-    const wastedQuantity = wasteRecords.reduce(
-      (sum, record) => sum + record.wastedQuantity,
-      0,
-    );
+    const totalQuantity = items.reduce((sum, item) => sum + item.originalQuantity, 0);
+    const usedQuantity = usageRecords.reduce((sum, record) => sum + record.usedQuantity, 0);
+    const wastedQuantity = wasteRecords.reduce((sum, record) => sum + record.wastedQuantity, 0);
 
     return {
       totalItems,
@@ -552,10 +479,7 @@ export class InventoryAnalyzer {
     };
   }
 
-  private async analyzeByCategory(
-    memberId: string,
-    period: { startDate: Date; endDate: Date },
-  ) {
+  private async analyzeByCategory(memberId: string, period: { startDate: Date; endDate: Date }) {
     const items = await this.getInventoryItems(memberId, period);
     const usageRecords = await this.getUsageRecords(memberId, period);
     const wasteRecords = await this.getWasteRecords(memberId, period);
@@ -596,22 +520,16 @@ export class InventoryAnalyzer {
       ...stats,
       wasteRate:
         stats.usedQuantity > 0
-          ? (stats.wastedQuantity /
-              (stats.usedQuantity + stats.wastedQuantity)) *
-            100
+          ? (stats.wastedQuantity / (stats.usedQuantity + stats.wastedQuantity)) * 100
           : 0,
       efficiency:
         stats.usedQuantity > 0
-          ? (stats.usedQuantity / (stats.usedQuantity + stats.wastedQuantity)) *
-            100
+          ? (stats.usedQuantity / (stats.usedQuantity + stats.wastedQuantity)) * 100
           : 0,
     }));
   }
 
-  private async analyzeUsagePatterns(
-    memberId: string,
-    period: { startDate: Date; endDate: Date },
-  ) {
+  private async analyzeUsagePatterns(memberId: string, period: { startDate: Date; endDate: Date }) {
     const usageRecords = await this.getUsageRecords(memberId, period);
     const wasteRecords = await this.getWasteRecords(memberId, period);
 
@@ -644,10 +562,7 @@ export class InventoryAnalyzer {
     return Array.from(usageMap.values())
       .map((stats) => ({
         ...stats,
-        averageUsage:
-          stats.usageFrequency > 0
-            ? stats.totalUsage / stats.usageFrequency
-            : 0,
+        averageUsage: stats.usageFrequency > 0 ? stats.totalUsage / stats.usageFrequency : 0,
         efficiency:
           stats.totalUsage > 0
             ? (stats.totalUsage / (stats.totalUsage + stats.totalWaste)) * 100
@@ -656,15 +571,12 @@ export class InventoryAnalyzer {
       .sort((a, b) => b.usageFrequency - a.usageFrequency);
   }
 
-  private async analyzeWaste(
-    memberId: string,
-    period: { startDate: Date; endDate: Date },
-  ) {
+  private async analyzeWaste(memberId: string, period: { startDate: Date; endDate: Date }) {
     const wasteRecords = await this.getWasteRecords(memberId, period);
 
     const totalWasteValue = wasteRecords.reduce(
       (sum, record) => sum + (record.estimatedCost || 0),
-      0,
+      0
     );
 
     // 按原因分组
@@ -711,13 +623,11 @@ export class InventoryAnalyzer {
       totalWasteValue,
       wasteByReason: Array.from(wasteByReason.values()).map((stats) => ({
         ...stats,
-        percentage:
-          totalWasteValue > 0 ? (stats.value / totalWasteValue) * 100 : 0,
+        percentage: totalWasteValue > 0 ? (stats.value / totalWasteValue) * 100 : 0,
       })),
       wasteByCategory: Array.from(wasteByCategory.values()).map((stats) => ({
         ...stats,
-        percentage:
-          totalWasteValue > 0 ? (stats.value / totalWasteValue) * 100 : 0,
+        percentage: totalWasteValue > 0 ? (stats.value / totalWasteValue) * 100 : 0,
       })),
       topWastedItems: Array.from(topWastedItems.values())
         .map((stats) => ({ ...stats, wasteRate: stats.wasteCount }))
@@ -726,11 +636,7 @@ export class InventoryAnalyzer {
     };
   }
 
-  private generateRecommendations(
-    summary: any,
-    categoryAnalysis: any[],
-    wasteAnalysis: any,
-  ) {
+  private generateRecommendations(summary: any, categoryAnalysis: any[], wasteAnalysis: any) {
     const recommendations = [];
 
     // 基于浪费率的建议
@@ -746,7 +652,7 @@ export class InventoryAnalyzer {
 
     // 基于分类分析的建议
     const worstCategory = categoryAnalysis.reduce((worst, current) =>
-      current.wasteRate > worst.wasteRate ? current : worst,
+      current.wasteRate > worst.wasteRate ? current : worst
     );
 
     if (worstCategory.wasteRate > 30) {
@@ -800,15 +706,13 @@ export class InventoryAnalyzer {
               totalUsage: result._sum.usedQuantity || 0,
               averageUsage: (result._sum.usedQuantity || 0) / result._count.id,
             };
-          }),
+          })
         );
         return items;
       });
   }
 
-  private async getSeasonalSuggestions(
-    memberId: string,
-  ): Promise<PurchaseSuggestion[]> {
+  private async getSeasonalSuggestions(memberId: string): Promise<PurchaseSuggestion[]> {
     // 基于当前季节生成建议
     const currentMonth = new Date().getMonth();
     const seasonalItems = this.getSeasonalItems(currentMonth);
@@ -835,10 +739,7 @@ export class InventoryAnalyzer {
         continue;
       }
 
-      if (
-        !existingStock ||
-        existingStock.quantity < seasonalItem.suggestedQuantity
-      ) {
+      if (!existingStock || existingStock.quantity < seasonalItem.suggestedQuantity) {
         suggestions.push({
           foodId: food.id,
           foodName: seasonalItem.name,
@@ -900,7 +801,7 @@ export class InventoryAnalyzer {
     wasteReduction: number,
     storageOptimization: number,
     purchasePlanning: number,
-    data: any,
+    data: any
   ) {
     const strengths: string[] = [];
     const weaknesses: string[] = [];

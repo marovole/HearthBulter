@@ -17,15 +17,8 @@ interface ListShareProps {
   onClose: () => void;
 }
 
-export function ListShare({
-  shoppingListId,
-  listName,
-  items,
-  onClose,
-}: ListShareProps) {
-  const [shareMethod, setShareMethod] = useState<"link" | "text" | "email">(
-    "link",
-  );
+export function ListShare({ shoppingListId, listName, items, onClose }: ListShareProps) {
+  const [shareMethod, setShareMethod] = useState<"link" | "text" | "email">("link");
   const [emailAddress, setEmailAddress] = useState("");
   const [isSharing, setIsSharing] = useState(false);
   const [shareLink, setShareLink] = useState("");
@@ -37,15 +30,12 @@ export function ListShare({
       setIsSharing(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/shopping-lists/${shoppingListId}/share`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`/api/shopping-lists/${shoppingListId}/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (!response.ok) {
         throw new Error("生成分享链接失败");
@@ -88,7 +78,7 @@ export function ListShare({
         acc[category].push(item);
         return acc;
       },
-      {} as Record<string, typeof items>,
+      {} as Record<string, typeof items>
     );
 
     const categoryOrder = [
@@ -172,20 +162,17 @@ export function ListShare({
       setIsSharing(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/shopping-lists/${shoppingListId}/share/email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            emailAddress: emailAddress.trim(),
-            listName,
-            textContent: generateTextList(),
-          }),
+      const response = await fetch(`/api/shopping-lists/${shoppingListId}/share/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          emailAddress: emailAddress.trim(),
+          listName,
+          textContent: generateTextList(),
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("发送邮件失败");
@@ -201,15 +188,12 @@ export function ListShare({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-lg max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-lg bg-white">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between border-b p-6">
           <h2 className="text-xl font-bold text-gray-900">分享购物清单</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
+          <button onClick={onClose} className="text-2xl text-gray-400 hover:text-gray-600">
             ✕
           </button>
         </div>
@@ -218,9 +202,7 @@ export function ListShare({
         <div className="flex-1 overflow-y-auto p-6">
           {/* Share Method Selection */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
-              选择分享方式
-            </h3>
+            <h3 className="mb-3 text-lg font-semibold text-gray-900">选择分享方式</h3>
             <div className="space-y-2">
               {[
                 {
@@ -242,18 +224,14 @@ export function ListShare({
                 <button
                   key={method.value}
                   onClick={() => setShareMethod(method.value as any)}
-                  className={`w-full p-3 border rounded-lg text-left transition-colors ${
+                  className={`w-full rounded-lg border p-3 text-left transition-colors ${
                     shareMethod === method.value
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
-                  <div className="font-medium text-gray-900">
-                    {method.label}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {method.description}
-                  </div>
+                  <div className="font-medium text-gray-900">{method.label}</div>
+                  <div className="text-sm text-gray-500">{method.description}</div>
                 </button>
               ))}
             </div>
@@ -263,12 +241,12 @@ export function ListShare({
           {shareMethod === "link" && (
             <div className="space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">分享链接</h4>
+                <h4 className="mb-2 font-medium text-gray-900">分享链接</h4>
                 {!shareLink ? (
                   <button
                     onClick={generateShareLink}
                     disabled={isSharing}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                    className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
                   >
                     {isSharing ? "生成中..." : "生成分享链接"}
                   </button>
@@ -278,11 +256,11 @@ export function ListShare({
                       type="text"
                       value={shareLink}
                       readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                      className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2"
                     />
                     <button
                       onClick={() => copyToClipboard(shareLink)}
-                      className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                      className="w-full rounded-lg bg-gray-600 px-4 py-2 font-medium text-white transition-colors hover:bg-gray-700"
                     >
                       复制链接
                     </button>
@@ -295,24 +273,24 @@ export function ListShare({
           {shareMethod === "text" && (
             <div className="space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">文本内容</h4>
+                <h4 className="mb-2 font-medium text-gray-900">文本内容</h4>
                 <textarea
                   value={generateTextList()}
                   readOnly
                   rows={12}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-sm"
+                  className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 font-mono text-sm"
                 />
               </div>
               <div className="flex space-x-3">
                 <button
                   onClick={() => copyToClipboard(generateTextList())}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
                 >
                   复制文本
                 </button>
                 <button
                   onClick={shareViaWebShare}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                  className="flex-1 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700"
                 >
                   系统分享
                 </button>
@@ -323,21 +301,19 @@ export function ListShare({
           {shareMethod === "email" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  邮箱地址
-                </label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">邮箱地址</label>
                 <input
                   type="email"
                   value={emailAddress}
                   onChange={(e) => setEmailAddress(e.target.value)}
                   placeholder="请输入邮箱地址"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <button
                 onClick={sendEmail}
                 disabled={isSharing}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
               >
                 {isSharing ? "发送中..." : "发送邮件"}
               </button>
@@ -346,13 +322,13 @@ export function ListShare({
 
           {/* Messages */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-green-800 text-sm">{success}</p>
+            <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+              <p className="text-sm text-green-800">{success}</p>
             </div>
           )}
         </div>
@@ -361,7 +337,7 @@ export function ListShare({
         <div className="border-t p-6">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
             关闭
           </button>

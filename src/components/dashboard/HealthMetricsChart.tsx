@@ -14,14 +14,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import {
-  Activity,
-  TrendingUp,
-  Heart,
-  Calendar,
-  Target,
-  AlertCircle,
-} from "lucide-react";
+import { Activity, TrendingUp, Heart, Calendar, Target, AlertCircle } from "lucide-react";
 
 interface HealthMetricData {
   date: Date;
@@ -142,10 +135,10 @@ export function HealthMetricsChart({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-center h-64">
+      <div className="rounded-lg bg-white p-6 shadow">
+        <div className="flex h-64 items-center justify-center">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
             <p className="mt-2 text-sm text-gray-500">加载健康数据中...</p>
           </div>
         </div>
@@ -155,10 +148,10 @@ export function HealthMetricsChart({
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+      <div className="rounded-lg bg-white p-6 shadow">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4">
           <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
+            <AlertCircle className="mr-2 h-5 w-5 text-red-400" />
             <p className="text-sm text-red-800">{error}</p>
           </div>
         </div>
@@ -168,8 +161,8 @@ export function HealthMetricsChart({
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="rounded-lg bg-white p-6 shadow">
+        <div className="flex h-64 items-center justify-center text-gray-500">
           <p>暂无健康数据</p>
         </div>
       </div>
@@ -198,28 +191,18 @@ export function HealthMetricsChart({
     .map((d) => d[currentConfig.key])
     .filter((v) => v !== undefined) as number[];
   const currentValue = currentValues[currentValues.length - 1] || 0;
-  const averageValue =
-    currentValues.reduce((a, b) => a + b, 0) / currentValues.length || 0;
+  const averageValue = currentValues.reduce((a, b) => a + b, 0) / currentValues.length || 0;
   const firstValue = currentValues[0];
   const changeValue =
-    currentValues.length > 1 && firstValue !== undefined
-      ? currentValue - firstValue
-      : 0;
+    currentValues.length > 1 && firstValue !== undefined ? currentValue - firstValue : 0;
 
   const renderChart = () => {
     if (selectedMetric === "bloodPressure") {
       return (
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart
-            data={chartData}
-            margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-          >
+          <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
-            <XAxis
-              dataKey="date"
-              className="text-xs text-gray-600"
-              tick={{ fontSize: 12 }}
-            />
+            <XAxis dataKey="date" className="text-xs text-gray-600" tick={{ fontSize: 12 }} />
             <YAxis
               className="text-xs text-gray-600"
               domain={[60, 160]}
@@ -241,10 +224,10 @@ export function HealthMetricsChart({
                 const item = chartData.find((d) => d.date === label);
                 return item
                   ? new Date(item.fullDate).toLocaleDateString("zh-CN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
                   : label;
               }}
             />
@@ -265,18 +248,8 @@ export function HealthMetricsChart({
               dot={{ r: 3 }}
               name="舒张压"
             />
-            <ReferenceLine
-              y={120}
-              stroke="#ef4444"
-              strokeDasharray="3 3"
-              label="收缩压目标"
-            />
-            <ReferenceLine
-              y={80}
-              stroke="#f59e0b"
-              strokeDasharray="3 3"
-              label="舒张压目标"
-            />
+            <ReferenceLine y={120} stroke="#ef4444" strokeDasharray="3 3" label="收缩压目标" />
+            <ReferenceLine y={80} stroke="#f59e0b" strokeDasharray="3 3" label="舒张压目标" />
           </LineChart>
         </ResponsiveContainer>
       );
@@ -284,16 +257,9 @@ export function HealthMetricsChart({
 
     return (
       <ResponsiveContainer width="100%" height={300}>
-        <AreaChart
-          data={chartData}
-          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-        >
+        <AreaChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
-          <XAxis
-            dataKey="date"
-            className="text-xs text-gray-600"
-            tick={{ fontSize: 12 }}
-          />
+          <XAxis dataKey="date" className="text-xs text-gray-600" tick={{ fontSize: 12 }} />
           <YAxis
             className="text-xs text-gray-600"
             domain={["dataMin - 5", "dataMax + 5"]}
@@ -315,10 +281,10 @@ export function HealthMetricsChart({
               const item = chartData.find((d) => d.date === label);
               return item
                 ? new Date(item.fullDate).toLocaleDateString("zh-CN", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
                 : label;
             }}
             formatter={(value: number) => [
@@ -353,15 +319,13 @@ export function HealthMetricsChart({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="rounded-lg bg-white p-6 shadow">
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Icon className="h-6 w-6 text-blue-600" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              健康数据趋势
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900">健康数据趋势</h3>
             <p className="text-sm text-gray-500">最近 {days} 天的数据</p>
           </div>
         </div>
@@ -372,7 +336,7 @@ export function HealthMetricsChart({
             onChange={(e) => {
               // 这里可以触发重新加载不同天数的数据
             }}
-            className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value={7}>7天</option>
             <option value={30}>30天</option>
@@ -383,7 +347,7 @@ export function HealthMetricsChart({
       </div>
 
       {/* 指标选择器 */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="mb-6 flex flex-wrap gap-2">
         {metrics.map((metric) => {
           const config = metricConfigs[metric] ?? fallbackConfig;
           const MetricIcon = config.icon;
@@ -391,10 +355,10 @@ export function HealthMetricsChart({
             <button
               key={metric}
               onClick={() => setSelectedMetric(metric)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 selectedMetric === metric
-                  ? "bg-blue-100 text-blue-700 border-blue-300"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200"
+                  ? "border-blue-300 bg-blue-100 text-blue-700"
+                  : "border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
               } border`}
             >
               <MetricIcon className="h-4 w-4" />
@@ -408,21 +372,21 @@ export function HealthMetricsChart({
       {renderChart()}
 
       {/* 统计信息 */}
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-gray-600 text-xs">当前值</p>
+      <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs text-gray-600">当前值</p>
           <p className="text-lg font-semibold text-gray-900">
             {currentValue.toFixed(1)} {currentConfig.unit}
           </p>
         </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-gray-600 text-xs">平均值</p>
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs text-gray-600">平均值</p>
           <p className="text-lg font-semibold text-gray-900">
             {averageValue.toFixed(1)} {currentConfig.unit}
           </p>
         </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-gray-600 text-xs">变化</p>
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs text-gray-600">变化</p>
           <p
             className={`text-lg font-semibold ${
               changeValue >= 0 ? "text-red-600" : "text-green-600"
@@ -432,8 +396,8 @@ export function HealthMetricsChart({
             {changeValue.toFixed(1)} {currentConfig.unit}
           </p>
         </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-gray-600 text-xs">目标值</p>
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs text-gray-600">目标值</p>
           <p className="text-lg font-semibold text-blue-600">
             {currentConfig.targetValue || "--"} {currentConfig.unit}
           </p>
@@ -441,20 +405,16 @@ export function HealthMetricsChart({
       </div>
 
       {/* 健康建议 */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+      <div className="mt-6 rounded-lg bg-blue-50 p-4">
         <div className="flex items-start space-x-3">
-          <Target className="h-5 w-5 text-blue-600 mt-0.5" />
+          <Target className="mt-0.5 h-5 w-5 text-blue-600" />
           <div>
             <h4 className="text-sm font-medium text-blue-900">健康建议</h4>
-            <p className="text-sm text-blue-700 mt-1">
-              {selectedMetric === "weight" &&
-                "您的体重趋势稳定，继续保持当前的饮食和运动习惯。"}
-              {selectedMetric === "bodyFat" &&
-                "体脂率在正常范围内，建议增加有氧运动来进一步改善。"}
-              {selectedMetric === "bloodPressure" &&
-                "血压水平良好，请继续保持健康的生活方式。"}
-              {selectedMetric === "heartRate" &&
-                "心率正常，规律的运动有助于维持心血管健康。"}
+            <p className="mt-1 text-sm text-blue-700">
+              {selectedMetric === "weight" && "您的体重趋势稳定，继续保持当前的饮食和运动习惯。"}
+              {selectedMetric === "bodyFat" && "体脂率在正常范围内，建议增加有氧运动来进一步改善。"}
+              {selectedMetric === "bloodPressure" && "血压水平良好，请继续保持健康的生活方式。"}
+              {selectedMetric === "heartRate" && "心率正常，规律的运动有助于维持心血管健康。"}
             </p>
           </div>
         </div>

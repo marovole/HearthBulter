@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { convexClient, api } from "@/lib/convex-client";
-import {
-  asConvexMutationReference,
-  asConvexQueryReference,
-} from "@/lib/convex-reference";
+import { asConvexMutationReference, asConvexQueryReference } from "@/lib/convex-reference";
 import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
 
@@ -29,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const photo = await convexClient.query<Doc<"foodPhotos"> | null>(
       asConvexQueryReference("tracking:getFoodPhotoById"),
-      { id: photoId as Id<"foodPhotos"> },
+      { id: photoId as Id<"foodPhotos"> }
     );
     if (!photo) {
       return NextResponse.json({ error: "未找到照片记录" }, { status: 404 });
@@ -40,27 +37,23 @@ export async function POST(request: NextRequest) {
           _id: string;
           memberId: Id<"familyMembers">;
         })
-        | null
-        >(api.tracking.getMealLogById, {
-          id: photo.mealLogId,
-        });
+      | null
+    >(api.tracking.getMealLogById, {
+      id: photo.mealLogId,
+    });
 
     if (!mealLog) {
       return NextResponse.json({ error: "未找到餐食记录" }, { status: 404 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      mealLog.memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(mealLog.memberId, session.user.id);
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限访问该记录" }, { status: 403 });
     }
 
-    const food = await convexClient.query<Doc<"foods"> | null>(
-      api.budget.getFoodById,
-      { foodId: foodId as Id<"foods"> },
-    );
+    const food = await convexClient.query<Doc<"foods"> | null>(api.budget.getFoodById, {
+      foodId: foodId as Id<"foods">,
+    });
     if (!food) {
       return NextResponse.json({ error: "未找到食物" }, { status: 404 });
     }
@@ -102,19 +95,16 @@ export async function POST(request: NextRequest) {
       sodium: nutrition.sodium,
     });
 
-    await convexClient.mutation(
-      asConvexMutationReference("tracking:updateFoodPhoto"),
-      {
-        id: photoId as Id<"foodPhotos">,
-        recognitionStatus: "COMPLETED",
-        recognitionResult: JSON.stringify({
-          foodName: food.name,
-          confidence: 1,
-          amount,
-        }),
+    await convexClient.mutation(asConvexMutationReference("tracking:updateFoodPhoto"), {
+      id: photoId as Id<"foodPhotos">,
+      recognitionStatus: "COMPLETED",
+      recognitionResult: JSON.stringify({
+        foodName: food.name,
         confidence: 1,
-      },
-    );
+        amount,
+      }),
+      confidence: 1,
+    });
 
     return NextResponse.json({
       success: true,

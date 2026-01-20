@@ -3,10 +3,7 @@
  * Unit tests for nutrition calculation service
  */
 
-import {
-  NutritionCalculator,
-  UnitConverter,
-} from "@/lib/services/nutrition-calculator";
+import { NutritionCalculator, UnitConverter } from "@/lib/services/nutrition-calculator";
 import { prisma } from "@/lib/db";
 
 // Mock Prisma

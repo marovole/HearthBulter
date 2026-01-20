@@ -11,7 +11,7 @@ import type { Id, Doc } from "@/../convex/_generated/dataModel";
 export const dynamic = "force-dynamic";
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ planId: string }> },
+  { params }: { params: Promise<{ planId: string }> }
 ) {
   try {
     const { planId } = await params;
@@ -20,10 +20,9 @@ export async function DELETE(
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const mealPlan = await convexClient.query<Doc<"mealPlans"> | null>(
-      api.meals.getPlanById,
-      { planId: planId as Id<"mealPlans"> },
-    );
+    const mealPlan = await convexClient.query<Doc<"mealPlans"> | null>(api.meals.getPlanById, {
+      planId: planId as Id<"mealPlans">,
+    });
 
     if (!mealPlan) {
       return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
@@ -38,10 +37,7 @@ export async function DELETE(
     });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限删除该食谱计划" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限删除该食谱计划" }, { status: 403 });
     }
 
     await convexClient.mutation(api.meals.deletePlan, {

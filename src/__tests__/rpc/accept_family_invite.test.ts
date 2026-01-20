@@ -15,7 +15,7 @@ describe("accept_family_invite RPC", () => {
   beforeAll(async () => {
     supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!,
+      process.env.SUPABASE_SERVICE_KEY!
     );
   });
 
@@ -28,28 +28,16 @@ describe("accept_family_invite RPC", () => {
     };
 
     // Clean up any existing test data
-    await supabase
-      .from("family_invitation")
-      .delete()
-      .eq("id", testData.invitationId);
+    await supabase.from("family_invitation").delete().eq("id", testData.invitationId);
 
-    await supabase
-      .from("family_member")
-      .delete()
-      .eq("user_id", testData.userId);
+    await supabase.from("family_member").delete().eq("user_id", testData.userId);
   });
 
   afterEach(async () => {
     // Clean up test data
-    await supabase
-      .from("family_invitation")
-      .delete()
-      .eq("id", testData.invitationId);
+    await supabase.from("family_invitation").delete().eq("id", testData.invitationId);
 
-    await supabase
-      .from("family_member")
-      .delete()
-      .eq("user_id", testData.userId);
+    await supabase.from("family_member").delete().eq("user_id", testData.userId);
   });
 
   describe("Successful invitation acceptance", () => {
@@ -291,7 +279,7 @@ describe("accept_family_invite RPC", () => {
             p_invitation_id: testData.invitationId,
             p_user_id: testData.userId,
             p_member_name: "Test User",
-          }),
+          })
         );
 
       const results = await Promise.all(promises);
@@ -300,9 +288,7 @@ describe("accept_family_invite RPC", () => {
       const successCount = results.filter((r) => r.data?.success).length;
       expect(successCount).toBe(1);
 
-      const errorCount = results.filter(
-        (r) => r.data?.success === false,
-      ).length;
+      const errorCount = results.filter((r) => r.data?.success === false).length;
       expect(errorCount).toBe(2);
     });
   });

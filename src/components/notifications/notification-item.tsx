@@ -39,8 +39,7 @@ export function NotificationItem({
 }: NotificationItemProps) {
   const isUnread = !notification.readAt;
   const isFailed = notification.status === "FAILED";
-  const isPending =
-    notification.status === "PENDING" || notification.status === "SENDING";
+  const isPending = notification.status === "PENDING" || notification.status === "SENDING";
 
   const handleActionClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -77,8 +76,8 @@ export function NotificationItem({
     return (
       <span
         className={cn(
-          "px-2 py-0.5 text-xs font-medium rounded",
-          colors[notification.priority as keyof typeof colors] || colors.MEDIUM,
+          "rounded px-2 py-0.5 text-xs font-medium",
+          colors[notification.priority as keyof typeof colors] || colors.MEDIUM
         )}
       >
         {labels[notification.priority as keyof typeof labels] || "中"}
@@ -94,7 +93,7 @@ export function NotificationItem({
       return <Clock className="h-4 w-4 text-yellow-500" />;
     }
     if (isUnread) {
-      return <div className="h-2 w-2 bg-blue-500 rounded-full" />;
+      return <div className="h-2 w-2 rounded-full bg-blue-500" />;
     }
     return null;
   };
@@ -102,9 +101,9 @@ export function NotificationItem({
   return (
     <div
       className={cn(
-        "px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer group",
+        "group cursor-pointer px-6 py-4 transition-colors hover:bg-gray-50",
         isUnread && "bg-blue-50/30",
-        selected && "bg-blue-50",
+        selected && "bg-blue-50"
       )}
       onClick={onSelect}
     >
@@ -113,10 +112,10 @@ export function NotificationItem({
         <div className="pt-1">
           <div
             className={cn(
-              "h-4 w-4 border rounded transition-colors",
+              "h-4 w-4 rounded border transition-colors",
               selected
-                ? "bg-blue-500 border-blue-500"
-                : "border-gray-300 group-hover:border-gray-400",
+                ? "border-blue-500 bg-blue-500"
+                : "border-gray-300 group-hover:border-gray-400"
             )}
             onClick={(e) => {
               e.stopPropagation();
@@ -133,15 +132,15 @@ export function NotificationItem({
         </div>
 
         {/* 通知内容 */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               {/* 标题和状态 */}
-              <div className="flex items-center space-x-2 mb-1">
+              <div className="mb-1 flex items-center space-x-2">
                 <h3
                   className={cn(
-                    "text-sm font-medium truncate",
-                    isUnread ? "text-gray-900 font-semibold" : "text-gray-700",
+                    "truncate text-sm font-medium",
+                    isUnread ? "font-semibold text-gray-900" : "text-gray-700"
                   )}
                 >
                   {notification.title}
@@ -151,16 +150,14 @@ export function NotificationItem({
               </div>
 
               {/* 内容 */}
-              <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+              <p className="mb-2 line-clamp-2 text-sm text-gray-600">
                 {notification.formattedContent || notification.content}
               </p>
 
               {/* 元信息 */}
               <div className="flex items-center space-x-4 text-xs text-gray-500">
                 <span>{notification.typeName || notification.type}</span>
-                <span>
-                  {notification.formattedTime || notification.createdAt}
-                </span>
+                <span>{notification.formattedTime || notification.createdAt}</span>
                 {isFailed && <span className="text-red-500">发送失败</span>}
                 {isPending && <span className="text-yellow-500">发送中</span>}
               </div>
@@ -168,11 +165,11 @@ export function NotificationItem({
 
             {/* 操作按钮 */}
             {showActions && (
-              <div className="flex items-center space-x-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="ml-4 flex items-center space-x-1 opacity-0 transition-opacity group-hover:opacity-100">
                 {isUnread && onMarkAsRead && (
                   <button
                     onClick={handleMarkAsRead}
-                    className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                    className="rounded p-1 text-gray-400 hover:bg-blue-50 hover:text-blue-600"
                     title="标记已读"
                   >
                     <Check className="h-4 w-4" />
@@ -182,7 +179,7 @@ export function NotificationItem({
                 {notification.actionUrl && (
                   <button
                     onClick={handleActionClick}
-                    className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+                    className="rounded p-1 text-gray-400 hover:bg-green-50 hover:text-green-600"
                     title="查看详情"
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -192,7 +189,7 @@ export function NotificationItem({
                 {onDelete && (
                   <button
                     onClick={handleDelete}
-                    className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
                     title="删除"
                   >
                     <X className="h-4 w-4" />
@@ -208,8 +205,8 @@ export function NotificationItem({
               <button
                 onClick={handleActionClick}
                 className={cn(
-                  "px-3 py-1 text-xs font-medium rounded transition-colors",
-                  "bg-blue-100 text-blue-700 hover:bg-blue-200",
+                  "rounded px-3 py-1 text-xs font-medium transition-colors",
+                  "bg-blue-100 text-blue-700 hover:bg-blue-200"
                 )}
               >
                 {notification.actionText}

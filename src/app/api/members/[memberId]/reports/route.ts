@@ -17,13 +17,12 @@ import type { IndicatorType, IndicatorStatus } from "@prisma/client";
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(
-  value: T | T[] | null | undefined,
-): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
+  Array.isArray(value) ? value[0] : (value ?? undefined);
 
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean; member: any }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -38,7 +37,7 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `,
+    `
     )
     .eq("id", memberId)
     .is("deletedAt", null)
@@ -81,7 +80,7 @@ async function verifyMemberAccess(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -95,10 +94,7 @@ export async function POST(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限为该成员上传报告" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限为该成员上传报告" }, { status: 403 });
     }
 
     // 解析FormData
@@ -106,10 +102,7 @@ export async function POST(
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json(
-        { error: "请选择要上传的文件" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "请选择要上传的文件" }, { status: 400 });
     }
 
     // 验证文件类型
@@ -120,16 +113,13 @@ export async function POST(
           error: "不支持的文件类型",
           supportedTypes: ["application/pdf", "image/jpeg", "image/png"],
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // 验证文件大小
     if (!OcrService.validateFileSize(file.size)) {
-      return NextResponse.json(
-        { error: "文件大小超过限制（最大10MB）" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "文件大小超过限制（最大10MB）" }, { status: 400 });
     }
 
     // 读取文件内容
@@ -157,14 +147,9 @@ export async function POST(
 
     try {
       // 上传文件到云存储
-      const uploadResult = await FileStorageService.uploadFile(
-        fileBuffer,
-        file.name,
-        memberId,
-        {
-          contentType: mimeType as SupportedMimeType,
-        },
-      );
+      const uploadResult = await FileStorageService.uploadFile(fileBuffer, file.name, memberId, {
+        contentType: mimeType as SupportedMimeType,
+      });
 
       // 更新报告记录，保存文件URL
       const { error: updateError } = await supabase
@@ -183,11 +168,9 @@ export async function POST(
       }
 
       // 执行OCR识别（异步处理，不阻塞响应）
-      processOCR(report.id, fileBuffer, mimeType as SupportedMimeType).catch(
-        (error) => {
-          console.error("OCR处理失败:", error);
-        },
-      );
+      processOCR(report.id, fileBuffer, mimeType as SupportedMimeType).catch((error) => {
+        console.error("OCR处理失败:", error);
+      });
 
       // 立即返回响应
       return NextResponse.json(
@@ -196,7 +179,7 @@ export async function POST(
           reportId: report.id,
           status: "PROCESSING",
         },
-        { status: 202 }, // Accepted - 异步处理中
+        { status: 202 } // Accepted - 异步处理中
       );
     } catch (error) {
       // 如果上传失败，删除报告记录
@@ -211,7 +194,7 @@ export async function POST(
         error: "服务器内部错误",
         details: error instanceof Error ? error.message : "未知错误",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -221,19 +204,12 @@ export async function POST(
  *
  * Migrated from Prisma to Supabase
  */
-async function processOCR(
-  reportId: string,
-  fileBuffer: Buffer,
-  mimeType: SupportedMimeType,
-) {
+async function processOCR(reportId: string, fileBuffer: Buffer, mimeType: SupportedMimeType) {
   const supabase = SupabaseClientManager.getInstance();
 
   try {
     // 执行OCR识别
-    const ocrResult = await OcrService.recognize(
-      fileBuffer,
-      mimeType as SupportedMimeType,
-    );
+    const ocrResult = await OcrService.recognize(fileBuffer, mimeType as SupportedMimeType);
 
     // 解析报告内容
     const parsedReport = ReportParser.parse(ocrResult.text);
@@ -245,9 +221,7 @@ async function processOCR(
     const updateData: any = {
       ocrStatus: validation.valid ? "COMPLETED" : "FAILED",
       ocrText: ocrResult.text,
-      reportDate: parsedReport.reportDate
-        ? new Date(parsedReport.reportDate).toISOString()
-        : null,
+      reportDate: parsedReport.reportDate ? new Date(parsedReport.reportDate).toISOString() : null,
       institution: parsedReport.institution || null,
       reportType: parsedReport.reportType || null,
     };
@@ -286,7 +260,7 @@ async function processOCR(
           referenceRange: indicator.referenceRange || null,
           isAbnormal: indicator.isAbnormal,
           status: indicator.status,
-        }),
+        })
       );
 
       const { error: indicatorError } = await supabase
@@ -320,7 +294,7 @@ async function processOCR(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -334,10 +308,7 @@ export async function GET(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限查看该成员的报告" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限查看该成员的报告" }, { status: 403 });
     }
 
     // 解析查询参数
@@ -364,9 +335,7 @@ export async function GET(
       data: reports,
       error: reportsError,
       count,
-    } = await query
-      .order("createdAt", { ascending: false })
-      .range(offset, offset + limit - 1);
+    } = await query.order("createdAt", { ascending: false }).range(offset, offset + limit - 1);
 
     if (reportsError) {
       console.error("查询报告列表失败:", reportsError);
@@ -381,7 +350,7 @@ export async function GET(
           limit,
           offset,
         },
-        { status: 200 },
+        { status: 200 }
       );
     }
 
@@ -389,9 +358,7 @@ export async function GET(
     const reportIds = reports.map((r) => r.id);
     const { data: indicators, error: indicatorsError } = await supabase
       .from("medical_indicators")
-      .select(
-        "id, reportId, indicatorType, name, value, unit, isAbnormal, status",
-      )
+      .select("id, reportId, indicatorType, name, value, unit, isAbnormal, status")
       .in("reportId", reportIds);
 
     if (indicatorsError) {
@@ -420,7 +387,7 @@ export async function GET(
         limit,
         offset,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("查询报告列表失败:", error);

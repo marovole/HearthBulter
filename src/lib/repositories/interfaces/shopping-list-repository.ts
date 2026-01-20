@@ -40,7 +40,7 @@ export interface ShoppingListRepository {
    */
   listShoppingLists(
     query: ShoppingListListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<ShoppingListDTO>>;
 
   /**
@@ -54,7 +54,7 @@ export interface ShoppingListRepository {
    */
   getShoppingListById(
     id: string,
-    options?: ShoppingListGetOptions,
+    options?: ShoppingListGetOptions
   ): Promise<ShoppingListDTO | null>;
 
   /**
@@ -64,10 +64,7 @@ export interface ShoppingListRepository {
    * @param payload - 更新参数
    * @returns 更新后的购物清单对象
    */
-  updateShoppingList(
-    id: string,
-    payload: UpdateShoppingListDTO,
-  ): Promise<ShoppingListDTO>;
+  updateShoppingList(id: string, payload: UpdateShoppingListDTO): Promise<ShoppingListDTO>;
 
   /**
    * 删除购物清单
@@ -91,7 +88,7 @@ export interface ShoppingListRepository {
   updateShoppingListItem(
     listId: string,
     itemId: string,
-    payload: UpdateShoppingListItemDTO,
+    payload: UpdateShoppingListItemDTO
   ): Promise<ShoppingListItemDTO>;
 
   /**
@@ -103,8 +100,5 @@ export interface ShoppingListRepository {
    * @param payload - 完成参数（实际花费等）
    * @returns 更新后的购物清单对象
    */
-  completeShoppingList(
-    listId: string,
-    payload: CompleteShoppingListDTO,
-  ): Promise<ShoppingListDTO>;
+  completeShoppingList(listId: string, payload: CompleteShoppingListDTO): Promise<ShoppingListDTO>;
 }

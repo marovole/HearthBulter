@@ -12,12 +12,7 @@ import type { SortInput } from "./common";
 /**
  * 任务状态枚举
  */
-export const taskStatusSchema = z.enum([
-  "TODO",
-  "IN_PROGRESS",
-  "COMPLETED",
-  "CANCELLED",
-]);
+export const taskStatusSchema = z.enum(["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"]);
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
 
 /**

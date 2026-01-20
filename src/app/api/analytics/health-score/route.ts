@@ -26,10 +26,7 @@ export async function GET(request: NextRequest) {
     const days = searchParams.get("days");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "缺少必要参数：memberId" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少必要参数：memberId" }, { status: 400 });
     }
 
     // 如果请求趋势数据
@@ -70,10 +67,7 @@ export async function POST(request: NextRequest) {
     const { memberId, date } = body;
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "缺少必要参数：memberId" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少必要参数：memberId" }, { status: 400 });
     }
 
     const targetDate = date ? new Date(date) : new Date();

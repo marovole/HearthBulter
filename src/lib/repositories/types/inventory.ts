@@ -183,9 +183,7 @@ export const inventoryUsageCreateSchema = inventoryUsageSchema.omit({
   createdAt: true,
 });
 
-export type InventoryUsageCreateDTO = z.infer<
-  typeof inventoryUsageCreateSchema
->;
+export type InventoryUsageCreateDTO = z.infer<typeof inventoryUsageCreateSchema>;
 
 /**
  * 浪费记录 Schema
@@ -218,14 +216,8 @@ export type WasteRecordCreateDTO = z.infer<typeof wasteRecordCreateSchema>;
 export const inventoryStatsSchema = z.object({
   totalItems: z.number().int().nonnegative(),
   totalValue: z.number().nonnegative(),
-  itemsByStatus: z.record(
-    inventoryStatusSchema,
-    z.number().int().nonnegative(),
-  ),
-  itemsByLocation: z.record(
-    storageLocationSchema,
-    z.number().int().nonnegative(),
-  ),
+  itemsByStatus: z.record(inventoryStatusSchema, z.number().int().nonnegative()),
+  itemsByLocation: z.record(storageLocationSchema, z.number().int().nonnegative()),
   expiringCount: z.number().int().nonnegative(),
   expiredCount: z.number().int().nonnegative(),
   lowStockCount: z.number().int().nonnegative(),
@@ -246,9 +238,7 @@ export const inventoryItemWithRelationsSchema = inventoryItemSchema.extend({
   wasteRecords: z.array(wasteRecordSchema).default([]),
 });
 
-export type InventoryItemWithRelationsDTO = z.infer<
-  typeof inventoryItemWithRelationsSchema
->;
+export type InventoryItemWithRelationsDTO = z.infer<typeof inventoryItemWithRelationsSchema>;
 
 /**
  * 使用库存输入 Schema（用于食谱制作等批量使用）
@@ -274,6 +264,4 @@ export const batchUseInventoryInputSchema = z.object({
   items: z.array(useInventoryInputSchema).min(1),
 });
 
-export type BatchUseInventoryInputDTO = z.infer<
-  typeof batchUseInventoryInputSchema
->;
+export type BatchUseInventoryInputDTO = z.infer<typeof batchUseInventoryInputSchema>;

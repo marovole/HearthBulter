@@ -12,12 +12,7 @@ export type NotificationType =
 
 export type NotificationPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
-export type NotificationStatus =
-  | "PENDING"
-  | "SENDING"
-  | "SENT"
-  | "FAILED"
-  | "CANCELLED";
+export type NotificationStatus = "PENDING" | "SENDING" | "SENT" | "FAILED" | "CANCELLED";
 
 export class NotificationUtils {
   /**
@@ -134,7 +129,7 @@ export class NotificationUtils {
    */
   static validateNotificationContent(
     title: string,
-    content: string,
+    content: string
   ): {
     isValid: boolean;
     errors: string[];
@@ -266,9 +261,7 @@ export class NotificationUtils {
    * 过滤紧急通知
    */
   static filterUrgent(notifications: any[]): any[] {
-    return notifications.filter(
-      (notification) => notification.priority === "URGENT",
-    );
+    return notifications.filter((notification) => notification.priority === "URGENT");
   }
 
   /**
@@ -276,7 +269,7 @@ export class NotificationUtils {
    */
   static generatePreview(
     type: NotificationType,
-    data: any = {},
+    data: any = {}
   ): {
     title: string;
     content: string;
@@ -368,12 +361,10 @@ export class NotificationUtils {
       MEDIUM: 50,
       LOW: 25,
     };
-    const priorityValue =
-      priorityScores[notification.priority as NotificationPriority] ?? 0;
+    const priorityValue = priorityScores[notification.priority as NotificationPriority] ?? 0;
     score += priorityValue;
 
-    const hoursSinceCreation =
-      (Date.now() - notification.createdAt.getTime()) / (1000 * 60 * 60);
+    const hoursSinceCreation = (Date.now() - notification.createdAt.getTime()) / (1000 * 60 * 60);
     score += Math.max(0, 50 - hoursSinceCreation);
 
     if (!notification.readAt) {
@@ -388,36 +379,32 @@ export class NotificationUtils {
    */
   static sortNotifications(
     notifications: any[],
-    sortBy: "priority" | "time" | "score" = "score",
+    sortBy: "priority" | "time" | "score" = "score"
   ): any[] {
     const sortedNotifications = [...notifications];
 
     switch (sortBy) {
-    case "priority":
-      return sortedNotifications.sort((a, b) => {
-        const priorityOrder: { [key in NotificationPriority]?: number } = {
-          URGENT: 4,
-          HIGH: 3,
-          MEDIUM: 2,
-          LOW: 1,
-        };
-        const bScore = priorityOrder[b.priority as NotificationPriority] ?? 0;
-        const aScore = priorityOrder[a.priority as NotificationPriority] ?? 0;
-        return bScore - aScore;
-      });
+      case "priority":
+        return sortedNotifications.sort((a, b) => {
+          const priorityOrder: { [key in NotificationPriority]?: number } = {
+            URGENT: 4,
+            HIGH: 3,
+            MEDIUM: 2,
+            LOW: 1,
+          };
+          const bScore = priorityOrder[b.priority as NotificationPriority] ?? 0;
+          const aScore = priorityOrder[a.priority as NotificationPriority] ?? 0;
+          return bScore - aScore;
+        });
 
-    case "time":
-      return sortedNotifications.sort(
-        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-      );
+      case "time":
+        return sortedNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-    case "score":
-    default:
-      return sortedNotifications.sort(
-        (a, b) =>
-          this.calculateNotificationScore(b) -
-            this.calculateNotificationScore(a),
-      );
+      case "score":
+      default:
+        return sortedNotifications.sort(
+          (a, b) => this.calculateNotificationScore(b) - this.calculateNotificationScore(a)
+        );
     }
   }
 }

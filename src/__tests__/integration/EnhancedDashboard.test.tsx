@@ -189,9 +189,7 @@ describe("EnhancedDashboard Integration Tests", () => {
     // Verify that health metrics are updated for selected member
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `/api/dashboard/health-metrics?memberId=${mockMemberId}`,
-        ),
+        expect.stringContaining(`/api/dashboard/health-metrics?memberId=${mockMemberId}`)
       );
     });
   });
@@ -225,9 +223,7 @@ describe("EnhancedDashboard Integration Tests", () => {
 
     // Check if API is called with new time range
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("days=30"),
-      );
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("days=30"));
     });
   });
 
@@ -303,8 +299,7 @@ describe("EnhancedDashboard Integration Tests", () => {
 
     // Should render mobile-friendly layout
     const dashboard =
-      screen.getByTestId("dashboard") ||
-      screen.getByText("健康数据趋势").closest("div");
+      screen.getByTestId("dashboard") || screen.getByText("健康数据趋势").closest("div");
     expect(dashboard).toBeInTheDocument();
   });
 
@@ -340,21 +335,15 @@ describe("EnhancedDashboard Integration Tests", () => {
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        `/api/dashboard/family-members?familyId=${mockFamilyId}`,
+        `/api/dashboard/family-members?familyId=${mockFamilyId}`
       );
     });
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/health-metrics"),
-    );
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/health-metrics"));
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/health-score"),
-    );
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/health-score"));
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/nutrition-trends"),
-    );
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/nutrition-trends"));
   });
 
   it("handles empty data states gracefully", async () => {

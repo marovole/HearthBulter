@@ -10,9 +10,8 @@ import { z } from "zod";
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(
-  value: T | T[] | null | undefined,
-): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
+  Array.isArray(value) ? value[0] : (value ?? undefined);
 
 const createMealPlanSchema = z.object({
   days: z.number().min(1).max(14).default(7), // 默认7天
@@ -26,7 +25,7 @@ const createMealPlanSchema = z.object({
  */
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean; member: any }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -41,7 +40,7 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `,
+    `
     )
     .eq("id", memberId)
     .is("deletedAt", null)
@@ -85,7 +84,7 @@ async function verifyMemberAccess(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -95,10 +94,7 @@ export async function POST(
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess || !member) {
       return NextResponse.json({ error: "成员不存在" }, { status: 404 });
@@ -108,30 +104,24 @@ export async function POST(
     const body = await request.json();
     const validatedData = createMealPlanSchema.parse(body);
 
-    const startDate = validatedData.startDate
-      ? new Date(validatedData.startDate)
-      : undefined;
+    const startDate = validatedData.startDate ? new Date(validatedData.startDate) : undefined;
 
     // 生成食谱计划
     // Note: mealPlanner service still uses Prisma for complex business logic
-    const planData = await mealPlanner.generateMealPlan(
-      memberId,
-      validatedData.days,
-      startDate,
-    );
+    const planData = await mealPlanner.generateMealPlan(memberId, validatedData.days, startDate);
 
     return NextResponse.json(
       {
         message: "食谱计划生成成功",
         plan: planData,
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "请求参数验证失败", details: error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -148,7 +138,7 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -158,10 +148,7 @@ export async function GET(
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess || !member) {
       return NextResponse.json({ error: "成员不存在" }, { status: 404 });
@@ -170,7 +157,7 @@ export async function GET(
     // 使用 Repository 查询膳食计划（包含所有嵌套数据）
     const result = await mealPlanRepository.listMealPlans(
       { memberId, includeDeleted: false },
-      { offset: 0, limit: 100 }, // 默认返回最多 100 个计划
+      { offset: 0, limit: 100 } // 默认返回最多 100 个计划
     );
 
     // 转换为原有的响应格式以保持向后兼容
@@ -213,7 +200,7 @@ export async function GET(
           createdAt: meal.createdAt,
           updatedAt: meal.updatedAt,
           ingredients: meal.ingredients,
-        }),
+        })
       ),
     }));
 

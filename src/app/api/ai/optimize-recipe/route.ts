@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { recipeOptimizer } from "@/lib/services/ai/recipe-optimizer";
 import { prisma } from "@/lib/db";
-import {
-  getDefaultRateLimitConfig,
-  rateLimiter,
-} from "@/lib/services/ai/rate-limiter";
+import { getDefaultRateLimitConfig, rateLimiter } from "@/lib/services/ai/rate-limiter";
 import { sensitiveFilter } from "@/lib/services/sensitive-filter";
 
 // Force dynamic rendering for auth()
@@ -21,7 +18,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await rateLimiter.checkLimit(
       session.user.id,
       "ai_optimize_recipe",
-      getDefaultRateLimitConfig("ai_optimize_recipe"),
+      getDefaultRateLimitConfig("ai_optimize_recipe")
     );
 
     if (!rateLimitResult.allowed) {
@@ -38,7 +35,7 @@ export async function POST(request: NextRequest) {
             "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
             "Retry-After": rateLimitResult.retryAfter?.toString() || "3600",
           },
-        },
+        }
       );
     }
 
@@ -53,10 +50,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!recipeId || !memberId) {
-      return NextResponse.json(
-        { error: "Recipe ID and Member ID are required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Recipe ID and Member ID are required" }, { status: 400 });
     }
 
     // 验证用户权限
@@ -84,10 +78,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     const memberData = member as {
@@ -141,9 +132,7 @@ export async function POST(request: NextRequest) {
     };
 
     // 构建用户偏好
-    const memberAllergies = Array.isArray(memberData.allergies)
-      ? memberData.allergies
-      : [];
+    const memberAllergies = Array.isArray(memberData.allergies) ? memberData.allergies : [];
 
     const userPreferences = {
       dietary_restrictions: [],
@@ -160,8 +149,7 @@ export async function POST(request: NextRequest) {
     // 添加饮食偏好限制
     if (memberData.dietaryPreference) {
       const pref = memberData.dietaryPreference;
-      if (pref.isVegetarian)
-        userPreferences.dietary_restrictions.push("vegetarian");
+      if (pref.isVegetarian) userPreferences.dietary_restrictions.push("vegetarian");
       if (pref.isVegan) userPreferences.dietary_restrictions.push("vegan");
       if (pref.isKeto) userPreferences.dietary_restrictions.push("keto");
       if (pref.isLowCarb) userPreferences.dietary_restrictions.push("low_carb");
@@ -180,7 +168,7 @@ export async function POST(request: NextRequest) {
       recipeData,
       defaultTargetNutrition,
       userPreferences,
-      season,
+      season
     );
 
     // 保存优化建议到数据库
@@ -206,10 +194,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Recipe optimization API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -227,10 +212,7 @@ export async function GET(request: NextRequest) {
     const memberId = searchParams.get("memberId");
 
     if (!ingredient || !memberId) {
-      return NextResponse.json(
-        { error: "Ingredient and memberId are required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Ingredient and memberId are required" }, { status: 400 });
     }
 
     // 验证用户权限
@@ -258,18 +240,13 @@ export async function GET(request: NextRequest) {
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     const memberData = member as {
       allergies?: Array<{ allergenName?: string }>;
     };
-    const memberAllergies = Array.isArray(memberData.allergies)
-      ? memberData.allergies
-      : [];
+    const memberAllergies = Array.isArray(memberData.allergies) ? memberData.allergies : [];
 
     // 构建用户偏好
     const userPreferences = {
@@ -289,15 +266,12 @@ export async function GET(request: NextRequest) {
       reason,
       [], // 可用食材列表
       ["营养均衡", "健康饮食"], // 营养要求
-      userPreferences,
+      userPreferences
     );
 
     return NextResponse.json({ substitutions });
   } catch (error) {
     console.error("Ingredient substitution API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

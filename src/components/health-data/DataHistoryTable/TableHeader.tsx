@@ -33,12 +33,12 @@ export function TableHeader({
             type="checkbox"
             checked={allSelected}
             onChange={(e) => onSelectAll(e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
         </th>
 
         <th
-          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100"
           onClick={() => onSort("measuredAt")}
         >
           <div className="flex items-center space-x-1">
@@ -47,19 +47,19 @@ export function TableHeader({
           </div>
         </th>
 
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
           健康指标
         </th>
 
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
           数据来源
         </th>
 
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
           备注
         </th>
 
-        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
           操作
         </th>
       </tr>

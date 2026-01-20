@@ -28,12 +28,7 @@ export interface RateLimitResult {
 }
 
 // AI 调用类型
-export type AICallType =
-  | "chat"
-  | "analysis"
-  | "report"
-  | "recommendation"
-  | "image";
+export type AICallType = "chat" | "analysis" | "report" | "recommendation" | "image";
 
 // 默认限流配置（每种调用类型）
 const DEFAULT_CONFIGS: Record<AICallType, RateLimitConfig> = {
@@ -109,10 +104,7 @@ function getUserRateLimit(userId: string, callType: AICallType): UserRateLimit {
 /**
  * 清理过期的请求记录
  */
-function cleanupExpiredRequests(
-  rateLimit: UserRateLimit,
-  windowMs: number,
-): void {
+function cleanupExpiredRequests(rateLimit: UserRateLimit, windowMs: number): void {
   const now = Date.now();
   const windowStart = now - windowMs;
   rateLimit.requests = rateLimit.requests.filter((ts) => ts > windowStart);
@@ -124,7 +116,7 @@ function cleanupExpiredRequests(
 export function checkRateLimit(
   userId: string,
   callType: AICallType,
-  config?: Partial<RateLimitConfig>,
+  config?: Partial<RateLimitConfig>
 ): RateLimitResult {
   const finalConfig = { ...DEFAULT_CONFIGS[callType], ...config };
   const rateLimit = getUserRateLimit(userId, callType);
@@ -198,7 +190,7 @@ export function recordAICall(userId: string, callType: AICallType): void {
  */
 export function getUserRateLimitStatus(
   userId: string,
-  callType: AICallType,
+  callType: AICallType
 ): {
   requestsInWindow: number;
   isBlocked: boolean;
@@ -211,22 +203,15 @@ export function getUserRateLimitStatus(
 
   return {
     requestsInWindow: rateLimit.requests.length,
-    isBlocked: rateLimit.blockedUntil
-      ? rateLimit.blockedUntil > Date.now()
-      : false,
-    blockedUntil: rateLimit.blockedUntil
-      ? new Date(rateLimit.blockedUntil)
-      : null,
+    isBlocked: rateLimit.blockedUntil ? rateLimit.blockedUntil > Date.now() : false,
+    blockedUntil: rateLimit.blockedUntil ? new Date(rateLimit.blockedUntil) : null,
   };
 }
 
 /**
  * 重置用户限流状态（管理员功能）
  */
-export function resetUserRateLimit(
-  userId: string,
-  callType?: AICallType,
-): void {
+export function resetUserRateLimit(userId: string, callType?: AICallType): void {
   if (callType) {
     const userMap = userLimits.get(userId);
     if (userMap) {
@@ -284,14 +269,14 @@ export function cleanupAllExpiredRecords(): void {
 export async function withRateLimit<T>(
   userId: string,
   callType: AICallType,
-  fn: () => Promise<T>,
+  fn: () => Promise<T>
 ): Promise<T> {
   const result = checkRateLimit(userId, callType);
 
   if (!result.allowed) {
     throw new RateLimitError(
       `AI 调用频率超限，请 ${result.retryAfter} 秒后重试`,
-      result.retryAfter || 60,
+      result.retryAfter || 60
     );
   }
 
@@ -357,10 +342,7 @@ type RateLimiterGlobalStats = {
 };
 
 export class RateLimiter {
-  private limits = new Map<
-    string,
-    { requests: number[]; blockedUntil: number | null }
-  >();
+  private limits = new Map<string, { requests: number[]; blockedUntil: number | null }>();
   private stats = new Map<string, RateLimiterStats>();
   private lastConfigs = new Map<string, RateLimitConfig>();
   private lastAccess = new Map<string, number>();
@@ -399,7 +381,7 @@ export class RateLimiter {
   async checkLimit(
     userId: string,
     endpoint: string,
-    config: RateLimitConfig,
+    config: RateLimitConfig
   ): Promise<{
     allowed: boolean;
     remaining: number;
@@ -481,19 +463,14 @@ export class RateLimiter {
 
   getStats(): RateLimiterSummary;
   getStats(userId: string, endpoint: string): RateLimiterStatsResult;
-  getStats(
-    userId?: string,
-    endpoint?: string,
-  ): RateLimiterSummary | RateLimiterStatsResult {
+  getStats(userId?: string, endpoint?: string): RateLimiterSummary | RateLimiterStatsResult {
     if (!userId || !endpoint) {
       const globalStats = this.getGlobalStats();
       const totalRecords = this.stats.size;
       const activeRecords = this.limits.size;
       const blockRate =
         globalStats.totalRequests > 0
-          ? Math.round(
-            (globalStats.blockedRequests / globalStats.totalRequests) * 100,
-          )
+          ? Math.round((globalStats.blockedRequests / globalStats.totalRequests) * 100)
           : 0;
       return {
         activeRecords,
@@ -510,9 +487,7 @@ export class RateLimiter {
     const limit = this.limits.get(key);
     const lastConfig = this.lastConfigs.get(key);
     const currentUsage = limit ? limit.requests.length : 0;
-    const remainingRequests = lastConfig
-      ? Math.max(0, lastConfig.maxRequests - currentUsage)
-      : 0;
+    const remainingRequests = lastConfig ? Math.max(0, lastConfig.maxRequests - currentUsage) : 0;
 
     return {
       totalRequests: stats.totalRequests,
@@ -553,16 +528,11 @@ export class RateLimiter {
       totalRequests,
       allowedRequests,
       blockedRequests,
-      averageRequestsPerUser:
-        userIds.size > 0 ? totalRequests / userIds.size : 0,
+      averageRequestsPerUser: userIds.size > 0 ? totalRequests / userIds.size : 0,
     };
   }
 
-  getStatsByTimeRange(
-    userId: string,
-    endpoint: string,
-    rangeMs: number,
-  ): RateLimiterStatsResult {
+  getStatsByTimeRange(userId: string, endpoint: string, rangeMs: number): RateLimiterStatsResult {
     const key = this.getKey(userId, endpoint);
     const stats = this.getStatsEntry(key);
     const now = Date.now();
@@ -571,24 +541,17 @@ export class RateLimiter {
     const lastConfig = this.lastConfigs.get(key);
     const limit = this.limits.get(key);
     const currentUsage = limit ? limit.requests.length : 0;
-    const remainingRequests = lastConfig
-      ? Math.max(0, lastConfig.maxRequests - currentUsage)
-      : 0;
+    const remainingRequests = lastConfig ? Math.max(0, lastConfig.maxRequests - currentUsage) : 0;
 
     return {
       totalRequests: rangeRequests.length,
       allowedRequests: Math.min(rangeRequests.length, stats.allowedRequests),
-      blockedRequests: Math.max(
-        0,
-        rangeRequests.length - stats.allowedRequests,
-      ),
+      blockedRequests: Math.max(0, rangeRequests.length - stats.allowedRequests),
       blockRate:
         rangeRequests.length > 0
           ? Math.round(
-            ((rangeRequests.length - stats.allowedRequests) /
-                rangeRequests.length) *
-                100,
-          )
+              ((rangeRequests.length - stats.allowedRequests) / rangeRequests.length) * 100
+            )
           : 0,
       currentUsage,
       remainingRequests,

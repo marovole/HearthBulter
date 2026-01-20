@@ -225,9 +225,7 @@ export const updateInventoryItemSchema = z.object({
   expiry_date: stringSchema.optional(),
   purchase_date: stringSchema.optional(),
   location: stringSchema.optional(),
-  status: z
-    .enum(["IN_STOCK", "LOW_STOCK", "EXPIRED", "OUT_OF_STOCK"])
-    .optional(),
+  status: z.enum(["IN_STOCK", "LOW_STOCK", "EXPIRED", "OUT_OF_STOCK"]).optional(),
 });
 
 // 购物清单相关模式
@@ -382,7 +380,7 @@ export const createInventoryNotificationsSchema = z.object({
       title: stringSchema.optional(),
       message: stringSchema.optional(),
       priority: z.enum(["HIGH", "MEDIUM", "LOW"]).default("MEDIUM"),
-    }),
+    })
   ),
 });
 

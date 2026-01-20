@@ -3,10 +3,7 @@
  * 提供自动化代码质量分析、规范检查和安全漏洞扫描
  */
 
-import {
-  loadCodeReviewConfig,
-  applyConfigToService,
-} from "@/lib/code-review-config";
+import { loadCodeReviewConfig, applyConfigToService } from "@/lib/code-review-config";
 
 export interface CodeReviewInput {
   content: string;
@@ -35,13 +32,7 @@ export interface CodeReviewResult {
 }
 
 export interface CodeReviewIssue {
-  type:
-    | "complexity"
-    | "security"
-    | "typescript"
-    | "style"
-    | "performance"
-    | "maintainability";
+  type: "complexity" | "security" | "typescript" | "style" | "performance" | "maintainability";
   severity: "low" | "medium" | "high" | "critical";
   description: string;
   location?: {
@@ -66,11 +57,7 @@ export interface CodeReviewRule {
   description: string;
   pattern?: RegExp;
   keywords?: string[];
-  condition: (
-    content: string,
-    filePath: string,
-    context?: CodeReviewInput["context"],
-  ) => boolean;
+  condition: (content: string, filePath: string, context?: CodeReviewInput["context"]) => boolean;
   severity: CodeReviewIssue["severity"];
   type: CodeReviewIssue["type"];
   recommendation: string;
@@ -114,22 +101,13 @@ class CodeReviewService {
           continue;
         }
 
-        if (
-          rule.condition(
-            reviewInput.content,
-            reviewInput.filePath,
-            reviewInput.context,
-          )
-        ) {
+        if (rule.condition(reviewInput.content, reviewInput.filePath, reviewInput.context)) {
           // 查找具体位置（如果有模式匹配）
           let location;
           if (rule.pattern) {
             const match = rule.pattern.exec(reviewInput.content);
             if (match) {
-              const lineNumber = this.getLineNumber(
-                reviewInput.content,
-                match.index,
-              );
+              const lineNumber = this.getLineNumber(reviewInput.content, match.index);
               location = {
                 line: lineNumber,
                 text: match[0],
@@ -162,8 +140,7 @@ class CodeReviewService {
 
     // 根据风险等级决定是否批准
     const approved =
-      riskLevel !== "critical" &&
-      issues.filter((i) => i.severity === "critical").length === 0;
+      riskLevel !== "critical" && issues.filter((i) => i.severity === "critical").length === 0;
 
     const processingTime = Date.now() - startTime;
 
@@ -187,9 +164,7 @@ class CodeReviewService {
    * 批量审查多个文件
    */
   async reviewBatch(reviews: CodeReviewInput[]): Promise<CodeReviewResult[]> {
-    const results = await Promise.all(
-      reviews.map((review) => this.reviewCode(review)),
-    );
+    const results = await Promise.all(reviews.map((review) => this.reviewCode(review)));
     return results;
   }
 
@@ -239,10 +214,7 @@ class CodeReviewService {
     results.forEach((result) => {
       result.issues.forEach((issue) => {
         issuesByType.set(issue.type, (issuesByType.get(issue.type) || 0) + 1);
-        issuesBySeverity.set(
-          issue.severity,
-          (issuesBySeverity.get(issue.severity) || 0) + 1,
-        );
+        issuesBySeverity.set(issue.severity, (issuesBySeverity.get(issue.severity) || 0) + 1);
       });
     });
 
@@ -268,9 +240,7 @@ class CodeReviewService {
     let complexity = 1; // 基础复杂度
 
     // 条件语句
-    const conditions = (
-      code.match(/\bif\b|\belse\b|\bswitch\b|\bcatch\b/g) || []
-    ).length;
+    const conditions = (code.match(/\bif\b|\belse\b|\bswitch\b|\bcatch\b/g) || []).length;
     complexity += conditions;
 
     // 循环语句
@@ -303,10 +273,7 @@ class CodeReviewService {
     const securityScore = this.calculateSecurityScore(content);
 
     // 简化的可维护性指数
-    const maintainabilityIndex = Math.max(
-      0,
-      100 - complexity * 5 - duplicateLines,
-    );
+    const maintainabilityIndex = Math.max(0, 100 - complexity * 5 - duplicateLines);
 
     return {
       complexity,
@@ -355,9 +322,7 @@ class CodeReviewService {
     return Math.max(0, score);
   }
 
-  private calculateRiskLevel(
-    issues: CodeReviewIssue[],
-  ): CodeReviewResult["riskLevel"] {
+  private calculateRiskLevel(issues: CodeReviewIssue[]): CodeReviewResult["riskLevel"] {
     if (issues.some((issue) => issue.severity === "critical")) {
       return "critical";
     }
@@ -392,20 +357,14 @@ export interface CodeReviewReport {
 export const codeReviewService = new CodeReviewService();
 
 // 导出工具函数
-export async function reviewCodeFile(
-  reviewInput: CodeReviewInput,
-): Promise<CodeReviewResult> {
+export async function reviewCodeFile(reviewInput: CodeReviewInput): Promise<CodeReviewResult> {
   return await codeReviewService.reviewCode(reviewInput);
 }
 
-export async function reviewCodeBatch(
-  reviews: CodeReviewInput[],
-): Promise<CodeReviewResult[]> {
+export async function reviewCodeBatch(reviews: CodeReviewInput[]): Promise<CodeReviewResult[]> {
   return await codeReviewService.reviewBatch(reviews);
 }
 
-export function generateReviewReport(
-  results: CodeReviewResult[],
-): CodeReviewReport {
+export function generateReviewReport(results: CodeReviewResult[]): CodeReviewReport {
   return codeReviewService.generateReport(results);
 }

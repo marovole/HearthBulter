@@ -130,28 +130,21 @@ export function MacroNutrientChart({
         value: protein,
         calories: proteinCalories,
         color: MACRO_COLORS.protein,
-        percentage:
-          totalMacroCalories > 0
-            ? (proteinCalories / totalMacroCalories) * 100
-            : 0,
+        percentage: totalMacroCalories > 0 ? (proteinCalories / totalMacroCalories) * 100 : 0,
       },
       {
         name: "碳水化合物",
         value: carbs,
         calories: carbsCalories,
         color: MACRO_COLORS.carbs,
-        percentage:
-          totalMacroCalories > 0
-            ? (carbsCalories / totalMacroCalories) * 100
-            : 0,
+        percentage: totalMacroCalories > 0 ? (carbsCalories / totalMacroCalories) * 100 : 0,
       },
       {
         name: "脂肪",
         value: fat,
         calories: fatCalories,
         color: MACRO_COLORS.fat,
-        percentage:
-          totalMacroCalories > 0 ? (fatCalories / totalMacroCalories) * 100 : 0,
+        percentage: totalMacroCalories > 0 ? (fatCalories / totalMacroCalories) * 100 : 0,
       },
     ];
 
@@ -159,13 +152,7 @@ export function MacroNutrientChart({
     const goal = MACRO_GOALS[goalType];
     actualMacros.forEach((macro) => {
       macro.targetPercentage =
-        goal[
-          macro.name === "蛋白质"
-            ? "protein"
-            : macro.name === "碳水化合物"
-              ? "carbs"
-              : "fat"
-        ];
+        goal[macro.name === "蛋白质" ? "protein" : macro.name === "碳水化合物" ? "carbs" : "fat"];
     });
 
     setMacroData(actualMacros);
@@ -220,21 +207,9 @@ export function MacroNutrientChart({
     ];
 
     setGoalData(radarData);
-  }, [
-    calories,
-    protein,
-    carbs,
-    fat,
-    targetProtein,
-    targetCarbs,
-    targetFat,
-    goalType,
-  ]);
+  }, [calories, protein, carbs, fat, targetProtein, targetCarbs, targetFat, goalType]);
 
-  const getGoalStatus = (
-    actual: number,
-    target: number,
-  ): "good" | "warning" | "danger" => {
+  const getGoalStatus = (actual: number, target: number): "good" | "warning" | "danger" => {
     const percentage = (actual / target) * 100;
     if (percentage >= 90 && percentage <= 110) return "good";
     if (percentage >= 80 && percentage < 90) return "warning";
@@ -244,27 +219,24 @@ export function MacroNutrientChart({
 
   const getStatusColor = (status: "good" | "warning" | "danger"): string => {
     switch (status) {
-    case "good":
-      return "text-green-600 bg-green-50 border-green-200";
-    case "warning":
-      return "text-yellow-600 bg-yellow-50 border-yellow-200";
-    case "danger":
-      return "text-red-600 bg-red-50 border-red-200";
+      case "good":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "warning":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      case "danger":
+        return "text-red-600 bg-red-50 border-red-200";
     }
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <p className="font-medium">{payload[0].name}</p>
           <p className="text-sm text-gray-600">
-            {payload[0].value?.toFixed(1)}g (
-            {payload[0].payload?.percentage?.toFixed(1)}%)
+            {payload[0].value?.toFixed(1)}g ({payload[0].payload?.percentage?.toFixed(1)}%)
           </p>
-          <p className="text-sm text-gray-600">
-            {payload[0].payload?.calories?.toFixed(0)} kcal
-          </p>
+          <p className="text-sm text-gray-600">{payload[0].payload?.calories?.toFixed(0)} kcal</p>
         </div>
       );
     }
@@ -304,16 +276,14 @@ export function MacroNutrientChart({
         {macroData.map((macro) => (
           <div key={macro.name} className="text-center">
             <div
-              className="w-4 h-4 rounded-full mx-auto mb-2"
+              className="mx-auto mb-2 h-4 w-4 rounded-full"
               style={{ backgroundColor: macro.color }}
             />
             <div className="text-sm font-medium">{macro.name}</div>
             <div className="text-xs text-gray-600">
               {macro.value.toFixed(1)}g ({macro.percentage.toFixed(1)}%)
             </div>
-            <div className="text-xs text-gray-500">
-              {macro.calories.toFixed(0)} kcal
-            </div>
+            <div className="text-xs text-gray-500">{macro.calories.toFixed(0)} kcal</div>
           </div>
         ))}
       </div>
@@ -344,14 +314,9 @@ export function MacroNutrientChart({
             <div key={item.nutrient} className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="font-medium">{item.nutrient}</span>
-                <span className={getStatusColor(status)}>
-                  {item.percentage.toFixed(1)}%
-                </span>
+                <span className={getStatusColor(status)}>{item.percentage.toFixed(1)}%</span>
               </div>
-              <Progress
-                value={Math.min(item.percentage, 150)}
-                className="h-2"
-              />
+              <Progress value={Math.min(item.percentage, 150)} className="h-2" />
               <div className="flex justify-between text-xs text-gray-600">
                 <span>实际: {item.actual.toFixed(1)}g</span>
                 <span>目标: {item.target.toFixed(1)}g</span>
@@ -392,8 +357,8 @@ export function MacroNutrientChart({
       </div>
 
       {/* 目标说明 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="mb-2 flex items-center gap-2">
           <Target className="h-4 w-4 text-blue-600" />
           <span className="font-medium text-blue-900">
             {goalType === "WEIGHT_LOSS"
@@ -406,9 +371,7 @@ export function MacroNutrientChart({
             目标
           </span>
         </div>
-        <p className="text-sm text-blue-800">
-          {MACRO_GOALS[goalType].description}
-        </p>
+        <p className="text-sm text-blue-800">{MACRO_GOALS[goalType].description}</p>
         <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
           <div className="text-center">
             <div className="font-medium text-blue-900">蛋白质</div>
@@ -436,10 +399,7 @@ export function MacroNutrientChart({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs
-          value={activeView}
-          onValueChange={(value) => setActiveView(value as any)}
-        >
+        <Tabs value={activeView} onValueChange={(value) => setActiveView(value as any)}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pie" className="flex items-center gap-2">
               <PieChartIcon className="h-4 w-4" />
@@ -475,7 +435,7 @@ export function MacroNutrientChart({
             <span className="font-medium text-purple-900">营养建议</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {macroData.map((macro) => {
               const targetPercentage = macro.targetPercentage || 25;
               const diff = macro.percentage - targetPercentage;
@@ -483,10 +443,7 @@ export function MacroNutrientChart({
               if (Math.abs(diff) < 5) return null;
 
               return (
-                <div
-                  key={macro.name}
-                  className="flex items-center gap-2 text-sm"
-                >
+                <div key={macro.name} className="flex items-center gap-2 text-sm">
                   {diff > 0 ? (
                     <Zap className="h-4 w-4 text-orange-500" />
                   ) : (

@@ -36,9 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 软删除超过30天的已过期/已拒绝邀请
-    const thirtyDaysAgo = new Date(
-      Date.now() - 30 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data: deletedInvitations, error: deleteError } = await supabase
       .from("family_invitations")
       .update({ status: "DELETED" } as any)
@@ -59,7 +57,7 @@ export async function POST(request: NextRequest) {
           softDeleted: deletedInvitations?.length || 0,
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("清理过期邀请失败:", error);
@@ -83,40 +81,34 @@ export async function GET(request: NextRequest) {
 
     const supabase = SupabaseClientManager.getInstance();
     const now = new Date().toISOString();
-    const thirtyDaysAgo = new Date(
-      Date.now() - 30 * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     // 获取过期邀请统计（使用Supabase）
-    const [
-      pendingExpiredResult,
-      expiredStatusResult,
-      rejectedStatusResult,
-      softDeletableResult,
-    ] = await Promise.all([
-      // 待处理但已过期的邀请
-      supabase
-        .from("family_invitations")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "PENDING")
-        .lt("expiresAt", now),
-      // 已标记为过期的邀请
-      supabase
-        .from("family_invitations")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "EXPIRED"),
-      // 已拒绝的邀请
-      supabase
-        .from("family_invitations")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "REJECTED"),
-      // 可软删除的过期/拒绝邀请（超过30天）
-      supabase
-        .from("family_invitations")
-        .select("*", { count: "exact", head: true })
-        .in("status", ["EXPIRED", "REJECTED"])
-        .lt("updatedAt", thirtyDaysAgo),
-    ]);
+    const [pendingExpiredResult, expiredStatusResult, rejectedStatusResult, softDeletableResult] =
+      await Promise.all([
+        // 待处理但已过期的邀请
+        supabase
+          .from("family_invitations")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "PENDING")
+          .lt("expiresAt", now),
+        // 已标记为过期的邀请
+        supabase
+          .from("family_invitations")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "EXPIRED"),
+        // 已拒绝的邀请
+        supabase
+          .from("family_invitations")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "REJECTED"),
+        // 可软删除的过期/拒绝邀请（超过30天）
+        supabase
+          .from("family_invitations")
+          .select("*", { count: "exact", head: true })
+          .in("status", ["EXPIRED", "REJECTED"])
+          .lt("updatedAt", thirtyDaysAgo),
+      ]);
 
     const pendingExpired = pendingExpiredResult.count || 0;
     const expiredStatus = expiredStatusResult.count || 0;
@@ -132,7 +124,7 @@ export async function GET(request: NextRequest) {
           softDeletable,
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取过期邀请统计失败:", error);

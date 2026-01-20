@@ -45,7 +45,7 @@ export interface ReminderTrigger {
 class ReminderService {
   async getReminderConfigs(memberId: string): Promise<NutritionReminder[]> {
     const reminders = (await convexTracking.getReminderConfigs(
-      memberId,
+      memberId
     )) as Doc<"healthReminders">[];
     return reminders.map((reminder) => ({
       ...reminder,
@@ -60,7 +60,7 @@ class ReminderService {
 
   async upsertReminderConfig(
     memberId: string,
-    config: Omit<ReminderConfig, "enabled"> & { enabled?: boolean },
+    config: Omit<ReminderConfig, "enabled"> & { enabled?: boolean }
   ): Promise<NutritionReminder> {
     const { type, enabled = true, hour, minute, daysOfWeek, message } = config;
     await convexTracking.upsertReminderConfig({
@@ -73,9 +73,7 @@ class ReminderService {
       message,
     });
 
-    const updated = (await convexTracking.getReminderConfigs(
-      memberId,
-    )) as Doc<"healthReminders">[];
+    const updated = (await convexTracking.getReminderConfigs(memberId)) as Doc<"healthReminders">[];
     const reminder = updated.find((r) => r.reminderType === type);
     if (!reminder) throw new Error("Failed to create reminder");
 
@@ -101,8 +99,7 @@ class ReminderService {
     const currentMinute = now.getMinutes();
     const currentDayOfWeek = now.getDay();
 
-    const activeReminders =
-      (await convexTracking.getActiveReminders()) as Doc<"healthReminders">[];
+    const activeReminders = (await convexTracking.getActiveReminders()) as Doc<"healthReminders">[];
 
     for (const reminder of activeReminders) {
       if (!reminder.enabled || reminder.deletedAt) continue;
@@ -117,8 +114,7 @@ class ReminderService {
       if (Math.abs(currentTime - reminderTime) > 5) continue;
 
       const oneHourAgo = now.getTime() - 60 * 60 * 1000;
-      if (reminder.lastTriggeredAt && reminder.lastTriggeredAt > oneHourAgo)
-        continue;
+      if (reminder.lastTriggeredAt && reminder.lastTriggeredAt > oneHourAgo) continue;
 
       const trigger = await this.generateReminderTrigger(reminder, now);
       if (trigger) {
@@ -132,44 +128,28 @@ class ReminderService {
 
   private async generateReminderTrigger(
     reminder: Doc<"healthReminders">,
-    scheduledTime: Date,
+    scheduledTime: Date
   ): Promise<ReminderTrigger | null> {
     const { memberId, reminderType, message } = reminder;
 
     switch (reminderType) {
-    case "WEIGHT":
-      return this.generateWeightReminder(
-        memberId,
-        scheduledTime,
-        message ?? undefined,
-      );
-    case "BLOOD_PRESSURE":
-      return this.generateBloodPressureReminder(
-        memberId,
-        scheduledTime,
-        message ?? undefined,
-      );
-    case "HEART_RATE":
-      return this.generateHeartRateReminder(
-        memberId,
-        scheduledTime,
-        message ?? undefined,
-      );
-    case "GENERAL":
-      return this.generateGeneralReminder(
-        memberId,
-        scheduledTime,
-        message ?? undefined,
-      );
-    default:
-      return null;
+      case "WEIGHT":
+        return this.generateWeightReminder(memberId, scheduledTime, message ?? undefined);
+      case "BLOOD_PRESSURE":
+        return this.generateBloodPressureReminder(memberId, scheduledTime, message ?? undefined);
+      case "HEART_RATE":
+        return this.generateHeartRateReminder(memberId, scheduledTime, message ?? undefined);
+      case "GENERAL":
+        return this.generateGeneralReminder(memberId, scheduledTime, message ?? undefined);
+      default:
+        return null;
     }
   }
 
   private generateWeightReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string,
+    customMessage?: string
   ): ReminderTrigger {
     return {
       memberId,
@@ -183,7 +163,7 @@ class ReminderService {
   private generateBloodPressureReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string,
+    customMessage?: string
   ): ReminderTrigger {
     return {
       memberId,
@@ -197,7 +177,7 @@ class ReminderService {
   private generateHeartRateReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string,
+    customMessage?: string
   ): ReminderTrigger {
     return {
       memberId,
@@ -211,7 +191,7 @@ class ReminderService {
   private generateGeneralReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string,
+    customMessage?: string
   ): ReminderTrigger {
     return {
       memberId,
@@ -225,7 +205,7 @@ class ReminderService {
   private generateMealTimeReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string,
+    customMessage?: string
   ): ReminderTrigger {
     const hour = scheduledTime.getHours();
 
@@ -259,7 +239,7 @@ class ReminderService {
   private async generateMissingMealReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string,
+    customMessage?: string
   ): Promise<ReminderTrigger | null> {
     const hour = scheduledTime.getHours();
     const today = new Date();
@@ -281,19 +261,14 @@ class ReminderService {
       return null;
     }
 
-    const existingMeal = await convexTracking.findMealLogByTypeAndDate(
-      memberId,
-      mealType,
-      today,
-    );
+    const existingMeal = await convexTracking.findMealLogByTypeAndDate(memberId, mealType, today);
 
     if (existingMeal) return null;
 
     return {
       memberId,
       type: "GENERAL",
-      message:
-        customMessage || `还没记录${mealName}哦！点击记录，保持打卡连续性～`,
+      message: customMessage || `还没记录${mealName}哦！点击记录，保持打卡连续性～`,
       scheduledTime,
       priority: "HIGH",
       metadata: { mealType, mealName },
@@ -303,7 +278,7 @@ class ReminderService {
   private async generateNutritionDeficiencyReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string,
+    customMessage?: string
   ): Promise<ReminderTrigger | null> {
     const hour = scheduledTime.getHours();
 
@@ -312,9 +287,9 @@ class ReminderService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const todayMeals = (await convexTracking.getTodayMealLogs(
-      memberId,
-    )) as Array<Doc<"mealLogs"> & { foods: Doc<"mealLogFoods">[] }>;
+    const todayMeals = (await convexTracking.getTodayMealLogs(memberId)) as Array<
+      Doc<"mealLogs"> & { foods: Doc<"mealLogFoods">[] }
+    >;
 
     if (todayMeals.length === 0) return null;
 
@@ -324,7 +299,7 @@ class ReminderService {
   private async generateStreakWarningReminder(
     memberId: string,
     scheduledTime: Date,
-    customMessage?: string,
+    customMessage?: string
   ): Promise<ReminderTrigger | null> {
     const hour = scheduledTime.getHours();
 
@@ -333,13 +308,11 @@ class ReminderService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const todayMeals = (await convexTracking.getTodayMealLogs(
-      memberId,
-    )) as MealLogDoc[];
+    const todayMeals = (await convexTracking.getTodayMealLogs(memberId)) as MealLogDoc[];
     if (todayMeals.length > 0) return null;
 
     const streakData = (await convexTracking.getTrackingStreak(
-      memberId,
+      memberId
     )) as Doc<"trackingStreaks"> | null;
     if (!streakData || (streakData.currentStreak ?? 0) < 7) return null;
 
@@ -377,9 +350,7 @@ class ReminderService {
     }
   }
 
-  async sendReminders(
-    triggers: ReminderTrigger[],
-  ): Promise<{ success: number; failed: number }> {
+  async sendReminders(triggers: ReminderTrigger[]): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
 

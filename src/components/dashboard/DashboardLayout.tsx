@@ -52,30 +52,27 @@ export function DashboardLayout({
   const getActiveTab = () => {
     if (pathname === "/dashboard") return "overview";
     if (pathname.includes("health")) return "health";
-    if (pathname.includes("meal") || pathname.includes("nutrition"))
-      return "nutrition";
+    if (pathname.includes("meal") || pathname.includes("nutrition")) return "nutrition";
     return "overview";
   };
 
   const activeTab = getActiveTab();
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="flex min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-border bg-card">
-        <div className="flex flex-col flex-1 pt-6 pb-4 overflow-y-auto">
+      <aside className="hidden border-r border-border bg-card lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex flex-1 flex-col overflow-y-auto pb-4 pt-6">
           {/* Logo */}
-          <Link href="/" className="flex items-center px-6 mb-8">
-            <div className="p-2 rounded-xl bg-primary/10 mr-3">
+          <Link href="/" className="mb-8 flex items-center px-6">
+            <div className="mr-3 rounded-xl bg-primary/10 p-2">
               <Heart className="h-6 w-6 text-primary" />
             </div>
-            <span className="font-display text-lg font-bold text-foreground">
-              Health Butler
-            </span>
+            <span className="font-display text-lg font-bold text-foreground">Health Butler</span>
           </Link>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 space-y-1">
+          <nav className="flex-1 space-y-1 px-3">
             {navigation.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -83,10 +80,10 @@ export function DashboardLayout({
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "group flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                    "group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-soft"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   <item.icon
@@ -94,7 +91,7 @@ export function DashboardLayout({
                       "mr-3 h-5 w-5 transition-colors",
                       isActive
                         ? "text-primary-foreground"
-                        : "text-muted-foreground group-hover:text-foreground",
+                        : "text-muted-foreground group-hover:text-foreground"
                     )}
                   />
                   {item.name}
@@ -106,8 +103,8 @@ export function DashboardLayout({
 
           {/* Family Members */}
           {familyMembers.length > 0 && (
-            <div className="px-3 pt-4 mt-4 border-t border-border">
-              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            <div className="mt-4 border-t border-border px-3 pt-4">
+              <h3 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 家庭成员
               </h3>
               <div className="space-y-1">
@@ -115,18 +112,18 @@ export function DashboardLayout({
                   <button
                     key={member.id}
                     className={cn(
-                      "w-full flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                      "flex w-full items-center rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
                       currentMember === member.id
                         ? "bg-accent/10 text-accent"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
                     <div
                       className={cn(
-                        "h-8 w-8 rounded-full flex items-center justify-center mr-3 text-sm font-semibold",
+                        "mr-3 flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
                         currentMember === member.id
                           ? "bg-accent text-accent-foreground"
-                          : "bg-muted text-muted-foreground",
+                          : "bg-muted text-muted-foreground"
                       )}
                     >
                       {member.name.charAt(0)}
@@ -134,8 +131,8 @@ export function DashboardLayout({
                     <span className="truncate">{member.name}</span>
                   </button>
                 ))}
-                <button className="w-full flex items-center px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200">
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center mr-3">
+                <button className="flex w-full items-center rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground">
+                  <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                     <Plus className="h-4 w-4" />
                   </div>
                   添加成员
@@ -145,10 +142,10 @@ export function DashboardLayout({
           )}
 
           {/* Sign out */}
-          <div className="px-3 pt-4 mt-auto border-t border-border">
+          <div className="mt-auto border-t border-border px-3 pt-4">
             <button
               onClick={() => signOut({ redirectUrl: "/" })}
-              className="w-full flex items-center px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+              className="flex w-full items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
             >
               <LogOut className="mr-3 h-5 w-5" />
               退出登录
@@ -165,23 +162,21 @@ export function DashboardLayout({
             onClick={() => setSidebarOpen(false)}
           />
           <div className="fixed inset-y-0 left-0 w-72 bg-card shadow-soft-xl">
-            <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="flex items-center justify-between border-b border-border p-4">
               <div className="flex items-center">
-                <div className="p-2 rounded-xl bg-primary/10 mr-3">
+                <div className="mr-3 rounded-xl bg-primary/10 p-2">
                   <Heart className="h-5 w-5 text-primary" />
                 </div>
-                <span className="font-display text-lg font-bold">
-                  Health Butler
-                </span>
+                <span className="font-display text-lg font-bold">Health Butler</span>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-muted"
+                className="rounded-lg p-2 hover:bg-muted"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="p-3 space-y-1">
+            <nav className="space-y-1 p-3">
               {navigation.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
@@ -190,10 +185,10 @@ export function DashboardLayout({
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
                     className={cn(
-                      "flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      "flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
                       isActive
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted",
+                        : "text-muted-foreground hover:bg-muted"
                     )}
                   >
                     <item.icon className="mr-3 h-5 w-5" />
@@ -207,21 +202,21 @@ export function DashboardLayout({
       )}
 
       {/* Main content */}
-      <div className="flex flex-col flex-1 lg:pl-64">
+      <div className="flex flex-1 flex-col lg:pl-64">
         {/* Top bar */}
-        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
+          <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <button
               type="button"
-              className="lg:hidden p-2 rounded-lg text-muted-foreground hover:bg-muted"
+              className="rounded-lg p-2 text-muted-foreground hover:bg-muted lg:hidden"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="h-6 w-6" />
             </button>
 
-            <div className="flex-1 flex items-center justify-end gap-4">
+            <div className="flex flex-1 items-center justify-end gap-4">
               <Button size="sm" variant="soft">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 添加数据
               </Button>
             </div>
@@ -230,9 +225,7 @@ export function DashboardLayout({
 
         {/* Page content */}
         <main className="flex-1 py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {children}
-          </div>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>

@@ -35,7 +35,7 @@ jest.mock(
   () => ({
     FoodCategory: FoodCategoryValues,
   }),
-  { virtual: true },
+  { virtual: true }
 );
 
 describe("List Generator", () => {
@@ -209,9 +209,7 @@ describe("List Generator", () => {
 
       const result = await generator.generateShoppingList("plan-1");
 
-      const vegetables = result.items.find(
-        (item) => item.category === "VEGETABLES",
-      );
+      const vegetables = result.items.find((item) => item.category === "VEGETABLES");
       expect(vegetables?.perishableDays).toBe(5);
 
       const protein = result.items.find((item) => item.category === "PROTEIN");
@@ -224,9 +222,9 @@ describe("List Generator", () => {
     it("should throw error when plan does not exist", async () => {
       (prisma.mealPlan.findUnique as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        generator.generateShoppingList("non-existent"),
-      ).rejects.toThrow("食谱计划不存在");
+      await expect(generator.generateShoppingList("non-existent")).rejects.toThrow(
+        "食谱计划不存在"
+      );
     });
 
     it("should handle empty meal plan", async () => {

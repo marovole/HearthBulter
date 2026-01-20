@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { taskRepository } from "@/lib/repositories/task-repository-singleton";
-import {
-  withApiPermissions,
-  PERMISSION_CONFIGS,
-} from "@/middleware/permissions";
+import { withApiPermissions, PERMISSION_CONFIGS } from "@/middleware/permissions";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
 import type { TaskStatus } from "@/lib/repositories/types/task";
@@ -19,7 +16,7 @@ import type { TaskStatus } from "@/lib/repositories/types/task";
 export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> },
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -31,14 +28,11 @@ export async function GET(
         {
           familyId: familyId as Id<"families">,
           clerkId: userId,
-        },
+        }
       );
 
       if (!member) {
-        return NextResponse.json(
-          { success: false, error: "Not a family member" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Not a family member" }, { status: 403 });
       }
 
       // 获取查询参数
@@ -46,11 +40,7 @@ export async function GET(
       const status = searchParams.get("status") as TaskStatus | undefined;
 
       // 使用 Repository 查询我的任务
-      const tasks = await taskRepository.getMyTasks(
-        familyId,
-        member._id,
-        status,
-      );
+      const tasks = await taskRepository.getMyTasks(familyId, member._id, status);
 
       return NextResponse.json({
         success: true,
@@ -61,10 +51,9 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to get my tasks",
+          error: error instanceof Error ? error.message : "Failed to get my tasks",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.FAMILY_MEMBER)(request as any, { params });

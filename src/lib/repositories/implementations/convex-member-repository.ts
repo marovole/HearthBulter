@@ -17,51 +17,36 @@ import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 export class ConvexMemberRepository implements MemberRepository {
-  async verifyMemberAccess(
-    memberId: string,
-    clerkId: string,
-  ): Promise<MemberAccessResult> {
-    const result = await convexClient.query<MemberAccessResult>(
-      api.members.verifyAccess,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        clerkId,
-      },
-    );
+  async verifyMemberAccess(memberId: string, clerkId: string): Promise<MemberAccessResult> {
+    const result = await convexClient.query<MemberAccessResult>(api.members.verifyAccess, {
+      memberId: memberId as Id<"familyMembers">,
+      clerkId,
+    });
 
     return result;
   }
 
   async getHealthGoals(
     memberId: string,
-    includeInactive: boolean = false,
+    includeInactive: boolean = false
   ): Promise<HealthGoalDTO[]> {
-    const goals = await convexClient.query<Doc<"healthGoals">[]>(
-      api.health.listGoals,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        includeInactive,
-      },
-    );
+    const goals = await convexClient.query<Doc<"healthGoals">[]>(api.health.listGoals, {
+      memberId: memberId as Id<"familyMembers">,
+      includeInactive,
+    });
 
     return goals.map(mapHealthGoal);
   }
 
   async getHealthGoalById(goalId: string): Promise<HealthGoalDTO | null> {
-    const goal = await convexClient.query<Doc<"healthGoals"> | null>(
-      api.health.getGoalById,
-      {
-        goalId: goalId as Id<"healthGoals">,
-      },
-    );
+    const goal = await convexClient.query<Doc<"healthGoals"> | null>(api.health.getGoalById, {
+      goalId: goalId as Id<"healthGoals">,
+    });
 
     return goal ? mapHealthGoal(goal) : null;
   }
 
-  async createHealthGoal(
-    memberId: string,
-    input: CreateHealthGoalInput,
-  ): Promise<HealthGoalDTO> {
+  async createHealthGoal(memberId: string, input: CreateHealthGoalInput): Promise<HealthGoalDTO> {
     const goalId = await convexClient.mutation(api.health.createGoal, {
       memberId: memberId as Id<"familyMembers">,
       goalType: input.goalType,
@@ -81,12 +66,9 @@ export class ConvexMemberRepository implements MemberRepository {
       progress: 0,
     });
 
-    const goal = await convexClient.query<Doc<"healthGoals"> | null>(
-      api.health.getGoalById,
-      {
-        goalId: goalId as Id<"healthGoals">,
-      },
-    );
+    const goal = await convexClient.query<Doc<"healthGoals"> | null>(api.health.getGoalById, {
+      goalId: goalId as Id<"healthGoals">,
+    });
 
     if (!goal) {
       throw new Error("健康目标创建失败");
@@ -95,10 +77,7 @@ export class ConvexMemberRepository implements MemberRepository {
     return mapHealthGoal(goal);
   }
 
-  async updateHealthGoal(
-    goalId: string,
-    input: UpdateHealthGoalInput,
-  ): Promise<HealthGoalDTO> {
+  async updateHealthGoal(goalId: string, input: UpdateHealthGoalInput): Promise<HealthGoalDTO> {
     await convexClient.mutation(api.health.updateGoal, {
       goalId: goalId as Id<"healthGoals">,
       targetValue: input.targetWeight,
@@ -110,12 +89,9 @@ export class ConvexMemberRepository implements MemberRepository {
       fatRatio: input.fatRatio,
     });
 
-    const goal = await convexClient.query<Doc<"healthGoals"> | null>(
-      api.health.getGoalById,
-      {
-        goalId: goalId as Id<"healthGoals">,
-      },
-    );
+    const goal = await convexClient.query<Doc<"healthGoals"> | null>(api.health.getGoalById, {
+      goalId: goalId as Id<"healthGoals">,
+    });
 
     if (!goal) {
       throw new Error("健康目标不存在");
@@ -131,20 +107,14 @@ export class ConvexMemberRepository implements MemberRepository {
   }
 
   async getAllergies(memberId: string): Promise<AllergyDTO[]> {
-    const allergies = await convexClient.query<Doc<"allergies">[]>(
-      api.health.listAllergies,
-      {
-        memberId: memberId as Id<"familyMembers">,
-      },
-    );
+    const allergies = await convexClient.query<Doc<"allergies">[]>(api.health.listAllergies, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     return allergies.map(mapAllergy);
   }
 
-  async createAllergy(
-    memberId: string,
-    input: CreateAllergyInput,
-  ): Promise<AllergyDTO> {
+  async createAllergy(memberId: string, input: CreateAllergyInput): Promise<AllergyDTO> {
     const allergyId = await convexClient.mutation(api.health.createAllergy, {
       memberId: memberId as Id<"familyMembers">,
       allergenType: input.allergenType,
@@ -153,12 +123,9 @@ export class ConvexMemberRepository implements MemberRepository {
       description: input.description,
     });
 
-    const allergy = await convexClient.query<Doc<"allergies"> | null>(
-      api.health.getAllergyById,
-      {
-        allergyId: allergyId as Id<"allergies">,
-      },
-    );
+    const allergy = await convexClient.query<Doc<"allergies"> | null>(api.health.getAllergyById, {
+      allergyId: allergyId as Id<"allergies">,
+    });
 
     if (!allergy) {
       throw new Error("过敏记录创建失败");
@@ -167,10 +134,7 @@ export class ConvexMemberRepository implements MemberRepository {
     return mapAllergy(allergy);
   }
 
-  async updateAllergy(
-    allergyId: string,
-    input: UpdateAllergyInput,
-  ): Promise<AllergyDTO> {
+  async updateAllergy(allergyId: string, input: UpdateAllergyInput): Promise<AllergyDTO> {
     await convexClient.mutation(api.health.updateAllergy, {
       allergyId: allergyId as Id<"allergies">,
       allergenType: input.allergenType,
@@ -179,12 +143,9 @@ export class ConvexMemberRepository implements MemberRepository {
       description: input.description,
     });
 
-    const allergy = await convexClient.query<Doc<"allergies"> | null>(
-      api.health.getAllergyById,
-      {
-        allergyId: allergyId as Id<"allergies">,
-      },
-    );
+    const allergy = await convexClient.query<Doc<"allergies"> | null>(api.health.getAllergyById, {
+      allergyId: allergyId as Id<"allergies">,
+    });
 
     if (!allergy) {
       throw new Error("过敏记录不存在");
@@ -209,9 +170,7 @@ export class ConvexMemberRepository implements MemberRepository {
       total: number;
     }>(api.health.listHealthData, {
       memberId: query.memberId as Id<"familyMembers">,
-      startDate: query.startDate
-        ? new Date(query.startDate).getTime()
-        : undefined,
+      startDate: query.startDate ? new Date(query.startDate).getTime() : undefined,
       endDate: query.endDate ? new Date(query.endDate).getTime() : undefined,
       page,
       limit,
@@ -229,10 +188,7 @@ export class ConvexMemberRepository implements MemberRepository {
     };
   }
 
-  async createHealthData(
-    memberId: string,
-    input: CreateHealthDataInput,
-  ): Promise<HealthDataDTO> {
+  async createHealthData(memberId: string, input: CreateHealthDataInput): Promise<HealthDataDTO> {
     const source = "source" in input ? input.source : undefined;
 
     const response = await convexClient.mutation<{
@@ -253,12 +209,9 @@ export class ConvexMemberRepository implements MemberRepository {
     });
 
     const recordId = response.data.recordId as Id<"healthData">;
-    const record = await convexClient.query<Doc<"healthData"> | null>(
-      api.health.getRecordById,
-      {
-        recordId,
-      },
-    );
+    const record = await convexClient.query<Doc<"healthData"> | null>(api.health.getRecordById, {
+      recordId,
+    });
 
     if (!record) {
       throw new Error("健康数据创建失败");
@@ -267,10 +220,7 @@ export class ConvexMemberRepository implements MemberRepository {
     return mapHealthData(record);
   }
 
-  async updateHealthData(
-    dataId: string,
-    input: UpdateHealthDataInput,
-  ): Promise<HealthDataDTO> {
+  async updateHealthData(dataId: string, input: UpdateHealthDataInput): Promise<HealthDataDTO> {
     await convexClient.mutation(api.health.updateRecord, {
       recordId: dataId as Id<"healthData">,
       weight: input.weight,
@@ -283,12 +233,9 @@ export class ConvexMemberRepository implements MemberRepository {
       notes: input.notes,
     });
 
-    const record = await convexClient.query<Doc<"healthData"> | null>(
-      api.health.getRecordById,
-      {
-        recordId: dataId as Id<"healthData">,
-      },
-    );
+    const record = await convexClient.query<Doc<"healthData"> | null>(api.health.getRecordById, {
+      recordId: dataId as Id<"healthData">,
+    });
 
     if (!record) {
       throw new Error("健康数据不存在");

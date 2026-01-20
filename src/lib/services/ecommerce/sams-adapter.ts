@@ -23,8 +23,7 @@ import type { OrderStatus, DeliveryStatus } from "./types";
 export class SamsClubAdapter extends BasePlatformAdapter {
   readonly platform = EcommercePlatform.SAMS_CLUB;
   readonly platformName = "山姆会员商店";
-  readonly baseUrl =
-    process.env.SAMS_CLUB_API_URL || "https://api.samsclub.com.cn/v1";
+  readonly baseUrl = process.env.SAMS_CLUB_API_URL || "https://api.samsclub.com.cn/v1";
 
   // OAuth 认证
   async getAuthorizationUrl(request: OAuthRequest): Promise<OAuthResponse> {
@@ -119,7 +118,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
   // 商品搜索
   async searchProducts(
     request: ProductSearchRequest,
-    token: string,
+    token: string
   ): Promise<ProductSearchResponse> {
     try {
       const params = new URLSearchParams({
@@ -155,9 +154,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
       }>(`/products/search?${params.toString()}`, {}, token);
 
       return {
-        products: response.products.map((product) =>
-          this.standardizeProductInfo(product),
-        ),
+        products: response.products.map((product) => this.standardizeProductInfo(product)),
         total: response.total,
         page: response.page,
         pageSize: response.page_size,
@@ -172,16 +169,9 @@ export class SamsClubAdapter extends BasePlatformAdapter {
     }
   }
 
-  async getProduct(
-    productId: string,
-    token: string,
-  ): Promise<PlatformProductInfo | null> {
+  async getProduct(productId: string, token: string): Promise<PlatformProductInfo | null> {
     try {
-      const response = await this.makeRequest<any>(
-        `/products/${productId}`,
-        {},
-        token,
-      );
+      const response = await this.makeRequest<any>(`/products/${productId}`, {}, token);
       return this.standardizeProductInfo(response);
     } catch (error) {
       if (error instanceof PlatformError) {
@@ -195,10 +185,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
   }
 
   // 库存查询
-  async queryStock(
-    request: StockQueryRequest,
-    token: string,
-  ): Promise<StockQueryResponse> {
+  async queryStock(request: StockQueryRequest, token: string): Promise<StockQueryResponse> {
     try {
       const response = await this.makeRequest<
         Record<
@@ -217,7 +204,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
             product_ids: request.productIds,
           }),
         },
-        token,
+        token
       );
 
       const stocks: Record<
@@ -248,10 +235,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
   }
 
   // 订单管理
-  async createOrder(
-    request: CreateOrderRequest,
-    token: string,
-  ): Promise<CreateOrderResponse> {
+  async createOrder(request: CreateOrderRequest, token: string): Promise<CreateOrderResponse> {
     try {
       const orderData = {
         items: request.items.map((item) => ({
@@ -280,7 +264,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
           method: "POST",
           body: JSON.stringify(orderData),
         },
-        token,
+        token
       );
 
       return {
@@ -302,10 +286,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
     }
   }
 
-  async getOrderStatus(
-    orderId: string,
-    token: string,
-  ): Promise<OrderStatusResponse> {
+  async getOrderStatus(orderId: string, token: string): Promise<OrderStatusResponse> {
     try {
       const response = await this.makeRequest<{
         order_id: string;
@@ -342,7 +323,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
         {
           method: "POST",
         },
-        token,
+        token
       );
       return true;
     } catch (error) {
@@ -355,10 +336,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
   }
 
   // 价格查询
-  async getProductPrices(
-    productIds: string[],
-    token: string,
-  ): Promise<Record<string, number>> {
+  async getProductPrices(productIds: string[], token: string): Promise<Record<string, number>> {
     try {
       const response = await this.makeRequest<Record<string, number>>(
         "/products/prices",
@@ -368,7 +346,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
             product_ids: productIds,
           }),
         },
-        token,
+        token
       );
 
       return response;
@@ -382,10 +360,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
   }
 
   // 配送信息
-  async getDeliveryOptions(
-    address: DeliveryAddress,
-    token: string,
-  ): Promise<Record<string, any>> {
+  async getDeliveryOptions(address: DeliveryAddress, token: string): Promise<Record<string, any>> {
     try {
       const response = await this.makeRequest<{
         standard: { time: string; fee: number };
@@ -399,7 +374,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
             address: this.standardizeAddress(address),
           }),
         },
-        token,
+        token
       );
 
       return response;
@@ -415,7 +390,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
   async estimateDeliveryTime(
     orderItems: OrderItem[],
     address: DeliveryAddress,
-    token: string,
+    token: string
   ): Promise<string> {
     try {
       const response = await this.makeRequest<{
@@ -433,7 +408,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
             address: this.standardizeAddress(address),
           }),
         },
-        token,
+        token
       );
 
       return response.estimated_time;
@@ -449,8 +424,7 @@ export class SamsClubAdapter extends BasePlatformAdapter {
   // 工具方法
   private generateState(): string {
     return (
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
+      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
     );
   }
 
@@ -476,38 +450,22 @@ export class SamsClubAdapter extends BasePlatformAdapter {
       category: rawProduct.category_name || rawProduct.category,
       imageUrl: rawProduct.image_url || rawProduct.main_image,
       specification: rawProduct.specification,
-      weight: rawProduct.weight_grams
-        ? parseFloat(rawProduct.weight_grams)
-        : undefined,
-      volume: rawProduct.volume_ml
-        ? parseFloat(rawProduct.volume_ml)
-        : undefined,
+      weight: rawProduct.weight_grams ? parseFloat(rawProduct.weight_grams) : undefined,
+      volume: rawProduct.volume_ml ? parseFloat(rawProduct.volume_ml) : undefined,
       unit: rawProduct.unit,
       price: parseFloat(rawProduct.member_price || rawProduct.price),
-      originalPrice: rawProduct.original_price
-        ? parseFloat(rawProduct.original_price)
-        : undefined,
+      originalPrice: rawProduct.original_price ? parseFloat(rawProduct.original_price) : undefined,
       currency: rawProduct.currency || "CNY",
       priceUnit: rawProduct.price_unit,
       stock: parseInt(rawProduct.available_quantity) || 0,
-      isInStock:
-        rawProduct.in_stock !== false &&
-        (rawProduct.available_quantity || 0) > 0,
+      isInStock: rawProduct.in_stock !== false && (rawProduct.available_quantity || 0) > 0,
       stockStatus: rawProduct.stock_status,
-      salesCount: rawProduct.sales_count
-        ? parseInt(rawProduct.sales_count)
-        : undefined,
-      rating: rawProduct.average_rating
-        ? parseFloat(rawProduct.average_rating)
-        : undefined,
-      reviewCount: rawProduct.review_count
-        ? parseInt(rawProduct.review_count)
-        : undefined,
+      salesCount: rawProduct.sales_count ? parseInt(rawProduct.sales_count) : undefined,
+      rating: rawProduct.average_rating ? parseFloat(rawProduct.average_rating) : undefined,
+      reviewCount: rawProduct.review_count ? parseInt(rawProduct.review_count) : undefined,
       deliveryOptions: rawProduct.delivery_options,
       deliveryTime: rawProduct.delivery_time,
-      shippingFee: rawProduct.shipping_fee
-        ? parseFloat(rawProduct.shipping_fee)
-        : undefined,
+      shippingFee: rawProduct.shipping_fee ? parseFloat(rawProduct.shipping_fee) : undefined,
       platformData: rawProduct,
     };
   }

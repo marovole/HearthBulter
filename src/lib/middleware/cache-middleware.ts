@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  CacheService,
-  CacheKeyBuilder,
-  CACHE_CONFIG,
-} from "@/lib/cache/redis-client";
+import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from "@/lib/cache/redis-client";
 
 // 缓存中间件配置
 interface CacheMiddlewareOptions {
@@ -55,9 +51,7 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
         const shouldVary =
           cachedVary &&
           varyHeaders.some(
-            (header) =>
-              request.headers.get(header) !==
-              cachedResponse.headers[`x-${header}`],
+            (header) => request.headers.get(header) !== cachedResponse.headers[`x-${header}`]
           );
 
         if (!shouldVary) {
@@ -72,9 +66,8 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
           response.headers.set(
             "Age",
             String(
-              Math.floor(Date.now() / 1000) -
-                parseInt(cachedResponse.headers["x-cached-at"] || "0"),
-            ),
+              Math.floor(Date.now() / 1000) - parseInt(cachedResponse.headers["x-cached-at"] || "0")
+            )
           );
 
           return response;
@@ -94,7 +87,7 @@ export function createCacheMiddleware(options: CacheMiddlewareOptions = {}) {
 export function wrapResponseWithCache(
   response: NextResponse,
   request: NextRequest,
-  options: CacheMiddlewareOptions = {},
+  options: CacheMiddlewareOptions = {}
 ): NextResponse {
   const {
     ttl = CACHE_CONFIG.TTL.API_RESPONSE,
@@ -152,7 +145,7 @@ export function wrapResponseWithCache(
           headers,
           body,
         },
-        ttl,
+        ttl
       );
     } catch (error) {
       console.error("Response caching error:", error);
@@ -196,9 +189,7 @@ export const defaultCacheMiddlewareOptions: CacheMiddlewareOptions = {
 /**
  * 预定义的缓存中间件
  */
-export const cacheMiddleware = createCacheMiddleware(
-  defaultCacheMiddlewareOptions,
-);
+export const cacheMiddleware = createCacheMiddleware(defaultCacheMiddlewareOptions);
 
 /**
  * 静态资源缓存中间件
@@ -220,11 +211,7 @@ export const userDataCacheMiddleware = createCacheMiddleware({
     const url = new URL(request.url);
     const pathname = url.pathname;
 
-    const sensitivePatterns = [
-      "/api/auth",
-      "/api/users/profile",
-      "/api/families/members",
-    ];
+    const sensitivePatterns = ["/api/auth", "/api/users/profile", "/api/families/members"];
 
     return sensitivePatterns.some((pattern) => pathname.includes(pattern));
   },

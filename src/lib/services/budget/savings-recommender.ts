@@ -72,19 +72,15 @@ export class SavingsRecommender {
     bulkPurchases: BulkPurchaseSuggestion[];
     coupons: CouponMatch[];
   }> {
-    const [
-      promotions,
-      groupBuys,
-      seasonalAlternatives,
-      bulkPurchases,
-      coupons,
-    ] = await Promise.all([
-      this.identifyPromotions(memberId),
-      this.identifyGroupBuys(memberId),
-      this.identifySeasonalAlternatives(memberId),
-      this.identifyBulkPurchases(memberId),
-      this.matchCoupons(memberId),
-    ]);
+    const [promotions, groupBuys, seasonalAlternatives, bulkPurchases, coupons] = await Promise.all(
+      [
+        this.identifyPromotions(memberId),
+        this.identifyGroupBuys(memberId),
+        this.identifySeasonalAlternatives(memberId),
+        this.identifyBulkPurchases(memberId),
+        this.matchCoupons(memberId),
+      ]
+    );
 
     return {
       promotions,
@@ -105,14 +101,11 @@ export class SavingsRecommender {
     const promotions: PromotionInfo[] = [];
 
     for (const foodId of foodIds) {
-      const priceHistories = (await convexClient.query(
-        api.budget.getPriceHistories,
-        {
-          foodId: foodId as Id<"foods">,
-          isValid: true,
-          limit: 10,
-        },
-      )) as Doc<"priceHistories">[];
+      const priceHistories = (await convexClient.query(api.budget.getPriceHistories, {
+        foodId: foodId as Id<"foods">,
+        isValid: true,
+        limit: 10,
+      })) as Doc<"priceHistories">[];
 
       if (priceHistories.length < 2) continue;
 
@@ -127,9 +120,7 @@ export class SavingsRecommender {
 
       if (latestPrice.unitPrice < previousPrice.unitPrice * 0.9) {
         const discountPercentage =
-          ((previousPrice.unitPrice - latestPrice.unitPrice) /
-            previousPrice.unitPrice) *
-          100;
+          ((previousPrice.unitPrice - latestPrice.unitPrice) / previousPrice.unitPrice) * 100;
 
         promotions.push({
           foodId,
@@ -143,9 +134,7 @@ export class SavingsRecommender {
       }
     }
 
-    return promotions.sort(
-      (a, b) => b.discountPercentage - a.discountPercentage,
-    );
+    return promotions.sort((a, b) => b.discountPercentage - a.discountPercentage);
   }
 
   private async identifyGroupBuys(memberId: string): Promise<GroupBuyInfo[]> {
@@ -181,13 +170,11 @@ export class SavingsRecommender {
     }
 
     return groupBuys.sort(
-      (a, b) => b.regularPrice - b.groupPrice - (a.regularPrice - a.groupPrice),
+      (a, b) => b.regularPrice - b.groupPrice - (a.regularPrice - a.groupPrice)
     );
   }
 
-  private async identifySeasonalAlternatives(
-    memberId: string,
-  ): Promise<SeasonalAlternative[]> {
+  private async identifySeasonalAlternatives(memberId: string): Promise<SeasonalAlternative[]> {
     const recentPurchases = await this.getRecentPurchases(memberId, 30);
     const seasonalAlternatives: SeasonalAlternative[] = [];
 
@@ -199,26 +186,21 @@ export class SavingsRecommender {
         foodId: purchase as Id<"foods">,
       })) as Doc<"foods"> | null;
 
-      const originalLatestPrice = (await convexClient.query(
-        api.budget.getLatestPrice,
-        { foodId: purchase as Id<"foods"> },
-      )) as Doc<"priceHistories"> | null;
+      const originalLatestPrice = (await convexClient.query(api.budget.getLatestPrice, {
+        foodId: purchase as Id<"foods">,
+      })) as Doc<"priceHistories"> | null;
       if (!originalFood || !originalLatestPrice) continue;
 
-      const seasonalFoods = (await convexClient.query(
-        api.budget.getFoodsByCategory,
-        {
-          category: originalFood.category,
-          excludeIds: [purchase as Id<"foods">],
-          limit: 5,
-        },
-      )) as Doc<"foods">[];
+      const seasonalFoods = (await convexClient.query(api.budget.getFoodsByCategory, {
+        category: originalFood.category,
+        excludeIds: [purchase as Id<"foods">],
+        limit: 5,
+      })) as Doc<"foods">[];
 
       for (const seasonalFood of seasonalFoods) {
-        const latestPrice = (await convexClient.query(
-          api.budget.getLatestPrice,
-          { foodId: seasonalFood._id },
-        )) as Doc<"priceHistories"> | null;
+        const latestPrice = (await convexClient.query(api.budget.getLatestPrice, {
+          foodId: seasonalFood._id,
+        })) as Doc<"priceHistories"> | null;
         if (!latestPrice) continue;
 
         if (latestPrice.unitPrice < originalLatestPrice.unitPrice * 0.8) {
@@ -241,9 +223,7 @@ export class SavingsRecommender {
     return seasonalAlternatives.sort((a, b) => b.savings - a.savings);
   }
 
-  private async identifyBulkPurchases(
-    memberId: string,
-  ): Promise<BulkPurchaseSuggestion[]> {
+  private async identifyBulkPurchases(memberId: string): Promise<BulkPurchaseSuggestion[]> {
     const purchaseFrequency = await this.getPurchaseFrequency(memberId, 90);
 
     const bulkPurchases: BulkPurchaseSuggestion[] = [];
@@ -254,10 +234,9 @@ export class SavingsRecommender {
           foodId: foodId as Id<"foods">,
         })) as Doc<"foods"> | null;
 
-        const latestPrice = (await convexClient.query(
-          api.budget.getLatestPrice,
-          { foodId: foodId as Id<"foods"> },
-        )) as Doc<"priceHistories"> | null;
+        const latestPrice = (await convexClient.query(api.budget.getLatestPrice, {
+          foodId: foodId as Id<"foods">,
+        })) as Doc<"priceHistories"> | null;
         if (!food || !latestPrice) continue;
 
         const unitPrice = latestPrice.unitPrice;
@@ -320,7 +299,7 @@ export class SavingsRecommender {
 
   async generateEconomyRecipes(
     memberId: string,
-    budgetConstraint: number,
+    budgetConstraint: number
   ): Promise<{
     recipes: Array<{
       name: string;
@@ -339,38 +318,23 @@ export class SavingsRecommender {
       savings: number;
     }>;
   }> {
-    const affordableFoods = await this.getAffordableFoods(
-      memberId,
-      budgetConstraint,
-    );
+    const affordableFoods = await this.getAffordableFoods(memberId, budgetConstraint);
 
     const recipes = [];
 
-    const breakfastRecipe = this.generateBreakfastRecipe(
-      affordableFoods,
-      budgetConstraint * 0.3,
-    );
+    const breakfastRecipe = this.generateBreakfastRecipe(affordableFoods, budgetConstraint * 0.3);
     if (breakfastRecipe) recipes.push(breakfastRecipe);
 
-    const lunchRecipe = this.generateLunchRecipe(
-      affordableFoods,
-      budgetConstraint * 0.4,
-    );
+    const lunchRecipe = this.generateLunchRecipe(affordableFoods, budgetConstraint * 0.4);
     if (lunchRecipe) recipes.push(lunchRecipe);
 
-    const dinnerRecipe = this.generateDinnerRecipe(
-      affordableFoods,
-      budgetConstraint * 0.3,
-    );
+    const dinnerRecipe = this.generateDinnerRecipe(affordableFoods, budgetConstraint * 0.3);
     if (dinnerRecipe) recipes.push(dinnerRecipe);
 
     return { recipes };
   }
 
-  private async getRecentPurchases(
-    memberId: string,
-    days: number,
-  ): Promise<string[]> {
+  private async getRecentPurchases(memberId: string, days: number): Promise<string[]> {
     return await convexClient.query(api.budget.getRecentPurchases, {
       memberId,
       days,
@@ -379,7 +343,7 @@ export class SavingsRecommender {
 
   private async getPurchaseFrequency(
     memberId: string,
-    days: number,
+    days: number
   ): Promise<{ [key: string]: number }> {
     const purchases = await this.getRecentPurchases(memberId, days);
     const frequency: { [key: string]: number } = {};
@@ -399,7 +363,7 @@ export class SavingsRecommender {
 
   private async getAffordableFoods(
     memberId: string,
-    maxPrice: number,
+    maxPrice: number
   ): Promise<
     Array<{
       food: {
@@ -414,13 +378,10 @@ export class SavingsRecommender {
       platform: string;
     }>
   > {
-    const foods = await convexClient.query<AffordableFoodDoc[]>(
-      api.budget.getAffordableFoods,
-      {
-        maxUnitPrice: maxPrice / 10,
-        limit: 50,
-      },
-    );
+    const foods = await convexClient.query<AffordableFoodDoc[]>(api.budget.getAffordableFoods, {
+      maxUnitPrice: maxPrice / 10,
+      limit: 50,
+    });
 
     return foods.map((f) => ({
       food: {
@@ -442,7 +403,7 @@ export class SavingsRecommender {
         (f) =>
           f.food.category === "GRAINS" ||
           f.food.category === "DAIRY" ||
-          f.food.category === "FRUITS",
+          f.food.category === "FRUITS"
       )
       .slice(0, 3);
 
@@ -476,7 +437,7 @@ export class SavingsRecommender {
         (f) =>
           f.food.category === "PROTEIN" ||
           f.food.category === "VEGETABLES" ||
-          f.food.category === "GRAINS",
+          f.food.category === "GRAINS"
       )
       .slice(0, 4);
 
@@ -506,10 +467,7 @@ export class SavingsRecommender {
 
   private generateDinnerRecipe(affordableFoods: any[], budget: number): any {
     const dinnerFoods = affordableFoods
-      .filter(
-        (f) =>
-          f.food.category === "PROTEIN" || f.food.category === "VEGETABLES",
-      )
+      .filter((f) => f.food.category === "PROTEIN" || f.food.category === "VEGETABLES")
       .slice(0, 3);
 
     if (dinnerFoods.length < 2) return null;
@@ -527,10 +485,7 @@ export class SavingsRecommender {
       ingredients,
       totalCost,
       nutrition: {
-        calories: dinnerFoods.reduce(
-          (sum, f) => sum + f.food.calories * 1.2,
-          0,
-        ),
+        calories: dinnerFoods.reduce((sum, f) => sum + f.food.calories * 1.2, 0),
         protein: dinnerFoods.reduce((sum, f) => sum + f.food.protein * 1.2, 0),
         carbs: dinnerFoods.reduce((sum, f) => sum + f.food.carbs * 1.2, 0),
         fat: dinnerFoods.reduce((sum, f) => sum + f.food.fat * 1.2, 0),
@@ -567,7 +522,7 @@ export class SavingsRecommender {
       platform?: string;
       foodItems?: any[];
       validUntil?: number;
-    },
+    }
   ): Promise<string> {
     return await convexClient.mutation(api.budget.createSavingsRecommendation, {
       memberId,

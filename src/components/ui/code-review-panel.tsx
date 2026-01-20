@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -54,9 +48,7 @@ export function CodeReviewPanel({
   onFileRejected,
   className,
 }: CodeReviewPanelProps) {
-  const [reviewResult, setReviewResult] = useState<CodeReviewResult | null>(
-    null,
-  );
+  const [reviewResult, setReviewResult] = useState<CodeReviewResult | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
@@ -92,29 +84,29 @@ export function CodeReviewPanel({
 
   const getRiskColor = (riskLevel: CodeReviewResult["riskLevel"]) => {
     switch (riskLevel) {
-    case "critical":
-      return "text-red-600 bg-red-50 border-red-200";
-    case "high":
-      return "text-orange-600 bg-orange-50 border-orange-200";
-    case "medium":
-      return "text-yellow-600 bg-yellow-50 border-yellow-200";
-    case "low":
-      return "text-green-600 bg-green-50 border-green-200";
-    default:
-      return "text-gray-600 bg-gray-50 border-gray-200";
+      case "critical":
+        return "text-red-600 bg-red-50 border-red-200";
+      case "high":
+        return "text-orange-600 bg-orange-50 border-orange-200";
+      case "medium":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      case "low":
+        return "text-green-600 bg-green-50 border-green-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 
   const getSeverityIcon = (severity: CodeReviewIssue["severity"]) => {
     switch (severity) {
-    case "critical":
-      return <XCircle className="w-4 h-4 text-red-500" />;
-    case "high":
-      return <AlertTriangle className="w-4 h-4 text-orange-500" />;
-    case "medium":
-      return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-    case "low":
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "critical":
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case "high":
+        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+      case "medium":
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case "low":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
     }
   };
 
@@ -146,7 +138,7 @@ export function CodeReviewPanel({
       <Card className={cn("border-amber-200 bg-amber-50", className)}>
         <CardContent className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-3">
-            <RefreshCw className="w-5 h-5 animate-spin text-amber-600" />
+            <RefreshCw className="h-5 w-5 animate-spin text-amber-600" />
             <span className="text-amber-800">正在审查代码...</span>
           </div>
         </CardContent>
@@ -159,7 +151,7 @@ export function CodeReviewPanel({
       <Card className={className}>
         <CardContent className="flex items-center justify-center py-8">
           <Button onClick={performReview} variant="outline">
-            <Code className="w-4 h-4 mr-2" />
+            <Code className="mr-2 h-4 w-4" />
             开始代码审查
           </Button>
         </CardContent>
@@ -172,18 +164,14 @@ export function CodeReviewPanel({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Code className="w-5 h-5" />
+            <Code className="h-5 w-5" />
             <span>代码审查结果</span>
             <Badge variant={reviewResult.approved ? "default" : "destructive"}>
               {reviewResult.approved ? "通过" : "需要改进"}
             </Badge>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDetails(!showDetails)}
-          >
-            <Eye className="w-4 h-4 mr-1" />
+          <Button variant="ghost" size="sm" onClick={() => setShowDetails(!showDetails)}>
+            <Eye className="mr-1 h-4 w-4" />
             {showDetails ? "收起" : "详情"}
           </Button>
         </CardTitle>
@@ -192,9 +180,8 @@ export function CodeReviewPanel({
             {review.filePath} ({getFileTypeLabel(review.fileType)})
           </span>
           <span>
-            审查时间:{" "}
-            {reviewResult.metadata.reviewTimestamp.toLocaleString("zh-CN")} |
-            处理: {reviewResult.metadata.processingTime}ms
+            审查时间: {reviewResult.metadata.reviewTimestamp.toLocaleString("zh-CN")} | 处理:{" "}
+            {reviewResult.metadata.processingTime}ms
           </span>
         </CardDescription>
       </CardHeader>
@@ -204,9 +191,7 @@ export function CodeReviewPanel({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="text-sm font-medium">风险等级:</span>
-            <Badge
-              className={cn("capitalize", getRiskColor(reviewResult.riskLevel))}
-            >
+            <Badge className={cn("capitalize", getRiskColor(reviewResult.riskLevel))}>
               {reviewResult.riskLevel === "critical"
                 ? "严重"
                 : reviewResult.riskLevel === "high"
@@ -222,49 +207,41 @@ export function CodeReviewPanel({
         </div>
 
         {/* 代码指标 */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-white/50 rounded-lg">
+        <div className="grid grid-cols-2 gap-4 rounded-lg bg-white/50 p-4 md:grid-cols-5">
           <div className="text-center">
-            <div className="flex items-center justify-center mb-1">
-              <BarChart3 className="w-4 h-4 text-blue-500" />
+            <div className="mb-1 flex items-center justify-center">
+              <BarChart3 className="h-4 w-4 text-blue-500" />
             </div>
             <div className="text-xs text-muted-foreground">复杂度</div>
             <div className="font-medium">{reviewResult.metrics.complexity}</div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center mb-1">
-              <FileText className="w-4 h-4 text-green-500" />
+            <div className="mb-1 flex items-center justify-center">
+              <FileText className="h-4 w-4 text-green-500" />
             </div>
             <div className="text-xs text-muted-foreground">代码行数</div>
-            <div className="font-medium">
-              {reviewResult.metrics.linesOfCode}
-            </div>
+            <div className="font-medium">{reviewResult.metrics.linesOfCode}</div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center mb-1">
-              <Shield className="w-4 h-4 text-red-500" />
+            <div className="mb-1 flex items-center justify-center">
+              <Shield className="h-4 w-4 text-red-500" />
             </div>
             <div className="text-xs text-muted-foreground">安全评分</div>
-            <div className="font-medium">
-              {reviewResult.metrics.securityScore}
-            </div>
+            <div className="font-medium">{reviewResult.metrics.securityScore}</div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center mb-1">
-              <TrendingUp className="w-4 h-4 text-purple-500" />
+            <div className="mb-1 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-purple-500" />
             </div>
             <div className="text-xs text-muted-foreground">可维护性</div>
-            <div className="font-medium">
-              {reviewResult.metrics.maintainabilityIndex}
-            </div>
+            <div className="font-medium">{reviewResult.metrics.maintainabilityIndex}</div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center mb-1">
-              <Zap className="w-4 h-4 text-orange-500" />
+            <div className="mb-1 flex items-center justify-center">
+              <Zap className="h-4 w-4 text-orange-500" />
             </div>
             <div className="text-xs text-muted-foreground">重复行</div>
-            <div className="font-medium">
-              {reviewResult.metrics.duplicateLines}
-            </div>
+            <div className="font-medium">{reviewResult.metrics.duplicateLines}</div>
           </div>
         </div>
 
@@ -272,20 +249,16 @@ export function CodeReviewPanel({
         {reviewResult.issues.length > 0 && (
           <Alert
             className={
-              reviewResult.approved
-                ? "border-yellow-200 bg-yellow-50"
-                : "border-red-200 bg-red-50"
+              reviewResult.approved ? "border-yellow-200 bg-yellow-50" : "border-red-200 bg-red-50"
             }
           >
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               <div className="space-y-2">
                 <p className="font-medium">
-                  {reviewResult.approved
-                    ? "发现可改进的问题"
-                    : "发现需要解决的问题"}
+                  {reviewResult.approved ? "发现可改进的问题" : "发现需要解决的问题"}
                 </p>
-                <ul className="text-sm space-y-1 ml-4">
+                <ul className="ml-4 space-y-1 text-sm">
                   {reviewResult.issues.slice(0, 3).map((issue, index) => (
                     <li key={index} className="flex items-start space-x-2">
                       {getSeverityIcon(issue.severity)}
@@ -311,16 +284,11 @@ export function CodeReviewPanel({
             <ScrollArea className="max-h-60">
               <div className="space-y-2">
                 {reviewResult.issues.map((issue, index) => (
-                  <div
-                    key={index}
-                    className="p-3 border rounded-lg bg-white/50"
-                  >
-                    <div className="flex items-start justify-between mb-2">
+                  <div key={index} className="rounded-lg border bg-white/50 p-3">
+                    <div className="mb-2 flex items-start justify-between">
                       <div className="flex items-center space-x-2">
                         {getSeverityIcon(issue.severity)}
-                        <span className="font-medium">
-                          {getIssueTypeLabel(issue.type)}
-                        </span>
+                        <span className="font-medium">{getIssueTypeLabel(issue.type)}</span>
                       </div>
                       <Badge variant="outline" className="text-xs">
                         {issue.severity === "critical"
@@ -332,19 +300,15 @@ export function CodeReviewPanel({
                               : "低"}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {issue.description}
-                    </p>
+                    <p className="mb-2 text-sm text-muted-foreground">{issue.description}</p>
                     {issue.location && (
-                      <div className="text-xs text-muted-foreground mb-2">
+                      <div className="mb-2 text-xs text-muted-foreground">
                         位置: 第 {issue.location.line} 行
                       </div>
                     )}
                     <div className="flex items-start space-x-2">
-                      <Lightbulb className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-blue-700">
-                        {issue.recommendation}
-                      </p>
+                      <Lightbulb className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
+                      <p className="text-sm text-blue-700">{issue.recommendation}</p>
                     </div>
                   </div>
                 ))}
@@ -356,11 +320,11 @@ export function CodeReviewPanel({
         {/* 建议列表 */}
         {reviewResult.suggestions.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-medium flex items-center">
-              <Lightbulb className="w-4 h-4 mr-2 text-blue-500" />
+            <h4 className="flex items-center font-medium">
+              <Lightbulb className="mr-2 h-4 w-4 text-blue-500" />
               改进建议
             </h4>
-            <ul className="text-sm space-y-1 text-muted-foreground">
+            <ul className="space-y-1 text-sm text-muted-foreground">
               {reviewResult.suggestions.map((suggestion, index) => (
                 <li key={index} className="flex items-start space-x-2">
                   <span className="text-blue-500">•</span>
@@ -375,17 +339,13 @@ export function CodeReviewPanel({
         <div className="flex space-x-2 pt-4">
           {reviewResult.approved ? (
             <Button onClick={handleApprove} className="flex-1">
-              <CheckCircle className="w-4 h-4 mr-2" />
+              <CheckCircle className="mr-2 h-4 w-4" />
               确认通过
             </Button>
           ) : (
             <>
-              <Button
-                variant="outline"
-                onClick={handleApprove}
-                className="flex-1"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
+              <Button variant="outline" onClick={handleApprove} className="flex-1">
+                <CheckCircle className="mr-2 h-4 w-4" />
                 强制通过
               </Button>
               <Button
@@ -393,7 +353,7 @@ export function CodeReviewPanel({
                 onClick={() => handleReject("代码审查未通过")}
                 className="flex-1"
               >
-                <XCircle className="w-4 h-4 mr-2" />
+                <XCircle className="mr-2 h-4 w-4" />
                 拒绝提交
               </Button>
             </>
@@ -450,13 +410,8 @@ export function QuickCodeReview({
 
   if (isLoading) {
     return (
-      <div
-        className={cn(
-          "flex items-center space-x-2 text-sm text-muted-foreground",
-          className,
-        )}
-      >
-        <RefreshCw className="w-3 h-3 animate-spin" />
+      <div className={cn("flex items-center space-x-2 text-sm text-muted-foreground", className)}>
+        <RefreshCw className="h-3 w-3 animate-spin" />
         <span>审查中...</span>
       </div>
     );
@@ -467,9 +422,9 @@ export function QuickCodeReview({
   return (
     <div className={cn("flex items-center space-x-2", className)}>
       {result.approved ? (
-        <CheckCircle className="w-4 h-4 text-green-500" />
+        <CheckCircle className="h-4 w-4 text-green-500" />
       ) : (
-        <AlertTriangle className="w-4 h-4 text-orange-500" />
+        <AlertTriangle className="h-4 w-4 text-orange-500" />
       )}
       <span className="text-sm">
         {result.approved ? "审查通过" : `${result.issues.length} 个问题`}

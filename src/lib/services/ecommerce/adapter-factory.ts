@@ -38,7 +38,7 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
         PlatformErrorType.PLATFORM_ERROR,
         `Unsupported platform: ${platform}`,
         undefined,
-        { platform },
+        { platform }
       );
     }
 
@@ -78,9 +78,7 @@ export class PlatformAdapterFactory implements IPlatformAdapterFactory {
 export const platformAdapterFactory = PlatformAdapterFactory.getInstance();
 
 // 便捷函数
-export function createPlatformAdapter(
-  platform: EcommercePlatform,
-): IPlatformAdapter {
+export function createPlatformAdapter(platform: EcommercePlatform): IPlatformAdapter {
   return platformAdapterFactory.createAdapter(platform);
 }
 

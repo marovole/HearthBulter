@@ -119,8 +119,8 @@ export default function MealPlanningPage() {
       setLoadingPlan(true);
       const response = await fetch(
         `/api/meal-plans?startDate=${new Date(
-          dateRange.start,
-        ).toISOString()}&endDate=${new Date(dateRange.end).toISOString()}`,
+          dateRange.start
+        ).toISOString()}&endDate=${new Date(dateRange.end).toISOString()}`
       );
 
       if (!response.ok) {
@@ -189,10 +189,7 @@ export default function MealPlanningPage() {
     }
   };
 
-  const handleQuickAdd = async (
-    recipeId: string,
-    mealType: Meal["mealType"],
-  ) => {
+  const handleQuickAdd = async (recipeId: string, mealType: Meal["mealType"]) => {
     if (!mealPlan) return;
 
     try {
@@ -243,9 +240,9 @@ export default function MealPlanningPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <p className="text-gray-600">加载食谱计划中...</p>
         </div>
       </div>
@@ -257,9 +254,9 @@ export default function MealPlanningPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 页面头部 */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      <div className="border-b bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-3">
               <Utensils className="h-8 w-8 text-blue-600" />
               <div>
@@ -269,13 +266,8 @@ export default function MealPlanningPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportPlan}
-                disabled={!mealPlan}
-              >
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={handleExportPlan} disabled={!mealPlan}>
+                <Download className="mr-2 h-4 w-4" />
                 导出
               </Button>
               <Button
@@ -283,11 +275,11 @@ export default function MealPlanningPage() {
                 size="sm"
                 onClick={() => router.push("/meal-planning/settings")}
               >
-                <Settings className="h-4 w-4 mr-2" />
+                <Settings className="mr-2 h-4 w-4" />
                 设置
               </Button>
               <Button onClick={handleGenerateNewPlan}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 生成新计划
               </Button>
             </div>
@@ -296,12 +288,8 @@ export default function MealPlanningPage() {
       </div>
 
       {/* 主要内容 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="plan" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -322,21 +310,16 @@ export default function MealPlanningPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleNavigateDate("prev")}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleNavigateDate("prev")}>
                       ←
                     </Button>
-                    <div className="text-center min-w-48">
+                    <div className="min-w-48 text-center">
                       <h2 className="text-lg font-semibold">
                         {viewMode === "day" &&
                           format(currentDate, "yyyy年M月d日", { locale: zhCN })}
                         {viewMode === "week" &&
                           `${format(startOfWeek(currentDate, { weekStartsOn: 1 }), "yyyy年M月d日", { locale: zhCN })} - ${format(addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), 6), "M月d日", { locale: zhCN })}`}
-                        {viewMode === "month" &&
-                          format(currentDate, "yyyy年M月", { locale: zhCN })}
+                        {viewMode === "month" && format(currentDate, "yyyy年M月", { locale: zhCN })}
                       </h2>
                       <p className="text-sm text-gray-500">
                         {viewMode === "day" && "日视图"}
@@ -344,11 +327,7 @@ export default function MealPlanningPage() {
                         {viewMode === "month" && "月视图"}
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleNavigateDate("next")}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleNavigateDate("next")}>
                       →
                     </Button>
                   </div>
@@ -359,28 +338,28 @@ export default function MealPlanningPage() {
                       size="sm"
                       onClick={() => setViewMode("day")}
                     >
-                      <Clock className="h-4 w-4 mr-2" />日
+                      <Clock className="mr-2 h-4 w-4" />日
                     </Button>
                     <Button
                       variant={viewMode === "week" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setViewMode("week")}
                     >
-                      <Calendar className="h-4 w-4 mr-2" />周
+                      <Calendar className="mr-2 h-4 w-4" />周
                     </Button>
                     <Button
                       variant={viewMode === "month" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setViewMode("month")}
                     >
-                      <Calendar className="h-4 w-4 mr-2" />月
+                      <Calendar className="mr-2 h-4 w-4" />月
                     </Button>
                     <Button
                       variant={viewMode === "list" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setViewMode("list")}
                     >
-                      <List className="h-4 w-4 mr-2" />
+                      <List className="mr-2 h-4 w-4" />
                       列表
                     </Button>
                   </div>
@@ -401,16 +380,14 @@ export default function MealPlanningPage() {
                     )}
                   </>
                 ) : (
-                  <div className="text-center py-12">
-                    <Utensils className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      暂无食谱计划
-                    </h3>
-                    <p className="text-gray-500 mb-6">
+                  <div className="py-12 text-center">
+                    <Utensils className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+                    <h3 className="mb-2 text-lg font-medium text-gray-900">暂无食谱计划</h3>
+                    <p className="mb-6 text-gray-500">
                       点击&quot;生成新计划&quot;开始您的个性化食谱规划
                     </p>
                     <Button onClick={handleGenerateNewPlan}>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="mr-2 h-4 w-4" />
                       生成新计划
                     </Button>
                   </div>
@@ -424,11 +401,9 @@ export default function MealPlanningPage() {
               <NutritionSummary planId={mealPlan.id} />
             ) : (
               <Card>
-                <CardContent className="text-center py-12">
-                  <TrendingUp className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    暂无营养数据
-                  </h3>
+                <CardContent className="py-12 text-center">
+                  <TrendingUp className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+                  <h3 className="mb-2 text-lg font-medium text-gray-900">暂无营养数据</h3>
                   <p className="text-gray-500">请先生成食谱计划</p>
                 </CardContent>
               </Card>

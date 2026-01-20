@@ -57,7 +57,7 @@ export class ChartDataOptimizer {
    */
   static aggregateDataByTime(
     data: Array<{ date: Date; value: number }>,
-    interval: "hour" | "day" | "week" | "month",
+    interval: "hour" | "day" | "week" | "month"
   ): Array<{ date: Date; value: number; count: number }> {
     const grouped = new Map<string, number[]>();
 
@@ -78,19 +78,19 @@ export class ChartDataOptimizer {
 
   private static getTimeKey(date: Date, interval: string): string {
     switch (interval) {
-    case "hour":
-      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
-    case "day":
-      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-    case "week": {
-      const weekStart = new Date(date);
-      weekStart.setDate(date.getDate() - date.getDay());
-      return `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`;
-    }
-    case "month":
-      return `${date.getFullYear()}-${date.getMonth()}`;
-    default:
-      return date.toISOString();
+      case "hour":
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
+      case "day":
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      case "week": {
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        return `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`;
+      }
+      case "month":
+        return `${date.getFullYear()}-${date.getMonth()}`;
+      default:
+        return date.toISOString();
     }
   }
 }
@@ -98,10 +98,7 @@ export class ChartDataOptimizer {
 /**
  * 懒加载Hook
  */
-export function useLazyLoad<T>(
-  loader: () => Promise<T>,
-  dependencies: any[] = [],
-) {
+export function useLazyLoad<T>(loader: () => Promise<T>, dependencies: any[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -150,18 +147,14 @@ export function useLazyLoad<T>(
 /**
  * 虚拟化列表Hook
  */
-export function useVirtualList<T>(
-  items: T[],
-  itemHeight: number,
-  containerHeight: number,
-) {
+export function useVirtualList<T>(items: T[], itemHeight: number, containerHeight: number) {
   const [scrollTop, setScrollTop] = useState(0);
 
   const visibleItems = useMemo(() => {
     const startIndex = Math.floor(scrollTop / itemHeight);
     const endIndex = Math.min(
       startIndex + Math.ceil(containerHeight / itemHeight) + 1,
-      items.length,
+      items.length
     );
 
     return items.slice(startIndex, endIndex).map((item, index) => ({
@@ -199,7 +192,7 @@ export function usePerformanceMonitor(name: string) {
       if (startTimeRef.current) {
         const duration = performance.now() - startTimeRef.current;
         console.log(
-          `[Performance] ${name} render #${renderCountRef.current}: ${duration.toFixed(2)}ms`,
+          `[Performance] ${name} render #${renderCountRef.current}: ${duration.toFixed(2)}ms`
         );
       }
     };
@@ -212,13 +205,11 @@ export function usePerformanceMonitor(name: string) {
         const result = fn(...args);
         const end = performance.now();
 
-        console.log(
-          `[Performance] ${fnName || name}: ${(end - start).toFixed(2)}ms`,
-        );
+        console.log(`[Performance] ${fnName || name}: ${(end - start).toFixed(2)}ms`);
         return result;
       };
     },
-    [name],
+    [name]
   );
 
   return { measureFunction };
@@ -228,10 +219,7 @@ export function usePerformanceMonitor(name: string) {
  * 内存缓存管理器
  */
 export class MemoryCacheManager {
-  private cache = new Map<
-    string,
-    { data: any; timestamp: number; ttl: number }
-  >();
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
   private maxSize: number;
   private cleanupInterval: NodeJS.Timeout;
 
@@ -355,7 +343,7 @@ export function useThrottle<T>(value: T, delay: number): T {
           lastExecuted.current = Date.now();
         }
       },
-      delay - (Date.now() - lastExecuted.current),
+      delay - (Date.now() - lastExecuted.current)
     );
 
     return () => {
@@ -415,17 +403,15 @@ export class ResourcePreloader {
   /**
    * 预加载多个资源
    */
-  async preloadResources(
-    resources: Array<{ type: "image" | "script"; src: string }>,
-  ) {
+  async preloadResources(resources: Array<{ type: "image" | "script"; src: string }>) {
     const promises = resources.map((resource) => {
       switch (resource.type) {
-      case "image":
-        return this.preloadImage(resource.src);
-      case "script":
-        return this.preloadScript(resource.src);
-      default:
-        return Promise.resolve();
+        case "image":
+          return this.preloadImage(resource.src);
+        case "script":
+          return this.preloadScript(resource.src);
+        default:
+          return Promise.resolve();
       }
     });
 

@@ -92,15 +92,11 @@ describe("负载测试", () => {
         testResults.push(result);
 
         // 验证基础性能指标
-        expect(result.errorRate).toBeLessThan(
-          LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE,
-        );
+        expect(result.errorRate).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE);
         expect(result.averageResponseTime).toBeLessThan(
-          LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.ACCEPTABLE,
+          LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.ACCEPTABLE
         );
-        expect(result.throughput).toBeGreaterThan(
-          LOAD_TEST_CONFIG.BENCHMARKS.THROUGHPUT.MIN,
-        );
+        expect(result.throughput).toBeGreaterThan(LOAD_TEST_CONFIG.BENCHMARKS.THROUGHPUT.MIN);
 
         console.log(`并发用户 ${concurrentUsers}:`, {
           错误率: `${result.errorRate.toFixed(2)}%`,
@@ -108,7 +104,7 @@ describe("负载测试", () => {
           吞吐量: `${result.throughput.toFixed(2)} RPS`,
         });
       },
-      LOAD_TEST_CONFIG.TEST_TIMEOUT,
+      LOAD_TEST_CONFIG.TEST_TIMEOUT
     );
   });
 
@@ -123,15 +119,11 @@ describe("负载测试", () => {
       });
 
       // 验证GET端点性能
-      expect(result.errorRate).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.GOOD,
-      );
+      expect(result.errorRate).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.GOOD);
       expect(result.averageResponseTime).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.GOOD,
+        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.GOOD
       );
-      expect(result.throughput).toBeGreaterThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.THROUGHPUT.GOOD,
-      );
+      expect(result.throughput).toBeGreaterThan(LOAD_TEST_CONFIG.BENCHMARKS.THROUGHPUT.GOOD);
 
       console.log("GET /api/families 负载测试结果:", formatTestResult(result));
     });
@@ -150,11 +142,9 @@ describe("负载测试", () => {
       });
 
       // 验证POST端点性能
-      expect(result.errorRate).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE,
-      );
+      expect(result.errorRate).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE);
       expect(result.averageResponseTime).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.ACCEPTABLE,
+        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.ACCEPTABLE
       );
 
       console.log("POST /api/families 负载测试结果:", formatTestResult(result));
@@ -170,11 +160,9 @@ describe("负载测试", () => {
       });
 
       // 验证数据库查询性能
-      expect(result.errorRate).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE,
-      );
+      expect(result.errorRate).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE);
       expect(result.averageResponseTime).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.GOOD,
+        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.GOOD
       );
 
       console.log("数据库查询负载测试结果:", formatTestResult(result));
@@ -233,9 +221,7 @@ describe("负载测试", () => {
 
       // 应该有部分请求被频率限制
       expect(result.errorRate).toBeGreaterThan(0);
-      expect(result.throughput).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.THROUGHPUT.GOOD,
-      );
+      expect(result.throughput).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.THROUGHPUT.GOOD);
 
       console.log("频率限制负载测试结果:", formatTestResult(result));
     });
@@ -265,11 +251,9 @@ describe("负载测试", () => {
       });
 
       // 大数据量处理应该保持合理的性能
-      expect(result.errorRate).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE,
-      );
+      expect(result.errorRate).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE);
       expect(result.averageResponseTime).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.ACCEPTABLE,
+        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.ACCEPTABLE
       );
 
       console.log("大数据量处理测试结果:", formatTestResult(result));
@@ -290,14 +274,10 @@ describe("负载测试", () => {
 
       // 验证长时间稳定性
       expect(actualDuration).toBeGreaterThanOrEqual(testDuration * 0.9); // 允许10%误差
-      expect(result.errorRate).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE,
-      );
+      expect(result.errorRate).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE);
 
       // 响应时间不应该持续增长
-      expect(result.p99ResponseTime).toBeLessThan(
-        result.averageResponseTime * 3,
-      );
+      expect(result.p99ResponseTime).toBeLessThan(result.averageResponseTime * 3);
 
       console.log("长时间稳定测试结果:", {
         持续时间: `${(actualDuration / 1000).toFixed(1)}s`,
@@ -319,11 +299,9 @@ describe("负载测试", () => {
       });
 
       // 在极限负载下，系统应该仍然可用
-      expect(result.errorRate).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.POOR,
-      );
+      expect(result.errorRate).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.POOR);
       expect(result.averageResponseTime).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.POOR,
+        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.POOR
       );
       expect(result.throughput).toBeGreaterThan(0);
 
@@ -345,11 +323,9 @@ describe("负载测试", () => {
       });
 
       // 混合请求应该保持合理的性能
-      expect(result.errorRate).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE,
-      );
+      expect(result.errorRate).toBeLessThan(LOAD_TEST_CONFIG.BENCHMARKS.ERROR_RATE.ACCEPTABLE);
       expect(result.averageResponseTime).toBeLessThan(
-        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.ACCEPTABLE,
+        LOAD_TEST_CONFIG.BENCHMARKS.RESPONSE_TIME.ACCEPTABLE
       );
 
       console.log("混合请求极限测试结果:", formatTestResult(result));
@@ -388,8 +364,7 @@ describe("负载测试", () => {
     // 生成所有请求
     for (let user = 0; user < config.concurrentUsers; user++) {
       for (let request = 0; request < config.requestsPerUser; request++) {
-        const delay =
-          user * config.requestInterval + request * config.requestInterval;
+        const delay = user * config.requestInterval + request * config.requestInterval;
 
         requests.push(
           new Promise((resolve) => {
@@ -402,16 +377,13 @@ describe("负载测试", () => {
                   headers: { "Content-Type": "application/json" },
                 };
 
-                if (
-                  config.body &&
-                  (config.method === "POST" || config.method === "PUT")
-                ) {
+                if (config.body && (config.method === "POST" || config.method === "PUT")) {
                   fetchOptions.body = JSON.stringify(config.body);
                 }
 
                 const response = await fetch(
                   `http://localhost:3000${config.endpoint}`,
-                  fetchOptions,
+                  fetchOptions
                 );
                 const responseTime = performance.now() - requestStartTime;
 
@@ -430,7 +402,7 @@ describe("负载测试", () => {
                 });
               }
             }, delay);
-          }),
+          })
         );
       }
     }
@@ -448,8 +420,7 @@ describe("负载测试", () => {
     const responseTimes = results.map((r) => r.responseTime);
     const sortedTimes = responseTimes.sort((a, b) => a - b);
 
-    const averageResponseTime =
-      responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+    const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
     const minResponseTime = Math.min(...responseTimes);
     const maxResponseTime = Math.max(...responseTimes);
     const p95ResponseTime = getPercentile(sortedTimes, 95);
@@ -468,13 +439,11 @@ describe("负载测试", () => {
         }
       });
 
-    const errors = Array.from(errorCounts.entries()).map(
-      ([message, count]) => ({
-        type: "request_error",
-        message,
-        count,
-      }),
-    );
+    const errors = Array.from(errorCounts.entries()).map(([message, count]) => ({
+      type: "request_error",
+      message,
+      count,
+    }));
 
     return {
       concurrentUsers: config.concurrentUsers,
@@ -516,12 +485,9 @@ describe("负载测试", () => {
         const requestStartTime = performance.now();
 
         try {
-          const response = await fetch(
-            `http://localhost:3000${config.endpoint}`,
-            {
-              method: config.method,
-            },
-          );
+          const response = await fetch(`http://localhost:3000${config.endpoint}`, {
+            method: config.method,
+          });
           const responseTime = performance.now() - requestStartTime;
 
           results.push({
@@ -545,9 +511,7 @@ describe("负载测试", () => {
     };
 
     // 并发发送请求
-    const promises = Array.from({ length: config.concurrentUsers }, () =>
-      sendRequests(),
-    );
+    const promises = Array.from({ length: config.concurrentUsers }, () => sendRequests());
     await Promise.all(promises);
 
     // 计算统计信息
@@ -559,8 +523,7 @@ describe("负载测试", () => {
     const responseTimes = results.map((r) => r.responseTime);
     const sortedTimes = responseTimes.sort((a, b) => a - b);
 
-    const averageResponseTime =
-      responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+    const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
     const minResponseTime = Math.min(...responseTimes);
     const maxResponseTime = Math.max(...responseTimes);
     const p95ResponseTime = getPercentile(sortedTimes, 95);
@@ -615,10 +578,7 @@ describe("负载测试", () => {
     // 随机打乱请求序列
     for (let i = requestSequence.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [requestSequence[i], requestSequence[j]] = [
-        requestSequence[j],
-        requestSequence[i],
-      ];
+      [requestSequence[i], requestSequence[j]] = [requestSequence[j], requestSequence[i]];
     }
 
     // 生成请求
@@ -652,7 +612,7 @@ describe("负载测试", () => {
               });
             }
           }, delay);
-        }),
+        })
       );
     }
 
@@ -669,8 +629,7 @@ describe("负载测试", () => {
     const responseTimes = results.map((r) => r.responseTime);
     const sortedTimes = responseTimes.sort((a, b) => a - b);
 
-    const averageResponseTime =
-      responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+    const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
     const minResponseTime = Math.min(...responseTimes);
     const maxResponseTime = Math.max(...responseTimes);
     const p95ResponseTime = getPercentile(sortedTimes, 95);
@@ -730,7 +689,7 @@ describe("负载测试", () => {
         持续时间: `${(result.duration / 1000).toFixed(1)}s`,
       },
       null,
-      2,
+      2
     );
   }
 
@@ -741,7 +700,7 @@ describe("负载测试", () => {
       console.log(`测试 ${index + 1}: 并发用户 ${result.concurrentUsers}`);
       console.log(`  总请求数: ${result.totalRequests}`);
       console.log(
-        `  成功率: ${((result.successfulRequests / result.totalRequests) * 100).toFixed(2)}%`,
+        `  成功率: ${((result.successfulRequests / result.totalRequests) * 100).toFixed(2)}%`
       );
       console.log(`  平均响应时间: ${result.averageResponseTime.toFixed(2)}ms`);
       console.log(`  P95响应时间: ${result.p95ResponseTime.toFixed(2)}ms`);
@@ -753,19 +712,13 @@ describe("负载测试", () => {
     if (results.length > 1) {
       console.log("=== 性能趋势分析 ===\n");
 
-      const maxConcurrentUsers = Math.max(
-        ...results.map((r) => r.concurrentUsers),
-      );
-      const throughputAtMax = results.find(
-        (r) => r.concurrentUsers === maxConcurrentUsers,
-      );
+      const maxConcurrentUsers = Math.max(...results.map((r) => r.concurrentUsers));
+      const throughputAtMax = results.find((r) => r.concurrentUsers === maxConcurrentUsers);
 
       if (throughputAtMax) {
         console.log(`最大并发用户数: ${maxConcurrentUsers}`);
         console.log(`最大吞吐量: ${throughputAtMax.throughput.toFixed(2)} RPS`);
-        console.log(
-          `响应时间: ${throughputAtMax.averageResponseTime.toFixed(2)}ms`,
-        );
+        console.log(`响应时间: ${throughputAtMax.averageResponseTime.toFixed(2)}ms`);
         console.log(`错误率: ${throughputAtMax.errorRate.toFixed(2)}%`);
       }
     }

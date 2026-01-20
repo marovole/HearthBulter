@@ -77,11 +77,7 @@ export class PrismaFoodRepository implements FoodRepository {
     return foods.map(normalizePrismaFood);
   }
 
-  async listByCategory(
-    category: FoodCategory,
-    from: number,
-    to: number,
-  ): Promise<FoodRecord[]> {
+  async listByCategory(category: FoodCategory, from: number, to: number): Promise<FoodRecord[]> {
     const foods = await prisma.food.findMany({
       where: { category },
       orderBy: { name: "asc" },

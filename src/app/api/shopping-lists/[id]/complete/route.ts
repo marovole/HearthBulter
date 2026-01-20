@@ -12,10 +12,7 @@ const completeShoppingSchema = z.object({
   actualCost: z.number().min(0).optional(),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: listId } = await params;
     const session = await auth();
@@ -26,41 +23,31 @@ export async function PATCH(
     const body = await request.json().catch(() => ({}));
     const validatedData = completeShoppingSchema.parse(body);
 
-    const shoppingList = await shoppingListRepository.getShoppingListById(
-      listId,
-      { includePlan: true },
-    );
+    const shoppingList = await shoppingListRepository.getShoppingListById(listId, {
+      includePlan: true,
+    });
 
     const memberId = shoppingList?.plan?.member?.id;
     if (!shoppingList || !memberId) {
       return NextResponse.json({ error: "购物清单不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限完成该购物清单" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限完成该购物清单" }, { status: 403 });
     }
 
-    const updatedList = await shoppingListRepository.completeShoppingList(
-      listId,
-      validatedData,
-    );
+    const updatedList = await shoppingListRepository.completeShoppingList(listId, validatedData);
 
     let priceAdvice: string | undefined;
     if (updatedList.estimatedCost != null && updatedList.actualCost != null) {
       priceAdvice = priceEstimator.getPriceTrendAdvice(
         updatedList.estimatedCost,
-        updatedList.actualCost,
+        updatedList.actualCost
       );
     }
 
@@ -70,13 +57,13 @@ export async function PATCH(
         shoppingList: updatedList,
         priceAdvice,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "请求参数验证失败", details: error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 

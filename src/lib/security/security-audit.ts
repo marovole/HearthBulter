@@ -118,8 +118,7 @@ export class SecurityAuditSystem {
   }): string {
     const eventId = this.generateEventId();
     const correlationId =
-      event.correlationId ||
-      this.getOrCreateCorrelationId(event.userId, event.sessionId);
+      event.correlationId || this.getOrCreateCorrelationId(event.userId, event.sessionId);
 
     const securityEvent: SecurityEvent = {
       id: eventId,
@@ -158,24 +157,18 @@ export class SecurityAuditSystem {
    */
   logAuthentication(
     userId: string,
-    action:
-      | "login"
-      | "logout"
-      | "register"
-      | "password_change"
-      | "password_reset",
+    action: "login" | "logout" | "register" | "password_change" | "password_reset",
     outcome: "success" | "failure",
     metadata?: Record<string, any>,
     context?: {
       ipAddress?: string;
       userAgent?: string;
       sessionId?: string;
-    },
+    }
   ): string {
     return this.logEvent({
       type: SecurityEventType.AUTHENTICATION,
-      severity:
-        outcome === "failure" ? SecuritySeverity.MEDIUM : SecuritySeverity.LOW,
+      severity: outcome === "failure" ? SecuritySeverity.MEDIUM : SecuritySeverity.LOW,
       title: `用户${action === "login" ? "登录" : action === "logout" ? "登出" : action === "register" ? "注册" : action === "password_change" ? "密码修改" : "密码重置"}`,
       description: `用户 ${userId} ${action} ${outcome === "success" ? "成功" : "失败"}`,
       userId,
@@ -199,7 +192,7 @@ export class SecurityAuditSystem {
       ipAddress?: string;
       userAgent?: string;
       sessionId?: string;
-    },
+    }
   ): string {
     return this.logEvent({
       type: SecurityEventType.AUTHORIZATION,
@@ -233,7 +226,7 @@ export class SecurityAuditSystem {
       ipAddress?: string;
       userAgent?: string;
       sessionId?: string;
-    },
+    }
   ): string {
     return this.logEvent({
       type: SecurityEventType.DATA_ACCESS,
@@ -264,7 +257,7 @@ export class SecurityAuditSystem {
       ipAddress?: string;
       userAgent?: string;
       sessionId?: string;
-    },
+    }
   ): string {
     return this.logEvent({
       type: SecurityEventType.FILE_UPLOAD,
@@ -298,7 +291,7 @@ export class SecurityAuditSystem {
       ipAddress?: string;
       userAgent?: string;
       sessionId?: string;
-    },
+    }
   ): string {
     return this.logEvent({
       type: SecurityEventType.API_ACCESS,
@@ -331,7 +324,7 @@ export class SecurityAuditSystem {
       ipAddress?: string;
       userAgent?: string;
       sessionId?: string;
-    },
+    }
   ): string {
     return this.logEvent({
       type: SecurityEventType.SUSPICIOUS_ACTIVITY,
@@ -357,7 +350,7 @@ export class SecurityAuditSystem {
       ipAddress?: string;
       userAgent?: string;
       sessionId?: string;
-    },
+    }
   ): string {
     return this.logEvent({
       type: SecurityEventType.SECURITY_VIOLATION,
@@ -380,17 +373,11 @@ export class SecurityAuditSystem {
   /**
    * 获取或创建关联ID
    */
-  private getOrCreateCorrelationId(
-    userId?: string,
-    sessionId?: string,
-  ): string {
+  private getOrCreateCorrelationId(userId?: string, sessionId?: string): string {
     const key = userId || sessionId || "anonymous";
 
     if (!this.correlationIdMap.has(key)) {
-      this.correlationIdMap.set(
-        key,
-        `corr_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
-      );
+      this.correlationIdMap.set(key, `corr_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`);
     }
 
     return this.correlationIdMap.get(key)!;
@@ -423,11 +410,7 @@ export class SecurityAuditSystem {
     };
 
     if (logLevel === "error") {
-      logger.error(
-        `[SECURITY] ${event.title}`,
-        new Error(event.description),
-        context,
-      );
+      logger.error(`[SECURITY] ${event.title}`, new Error(event.description), context);
     } else if (logLevel === "warn") {
       logger.warn(`[SECURITY] ${event.title}`, context);
     } else {
@@ -503,33 +486,33 @@ export class SecurityAuditSystem {
    */
   generateReport(
     type: "daily" | "weekly" | "monthly" | "custom",
-    customPeriod?: { start: Date; end: Date },
+    customPeriod?: { start: Date; end: Date }
   ): AuditReport {
     const now = new Date();
     let start: Date;
     let end: Date = now;
 
     switch (type) {
-    case "daily":
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      break;
-    case "weekly":
-      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      break;
-    case "monthly":
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      break;
-    case "custom":
-      if (!customPeriod) {
-        throw new Error("自定义报告需要提供时间范围");
-      }
-      start = customPeriod.start;
-      end = customPeriod.end;
-      break;
+      case "daily":
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case "weekly":
+        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case "monthly":
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case "custom":
+        if (!customPeriod) {
+          throw new Error("自定义报告需要提供时间范围");
+        }
+        start = customPeriod.start;
+        end = customPeriod.end;
+        break;
     }
 
     const filteredEvents = this.events.filter(
-      (event) => event.timestamp >= start && event.timestamp <= end,
+      (event) => event.timestamp >= start && event.timestamp <= end
     );
 
     const report: AuditReport = {
@@ -579,10 +562,7 @@ export class SecurityAuditSystem {
       if (event.userId) uniqueUsers.add(event.userId);
       if (event.ipAddress) {
         uniqueIPs.add(event.ipAddress);
-        ipEventCount.set(
-          event.ipAddress,
-          (ipEventCount.get(event.ipAddress) || 0) + 1,
-        );
+        ipEventCount.set(event.ipAddress, (ipEventCount.get(event.ipAddress) || 0) + 1);
       }
     });
 
@@ -596,9 +576,7 @@ export class SecurityAuditSystem {
       .sort((a, b) => b.riskScore - a.riskScore)
       .slice(0, 10);
 
-    const criticalEvents = events.filter(
-      (event) => event.severity === SecuritySeverity.CRITICAL,
-    );
+    const criticalEvents = events.filter((event) => event.severity === SecuritySeverity.CRITICAL);
 
     return {
       totalEvents: events.length,
@@ -614,11 +592,7 @@ export class SecurityAuditSystem {
   /**
    * 计算风险分数
    */
-  private calculateRiskScore(
-    ip: string,
-    eventCount: number,
-    events: SecurityEvent[],
-  ): number {
+  private calculateRiskScore(ip: string, eventCount: number, events: SecurityEvent[]): number {
     const ipEvents = events.filter((event) => event.ipAddress === ip);
 
     let score = eventCount * 10; // 基础分数
@@ -626,24 +600,24 @@ export class SecurityAuditSystem {
     // 根据事件严重级别加权
     ipEvents.forEach((event) => {
       switch (event.severity) {
-      case SecuritySeverity.CRITICAL:
-        score += 100;
-        break;
-      case SecuritySeverity.HIGH:
-        score += 50;
-        break;
-      case SecuritySeverity.MEDIUM:
-        score += 20;
-        break;
-      case SecuritySeverity.LOW:
-        score += 5;
-        break;
+        case SecuritySeverity.CRITICAL:
+          score += 100;
+          break;
+        case SecuritySeverity.HIGH:
+          score += 50;
+          break;
+        case SecuritySeverity.MEDIUM:
+          score += 20;
+          break;
+        case SecuritySeverity.LOW:
+          score += 5;
+          break;
       }
     });
 
     // 根据事件类型加权
     const failureCount = ipEvents.filter(
-      (e) => e.outcome === "failure" || e.outcome === "blocked",
+      (e) => e.outcome === "failure" || e.outcome === "blocked"
     ).length;
     score += failureCount * 30;
 
@@ -654,9 +628,7 @@ export class SecurityAuditSystem {
    * 生成趋势数据
    */
   private generateTrends(events: SecurityEvent[], start: Date, end: Date) {
-    const days = Math.ceil(
-      (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000),
-    );
+    const days = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
     const eventVolume: Array<{ date: string; count: number }> = [];
     const threatLevel: Array<{ date: string; level: number }> = [];
 
@@ -666,8 +638,7 @@ export class SecurityAuditSystem {
 
       const dayEvents = events.filter((event) => {
         const eventDate =
-          event.timestamp.toISOString().split("T")[0] ??
-          event.timestamp.toISOString();
+          event.timestamp.toISOString().split("T")[0] ?? event.timestamp.toISOString();
         return eventDate === dateStr;
       });
 
@@ -680,18 +651,18 @@ export class SecurityAuditSystem {
       let level = 0;
       dayEvents.forEach((event) => {
         switch (event.severity) {
-        case SecuritySeverity.CRITICAL:
-          level += 25;
-          break;
-        case SecuritySeverity.HIGH:
-          level += 10;
-          break;
-        case SecuritySeverity.MEDIUM:
-          level += 3;
-          break;
-        case SecuritySeverity.LOW:
-          level += 1;
-          break;
+          case SecuritySeverity.CRITICAL:
+            level += 25;
+            break;
+          case SecuritySeverity.HIGH:
+            level += 10;
+            break;
+          case SecuritySeverity.MEDIUM:
+            level += 3;
+            break;
+          case SecuritySeverity.LOW:
+            level += 1;
+            break;
         }
       });
 
@@ -714,16 +685,13 @@ export class SecurityAuditSystem {
 
         this.events = this.events.filter(
           (event) =>
-            event.timestamp.getTime() > oneWeekAgo ||
-            event.severity === SecuritySeverity.CRITICAL,
+            event.timestamp.getTime() > oneWeekAgo || event.severity === SecuritySeverity.CRITICAL
         );
 
         // 清理过期的关联ID
         const oldCorrelationIds: string[] = [];
         for (const [key, id] of this.correlationIdMap.entries()) {
-          const relatedEvents = this.events.filter(
-            (event) => event.correlationId === id,
-          );
+          const relatedEvents = this.events.filter((event) => event.correlationId === id);
           if (relatedEvents.length === 0) {
             oldCorrelationIds.push(key);
           }
@@ -739,7 +707,7 @@ export class SecurityAuditSystem {
           correlationIds: this.correlationIdMap.size,
         });
       },
-      24 * 60 * 60 * 1000,
+      24 * 60 * 60 * 1000
     ); // 每天清理一次
   }
 
@@ -751,9 +719,7 @@ export class SecurityAuditSystem {
 
     if (timeRange) {
       events = events.filter(
-        (event) =>
-          event.timestamp >= timeRange.start &&
-          event.timestamp <= timeRange.end,
+        (event) => event.timestamp >= timeRange.start && event.timestamp <= timeRange.end
       );
     }
 
@@ -763,16 +729,10 @@ export class SecurityAuditSystem {
     return {
       totalEvents: events.length,
       recentEvents: recentEvents.length,
-      criticalEvents: events.filter(
-        (e) => e.severity === SecuritySeverity.CRITICAL,
-      ).length,
-      highRiskEvents: events.filter((e) => e.severity === SecuritySeverity.HIGH)
-        .length,
-      uniqueUsers: new Set(events.filter((e) => e.userId).map((e) => e.userId!))
-        .size,
-      uniqueIPs: new Set(
-        events.filter((e) => e.ipAddress).map((e) => e.ipAddress!),
-      ).size,
+      criticalEvents: events.filter((e) => e.severity === SecuritySeverity.CRITICAL).length,
+      highRiskEvents: events.filter((e) => e.severity === SecuritySeverity.HIGH).length,
+      uniqueUsers: new Set(events.filter((e) => e.userId).map((e) => e.userId!)).size,
+      uniqueIPs: new Set(events.filter((e) => e.ipAddress).map((e) => e.ipAddress!)).size,
     };
   }
 }
@@ -786,15 +746,8 @@ export const logAuth = (
   action: string,
   outcome: string,
   metadata?: any,
-  context?: any,
-) =>
-  securityAudit.logAuthentication(
-    userId,
-    action as any,
-    outcome as any,
-    metadata,
-    context,
-  );
+  context?: any
+) => securityAudit.logAuthentication(userId, action as any, outcome as any, metadata, context);
 
 export const logAccess = (
   userId: string,
@@ -802,30 +755,15 @@ export const logAccess = (
   action: string,
   outcome: string,
   metadata?: any,
-  context?: any,
-) =>
-  securityAudit.logAuthorization(
-    userId,
-    resource,
-    action,
-    outcome as any,
-    metadata,
-    context,
-  );
+  context?: any
+) => securityAudit.logAuthorization(userId, resource, action, outcome as any, metadata, context);
 
 export const logSuspicious = (
   title: string,
   description: string,
   severity?: SecuritySeverity,
   metadata?: any,
-  context?: any,
-) =>
-  securityAudit.logSuspiciousActivity(
-    title,
-    description,
-    severity,
-    metadata,
-    context,
-  );
+  context?: any
+) => securityAudit.logSuspiciousActivity(title, description, severity, metadata, context);
 
 export default securityAudit;

@@ -21,12 +21,7 @@ interface TrackingCalendarProps {
   onDateClick?: (date: Date) => void;
 }
 
-export function TrackingCalendar({
-  year,
-  month,
-  calendar,
-  onDateClick,
-}: TrackingCalendarProps) {
+export function TrackingCalendar({ year, month, calendar, onDateClick }: TrackingCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
@@ -52,32 +47,29 @@ export function TrackingCalendar({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="rounded-lg bg-white p-6 shadow">
+      <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold">{monthName}</h3>
         <div className="flex gap-4 text-sm">
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-green-500 rounded"></div>
+            <div className="h-4 w-4 rounded bg-green-500"></div>
             <span>已完成</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+            <div className="h-4 w-4 rounded bg-yellow-500"></div>
             <span>部分完成</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 w-4 rounded bg-gray-200"></div>
             <span>未打卡</span>
           </div>
         </div>
       </div>
 
       {/* 星期标题 */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="mb-2 grid grid-cols-7 gap-2">
         {weekDays.map((day) => (
-          <div
-            key={day}
-            className="text-center text-sm font-medium text-gray-600"
-          >
+          <div key={day} className="text-center text-sm font-medium text-gray-600">
             {day}
           </div>
         ))}
@@ -92,15 +84,13 @@ export function TrackingCalendar({
             onClick={() => onDateClick && onDateClick(day.date)}
           >
             <div className="text-sm font-medium">{day.date.getDate()}</div>
-            {day.isChecked && (
-              <div className="text-xs mt-1">{day.isCompleted ? "✓" : "◐"}</div>
-            )}
+            {day.isChecked && <div className="mt-1 text-xs">{day.isCompleted ? "✓" : "◐"}</div>}
           </div>
         ))}
       </div>
 
       {/* 统计信息 */}
-      <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4 text-center">
+      <div className="mt-4 grid grid-cols-3 gap-4 border-t pt-4 text-center">
         <div>
           <div className="text-2xl font-bold text-green-600">
             {calendar.filter((d) => d.isCompleted).length}

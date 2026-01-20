@@ -10,17 +10,11 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get("days") || "30");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Member ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
     if (days < 1 || days > 365) {
-      return NextResponse.json(
-        { error: "Days must be between 1 and 365" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Days must be between 1 and 365" }, { status: 400 });
     }
 
     const startDate = new Date();
@@ -68,9 +62,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching notification stats:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch notification stats" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch notification stats" }, { status: 500 });
   }
 }

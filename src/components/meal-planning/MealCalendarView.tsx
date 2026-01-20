@@ -18,14 +18,7 @@ import { RecipeDetailModal } from "./RecipeDetailModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  AlertTriangle,
-  Heart,
-  Eye,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, AlertTriangle, Heart, Eye } from "lucide-react";
 import { toast } from "@/lib/toast";
 
 type ViewMode = "day" | "week" | "month";
@@ -149,46 +142,36 @@ export function MealCalendarView({
         acc[key]!.push(meal);
         return acc;
       },
-      {} as Partial<Record<keyof typeof MEAL_TYPE_LABELS, Meal[]>>,
+      {} as Partial<Record<keyof typeof MEAL_TYPE_LABELS, Meal[]>>
     );
 
     return (
       <div className="space-y-6">
-        <div className="text-center mb-6">
+        <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-gray-900">
             {format(currentDate, "yyyy年M月d日 EEEE", { locale: zhCN })}
           </h2>
           <p className="text-gray-600">
             共 {dayMeals.length} 餐，总计{" "}
-            {dayMeals.reduce((sum, meal) => sum + meal.calories, 0).toFixed(0)}{" "}
-            kcal
+            {dayMeals.reduce((sum, meal) => sum + meal.calories, 0).toFixed(0)} kcal
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {Object.entries(MEAL_TYPE_LABELS).map(([mealType, label]) => {
-            const mealsForType =
-              groupedMeals[mealType as keyof typeof MEAL_TYPE_LABELS] || [];
+            const mealsForType = groupedMeals[mealType as keyof typeof MEAL_TYPE_LABELS] || [];
 
             return (
               <Card key={mealType} className="h-fit">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <span className="text-2xl">
-                      {
-                        MEAL_TYPE_ICONS[
-                          mealType as keyof typeof MEAL_TYPE_ICONS
-                        ]
-                      }
+                      {MEAL_TYPE_ICONS[mealType as keyof typeof MEAL_TYPE_ICONS]}
                     </span>
                     {label}
                     <Badge
                       variant="outline"
-                      className={
-                        MEAL_TYPE_COLORS[
-                          mealType as keyof typeof MEAL_TYPE_COLORS
-                        ]
-                      }
+                      className={MEAL_TYPE_COLORS[mealType as keyof typeof MEAL_TYPE_COLORS]}
                     >
                       {mealsForType.length}
                     </Badge>
@@ -199,7 +182,7 @@ export function MealCalendarView({
                     mealsForType.map((meal) => (
                       <div
                         key={meal.id}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        className="cursor-pointer transition-shadow hover:shadow-md"
                         onClick={() => handleMealClick(meal)}
                       >
                         <MealCard
@@ -216,7 +199,7 @@ export function MealCalendarView({
                           onReplace={() => handleReplaceMeal(meal.id)}
                         />
                         {meal.hasAllergens && (
-                          <div className="mt-2 flex items-center gap-2 text-amber-600 text-sm">
+                          <div className="mt-2 flex items-center gap-2 text-sm text-amber-600">
                             <AlertTriangle className="h-4 w-4" />
                             <span>含过敏原: {meal.allergens?.join(", ")}</span>
                           </div>
@@ -224,8 +207,8 @@ export function MealCalendarView({
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <div className="text-4xl mb-2">🍽️</div>
+                    <div className="py-8 text-center text-gray-500">
+                      <div className="mb-2 text-4xl">🍽️</div>
                       <p>暂无{label}安排</p>
                       <Button
                         variant="outline"
@@ -233,7 +216,7 @@ export function MealCalendarView({
                         className="mt-2"
                         onClick={() => toast.info("添加餐食功能开发中")}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="mr-2 h-4 w-4" />
                         添加{label}
                       </Button>
                     </div>
@@ -254,7 +237,7 @@ export function MealCalendarView({
 
     return (
       <div className="space-y-6">
-        <div className="text-center mb-6">
+        <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-gray-900">
             第{Math.ceil(currentDate.getDate() / 7)}周
           </h2>
@@ -264,7 +247,7 @@ export function MealCalendarView({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
           {weekDays.map((day, index) => {
             const dayMeals = getMealsForDate(day);
             const isToday = isSameDay(day, new Date());
@@ -278,8 +261,8 @@ export function MealCalendarView({
               >
                 <CardHeader className="pb-3 text-center">
                   <CardTitle className="text-sm">
-                    <div className="font-bold text-lg">{dayNumber}</div>
-                    <div className="text-gray-600 text-xs">{dayName}</div>
+                    <div className="text-lg font-bold">{dayNumber}</div>
+                    <div className="text-xs text-gray-600">{dayName}</div>
                     {isToday && (
                       <Badge variant="default" className="mt-1 text-xs">
                         今天
@@ -292,20 +275,19 @@ export function MealCalendarView({
                     dayMeals.map((meal) => (
                       <div
                         key={meal.id}
-                        className="cursor-pointer hover:shadow-sm transition-shadow p-2 border rounded-lg"
+                        className="cursor-pointer rounded-lg border p-2 transition-shadow hover:shadow-sm"
                         onClick={() => handleMealClick(meal)}
                       >
-                        <div className="flex items-center justify-between mb-1">
+                        <div className="mb-1 flex items-center justify-between">
                           <Badge
                             variant="outline"
                             className={`text-xs ${MEAL_TYPE_COLORS[meal.mealType]}`}
                           >
-                            {MEAL_TYPE_ICONS[meal.mealType]}{" "}
-                            {MEAL_TYPE_LABELS[meal.mealType]}
+                            {MEAL_TYPE_ICONS[meal.mealType]} {MEAL_TYPE_LABELS[meal.mealType]}
                           </Badge>
                           <div className="flex items-center gap-1">
                             {meal.isFavorite && (
-                              <Heart className="h-3 w-3 text-red-500 fill-current" />
+                              <Heart className="h-3 w-3 fill-current text-red-500" />
                             )}
                             {meal.hasAllergens && (
                               <AlertTriangle className="h-3 w-3 text-amber-500" />
@@ -315,11 +297,10 @@ export function MealCalendarView({
                         <div className="text-xs text-gray-600">
                           <div>🔥 {meal.calories.toFixed(0)} kcal</div>
                           <div>
-                            🥩 {meal.protein.toFixed(1)}g | 🍚{" "}
-                            {meal.carbs.toFixed(1)}g
+                            🥩 {meal.protein.toFixed(1)}g | 🍚 {meal.carbs.toFixed(1)}g
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1 truncate">
+                        <div className="mt-1 truncate text-xs text-gray-500">
                           {meal.ingredients
                             .slice(0, 2)
                             .map((ing) => ing.food.name)
@@ -329,8 +310,8 @@ export function MealCalendarView({
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-gray-400">
-                      <div className="text-2xl mb-1">🍽️</div>
+                    <div className="py-4 text-center text-gray-400">
+                      <div className="mb-1 text-2xl">🍽️</div>
                       <p className="text-xs">无餐食</p>
                     </div>
                   )}
@@ -349,14 +330,11 @@ export function MealCalendarView({
     const monthEnd = endOfMonth(currentDate);
     const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
     const startDayOfWeek = getDay(monthStart);
-    const calendarDays: (Date | null)[] = [
-      ...Array(startDayOfWeek).fill(null),
-      ...monthDays,
-    ];
+    const calendarDays: (Date | null)[] = [...Array(startDayOfWeek).fill(null), ...monthDays];
 
     return (
       <div className="space-y-6">
-        <div className="text-center mb-6">
+        <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-gray-900">
             {format(currentDate, "yyyy年M月", { locale: zhCN })}
           </h2>
@@ -366,12 +344,9 @@ export function MealCalendarView({
         <Card>
           <CardContent className="p-4">
             {/* 星期标题 */}
-            <div className="grid grid-cols-7 gap-2 mb-4">
+            <div className="mb-4 grid grid-cols-7 gap-2">
               {["一", "二", "三", "四", "五", "六", "日"].map((day) => (
-                <div
-                  key={day}
-                  className="text-center text-sm font-medium text-gray-600"
-                >
+                <div key={day} className="text-center text-sm font-medium text-gray-600">
                   {day}
                 </div>
               ))}
@@ -381,9 +356,7 @@ export function MealCalendarView({
             <div className="grid grid-cols-7 gap-2">
               {calendarDays.map((day, index) => {
                 if (!day) {
-                  return (
-                    <div key={`empty-${index}`} className="aspect-square" />
-                  );
+                  return <div key={`empty-${index}`} className="aspect-square" />;
                 }
 
                 const dayMeals = getMealsForDate(day);
@@ -393,12 +366,12 @@ export function MealCalendarView({
                 return (
                   <div
                     key={day.toISOString()}
-                    className={`aspect-square border rounded-lg p-2 cursor-pointer transition-colors ${
+                    className={`aspect-square cursor-pointer rounded-lg border p-2 transition-colors ${
                       isToday
-                        ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
+                        ? "border-blue-200 bg-blue-50 hover:bg-blue-100"
                         : isCurrentMonth
-                          ? "bg-white border-gray-200 hover:bg-gray-50"
-                          : "bg-gray-50 border-gray-100 text-gray-400"
+                          ? "border-gray-200 bg-white hover:bg-gray-50"
+                          : "border-gray-100 bg-gray-50 text-gray-400"
                     }`}
                     onClick={() => {
                       if (dayMeals.length > 0) {
@@ -407,25 +380,17 @@ export function MealCalendarView({
                       }
                     }}
                   >
-                    <div className="text-xs font-medium mb-1">
-                      {format(day, "d")}
-                    </div>
+                    <div className="mb-1 text-xs font-medium">{format(day, "d")}</div>
 
                     {dayMeals.length > 0 && (
                       <div className="space-y-1">
-                        <div className="text-xs text-center">
-                          <Badge
-                            variant="outline"
-                            className="text-xs px-1 py-0"
-                          >
+                        <div className="text-center text-xs">
+                          <Badge variant="outline" className="px-1 py-0 text-xs">
                             {dayMeals.length}餐
                           </Badge>
                         </div>
-                        <div className="text-xs text-center text-gray-600">
-                          🔥{" "}
-                          {dayMeals
-                            .reduce((sum, meal) => sum + meal.calories, 0)
-                            .toFixed(0)}
+                        <div className="text-center text-xs text-gray-600">
+                          🔥 {dayMeals.reduce((sum, meal) => sum + meal.calories, 0).toFixed(0)}
                         </div>
                         <div className="flex justify-center gap-1">
                           {dayMeals.slice(0, 3).map((meal, i) => (

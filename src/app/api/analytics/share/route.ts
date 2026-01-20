@@ -3,10 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { generateShareToken } from "@/lib/services/analytics/report-generator";
 import { requireOwnership } from "@/lib/middleware/authorization";
-import {
-  validateBody,
-  validationErrorResponse,
-} from "@/lib/validation/api-validator";
+import { validateBody, validationErrorResponse } from "@/lib/validation/api-validator";
 
 /**
  * POST /api/analytics/share
@@ -30,23 +27,13 @@ export async function POST(request: NextRequest) {
     const { reportId, expiryDays = 7 } = validation.data;
 
     if (!reportId) {
-      return NextResponse.json(
-        { error: "缺少必要参数：reportId" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "缺少必要参数：reportId" }, { status: 400 });
     }
 
     // 验证用户对该报告的访问权限
-    const accessResult = await requireOwnership(
-      session.user.id,
-      "health_report",
-      reportId,
-    );
+    const accessResult = await requireOwnership(session.user.id, "health_report", reportId);
     if (!accessResult.authorized) {
-      return NextResponse.json(
-        { error: accessResult.reason || "无权访问此报告" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: accessResult.reason || "无权访问此报告" }, { status: 403 });
     }
 
     const token = await generateShareToken(reportId, expiryDays);

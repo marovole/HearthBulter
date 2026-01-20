@@ -32,12 +32,7 @@ interface ProvidersProps {
 export default function Providers({ children }: ProvidersProps): JSX.Element {
   return (
     <ConvexClientProvider>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         {children}
 
         {/* Global toast notification system */}

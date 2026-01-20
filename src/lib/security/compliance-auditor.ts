@@ -78,8 +78,7 @@ interface RiskAssessment {
  */
 export class ComplianceAuditor {
   private static instance: ComplianceAuditor;
-  private requirements: Map<ComplianceStandard, ComplianceRequirement[]> =
-    new Map();
+  private requirements: Map<ComplianceStandard, ComplianceRequirement[]> = new Map();
   private assessments: RiskAssessment[] = [];
   private lastAuditDate: Date | null = null;
 
@@ -269,9 +268,7 @@ export class ComplianceAuditor {
   /**
    * 生成合规报告
    */
-  async generateComplianceReport(
-    standard: ComplianceStandard,
-  ): Promise<ComplianceReport> {
+  async generateComplianceReport(standard: ComplianceStandard): Promise<ComplianceReport> {
     const requirements = this.requirements.get(standard) || [];
     const generatedAt = new Date();
 
@@ -291,13 +288,8 @@ export class ComplianceAuditor {
           if (req.mandatory) {
             mandatoryImplemented++;
           }
-        } else if (
-          control.status === "partial" ||
-          control.status === "not_implemented"
-        ) {
-          recommendations.push(
-            `实施控制: ${control.title} - ${control.description}`,
-          );
+        } else if (control.status === "partial" || control.status === "not_implemented") {
+          recommendations.push(`实施控制: ${control.title} - ${control.description}`);
           if (req.mandatory) {
             highRiskItems++;
           }
@@ -319,9 +311,7 @@ export class ComplianceAuditor {
     });
 
     const overallScore =
-      totalControls > 0
-        ? Math.round((implementedControls / totalControls) * 100)
-        : 0;
+      totalControls > 0 ? Math.round((implementedControls / totalControls) * 100) : 0;
     const status =
       overallScore >= 95
         ? "compliant"
@@ -401,9 +391,7 @@ export class ComplianceAuditor {
     findings: ComplianceFinding[];
     recommendations: string[];
   }> {
-    const standards = standard
-      ? [standard]
-      : Array.from(this.requirements.keys());
+    const standards = standard ? [standard] : Array.from(this.requirements.keys());
     const findings: ComplianceFinding[] = [];
     const recommendations: string[] = [];
 
@@ -444,7 +432,7 @@ export class ComplianceAuditor {
    */
   private async evaluateControl(
     control: ComplianceControl,
-    requirement: ComplianceRequirement,
+    requirement: ComplianceRequirement
   ): Promise<ComplianceFinding> {
     const recommendations: string[] = [];
     let status: "compliant" | "non_compliant" | "needs_attention" = "compliant";
@@ -491,7 +479,7 @@ export class ComplianceAuditor {
     controlId: string,
     status: ComplianceControl["status"],
     evidence?: string[],
-    implementation?: string,
+    implementation?: string
   ): Promise<void> {
     const requirements = this.requirements.get(standard);
     if (!requirements) {
@@ -549,10 +537,7 @@ export class ComplianceAuditor {
   /**
    * 更新风险评估
    */
-  async updateRiskAssessment(
-    riskId: string,
-    updates: Partial<RiskAssessment>,
-  ): Promise<void> {
+  async updateRiskAssessment(riskId: string, updates: Partial<RiskAssessment>): Promise<void> {
     const risk = this.assessments.find((r) => r.id === riskId);
     if (!risk) {
       throw new Error(`未找到风险评估 ${riskId}`);
@@ -584,16 +569,16 @@ export class ComplianceAuditor {
    */
   private getLikelihoodScore(likelihood: RiskAssessment["likelihood"]): number {
     switch (likelihood) {
-    case "low":
-      return 25;
-    case "medium":
-      return 50;
-    case "high":
-      return 75;
-    case "critical":
-      return 100;
-    default:
-      return 50;
+      case "low":
+        return 25;
+      case "medium":
+        return 50;
+      case "high":
+        return 75;
+      case "critical":
+        return 100;
+      default:
+        return 50;
     }
   }
 
@@ -602,16 +587,16 @@ export class ComplianceAuditor {
    */
   private getImpactScore(impact: RiskAssessment["impact"]): number {
     switch (impact) {
-    case "low":
-      return 25;
-    case "medium":
-      return 50;
-    case "high":
-      return 75;
-    case "critical":
-      return 100;
-    default:
-      return 50;
+      case "low":
+        return 25;
+      case "medium":
+        return 50;
+      case "high":
+        return 75;
+      case "critical":
+        return 100;
+      default:
+        return 50;
     }
   }
 
@@ -662,35 +647,29 @@ export class ComplianceAuditor {
   /**
    * 估算实施工作量
    */
-  private estimateEffort(
-    control: ComplianceControl,
-  ): "low" | "medium" | "high" {
+  private estimateEffort(control: ComplianceControl): "low" | "medium" | "high" {
     if (control.status === "partial") return "low";
-    if (control.implementation && control.implementation.length > 100)
-      return "high";
+    if (control.implementation && control.implementation.length > 100) return "high";
     return "medium";
   }
 
   /**
    * 计算时间线
    */
-  private calculateTimeline(
-    control: ComplianceControl,
-    effort: "low" | "medium" | "high",
-  ): string {
+  private calculateTimeline(control: ComplianceControl, effort: "low" | "medium" | "high"): string {
     const now = new Date();
     let days: number;
 
     switch (effort) {
-    case "low":
-      days = 7;
-      break;
-    case "medium":
-      days = 21;
-      break;
-    case "high":
-      days = 60;
-      break;
+      case "low":
+        days = 7;
+        break;
+      case "medium":
+        days = 21;
+        break;
+      case "high":
+        days = 60;
+        break;
     }
 
     const targetDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);

@@ -26,7 +26,7 @@ export class SupabaseHealthRepository implements HealthRepository {
     options?: {
       healthDataLimit?: number;
       medicalReportsLimit?: number;
-    },
+    }
   ): Promise<MemberHealthContext | null> {
     const healthDataLimit = options?.healthDataLimit ?? 10;
     const medicalReportsLimit = options?.medicalReportsLimit ?? 5;
@@ -44,9 +44,7 @@ export class SupabaseHealthRepository implements HealthRepository {
         // 1. 获取成员基本信息
         this.supabase
           .from("family_members")
-          .select(
-            "id, familyId, userId, name, birthDate, gender, height, weight, bmi",
-          )
+          .select("id, familyId, userId, name, birthDate, gender, height, weight, bmi")
           .eq("id", memberId)
           .is("deletedAt", null)
           .single(),
@@ -103,9 +101,7 @@ export class SupabaseHealthRepository implements HealthRepository {
         const reportIds = medicalReportsResult.data.map((r) => r.id);
         const { data: indicators } = await this.supabase
           .from("medical_report_indicators")
-          .select(
-            "id, reportId, indicatorName, value, unit, referenceRange, status",
-          )
+          .select("id, reportId, indicatorName, value, unit, referenceRange, status")
           .in("reportId", reportIds);
 
         allIndicators = indicators || [];
@@ -140,12 +136,12 @@ export class SupabaseHealthRepository implements HealthRepository {
         })),
         dietaryPreference: dietaryPreferenceResult.data
           ? {
-            dietType: dietaryPreferenceResult.data.dietType,
-            isVegetarian: dietaryPreferenceResult.data.isVegetarian ?? false,
-            isVegan: dietaryPreferenceResult.data.isVegan ?? false,
-            restrictions: dietaryPreferenceResult.data.restrictions,
-            preferences: dietaryPreferenceResult.data.preferences,
-          }
+              dietType: dietaryPreferenceResult.data.dietType,
+              isVegetarian: dietaryPreferenceResult.data.isVegetarian ?? false,
+              isVegan: dietaryPreferenceResult.data.isVegan ?? false,
+              restrictions: dietaryPreferenceResult.data.restrictions,
+              preferences: dietaryPreferenceResult.data.preferences,
+            }
           : null,
         healthData: (healthDataResult.data || []).map((h) => ({
           id: h.id,
@@ -182,10 +178,7 @@ export class SupabaseHealthRepository implements HealthRepository {
   /**
    * 获取成员 AI 健康分析历史
    */
-  async getMemberHealthHistory(
-    memberId: string,
-    limit = 10,
-  ): Promise<AIAdviceHistoryRecord[]> {
+  async getMemberHealthHistory(memberId: string, limit = 10): Promise<AIAdviceHistoryRecord[]> {
     try {
       const { data, error } = await this.supabase
         .from("ai_advice")
@@ -274,14 +267,12 @@ export class SupabaseHealthRepository implements HealthRepository {
       // 压缩 messages：只保留最近 50 条消息
       const MAX_MESSAGES = 50;
       const compressedMessages =
-        data.messages.length > MAX_MESSAGES
-          ? data.messages.slice(-MAX_MESSAGES)
-          : data.messages;
+        data.messages.length > MAX_MESSAGES ? data.messages.slice(-MAX_MESSAGES) : data.messages;
 
       // 如果压缩了消息，记录日志（使用 warn 级别避免日志噪音）
       if (data.messages.length > MAX_MESSAGES) {
         console.warn(
-          `[HealthRepository] Compressed conversation ${data.id}: ${data.messages.length} → ${compressedMessages.length} messages`,
+          `[HealthRepository] Compressed conversation ${data.id}: ${data.messages.length} → ${compressedMessages.length} messages`
         );
       }
 
@@ -295,7 +286,7 @@ export class SupabaseHealthRepository implements HealthRepository {
           updatedAt: data.updatedAt.toISOString(),
           lastMessageAt: data.lastMessageAt.toISOString(),
         },
-        { onConflict: "id" },
+        { onConflict: "id" }
       );
 
       if (error) {

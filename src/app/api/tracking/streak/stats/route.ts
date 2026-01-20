@@ -23,10 +23,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const memberId = searchParams.get("memberId");
-    const period = (searchParams.get("period") || "week") as
-      | "week"
-      | "month"
-      | "year";
+    const period = (searchParams.get("period") || "week") as "week" | "month" | "year";
 
     if (!memberId) {
       return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });

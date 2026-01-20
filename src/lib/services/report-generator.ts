@@ -7,13 +7,7 @@
 
 import { analyticsService } from "./analytics-service";
 import { healthScoreCalculator } from "./health-score-calculator";
-import {
-  format,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
 
@@ -62,29 +56,25 @@ export class ReportGenerator {
   /**
    * 生成周报
    */
-  async generateWeeklyReport(
-    memberId: string,
-    memberName: string,
-  ): Promise<WeeklyReport> {
+  async generateWeeklyReport(memberId: string, memberName: string): Promise<WeeklyReport> {
     const now = new Date();
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
 
     // 获取过去7天的数据
-    const [weightTrend, nutritionSummary, goalProgress, healthScore] =
-      await Promise.all([
-        analyticsService.analyzeWeightTrend(memberId, 7),
-        analyticsService.summarizeNutrition(memberId, "weekly"),
-        analyticsService.calculateGoalProgress(memberId),
-        healthScoreCalculator.calculateHealthScore(memberId),
-      ]);
+    const [weightTrend, nutritionSummary, goalProgress, healthScore] = await Promise.all([
+      analyticsService.analyzeWeightTrend(memberId, 7),
+      analyticsService.summarizeNutrition(memberId, "weekly"),
+      analyticsService.calculateGoalProgress(memberId),
+      healthScoreCalculator.calculateHealthScore(memberId),
+    ]);
 
     // 生成洞察
     const insights = this.generateInsights(
       weightTrend,
       nutritionSummary,
       goalProgress,
-      healthScore,
+      healthScore
     );
 
     return {
@@ -124,22 +114,18 @@ export class ReportGenerator {
   /**
    * 生成月报
    */
-  async generateMonthlyReport(
-    memberId: string,
-    memberName: string,
-  ): Promise<MonthlyReport> {
+  async generateMonthlyReport(memberId: string, memberName: string): Promise<MonthlyReport> {
     const now = new Date();
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
 
     // 获取过去30天的数据
-    const [weightTrend, nutritionSummary, goalProgress, healthScore] =
-      await Promise.all([
-        analyticsService.analyzeWeightTrend(memberId, 30),
-        analyticsService.summarizeNutrition(memberId, "monthly"),
-        analyticsService.calculateGoalProgress(memberId),
-        healthScoreCalculator.calculateHealthScore(memberId),
-      ]);
+    const [weightTrend, nutritionSummary, goalProgress, healthScore] = await Promise.all([
+      analyticsService.analyzeWeightTrend(memberId, 30),
+      analyticsService.summarizeNutrition(memberId, "monthly"),
+      analyticsService.calculateGoalProgress(memberId),
+      healthScoreCalculator.calculateHealthScore(memberId),
+    ]);
 
     // 生成周度分解
     const weeklyBreakdown = await this.generateWeeklyBreakdown(memberId);
@@ -149,7 +135,7 @@ export class ReportGenerator {
       weightTrend,
       nutritionSummary,
       goalProgress,
-      healthScore,
+      healthScore
     );
 
     return {
@@ -192,10 +178,8 @@ export class ReportGenerator {
    * 将月度数据按周分解，用于月度报告中的周对比
    */
   private async generateWeeklyBreakdown(
-    memberId: string,
-  ): Promise<
-    Array<{ week: string; averageWeight: number; dataCompletenessRate: number }>
-  > {
+    memberId: string
+  ): Promise<Array<{ week: string; averageWeight: number; dataCompletenessRate: number }>> {
     // 获取过去30天的数据
     const now = new Date();
     const thirtyDaysAgo = new Date(now);
@@ -203,32 +187,22 @@ export class ReportGenerator {
 
     try {
       // 查询该时间段内的健康数据
-      const healthData = await convexClient.query<Doc<"healthData">[]>(
-        api.health.getMetrics,
-        { memberId: memberId as Id<"familyMembers"> },
-      );
+      const healthData = await convexClient.query<Doc<"healthData">[]>(api.health.getMetrics, {
+        memberId: memberId as Id<"familyMembers">,
+      });
 
       const filteredHealthData = healthData
         .filter((data) => {
           const measuredAt = data.measuredAt ?? data.createdAt ?? 0;
-          return (
-            measuredAt >= thirtyDaysAgo.getTime() && measuredAt <= now.getTime()
-          );
+          return measuredAt >= thirtyDaysAgo.getTime() && measuredAt <= now.getTime();
         })
-        .sort(
-          (a, b) =>
-            (a.measuredAt ?? a.createdAt ?? 0) -
-            (b.measuredAt ?? b.createdAt ?? 0),
-        );
+        .sort((a, b) => (a.measuredAt ?? a.createdAt ?? 0) - (b.measuredAt ?? b.createdAt ?? 0));
 
       if (filteredHealthData.length === 0) {
         return [];
       }
 
-      const weeklyData = new Map<
-        string,
-        { weights: number[]; totalDays: Set<string> }
-      >();
+      const weeklyData = new Map<string, { weights: number[]; totalDays: Set<string> }>();
 
       filteredHealthData.forEach((data) => {
         const timestamp = data.measuredAt ?? data.createdAt ?? 0;
@@ -264,10 +238,7 @@ export class ReportGenerator {
             : 0;
 
         // 数据完整性：记录天数 / 7天
-        const dataCompletenessRate = Math.min(
-          100,
-          (data.totalDays.size / 7) * 100,
-        );
+        const dataCompletenessRate = Math.min(100, (data.totalDays.size / 7) * 100);
 
         breakdown.push({
           week,
@@ -290,36 +261,32 @@ export class ReportGenerator {
     weightTrend: any,
     nutritionSummary: any,
     goalProgress: any[],
-    healthScore: any,
+    healthScore: any
   ): string[] {
     const insights: string[] = [];
 
     // 体重变化洞察
     if (Math.abs(weightTrend.changePercent) > 3) {
       insights.push(
-        `本周体重${weightTrend.change >= 0 ? "增加" : "减少"}了${Math.abs(weightTrend.changePercent).toFixed(1)}%，${weightTrend.change >= 0 ? "建议关注饮食控制" : "继续保持良好习惯"}`,
+        `本周体重${weightTrend.change >= 0 ? "增加" : "减少"}了${Math.abs(weightTrend.changePercent).toFixed(1)}%，${weightTrend.change >= 0 ? "建议关注饮食控制" : "继续保持良好习惯"}`
       );
     }
 
     // 目标进度洞察
     const activeGoals = goalProgress.filter((g) => g.onTrack);
     if (activeGoals.length > 0) {
-      insights.push(
-        `您有${activeGoals.length}个健康目标正在按计划进行中，继续保持！`,
-      );
+      insights.push(`您有${activeGoals.length}个健康目标正在按计划进行中，继续保持！`);
     } else if (goalProgress.length > 0) {
       const offTrackGoals = goalProgress.filter((g) => !g.onTrack);
       if (offTrackGoals.length > 0) {
-        insights.push(
-          `有${offTrackGoals.length}个目标进度滞后，建议调整计划或咨询专业人士`,
-        );
+        insights.push(`有${offTrackGoals.length}个目标进度滞后，建议调整计划或咨询专业人士`);
       }
     }
 
     // 数据完整性洞察
     if (healthScore.details.dataCompletenessRate < 50) {
       insights.push(
-        `数据完整性较低（${Math.round(healthScore.details.dataCompletenessRate)}%），建议每天记录健康数据以获得更准确的洞察`,
+        `数据完整性较低（${Math.round(healthScore.details.dataCompletenessRate)}%），建议每天记录健康数据以获得更准确的洞察`
       );
     }
 
@@ -327,9 +294,7 @@ export class ReportGenerator {
     if (healthScore.totalScore >= 80) {
       insights.push("您的健康评分表现优秀，继续保持当前的健康习惯！");
     } else if (healthScore.totalScore < 60) {
-      insights.push(
-        `健康评分为${healthScore.totalScore}分，建议根据系统建议改进健康习惯`,
-      );
+      insights.push(`健康评分为${healthScore.totalScore}分，建议根据系统建议改进健康习惯`);
     }
 
     return insights;

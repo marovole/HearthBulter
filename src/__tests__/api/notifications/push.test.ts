@@ -33,7 +33,7 @@ describe("/api/notifications/push", () => {
     });
 
     const request = new NextRequest(
-      "http://localhost:3000/api/notifications/push?memberId=member-1",
+      "http://localhost:3000/api/notifications/push?memberId=member-1"
     );
 
     const response = await GET(request);
@@ -50,19 +50,16 @@ describe("/api/notifications/push", () => {
     });
     prismaMock.notificationPreference.upsert.mockResolvedValue({});
 
-    const request = new NextRequest(
-      "http://localhost:3000/api/notifications/push",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          memberId: "member-1",
-          subscription: {
-            endpoint: "https://example.com/push/1",
-            keys: { p256dh: "key", auth: "auth" },
-          },
-        }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/notifications/push", {
+      method: "POST",
+      body: JSON.stringify({
+        memberId: "member-1",
+        subscription: {
+          endpoint: "https://example.com/push/1",
+          keys: { p256dh: "key", auth: "auth" },
+        },
+      }),
+    });
 
     const response = await POST(request);
     const data = await response.json();
@@ -73,7 +70,7 @@ describe("/api/notifications/push", () => {
         where: { memberId: "member-1" },
         update: expect.objectContaining({ pushEnabled: true }),
         create: expect.objectContaining({ pushEnabled: true }),
-      }),
+      })
     );
     expect(data.subscriptions).toHaveLength(1);
   });
@@ -89,16 +86,13 @@ describe("/api/notifications/push", () => {
     });
     prismaMock.notificationPreference.upsert.mockResolvedValue({});
 
-    const request = new NextRequest(
-      "http://localhost:3000/api/notifications/push",
-      {
-        method: "DELETE",
-        body: JSON.stringify({
-          memberId: "member-1",
-          endpoint: "https://example.com/push/1",
-        }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/notifications/push", {
+      method: "DELETE",
+      body: JSON.stringify({
+        memberId: "member-1",
+        endpoint: "https://example.com/push/1",
+      }),
+    });
 
     const response = await DELETE(request);
     const data = await response.json();

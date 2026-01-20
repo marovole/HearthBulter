@@ -128,7 +128,7 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
       startDate.setDate(startDate.getDate() - period);
 
       const response = await fetch(
-        `/api/inventory/analysis?memberId=${memberId}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        `/api/inventory/analysis?memberId=${memberId}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
       );
       const result = await response.json();
 
@@ -157,7 +157,7 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-gray-500">加载中...</div>
       </div>
     );
@@ -165,8 +165,8 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
 
   if (!analysis) {
     return (
-      <div className="text-center py-12 text-gray-500">
-        <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+      <div className="py-12 text-center text-gray-500">
+        <BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray-300" />
         <p>无法获取分析数据</p>
       </div>
     );
@@ -177,10 +177,7 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
       {/* 时间选择 */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">库存分析报告</h3>
-        <Select
-          value={period.toString()}
-          onValueChange={(value) => setPeriod(parseInt(value))}
-        >
+        <Select value={period.toString()} onValueChange={(value) => setPeriod(parseInt(value))}>
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
@@ -195,16 +192,14 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
       </div>
 
       {/* 总览统计 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
               <Package className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-gray-600">总物品数</p>
-                <p className="text-xl font-semibold">
-                  {analysis.summary.totalItems}
-                </p>
+                <p className="text-xl font-semibold">{analysis.summary.totalItems}</p>
               </div>
             </div>
           </CardContent>
@@ -216,9 +211,7 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
               <DollarSign className="h-5 w-5 text-green-600" />
               <div>
                 <p className="text-sm text-gray-600">总价值</p>
-                <p className="text-xl font-semibold">
-                  ¥{analysis.summary.totalValue.toFixed(2)}
-                </p>
+                <p className="text-xl font-semibold">¥{analysis.summary.totalValue.toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -304,7 +297,7 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Progress value={category.efficiency} className="h-2" />
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="mt-1 text-xs text-gray-500">
                           使用 {category.usedQuantity.toFixed(1)} | 浪费{" "}
                           {category.wastedQuantity.toFixed(1)}
                         </div>
@@ -314,7 +307,7 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
                           value={Math.min(100, category.wasteRate * 2)}
                           className="h-2 bg-red-100"
                         />
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="mt-1 text-xs text-gray-500">
                           浪费率 {category.wasteRate.toFixed(1)}%
                         </div>
                       </div>
@@ -339,17 +332,14 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
                 {analysis.usagePatterns.slice(0, 10).map((pattern, index) => (
                   <div
                     key={pattern.foodName}
-                    className="flex items-center justify-between p-3 border rounded-lg"
+                    className="flex items-center justify-between rounded-lg border p-3"
                   >
                     <div className="flex items-center space-x-3">
-                      <span className="text-sm text-gray-500">
-                        #{index + 1}
-                      </span>
+                      <span className="text-sm text-gray-500">#{index + 1}</span>
                       <div>
                         <div className="font-medium">{pattern.foodName}</div>
                         <div className="text-sm text-gray-500">
-                          使用 {pattern.usageFrequency} 次 • 平均{" "}
-                          {pattern.averageUsage.toFixed(1)}
+                          使用 {pattern.usageFrequency} 次 • 平均 {pattern.averageUsage.toFixed(1)}
                         </div>
                       </div>
                     </div>
@@ -371,7 +361,7 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
         </TabsContent>
 
         <TabsContent value="waste" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* 浪费原因 */}
             <Card>
               <CardHeader>
@@ -384,14 +374,11 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{reason.reason}</span>
                         <span className="text-sm text-gray-500">
-                          ¥{reason.value.toFixed(2)} (
-                          {reason.percentage.toFixed(1)}%)
+                          ¥{reason.value.toFixed(2)} ({reason.percentage.toFixed(1)}%)
                         </span>
                       </div>
                       <Progress value={reason.percentage} className="h-2" />
-                      <div className="text-xs text-gray-500">
-                        {reason.count} 次浪费
-                      </div>
+                      <div className="text-xs text-gray-500">{reason.count} 次浪费</div>
                     </div>
                   ))}
                 </div>
@@ -410,14 +397,11 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{category.category}</span>
                         <span className="text-sm text-gray-500">
-                          ¥{category.value.toFixed(2)} (
-                          {category.percentage.toFixed(1)}%)
+                          ¥{category.value.toFixed(2)} ({category.percentage.toFixed(1)}%)
                         </span>
                       </div>
                       <Progress value={category.percentage} className="h-2" />
-                      <div className="text-xs text-gray-500">
-                        {category.count} 次浪费
-                      </div>
+                      <div className="text-xs text-gray-500">{category.count} 次浪费</div>
                     </div>
                   ))}
                 </div>
@@ -432,32 +416,27 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {analysis.wasteAnalysis.topWastedItems
-                  .slice(0, 5)
-                  .map((item, index) => (
-                    <div
-                      key={item.foodName}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <span className="text-sm text-gray-500">
-                          #{index + 1}
-                        </span>
-                        <div>
-                          <div className="font-medium">{item.foodName}</div>
-                          <div className="text-sm text-gray-500">
-                            浪费 {item.wasteCount} 次 • 价值 ¥
-                            {item.totalWasteValue.toFixed(2)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-red-600">
-                          浪费率 {item.wasteRate.toFixed(1)}%
+                {analysis.wasteAnalysis.topWastedItems.slice(0, 5).map((item, index) => (
+                  <div
+                    key={item.foodName}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm text-gray-500">#{index + 1}</span>
+                      <div>
+                        <div className="font-medium">{item.foodName}</div>
+                        <div className="text-sm text-gray-500">
+                          浪费 {item.wasteCount} 次 • 价值 ¥{item.totalWasteValue.toFixed(2)}
                         </div>
                       </div>
                     </div>
-                  ))}
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-red-600">
+                        浪费率 {item.wasteRate.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -474,37 +453,27 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
             <CardContent>
               <div className="space-y-4">
                 {analysis.recommendations.map((recommendation, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
+                  <div key={index} className="rounded-lg border p-4">
+                    <div className="mb-2 flex items-start justify-between">
                       <div className="flex items-center space-x-3">
-                        <Target className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <Target className="mt-0.5 h-5 w-5 text-blue-600" />
                         <div>
-                          <h4 className="font-medium">
-                            {recommendation.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {recommendation.description}
-                          </p>
+                          <h4 className="font-medium">{recommendation.title}</h4>
+                          <p className="mt-1 text-sm text-gray-600">{recommendation.description}</p>
                         </div>
                       </div>
                       <Badge
                         className={
-                          priorityColors[
-                            recommendation.priority as keyof typeof priorityColors
-                          ]
+                          priorityColors[recommendation.priority as keyof typeof priorityColors]
                         }
                       >
-                        {
-                          priorityLabels[
-                            recommendation.priority as keyof typeof priorityLabels
-                          ]
-                        }
+                        {priorityLabels[recommendation.priority as keyof typeof priorityLabels]}
                         优先级
                       </Badge>
                     </div>
 
                     {recommendation.potentialSavings && (
-                      <div className="text-sm text-green-600 mt-2">
+                      <div className="mt-2 text-sm text-green-600">
                         💰 预计节省：¥
                         {recommendation.potentialSavings.toFixed(2)}
                       </div>
@@ -514,8 +483,8 @@ export function InventoryAnalysis({ memberId }: InventoryAnalysisProps) {
               </div>
 
               {analysis.recommendations.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                <div className="py-8 text-center text-gray-500">
+                  <CheckCircle className="mx-auto mb-4 h-12 w-12 text-green-500" />
                   <p>库存管理表现良好，暂无特别建议</p>
                 </div>
               )}

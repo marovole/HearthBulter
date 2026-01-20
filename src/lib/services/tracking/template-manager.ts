@@ -59,19 +59,13 @@ export async function createQuickTemplate(data: {
   });
 
   for (const food of foods) {
-    await convexTracking.addTemplateFood(
-      templateId as string,
-      food.foodId,
-      food.amount,
-    );
+    await convexTracking.addTemplateFood(templateId as string, food.foodId, food.amount);
   }
 
   return convexTracking.getTemplateById(templateId as string);
 }
 
-async function calculateNutritionFromFoods(
-  foods: Array<{ foodId: string; amount: number }>,
-) {
+async function calculateNutritionFromFoods(foods: Array<{ foodId: string; amount: number }>) {
   const foodIds = foods.map((f) => f.foodId);
   const foodData = (await convexTracking.getFoodsByIds(foodIds)) as FoodDoc[];
 
@@ -101,11 +95,9 @@ async function calculateNutritionFromFoods(
 export async function createTemplateFromMealLog(
   mealLogId: string,
   templateName: string,
-  description?: string,
+  description?: string
 ) {
-  const mealLog = (await convexTracking.getMealLogById(
-    mealLogId,
-  )) as MealLogDoc | null;
+  const mealLog = (await convexTracking.getMealLogById(mealLogId)) as MealLogDoc | null;
   if (!mealLog) {
     throw new Error("Meal log not found");
   }
@@ -129,7 +121,7 @@ export async function getQuickTemplates(memberId: string, mealType?: string) {
 export async function getRecommendedTemplates(
   memberId: string,
   mealType: string,
-  limit: number = 3,
+  limit: number = 3
 ) {
   const currentHour = new Date().getHours();
 
@@ -148,15 +140,13 @@ export async function getRecommendedTemplates(
 
   const templates = (await convexTracking.getQuickTemplates(
     memberId,
-    recommendedMealType,
+    recommendedMealType
   )) as QuickTemplateDoc[];
   return templates.slice(0, limit);
 }
 
 async function updateTemplateScores(memberId: string) {
-  const templates = (await convexTracking.getQuickTemplates(
-    memberId,
-  )) as QuickTemplateDoc[];
+  const templates = (await convexTracking.getQuickTemplates(memberId)) as QuickTemplateDoc[];
   const now = Date.now();
 
   for (const template of templates as Doc<"quickTemplates">[]) {
@@ -166,9 +156,7 @@ async function updateTemplateScores(memberId: string) {
     score += frequencyScore;
 
     if (template.lastUsed) {
-      const daysSinceLastUse = Math.floor(
-        (now - template.lastUsed) / (1000 * 60 * 60 * 24),
-      );
+      const daysSinceLastUse = Math.floor((now - template.lastUsed) / (1000 * 60 * 60 * 24));
 
       if (daysSinceLastUse <= 7) {
         score += 30;
@@ -205,13 +193,11 @@ export async function updateQuickTemplate(
     name?: string;
     description?: string;
     foods?: Array<{ foodId: string; amount: number }>;
-  },
+  }
 ) {
   const { name, description, foods } = data;
 
-  let nutrition:
-    | Awaited<ReturnType<typeof calculateNutritionFromFoods>>
-    | undefined;
+  let nutrition: Awaited<ReturnType<typeof calculateNutritionFromFoods>> | undefined;
   if (foods) {
     nutrition = await calculateNutritionFromFoods(foods);
     await convexTracking.deleteTemplateFoods(templateId);
@@ -230,11 +216,7 @@ export async function updateQuickTemplate(
 
   if (foods) {
     for (const food of foods) {
-      await convexTracking.addTemplateFood(
-        templateId,
-        food.foodId,
-        food.amount,
-      );
+      await convexTracking.addTemplateFood(templateId, food.foodId, food.amount);
     }
   }
 
@@ -288,9 +270,7 @@ export async function autoGenerateTemplates(memberId: string) {
       if (existing) {
         existing.count++;
         log.foods.forEach((food) => {
-          const foodStat = existing.foods.find(
-            (fs) => fs.foodId === food.foodId,
-          );
+          const foodStat = existing.foods.find((fs) => fs.foodId === food.foodId);
           if (foodStat) {
             foodStat.totalAmount += food.amount;
             foodStat.avgAmount = foodStat.totalAmount / existing.count;

@@ -17,10 +17,7 @@ export async function GET(request: NextRequest) {
     const memberId = searchParams.get("memberId");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "memberId is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -35,10 +32,7 @@ export async function GET(request: NextRequest) {
     if (error && error.code !== "PGRST116") {
       // PGRST116 = no rows returned, which is expected
       console.error("Error getting user preferences:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch user preferences" },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: "Failed to fetch user preferences" }, { status: 500 });
     }
 
     if (!preferences) {
@@ -87,10 +81,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error getting user preferences:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -106,10 +97,7 @@ export async function POST(request: NextRequest) {
     const { memberId } = preferences;
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "memberId is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -149,10 +137,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Error updating user preferences:", error);
-      return NextResponse.json(
-        { error: "Failed to update user preferences" },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: "Failed to update user preferences" }, { status: 500 });
     }
 
     const normalizedPreference = {
@@ -169,9 +154,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error updating user preferences:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

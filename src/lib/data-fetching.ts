@@ -38,11 +38,7 @@ export class DataFetcher {
   }
 
   // 实时数据：Supabase订阅
-  static subscribeToData(
-    channel: string,
-    table: string,
-    callback: (data: any) => void,
-  ) {
+  static subscribeToData(channel: string, table: string, callback: (data: any) => void) {
     return supabase
       .channel(channel)
       .on("postgres_changes", { event: "*", schema: "public", table }, callback)
@@ -52,7 +48,7 @@ export class DataFetcher {
   // 获取健康数据
   static async getHealthData(
     userId: string,
-    options?: { limit?: number; offset?: number; type?: string },
+    options?: { limit?: number; offset?: number; type?: string }
   ) {
     const { limit = 20, offset = 0, type } = options || {};
 
@@ -62,7 +58,7 @@ export class DataFetcher {
         `
         *,
         user:users!user_id(id, name, email)
-      `,
+      `
       )
       .eq("user_id", userId)
       .order("recorded_at", { ascending: false })
@@ -97,7 +93,7 @@ export class DataFetcher {
       unit?: string;
       recorded_at?: string;
       metadata?: Record<string, any>;
-    },
+    }
   ) {
     const { data_type, value, unit, recorded_at, metadata = {} } = data;
 
@@ -127,11 +123,7 @@ export class DataFetcher {
 
   // 获取用户信息
   static async getUser(userId: string) {
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
 
     if (error) {
       throw new Error(`Failed to fetch user: ${error.message}`);

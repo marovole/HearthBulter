@@ -51,7 +51,7 @@ describe("USDA Service", () => {
       expect(result).toEqual(mockResponse);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("chicken"),
-        expect.any(Object),
+        expect.any(Object)
       );
     });
 
@@ -104,7 +104,7 @@ describe("USDA Service", () => {
       const serviceWithoutKey = new USDAService();
 
       await expect(serviceWithoutKey.searchFoods("chicken")).rejects.toThrow(
-        "USDA API key is not configured",
+        "USDA API key is not configured"
       );
 
       process.env.USDA_API_KEY = originalEnv;
@@ -132,7 +132,7 @@ describe("USDA Service", () => {
       expect(result).toEqual(mockFood);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("123456"),
-        expect.any(Object),
+        expect.any(Object)
       );
     });
 
@@ -143,7 +143,7 @@ describe("USDA Service", () => {
       const serviceWithoutKey = new USDAService();
 
       await expect(serviceWithoutKey.getFoodByFdcId(123456)).rejects.toThrow(
-        "USDA API key is not configured",
+        "USDA API key is not configured"
       );
 
       process.env.USDA_API_KEY = originalEnv;
@@ -225,7 +225,7 @@ describe("USDA Service", () => {
       expect(result.foods).toHaveLength(1);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("broccoli"),
-        expect.any(Object),
+        expect.any(Object)
       );
     });
 
@@ -256,7 +256,7 @@ describe("USDA Service", () => {
       expect(result.foods).toHaveLength(1);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("beef"),
-        expect.any(Object),
+        expect.any(Object)
       );
     });
 

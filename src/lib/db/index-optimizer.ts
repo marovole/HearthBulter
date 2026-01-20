@@ -224,7 +224,7 @@ export class IndexOptimizer {
       async () => {
         await this.analyzeIndexUsage();
       },
-      60 * 60 * 1000,
+      60 * 60 * 1000
     );
 
     // 每天检查一次索引建议
@@ -232,7 +232,7 @@ export class IndexOptimizer {
       async () => {
         await this.checkIndexRecommendations();
       },
-      24 * 60 * 60 * 1000,
+      24 * 60 * 60 * 1000
     );
   }
 
@@ -314,7 +314,7 @@ export class IndexOptimizer {
     try {
       // 查找未使用的索引
       const unusedIndexes = Array.from(this.indexStats.values()).filter(
-        (stats) => stats.scans === 0 && stats.efficiency === "low",
+        (stats) => stats.scans === 0 && stats.efficiency === "low"
       );
 
       if (unusedIndexes.length > 0) {
@@ -334,13 +334,13 @@ export class IndexOptimizer {
               table: idx.table,
               size: idx.size,
             })),
-          },
+          }
         );
       }
 
       // 查找低效索引
       const inefficientIndexes = Array.from(this.indexStats.values()).filter(
-        (stats) => stats.efficiency === "low" && stats.scans > 0,
+        (stats) => stats.efficiency === "low" && stats.scans > 0
       );
 
       if (inefficientIndexes.length > 0) {
@@ -363,28 +363,27 @@ export class IndexOptimizer {
    */
   async createIndex(indexDefinition: IndexDefinition): Promise<void> {
     try {
-      const { name, table, columns, type, unique, partial, include } =
-        indexDefinition;
+      const { name, table, columns, type, unique, partial, include } = indexDefinition;
 
       let sql = `CREATE ${unique ? "UNIQUE " : ""}INDEX "${name}" ON "${table}" `;
 
       // 添加索引类型
       switch (type) {
-      case IndexType.BTREE:
-        sql += "USING btree ";
-        break;
-      case IndexType.HASH:
-        sql += "USING hash ";
-        break;
-      case IndexType.GIST:
-        sql += "USING gist ";
-        break;
-      case IndexType.GIN:
-        sql += "USING gin ";
-        break;
-      case IndexType.BRIN:
-        sql += "USING brin ";
-        break;
+        case IndexType.BTREE:
+          sql += "USING btree ";
+          break;
+        case IndexType.HASH:
+          sql += "USING hash ";
+          break;
+        case IndexType.GIST:
+          sql += "USING gist ";
+          break;
+        case IndexType.GIN:
+          sql += "USING gin ";
+          break;
+        case IndexType.BRIN:
+          sql += "USING brin ";
+          break;
       }
 
       // 添加列
@@ -492,8 +491,7 @@ export class IndexOptimizer {
       const executionPlan = plan.Plan;
 
       // 分析执行计划并推荐索引
-      const recommendedIndexes =
-        this.generateIndexRecommendations(executionPlan);
+      const recommendedIndexes = this.generateIndexRecommendations(executionPlan);
       const existingIndexesUsed = this.extractUsedIndexes(executionPlan);
       const missingIndexes = this.findMissingIndexes(executionPlan);
 
@@ -561,10 +559,7 @@ export class IndexOptimizer {
   private extractUsedIndexes(plan: any): string[] {
     const indexes: string[] = [];
 
-    if (
-      plan["Node Type"] === "Index Scan" ||
-      plan["Node Type"] === "Index Only Scan"
-    ) {
+    if (plan["Node Type"] === "Index Scan" || plan["Node Type"] === "Index Only Scan") {
       indexes.push(plan["Index Name"]);
     }
 
@@ -637,11 +632,11 @@ export class IndexOptimizer {
     await this.analyzeIndexUsage();
 
     const unusedIndexes = Array.from(this.indexStats.values()).filter(
-      (stats) => stats.scans === 0 && stats.efficiency === "low",
+      (stats) => stats.scans === 0 && stats.efficiency === "low"
     );
 
     const inefficientIndexes = Array.from(this.indexStats.values()).filter(
-      (stats) => stats.efficiency === "low" && stats.scans > 0,
+      (stats) => stats.efficiency === "low" && stats.scans > 0
     );
 
     // 这里可以实现缺失索引检测

@@ -18,16 +18,10 @@ export class CollaborativeFilter {
 
   constructor(private readonly repository: RecommendationRepository) {}
 
-  async getRecommendations(
-    _memberId: string,
-    limit: number = 10,
-  ): Promise<RecipeRecommendation[]> {
+  async getRecommendations(_memberId: string, limit: number = 10): Promise<RecipeRecommendation[]> {
     const userBehavior = await this.getUserBehavior(_memberId);
 
-    if (
-      userBehavior.ratings.length === 0 &&
-      userBehavior.favorites.length === 0
-    ) {
+    if (userBehavior.ratings.length === 0 && userBehavior.favorites.length === 0) {
       return this.getColdStartRecommendations(limit);
     }
 
@@ -47,13 +41,9 @@ export class CollaborativeFilter {
       memberId: string;
       behavior: RecommendationBehaviorDTO;
     }>,
-    limit: number,
+    limit: number
   ): Promise<RecipeRecommendation[]> {
-    const similarUsers = this.findSimilarUsers(
-      userBehavior,
-      otherUsersBehavior,
-      50,
-    );
+    const similarUsers = this.findSimilarUsers(userBehavior, otherUsersBehavior, 50);
 
     if (similarUsers.length === 0) {
       return [];
@@ -63,7 +53,7 @@ export class CollaborativeFilter {
       similarUsers,
       otherUsersBehavior,
       userBehavior,
-      limit * 3,
+      limit * 3
     );
 
     if (candidateRecipeIds.length === 0) {
@@ -89,7 +79,7 @@ export class CollaborativeFilter {
 
   private async getItemBasedRecommendations(
     userBehavior: RecommendationBehaviorDTO,
-    limit: number,
+    limit: number
   ): Promise<RecipeRecommendation[]> {
     const likedRecipes = this.getLikedRecipeIds(userBehavior);
 
@@ -98,7 +88,7 @@ export class CollaborativeFilter {
     }
 
     const similarRecipesPromises = likedRecipes.map((recipeId) =>
-      this.findSimilarRecipes(recipeId, 20),
+      this.findSimilarRecipes(recipeId, 20)
     );
 
     const similarRecipesResults = await Promise.all(similarRecipesPromises);
@@ -107,7 +97,7 @@ export class CollaborativeFilter {
     const candidateRecipes = this.filterAndDeduplicateRecipes(
       allSimilarRecipes,
       likedRecipes,
-      limit * 3,
+      limit * 3
     );
 
     return candidateRecipes.map((recipe) => {
@@ -135,15 +125,12 @@ export class CollaborativeFilter {
       memberId: string;
       behavior: RecommendationBehaviorDTO;
     }>,
-    limit: number,
+    limit: number
   ): UserSimilarity[] {
     const similarities: UserSimilarity[] = [];
 
     for (const otherUser of otherUsersBehavior) {
-      const similarity = this.calculateUserSimilarity(
-        userBehavior,
-        otherUser.behavior,
-      );
+      const similarity = this.calculateUserSimilarity(userBehavior, otherUser.behavior);
       if (similarity > 0.1) {
         similarities.push({
           userId: otherUser.memberId,
@@ -152,14 +139,12 @@ export class CollaborativeFilter {
       }
     }
 
-    return similarities
-      .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, limit);
+    return similarities.sort((a, b) => b.similarity - a.similarity).slice(0, limit);
   }
 
   private calculateUserSimilarity(
     user1: RecommendationBehaviorDTO,
-    user2: RecommendationBehaviorDTO,
+    user2: RecommendationBehaviorDTO
   ): number {
     const user1Ratings = this.createRatingVector(user1);
     const user2Ratings = this.createRatingVector(user2);
@@ -167,9 +152,7 @@ export class CollaborativeFilter {
     return this.cosineSimilarity(user1Ratings, user2Ratings);
   }
 
-  private createRatingVector(
-    userBehavior: RecommendationBehaviorDTO,
-  ): Map<string, number> {
+  private createRatingVector(userBehavior: RecommendationBehaviorDTO): Map<string, number> {
     const vector = new Map<string, number>();
 
     userBehavior.ratings.forEach((rating) => {
@@ -187,13 +170,8 @@ export class CollaborativeFilter {
     return vector;
   }
 
-  private cosineSimilarity(
-    vector1: Map<string, number>,
-    vector2: Map<string, number>,
-  ): number {
-    const commonItems = Array.from(vector1.keys()).filter((key) =>
-      vector2.has(key),
-    );
+  private cosineSimilarity(vector1: Map<string, number>, vector2: Map<string, number>): number {
+    const commonItems = Array.from(vector1.keys()).filter((key) => vector2.has(key));
 
     if (commonItems.length === 0) {
       return 0;
@@ -219,10 +197,7 @@ export class CollaborativeFilter {
     return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
   }
 
-  private async findSimilarRecipes(
-    recipeId: string,
-    limit: number,
-  ): Promise<ItemSimilarity[]> {
+  private async findSimilarRecipes(recipeId: string, limit: number): Promise<ItemSimilarity[]> {
     const cacheKey = `recipe_${recipeId}`;
 
     if (this.similarityCache.has(cacheKey)) {
@@ -233,10 +208,7 @@ export class CollaborativeFilter {
         .slice(0, limit);
     }
 
-    const cooccurrence = await this.repository.getRecipeCooccurrence(
-      recipeId,
-      limit,
-    );
+    const cooccurrence = await this.repository.getRecipeCooccurrence(recipeId, limit);
 
     const maxCount = Math.max(1, ...cooccurrence.map((entry) => entry.count));
 
@@ -279,11 +251,9 @@ export class CollaborativeFilter {
       behavior: RecommendationBehaviorDTO;
     }>,
     userBehavior: RecommendationBehaviorDTO,
-    limit: number,
+    limit: number
   ): string[] {
-    const behaviorMap = new Map(
-      otherUsersBehavior.map((item) => [item.memberId, item.behavior]),
-    );
+    const behaviorMap = new Map(otherUsersBehavior.map((item) => [item.memberId, item.behavior]));
     const candidates = new Set<string>();
     const knownRecipes = new Set(this.getKnownRecipeIds(userBehavior));
 
@@ -314,18 +284,12 @@ export class CollaborativeFilter {
       return 0;
     }
 
-    const similaritySum = similarUsers.reduce(
-      (sum, user) => sum + user.similarity,
-      0,
-    );
+    const similaritySum = similarUsers.reduce((sum, user) => sum + user.similarity, 0);
     const averageSimilarity = similaritySum / similarUsers.length;
     return Math.round(averageSimilarity * 100);
   }
 
-  private calculateItemBasedScore(
-    recipe: ItemSimilarity,
-    likedRecipes: string[],
-  ): number {
+  private calculateItemBasedScore(recipe: ItemSimilarity, likedRecipes: string[]): number {
     const similarityScore = recipe.similarity * 100;
     const diversityBonus = Math.min(likedRecipes.length * 5, 20);
     return Math.min(similarityScore + diversityBonus, 100);
@@ -334,7 +298,7 @@ export class CollaborativeFilter {
   private filterAndDeduplicateRecipes(
     recipes: ItemSimilarity[],
     excludeIds: string[],
-    limit: number,
+    limit: number
   ): ItemSimilarity[] {
     const uniqueRecipes = new Map<string, ItemSimilarity>();
 
@@ -362,16 +326,14 @@ export class CollaborativeFilter {
     const ratedRecipes = userBehavior.ratings
       .filter((rating) => (rating.rating ?? 0) >= 4)
       .map((rating) => rating.recipeId);
-    const favoritedRecipes = userBehavior.favorites.map(
-      (favorite) => favorite.recipeId,
-    );
+    const favoritedRecipes = userBehavior.favorites.map((favorite) => favorite.recipeId);
 
     return Array.from(new Set([...ratedRecipes, ...favoritedRecipes]));
   }
 
   private combineRecommendations(
     userBased: RecipeRecommendation[],
-    itemBased: RecipeRecommendation[],
+    itemBased: RecipeRecommendation[]
   ): RecipeRecommendation[] {
     const combined = new Map<string, RecipeRecommendation>();
     const userWeight = userBased.length > 0 ? 0.6 : 0;
@@ -402,9 +364,7 @@ export class CollaborativeFilter {
     return Array.from(combined.values()).sort((a, b) => b.score - a.score);
   }
 
-  private async getColdStartRecommendations(
-    limit: number,
-  ): Promise<RecipeRecommendation[]> {
+  private async getColdStartRecommendations(limit: number): Promise<RecipeRecommendation[]> {
     const popularRecipes = await this.repository.listPopularRecipes(limit);
 
     return popularRecipes.map((recipe) => ({

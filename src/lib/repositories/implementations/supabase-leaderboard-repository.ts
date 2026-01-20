@@ -23,10 +23,7 @@ type HealthData = HealthDataRecord;
 type LeaderboardEntry = LeaderboardEntryRecord;
 import type { Database } from "@/types/supabase-database";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import {
-  RepositoryError,
-  RepositoryErrorCode,
-} from "@/lib/errors/repository-error";
+import { RepositoryError, RepositoryErrorCode } from "@/lib/errors/repository-error";
 import type {
   HealthDataAggregationResult,
   HealthDataFilter,
@@ -39,21 +36,20 @@ import type {
 /**
  * Supabase Health Data 行类型，包含所有可能的字段
  */
-type SupabaseHealthDataRow =
-  Database["public"]["Tables"]["health_data"]["Row"] & {
-    weight?: number | null;
-    body_fat?: number | null;
-    muscle_mass?: number | null;
-    blood_pressure_systolic?: number | null;
-    blood_pressure_diastolic?: number | null;
-    heart_rate?: number | null;
-    measured_at?: string | null;
-    source?: string | null;
-    notes?: string | null;
-    device_connection_id?: string | null;
-    created_at?: string | null;
-    updated_at?: string | null;
-  };
+type SupabaseHealthDataRow = Database["public"]["Tables"]["health_data"]["Row"] & {
+  weight?: number | null;
+  body_fat?: number | null;
+  muscle_mass?: number | null;
+  blood_pressure_systolic?: number | null;
+  blood_pressure_diastolic?: number | null;
+  heart_rate?: number | null;
+  measured_at?: string | null;
+  source?: string | null;
+  notes?: string | null;
+  device_connection_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
 
 /**
  * 健康数据聚合查询结果行类型
@@ -81,9 +77,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    *
    * @param client - Supabase 客户端实例，可选，如果不提供则使用单例
    */
-  constructor(
-    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
-  ) {
+  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
     this.client = client;
   }
 
@@ -95,7 +89,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @throws {RepositoryError} 当数据库操作失败时
    */
   async aggregateHealthDataByMember(
-    filter: HealthDataFilter,
+    filter: HealthDataFilter
   ): Promise<HealthDataAggregationResult[]> {
     try {
       // 构建聚合查询，计算各健康指标的平均值和数据条数
@@ -111,12 +105,10 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
       // 应用过滤条件并执行聚合查询，按 member_id 分组
       const filteredQuery = this.applyHealthDataFilter(
         this.client.from("health_data") as any,
-        filter,
+        filter
       );
 
-      const { data, error } = await filteredQuery
-        .select(selectClause)
-        .group("member_id");
+      const { data, error } = await filteredQuery.select(selectClause).group("member_id");
 
       if (error) {
         throw Error(`aggregateHealthDataByMember failed: ${error.message}`);
@@ -140,7 +132,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    */
   async getMemberHealthData(
     memberId: string,
-    filter?: HealthDataFilter,
+    filter?: HealthDataFilter
   ): Promise<MemberHealthData> {
     try {
       // 首先获取成员基本信息
@@ -187,7 +179,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    */
   async getMembersHealthData(
     memberIds: string[],
-    filter?: HealthDataFilter,
+    filter?: HealthDataFilter
   ): Promise<MemberHealthData[]> {
     try {
       if (!memberIds.length) {
@@ -240,7 +232,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @throws {RepositoryError} 当数据库操作失败时
    */
   async getMemberById(
-    memberId: string,
+    memberId: string
   ): Promise<Pick<FamilyMember, "id" | "name" | "avatar"> | null> {
     try {
       const { data, error } = await this.client
@@ -274,14 +266,10 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @returns 成员列表（包含健康数据）
    * @throws {RepositoryError} 当数据库操作失败时
    */
-  async getMembersWithHealthData(
-    filter: HealthDataFilter,
-  ): Promise<MemberHealthData[]> {
+  async getMembersWithHealthData(filter: HealthDataFilter): Promise<MemberHealthData[]> {
     try {
       // 首先查询有健康数据的成员ID
-      const memberIdsQuery = this.client
-        .from("health_data")
-        .select("member_id");
+      const memberIdsQuery = this.client.from("health_data").select("member_id");
 
       // 应用过滤器到成员ID查询
       if (filter.memberId) {
@@ -294,14 +282,10 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
         memberIdsQuery.lte("measured_at", filter.endDate.toISOString());
       }
 
-      const { data: memberIdsData, error: memberIdsError } =
-        await memberIdsQuery;
+      const { data: memberIdsData, error: memberIdsError } = await memberIdsQuery;
 
       if (memberIdsError) {
-        throw this.createRepositoryError(
-          "getMembersWithHealthData",
-          memberIdsError,
-        );
+        throw this.createRepositoryError("getMembersWithHealthData", memberIdsError);
       }
 
       if (!memberIdsData || memberIdsData.length === 0) {
@@ -310,7 +294,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
 
       // 去重获取唯一的成员ID
       const uniqueMemberIds = Array.from(
-        new Set(memberIdsData.map((row) => row.member_id).filter(Boolean)),
+        new Set(memberIdsData.map((row) => row.member_id).filter(Boolean))
       ) as string[];
 
       // 获取成员健康数据
@@ -327,9 +311,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @returns 创建的排行榜条目
    * @throws {RepositoryError} 当数据库操作失败时
    */
-  async createLeaderboardEntry(
-    data: LeaderboardEntryCreateDTO,
-  ): Promise<LeaderboardEntry> {
+  async createLeaderboardEntry(data: LeaderboardEntryCreateDTO): Promise<LeaderboardEntry> {
     try {
       // 计算周期
       const now = new Date();
@@ -380,7 +362,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @throws {RepositoryError} 当数据库操作失败时
    */
   async createLeaderboardEntries(
-    entries: LeaderboardEntryCreateDTO[],
+    entries: LeaderboardEntryCreateDTO[]
   ): Promise<LeaderboardEntry[]> {
     try {
       if (!entries.length) {
@@ -409,10 +391,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
         rank_change: null,
       }));
 
-      const { data, error } = await this.client
-        .from("leaderboard_entry")
-        .insert(payload)
-        .select();
+      const { data, error } = await this.client.from("leaderboard_entry").insert(payload).select();
 
       if (error) {
         throw new Error(`createLeaderboardEntries failed: ${error.message}`);
@@ -431,9 +410,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @returns 排行榜条目数组
    * @throws {RepositoryError} 当数据库操作失败时
    */
-  async getLeaderboardEntries(
-    query: LeaderboardEntryQuery,
-  ): Promise<LeaderboardEntry[]> {
+  async getLeaderboardEntries(query: LeaderboardEntryQuery): Promise<LeaderboardEntry[]> {
     try {
       let dbQuery = this.client.from("leaderboard_entry").select(`
           *,
@@ -441,9 +418,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
         `);
 
       // 应用基础查询条件
-      dbQuery = dbQuery
-        .eq("member_id", query.memberId)
-        .eq("leaderboard_type", query.type);
+      dbQuery = dbQuery.eq("member_id", query.memberId).eq("leaderboard_type", query.type);
 
       // 应用日期范围
       if (query.startDate) {
@@ -474,7 +449,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
   }
 
   async getLatestLeaderboardEntry(
-    query: Omit<LeaderboardEntryQuery, "startDate" | "endDate">,
+    query: Omit<LeaderboardEntryQuery, "startDate" | "endDate">
   ): Promise<LeaderboardEntry | null> {
     try {
       const { data, error } = await this.client
@@ -483,7 +458,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
           `
           *,
           family_member!inner (id, name, avatar)
-        `,
+        `
         )
         .eq("member_id", query.memberId)
         .eq("leaderboard_type", query.type)
@@ -512,7 +487,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
   async getRankingHistory(
     memberId: string,
     type: LeaderboardType,
-    days?: number,
+    days?: number
   ): Promise<LeaderboardEntry[]> {
     try {
       const startDate = new Date();
@@ -524,7 +499,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
           `
           *,
           family_member!inner (id, name, avatar)
-        `,
+        `
         )
         .eq("member_id", memberId)
         .eq("leaderboard_type", type)
@@ -541,14 +516,9 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
     }
   }
 
-  async countMemberHealthData(
-    memberId: string,
-    filter?: HealthDataFilter,
-  ): Promise<number> {
+  async countMemberHealthData(memberId: string, filter?: HealthDataFilter): Promise<number> {
     try {
-      let query = this.client
-        .from("health_data")
-        .select("*", { count: "exact", head: true });
+      let query = this.client.from("health_data").select("*", { count: "exact", head: true });
 
       query = query.eq("member_id", memberId);
 
@@ -607,10 +577,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
         .single();
 
       if (streakError && streakError.code !== "PGRST116") {
-        throw this.createRepositoryError(
-          "calculateCheckinStreakDays",
-          streakError,
-        );
+        throw this.createRepositoryError("calculateCheckinStreakDays", streakError);
       }
 
       if (
@@ -631,17 +598,12 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
         .eq("member_id", memberId)
         .gte(
           "measured_at",
-          new Date(
-            Date.now() - daysOfHistory * 24 * 60 * 60 * 1000,
-          ).toISOString(),
+          new Date(Date.now() - daysOfHistory * 24 * 60 * 60 * 1000).toISOString()
         )
         .order("measured_at", { ascending: false });
 
       if (healthError) {
-        throw this.createRepositoryError(
-          "calculateCheckinStreakDays",
-          healthError,
-        );
+        throw this.createRepositoryError("calculateCheckinStreakDays", healthError);
       }
 
       if (!healthData || healthData.length === 0) {
@@ -649,9 +611,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
       }
 
       // 从健康数据中计算连续天数
-      return this.calculateStreakFromHealthData(
-        healthData.map((row) => row.measured_at),
-      );
+      return this.calculateStreakFromHealthData(healthData.map((row) => row.measured_at));
     } catch (error) {
       throw this.handleError("calculateCheckinStreakDays", error);
     }
@@ -671,7 +631,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    */
   private async fetchHealthDataRowsForMembers(
     memberIds: string[],
-    filter?: HealthDataFilter,
+    filter?: HealthDataFilter
   ): Promise<SupabaseHealthDataRow[]> {
     if (!memberIds.length) {
       return [];
@@ -733,9 +693,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @private
    */
   private mapLeaderboardEntryRow(row: any): LeaderboardEntry {
-    const calculatedAt = row.calculated_at
-      ? new Date(row.calculated_at)
-      : new Date();
+    const calculatedAt = row.calculated_at ? new Date(row.calculated_at) : new Date();
     const createdAt = row.created_at ? new Date(row.created_at) : calculatedAt;
     const updatedAt = row.updated_at ? new Date(row.updated_at) : createdAt;
 
@@ -768,9 +726,7 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @returns 连续打卡天数
    * @private
    */
-  private calculateStreakFromHealthData(
-    measuredAts: (string | null | undefined)[],
-  ): number {
+  private calculateStreakFromHealthData(measuredAts: (string | null | undefined)[]): number {
     if (!measuredAts.length) {
       return 0;
     }
@@ -780,8 +736,8 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
       new Set(
         measuredAts
           .filter((d): d is string => Boolean(d))
-          .map((d) => new Date(d).toISOString().split("T")[0]),
-      ),
+          .map((d) => new Date(d).toISOString().split("T")[0])
+      )
     );
 
     if (!dates.length) {
@@ -876,19 +832,13 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @returns 健康数据聚合结果
    * @private
    */
-  private mapAggregationRow(
-    row: HealthDataAggregationRow,
-  ): HealthDataAggregationResult {
+  private mapAggregationRow(row: HealthDataAggregationRow): HealthDataAggregationResult {
     return {
       memberId: row.member_id,
       avgWeight: this.parseNumeric(row.avg_weight),
       avgHeartRate: this.parseNumeric(row.avg_heart_rate),
-      avgBloodPressureSystolic: this.parseNumeric(
-        row.avg_blood_pressure_systolic,
-      ),
-      avgBloodPressureDiastolic: this.parseNumeric(
-        row.avg_blood_pressure_diastolic,
-      ),
+      avgBloodPressureSystolic: this.parseNumeric(row.avg_blood_pressure_systolic),
+      avgBloodPressureDiastolic: this.parseNumeric(row.avg_blood_pressure_diastolic),
       dataCount: this.parseNumeric(row.data_count) ?? 0,
     };
   }
@@ -953,15 +903,8 @@ export class SupabaseLeaderboardRepository implements LeaderboardRepository {
    * @returns RepositoryError
    * @private
    */
-  private createRepositoryError(
-    operation: string,
-    error: any,
-  ): RepositoryError {
-    return RepositoryError.fromSupabaseError(
-      operation,
-      error,
-      RepositoryErrorCode.DATABASE_ERROR,
-    );
+  private createRepositoryError(operation: string, error: any): RepositoryError {
+    return RepositoryError.fromSupabaseError(operation, error, RepositoryErrorCode.DATABASE_ERROR);
   }
 
   /**

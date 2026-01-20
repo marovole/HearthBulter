@@ -1,8 +1,5 @@
 import { subDays, startOfDay, endOfDay } from "date-fns";
-import {
-  LEADERBOARD_TYPE_CONFIGS,
-  LeaderboardType,
-} from "@/types/social-sharing";
+import { LEADERBOARD_TYPE_CONFIGS, LeaderboardType } from "@/types/social-sharing";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Id } from "@/../convex/_generated/dataModel";
 
@@ -67,7 +64,7 @@ export class LeaderboardService {
     type: LeaderboardType,
     memberId?: string,
     timeframe: "daily" | "weekly" | "monthly" | "all-time" = "weekly",
-    limit: number = 50,
+    limit: number = 50
   ): Promise<LeaderboardResult> {
     const cacheKey = `${type}_${timeframe}_${limit}_${memberId || "all"}`;
     const cached = this.cache.get(cacheKey);
@@ -79,39 +76,23 @@ export class LeaderboardService {
     let result: LeaderboardResult;
 
     switch (type) {
-    case LeaderboardType.HEALTH_SCORE:
-      result = await this.calculateHealthScoreLeaderboard(
-        memberId,
-        timeframe,
-        limit,
-      );
-      break;
-    case LeaderboardType.CHECK_IN_STREAK:
-      result = await this.calculateCheckinStreakLeaderboard(memberId, limit);
-      break;
-    case LeaderboardType.WEIGHT_LOSS:
-      result = await this.calculateWeightLossLeaderboard(
-        memberId,
-        timeframe,
-        limit,
-      );
-      break;
-    case LeaderboardType.EXERCISE_MINUTES:
-      result = await this.calculateExerciseMinutesLeaderboard(
-        memberId,
-        timeframe,
-        limit,
-      );
-      break;
-    case LeaderboardType.NUTRITION_SCORE:
-      result = await this.calculateCaloriesManagementLeaderboard(
-        memberId,
-        timeframe,
-        limit,
-      );
-      break;
-    default:
-      throw new Error(`不支持的排行榜类型: ${type}`);
+      case LeaderboardType.HEALTH_SCORE:
+        result = await this.calculateHealthScoreLeaderboard(memberId, timeframe, limit);
+        break;
+      case LeaderboardType.CHECK_IN_STREAK:
+        result = await this.calculateCheckinStreakLeaderboard(memberId, limit);
+        break;
+      case LeaderboardType.WEIGHT_LOSS:
+        result = await this.calculateWeightLossLeaderboard(memberId, timeframe, limit);
+        break;
+      case LeaderboardType.EXERCISE_MINUTES:
+        result = await this.calculateExerciseMinutesLeaderboard(memberId, timeframe, limit);
+        break;
+      case LeaderboardType.NUTRITION_SCORE:
+        result = await this.calculateCaloriesManagementLeaderboard(memberId, timeframe, limit);
+        break;
+      default:
+        throw new Error(`不支持的排行榜类型: ${type}`);
     }
 
     this.cache.set(cacheKey, {
@@ -125,7 +106,7 @@ export class LeaderboardService {
   private async calculateHealthScoreLeaderboard(
     memberId?: string,
     timeframe: "daily" | "weekly" | "monthly" | "all-time" = "weekly",
-    limit: number = 50,
+    limit: number = 50
   ): Promise<LeaderboardResult> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.HEALTH_SCORE];
@@ -172,7 +153,7 @@ export class LeaderboardService {
     const leaderboardItems = await this.convertToLeaderboardItems(
       scoredMembers.slice(0, limit),
       LeaderboardType.HEALTH_SCORE,
-      memberId,
+      memberId
     );
 
     const result: LeaderboardResult = {
@@ -192,7 +173,7 @@ export class LeaderboardService {
 
   private async calculateCheckinStreakLeaderboard(
     memberId?: string,
-    limit: number = 50,
+    limit: number = 50
   ): Promise<LeaderboardResult> {
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.CHECK_IN_STREAK];
     const startDate = subDays(new Date(), 365).getTime();
@@ -222,7 +203,7 @@ export class LeaderboardService {
     const leaderboardItems = await this.convertToLeaderboardItems(
       entries.slice(0, limit),
       LeaderboardType.CHECK_IN_STREAK,
-      memberId,
+      memberId
     );
 
     const result: LeaderboardResult = {
@@ -243,7 +224,7 @@ export class LeaderboardService {
   private async calculateWeightLossLeaderboard(
     memberId?: string,
     timeframe: "daily" | "weekly" | "monthly" | "all-time" = "monthly",
-    limit: number = 50,
+    limit: number = 50
   ): Promise<LeaderboardResult> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.WEIGHT_LOSS];
@@ -280,7 +261,7 @@ export class LeaderboardService {
     const leaderboardItems = await this.convertToLeaderboardItems(
       membersWithWeightLoss.slice(0, limit),
       LeaderboardType.WEIGHT_LOSS,
-      memberId,
+      memberId
     );
 
     const result: LeaderboardResult = {
@@ -301,7 +282,7 @@ export class LeaderboardService {
   private async calculateExerciseMinutesLeaderboard(
     memberId?: string,
     timeframe: "daily" | "weekly" | "monthly" | "all-time" = "weekly",
-    limit: number = 50,
+    limit: number = 50
   ): Promise<LeaderboardResult> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.EXERCISE_MINUTES];
@@ -334,7 +315,7 @@ export class LeaderboardService {
     const leaderboardItems = await this.convertToLeaderboardItems(
       membersWithExercise.slice(0, limit),
       LeaderboardType.EXERCISE_MINUTES,
-      memberId,
+      memberId
     );
 
     const result: LeaderboardResult = {
@@ -355,7 +336,7 @@ export class LeaderboardService {
   private async calculateCaloriesManagementLeaderboard(
     memberId?: string,
     timeframe: "daily" | "weekly" | "monthly" | "all-time" = "monthly",
-    limit: number = 50,
+    limit: number = 50
   ): Promise<LeaderboardResult> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
     const config = LEADERBOARD_TYPE_CONFIGS[LeaderboardType.NUTRITION_SCORE];
@@ -392,7 +373,7 @@ export class LeaderboardService {
     const leaderboardItems = await this.convertToLeaderboardItems(
       membersWithCalorieAccuracy.slice(0, limit),
       LeaderboardType.NUTRITION_SCORE,
-      memberId,
+      memberId
     );
 
     const result: LeaderboardResult = {
@@ -419,17 +400,13 @@ export class LeaderboardService {
       metadata?: Record<string, unknown>;
     }>,
     type: LeaderboardType,
-    currentMemberId?: string,
+    currentMemberId?: string
   ): Promise<LeaderboardItem[]> {
     const items: LeaderboardItem[] = [];
 
     for (const [index, member] of members.entries()) {
       const rank = index + 1;
-      const change = await this.calculateRankChange(
-        member.memberId,
-        type,
-        rank,
-      );
+      const change = await this.calculateRankChange(member.memberId, type, rank);
 
       items.push({
         rank,
@@ -437,11 +414,7 @@ export class LeaderboardService {
         memberName: member.memberName,
         avatar: member.avatar,
         value: member.value,
-        displayValue: this.formatDisplayValue(
-          type,
-          member.value,
-          member.metadata,
-        ),
+        displayValue: this.formatDisplayValue(type, member.value, member.metadata),
         change: change.change,
         changeValue: change.changeValue,
         metadata: member.metadata,
@@ -454,16 +427,16 @@ export class LeaderboardService {
   private async calculateRankChange(
     memberId: string,
     type: LeaderboardType,
-    currentRank: number,
+    currentRank: number
   ): Promise<{ change: "up" | "down" | "same" | "new"; changeValue?: number }> {
-    const lastRanking = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.leaderboards.getLatestEntry, {
-      memberId: memberId as Id<"familyMembers">,
-      type,
-      sinceDate: subDays(new Date(), 7).getTime(),
-    });
+    const lastRanking = await convexClient.query<Record<string, unknown> | null>(
+      api.leaderboards.getLatestEntry,
+      {
+        memberId: memberId as Id<"familyMembers">,
+        type,
+        sinceDate: subDays(new Date(), 7).getTime(),
+      }
+    );
 
     if (!lastRanking) {
       return { change: "new" };
@@ -479,67 +452,62 @@ export class LeaderboardService {
     return { change: "same" };
   }
 
-  private formatDisplayValue(
-    type: LeaderboardType,
-    value: number,
-    _metadata?: any,
-  ): string {
+  private formatDisplayValue(type: LeaderboardType, value: number, _metadata?: any): string {
     switch (type) {
-    case LeaderboardType.HEALTH_SCORE:
-      return `${value}分`;
-    case LeaderboardType.CHECK_IN_STREAK:
-      return `${value}天`;
-    case LeaderboardType.WEIGHT_LOSS:
-      return `${value}kg`;
-    case LeaderboardType.EXERCISE_MINUTES:
-      return `${value}分钟`;
-    case LeaderboardType.NUTRITION_SCORE:
-      return `${value}%`;
-    default:
-      return value.toString();
+      case LeaderboardType.HEALTH_SCORE:
+        return `${value}分`;
+      case LeaderboardType.CHECK_IN_STREAK:
+        return `${value}天`;
+      case LeaderboardType.WEIGHT_LOSS:
+        return `${value}kg`;
+      case LeaderboardType.EXERCISE_MINUTES:
+        return `${value}分钟`;
+      case LeaderboardType.NUTRITION_SCORE:
+        return `${value}%`;
+      default:
+        return value.toString();
     }
   }
 
-  private getTimeframeDates(
-    timeframe: "daily" | "weekly" | "monthly" | "all-time",
-  ): { startDate: Date; endDate: Date } {
+  private getTimeframeDates(timeframe: "daily" | "weekly" | "monthly" | "all-time"): {
+    startDate: Date;
+    endDate: Date;
+  } {
     const endDate = endOfDay(new Date());
     let startDate: Date;
 
     switch (timeframe) {
-    case "daily":
-      startDate = startOfDay(new Date());
-      break;
-    case "weekly":
-      startDate = subDays(endDate, 7);
-      break;
-    case "monthly":
-      startDate = subDays(endDate, 30);
-      break;
-    case "all-time":
-      startDate = new Date(2020, 0, 1);
-      break;
-    default:
-      startDate = subDays(endDate, 7);
+      case "daily":
+        startDate = startOfDay(new Date());
+        break;
+      case "weekly":
+        startDate = subDays(endDate, 7);
+        break;
+      case "monthly":
+        startDate = subDays(endDate, 30);
+        break;
+      case "all-time":
+        startDate = new Date(2020, 0, 1);
+        break;
+      default:
+        startDate = subDays(endDate, 7);
     }
 
     return { startDate, endDate };
   }
 
-  private getTimeframeDisplay(
-    timeframe: "daily" | "weekly" | "monthly" | "all-time",
-  ): string {
+  private getTimeframeDisplay(timeframe: "daily" | "weekly" | "monthly" | "all-time"): string {
     switch (timeframe) {
-    case "daily":
-      return "今日";
-    case "weekly":
-      return "本周";
-    case "monthly":
-      return "本月";
-    case "all-time":
-      return "全部时间";
-    default:
-      return "本周";
+      case "daily":
+        return "今日";
+      case "weekly":
+        return "本周";
+      case "monthly":
+        return "本月";
+      case "all-time":
+        return "全部时间";
+      default:
+        return "本周";
     }
   }
 
@@ -584,33 +552,30 @@ export class LeaderboardService {
     type: LeaderboardType,
     rank: number,
     value: number,
-    metadata?: any,
+    metadata?: any
   ): Promise<LeaderboardEntryRecord> {
     const { startDate, endDate } = this.getTimeframeDates("weekly");
-    const entryId = await convexClient.mutation<string>(
-      api.leaderboards.createEntry,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        leaderboardType: type,
-        period: "weekly",
-        periodStart: startDate.getTime(),
-        periodEnd: endDate.getTime(),
-        score: value,
-        rank,
-        previousRank: undefined,
-        rankChange: undefined,
-        totalParticipants: 0,
-        percentile: undefined,
-        isAnonymous: false,
-        showRank: true,
-        metadata: metadata ?? {},
-        calculatedAt: Date.now(),
-      },
-    );
+    const entryId = await convexClient.mutation<string>(api.leaderboards.createEntry, {
+      memberId: memberId as Id<"familyMembers">,
+      leaderboardType: type,
+      period: "weekly",
+      periodStart: startDate.getTime(),
+      periodEnd: endDate.getTime(),
+      score: value,
+      rank,
+      previousRank: undefined,
+      rankChange: undefined,
+      totalParticipants: 0,
+      percentile: undefined,
+      isAnonymous: false,
+      showRank: true,
+      metadata: metadata ?? {},
+      calculatedAt: Date.now(),
+    });
 
     const entry = await convexClient.query<Record<string, unknown> | null>(
       api.leaderboards.getEntryById,
-      { id: entryId as Id<"leaderboardEntries"> },
+      { id: entryId as Id<"leaderboardEntries"> }
     );
 
     if (!entry) {
@@ -627,7 +592,7 @@ export class LeaderboardService {
   async getRankingHistory(
     memberId: string,
     type: LeaderboardType,
-    days: number = 30,
+    days: number = 30
   ): Promise<LeaderboardEntryRecord[]> {
     const startDate = subDays(new Date(), days).getTime();
 
@@ -638,7 +603,7 @@ export class LeaderboardService {
         type,
         sinceDate: startDate,
         limit: days,
-      },
+      }
     );
 
     return entries.map((entry) => this.normalizeEntry(entry));
@@ -652,9 +617,7 @@ export class LeaderboardService {
     return Object.values(LeaderboardType);
   }
 
-  private normalizeEntry(
-    record: Record<string, unknown>,
-  ): LeaderboardEntryRecord {
+  private normalizeEntry(record: Record<string, unknown>): LeaderboardEntryRecord {
     return {
       id: record._id as string,
       memberId: record.memberId as string,
@@ -684,7 +647,7 @@ export async function getLeaderboard(
   type: LeaderboardType,
   memberId?: string,
   timeframe?: "daily" | "weekly" | "monthly" | "all-time",
-  limit?: number,
+  limit?: number
 ): Promise<LeaderboardResult> {
   const service = LeaderboardService.getInstance();
   return service.getLeaderboard(type, memberId, timeframe, limit);
@@ -693,7 +656,7 @@ export async function getLeaderboard(
 export async function getUserRankingHistory(
   memberId: string,
   type: LeaderboardType,
-  days?: number,
+  days?: number
 ): Promise<LeaderboardEntryRecord[]> {
   const service = LeaderboardService.getInstance();
   return service.getRankingHistory(memberId, type, days);
@@ -704,7 +667,7 @@ export async function saveUserRanking(
   type: LeaderboardType,
   rank: number,
   value: number,
-  metadata?: any,
+  metadata?: any
 ): Promise<LeaderboardEntryRecord> {
   const service = LeaderboardService.getInstance();
   return service.saveLeaderboardEntry(memberId, type, rank, value, metadata);

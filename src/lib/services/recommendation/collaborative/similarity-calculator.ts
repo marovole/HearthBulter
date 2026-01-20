@@ -1,11 +1,6 @@
 import { UserItemMatrix } from "./user-item-matrix";
 
-export type SimilarityMetric =
-  | "cosine"
-  | "pearson"
-  | "jaccard"
-  | "adjusted_cosine"
-  | "euclidean";
+export type SimilarityMetric = "cosine" | "pearson" | "jaccard" | "adjusted_cosine" | "euclidean";
 
 export interface SimilarityResult {
   id: string;
@@ -24,7 +19,7 @@ export class SimilarityCalculator {
     matrix: UserItemMatrix,
     user1Id: string,
     user2Id: string,
-    metric: SimilarityMetric = "cosine",
+    metric: SimilarityMetric = "cosine"
   ): number {
     const cacheKey = `user_${user1Id}_${user2Id}_${metric}`;
 
@@ -43,23 +38,23 @@ export class SimilarityCalculator {
     let similarity = 0;
 
     switch (metric) {
-    case "cosine":
-      similarity = this.cosineSimilarity(user1Ratings, user2Ratings);
-      break;
-    case "pearson":
-      similarity = this.pearsonCorrelation(matrix, user1Id, user2Id);
-      break;
-    case "jaccard":
-      similarity = this.jaccardSimilarity(user1Ratings, user2Ratings);
-      break;
-    case "adjusted_cosine":
-      similarity = this.adjustedCosineSimilarity(matrix, user1Id, user2Id);
-      break;
-    case "euclidean":
-      similarity = this.euclideanSimilarity(user1Ratings, user2Ratings);
-      break;
-    default:
-      similarity = this.cosineSimilarity(user1Ratings, user2Ratings);
+      case "cosine":
+        similarity = this.cosineSimilarity(user1Ratings, user2Ratings);
+        break;
+      case "pearson":
+        similarity = this.pearsonCorrelation(matrix, user1Id, user2Id);
+        break;
+      case "jaccard":
+        similarity = this.jaccardSimilarity(user1Ratings, user2Ratings);
+        break;
+      case "adjusted_cosine":
+        similarity = this.adjustedCosineSimilarity(matrix, user1Id, user2Id);
+        break;
+      case "euclidean":
+        similarity = this.euclideanSimilarity(user1Ratings, user2Ratings);
+        break;
+      default:
+        similarity = this.cosineSimilarity(user1Ratings, user2Ratings);
     }
 
     // 缓存结果
@@ -78,7 +73,7 @@ export class SimilarityCalculator {
     matrix: UserItemMatrix,
     item1Id: string,
     item2Id: string,
-    metric: SimilarityMetric = "cosine",
+    metric: SimilarityMetric = "cosine"
   ): number {
     const cacheKey = `item_${item1Id}_${item2Id}_${metric}`;
 
@@ -97,27 +92,23 @@ export class SimilarityCalculator {
     let similarity = 0;
 
     switch (metric) {
-    case "cosine":
-      similarity = this.cosineSimilarity(item1Ratings, item2Ratings);
-      break;
-    case "pearson":
-      similarity = this.pearsonCorrelationForItems(matrix, item1Id, item2Id);
-      break;
-    case "jaccard":
-      similarity = this.jaccardSimilarity(item1Ratings, item2Ratings);
-      break;
-    case "adjusted_cosine":
-      similarity = this.adjustedCosineSimilarityForItems(
-        matrix,
-        item1Id,
-        item2Id,
-      );
-      break;
-    case "euclidean":
-      similarity = this.euclideanSimilarity(item1Ratings, item2Ratings);
-      break;
-    default:
-      similarity = this.cosineSimilarity(item1Ratings, item2Ratings);
+      case "cosine":
+        similarity = this.cosineSimilarity(item1Ratings, item2Ratings);
+        break;
+      case "pearson":
+        similarity = this.pearsonCorrelationForItems(matrix, item1Id, item2Id);
+        break;
+      case "jaccard":
+        similarity = this.jaccardSimilarity(item1Ratings, item2Ratings);
+        break;
+      case "adjusted_cosine":
+        similarity = this.adjustedCosineSimilarityForItems(matrix, item1Id, item2Id);
+        break;
+      case "euclidean":
+        similarity = this.euclideanSimilarity(item1Ratings, item2Ratings);
+        break;
+      default:
+        similarity = this.cosineSimilarity(item1Ratings, item2Ratings);
     }
 
     // 缓存结果
@@ -136,7 +127,7 @@ export class SimilarityCalculator {
     matrix: UserItemMatrix,
     targetUserId: string,
     metric: SimilarityMetric = "cosine",
-    minCommonItems: number = 3,
+    minCommonItems: number = 3
   ): SimilarityResult[] {
     const targetRatings = matrix.ratings.get(targetUserId);
     if (!targetRatings) {
@@ -145,31 +136,22 @@ export class SimilarityCalculator {
 
     const similarities: SimilarityResult[] = [];
 
-    matrix.ratings.forEach(
-      (userRatings: Map<string, number>, userId: string) => {
-        if (userId === targetUserId) return;
+    matrix.ratings.forEach((userRatings: Map<string, number>, userId: string) => {
+      if (userId === targetUserId) return;
 
-        const commonItems = this.getCommonItemCount(targetRatings, userRatings);
-        if (commonItems < minCommonItems) return;
+      const commonItems = this.getCommonItemCount(targetRatings, userRatings);
+      if (commonItems < minCommonItems) return;
 
-        const similarity = this.calculateUserSimilarity(
-          matrix,
-          targetUserId,
-          userId,
-          metric,
-        );
+      const similarity = this.calculateUserSimilarity(matrix, targetUserId, userId, metric);
 
-        similarities.push({
-          id: userId,
-          similarity,
-          commonItems,
-        });
-      },
-    );
+      similarities.push({
+        id: userId,
+        similarity,
+        commonItems,
+      });
+    });
 
-    return similarities
-      .sort((a, b) => b.similarity - a.similarity)
-      .filter((s) => s.similarity > 0);
+    return similarities.sort((a, b) => b.similarity - a.similarity).filter((s) => s.similarity > 0);
   }
 
   /**
@@ -179,7 +161,7 @@ export class SimilarityCalculator {
     matrix: UserItemMatrix,
     targetItemId: string,
     metric: SimilarityMetric = "cosine",
-    minCommonUsers: number = 3,
+    minCommonUsers: number = 3
   ): SimilarityResult[] {
     const targetRatings = this.getItemRatings(matrix, targetItemId);
     if (targetRatings.size === 0) {
@@ -195,12 +177,7 @@ export class SimilarityCalculator {
       const commonUsers = this.getCommonItemCount(targetRatings, itemRatings);
       if (commonUsers < minCommonUsers) return;
 
-      const similarity = this.calculateItemSimilarity(
-        matrix,
-        targetItemId,
-        itemId,
-        metric,
-      );
+      const similarity = this.calculateItemSimilarity(matrix, targetItemId, itemId, metric);
 
       similarities.push({
         id: itemId,
@@ -209,18 +186,13 @@ export class SimilarityCalculator {
       });
     });
 
-    return similarities
-      .sort((a, b) => b.similarity - a.similarity)
-      .filter((s) => s.similarity > 0);
+    return similarities.sort((a, b) => b.similarity - a.similarity).filter((s) => s.similarity > 0);
   }
 
   /**
    * 余弦相似度
    */
-  private cosineSimilarity(
-    ratings1: Map<string, number>,
-    ratings2: Map<string, number>,
-  ): number {
+  private cosineSimilarity(ratings1: Map<string, number>, ratings2: Map<string, number>): number {
     const commonItems = this.getCommonItems(ratings1, ratings2);
 
     if (commonItems.length === 0) {
@@ -250,11 +222,7 @@ export class SimilarityCalculator {
   /**
    * 皮尔逊相关系数
    */
-  private pearsonCorrelation(
-    matrix: UserItemMatrix,
-    user1Id: string,
-    user2Id: string,
-  ): number {
+  private pearsonCorrelation(matrix: UserItemMatrix, user1Id: string, user2Id: string): number {
     const user1Ratings = matrix.ratings.get(user1Id);
     const user2Ratings = matrix.ratings.get(user2Id);
 
@@ -296,10 +264,7 @@ export class SimilarityCalculator {
   /**
    * 杰卡德相似度
    */
-  private jaccardSimilarity(
-    ratings1: Map<string, number>,
-    ratings2: Map<string, number>,
-  ): number {
+  private jaccardSimilarity(ratings1: Map<string, number>, ratings2: Map<string, number>): number {
     const commonItems = this.getCommonItems(ratings1, ratings2);
     const allItems = new Set([...ratings1.keys(), ...ratings2.keys()]);
 
@@ -312,7 +277,7 @@ export class SimilarityCalculator {
   private adjustedCosineSimilarity(
     matrix: UserItemMatrix,
     user1Id: string,
-    user2Id: string,
+    user2Id: string
   ): number {
     const user1Ratings = matrix.ratings.get(user1Id);
     const user2Ratings = matrix.ratings.get(user2Id);
@@ -354,7 +319,7 @@ export class SimilarityCalculator {
    */
   private euclideanSimilarity(
     ratings1: Map<string, number>,
-    ratings2: Map<string, number>,
+    ratings2: Map<string, number>
   ): number {
     const commonItems = this.getCommonItems(ratings1, ratings2);
     if (commonItems.length === 0) {
@@ -380,7 +345,7 @@ export class SimilarityCalculator {
   private pearsonCorrelationForItems(
     matrix: UserItemMatrix,
     item1Id: string,
-    item2Id: string,
+    item2Id: string
   ): number {
     const item1Ratings = this.getItemRatings(matrix, item1Id);
     const item2Ratings = this.getItemRatings(matrix, item2Id);
@@ -426,7 +391,7 @@ export class SimilarityCalculator {
   private adjustedCosineSimilarityForItems(
     matrix: UserItemMatrix,
     item1Id: string,
-    item2Id: string,
+    item2Id: string
   ): number {
     const item1Ratings = this.getItemRatings(matrix, item1Id);
     const item2Ratings = this.getItemRatings(matrix, item2Id);
@@ -467,19 +432,14 @@ export class SimilarityCalculator {
   /**
    * 获取物品评分
    */
-  private getItemRatings(
-    matrix: UserItemMatrix,
-    itemId: string,
-  ): Map<string, number> {
+  private getItemRatings(matrix: UserItemMatrix, itemId: string): Map<string, number> {
     const itemRatings = new Map<string, number>();
 
-    matrix.ratings.forEach(
-      (userRatings: Map<string, number>, userId: string) => {
-        if (userRatings.has(itemId)) {
-          itemRatings.set(userId, userRatings.get(itemId)!);
-        }
-      },
-    );
+    matrix.ratings.forEach((userRatings: Map<string, number>, userId: string) => {
+      if (userRatings.has(itemId)) {
+        itemRatings.set(userId, userRatings.get(itemId)!);
+      }
+    });
 
     return itemRatings;
   }
@@ -487,20 +447,14 @@ export class SimilarityCalculator {
   /**
    * 获取共同评分的物品
    */
-  private getCommonItems(
-    ratings1: Map<string, number>,
-    ratings2: Map<string, number>,
-  ): string[] {
+  private getCommonItems(ratings1: Map<string, number>, ratings2: Map<string, number>): string[] {
     return Array.from(ratings1.keys()).filter((item) => ratings2.has(item));
   }
 
   /**
    * 获取共同评分数量
    */
-  private getCommonItemCount(
-    ratings1: Map<string, number>,
-    ratings2: Map<string, number>,
-  ): number {
+  private getCommonItemCount(ratings1: Map<string, number>, ratings2: Map<string, number>): number {
     return this.getCommonItems(ratings1, ratings2).length;
   }
 
@@ -511,7 +465,7 @@ export class SimilarityCalculator {
     matrix: UserItemMatrix,
     type: "user" | "item",
     metric: SimilarityMetric = "cosine",
-    minCommonRatings: number = 3,
+    minCommonRatings: number = 3
   ): Map<string, Map<string, number>> {
     const similarityMatrix = new Map<string, Map<string, number>>();
     const ids = type === "user" ? matrix.users : matrix.items;
@@ -532,13 +486,13 @@ export class SimilarityCalculator {
           const commonCount =
             type === "user"
               ? this.getCommonItemCount(
-                matrix.ratings.get(id1) || new Map(),
-                matrix.ratings.get(id2) || new Map(),
-              )
+                  matrix.ratings.get(id1) || new Map(),
+                  matrix.ratings.get(id2) || new Map()
+                )
               : this.getCommonItemCount(
-                this.getItemRatings(matrix, id1),
-                this.getItemRatings(matrix, id2),
-              );
+                  this.getItemRatings(matrix, id1),
+                  this.getItemRatings(matrix, id2)
+                );
 
           if (commonCount >= minCommonRatings) {
             similarities.set(id2, similarity);
@@ -576,7 +530,7 @@ export class SimilarityCalculator {
     matrix: UserItemMatrix,
     type: "user" | "item",
     topK: number = 50,
-    metric: SimilarityMetric = "cosine",
+    metric: SimilarityMetric = "cosine"
   ): Promise<Map<string, SimilarityResult[]>> {
     const results = new Map<string, SimilarityResult[]>();
     const ids = type === "user" ? matrix.users : matrix.items;

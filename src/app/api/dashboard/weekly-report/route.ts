@@ -11,7 +11,7 @@ import { reportGenerator } from "@/lib/services/report-generator";
 export const dynamic = "force-dynamic";
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean; member: any }> {
   const member = await prisma.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },
@@ -64,16 +64,10 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证权限
-    const { hasAccess, member } = await verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess, member } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess || !member) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的报告数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的报告数据" }, { status: 403 });
     }
 
     // 生成报告

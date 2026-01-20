@@ -118,7 +118,7 @@ export class HemaAdapter extends BasePlatformAdapter {
   // 商品搜索
   async searchProducts(
     request: ProductSearchRequest,
-    token: string,
+    token: string
   ): Promise<ProductSearchResponse> {
     try {
       const params = new URLSearchParams({
@@ -142,10 +142,7 @@ export class HemaAdapter extends BasePlatformAdapter {
         params.append("max_price", request.maxPrice.toString());
       }
       if (request.inStock !== undefined) {
-        params.append(
-          "stock_status",
-          request.inStock ? "in_stock" : "out_of_stock",
-        );
+        params.append("stock_status", request.inStock ? "in_stock" : "out_of_stock");
       }
 
       const response = await this.makeRequest<{
@@ -157,9 +154,7 @@ export class HemaAdapter extends BasePlatformAdapter {
       }>(`/products/search?${params.toString()}`, {}, token);
 
       return {
-        products: response.items.map((product) =>
-          this.standardizeProductInfo(product),
-        ),
+        products: response.items.map((product) => this.standardizeProductInfo(product)),
         total: response.total_count,
         page: response.current_page,
         pageSize: response.page_size,
@@ -174,16 +169,9 @@ export class HemaAdapter extends BasePlatformAdapter {
     }
   }
 
-  async getProduct(
-    productId: string,
-    token: string,
-  ): Promise<PlatformProductInfo | null> {
+  async getProduct(productId: string, token: string): Promise<PlatformProductInfo | null> {
     try {
-      const response = await this.makeRequest<any>(
-        `/products/${productId}`,
-        {},
-        token,
-      );
+      const response = await this.makeRequest<any>(`/products/${productId}`, {}, token);
       return this.standardizeProductInfo(response);
     } catch (error) {
       if (error instanceof PlatformError) {
@@ -197,10 +185,7 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 库存查询
-  async queryStock(
-    request: StockQueryRequest,
-    token: string,
-  ): Promise<StockQueryResponse> {
+  async queryStock(request: StockQueryRequest, token: string): Promise<StockQueryResponse> {
     try {
       const response = await this.makeRequest<
         Record<
@@ -219,7 +204,7 @@ export class HemaAdapter extends BasePlatformAdapter {
             product_ids: request.productIds,
           }),
         },
-        token,
+        token
       );
 
       const stocks: Record<
@@ -250,10 +235,7 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 订单管理
-  async createOrder(
-    request: CreateOrderRequest,
-    token: string,
-  ): Promise<CreateOrderResponse> {
+  async createOrder(request: CreateOrderRequest, token: string): Promise<CreateOrderResponse> {
     try {
       const orderData = {
         items: request.items.map((item) => ({
@@ -284,7 +266,7 @@ export class HemaAdapter extends BasePlatformAdapter {
           method: "POST",
           body: JSON.stringify(orderData),
         },
-        token,
+        token
       );
 
       return {
@@ -306,10 +288,7 @@ export class HemaAdapter extends BasePlatformAdapter {
     }
   }
 
-  async getOrderStatus(
-    orderId: string,
-    token: string,
-  ): Promise<OrderStatusResponse> {
+  async getOrderStatus(orderId: string, token: string): Promise<OrderStatusResponse> {
     try {
       const response = await this.makeRequest<{
         order_code: string;
@@ -351,7 +330,7 @@ export class HemaAdapter extends BasePlatformAdapter {
             cancel_reason: "用户取消",
           }),
         },
-        token,
+        token
       );
       return true;
     } catch (error) {
@@ -364,10 +343,7 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 价格查询
-  async getProductPrices(
-    productIds: string[],
-    token: string,
-  ): Promise<Record<string, number>> {
+  async getProductPrices(productIds: string[], token: string): Promise<Record<string, number>> {
     try {
       const response = await this.makeRequest<
         Record<
@@ -385,7 +361,7 @@ export class HemaAdapter extends BasePlatformAdapter {
             product_ids: productIds,
           }),
         },
-        token,
+        token
       );
 
       const prices: Record<string, number> = {};
@@ -403,10 +379,7 @@ export class HemaAdapter extends BasePlatformAdapter {
   }
 
   // 配送信息
-  async getDeliveryOptions(
-    address: DeliveryAddress,
-    token: string,
-  ): Promise<Record<string, any>> {
+  async getDeliveryOptions(address: DeliveryAddress, token: string): Promise<Record<string, any>> {
     try {
       const response = await this.makeRequest<{
         immediate: { time: string; fee: number };
@@ -420,7 +393,7 @@ export class HemaAdapter extends BasePlatformAdapter {
             address: this.standardizeAddress(address),
           }),
         },
-        token,
+        token
       );
 
       return response;
@@ -436,7 +409,7 @@ export class HemaAdapter extends BasePlatformAdapter {
   async estimateDeliveryTime(
     orderItems: OrderItem[],
     address: DeliveryAddress,
-    token: string,
+    token: string
   ): Promise<string> {
     try {
       const response = await this.makeRequest<{
@@ -458,7 +431,7 @@ export class HemaAdapter extends BasePlatformAdapter {
             address: this.standardizeAddress(address),
           }),
         },
-        token,
+        token
       );
 
       return response.delivery_time;
@@ -474,8 +447,7 @@ export class HemaAdapter extends BasePlatformAdapter {
   // 工具方法
   private generateState(): string {
     return (
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
+      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
     );
   }
 
@@ -495,28 +467,18 @@ export class HemaAdapter extends BasePlatformAdapter {
       volume: rawProduct.volume ? parseFloat(rawProduct.volume) : undefined,
       unit: rawProduct.unit,
       price: parseFloat(rawProduct.sale_price || rawProduct.price),
-      originalPrice: rawProduct.original_price
-        ? parseFloat(rawProduct.original_price)
-        : undefined,
+      originalPrice: rawProduct.original_price ? parseFloat(rawProduct.original_price) : undefined,
       currency: rawProduct.currency || "CNY",
       priceUnit: rawProduct.price_unit,
       stock: parseInt(rawProduct.available_stock) || 0,
-      isInStock:
-        rawProduct.stock_status === "有货" &&
-        (rawProduct.available_stock || 0) > 0,
+      isInStock: rawProduct.stock_status === "有货" && (rawProduct.available_stock || 0) > 0,
       stockStatus: rawProduct.stock_status,
-      salesCount: rawProduct.monthly_sales
-        ? parseInt(rawProduct.monthly_sales)
-        : undefined,
+      salesCount: rawProduct.monthly_sales ? parseInt(rawProduct.monthly_sales) : undefined,
       rating: rawProduct.rating ? parseFloat(rawProduct.rating) : undefined,
-      reviewCount: rawProduct.review_count
-        ? parseInt(rawProduct.review_count)
-        : undefined,
+      reviewCount: rawProduct.review_count ? parseInt(rawProduct.review_count) : undefined,
       deliveryOptions: rawProduct.delivery_info,
       deliveryTime: rawProduct.delivery_time,
-      shippingFee: rawProduct.delivery_fee
-        ? parseFloat(rawProduct.delivery_fee)
-        : undefined,
+      shippingFee: rawProduct.delivery_fee ? parseFloat(rawProduct.delivery_fee) : undefined,
       platformData: rawProduct,
     };
   }

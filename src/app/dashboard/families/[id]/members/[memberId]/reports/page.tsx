@@ -50,15 +50,12 @@ export default async function ReportsPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* 面包屑导航 */}
           <nav className="mb-6">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Link
-                href={`/dashboard/families/${id}`}
-                className="hover:text-gray-900"
-              >
+              <Link href={`/dashboard/families/${id}`} className="hover:text-gray-900">
                 家庭
               </Link>
               <span>/</span>
@@ -78,7 +75,7 @@ export default async function ReportsPage({
             <h1 className="text-2xl font-bold text-gray-900">体检报告</h1>
             <Link
               href={`/dashboard/families/${id}/members/${memberId}/reports/new`}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
             >
               上传新报告
             </Link>

@@ -103,26 +103,23 @@ export function generateShareUrl(platform: string, data: ShareData): string {
 /**
  * 分享到指定平台
  */
-export async function shareToPlatform(
-  platform: string,
-  data: ShareData,
-): Promise<boolean> {
+export async function shareToPlatform(platform: string, data: ShareData): Promise<boolean> {
   try {
     const shareUrl = generateShareUrl(platform, data);
 
     switch (platform) {
-    case "wechat":
-    case "wechatMoments":
-      // 微信分享需要生成二维码
-      return await shareToWechat(shareUrl, data);
+      case "wechat":
+      case "wechatMoments":
+        // 微信分享需要生成二维码
+        return await shareToWechat(shareUrl, data);
 
-    case "copy":
-      return await copyToClipboard(shareUrl);
+      case "copy":
+        return await copyToClipboard(shareUrl);
 
-    default:
-      // 其他平台直接打开链接
-      window.open(shareUrl, "_blank", "width=600,height=400");
-      return true;
+      default:
+        // 其他平台直接打开链接
+        window.open(shareUrl, "_blank", "width=600,height=400");
+        return true;
     }
   } catch (error) {
     console.error(`分享到${platform}失败:`, error);
@@ -163,8 +160,7 @@ async function generateQRCode(url: string): Promise<string> {
 function showWechatQRCode(qrCodeUrl: string, data: ShareData): void {
   // 创建弹窗显示二维码
   const modal = document.createElement("div");
-  modal.className =
-    "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+  modal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
   modal.innerHTML = `
     <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
       <h3 class="text-lg font-semibold mb-4">分享到微信</h3>
@@ -223,9 +219,7 @@ export function isPlatformAvailable(platform: string): boolean {
  * 获取可用平台列表
  */
 export function getAvailablePlatforms(): SocialPlatform[] {
-  return Object.values(SOCIAL_PLATFORMS).filter(
-    (platform) => platform.isAvailable,
-  );
+  return Object.values(SOCIAL_PLATFORMS).filter((platform) => platform.isAvailable);
 }
 
 /**
@@ -303,11 +297,7 @@ export class WechatSDK {
    * 分享到微信好友
    */
   shareToFriend(data: ShareData): void {
-    if (
-      !this.isInitialized ||
-      typeof window === "undefined" ||
-      !(window as any).wx
-    ) {
+    if (!this.isInitialized || typeof window === "undefined" || !(window as any).wx) {
       throw new Error("微信SDK未初始化");
     }
 
@@ -329,11 +319,7 @@ export class WechatSDK {
    * 分享到朋友圈
    */
   shareToTimeline(data: ShareData): void {
-    if (
-      !this.isInitialized ||
-      typeof window === "undefined" ||
-      !(window as any).wx
-    ) {
+    if (!this.isInitialized || typeof window === "undefined" || !(window as any).wx) {
       throw new Error("微信SDK未初始化");
     }
 
@@ -393,7 +379,7 @@ export class ShareAnalytics {
   static async trackShare(
     shareToken: string,
     platform: string,
-    action: "share" | "click" | "conversion" = "share",
+    action: "share" | "click" | "conversion" = "share"
   ): Promise<void> {
     try {
       await fetch(`/api/social/share/${shareToken}`, {

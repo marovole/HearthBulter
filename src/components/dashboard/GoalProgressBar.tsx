@@ -21,16 +21,16 @@ export function GoalProgressBar({
 }: GoalProgressBarProps) {
   const getGoalTypeLabel = (type: string) => {
     switch (type) {
-    case "LOSE_WEIGHT":
-      return "减重目标";
-    case "GAIN_MUSCLE":
-      return "增肌目标";
-    case "MAINTAIN":
-      return "维持体重";
-    case "IMPROVE_HEALTH":
-      return "改善健康";
-    default:
-      return "健康目标";
+      case "LOSE_WEIGHT":
+        return "减重目标";
+      case "GAIN_MUSCLE":
+        return "增肌目标";
+      case "MAINTAIN":
+        return "维持体重";
+      case "IMPROVE_HEALTH":
+        return "改善健康";
+      default:
+        return "健康目标";
     }
   };
 
@@ -50,23 +50,19 @@ export function GoalProgressBar({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-gray-900">
-          {getGoalTypeLabel(goalType)}
-        </h3>
-        <span className={`text-xs font-medium ${getStatusColor()}`}>
-          {getStatusText()}
-        </span>
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-medium text-gray-900">{getGoalTypeLabel(goalType)}</h3>
+        <span className={`text-xs font-medium ${getStatusColor()}`}>{getStatusText()}</span>
       </div>
 
       {/* 进度条 */}
       <div className="mb-3">
-        <div className="flex justify-between text-xs text-gray-600 mb-1">
+        <div className="mb-1 flex justify-between text-xs text-gray-600">
           <span>进度</span>
           <span>{Math.round(currentProgress)}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div className="h-3 w-full rounded-full bg-gray-200">
           <div
             className={`${getProgressColor()} h-3 rounded-full transition-all duration-300`}
             style={{ width: `${Math.min(100, Math.max(0, currentProgress))}%` }}
@@ -98,12 +94,10 @@ export function GoalProgressBar({
 
       {/* 预计完成时间 */}
       {weeksRemaining !== null && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
+        <div className="mt-3 border-t border-gray-200 pt-3">
           <div className="text-xs text-gray-600">
             预计剩余时间：
-            <span className="font-semibold text-gray-900">
-              {weeksRemaining} 周
-            </span>
+            <span className="font-semibold text-gray-900">{weeksRemaining} 周</span>
           </div>
         </div>
       )}

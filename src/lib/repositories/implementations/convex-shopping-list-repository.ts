@@ -17,7 +17,7 @@ const DEFAULT_LIMIT = 20;
 export class ConvexShoppingListRepository implements ShoppingListRepository {
   async listShoppingLists(
     query: ShoppingListListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<ShoppingListDTO>> {
     const result = await convexClient.query<{
       data: Array<Record<string, unknown>>;
@@ -48,7 +48,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
 
   async getShoppingListById(
     id: string,
-    options?: ShoppingListGetOptions,
+    options?: ShoppingListGetOptions
   ): Promise<ShoppingListDTO | null> {
     const list = await convexClient.query<Record<string, unknown> | null>(
       api["shopping-lists"].getById,
@@ -56,16 +56,13 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
         listId: id as Id<"shoppingLists">,
         includePlan: options?.includePlan,
         includeItems: options?.includeItems,
-      },
+      }
     );
 
     return list ? mapShoppingList(list) : null;
   }
 
-  async updateShoppingList(
-    id: string,
-    payload: UpdateShoppingListDTO,
-  ): Promise<ShoppingListDTO> {
+  async updateShoppingList(id: string, payload: UpdateShoppingListDTO): Promise<ShoppingListDTO> {
     await convexClient.mutation(api["shopping-lists"].update, {
       listId: id as Id<"shoppingLists">,
       name: payload.name,
@@ -94,7 +91,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
   async updateShoppingListItem(
     listId: string,
     itemId: string,
-    payload: UpdateShoppingListItemDTO,
+    payload: UpdateShoppingListItemDTO
   ): Promise<ShoppingListItemDTO> {
     await convexClient.mutation(api["shopping-lists"].updateItem, {
       listId: listId as Id<"shoppingLists">,
@@ -118,7 +115,7 @@ export class ConvexShoppingListRepository implements ShoppingListRepository {
 
   async completeShoppingList(
     listId: string,
-    payload: CompleteShoppingListDTO,
+    payload: CompleteShoppingListDTO
   ): Promise<ShoppingListDTO> {
     await convexClient.mutation(api["shopping-lists"].complete, {
       listId: listId as Id<"shoppingLists">,
@@ -153,29 +150,24 @@ function mapShoppingList(list: Record<string, unknown>): ShoppingListDTO {
     planId: String(list.planId),
     name: String(list.name),
     budget: typeof list.budget === "number" ? list.budget : null,
-    estimatedCost:
-      typeof list.estimatedCost === "number" ? list.estimatedCost : undefined,
-    actualCost:
-      typeof list.actualCost === "number" ? list.actualCost : undefined,
+    estimatedCost: typeof list.estimatedCost === "number" ? list.estimatedCost : undefined,
+    actualCost: typeof list.actualCost === "number" ? list.actualCost : undefined,
     status: list.status as ShoppingListDTO["status"],
     createdAt: new Date(Number(list.createdAt)),
     updatedAt: new Date(Number(list.updatedAt)),
-    deletedAt:
-      typeof list.deletedAt === "number" ? new Date(list.deletedAt) : undefined,
+    deletedAt: typeof list.deletedAt === "number" ? new Date(list.deletedAt) : undefined,
     plan: plan
       ? {
-        id: plan.id,
-        name: plan.name,
-        member: plan.member,
-      }
+          id: plan.id,
+          name: plan.name,
+          member: plan.member,
+        }
       : undefined,
     items: items ? items.map(mapShoppingListItem) : undefined,
   };
 }
 
-function mapShoppingListItem(
-  item: Record<string, unknown>,
-): ShoppingListItemDTO {
+function mapShoppingListItem(item: Record<string, unknown>): ShoppingListItemDTO {
   const food = item.food as
     | {
         id: string;
@@ -199,12 +191,12 @@ function mapShoppingListItem(
     updatedAt: new Date(Number(item.updatedAt)),
     food: food
       ? {
-        id: food.id,
-        name: food.name,
-        category: food.category ?? undefined,
-        defaultUnit: food.defaultUnit ?? undefined,
-        imageUrl: food.imageUrl ?? undefined,
-      }
+          id: food.id,
+          name: food.name,
+          category: food.category ?? undefined,
+          defaultUnit: food.defaultUnit ?? undefined,
+          imageUrl: food.imageUrl ?? undefined,
+        }
       : undefined,
   };
 }

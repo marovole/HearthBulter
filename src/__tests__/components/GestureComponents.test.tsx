@@ -1,11 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import {
-  useSwipe,
-  useLongPress,
-  usePinchZoom,
-} from "../../lib/hooks/useGestures";
+import { useSwipe, useLongPress, usePinchZoom } from "../../lib/hooks/useGestures";
 import {
   GestureEnhancedCard,
   SwipeableCarousel,
@@ -178,7 +174,7 @@ describe("Gesture Components", () => {
       render(
         <GestureEnhancedCard title="Test Card">
           <div>Card Content</div>
-        </GestureEnhancedCard>,
+        </GestureEnhancedCard>
       );
 
       expect(screen.getByText("Test Card")).toBeInTheDocument();
@@ -194,7 +190,7 @@ describe("Gesture Components", () => {
           onSwipeRight={() => {}}
         >
           <div>Card Content</div>
-        </GestureEnhancedCard>,
+        </GestureEnhancedCard>
       );
 
       // Wait for hint to appear
@@ -212,7 +208,7 @@ describe("Gesture Components", () => {
           onSwipeRight={() => {}}
         >
           <div>Card Content</div>
-        </GestureEnhancedCard>,
+        </GestureEnhancedCard>
       );
 
       expect(screen.queryByText("← 滑动切换 →")).not.toBeInTheDocument();
@@ -222,7 +218,7 @@ describe("Gesture Components", () => {
       render(
         <GestureEnhancedCard title="Test Card" className="custom-class">
           <div>Card Content</div>
-        </GestureEnhancedCard>,
+        </GestureEnhancedCard>
       );
 
       const card = screen.getByText("Test Card").closest(".relative");
@@ -270,9 +266,7 @@ describe("Gesture Components", () => {
       const indicators = screen
         .getAllByRole("button")
         .filter(
-          (button) =>
-            button.classList.contains("rounded-full") &&
-            button.classList.contains("w-2"),
+          (button) => button.classList.contains("rounded-full") && button.classList.contains("w-2")
         );
 
       expect(indicators).toHaveLength(3);
@@ -287,9 +281,7 @@ describe("Gesture Components", () => {
       const indicators = screen
         .getAllByRole("button")
         .filter(
-          (button) =>
-            button.classList.contains("rounded-full") &&
-            button.classList.contains("w-2"),
+          (button) => button.classList.contains("rounded-full") && button.classList.contains("w-2")
         );
 
       // Click on second indicator

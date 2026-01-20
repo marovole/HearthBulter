@@ -6,33 +6,24 @@ import type { Id } from "@/../convex/_generated/dataModel";
 
 export const dynamic = "force-dynamic";
 
-const resolveMemberId = async (
-  memberId: string | undefined,
-  clerkId: string,
-) => {
+const resolveMemberId = async (memberId: string | undefined, clerkId: string) => {
   if (memberId) {
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        clerkId,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: memberId as Id<"familyMembers">,
+      clerkId,
+    });
     return access.hasAccess ? memberId : null;
   }
 
   const members = await convexClient.query<Array<{ _id: Id<"familyMembers"> }>>(
     api.members.listByClerkId,
-    { clerkId },
+    { clerkId }
   );
 
   return members[0]?._id ?? null;
 };
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: recipeId } = await params;
     const body = await request.json();
@@ -45,10 +36,7 @@ export async function POST(
 
     const memberId = await resolveMemberId(body?.memberId, session.user.id);
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Missing required parameter: memberId" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing required parameter: memberId" }, { status: 400 });
     }
 
     const recipeExists = await recipeRepository.recipeExists(recipeId);
@@ -68,16 +56,13 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error favoriting recipe:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: recipeId } = await params;
@@ -91,10 +76,7 @@ export async function DELETE(
 
     const memberId = await resolveMemberId(memberIdParam, session.user.id);
     if (!memberId) {
-      return NextResponse.json(
-        { error: "memberId is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
     await recipeRepository.removeFavorite(recipeId, memberId);
@@ -105,33 +87,21 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Error unfavoriting recipe:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: recipeId } = await params;
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get("memberId");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "memberId is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
-    const favorite = await recipeRepository.checkFavoriteStatus(
-      recipeId,
-      memberId,
-    );
+    const favorite = await recipeRepository.checkFavoriteStatus(recipeId, memberId);
 
     return NextResponse.json({
       success: true,
@@ -140,9 +110,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error checking favorite status:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

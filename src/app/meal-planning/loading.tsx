@@ -2,7 +2,7 @@ import { CardSkeleton, Skeleton } from "@/components/ui/skeleton";
 
 function NutritionCardSkeleton() {
   return (
-    <div className="rounded-lg border p-4 space-y-2">
+    <div className="space-y-2 rounded-lg border p-4">
       <Skeleton className="h-4 w-16" />
       <Skeleton className="h-8 w-24" />
       <Skeleton className="h-2 w-full" />
@@ -25,9 +25,9 @@ function DayColumnSkeleton() {
 
 function RecipeCardSkeleton() {
   return (
-    <div className="rounded-lg border overflow-hidden">
+    <div className="overflow-hidden rounded-lg border">
       <Skeleton className="h-40 w-full" />
-      <div className="p-4 space-y-2">
+      <div className="space-y-2 p-4">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
         <div className="flex gap-2">
@@ -41,15 +41,15 @@ function RecipeCardSkeleton() {
 
 export default function MealPlanningLoading() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-          <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+          <div className="h-8 w-48 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-64 animate-pulse rounded bg-muted" />
         </div>
         <div className="flex gap-2">
-          <div className="h-10 w-24 bg-muted animate-pulse rounded" />
-          <div className="h-10 w-32 bg-muted animate-pulse rounded" />
+          <div className="h-10 w-24 animate-pulse rounded bg-muted" />
+          <div className="h-10 w-32 animate-pulse rounded bg-muted" />
         </div>
       </div>
 
@@ -61,7 +61,7 @@ export default function MealPlanningLoading() {
       </div>
 
       <div className="rounded-lg border p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Skeleton className="h-6 w-32" />
           <div className="flex gap-2">
             <Skeleton className="h-8 w-8" />
@@ -82,7 +82,7 @@ export default function MealPlanningLoading() {
       </div>
 
       <div className="rounded-lg border p-6">
-        <Skeleton className="h-6 w-32 mb-4" />
+        <Skeleton className="mb-4 h-6 w-32" />
         <div className="grid gap-4 md:grid-cols-3">
           <RecipeCardSkeleton />
           <RecipeCardSkeleton />

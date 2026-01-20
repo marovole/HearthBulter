@@ -115,23 +115,19 @@ export function CookingSteps({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             {/* 总时间 */}
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <Clock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <div className="text-sm text-blue-600 font-medium">总用时</div>
-              <div className="text-lg font-bold text-blue-900">
-                {formatDuration(totalTime)}
-              </div>
+            <div className="rounded-lg bg-blue-50 p-4 text-center">
+              <Clock className="mx-auto mb-2 h-8 w-8 text-blue-600" />
+              <div className="text-sm font-medium text-blue-600">总用时</div>
+              <div className="text-lg font-bold text-blue-900">{formatDuration(totalTime)}</div>
             </div>
 
             {/* 烹饪时间 */}
             {cookingTime && (
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <Flame className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-                <div className="text-sm text-orange-600 font-medium">
-                  烹饪时间
-                </div>
+              <div className="rounded-lg bg-orange-50 p-4 text-center">
+                <Flame className="mx-auto mb-2 h-8 w-8 text-orange-600" />
+                <div className="text-sm font-medium text-orange-600">烹饪时间</div>
                 <div className="text-lg font-bold text-orange-900">
                   {formatDuration(cookingTime)}
                 </div>
@@ -140,15 +136,10 @@ export function CookingSteps({
 
             {/* 难度 */}
             {difficulty && (
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-2xl mb-2">
-                  {DIFFICULTY_CONFIG[difficulty].icon}
-                </div>
-                <div className="text-sm text-gray-600 font-medium">难度</div>
-                <Badge
-                  variant="outline"
-                  className={DIFFICULTY_CONFIG[difficulty].color}
-                >
+              <div className="rounded-lg bg-gray-50 p-4 text-center">
+                <div className="mb-2 text-2xl">{DIFFICULTY_CONFIG[difficulty].icon}</div>
+                <div className="text-sm font-medium text-gray-600">难度</div>
+                <Badge variant="outline" className={DIFFICULTY_CONFIG[difficulty].color}>
                   {DIFFICULTY_CONFIG[difficulty].label}
                 </Badge>
               </div>
@@ -156,36 +147,32 @@ export function CookingSteps({
 
             {/* 份量 */}
             {servings && (
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                <div className="text-sm text-green-600 font-medium">份量</div>
-                <div className="text-lg font-bold text-green-900">
-                  {servings}人份
-                </div>
+              <div className="rounded-lg bg-green-50 p-4 text-center">
+                <Users className="mx-auto mb-2 h-8 w-8 text-green-600" />
+                <div className="text-sm font-medium text-green-600">份量</div>
+                <div className="text-lg font-bold text-green-900">{servings}人份</div>
               </div>
             )}
           </div>
 
           {/* 进度条 */}
           <div className="mt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                完成进度
-              </span>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">完成进度</span>
               <span className="text-sm text-gray-500">
                 {completedSteps.size}/{steps.length} 步骤
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="h-2 w-full rounded-full bg-gray-200">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="h-2 rounded-full bg-blue-600 transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
 
           {/* 控制按钮 */}
-          <div className="flex items-center gap-2 mt-4">
+          <div className="mt-4 flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -194,19 +181,19 @@ export function CookingSteps({
             >
               {isPlaying ? (
                 <>
-                  <Pause className="h-4 w-4 mr-2" />
+                  <Pause className="mr-2 h-4 w-4" />
                   暂停
                 </>
               ) : (
                 <>
-                  <Play className="h-4 w-4 mr-2" />
+                  <Play className="mr-2 h-4 w-4" />
                   开始
                 </>
               )}
             </Button>
 
             <Button variant="outline" size="sm" onClick={handleReset}>
-              <RotateCcw className="h-4 w-4 mr-2" />
+              <RotateCcw className="mr-2 h-4 w-4" />
               重置
             </Button>
           </div>
@@ -224,9 +211,9 @@ export function CookingSteps({
               key={step.id}
               className={`transition-all duration-300 ${
                 isCurrent
-                  ? "ring-2 ring-blue-500 shadow-lg"
+                  ? "shadow-lg ring-2 ring-blue-500"
                   : isCompleted
-                    ? "bg-green-50 border-green-200"
+                    ? "border-green-200 bg-green-50"
                     : "bg-white"
               }`}
             >
@@ -235,7 +222,7 @@ export function CookingSteps({
                   {/* 步骤编号和状态 */}
                   <div className="flex-shrink-0">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
                         isCompleted
                           ? "bg-green-500 text-white"
                           : isCurrent
@@ -255,7 +242,7 @@ export function CookingSteps({
 
                   {/* 步骤内容 */}
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="mb-3 flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900">
                         步骤 {index + 1}: {step.title}
                       </h3>
@@ -269,13 +256,11 @@ export function CookingSteps({
                       )}
                     </div>
 
-                    <p className="text-gray-700 mb-4 leading-relaxed">
-                      {step.description}
-                    </p>
+                    <p className="mb-4 leading-relaxed text-gray-700">{step.description}</p>
 
                     {/* 温度信息 */}
                     {step.temperature && (
-                      <div className="flex items-center gap-2 mb-4">
+                      <div className="mb-4 flex items-center gap-2">
                         <Flame className="h-4 w-4 text-orange-500" />
                         <span className="text-sm font-medium text-orange-700">
                           温度: {step.temperature}
@@ -285,19 +270,14 @@ export function CookingSteps({
 
                     {/* 小贴士 */}
                     {step.tips && step.tips.length > 0 && (
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-                        <div className="flex items-center gap-2 mb-2">
+                      <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                        <div className="mb-2 flex items-center gap-2">
                           <div className="text-amber-600">💡</div>
-                          <span className="text-sm font-medium text-amber-900">
-                            小贴士
-                          </span>
+                          <span className="text-sm font-medium text-amber-900">小贴士</span>
                         </div>
                         <ul className="space-y-1">
                           {step.tips.map((tip, tipIndex) => (
-                            <li
-                              key={tipIndex}
-                              className="text-sm text-amber-800"
-                            >
+                            <li key={tipIndex} className="text-sm text-amber-800">
                               • {tip}
                             </li>
                           ))}
@@ -311,7 +291,7 @@ export function CookingSteps({
                         <img
                           src={step.image}
                           alt={step.title}
-                          className="w-full h-48 object-cover rounded-lg"
+                          className="h-48 w-full rounded-lg object-cover"
                         />
                       </div>
                     )}
@@ -326,12 +306,12 @@ export function CookingSteps({
                       >
                         {isCompleted ? (
                           <>
-                            <CheckCircle className="h-4 w-4 mr-2" />
+                            <CheckCircle className="mr-2 h-4 w-4" />
                             已完成
                           </>
                         ) : (
                           <>
-                            <Circle className="h-4 w-4 mr-2" />
+                            <Circle className="mr-2 h-4 w-4" />
                             标记完成
                           </>
                         )}
@@ -347,15 +327,11 @@ export function CookingSteps({
 
       {/* 完成提示 */}
       {completedSteps.size === steps.length && steps.length > 0 && (
-        <Card className="bg-green-50 border-green-200">
+        <Card className="border-green-200 bg-green-50">
           <CardContent className="p-6 text-center">
-            <div className="text-4xl mb-4">🎉</div>
-            <h3 className="text-xl font-bold text-green-900 mb-2">
-              恭喜完成！
-            </h3>
-            <p className="text-green-700">
-              您已成功完成所有烹饪步骤，享受您的美食吧！
-            </p>
+            <div className="mb-4 text-4xl">🎉</div>
+            <h3 className="mb-2 text-xl font-bold text-green-900">恭喜完成！</h3>
+            <p className="text-green-700">您已成功完成所有烹饪步骤，享受您的美食吧！</p>
           </CardContent>
         </Card>
       )}

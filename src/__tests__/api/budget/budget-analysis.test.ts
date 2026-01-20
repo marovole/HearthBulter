@@ -28,9 +28,7 @@ describe("/api/budget", () => {
 
   describe("GET /api/budget/analyze", () => {
     it("should return 400 when memberId is missing", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/budget/analyze",
-      );
+      const request = new NextRequest("http://localhost:3000/api/budget/analyze");
 
       const response = await analyzeGET(request);
 
@@ -43,26 +41,19 @@ describe("/api/budget", () => {
         summary: { total: 120 },
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/budget/analyze?memberId=member-1",
-      );
+      const request = new NextRequest("http://localhost:3000/api/budget/analyze?memberId=member-1");
 
       const response = await analyzeGET(request);
 
       expect(response.status).toBe(200);
-      expect(spendingAnalyzer.analyzeSpending).toHaveBeenCalledWith(
-        "member-1",
-        "MONTHLY",
-      );
+      expect(spendingAnalyzer.analyzeSpending).toHaveBeenCalledWith("member-1", "MONTHLY");
       expect(await response.json()).toEqual({ summary: { total: 120 } });
     });
   });
 
   describe("GET /api/budget/spending-history", () => {
     it("should return 400 when budgetId is missing", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/budget/spending-history",
-      );
+      const request = new NextRequest("http://localhost:3000/api/budget/spending-history");
 
       const response = await historyGET(request);
 
@@ -90,7 +81,7 @@ describe("/api/budget", () => {
         .mockResolvedValueOnce(paginatedSpendings);
 
       const request = new NextRequest(
-        "http://localhost:3000/api/budget/spending-history?budgetId=budget-1&page=1&limit=2",
+        "http://localhost:3000/api/budget/spending-history?budgetId=budget-1&page=1&limit=2"
       );
 
       const response = await historyGET(request);
@@ -111,7 +102,7 @@ describe("/api/budget", () => {
         expect.arrayContaining([
           { category: "PROTEIN", amount: 25, count: 2 },
           { category: "VEGETABLE", amount: 20, count: 1 },
-        ]),
+        ])
       );
     });
   });

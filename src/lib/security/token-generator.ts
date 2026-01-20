@@ -40,9 +40,7 @@ function getSecretKey(): Uint8Array {
   }
 
   const keyBytes =
-    typeof Buffer !== "undefined"
-      ? Buffer.from(secret)
-      : new TextEncoder().encode(secret);
+    typeof Buffer !== "undefined" ? Buffer.from(secret) : new TextEncoder().encode(secret);
   if (keyBytes.byteLength < 32) {
     throw new Error("TOKEN_SECRET_KEY 长度不足，至少需要 32 字节");
   }
@@ -51,8 +49,7 @@ function getSecretKey(): Uint8Array {
 }
 
 function base64UrlEncode(input: Uint8Array | string): string {
-  const bytes =
-    typeof input === "string" ? new TextEncoder().encode(input) : input;
+  const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
   const base64 =
     typeof Buffer !== "undefined"
       ? Buffer.from(bytes).toString("base64")
@@ -66,9 +63,7 @@ function base64UrlDecode(input: string): Uint8Array {
   const padded = normalized + "===".slice((normalized.length + 3) % 4);
   if (typeof Buffer !== "undefined") {
     const buf = Buffer.from(padded, "base64");
-    return new Uint8Array(
-      buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
-    );
+    return new Uint8Array(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
   }
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
@@ -81,7 +76,7 @@ function base64UrlDecode(input: string): Uint8Array {
 async function signJwt(
   payload: Record<string, unknown>,
   secretKey: Uint8Array,
-  options: { expiresAt: Date; audience: string; issuer: string; jti: string },
+  options: { expiresAt: Date; audience: string; issuer: string; jti: string }
 ): Promise<string> {
   const header = { alg: "HS256", typ: "JWT" };
   const fullPayload = {
@@ -102,13 +97,13 @@ async function signJwt(
     secretKey,
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"],
+    ["sign"]
   );
 
   const signatureBuffer = await cryptoApi.subtle.sign(
     "HMAC",
     key,
-    new TextEncoder().encode(signingInput),
+    new TextEncoder().encode(signingInput)
   );
 
   const signature = base64UrlEncode(new Uint8Array(signatureBuffer));
@@ -118,7 +113,7 @@ async function signJwt(
 async function verifyJwt(
   token: string,
   secretKey: Uint8Array,
-  options: { audience: string; issuer: string },
+  options: { audience: string; issuer: string }
 ): Promise<JWTPayload & Record<string, unknown>> {
   const parts = token.split(".");
   if (parts.length !== 3) {
@@ -138,13 +133,13 @@ async function verifyJwt(
     secretKey,
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"],
+    ["sign"]
   );
 
   const expectedSignature = await cryptoApi.subtle.sign(
     "HMAC",
     key,
-    new TextEncoder().encode(signingInput),
+    new TextEncoder().encode(signingInput)
   );
 
   const expected = base64UrlEncode(new Uint8Array(expectedSignature));
@@ -154,8 +149,7 @@ async function verifyJwt(
 
   const payloadBytes = base64UrlDecode(payloadValue);
   const payloadJson = new TextDecoder().decode(payloadBytes);
-  const payload = JSON.parse(payloadJson) as JWTPayload &
-    Record<string, unknown>;
+  const payload = JSON.parse(payloadJson) as JWTPayload & Record<string, unknown>;
 
   if (payload.iss !== options.issuer || payload.aud !== options.audience) {
     throw new Error("Token颁发者或受众无效");
@@ -190,7 +184,7 @@ export async function generateSecureShareToken(
   resourceType: string,
   ownerId: string,
   expiryDays: number = 7,
-  permissions: string[] = ["read"],
+  permissions: string[] = ["read"]
 ): Promise<string> {
   const secretKey = getSecretKey();
   const expiresAt = new Date();
@@ -209,7 +203,7 @@ export async function generateSecureShareToken(
       audience: TOKEN_AUDIENCE,
       issuer: TOKEN_ISSUER,
       jti: generateRandomId(),
-    },
+    }
   );
 
   logger.info("生成分享Token", {
@@ -227,9 +221,7 @@ export async function generateSecureShareToken(
  * 验证分享 Token
  * @param token 待验证的 Token
  */
-export async function verifyShareToken(
-  token: string,
-): Promise<TokenVerificationResult> {
+export async function verifyShareToken(token: string): Promise<TokenVerificationResult> {
   try {
     const secretKey = getSecretKey();
 
@@ -241,11 +233,7 @@ export async function verifyShareToken(
     const sharePayload = payload as ShareTokenPayload;
 
     // 验证必要字段
-    if (
-      !sharePayload.resourceId ||
-      !sharePayload.resourceType ||
-      !sharePayload.ownerId
-    ) {
+    if (!sharePayload.resourceId || !sharePayload.resourceType || !sharePayload.ownerId) {
       return {
         valid: false,
         error: "Token 缺少必要字段",
@@ -262,8 +250,7 @@ export async function verifyShareToken(
       payload: sharePayload,
     };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Token验证失败";
+    const errorMessage = error instanceof Error ? error.message : "Token验证失败";
 
     // 区分不同类型的错误
     if (errorMessage.includes("expired")) {
@@ -296,9 +283,7 @@ export async function verifyShareToken(
 function generateRandomId(): string {
   const array = new Uint8Array(16);
   cryptoApi.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
-  );
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -309,9 +294,7 @@ function generateRandomId(): string {
 export function generateSecureRandomToken(length: number = 32): string {
   const array = new Uint8Array(length);
   cryptoApi.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
-  );
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -336,7 +319,7 @@ export function generateUrlSafeToken(length: number = 32): string {
  */
 export async function createOneTimeToken(
   data: Record<string, unknown>,
-  expiryMinutes: number = 30,
+  expiryMinutes: number = 30
 ): Promise<string> {
   const secretKey = getSecretKey();
   const expiresAt = new Date();
@@ -353,7 +336,7 @@ export async function createOneTimeToken(
       audience: TOKEN_AUDIENCE,
       issuer: TOKEN_ISSUER,
       jti: generateRandomId(),
-    },
+    }
   );
 }
 
@@ -362,7 +345,7 @@ export async function createOneTimeToken(
  * @param token 待验证的 Token
  */
 export async function verifyOneTimeToken(
-  token: string,
+  token: string
 ): Promise<{ valid: boolean; payload?: JWTPayload; error?: string }> {
   try {
     const secretKey = getSecretKey();
@@ -377,8 +360,7 @@ export async function verifyOneTimeToken(
       payload,
     };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Token验证失败";
+    const errorMessage = error instanceof Error ? error.message : "Token验证失败";
     return {
       valid: false,
       error: errorMessage,

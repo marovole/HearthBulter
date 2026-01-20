@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -140,7 +134,7 @@ export function CacheStatsPanel({
       <Card className={className}>
         <CardContent className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-2">
-            <RefreshCw className="w-5 h-5 animate-spin" />
+            <RefreshCw className="h-5 w-5 animate-spin" />
             <span>加载缓存统计中...</span>
           </div>
         </CardContent>
@@ -152,7 +146,7 @@ export function CacheStatsPanel({
     return (
       <Card className={className}>
         <CardContent className="flex items-center justify-center py-8">
-          <AlertTriangle className="w-12 h-12 text-muted-foreground mb-4" />
+          <AlertTriangle className="mb-4 h-12 w-12 text-muted-foreground" />
           <p className="text-muted-foreground">无法加载缓存统计数据</p>
         </CardContent>
       </Card>
@@ -167,20 +161,11 @@ export function CacheStatsPanel({
   }));
 
   const cacheTypeData = cacheTypes.map((type) => ({
-    name:
-      type.cacheType === "redis"
-        ? "Redis"
-        : type.cacheType === "memory"
-          ? "内存"
-          : "未命中",
+    name: type.cacheType === "redis" ? "Redis" : type.cacheType === "memory" ? "内存" : "未命中",
     value: type.hits + type.misses + type.sets + type.deletes,
     hitRate: type.hitRate,
     color:
-      type.cacheType === "redis"
-        ? "#8884d8"
-        : type.cacheType === "memory"
-          ? "#82ca9d"
-          : "#ffc658",
+      type.cacheType === "redis" ? "#8884d8" : type.cacheType === "memory" ? "#82ca9d" : "#ffc658",
   }));
 
   return (
@@ -191,7 +176,7 @@ export function CacheStatsPanel({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center">
-                <Database className="w-5 h-5 mr-2" />
+                <Database className="mr-2 h-5 w-5" />
                 缓存性能监控
               </CardTitle>
               <CardDescription>
@@ -203,40 +188,31 @@ export function CacheStatsPanel({
                 )}
               </CardDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadStats}
-              disabled={isLoading}
-            >
-              <RefreshCw
-                className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")}
-              />
+            <Button variant="outline" size="sm" onClick={loadStats} disabled={isLoading}>
+              <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
               刷新
             </Button>
           </div>
         </CardHeader>
 
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {/* 命中率 */}
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Target className="w-8 h-8 text-blue-500" />
+              <div className="mb-2 flex items-center justify-center">
+                <Target className="h-8 w-8 text-blue-500" />
               </div>
-              <div className="text-2xl font-bold mb-1">
-                {metrics.hitRate.toFixed(1)}%
-              </div>
+              <div className="mb-1 text-2xl font-bold">{metrics.hitRate.toFixed(1)}%</div>
               <div className="text-sm text-muted-foreground">命中率</div>
               <Progress value={metrics.hitRate} className="mt-2" />
             </div>
 
             {/* 总请求数 */}
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Activity className="w-8 h-8 text-green-500" />
+              <div className="mb-2 flex items-center justify-center">
+                <Activity className="h-8 w-8 text-green-500" />
               </div>
-              <div className="text-2xl font-bold mb-1">
+              <div className="mb-1 text-2xl font-bold">
                 {metrics.totalRequests.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground">总请求数</div>
@@ -244,35 +220,31 @@ export function CacheStatsPanel({
 
             {/* 平均响应时间 */}
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Zap className="w-8 h-8 text-yellow-500" />
+              <div className="mb-2 flex items-center justify-center">
+                <Zap className="h-8 w-8 text-yellow-500" />
               </div>
-              <div className="text-2xl font-bold mb-1">
-                {metrics.averageResponseTime}ms
-              </div>
+              <div className="mb-1 text-2xl font-bold">{metrics.averageResponseTime}ms</div>
               <div className="text-sm text-muted-foreground">平均响应时间</div>
             </div>
 
             {/* 内存使用 */}
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Database className="w-8 h-8 text-purple-500" />
+              <div className="mb-2 flex items-center justify-center">
+                <Database className="h-8 w-8 text-purple-500" />
               </div>
-              <div className="text-2xl font-bold mb-1">
-                {formatBytes(metrics.memoryUsage)}
-              </div>
+              <div className="mb-1 text-2xl font-bold">{formatBytes(metrics.memoryUsage)}</div>
               <div className="text-sm text-muted-foreground">内存使用</div>
             </div>
           </div>
 
           {/* 性能评估 */}
           <div className="mt-6">
-            <div className="flex items-center space-x-2 mb-3">
-              <TrendingUp className="w-4 h-4" />
+            <div className="mb-3 flex items-center space-x-2">
+              <TrendingUp className="h-4 w-4" />
               <span className="font-medium">性能评估</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Alert
                 className={cn(
                   "border-2",
@@ -280,17 +252,13 @@ export function CacheStatsPanel({
                     ? "border-green-200 bg-green-50"
                     : metrics.hitRate >= 60
                       ? "border-yellow-200 bg-yellow-50"
-                      : "border-red-200 bg-red-50",
+                      : "border-red-200 bg-red-50"
                 )}
               >
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
                   <strong>缓存效率:</strong>{" "}
-                  {metrics.hitRate >= 80
-                    ? "优秀"
-                    : metrics.hitRate >= 60
-                      ? "良好"
-                      : "需要优化"}
+                  {metrics.hitRate >= 80 ? "优秀" : metrics.hitRate >= 60 ? "良好" : "需要优化"}
                 </AlertDescription>
               </Alert>
 
@@ -301,7 +269,7 @@ export function CacheStatsPanel({
                     ? "border-green-200 bg-green-50"
                     : metrics.averageResponseTime <= 200
                       ? "border-yellow-200 bg-yellow-50"
-                      : "border-red-200 bg-red-50",
+                      : "border-red-200 bg-red-50"
                 )}
               >
                 <Clock className="h-4 w-4" />
@@ -335,7 +303,7 @@ export function CacheStatsPanel({
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* 时间窗口命中率趋势 */}
             <Card>
               <CardHeader>
@@ -348,12 +316,7 @@ export function CacheStatsPanel({
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="time" />
                     <YAxis domain={[0, 100]} />
-                    <Tooltip
-                      formatter={(value: number) => [
-                        `${value.toFixed(1)}%`,
-                        "命中率",
-                      ]}
-                    />
+                    <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, "命中率"]} />
                     <Line
                       type="monotone"
                       dataKey="hitRate"
@@ -401,34 +364,30 @@ export function CacheStatsPanel({
               <CardTitle className="text-base">基础统计</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 border rounded-lg">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl font-bold text-green-600">
                     {metrics.hits.toLocaleString()}
                   </div>
                   <div className="text-sm text-muted-foreground">命中次数</div>
                 </div>
-                <div className="text-center p-4 border rounded-lg">
+                <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl font-bold text-red-600">
                     {metrics.misses.toLocaleString()}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    未命中次数
-                  </div>
+                  <div className="text-sm text-muted-foreground">未命中次数</div>
                 </div>
-                <div className="text-center p-4 border rounded-lg">
+                <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl font-bold text-blue-600">
                     {metrics.sets.toLocaleString()}
                   </div>
                   <div className="text-sm text-muted-foreground">设置次数</div>
                 </div>
-                <div className="text-center p-4 border rounded-lg">
+                <div className="rounded-lg border p-4 text-center">
                   <div className="text-2xl font-bold text-orange-600">
                     {metrics.itemCount.toLocaleString()}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    缓存项数量
-                  </div>
+                  <div className="text-sm text-muted-foreground">缓存项数量</div>
                 </div>
               </div>
             </CardContent>
@@ -436,7 +395,7 @@ export function CacheStatsPanel({
         </TabsContent>
 
         <TabsContent value="performance" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* 响应时间分布 */}
             <Card>
               <CardHeader>
@@ -444,17 +403,15 @@ export function CacheStatsPanel({
                 <CardDescription>缓存操作的响应时间分布</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span className="text-sm">平均响应时间</span>
-                  <Badge variant="outline">
-                    {metrics.averageResponseTime}ms
-                  </Badge>
+                  <Badge variant="outline">{metrics.averageResponseTime}ms</Badge>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span className="text-sm">95%响应时间</span>
                   <Badge variant="outline">{metrics.p95ResponseTime}ms</Badge>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span className="text-sm">99%响应时间</span>
                   <Badge variant="outline">{metrics.p99ResponseTime}ms</Badge>
                 </div>
@@ -474,11 +431,7 @@ export function CacheStatsPanel({
                     <XAxis dataKey="cacheType" />
                     <YAxis />
                     <Tooltip />
-                    <Bar
-                      dataKey="averageResponseTime"
-                      fill="#8884d8"
-                      name="平均响应时间(ms)"
-                    />
+                    <Bar dataKey="averageResponseTime" fill="#8884d8" name="平均响应时间(ms)" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -498,43 +451,36 @@ export function CacheStatsPanel({
                   {hotKeys.map((key, index) => (
                     <div
                       key={key.key}
-                      className="flex items-center justify-between p-3 border rounded-lg"
+                      className="flex items-center justify-between rounded-lg border p-3"
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center space-x-2">
                           <Badge variant="outline">#{index + 1}</Badge>
-                          <code className="text-sm font-mono bg-muted px-2 py-1 rounded truncate">
+                          <code className="truncate rounded bg-muted px-2 py-1 font-mono text-sm">
                             {key.key}
                           </code>
                         </div>
                         <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                           <span>命中: {key.hits}</span>
                           <span>未命中: {key.misses}</span>
-                          <span>
-                            频率: {key.accessFrequency.toFixed(2)}/分钟
-                          </span>
+                          <span>频率: {key.accessFrequency.toFixed(2)}/分钟</span>
                           <span>大小: {formatBytes(key.size)}</span>
                         </div>
                       </div>
                       <div className="text-right">
                         <Badge
                           className={getHitRateBadgeVariant(
-                            (key.hits / (key.hits + key.misses)) * 100,
+                            (key.hits / (key.hits + key.misses)) * 100
                           )}
                         >
-                          {((key.hits / (key.hits + key.misses)) * 100).toFixed(
-                            1,
-                          )}
-                          %
+                          {((key.hits / (key.hits + key.misses)) * 100).toFixed(1)}%
                         </Badge>
                       </div>
                     </div>
                   ))}
 
                   {hotKeys.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      暂无缓存键统计数据
-                    </div>
+                    <div className="py-8 text-center text-muted-foreground">暂无缓存键统计数据</div>
                   )}
                 </div>
               </ScrollArea>
@@ -568,14 +514,12 @@ export function CacheStatusIndicator({ className }: CacheStatusIndicatorProps) {
 
   return (
     <div className={cn("flex items-center space-x-2", className)}>
-      <Database className="w-4 h-4" />
+      <Database className="h-4 w-4" />
       <span className="text-sm">缓存命中率</span>
       <Badge
         className={cn(
+          getHitRateColor(hitRate).replace("text-", "bg-").replace("-600", "-100"),
           getHitRateColor(hitRate)
-            .replace("text-", "bg-")
-            .replace("-600", "-100"),
-          getHitRateColor(hitRate),
         )}
       >
         {hitRate.toFixed(1)}%

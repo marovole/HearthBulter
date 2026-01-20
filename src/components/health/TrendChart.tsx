@@ -53,9 +53,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
   const loadTrends = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/members/${memberId}/health-data/trends?days=${days}`,
-      );
+      const response = await fetch(`/api/members/${memberId}/health-data/trends?days=${days}`);
       if (!response.ok) {
         throw new Error("加载趋势数据失败");
       }
@@ -70,25 +68,25 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
 
   const getTypeLabel = () => {
     switch (type) {
-    case "weight":
-      return "体重 (kg)";
-    case "bodyFat":
-      return "体脂率 (%)";
-    case "muscleMass":
-      return "肌肉量 (kg)";
-    case "heartRate":
-      return "心率 (bpm)";
-    case "bloodPressure":
-      return "血压 (mmHg)";
-    default:
-      return "";
+      case "weight":
+        return "体重 (kg)";
+      case "bodyFat":
+        return "体脂率 (%)";
+      case "muscleMass":
+        return "肌肉量 (kg)";
+      case "heartRate":
+        return "心率 (bpm)";
+      case "bloodPressure":
+        return "血压 (mmHg)";
+      default:
+        return "";
     }
   };
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="py-8 text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
         <p className="mt-2 text-sm text-gray-500">加载中...</p>
       </div>
     );
@@ -96,7 +94,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+      <div className="rounded-md border border-red-200 bg-red-50 p-4">
         <p className="text-sm text-red-800">{error}</p>
       </div>
     );
@@ -110,7 +108,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
 
   if (!trendData || (type !== "bloodPressure" && trendData.data.length === 0)) {
     return (
-      <div className="text-center py-8">
+      <div className="py-8 text-center">
         <p className="text-gray-500">暂无{getTypeLabel()}趋势数据</p>
       </div>
     );
@@ -121,7 +119,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
     const bpData = trends.trends.bloodPressure!;
     if (bpData.data.length === 0) {
       return (
-        <div className="text-center py-8">
+        <div className="py-8 text-center">
           <p className="text-gray-500">暂无血压趋势数据</p>
         </div>
       );
@@ -143,14 +141,9 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
 
     const points = bpData.data.map((d, i) => {
       const x = padding + (i / (bpData.data.length - 1 || 1)) * chartAreaWidth;
-      const ySystolic =
-        padding +
-        chartAreaHeight -
-        ((d.systolic - min) / range) * chartAreaHeight;
+      const ySystolic = padding + chartAreaHeight - ((d.systolic - min) / range) * chartAreaHeight;
       const yDiastolic =
-        padding +
-        chartAreaHeight -
-        ((d.diastolic - min) / range) * chartAreaHeight;
+        padding + chartAreaHeight - ((d.diastolic - min) / range) * chartAreaHeight;
       return { x, ySystolic, yDiastolic, date: d.date };
     });
 
@@ -162,10 +155,8 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
       .join(" ");
 
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          {getTypeLabel()}趋势
-        </h3>
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">{getTypeLabel()}趋势</h3>
         <svg width={chartWidth} height={chartHeight} className="w-full">
           {/* 网格线 */}
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -185,12 +176,7 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
           {/* 收缩压曲线 */}
           <path d={systolicPath} fill="none" stroke="#ef4444" strokeWidth="2" />
           {/* 舒张压曲线 */}
-          <path
-            d={diastolicPath}
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth="2"
-          />
+          <path d={diastolicPath} fill="none" stroke="#3b82f6" strokeWidth="2" />
           {/* 数据点 */}
           {points.map((p, i) => (
             <g key={i}>
@@ -227,22 +213,16 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
   const range = max - min || 1;
 
   const points = simpleTrendData.data.map((d, i) => {
-    const x =
-      padding + (i / (simpleTrendData.data.length - 1 || 1)) * chartAreaWidth;
-    const y =
-      padding + chartAreaHeight - ((d.value - min) / range) * chartAreaHeight;
+    const x = padding + (i / (simpleTrendData.data.length - 1 || 1)) * chartAreaWidth;
+    const y = padding + chartAreaHeight - ((d.value - min) / range) * chartAreaHeight;
     return { x, y, value: d.value, date: d.date };
   });
 
-  const path = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-    .join(" ");
+  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        {getTypeLabel()}趋势
-      </h3>
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <h3 className="mb-4 text-lg font-semibold text-gray-900">{getTypeLabel()}趋势</h3>
       <svg width={chartWidth} height={chartHeight} className="w-full">
         {/* 网格线 */}
         {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -267,21 +247,11 @@ export function TrendChart({ memberId, type, days = 30 }: TrendChartProps) {
         ))}
       </svg>
       <div className="mt-4 flex justify-between text-sm text-gray-600">
-        {simpleTrendData.average !== null && (
-          <div>平均: {simpleTrendData.average.toFixed(1)}</div>
-        )}
-        {simpleTrendData.min !== null && (
-          <div>最低: {simpleTrendData.min.toFixed(1)}</div>
-        )}
-        {simpleTrendData.max !== null && (
-          <div>最高: {simpleTrendData.max.toFixed(1)}</div>
-        )}
+        {simpleTrendData.average !== null && <div>平均: {simpleTrendData.average.toFixed(1)}</div>}
+        {simpleTrendData.min !== null && <div>最低: {simpleTrendData.min.toFixed(1)}</div>}
+        {simpleTrendData.max !== null && <div>最高: {simpleTrendData.max.toFixed(1)}</div>}
         {simpleTrendData.change !== null && (
-          <div
-            className={
-              simpleTrendData.change > 0 ? "text-green-600" : "text-red-600"
-            }
-          >
+          <div className={simpleTrendData.change > 0 ? "text-green-600" : "text-red-600"}>
             变化: {simpleTrendData.change > 0 ? "+" : ""}
             {simpleTrendData.change.toFixed(1)}
           </div>

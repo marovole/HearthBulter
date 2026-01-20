@@ -7,10 +7,7 @@ import { z } from "zod";
 
 // 创建家庭的验证 schema
 const createFamilySchema = z.object({
-  name: z
-    .string()
-    .min(2, "家庭名称至少需要2个字符")
-    .max(50, "家庭名称不能超过50个字符"),
+  name: z.string().min(2, "家庭名称至少需要2个字符").max(50, "家庭名称不能超过50个字符"),
   description: z.string().max(200, "描述不能超过200个字符").optional(),
   memberName: z.string().min(2, "成员名称至少需要2个字符"),
   memberGender: z.enum(["MALE", "FEMALE", "OTHER"]),
@@ -21,18 +18,14 @@ const createFamilySchema = z.object({
 
 // 更新家庭的验证 schema
 const updateFamilySchema = z.object({
-  name: z
-    .string()
-    .min(2, "家庭名称至少需要2个字符")
-    .max(50, "家庭名称不能超过50个字符")
-    .optional(),
+  name: z.string().min(2, "家庭名称至少需要2个字符").max(50, "家庭名称不能超过50个字符").optional(),
   description: z.string().max(200, "描述不能超过200个字符").optional(),
 });
 
 // 权限检查辅助函数
 function checkPermission(
   userRole: "ADMIN" | "MEMBER",
-  action: "create" | "read" | "update" | "delete" | "invite",
+  action: "create" | "read" | "update" | "delete" | "invite"
 ): boolean {
   const permissions: Record<string, string[]> = {
     ADMIN: ["create", "read", "update", "delete", "invite"],

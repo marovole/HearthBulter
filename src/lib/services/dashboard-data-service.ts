@@ -50,18 +50,12 @@ export interface DataFetchOptions {
 }
 
 export class DashboardDataService {
-  private cache = new Map<
-    string,
-    { data: any; timestamp: number; ttl: number }
-  >();
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 
   /**
    * 获取仪表盘完整数据
    */
-  async getDashboardData(
-    memberId: string,
-    options: DataFetchOptions = {},
-  ): Promise<DashboardData> {
+  async getDashboardData(memberId: string, options: DataFetchOptions = {}): Promise<DashboardData> {
     const {
       useCache = true,
       cacheTTL = 5 * 60 * 1000, // 5分钟缓存
@@ -81,10 +75,7 @@ export class DashboardDataService {
 
     try {
       // 并行获取所有数据
-      const data = await this.fetchWithTimeout(
-        this.aggregateDashboardData(memberId),
-        timeout,
-      );
+      const data = await this.fetchWithTimeout(this.aggregateDashboardData(memberId), timeout);
 
       // 缓存结果
       if (useCache) {
@@ -97,10 +88,7 @@ export class DashboardDataService {
       for (let attempt = 1; attempt <= retryAttempts; attempt++) {
         try {
           await new Promise((resolve) => setTimeout(resolve, 1000 * attempt)); // 指数退避
-          const data = await this.fetchWithTimeout(
-            this.aggregateDashboardData(memberId),
-            timeout,
-          );
+          const data = await this.fetchWithTimeout(this.aggregateDashboardData(memberId), timeout);
 
           if (useCache) {
             this.setCache(cacheKey, data, cacheTTL);
@@ -121,28 +109,20 @@ export class DashboardDataService {
   /**
    * 聚合仪表盘数据
    */
-  private async aggregateDashboardData(
-    memberId: string,
-  ): Promise<DashboardData> {
+  private async aggregateDashboardData(memberId: string): Promise<DashboardData> {
     // 获取成员基本信息
     const member = await this.getMemberInfo(memberId);
 
     // 并行获取各项数据
-    const [
-      weightTrend,
-      nutritionSummary,
-      goalProgress,
-      healthScore,
-      weeklyReport,
-      monthlyReport,
-    ] = await Promise.all([
-      analyticsService.analyzeWeightTrend(memberId, 30),
-      analyticsService.summarizeNutrition(memberId, "daily"),
-      analyticsService.calculateGoalProgress(memberId),
-      healthScoreCalculator.calculateHealthScore(memberId),
-      reportGenerator.generateWeeklyReport(memberId, member.name),
-      reportGenerator.generateMonthlyReport(memberId, member.name),
-    ]);
+    const [weightTrend, nutritionSummary, goalProgress, healthScore, weeklyReport, monthlyReport] =
+      await Promise.all([
+        analyticsService.analyzeWeightTrend(memberId, 30),
+        analyticsService.summarizeNutrition(memberId, "daily"),
+        analyticsService.calculateGoalProgress(memberId),
+        healthScoreCalculator.calculateHealthScore(memberId),
+        reportGenerator.generateWeeklyReport(memberId, member.name),
+        reportGenerator.generateMonthlyReport(memberId, member.name),
+      ]);
 
     // 获取最近的健康数据
     const recentData = await this.getRecentHealthData(memberId, 7);
@@ -169,10 +149,7 @@ export class DashboardDataService {
       },
       nutrition: {
         weeklyAnalysis: nutritionSummary,
-        monthlyAnalysis: await analyticsService.summarizeNutrition(
-          memberId,
-          "monthly",
-        ),
+        monthlyAnalysis: await analyticsService.summarizeNutrition(memberId, "monthly"),
         adherenceHistory: await this.getNutritionAdherenceHistory(memberId, 30),
       },
       reports: {
@@ -186,21 +163,20 @@ export class DashboardDataService {
    * 获取成员信息
    */
   private async getMemberInfo(memberId: string) {
-    const member = await convexClient.query<Doc<"familyMembers"> | null>(
-      api.members.getById,
-      { memberId: memberId as Id<"familyMembers"> },
-    );
+    const member = await convexClient.query<Doc<"familyMembers"> | null>(api.members.getById, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     if (!member || member.deletedAt) {
       throw new Error("成员不存在");
     }
 
-    const family = await convexClient.query<
-      (Doc<"families"> & { creatorId: Id<"users"> }) | null
-        >(api.families.getById, { familyId: member.familyId });
+    const family = await convexClient.query<(Doc<"families"> & { creatorId: Id<"users"> }) | null>(
+      api.families.getById,
+      { familyId: member.familyId }
+    );
 
-    const isAdmin =
-      family?.creatorId === member.userId || member.role === "ADMIN";
+    const isAdmin = family?.creatorId === member.userId || member.role === "ADMIN";
 
     return {
       id: member._id,
@@ -218,23 +194,16 @@ export class DashboardDataService {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
-    const records = await convexClient.query<Doc<"healthData">[]>(
-      api.health.getMetrics,
-      { memberId: memberId as Id<"familyMembers"> },
-    );
+    const records = await convexClient.query<Doc<"healthData">[]>(api.health.getMetrics, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     return records
       .filter((record) => {
         const measuredAt = record.measuredAt ?? record.createdAt ?? 0;
-        return (
-          measuredAt >= startDate.getTime() && measuredAt <= endDate.getTime()
-        );
+        return measuredAt >= startDate.getTime() && measuredAt <= endDate.getTime();
       })
-      .sort(
-        (a, b) =>
-          (b.measuredAt ?? b.createdAt ?? 0) -
-          (a.measuredAt ?? a.createdAt ?? 0),
-      )
+      .sort((a, b) => (b.measuredAt ?? b.createdAt ?? 0) - (a.measuredAt ?? a.createdAt ?? 0))
       .slice(0, 100)
       .map((record) => ({
         ...record,
@@ -254,8 +223,7 @@ export class DashboardDataService {
     const calculateAverage = (items: any[], field: string) => {
       const validItems = items.filter((item) => item[field] !== null);
       return validItems.length > 0
-        ? validItems.reduce((sum, item) => sum + item[field], 0) /
-            validItems.length
+        ? validItems.reduce((sum, item) => sum + item[field], 0) / validItems.length
         : 0;
     };
 
@@ -263,23 +231,17 @@ export class DashboardDataService {
       weight: {
         current: calculateAverage(recent, "weight"),
         previous: calculateAverage(older, "weight"),
-        trend:
-          calculateAverage(recent, "weight") -
-          calculateAverage(older, "weight"),
+        trend: calculateAverage(recent, "weight") - calculateAverage(older, "weight"),
       },
       bodyFat: {
         current: calculateAverage(recent, "bodyFat"),
         previous: calculateAverage(older, "bodyFat"),
-        trend:
-          calculateAverage(recent, "bodyFat") -
-          calculateAverage(older, "bodyFat"),
+        trend: calculateAverage(recent, "bodyFat") - calculateAverage(older, "bodyFat"),
       },
       muscleMass: {
         current: calculateAverage(recent, "muscleMass"),
         previous: calculateAverage(older, "muscleMass"),
-        trend:
-          calculateAverage(recent, "muscleMass") -
-          calculateAverage(older, "muscleMass"),
+        trend: calculateAverage(recent, "muscleMass") - calculateAverage(older, "muscleMass"),
       },
     };
   }
@@ -308,10 +270,9 @@ export class DashboardDataService {
    * 获取家庭成员列表
    */
   async getFamilyMembers(userId: string) {
-    const families = await convexClient.query<Array<Record<string, unknown>>>(
-      api.families.list,
-      { clerkId: userId },
-    );
+    const families = await convexClient.query<Array<Record<string, unknown>>>(api.families.list, {
+      clerkId: userId,
+    });
 
     return families;
   }
@@ -355,15 +316,10 @@ export class DashboardDataService {
   /**
    * 超时控制
    */
-  private fetchWithTimeout<T>(
-    promise: Promise<T>,
-    timeout: number,
-  ): Promise<T> {
+  private fetchWithTimeout<T>(promise: Promise<T>, timeout: number): Promise<T> {
     return Promise.race([
       promise,
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error("请求超时")), timeout),
-      ),
+      new Promise<T>((_, reject) => setTimeout(() => reject(new Error("请求超时")), timeout)),
     ]);
   }
 
@@ -375,7 +331,7 @@ export class DashboardDataService {
       this.getDashboardData(memberId, {
         useCache: true,
         cacheTTL: 10 * 60 * 1000,
-      }).catch((error) => console.error(`预加载失败 ${memberId}:`, error)),
+      }).catch((error) => console.error(`预加载失败 ${memberId}:`, error))
     );
 
     await Promise.allSettled(promises);
@@ -397,7 +353,7 @@ export class DashboardDataService {
         "日期,体重,体脂率,肌肉量,健康评分",
         ...data.healthMetrics.recentData.map(
           (item) =>
-            `${item.measuredAt},${item.weight || ""},${item.bodyFat || ""},${item.muscleMass || ""},${data.overview.healthScore.totalScore}`,
+            `${item.measuredAt},${item.weight || ""},${item.bodyFat || ""},${item.muscleMass || ""},${data.overview.healthScore.totalScore}`
         ),
       ];
 

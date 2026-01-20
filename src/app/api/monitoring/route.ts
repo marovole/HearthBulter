@@ -18,18 +18,12 @@ export async function GET() {
     if (isProduction) {
       const user = await getCurrentUser();
       if (!user?.id) {
-        return NextResponse.json(
-          { system: "unhealthy", error: "未授权访问" },
-          { status: 401 },
-        );
+        return NextResponse.json({ system: "unhealthy", error: "未授权访问" }, { status: 401 });
       }
 
       const authResult = await requireAdmin(user.id);
       if (!authResult.authorized) {
-        return NextResponse.json(
-          { system: "unhealthy", error: "需要管理员权限" },
-          { status: 403 },
-        );
+        return NextResponse.json({ system: "unhealthy", error: "需要管理员权限" }, { status: 403 });
       }
     }
 
@@ -48,7 +42,7 @@ export async function GET() {
           timestamp: new Date().toISOString(),
           error: "Failed to fetch user statistics",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -74,7 +68,7 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         error: "Internal server error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

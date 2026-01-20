@@ -3,11 +3,7 @@ import { testDatabaseConnection } from "@/lib/db";
 import { foodRepository } from "@/lib/repositories/food-repository-singleton";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 import { usdaService } from "@/lib/services/usda-service";
-import {
-  CacheService,
-  CacheKeyBuilder,
-  CACHE_CONFIG,
-} from "@/lib/cache/redis-client";
+import { CacheService, CacheKeyBuilder, CACHE_CONFIG } from "@/lib/cache/redis-client";
 import { FoodCategory } from "@/lib/types/meal";
 
 /**
@@ -39,16 +35,14 @@ export async function GET(request: NextRequest) {
     const cacheKey = CacheKeyBuilder.build(
       "foods-search",
       normalizedQuery,
-      `${category || "all"}-${limit}-${page}`,
+      `${category || "all"}-${limit}-${page}`
     );
 
     // 尝试从缓存获取结果
     const cachedResult = await CacheService.get(cacheKey);
     if (cachedResult) {
       const apiDuration = Date.now() - apiStartTime;
-      console.log(
-        `🚀 食品搜索 [缓存命中] - ${apiDuration}ms - 查询: "${query}"`,
-      );
+      console.log(`🚀 食品搜索 [缓存命中] - ${apiDuration}ms - 查询: "${query}"`);
 
       return NextResponse.json(cachedResult, {
         headers: {
@@ -84,9 +78,7 @@ export async function GET(request: NextRequest) {
       totalCount = searchResult.total;
 
       dbDuration = Date.now() - dbStartTime;
-      console.log(
-        `📊 数据库查询 - ${dbDuration}ms - 找到 ${localFoods.length} 条本地结果`,
-      );
+      console.log(`📊 数据库查询 - ${dbDuration}ms - 找到 ${localFoods.length} 条本地结果`);
     } catch (error) {
       dbError = error instanceof Error ? error.message : String(error);
       dbDuration = Date.now() - dbStartTime;
@@ -114,7 +106,7 @@ export async function GET(request: NextRequest) {
 
       const apiDuration = Date.now() - apiStartTime;
       console.log(
-        `🚀 食品搜索 [${dbError ? "降级" : "本地"}结果] - 总计 ${apiDuration}ms - 查询: "${query}"`,
+        `🚀 食品搜索 [${dbError ? "降级" : "本地"}结果] - 总计 ${apiDuration}ms - 查询: "${query}"`
       );
 
       return NextResponse.json(result, {
@@ -131,15 +123,10 @@ export async function GET(request: NextRequest) {
     // 2. 如果本地结果不足，尝试从USDA API搜索
     const usdaStartTime = Date.now();
     try {
-      const usdaResults = await usdaService.searchAndMapFoods(
-        query,
-        limit - localFoods.length,
-      );
+      const usdaResults = await usdaService.searchAndMapFoods(query, limit - localFoods.length);
 
       const usdaDuration = Date.now() - usdaStartTime;
-      console.log(
-        `🌐 USDA API 查询 - ${usdaDuration}ms - 找到 ${usdaResults.length} 条结果`,
-      );
+      console.log(`🌐 USDA API 查询 - ${usdaDuration}ms - 找到 ${usdaResults.length} 条结果`);
 
       // 将USDA结果保存到数据库（异步，不阻塞响应）
       setImmediate(() => {
@@ -153,12 +140,11 @@ export async function GET(request: NextRequest) {
               const backgroundSupabase = SupabaseClientManager.getInstance();
 
               // 检查是否已存在
-              const { data: existing, error: existingError } =
-                await backgroundSupabase
-                  .from("foods")
-                  .select("id")
-                  .eq("usdaId", foodData.usdaId)
-                  .maybeSingle();
+              const { data: existing, error: existingError } = await backgroundSupabase
+                .from("foods")
+                .select("id")
+                .eq("usdaId", foodData.usdaId)
+                .maybeSingle();
 
               if (existingError) {
                 console.error("检查USDA数据存在性失败:", existingError);
@@ -170,30 +156,28 @@ export async function GET(request: NextRequest) {
               }
 
               // 插入新数据
-              const { error: insertError } = await backgroundSupabase
-                .from("foods")
-                .insert({
-                  name: foodData.name,
-                  nameEn: foodData.nameEn,
-                  aliases: JSON.stringify(foodData.aliases),
-                  calories: foodData.calories,
-                  protein: foodData.protein,
-                  carbs: foodData.carbs,
-                  fat: foodData.fat,
-                  fiber: foodData.fiber,
-                  sugar: foodData.sugar,
-                  sodium: foodData.sodium,
-                  vitaminA: foodData.vitaminA,
-                  vitaminC: foodData.vitaminC,
-                  calcium: foodData.calcium,
-                  iron: foodData.iron,
-                  category: foodData.category as FoodCategory,
-                  tags: JSON.stringify(foodData.tags),
-                  source: foodData.source,
-                  usdaId: foodData.usdaId,
-                  verified: foodData.verified,
-                  cachedAt: new Date().toISOString(),
-                });
+              const { error: insertError } = await backgroundSupabase.from("foods").insert({
+                name: foodData.name,
+                nameEn: foodData.nameEn,
+                aliases: JSON.stringify(foodData.aliases),
+                calories: foodData.calories,
+                protein: foodData.protein,
+                carbs: foodData.carbs,
+                fat: foodData.fat,
+                fiber: foodData.fiber,
+                sugar: foodData.sugar,
+                sodium: foodData.sodium,
+                vitaminA: foodData.vitaminA,
+                vitaminC: foodData.vitaminC,
+                calcium: foodData.calcium,
+                iron: foodData.iron,
+                category: foodData.category as FoodCategory,
+                tags: JSON.stringify(foodData.tags),
+                source: foodData.source,
+                usdaId: foodData.usdaId,
+                verified: foodData.verified,
+                cachedAt: new Date().toISOString(),
+              });
 
               if (insertError) {
                 console.error("保存USDA数据失败:", insertError);
@@ -201,7 +185,7 @@ export async function GET(request: NextRequest) {
             } catch (error) {
               console.error("保存USDA数据失败:", error);
             }
-          }),
+          })
         ).catch((error) => {
           console.error("批量保存USDA数据失败:", error);
         });
@@ -230,9 +214,7 @@ export async function GET(request: NextRequest) {
       await CacheService.set(cacheKey, result, CACHE_CONFIG.TTL.USDA_DATA);
 
       const apiDuration = Date.now() - apiStartTime;
-      console.log(
-        `🚀 食品搜索 [混合结果] - 总计 ${apiDuration}ms - 查询: "${query}"`,
-      );
+      console.log(`🚀 食品搜索 [混合结果] - 总计 ${apiDuration}ms - 查询: "${query}"`);
 
       return NextResponse.json(result, {
         status: 200,
@@ -258,16 +240,10 @@ export async function GET(request: NextRequest) {
       };
 
       // 缓存失败回退结果（使用较短的 TTL）
-      await CacheService.set(
-        cacheKey,
-        result,
-        CACHE_CONFIG.TTL.FOOD_SEARCH_EMPTY,
-      );
+      await CacheService.set(cacheKey, result, CACHE_CONFIG.TTL.FOOD_SEARCH_EMPTY);
 
       const apiDuration = Date.now() - apiStartTime;
-      console.log(
-        `🚀 食品搜索 [降级] - 总计 ${apiDuration}ms - 查询: "${query}"`,
-      );
+      console.log(`🚀 食品搜索 [降级] - 总计 ${apiDuration}ms - 查询: "${query}"`);
 
       return NextResponse.json(result, {
         status: 200,
@@ -288,11 +264,7 @@ export async function GET(request: NextRequest) {
  * 获取降级食品搜索结果
  * 当数据库不可用时提供基本的静态结果
  */
-function getFallbackFoodResults(
-  query: string,
-  category: FoodCategory | null,
-  limit: number,
-) {
+function getFallbackFoodResults(query: string, category: FoodCategory | null, limit: number) {
   const fallbackData = [
     {
       id: "fallback-1",
@@ -374,7 +346,7 @@ function getFallbackFoodResults(
       (!category || food.category === category) &&
       (food.name.includes(query) ||
         food.nameEn.toLowerCase().includes(query.toLowerCase()) ||
-        food.aliases.some((alias: string) => alias.includes(query))),
+        food.aliases.some((alias: string) => alias.includes(query)))
   );
 
   return filtered.slice(0, limit);
@@ -388,9 +360,7 @@ function parseFoodResponse(food: any) {
     id: food.id,
     name: food.name,
     nameEn: food.nameEn,
-    aliases: Array.isArray(food.aliases)
-      ? food.aliases
-      : JSON.parse(food.aliases || "[]"),
+    aliases: Array.isArray(food.aliases) ? food.aliases : JSON.parse(food.aliases || "[]"),
     calories: food.calories,
     protein: food.protein,
     carbs: food.carbs,

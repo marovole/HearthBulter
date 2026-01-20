@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -35,16 +35,10 @@ export async function GET(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess } = await memberRepository.verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的健康数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的健康数据" }, { status: 403 });
     }
 
     // 解析查询参数
@@ -75,7 +69,7 @@ export async function GET(
         limit,
         offset,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("查询健康数据失败:", error);
@@ -91,7 +85,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -102,23 +96,14 @@ export async function POST(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess } = await memberRepository.verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限为该成员录入健康数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限为该成员录入健康数据" }, { status: 403 });
     }
 
     // 验证请求体（业务逻辑层）
-    const validation = await validateRequestBody(
-      request,
-      healthDataSchemas.create,
-    );
+    const validation = await validateRequestBody(request, healthDataSchemas.create);
     if (!validation.success) {
       return validation.response;
     }
@@ -139,10 +124,7 @@ export async function POST(
     };
 
     // 验证数据和异常检测（业务逻辑验证 - 保留在端点层）
-    const businessValidation = await validateAndDetectAnomaly(
-      memberId,
-      healthDataInput,
-    );
+    const businessValidation = await validateAndDetectAnomaly(memberId, healthDataInput);
 
     if (!businessValidation.valid) {
       return NextResponse.json(
@@ -151,7 +133,7 @@ export async function POST(
           details: businessValidation.errors,
           warnings: businessValidation.warnings,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -161,13 +143,10 @@ export async function POST(
       bodyFat: healthDataInput.bodyFat ?? undefined,
       muscleMass: healthDataInput.muscleMass ?? undefined,
       bloodPressureSystolic: healthDataInput.bloodPressureSystolic ?? undefined,
-      bloodPressureDiastolic:
-        healthDataInput.bloodPressureDiastolic ?? undefined,
+      bloodPressureDiastolic: healthDataInput.bloodPressureDiastolic ?? undefined,
       heartRate: healthDataInput.heartRate ?? undefined,
       measuredAt: healthDataInput.measuredAt as Date,
-      source:
-        (healthDataInput.source as "MANUAL" | "DEVICE" | "IMPORTED") ||
-        "MANUAL",
+      source: (healthDataInput.source as "MANUAL" | "DEVICE" | "IMPORTED") || "MANUAL",
       notes: healthDataInput.notes ?? undefined,
     });
 

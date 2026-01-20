@@ -1,10 +1,6 @@
 import crypto from "crypto";
 import { logger } from "@/lib/logging/structured-logger";
-import {
-  securityAudit,
-  SecurityEventType,
-  SecuritySeverity,
-} from "./security-audit";
+import { securityAudit, SecurityEventType, SecuritySeverity } from "./security-audit";
 
 // 数据分类
 export enum DataClassification {
@@ -66,8 +62,7 @@ export class DataProtectionManager {
   private encryptionKey!: Buffer;
   private keyId!: string;
   private keyRotationDate!: Date;
-  private retentionPolicies: Map<DataClassification, RetentionPolicy> =
-    new Map();
+  private retentionPolicies: Map<DataClassification, RetentionPolicy> = new Map();
 
   private constructor() {
     this.initializeEncryption();
@@ -161,7 +156,7 @@ export class DataProtectionManager {
           this.rotateKey();
         }
       },
-      24 * 60 * 60 * 1000,
+      24 * 60 * 60 * 1000
     ); // 每天检查
   }
 
@@ -219,7 +214,7 @@ export class DataProtectionManager {
         {
           keyId: this.keyId,
           error: error instanceof Error ? error.message : "未知错误",
-        },
+        }
       );
     }
   }
@@ -237,11 +232,7 @@ export class DataProtectionManager {
   encrypt(plaintext: string, associatedData?: string): EncryptionResult {
     try {
       const iv = crypto.randomBytes(12); // GCM推荐的IV大小
-      const cipher = crypto.createCipheriv(
-        "aes-256-gcm",
-        this.encryptionKey,
-        iv,
-      );
+      const cipher = crypto.createCipheriv("aes-256-gcm", this.encryptionKey, iv);
       cipher.setAAD(Buffer.from(associatedData || ""));
 
       let encrypted = cipher.update(plaintext, "utf8", "base64");
@@ -270,9 +261,7 @@ export class DataProtectionManager {
         type: "data_protection",
       });
 
-      throw new Error(
-        `加密失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      throw new Error(`加密失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
   }
 
@@ -292,19 +281,11 @@ export class DataProtectionManager {
 
       const iv = Buffer.from(encryptedData.iv, "base64");
       const tag = Buffer.from(encryptedData.tag || "", "base64");
-      const decipher = crypto.createDecipheriv(
-        "aes-256-gcm",
-        this.encryptionKey,
-        iv,
-      );
+      const decipher = crypto.createDecipheriv("aes-256-gcm", this.encryptionKey, iv);
       decipher.setAAD(Buffer.from(associatedData || ""));
       decipher.setAuthTag(tag);
 
-      let decrypted = decipher.update(
-        encryptedData.encrypted,
-        "base64",
-        "utf8",
-      );
+      let decrypted = decipher.update(encryptedData.encrypted, "base64", "utf8");
       decrypted += decipher.final("utf8");
 
       logger.debug("数据解密完成", {
@@ -328,12 +309,10 @@ export class DataProtectionManager {
         {
           keyId: encryptedData.keyId,
           error: error instanceof Error ? error.message : "未知错误",
-        },
+        }
       );
 
-      throw new Error(
-        `解密失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      throw new Error(`解密失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
   }
 
@@ -343,7 +322,7 @@ export class DataProtectionManager {
   maskSensitiveData(
     data: string,
     dataType: SensitiveDataType,
-    config?: Partial<MaskingConfig>,
+    config?: Partial<MaskingConfig>
   ): string {
     try {
       const maskingConfig: MaskingConfig = {
@@ -357,24 +336,20 @@ export class DataProtectionManager {
       let masked: string;
 
       switch (maskingConfig.type) {
-      case "partial":
-        masked = this.partialMask(data, maskingConfig);
-        break;
-      case "full":
-        masked = maskingConfig.maskChar.repeat(data.length);
-        break;
-      case "hash":
-        masked = crypto
-          .createHash("sha256")
-          .update(data)
-          .digest("hex")
-          .substring(0, 8);
-        break;
-      case "tokenize":
-        masked = this.tokenizeData(data, dataType);
-        break;
-      default:
-        masked = this.partialMask(data, maskingConfig);
+        case "partial":
+          masked = this.partialMask(data, maskingConfig);
+          break;
+        case "full":
+          masked = maskingConfig.maskChar.repeat(data.length);
+          break;
+        case "hash":
+          masked = crypto.createHash("sha256").update(data).digest("hex").substring(0, 8);
+          break;
+        case "tokenize":
+          masked = this.tokenizeData(data, dataType);
+          break;
+        default:
+          masked = this.partialMask(data, maskingConfig);
       }
 
       logger.debug("数据脱敏完成", {
@@ -405,13 +380,8 @@ export class DataProtectionManager {
     }
 
     const start = data.substring(0, config.visibleChars);
-    const end =
-      config.visibleChars > 0
-        ? data.substring(data.length - config.visibleChars)
-        : "";
-    const middle = config.maskChar.repeat(
-      Math.max(1, data.length - config.visibleChars * 2),
-    );
+    const end = config.visibleChars > 0 ? data.substring(data.length - config.visibleChars) : "";
+    const middle = config.maskChar.repeat(Math.max(1, data.length - config.visibleChars * 2));
 
     return config.preserveFormat ? `${start}${middle}${end}` : middle;
   }
@@ -451,9 +421,7 @@ export class DataProtectionManager {
   private isPublicData(data: any, context?: Record<string, any>): boolean {
     // 公开数据的判断逻辑
     const publicFields = ["name", "description", "category", "createdAt"];
-    const hasOnlyPublicFields = Object.keys(data).every((key) =>
-      publicFields.includes(key),
-    );
+    const hasOnlyPublicFields = Object.keys(data).every((key) => publicFields.includes(key));
 
     return hasOnlyPublicFields && !this.containsSensitiveData(data);
   }
@@ -463,14 +431,7 @@ export class DataProtectionManager {
    */
   private isRestrictedData(data: any, context?: Record<string, any>): boolean {
     // 限制数据的判断逻辑
-    const restrictedPatterns = [
-      /password/i,
-      /token/i,
-      /secret/i,
-      /key/i,
-      /ssn/i,
-      /credit.*card/i,
-    ];
+    const restrictedPatterns = [/password/i, /token/i, /secret/i, /key/i, /ssn/i, /credit.*card/i];
 
     const dataString = JSON.stringify(data).toLowerCase();
     return restrictedPatterns.some((pattern) => pattern.test(dataString));
@@ -479,20 +440,11 @@ export class DataProtectionManager {
   /**
    * 检查是否为机密数据
    */
-  private isConfidentialData(
-    data: any,
-    context?: Record<string, any>,
-  ): boolean {
+  private isConfidentialData(data: any, context?: Record<string, any>): boolean {
     // 机密数据的判断逻辑
-    const confidentialFields = [
-      "email",
-      "phone",
-      "address",
-      "health",
-      "medical",
-    ];
+    const confidentialFields = ["email", "phone", "address", "health", "medical"];
     const hasConfidentialFields = Object.keys(data).some((key) =>
-      confidentialFields.some((field) => key.toLowerCase().includes(field)),
+      confidentialFields.some((field) => key.toLowerCase().includes(field))
     );
 
     return hasConfidentialFields || this.containsHealthData(data);
@@ -544,7 +496,7 @@ export class DataProtectionManager {
   async applyRetentionPolicy(
     data: any,
     classification: DataClassification,
-    createdAt: Date,
+    createdAt: Date
   ): Promise<{
     shouldDelete: boolean;
     shouldArchive: boolean;
@@ -562,9 +514,7 @@ export class DataProtectionManager {
     }
 
     const now = new Date();
-    const ageInDays = Math.floor(
-      (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const ageInDays = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
 
     if (policy.maxAgeDays > 0 && ageInDays > policy.maxAgeDays) {
       if (policy.autoDelete) {
@@ -632,7 +582,7 @@ export class DataProtectionManager {
       autoDelete: boolean;
     }>;
     recommendations: string[];
-    } {
+  } {
     const recommendations = [
       "定期检查和更新数据分类规则",
       "监控加密密钥的使用情况",
@@ -649,7 +599,7 @@ export class DataProtectionManager {
           classification,
           maxAgeDays: policy.maxAgeDays,
           autoDelete: policy.autoDelete,
-        }),
+        })
       ),
       recommendations,
     };
@@ -679,7 +629,7 @@ export class DataProtectionManager {
 
       const isValid = crypto.timingSafeEqual(
         Buffer.from(signature, "hex"),
-        Buffer.from(expectedSignature, "hex"),
+        Buffer.from(expectedSignature, "hex")
       );
 
       if (!isValid) {
@@ -691,7 +641,7 @@ export class DataProtectionManager {
           {
             dataLength: data.length,
             providedSignature: `${signature.substring(0, 16)}...`,
-          },
+          }
         );
       }
 
@@ -726,7 +676,7 @@ export const decryptData = (encryptedData: any, associatedData?: string) =>
 export const maskData = (
   data: string,
   dataType: SensitiveDataType,
-  config?: Partial<MaskingConfig>,
+  config?: Partial<MaskingConfig>
 ) => dataProtection.maskSensitiveData(data, dataType, config);
 export const classifyData = (data: any, context?: Record<string, any>) =>
   dataProtection.classifyData(data, context);

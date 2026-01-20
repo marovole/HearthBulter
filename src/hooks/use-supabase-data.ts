@@ -11,7 +11,7 @@ export function useSupabaseData<T>(
     refetchInterval?: number;
     staleTime?: number;
     cacheTime?: number;
-  } = {},
+  } = {}
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,11 +25,7 @@ export function useSupabaseData<T>(
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const {
-    enabled = true,
-    refetchInterval,
-    staleTime = 5 * 60 * 1000,
-  } = options;
+  const { enabled = true, refetchInterval, staleTime = 5 * 60 * 1000 } = options;
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
@@ -121,7 +117,7 @@ export function useHealthData(
     offset?: number;
     type?: string;
     enabled?: boolean;
-  } = {},
+  } = {}
 ) {
   const { limit = 20, offset = 0, type, enabled = true } = options;
 
@@ -131,11 +127,9 @@ export function useHealthData(
     ...(type && { type }),
   });
 
-  return useSupabaseData(
-    `/v1/health?${queryParams.toString()}`,
-    [memberId, limit, offset, type],
-    { enabled },
-  );
+  return useSupabaseData(`/v1/health?${queryParams.toString()}`, [memberId, limit, offset, type], {
+    enabled,
+  });
 }
 
 // 饮食记录 Hook
@@ -146,7 +140,7 @@ export function useMealRecords(
     endDate?: string;
     mealType?: string;
     enabled?: boolean;
-  } = {},
+  } = {}
 ) {
   const { startDate, endDate, mealType, enabled = true } = options;
 
@@ -159,7 +153,7 @@ export function useMealRecords(
   return useSupabaseData(
     `/v1/meal-records?${queryParams.toString()}`,
     [memberId, startDate, endDate, mealType],
-    { enabled },
+    { enabled }
   );
 }
 
@@ -172,15 +166,9 @@ export function useFoodSearch(
     page?: number;
     enabled?: boolean;
     debounceMs?: number;
-  } = {},
+  } = {}
 ) {
-  const {
-    category,
-    limit = 20,
-    page = 1,
-    enabled = true,
-    debounceMs = 300,
-  } = options;
+  const { category, limit = 20, page = 1, enabled = true, debounceMs = 300 } = options;
   const [debouncedQuery, setDebouncedQuery] = useState(query);
 
   // 防抖处理
@@ -205,26 +193,18 @@ export function useFoodSearch(
     {
       enabled: enabled && debouncedQuery.trim().length > 0,
       staleTime: 60 * 1000, // 1分钟缓存
-    },
+    }
   );
 }
 
 // 用户偏好 Hook
 export function useUserPreferences(memberId: string, enabled = true) {
-  return useSupabaseData(
-    `/v1/users/preferences?memberId=${memberId}`,
-    [memberId],
-    { enabled },
-  );
+  return useSupabaseData(`/v1/users/preferences?memberId=${memberId}`, [memberId], { enabled });
 }
 
 // 仪表盘数据 Hook
 export function useDashboardData(memberId: string, enabled = true) {
-  return useSupabaseData(
-    `/v1/dashboard/overview?memberId=${memberId}`,
-    [memberId],
-    { enabled },
-  );
+  return useSupabaseData(`/v1/dashboard/overview?memberId=${memberId}`, [memberId], { enabled });
 }
 
 // 食谱 Hook
@@ -237,17 +217,9 @@ export function useRecipes(
     limit?: number;
     page?: number;
     enabled?: boolean;
-  } = {},
+  } = {}
 ) {
-  const {
-    category,
-    cuisine,
-    difficulty,
-    isPublic,
-    limit = 20,
-    page = 1,
-    enabled = true,
-  } = options;
+  const { category, cuisine, difficulty, isPublic, limit = 20, page = 1, enabled = true } = options;
 
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
@@ -261,7 +233,7 @@ export function useRecipes(
   return useSupabaseData(
     `/v1/recipes?${queryParams.toString()}`,
     [category, cuisine, difficulty, isPublic, limit, page],
-    { enabled },
+    { enabled }
   );
 }
 
@@ -275,16 +247,9 @@ export function useInventory(
     limit?: number;
     page?: number;
     enabled?: boolean;
-  } = {},
+  } = {}
 ) {
-  const {
-    status,
-    category,
-    isLowStock,
-    limit = 50,
-    page = 1,
-    enabled = true,
-  } = options;
+  const { status, category, isLowStock, limit = 50, page = 1, enabled = true } = options;
 
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
@@ -297,7 +262,7 @@ export function useInventory(
   return useSupabaseData(
     `/v1/inventory?${queryParams.toString()}`,
     [familyId, status, category, isLowStock, limit, page],
-    { enabled },
+    { enabled }
   );
 }
 
@@ -311,16 +276,9 @@ export function useShoppingLists(
     limit?: number;
     page?: number;
     enabled?: boolean;
-  } = {},
+  } = {}
 ) {
-  const {
-    status,
-    priority,
-    assignedTo,
-    limit = 20,
-    page = 1,
-    enabled = true,
-  } = options;
+  const { status, priority, assignedTo, limit = 20, page = 1, enabled = true } = options;
 
   const queryParams = new URLSearchParams({
     limit: limit.toString(),
@@ -333,7 +291,7 @@ export function useShoppingLists(
   return useSupabaseData(
     `/v1/shopping-lists?${queryParams.toString()}`,
     [familyId, status, priority, assignedTo, limit, page],
-    { enabled },
+    { enabled }
   );
 }
 
@@ -342,7 +300,7 @@ export function useRealtimeData<T>(
   channel: string,
   table: string,
   filter: Record<string, any> = {},
-  enabled = true,
+  enabled = true
 ) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -356,10 +314,7 @@ export function useRealtimeData<T>(
     const setupSubscription = async () => {
       try {
         // 首先获取初始数据
-        const initialData = await DataFetcher.getHealthData(
-          filter.memberId || "",
-          filter,
-        );
+        const initialData = await DataFetcher.getHealthData(filter.memberId || "", filter);
         setData(initialData.data || []);
         setLoading(false);
 
@@ -373,11 +328,7 @@ export function useRealtimeData<T>(
               schema: "public",
               table,
             },
-            (payload: {
-              eventType?: "INSERT" | "UPDATE" | "DELETE";
-              new?: T;
-              old?: T;
-            }) => {
+            (payload: { eventType?: "INSERT" | "UPDATE" | "DELETE"; new?: T; old?: T }) => {
               console.log("Real-time update:", payload);
 
               if (payload.eventType === "INSERT" && payload.new) {
@@ -385,22 +336,19 @@ export function useRealtimeData<T>(
               } else if (payload.eventType === "UPDATE" && payload.new) {
                 setData((prev) =>
                   prev.map((item) =>
-                    (item as { id?: string }).id ===
-                    (payload.new as { id?: string }).id
+                    (item as { id?: string }).id === (payload.new as { id?: string }).id
                       ? (payload.new as T)
-                      : item,
-                  ),
+                      : item
+                  )
                 );
               } else if (payload.eventType === "DELETE" && payload.old) {
                 setData((prev) =>
                   prev.filter(
-                    (item) =>
-                      (item as { id?: string }).id !==
-                      (payload.old as { id?: string }).id,
-                  ),
+                    (item) => (item as { id?: string }).id !== (payload.old as { id?: string }).id
+                  )
                 );
               }
-            },
+            }
           )
           .subscribe();
       } catch (err) {

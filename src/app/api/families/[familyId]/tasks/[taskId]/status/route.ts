@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { taskRepository } from "@/lib/repositories/task-repository-singleton";
-import {
-  withApiPermissions,
-  PERMISSION_CONFIGS,
-} from "@/middleware/permissions";
+import { withApiPermissions, PERMISSION_CONFIGS } from "@/middleware/permissions";
 import { hasPermission, Permission } from "@/lib/permissions";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
@@ -20,7 +17,7 @@ import type { TaskStatus } from "@/lib/repositories/types/task";
 export const dynamic = "force-dynamic";
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string; taskId: string }> },
+  { params }: { params: Promise<{ familyId: string; taskId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -31,16 +28,11 @@ export async function PUT(
       const { status, note } = body;
 
       // 验证必需字段
-      const validStatuses: TaskStatus[] = [
-        "TODO",
-        "IN_PROGRESS",
-        "COMPLETED",
-        "CANCELLED",
-      ];
+      const validStatuses: TaskStatus[] = ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
       if (!status || !validStatuses.includes(status)) {
         return NextResponse.json(
           { success: false, error: "Invalid or missing status field" },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -49,34 +41,24 @@ export async function PUT(
         {
           familyId: familyId as Id<"families">,
           clerkId: userId,
-        },
+        }
       );
 
       if (!member) {
-        return NextResponse.json(
-          { success: false, error: "Not a family member" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Not a family member" }, { status: 403 });
       }
 
       // 验证任务并检查权限
       const task = await taskRepository.getTaskById(familyId, taskId);
 
       if (!task) {
-        return NextResponse.json(
-          { success: false, error: "Task not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ success: false, error: "Task not found" }, { status: 404 });
       }
 
       // 检查更新权限：创建者或分配人都可以更新状态
       const canUpdate =
-        hasPermission(
-          member.role as any,
-          Permission.UPDATE_TASK,
-          task.creatorId,
-          member._id,
-        ) || task.assigneeId === member._id;
+        hasPermission(member.role as any, Permission.UPDATE_TASK, task.creatorId, member._id) ||
+        task.assigneeId === member._id;
 
       if (!canUpdate) {
         return NextResponse.json(
@@ -84,19 +66,15 @@ export async function PUT(
             success: false,
             error: "Insufficient permissions to update this task",
           },
-          { status: 403 },
+          { status: 403 }
         );
       }
 
       // 使用 Repository 更新任务状态
-      const updatedTask = await taskRepository.updateTaskStatus(
-        familyId,
-        taskId,
-        {
-          status,
-          note,
-        },
-      );
+      const updatedTask = await taskRepository.updateTaskStatus(familyId, taskId, {
+        status,
+        note,
+      });
 
       // 记录活动日志
       await convexClient
@@ -145,12 +123,9 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to update task status",
+          error: error instanceof Error ? error.message : "Failed to update task status",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.UPDATE_TASK)(request as any, { params });

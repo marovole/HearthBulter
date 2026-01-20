@@ -12,13 +12,12 @@ import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(
-  value: T | T[] | null | undefined,
-): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
+  Array.isArray(value) ? value[0] : (value ?? undefined);
 
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -33,7 +32,7 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `,
+    `
     )
     .eq("id", memberId)
     .is("deletedAt", null)
@@ -75,7 +74,7 @@ async function verifyMemberAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -89,10 +88,7 @@ export async function GET(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的健康数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的健康数据" }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -171,7 +167,7 @@ export async function GET(
             end,
           },
         },
-        { status: 200 },
+        { status: 200 }
       );
     }
 
@@ -237,10 +233,7 @@ export async function GET(
 
     // 处理血压数据
     const bloodPressureData = healthData
-      .filter(
-        (d) =>
-          d.bloodPressureSystolic !== null && d.bloodPressureDiastolic !== null,
-      )
+      .filter((d) => d.bloodPressureSystolic !== null && d.bloodPressureDiastolic !== null)
       .map((d) => ({
         date: d.measuredAt,
         systolic: d.bloodPressureSystolic!,
@@ -254,10 +247,8 @@ export async function GET(
       trends.bloodPressure = {
         data: bloodPressureData,
         average: {
-          systolic:
-            systolicValues.reduce((a, b) => a + b, 0) / systolicValues.length,
-          diastolic:
-            diastolicValues.reduce((a, b) => a + b, 0) / diastolicValues.length,
+          systolic: systolicValues.reduce((a, b) => a + b, 0) / systolicValues.length,
+          diastolic: diastolicValues.reduce((a, b) => a + b, 0) / diastolicValues.length,
         },
         min: {
           systolic: Math.min(...systolicValues),
@@ -268,15 +259,11 @@ export async function GET(
           diastolic: Math.max(...diastolicValues),
         },
         change:
-          bloodPressureData.length > 1 &&
-          firstBloodPressure &&
-          lastBloodPressure
+          bloodPressureData.length > 1 && firstBloodPressure && lastBloodPressure
             ? {
-              systolic:
-                  lastBloodPressure.systolic - firstBloodPressure.systolic,
-              diastolic:
-                  lastBloodPressure.diastolic - firstBloodPressure.diastolic,
-            }
+                systolic: lastBloodPressure.systolic - firstBloodPressure.systolic,
+                diastolic: lastBloodPressure.diastolic - firstBloodPressure.diastolic,
+              }
             : null,
       };
     }
@@ -309,7 +296,7 @@ export async function GET(
           end,
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("获取健康数据趋势失败:", error);

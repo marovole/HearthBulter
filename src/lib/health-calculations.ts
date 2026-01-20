@@ -27,7 +27,7 @@ export function calculateBMR(
   weight: number,
   height: number,
   age: number,
-  gender: "MALE" | "FEMALE",
+  gender: "MALE" | "FEMALE"
 ): number {
   if (weight <= 0 || height <= 0 || age <= 0) {
     throw new Error("Weight, height, and age must be positive numbers");
@@ -71,7 +71,7 @@ export const ACTIVITY_FACTORS = {
 export function calculateProgress(
   startWeight: number | null,
   currentWeight: number | null,
-  targetWeight: number | null,
+  targetWeight: number | null
 ): number {
   if (!startWeight || !currentWeight || !targetWeight) {
     return 0;
@@ -98,10 +98,7 @@ export function calculateAge(birthDate: Date): number {
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
 
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
 
@@ -111,9 +108,7 @@ export function calculateAge(birthDate: Date): number {
 /**
  * Determine age group based on age
  */
-export function calculateAgeGroup(
-  birthDate: Date,
-): "CHILD" | "TEENAGER" | "ADULT" | "ELDERLY" {
+export function calculateAgeGroup(birthDate: Date): "CHILD" | "TEENAGER" | "ADULT" | "ELDERLY" {
   const age = calculateAge(birthDate);
 
   if (age < 12) return "CHILD";
@@ -128,20 +123,20 @@ export function calculateAgeGroup(
  */
 export function calculateCalorieTarget(
   tdee: number,
-  goalType: "LOSE_WEIGHT" | "GAIN_MUSCLE" | "MAINTAIN" | "IMPROVE_HEALTH",
+  goalType: "LOSE_WEIGHT" | "GAIN_MUSCLE" | "MAINTAIN" | "IMPROVE_HEALTH"
 ): number {
   switch (goalType) {
-  case "LOSE_WEIGHT":
-    // 500 calorie deficit for ~0.5kg loss per week
-    return Math.round(tdee - 500);
-  case "GAIN_MUSCLE":
-    // 300 calorie surplus for muscle gain
-    return Math.round(tdee + 300);
-  case "MAINTAIN":
-  case "IMPROVE_HEALTH":
-    return tdee;
-  default:
-    return tdee;
+    case "LOSE_WEIGHT":
+      // 500 calorie deficit for ~0.5kg loss per week
+      return Math.round(tdee - 500);
+    case "GAIN_MUSCLE":
+      // 300 calorie surplus for muscle gain
+      return Math.round(tdee + 300);
+    case "MAINTAIN":
+    case "IMPROVE_HEALTH":
+      return tdee;
+    default:
+      return tdee;
   }
 }
 
@@ -152,7 +147,7 @@ export function calculateMacroTargets(
   calorieTarget: number,
   carbRatio: number,
   proteinRatio: number,
-  fatRatio: number,
+  fatRatio: number
 ): {
   carbs: number;
   protein: number;
@@ -183,7 +178,7 @@ export function calculateMacroTargets(
 export function estimateWeeksToTarget(
   currentWeight: number,
   targetWeight: number,
-  goalType: "LOSE_WEIGHT" | "GAIN_MUSCLE",
+  goalType: "LOSE_WEIGHT" | "GAIN_MUSCLE"
 ): number {
   const weightDifference = Math.abs(targetWeight - currentWeight);
 

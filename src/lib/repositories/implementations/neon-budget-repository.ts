@@ -113,8 +113,7 @@ export class NeonBudgetRepository implements BudgetRepository {
     if (payload.period) updateData.period = payload.period;
     if (payload.startDate) updateData.startDate = payload.startDate;
     if (payload.endDate) updateData.endDate = payload.endDate;
-    if (payload.totalAmount !== undefined)
-      updateData.totalAmount = payload.totalAmount;
+    if (payload.totalAmount !== undefined) updateData.totalAmount = payload.totalAmount;
     if (payload.status) updateData.status = payload.status;
 
     if (payload.categoryBudgets) {
@@ -156,7 +155,7 @@ export class NeonBudgetRepository implements BudgetRepository {
   async listBudgets(
     memberId: string,
     filter?: { status?: BudgetDTO["status"] },
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<BudgetDTO>> {
     const where: Record<string, unknown> = { memberId };
     if (filter?.status) where.status = filter.status;
@@ -174,9 +173,7 @@ export class NeonBudgetRepository implements BudgetRepository {
     return {
       items,
       total,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < total
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < total : false,
     };
   }
 
@@ -209,10 +206,7 @@ export class NeonBudgetRepository implements BudgetRepository {
       data: {
         usedAmount: newUsedAmount,
         remainingAmount: Math.max(0, budget.totalAmount - newUsedAmount),
-        usagePercentage:
-          budget.totalAmount > 0
-            ? (newUsedAmount / budget.totalAmount) * 100
-            : 0,
+        usagePercentage: budget.totalAmount > 0 ? (newUsedAmount / budget.totalAmount) * 100 : 0,
       },
     });
 
@@ -223,7 +217,7 @@ export class NeonBudgetRepository implements BudgetRepository {
 
   async listSpendings(
     filter: SpendingFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<SpendingDTO>> {
     const where: Record<string, unknown> = { budgetId: filter.budgetId };
     if (filter.category) where.category = filter.category;
@@ -251,9 +245,7 @@ export class NeonBudgetRepository implements BudgetRepository {
     return {
       items,
       total,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < total
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < total : false,
     };
   }
 
@@ -269,13 +261,9 @@ export class NeonBudgetRepository implements BudgetRepository {
       where: { budgetId },
     });
 
-    const usedAmount = spendings.reduce(
-      (sum, row) => sum + (row.amount ?? 0),
-      0,
-    );
+    const usedAmount = spendings.reduce((sum, row) => sum + (row.amount ?? 0), 0);
     const remainingAmount = Math.max(0, budget.totalAmount - usedAmount);
-    const usagePercentage =
-      budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
+    const usagePercentage = budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
 
     return { usedAmount, remainingAmount, usagePercentage };
   }
@@ -314,14 +302,11 @@ export class NeonBudgetRepository implements BudgetRepository {
     ]);
 
     const totalDays = Math.ceil(
-      (budget.endDate.getTime() - budget.startDate.getTime()) /
-        (1000 * 60 * 60 * 24),
+      (budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
     const elapsedDays = Math.max(
       1,
-      Math.ceil(
-        (Date.now() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24),
-      ),
+      Math.ceil((Date.now() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24))
     );
 
     const dailyAverage = usage.usedAmount / elapsedDays;
@@ -393,16 +378,14 @@ export class NeonBudgetRepository implements BudgetRepository {
 
   private calculateCategoryUsage(
     budget: BudgetDTO,
-    spendings: SpendingRow[],
+    spendings: SpendingRow[]
   ): BudgetStatusDTO["categoryUsage"] {
     const usage: BudgetStatusDTO["categoryUsage"] = {};
     const categories = Object.keys(budget.categoryBudgets ?? {});
 
     for (const category of categories) {
       const categoryBudget =
-        budget.categoryBudgets![
-          category as keyof typeof budget.categoryBudgets
-        ] ?? 0;
+        budget.categoryBudgets![category as keyof typeof budget.categoryBudgets] ?? 0;
       const categorySpent = spendings
         .filter((s) => s.category === category)
         .reduce((sum, row) => sum + (row.amount ?? 0), 0);
@@ -410,8 +393,7 @@ export class NeonBudgetRepository implements BudgetRepository {
         budget: categoryBudget,
         used: categorySpent,
         remaining: Math.max(0, categoryBudget - categorySpent),
-        percentage:
-          categoryBudget > 0 ? (categorySpent / categoryBudget) * 100 : 0,
+        percentage: categoryBudget > 0 ? (categorySpent / categoryBudget) * 100 : 0,
       };
     }
 

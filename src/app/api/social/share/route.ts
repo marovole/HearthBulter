@@ -6,10 +6,7 @@ import type { ShareContentInput } from "@/types/social-sharing";
 import { SocialPlatform } from "@/types/social-sharing";
 import { ShareContentType } from "@prisma/client";
 import { generateSecureShareToken } from "@/lib/security/token-generator";
-import {
-  validateBody,
-  validationErrorResponse,
-} from "@/lib/validation/api-validator";
+import { validateBody, validationErrorResponse } from "@/lib/validation/api-validator";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Id } from "@/../convex/_generated/dataModel";
 
@@ -32,53 +29,41 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SITE_URL ||
       "http://localhost:3000";
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: validatedData.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: validatedData.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该家庭成员" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该家庭成员" }, { status: 403 });
     }
 
-    const provisionalId = await convexClient.mutation<string>(
-      api.social.createSharedContent,
-      {
-        memberId: validatedData.memberId as Id<"familyMembers">,
-        contentType: validatedData.type,
-        privacyLevel: validatedData.privacyLevel,
-        targetId: validatedData.targetId,
-        sharedPlatforms: validatedData.platforms,
-        shareToken: "pending",
-        shareUrl: "pending",
-        status: "ACTIVE",
-      },
-    );
+    const provisionalId = await convexClient.mutation<string>(api.social.createSharedContent, {
+      memberId: validatedData.memberId as Id<"familyMembers">,
+      contentType: validatedData.type,
+      privacyLevel: validatedData.privacyLevel,
+      targetId: validatedData.targetId,
+      sharedPlatforms: validatedData.platforms,
+      shareToken: "pending",
+      shareUrl: "pending",
+      status: "ACTIVE",
+    });
 
     const shareToken = await generateSecureShareToken(
       provisionalId,
       "social_share",
       session.user.id,
       7,
-      ["read"],
+      ["read"]
     );
 
     const shareUrl = `${baseUrl}/share/${shareToken}`;
 
-    const shareResult = await shareContentGenerator.generateShareContent(
-      validatedData,
-      {
-        shareToken,
-        shareUrl,
-        baseUrl,
-      },
-    );
+    const shareResult = await shareContentGenerator.generateShareContent(validatedData, {
+      shareToken,
+      shareUrl,
+      baseUrl,
+    });
 
     await convexClient.mutation(api.social.updateSharedContent, {
       id: provisionalId as Id<"sharedContents">,
@@ -113,7 +98,7 @@ export async function POST(request: NextRequest) {
     console.error("创建分享失败:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "服务器内部错误" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -144,19 +129,13 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
 
     if (memberId) {
-      const access = await convexClient.query<{ hasAccess: boolean }>(
-        api.members.verifyAccess,
-        {
-          memberId: memberId as Id<"familyMembers">,
-          clerkId: session.user.id,
-        },
-      );
+      const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+        memberId: memberId as Id<"familyMembers">,
+        clerkId: session.user.id,
+      });
 
       if (!access.hasAccess) {
-        return NextResponse.json(
-          { error: "无权限访问该家庭成员" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "无权限访问该家庭成员" }, { status: 403 });
       }
     }
 

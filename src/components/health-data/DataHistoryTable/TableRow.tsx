@@ -9,12 +9,7 @@ interface TableRowProps {
   onDelete: (id: string) => void;
 }
 
-export function TableRow({
-  item,
-  isSelected,
-  onSelect,
-  onDelete,
-}: TableRowProps) {
+export function TableRow({ item, isSelected, onSelect, onDelete }: TableRowProps) {
   return (
     <tr className="hover:bg-gray-50">
       <td className="px-6 py-4">
@@ -22,11 +17,11 @@ export function TableRow({
           type="checkbox"
           checked={isSelected}
           onChange={(e) => onSelect(item.id, e.target.checked)}
-          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
       </td>
 
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
         {formatDate(item.measuredAt)}
       </td>
 
@@ -38,13 +33,11 @@ export function TableRow({
               <span className="font-medium">{item.weight} kg</span>
             </div>
           )}
-          {item.bloodPressureSystolic !== null &&
-            item.bloodPressureDiastolic !== null && (
+          {item.bloodPressureSystolic !== null && item.bloodPressureDiastolic !== null && (
             <div className="flex items-center space-x-2">
               <span className="text-gray-500">血压:</span>
               <span className="font-medium">
-                {item.bloodPressureSystolic}/{item.bloodPressureDiastolic}{" "}
-                  mmHg
+                {item.bloodPressureSystolic}/{item.bloodPressureDiastolic} mmHg
               </span>
             </div>
           )}
@@ -69,9 +62,9 @@ export function TableRow({
         </div>
       </td>
 
-      <td className="px-6 py-4 whitespace-nowrap">
+      <td className="whitespace-nowrap px-6 py-4">
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSourceBadgeClass(item.source)}`}
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getSourceBadgeClass(item.source)}`}
         >
           {getSourceLabel(item.source)}
         </span>
@@ -81,7 +74,7 @@ export function TableRow({
         <div className="max-w-xs truncate">{item.notes || "-"}</div>
       </td>
 
-      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+      <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
         <div className="flex items-center justify-end space-x-2">
           <button className="text-gray-400 hover:text-gray-600">
             <Eye className="h-4 w-4" />
@@ -89,10 +82,7 @@ export function TableRow({
           <button className="text-blue-600 hover:text-blue-900">
             <Edit className="h-4 w-4" />
           </button>
-          <button
-            onClick={() => onDelete(item.id)}
-            className="text-red-600 hover:text-red-900"
-          >
+          <button onClick={() => onDelete(item.id)} className="text-red-600 hover:text-red-900">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>

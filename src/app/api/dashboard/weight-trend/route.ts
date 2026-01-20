@@ -11,7 +11,7 @@ import { analyticsService } from "@/lib/services/analytics-service";
 export const dynamic = "force-dynamic";
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const member = await prisma.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },
@@ -66,17 +66,11 @@ export async function GET(request: NextRequest) {
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的体重趋势数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的体重趋势数据" }, { status: 403 });
     }
 
     // 获取体重趋势分析
-    const weightTrend = await analyticsService.analyzeWeightTrend(
-      memberId,
-      days,
-    );
+    const weightTrend = await analyticsService.analyzeWeightTrend(memberId, days);
 
     return NextResponse.json({ data: weightTrend }, { status: 200 });
   } catch (error) {

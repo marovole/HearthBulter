@@ -21,19 +21,13 @@ export async function GET(request: NextRequest) {
       const user = await getCurrentUser();
 
       if (!user?.id) {
-        return NextResponse.json(
-          { status: "error", error: "未授权访问" },
-          { status: 401 },
-        );
+        return NextResponse.json({ status: "error", error: "未授权访问" }, { status: 401 });
       }
 
       const authResult = await requireAdmin(user.id);
 
       if (!authResult.authorized) {
-        return NextResponse.json(
-          { status: "error", error: "需要管理员权限" },
-          { status: 403 },
-        );
+        return NextResponse.json({ status: "error", error: "需要管理员权限" }, { status: 403 });
       }
     }
 
@@ -48,9 +42,7 @@ export async function GET(request: NextRequest) {
     const configStatus = {
       auth: process.env.CLERK_SECRET_KEY ? "configured" : "missing",
       database:
-        process.env.DATABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-          ? "configured"
-          : "missing",
+        process.env.DATABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL ? "configured" : "missing",
     };
 
     return NextResponse.json({
@@ -65,7 +57,7 @@ export async function GET(request: NextRequest) {
         error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

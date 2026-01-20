@@ -7,12 +7,12 @@ const enumProxy = new Proxy(
   {},
   {
     get: (_target, prop) => String(prop),
-  },
+  }
 );
 
 module.exports = new Proxy(
   { PrismaClient, ...mockPrisma },
   {
     get: (target, prop) => (prop in target ? target[prop] : enumProxy),
-  },
+  }
 );

@@ -139,7 +139,7 @@ export class ConvexEcommerceRepository {
 
   async getProductById(
     platform: string,
-    platformProductId: string,
+    platformProductId: string
   ): Promise<PlatformProduct | null> {
     try {
       return await convexClient.query((api as any).ecommerce.getProductById, {
@@ -152,16 +152,10 @@ export class ConvexEcommerceRepository {
   }
 
   async upsertProduct(product: Partial<PlatformProduct>): Promise<string> {
-    return await convexClient.mutation(
-      (api as any).ecommerce.upsertProduct,
-      product,
-    );
+    return await convexClient.mutation((api as any).ecommerce.upsertProduct, product);
   }
 
-  async invalidateProduct(
-    platform: string,
-    platformProductId: string,
-  ): Promise<void> {
+  async invalidateProduct(platform: string, platformProductId: string): Promise<void> {
     await convexClient.mutation((api as any).ecommerce.invalidateProduct, {
       platform,
       platformProductId,
@@ -175,10 +169,7 @@ export class ConvexEcommerceRepository {
     limit?: number;
   }): Promise<PriceHistory[]> {
     try {
-      return await convexClient.query(
-        (api as any).ecommerce.getPriceHistory,
-        args,
-      );
+      return await convexClient.query((api as any).ecommerce.getPriceHistory, args);
     } catch {
       return [];
     }
@@ -192,21 +183,18 @@ export class ConvexEcommerceRepository {
     platform: string;
     source?: string;
   }): Promise<string> {
-    return await convexClient.mutation(
-      (api as any).ecommerce.addPriceHistory,
-      args,
-    );
+    return await convexClient.mutation((api as any).ecommerce.addPriceHistory, args);
   }
 
   async getOrCreatePlatformAccount(
     memberId: string,
-    platform: string,
+    platform: string
   ): Promise<PlatformAccount | null> {
     try {
-      return await convexClient.query(
-        (api as any).ecommerce.getOrCreatePlatformAccount,
-        { memberId, platform },
-      );
+      return await convexClient.query((api as any).ecommerce.getOrCreatePlatformAccount, {
+        memberId,
+        platform,
+      });
     } catch {
       return null;
     }
@@ -220,10 +208,7 @@ export class ConvexEcommerceRepository {
     tokenExpiresAt?: number;
     platformUserId?: string;
   }): Promise<string> {
-    return await convexClient.mutation(
-      (api as any).ecommerce.upsertPlatformAccount,
-      account,
-    );
+    return await convexClient.mutation((api as any).ecommerce.upsertPlatformAccount, account);
   }
 
   async createOrder(order: {
@@ -240,10 +225,7 @@ export class ConvexEcommerceRepository {
     items: Array<Record<string, unknown>>;
     platformResponse?: Record<string, unknown>;
   }): Promise<string> {
-    return await convexClient.mutation(
-      (api as any).ecommerce.createOrder,
-      order,
-    );
+    return await convexClient.mutation((api as any).ecommerce.createOrder, order);
   }
 
   async getOrders(args: {
@@ -262,16 +244,13 @@ export class ConvexEcommerceRepository {
 
   async getOrderByPlatformId(
     platform: string,
-    platformOrderId: string,
+    platformOrderId: string
   ): Promise<EcommerceOrder | null> {
     try {
-      return await convexClient.query(
-        (api as any).ecommerce.getOrderByPlatformId,
-        {
-          platform,
-          platformOrderId,
-        },
-      );
+      return await convexClient.query((api as any).ecommerce.getOrderByPlatformId, {
+        platform,
+        platformOrderId,
+      });
     } catch {
       return null;
     }

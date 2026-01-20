@@ -39,9 +39,6 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Error fetching streak:", error);
 
-    return NextResponse.json(
-      { error: "获取连续打卡记录失败" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "获取连续打卡记录失败" }, { status: 500 });
   }
 }

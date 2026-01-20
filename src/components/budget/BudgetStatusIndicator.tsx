@@ -117,9 +117,9 @@ export function BudgetStatusIndicator({
       <Card className="w-full">
         <CardContent className="p-4">
           <div className="animate-pulse space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-2 bg-gray-200 rounded w-full"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+            <div className="h-2 w-full rounded bg-gray-200"></div>
+            <div className="h-4 w-1/2 rounded bg-gray-200"></div>
           </div>
         </CardContent>
       </Card>
@@ -135,34 +135,21 @@ export function BudgetStatusIndicator({
     );
   }
 
-  const {
-    budget,
-    usedAmount,
-    remainingAmount,
-    usagePercentage,
-    daysRemaining,
-    alerts,
-  } = budgetStatus;
+  const { budget, usedAmount, remainingAmount, usagePercentage, daysRemaining, alerts } =
+    budgetStatus;
 
   if (compact) {
     return (
       <Card className="w-full">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">{budget.name}</span>
               {getStatusBadge(usagePercentage)}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={refreshing}
-            >
-              <RefreshCwIcon
-                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-              />
+            <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCwIcon className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             </Button>
           </div>
 
@@ -170,8 +157,7 @@ export function BudgetStatusIndicator({
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">预算使用</span>
               <span className={getUsageColor(usagePercentage)}>
-                {formatCurrency(usedAmount)} /{" "}
-                {formatCurrency(budget.totalAmount)}
+                {formatCurrency(usedAmount)} / {formatCurrency(budget.totalAmount)}
               </span>
             </div>
             <Progress value={Math.min(usagePercentage, 100)} className="h-2" />
@@ -182,7 +168,7 @@ export function BudgetStatusIndicator({
           </div>
 
           {alerts.length > 0 && (
-            <div className="mt-3 pt-3 border-t">
+            <div className="mt-3 border-t pt-3">
               <div className="flex items-center gap-2 text-sm text-orange-600">
                 <AlertTriangleIcon className="h-4 w-4" />
                 <span>{alerts[0]}</span>
@@ -197,7 +183,7 @@ export function BudgetStatusIndicator({
   return (
     <Card className="w-full">
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold">{budget.name}</h3>
             <p className="text-sm text-muted-foreground">
@@ -210,20 +196,13 @@ export function BudgetStatusIndicator({
           </div>
           <div className="flex items-center gap-2">
             {getStatusBadge(usagePercentage)}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={refreshing}
-            >
-              <RefreshCwIcon
-                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-              />
+            <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCwIcon className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="mb-4 grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
               {formatCurrency(budget.totalAmount)}
@@ -231,14 +210,10 @@ export function BudgetStatusIndicator({
             <p className="text-xs text-muted-foreground">总预算</p>
           </div>
           <div className="text-center">
-            <div
-              className={`text-2xl font-bold ${getUsageColor(usagePercentage)}`}
-            >
+            <div className={`text-2xl font-bold ${getUsageColor(usagePercentage)}`}>
               {formatCurrency(usedAmount)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              已使用 {usagePercentage.toFixed(1)}%
-            </p>
+            <p className="text-xs text-muted-foreground">已使用 {usagePercentage.toFixed(1)}%</p>
           </div>
           <div className="text-center">
             <div
@@ -250,12 +225,10 @@ export function BudgetStatusIndicator({
           </div>
         </div>
 
-        <div className="space-y-2 mb-4">
+        <div className="mb-4 space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span>预算使用进度</span>
-            <span className={getUsageColor(usagePercentage)}>
-              {usagePercentage.toFixed(1)}%
-            </span>
+            <span className={getUsageColor(usagePercentage)}>{usagePercentage.toFixed(1)}%</span>
           </div>
           <Progress value={Math.min(usagePercentage, 100)} className="h-3" />
           {usagePercentage > 100 && (
@@ -266,15 +239,13 @@ export function BudgetStatusIndicator({
         </div>
 
         {showDetails && (
-          <div className="border-t pt-4 space-y-3">
+          <div className="space-y-3 border-t pt-4">
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-1">
                 <TrendingUpIcon className="h-4 w-4" />
                 日均支出
               </span>
-              <span className="font-medium">
-                {formatCurrency(budgetStatus.dailyAverage)}
-              </span>
+              <span className="font-medium">{formatCurrency(budgetStatus.dailyAverage)}</span>
             </div>
 
             <div className="flex items-center justify-between text-sm">
@@ -295,9 +266,7 @@ export function BudgetStatusIndicator({
                 className={`font-medium ${budgetStatus.projectedSpend > budget.totalAmount ? "text-red-600" : "text-green-600"}`}
               >
                 {budgetStatus.projectedSpend > budget.totalAmount ? "+" : ""}
-                {formatCurrency(
-                  budgetStatus.projectedSpend - budget.totalAmount,
-                )}
+                {formatCurrency(budgetStatus.projectedSpend - budget.totalAmount)}
               </span>
             </div>
           </div>
@@ -306,11 +275,7 @@ export function BudgetStatusIndicator({
         {alerts.length > 0 && (
           <div className="border-t pt-4">
             <Alert
-              variant={
-                alerts.some((alert) => alert.includes("超支"))
-                  ? "destructive"
-                  : "default"
-              }
+              variant={alerts.some((alert) => alert.includes("超支")) ? "destructive" : "default"}
             >
               <AlertTriangleIcon className="h-4 w-4" />
               <AlertDescription>

@@ -11,12 +11,9 @@ import type {
 import { convexClient, api } from "@/lib/convex-client";
 import type { Id } from "@/../convex/_generated/dataModel";
 
-const toDate = (timestamp?: number | null) =>
-  timestamp ? new Date(timestamp) : new Date();
+const toDate = (timestamp?: number | null) => (timestamp ? new Date(timestamp) : new Date());
 
-const mapRecipe = (
-  recipe: Record<string, unknown>,
-): RecipeWithIngredientsDTO => ({
+const mapRecipe = (recipe: Record<string, unknown>): RecipeWithIngredientsDTO => ({
   id: recipe._id as string,
   name: recipe.name as string,
   description: (recipe.description as string | null) ?? null,
@@ -69,9 +66,7 @@ const mapRating = (rating: Record<string, unknown>): RecipeRatingDTO => ({
 });
 
 export class ConvexRecipeRepository implements RecipeRepository {
-  async getFavoritesByMember(
-    query: GetFavoritesQuery,
-  ): Promise<FavoritesResult> {
+  async getFavoritesByMember(query: GetFavoritesQuery): Promise<FavoritesResult> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const offset = (page - 1) * limit;
@@ -85,14 +80,11 @@ export class ConvexRecipeRepository implements RecipeRepository {
       limit,
     });
 
-    const recipeIds = result.items.map(
-      (favorite) => favorite.recipeId as string,
-    );
+    const recipeIds = result.items.map((favorite) => favorite.recipeId as string);
     const recipes = recipeIds.length
-      ? await convexClient.query<Array<Record<string, unknown>>>(
-        api.recipes.listByIds,
-        { ids: recipeIds as Id<"recipes">[] },
-      )
+      ? await convexClient.query<Array<Record<string, unknown>>>(api.recipes.listByIds, {
+          ids: recipeIds as Id<"recipes">[],
+        })
       : [];
 
     const recipeMap = new Map(recipes.map((recipe) => [recipe._id, recipe]));
@@ -124,7 +116,7 @@ export class ConvexRecipeRepository implements RecipeRepository {
         recipeId: input.recipeId as Id<"recipes">,
         memberId: input.memberId as Id<"familyMembers">,
         notes: input.notes ?? undefined,
-      },
+      }
     );
 
     return mapFavorite(favorite);
@@ -137,24 +129,19 @@ export class ConvexRecipeRepository implements RecipeRepository {
     });
   }
 
-  async checkFavoriteStatus(
-    recipeId: string,
-    memberId: string,
-  ): Promise<RecipeFavoriteDTO | null> {
+  async checkFavoriteStatus(recipeId: string, memberId: string): Promise<RecipeFavoriteDTO | null> {
     const favorite = await convexClient.query<Record<string, unknown> | null>(
       api["recipe-interactions"].getFavorite,
       {
         recipeId: recipeId as Id<"recipes">,
         memberId: memberId as Id<"familyMembers">,
-      },
+      }
     );
 
     return favorite ? mapFavorite(favorite) : null;
   }
 
-  async addOrUpdateRating(
-    input: AddOrUpdateRatingInput,
-  ): Promise<RecipeRatingDTO> {
+  async addOrUpdateRating(input: AddOrUpdateRatingInput): Promise<RecipeRatingDTO> {
     const rating = await convexClient.mutation<Record<string, unknown>>(
       api["recipe-interactions"].addOrUpdateRating,
       {
@@ -163,22 +150,19 @@ export class ConvexRecipeRepository implements RecipeRepository {
         rating: input.rating,
         comment: input.comment ?? undefined,
         tags: input.tags ?? undefined,
-      },
+      }
     );
 
     return mapRating(rating);
   }
 
-  async getRating(
-    recipeId: string,
-    memberId: string,
-  ): Promise<RecipeRatingDTO | null> {
+  async getRating(recipeId: string, memberId: string): Promise<RecipeRatingDTO | null> {
     const rating = await convexClient.query<Record<string, unknown> | null>(
       api["recipe-interactions"].getRating,
       {
         recipeId: recipeId as Id<"recipes">,
         memberId: memberId as Id<"familyMembers">,
-      },
+      }
     );
 
     return rating ? mapRating(rating) : null;

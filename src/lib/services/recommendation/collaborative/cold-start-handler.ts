@@ -1,9 +1,6 @@
 import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
-import {
-  RecipeRecommendation,
-  RecommendationContext,
-} from "../recommendation-engine";
+import { RecipeRecommendation, RecommendationContext } from "../recommendation-engine";
 
 export interface UserProfile {
   demographicInfo?: {
@@ -35,7 +32,7 @@ export interface ColdStartStrategy {
   applicable: (user: UserProfile) => boolean;
   generateRecommendations: (
     user: UserProfile,
-    context: RecommendationContext,
+    context: RecommendationContext
   ) => Promise<RecipeRecommendation[]>;
 }
 
@@ -54,7 +51,7 @@ export class ColdStartHandler {
   async handleColdStart(
     memberId: string,
     context: RecommendationContext,
-    limit: number = 10,
+    limit: number = 10
   ): Promise<RecipeRecommendation[]> {
     // 获取用户基础信息
     const userProfile = await this.buildUserProfile(memberId);
@@ -75,23 +72,19 @@ export class ColdStartHandler {
       return this.getDefaultRecommendations(context, limit);
     }
 
-    let recommendations = await primaryStrategy.generateRecommendations(
-      userProfile,
-      context,
-    );
+    let recommendations = await primaryStrategy.generateRecommendations(userProfile, context);
 
     // 如果推荐数量不足，使用次要策略补充
     if (recommendations.length < limit && applicableStrategies.length > 1) {
       const secondaryStrategy = applicableStrategies[1];
       if (secondaryStrategy) {
-        const secondaryRecommendations =
-          await secondaryStrategy.generateRecommendations(userProfile, context);
+        const secondaryRecommendations = await secondaryStrategy.generateRecommendations(
+          userProfile,
+          context
+        );
 
         // 合并并去重
-        const combined = this.mergeRecommendations(
-          recommendations,
-          secondaryRecommendations,
-        );
+        const combined = this.mergeRecommendations(recommendations, secondaryRecommendations);
         recommendations = combined.slice(0, limit);
       }
     }
@@ -107,10 +100,9 @@ export class ColdStartHandler {
       convexClient.query<Doc<"familyMembers"> | null>(api.members.getById, {
         memberId: memberId as Id<"familyMembers">,
       }),
-      convexClient.query<Record<string, unknown> | null>(
-        api.recommendations.getUserPreference,
-        { memberId: memberId as Id<"familyMembers"> },
-      ),
+      convexClient.query<Record<string, unknown> | null>(api.recommendations.getUserPreference, {
+        memberId: memberId as Id<"familyMembers">,
+      }),
       convexClient.query<Doc<"healthGoals">[]>(api.health.listGoals, {
         memberId: memberId as Id<"familyMembers">,
         includeInactive: false,
@@ -124,24 +116,18 @@ export class ColdStartHandler {
 
     if (member) {
       profile.demographicInfo = {
-        age: member.birthDate
-          ? this.calculateAge(new Date(member.birthDate))
-          : undefined,
+        age: member.birthDate ? this.calculateAge(new Date(member.birthDate)) : undefined,
         gender: member.gender ?? undefined,
       };
     }
 
     const allergyNames = allergies
-      .filter(
-        (allergy) => allergy.allergenType === "FOOD" && !allergy.deletedAt,
-      )
+      .filter((allergy) => allergy.allergenType === "FOOD" && !allergy.deletedAt)
       .map((allergy) => allergy.allergenName);
 
     if (userPreference) {
-      const preferredCuisines =
-        (userPreference.preferredCuisines as string[] | undefined) ?? [];
-      const avoidedIngredients =
-        (userPreference.avoidedIngredients as string[] | undefined) ?? [];
+      const preferredCuisines = (userPreference.preferredCuisines as string[] | undefined) ?? [];
+      const avoidedIngredients = (userPreference.avoidedIngredients as string[] | undefined) ?? [];
       const maxCookTime = userPreference.maxCookTime as number | undefined;
 
       profile.dietaryPreferences = {
@@ -162,9 +148,7 @@ export class ColdStartHandler {
       profile.healthGoals = {
         goalType: activeGoal.goalType,
         targetWeight: activeGoal.targetValue ?? undefined,
-        activityLevel: activeGoal.activityFactor
-          ? String(activeGoal.activityFactor)
-          : undefined,
+        activityLevel: activeGoal.activityFactor ? String(activeGoal.activityFactor) : undefined,
       };
     }
 
@@ -262,7 +246,7 @@ export class ColdStartHandler {
    */
   private async generateDemographicRecommendations(
     user: UserProfile,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): Promise<RecipeRecommendation[]> {
     const age = user.demographicInfo?.age;
     const maxCookTime = age && age < 25 ? 45 : undefined;
@@ -291,8 +275,7 @@ export class ColdStartHandler {
 
     filtered.sort(
       (a, b) =>
-        ((b.viewCount as number | undefined) ?? 0) -
-        ((a.viewCount as number | undefined) ?? 0),
+        ((b.viewCount as number | undefined) ?? 0) - ((a.viewCount as number | undefined) ?? 0)
     );
 
     return filtered.slice(0, 20).map((recipe: RecipeRecord) => ({
@@ -315,7 +298,7 @@ export class ColdStartHandler {
    */
   private async generateDietaryRecommendations(
     user: UserProfile,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): Promise<RecipeRecommendation[]> {
     const dietType = user.dietaryPreferences?.dietType;
     const restrictedTerms = new Set(
@@ -324,7 +307,7 @@ export class ColdStartHandler {
         ...(user.dietaryPreferences?.allergies ?? []),
       ]
         .map((term) => term.trim().toLowerCase())
-        .filter((term) => term.length > 0),
+        .filter((term) => term.length > 0)
     );
 
     const recipes = await this.listPublicRecipes({
@@ -332,9 +315,7 @@ export class ColdStartHandler {
     });
 
     const filtered = recipes.filter((recipe: RecipeRecord) => {
-      const ingredients =
-        (recipe.ingredients as Array<Record<string, unknown>> | undefined) ??
-        [];
+      const ingredients = (recipe.ingredients as Array<Record<string, unknown>> | undefined) ?? [];
 
       if (dietType === "VEGETARIAN" || dietType === "VEGAN") {
         const hasMeat = ingredients.some((ingredient) => {
@@ -363,7 +344,7 @@ export class ColdStartHandler {
     filtered.sort(
       (a, b) =>
         ((b.averageRating as number | undefined) ?? 0) -
-        ((a.averageRating as number | undefined) ?? 0),
+        ((a.averageRating as number | undefined) ?? 0)
     );
 
     return filtered.slice(0, 20).map((recipe: RecipeRecord) => ({
@@ -386,12 +367,10 @@ export class ColdStartHandler {
    */
   private async generateCookingRecommendations(
     user: UserProfile,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): Promise<RecipeRecommendation[]> {
     const skillLevel = user.cookingPreferences?.skillLevel;
-    const targetDifficulty = skillLevel
-      ? this.mapSkillLevelToDifficulty(skillLevel)
-      : undefined;
+    const targetDifficulty = skillLevel ? this.mapSkillLevelToDifficulty(skillLevel) : undefined;
 
     const maxCookTime = user.cookingPreferences?.timePreference
       ? parseInt(user.cookingPreferences.timePreference)
@@ -416,7 +395,7 @@ export class ColdStartHandler {
     filtered.sort(
       (a, b) =>
         ((b.averageRating as number | undefined) ?? 0) -
-        ((a.averageRating as number | undefined) ?? 0),
+        ((a.averageRating as number | undefined) ?? 0)
     );
 
     return filtered.slice(0, 20).map((recipe: RecipeRecord) => ({
@@ -439,7 +418,7 @@ export class ColdStartHandler {
    */
   private async generateHealthRecommendations(
     user: UserProfile,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): Promise<RecipeRecommendation[]> {
     const goalType = user.healthGoals?.goalType;
     const recipes = await this.listPublicRecipes({
@@ -456,21 +435,21 @@ export class ColdStartHandler {
       const sodium = (recipe.sodium as number | undefined) ?? 0;
 
       switch (goalType) {
-      case "LOSE_WEIGHT":
-        return calories <= 400 && carbs <= 30;
-      case "GAIN_MUSCLE":
-        return protein >= 25 && calories >= 500;
-      case "IMPROVE_HEALTH":
-        return fiber >= 5 && sodium <= 600;
-      default:
-        return true;
+        case "LOSE_WEIGHT":
+          return calories <= 400 && carbs <= 30;
+        case "GAIN_MUSCLE":
+          return protein >= 25 && calories >= 500;
+        case "IMPROVE_HEALTH":
+          return fiber >= 5 && sodium <= 600;
+        default:
+          return true;
       }
     });
 
     filtered.sort(
       (a, b) =>
         ((b.averageRating as number | undefined) ?? 0) -
-        ((a.averageRating as number | undefined) ?? 0),
+        ((a.averageRating as number | undefined) ?? 0)
     );
 
     return filtered.slice(0, 20).map((recipe: RecipeRecord) => ({
@@ -492,7 +471,7 @@ export class ColdStartHandler {
    * 基于热门度的推荐
    */
   private async generatePopularityRecommendations(
-    context: RecommendationContext,
+    context: RecommendationContext
   ): Promise<RecipeRecommendation[]> {
     const recipes = await this.listPublicRecipes({
       mealTypes: context.mealType ? [context.mealType] : undefined,
@@ -500,14 +479,12 @@ export class ColdStartHandler {
     });
 
     const filtered = recipes.filter(
-      (recipe: RecipeRecord) =>
-        ((recipe.averageRating as number | undefined) ?? 0) >= 4,
+      (recipe: RecipeRecord) => ((recipe.averageRating as number | undefined) ?? 0) >= 4
     );
 
     filtered.sort((a, b) => {
       const ratingCountDiff =
-        ((b.ratingCount as number | undefined) ?? 0) -
-        ((a.ratingCount as number | undefined) ?? 0);
+        ((b.ratingCount as number | undefined) ?? 0) - ((a.ratingCount as number | undefined) ?? 0);
       if (ratingCountDiff !== 0) return ratingCountDiff;
 
       const ratingDiff =
@@ -516,8 +493,7 @@ export class ColdStartHandler {
       if (ratingDiff !== 0) return ratingDiff;
 
       return (
-        ((b.viewCount as number | undefined) ?? 0) -
-        ((a.viewCount as number | undefined) ?? 0)
+        ((b.viewCount as number | undefined) ?? 0) - ((a.viewCount as number | undefined) ?? 0)
       );
     });
 
@@ -541,10 +517,9 @@ export class ColdStartHandler {
    */
   private async getDefaultRecommendations(
     context: RecommendationContext,
-    limit: number,
+    limit: number
   ): Promise<RecipeRecommendation[]> {
-    const recommendations =
-      await this.generatePopularityRecommendations(context);
+    const recommendations = await this.generatePopularityRecommendations(context);
     return recommendations.slice(0, limit);
   }
 
@@ -553,7 +528,7 @@ export class ColdStartHandler {
    */
   private mergeRecommendations(
     primary: RecipeRecommendation[],
-    secondary: RecipeRecommendation[],
+    secondary: RecipeRecommendation[]
   ): RecipeRecommendation[] {
     const merged = new Map<string, RecipeRecommendation>();
 
@@ -603,10 +578,7 @@ export class ColdStartHandler {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age -= 1;
     }
     return age;

@@ -6,15 +6,13 @@ const redisUrl = (process.env.UPSTASH_REDIS_REST_URL || "").trim();
 const redisToken = (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim();
 
 // 检查Redis配置是否完整
-const isRedisConfigured = Boolean(
-  redisUrl && redisToken && redisUrl !== "" && redisToken !== "",
-);
+const isRedisConfigured = Boolean(redisUrl && redisToken && redisUrl !== "" && redisToken !== "");
 
 const redis = isRedisConfigured
   ? new Redis({
-    url: redisUrl,
-    token: redisToken,
-  })
+      url: redisUrl,
+      token: redisToken,
+    })
   : null;
 
 export { redis, isRedisConfigured };
@@ -154,9 +152,7 @@ export class CacheService {
       this.stats.misses++;
     }
     this.stats.hitRate =
-      this.stats.totalRequests > 0
-        ? (this.stats.hits / this.stats.totalRequests) * 100
-        : 0;
+      this.stats.totalRequests > 0 ? (this.stats.hits / this.stats.totalRequests) * 100 : 0;
     this.stats.lastUpdated = new Date();
   }
 
@@ -202,8 +198,7 @@ export class CacheService {
    */
   private static shouldTestConnection(): boolean {
     const now = new Date();
-    const timeSinceLastCheck =
-      now.getTime() - this.lastConnectionCheck.getTime();
+    const timeSinceLastCheck = now.getTime() - this.lastConnectionCheck.getTime();
     return timeSinceLastCheck > this.CONNECTION_CHECK_INTERVAL;
   }
 
@@ -229,7 +224,7 @@ export class CacheService {
     healthy: boolean;
     configured: boolean;
     lastCheck: Date;
-    } {
+  } {
     return {
       healthy: this.connectionHealthy,
       configured: isRedisConfigured,
@@ -257,7 +252,7 @@ export class CacheService {
   static async set<T>(
     key: string,
     value: T,
-    ttl: number = CACHE_CONFIG.DEFAULT_TTL,
+    ttl: number = CACHE_CONFIG.DEFAULT_TTL
   ): Promise<void> {
     const startTime = Date.now();
     try {
@@ -424,7 +419,7 @@ export class CacheService {
   static async getOrSet<T>(
     key: string,
     fetcher: () => Promise<T>,
-    ttl: number = CACHE_CONFIG.DEFAULT_TTL,
+    ttl: number = CACHE_CONFIG.DEFAULT_TTL
   ): Promise<T> {
     try {
       // 尝试从缓存获取

@@ -1,8 +1,4 @@
-import {
-  performanceTestManager,
-  TestConfig,
-  TestType,
-} from "./performance-testing";
+import { performanceTestManager, TestConfig, TestType } from "./performance-testing";
 import { logger } from "@/lib/logging/structured-logger";
 
 // 基准测试套件配置
@@ -275,26 +271,26 @@ export class BenchmarkSuiteManager {
       let nextExecution: Date;
 
       switch (frequency) {
-      case "hourly":
-        nextExecution = new Date(now.getTime() + 60 * 60 * 1000);
-        break;
-      case "daily":
-        if (time) {
-          const [hours = 0, minutes = 0] = time.split(":").map(Number);
-          nextExecution = new Date(now);
-          nextExecution.setHours(hours, minutes, 0, 0);
-          if (nextExecution <= now) {
-            nextExecution.setDate(nextExecution.getDate() + 1);
+        case "hourly":
+          nextExecution = new Date(now.getTime() + 60 * 60 * 1000);
+          break;
+        case "daily":
+          if (time) {
+            const [hours = 0, minutes = 0] = time.split(":").map(Number);
+            nextExecution = new Date(now);
+            nextExecution.setHours(hours, minutes, 0, 0);
+            if (nextExecution <= now) {
+              nextExecution.setDate(nextExecution.getDate() + 1);
+            }
+          } else {
+            nextExecution = new Date(now.getTime() + 24 * 60 * 60 * 1000);
           }
-        } else {
-          nextExecution = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        }
-        break;
-      case "weekly":
-        nextExecution = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        return;
+          break;
+        case "weekly":
+          nextExecution = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          return;
       }
 
       const delay = nextExecution.getTime() - now.getTime();
@@ -427,8 +423,7 @@ export class BenchmarkSuiteManager {
       }
     }
 
-    const overallScore =
-      totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
+    const overallScore = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
     const performance = this.getPerformanceGrade(overallScore);
 
     const suiteResult: BenchmarkSuiteResult = {
@@ -444,10 +439,7 @@ export class BenchmarkSuiteManager {
         performance,
       },
       testResults,
-      recommendations: this.generateSuiteRecommendations(
-        testResults,
-        overallScore,
-      ),
+      recommendations: this.generateSuiteRecommendations(testResults, overallScore),
     };
 
     // 与上次结果比较
@@ -458,7 +450,7 @@ export class BenchmarkSuiteManager {
         scoreChange: overallScore - previousResult.summary.overallScore,
         performanceTrend: this.getPerformanceTrend(
           overallScore,
-          previousResult.summary.overallScore,
+          previousResult.summary.overallScore
         ),
       };
     }
@@ -492,7 +484,7 @@ export class BenchmarkSuiteManager {
     // 响应时间评分 (40%)
     const responseTimeScore = this.calculateResponseTimeScore(
       result.summary.averageResponseTime,
-      thresholds.responseTime,
+      thresholds.responseTime
     );
     score = score * 0.6 + responseTimeScore * 0.4;
 
@@ -503,7 +495,7 @@ export class BenchmarkSuiteManager {
     // 吞吐量评分 (30%)
     const throughputScore = this.calculateThroughputScore(
       result.summary.throughput,
-      thresholds.throughput,
+      thresholds.throughput
     );
     score = score * 0.7 + throughputScore * 0.3;
 
@@ -513,10 +505,7 @@ export class BenchmarkSuiteManager {
   /**
    * 计算响应时间分数
    */
-  private calculateResponseTimeScore(
-    actualTime: number,
-    threshold: any,
-  ): number {
+  private calculateResponseTimeScore(actualTime: number, threshold: any): number {
     if (actualTime <= threshold.avg) return 100;
     if (actualTime >= threshold.p99) return 0;
 
@@ -528,10 +517,7 @@ export class BenchmarkSuiteManager {
   /**
    * 计算吞吐量分数
    */
-  private calculateThroughputScore(
-    actualThroughput: number,
-    threshold: any,
-  ): number {
+  private calculateThroughputScore(actualThroughput: number, threshold: any): number {
     if (actualThroughput >= threshold.max) return 100;
     if (actualThroughput <= threshold.min) return 50;
 
@@ -543,9 +529,7 @@ export class BenchmarkSuiteManager {
   /**
    * 获取性能等级
    */
-  private getPerformanceGrade(
-    score: number,
-  ): "excellent" | "good" | "fair" | "poor" {
+  private getPerformanceGrade(score: number): "excellent" | "good" | "fair" | "poor" {
     if (score >= 90) return "excellent";
     if (score >= 75) return "good";
     if (score >= 60) return "fair";
@@ -557,7 +541,7 @@ export class BenchmarkSuiteManager {
    */
   private getPerformanceTrend(
     currentScore: number,
-    previousScore: number,
+    previousScore: number
   ): "improved" | "stable" | "degraded" {
     const change = currentScore - previousScore;
     if (change > 5) return "improved";
@@ -570,7 +554,7 @@ export class BenchmarkSuiteManager {
    */
   private generateSuiteRecommendations(
     testResults: BenchmarkSuiteResult["testResults"],
-    overallScore: number,
+    overallScore: number
   ): string[] {
     const recommendations: string[] = [];
 
@@ -584,9 +568,7 @@ export class BenchmarkSuiteManager {
     // 基于失败测试的建议
     const failedTests = testResults.filter((t) => !t.passed);
     if (failedTests.length > 0) {
-      recommendations.push(
-        `有 ${failedTests.length} 个测试未通过，需要优先解决`,
-      );
+      recommendations.push(`有 ${failedTests.length} 个测试未通过，需要优先解决`);
       failedTests.forEach((test) => {
         if (test.metrics.responseTime > 1000) {
           recommendations.push(`优化 ${test.testName} 的响应时间`);
@@ -670,9 +652,7 @@ export class BenchmarkSuiteManager {
       results = results.filter((r) => r.suiteId === suiteId);
     }
 
-    results = results.sort(
-      (a, b) => b.executedAt.getTime() - a.executedAt.getTime(),
-    );
+    results = results.sort((a, b) => b.executedAt.getTime() - a.executedAt.getTime());
     return limit ? results.slice(0, limit) : results;
   }
 
@@ -695,7 +675,7 @@ export class BenchmarkSuiteManager {
    */
   generateTrendReport(
     suiteId: string,
-    days: number = 7,
+    days: number = 7
   ): {
     suiteId: string;
     suiteName: string;
@@ -718,8 +698,7 @@ export class BenchmarkSuiteManager {
     const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
     const results = this.getResults(suiteId).filter(
-      (result) =>
-        result.executedAt >= startDate && result.executedAt <= endDate,
+      (result) => result.executedAt >= startDate && result.executedAt <= endDate
     );
 
     if (results.length === 0) return null;
@@ -733,18 +712,15 @@ export class BenchmarkSuiteManager {
     }));
 
     const averageScore = Math.round(
-      dataPoints.reduce((sum, point) => sum + point.score, 0) /
-        dataPoints.length,
+      dataPoints.reduce((sum, point) => sum + point.score, 0) / dataPoints.length
     );
 
     const scores = dataPoints.map((point) => point.score);
     const firstHalf = scores.slice(0, Math.floor(scores.length / 2));
     const secondHalf = scores.slice(Math.floor(scores.length / 2));
 
-    const firstHalfAvg =
-      firstHalf.reduce((sum, score) => sum + score, 0) / firstHalf.length;
-    const secondHalfAvg =
-      secondHalf.reduce((sum, score) => sum + score, 0) / secondHalf.length;
+    const firstHalfAvg = firstHalf.reduce((sum, score) => sum + score, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, score) => sum + score, 0) / secondHalf.length;
 
     const trend =
       secondHalfAvg > firstHalfAvg + 5
@@ -753,10 +729,7 @@ export class BenchmarkSuiteManager {
           ? "degrading"
           : "stable";
 
-    const recommendations = this.generateTrendRecommendations(
-      trend,
-      averageScore,
-    );
+    const recommendations = this.generateTrendRecommendations(trend, averageScore);
 
     return {
       suiteId,
@@ -774,7 +747,7 @@ export class BenchmarkSuiteManager {
    */
   private generateTrendRecommendations(
     trend: "improving" | "stable" | "degrading",
-    averageScore: number,
+    averageScore: number
   ): string[] {
     const recommendations: string[] = [];
 

@@ -33,16 +33,12 @@ export async function POST(request: NextRequest) {
     if (!validationResult.isValid) {
       return NextResponse.json(
         { error: `数据验证失败: ${validationResult.error}` },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // 生成图片
-    const imageUrl = await shareImageGenerator.generateShareImage(
-      template,
-      data,
-      config,
-    );
+    const imageUrl = await shareImageGenerator.generateShareImage(template, data, config);
 
     return NextResponse.json({
       success: true,
@@ -57,7 +53,7 @@ export async function POST(request: NextRequest) {
     console.error("生成分享图片失败:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "服务器内部错误" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -67,36 +63,36 @@ export async function POST(request: NextRequest) {
  */
 function validateTemplateData(
   template: ShareTemplate,
-  data: any,
+  data: any
 ): { isValid: boolean; error?: string } {
   try {
     switch (template) {
-    case ShareTemplate.HEALTH_REPORT:
-      return validateHealthReportData(data);
+      case ShareTemplate.HEALTH_REPORT:
+        return validateHealthReportData(data);
 
-    case ShareTemplate.GOAL_ACHIEVED:
-      return validateGoalAchievedData(data);
+      case ShareTemplate.GOAL_ACHIEVED:
+        return validateGoalAchievedData(data);
 
-    case ShareTemplate.ACHIEVEMENT_UNLOCKED:
-      return validateAchievementUnlockedData(data);
+      case ShareTemplate.ACHIEVEMENT_UNLOCKED:
+        return validateAchievementUnlockedData(data);
 
-    case ShareTemplate.WEIGHT_LOSS:
-      return validateWeightLossData(data);
+      case ShareTemplate.WEIGHT_LOSS:
+        return validateWeightLossData(data);
 
-    case ShareTemplate.STREAK_CELEBRATION:
-      return validateStreakCelebrationData(data);
+      case ShareTemplate.STREAK_CELEBRATION:
+        return validateStreakCelebrationData(data);
 
-    case ShareTemplate.RECIPE_CARD:
-      return validateRecipeCardData(data);
+      case ShareTemplate.RECIPE_CARD:
+        return validateRecipeCardData(data);
 
-    case ShareTemplate.PERSONAL_RECORD:
-      return validatePersonalRecordData(data);
+      case ShareTemplate.PERSONAL_RECORD:
+        return validatePersonalRecordData(data);
 
-    case ShareTemplate.COMMUNITY_POST:
-      return validateCommunityPostData(data);
+      case ShareTemplate.COMMUNITY_POST:
+        return validateCommunityPostData(data);
 
-    default:
-      return { isValid: false, error: "不支持的模板类型" };
+      default:
+        return { isValid: false, error: "不支持的模板类型" };
     }
   } catch (error) {
     return {
@@ -121,11 +117,7 @@ function validateHealthReportData(data: any): {
     }
   }
 
-  if (
-    typeof data.healthScore !== "number" ||
-    data.healthScore < 0 ||
-    data.healthScore > 100
-  ) {
+  if (typeof data.healthScore !== "number" || data.healthScore < 0 || data.healthScore > 100) {
     return { isValid: false, error: "healthScore必须是0-100之间的数字" };
   }
 
@@ -147,11 +139,7 @@ function validateGoalAchievedData(data: any): {
     }
   }
 
-  if (
-    typeof data.progress !== "number" ||
-    data.progress < 0 ||
-    data.progress > 100
-  ) {
+  if (typeof data.progress !== "number" || data.progress < 0 || data.progress > 100) {
     return { isValid: false, error: "progress必须是0-100之间的数字" };
   }
 
@@ -165,12 +153,7 @@ function validateAchievementUnlockedData(data: any): {
   isValid: boolean;
   error?: string;
 } {
-  const requiredFields = [
-    "memberName",
-    "achievementType",
-    "achievementTitle",
-    "points",
-  ];
+  const requiredFields = ["memberName", "achievementType", "achievementTitle", "points"];
 
   for (const field of requiredFields) {
     if (!data[field]) {
@@ -234,11 +217,7 @@ function validateStreakCelebrationData(data: any): {
     }
   }
 
-  if (
-    typeof data.streakDays !== "number" ||
-    data.streakDays < 1 ||
-    data.streakDays > 365
-  ) {
+  if (typeof data.streakDays !== "number" || data.streakDays < 1 || data.streakDays > 365) {
     return { isValid: false, error: "streakDays必须是1-365之间的整数" };
   }
 
@@ -260,10 +239,7 @@ function validateRecipeCardData(data: any): {
     }
   }
 
-  if (
-    data.calories &&
-    (typeof data.calories !== "number" || data.calories < 0)
-  ) {
+  if (data.calories && (typeof data.calories !== "number" || data.calories < 0)) {
     return { isValid: false, error: "calories必须是大于等于0的数字" };
   }
 
@@ -351,23 +327,20 @@ export async function GET(request: NextRequest) {
         ShareTemplate.ACHIEVEMENT_UNLOCKED,
       ];
 
-      const socialTemplates = [
-        ShareTemplate.RECIPE_CARD,
-        ShareTemplate.COMMUNITY_POST,
-      ];
+      const socialTemplates = [ShareTemplate.RECIPE_CARD, ShareTemplate.COMMUNITY_POST];
 
       switch (category) {
-      case "health":
-        templates = healthTemplates;
-        break;
-      case "achievement":
-        templates = achievementTemplates;
-        break;
-      case "social":
-        templates = socialTemplates;
-        break;
-      default:
-        templates = [];
+        case "health":
+          templates = healthTemplates;
+          break;
+        case "achievement":
+          templates = achievementTemplates;
+          break;
+        case "social":
+          templates = socialTemplates;
+          break;
+        default:
+          templates = [];
       }
     }
 
@@ -456,11 +429,7 @@ function getTemplateRequiredFields(template: ShareTemplate): string[] {
       "achievementTitle",
       "points",
     ],
-    [ShareTemplate.WEIGHT_LOSS]: [
-      "memberName",
-      "initialWeight",
-      "currentWeight",
-    ],
+    [ShareTemplate.WEIGHT_LOSS]: ["memberName", "initialWeight", "currentWeight"],
     [ShareTemplate.STREAK_CELEBRATION]: ["memberName", "streakDays"],
     [ShareTemplate.RECIPE_CARD]: ["memberName", "recipeName"],
     [ShareTemplate.PERSONAL_RECORD]: ["memberName", "title", "description"],

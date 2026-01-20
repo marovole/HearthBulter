@@ -38,28 +38,26 @@ export class HealthScoreCalculator {
    * @param memberId 成员ID
    */
   async calculateHealthScore(memberId: string): Promise<HealthScore> {
-    const member = await convexClient.query<Doc<"familyMembers"> | null>(
-      api.members.getById,
-      { memberId: memberId as Id<"familyMembers"> },
-    );
+    const member = await convexClient.query<Doc<"familyMembers"> | null>(api.members.getById, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     if (!member) {
       throw new Error("成员不存在");
     }
 
-    const goals = await convexClient.query<Doc<"healthGoals">[]>(
-      api.health.listGoals,
-      { memberId: memberId as Id<"familyMembers">, includeInactive: false },
-    );
+    const goals = await convexClient.query<Doc<"healthGoals">[]>(api.health.listGoals, {
+      memberId: memberId as Id<"familyMembers">,
+      includeInactive: false,
+    });
 
-    const healthData = await convexClient.query<Doc<"healthData">[]>(
-      api.health.getMetrics,
-      { memberId: memberId as Id<"familyMembers"> },
-    );
+    const healthData = await convexClient.query<Doc<"healthData">[]>(api.health.getMetrics, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     const cutoff = subDays(new Date(), 30).getTime();
     const recentHealthData = healthData.filter(
-      (record) => (record.measuredAt ?? record.createdAt ?? 0) >= cutoff,
+      (record) => (record.measuredAt ?? record.createdAt ?? 0) >= cutoff
     );
 
     const mappedHealthData = recentHealthData.map((record) => ({
@@ -75,26 +73,16 @@ export class HealthScoreCalculator {
     const activeGoal = goals[0];
 
     const bmiScore = this.calculateBMIScore(member);
-    const bmi =
-      member.height && member.weight
-        ? calculateBMI(member.weight, member.height)
-        : null;
+    const bmi = member.height && member.weight ? calculateBMI(member.weight, member.height) : null;
 
-    const nutritionScore = await this.calculateNutritionScore(
-      memberId,
-      activeGoal,
-    );
+    const nutritionScore = await this.calculateNutritionScore(memberId, activeGoal);
 
     const activityScore = this.calculateActivityScore(mappedHealthData);
 
-    const dataCompletenessScore =
-      this.calculateDataCompletenessScore(mappedHealthData);
+    const dataCompletenessScore = this.calculateDataCompletenessScore(mappedHealthData);
 
     const totalScore = Math.round(
-      bmiScore.score +
-        nutritionScore.score +
-        activityScore.score +
-        dataCompletenessScore.score,
+      bmiScore.score + nutritionScore.score + activityScore.score + dataCompletenessScore.score
     );
 
     // 生成建议
@@ -127,10 +115,7 @@ export class HealthScoreCalculator {
   /**
    * 计算BMI评分（30分）
    */
-  private calculateBMIScore(member: {
-    height?: number | null;
-    weight?: number | null;
-  }): {
+  private calculateBMIScore(member: { height?: number | null; weight?: number | null }): {
     score: number;
     category: "underweight" | "normal" | "overweight" | "obese" | null;
   } {
@@ -140,8 +125,7 @@ export class HealthScoreCalculator {
 
     const bmi = calculateBMI(member.weight, member.height);
     let score = 0;
-    let category: "underweight" | "normal" | "overweight" | "obese" | null =
-      null;
+    let category: "underweight" | "normal" | "overweight" | "obese" | null = null;
 
     if (bmi < 18.5) {
       score = 15; // 偏瘦
@@ -165,7 +149,7 @@ export class HealthScoreCalculator {
    */
   private async calculateNutritionScore(
     memberId: string,
-    activeGoal?: Doc<"healthGoals">,
+    activeGoal?: Doc<"healthGoals">
   ): Promise<{
     score: number;
     adherenceRate: number;
@@ -198,9 +182,8 @@ export class HealthScoreCalculator {
     frequency: number;
   } {
     // 计算过去30天有记录的天数
-    const daysWithData = new Set(
-      healthData.map((d) => d.measuredAt.toISOString().split("T")[0]),
-    ).size;
+    const daysWithData = new Set(healthData.map((d) => d.measuredAt.toISOString().split("T")[0]))
+      .size;
 
     // 理想情况：每天记录
     const idealDays = 30;
@@ -222,7 +205,7 @@ export class HealthScoreCalculator {
       muscleMass: number | null;
       bloodPressureSystolic: number | null;
       heartRate: number | null;
-    }>,
+    }>
   ): {
     score: number;
     completenessRate: number;
@@ -274,21 +257,19 @@ export class HealthScoreCalculator {
     // 营养建议
     if (data.nutritionScore.score < 25) {
       recommendations.push(
-        `营养达标率较低（${data.nutritionScore.adherenceRate}%），建议关注每日营养摄入`,
+        `营养达标率较低（${data.nutritionScore.adherenceRate}%），建议关注每日营养摄入`
       );
     }
 
     // 运动建议
     if (data.activityScore.score < 15) {
-      recommendations.push(
-        `过去30天仅记录${data.activityScore.frequency}天，建议每天记录健康数据`,
-      );
+      recommendations.push(`过去30天仅记录${data.activityScore.frequency}天，建议每天记录健康数据`);
     }
 
     // 数据完整性建议
     if (data.dataCompletenessScore.score < 15) {
       recommendations.push(
-        `数据完整性较低（${Math.round(data.dataCompletenessScore.completenessRate)}%），建议完善各项健康指标记录`,
+        `数据完整性较低（${Math.round(data.dataCompletenessScore.completenessRate)}%），建议完善各项健康指标记录`
       );
     }
 

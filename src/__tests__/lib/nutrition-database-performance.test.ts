@@ -55,7 +55,7 @@ describe("Nutrition Database Performance Tests", () => {
             ],
           },
           take: 20,
-        }),
+        })
       );
 
       await Promise.all(queries);

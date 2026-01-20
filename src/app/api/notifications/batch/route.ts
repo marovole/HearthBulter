@@ -21,31 +21,22 @@ export async function POST(request: NextRequest) {
 
     // 验证 data 参数是否存在
     if (!data) {
-      return NextResponse.json(
-        { error: "Missing required field: data" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing required field: data" }, { status: 400 });
     }
 
     switch (operation) {
-    case "create":
-      return await handleBatchCreate(data);
-    case "markRead":
-      return await handleBatchMarkRead(data);
-    case "delete":
-      return await handleBatchDelete(data);
-    default:
-      return NextResponse.json(
-        { error: "Invalid operation" },
-        { status: 400 },
-      );
+      case "create":
+        return await handleBatchCreate(data);
+      case "markRead":
+        return await handleBatchMarkRead(data);
+      case "delete":
+        return await handleBatchDelete(data);
+      default:
+        return NextResponse.json({ error: "Invalid operation" }, { status: 400 });
     }
   } catch (error) {
     console.error("Error in batch operation:", error);
-    return NextResponse.json(
-      { error: "Failed to perform batch operation" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to perform batch operation" }, { status: 500 });
   }
 }
 
@@ -66,23 +57,17 @@ async function handleBatchCreate(data: {
   }>;
 }) {
   if (!data.notifications || !Array.isArray(data.notifications)) {
-    return NextResponse.json(
-      { error: "Notifications array is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Notifications array is required" }, { status: 400 });
   }
 
   if (data.notifications.length === 0) {
-    return NextResponse.json(
-      { error: "At least one notification is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "At least one notification is required" }, { status: 400 });
   }
 
   if (data.notifications.length > 100) {
     return NextResponse.json(
       { error: "Maximum 100 notifications allowed per batch" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -128,9 +113,7 @@ async function handleBatchCreate(data: {
         success: successCount,
         failed: failureCount,
         successRate:
-          data.notifications.length > 0
-            ? (successCount / data.notifications.length) * 100
-            : 0,
+          data.notifications.length > 0 ? (successCount / data.notifications.length) * 100 : 0,
       },
       errors: errors.length > 0 ? errors : undefined,
     },
@@ -138,35 +121,26 @@ async function handleBatchCreate(data: {
 }
 
 // 批量标记为已读
-async function handleBatchMarkRead(data: {
-  notificationIds: string[];
-  memberId: string;
-}) {
+async function handleBatchMarkRead(data: { notificationIds: string[]; memberId: string }) {
   if (!data.notificationIds || !Array.isArray(data.notificationIds)) {
-    return NextResponse.json(
-      { error: "Notification IDs array is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Notification IDs array is required" }, { status: 400 });
   }
 
   if (!data.memberId) {
-    return NextResponse.json(
-      { error: "Member ID is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
   }
 
   if (data.notificationIds.length === 0) {
     return NextResponse.json(
       { error: "At least one notification ID is required" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
   if (data.notificationIds.length > 50) {
     return NextResponse.json(
       { error: "Maximum 50 notifications allowed per batch" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -196,9 +170,7 @@ async function handleBatchMarkRead(data: {
         success: successCount,
         failed: failureCount,
         successRate:
-          data.notificationIds.length > 0
-            ? (successCount / data.notificationIds.length) * 100
-            : 0,
+          data.notificationIds.length > 0 ? (successCount / data.notificationIds.length) * 100 : 0,
       },
       errors: errors.length > 0 ? errors : undefined,
     },
@@ -206,35 +178,26 @@ async function handleBatchMarkRead(data: {
 }
 
 // 批量删除通知
-async function handleBatchDelete(data: {
-  notificationIds: string[];
-  memberId: string;
-}) {
+async function handleBatchDelete(data: { notificationIds: string[]; memberId: string }) {
   if (!data.notificationIds || !Array.isArray(data.notificationIds)) {
-    return NextResponse.json(
-      { error: "Notification IDs array is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Notification IDs array is required" }, { status: 400 });
   }
 
   if (!data.memberId) {
-    return NextResponse.json(
-      { error: "Member ID is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
   }
 
   if (data.notificationIds.length === 0) {
     return NextResponse.json(
       { error: "At least one notification ID is required" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
   if (data.notificationIds.length > 50) {
     return NextResponse.json(
       { error: "Maximum 50 notifications allowed per batch" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -244,10 +207,7 @@ async function handleBatchDelete(data: {
   // 使用双写框架逐个删除通知
   for (const notificationId of data.notificationIds) {
     try {
-      await notificationRepository.deleteNotification(
-        notificationId,
-        data.memberId,
-      );
+      await notificationRepository.deleteNotification(notificationId, data.memberId);
       successCount++;
     } catch (error) {
       errors.push({
@@ -267,9 +227,7 @@ async function handleBatchDelete(data: {
         success: successCount,
         failed: failureCount,
         successRate:
-          data.notificationIds.length > 0
-            ? (successCount / data.notificationIds.length) * 100
-            : 0,
+          data.notificationIds.length > 0 ? (successCount / data.notificationIds.length) * 100 : 0,
       },
       errors: errors.length > 0 ? errors : undefined,
     },

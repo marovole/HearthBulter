@@ -25,16 +25,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const days: number =
-      typeof body?.days === "number" ? Math.max(1, Math.min(30, body.days)) : 7;
-    const startDate: Date | undefined = body?.startDate
-      ? new Date(body.startDate)
-      : undefined;
+    const days: number = typeof body?.days === "number" ? Math.max(1, Math.min(30, body.days)) : 7;
+    const startDate: Date | undefined = body?.startDate ? new Date(body.startDate) : undefined;
 
-    const members = await convexClient.query<Doc<"familyMembers">[]>(
-      api.members.listByClerkId,
-      { clerkId: session.user.id },
-    );
+    const members = await convexClient.query<Doc<"familyMembers">[]>(api.members.listByClerkId, {
+      clerkId: session.user.id,
+    });
 
     const member = members[0];
 
@@ -42,11 +38,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未找到关联的成员" }, { status: 404 });
     }
 
-    const plan = await mealPlanner.generateMealPlan(
-      member._id as string,
-      days,
-      startDate,
-    );
+    const plan = await mealPlanner.generateMealPlan(member._id as string, days, startDate);
 
     return NextResponse.json(plan, { status: 201 });
   } catch (error) {

@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -23,10 +17,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import type { DeviceConnectionInfo } from "@/types/wearable-devices";
-import {
-  SYNC_STATUS_LABELS,
-  PLATFORM_TYPE_LABELS,
-} from "@/types/wearable-devices";
+import { SYNC_STATUS_LABELS, PLATFORM_TYPE_LABELS } from "@/types/wearable-devices";
 
 interface SyncStatusProps {
   devices: DeviceConnectionInfo[];
@@ -35,12 +26,7 @@ interface SyncStatusProps {
   className?: string;
 }
 
-export function SyncStatus({
-  devices,
-  onSyncDevice,
-  onSyncAll,
-  className,
-}: SyncStatusProps) {
+export function SyncStatus({ devices, onSyncDevice, onSyncAll, className }: SyncStatusProps) {
   const [isSyncing, setIsSyncing] = useState<string | null>(null);
   const [lastGlobalSync, setLastGlobalSync] = useState<Date | null>(null);
 
@@ -68,14 +54,14 @@ export function SyncStatus({
   // 获取同步状态颜色
   const getStatusColor = (status: string) => {
     switch (status) {
-    case "SUCCESS":
-      return "bg-green-100 text-green-800";
-    case "FAILED":
-      return "bg-red-100 text-red-800";
-    case "SYNCING":
-      return "bg-blue-100 text-blue-800";
-    default:
-      return "bg-gray-100 text-gray-800";
+      case "SUCCESS":
+        return "bg-green-100 text-green-800";
+      case "FAILED":
+        return "bg-red-100 text-red-800";
+      case "SYNCING":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -97,9 +83,7 @@ export function SyncStatus({
   const getSyncProgress = () => {
     if (devices.length === 0) return 100;
     const activeDevices = devices.filter((device) => device.isActive).length;
-    const successDevices = devices.filter(
-      (device) => device.syncStatus === "SUCCESS",
-    ).length;
+    const successDevices = devices.filter((device) => device.syncStatus === "SUCCESS").length;
     return activeDevices > 0 ? (successDevices / activeDevices) * 100 : 0;
   };
 
@@ -110,17 +94,12 @@ export function SyncStatus({
       return { status: "NO_DEVICES", label: "无设备", color: "text-gray-500" };
     }
 
-    const failedDevices = activeDevices.filter(
-      (device) => device.syncStatus === "FAILED",
-    );
-    const successDevices = activeDevices.filter(
-      (device) => device.syncStatus === "SUCCESS",
-    );
+    const failedDevices = activeDevices.filter((device) => device.syncStatus === "FAILED");
+    const successDevices = activeDevices.filter((device) => device.syncStatus === "SUCCESS");
     const hasRecentSync = activeDevices.some((device) => {
       if (!device.lastSyncAt) return false;
       const hours =
-        (new Date().getTime() - new Date(device.lastSyncAt).getTime()) /
-        (1000 * 60 * 60);
+        (new Date().getTime() - new Date(device.lastSyncAt).getTime()) / (1000 * 60 * 60);
       return hours < 2;
     });
 
@@ -148,17 +127,14 @@ export function SyncStatus({
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <Activity className="w-5 h-5 mr-2" />
+              <Activity className="mr-2 h-5 w-5" />
               数据同步状态
             </div>
             <div className="flex items-center space-x-2">
               <Badge className={healthStatus.color}>{healthStatus.label}</Badge>
               {syncStats.syncing > 0 && (
-                <Badge
-                  variant="outline"
-                  className="text-blue-600 border-blue-200"
-                >
-                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                <Badge variant="outline" className="border-blue-200 text-blue-600">
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                   同步中
                 </Badge>
               )}
@@ -168,35 +144,33 @@ export function SyncStatus({
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 总体状态 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Activity className="w-5 h-5 text-blue-500" />
+              <div className="mb-2 flex items-center justify-center">
+                <Activity className="h-5 w-5 text-blue-500" />
               </div>
               <div className="text-2xl font-bold">{syncStats.active}</div>
               <div className="text-xs text-muted-foreground">活跃设备</div>
             </div>
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
+              <div className="mb-2 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
               <div className="text-2xl font-bold">{syncStats.success}</div>
               <div className="text-xs text-muted-foreground">同步正常</div>
             </div>
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <AlertCircle className="w-5 h-5 text-red-500" />
+              <div className="mb-2 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-red-500" />
               </div>
               <div className="text-2xl font-bold">{syncStats.failed}</div>
               <div className="text-xs text-muted-foreground">同步失败</div>
             </div>
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Clock className="w-5 h-5 text-gray-500" />
+              <div className="mb-2 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-gray-500" />
               </div>
-              <div className="text-2xl font-bold">
-                {formatTime(lastGlobalSync)}
-              </div>
+              <div className="text-2xl font-bold">{formatTime(lastGlobalSync)}</div>
               <div className="text-xs text-muted-foreground">最后同步</div>
             </div>
           </div>
@@ -223,27 +197,25 @@ export function SyncStatus({
                 {devices.map((device) => (
                   <div
                     key={device.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                    className={`flex items-center justify-between rounded-lg border p-3 ${
                       device.isActive ? "bg-white" : "bg-gray-50 opacity-60"
                     }`}
                   >
                     <div className="flex items-center space-x-3">
                       <div
-                        className={`p-2 rounded-lg ${
+                        className={`rounded-lg p-2 ${
                           device.isActive ? "bg-blue-100" : "bg-gray-100"
                         }`}
                       >
                         {device.isActive ? (
-                          <Wifi className="w-4 h-4 text-blue-600" />
+                          <Wifi className="h-4 w-4 text-blue-600" />
                         ) : (
-                          <WifiOff className="w-4 h-4 text-gray-600" />
+                          <WifiOff className="h-4 w-4 text-gray-600" />
                         )}
                       </div>
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-sm">
-                            {device.deviceName}
-                          </span>
+                          <span className="text-sm font-medium">{device.deviceName}</span>
                           <Badge
                             variant="outline"
                             className={`text-xs ${getStatusColor(device.syncStatus)}`}
@@ -252,15 +224,14 @@ export function SyncStatus({
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {PLATFORM_TYPE_LABELS[device.platform]} •
-                          {formatTime(device.lastSyncAt)}
+                          {PLATFORM_TYPE_LABELS[device.platform]} •{formatTime(device.lastSyncAt)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       {device.lastError && (
                         <span title={device.lastError}>
-                          <AlertCircle className="w-4 h-4 text-red-500" />
+                          <AlertCircle className="h-4 w-4 text-red-500" />
                         </span>
                       )}
                       <Button
@@ -275,12 +246,12 @@ export function SyncStatus({
                       >
                         {isSyncing === device.deviceId ? (
                           <>
-                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                             同步中
                           </>
                         ) : (
                           <>
-                            <CloudDownload className="w-3 h-3 mr-1" />
+                            <CloudDownload className="mr-1 h-3 w-3" />
                             同步
                           </>
                         )}
@@ -293,39 +264,33 @@ export function SyncStatus({
           )}
 
           {/* 操作按钮 */}
-          <div className="flex space-x-3 pt-4 border-t">
+          <div className="flex space-x-3 border-t pt-4">
             <Button
               variant="outline"
               onClick={() => onSyncDevice?.("all")}
               disabled={devices.filter((d) => d.isActive).length === 0}
               className="flex-1"
             >
-              <CloudDownload className="w-4 h-4 mr-2" />
+              <CloudDownload className="mr-2 h-4 w-4" />
               同步所有设备
             </Button>
-            <Button
-              onClick={onSyncAll}
-              disabled={devices.length === 0}
-              className="flex-1"
-            >
-              <Activity className="w-4 h-4 mr-2" />
+            <Button onClick={onSyncAll} disabled={devices.length === 0} className="flex-1">
+              <Activity className="mr-2 h-4 w-4" />
               批量同步
             </Button>
           </div>
 
           {/* 趋势提示 */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="flex items-start space-x-2">
-              <TrendingUp className="w-4 h-4 text-blue-600 mt-0.5" />
+              <TrendingUp className="mt-0.5 h-4 w-4 text-blue-600" />
               <div>
-                <h5 className="font-medium text-sm text-blue-800">同步建议</h5>
-                <p className="text-xs text-blue-600 mt-1">
-                  {healthStatus.status === "HEALTHY" &&
-                    "所有设备数据正常，建议保持当前同步频率。"}
+                <h5 className="text-sm font-medium text-blue-800">同步建议</h5>
+                <p className="mt-1 text-xs text-blue-600">
+                  {healthStatus.status === "HEALTHY" && "所有设备数据正常，建议保持当前同步频率。"}
                   {healthStatus.status === "STALE" &&
                     "部分设备数据较旧，建议立即同步获取最新数据。"}
-                  {healthStatus.status === "ERROR" &&
-                    "发现同步异常，请检查设备连接或网络状态。"}
+                  {healthStatus.status === "ERROR" && "发现同步异常，请检查设备连接或网络状态。"}
                   {healthStatus.status === "NO_DEVICES" &&
                     "尚未连接任何可穿戴设备，连接设备后即可自动同步健康数据。"}
                 </p>

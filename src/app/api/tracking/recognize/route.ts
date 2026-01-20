@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { convexClient, api } from "@/lib/convex-client";
-import {
-  asConvexMutationReference,
-  asConvexQueryReference,
-} from "@/lib/convex-reference";
+import { asConvexMutationReference, asConvexQueryReference } from "@/lib/convex-reference";
 import { memberRepository } from "@/lib/repositories/member-repository-singleton";
 import type { Doc, Id } from "../../../../../convex/_generated/dataModel";
 
@@ -40,10 +37,10 @@ export async function POST(request: NextRequest) {
           _id: string;
           mealLogId: Id<"mealLogs">;
         })
-        | null
-        >(asConvexQueryReference("tracking:getFoodPhotoById"), {
-          id: photoId as Id<"foodPhotos">,
-        });
+      | null
+    >(asConvexQueryReference("tracking:getFoodPhotoById"), {
+      id: photoId as Id<"foodPhotos">,
+    });
 
     if (!photo) {
       return NextResponse.json({ error: "未找到照片记录" }, { status: 404 });
@@ -54,33 +51,26 @@ export async function POST(request: NextRequest) {
           _id: string;
           memberId: Id<"familyMembers">;
         })
-        | null
-        >(api.tracking.getMealLogById, {
-          id: photo.mealLogId,
-        });
+      | null
+    >(api.tracking.getMealLogById, {
+      id: photo.mealLogId,
+    });
 
     if (!mealLog) {
       return NextResponse.json({ error: "未找到餐食记录" }, { status: 404 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      mealLog.memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(mealLog.memberId, session.user.id);
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限访问该记录" }, { status: 403 });
     }
 
-    await convexClient.mutation(
-      asConvexMutationReference("tracking:updateFoodPhoto"),
-      {
-        id: photoId as Id<"foodPhotos">,
-        recognitionStatus: "PROCESSING",
-      },
-    );
+    await convexClient.mutation(asConvexMutationReference("tracking:updateFoodPhoto"), {
+      id: photoId as Id<"foodPhotos">,
+      recognitionStatus: "PROCESSING",
+    });
 
-    const mockResult =
-      MOCK_FOODS[Math.floor(Math.random() * MOCK_FOODS.length)];
+    const mockResult = MOCK_FOODS[Math.floor(Math.random() * MOCK_FOODS.length)];
 
     if (!mockResult) {
       throw new Error("识别结果生成失败");
@@ -91,7 +81,7 @@ export async function POST(request: NextRequest) {
       {
         query: mockResult.name,
         limit: 5,
-      },
+      }
     );
 
     const recognitionResult = {
@@ -104,15 +94,12 @@ export async function POST(request: NextRequest) {
       })),
     };
 
-    await convexClient.mutation(
-      asConvexMutationReference("tracking:updateFoodPhoto"),
-      {
-        id: photoId as Id<"foodPhotos">,
-        recognitionStatus: "COMPLETED",
-        recognitionResult: JSON.stringify(recognitionResult),
-        confidence: mockResult.confidence,
-      },
-    );
+    await convexClient.mutation(asConvexMutationReference("tracking:updateFoodPhoto"), {
+      id: photoId as Id<"foodPhotos">,
+      recognitionStatus: "COMPLETED",
+      recognitionResult: JSON.stringify(recognitionResult),
+      confidence: mockResult.confidence,
+    });
 
     const primaryFood = matchedFoods[0] || null;
     const amount = mockResult.amount ?? 100;
@@ -173,19 +160,19 @@ export async function POST(request: NextRequest) {
           {
             query: match.foodName,
             limit: 1,
-          },
+          }
         );
 
         const food = foods[0] ?? null;
 
         return food
           ? {
-            id: food._id,
-            name: food.name,
-            confidence: Math.round(match.confidence * 100),
-          }
+              id: food._id,
+              name: food.name,
+              confidence: Math.round(match.confidence * 100),
+            }
           : null;
-      }),
+      })
     );
 
     return NextResponse.json({
@@ -197,20 +184,16 @@ export async function POST(request: NextRequest) {
       estimatedAmount: amount,
       nutrition,
       alternatives: alternatives.filter(
-        (item): item is { id: Id<"foods">; name: string; confidence: number } =>
-          item !== null,
+        (item): item is { id: Id<"foods">; name: string; confidence: number } => item !== null
       ),
     });
   } catch (error) {
     if (photoId) {
-      await convexClient.mutation(
-        asConvexMutationReference("tracking:updateFoodPhoto"),
-        {
-          id: photoId as Id<"foodPhotos">,
-          recognitionStatus: "FAILED",
-          recognitionError: error instanceof Error ? error.message : "识别失败",
-        },
-      );
+      await convexClient.mutation(asConvexMutationReference("tracking:updateFoodPhoto"), {
+        id: photoId as Id<"foodPhotos">,
+        recognitionStatus: "FAILED",
+        recognitionError: error instanceof Error ? error.message : "识别失败",
+      });
     }
 
     console.error("食物识别失败:", error);

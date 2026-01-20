@@ -54,11 +54,7 @@ export async function createMealLog(data: {
   });
 
   for (const food of foods) {
-    await convexTracking.addMealLogFood(
-      mealLogId as string,
-      food.foodId,
-      food.amount,
-    );
+    await convexTracking.addMealLogFood(mealLogId as string, food.foodId, food.amount);
   }
 
   await updateDailyNutritionTarget(memberId, date);
@@ -69,7 +65,7 @@ export async function createMealLog(data: {
 }
 
 export async function calculateNutritionFromFoods(
-  foods: Array<{ foodId: string; amount: number }>,
+  foods: Array<{ foodId: string; amount: number }>
 ) {
   const foodIds = foods.map((f) => f.foodId);
   const foodData = (await convexTracking.getFoodsByIds(foodIds)) as FoodDoc[];
@@ -115,7 +111,7 @@ export async function getMealLogHistory(
     mealType?: string;
     limit?: number;
     offset?: number;
-  } = {},
+  } = {}
 ) {
   return convexTracking.getMealLogHistory(memberId, options);
 }
@@ -125,13 +121,11 @@ export async function updateMealLog(
   data: {
     foods?: Array<{ foodId: string; amount: number }>;
     notes?: string;
-  },
+  }
 ) {
   const { foods, notes } = data;
 
-  let nutrition:
-    | Awaited<ReturnType<typeof calculateNutritionFromFoods>>
-    | undefined;
+  let nutrition: Awaited<ReturnType<typeof calculateNutritionFromFoods>> | undefined;
   if (foods) {
     nutrition = await calculateNutritionFromFoods(foods);
     await convexTracking.deleteMealLogFoods(mealLogId);
@@ -154,14 +148,9 @@ export async function updateMealLog(
     for (const food of foods) {
       await convexTracking.addMealLogFood(mealLogId, food.foodId, food.amount);
     }
-    const mealLog = (await convexTracking.getMealLogById(
-      mealLogId,
-    )) as MealLogDoc | null;
+    const mealLog = (await convexTracking.getMealLogById(mealLogId)) as MealLogDoc | null;
     if (mealLog) {
-      await updateDailyNutritionTarget(
-        mealLog.memberId as string,
-        new Date(mealLog.date),
-      );
+      await updateDailyNutritionTarget(mealLog.memberId as string, new Date(mealLog.date));
     }
   }
 
@@ -170,14 +159,9 @@ export async function updateMealLog(
 
 export async function deleteMealLog(mealLogId: string) {
   await convexTracking.softDeleteMealLog(mealLogId);
-  const mealLog = (await convexTracking.getMealLogById(
-    mealLogId,
-  )) as MealLogDoc | null;
+  const mealLog = (await convexTracking.getMealLogById(mealLogId)) as MealLogDoc | null;
   if (mealLog) {
-    await updateDailyNutritionTarget(
-      mealLog.memberId as string,
-      new Date(mealLog.date),
-    );
+    await updateDailyNutritionTarget(mealLog.memberId as string, new Date(mealLog.date));
   }
 }
 
@@ -191,7 +175,7 @@ async function updateDailyNutritionTarget(memberId: string, date: Date) {
   const mealLogs = (await convexTracking.getMealLogsForPeriod(
     memberId,
     targetDate,
-    tomorrow,
+    tomorrow
   )) as Array<{
     calories: number;
     protein: number;
@@ -206,7 +190,7 @@ async function updateDailyNutritionTarget(memberId: string, date: Date) {
       carbs: sum.carbs + log.carbs,
       fat: sum.fat + log.fat,
     }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
   const targetCalories = 2000;
@@ -215,17 +199,11 @@ async function updateDailyNutritionTarget(memberId: string, date: Date) {
   const targetFat = 65;
 
   const caloriesDeviation =
-    targetCalories > 0
-      ? ((actual.calories - targetCalories) / targetCalories) * 100
-      : 0;
+    targetCalories > 0 ? ((actual.calories - targetCalories) / targetCalories) * 100 : 0;
   const proteinDeviation =
-    targetProtein > 0
-      ? ((actual.protein - targetProtein) / targetProtein) * 100
-      : 0;
-  const carbsDeviation =
-    targetCarbs > 0 ? ((actual.carbs - targetCarbs) / targetCarbs) * 100 : 0;
-  const fatDeviation =
-    targetFat > 0 ? ((actual.fat - targetFat) / targetFat) * 100 : 0;
+    targetProtein > 0 ? ((actual.protein - targetProtein) / targetProtein) * 100 : 0;
+  const carbsDeviation = targetCarbs > 0 ? ((actual.carbs - targetCarbs) / targetCarbs) * 100 : 0;
+  const fatDeviation = targetFat > 0 ? ((actual.fat - targetFat) / targetFat) * 100 : 0;
 
   const isCompleted = mealLogs.length > 0;
 
@@ -253,7 +231,7 @@ async function updateTrackingStreak(memberId: string, date: Date) {
   today.setHours(0, 0, 0, 0);
 
   const streak = (await convexTracking.getTrackingStreak(
-    memberId,
+    memberId
   )) as Doc<"trackingStreaks"> | null;
 
   if (!streak) {
@@ -310,7 +288,7 @@ export async function getRecentFoods(
     days?: number;
     limit?: number;
     mealType?: string;
-  } = {},
+  } = {}
 ) {
   const { days = 7, limit = 10, mealType } = options;
 

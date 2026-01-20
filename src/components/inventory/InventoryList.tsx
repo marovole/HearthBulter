@@ -99,23 +99,14 @@ const storageLocationLabels = {
   OTHER: "其他",
 };
 
-export function InventoryList({
-  memberId,
-  onAddItem,
-  onEditItem,
-  onUseItem,
-}: InventoryListProps) {
+export function InventoryList({ memberId, onAddItem, onEditItem, onUseItem }: InventoryListProps) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<InventoryStatus | "">("");
-  const [locationFilter, setLocationFilter] = useState<StorageLocation | "">(
-    "",
-  );
+  const [locationFilter, setLocationFilter] = useState<StorageLocation | "">("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [sortBy, setSortBy] = useState<
-    "status" | "expiry" | "name" | "quantity"
-  >("status");
+  const [sortBy, setSortBy] = useState<"status" | "expiry" | "name" | "quantity">("status");
 
   useEffect(() => {
     fetchInventoryItems();
@@ -141,31 +132,26 @@ export function InventoryList({
           filteredItems = filteredItems.filter(
             (item: InventoryItem) =>
               item.food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              item.food.nameEn
-                ?.toLowerCase()
-                .includes(searchTerm.toLowerCase()) ||
-              item.brand?.toLowerCase().includes(searchTerm.toLowerCase()),
+              item.food.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              item.brand?.toLowerCase().includes(searchTerm.toLowerCase())
           );
         }
 
         // 排序
         filteredItems.sort((a: InventoryItem, b: InventoryItem) => {
           switch (sortBy) {
-          case "status":
-            return a.status.localeCompare(b.status);
-          case "expiry":
-            if (!a.expiryDate) return 1;
-            if (!b.expiryDate) return -1;
-            return (
-              new Date(a.expiryDate).getTime() -
-                new Date(b.expiryDate).getTime()
-            );
-          case "name":
-            return a.food.name.localeCompare(b.food.name);
-          case "quantity":
-            return b.quantity - a.quantity;
-          default:
-            return 0;
+            case "status":
+              return a.status.localeCompare(b.status);
+            case "expiry":
+              if (!a.expiryDate) return 1;
+              if (!b.expiryDate) return -1;
+              return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+            case "name":
+              return a.food.name.localeCompare(b.food.name);
+            case "quantity":
+              return b.quantity - a.quantity;
+            default:
+              return 0;
           }
         });
 
@@ -238,7 +224,7 @@ export function InventoryList({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-gray-500">加载中...</div>
       </div>
     );
@@ -247,7 +233,7 @@ export function InventoryList({
   return (
     <div className="space-y-6">
       {/* 统计卡片 */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -266,9 +252,7 @@ export function InventoryList({
               <TrendingUp className="h-4 w-4 text-green-600" />
               <div>
                 <p className="text-sm text-gray-600">新鲜</p>
-                <p className="text-lg font-semibold text-green-600">
-                  {stats.fresh}
-                </p>
+                <p className="text-lg font-semibold text-green-600">{stats.fresh}</p>
               </div>
             </div>
           </CardContent>
@@ -280,9 +264,7 @@ export function InventoryList({
               <Clock className="h-4 w-4 text-yellow-600" />
               <div>
                 <p className="text-sm text-gray-600">临期</p>
-                <p className="text-lg font-semibold text-yellow-600">
-                  {stats.expiring}
-                </p>
+                <p className="text-lg font-semibold text-yellow-600">{stats.expiring}</p>
               </div>
             </div>
           </CardContent>
@@ -294,9 +276,7 @@ export function InventoryList({
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <div>
                 <p className="text-sm text-gray-600">过期</p>
-                <p className="text-lg font-semibold text-red-600">
-                  {stats.expired}
-                </p>
+                <p className="text-lg font-semibold text-red-600">{stats.expired}</p>
               </div>
             </div>
           </CardContent>
@@ -308,9 +288,7 @@ export function InventoryList({
               <TrendingDown className="h-4 w-4 text-orange-600" />
               <div>
                 <p className="text-sm text-gray-600">库存不足</p>
-                <p className="text-lg font-semibold text-orange-600">
-                  {stats.lowStock}
-                </p>
+                <p className="text-lg font-semibold text-orange-600">{stats.lowStock}</p>
               </div>
             </div>
           </CardContent>
@@ -323,16 +301,16 @@ export function InventoryList({
           <div className="flex items-center justify-between">
             <CardTitle>库存管理</CardTitle>
             <Button onClick={onAddItem}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               添加物品
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                 <Input
                   placeholder="搜索食材名称、品牌..."
                   value={searchTerm}
@@ -344,9 +322,7 @@ export function InventoryList({
 
             <Select
               value={statusFilter}
-              onValueChange={(value) =>
-                setStatusFilter(value as InventoryStatus | "")
-              }
+              onValueChange={(value) => setStatusFilter(value as InventoryStatus | "")}
             >
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="状态筛选" />
@@ -363,9 +339,7 @@ export function InventoryList({
 
             <Select
               value={locationFilter}
-              onValueChange={(value) =>
-                setLocationFilter(value as StorageLocation | "")
-              }
+              onValueChange={(value) => setLocationFilter(value as StorageLocation | "")}
             >
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="存储位置" />
@@ -380,10 +354,7 @@ export function InventoryList({
               </SelectContent>
             </Select>
 
-            <Select
-              value={sortBy}
-              onValueChange={(value) => setSortBy(value as any)}
-            >
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="排序方式" />
               </SelectTrigger>
@@ -402,18 +373,15 @@ export function InventoryList({
               const expiryInfo = getExpiryInfo(item);
 
               return (
-                <Card
-                  key={item.id}
-                  className="hover:shadow-md transition-shadow"
-                >
+                <Card key={item.id} className="transition-shadow hover:shadow-md">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-medium text-lg">
+                        <div className="mb-2 flex items-center space-x-3">
+                          <h3 className="text-lg font-medium">
                             {item.food.name}
                             {item.food.nameEn && (
-                              <span className="text-gray-500 text-sm ml-2">
+                              <span className="ml-2 text-sm text-gray-500">
                                 ({item.food.nameEn})
                               </span>
                             )}
@@ -422,16 +390,13 @@ export function InventoryList({
                             {statusLabels[item.status]}
                           </Badge>
                           {item.isLowStock && (
-                            <Badge
-                              variant="outline"
-                              className="text-orange-600 border-orange-600"
-                            >
+                            <Badge variant="outline" className="border-orange-600 text-orange-600">
                               库存不足
                             </Badge>
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 md:grid-cols-4">
                           <div>
                             <span className="font-medium">数量：</span>
                             {item.quantity} {item.unit}
@@ -451,9 +416,7 @@ export function InventoryList({
                             <div className={expiryInfo.color}>
                               <span className="font-medium">保质期：</span>
                               <div className="flex items-center space-x-1">
-                                {expiryInfo.icon && (
-                                  <expiryInfo.icon className="h-3 w-3" />
-                                )}
+                                {expiryInfo.icon && <expiryInfo.icon className="h-3 w-3" />}
                                 <span>{expiryInfo.text}</span>
                               </div>
                             </div>
@@ -461,13 +424,11 @@ export function InventoryList({
                         </div>
 
                         {item.brand && (
-                          <div className="text-sm text-gray-500 mt-1">
-                            品牌：{item.brand}
-                          </div>
+                          <div className="mt-1 text-sm text-gray-500">品牌：{item.brand}</div>
                         )}
                       </div>
 
-                      <div className="flex items-center space-x-2 ml-4">
+                      <div className="ml-4 flex items-center space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
@@ -484,9 +445,7 @@ export function InventoryList({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => onEditItem?.(item)}
-                            >
+                            <DropdownMenuItem onClick={() => onEditItem?.(item)}>
                               编辑
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -505,12 +464,10 @@ export function InventoryList({
             })}
 
             {filteredItems.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <div className="py-12 text-center text-gray-500">
+                <Package className="mx-auto mb-4 h-12 w-12 text-gray-300" />
                 <p>暂无库存物品</p>
-                <p className="text-sm">
-                  点击&quot;添加物品&quot;开始管理您的库存
-                </p>
+                <p className="text-sm">点击&quot;添加物品&quot;开始管理您的库存</p>
               </div>
             )}
           </div>

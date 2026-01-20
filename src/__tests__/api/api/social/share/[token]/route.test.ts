@@ -59,17 +59,13 @@ describe("/api/social/share/[token]", () => {
 
   describe("GET - Get Share Content", () => {
     it("should return share content with valid token", async () => {
-      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(
-        mockSharedContent,
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(mockSharedContent);
       (prisma.sharedContent.update as jest.Mock).mockResolvedValue({
         ...mockSharedContent,
         viewCount: 51,
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123");
       const response = await GET(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -84,14 +80,12 @@ describe("/api/social/share/[token]", () => {
       expect(prisma.sharedContent.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { viewCount: 51 },
-        }),
+        })
       );
     });
 
     it("should return 400 when token is missing", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/");
       const response = await GET(request, {
         params: Promise.resolve({ token: "" }),
       });
@@ -104,9 +98,7 @@ describe("/api/social/share/[token]", () => {
     it("should return 404 when share content does not exist", async () => {
       (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/invalid-token",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/invalid-token");
       const response = await GET(request, {
         params: Promise.resolve({ token: "invalid-token" }),
       });
@@ -122,9 +114,7 @@ describe("/api/social/share/[token]", () => {
         status: "REVOKED",
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123");
       const response = await GET(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -139,17 +129,13 @@ describe("/api/social/share/[token]", () => {
         ...mockSharedContent,
         expiresAt: new Date("2024-01-10"), // 已过期
       };
-      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(
-        expiredContent,
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(expiredContent);
       (prisma.sharedContent.update as jest.Mock).mockResolvedValue({
         ...expiredContent,
         status: "EXPIRED",
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123");
       const response = await GET(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -160,28 +146,23 @@ describe("/api/social/share/[token]", () => {
       expect(prisma.sharedContent.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { status: "EXPIRED" },
-        }),
+        })
       );
     });
   });
 
   describe("POST - Track Share Interaction", () => {
     it("should track click action", async () => {
-      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(
-        mockSharedContent,
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(mockSharedContent);
       (prisma.sharedContent.update as jest.Mock).mockResolvedValue({
         ...mockSharedContent,
         clickCount: 51,
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-        {
-          method: "POST",
-          body: JSON.stringify({ action: "click" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123", {
+        method: "POST",
+        body: JSON.stringify({ action: "click" }),
+      });
       const response = await POST(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -193,26 +174,21 @@ describe("/api/social/share/[token]", () => {
       expect(prisma.sharedContent.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { clickCount: 51 },
-        }),
+        })
       );
     });
 
     it("should track share action", async () => {
-      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(
-        mockSharedContent,
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(mockSharedContent);
       (prisma.sharedContent.update as jest.Mock).mockResolvedValue({
         ...mockSharedContent,
         shareCount: 4,
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-        {
-          method: "POST",
-          body: JSON.stringify({ action: "share" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123", {
+        method: "POST",
+        body: JSON.stringify({ action: "share" }),
+      });
       const response = await POST(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -221,26 +197,21 @@ describe("/api/social/share/[token]", () => {
       expect(prisma.sharedContent.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { shareCount: 4 },
-        }),
+        })
       );
     });
 
     it("should track conversion action", async () => {
-      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(
-        mockSharedContent,
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(mockSharedContent);
       (prisma.sharedContent.update as jest.Mock).mockResolvedValue({
         ...mockSharedContent,
         conversionCount: 6,
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-        {
-          method: "POST",
-          body: JSON.stringify({ action: "conversion" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123", {
+        method: "POST",
+        body: JSON.stringify({ action: "conversion" }),
+      });
       const response = await POST(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -249,22 +220,17 @@ describe("/api/social/share/[token]", () => {
       expect(prisma.sharedContent.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { conversionCount: 6 },
-        }),
+        })
       );
     });
 
     it("should return 400 for unsupported action", async () => {
-      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(
-        mockSharedContent,
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(mockSharedContent);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-        {
-          method: "POST",
-          body: JSON.stringify({ action: "invalid" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123", {
+        method: "POST",
+        body: JSON.stringify({ action: "invalid" }),
+      });
       const response = await POST(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -278,17 +244,13 @@ describe("/api/social/share/[token]", () => {
   describe("DELETE - Revoke Share", () => {
     it("should revoke share with authentication", async () => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
-      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(
-        mockSharedContent,
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(mockSharedContent);
       (prisma.sharedContent.update as jest.Mock).mockResolvedValue({
         ...mockSharedContent,
         status: "REVOKED",
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123");
       const response = await DELETE(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -300,16 +262,14 @@ describe("/api/social/share/[token]", () => {
       expect(prisma.sharedContent.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { status: "REVOKED" },
-        }),
+        })
       );
     });
 
     it("should return 401 when user is not authenticated", async () => {
       (auth as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123");
       const response = await DELETE(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -321,13 +281,9 @@ describe("/api/social/share/[token]", () => {
 
     it("should return 403 when user is not the owner", async () => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: "user-2" } }); // 不同用户
-      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(
-        mockSharedContent,
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockResolvedValue(mockSharedContent);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123");
       const response = await DELETE(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });
@@ -340,13 +296,9 @@ describe("/api/social/share/[token]", () => {
 
   describe("Error Handling", () => {
     it("GET: should handle database errors gracefully", async () => {
-      (prisma.sharedContent.findUnique as jest.Mock).mockRejectedValue(
-        new Error("Database error"),
-      );
+      (prisma.sharedContent.findUnique as jest.Mock).mockRejectedValue(new Error("Database error"));
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/share/test-token-123",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/share/test-token-123");
       const response = await GET(request, {
         params: Promise.resolve({ token: "test-token-123" }),
       });

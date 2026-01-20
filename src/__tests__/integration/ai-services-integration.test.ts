@@ -86,15 +86,10 @@ describe("AI Services Integration Tests", () => {
         glucose: 5.6,
       };
 
-      const analysisResult = await healthAnalyzer.analyzeHealthStatus(
-        userProfile,
-        medicalData,
-      );
+      const analysisResult = await healthAnalyzer.analyzeHealthStatus(userProfile, medicalData);
 
       expect(analysisResult.overall_score).toBe(75);
-      expect(analysisResult.nutritional_recommendations.daily_calories).toBe(
-        1800,
-      );
+      expect(analysisResult.nutritional_recommendations.daily_calories).toBe(1800);
 
       // 2. 创建对话会话
       const session = conversationManager.createSession("member-123", {
@@ -113,26 +108,22 @@ describe("AI Services Integration Tests", () => {
       conversationManager.addMessage(
         session.id,
         "user",
-        "根据我的分析结果，您建议我从哪方面开始改善？",
+        "根据我的分析结果，您建议我从哪方面开始改善？"
       );
 
       // Mock对话AI响应
-      (openaiClient.chat.completions.create as jest.Mock).mockResolvedValueOnce(
-        {
-          choices: [
-            {
-              message: {
-                content:
-                  "根据您的健康分析，我建议从以下方面开始改善：\n1. 控制血压：减少钠盐摄入，增加有氧运动\n2. 管理体重：控制每日热量在1800卡路里左右\n3. 改善饮食：增加蔬菜水果摄入，减少加工食品",
-              },
+      (openaiClient.chat.completions.create as jest.Mock).mockResolvedValueOnce({
+        choices: [
+          {
+            message: {
+              content:
+                "根据您的健康分析，我建议从以下方面开始改善：\n1. 控制血压：减少钠盐摄入，增加有氧运动\n2. 管理体重：控制每日热量在1800卡路里左右\n3. 改善饮食：增加蔬菜水果摄入，减少加工食品",
             },
-          ],
-        },
-      );
+          },
+        ],
+      });
 
-      const conversationHistory = conversationManager.formatConversationHistory(
-        session.id,
-      );
+      const conversationHistory = conversationManager.formatConversationHistory(session.id);
       expect(conversationHistory).toContain("健康分析结果：总分75分");
       expect(conversationHistory).toContain("从哪方面开始改善？");
 
@@ -159,21 +150,11 @@ describe("AI Services Integration Tests", () => {
       };
 
       // 创建会话
-      const session1 = conversationManager.createSession(
-        "member-123",
-        userProfile,
-      );
-      const session2 = conversationManager.createSession(
-        "member-456",
-        userProfile,
-      );
+      const session1 = conversationManager.createSession("member-123", userProfile);
+      const session2 = conversationManager.createSession("member-456", userProfile);
 
       // 第一次对话
-      conversationManager.addMessage(
-        session1.id,
-        "user",
-        "我应该摄入多少卡路里？",
-      );
+      conversationManager.addMessage(session1.id, "user", "我应该摄入多少卡路里？");
 
       const cacheKey1 = cache.generateKey({
         userProfile,
@@ -229,7 +210,7 @@ describe("AI Services Integration Tests", () => {
       // 使用降级服务
       const fallbackResult = await aiFallbackService.analyzeHealthWithFallback(
         { blood_pressure: "120/80" },
-        { age: 30, gender: "male" },
+        { age: 30, gender: "male" }
       );
 
       expect(fallbackResult.success).toBe(true);
@@ -290,33 +271,21 @@ describe("AI Services Integration Tests", () => {
       };
 
       // 2. 健康分析
-      const analysis = await healthAnalyzer.analyzeHealthStatus(
-        userProfile,
-        medicalData,
-      );
+      const analysis = await healthAnalyzer.analyzeHealthStatus(userProfile, medicalData);
       expect(analysis.overall_score).toBe(80);
 
       // 3. 创建对话会话
-      const session = conversationManager.createSession(
-        "member-456",
-        userProfile,
-      );
+      const session = conversationManager.createSession("member-456", userProfile);
 
       // 4. 基于分析结果进行营养咨询
       conversationManager.addMessage(
         session.id,
         "system",
-        `健康分析完成，总分：${analysis.overall_score}`,
+        `健康分析完成，总分：${analysis.overall_score}`
       );
-      conversationManager.addMessage(
-        session.id,
-        "user",
-        "请根据我的分析结果给我具体的饮食建议",
-      );
+      conversationManager.addMessage(session.id, "user", "请根据我的分析结果给我具体的饮食建议");
 
-      const conversationHistory = conversationManager.formatConversationHistory(
-        session.id,
-      );
+      const conversationHistory = conversationManager.formatConversationHistory(session.id);
       expect(conversationHistory).toContain("健康分析完成，总分：80");
       expect(conversationHistory).toContain("具体的饮食建议");
 
@@ -337,17 +306,14 @@ describe("AI Services Integration Tests", () => {
       expect(cachedAnalysis?.overall_score).toBe(80);
 
       // 7. 验证速率限制
-      const rateLimitResult = await rateLimiter.checkLimit(
-        "member-456",
-        "ai_analyze_health",
-      );
+      const rateLimitResult = await rateLimiter.checkLimit("member-456", "ai_analyze_health");
       expect(rateLimitResult.allowed).toBe(true);
 
       // 8. 生成营养目标
       const nutritionTargets = healthAnalyzer.generateNutritionTargets(
         userProfile,
         analysis,
-        userProfile.health_goals,
+        userProfile.health_goals
       );
 
       expect(nutritionTargets.daily_calories).toBeGreaterThan(0);
@@ -378,10 +344,7 @@ describe("AI Services Integration Tests", () => {
       };
 
       // 尝试健康分析，应该使用降级方案
-      const result = await aiFallbackService.analyzeHealthWithFallback(
-        medicalData,
-        userProfile,
-      );
+      const result = await aiFallbackService.analyzeHealthWithFallback(medicalData, userProfile);
 
       expect(result.success).toBe(true);
       expect(result.fallbackUsed).toBe(true);
@@ -414,16 +377,12 @@ describe("AI Services Integration Tests", () => {
       // 创建多个并发会话
       const sessions = [];
       for (let i = 0; i < 10; i++) {
-        sessions.push(
-          conversationManager.createSession(`member-${i}`, userProfile),
-        );
+        sessions.push(conversationManager.createSession(`member-${i}`, userProfile));
       }
 
       // 并发添加消息
       const promises = sessions.map((session) =>
-        Promise.resolve(
-          conversationManager.addMessage(session.id, "user", "Test message"),
-        ),
+        Promise.resolve(conversationManager.addMessage(session.id, "user", "Test message"))
       );
 
       await Promise.all(promises);

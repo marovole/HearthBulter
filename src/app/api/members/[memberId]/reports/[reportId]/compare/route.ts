@@ -13,13 +13,12 @@ import type { IndicatorType } from "@prisma/client";
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(
-  value: T | T[] | null | undefined,
-): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
+  Array.isArray(value) ? value[0] : (value ?? undefined);
 
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -34,7 +33,7 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `,
+    `
     )
     .eq("id", memberId)
     .is("deletedAt", null)
@@ -76,7 +75,7 @@ async function verifyMemberAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> },
+  { params }: { params: Promise<{ memberId: string; reportId: string }> }
 ) {
   try {
     const { memberId, reportId } = await params;
@@ -114,11 +113,10 @@ export async function GET(
     }
 
     // 查询当前报告的指标
-    const { data: currentIndicators, error: currentIndicatorsError } =
-      await supabase
-        .from("medical_indicators")
-        .select("*")
-        .eq("reportId", reportId);
+    const { data: currentIndicators, error: currentIndicatorsError } = await supabase
+      .from("medical_indicators")
+      .select("*")
+      .eq("reportId", reportId);
 
     if (currentIndicatorsError) {
       console.error("查询当前指标失败:", currentIndicatorsError);
@@ -137,11 +135,10 @@ export async function GET(
       previousQuery = previousQuery.lt("reportDate", currentReport.reportDate);
     }
 
-    const { data: previousReports, error: previousReportsError } =
-      await previousQuery
-        .order("reportDate", { ascending: false, nullsFirst: false })
-        .order("createdAt", { ascending: false })
-        .limit(1);
+    const { data: previousReports, error: previousReportsError } = await previousQuery
+      .order("reportDate", { ascending: false, nullsFirst: false })
+      .order("createdAt", { ascending: false })
+      .limit(1);
 
     if (previousReportsError) {
       console.error("查询历史报告失败:", previousReportsError);
@@ -163,11 +160,10 @@ export async function GET(
     }
 
     // 查询历史报告的指标
-    const { data: previousIndicators, error: previousIndicatorsError } =
-      await supabase
-        .from("medical_indicators")
-        .select("*")
-        .eq("reportId", previousReport.id);
+    const { data: previousIndicators, error: previousIndicatorsError } = await supabase
+      .from("medical_indicators")
+      .select("*")
+      .eq("reportId", previousReport.id);
 
     if (previousIndicatorsError) {
       console.error("查询历史指标失败:", previousIndicatorsError);
@@ -190,11 +186,11 @@ export async function GET(
 
     // 按指标类型分组
     const previousIndicatorsMap = new Map(
-      (previousIndicators || []).map((ind) => [ind.indicatorType, ind]),
+      (previousIndicators || []).map((ind) => [ind.indicatorType, ind])
     );
 
     const currentIndicatorsMap = new Map(
-      (currentIndicators || []).map((ind) => [ind.indicatorType, ind]),
+      (currentIndicators || []).map((ind) => [ind.indicatorType, ind])
     );
 
     // 处理所有当前指标
@@ -205,9 +201,7 @@ export async function GET(
         // 有历史数据，计算变化
         const change = current.value - previous.value;
         const changePercent =
-          previous.value !== 0
-            ? ((change / previous.value) * 100).toFixed(2)
-            : "0";
+          previous.value !== 0 ? ((change / previous.value) * 100).toFixed(2) : "0";
 
         // 判断趋势
         let trend: "improved" | "worsened" | "stable" = "stable";
@@ -215,20 +209,11 @@ export async function GET(
         // 如果当前状态比之前好，视为改善
         if (current.status === "NORMAL" && previous.status !== "NORMAL") {
           trend = "improved";
-        } else if (
-          current.status !== "NORMAL" &&
-          previous.status === "NORMAL"
-        ) {
+        } else if (current.status !== "NORMAL" && previous.status === "NORMAL") {
           trend = "worsened";
-        } else if (
-          current.status === "CRITICAL" &&
-          previous.status !== "CRITICAL"
-        ) {
+        } else if (current.status === "CRITICAL" && previous.status !== "CRITICAL") {
           trend = "worsened";
-        } else if (
-          current.status !== "CRITICAL" &&
-          previous.status === "CRITICAL"
-        ) {
+        } else if (current.status !== "CRITICAL" && previous.status === "CRITICAL") {
           trend = "improved";
         } else if (Math.abs(change / previous.value) < 0.05) {
           // 变化小于5%视为稳定
@@ -301,9 +286,7 @@ export async function GET(
         OTHER: 20,
       };
 
-      return (
-        (typeOrder[a.indicatorType] || 99) - (typeOrder[b.indicatorType] || 99)
-      );
+      return (typeOrder[a.indicatorType] || 99) - (typeOrder[b.indicatorType] || 99);
     });
 
     return NextResponse.json({
@@ -333,7 +316,7 @@ export async function GET(
         error: "服务器内部错误",
         details: error instanceof Error ? error.message : "未知错误",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

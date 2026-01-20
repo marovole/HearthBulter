@@ -124,15 +124,12 @@ export class PriceAnalyzer {
     }
 
     const startDate = Date.now() - days * 24 * 60 * 60 * 1000;
-    const priceHistories = (await convexClient.query(
-      api.budget.getPriceHistories,
-      {
-        foodId: foodId as Id<"foods">,
-        isValid: true,
-        startDate,
-        limit: 100,
-      },
-    )) as Doc<"priceHistories">[];
+    const priceHistories = (await convexClient.query(api.budget.getPriceHistories, {
+      foodId: foodId as Id<"foods">,
+      isValid: true,
+      startDate,
+      limit: 100,
+    })) as Doc<"priceHistories">[];
 
     if (priceHistories.length < 3) {
       throw new Error("价格数据不足，无法分析趋势");
@@ -150,8 +147,7 @@ export class PriceAnalyzer {
       throw new Error("价格数据不足，无法分析趋势");
     }
     const currentPrice = latestPrice.unitPrice;
-    const averagePrice =
-      prices.reduce((sum, p) => sum + p.unitPrice, 0) / prices.length;
+    const averagePrice = prices.reduce((sum, p) => sum + p.unitPrice, 0) / prices.length;
     const minPrice = Math.min(...prices.map((p) => p.unitPrice));
     const maxPrice = Math.max(...prices.map((p) => p.unitPrice));
 
@@ -162,7 +158,7 @@ export class PriceAnalyzer {
       currentPrice,
       averagePrice,
       trend,
-      prediction,
+      prediction
     );
 
     return {
@@ -180,10 +176,7 @@ export class PriceAnalyzer {
     };
   }
 
-  async getPlatformComparison(
-    foodId: string,
-    quantity: number = 1,
-  ): Promise<PlatformComparison> {
+  async getPlatformComparison(foodId: string, quantity: number = 1): Promise<PlatformComparison> {
     const food = (await convexClient.query(api.budget.getFoodById, {
       foodId: foodId as Id<"foods">,
     })) as Doc<"foods"> | null;
@@ -192,14 +185,11 @@ export class PriceAnalyzer {
       throw new Error("食物不存在");
     }
 
-    const priceHistories = (await convexClient.query(
-      api.budget.getPriceHistories,
-      {
-        foodId: foodId as Id<"foods">,
-        isValid: true,
-        limit: 100,
-      },
-    )) as Doc<"priceHistories">[];
+    const priceHistories = (await convexClient.query(api.budget.getPriceHistories, {
+      foodId: foodId as Id<"foods">,
+      isValid: true,
+      limit: 100,
+    })) as Doc<"priceHistories">[];
 
     const platformData: { [key: string]: PriceData[] } = {};
 
@@ -245,11 +235,7 @@ export class PriceAnalyzer {
 
     const platformsWithCost = platforms.map((p) => {
       const itemCost = p.unitPrice * quantity;
-      const totalCost = this.calculateTotalCost(
-        itemCost,
-        p.shippingCost,
-        p.freeShippingThreshold,
-      );
+      const totalCost = this.calculateTotalCost(itemCost, p.shippingCost, p.freeShippingThreshold);
 
       return {
         ...p,
@@ -257,17 +243,14 @@ export class PriceAnalyzer {
       };
     });
 
-    const sortedByCost = platformsWithCost.sort(
-      (a, b) => a.totalCost - b.totalCost,
-    );
+    const sortedByCost = platformsWithCost.sort((a, b) => a.totalCost - b.totalCost);
     const bestPlatform = sortedByCost[0];
     if (!bestPlatform) {
       throw new Error("缺少平台价格数据");
     }
 
     const avgTotalCost =
-      platformsWithCost.reduce((sum, p) => sum + p.totalCost, 0) /
-      platformsWithCost.length;
+      platformsWithCost.reduce((sum, p) => sum + p.totalCost, 0) / platformsWithCost.length;
     const savings =
       platformsWithCost.length > 1
         ? ((avgTotalCost - bestPlatform.totalCost) / avgTotalCost) * 100
@@ -279,10 +262,7 @@ export class PriceAnalyzer {
       savings,
     };
 
-    const recommendation = this.generatePlatformRecommendation(
-      platforms,
-      bestPlatformSummary,
-    );
+    const recommendation = this.generatePlatformRecommendation(platforms, bestPlatformSummary);
 
     return {
       foodId: food._id,
@@ -316,14 +296,12 @@ export class PriceAnalyzer {
           foodName: comparison.foodName,
           platforms: comparison.platforms,
         };
-      }),
+      })
     );
 
-    const singlePlatformOptions =
-      await this.generateSinglePlatformOptions(foodPlatforms);
+    const singlePlatformOptions = await this.generateSinglePlatformOptions(foodPlatforms);
 
-    const mixedPlatformOptionResult =
-      await this.generateMixedPlatformOption(foodPlatforms);
+    const mixedPlatformOptionResult = await this.generateMixedPlatformOption(foodPlatforms);
     const mixedPlatformOption:
       | {
           platforms: string[];
@@ -337,18 +315,16 @@ export class PriceAnalyzer {
     if (mixedPlatformOption) {
       const subtotal = mixedPlatformOption.breakdown.reduce(
         (sum, breakdownItem) => sum + breakdownItem.cost,
-        0,
+        0
       );
       const shippingCost = mixedPlatformOption.breakdown.reduce(
         (sum, breakdownItem) => sum + (breakdownItem.cost > 99 ? 0 : 12),
-        0,
+        0
       );
 
       allOptions.push({
         platform: "跨平台组合",
-        items: mixedPlatformOption.breakdown.flatMap(
-          (breakdownItem) => breakdownItem.items,
-        ),
+        items: mixedPlatformOption.breakdown.flatMap((breakdownItem) => breakdownItem.items),
         subtotal,
         shippingCost,
         totalCost: mixedPlatformOption.totalCost,
@@ -359,21 +335,15 @@ export class PriceAnalyzer {
       throw new Error("没有可用的购买方案");
     }
 
-    const sortedOptions = [...allOptions].sort(
-      (a, b) => a.totalCost - b.totalCost,
-    );
+    const sortedOptions = [...allOptions].sort((a, b) => a.totalCost - b.totalCost);
     const bestOption = sortedOptions[0];
     if (!bestOption) {
       throw new Error("没有可用的购买方案");
     }
 
     const avgCost =
-      allOptions.reduce((sum, option) => sum + option.totalCost, 0) /
-      allOptions.length;
-    const savings =
-      allOptions.length > 1
-        ? ((avgCost - bestOption.totalCost) / avgCost) * 100
-        : 0;
+      allOptions.reduce((sum, option) => sum + option.totalCost, 0) / allOptions.length;
+    const savings = allOptions.length > 1 ? ((avgCost - bestOption.totalCost) / avgCost) * 100 : 0;
 
     return {
       combinations: singlePlatformOptions,
@@ -446,19 +416,17 @@ export class PriceAnalyzer {
   private calculateTotalCost(
     itemCost: number,
     shippingCost?: number,
-    freeShippingThreshold?: number,
+    freeShippingThreshold?: number
   ): number {
     if (!shippingCost || !freeShippingThreshold) {
       return itemCost;
     }
 
-    return itemCost >= freeShippingThreshold
-      ? itemCost
-      : itemCost + shippingCost;
+    return itemCost >= freeShippingThreshold ? itemCost : itemCost + shippingCost;
   }
 
   private async generateSinglePlatformOptions(
-    foodPlatforms: FoodPlatformInfo[],
+    foodPlatforms: FoodPlatformInfo[]
   ): Promise<PlatformOption[]> {
     const allPlatforms = new Set<string>();
     for (const foodPlatform of foodPlatforms) {
@@ -475,7 +443,7 @@ export class PriceAnalyzer {
 
       for (const foodPlatform of foodPlatforms) {
         const platformInfo = foodPlatform.platforms.find(
-          (platformItem) => platformItem.platform === platform,
+          (platformItem) => platformItem.platform === platform
         );
         if (platformInfo) {
           const item = {
@@ -495,7 +463,7 @@ export class PriceAnalyzer {
         const shippingCost = this.calculateShippingCost(
           subtotal,
           platformData.shippingCost,
-          platformData.freeShippingThreshold,
+          platformData.freeShippingThreshold
         );
         const totalCost = subtotal + shippingCost;
 
@@ -512,9 +480,7 @@ export class PriceAnalyzer {
     return options;
   }
 
-  private async generateMixedPlatformOption(
-    foodPlatforms: FoodPlatformInfo[],
-  ): Promise<{
+  private async generateMixedPlatformOption(foodPlatforms: FoodPlatformInfo[]): Promise<{
     platforms: string[];
     totalCost: number;
     savings: number;
@@ -524,21 +490,15 @@ export class PriceAnalyzer {
     let totalCost = 0;
 
     for (const foodPlatform of foodPlatforms) {
-      const sortedPlatforms = [...foodPlatform.platforms].sort(
-        (a, b) => a.unitPrice - b.unitPrice,
-      );
+      const sortedPlatforms = [...foodPlatform.platforms].sort((a, b) => a.unitPrice - b.unitPrice);
       const cheapestPlatform = sortedPlatforms[0];
 
       if (!cheapestPlatform) continue;
 
-      let platformGroup = breakdown.find(
-        (group) => group.platform === cheapestPlatform.platform,
-      );
+      let platformGroup = breakdown.find((group) => group.platform === cheapestPlatform.platform);
 
       if (!platformGroup) {
-        const platformData = await this.getPlatformInfo(
-          cheapestPlatform.platform,
-        );
+        const platformData = await this.getPlatformInfo(cheapestPlatform.platform);
         platformGroup = {
           platform: cheapestPlatform.platform,
           items: [],
@@ -565,7 +525,7 @@ export class PriceAnalyzer {
       const shippingCost = this.calculateShippingCost(
         group.cost,
         group.shippingCost,
-        group.freeShippingThreshold,
+        group.freeShippingThreshold
       );
       group.totalCost = group.cost + shippingCost;
       totalCost += group.totalCost;
@@ -584,22 +544,19 @@ export class PriceAnalyzer {
   private calculateShippingCost(
     subtotal: number,
     shippingCost: number,
-    freeShippingThreshold: number,
+    freeShippingThreshold: number
   ): number {
     return subtotal >= freeShippingThreshold ? 0 : shippingCost;
   }
 
   async getPriceAlerts(memberId?: string): Promise<PriceAlert[]> {
     const alerts: PriceAlert[] = [];
-    const recentPrices = (await convexClient.query(
-      api.budget.getPriceHistories,
-      {
-        foodId: "" as Id<"foods">,
-        isValid: true,
-        startDate: Date.now() - 7 * 24 * 60 * 60 * 1000,
-        limit: 100,
-      },
-    )) as Doc<"priceHistories">[];
+    const recentPrices = (await convexClient.query(api.budget.getPriceHistories, {
+      foodId: "" as Id<"foods">,
+      isValid: true,
+      startDate: Date.now() - 7 * 24 * 60 * 60 * 1000,
+      limit: 100,
+    })) as Doc<"priceHistories">[];
 
     const foodPrices: { [key: string]: any[] } = {};
     for (const price of recentPrices) {
@@ -629,7 +586,7 @@ export class PriceAnalyzer {
       unit: string;
       platform: string;
       source?: string;
-    }[],
+    }[]
   ): Promise<void> {
     await convexClient.mutation(api.budget.createManyPriceHistories, {
       updates: priceUpdates.map((update) => ({
@@ -657,22 +614,13 @@ export class PriceAnalyzer {
     const monthly = this.findPriceAtDaysAgo(prices, 30);
 
     return {
-      daily: daily
-        ? ((latest.unitPrice - daily.unitPrice) / daily.unitPrice) * 100
-        : 0,
-      weekly: weekly
-        ? ((latest.unitPrice - weekly.unitPrice) / weekly.unitPrice) * 100
-        : 0,
-      monthly: monthly
-        ? ((latest.unitPrice - monthly.unitPrice) / monthly.unitPrice) * 100
-        : 0,
+      daily: daily ? ((latest.unitPrice - daily.unitPrice) / daily.unitPrice) * 100 : 0,
+      weekly: weekly ? ((latest.unitPrice - weekly.unitPrice) / weekly.unitPrice) * 100 : 0,
+      monthly: monthly ? ((latest.unitPrice - monthly.unitPrice) / monthly.unitPrice) * 100 : 0,
     };
   }
 
-  private findPriceAtDaysAgo(
-    prices: PriceData[],
-    days: number,
-  ): PriceData | null {
+  private findPriceAtDaysAgo(prices: PriceData[], days: number): PriceData | null {
     const targetDate = Date.now() - days * 24 * 60 * 60 * 1000;
 
     let closest = null;
@@ -787,15 +735,12 @@ export class PriceAnalyzer {
       const current = prices[i];
       const previous = prices[i - 1];
       if (!current || !previous) continue;
-      const returnRate =
-        (current.unitPrice - previous.unitPrice) / previous.unitPrice;
+      const returnRate = (current.unitPrice - previous.unitPrice) / previous.unitPrice;
       returns.push(returnRate);
     }
 
     const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
-    const variance =
-      returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) /
-      returns.length;
+    const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
 
     return Math.sqrt(variance);
   }
@@ -808,7 +753,7 @@ export class PriceAnalyzer {
       next7Days: number[];
       expectedMin: number;
       expectedMax: number;
-    },
+    }
   ): string[] {
     const recommendations: string[] = [];
 
@@ -825,8 +770,7 @@ export class PriceAnalyzer {
     }
 
     const futureAvg =
-      prediction.next7Days.reduce((sum, p) => sum + p, 0) /
-      prediction.next7Days.length;
+      prediction.next7Days.reduce((sum, p) => sum + p, 0) / prediction.next7Days.length;
     if (futureAvg < currentPrice * 0.9) {
       recommendations.push("预计未来价格会下降，建议等待");
     } else if (futureAvg > currentPrice * 1.1) {
@@ -838,7 +782,7 @@ export class PriceAnalyzer {
 
   private generatePlatformRecommendation(
     platforms: PlatformComparison["platforms"],
-    bestPlatform: PlatformComparison["bestPlatform"],
+    bestPlatform: PlatformComparison["bestPlatform"]
   ): string {
     if (!bestPlatform || platforms.length < 2) {
       return "需要更多平台数据来生成推荐";
@@ -860,8 +804,7 @@ export class PriceAnalyzer {
     const previous = prices.slice(1, 6);
     if (previous.length < 3) return null;
 
-    const avgPrice =
-      previous.reduce((sum, p) => sum + p.unitPrice, 0) / previous.length;
+    const avgPrice = previous.reduce((sum, p) => sum + p.unitPrice, 0) / previous.length;
     const deviation = ((latest.unitPrice - avgPrice) / avgPrice) * 100;
 
     const foodName = latest.food?.name ?? "食物";

@@ -65,9 +65,7 @@ export class TokenMonitor {
   /**
    * 记录Token使用情况
    */
-  async recordUsage(
-    usage: Omit<TokenUsage, "timestamp" | "cost">,
-  ): Promise<void> {
+  async recordUsage(usage: Omit<TokenUsage, "timestamp" | "cost">): Promise<void> {
     const fullUsage: TokenUsage = {
       ...usage,
       timestamp: new Date(),
@@ -86,7 +84,7 @@ export class TokenMonitor {
     await this.checkCostLimits(fullUsage.userId);
 
     console.log(
-      `Token使用记录: ${usage.model} - ${usage.tokens} tokens - $${fullUsage.cost.toFixed(4)}`,
+      `Token使用记录: ${usage.model} - ${usage.tokens} tokens - $${fullUsage.cost.toFixed(4)}`
     );
   }
 
@@ -94,43 +92,22 @@ export class TokenMonitor {
    * 获取用户Token使用统计
    */
   async getUserStats(userId: string): Promise<TokenStats> {
-    const userRecords = this.usageRecords.filter(
-      (record) => record.userId === userId,
-    );
+    const userRecords = this.usageRecords.filter((record) => record.userId === userId);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // 计算各种统计
-    const totalTokens = userRecords.reduce(
-      (sum, record) => sum + record.tokens,
-      0,
-    );
+    const totalTokens = userRecords.reduce((sum, record) => sum + record.tokens, 0);
     const totalCost = userRecords.reduce((sum, record) => sum + record.cost, 0);
 
-    const dailyRecords = userRecords.filter(
-      (record) => record.timestamp >= today,
-    );
-    const dailyTokens = dailyRecords.reduce(
-      (sum, record) => sum + record.tokens,
-      0,
-    );
-    const dailyCost = dailyRecords.reduce(
-      (sum, record) => sum + record.cost,
-      0,
-    );
+    const dailyRecords = userRecords.filter((record) => record.timestamp >= today);
+    const dailyTokens = dailyRecords.reduce((sum, record) => sum + record.tokens, 0);
+    const dailyCost = dailyRecords.reduce((sum, record) => sum + record.cost, 0);
 
-    const monthlyRecords = userRecords.filter(
-      (record) => record.timestamp >= thisMonth,
-    );
-    const monthlyTokens = monthlyRecords.reduce(
-      (sum, record) => sum + record.tokens,
-      0,
-    );
-    const monthlyCost = monthlyRecords.reduce(
-      (sum, record) => sum + record.cost,
-      0,
-    );
+    const monthlyRecords = userRecords.filter((record) => record.timestamp >= thisMonth);
+    const monthlyTokens = monthlyRecords.reduce((sum, record) => sum + record.tokens, 0);
+    const monthlyCost = monthlyRecords.reduce((sum, record) => sum + record.cost, 0);
 
     // 计算平均成本
     const averageCostPerToken = totalTokens > 0 ? totalCost / totalTokens : 0;
@@ -141,12 +118,11 @@ export class TokenMonitor {
         acc[record.model] = (acc[record.model] || 0) + record.tokens;
         return acc;
       },
-      {} as Record<string, number>,
+      {} as Record<string, number>
     );
 
     const mostUsedModel =
-      Object.entries(modelUsage).sort(([, a], [, b]) => b - a)[0]?.[0] ||
-      "none";
+      Object.entries(modelUsage).sort(([, a], [, b]) => b - a)[0]?.[0] || "none";
 
     return {
       totalTokens,
@@ -168,34 +144,24 @@ export class TokenMonitor {
     const stats = await this.getUserStats(userId);
 
     // 检查每日限制
-    if (
-      stats.dailyCost >=
-      this.costLimits.dailyLimit * this.costLimits.warningThreshold
-    ) {
+    if (stats.dailyCost >= this.costLimits.dailyLimit * this.costLimits.warningThreshold) {
       if (stats.dailyCost >= this.costLimits.dailyLimit) {
-        console.warn(
-          `用户 ${userId} 已达到每日成本限制: $${stats.dailyCost.toFixed(2)}`,
-        );
+        console.warn(`用户 ${userId} 已达到每日成本限制: $${stats.dailyCost.toFixed(2)}`);
         // 这里可以发送通知或限制服务
       } else {
         console.warn(
-          `用户 ${userId} 接近每日成本限制: $${stats.dailyCost.toFixed(2)} / $${this.costLimits.dailyLimit}`,
+          `用户 ${userId} 接近每日成本限制: $${stats.dailyCost.toFixed(2)} / $${this.costLimits.dailyLimit}`
         );
       }
     }
 
     // 检查每月限制
-    if (
-      stats.monthlyCost >=
-      this.costLimits.monthlyLimit * this.costLimits.warningThreshold
-    ) {
+    if (stats.monthlyCost >= this.costLimits.monthlyLimit * this.costLimits.warningThreshold) {
       if (stats.monthlyCost >= this.costLimits.monthlyLimit) {
-        console.error(
-          `用户 ${userId} 已达到每月成本限制: $${stats.monthlyCost.toFixed(2)}`,
-        );
+        console.error(`用户 ${userId} 已达到每月成本限制: $${stats.monthlyCost.toFixed(2)}`);
       } else {
         console.warn(
-          `用户 ${userId} 接近每月成本限制: $${stats.monthlyCost.toFixed(2)} / $${this.costLimits.monthlyLimit}`,
+          `用户 ${userId} 接近每月成本限制: $${stats.monthlyCost.toFixed(2)} / $${this.costLimits.monthlyLimit}`
         );
       }
     }
@@ -205,8 +171,7 @@ export class TokenMonitor {
    * 计算Token成本
    */
   private calculateCost(model: string, tokens: number): number {
-    const pricing = MODEL_PRICING[model] ??
-      MODEL_PRICING.default ?? { input: 0, output: 0 };
+    const pricing = MODEL_PRICING[model] ?? MODEL_PRICING.default ?? { input: 0, output: 0 };
 
     // 简单估算：假设输入和输出token各占一半
     const inputTokens = Math.ceil(tokens / 2);
@@ -242,18 +207,10 @@ export class TokenMonitor {
     averageCostPerUser: number;
     topModels: Array<{ model: string; usage: number; cost: number }>;
   }> {
-    const userIds = [
-      ...new Set(this.usageRecords.map((record) => record.userId)),
-    ];
+    const userIds = [...new Set(this.usageRecords.map((record) => record.userId))];
 
-    const totalTokens = this.usageRecords.reduce(
-      (sum, record) => sum + record.tokens,
-      0,
-    );
-    const totalCost = this.usageRecords.reduce(
-      (sum, record) => sum + record.cost,
-      0,
-    );
+    const totalTokens = this.usageRecords.reduce((sum, record) => sum + record.tokens, 0);
+    const totalCost = this.usageRecords.reduce((sum, record) => sum + record.cost, 0);
 
     // 统计模型使用情况
     const modelStats = this.usageRecords.reduce(
@@ -264,7 +221,7 @@ export class TokenMonitor {
         acc[record.model] = entry;
         return acc;
       },
-      {} as Record<string, { tokens: number; cost: number }>,
+      {} as Record<string, { tokens: number; cost: number }>
     );
 
     const topModels = Object.entries(modelStats)
@@ -293,9 +250,7 @@ export class TokenMonitor {
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
     const initialLength = this.usageRecords.length;
-    this.usageRecords = this.usageRecords.filter(
-      (record) => record.timestamp >= cutoffDate,
-    );
+    this.usageRecords = this.usageRecords.filter((record) => record.timestamp >= cutoffDate);
 
     return initialLength - this.usageRecords.length;
   }
@@ -303,24 +258,17 @@ export class TokenMonitor {
   /**
    * 导出使用记录（用于分析）
    */
-  async exportRecords(
-    userId?: string,
-    days: number = 7,
-  ): Promise<TokenUsage[]> {
+  async exportRecords(userId?: string, days: number = 7): Promise<TokenUsage[]> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    let records = this.usageRecords.filter(
-      (record) => record.timestamp >= cutoffDate,
-    );
+    let records = this.usageRecords.filter((record) => record.timestamp >= cutoffDate);
 
     if (userId) {
       records = records.filter((record) => record.userId === userId);
     }
 
-    return records.sort(
-      (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
-    );
+    return records.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 }
 
@@ -338,7 +286,7 @@ export async function callOpenAIMonitored(
   temperature: number = 0.7,
   useOpenRouter: boolean = true,
   userId?: string,
-  sessionId?: string,
+  sessionId?: string
 ) {
   const startTime = Date.now();
   let success = false;
@@ -346,13 +294,7 @@ export async function callOpenAIMonitored(
   let error: string | undefined;
 
   try {
-    const response = await callOpenAI(
-      prompt,
-      model,
-      maxTokens,
-      temperature,
-      useOpenRouter,
-    );
+    const response = await callOpenAI(prompt, model, maxTokens, temperature, useOpenRouter);
     tokens = response.tokens;
     success = true;
 

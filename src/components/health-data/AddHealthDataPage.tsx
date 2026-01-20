@@ -80,48 +80,35 @@ export function AddHealthDataPage({ userId }: AddHealthDataPageProps) {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout
-      currentMember={selectedMemberId || undefined}
-      familyMembers={familyMembers}
-    >
-      <div className="max-w-4xl mx-auto">
+    <DashboardLayout currentMember={selectedMemberId || undefined} familyMembers={familyMembers}>
+      <div className="mx-auto max-w-4xl">
         {!selectedMemberId ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              选择家庭成员
-            </h3>
-            <p className="text-gray-600">
-              请从左侧选择一个家庭成员开始录入健康数据
-            </p>
+          <div className="py-12 text-center">
+            <h3 className="mb-2 text-lg font-medium text-gray-900">选择家庭成员</h3>
+            <p className="text-gray-600">请从左侧选择一个家庭成员开始录入健康数据</p>
           </div>
         ) : (
           <div className="space-y-6">
             {/* 页面标题 */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+            <div className="rounded-lg bg-white p-6 shadow">
+              <div className="mb-6 flex items-center space-x-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                   <span className="text-lg font-semibold text-blue-600">
-                    {familyMembers
-                      .find((m) => m.id === selectedMemberId)
-                      ?.name?.charAt(0)}
+                    {familyMembers.find((m) => m.id === selectedMemberId)?.name?.charAt(0)}
                   </span>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    录入健康数据
-                  </h1>
+                  <h1 className="text-2xl font-bold text-gray-900">录入健康数据</h1>
                   <p className="text-gray-500">
-                    为{" "}
-                    {familyMembers.find((m) => m.id === selectedMemberId)?.name}{" "}
-                    录入健康指标
+                    为 {familyMembers.find((m) => m.id === selectedMemberId)?.name} 录入健康指标
                   </p>
                 </div>
               </div>

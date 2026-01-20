@@ -37,10 +37,7 @@ export interface TaskRepository {
    * @param pagination - 分页参数
    * @returns 分页的任务列表
    */
-  listTasks(
-    query: TaskListQuery,
-    pagination?: PaginationInput,
-  ): Promise<PaginatedResult<TaskDTO>>;
+  listTasks(query: TaskListQuery, pagination?: PaginationInput): Promise<PaginatedResult<TaskDTO>>;
 
   /**
    * 获取单个任务详情
@@ -52,11 +49,7 @@ export interface TaskRepository {
    * @param options - 数据展开选项
    * @returns 任务对象，不存在时返回 null
    */
-  getTaskById(
-    familyId: string,
-    taskId: string,
-    options?: TaskGetOptions,
-  ): Promise<TaskDTO | null>;
+  getTaskById(familyId: string, taskId: string, options?: TaskGetOptions): Promise<TaskDTO | null>;
 
   /**
    * 获取我的任务
@@ -68,11 +61,7 @@ export interface TaskRepository {
    * @param status - 可选的状态过滤
    * @returns 任务列表
    */
-  getMyTasks(
-    familyId: string,
-    memberId: string,
-    status?: TaskStatus,
-  ): Promise<TaskDTO[]>;
+  getMyTasks(familyId: string, memberId: string, status?: TaskStatus): Promise<TaskDTO[]>;
 
   /**
    * 创建任务
@@ -82,11 +71,7 @@ export interface TaskRepository {
    * @param payload - 创建参数
    * @returns 创建的任务对象
    */
-  createTask(
-    familyId: string,
-    creatorId: string,
-    payload: CreateTaskDTO,
-  ): Promise<TaskDTO>;
+  createTask(familyId: string, creatorId: string, payload: CreateTaskDTO): Promise<TaskDTO>;
 
   /**
    * 更新任务详情
@@ -96,11 +81,7 @@ export interface TaskRepository {
    * @param payload - 更新参数
    * @returns 更新后的任务对象
    */
-  updateTask(
-    familyId: string,
-    taskId: string,
-    payload: UpdateTaskDTO,
-  ): Promise<TaskDTO>;
+  updateTask(familyId: string, taskId: string, payload: UpdateTaskDTO): Promise<TaskDTO>;
 
   /**
    * 更新任务状态
@@ -115,7 +96,7 @@ export interface TaskRepository {
   updateTaskStatus(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskStatusDTO,
+    payload: UpdateTaskStatusDTO
   ): Promise<TaskDTO>;
 
   /**
@@ -126,11 +107,7 @@ export interface TaskRepository {
    * @param assigneeId - 分配人成员ID
    * @returns 更新后的任务对象
    */
-  assignTask(
-    familyId: string,
-    taskId: string,
-    assigneeId: string,
-  ): Promise<TaskDTO>;
+  assignTask(familyId: string, taskId: string, assigneeId: string): Promise<TaskDTO>;
 
   /**
    * 删除任务（软删除）

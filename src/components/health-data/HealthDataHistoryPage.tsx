@@ -26,9 +26,9 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<
-    "week" | "month" | "quarter" | "year" | "all"
-  >("month");
+  const [dateRange, setDateRange] = useState<"week" | "month" | "quarter" | "year" | "all">(
+    "month"
+  );
   const [showExport, setShowExport] = useState(false);
 
   // 获取家庭成员数据
@@ -82,51 +82,36 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout
-      currentMember={selectedMemberId || undefined}
-      familyMembers={familyMembers}
-    >
+    <DashboardLayout currentMember={selectedMemberId || undefined} familyMembers={familyMembers}>
       <div className="space-y-6">
         {!selectedMemberId ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              选择家庭成员
-            </h3>
-            <p className="text-gray-600">
-              请从左侧选择一个家庭成员查看健康数据历史
-            </p>
+          <div className="py-12 text-center">
+            <h3 className="mb-2 text-lg font-medium text-gray-900">选择家庭成员</h3>
+            <p className="text-gray-600">请从左侧选择一个家庭成员查看健康数据历史</p>
           </div>
         ) : (
           <>
             {/* 页面标题和操作 */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between mb-6">
+            <div className="rounded-lg bg-white p-6 shadow">
+              <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                     <span className="text-lg font-semibold text-blue-600">
-                      {familyMembers
-                        .find((m) => m.id === selectedMemberId)
-                        ?.name?.charAt(0)}
+                      {familyMembers.find((m) => m.id === selectedMemberId)?.name?.charAt(0)}
                     </span>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      健康数据历史
-                    </h1>
+                    <h1 className="text-2xl font-bold text-gray-900">健康数据历史</h1>
                     <p className="text-gray-500">
-                      查看{" "}
-                      {
-                        familyMembers.find((m) => m.id === selectedMemberId)
-                          ?.name
-                      }{" "}
+                      查看 {familyMembers.find((m) => m.id === selectedMemberId)?.name}{" "}
                       的历史健康数据
                     </p>
                   </div>
@@ -135,7 +120,7 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setShowExport(!showExport)}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+                    className="flex items-center space-x-2 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100"
                   >
                     <Download className="h-4 w-4" />
                     <span>导出数据</span>
@@ -144,17 +129,17 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
               </div>
 
               {/* 筛选和搜索 */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="mb-6 flex flex-col gap-4 sm:flex-row">
                 {/* 搜索框 */}
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <input
                       type="text"
                       placeholder="搜索健康数据..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -165,7 +150,7 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
                   <select
                     value={dateRange}
                     onChange={(e) => setDateRange(e.target.value as any)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="week">最近一周</option>
                     <option value="month">最近一月</option>
@@ -187,10 +172,7 @@ export function HealthDataHistoryPage({ userId }: HealthDataHistoryPageProps) {
 
             {/* 导出面板 */}
             {showExport && (
-              <DataImportExport
-                memberId={selectedMemberId}
-                onClose={() => setShowExport(false)}
-              />
+              <DataImportExport memberId={selectedMemberId} onClose={() => setShowExport(false)} />
             )}
           </>
         )}

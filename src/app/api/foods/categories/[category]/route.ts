@@ -18,7 +18,7 @@ const validCategories = new Set(Object.values(FoodCategory));
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ category: string }> },
+  { params }: { params: Promise<{ category: string }> }
 ) {
   try {
     const { category } = await params;
@@ -47,7 +47,7 @@ export async function GET(
         limit,
         category,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("按类别查询食物失败:", error);

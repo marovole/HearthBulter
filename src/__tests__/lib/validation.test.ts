@@ -171,9 +171,7 @@ describe("Validation Functions", () => {
     });
 
     it("should remove dangerous characters", () => {
-      expect(sanitizeString("Hello<script>alert(1)</script>")).toBe(
-        "Helloscriptalert(1)/script",
-      );
+      expect(sanitizeString("Hello<script>alert(1)</script>")).toBe("Helloscriptalert(1)/script");
     });
 
     it("should limit length", () => {

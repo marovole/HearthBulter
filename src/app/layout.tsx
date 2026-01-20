@@ -15,15 +15,11 @@ export const metadata = {
   description: "基于健康数据与电商库存的动态饮食引擎",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
       <html lang="zh-CN" suppressHydrationWarning>
-        <body className="font-body antialiased bg-background text-foreground">
+        <body className="bg-background font-body text-foreground antialiased">
           <Providers>{children}</Providers>
         </body>
       </html>

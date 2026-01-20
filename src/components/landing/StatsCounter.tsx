@@ -13,13 +13,7 @@ interface StatItemProps {
   icon: React.ElementType;
 }
 
-function StatItem({
-  end,
-  label,
-  suffix = "",
-  duration = 2000,
-  icon: Icon,
-}: StatItemProps) {
+function StatItem({ end, label, suffix = "", duration = 2000, icon: Icon }: StatItemProps) {
   const [count, setCount] = useState(0);
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -73,14 +67,14 @@ function StatItem({
       transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
       className="text-center"
     >
-      <div className="inline-flex p-4 rounded-2xl bg-primary/10 mb-6">
-        <Icon className="w-8 h-8 text-primary" />
+      <div className="mb-6 inline-flex rounded-2xl bg-primary/10 p-4">
+        <Icon className="h-8 w-8 text-primary" />
       </div>
-      <div className="font-mono text-5xl sm:text-6xl font-bold text-foreground mb-2">
+      <div className="mb-2 font-mono text-5xl font-bold text-foreground sm:text-6xl">
         {formatNumber(count)}
         {suffix}
       </div>
-      <div className="text-muted-foreground font-medium">{label}</div>
+      <div className="font-medium text-muted-foreground">{label}</div>
     </motion.div>
   );
 }
@@ -98,11 +92,11 @@ export default function StatsCounter() {
   });
 
   return (
-    <section className="py-24 md:py-32 bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="bg-background py-24 md:py-32">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <motion.div
           ref={ref}
-          className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8"
+          className="grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-8"
           initial="hidden"
           animate={inView ? "visible" : "hidden"}
           variants={{

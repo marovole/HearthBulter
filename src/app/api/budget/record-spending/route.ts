@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     if (!budgetId || !amount || !category || !description) {
       return NextResponse.json(
         { error: "缺少必需字段：budgetId, amount, category, description" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -60,21 +60,12 @@ export async function POST(request: NextRequest) {
 
     const budget = await budgetRepository.getBudgetById(budgetId);
     if (!budget) {
-      return NextResponse.json(
-        { error: "预算不存在或已不活跃" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "预算不存在或已不活跃" }, { status: 404 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      budget.memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(budget.memberId, session.user.id);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限记录该预算的支出" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限记录该预算的支出" }, { status: 403 });
     }
 
     // 构建 SpendingCreateDTO
@@ -104,49 +95,28 @@ export async function POST(request: NextRequest) {
       // 根据 RPC 函数返回的错误类型，映射到合适的 HTTP 状态码
       const message = error.message;
 
-      if (
-        message.includes("BUDGET_NOT_FOUND") ||
-        message.includes("预算不存在")
-      ) {
-        return NextResponse.json(
-          { error: "预算不存在或已不活跃" },
-          { status: 404 },
-        );
+      if (message.includes("BUDGET_NOT_FOUND") || message.includes("预算不存在")) {
+        return NextResponse.json({ error: "预算不存在或已不活跃" }, { status: 404 });
       }
 
-      if (
-        message.includes("DATE_OUT_OF_RANGE") ||
-        message.includes("不在预算周期内")
-      ) {
-        return NextResponse.json(
-          { error: "支出日期不在预算周期内" },
-          { status: 400 },
-        );
+      if (message.includes("DATE_OUT_OF_RANGE") || message.includes("不在预算周期内")) {
+        return NextResponse.json({ error: "支出日期不在预算周期内" }, { status: 400 });
       }
 
       if (message.includes("BUDGET_EXCEEDED") || message.includes("超出预算")) {
         return NextResponse.json({ error: message }, { status: 400 });
       }
 
-      if (
-        message.includes("CATEGORY_LIMIT_EXCEEDED") ||
-        message.includes("分类预算")
-      ) {
+      if (message.includes("CATEGORY_LIMIT_EXCEEDED") || message.includes("分类预算")) {
         return NextResponse.json({ error: message }, { status: 400 });
       }
 
       if (message.includes("BUDGET_INACTIVE")) {
-        return NextResponse.json(
-          { error: "预算已结束或不可用" },
-          { status: 400 },
-        );
+        return NextResponse.json({ error: "预算已结束或不可用" }, { status: 400 });
       }
 
       if (message.includes("ID 与请求不一致")) {
-        return NextResponse.json(
-          { error: "系统错误：预算 ID 不一致" },
-          { status: 500 },
-        );
+        return NextResponse.json({ error: "系统错误：预算 ID 不一致" }, { status: 500 });
       }
 
       // 其他错误
@@ -180,21 +150,12 @@ export async function GET(request: NextRequest) {
 
     const budget = await budgetRepository.getBudgetById(budgetId);
     if (!budget) {
-      return NextResponse.json(
-        { error: "预算不存在或已不活跃" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "预算不存在或已不活跃" }, { status: 404 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      budget.memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(budget.memberId, session.user.id);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该预算的支出记录" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该预算的支出记录" }, { status: 403 });
     }
 
     // 使用 Repository 获取支出历史
@@ -203,7 +164,7 @@ export async function GET(request: NextRequest) {
         budgetId,
         category: category || undefined,
       },
-      undefined, // 不使用分页，返回所有结果
+      undefined // 不使用分页，返回所有结果
     );
 
     return NextResponse.json(result.items || []);

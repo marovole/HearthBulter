@@ -172,7 +172,7 @@ describe("/api/ai/consent", () => {
 
     it("should retrieve specific consent status by ID", async () => {
       const request = new Request(
-        "http://localhost:3000/api/ai/consent?consentId=ai_health_analysis",
+        "http://localhost:3000/api/ai/consent?consentId=ai_health_analysis"
       );
 
       const response = await GET(request);

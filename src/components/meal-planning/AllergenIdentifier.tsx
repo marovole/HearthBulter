@@ -162,9 +162,7 @@ export function AllergenIdentifier({
   const [detectedAllergens, setDetectedAllergens] = useState<Allergen[]>([]);
   const [highRiskAllergens, setHighRiskAllergens] = useState<Allergen[]>([]);
   const [showAllergenDetails, setShowAllergenDetails] = useState(false);
-  const [hiddenAllergens, setHiddenAllergens] = useState<Set<string>>(
-    new Set(),
-  );
+  const [hiddenAllergens, setHiddenAllergens] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     analyzeAllergens();
@@ -209,7 +207,7 @@ export function AllergenIdentifier({
   };
 
   const visibleAllergens = detectedAllergens.filter(
-    (allergen) => !hiddenAllergens.has(allergen.id),
+    (allergen) => !hiddenAllergens.has(allergen.id)
   );
 
   const getRiskLevel = (): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" => {
@@ -220,7 +218,7 @@ export function AllergenIdentifier({
 
     if (detectedAllergens.length > 0) {
       const hasModerateOrSevere = detectedAllergens.some(
-        (a) => a.severity === "MODERATE" || a.severity === "SEVERE",
+        (a) => a.severity === "MODERATE" || a.severity === "SEVERE"
       );
       return hasModerateOrSevere ? "MEDIUM" : "LOW";
     }
@@ -256,13 +254,11 @@ export function AllergenIdentifier({
 
   if (detectedAllergens.length === 0) {
     return (
-      <Card className="bg-green-50 border-green-200">
+      <Card className="border-green-200 bg-green-50">
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
-            <span className="text-green-800 font-medium">
-              未检测到常见过敏原
-            </span>
+            <span className="font-medium text-green-800">未检测到常见过敏原</span>
           </div>
         </CardContent>
       </Card>
@@ -298,17 +294,15 @@ export function AllergenIdentifier({
 
         {/* 高风险过敏原警告 */}
         {highRiskAllergens.length > 0 && (
-          <Alert className="bg-red-50 border-red-200">
+          <Alert className="border-red-200 bg-red-50">
             <XCircle className="h-4 w-4 text-red-600" />
             <AlertDescription>
-              <div className="font-medium text-red-900 mb-2">
-                ⚠️ 检测到您的过敏原：
-              </div>
+              <div className="mb-2 font-medium text-red-900">⚠️ 检测到您的过敏原：</div>
               <div className="flex flex-wrap gap-2">
                 {highRiskAllergens.map((allergen) => (
                   <Badge
                     key={allergen.id}
-                    className="bg-red-100 text-red-800 border-red-200 cursor-pointer"
+                    className="cursor-pointer border-red-200 bg-red-100 text-red-800"
                     onClick={() => onAllergenClick?.(allergen.name)}
                   >
                     {allergen.icon}
@@ -333,26 +327,24 @@ export function AllergenIdentifier({
                 onClick={() => setShowAllergenDetails(!showAllergenDetails)}
               >
                 {showAllergenDetails ? (
-                  <EyeOff className="h-3 w-3 mr-1" />
+                  <EyeOff className="mr-1 h-3 w-3" />
                 ) : (
-                  <Eye className="h-3 w-3 mr-1" />
+                  <Eye className="mr-1 h-3 w-3" />
                 )}
                 {showAllergenDetails ? "隐藏详情" : "显示详情"}
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {visibleAllergens.map((allergen) => (
               <div
                 key={allergen.id}
-                className={`p-3 border rounded-lg ${allergen.color} ${
-                  highRiskAllergens.includes(allergen)
-                    ? "ring-2 ring-red-300"
-                    : ""
+                className={`rounded-lg border p-3 ${allergen.color} ${
+                  highRiskAllergens.includes(allergen) ? "ring-2 ring-red-300" : ""
                 }`}
               >
-                <div className="flex items-start justify-between mb-2">
+                <div className="mb-2 flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     {allergen.icon}
                     <span className="font-medium">{allergen.name}</span>
@@ -362,9 +354,7 @@ export function AllergenIdentifier({
                   </div>
                   <div className="flex items-center gap-1">
                     {SEVERITY_CONFIG[allergen.severity].icon}
-                    <span
-                      className={`text-xs ${SEVERITY_CONFIG[allergen.severity].color}`}
-                    >
+                    <span className={`text-xs ${SEVERITY_CONFIG[allergen.severity].color}`}>
                       {SEVERITY_CONFIG[allergen.severity].label}
                     </span>
                   </div>
@@ -374,16 +364,10 @@ export function AllergenIdentifier({
                   <div className="space-y-2 text-sm">
                     <p className="text-gray-700">{allergen.description}</p>
                     <div>
-                      <span className="font-medium text-gray-900">
-                        可能症状：
-                      </span>
-                      <div className="flex flex-wrap gap-1 mt-1">
+                      <span className="font-medium text-gray-900">可能症状：</span>
+                      <div className="mt-1 flex flex-wrap gap-1">
                         {allergen.symptoms.map((symptom, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs"
-                          >
+                          <Badge key={index} variant="secondary" className="text-xs">
                             {symptom}
                           </Badge>
                         ))}
@@ -392,7 +376,7 @@ export function AllergenIdentifier({
                   </div>
                 )}
 
-                <div className="flex gap-2 mt-2">
+                <div className="mt-2 flex gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -418,22 +402,18 @@ export function AllergenIdentifier({
         {/* 隐藏的过敏原 */}
         {hiddenAllergens.size > 0 && (
           <div className="text-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setHiddenAllergens(new Set())}
-            >
+            <Button variant="outline" size="sm" onClick={() => setHiddenAllergens(new Set())}>
               显示所有过敏原 ({hiddenAllergens.size} 个已隐藏)
             </Button>
           </div>
         )}
 
         {/* 安全提示 */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
           <div className="flex items-start gap-2">
-            <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+            <Info className="mt-0.5 h-4 w-4 text-blue-600" />
             <div className="text-sm text-blue-800">
-              <div className="font-medium mb-1">安全提示</div>
+              <div className="mb-1 font-medium">安全提示</div>
               <ul className="space-y-1 text-xs">
                 <li>• 如果您有食物过敏史，请谨慎食用含过敏原的食品</li>
                 <li>• 严重过敏者应避免食用相关过敏原食品</li>

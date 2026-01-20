@@ -96,7 +96,7 @@ export default function InvitePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-gray-600">加载中...</div>
       </div>
     );
@@ -106,12 +106,12 @@ export default function InvitePage() {
     <div className="min-h-screen bg-gray-50">
       {/* 顶部导航栏 */}
       <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between">
             <div className="flex items-center">
               <Link
                 href={`/dashboard/families/${familyId}`}
-                className="text-blue-600 hover:text-blue-800 mr-4"
+                className="mr-4 text-blue-600 hover:text-blue-800"
               >
                 ← 返回家庭
               </Link>
@@ -121,21 +121,19 @@ export default function InvitePage() {
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-3xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* 错误提示 */}
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
           {/* 邀请码信息卡片 */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              邀请新成员加入家庭
-            </h2>
-            <p className="text-gray-600 mb-6">
+          <div className="mb-6 rounded-lg bg-white p-6 shadow">
+            <h2 className="mb-4 text-2xl font-bold text-gray-900">邀请新成员加入家庭</h2>
+            <p className="mb-6 text-gray-600">
               分享邀请链接或邀请码，让其他人加入您的家庭。每个家庭都有唯一的邀请码。
             </p>
 
@@ -143,12 +141,10 @@ export default function InvitePage() {
               <>
                 {/* 邀请码显示 */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    邀请码
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">邀请码</label>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-gray-50 border border-gray-300 rounded-md px-4 py-3">
-                      <code className="text-2xl font-mono font-bold text-gray-900 tracking-wider">
+                    <div className="flex-1 rounded-md border border-gray-300 bg-gray-50 px-4 py-3">
+                      <code className="font-mono text-2xl font-bold tracking-wider text-gray-900">
                         {inviteData.inviteCode}
                       </code>
                     </div>
@@ -157,19 +153,17 @@ export default function InvitePage() {
 
                 {/* 邀请链接显示 */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    邀请链接
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">邀请链接</label>
                   <div className="flex items-center gap-3">
                     <input
                       type="text"
                       value={inviteData.inviteUrl || ""}
                       readOnly
-                      className="flex-1 bg-gray-50 border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-900"
+                      className="flex-1 rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm text-gray-900"
                     />
                     <button
                       onClick={copyInviteUrl}
-                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                      className={`rounded-md px-4 py-2 font-medium transition-colors ${
                         copied
                           ? "bg-green-600 text-white"
                           : "bg-blue-600 text-white hover:bg-blue-700"
@@ -181,11 +175,9 @@ export default function InvitePage() {
                 </div>
 
                 {/* 使用说明 */}
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-                  <h3 className="text-sm font-medium text-blue-900 mb-2">
-                    如何使用
-                  </h3>
-                  <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                <div className="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4">
+                  <h3 className="mb-2 text-sm font-medium text-blue-900">如何使用</h3>
+                  <ul className="list-inside list-disc space-y-1 text-sm text-blue-800">
                     <li>将邀请链接发送给您想邀请的人</li>
                     <li>他们点击链接后，可以看到家庭信息并选择加入</li>
                     <li>加入时需要登录账户并提供基本信息</li>
@@ -197,25 +189,23 @@ export default function InvitePage() {
                 <button
                   onClick={generateInviteCode}
                   disabled={generating}
-                  className="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="w-full rounded-md bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-400"
                 >
                   {generating ? "生成中..." : "生成新的邀请码"}
                 </button>
-                <p className="mt-2 text-xs text-gray-500 text-center">
+                <p className="mt-2 text-center text-xs text-gray-500">
                   生成新邀请码会使旧的邀请码失效
                 </p>
               </>
             ) : (
               <>
                 {/* 尚未生成邀请码 */}
-                <div className="text-center py-8">
-                  <p className="text-gray-600 mb-6">
-                    {inviteData?.message || "尚未生成邀请码"}
-                  </p>
+                <div className="py-8 text-center">
+                  <p className="mb-6 text-gray-600">{inviteData?.message || "尚未生成邀请码"}</p>
                   <button
                     onClick={generateInviteCode}
                     disabled={generating}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    className="rounded-md bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
                   >
                     {generating ? "生成中..." : "生成邀请码"}
                   </button>
@@ -225,11 +215,9 @@ export default function InvitePage() {
           </div>
 
           {/* 安全提示 */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-            <h3 className="text-sm font-medium text-yellow-900 mb-2">
-              ⚠️ 安全提示
-            </h3>
-            <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4">
+            <h3 className="mb-2 text-sm font-medium text-yellow-900">⚠️ 安全提示</h3>
+            <ul className="list-inside list-disc space-y-1 text-sm text-yellow-800">
               <li>请只将邀请链接分享给您信任的人</li>
               <li>任何拥有邀请链接的人都可以加入您的家庭</li>
               <li>如果邀请链接泄露，请立即生成新的邀请码</li>

@@ -56,10 +56,7 @@ function analyzeErrorType(error: unknown): AIErrorType {
   const errorName = error instanceof Error ? error.name : "";
 
   // 检查超时
-  if (
-    errorName === "TimeoutError" ||
-    errorMessage.match(/timeout|timed out|ETIMEDOUT/i)
-  ) {
+  if (errorName === "TimeoutError" || errorMessage.match(/timeout|timed out|ETIMEDOUT/i)) {
     return AIErrorType.TIMEOUT;
   }
 
@@ -115,10 +112,7 @@ function isRetryable(errorType: AIErrorType): boolean {
 /**
  * 获取重试等待时间
  */
-function getRetryAfter(
-  error: unknown,
-  errorType: AIErrorType,
-): number | undefined {
+function getRetryAfter(error: unknown, errorType: AIErrorType): number | undefined {
   if (error instanceof RateLimitError) {
     return error.retryAfter;
   }
@@ -142,7 +136,7 @@ export function handleAIError(
     userId?: string;
     operation?: string;
     provider?: string;
-  },
+  }
 ): AIErrorResponse {
   const errorType = analyzeErrorType(error);
   const message = getUserFriendlyMessage(errorType);
@@ -192,14 +186,9 @@ export async function withRetry<T>(
     baseDelay?: number;
     maxDelay?: number;
     onRetry?: (attempt: number, error: unknown) => void;
-  } = {},
+  } = {}
 ): Promise<T> {
-  const {
-    maxRetries = 3,
-    baseDelay = 1000,
-    maxDelay = 30000,
-    onRetry,
-  } = options;
+  const { maxRetries = 3, baseDelay = 1000, maxDelay = 30000, onRetry } = options;
 
   let lastError: unknown;
 
@@ -216,10 +205,7 @@ export async function withRetry<T>(
       }
 
       // 计算延迟时间（指数退避）
-      const delay = Math.min(
-        baseDelay * Math.pow(2, attempt) + Math.random() * 1000,
-        maxDelay,
-      );
+      const delay = Math.min(baseDelay * Math.pow(2, attempt) + Math.random() * 1000, maxDelay);
 
       if (onRetry) {
         onRetry(attempt + 1, error);
@@ -242,10 +228,7 @@ export async function withRetry<T>(
 /**
  * 带超时的 AI 调用包装器
  */
-export async function withTimeout<T>(
-  fn: () => Promise<T>,
-  timeoutMs: number = 30000,
-): Promise<T> {
+export async function withTimeout<T>(fn: () => Promise<T>, timeoutMs: number = 30000): Promise<T> {
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
       reject(new TimeoutError(`AI 调用超时 (${timeoutMs}ms)`));

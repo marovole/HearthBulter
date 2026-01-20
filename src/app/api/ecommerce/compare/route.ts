@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PriceComparator } from "@/lib/services/price-comparator";
-import {
-  PlatformError,
-  PlatformErrorType,
-} from "@/lib/services/ecommerce/types";
+import { PlatformError, PlatformErrorType } from "@/lib/services/ecommerce/types";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
@@ -20,10 +17,7 @@ export async function POST(request: NextRequest) {
     const { foodIds, config } = body;
 
     if (!foodIds || !Array.isArray(foodIds) || foodIds.length === 0) {
-      return NextResponse.json(
-        { error: "foodIds array is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "foodIds array is required" }, { status: 400 });
     }
 
     // 获取食材信息
@@ -49,10 +43,7 @@ export async function POST(request: NextRequest) {
       preferInStock: config?.preferInStock !== false,
     };
 
-    const comparisonResults = await priceComparator.comparePrices(
-      foods,
-      comparisonConfig,
-    );
+    const comparisonResults = await priceComparator.comparePrices(foods, comparisonConfig);
 
     // 转换结果格式
     const results = comparisonResults.map((result) => ({
@@ -80,26 +71,22 @@ export async function POST(request: NextRequest) {
       })),
       bestPrice: result.bestPrice
         ? {
-          platform: result.bestPrice.platform,
-          platformProductId: result.bestPrice.product.platformProductId,
-          name: result.bestPrice.product.name,
-          totalPrice: result.bestPrice.totalPrice,
-          unitPrice: result.bestPrice.unitPrice,
-          price: result.bestPrice.product.price,
-          shippingFee: (result.bestPrice.product as any).shippingFee,
-        }
+            platform: result.bestPrice.platform,
+            platformProductId: result.bestPrice.product.platformProductId,
+            name: result.bestPrice.product.name,
+            totalPrice: result.bestPrice.totalPrice,
+            unitPrice: result.bestPrice.unitPrice,
+            price: result.bestPrice.product.price,
+            shippingFee: (result.bestPrice.product as any).shippingFee,
+          }
         : null,
     }));
 
     // 计算汇总统计
     const statistics = {
       totalFoods: foods.length,
-      totalMatches: results.reduce(
-        (sum, result) => sum + result.matches.length,
-        0,
-      ),
-      foodsWithBestPrice: results.filter((result) => result.bestPrice !== null)
-        .length,
+      totalMatches: results.reduce((sum, result) => sum + result.matches.length, 0),
+      foodsWithBestPrice: results.filter((result) => result.bestPrice !== null).length,
       averageSavings: calculateAverageSavings(results),
       platformDistribution: calculatePlatformDistribution(results),
     };
@@ -113,16 +100,10 @@ export async function POST(request: NextRequest) {
     console.error("Price comparison error:", error);
 
     if (error instanceof PlatformError) {
-      return NextResponse.json(
-        { error: error.message, type: error.type },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: error.message, type: error.type }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: "Failed to compare prices" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to compare prices" }, { status: 500 });
   }
 }
 
@@ -138,10 +119,7 @@ export async function GET(request: NextRequest) {
     const includeShipping = searchParams.get("includeShipping") !== "false";
 
     if (!foodId) {
-      return NextResponse.json(
-        { error: "foodId is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "foodId is required" }, { status: 400 });
     }
 
     // 获取食材信息
@@ -166,18 +144,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (comparisonResults.length === 0) {
-      return NextResponse.json(
-        { error: "No comparison results found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "No comparison results found" }, { status: 404 });
     }
 
     const [result] = comparisonResults;
     if (!result) {
-      return NextResponse.json(
-        { error: "No comparison results found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "No comparison results found" }, { status: 404 });
     }
 
     // 转换结果格式
@@ -208,14 +180,14 @@ export async function GET(request: NextRequest) {
       })),
       bestPrice: result.bestPrice
         ? {
-          platform: result.bestPrice.platform,
-          platformProductId: result.bestPrice.product.platformProductId,
-          name: result.bestPrice.product.name,
-          totalPrice: result.bestPrice.totalPrice,
-          unitPrice: result.bestPrice.unitPrice,
-          price: result.bestPrice.product.price,
-          shippingFee: (result.bestPrice.product as any).shippingFee,
-        }
+            platform: result.bestPrice.platform,
+            platformProductId: result.bestPrice.product.platformProductId,
+            name: result.bestPrice.product.name,
+            totalPrice: result.bestPrice.totalPrice,
+            unitPrice: result.bestPrice.unitPrice,
+            price: result.bestPrice.product.price,
+            shippingFee: (result.bestPrice.product as any).shippingFee,
+          }
         : null,
     };
 
@@ -227,16 +199,10 @@ export async function GET(request: NextRequest) {
     console.error("Single price comparison error:", error);
 
     if (error instanceof PlatformError) {
-      return NextResponse.json(
-        { error: error.message, type: error.type },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: error.message, type: error.type }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: "Failed to compare price" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to compare price" }, { status: 500 });
   }
 }
 
@@ -245,15 +211,13 @@ function calculateAverageSavings(
   results: Array<{
     bestPrice?: unknown;
     matches: Array<{ totalPrice?: number; price: number }>;
-  }>,
+  }>
 ): number {
   const savings = results
     .map((result) => {
       if (!result.bestPrice || result.matches.length < 2) return 0;
 
-      const prices = result.matches.map(
-        (match) => match.totalPrice || match.price,
-      );
+      const prices = result.matches.map((match) => match.totalPrice || match.price);
       const lowestPrice = Math.min(...prices);
       const highestPrice = Math.max(...prices);
 
@@ -261,14 +225,12 @@ function calculateAverageSavings(
     })
     .filter((saving) => saving > 0);
 
-  return savings.length > 0
-    ? savings.reduce((sum, saving) => sum + saving, 0) / savings.length
-    : 0;
+  return savings.length > 0 ? savings.reduce((sum, saving) => sum + saving, 0) / savings.length : 0;
 }
 
 // 计算平台分布
 function calculatePlatformDistribution(
-  results: Array<{ matches: Array<{ platform: string }> }>,
+  results: Array<{ matches: Array<{ platform: string }> }>
 ): Record<string, number> {
   const distribution: Record<string, number> = {};
 

@@ -81,7 +81,7 @@ async function fetchTimeSeriesDataFromRepository(
   memberId: string,
   dataType: TrendDataType,
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): Promise<TimeSeriesPoint[]> {
   const metric = TREND_METRIC_MAP[dataType];
   if (!metric) {
@@ -126,15 +126,10 @@ export class TrendAnalyzer {
     memberId: string,
     dataType: TrendDataType,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<TrendAnalysis> {
     // 获取当前时期数据
-    const dataPoints = await this.fetchTimeSeriesData(
-      memberId,
-      dataType,
-      startDate,
-      endDate,
-    );
+    const dataPoints = await this.fetchTimeSeriesData(memberId, dataType, startDate, endDate);
 
     // 计算统计数据
     const statistics = this.calculateStatistics(dataPoints);
@@ -156,13 +151,10 @@ export class TrendAnalyzer {
       memberId,
       dataType,
       previousStartDate,
-      previousEndDate,
+      previousEndDate
     );
 
-    const periodComparison = this.calculatePeriodComparison(
-      dataPoints,
-      previousDataPoints,
-    );
+    const periodComparison = this.calculatePeriodComparison(dataPoints, previousDataPoints);
 
     return {
       dataPoints,
@@ -185,14 +177,14 @@ export class TrendAnalyzer {
     memberId: string,
     dataType: TrendDataType,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<TimeSeriesPoint[]> {
     return fetchTimeSeriesDataFromRepository(
       this.analyticsRepository,
       memberId,
       dataType,
       startDate,
-      endDate,
+      endDate
     );
   }
 
@@ -218,15 +210,12 @@ export class TrendAnalyzer {
     const midIndex = Math.floor(values.length / 2);
     const midValue = values[midIndex] ?? 0;
     const leftValue = values[midIndex - 1] ?? midValue;
-    const median =
-      values.length % 2 === 0 ? (leftValue + midValue) / 2 : midValue;
+    const median = values.length % 2 === 0 ? (leftValue + midValue) / 2 : midValue;
     const min = values[0] ?? 0;
     const max = values[values.length - 1] ?? 0;
 
     // 计算标准差
-    const variance =
-      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
-      values.length;
+    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
     const stdDev = Math.sqrt(variance);
 
     return { mean, median, min, max, stdDev };
@@ -239,7 +228,7 @@ export class TrendAnalyzer {
    */
   private calculateMovingAverage(
     dataPoints: TimeSeriesPoint[],
-    windowSize: number = 7,
+    windowSize: number = 7
   ): TimeSeriesPoint[] {
     if (dataPoints.length < windowSize) {
       return dataPoints; // 数据点不足，返回原始数据
@@ -285,9 +274,7 @@ export class TrendAnalyzer {
     }
 
     const firstDate = firstPoint.date.getTime();
-    const x = dataPoints.map(
-      (p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24),
-    );
+    const x = dataPoints.map((p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24));
     const y = dataPoints.map((p) => p.value);
 
     const n = x.length;
@@ -330,7 +317,7 @@ export class TrendAnalyzer {
    */
   private predictFutureTrend(
     dataPoints: TimeSeriesPoint[],
-    daysAhead: number = 7,
+    daysAhead: number = 7
   ): TimeSeriesPoint[] {
     if (dataPoints.length < 2) {
       return [];
@@ -344,9 +331,7 @@ export class TrendAnalyzer {
     const firstDate = firstPoint.date.getTime();
     const lastDate = lastPoint.date.getTime();
 
-    const x = dataPoints.map(
-      (p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24),
-    );
+    const x = dataPoints.map((p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24));
     const y = dataPoints.map((p) => p.value);
 
     const n = x.length;
@@ -382,18 +367,16 @@ export class TrendAnalyzer {
    */
   private calculatePeriodComparison(
     currentDataPoints: TimeSeriesPoint[],
-    previousDataPoints: TimeSeriesPoint[],
+    previousDataPoints: TimeSeriesPoint[]
   ) {
     if (currentDataPoints.length === 0 || previousDataPoints.length === 0) {
       return null;
     }
 
     const currentAvg =
-      currentDataPoints.reduce((sum, p) => sum + p.value, 0) /
-      currentDataPoints.length;
+      currentDataPoints.reduce((sum, p) => sum + p.value, 0) / currentDataPoints.length;
     const previousAvg =
-      previousDataPoints.reduce((sum, p) => sum + p.value, 0) /
-      previousDataPoints.length;
+      previousDataPoints.reduce((sum, p) => sum + p.value, 0) / previousDataPoints.length;
 
     const changePercent = ((currentAvg - previousAvg) / previousAvg) * 100;
 
@@ -490,14 +473,14 @@ export async function aggregateTimeSeriesData(
   memberId: string,
   dataType: TrendDataType,
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): Promise<TimeSeriesPoint[]> {
   return fetchTimeSeriesDataFromRepository(
     getDefaultAnalyticsRepository(),
     memberId,
     dataType,
     startDate,
-    endDate,
+    endDate
   );
 }
 
@@ -529,14 +512,9 @@ export async function analyzeTrend(
   memberId: string,
   dataType: TrendDataType,
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): Promise<TrendAnalysis> {
-  return getDefaultTrendAnalyzer().analyzeTrend(
-    memberId,
-    dataType,
-    startDate,
-    endDate,
-  );
+  return getDefaultTrendAnalyzer().analyzeTrend(memberId, dataType, startDate, endDate);
 }
 
 // ============================================================================
@@ -564,14 +542,11 @@ export function calculateStatistics(dataPoints: TimeSeriesPoint[]) {
   const midIndex = Math.floor(values.length / 2);
   const midValue = values[midIndex] ?? 0;
   const leftValue = values[midIndex - 1] ?? midValue;
-  const median =
-    values.length % 2 === 0 ? (leftValue + midValue) / 2 : midValue;
+  const median = values.length % 2 === 0 ? (leftValue + midValue) / 2 : midValue;
   const min = values[0] ?? 0;
   const max = values[values.length - 1] ?? 0;
 
-  const variance =
-    values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
-    values.length;
+  const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
   const stdDev = Math.sqrt(variance);
 
   return { mean, median, min, max, stdDev };
@@ -583,7 +558,7 @@ export function calculateStatistics(dataPoints: TimeSeriesPoint[]) {
  */
 export function calculateMovingAverage(
   dataPoints: TimeSeriesPoint[],
-  windowSize: number = 7,
+  windowSize: number = 7
 ): TimeSeriesPoint[] {
   if (dataPoints.length < windowSize) {
     return dataPoints;
@@ -628,9 +603,7 @@ export function calculateLinearRegression(dataPoints: TimeSeriesPoint[]) {
   }
 
   const firstDate = firstPoint.date.getTime();
-  const x = dataPoints.map(
-    (p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24),
-  );
+  const x = dataPoints.map((p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24));
   const y = dataPoints.map((p) => p.value);
 
   const n = x.length;
@@ -668,7 +641,7 @@ export function calculateLinearRegression(dataPoints: TimeSeriesPoint[]) {
  */
 export function predictFutureTrend(
   dataPoints: TimeSeriesPoint[],
-  daysAhead: number = 7,
+  daysAhead: number = 7
 ): TimeSeriesPoint[] {
   if (dataPoints.length < 2) {
     return [];
@@ -682,9 +655,7 @@ export function predictFutureTrend(
   const firstDate = firstPoint.date.getTime();
   const lastDate = lastPoint.date.getTime();
 
-  const x = dataPoints.map(
-    (p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24),
-  );
+  const x = dataPoints.map((p) => (p.date.getTime() - firstDate) / (1000 * 60 * 60 * 24));
   const y = dataPoints.map((p) => p.value);
 
   const n = x.length;
@@ -719,18 +690,16 @@ export function predictFutureTrend(
  */
 export function calculatePeriodComparison(
   currentDataPoints: TimeSeriesPoint[],
-  previousDataPoints: TimeSeriesPoint[],
+  previousDataPoints: TimeSeriesPoint[]
 ) {
   if (currentDataPoints.length === 0 || previousDataPoints.length === 0) {
     return null;
   }
 
   const currentAvg =
-    currentDataPoints.reduce((sum, p) => sum + p.value, 0) /
-    currentDataPoints.length;
+    currentDataPoints.reduce((sum, p) => sum + p.value, 0) / currentDataPoints.length;
   const previousAvg =
-    previousDataPoints.reduce((sum, p) => sum + p.value, 0) /
-    previousDataPoints.length;
+    previousDataPoints.reduce((sum, p) => sum + p.value, 0) / previousDataPoints.length;
 
   const changePercent = ((currentAvg - previousAvg) / previousAvg) * 100;
 

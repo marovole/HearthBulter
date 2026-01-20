@@ -397,10 +397,7 @@ function extractReportDate(text: string): Date | undefined {
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match) {
-      const dateStr = match[0]
-        .replace(/年|月/g, "-")
-        .replace(/日/g, "")
-        .replace(/\//g, "-");
+      const dateStr = match[0].replace(/年|月/g, "-").replace(/日/g, "").replace(/\//g, "-");
       try {
         const date = new Date(dateStr);
         if (!isNaN(date.getTime())) {

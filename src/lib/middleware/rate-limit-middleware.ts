@@ -58,10 +58,7 @@ export class RateLimiter {
   /**
    * 检查请求限制
    */
-  async checkLimit(
-    request: NextRequest,
-    config: RateLimitConfig,
-  ): Promise<RateLimitResult> {
+  async checkLimit(request: NextRequest, config: RateLimitConfig): Promise<RateLimitResult> {
     const key = this.generateKey(request, config);
     const now = Date.now();
 
@@ -78,9 +75,7 @@ export class RateLimiter {
 
     // 使用Redis或内存存储
     const record =
-      config.enableRedis && this.redis
-        ? await this.getRedisRecord(key)
-        : this.memoryStore.get(key);
+      config.enableRedis && this.redis ? await this.getRedisRecord(key) : this.memoryStore.get(key);
 
     // 计算重置时间
     const resetTime = record ? record.resetTime : now + config.windowMs;
@@ -94,11 +89,7 @@ export class RateLimiter {
       };
 
       if (config.enableRedis && this.redis) {
-        await this.setRedisRecord(
-          key,
-          newRecord,
-          Math.ceil(config.windowMs / 1000),
-        );
+        await this.setRedisRecord(key, newRecord, Math.ceil(config.windowMs / 1000));
       } else {
         this.memoryStore.set(key, newRecord);
       }
@@ -159,19 +150,17 @@ export class RateLimiter {
 
   private async checkLimitWithConvex(
     key: string,
-    config: RateLimitConfig,
+    config: RateLimitConfig
   ): Promise<RateLimitResult> {
     const { convexClient } = await import("@/lib/convex-client");
-    const { asConvexMutationReference } = await import(
-      "@/lib/convex-reference"
-    );
+    const { asConvexMutationReference } = await import("@/lib/convex-reference");
     return await convexClient.mutation<RateLimitResult>(
       asConvexMutationReference("rateLimits:checkAndIncrement"),
       {
         key,
         windowMs: config.windowMs,
         maxRequests: config.maxRequests,
-      },
+      }
     );
   }
 
@@ -186,16 +175,16 @@ export class RateLimiter {
     let identifier: string;
 
     switch (config.identifier) {
-    case "userId":
-      identifier = request.headers.get("x-user-id") || "anonymous";
-      break;
-    case "session":
-      identifier = request.headers.get("x-session-id") || "anonymous";
-      break;
-    case "ip":
-    default:
-      identifier = this.getClientIP(request);
-      break;
+      case "userId":
+        identifier = request.headers.get("x-user-id") || "anonymous";
+        break;
+      case "session":
+        identifier = request.headers.get("x-session-id") || "anonymous";
+        break;
+      case "ip":
+      default:
+        identifier = this.getClientIP(request);
+        break;
     }
 
     // 添加路径前缀以区分不同端点
@@ -248,7 +237,7 @@ export class RateLimiter {
   private async setRedisRecord(
     key: string,
     record: RateLimitRecord,
-    ttlSeconds: number,
+    ttlSeconds: number
   ): Promise<void> {
     if (!this.redis) return;
 
@@ -267,10 +256,7 @@ export class RateLimiter {
   /**
    * 增加Redis计数
    */
-  private async incrementRedisCount(
-    key: string,
-    ttlSeconds: number,
-  ): Promise<void> {
+  private async incrementRedisCount(key: string, ttlSeconds: number): Promise<void> {
     if (!this.redis) return;
 
     try {
@@ -382,13 +368,10 @@ export const commonRateLimits = {
 // 创建频率限制高阶函数
 type RateLimitHandler = (
   request: NextRequest,
-  context: { rateLimit?: RateLimitResult },
+  context: { rateLimit?: RateLimitResult }
 ) => Promise<NextResponse>;
 
-export function withRateLimit(
-  config: RateLimitConfig,
-  handler: RateLimitHandler,
-) {
+export function withRateLimit(config: RateLimitConfig, handler: RateLimitHandler) {
   return async (request: NextRequest) => {
     const rateLimitResult = await rateLimiter.checkLimit(request, config);
 
@@ -396,9 +379,7 @@ export function withRateLimit(
     const headers: Record<string, string> = {
       "X-RateLimit-Limit": rateLimitResult.limit.toString(),
       "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-      "X-RateLimit-Reset": Math.ceil(
-        rateLimitResult.resetTime / 1000,
-      ).toString(),
+      "X-RateLimit-Reset": Math.ceil(rateLimitResult.resetTime / 1000).toString(),
     };
 
     if (rateLimitResult.retryAfter) {
@@ -407,9 +388,7 @@ export function withRateLimit(
 
     // 检查是否超过限制
     if (!rateLimitResult.allowed) {
-      const error = APIError.tooManyRequests(
-        config.message || "请求过于频繁，请稍后再试",
-      );
+      const error = APIError.tooManyRequests(config.message || "请求过于频繁，请稍后再试");
 
       return createErrorResponse(error, { headers });
     }

@@ -28,7 +28,7 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
   protected async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {},
-    token?: string,
+    token?: string
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {
@@ -43,9 +43,7 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
 
     try {
       const controller = options.signal ? null : new AbortController();
-      const timeoutId = controller
-        ? setTimeout(() => controller.abort(), 10000)
-        : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 10000) : null;
 
       const response = await fetch(url, {
         ...options,
@@ -71,7 +69,7 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
         PlatformErrorType.NETWORK_ERROR,
         `Network error when calling ${endpoint}: ${errorMessage}`,
         undefined,
-        { originalError: error },
+        { originalError: error }
       );
     }
   }
@@ -95,29 +93,29 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
       errorType,
       errorDetails.message || `HTTP ${response.status}: ${response.statusText}`,
       response.status.toString(),
-      errorDetails,
+      errorDetails
     );
   }
 
   // 映射HTTP状态码到平台错误类型
   protected mapHttpStatusToErrorType(status: number): PlatformErrorType {
     switch (status) {
-    case 401:
-      return PlatformErrorType.INVALID_TOKEN;
-    case 403:
-      return PlatformErrorType.INSUFFICIENT_PERMISSION;
-    case 404:
-      return PlatformErrorType.PRODUCT_NOT_FOUND;
-    case 422:
-      return PlatformErrorType.INVALID_REQUEST;
-    case 429:
-      return PlatformErrorType.RATE_LIMITED;
-    case 500:
-    case 502:
-    case 503:
-      return PlatformErrorType.PLATFORM_ERROR;
-    default:
-      return PlatformErrorType.NETWORK_ERROR;
+      case 401:
+        return PlatformErrorType.INVALID_TOKEN;
+      case 403:
+        return PlatformErrorType.INSUFFICIENT_PERMISSION;
+      case 404:
+        return PlatformErrorType.PRODUCT_NOT_FOUND;
+      case 422:
+        return PlatformErrorType.INVALID_REQUEST;
+      case 429:
+        return PlatformErrorType.RATE_LIMITED;
+      case 500:
+      case 502:
+      case 503:
+        return PlatformErrorType.PLATFORM_ERROR;
+      default:
+        return PlatformErrorType.NETWORK_ERROR;
     }
   }
 
@@ -132,10 +130,7 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
   }
 
   // 解析token过期时间
-  protected parseTokenExpiry(
-    expiresIn?: number,
-    expiresAt?: string,
-  ): Date | undefined {
+  protected parseTokenExpiry(expiresIn?: number, expiresAt?: string): Date | undefined {
     if (expiresAt) {
       return new Date(expiresAt);
     }
@@ -167,26 +162,18 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
       volume: rawProduct.volume,
       unit: rawProduct.unit,
       price: parseFloat(rawProduct.price) || 0,
-      originalPrice: rawProduct.originalPrice
-        ? parseFloat(rawProduct.originalPrice)
-        : undefined,
+      originalPrice: rawProduct.originalPrice ? parseFloat(rawProduct.originalPrice) : undefined,
       currency: rawProduct.currency || "CNY",
       priceUnit: rawProduct.priceUnit,
       stock: parseInt(rawProduct.stock) || 0,
       isInStock: rawProduct.isInStock !== false && (rawProduct.stock || 0) > 0,
       stockStatus: rawProduct.stockStatus,
-      salesCount: rawProduct.salesCount
-        ? parseInt(rawProduct.salesCount)
-        : undefined,
+      salesCount: rawProduct.salesCount ? parseInt(rawProduct.salesCount) : undefined,
       rating: rawProduct.rating ? parseFloat(rawProduct.rating) : undefined,
-      reviewCount: rawProduct.reviewCount
-        ? parseInt(rawProduct.reviewCount)
-        : undefined,
+      reviewCount: rawProduct.reviewCount ? parseInt(rawProduct.reviewCount) : undefined,
       deliveryOptions: rawProduct.deliveryOptions,
       deliveryTime: rawProduct.deliveryTime,
-      shippingFee: rawProduct.shippingFee
-        ? parseFloat(rawProduct.shippingFee)
-        : undefined,
+      shippingFee: rawProduct.shippingFee ? parseFloat(rawProduct.shippingFee) : undefined,
       platformData: rawProduct,
     };
   }
@@ -209,13 +196,10 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
   protected calculateShippingFee(
     subtotal: number,
     address: DeliveryAddress,
-    platformRules?: Record<string, any>,
+    platformRules?: Record<string, any>
   ): number {
     // 默认配送费计算逻辑，子类可以重写
-    if (
-      platformRules?.freeShippingThreshold &&
-      subtotal >= platformRules.freeShippingThreshold
-    ) {
+    if (platformRules?.freeShippingThreshold && subtotal >= platformRules.freeShippingThreshold) {
       return 0;
     }
 
@@ -228,37 +212,22 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
   abstract refreshToken(refreshToken: string): Promise<TokenInfo>;
   abstract searchProducts(
     request: ProductSearchRequest,
-    token: string,
+    token: string
   ): Promise<ProductSearchResponse>;
-  abstract getProduct(
-    productId: string,
-    token: string,
-  ): Promise<PlatformProductInfo | null>;
-  abstract queryStock(
-    request: StockQueryRequest,
-    token: string,
-  ): Promise<StockQueryResponse>;
-  abstract createOrder(
-    request: CreateOrderRequest,
-    token: string,
-  ): Promise<CreateOrderResponse>;
-  abstract getOrderStatus(
-    orderId: string,
-    token: string,
-  ): Promise<OrderStatusResponse>;
+  abstract getProduct(productId: string, token: string): Promise<PlatformProductInfo | null>;
+  abstract queryStock(request: StockQueryRequest, token: string): Promise<StockQueryResponse>;
+  abstract createOrder(request: CreateOrderRequest, token: string): Promise<CreateOrderResponse>;
+  abstract getOrderStatus(orderId: string, token: string): Promise<OrderStatusResponse>;
   abstract cancelOrder(orderId: string, token: string): Promise<boolean>;
-  abstract getProductPrices(
-    productIds: string[],
-    token: string,
-  ): Promise<Record<string, number>>;
+  abstract getProductPrices(productIds: string[], token: string): Promise<Record<string, number>>;
   abstract getDeliveryOptions(
     address: DeliveryAddress,
-    token: string,
+    token: string
   ): Promise<Record<string, any>>;
   abstract estimateDeliveryTime(
     orderItems: OrderItem[],
     address: DeliveryAddress,
-    token: string,
+    token: string
   ): Promise<string>;
 
   // 通用实现
@@ -294,7 +263,7 @@ export abstract class BasePlatformAdapter implements IPlatformAdapter {
         PlatformErrorType.TOKEN_EXPIRED,
         `Failed to refresh token: ${errorMessage}`,
         undefined,
-        { originalError: error },
+        { originalError: error }
       );
     }
   }

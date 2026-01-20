@@ -4,13 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Target,
-  MousePointer,
-} from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Target, MousePointer } from "lucide-react";
 
 interface TourStep {
   id: string;
@@ -29,16 +23,9 @@ interface FeatureTourProps {
   onStart?: () => void;
 }
 
-export function FeatureTour({
-  steps,
-  isOpen,
-  onComplete,
-  onSkip,
-  onStart,
-}: FeatureTourProps) {
+export function FeatureTour({ steps, isOpen, onComplete, onSkip, onStart }: FeatureTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [highlightedElement, setHighlightedElement] =
-    useState<HTMLElement | null>(null);
+  const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const tourRef = useRef<HTMLDivElement>(null);
 
@@ -152,15 +139,12 @@ export function FeatureTour({
   return (
     <>
       {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={handleSkip}
-      />
+      <div className="fixed inset-0 z-40 bg-black bg-opacity-50" onClick={handleSkip} />
 
       {/* Tooltip */}
       <div
         ref={tourRef}
-        className="fixed z-50 w-80 bg-white rounded-lg shadow-2xl border border-gray-200"
+        className="fixed z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-2xl"
         style={{
           top: `${tooltipPosition.top}px`,
           left: `${tooltipPosition.left}px`,
@@ -169,46 +153,35 @@ export function FeatureTour({
         <Card className="border-0 shadow-none">
           <CardContent className="p-0">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center justify-between border-b p-4">
               <div className="flex items-center space-x-2">
                 <Target className="h-4 w-4 text-blue-600" />
                 <Badge variant="outline" className="text-xs">
                   {currentStep + 1} / {steps.length}
                 </Badge>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSkip}
-                className="h-6 w-6 p-0"
-              >
+              <Button variant="ghost" size="sm" onClick={handleSkip} className="h-6 w-6 p-0">
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             {/* Content */}
             <div className="p-4">
-              <h3 className="font-semibold text-lg mb-2">
-                {currentStepData.title}
-              </h3>
-              <p className="text-gray-600 text-sm mb-4">
-                {currentStepData.content}
-              </p>
+              <h3 className="mb-2 text-lg font-semibold">{currentStepData.title}</h3>
+              <p className="mb-4 text-sm text-gray-600">{currentStepData.content}</p>
 
               {currentStepData.action && (
-                <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                <div className="mb-4 rounded-lg bg-blue-50 p-3">
                   <div className="flex items-center space-x-2 text-blue-800">
                     <MousePointer className="h-4 w-4" />
                     <span className="text-sm font-medium">操作提示</span>
                   </div>
-                  <p className="text-blue-700 text-sm mt-1">
-                    {currentStepData.action}
-                  </p>
+                  <p className="mt-1 text-sm text-blue-700">{currentStepData.action}</p>
                 </div>
               )}
 
               {/* Step indicators */}
-              <div className="flex space-x-1 mb-4">
+              <div className="mb-4 flex space-x-1">
                 {steps.map((_, index) => (
                   <button
                     key={index}
@@ -232,17 +205,13 @@ export function FeatureTour({
                   onClick={handlePrevious}
                   disabled={currentStep === 0}
                 >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <ChevronLeft className="mr-1 h-4 w-4" />
                   上一步
                 </Button>
 
-                <Button
-                  size="sm"
-                  onClick={handleNext}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
+                <Button size="sm" onClick={handleNext} className="bg-blue-600 hover:bg-blue-700">
                   {currentStep === steps.length - 1 ? "完成" : "下一步"}
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </div>

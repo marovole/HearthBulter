@@ -74,7 +74,7 @@ export class OcrService {
    */
   private static async recognizeImage(
     imageBuffer: Buffer,
-    language: string = "chi_sim+eng", // 中文简体+英文
+    language: string = "chi_sim+eng" // 中文简体+英文
   ): Promise<OcrResult> {
     const startTime = Date.now();
 
@@ -103,9 +103,7 @@ export class OcrService {
       };
     } catch (error) {
       console.error("OCR识别失败:", error);
-      throw new Error(
-        `OCR识别失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      throw new Error(`OCR识别失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
   }
 
@@ -132,24 +130,17 @@ export class OcrService {
 
       // 图片型PDF需要先转换为图片，然后OCR识别
       // 这里简化处理，提示需要额外的PDF转换工具
-      throw new Error(
-        "图片型PDF需要先转换为图片。建议使用pdf-poppler或pdf2pic等工具",
-      );
+      throw new Error("图片型PDF需要先转换为图片。建议使用pdf-poppler或pdf2pic等工具");
     } catch (error) {
       console.error("PDF识别失败:", error);
-      throw new Error(
-        `PDF识别失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      throw new Error(`PDF识别失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
   }
 
   /**
    * 识别文件中的文本（主入口方法）
    */
-  static async recognize(
-    fileBuffer: Buffer,
-    mimeType: SupportedMimeType,
-  ): Promise<OcrResult> {
+  static async recognize(fileBuffer: Buffer, mimeType: SupportedMimeType): Promise<OcrResult> {
     // 验证文件类型
     if (!this.isSupportedMimeType(mimeType)) {
       throw new Error(`不支持的文件类型: ${mimeType}`);
@@ -169,7 +160,7 @@ export class OcrService {
    */
   static async recognizeBatch(
     fileBuffers: Buffer[],
-    mimeType: SupportedMimeType,
+    mimeType: SupportedMimeType
   ): Promise<OcrResult[]> {
     const results: OcrResult[] = [];
 

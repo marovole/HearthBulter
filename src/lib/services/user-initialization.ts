@@ -22,9 +22,7 @@ interface InitializationResult {
 /**
  * 检查成员是否需要初始化
  */
-export async function checkIfMemberNeedsInitialization(
-  memberId: string,
-): Promise<boolean> {
+export async function checkIfMemberNeedsInitialization(memberId: string): Promise<boolean> {
   const [healthData, healthGoals, nutritionTargets] = await Promise.all([
     convexClient.query<Doc<"healthData">[]>(api.health.getMetrics, {
       memberId: memberId as Id<"familyMembers">,
@@ -34,21 +32,14 @@ export async function checkIfMemberNeedsInitialization(
       memberId: memberId as Id<"familyMembers">,
       includeInactive: true,
     }),
-    convexClient.query<Doc<"dailyNutritionTargets">[]>(
-      api.analytics.listDailyNutritionTargets,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        startDate: 0,
-        endDate: Date.now(),
-      },
-    ),
+    convexClient.query<Doc<"dailyNutritionTargets">[]>(api.analytics.listDailyNutritionTargets, {
+      memberId: memberId as Id<"familyMembers">,
+      startDate: 0,
+      endDate: Date.now(),
+    }),
   ]);
 
-  return (
-    healthData.length === 0 &&
-    healthGoals.length === 0 &&
-    nutritionTargets.length === 0
-  );
+  return healthData.length === 0 && healthGoals.length === 0 && nutritionTargets.length === 0;
 }
 
 /**
@@ -58,7 +49,7 @@ function calculateBMR(
   weight: number,
   height: number,
   age: number,
-  gender: "MALE" | "FEMALE" | "OTHER",
+  gender: "MALE" | "FEMALE" | "OTHER"
 ): number {
   if (gender === "MALE") {
     return 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
@@ -77,12 +68,7 @@ function calculateBMR(
  */
 function calculateTDEE(
   bmr: number,
-  activityLevel:
-    | "sedentary"
-    | "light"
-    | "moderate"
-    | "active"
-    | "very_active" = "moderate",
+  activityLevel: "sedentary" | "light" | "moderate" | "active" | "very_active" = "moderate"
 ): number {
   const activityMultipliers = {
     sedentary: 1.2, // 久坐，很少运动
@@ -98,15 +84,12 @@ function calculateTDEE(
 /**
  * 初始化成员的健康数据
  */
-export async function initializeMemberHealthData(
-  memberId: string,
-): Promise<InitializationResult> {
+export async function initializeMemberHealthData(memberId: string): Promise<InitializationResult> {
   try {
     // 获取成员信息
-    const member = await convexClient.query<Doc<"familyMembers"> | null>(
-      api.members.getById,
-      { memberId: memberId as Id<"familyMembers"> },
-    );
+    const member = await convexClient.query<Doc<"familyMembers"> | null>(api.members.getById, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     if (!member) {
       return {
@@ -116,8 +99,7 @@ export async function initializeMemberHealthData(
     }
 
     // 检查是否已经初始化过
-    const alreadyInitialized =
-      !(await checkIfMemberNeedsInitialization(memberId));
+    const alreadyInitialized = !(await checkIfMemberNeedsInitialization(memberId));
     if (alreadyInitialized) {
       return {
         success: true,
@@ -170,16 +152,9 @@ export async function initializeMemberHealthData(
 
     // 3. 创建默认营养目标
     if (member.weight && member.height && member.birthDate) {
-      const age = Math.floor(
-        (now.getTime() - member.birthDate) / (365.25 * 24 * 60 * 60 * 1000),
-      );
+      const age = Math.floor((now.getTime() - member.birthDate) / (365.25 * 24 * 60 * 60 * 1000));
 
-      const bmr = calculateBMR(
-        member.weight,
-        member.height,
-        age,
-        member.gender,
-      );
+      const bmr = calculateBMR(member.weight, member.height, age, member.gender);
       const tdee = calculateTDEE(bmr);
 
       const targetCalories = Math.round(tdee);
@@ -240,16 +215,14 @@ export async function initializeMemberHealthData(
 /**
  * 批量初始化家庭的所有成员
  */
-export async function initializeFamilyMembers(
-  familyId: string,
-): Promise<InitializationResult[]> {
-  const members = await convexClient.query<Doc<"familyMembers">[]>(
-    api.families.listMembers,
-    { familyId: familyId as Id<"families">, includeDeleted: false },
-  );
+export async function initializeFamilyMembers(familyId: string): Promise<InitializationResult[]> {
+  const members = await convexClient.query<Doc<"familyMembers">[]>(api.families.listMembers, {
+    familyId: familyId as Id<"families">,
+    includeDeleted: false,
+  });
 
   const results = await Promise.all(
-    members.map((member) => initializeMemberHealthData(member._id as string)),
+    members.map((member) => initializeMemberHealthData(member._id as string))
   );
 
   return results;

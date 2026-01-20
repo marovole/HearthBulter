@@ -21,5 +21,4 @@ export const useSession = jest.fn(() => ({
   status: "authenticated",
 }));
 
-export const SessionProvider = ({ children }: { children: React.ReactNode }) =>
-  children;
+export const SessionProvider = ({ children }: { children: React.ReactNode }) => children;

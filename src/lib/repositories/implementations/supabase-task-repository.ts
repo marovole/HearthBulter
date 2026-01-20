@@ -36,15 +36,13 @@ export class SupabaseTaskRepository implements TaskRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = "[SupabaseTaskRepository]";
 
-  constructor(
-    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
-  ) {
+  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
     this.client = client;
   }
 
   async listTasks(
     query: TaskListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<TaskDTO>> {
     const {
       familyId,
@@ -64,16 +62,13 @@ export class SupabaseTaskRepository implements TaskRepository {
     // 构建 select 字符串
     let selectStr = "*";
     if (includeAssignee) {
-      selectStr +=
-        ", assignee:family_members!tasks_assignee_id_fkey(id, name, avatar, role)";
+      selectStr += ", assignee:family_members!tasks_assignee_id_fkey(id, name, avatar, role)";
     }
     if (includeCreator) {
-      selectStr +=
-        ", creator:family_members!tasks_creator_id_fkey(id, name, avatar, role)";
+      selectStr += ", creator:family_members!tasks_creator_id_fkey(id, name, avatar, role)";
     }
     if (includeComments) {
-      selectStr +=
-        ", comments(id, content, author:family_members(id, name, avatar), created_at)";
+      selectStr += ", comments(id, content, author:family_members(id, name, avatar), created_at)";
     }
 
     // 构建查询
@@ -93,10 +88,7 @@ export class SupabaseTaskRepository implements TaskRepository {
     // 截止日期范围
     if (dueDate) {
       if (dueDate.from) {
-        supabaseQuery = supabaseQuery.gte(
-          "due_date",
-          dueDate.from.toISOString(),
-        );
+        supabaseQuery = supabaseQuery.gte("due_date", dueDate.from.toISOString());
       }
       if (dueDate.to) {
         supabaseQuery = supabaseQuery.lte("due_date", dueDate.to.toISOString());
@@ -106,10 +98,7 @@ export class SupabaseTaskRepository implements TaskRepository {
     // 排序
     if (sort) {
       const direction = { ascending: sort.direction === "asc" };
-      supabaseQuery = supabaseQuery.order(
-        this.mapSortField(sort.field),
-        direction,
-      );
+      supabaseQuery = supabaseQuery.order(this.mapSortField(sort.field), direction);
     } else {
       // 默认排序：优先级降序 -> 截止日期升序 -> 创建时间降序
       supabaseQuery = supabaseQuery
@@ -141,7 +130,7 @@ export class SupabaseTaskRepository implements TaskRepository {
   async getTaskById(
     familyId: string,
     taskId: string,
-    options?: TaskGetOptions,
+    options?: TaskGetOptions
   ): Promise<TaskDTO | null> {
     const {
       includeAssignee = true,
@@ -152,16 +141,13 @@ export class SupabaseTaskRepository implements TaskRepository {
     // 构建 select 字符串
     let selectStr = "*";
     if (includeAssignee) {
-      selectStr +=
-        ", assignee:family_members!tasks_assignee_id_fkey(id, name, avatar, role)";
+      selectStr += ", assignee:family_members!tasks_assignee_id_fkey(id, name, avatar, role)";
     }
     if (includeCreator) {
-      selectStr +=
-        ", creator:family_members!tasks_creator_id_fkey(id, name, avatar, role)";
+      selectStr += ", creator:family_members!tasks_creator_id_fkey(id, name, avatar, role)";
     }
     if (includeComments) {
-      selectStr +=
-        ", comments(id, content, author:family_members(id, name, avatar), created_at)";
+      selectStr += ", comments(id, content, author:family_members(id, name, avatar), created_at)";
     }
 
     const { data, error } = await this.client
@@ -183,11 +169,7 @@ export class SupabaseTaskRepository implements TaskRepository {
     return this.mapTaskRow(data);
   }
 
-  async getMyTasks(
-    familyId: string,
-    memberId: string,
-    status?: TaskStatus,
-  ): Promise<TaskDTO[]> {
+  async getMyTasks(familyId: string, memberId: string, status?: TaskStatus): Promise<TaskDTO[]> {
     let query = this.client
       .from("tasks")
       .select(
@@ -195,7 +177,7 @@ export class SupabaseTaskRepository implements TaskRepository {
         *,
         creator:family_members!tasks_creator_id_fkey(id, name, avatar, role),
         comments(id, content, author:family_members(id, name, avatar), created_at)
-      `,
+      `
       )
       .eq("family_id", familyId)
       .eq("assignee_id", memberId)
@@ -219,11 +201,7 @@ export class SupabaseTaskRepository implements TaskRepository {
     return (data || []).map((row) => this.mapTaskRow(row));
   }
 
-  async createTask(
-    familyId: string,
-    creatorId: string,
-    payload: CreateTaskDTO,
-  ): Promise<TaskDTO> {
+  async createTask(familyId: string, creatorId: string, payload: CreateTaskDTO): Promise<TaskDTO> {
     const { data, error } = await this.client
       .from("tasks")
       .insert({
@@ -245,7 +223,7 @@ export class SupabaseTaskRepository implements TaskRepository {
         *,
         assignee:family_members!tasks_assignee_id_fkey(id, name, avatar, role),
         creator:family_members!tasks_creator_id_fkey(id, name, avatar, role)
-      `,
+      `
       )
       .single();
 
@@ -256,24 +234,17 @@ export class SupabaseTaskRepository implements TaskRepository {
     return this.mapTaskRow(data!);
   }
 
-  async updateTask(
-    familyId: string,
-    taskId: string,
-    payload: UpdateTaskDTO,
-  ): Promise<TaskDTO> {
+  async updateTask(familyId: string, taskId: string, payload: UpdateTaskDTO): Promise<TaskDTO> {
     const updateData: Partial<TaskRow> = {
       updated_at: new Date().toISOString(),
     };
 
     if (payload.title !== undefined) updateData.title = payload.title;
-    if (payload.description !== undefined)
-      updateData.description = payload.description;
+    if (payload.description !== undefined) updateData.description = payload.description;
     if (payload.category !== undefined) updateData.category = payload.category;
     if (payload.priority !== undefined) updateData.priority = payload.priority;
     if (payload.dueDate !== undefined) {
-      updateData.due_date = payload.dueDate
-        ? payload.dueDate.toISOString()
-        : null;
+      updateData.due_date = payload.dueDate ? payload.dueDate.toISOString() : null;
     }
 
     const { data, error } = await this.client
@@ -286,7 +257,7 @@ export class SupabaseTaskRepository implements TaskRepository {
         *,
         assignee:family_members!tasks_assignee_id_fkey(id, name, avatar, role),
         creator:family_members!tasks_creator_id_fkey(id, name, avatar, role)
-      `,
+      `
       )
       .single();
 
@@ -300,7 +271,7 @@ export class SupabaseTaskRepository implements TaskRepository {
   async updateTaskStatus(
     familyId: string,
     taskId: string,
-    payload: UpdateTaskStatusDTO,
+    payload: UpdateTaskStatusDTO
   ): Promise<TaskDTO> {
     const updateData: Partial<TaskRow> = {
       status: payload.status,
@@ -310,13 +281,13 @@ export class SupabaseTaskRepository implements TaskRepository {
     // 根据状态自动设置时间字段
     const now = new Date().toISOString();
     switch (payload.status) {
-    case "IN_PROGRESS":
-      updateData.started_at = now;
-      break;
-    case "COMPLETED":
-    case "CANCELLED":
-      updateData.completed_at = now;
-      break;
+      case "IN_PROGRESS":
+        updateData.started_at = now;
+        break;
+      case "COMPLETED":
+      case "CANCELLED":
+        updateData.completed_at = now;
+        break;
     }
 
     const { data, error } = await this.client
@@ -329,7 +300,7 @@ export class SupabaseTaskRepository implements TaskRepository {
         *,
         assignee:family_members!tasks_assignee_id_fkey(id, name, avatar, role),
         creator:family_members!tasks_creator_id_fkey(id, name, avatar, role)
-      `,
+      `
       )
       .single();
 
@@ -340,11 +311,7 @@ export class SupabaseTaskRepository implements TaskRepository {
     return this.mapTaskRow(data!);
   }
 
-  async assignTask(
-    familyId: string,
-    taskId: string,
-    assigneeId: string,
-  ): Promise<TaskDTO> {
+  async assignTask(familyId: string, taskId: string, assigneeId: string): Promise<TaskDTO> {
     const { data, error } = await this.client
       .from("tasks")
       .update({
@@ -358,7 +325,7 @@ export class SupabaseTaskRepository implements TaskRepository {
         *,
         assignee:family_members!tasks_assignee_id_fkey(id, name, avatar, role),
         creator:family_members!tasks_creator_id_fkey(id, name, avatar, role)
-      `,
+      `
       )
       .single();
 
@@ -393,7 +360,7 @@ export class SupabaseTaskRepository implements TaskRepository {
         due_date,
         assignee:family_members!tasks_assignee_id_fkey(id, name, avatar),
         creator:family_members!tasks_creator_id_fkey(id, name, avatar)
-      `,
+      `
       )
       .eq("family_id", familyId)
       .is("deleted_at", null);
@@ -438,9 +405,7 @@ export class SupabaseTaskRepository implements TaskRepository {
 
     taskList.forEach((task: any) => {
       // 按状态统计
-      const statusKey = task.status
-        .toLowerCase()
-        .replace("_", "") as keyof typeof stats.byStatus;
+      const statusKey = task.status.toLowerCase().replace("_", "") as keyof typeof stats.byStatus;
       if (stats.byStatus[statusKey] !== undefined) {
         stats.byStatus[statusKey]++;
       }
@@ -449,8 +414,7 @@ export class SupabaseTaskRepository implements TaskRepository {
       stats.byCategory[task.category as TaskCategory]++;
 
       // 按优先级统计
-      const priorityKey =
-        task.priority.toLowerCase() as keyof typeof stats.byPriority;
+      const priorityKey = task.priority.toLowerCase() as keyof typeof stats.byPriority;
       if (stats.byPriority[priorityKey] !== undefined) {
         stats.byPriority[priorityKey]++;
       }
@@ -547,15 +511,11 @@ export class SupabaseTaskRepository implements TaskRepository {
       assignee: rowWithRelations.assignee
         ? this.mapMemberRow(rowWithRelations.assignee)
         : undefined,
-      creator: rowWithRelations.creator
-        ? this.mapMemberRow(rowWithRelations.creator)
-        : undefined,
+      creator: rowWithRelations.creator ? this.mapMemberRow(rowWithRelations.creator) : undefined,
       comments: rowWithRelations.comments
         ? rowWithRelations.comments.map((c: any) => this.mapCommentRow(c))
         : undefined,
-      commentCount: rowWithRelations.comments
-        ? rowWithRelations.comments.length
-        : undefined,
+      commentCount: rowWithRelations.comments ? rowWithRelations.comments.length : undefined,
     };
   }
 

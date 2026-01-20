@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 import { fetchAdviceHistory } from "@/lib/db/supabase-rpc-helpers";
-import {
-  addCacheHeaders,
-  EDGE_CACHE_PRESETS,
-} from "@/lib/cache/edge-cache-helpers";
+import { addCacheHeaders, EDGE_CACHE_PRESETS } from "@/lib/cache/edge-cache-helpers";
 
 /**
  * GET /api/ai/advice-history
@@ -34,10 +31,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Member ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -50,10 +44,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!memberCheck) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // 类型断言：memberCheck 已通过 null 检查
@@ -79,10 +70,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!isOwnMember && !isAdmin) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // 使用优化的 RPC 函数获取 AI 建议历史
@@ -91,10 +79,7 @@ export async function GET(request: NextRequest) {
 
     if (!adviceResult.success || !adviceResult.data) {
       console.error("获取AI建议历史失败:", adviceResult.error);
-      return NextResponse.json(
-        { error: "Failed to fetch advice history" },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: "Failed to fetch advice history" }, { status: 500 });
     }
 
     const { advice: rawAdvice, pagination } = adviceResult.data;
@@ -104,16 +89,12 @@ export async function GET(request: NextRequest) {
     //    1. pagination.total 和 hasMore 不准确（是未过滤的总数）
     //    2. adviceByType 只反映当前页的统计，不是全局统计
     // TODO: 在 RPC 中添加 p_type 参数支持服务端过滤
-    const filteredAdvice = type
-      ? rawAdvice.filter((item) => item.type === type)
-      : rawAdvice;
+    const filteredAdvice = type ? rawAdvice.filter((item) => item.type === type) : rawAdvice;
 
     // 获取对话历史
     const { data: conversationHistory, error: convError } = await supabase
       .from("ai_conversations")
-      .select(
-        "id, title, messages, status, tokens, createdAt, updatedAt, lastMessageAt",
-      )
+      .select("id, title, messages, status, tokens, createdAt, updatedAt, lastMessageAt")
       .eq("memberId", memberId)
       .is("deletedAt", null)
       .order("lastMessageAt", { ascending: false })
@@ -121,10 +102,7 @@ export async function GET(request: NextRequest) {
 
     if (convError) {
       console.error("获取对话历史失败:", convError);
-      return NextResponse.json(
-        { error: "Failed to fetch conversation history" },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: "Failed to fetch conversation history" }, { status: 500 });
     }
 
     // 处理对话历史，只保留最近的几条消息
@@ -138,16 +116,14 @@ export async function GET(request: NextRequest) {
       updatedAt: string;
       lastMessageAt: string | null;
     };
-    const processedConversations = (conversationHistory || []).map(
-      (conv: ConversationData) => {
-        const messages = conv.messages || [];
-        return {
-          ...conv,
-          messages: messages.slice(-5), // 只保留最近5条消息
-          messageCount: messages.length,
-        };
-      },
-    );
+    const processedConversations = (conversationHistory || []).map((conv: ConversationData) => {
+      const messages = conv.messages || [];
+      return {
+        ...conv,
+        messages: messages.slice(-5), // 只保留最近5条消息
+        messageCount: messages.length,
+      };
+    });
 
     // 从 RPC 返回的 advice 数据计算统计信息
     // 优势：避免额外查询所有记录
@@ -179,10 +155,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(responseData, { headers });
   } catch (error) {
     console.error("Advice history API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -209,7 +182,7 @@ function calculateAdviceStats(advice: Array<{ type: string }>) {
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>,
+    {} as Record<string, number>
   );
 
   return stats;

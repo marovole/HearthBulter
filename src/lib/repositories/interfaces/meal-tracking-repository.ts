@@ -88,7 +88,7 @@ export interface MealTrackingRepository {
   listMealLogs(
     memberId: string,
     filter?: MealLogFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<MealLogDTO>>;
 
   /**
@@ -125,7 +125,7 @@ export interface MealTrackingRepository {
   getMealLogHistory(
     memberId: string,
     filter?: MealLogFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<MealLogDTO>>;
 
   // ==================== 营养计算 ====================
@@ -138,9 +138,7 @@ export interface MealTrackingRepository {
    * @param foods - 食物列表（包含foodId和amount）
    * @returns 营养计算结果
    */
-  calculateNutrition(
-    foods: NutritionCalculationInputDTO,
-  ): Promise<NutritionCalculationResultDTO>;
+  calculateNutrition(foods: NutritionCalculationInputDTO): Promise<NutritionCalculationResultDTO>;
 
   /**
    * 获取每日营养汇总
@@ -153,10 +151,7 @@ export interface MealTrackingRepository {
    * @param date - 日期
    * @returns 每日营养汇总
    */
-  getDailySummary(
-    memberId: string,
-    date: Date,
-  ): Promise<DailyNutritionSummaryDTO>;
+  getDailySummary(memberId: string, date: Date): Promise<DailyNutritionSummaryDTO>;
 
   // ==================== 快速模板 ====================
 
@@ -168,9 +163,7 @@ export interface MealTrackingRepository {
    * @param input - 模板创建参数
    * @returns 创建的快速模板对象
    */
-  createQuickTemplate(
-    input: QuickTemplateCreateInputDTO,
-  ): Promise<QuickTemplateDTO>;
+  createQuickTemplate(input: QuickTemplateCreateInputDTO): Promise<QuickTemplateDTO>;
 
   /**
    * 列出快速模板
@@ -181,10 +174,7 @@ export interface MealTrackingRepository {
    * @param mealType - 可选的餐次类型过滤
    * @returns 快速模板列表
    */
-  listQuickTemplates(
-    memberId: string,
-    mealType?: string,
-  ): Promise<QuickTemplateDTO[]>;
+  listQuickTemplates(memberId: string, mealType?: string): Promise<QuickTemplateDTO[]>;
 
   /**
    * 使用快速模板创建膳食记录
@@ -227,10 +217,7 @@ export interface MealTrackingRepository {
    * @param date - 打卡日期
    * @returns 更新后的连续打卡统计
    */
-  updateTrackingStreak(
-    memberId: string,
-    date: Date,
-  ): Promise<TrackingStreakDTO>;
+  updateTrackingStreak(memberId: string, date: Date): Promise<TrackingStreakDTO>;
 
   // ==================== 统计分析 ====================
 
@@ -245,7 +232,7 @@ export interface MealTrackingRepository {
    */
   getRecentFoods(
     memberId: string,
-    limit?: number,
+    limit?: number
   ): Promise<Array<{ foodId: string; useCount: number }>>;
 
   /**
@@ -261,6 +248,6 @@ export interface MealTrackingRepository {
   getNutritionTrends(
     memberId: string,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<DailyNutritionSummaryDTO[]>;
 }

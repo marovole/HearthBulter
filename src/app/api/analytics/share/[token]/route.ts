@@ -10,17 +10,14 @@ import { getReportByShareToken } from "@/lib/services/analytics/report-generator
 export const dynamic = "force-dynamic";
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> },
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const { token } = await params;
     const report = await getReportByShareToken(token);
 
     if (!report) {
-      return NextResponse.json(
-        { error: "报告不存在或已过期" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "报告不存在或已过期" }, { status: 404 });
     }
 
     return NextResponse.json({

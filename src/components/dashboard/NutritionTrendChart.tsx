@@ -138,10 +138,10 @@ export function NutritionTrendChart({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-center h-64">
+      <div className="rounded-lg bg-white p-6 shadow">
+        <div className="flex h-64 items-center justify-center">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
             <p className="mt-2 text-sm text-gray-500">加载营养数据中...</p>
           </div>
         </div>
@@ -151,10 +151,10 @@ export function NutritionTrendChart({
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+      <div className="rounded-lg bg-white p-6 shadow">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4">
           <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
+            <AlertCircle className="mr-2 h-5 w-5 text-red-400" />
             <p className="text-sm text-red-800">{error}</p>
           </div>
         </div>
@@ -164,8 +164,8 @@ export function NutritionTrendChart({
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="rounded-lg bg-white p-6 shadow">
+        <div className="flex h-64 items-center justify-center text-gray-500">
           <p>暂无营养数据</p>
         </div>
       </div>
@@ -187,18 +187,10 @@ export function NutritionTrendChart({
 
   // 计算宏量营养素平均值
   const avgMacros = {
-    calories: Math.round(
-      data.reduce((acc, d) => acc + (d.calories || 0), 0) / data.length,
-    ),
-    protein: Math.round(
-      data.reduce((acc, d) => acc + (d.protein || 0), 0) / data.length,
-    ),
-    carbs: Math.round(
-      data.reduce((acc, d) => acc + (d.carbs || 0), 0) / data.length,
-    ),
-    fat: Math.round(
-      data.reduce((acc, d) => acc + (d.fat || 0), 0) / data.length,
-    ),
+    calories: Math.round(data.reduce((acc, d) => acc + (d.calories || 0), 0) / data.length),
+    protein: Math.round(data.reduce((acc, d) => acc + (d.protein || 0), 0) / data.length),
+    carbs: Math.round(data.reduce((acc, d) => acc + (d.carbs || 0), 0) / data.length),
+    fat: Math.round(data.reduce((acc, d) => acc + (d.fat || 0), 0) / data.length),
   };
 
   // 宏量营养素比例数据
@@ -236,16 +228,9 @@ export function NutritionTrendChart({
 
   const renderTrendsView = () => (
     <ResponsiveContainer width="100%" height={300}>
-      <LineChart
-        data={trendData}
-        margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-      >
+      <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
-        <XAxis
-          dataKey="date"
-          className="text-xs text-gray-600"
-          tick={{ fontSize: 12 }}
-        />
+        <XAxis dataKey="date" className="text-xs text-gray-600" tick={{ fontSize: 12 }} />
         <YAxis className="text-xs text-gray-600" tick={{ fontSize: 12 }} />
         <Tooltip
           contentStyle={{
@@ -276,23 +261,15 @@ export function NutritionTrendChart({
           strokeWidth={2}
           name="碳水"
         />
-        <Line
-          type="monotone"
-          dataKey="fat"
-          stroke={macroColors.fat}
-          strokeWidth={2}
-          name="脂肪"
-        />
+        <Line type="monotone" dataKey="fat" stroke={macroColors.fat} strokeWidth={2} name="脂肪" />
       </LineChart>
     </ResponsiveContainer>
   );
 
   const renderMacrosView = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-4">
-          宏量营养素比例
-        </h4>
+        <h4 className="mb-4 text-sm font-medium text-gray-700">宏量营养素比例</h4>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie
@@ -317,9 +294,7 @@ export function NutritionTrendChart({
       </div>
 
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-4">
-          平均每日摄入量
-        </h4>
+        <h4 className="mb-4 text-sm font-medium text-gray-700">平均每日摄入量</h4>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart
             data={Object.entries(avgMacros).map(([key, value]) => ({
@@ -342,49 +317,19 @@ export function NutritionTrendChart({
 
   const renderMicrosView = () => (
     <div>
-      <h4 className="text-sm font-medium text-gray-700 mb-4">
-        微量营养素趋势（最近7天）
-      </h4>
+      <h4 className="mb-4 text-sm font-medium text-gray-700">微量营养素趋势（最近7天）</h4>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart
-          data={microData}
-          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-        >
+        <LineChart data={microData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip />
           <Legend />
-          <Line
-            type="monotone"
-            dataKey="vitaminA"
-            stroke="#8b5cf6"
-            name="维生素A"
-          />
-          <Line
-            type="monotone"
-            dataKey="vitaminC"
-            stroke="#06b6d4"
-            name="维生素C"
-          />
-          <Line
-            type="monotone"
-            dataKey="vitaminD"
-            stroke="#f59e0b"
-            name="维生素D"
-          />
-          <Line
-            type="monotone"
-            dataKey="calcium"
-            stroke="#10b981"
-            name="钙(x10)"
-          />
-          <Line
-            type="monotone"
-            dataKey="iron"
-            stroke="#ef4444"
-            name="铁(x10)"
-          />
+          <Line type="monotone" dataKey="vitaminA" stroke="#8b5cf6" name="维生素A" />
+          <Line type="monotone" dataKey="vitaminC" stroke="#06b6d4" name="维生素C" />
+          <Line type="monotone" dataKey="vitaminD" stroke="#f59e0b" name="维生素D" />
+          <Line type="monotone" dataKey="calcium" stroke="#10b981" name="钙(x10)" />
+          <Line type="monotone" dataKey="iron" stroke="#ef4444" name="铁(x10)" />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -392,13 +337,13 @@ export function NutritionTrendChart({
 
   const renderGoalsView = () => (
     <div>
-      <h4 className="text-sm font-medium text-gray-700 mb-4">营养目标达成度</h4>
+      <h4 className="mb-4 text-sm font-medium text-gray-700">营养目标达成度</h4>
       <div className="space-y-4">
         {goalAchievementData.map((item, index) => (
           <div key={index} className="flex items-center space-x-4">
             <div className="w-24 text-sm text-gray-600">{item.nutrient}</div>
             <div className="flex-1">
-              <div className="flex items-center justify-between mb-1">
+              <div className="mb-1 flex items-center justify-between">
                 <span className="text-sm text-gray-900">
                   {item.actual} / {item.target}
                 </span>
@@ -414,7 +359,7 @@ export function NutritionTrendChart({
                   {item.percentage}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="h-2 w-full rounded-full bg-gray-200">
                 <div
                   className={`h-2 rounded-full ${
                     item.percentage >= 100
@@ -434,23 +379,19 @@ export function NutritionTrendChart({
   );
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="rounded-lg bg-white p-6 shadow">
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Apple className="h-6 w-6 text-green-600" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              营养趋势分析
-            </h3>
-            <p className="text-sm text-gray-500">
-              最近 {days} 天的营养摄入情况
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900">营养趋势分析</h3>
+            <p className="text-sm text-gray-500">最近 {days} 天的营养摄入情况</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <Calendar className="h-4 w-4 text-gray-400" />
-          <select className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+          <select className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
             <option value={7}>7天</option>
             <option value={30}>30天</option>
             <option value={90}>90天</option>
@@ -459,13 +400,13 @@ export function NutritionTrendChart({
       </div>
 
       {/* 视图选择器 */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="mb-6 flex flex-wrap gap-2">
         <button
           onClick={() => (viewMode = "trends")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             viewMode === "trends"
-              ? "bg-green-100 text-green-700 border-green-300"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200"
+              ? "border-green-300 bg-green-100 text-green-700"
+              : "border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           } border`}
         >
           <TrendingUp className="h-4 w-4" />
@@ -473,10 +414,10 @@ export function NutritionTrendChart({
         </button>
         <button
           onClick={() => (viewMode = "macros")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             viewMode === "macros"
-              ? "bg-green-100 text-green-700 border-green-300"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200"
+              ? "border-green-300 bg-green-100 text-green-700"
+              : "border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           } border`}
         >
           <PieChartIcon className="h-4 w-4" />
@@ -484,10 +425,10 @@ export function NutritionTrendChart({
         </button>
         <button
           onClick={() => (viewMode = "micros")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             viewMode === "micros"
-              ? "bg-green-100 text-green-700 border-green-300"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200"
+              ? "border-green-300 bg-green-100 text-green-700"
+              : "border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           } border`}
         >
           <BarChart3 className="h-4 w-4" />
@@ -495,10 +436,10 @@ export function NutritionTrendChart({
         </button>
         <button
           onClick={() => (viewMode = "goals")}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             viewMode === "goals"
-              ? "bg-green-100 text-green-700 border-green-300"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200"
+              ? "border-green-300 bg-green-100 text-green-700"
+              : "border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           } border`}
         >
           <Target className="h-4 w-4" />
@@ -515,20 +456,17 @@ export function NutritionTrendChart({
       </div>
 
       {/* 营养建议 */}
-      <div className="p-4 bg-green-50 rounded-lg">
+      <div className="rounded-lg bg-green-50 p-4">
         <div className="flex items-start space-x-3">
-          <Target className="h-5 w-5 text-green-600 mt-0.5" />
+          <Target className="mt-0.5 h-5 w-5 text-green-600" />
           <div>
             <h4 className="text-sm font-medium text-green-900">营养建议</h4>
-            <p className="text-sm text-green-700 mt-1">
+            <p className="mt-1 text-sm text-green-700">
               {viewMode === "trends" &&
                 "您的营养摄入总体稳定，建议保持均衡饮食，适当增加蛋白质摄入。"}
-              {viewMode === "macros" &&
-                "宏量营养素比例基本合理，建议适当增加优质蛋白质的比例。"}
-              {viewMode === "micros" &&
-                "微量营养素摄入整体良好，维生素D可能需要额外补充。"}
-              {viewMode === "goals" &&
-                "大部分营养目标达成良好，建议关注未达标的营养素摄入。"}
+              {viewMode === "macros" && "宏量营养素比例基本合理，建议适当增加优质蛋白质的比例。"}
+              {viewMode === "micros" && "微量营养素摄入整体良好，维生素D可能需要额外补充。"}
+              {viewMode === "goals" && "大部分营养目标达成良好，建议关注未达标的营养素摄入。"}
             </p>
           </div>
         </div>

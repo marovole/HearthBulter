@@ -45,11 +45,10 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       name: "高复杂度函数",
       description: "检测复杂度过高的函数",
       condition: (content, filePath) => {
-        const functionMatches =
-          content.match(/function\s+\w+\s*\([^)]*\)\s*{[\s\S]*?}/g) || [];
+        const functionMatches = content.match(/function\s+\w+\s*\([^)]*\)\s*{[\s\S]*?}/g) || [];
         // 简化的复杂度检查 - 实际实现需要更复杂的分析
         return functionMatches.some(
-          (func) => (func.match(/\bif\b|\bfor\b|\bwhile\b/g) || []).length > 5,
+          (func) => (func.match(/\bif\b|\bfor\b|\bwhile\b/g) || []).length > 5
         );
       },
       severity: "medium",
@@ -67,9 +66,7 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       keywords: ["SELECT", "INSERT", "UPDATE", "DELETE"],
       pattern: /\$\{[^}]*(?:req\.|query\.|body\.)/gi,
       condition: (content) => {
-        const hasSQLKeywords = /(?:SELECT|INSERT|UPDATE|DELETE)\s+/i.test(
-          content,
-        );
+        const hasSQLKeywords = /(?:SELECT|INSERT|UPDATE|DELETE)\s+/i.test(content);
         const hasStringInterpolation = /\$\{[^}]*\}/.test(content);
         return hasSQLKeywords && hasStringInterpolation;
       },
@@ -85,8 +82,7 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       name: "使用any类型",
       description: "检测代码中不推荐使用的any类型",
       pattern: /\bany\b/g,
-      condition: (content) =>
-        content.includes(": any") || content.includes("<any>"),
+      condition: (content) => content.includes(": any") || content.includes("<any>"),
       severity: "medium",
       type: "typescript",
       recommendation: "使用具体的类型定义替换any类型，提高类型安全性",
@@ -100,8 +96,7 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       name: "大数组操作",
       description: "检测可能影响性能的大数组操作",
       condition: (content) => {
-        const largeArrayOps =
-          content.match(/\w+\.map\(|\w+\.filter\(|\w+\.reduce\(/g) || [];
+        const largeArrayOps = content.match(/\w+\.map\(|\w+\.filter\(|\w+\.reduce\(/g) || [];
         return largeArrayOps.length > 5; // 简单阈值检测
       },
       severity: "low",
@@ -172,8 +167,7 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
 
         // 检查是否有useEffect但缺少依赖数组
         const useEffectMatches = content.match(/useEffect\s*\(/g) || [];
-        const dependencyArrays =
-          content.match(/useEffect\s*\([^,]+,\s*\[/g) || [];
+        const dependencyArrays = content.match(/useEffect\s*\([^,]+,\s*\[/g) || [];
 
         return useEffectMatches.length > dependencyArrays.length;
       },
@@ -212,8 +206,7 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
 
         // 检查findMany查询是否有限制
         const findManyQueries = content.match(/\.findMany\s*\(/g) || [];
-        const limitedQueries =
-          content.match(/\.findMany\s*\(\s*\{[\s\S]*?take\s*:/g) || [];
+        const limitedQueries = content.match(/\.findMany\s*\(\s*\{[\s\S]*?take\s*:/g) || [];
 
         return findManyQueries.length > 0 && limitedQueries.length === 0;
       },
@@ -262,11 +255,7 @@ export const defaultCodeReviewConfig: CodeReviewConfig = {
       "**/*.spec.tsx",
       "**/migrations/**",
     ],
-    include: [
-      "src/**/*.{ts,tsx,js,jsx}",
-      "pages/**/*.{ts,tsx,js,jsx}",
-      "app/**/*.{ts,tsx,js,jsx}",
-    ],
+    include: ["src/**/*.{ts,tsx,js,jsx}", "pages/**/*.{ts,tsx,js,jsx}", "app/**/*.{ts,tsx,js,jsx}"],
   },
 
   severityOverrides: {

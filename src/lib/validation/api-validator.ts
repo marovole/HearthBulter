@@ -39,11 +39,8 @@ function formatZodError(error: ZodError): ValidationErrorResponse {
  */
 export async function validateBody<T>(
   request: NextRequest,
-  schema: ZodSchema<T>,
-): Promise<
-  | { success: true; data: T }
-  | { success: false; error: ValidationErrorResponse }
-> {
+  schema: ZodSchema<T>
+): Promise<{ success: true; data: T } | { success: false; error: ValidationErrorResponse }> {
   try {
     const body = await request.json();
     const data = schema.parse(body);
@@ -77,10 +74,8 @@ export async function validateBody<T>(
  */
 export function validateQuery<T>(
   request: NextRequest,
-  schema: ZodSchema<T>,
-):
-  | { success: true; data: T }
-  | { success: false; error: ValidationErrorResponse } {
+  schema: ZodSchema<T>
+): { success: true; data: T } | { success: false; error: ValidationErrorResponse } {
   try {
     const searchParams = request.nextUrl.searchParams;
     const queryObject: Record<string, string> = {};
@@ -108,10 +103,8 @@ export function validateQuery<T>(
  */
 export function validateParams<T>(
   params: Record<string, string>,
-  schema: ZodSchema<T>,
-):
-  | { success: true; data: T }
-  | { success: false; error: ValidationErrorResponse } {
+  schema: ZodSchema<T>
+): { success: true; data: T } | { success: false; error: ValidationErrorResponse } {
   try {
     const data = schema.parse(params);
     return { success: true, data };
@@ -127,9 +120,7 @@ export function validateParams<T>(
 /**
  * 创建验证错误响应
  */
-export function validationErrorResponse(
-  error: ValidationErrorResponse,
-): NextResponse {
+export function validationErrorResponse(error: ValidationErrorResponse): NextResponse {
   return NextResponse.json(error, { status: 400 });
 }
 
@@ -138,7 +129,7 @@ export function validationErrorResponse(
  */
 export function withBodyValidation<T>(
   schema: ZodSchema<T>,
-  handler: (request: NextRequest, data: T) => Promise<NextResponse>,
+  handler: (request: NextRequest, data: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     const result = await validateBody(request, schema);
@@ -156,7 +147,7 @@ export function withBodyValidation<T>(
  */
 export function withQueryValidation<T>(
   schema: ZodSchema<T>,
-  handler: (request: NextRequest, query: T) => Promise<NextResponse>,
+  handler: (request: NextRequest, query: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     const result = validateQuery(request, schema);

@@ -56,11 +56,12 @@ export default async function MealPlansPage({
 
   const member = access.member;
 
-  const mealPlans = await convexClient.query<
-    Array<Doc<"mealPlans"> & { mealCount: number }>
-  >(api.meals.listPlansByMember, {
-    memberId: memberId as Id<"familyMembers">,
-  });
+  const mealPlans = await convexClient.query<Array<Doc<"mealPlans"> & { mealCount: number }>>(
+    api.meals.listPlansByMember,
+    {
+      memberId: memberId as Id<"familyMembers">,
+    }
+  );
 
   const planSummaries: MealPlanSummary[] = mealPlans.map((plan) => ({
     id: plan._id,
@@ -92,15 +93,12 @@ export default async function MealPlansPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* 面包屑导航 */}
           <nav className="mb-6">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Link
-                href={`/dashboard/families/${id}`}
-                className="hover:text-gray-900"
-              >
+              <Link href={`/dashboard/families/${id}`} className="hover:text-gray-900">
                 家庭
               </Link>
               <span>/</span>
@@ -120,7 +118,7 @@ export default async function MealPlansPage({
             <h1 className="text-2xl font-bold text-gray-900">食谱计划</h1>
             <Link
               href={`/dashboard/families/${id}/members/${memberId}/meal-plans/new`}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
             >
               新建食谱计划
             </Link>
@@ -128,11 +126,11 @@ export default async function MealPlansPage({
 
           {/* 食谱列表 */}
           {planSummaries.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <p className="text-gray-600 mb-4">还没有创建任何食谱计划</p>
+            <div className="rounded-lg bg-white p-12 text-center shadow-md">
+              <p className="mb-4 text-gray-600">还没有创建任何食谱计划</p>
               <Link
                 href={`/dashboard/families/${id}/members/${memberId}/meal-plans/new`}
-                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="inline-block rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
               >
                 创建第一个食谱计划
               </Link>
@@ -142,19 +140,18 @@ export default async function MealPlansPage({
               {planSummaries.map((plan: MealPlanSummary) => {
                 const days =
                   Math.ceil(
-                    (plan.endDate.getTime() - plan.startDate.getTime()) /
-                      (1000 * 60 * 60 * 24),
+                    (plan.endDate.getTime() - plan.startDate.getTime()) / (1000 * 60 * 60 * 24)
                   ) + 1;
 
                 return (
                   <Link
                     key={plan.id}
                     href={`/dashboard/families/${id}/members/${memberId}/meal-plans/${plan.id}`}
-                    className="block bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+                    className="block rounded-lg bg-white p-6 shadow-md transition-shadow hover:shadow-lg"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="mb-2 flex items-center gap-3">
                           <h3 className="text-lg font-semibold text-gray-900">
                             {format(plan.startDate, "yyyy年M月d日", {
                               locale: zhCN,
@@ -165,20 +162,15 @@ export default async function MealPlansPage({
                             })}
                           </h3>
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${STATUS_COLORS[plan.status]}`}
+                            className={`rounded px-2 py-1 text-xs font-medium ${STATUS_COLORS[plan.status]}`}
                           >
                             {STATUS_LABELS[plan.status]}
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-600">
                           <span>时长: {days}天</span>
-                          <span>
-                            目标:{" "}
-                            {GOAL_TYPE_LABELS[plan.goalType] || plan.goalType}
-                          </span>
-                          <span>
-                            目标热量: {plan.targetCalories.toFixed(0)} kcal/天
-                          </span>
+                          <span>目标: {GOAL_TYPE_LABELS[plan.goalType] || plan.goalType}</span>
+                          <span>目标热量: {plan.targetCalories.toFixed(0)} kcal/天</span>
                           <span>餐食数: {plan.mealCount}</span>
                         </div>
                       </div>

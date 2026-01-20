@@ -103,13 +103,7 @@ export function FeedbackForm({
     const files = Array.from(event.target.files || []);
     const validFiles = files.filter((file) => {
       const maxSize = 5 * 1024 * 1024; // 5MB
-      const validTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "application/pdf",
-        "text/plain",
-      ];
+      const validTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf", "text/plain"];
       return file.size <= maxSize && validTypes.includes(file.type);
     });
 
@@ -174,7 +168,7 @@ export function FeedbackForm({
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <MessageCircle className="h-5 w-5" />
@@ -192,17 +186,11 @@ export function FeedbackForm({
               className="flex flex-wrap gap-4"
             >
               {feedbackTypes.map((feedbackType) => (
-                <div
-                  key={feedbackType.value}
-                  className="flex items-center space-x-2"
-                >
-                  <RadioGroupItem
-                    value={feedbackType.value}
-                    id={feedbackType.value}
-                  />
+                <div key={feedbackType.value} className="flex items-center space-x-2">
+                  <RadioGroupItem value={feedbackType.value} id={feedbackType.value} />
                   <Label
                     htmlFor={feedbackType.value}
-                    className="flex items-center space-x-1 cursor-pointer"
+                    className="flex cursor-pointer items-center space-x-1"
                   >
                     {feedbackType.icon}
                     <span>{feedbackType.label}</span>
@@ -213,27 +201,22 @@ export function FeedbackForm({
           </div>
 
           {/* Category */}
-          {formData.type &&
-            categories[formData.type as keyof typeof categories] && (
+          {formData.type && categories[formData.type as keyof typeof categories] && (
             <div className="space-y-2">
               <Label>详细分类</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) =>
-                  handleInputChange("category", value)
-                }
+                onValueChange={(value) => handleInputChange("category", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="请选择分类" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories[formData.type as keyof typeof categories].map(
-                    (category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ),
-                  )}
+                  {categories[formData.type as keyof typeof categories].map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -283,7 +266,7 @@ export function FeedbackForm({
           {showAttachment && (
             <div className="space-y-2">
               <Label>附件（可选）</Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+              <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
                 <input
                   type="file"
                   multiple
@@ -292,17 +275,10 @@ export function FeedbackForm({
                   className="hidden"
                   id="file-upload"
                 />
-                <label
-                  htmlFor="file-upload"
-                  className="cursor-pointer flex flex-col items-center"
-                >
-                  <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-600">
-                    点击上传文件或拖拽到此处
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    支持图片、PDF、文本文件，最大5MB
-                  </span>
+                <label htmlFor="file-upload" className="flex cursor-pointer flex-col items-center">
+                  <Upload className="mb-2 h-8 w-8 text-gray-400" />
+                  <span className="text-sm text-gray-600">点击上传文件或拖拽到此处</span>
+                  <span className="text-xs text-gray-500">支持图片、PDF、文本文件，最大5MB</span>
                 </label>
               </div>
 
@@ -313,7 +289,7 @@ export function FeedbackForm({
                   {attachedFiles.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                      className="flex items-center justify-between rounded bg-gray-50 p-2"
                     >
                       <div className="flex items-center space-x-2">
                         <Badge variant="outline" className="text-xs">
@@ -349,16 +325,14 @@ export function FeedbackForm({
             )}
             <Button
               type="submit"
-              disabled={
-                isSubmitting || !formData.title || !formData.description
-              }
+              disabled={isSubmitting || !formData.title || !formData.description}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {isSubmitting ? (
                 "提交中..."
               ) : (
                 <>
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="mr-2 h-4 w-4" />
                   提交反馈
                 </>
               )}
@@ -383,25 +357,25 @@ export function QuickFeedback({
   message = "这个内容对您有帮助吗？",
 }: QuickFeedbackProps) {
   return (
-    <div className="flex items-center justify-center space-x-4 p-4 bg-gray-50 rounded-lg">
+    <div className="flex items-center justify-center space-x-4 rounded-lg bg-gray-50 p-4">
       <span className="text-sm text-gray-600">{message}</span>
       <div className="flex space-x-2">
         <Button
           variant="outline"
           size="sm"
           onClick={onPositive}
-          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+          className="text-green-600 hover:bg-green-50 hover:text-green-700"
         >
-          <ThumbsUp className="h-4 w-4 mr-1" />
+          <ThumbsUp className="mr-1 h-4 w-4" />
           有帮助
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={onNegative}
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          className="text-red-600 hover:bg-red-50 hover:text-red-700"
         >
-          <ThumbsDown className="h-4 w-4 mr-1" />
+          <ThumbsDown className="mr-1 h-4 w-4" />
           没帮助
         </Button>
       </div>

@@ -126,9 +126,7 @@ export function AllergyAlert({
   }
 
   return (
-    <Alert
-      className={`${finalConfig.bgColor} ${finalConfig.borderColor} ${finalConfig.textColor}`}
-    >
+    <Alert className={`${finalConfig.bgColor} ${finalConfig.borderColor} ${finalConfig.textColor}`}>
       <AlertTriangle className={`h-4 w-4 ${finalConfig.iconColor}`} />
       <AlertTitle className="flex items-center justify-between">
         <span className="flex items-center gap-2">
@@ -150,10 +148,9 @@ export function AllergyAlert({
       <AlertDescription className="space-y-3">
         <div>
           <span className="font-medium">检测到过敏原：</span>
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="mt-2 flex flex-wrap gap-2">
             {allergens.map((allergen, index) => {
-              const info =
-                ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
+              const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
               const allergenSeverity = info?.severity || "moderate";
               const allergenConfig = SEVERITY_CONFIGS[allergenSeverity];
 
@@ -186,12 +183,12 @@ export function AllergyAlert({
           >
             {showDetails ? (
               <>
-                <EyeOff className="h-4 w-4 mr-1" />
+                <EyeOff className="mr-1 h-4 w-4" />
                 收起详情
               </>
             ) : (
               <>
-                <Eye className="h-4 w-4 mr-1" />
+                <Eye className="mr-1 h-4 w-4" />
                 查看详情
               </>
             )}
@@ -200,19 +197,15 @@ export function AllergyAlert({
 
         {/* 详细过敏信息 */}
         {showDetails && (
-          <div className="space-y-3 mt-4 pt-3 border-t border-current border-opacity-20">
+          <div className="mt-4 space-y-3 border-t border-current border-opacity-20 pt-3">
             {allergens.map((allergen, index) => {
-              const info =
-                ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
+              const info = ALLERGEN_INFO[allergen as keyof typeof ALLERGEN_INFO];
               if (!info) return null;
 
               return (
-                <div
-                  key={index}
-                  className="bg-white bg-opacity-50 p-3 rounded-lg"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium flex items-center gap-2">
+                <div key={index} className="rounded-lg bg-white bg-opacity-50 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <h4 className="flex items-center gap-2 font-medium">
                       <AlertTriangle className="h-4 w-4" />
                       {allergen}
                     </h4>
@@ -226,7 +219,7 @@ export function AllergyAlert({
                     </Badge>
                   </div>
 
-                  <p className="text-sm mb-2">{info.description}</p>
+                  <p className="mb-2 text-sm">{info.description}</p>
 
                   {info.alternatives && (
                     <div className="space-y-2">
@@ -254,12 +247,12 @@ export function AllergyAlert({
             })}
 
             {/* 安全提示 */}
-            <div className="bg-blue-100 bg-opacity-50 p-3 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+            <div className="rounded-lg bg-blue-100 bg-opacity-50 p-3">
+              <h4 className="mb-2 flex items-center gap-2 font-medium text-blue-900">
                 <Shield className="h-4 w-4" />
                 安全提示
               </h4>
-              <ul className="text-sm text-blue-800 space-y-1">
+              <ul className="space-y-1 text-sm text-blue-800">
                 <li>• 如有严重过敏史，请严格避免相关过敏原</li>
                 <li>• 食用前请仔细检查食品成分表</li>
                 <li>• 建议随身携带抗过敏药物</li>
@@ -295,7 +288,7 @@ export function AllergyBadge({ allergens }: { allergens: string[] }) {
       variant="outline"
       className={`${config.bgColor} ${config.borderColor} ${config.textColor} text-xs`}
     >
-      <AlertTriangle className="h-3 w-3 mr-1" />
+      <AlertTriangle className="mr-1 h-3 w-3" />
       {allergens.length}个过敏原
     </Badge>
   );

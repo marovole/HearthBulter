@@ -103,9 +103,7 @@ describe("/api/social/achievements", () => {
     it("GET: should return 401 when user is not authenticated", async () => {
       (auth as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/achievements");
       const response = await GET(request);
 
       expect(response.status).toBe(401);
@@ -116,16 +114,13 @@ describe("/api/social/achievements", () => {
     it("POST: should return 401 when user is not authenticated", async () => {
       (auth as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            memberId: "member-1",
-            type: "TEST_ACHIEVEMENT",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/achievements", {
+        method: "POST",
+        body: JSON.stringify({
+          memberId: "member-1",
+          type: "TEST_ACHIEVEMENT",
+        }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(401);
@@ -138,14 +133,12 @@ describe("/api/social/achievements", () => {
     beforeEach(() => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
       (achievementSystem.getAvailableAchievements as jest.Mock).mockReturnValue(
-        mockAvailableAchievements,
+        mockAvailableAchievements
       );
     });
 
     it("should return all available achievements", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements?all=true",
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/achievements?all=true");
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -180,14 +173,12 @@ describe("/api/social/achievements", () => {
 
     beforeEach(() => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
-      (prisma.achievement.findMany as jest.Mock).mockResolvedValue(
-        mockUserAchievements,
-      );
+      (prisma.achievement.findMany as jest.Mock).mockResolvedValue(mockUserAchievements);
     });
 
     it("should return user achievements", async () => {
       const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements?memberId=member-1",
+        "http://localhost:3000/api/social/achievements?memberId=member-1"
       );
       const response = await GET(request);
 
@@ -202,7 +193,7 @@ describe("/api/social/achievements", () => {
 
     it("should filter by type", async () => {
       const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements?memberId=member-1&type=HEALTH_SCORE_90",
+        "http://localhost:3000/api/social/achievements?memberId=member-1&type=HEALTH_SCORE_90"
       );
       const response = await GET(request);
 
@@ -210,13 +201,13 @@ describe("/api/social/achievements", () => {
       expect(prisma.achievement.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ type: "HEALTH_SCORE_90" }),
-        }),
+        })
       );
     });
 
     it("should filter by rarity", async () => {
       const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements?memberId=member-1&rarity=RARE",
+        "http://localhost:3000/api/social/achievements?memberId=member-1&rarity=RARE"
       );
       const response = await GET(request);
 
@@ -224,7 +215,7 @@ describe("/api/social/achievements", () => {
       expect(prisma.achievement.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ rarity: "RARE" }),
-        }),
+        })
       );
     });
   });
@@ -245,24 +236,19 @@ describe("/api/social/achievements", () => {
 
     beforeEach(() => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
-      (achievementSystem.unlockAchievement as jest.Mock).mockResolvedValue(
-        mockAchievement,
-      );
+      (achievementSystem.unlockAchievement as jest.Mock).mockResolvedValue(mockAchievement);
     });
 
     it("should unlock achievement with admin permission", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            memberId: "member-1",
-            type: "TEST_ACHIEVEMENT",
-            reason: "测试手动解锁",
-            adminCode: "ADMIN123",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/achievements", {
+        method: "POST",
+        body: JSON.stringify({
+          memberId: "member-1",
+          type: "TEST_ACHIEVEMENT",
+          reason: "测试手动解锁",
+          adminCode: "ADMIN123",
+        }),
+      });
 
       const response = await POST(request);
 
@@ -275,17 +261,14 @@ describe("/api/social/achievements", () => {
     });
 
     it("should return 403 for invalid admin code", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            memberId: "member-1",
-            type: "TEST_ACHIEVEMENT",
-            adminCode: "INVALID_CODE",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/achievements", {
+        method: "POST",
+        body: JSON.stringify({
+          memberId: "member-1",
+          type: "TEST_ACHIEVEMENT",
+          adminCode: "INVALID_CODE",
+        }),
+      });
 
       const response = await POST(request);
 
@@ -299,17 +282,14 @@ describe("/api/social/achievements", () => {
         id: "existing-achievement",
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            memberId: "member-1",
-            type: "HEALTH_SCORE_90",
-            adminCode: "ADMIN123",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/achievements", {
+        method: "POST",
+        body: JSON.stringify({
+          memberId: "member-1",
+          type: "HEALTH_SCORE_90",
+          adminCode: "ADMIN123",
+        }),
+      });
 
       const response = await POST(request);
 
@@ -325,12 +305,10 @@ describe("/api/social/achievements", () => {
     });
 
     it("GET: should handle service errors gracefully", async () => {
-      (prisma.achievement.findMany as jest.Mock).mockRejectedValue(
-        new Error("Service error"),
-      );
+      (prisma.achievement.findMany as jest.Mock).mockRejectedValue(new Error("Service error"));
 
       const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements?memberId=member-1",
+        "http://localhost:3000/api/social/achievements?memberId=member-1"
       );
       const response = await GET(request);
 
@@ -341,20 +319,17 @@ describe("/api/social/achievements", () => {
 
     it("POST: should handle service errors gracefully", async () => {
       (achievementSystem.unlockAchievement as jest.Mock).mockRejectedValue(
-        new Error("Unlock failed"),
+        new Error("Unlock failed")
       );
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/social/achievements",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            memberId: "member-1",
-            type: "TEST_ACHIEVEMENT",
-            adminCode: "ADMIN123",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/social/achievements", {
+        method: "POST",
+        body: JSON.stringify({
+          memberId: "member-1",
+          type: "TEST_ACHIEVEMENT",
+          adminCode: "ADMIN123",
+        }),
+      });
 
       const response = await POST(request);
 

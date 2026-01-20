@@ -22,11 +22,10 @@ import type {
   PaginationInput,
 } from "@/lib/repositories/types/common";
 
-const toDate = (timestamp?: number | null) =>
-  timestamp ? new Date(timestamp) : undefined;
+const toDate = (timestamp?: number | null) => (timestamp ? new Date(timestamp) : undefined);
 
 const mapIngredientsDetailed = (
-  ingredients: Array<Record<string, unknown>> = [],
+  ingredients: Array<Record<string, unknown>> = []
 ): RecipeIngredientDetailDTO[] => {
   const result: RecipeIngredientDetailDTO[] = [];
 
@@ -73,7 +72,7 @@ const mapRecipeDetail = (recipe: Record<string, unknown>): RecipeDetailDTO => ({
   estimatedCost: (recipe.estimatedCost as number | null) ?? null,
   tags: (recipe.tags as string[] | undefined) ?? [],
   ingredients: mapIngredientsDetailed(
-    (recipe.ingredients as Array<Record<string, unknown>> | undefined) ?? [],
+    (recipe.ingredients as Array<Record<string, unknown>> | undefined) ?? []
   ).map((ingredient) => ({
     name: ingredient.food.name,
     amount: ingredient.amount,
@@ -91,15 +90,13 @@ const mapRecipeDetail = (recipe: Record<string, unknown>): RecipeDetailDTO => ({
   costLevel: (recipe.costLevel as "LOW" | "MEDIUM" | "HIGH" | null) ?? null,
   tagsRaw: (recipe.tags as string[] | undefined) ?? [],
   ingredientsDetailed: mapIngredientsDetailed(
-    (recipe.ingredients as Array<Record<string, unknown>> | undefined) ?? [],
+    (recipe.ingredients as Array<Record<string, unknown>> | undefined) ?? []
   ),
   createdAt: toDate(recipe.createdAt as number | undefined),
   updatedAt: toDate(recipe.updatedAt as number | undefined),
 });
 
-const mapRecipeSummary = (
-  recipe: Record<string, unknown>,
-): RecipeSummaryDTO => ({
+const mapRecipeSummary = (recipe: Record<string, unknown>): RecipeSummaryDTO => ({
   id: recipe._id as string,
   name: recipe.name as string,
   cuisineType: (recipe.cuisine as string | null) ?? null,
@@ -118,7 +115,7 @@ const mapRecipeSummary = (
   estimatedCost: (recipe.estimatedCost as number | null) ?? null,
   tags: (recipe.tags as string[] | undefined) ?? [],
   ingredients: mapIngredientsDetailed(
-    (recipe.ingredients as Array<Record<string, unknown>> | undefined) ?? [],
+    (recipe.ingredients as Array<Record<string, unknown>> | undefined) ?? []
   ).map((ingredient) => ({
     name: ingredient.food.name,
     amount: ingredient.amount,
@@ -132,29 +129,22 @@ const buildRangeFilter = (range?: DateRangeFilter) => {
   return { start, end };
 };
 
-export class ConvexRecommendationRepository
-implements RecommendationRepository
-{
+export class ConvexRecommendationRepository implements RecommendationRepository {
   async getUserPreference(memberId: string): Promise<UserPreferenceDTO | null> {
     const preference = await convexClient.query<Record<string, unknown> | null>(
       api.recommendations.getUserPreference,
-      { memberId: memberId as Id<"familyMembers"> },
+      { memberId: memberId as Id<"familyMembers"> }
     );
 
     if (!preference) return null;
 
     return {
       memberId,
-      preferredIngredients:
-        (preference.preferredIngredients as string[] | undefined) ?? [],
-      avoidedIngredients:
-        (preference.avoidedIngredients as string[] | undefined) ?? [],
+      preferredIngredients: (preference.preferredIngredients as string[] | undefined) ?? [],
+      avoidedIngredients: (preference.avoidedIngredients as string[] | undefined) ?? [],
       maxCookTimeMinutes: (preference.maxCookTime as number | null) ?? null,
-      costLevel:
-        (preference.costLevel as "LOW" | "MEDIUM" | "HIGH" | undefined) ??
-        "MEDIUM",
-      preferredCuisines:
-        (preference.preferredCuisines as string[] | undefined) ?? [],
+      costLevel: (preference.costLevel as "LOW" | "MEDIUM" | "HIGH" | undefined) ?? "MEDIUM",
+      preferredCuisines: (preference.preferredCuisines as string[] | undefined) ?? [],
       recommendationWeights: preference.recommendationWeights as
         | RecommendationWeightsDTO
         | undefined,
@@ -163,7 +153,7 @@ implements RecommendationRepository
 
   async listCandidateRecipes(
     filters: RecommendationRecipeFilter,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<RecipeSummaryDTO>> {
     const offset = pagination?.offset ?? 0;
     const limit = pagination?.limit ?? 20;
@@ -175,8 +165,7 @@ implements RecommendationRepository
       mealTypes: filters.mealTypes,
       cuisineTypes: filters.cuisineTypes,
       tags: filters.tags,
-      excludeIds:
-        (filters.excludeRecipeIds as Id<"recipes">[] | undefined) ?? undefined,
+      excludeIds: (filters.excludeRecipeIds as Id<"recipes">[] | undefined) ?? undefined,
       maxCookTime: filters.maxCookTimeMinutes,
       budgetLimit: filters.budgetLimit,
       season: filters.season,
@@ -193,22 +182,22 @@ implements RecommendationRepository
 
   async getRecipeBehavior(
     memberId: string,
-    range?: DateRangeFilter,
+    range?: DateRangeFilter
   ): Promise<RecommendationBehaviorDTO> {
     const { start } = buildRangeFilter(range);
 
     const [ratings, favorites, views] = await Promise.all([
       convexClient.query<Array<Record<string, unknown>>>(
         api["recipe-interactions"].listRatingsByMember,
-        { memberId: memberId as Id<"familyMembers">, startDate: start },
+        { memberId: memberId as Id<"familyMembers">, startDate: start }
       ),
       convexClient.query<Array<Record<string, unknown>>>(
         api["recipe-interactions"].listFavoritesByMemberSimple,
-        { memberId: memberId as Id<"familyMembers"> },
+        { memberId: memberId as Id<"familyMembers"> }
       ),
       convexClient.query<Array<Record<string, unknown>>>(
         api["recipe-interactions"].listViewsByMember,
-        { memberId: memberId as Id<"familyMembers">, startDate: start },
+        { memberId: memberId as Id<"familyMembers">, startDate: start }
       ),
     ]);
 
@@ -231,21 +220,18 @@ implements RecommendationRepository
 
   async getDetailedRecipeBehavior(
     memberId: string,
-    options?: { range?: DateRangeFilter; limit?: number; minRating?: number },
+    options?: { range?: DateRangeFilter; limit?: number; minRating?: number }
   ): Promise<RecommendationBehaviorWithDetailsDTO> {
     const behavior = await this.getRecipeBehavior(memberId, options?.range);
     const ratingIds = behavior.ratings.map((rating) => rating.recipeId);
     const favoriteIds = behavior.favorites.map((favorite) => favorite.recipeId);
     const viewIds = behavior.views.map((view) => view.recipeId);
 
-    const recipeIds = Array.from(
-      new Set([...ratingIds, ...favoriteIds, ...viewIds]),
-    );
+    const recipeIds = Array.from(new Set([...ratingIds, ...favoriteIds, ...viewIds]));
     const recipes = recipeIds.length
-      ? await convexClient.query<Array<Record<string, unknown>>>(
-        api.recipes.listByIds,
-        { ids: recipeIds as Id<"recipes">[] },
-      )
+      ? await convexClient.query<Array<Record<string, unknown>>>(api.recipes.listByIds, {
+          ids: recipeIds as Id<"recipes">[],
+        })
       : [];
 
     const recipeMap = new Map(recipes.map((recipe) => [recipe._id, recipe]));
@@ -274,19 +260,13 @@ implements RecommendationRepository
     };
   }
 
-  async getSimilarRecipes(
-    recipeId: string,
-    limit: number = 5,
-  ): Promise<RecipeSummaryDTO[]> {
+  async getSimilarRecipes(recipeId: string, limit: number = 5): Promise<RecipeSummaryDTO[]> {
     const recipe = await this.getRecipeById(recipeId);
     if (!recipe) return [];
 
     const filters: RecommendationRecipeFilter = {
       cuisineTypes: recipe.cuisine ? [recipe.cuisine] : undefined,
-      mealTypes:
-        recipe.mealTypes && recipe.mealTypes.length > 0
-          ? recipe.mealTypes
-          : undefined,
+      mealTypes: recipe.mealTypes && recipe.mealTypes.length > 0 ? recipe.mealTypes : undefined,
       excludeRecipeIds: [recipeId],
     };
 
@@ -299,34 +279,30 @@ implements RecommendationRepository
   }
 
   async getRecipeById(recipeId: string): Promise<RecipeDetailDTO | null> {
-    const recipe = await convexClient.query<Record<string, unknown> | null>(
-      api.recipes.getById,
-      { recipeId: recipeId as Id<"recipes"> },
-    );
+    const recipe = await convexClient.query<Record<string, unknown> | null>(api.recipes.getById, {
+      recipeId: recipeId as Id<"recipes">,
+    });
 
     return recipe ? mapRecipeDetail(recipe) : null;
   }
 
-  async listPopularRecipes(
-    limit: number = 10,
-    category?: string,
-  ): Promise<RecipeDetailDTO[]> {
+  async listPopularRecipes(limit: number = 10, category?: string): Promise<RecipeDetailDTO[]> {
     const recipes = await convexClient.query<Array<Record<string, unknown>>>(
       api.recipes.listPopular,
       {
         limit,
         category: category ?? undefined,
-      },
+      }
     );
 
     return recipes.map((recipe) => mapRecipeDetail(recipe));
   }
 
   async getActiveHealthGoal(memberId: string): Promise<HealthGoalDTO | null> {
-    const goals = await convexClient.query<Array<Record<string, unknown>>>(
-      api.health.listGoals,
-      { memberId: memberId as Id<"familyMembers">, includeInactive: false },
-    );
+    const goals = await convexClient.query<Array<Record<string, unknown>>>(api.health.listGoals, {
+      memberId: memberId as Id<"familyMembers">,
+      includeInactive: false,
+    });
 
     const activeGoal = goals[0];
     if (!activeGoal) return null;
@@ -335,26 +311,21 @@ implements RecommendationRepository
       id: activeGoal._id as string,
       memberId,
       goalType: activeGoal.goalType as string,
-      status:
-        (activeGoal.status as "ACTIVE" | "PAUSED" | "COMPLETED") ?? "ACTIVE",
+      status: (activeGoal.status as "ACTIVE" | "PAUSED" | "COMPLETED") ?? "ACTIVE",
       targetCalories: (activeGoal.targetValue as number | null) ?? null,
       macroTargets: {
         protein: (activeGoal.proteinRatio as number | null) ?? null,
         carbs: (activeGoal.carbRatio as number | null) ?? null,
         fat: (activeGoal.fatRatio as number | null) ?? null,
       },
-      createdAt:
-        toDate(activeGoal.createdAt as number | undefined) ?? new Date(),
+      createdAt: toDate(activeGoal.createdAt as number | undefined) ?? new Date(),
     };
   }
 
   async getInventorySnapshot(memberId: string): Promise<InventorySnapshotDTO> {
-    const items = await convexClient.query<Array<Record<string, unknown>>>(
-      api.inventory.list,
-      {
-        memberId: memberId as Id<"familyMembers">,
-      },
-    );
+    const items = await convexClient.query<Array<Record<string, unknown>>>(api.inventory.list, {
+      memberId: memberId as Id<"familyMembers">,
+    });
 
     return {
       memberId,
@@ -386,7 +357,7 @@ implements RecommendationRepository
 
   async upsertRecommendationWeights(
     memberId: string,
-    weights: RecommendationWeightsDTO,
+    weights: RecommendationWeightsDTO
   ): Promise<void> {
     await convexClient.mutation(api.recommendations.upsertUserPreference, {
       memberId: memberId as Id<"familyMembers">,
@@ -396,7 +367,7 @@ implements RecommendationRepository
 
   async upsertLearnedUserPreferences(
     memberId: string,
-    payload: { preferences: any; confidence: number },
+    payload: { preferences: any; confidence: number }
   ): Promise<void> {
     await convexClient.mutation(api.recommendations.upsertUserPreference, {
       memberId: memberId as Id<"familyMembers">,
@@ -410,7 +381,7 @@ implements RecommendationRepository
     if (ids.length === 0) return [];
     const recipes = await convexClient.query<Array<Record<string, unknown>>>(
       api.recipes.listByIds,
-      { ids: ids as Id<"recipes">[] },
+      { ids: ids as Id<"recipes">[] }
     );
     return recipes.map((recipe) => mapRecipeDetail(recipe));
   }
@@ -418,17 +389,13 @@ implements RecommendationRepository
   async listMemberBehaviorSamples(options: {
     excludeMemberId?: string;
     limit?: number;
-  }): Promise<
-    Array<{ memberId: string; behavior: RecommendationBehaviorDTO }>
-  > {
+  }): Promise<Array<{ memberId: string; behavior: RecommendationBehaviorDTO }>> {
     const members = await convexClient.query<Array<Record<string, unknown>>>(
       api.members.listAll,
-      {},
+      {}
     );
 
-    const filtered = members.filter(
-      (member) => member._id !== options.excludeMemberId,
-    );
+    const filtered = members.filter((member) => member._id !== options.excludeMemberId);
 
     const limited = filtered.slice(0, options.limit ?? 50);
 
@@ -436,7 +403,7 @@ implements RecommendationRepository
       limited.map(async (member) => ({
         memberId: member._id as string,
         behavior: await this.getRecipeBehavior(member._id as string),
-      })),
+      }))
     );
 
     return behaviors;
@@ -444,7 +411,7 @@ implements RecommendationRepository
 
   async getRecipeCooccurrence(
     recipeId: string,
-    limit: number = 10,
+    limit: number = 10
   ): Promise<Array<{ recipeId: string; count: number }>> {
     const samples = await this.listMemberBehaviorSamples({});
     const counts = new Map<string, number>();
@@ -471,7 +438,7 @@ implements RecommendationRepository
 
   async listDetailedCandidateRecipes(
     filters: RecommendationRecipeFilter,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<RecipeDetailDTO>> {
     const offset = pagination?.offset ?? 0;
     const limit = pagination?.limit ?? 20;
@@ -483,8 +450,7 @@ implements RecommendationRepository
       mealTypes: filters.mealTypes,
       cuisineTypes: filters.cuisineTypes,
       tags: filters.tags,
-      excludeIds:
-        (filters.excludeRecipeIds as Id<"recipes">[] | undefined) ?? undefined,
+      excludeIds: (filters.excludeRecipeIds as Id<"recipes">[] | undefined) ?? undefined,
       maxCookTime: filters.maxCookTimeMinutes,
       budgetLimit: filters.budgetLimit,
       season: filters.season,

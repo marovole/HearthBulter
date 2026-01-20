@@ -21,7 +21,7 @@ const createTemplateSchema = z.object({
     z.object({
       foodId: z.string(),
       amount: z.number().positive(),
-    }),
+    })
   ),
 });
 
@@ -44,11 +44,7 @@ export async function POST(req: NextRequest) {
 
     // 检查是否是从餐饮记录创建模板（使用服务层）
     if (body.mealLogId) {
-      const template = await createTemplateFromMealLog(
-        body.mealLogId,
-        body.name,
-        body.description,
-      );
+      const template = await createTemplateFromMealLog(body.mealLogId, body.name, body.description);
       return NextResponse.json(template, { status: 201 });
     }
 
@@ -67,10 +63,7 @@ export async function POST(req: NextRequest) {
     console.error("Error creating template:", error);
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "无效的请求数据", details: error.errors },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "无效的请求数据", details: error.errors }, { status: 400 });
     }
 
     return NextResponse.json({ error: "创建模板失败" }, { status: 500 });
@@ -107,7 +100,7 @@ export async function GET(req: NextRequest) {
       const templates = await getRecommendedTemplates(
         memberId,
         mealType as any,
-        limit ? parseInt(limit) : undefined,
+        limit ? parseInt(limit) : undefined
       );
       return NextResponse.json({ templates });
     }
@@ -115,7 +108,7 @@ export async function GET(req: NextRequest) {
     // 常规模板列表（使用 Repository）
     const templates = await mealTrackingRepository.listQuickTemplates(
       memberId,
-      mealType || undefined,
+      mealType || undefined
     );
 
     return NextResponse.json({ templates });

@@ -16,24 +16,13 @@ import { dateRangeFilterSchema } from "./common";
 /**
  * 预算周期枚举
  */
-export const budgetPeriodSchema = z.enum([
-  "WEEKLY",
-  "MONTHLY",
-  "QUARTERLY",
-  "YEARLY",
-  "CUSTOM",
-]);
+export const budgetPeriodSchema = z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY", "CUSTOM"]);
 export type BudgetPeriod = z.infer<typeof budgetPeriodSchema>;
 
 /**
  * 预算状态枚举
  */
-export const budgetStatusSchema = z.enum([
-  "ACTIVE",
-  "COMPLETED",
-  "CANCELLED",
-  "EXPIRED",
-]);
+export const budgetStatusSchema = z.enum(["ACTIVE", "COMPLETED", "CANCELLED", "EXPIRED"]);
 export type BudgetStatus = z.infer<typeof budgetStatusSchema>;
 
 /**
@@ -150,14 +139,12 @@ export type SpendingDTO = z.infer<typeof spendingSchema>;
 /**
  * 创建支出 Schema
  */
-export const spendingCreateSchema = spendingSchema
-  .omit({ id: true, createdAt: true })
-  .partial({
-    description: true,
-    transactionId: true,
-    platform: true,
-    items: true,
-  });
+export const spendingCreateSchema = spendingSchema.omit({ id: true, createdAt: true }).partial({
+  description: true,
+  transactionId: true,
+  platform: true,
+  items: true,
+});
 
 export type SpendingCreateDTO = z.infer<typeof spendingCreateSchema>;
 
@@ -211,7 +198,7 @@ export const budgetStatusPayloadSchema = z.object({
       used: z.number().nonnegative(),
       remaining: z.number().nonnegative(),
       percentage: z.number().min(0).max(100),
-    }),
+    })
   ),
 });
 

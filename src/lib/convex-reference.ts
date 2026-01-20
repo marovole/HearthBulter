@@ -8,8 +8,6 @@ export function asConvexQueryReference(name: string): ConvexQueryReference {
   return name as unknown as ConvexQueryReference;
 }
 
-export function asConvexMutationReference(
-  name: string,
-): ConvexMutationReference {
+export function asConvexMutationReference(name: string): ConvexMutationReference {
   return name as unknown as ConvexMutationReference;
 }

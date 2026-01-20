@@ -33,16 +33,14 @@ export function NutritionProgress({ nutrient }: NutritionProgressProps) {
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <span className="font-medium">{name}</span>
         <div className="text-sm text-gray-600">
-          <span className={isOver ? "text-red-600 font-semibold" : ""}>
-            {Math.round(actual)}
-          </span>
-          /{target}
+          <span className={isOver ? "font-semibold text-red-600" : ""}>{Math.round(actual)}</span>/
+          {target}
           {unit}
           <span
-            className={`ml-2 px-2 py-0.5 rounded text-xs ${
+            className={`ml-2 rounded px-2 py-0.5 text-xs ${
               isOver
                 ? "bg-red-100 text-red-700"
                 : isLow
@@ -55,7 +53,7 @@ export function NutritionProgress({ nutrient }: NutritionProgressProps) {
         </div>
       </div>
 
-      <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+      <div className="relative h-3 w-full overflow-hidden rounded-full bg-gray-200">
         <div
           className={`h-full transition-all duration-500 ${getStatusColor()}`}
           style={{ width: `${percentage}%` }}
@@ -91,9 +89,7 @@ interface DailyNutritionProgressProps {
   };
 }
 
-export function DailyNutritionProgress({
-  targets,
-}: DailyNutritionProgressProps) {
+export function DailyNutritionProgress({ targets }: DailyNutritionProgressProps) {
   const nutrients = [
     {
       name: "热量",
@@ -126,8 +122,8 @@ export function DailyNutritionProgress({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 space-y-4">
-      <h3 className="text-lg font-semibold mb-4">今日营养进度</h3>
+    <div className="space-y-4 rounded-lg bg-white p-6 shadow">
+      <h3 className="mb-4 text-lg font-semibold">今日营养进度</h3>
       {nutrients.map((nutrient, index) => (
         <NutritionProgress key={index} nutrient={nutrient} />
       ))}

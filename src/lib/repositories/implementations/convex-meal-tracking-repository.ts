@@ -21,10 +21,7 @@ import type {
 } from "../types/meal-tracking";
 import type { MealTrackingRepository } from "../interfaces/meal-tracking-repository";
 import { convexClient, api } from "@/lib/convex-client";
-import {
-  asConvexMutationReference,
-  asConvexQueryReference,
-} from "@/lib/convex-reference";
+import { asConvexMutationReference, asConvexQueryReference } from "@/lib/convex-reference";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 // Convex 文档类型定义
@@ -115,10 +112,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
     return (await this.getMealLogById(mealLogId as string)) as MealLogDTO;
   }
 
-  async updateMealLog(
-    id: string,
-    input: MealLogUpdateInputDTO,
-  ): Promise<MealLogDTO> {
+  async updateMealLog(id: string, input: MealLogUpdateInputDTO): Promise<MealLogDTO> {
     // 如果更新了食物列表，重新计算营养
     let nutrition: NutritionCalculationResultDTO | undefined;
     if (input.foods) {
@@ -167,7 +161,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
     const foodIds = log.foods.map((f) => f.foodId);
     const foodsData = await convexClient.query<FoodDoc[]>(
       asConvexQueryReference("tracking:getFoodsByIds"),
-      { foodIds },
+      { foodIds }
     );
 
     const foodMap = new Map(foodsData.map((f) => [f._id, f]));
@@ -178,21 +172,18 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
   async listMealLogs(
     memberId: string,
     filter?: MealLogFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<MealLogDTO>> {
     // 使用分页参数中的 limit，而不是 filter 中的
     const effectiveLimit = pagination?.limit ?? 50;
 
-    let logs = await convexClient.query<MealLogDoc[]>(
-      api.tracking.getMealLogHistory,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        startDate: filter?.startDate?.getTime(),
-        endDate: filter?.endDate?.getTime(),
-        mealType: filter?.mealType,
-        limit: effectiveLimit,
-      },
-    );
+    let logs = await convexClient.query<MealLogDoc[]>(api.tracking.getMealLogHistory, {
+      memberId: memberId as Id<"familyMembers">,
+      startDate: filter?.startDate?.getTime(),
+      endDate: filter?.endDate?.getTime(),
+      mealType: filter?.mealType,
+      limit: effectiveLimit,
+    });
 
     // 过滤已删除的记录
     logs = logs.filter((log) => !log.deletedAt);
@@ -205,26 +196,22 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
       logs.map(async (log) => {
         const foods = await convexClient.query<MealLogFoodDoc[]>(
           asConvexQueryReference("tracking:getMealLogFoods"),
-          { mealLogId: log._id },
+          { mealLogId: log._id }
         );
         return { logs: log, foods };
-      }),
+      })
     );
 
     // 获取所有食物详情
-    const allFoodIds = logsWithFoods.flatMap((lw) =>
-      lw.foods.map((f) => f.foodId),
-    );
+    const allFoodIds = logsWithFoods.flatMap((lw) => lw.foods.map((f) => f.foodId));
     const uniqueFoodIds = [...new Set(allFoodIds)];
     const foodsData = await convexClient.query<FoodDoc[]>(
       asConvexQueryReference("tracking:getFoodsByIds"),
-      { foodIds: uniqueFoodIds },
+      { foodIds: uniqueFoodIds }
     );
     const foodMap = new Map(foodsData.map((f) => [f._id, f]));
 
-    const items = logsWithFoods.map((lw) =>
-      this.mapMealLogRow(lw.logs, lw.foods, foodMap),
-    );
+    const items = logsWithFoods.map((lw) => this.mapMealLogRow(lw.logs, lw.foods, foodMap));
 
     // 分页
     const offset = pagination?.offset ?? 0;
@@ -263,7 +250,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
   async getMealLogHistory(
     memberId: string,
     filter?: MealLogFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<MealLogDTO>> {
     return this.listMealLogs(memberId, filter, pagination);
   }
@@ -271,12 +258,12 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
   // ==================== 营养计算 ====================
 
   async calculateNutrition(
-    foods: NutritionCalculationInputDTO,
+    foods: NutritionCalculationInputDTO
   ): Promise<NutritionCalculationResultDTO> {
     const foodIds = foods.map((f) => f.foodId);
     const foodsData = await convexClient.query<FoodDoc[]>(
       asConvexQueryReference("tracking:getFoodsByIds"),
-      { foodIds },
+      { foodIds }
     );
 
     const foodMap = new Map(foodsData.map((f) => [f._id, f]));
@@ -308,10 +295,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
     return nutrition;
   }
 
-  async getDailySummary(
-    memberId: string,
-    date: Date,
-  ): Promise<DailyNutritionSummaryDTO> {
+  async getDailySummary(memberId: string, date: Date): Promise<DailyNutritionSummaryDTO> {
     const logs = await this.getTodayMealLogs(memberId);
 
     const summary: DailyNutritionSummaryDTO = {
@@ -339,11 +323,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
       summary.totalFiber = (summary.totalFiber ?? 0) + (log.fiber ?? 0);
       summary.totalSugar = (summary.totalSugar ?? 0) + (log.sugar ?? 0);
       summary.totalSodium = (summary.totalSodium ?? 0) + (log.sodium ?? 0);
-      const mealType = log.mealType as
-        | "BREAKFAST"
-        | "LUNCH"
-        | "DINNER"
-        | "SNACK";
+      const mealType = log.mealType as "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
       summary.mealCounts[mealType]++;
     }
 
@@ -352,59 +332,44 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
 
   // ==================== 快速模板 ====================
 
-  async createQuickTemplate(
-    input: QuickTemplateCreateInputDTO,
-  ): Promise<QuickTemplateDTO> {
+  async createQuickTemplate(input: QuickTemplateCreateInputDTO): Promise<QuickTemplateDTO> {
     const mealLog = await this.getMealLogById(input.mealLogId);
     if (!mealLog) throw new Error("Meal log not found");
 
-    const templateId = await convexClient.mutation(
-      api.tracking.createQuickTemplate,
-      {
-        memberId: input.memberId as Id<"familyMembers">,
-        name: input.name,
-        description: input.description,
-        mealType: input.mealType,
-        calories: mealLog.calories,
-        protein: mealLog.protein,
-        carbs: mealLog.carbs,
-        fat: mealLog.fat,
-        score: 0,
-        useCount: 0,
-      },
-    );
+    const templateId = await convexClient.mutation(api.tracking.createQuickTemplate, {
+      memberId: input.memberId as Id<"familyMembers">,
+      name: input.name,
+      description: input.description,
+      mealType: input.mealType,
+      calories: mealLog.calories,
+      protein: mealLog.protein,
+      carbs: mealLog.carbs,
+      fat: mealLog.fat,
+      score: 0,
+      useCount: 0,
+    });
 
-    return (await this.getQuickTemplateById(
-      templateId as string,
-    )) as QuickTemplateDTO;
+    return (await this.getQuickTemplateById(templateId as string)) as QuickTemplateDTO;
   }
 
-  async listQuickTemplates(
-    memberId: string,
-    mealType?: string,
-  ): Promise<QuickTemplateDTO[]> {
-    const templates = await convexClient.query<QuickTemplateDoc[]>(
-      api.tracking.getQuickTemplates,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        mealType,
-      },
-    );
+  async listQuickTemplates(memberId: string, mealType?: string): Promise<QuickTemplateDTO[]> {
+    const templates = await convexClient.query<QuickTemplateDoc[]>(api.tracking.getQuickTemplates, {
+      memberId: memberId as Id<"familyMembers">,
+      mealType,
+    });
 
     // 获取每个模板的食物
     const templatesWithFoods = await Promise.all(
       templates.map(async (template) => {
         const foods = await convexClient.query<TemplateFoodDoc[]>(
           asConvexQueryReference("tracking:getTemplateFoods"),
-          { templateId: template._id },
+          { templateId: template._id }
         );
         return { template, foods };
-      }),
+      })
     );
 
-    return templatesWithFoods.map((tw) =>
-      this.mapQuickTemplateRow(tw.template),
-    );
+    return templatesWithFoods.map((tw) => this.mapQuickTemplateRow(tw.template));
   }
 
   async useQuickTemplate(templateId: string, date: Date): Promise<MealLogDTO> {
@@ -422,7 +387,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
     const foodIds = templateWithFoods.foods.map((f) => f.foodId);
     const foodsData = await convexClient.query<FoodDoc[]>(
       asConvexQueryReference("tracking:getFoodsByIds"),
-      { foodIds },
+      { foodIds }
     );
     const foodMap = new Map(foodsData.map((f) => [f._id, f]));
 
@@ -438,11 +403,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
     const mealLog = await this.createMealLog({
       memberId: templateWithFoods.template.memberId as string,
       date,
-      mealType: templateWithFoods.template.mealType as
-        | "BREAKFAST"
-        | "LUNCH"
-        | "DINNER"
-        | "SNACK",
+      mealType: templateWithFoods.template.mealType as "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK",
       foods,
     });
 
@@ -465,7 +426,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
   async getTrackingStreak(memberId: string): Promise<TrackingStreakDTO> {
     const streak = await convexClient.query<TrackingStreakDoc | null>(
       api.tracking.getTrackingStreak,
-      { memberId: memberId as Id<"familyMembers"> },
+      { memberId: memberId as Id<"familyMembers"> }
     );
 
     if (!streak) {
@@ -484,10 +445,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
     return this.mapTrackingStreakRow(streak);
   }
 
-  async updateTrackingStreak(
-    memberId: string,
-    date: Date,
-  ): Promise<TrackingStreakDTO> {
+  async updateTrackingStreak(memberId: string, date: Date): Promise<TrackingStreakDTO> {
     const existing = await this.getTrackingStreak(memberId);
     const today = new Date(date);
     today.setHours(0, 0, 0, 0);
@@ -499,7 +457,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
       const lastCheckIn = new Date(existing.lastCheckIn);
       lastCheckIn.setHours(0, 0, 0, 0);
       const daysDiff = Math.floor(
-        (today.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24),
+        (today.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24)
       );
 
       if (daysDiff === 1) {
@@ -530,19 +488,17 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
 
   async getRecentFoods(
     memberId: string,
-    limit: number = 10,
+    limit: number = 10
   ): Promise<Array<{ foodId: string; useCount: number }>> {
     // Convex 版本可能不支持此功能，返回空数组
-    console.warn(
-      "ConvexMealTrackingRepository: getRecentFoods not implemented",
-    );
+    console.warn("ConvexMealTrackingRepository: getRecentFoods not implemented");
     return [];
   }
 
   async getNutritionTrends(
     memberId: string,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<DailyNutritionSummaryDTO[]> {
     const trends: DailyNutritionSummaryDTO[] = [];
     const current = new Date(startDate);
@@ -558,9 +514,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
 
   // ==================== 辅助方法 ====================
 
-  private async getQuickTemplateById(
-    id: string,
-  ): Promise<QuickTemplateDTO | null> {
+  private async getQuickTemplateById(id: string): Promise<QuickTemplateDTO | null> {
     const template = await convexClient.query<{
       template: QuickTemplateDoc;
       foods: TemplateFoodDoc[];
@@ -572,7 +526,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
     const foodIds = template.foods.map((f) => f.foodId);
     const foodsData = await convexClient.query<FoodDoc[]>(
       asConvexQueryReference("tracking:getFoodsByIds"),
-      { foodIds },
+      { foodIds }
     );
     const foodMap = new Map(foodsData.map((f) => [f._id, f]));
 
@@ -582,7 +536,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
   private mapMealLogRow(
     log: MealLogDoc,
     foods: MealLogFoodDoc[],
-    foodMap: Map<Id<"foods">, FoodDoc>,
+    foodMap: Map<Id<"foods">, FoodDoc>
   ): MealLogDTO {
     const mappedFoods = foods.map((f) => {
       const food = foodMap.get(f.foodId);
@@ -673,9 +627,7 @@ export class ConvexMealTrackingRepository implements MealTrackingRepository {
       currentStreak: streak.currentStreak,
       longestStreak: streak.longestStreak,
       totalDays: streak.totalDays,
-      lastCheckIn: streak.lastCheckIn
-        ? new Date(streak.lastCheckIn)
-        : undefined,
+      lastCheckIn: streak.lastCheckIn ? new Date(streak.lastCheckIn) : undefined,
       badges: Array.isArray(streak.badges)
         ? streak.badges
         : streak.badges

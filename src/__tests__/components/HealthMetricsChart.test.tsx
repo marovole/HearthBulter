@@ -163,7 +163,7 @@ describe("HealthMetricsChart", () => {
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/dashboard/health-metrics?memberId=test-member-1&days=30",
+        "/api/dashboard/health-metrics?memberId=test-member-1&days=30"
       );
     });
   });
@@ -178,7 +178,7 @@ describe("HealthMetricsChart", () => {
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/dashboard/health-metrics?memberId=test-member-1&days=7",
+        "/api/dashboard/health-metrics?memberId=test-member-1&days=7"
       );
     });
   });

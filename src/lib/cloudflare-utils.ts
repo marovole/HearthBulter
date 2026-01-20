@@ -16,9 +16,7 @@ export const getPdfParser = async () => {
 };
 
 // 条件执行函数
-export const runIfNotCloudflare = async <T>(
-  fn: () => Promise<T> | T,
-): Promise<T | null> => {
+export const runIfNotCloudflare = async <T>(fn: () => Promise<T> | T): Promise<T | null> => {
   if (isCloudflare) {
     console.warn("Function not available in Cloudflare environment");
     return null;

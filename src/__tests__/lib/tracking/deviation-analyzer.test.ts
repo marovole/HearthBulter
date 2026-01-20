@@ -26,10 +26,7 @@ describe("Deviation Analyzer", () => {
 
   describe("analyzeNutritionDeviations", () => {
     it("should detect consistent protein deficiency", () => {
-      const deviations = analyzeNutritionDeviations(
-        mockWeeklyData,
-        mockNutritionGoals,
-      );
+      const deviations = analyzeNutritionDeviations(mockWeeklyData, mockNutritionGoals);
 
       const proteinDeviation = deviations.find((d) => d.nutrient === "protein");
       expect(proteinDeviation).toBeDefined();
@@ -40,14 +37,9 @@ describe("Deviation Analyzer", () => {
     });
 
     it("should detect calorie deficiency trend", () => {
-      const deviations = analyzeNutritionDeviations(
-        mockWeeklyData,
-        mockNutritionGoals,
-      );
+      const deviations = analyzeNutritionDeviations(mockWeeklyData, mockNutritionGoals);
 
-      const calorieDeviation = deviations.find(
-        (d) => d.nutrient === "calories",
-      );
+      const calorieDeviation = deviations.find((d) => d.nutrient === "calories");
       expect(calorieDeviation).toBeDefined();
       expect(calorieDeviation?.type).toBe("DEFICIENCY");
       expect(calorieDeviation?.trend).toBe("WORSENING");
@@ -78,10 +70,7 @@ describe("Deviation Analyzer", () => {
         },
       ];
 
-      const deviations = analyzeNutritionDeviations(
-        normalData,
-        mockNutritionGoals,
-      );
+      const deviations = analyzeNutritionDeviations(normalData, mockNutritionGoals);
 
       expect(deviations).toHaveLength(0);
     });
@@ -111,10 +100,7 @@ describe("Deviation Analyzer", () => {
         },
       ];
 
-      const deviations = analyzeNutritionDeviations(
-        excessData,
-        mockNutritionGoals,
-      );
+      const deviations = analyzeNutritionDeviations(excessData, mockNutritionGoals);
 
       expect(deviations.length).toBeGreaterThan(0);
       expect(deviations[0].type).toBe("EXCESS");
@@ -131,10 +117,7 @@ describe("Deviation Analyzer", () => {
         },
       ];
 
-      const deviations = analyzeNutritionDeviations(
-        insufficientData,
-        mockNutritionGoals,
-      );
+      const deviations = analyzeNutritionDeviations(insufficientData, mockNutritionGoals);
 
       expect(deviations).toHaveLength(0);
     });
@@ -387,17 +370,10 @@ describe("Deviation Analyzer", () => {
 
   describe("generateDeviationReport", () => {
     it("should generate comprehensive deviation report", () => {
-      const deviations = analyzeNutritionDeviations(
-        mockWeeklyData,
-        mockNutritionGoals,
-      );
+      const deviations = analyzeNutritionDeviations(mockWeeklyData, mockNutritionGoals);
       const patterns = detectAnomalyPatterns(mockWeeklyData);
 
-      const report = generateDeviationReport(
-        deviations,
-        patterns,
-        mockWeeklyData,
-      );
+      const report = generateDeviationReport(deviations, patterns, mockWeeklyData);
 
       expect(report).toHaveProperty("summary");
       expect(report).toHaveProperty("deviations");
@@ -423,9 +399,7 @@ describe("Deviation Analyzer", () => {
 
       const report = generateDeviationReport(deviations, [], mockWeeklyData);
 
-      const proteinRecommendations = report.recommendations.filter(
-        (r) => r.nutrient === "protein",
-      );
+      const proteinRecommendations = report.recommendations.filter((r) => r.nutrient === "protein");
 
       expect(proteinRecommendations.length).toBeGreaterThan(0);
       expect(proteinRecommendations[0].action).toContain("增加蛋白质");

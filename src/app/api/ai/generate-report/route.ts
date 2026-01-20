@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import {
-  healthReportGenerator,
-  ReportType,
-} from "@/lib/services/ai/health-report-generator";
+import { healthReportGenerator, ReportType } from "@/lib/services/ai/health-report-generator";
 import { prisma } from "@/lib/db";
-import {
-  getDefaultRateLimitConfig,
-  rateLimiter,
-} from "@/lib/services/ai/rate-limiter";
+import { getDefaultRateLimitConfig, rateLimiter } from "@/lib/services/ai/rate-limiter";
 import { sensitiveFilter } from "@/lib/services/sensitive-filter";
 
 // Force dynamic rendering for auth()
@@ -24,7 +18,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await rateLimiter.checkLimit(
       session.user.id,
       "ai_generate_report",
-      getDefaultRateLimitConfig("ai_generate_report"),
+      getDefaultRateLimitConfig("ai_generate_report")
     );
 
     if (!rateLimitResult.allowed) {
@@ -41,7 +35,7 @@ export async function POST(request: NextRequest) {
             "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
             "Retry-After": rateLimitResult.retryAfter?.toString() || "86400",
           },
-        },
+        }
       );
     }
 
@@ -57,7 +51,7 @@ export async function POST(request: NextRequest) {
     if (!memberId || !startDate || !endDate) {
       return NextResponse.json(
         { error: "Member ID, start date, and end date are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -82,10 +76,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // 收集报告数据
@@ -93,14 +84,11 @@ export async function POST(request: NextRequest) {
       memberId,
       reportType,
       new Date(startDate),
-      new Date(endDate),
+      new Date(endDate)
     );
 
     // 生成报告
-    const report = await healthReportGenerator.generateReport(
-      reportData,
-      includeAIInsights,
-    );
+    const report = await healthReportGenerator.generateReport(reportData, includeAIInsights);
 
     // 保存报告到数据库
     const savedReport = await prisma.healthReport.create({
@@ -114,8 +102,7 @@ export async function POST(request: NextRequest) {
         dataSnapshot: JSON.stringify(reportData),
         insights: report.insights.length > 0 ? report.insights : null,
         overallScore:
-          report.sections.find((s) => s.id === "executive_summary")?.data
-            ?.overall_score || null,
+          report.sections.find((s) => s.id === "executive_summary")?.data?.overall_score || null,
         htmlContent: report.htmlContent,
         status: report.status,
         shareToken: report.shareToken,
@@ -149,10 +136,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Report generation API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -170,10 +154,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Member ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
     // 验证用户权限
@@ -197,10 +178,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // 获取报告历史
@@ -228,10 +206,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ reports });
   } catch (error) {
     console.error("Report history API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -240,7 +215,7 @@ async function collectReportData(
   memberId: string,
   reportType: ReportType,
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ) {
   // 获取健康评分数据
   const healthScores = (await prisma.healthScore.findMany({

@@ -4,10 +4,7 @@ import { healthAnalyzer } from "@/lib/services/ai/health-analyzer";
 import { healthRepository } from "@/lib/repositories/health-repository-singleton";
 import { SupabaseFamilyRepository } from "@/lib/repositories/implementations/supabase-family-repository";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
-import {
-  getDefaultRateLimitConfig,
-  rateLimiter,
-} from "@/lib/services/ai/rate-limiter";
+import { getDefaultRateLimitConfig, rateLimiter } from "@/lib/services/ai/rate-limiter";
 import { aiFallbackService } from "@/lib/services/ai/fallback-service";
 import { medicalReportFilter } from "@/lib/middleware/ai-sensitive-filter";
 import { consentManager } from "@/lib/services/consent-manager";
@@ -16,9 +13,7 @@ import { consentManager } from "@/lib/services/consent-manager";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-const familyRepo = new SupabaseFamilyRepository(
-  SupabaseClientManager.getInstance(),
-);
+const familyRepo = new SupabaseFamilyRepository(SupabaseClientManager.getInstance());
 
 /**
  * POST /api/ai/analyze-health
@@ -39,7 +34,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await rateLimiter.checkLimit(
       session.user.id,
       "ai_analyze_health",
-      getDefaultRateLimitConfig("ai_analyze_health"),
+      getDefaultRateLimitConfig("ai_analyze_health")
     );
 
     if (!rateLimitResult.allowed) {
@@ -56,7 +51,7 @@ export async function POST(request: NextRequest) {
             "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
             "Retry-After": rateLimitResult.retryAfter?.toString() || "3600",
           },
-        },
+        }
       );
     }
 
@@ -64,13 +59,11 @@ export async function POST(request: NextRequest) {
     const requiredConsents = ["ai_health_analysis", "medical_data_processing"];
     const consentResults = await consentManager.checkMultipleConsents(
       session.user.id,
-      requiredConsents,
+      requiredConsents
     );
 
     // 检查必需的同意
-    const missingConsents = requiredConsents.filter(
-      (consentId) => !consentResults[consentId],
-    );
+    const missingConsents = requiredConsents.filter((consentId) => !consentResults[consentId]);
     if (missingConsents.length > 0) {
       // 获取缺失的同意类型详情
       const consentTypes = missingConsents
@@ -88,7 +81,7 @@ export async function POST(request: NextRequest) {
           })),
           missingConsents,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -96,21 +89,14 @@ export async function POST(request: NextRequest) {
     const { memberId, includeRecommendations = true } = body;
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Member ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
     // 使用 HealthRepository 获取成员健康上下文（一次性获取所有数据）
-    const memberContext =
-      await healthRepository.getMemberHealthContext(memberId);
+    const memberContext = await healthRepository.getMemberHealthContext(memberId);
 
     if (!memberContext) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // 使用 FamilyRepository 检查权限：是成员本人或家庭管理员
@@ -120,16 +106,13 @@ export async function POST(request: NextRequest) {
     if (!isOwnMember) {
       const role = await familyRepo.getUserFamilyRole(
         memberContext.member.familyId,
-        session.user.id,
+        session.user.id
       );
       isAdmin = role === "ADMIN";
     }
 
     if (!isOwnMember && !isAdmin) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // 组装完整的成员数据（兼容现有代码）
@@ -146,19 +129,18 @@ export async function POST(request: NextRequest) {
 
     // 结构化体检数据
     const medicalData = await healthAnalyzer.structureMedicalData(
-      member.medicalReports.flatMap((report) => report.indicators) as any,
+      member.medicalReports.flatMap((report) => report.indicators) as any
     );
 
     // 敏感信息过滤处理（使用医疗报告专用过滤器）
     const filteredMedicalData = medicalReportFilter.filterStructuredData(
-      medicalData as unknown as Record<string, unknown>,
+      medicalData as unknown as Record<string, unknown>
     );
 
     // 构建用户健康档案
     const userProfile = {
       age: Math.floor(
-        (Date.now() - new Date(member.birthDate).getTime()) /
-          (365.25 * 24 * 60 * 60 * 1000),
+        (Date.now() - new Date(member.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
       ),
       gender: member.gender.toLowerCase() as "male" | "female",
       height: member.height || 170,
@@ -167,10 +149,10 @@ export async function POST(request: NextRequest) {
       health_goals: member.healthGoals.map((g) => g.goalType),
       dietary_preferences: member.dietaryPreference
         ? [
-          member.dietaryPreference.dietType,
-          ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
-          ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
-        ].filter((pref): pref is string => pref !== null)
+            member.dietaryPreference.dietType,
+            ...(member.dietaryPreference.isVegetarian ? ["vegetarian"] : []),
+            ...(member.dietaryPreference.isVegan ? ["vegan"] : []),
+          ].filter((pref): pref is string => pref !== null)
         : [],
       allergies: member.allergies.map((a) => a.allergenName),
       activity_level: "moderate" as const, // 可以从健康数据推断
@@ -179,14 +161,11 @@ export async function POST(request: NextRequest) {
     // 执行健康分析（带降级策略）
     const analysisResult = await aiFallbackService.analyzeHealthWithFallback(
       filteredMedicalData,
-      userProfile,
+      userProfile
     );
 
     if (!analysisResult.success) {
-      return NextResponse.json(
-        { error: analysisResult.message },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: analysisResult.message }, { status: 500 });
     }
 
     // 生成个性化营养目标建议
@@ -198,12 +177,10 @@ export async function POST(request: NextRequest) {
       nutritionTargets = await healthAnalyzer.generateNutritionTargets(
         userProfile,
         analysisResult.data,
-        userProfile.health_goals,
+        userProfile.health_goals
       );
 
-      dietaryAdjustments = healthAnalyzer.generateDietaryAdjustments(
-        analysisResult.data,
-      );
+      dietaryAdjustments = healthAnalyzer.generateDietaryAdjustments(analysisResult.data);
     } else {
       // 使用降级方案，生成基础建议
       nutritionTargets = {
@@ -261,10 +238,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("Health analysis API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -286,20 +260,14 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Member ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
     // 使用 FamilyRepository 验证访问权限
     const memberData = await familyRepo.getFamilyMemberById(memberId);
 
     if (!memberData) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // 检查权限：是成员本人或家庭管理员
@@ -307,32 +275,20 @@ export async function GET(request: NextRequest) {
     let isAdmin = false;
 
     if (!isOwnMember) {
-      const role = await familyRepo.getUserFamilyRole(
-        memberData.familyId,
-        session.user.id,
-      );
+      const role = await familyRepo.getUserFamilyRole(memberData.familyId, session.user.id);
       isAdmin = role === "ADMIN";
     }
 
     if (!isOwnMember && !isAdmin) {
-      return NextResponse.json(
-        { error: "Member not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Member not found or access denied" }, { status: 404 });
     }
 
     // 使用 HealthRepository 获取历史分析记录
-    const history = await healthRepository.getMemberHealthHistory(
-      memberId,
-      limit,
-    );
+    const history = await healthRepository.getMemberHealthHistory(memberId, limit);
 
     return NextResponse.json({ history });
   } catch (error) {
     console.error("Health analysis history API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

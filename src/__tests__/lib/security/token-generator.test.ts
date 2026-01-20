@@ -36,22 +36,16 @@ describe("Token Generator", () => {
   it("应该在密钥过短时抛出错误", async () => {
     process.env.TOKEN_SECRET_KEY = "too-short";
 
-    await expect(
-      generateSecureShareToken("res", "report", "owner"),
-    ).rejects.toThrow("长度不足");
+    await expect(generateSecureShareToken("res", "report", "owner")).rejects.toThrow("长度不足");
 
     process.env.TOKEN_SECRET_KEY = TEST_SECRET;
   });
 
   describe("generateSecureShareToken", () => {
     it("应该生成有效的 JWT Token", async () => {
-      const token = await generateSecureShareToken(
-        "resource-123",
-        "report",
-        "owner-456",
-        7,
-        ["read"],
-      );
+      const token = await generateSecureShareToken("resource-123", "report", "owner-456", 7, [
+        "read",
+      ]);
 
       expect(token).toBeTruthy();
       expect(typeof token).toBe("string");
@@ -60,23 +54,16 @@ describe("Token Generator", () => {
     });
 
     it("应该使用默认参数生成 Token", async () => {
-      const token = await generateSecureShareToken(
-        "resource-123",
-        "report",
-        "owner-456",
-      );
+      const token = await generateSecureShareToken("resource-123", "report", "owner-456");
 
       expect(token).toBeTruthy();
     });
 
     it("应该包含正确的 payload 信息", async () => {
-      const token = await generateSecureShareToken(
-        "resource-123",
-        "report",
-        "owner-456",
-        7,
-        ["read", "download"],
-      );
+      const token = await generateSecureShareToken("resource-123", "report", "owner-456", 7, [
+        "read",
+        "download",
+      ]);
 
       const result = await verifyShareToken(token);
 
@@ -90,11 +77,7 @@ describe("Token Generator", () => {
 
   describe("verifyShareToken", () => {
     it("应该验证有效的 Token", async () => {
-      const token = await generateSecureShareToken(
-        "resource-123",
-        "report",
-        "owner-456",
-      );
+      const token = await generateSecureShareToken("resource-123", "report", "owner-456");
 
       const result = await verifyShareToken(token);
 
@@ -110,11 +93,7 @@ describe("Token Generator", () => {
     });
 
     it("应该拒绝被篡改的 Token", async () => {
-      const token = await generateSecureShareToken(
-        "resource-123",
-        "report",
-        "owner-456",
-      );
+      const token = await generateSecureShareToken("resource-123", "report", "owner-456");
 
       // 篡改 token
       const tamperedToken = `${token.slice(0, -10)}tampered12`;
@@ -130,7 +109,7 @@ describe("Token Generator", () => {
         "report",
         "owner-456",
         -1,
-        ["read"],
+        ["read"]
       );
 
       const result = await verifyShareToken(expiredToken);

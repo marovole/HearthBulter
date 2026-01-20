@@ -63,9 +63,7 @@ describe("Price Estimator", () => {
     it("should throw error when food does not exist", async () => {
       (prisma.food.findUnique as jest.Mock).mockResolvedValue(null);
 
-      await expect(
-        estimator.estimatePrice("non-existent", 100),
-      ).rejects.toThrow("食物不存在");
+      await expect(estimator.estimatePrice("non-existent", 100)).rejects.toThrow("食物不存在");
     });
 
     it("should round price to 2 decimal places", async () => {

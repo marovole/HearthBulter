@@ -92,7 +92,7 @@ class ImageCache {
     totalEntries: number;
     expiredEntries: number;
     size: number;
-    } {
+  } {
     const now = new Date();
     let expiredCount = 0;
 
@@ -136,7 +136,7 @@ setInterval(
       console.log(`清理了 ${cleaned} 个过期的图片缓存`);
     }
   },
-  60 * 60 * 1000,
+  60 * 60 * 1000
 ); // 每小时清理一次
 
 export default imageCache;

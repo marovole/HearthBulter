@@ -7,14 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { HealthScoreGauge } from "./HealthScoreGauge";
 import { GoalProgressBar } from "./GoalProgressBar";
 import { EmptyStateGuide } from "./EmptyStateGuide";
-import {
-  TrendingUp,
-  TrendingDown,
-  Scale,
-  Target,
-  Utensils,
-  Activity,
-} from "lucide-react";
+import { TrendingUp, TrendingDown, Scale, Target, Utensils, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OverviewCardsProps {
@@ -28,12 +21,12 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
 
   if (data === undefined) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} variant="default" className="animate-pulse">
             <CardContent className="p-6">
-              <div className="h-4 bg-muted rounded w-20 mb-3" />
-              <div className="h-8 bg-muted rounded w-24" />
+              <div className="mb-3 h-4 w-20 rounded bg-muted" />
+              <div className="h-8 w-24 rounded bg-muted" />
             </CardContent>
           </Card>
         ))}
@@ -42,23 +35,11 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
   }
 
   if (!data) {
-    return (
-      <EmptyStateGuide
-        memberId={memberId}
-        type="overview"
-        onInitialize={() => {}}
-      />
-    );
+    return <EmptyStateGuide memberId={memberId} type="overview" onInitialize={() => {}} />;
   }
 
   if (!data) {
-    return (
-      <EmptyStateGuide
-        memberId={memberId}
-        type="overview"
-        onInitialize={() => {}}
-      />
-    );
+    return <EmptyStateGuide memberId={memberId} type="overview" onInitialize={() => {}} />;
   }
 
   const { weightTrend, nutritionSummary, healthScore, goalProgress } = data;
@@ -66,9 +47,7 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
   const statCards = [
     {
       label: "当前体重",
-      value: weightTrend.currentWeight
-        ? `${weightTrend.currentWeight.toFixed(1)} kg`
-        : "--",
+      value: weightTrend.currentWeight ? `${weightTrend.currentWeight.toFixed(1)} kg` : "--",
       subtext: weightTrend.targetWeight
         ? `目标: ${weightTrend.targetWeight.toFixed(1)} kg`
         : undefined,
@@ -109,18 +88,16 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
   return (
     <div className="space-y-6">
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
           <Card key={stat.label} variant="elevated" className="group">
             <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-sm font-medium text-muted-foreground">
-                  {stat.label}
-                </span>
+              <div className="mb-3 flex items-start justify-between">
+                <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
                 <div
                   className={cn(
-                    "p-2 rounded-lg transition-transform group-hover:scale-110",
-                    stat.bgColor,
+                    "rounded-lg p-2 transition-transform group-hover:scale-110",
+                    stat.bgColor
                   )}
                 >
                   <stat.icon className={cn("h-4 w-4", stat.color)} />
@@ -128,44 +105,32 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
               </div>
               <div
                 className={cn(
-                  "font-mono text-2xl font-bold mb-1",
-                  stat.color === "text-destructive" ||
-                    stat.color === "text-success"
+                  "mb-1 font-mono text-2xl font-bold",
+                  stat.color === "text-destructive" || stat.color === "text-success"
                     ? stat.color
-                    : "text-foreground",
+                    : "text-foreground"
                 )}
               >
                 {stat.value}
               </div>
-              {stat.subtext && (
-                <div className="text-xs text-muted-foreground">
-                  {stat.subtext}
-                </div>
-              )}
+              {stat.subtext && <div className="text-xs text-muted-foreground">{stat.subtext}</div>}
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Score and Goals */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card variant="elevated">
           <CardContent className="p-6">
-            <h3 className="font-display text-lg font-semibold text-foreground mb-4">
-              健康评分
-            </h3>
-            <HealthScoreGauge
-              score={healthScore.totalScore}
-              breakdown={healthScore.breakdown}
-            />
+            <h3 className="mb-4 font-display text-lg font-semibold text-foreground">健康评分</h3>
+            <HealthScoreGauge score={healthScore.totalScore} breakdown={healthScore.breakdown} />
           </CardContent>
         </Card>
 
         <Card variant="elevated">
           <CardContent className="p-6">
-            <h3 className="font-display text-lg font-semibold text-foreground mb-4">
-              目标进度
-            </h3>
+            <h3 className="mb-4 font-display text-lg font-semibold text-foreground">目标进度</h3>
             {goalProgress.length > 0 ? (
               <div className="space-y-4">
                 {goalProgress.map((goal: any) => (
@@ -183,11 +148,11 @@ export function OverviewCards({ memberId }: OverviewCardsProps) {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="p-3 rounded-full bg-muted mb-3">
+                <div className="mb-3 rounded-full bg-muted p-3">
                   <Target className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">暂无活跃目标</p>
-                <button className="mt-2 text-sm text-primary font-medium hover:underline">
+                <button className="mt-2 text-sm font-medium text-primary hover:underline">
                   设置健康目标
                 </button>
               </div>

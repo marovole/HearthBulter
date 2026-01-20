@@ -20,7 +20,7 @@ export interface AuthorizationResult {
  */
 export async function requireFamilyMembership(
   userId: string,
-  memberId: string,
+  memberId: string
 ): Promise<AuthorizationResult> {
   try {
     const member = await supabaseAdapter.familyMember.findUnique({
@@ -86,9 +86,7 @@ export async function requireFamilyMembership(
  * 验证用户是否为管理员
  * @param userId 用户 ID
  */
-export async function requireAdmin(
-  userId: string,
-): Promise<AuthorizationResult> {
+export async function requireAdmin(userId: string): Promise<AuthorizationResult> {
   try {
     const user = await supabaseAdapter.user.findUnique({
       where: { id: userId },
@@ -142,7 +140,7 @@ export type ResourceType =
 export async function requireOwnership(
   userId: string,
   resourceType: ResourceType,
-  resourceId: string,
+  resourceId: string
 ): Promise<AuthorizationResult> {
   try {
     let resource: {
@@ -152,123 +150,123 @@ export async function requireOwnership(
     } | null = null;
 
     switch (resourceType) {
-    case "inventory_item":
-      resource = await supabaseAdapter.inventoryItem.findUnique({
-        where: { id: resourceId },
-        select: { memberId: true },
-      });
-      if (resource?.memberId) {
-        return requireFamilyMembership(userId, resource.memberId);
-      }
-      break;
-
-    case "health_report":
-      resource = await supabaseAdapter.healthReport.findUnique({
-        where: { id: resourceId },
-        select: { memberId: true },
-      });
-      if (resource?.memberId) {
-        return requireFamilyMembership(userId, resource.memberId);
-      }
-      break;
-
-    case "meal_plan":
-      resource = await supabaseAdapter.mealPlan.findUnique({
-        where: { id: resourceId },
-        select: { memberId: true },
-      });
-      if (resource?.memberId) {
-        return requireFamilyMembership(userId, resource.memberId);
-      }
-      break;
-
-    case "recipe":
-      resource = await supabaseAdapter.recipe.findUnique({
-        where: { id: resourceId },
-        select: { creatorId: true },
-      });
-      if (resource && "creatorId" in resource) {
-        if (resource.creatorId === userId) {
-          return { authorized: true, userId };
-        }
-        return {
-          authorized: false,
-          userId,
-          reason: "无权访问此食谱",
-        };
-      }
-      break;
-
-    case "notification":
-      resource = await supabaseAdapter.notification.findUnique({
-        where: { id: resourceId },
-        select: { memberId: true },
-      });
-      if (resource?.memberId) {
-        return requireFamilyMembership(userId, resource.memberId);
-      }
-      break;
-
-    case "budget":
-      resource = await supabaseAdapter.budget.findUnique({
-        where: { id: resourceId },
-        select: { familyId: true },
-      });
-      if (resource?.familyId) {
-        const membership = await supabaseAdapter.familyMember.findFirst({
-          where: {
-            userId,
-            familyId: resource.familyId,
-            deletedAt: null,
-          },
+      case "inventory_item":
+        resource = await supabaseAdapter.inventoryItem.findUnique({
+          where: { id: resourceId },
+          select: { memberId: true },
         });
-        if (membership) {
-          return { authorized: true, userId };
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
         }
+        break;
+
+      case "health_report":
+        resource = await supabaseAdapter.healthReport.findUnique({
+          where: { id: resourceId },
+          select: { memberId: true },
+        });
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
+        }
+        break;
+
+      case "meal_plan":
+        resource = await supabaseAdapter.mealPlan.findUnique({
+          where: { id: resourceId },
+          select: { memberId: true },
+        });
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
+        }
+        break;
+
+      case "recipe":
+        resource = await supabaseAdapter.recipe.findUnique({
+          where: { id: resourceId },
+          select: { creatorId: true },
+        });
+        if (resource && "creatorId" in resource) {
+          if (resource.creatorId === userId) {
+            return { authorized: true, userId };
+          }
+          return {
+            authorized: false,
+            userId,
+            reason: "无权访问此食谱",
+          };
+        }
+        break;
+
+      case "notification":
+        resource = await supabaseAdapter.notification.findUnique({
+          where: { id: resourceId },
+          select: { memberId: true },
+        });
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
+        }
+        break;
+
+      case "budget":
+        resource = await supabaseAdapter.budget.findUnique({
+          where: { id: resourceId },
+          select: { familyId: true },
+        });
+        if (resource?.familyId) {
+          const membership = await supabaseAdapter.familyMember.findFirst({
+            where: {
+              userId,
+              familyId: resource.familyId,
+              deletedAt: null,
+            },
+          });
+          if (membership) {
+            return { authorized: true, userId };
+          }
+          return {
+            authorized: false,
+            userId,
+            reason: "无权访问此预算",
+          };
+        }
+        break;
+
+      case "health_goal":
+        resource = await supabaseAdapter.healthGoal.findUnique({
+          where: { id: resourceId },
+          select: { memberId: true },
+        });
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
+        }
+        break;
+
+      case "medical_report":
+        resource = await supabaseAdapter.medicalReport.findUnique({
+          where: { id: resourceId },
+          select: { memberId: true },
+        });
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
+        }
+        break;
+
+      case "ai_conversation":
+        resource = await supabaseAdapter.aiConversation.findUnique({
+          where: { id: resourceId },
+          select: { memberId: true },
+        });
+        if (resource?.memberId) {
+          return requireFamilyMembership(userId, resource.memberId);
+        }
+        break;
+
+      default:
         return {
           authorized: false,
           userId,
-          reason: "无权访问此预算",
+          reason: `不支持的资源类型: ${resourceType}`,
         };
-      }
-      break;
-
-    case "health_goal":
-      resource = await supabaseAdapter.healthGoal.findUnique({
-        where: { id: resourceId },
-        select: { memberId: true },
-      });
-      if (resource?.memberId) {
-        return requireFamilyMembership(userId, resource.memberId);
-      }
-      break;
-
-    case "medical_report":
-      resource = await supabaseAdapter.medicalReport.findUnique({
-        where: { id: resourceId },
-        select: { memberId: true },
-      });
-      if (resource?.memberId) {
-        return requireFamilyMembership(userId, resource.memberId);
-      }
-      break;
-
-    case "ai_conversation":
-      resource = await supabaseAdapter.aiConversation.findUnique({
-        where: { id: resourceId },
-        select: { memberId: true },
-      });
-      if (resource?.memberId) {
-        return requireFamilyMembership(userId, resource.memberId);
-      }
-      break;
-
-    default:
-      return {
-        authorized: false,
-        userId,
-        reason: `不支持的资源类型: ${resourceType}`,
-      };
     }
 
     if (!resource) {
@@ -320,7 +318,7 @@ export async function getAuthenticatedUser(): Promise<string | null> {
  */
 export async function requireFamilyAccess(
   userId: string,
-  familyId: string,
+  familyId: string
 ): Promise<AuthorizationResult> {
   try {
     const membership = await supabaseAdapter.familyMember.findFirst({
@@ -357,7 +355,7 @@ export async function requireFamilyAccess(
  */
 export async function requireMemberDataAccess(
   userId: string,
-  memberId: string,
+  memberId: string
 ): Promise<AuthorizationResult> {
   return requireFamilyMembership(userId, memberId);
 }

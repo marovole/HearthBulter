@@ -51,12 +51,9 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
     }
 
     try {
-      const response = await fetch(
-        `/api/members/${memberId}/health-data/${id}`,
-        {
-          method: "DELETE",
-        },
-      );
+      const response = await fetch(`/api/members/${memberId}/health-data/${id}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         throw new Error("删除失败");
@@ -86,21 +83,21 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
 
   const getSourceLabel = (source: string) => {
     switch (source) {
-    case "MANUAL":
-      return "手动录入";
-    case "WEARABLE":
-      return "可穿戴设备";
-    case "MEDICAL_REPORT":
-      return "体检报告";
-    default:
-      return source;
+      case "MANUAL":
+        return "手动录入";
+      case "WEARABLE":
+        return "可穿戴设备";
+      case "MEDICAL_REPORT":
+        return "体检报告";
+      default:
+        return source;
     }
   };
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="py-8 text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
         <p className="mt-2 text-sm text-gray-500">加载中...</p>
       </div>
     );
@@ -108,7 +105,7 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+      <div className="rounded-md border border-red-200 bg-red-50 p-4">
         <p className="text-sm text-red-800">{error}</p>
       </div>
     );
@@ -116,7 +113,7 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
 
   if (data.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div className="py-8 text-center">
         <p className="text-gray-500">暂无健康数据记录</p>
       </div>
     );
@@ -127,20 +124,20 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
       {data.map((item) => (
         <div
           key={item.id}
-          className="bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+          className="rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:border-blue-300"
         >
-          <div className="flex justify-between items-start mb-3">
+          <div className="mb-3 flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="mb-2 flex items-center gap-3">
                 <h3 className="text-lg font-semibold text-gray-900">
                   {formatDate(item.measuredAt)}
                 </h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500">
                   {getSourceLabel(item.source)}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-3 lg:grid-cols-6">
                 {item.weight !== null && (
                   <div>
                     <span className="text-gray-500">体重:</span>
@@ -156,33 +153,27 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
                 {item.muscleMass !== null && (
                   <div>
                     <span className="text-gray-500">肌肉量:</span>
-                    <span className="ml-2 font-medium">
-                      {item.muscleMass} kg
-                    </span>
+                    <span className="ml-2 font-medium">{item.muscleMass} kg</span>
                   </div>
                 )}
-                {item.bloodPressureSystolic !== null &&
-                  item.bloodPressureDiastolic !== null && (
+                {item.bloodPressureSystolic !== null && item.bloodPressureDiastolic !== null && (
                   <div>
                     <span className="text-gray-500">血压:</span>
                     <span className="ml-2 font-medium">
-                      {item.bloodPressureSystolic}/
-                      {item.bloodPressureDiastolic} mmHg
+                      {item.bloodPressureSystolic}/{item.bloodPressureDiastolic} mmHg
                     </span>
                   </div>
                 )}
                 {item.heartRate !== null && (
                   <div>
                     <span className="text-gray-500">心率:</span>
-                    <span className="ml-2 font-medium">
-                      {item.heartRate} bpm
-                    </span>
+                    <span className="ml-2 font-medium">{item.heartRate} bpm</span>
                   </div>
                 )}
               </div>
 
               {item.notes && (
-                <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="mt-3 border-t border-gray-200 pt-3">
                   <p className="text-sm text-gray-600">{item.notes}</p>
                 </div>
               )}
@@ -191,7 +182,7 @@ export function HealthDataList({ memberId, onDelete }: HealthDataListProps) {
             {onDelete && (
               <button
                 onClick={() => handleDelete(item.id)}
-                className="ml-4 text-red-600 hover:text-red-800 text-sm font-medium"
+                className="ml-4 text-sm font-medium text-red-600 hover:text-red-800"
               >
                 删除
               </button>

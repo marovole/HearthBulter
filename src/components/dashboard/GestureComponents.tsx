@@ -86,7 +86,7 @@ export function GestureEnhancedCard({
       {/* 手势提示 */}
       {showGestureHints && showSwipeHint && (
         <div className="absolute -top-8 left-0 right-0 z-10 flex justify-center">
-          <div className="bg-black bg-opacity-75 text-white text-xs px-3 py-1 rounded-full">
+          <div className="rounded-full bg-black bg-opacity-75 px-3 py-1 text-xs text-white">
             {onSwipeLeft && onSwipeRight && "← 滑动切换 →"}
             {onSwipeUp && onSwipeDown && "↑ 滑动查看 ↓"}
             {onLongPress && "长按查看更多"}
@@ -99,7 +99,7 @@ export function GestureEnhancedCard({
         <div className="absolute -top-2 right-2 z-10 flex space-x-1">
           <button
             onClick={resetScale}
-            className="bg-white rounded-full p-1 shadow-md hover:shadow-lg transition-shadow"
+            className="rounded-full bg-white p-1 shadow-md transition-shadow hover:shadow-lg"
           >
             <Minimize2 className="h-3 w-3 text-gray-600" />
           </button>
@@ -109,7 +109,7 @@ export function GestureEnhancedCard({
       {/* 主卡片 */}
       <div
         ref={cardRef}
-        className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transition-transform duration-300"
+        className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-transform duration-300"
         style={{
           transform: `scale(${scale})`,
           transformOrigin: "center",
@@ -117,7 +117,7 @@ export function GestureEnhancedCard({
         {...longPressHandlers}
       >
         {title && (
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
             <h3 className="text-sm font-medium text-gray-900">{title}</h3>
           </div>
         )}
@@ -126,14 +126,14 @@ export function GestureEnhancedCard({
 
         {/* 滑动指示器 */}
         {(onSwipeLeft || onSwipeRight) && (
-          <div className="absolute top-1/2 -translate-y-1/2 flex justify-between w-full px-2 pointer-events-none">
+          <div className="pointer-events-none absolute top-1/2 flex w-full -translate-y-1/2 justify-between px-2">
             {onSwipeLeft && (
-              <div className="bg-white bg-opacity-80 rounded-full p-1 shadow-sm">
+              <div className="rounded-full bg-white bg-opacity-80 p-1 shadow-sm">
                 <ChevronLeft className="h-4 w-4 text-gray-400" />
               </div>
             )}
             {onSwipeRight && (
-              <div className="bg-white bg-opacity-80 rounded-full p-1 shadow-sm">
+              <div className="rounded-full bg-white bg-opacity-80 p-1 shadow-sm">
                 <ChevronRight className="h-4 w-4 text-gray-400" />
               </div>
             )}
@@ -198,7 +198,7 @@ export function SwipeableCarousel({
       </div>
 
       {/* 指示器 */}
-      <div className="flex justify-center space-x-2 mt-4">
+      <div className="mt-4 flex justify-center space-x-2">
         {items.map((_, index) => (
           <button
             key={index}
@@ -206,7 +206,7 @@ export function SwipeableCarousel({
               setCurrentIndex(index);
               onIndexChange?.(index);
             }}
-            className={`w-2 h-2 rounded-full transition-colors ${
+            className={`h-2 w-2 rounded-full transition-colors ${
               index === currentIndex ? "bg-blue-600" : "bg-gray-300"
             }`}
           />
@@ -218,13 +218,13 @@ export function SwipeableCarousel({
         <>
           <button
             onClick={handleSwipeRight}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-shadow"
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-shadow hover:shadow-lg"
           >
             <ChevronLeft className="h-4 w-4 text-gray-600" />
           </button>
           <button
             onClick={handleSwipeLeft}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-shadow"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white p-2 shadow-md transition-shadow hover:shadow-lg"
           >
             <ChevronRight className="h-4 w-4 text-gray-600" />
           </button>
@@ -270,16 +270,14 @@ export function GestureInput({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
+      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
       <input
         ref={inputRef}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
       />
       {(onSwipeUp || onSwipeDown) && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">

@@ -42,18 +42,14 @@ function buildContext(searchParams: URLSearchParams): {
 
   const context: RecommendationContext = {
     memberId,
-    mealType:
-      (searchParams.get("mealType") as RecommendationContext["mealType"]) ||
-      undefined,
+    mealType: (searchParams.get("mealType") as RecommendationContext["mealType"]) || undefined,
     servings: parseInteger(searchParams.get("servings")),
     maxCookTime: parseInteger(searchParams.get("maxCookTime")),
     budgetLimit: parseFloatValue(searchParams.get("budgetLimit")),
     dietaryRestrictions: parseCsv(searchParams.get("dietaryRestrictions")),
     excludedIngredients: parseCsv(searchParams.get("excludedIngredients")),
     preferredCuisines: parseCsv(searchParams.get("preferredCuisines")),
-    season:
-      (searchParams.get("season") as RecommendationContext["season"]) ||
-      undefined,
+    season: (searchParams.get("season") as RecommendationContext["season"]) || undefined,
   };
 
   return { context, limit };
@@ -68,16 +64,13 @@ export async function GET(request: NextRequest) {
     const container = await import("@/lib/container/service-container");
     const getDefaultContainer = container.getDefaultContainer;
     const recommendationEngine = new RecommendationEngine(
-      getDefaultContainer().getRecommendationRepository(),
+      getDefaultContainer().getRecommendationRepository()
     );
 
     const { searchParams } = request.nextUrl;
     const { context, limit } = buildContext(searchParams);
 
-    const recommendations = await recommendationEngine.getRecommendations(
-      context,
-      limit,
-    );
+    const recommendations = await recommendationEngine.getRecommendations(context, limit);
     const recipeIds = recommendations.map((rec) => rec.recipeId);
 
     if (recipeIds.length === 0) {
@@ -98,16 +91,14 @@ export async function GET(request: NextRequest) {
     const recipeMap = new Map(recipes.map((recipe) => [recipe.id, recipe]));
 
     const enriched = recommendations.reduce<
-      Array<
-        (typeof recommendations)[number] & { recipe: (typeof recipes)[number] }
-          >
-          >((acc, rec) => {
-            const recipe = recipeMap.get(rec.recipeId);
-            if (recipe) {
-              acc.push({ ...rec, recipe });
-            }
-            return acc;
-          }, []);
+      Array<(typeof recommendations)[number] & { recipe: (typeof recipes)[number] }>
+    >((acc, rec) => {
+      const recipe = recipeMap.get(rec.recipeId);
+      if (recipe) {
+        acc.push({ ...rec, recipe });
+      }
+      return acc;
+    }, []);
 
     return NextResponse.json({
       success: true,
@@ -125,7 +116,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to get recommendations",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 400 },
+      { status: 400 }
     );
   }
 }

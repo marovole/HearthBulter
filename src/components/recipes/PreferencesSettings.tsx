@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,15 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Settings,
-  ChefHat,
-  Heart,
-  DollarSign,
-  Clock,
-  Users,
-  Target,
-} from "lucide-react";
+import { Settings, ChefHat, Heart, DollarSign, Clock, Users, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserPreferences {
@@ -128,9 +114,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
   const loadPreferences = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/user/preferences?memberId=${memberId}`,
-      );
+      const response = await fetch(`/api/user/preferences?memberId=${memberId}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -185,15 +169,13 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
   };
 
   const toggleArrayItem = (array: string[], item: string): string[] => {
-    return array.includes(item)
-      ? array.filter((i) => i !== item)
-      : [...array, item];
+    return array.includes(item) ? array.filter((i) => i !== item) : [...array, item];
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
         <span className="ml-2">正在加载偏好设置...</span>
       </div>
     );
@@ -203,7 +185,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
     return (
       <Card className="p-6">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="mb-4 text-red-600">{error}</p>
           <Button onClick={loadPreferences} variant="outline">
             重新加载
           </Button>
@@ -240,14 +222,12 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
               <CardDescription>设置您喜欢的口味类型和程度</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label>辣度偏好</Label>
                   <Select
                     value={preferences.spiceLevel}
-                    onValueChange={(value: any) =>
-                      updatePreferences({ spiceLevel: value })
-                    }
+                    onValueChange={(value: any) => updatePreferences({ spiceLevel: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -266,9 +246,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   <Label>甜度偏好</Label>
                   <Select
                     value={preferences.sweetness}
-                    onValueChange={(value: any) =>
-                      updatePreferences({ sweetness: value })
-                    }
+                    onValueChange={(value: any) => updatePreferences({ sweetness: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -287,9 +265,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   <Label>咸度偏好</Label>
                   <Select
                     value={preferences.saltiness}
-                    onValueChange={(value: any) =>
-                      updatePreferences({ saltiness: value })
-                    }
+                    onValueChange={(value: any) => updatePreferences({ saltiness: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -311,16 +287,14 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                     <Badge
                       key={cuisine}
                       variant={
-                        preferences.preferredCuisines.includes(cuisine)
-                          ? "default"
-                          : "outline"
+                        preferences.preferredCuisines.includes(cuisine) ? "default" : "outline"
                       }
                       className="cursor-pointer"
                       onClick={() =>
                         updatePreferences({
                           preferredCuisines: toggleArrayItem(
                             preferences.preferredCuisines,
-                            cuisine,
+                            cuisine
                           ),
                         })
                       }
@@ -347,9 +321,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                 <Label>饮食类型</Label>
                 <Select
                   value={preferences.dietType}
-                  onValueChange={(value) =>
-                    updatePreferences({ dietType: value })
-                  }
+                  onValueChange={(value) => updatePreferences({ dietType: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -365,7 +337,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 {[
                   { key: "isLowCarb", label: "低碳水" },
                   { key: "isLowFat", label: "低脂肪" },
@@ -378,12 +350,8 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox
                       id={key}
-                      checked={
-                        preferences[key as keyof UserPreferences] as boolean
-                      }
-                      onCheckedChange={(checked) =>
-                        updatePreferences({ [key]: checked })
-                      }
+                      checked={preferences[key as keyof UserPreferences] as boolean}
+                      onCheckedChange={(checked) => updatePreferences({ [key]: checked })}
                     />
                     <Label htmlFor={key} className="text-sm">
                       {label}
@@ -408,7 +376,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                         updatePreferences({
                           avoidedIngredients: toggleArrayItem(
                             preferences.avoidedIngredients,
-                            ingredient,
+                            ingredient
                           ),
                         })
                       }
@@ -435,7 +403,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                         updatePreferences({
                           preferredIngredients: toggleArrayItem(
                             preferences.preferredIngredients,
-                            ingredient,
+                            ingredient
                           ),
                         })
                       }
@@ -458,21 +426,19 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>最大烹饪时间（分钟）</Label>
                   <div className="px-3">
                     <Slider
                       value={[preferences.maxCookTime || 60]}
-                      onValueChange={([value]) =>
-                        updatePreferences({ maxCookTime: value })
-                      }
+                      onValueChange={([value]) => updatePreferences({ maxCookTime: value })}
                       max={180}
                       min={15}
                       step={15}
                       className="w-full"
                     />
-                    <div className="text-sm text-muted-foreground mt-1">
+                    <div className="mt-1 text-sm text-muted-foreground">
                       {preferences.maxCookTime || 60} 分钟
                     </div>
                   </div>
@@ -482,9 +448,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   <Label>成本等级偏好</Label>
                   <Select
                     value={preferences.costLevel}
-                    onValueChange={(value: any) =>
-                      updatePreferences({ costLevel: value })
-                    }
+                    onValueChange={(value: any) => updatePreferences({ costLevel: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -498,7 +462,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>最小份数</Label>
                   <Input
@@ -537,9 +501,7 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
                   value={preferences.maxEstimatedCost || ""}
                   onChange={(e) =>
                     updatePreferences({
-                      maxEstimatedCost: e.target.value
-                        ? parseFloat(e.target.value)
-                        : undefined,
+                      maxEstimatedCost: e.target.value ? parseFloat(e.target.value) : undefined,
                     })
                   }
                   placeholder="不限制"
@@ -573,51 +535,44 @@ export function PreferencesSettings({ memberId }: PreferencesSettingsProps) {
               </div>
 
               {preferences.enableRecommendations && (
-                <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
                   <h4 className="font-medium">推荐权重设置</h4>
                   <p className="text-sm text-muted-foreground">
                     调整各项因素在推荐算法中的权重（总和应为1.0）
                   </p>
 
                   {/* 这里可以添加权重滑块，但为了简化暂时省略 */}
-                  <div className="text-sm text-muted-foreground">
-                    当前使用系统默认权重设置
-                  </div>
+                  <div className="text-sm text-muted-foreground">当前使用系统默认权重设置</div>
                 </div>
               )}
 
               {preferences.learnedPreferences &&
                 Object.keys(preferences.learnedPreferences).length > 0 && (
-                <div className="space-y-2">
-                  <Label>AI学习到的偏好</Label>
-                  <div className="p-3 border rounded-lg bg-muted/50">
-                    <div className="text-sm">
-                      <div>
-                          偏好明确度:{" "}
-                        {(preferences.preferenceScore * 100).toFixed(1)}%
-                      </div>
-                      <div className="mt-2">
+                  <div className="space-y-2">
+                    <Label>AI学习到的偏好</Label>
+                    <div className="rounded-lg border bg-muted/50 p-3">
+                      <div className="text-sm">
+                        <div>偏好明确度: {(preferences.preferenceScore * 100).toFixed(1)}%</div>
+                        <div className="mt-2">
                           学习到的菜系:{" "}
-                        {preferences.learnedPreferences.preferredCuisines?.join(
-                          ", ",
-                        ) || "暂无"}
-                      </div>
-                      <div className="mt-1">
+                          {preferences.learnedPreferences.preferredCuisines?.join(", ") || "暂无"}
+                        </div>
+                        <div className="mt-1">
                           学习到的食材:{" "}
-                        {preferences.learnedPreferences.preferredIngredients
-                          ?.slice(0, 5)
-                          .join(", ") || "暂无"}
+                          {preferences.learnedPreferences.preferredIngredients
+                            ?.slice(0, 5)
+                            .join(", ") || "暂无"}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end gap-3 pt-6 border-t">
+      <div className="flex justify-end gap-3 border-t pt-6">
         <Button variant="outline" onClick={loadPreferences}>
           重置
         </Button>

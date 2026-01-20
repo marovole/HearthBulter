@@ -25,8 +25,7 @@ describe("CodeReviewService", () => {
         fileType: "typescript",
       };
 
-      const result: CodeReviewResult =
-        await codeReviewService.reviewCode(input);
+      const result: CodeReviewResult = await codeReviewService.reviewCode(input);
 
       expect(result).toBeDefined();
       expect(result.approved).toBeDefined();
@@ -46,8 +45,7 @@ describe("CodeReviewService", () => {
       const result = await codeReviewService.reviewCode(input);
 
       const anyTypeIssues = result.issues.filter(
-        (issue) =>
-          issue.type === "typescript" && issue.description.includes("any"),
+        (issue) => issue.type === "typescript" && issue.description.includes("any")
       );
 
       expect(anyTypeIssues.length).toBeGreaterThan(0);
@@ -55,7 +53,7 @@ describe("CodeReviewService", () => {
 
     it("should detect console.log statements", async () => {
       const input: CodeReviewInput = {
-        content: "console.log(\"debug message\");",
+        content: 'console.log("debug message");',
         filePath: "src/debug.ts",
         fileType: "typescript",
       };
@@ -63,8 +61,7 @@ describe("CodeReviewService", () => {
       const result = await codeReviewService.reviewCode(input);
 
       const consoleIssues = result.issues.filter(
-        (issue) =>
-          issue.type === "style" && issue.description.includes("console.log"),
+        (issue) => issue.type === "style" && issue.description.includes("console.log")
       );
 
       expect(consoleIssues.length).toBeGreaterThan(0);
@@ -117,12 +114,12 @@ describe("CodeReviewService", () => {
     it("should review multiple files", async () => {
       const inputs: CodeReviewInput[] = [
         {
-          content: "const goodCode = \"hello\";",
+          content: 'const goodCode = "hello";',
           filePath: "src/good.ts",
           fileType: "typescript",
         },
         {
-          content: "const badCode: any = \"world\";",
+          content: 'const badCode: any = "world";',
           filePath: "src/bad.ts",
           fileType: "typescript",
         },
@@ -256,9 +253,7 @@ describe("CodeReviewService", () => {
       codeReviewService.addRule(customRule);
 
       // Initially enabled
-      let rule = codeReviewService
-        .getRules()
-        .find((r) => r.id === customRule.id);
+      let rule = codeReviewService.getRules().find((r) => r.id === customRule.id);
       expect(rule?.enabled).toBe(true);
 
       // Toggle to disabled

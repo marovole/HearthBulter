@@ -112,14 +112,11 @@ describe("AI Workflows Integration Tests", () => {
         includeRecommendations: true,
       };
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/ai/analyze-health",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/ai/analyze-health", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
 
       // 导入并调用API处理函数
       const { POST } = await import("@/app/api/ai/analyze-health/route");
@@ -154,14 +151,11 @@ describe("AI Workflows Integration Tests", () => {
       // Mock缺少同意
       (prisma.userConsent.findUnique as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/ai/analyze-health",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ memberId: "member-123" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/ai/analyze-health", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId: "member-123" }),
+      });
 
       const { POST } = await import("@/app/api/ai/analyze-health/route");
       const response = await POST(request);
@@ -176,17 +170,14 @@ describe("AI Workflows Integration Tests", () => {
     it("应该处理AI服务错误并提供降级方案", async () => {
       // Mock AI服务错误
       (openaiClient.chat.completions.create as jest.Mock).mockRejectedValue(
-        new Error("AI service unavailable"),
+        new Error("AI service unavailable")
       );
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/ai/analyze-health",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ memberId: "member-123" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/ai/analyze-health", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId: "member-123" }),
+      });
 
       const { POST } = await import("@/app/api/ai/analyze-health/route");
       const response = await POST(request);
@@ -201,14 +192,11 @@ describe("AI Workflows Integration Tests", () => {
       // Mock无权限访问
       (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/ai/analyze-health",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ memberId: "member-123" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/ai/analyze-health", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId: "member-123" }),
+      });
 
       const { POST } = await import("@/app/api/ai/analyze-health/route");
       const response = await POST(request);
@@ -227,8 +215,7 @@ describe("AI Workflows Integration Tests", () => {
         choices: [
           {
             message: {
-              content:
-                "根据您的健康目标，我建议您每天摄入2000卡路里，其中25%来自蛋白质。",
+              content: "根据您的健康目标，我建议您每天摄入2000卡路里，其中25%来自蛋白质。",
             },
           },
         ],
@@ -240,17 +227,14 @@ describe("AI Workflows Integration Tests", () => {
       });
 
       // 第一轮对话
-      const firstRequest = new NextRequest(
-        "http://localhost:3000/api/ai/chat",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: "我应该如何控制饮食来减重？",
-            memberId: "member-123",
-          }),
-        },
-      );
+      const firstRequest = new NextRequest("http://localhost:3000/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: "我应该如何控制饮食来减重？",
+          memberId: "member-123",
+        }),
+      });
 
       const { POST: ChatPOST } = await import("@/app/api/ai/chat/route");
       const firstResponse = await ChatPOST(firstRequest);
@@ -261,18 +245,15 @@ describe("AI Workflows Integration Tests", () => {
       expect(firstData.sessionId).toBeDefined();
 
       // 第二轮对话（使用会话ID）
-      const secondRequest = new NextRequest(
-        "http://localhost:3000/api/ai/chat",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: "蛋白质具体应该吃多少？",
-            memberId: "member-123",
-            sessionId: firstData.sessionId,
-          }),
-        },
-      );
+      const secondRequest = new NextRequest("http://localhost:3000/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: "蛋白质具体应该吃多少？",
+          memberId: "member-123",
+          sessionId: firstData.sessionId,
+        }),
+      });
 
       const secondResponse = await ChatPOST(secondRequest);
       expect(secondResponse.status).toBe(200);
@@ -291,9 +272,7 @@ describe("AI Workflows Integration Tests", () => {
         yield "...";
       };
 
-      (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
-        () => mockStream(),
-      );
+      (openaiClient.chat.completions.create as jest.Mock).mockImplementation(() => mockStream());
 
       const request = new NextRequest("http://localhost:3000/api/ai/chat", {
         method: "POST",
@@ -313,7 +292,7 @@ describe("AI Workflows Integration Tests", () => {
 
       // 验证流式响应格式
       const text = await response.text();
-      expect(text).toContain("data: {\"chunk\":\"根据\"}");
+      expect(text).toContain('data: {"chunk":"根据"}');
       expect(text).toContain("data: [DONE]");
     });
 
@@ -322,8 +301,7 @@ describe("AI Workflows Integration Tests", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message:
-            "我的身份证号是123456789012345678，电话是13800138000，帮我分析健康状况",
+          message: "我的身份证号是123456789012345678，电话是13800138000，帮我分析健康状况",
           memberId: "member-123",
         }),
       });
@@ -342,7 +320,7 @@ describe("AI Workflows Integration Tests", () => {
               content: expect.not.toContain("13800138000"),
             }),
           ]),
-        }),
+        })
       );
     });
   });
@@ -400,29 +378,26 @@ describe("AI Workflows Integration Tests", () => {
         ],
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/ai/optimize-recipe",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            recipeId: "recipe-123",
-            memberId: "member-123",
-            targetNutrition: {
-              calories: 600,
-              protein: 40,
-              carbs: 50,
-              fat: 20,
-            },
-            preferences: {
-              dietary_restrictions: [],
-              allergies: ["nuts"],
-              preferred_cuisines: ["chinese"],
-              budget_level: "medium",
-            },
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/ai/optimize-recipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipeId: "recipe-123",
+          memberId: "member-123",
+          targetNutrition: {
+            calories: 600,
+            protein: 40,
+            carbs: 50,
+            fat: 20,
+          },
+          preferences: {
+            dietary_restrictions: [],
+            allergies: ["nuts"],
+            preferred_cuisines: ["chinese"],
+            budget_level: "medium",
+          },
+        }),
+      });
 
       const { POST } = await import("@/app/api/ai/optimize-recipe/route");
       const response = await POST(request);
@@ -438,31 +413,24 @@ describe("AI Workflows Integration Tests", () => {
       // 验证优化结果
       const optimization = data.optimization;
       expect(optimization.analysis.nutrition_score).toBe(85);
-      expect(optimization.optimizations.improved_recipe.name).toBe(
-        "优化版宫保鸡丁",
-      );
-      expect(optimization.optimizations.ingredient_substitutions).toHaveLength(
-        1,
-      );
+      expect(optimization.optimizations.improved_recipe.name).toBe("优化版宫保鸡丁");
+      expect(optimization.optimizations.ingredient_substitutions).toHaveLength(1);
     });
 
     it("应该处理用户偏好和过敏信息", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/ai/optimize-recipe",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            recipeId: "recipe-123",
-            memberId: "member-123",
-            preferences: {
-              dietary_restrictions: ["vegetarian"],
-              allergies: ["nuts", "dairy"],
-              preferred_cuisines: ["mediterranean"],
-            },
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/ai/optimize-recipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipeId: "recipe-123",
+          memberId: "member-123",
+          preferences: {
+            dietary_restrictions: ["vegetarian"],
+            allergies: ["nuts", "dairy"],
+            preferred_cuisines: ["mediterranean"],
+          },
+        }),
+      });
 
       const { POST } = await import("@/app/api/ai/optimize-recipe/route");
       const response = await POST(request);
@@ -480,7 +448,7 @@ describe("AI Workflows Integration Tests", () => {
               content: expect.stringContaining("mediterranean"),
             }),
           ]),
-        }),
+        })
       );
     });
   });
@@ -495,21 +463,18 @@ describe("AI Workflows Integration Tests", () => {
         content: { analysis: "test data" },
       });
 
-      const feedbackRequest = new NextRequest(
-        "http://localhost:3000/api/ai/feedback",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            adviceId: "advice-123",
-            feedbackType: "advice",
-            liked: true,
-            rating: 5,
-            comments: "非常有用的建议",
-            categories: ["helpfulness", "accuracy"],
-          }),
-        },
-      );
+      const feedbackRequest = new NextRequest("http://localhost:3000/api/ai/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adviceId: "advice-123",
+          feedbackType: "advice",
+          liked: true,
+          rating: 5,
+          comments: "非常有用的建议",
+          categories: ["helpfulness", "accuracy"],
+        }),
+      });
 
       const { POST } = await import("@/app/api/ai/feedback/route");
       const response = await POST(feedbackRequest);
@@ -548,7 +513,7 @@ describe("AI Workflows Integration Tests", () => {
       ]);
 
       const statsRequest = new NextRequest(
-        "http://localhost:3000/api/ai/feedback?memberId=member-123&type=HEALTH_ANALYSIS",
+        "http://localhost:3000/api/ai/feedback?memberId=member-123&type=HEALTH_ANALYSIS"
       );
 
       const { GET } = await import("@/app/api/ai/feedback/route");
@@ -565,18 +530,15 @@ describe("AI Workflows Integration Tests", () => {
 
   describe("同意管理工作流", () => {
     it("应该处理用户同意流程", async () => {
-      const consentRequest = new NextRequest(
-        "http://localhost:3000/api/ai/consent",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            consentId: "ai_health_analysis",
-            action: "grant",
-            context: { source: "health_analysis_page" },
-          }),
-        },
-      );
+      const consentRequest = new NextRequest("http://localhost:3000/api/ai/consent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          consentId: "ai_health_analysis",
+          action: "grant",
+          context: { source: "health_analysis_page" },
+        }),
+      });
 
       const { POST } = await import("@/app/api/ai/consent/route");
       const response = await POST(consentRequest);
@@ -605,7 +567,7 @@ describe("AI Workflows Integration Tests", () => {
 
     it("应该检查用户同意状态", async () => {
       const checkRequest = new NextRequest(
-        "http://localhost:3000/api/ai/consent?consentId=ai_health_analysis",
+        "http://localhost:3000/api/ai/consent?consentId=ai_health_analysis"
       );
 
       const { GET } = await import("@/app/api/ai/consent/route");
@@ -621,7 +583,7 @@ describe("AI Workflows Integration Tests", () => {
     it("应该处理同意撤销", async () => {
       const revokeRequest = new NextRequest(
         "http://localhost:3000/api/ai/consent?consentId=ai_health_analysis",
-        { method: "DELETE" },
+        { method: "DELETE" }
       );
 
       const { DELETE } = await import("@/app/api/ai/consent/route");
@@ -647,38 +609,30 @@ describe("AI Workflows Integration Tests", () => {
   describe("端到端工作流", () => {
     it("应该完成完整的用户健康管理流程", async () => {
       // 1. 用户首先需要同意AI分析
-      const consentRequest = new NextRequest(
-        "http://localhost:3000/api/ai/consent",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            consentId: "ai_health_analysis",
-            action: "grant",
-          }),
-        },
-      );
+      const consentRequest = new NextRequest("http://localhost:3000/api/ai/consent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          consentId: "ai_health_analysis",
+          action: "grant",
+        }),
+      });
 
       const { POST: ConsentPOST } = await import("@/app/api/ai/consent/route");
       const consentResponse = await ConsentPOST(consentRequest);
       expect(consentResponse.status).toBe(200);
 
       // 2. 进行健康分析
-      const analysisRequest = new NextRequest(
-        "http://localhost:3000/api/ai/analyze-health",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            memberId: "member-123",
-            includeRecommendations: true,
-          }),
-        },
-      );
+      const analysisRequest = new NextRequest("http://localhost:3000/api/ai/analyze-health", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: "member-123",
+          includeRecommendations: true,
+        }),
+      });
 
-      const { POST: AnalysisPOST } = await import(
-        "@/app/api/ai/analyze-health/route"
-      );
+      const { POST: AnalysisPOST } = await import("@/app/api/ai/analyze-health/route");
       const analysisResponse = await AnalysisPOST(analysisRequest);
       expect(analysisResponse.status).toBe(200);
 
@@ -700,24 +654,19 @@ describe("AI Workflows Integration Tests", () => {
       expect(chatResponse.status).toBe(200);
 
       // 4. 提供反馈
-      const feedbackRequest = new NextRequest(
-        "http://localhost:3000/api/ai/feedback",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            adviceId,
-            feedbackType: "advice",
-            liked: true,
-            rating: 5,
-            comments: "分析很全面，建议很实用",
-          }),
-        },
-      );
+      const feedbackRequest = new NextRequest("http://localhost:3000/api/ai/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adviceId,
+          feedbackType: "advice",
+          liked: true,
+          rating: 5,
+          comments: "分析很全面，建议很实用",
+        }),
+      });
 
-      const { POST: FeedbackPOST } = await import(
-        "@/app/api/ai/feedback/route"
-      );
+      const { POST: FeedbackPOST } = await import("@/app/api/ai/feedback/route");
       const feedbackResponse = await FeedbackPOST(feedbackRequest);
       expect(feedbackResponse.status).toBe(200);
 
@@ -736,14 +685,11 @@ describe("AI Workflows Integration Tests", () => {
         .mockRejectedValueOnce(new Error("API quota exceeded"))
         .mockRejectedValueOnce(new Error("Service unavailable"));
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/ai/analyze-health",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ memberId: "member-123" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/ai/analyze-health", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId: "member-123" }),
+      });
 
       const { POST } = await import("@/app/api/ai/analyze-health/route");
       const response = await POST(request);
@@ -760,9 +706,7 @@ describe("AI Workflows Integration Tests", () => {
       // Mock网络超时
       (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
         () =>
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Request timeout")), 100),
-          ),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Request timeout")), 100))
       );
 
       const request = new NextRequest("http://localhost:3000/api/ai/chat", {

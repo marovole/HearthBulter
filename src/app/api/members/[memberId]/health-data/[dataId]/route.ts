@@ -11,13 +11,12 @@ import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(
-  value: T | T[] | null | undefined,
-): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
+  Array.isArray(value) ? value[0] : (value ?? undefined);
 
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -32,7 +31,7 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `,
+    `
     )
     .eq("id", memberId)
     .is("deletedAt", null)
@@ -77,7 +76,7 @@ async function verifyMemberAccess(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; dataId: string }> },
+  { params }: { params: Promise<{ memberId: string; dataId: string }> }
 ) {
   try {
     const { memberId, dataId } = await params;
@@ -91,10 +90,7 @@ export async function DELETE(
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限删除该成员的健康数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限删除该成员的健康数据" }, { status: 403 });
     }
 
     const supabase = SupabaseClientManager.getInstance();
@@ -108,17 +104,11 @@ export async function DELETE(
       .maybeSingle();
 
     if (!healthData) {
-      return NextResponse.json(
-        { error: "健康数据记录不存在" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "健康数据记录不存在" }, { status: 404 });
     }
 
     // 删除记录
-    const { error: deleteError } = await supabase
-      .from("health_data")
-      .delete()
-      .eq("id", dataId);
+    const { error: deleteError } = await supabase.from("health_data").delete().eq("id", dataId);
 
     if (deleteError) {
       console.error("删除健康数据失败:", deleteError);
@@ -129,7 +119,7 @@ export async function DELETE(
       {
         message: "健康数据删除成功",
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("删除健康数据失败:", error);

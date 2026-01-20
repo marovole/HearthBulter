@@ -90,13 +90,8 @@ describe("Conversation Manager", () => {
         allergies: [],
       };
 
-      const createdSession = conversationManager.createSession(
-        memberId,
-        userProfile,
-      );
-      const retrievedSession = conversationManager.getSession(
-        createdSession.id,
-      );
+      const createdSession = conversationManager.createSession(memberId, userProfile);
+      const retrievedSession = conversationManager.getSession(createdSession.id);
 
       expect(retrievedSession).toBeDefined();
       expect(retrievedSession?.id).toBe(createdSession.id);
@@ -118,16 +113,13 @@ describe("Conversation Manager", () => {
       const session1 = conversationManager.getOrCreateSession(
         "new-session-id",
         memberId,
-        userProfile,
+        userProfile
       );
       expect(session1.id).toBe("new-session-id");
       expect(session1.memberId).toBe(memberId);
 
       // 第二次调用应该返回现有会话
-      const session2 = conversationManager.getOrCreateSession(
-        "new-session-id",
-        memberId,
-      );
+      const session2 = conversationManager.getOrCreateSession("new-session-id", memberId);
       expect(session2.id).toBe("new-session-id");
       expect(session2).toBe(session1);
     });
@@ -163,10 +155,7 @@ describe("Conversation Manager", () => {
 
       const session1 = conversationManager.createSession(memberId, userProfile);
       const session2 = conversationManager.createSession(memberId, userProfile);
-      const session3 = conversationManager.createSession(
-        "other-member",
-        userProfile,
-      );
+      const session3 = conversationManager.createSession("other-member", userProfile);
 
       const userSessions = conversationManager.getUserSessions(memberId);
 
@@ -189,10 +178,7 @@ describe("Conversation Manager", () => {
         dietary_preferences: null,
         allergies: [],
       };
-      const session = conversationManager.createSession(
-        "member-123",
-        userProfile,
-      );
+      const session = conversationManager.createSession("member-123", userProfile);
       sessionId = session.id;
     });
 
@@ -214,22 +200,13 @@ describe("Conversation Manager", () => {
 
     it("应该能够添加助手回复", () => {
       // 先添加用户消息
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "What should I eat today?",
-      );
+      conversationManager.addMessage(sessionId, "user", "What should I eat today?");
 
       // 添加助手回复
       const response = "Based on your health goals, I recommend...";
       const metadata = { model: "gpt-4", tokens: 150 };
 
-      conversationManager.addMessage(
-        sessionId,
-        "assistant",
-        response,
-        metadata,
-      );
+      conversationManager.addMessage(sessionId, "assistant", response, metadata);
 
       const session = conversationManager.getSession(sessionId);
       expect(session?.messages).toHaveLength(2);
@@ -268,10 +245,7 @@ describe("Conversation Manager", () => {
         conversationManager.addMessage(sessionId, role, `Message ${i}`);
       }
 
-      const recentMessages = conversationManager.getRecentMessages(
-        sessionId,
-        5,
-      );
+      const recentMessages = conversationManager.getRecentMessages(sessionId, 5);
       expect(recentMessages).toHaveLength(5);
 
       // 应该是最后5条消息
@@ -281,24 +255,13 @@ describe("Conversation Manager", () => {
     });
 
     it("应该能够格式化对话历史", () => {
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "What is a healthy breakfast?",
-      );
-      conversationManager.addMessage(
-        sessionId,
-        "assistant",
-        "A healthy breakfast includes...",
-      );
+      conversationManager.addMessage(sessionId, "user", "What is a healthy breakfast?");
+      conversationManager.addMessage(sessionId, "assistant", "A healthy breakfast includes...");
 
-      const formattedHistory =
-        conversationManager.formatConversationHistory(sessionId);
+      const formattedHistory = conversationManager.formatConversationHistory(sessionId);
 
       expect(formattedHistory).toContain("User: What is a healthy breakfast?");
-      expect(formattedHistory).toContain(
-        "Assistant: A healthy breakfast includes...",
-      );
+      expect(formattedHistory).toContain("Assistant: A healthy breakfast includes...");
     });
   });
 
@@ -373,12 +336,7 @@ describe("Conversation Manager", () => {
     });
 
     it("应该处理模糊意图", () => {
-      const ambiguousMessages = [
-        "Help",
-        "I need advice",
-        "Can you help me?",
-        "What do you think?",
-      ];
+      const ambiguousMessages = ["Help", "I need advice", "Can you help me?", "What do you think?"];
 
       ambiguousMessages.forEach((message) => {
         const result = conversationManager.recognizeIntent(message);
@@ -413,29 +371,18 @@ describe("Conversation Manager", () => {
         dietary_preferences: { diet_type: "balanced" },
         allergies: ["nuts"],
       };
-      const session = conversationManager.createSession(
-        "member-123",
-        userProfile,
-      );
+      const session = conversationManager.createSession("member-123", userProfile);
       sessionId = session.id;
     });
 
     it("应该提供对话上下文", () => {
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "I want to lose weight",
-      );
+      conversationManager.addMessage(sessionId, "user", "I want to lose weight");
       conversationManager.addMessage(
         sessionId,
         "assistant",
-        "I can help with weight loss. What is your current weight?",
+        "I can help with weight loss. What is your current weight?"
       );
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "I am 80kg and 175cm tall",
-      );
+      conversationManager.addMessage(sessionId, "user", "I am 80kg and 175cm tall");
 
       const context = conversationManager.getConversationContext(sessionId);
 
@@ -448,21 +395,13 @@ describe("Conversation Manager", () => {
     });
 
     it("应该检测话题变化", () => {
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "Tell me about nutrition",
-      );
+      conversationManager.addMessage(sessionId, "user", "Tell me about nutrition");
       conversationManager.addMessage(
         sessionId,
         "assistant",
-        "Nutrition is important for health...",
+        "Nutrition is important for health..."
       );
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "Actually, I want to know about exercise",
-      );
+      conversationManager.addMessage(sessionId, "user", "Actually, I want to know about exercise");
 
       const context = conversationManager.getConversationContext(sessionId);
       expect(context.topicChanged).toBe(true);
@@ -471,21 +410,9 @@ describe("Conversation Manager", () => {
     });
 
     it("应该跟踪用户偏好", () => {
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "I prefer detailed answers",
-      );
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "Keep it simple next time",
-      );
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "I like scientific explanations",
-      );
+      conversationManager.addMessage(sessionId, "user", "I prefer detailed answers");
+      conversationManager.addMessage(sessionId, "user", "Keep it simple next time");
+      conversationManager.addMessage(sessionId, "user", "I like scientific explanations");
 
       const context = conversationManager.getConversationContext(sessionId);
       expect(context.userPreferences).toBeDefined();
@@ -518,10 +445,7 @@ describe("Conversation Manager", () => {
         dietary_preferences: null,
         allergies: [],
       };
-      const session = conversationManager.createSession(
-        "member-123",
-        userProfile,
-      );
+      const session = conversationManager.createSession("member-123", userProfile);
       sessionId = session.id;
 
       // Mock successful AI response
@@ -542,11 +466,7 @@ describe("Conversation Manager", () => {
     });
 
     it("应该生成AI响应", async () => {
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "What should I eat for breakfast?",
-      );
+      conversationManager.addMessage(sessionId, "user", "What should I eat for breakfast?");
 
       const response = await conversationManager.generateResponse(sessionId, {
         temperature: 0.7,
@@ -562,16 +482,7 @@ describe("Conversation Manager", () => {
 
     it("应该处理流式响应", async () => {
       // Mock streaming response
-      const streamChunks = [
-        "Here",
-        " is",
-        " my",
-        " advice",
-        " for",
-        " healthy",
-        " eating",
-        ".",
-      ];
+      const streamChunks = ["Here", " is", " my", " advice", " for", " healthy", " eating", "."];
 
       mockCreate.mockResolvedValue({
         choices: [
@@ -586,9 +497,7 @@ describe("Conversation Manager", () => {
       conversationManager.addMessage(sessionId, "user", "Give me some advice");
 
       const chunks = [];
-      for await (const chunk of conversationManager.generateStreamingResponse(
-        sessionId,
-      )) {
+      for await (const chunk of conversationManager.generateStreamingResponse(sessionId)) {
         chunks.push(chunk);
       }
 
@@ -601,18 +510,14 @@ describe("Conversation Manager", () => {
 
       conversationManager.addMessage(sessionId, "user", "Help me with diet");
 
-      await expect(
-        conversationManager.generateResponse(sessionId),
-      ).rejects.toThrow("AI service unavailable");
+      await expect(conversationManager.generateResponse(sessionId)).rejects.toThrow(
+        "AI service unavailable"
+      );
     });
 
     it("应该重用对话历史", async () => {
       conversationManager.addMessage(sessionId, "user", "My name is John");
-      conversationManager.addMessage(
-        sessionId,
-        "assistant",
-        "Nice to meet you, John!",
-      );
+      conversationManager.addMessage(sessionId, "assistant", "Nice to meet you, John!");
       conversationManager.addMessage(sessionId, "user", "What is my name?");
 
       const response = await conversationManager.generateResponse(sessionId);
@@ -625,7 +530,7 @@ describe("Conversation Manager", () => {
               content: expect.stringContaining("John"),
             }),
           ]),
-        }),
+        })
       );
     });
   });
@@ -645,8 +550,7 @@ describe("Conversation Manager", () => {
     });
 
     it("应该按类别获取预设问题", () => {
-      const nutritionQuestions =
-        conversationManager.getPresetQuestions("nutrition");
+      const nutritionQuestions = conversationManager.getPresetQuestions("nutrition");
       const healthQuestions = conversationManager.getPresetQuestions("health");
 
       expect(nutritionQuestions.length).toBeGreaterThan(0);
@@ -671,20 +575,11 @@ describe("Conversation Manager", () => {
         allergies: ["nuts"],
       };
 
-      const session = conversationManager.createSession(
-        "member-123",
-        userProfile,
-      );
+      const session = conversationManager.createSession("member-123", userProfile);
 
-      conversationManager.addMessage(
-        session.id,
-        "user",
-        "I want to lose weight",
-      );
+      conversationManager.addMessage(session.id, "user", "I want to lose weight");
 
-      const recommendedQuestions = conversationManager.getRecommendedQuestions(
-        session.id,
-      );
+      const recommendedQuestions = conversationManager.getRecommendedQuestions(session.id);
 
       expect(recommendedQuestions).toBeDefined();
       expect(recommendedQuestions.length).toBeGreaterThan(0);
@@ -694,7 +589,7 @@ describe("Conversation Manager", () => {
         expect(
           q.question.toLowerCase().includes("weight") ||
             q.question.toLowerCase().includes("diet") ||
-            q.question.toLowerCase().includes("calorie"),
+            q.question.toLowerCase().includes("calorie")
         ).toBe(true);
       });
     });
@@ -712,26 +607,15 @@ describe("Conversation Manager", () => {
         dietary_preferences: null,
         allergies: [],
       };
-      const session = conversationManager.createSession(
-        "member-123",
-        userProfile,
-      );
+      const session = conversationManager.createSession("member-123", userProfile);
       sessionId = session.id;
     });
 
     it("应该分析会话统计", () => {
       conversationManager.addMessage(sessionId, "user", "Hello");
-      conversationManager.addMessage(
-        sessionId,
-        "assistant",
-        "Hi! How can I help you?",
-      );
+      conversationManager.addMessage(sessionId, "assistant", "Hi! How can I help you?");
       conversationManager.addMessage(sessionId, "user", "I need diet advice");
-      conversationManager.addMessage(
-        sessionId,
-        "assistant",
-        "I can help with diet planning...",
-      );
+      conversationManager.addMessage(sessionId, "assistant", "I can help with diet planning...");
 
       const stats = conversationManager.getSessionStats(sessionId);
 
@@ -744,21 +628,17 @@ describe("Conversation Manager", () => {
     });
 
     it("应该生成会话摘要", () => {
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "I want to lose weight",
-      );
+      conversationManager.addMessage(sessionId, "user", "I want to lose weight");
       conversationManager.addMessage(
         sessionId,
         "assistant",
-        "I can help with weight loss. What is your current weight?",
+        "I can help with weight loss. What is your current weight?"
       );
       conversationManager.addMessage(sessionId, "user", "I am 80kg");
       conversationManager.addMessage(
         sessionId,
         "assistant",
-        "Based on your weight, I recommend a calorie deficit...",
+        "Based on your weight, I recommend a calorie deficit..."
       );
 
       const summary = conversationManager.generateSessionSummary(sessionId);
@@ -772,15 +652,11 @@ describe("Conversation Manager", () => {
 
     it("应该评估会话质量", () => {
       // 添加高质量的对话
-      conversationManager.addMessage(
-        sessionId,
-        "user",
-        "What is a healthy breakfast?",
-      );
+      conversationManager.addMessage(sessionId, "user", "What is a healthy breakfast?");
       conversationManager.addMessage(
         sessionId,
         "assistant",
-        "A healthy breakfast should include protein, complex carbs, and healthy fats. For example, oatmeal with berries and nuts provides...",
+        "A healthy breakfast should include protein, complex carbs, and healthy fats. For example, oatmeal with berries and nuts provides..."
       );
 
       const quality = conversationManager.assessConversationQuality(sessionId);
@@ -808,9 +684,7 @@ describe("Conversation Manager", () => {
           dietary_preferences: null,
           allergies: [],
         };
-        sessions.push(
-          conversationManager.createSession(`member-${i}`, userProfile),
-        );
+        sessions.push(conversationManager.createSession(`member-${i}`, userProfile));
       }
 
       const endTime = performance.now();
@@ -828,10 +702,7 @@ describe("Conversation Manager", () => {
         dietary_preferences: null,
         allergies: [],
       };
-      const session = conversationManager.createSession(
-        "member-123",
-        userProfile,
-      );
+      const session = conversationManager.createSession("member-123", userProfile);
 
       const startTime = performance.now();
 
@@ -868,10 +739,7 @@ describe("Conversation Manager", () => {
         dietary_preferences: null,
         allergies: [],
       };
-      const session = conversationManager.createSession(
-        "member-123",
-        userProfile,
-      );
+      const session = conversationManager.createSession("member-123", userProfile);
 
       expect(conversationManager.getSession(session.id)).toBeDefined();
 

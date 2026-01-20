@@ -127,9 +127,7 @@ export interface LeaderboardRepository {
    * @param filter - 查询过滤器
    * @returns 聚合结果数组
    */
-  aggregateHealthDataByMember(
-    filter: HealthDataFilter,
-  ): Promise<HealthDataAggregationResult[]>;
+  aggregateHealthDataByMember(filter: HealthDataFilter): Promise<HealthDataAggregationResult[]>;
 
   /**
    * 获取成员的健康数据列表
@@ -138,10 +136,7 @@ export interface LeaderboardRepository {
    * @param filter - 可选的查询过滤器
    * @returns 成员健康数据
    */
-  getMemberHealthData(
-    memberId: string,
-    filter?: HealthDataFilter,
-  ): Promise<MemberHealthData>;
+  getMemberHealthData(memberId: string, filter?: HealthDataFilter): Promise<MemberHealthData>;
 
   /**
    * 批量获取多个成员的健康数据
@@ -150,10 +145,7 @@ export interface LeaderboardRepository {
    * @param filter - 可选的查询过滤器
    * @returns 成员健康数据数组
    */
-  getMembersHealthData(
-    memberIds: string[],
-    filter?: HealthDataFilter,
-  ): Promise<MemberHealthData[]>;
+  getMembersHealthData(memberIds: string[], filter?: HealthDataFilter): Promise<MemberHealthData[]>;
 
   // ========================================================================
   // Family Member 查询
@@ -173,9 +165,7 @@ export interface LeaderboardRepository {
    * @param filter - 查询过滤器
    * @returns 成员列表（包含健康数据）
    */
-  getMembersWithHealthData(
-    filter: HealthDataFilter,
-  ): Promise<MemberHealthData[]>;
+  getMembersWithHealthData(filter: HealthDataFilter): Promise<MemberHealthData[]>;
 
   // ========================================================================
   // Leaderboard Entry 操作
@@ -187,9 +177,7 @@ export interface LeaderboardRepository {
    * @param data - 排行榜条目数据
    * @returns 创建的排行榜条目
    */
-  createLeaderboardEntry(
-    data: LeaderboardEntryCreateDTO,
-  ): Promise<LeaderboardEntryRecord>;
+  createLeaderboardEntry(data: LeaderboardEntryCreateDTO): Promise<LeaderboardEntryRecord>;
 
   /**
    * 批量创建排行榜条目
@@ -197,9 +185,7 @@ export interface LeaderboardRepository {
    * @param entries - 排行榜条目数据数组
    * @returns 创建的排行榜条目数组
    */
-  createLeaderboardEntries(
-    entries: LeaderboardEntryCreateDTO[],
-  ): Promise<LeaderboardEntryRecord[]>;
+  createLeaderboardEntries(entries: LeaderboardEntryCreateDTO[]): Promise<LeaderboardEntryRecord[]>;
 
   /**
    * 查询排行榜条目
@@ -207,9 +193,7 @@ export interface LeaderboardRepository {
    * @param query - 查询条件
    * @returns 排行榜条目数组
    */
-  getLeaderboardEntries(
-    query: LeaderboardEntryQuery,
-  ): Promise<LeaderboardEntryRecord[]>;
+  getLeaderboardEntries(query: LeaderboardEntryQuery): Promise<LeaderboardEntryRecord[]>;
 
   /**
    * 获取最新的排行榜条目
@@ -218,7 +202,7 @@ export interface LeaderboardRepository {
    * @returns 最新的排行榜条目或null
    */
   getLatestLeaderboardEntry(
-    query: Omit<LeaderboardEntryQuery, "startDate" | "endDate">,
+    query: Omit<LeaderboardEntryQuery, "startDate" | "endDate">
   ): Promise<LeaderboardEntryRecord | null>;
 
   /**
@@ -232,7 +216,7 @@ export interface LeaderboardRepository {
   getRankingHistory(
     memberId: string,
     type: LeaderboardType,
-    days?: number,
+    days?: number
   ): Promise<LeaderboardEntryRecord[]>;
 
   // ========================================================================
@@ -246,10 +230,7 @@ export interface LeaderboardRepository {
    * @param filter - 可选的查询过滤器
    * @returns 数据点数
    */
-  countMemberHealthData(
-    memberId: string,
-    filter?: HealthDataFilter,
-  ): Promise<number>;
+  countMemberHealthData(memberId: string, filter?: HealthDataFilter): Promise<number>;
 
   /**
    * 计算连续打卡天数

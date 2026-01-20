@@ -130,8 +130,7 @@ export function RecipeDetailModal({
   onToggleFavorite,
 }: RecipeDetailModalProps) {
   const [isPrinting, setIsPrinting] = useState(false);
-  const [selectedIngredient, setSelectedIngredient] =
-    useState<MealIngredient | null>(null);
+  const [selectedIngredient, setSelectedIngredient] = useState<MealIngredient | null>(null);
   const [showSubstitutes, setShowSubstitutes] = useState(false);
   const [isFavorite, setIsFavorite] = useState(meal.isFavorite || false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
@@ -159,14 +158,11 @@ export function RecipeDetailModal({
 
     setFavoriteLoading(true);
     try {
-      const response = await fetch(
-        `/api/meal-plans/meals/${meal.id}/favorite`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isFavorite: !isFavorite }),
-        },
-      );
+      const response = await fetch(`/api/meal-plans/meals/${meal.id}/favorite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite: !isFavorite }),
+      });
 
       if (!response.ok) {
         throw new Error("操作失败");
@@ -217,10 +213,7 @@ export function RecipeDetailModal({
     setShowSubstitutes(true);
   };
 
-  const totalWeight = meal.ingredients.reduce(
-    (sum, ing) => sum + ing.amount,
-    0,
-  );
+  const totalWeight = meal.ingredients.reduce((sum, ing) => sum + ing.amount, 0);
 
   const allergyIngredients = meal.ingredients.map((ingredient) => ({
     id: ingredient.id,
@@ -241,7 +234,7 @@ export function RecipeDetailModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-3 text-xl">
@@ -256,7 +249,7 @@ export function RecipeDetailModal({
                     {MEAL_TYPE_LABELS[meal.mealType]} -{" "}
                     {format(new Date(meal.date), "M月d日", { locale: zhCN })}
                   </div>
-                  <div className="text-sm text-gray-500 font-normal">
+                  <div className="text-sm font-normal text-gray-500">
                     {format(new Date(meal.date), "yyyy年M月d日 EEEE", {
                       locale: zhCN,
                     })}
@@ -264,14 +257,9 @@ export function RecipeDetailModal({
                 </div>
               </DialogTitle>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggleFavorite}
-                className="mr-2"
-              >
+              <Button variant="ghost" size="sm" onClick={onToggleFavorite} className="mr-2">
                 <Heart
-                  className={`h-5 w-5 ${meal.isFavorite ? "text-red-500 fill-current" : "text-gray-400"}`}
+                  className={`h-5 w-5 ${meal.isFavorite ? "fill-current text-red-500" : "text-gray-400"}`}
                 />
               </Button>
             </div>
@@ -286,21 +274,21 @@ export function RecipeDetailModal({
 
               {meal.difficulty && (
                 <Badge className={DIFFICULTY_COLORS[meal.difficulty]}>
-                  <ChefHat className="h-3 w-3 mr-1" />
+                  <ChefHat className="mr-1 h-3 w-3" />
                   {DIFFICULTY_LABELS[meal.difficulty]}
                 </Badge>
               )}
 
               {meal.cookingTime && (
                 <Badge variant="outline">
-                  <Clock className="h-3 w-3 mr-1" />
+                  <Clock className="mr-1 h-3 w-3" />
                   {formatCookingTime(meal.cookingTime)}
                 </Badge>
               )}
 
               {meal.servings && (
                 <Badge variant="outline">
-                  <Users className="h-3 w-3 mr-1" />
+                  <Users className="mr-1 h-3 w-3" />
                   {meal.servings}人份
                 </Badge>
               )}
@@ -331,13 +319,13 @@ export function RecipeDetailModal({
             />
 
             {/* 营养成分概览 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">营养成分</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="mb-4 grid grid-cols-2 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
                         {meal.calories.toFixed(0)}
@@ -354,9 +342,7 @@ export function RecipeDetailModal({
                       <div className="text-2xl font-bold text-green-600">
                         {meal.carbs.toFixed(1)}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        碳水化合物 (g)
-                      </div>
+                      <div className="text-sm text-gray-600">碳水化合物 (g)</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
@@ -372,17 +358,13 @@ export function RecipeDetailModal({
                     <div className="flex justify-between text-sm">
                       <span>热量密度</span>
                       <span className="font-medium">
-                        {((meal.calories / totalWeight) * 100).toFixed(1)}{" "}
-                        kcal/100g
+                        {((meal.calories / totalWeight) * 100).toFixed(1)} kcal/100g
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>蛋白质占比</span>
                       <span className="font-medium">
-                        {(((meal.protein * 4) / meal.calories) * 100).toFixed(
-                          1,
-                        )}
-                        %
+                        {(((meal.protein * 4) / meal.calories) * 100).toFixed(1)}%
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
@@ -454,42 +436,32 @@ export function RecipeDetailModal({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {meal.ingredients.map((ingredient) => (
                     <div
                       key={ingredient.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors hover:bg-gray-50"
                       onClick={() => handleIngredientClick(ingredient)}
                     >
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">
-                          {ingredient.food.name}
-                        </div>
+                        <div className="font-medium text-gray-900">{ingredient.food.name}</div>
                         {ingredient.food.category && (
-                          <div className="text-sm text-gray-500">
-                            {ingredient.food.category}
-                          </div>
+                          <div className="text-sm text-gray-500">{ingredient.food.category}</div>
                         )}
                       </div>
                       <div className="text-right">
                         <div className="font-medium text-gray-900">
-                          {formatAmount(
-                            ingredient.amount,
-                            ingredient.food.unit,
-                          )}
+                          {formatAmount(ingredient.amount, ingredient.food.unit)}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {((ingredient.amount / totalWeight) * 100).toFixed(1)}
-                          %
+                          {((ingredient.amount / totalWeight) * 100).toFixed(1)}%
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-4 text-sm text-gray-600">
-                  💡 点击食材可查看替代选项
-                </div>
+                <div className="mt-4 text-sm text-gray-600">💡 点击食材可查看替代选项</div>
               </CardContent>
             </Card>
 
@@ -522,17 +494,13 @@ export function RecipeDetailModal({
           </div>
 
           <DialogFooter className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handlePrint}
-              disabled={isPrinting}
-            >
-              <Printer className="h-4 w-4 mr-2" />
+            <Button variant="outline" onClick={handlePrint} disabled={isPrinting}>
+              <Printer className="mr-2 h-4 w-4" />
               打印
             </Button>
 
             <Button variant="outline" onClick={handleShare}>
-              <Share2 className="h-4 w-4 mr-2" />
+              <Share2 className="mr-2 h-4 w-4" />
               分享
             </Button>
 
@@ -540,18 +508,14 @@ export function RecipeDetailModal({
               variant={isFavorite ? "default" : "outline"}
               onClick={handleToggleFavorite}
               disabled={favoriteLoading}
-              className={
-                isFavorite ? "text-white bg-red-500 hover:bg-red-600" : ""
-              }
+              className={isFavorite ? "bg-red-500 text-white hover:bg-red-600" : ""}
             >
-              <Heart
-                className={`h-4 w-4 mr-2 ${isFavorite ? "fill-current" : ""}`}
-              />
+              <Heart className={`mr-2 h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
               {favoriteLoading ? "处理中..." : isFavorite ? "已收藏" : "收藏"}
             </Button>
 
             <Button variant="outline" onClick={onReplace}>
-              <ArrowLeftRight className="h-4 w-4 mr-2" />
+              <ArrowLeftRight className="mr-2 h-4 w-4" />
               替换
             </Button>
 
@@ -574,9 +538,7 @@ export function RecipeDetailModal({
           }}
           onReplace={(newIngredient) => {
             // 处理食材替换逻辑
-            toast.success(
-              `已将 ${selectedIngredient.food.name} 替换为 ${newIngredient.food.name}`,
-            );
+            toast.success(`已将 ${selectedIngredient.food.name} 替换为 ${newIngredient.food.name}`);
             setShowSubstitutes(false);
             setSelectedIngredient(null);
             // 这里可以刷新餐食数据或调用回调

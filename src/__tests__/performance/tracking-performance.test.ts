@@ -92,7 +92,7 @@ describe("Tracking Performance Tests", () => {
           mealType: "BREAKFAST",
           foods: [{ foodId: "test-food-1", amount: 100 }],
           createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000), // Different days
-        }),
+        })
       );
 
       await Promise.all(mealPromises);
@@ -118,7 +118,7 @@ describe("Tracking Performance Tests", () => {
           memberId: testMember.id,
           mealType: "BREAKFAST",
           foods: [{ foodId: "test-food-1", amount: 100 }],
-        }),
+        })
       );
 
       const results = await Promise.all(concurrentPromises);
@@ -150,13 +150,7 @@ describe("Tracking Performance Tests", () => {
         await mealTracker.logMeal({
           memberId: testMember.id,
           mealType:
-            i % 4 === 0
-              ? "BREAKFAST"
-              : i % 4 === 1
-                ? "LUNCH"
-                : i % 4 === 2
-                  ? "DINNER"
-                  : "SNACK",
+            i % 4 === 0 ? "BREAKFAST" : i % 4 === 1 ? "LUNCH" : i % 4 === 2 ? "DINNER" : "SNACK",
           foods: [
             { foodId: "test-food-1", amount: 100 },
             { foodId: "test-food-2", amount: 50 },
@@ -167,10 +161,7 @@ describe("Tracking Performance Tests", () => {
 
       const startTime = performance.now();
 
-      const nutrition = await mealTracker.getDailyNutrition(
-        testMember.id,
-        new Date(),
-      );
+      const nutrition = await mealTracker.getDailyNutrition(testMember.id, new Date());
 
       const endTime = performance.now();
       const duration = endTime - startTime;
@@ -194,8 +185,7 @@ describe("Tracking Performance Tests", () => {
         for (let meal = 0; meal < 3; meal++) {
           await mealTracker.logMeal({
             memberId: testMember.id,
-            mealType:
-              meal === 0 ? "BREAKFAST" : meal === 1 ? "LUNCH" : "DINNER",
+            mealType: meal === 0 ? "BREAKFAST" : meal === 1 ? "LUNCH" : "DINNER",
             foods: [
               { foodId: "test-food-1", amount: 100 + meal * 10 },
               { foodId: "test-food-2", amount: 50 + meal * 5 },
@@ -207,11 +197,7 @@ describe("Tracking Performance Tests", () => {
 
       const startTime = performance.now();
 
-      const weeklyData = await mealTracker.getWeeklyNutrition(
-        testMember.id,
-        startDate,
-        new Date(),
-      );
+      const weeklyData = await mealTracker.getWeeklyNutrition(testMember.id, startDate, new Date());
 
       const endTime = performance.now();
       const duration = endTime - startTime;
@@ -274,7 +260,7 @@ describe("Tracking Performance Tests", () => {
             { foodId: "test-food-1", amount: 100 },
             { foodId: "test-food-2", amount: 50 },
           ],
-        }),
+        })
       );
 
       const templates = await Promise.all(templatePromises);
@@ -286,9 +272,7 @@ describe("Tracking Performance Tests", () => {
       expect(templates).toHaveLength(templateCount);
       expect(templatesPerSecond).toBeGreaterThan(50);
 
-      console.log(
-        `Template creation: ${templatesPerSecond.toFixed(2)} templates/second`,
-      );
+      console.log(`Template creation: ${templatesPerSecond.toFixed(2)} templates/second`);
     });
 
     it("should handle template retrieval efficiently", async () => {
@@ -328,7 +312,7 @@ describe("Tracking Performance Tests", () => {
 
       // Simulate template usage
       const usagePromises = Array.from({ length: usageCount }, () =>
-        templateManager.incrementUsage(template.id),
+        templateManager.incrementUsage(template.id)
       );
 
       await Promise.all(usagePromises);
@@ -343,9 +327,7 @@ describe("Tracking Performance Tests", () => {
       const updatedTemplate = await templateManager.getTemplate(template.id);
       expect(updatedTemplate.usageCount).toBe(usageCount);
 
-      console.log(
-        `Template usage tracking: ${usagesPerSecond.toFixed(2)} updates/second`,
-      );
+      console.log(`Template usage tracking: ${usagesPerSecond.toFixed(2)} updates/second`);
     });
   });
 
@@ -375,7 +357,7 @@ describe("Tracking Performance Tests", () => {
       const deviations = await deviationAnalyzer.analyzeWeeklyDeviations(
         testMember.id,
         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        new Date(),
+        new Date()
       );
 
       const analysisEndTime = performance.now();
@@ -397,8 +379,7 @@ describe("Tracking Performance Tests", () => {
         currentDate.setDate(startDate.getDate() + i);
 
         // Create varied nutrition patterns
-        const isWeekend =
-          currentDate.getDay() === 0 || currentDate.getDay() === 6;
+        const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
         const meals = isWeekend ? 4 : 3; // More meals on weekends
 
         for (let meal = 0; meal < meals; meal++) {
@@ -419,7 +400,7 @@ describe("Tracking Performance Tests", () => {
       const report = await deviationAnalyzer.generateWeeklyReport(
         testMember.id,
         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        new Date(),
+        new Date()
       );
 
       const reportEndTime = performance.now();
@@ -468,9 +449,7 @@ describe("Tracking Performance Tests", () => {
       // Memory increase should be reasonable (less than 50MB)
       expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
 
-      console.log(
-        `Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`,
-      );
+      console.log(`Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`);
     });
 
     it("should handle database connection pooling efficiently", async () => {
@@ -482,7 +461,7 @@ describe("Tracking Performance Tests", () => {
           memberId: testMember.id,
           mealType: "BREAKFAST",
           foods: [{ foodId: "test-food-1", amount: 100 }],
-        }),
+        })
       );
 
       await Promise.all(concurrentOperations);
@@ -541,8 +520,8 @@ describe("Tracking Performance Tests", () => {
             memberId: member.id,
             mealType: "BREAKFAST",
             foods: [{ foodId: "test-food-1", amount: 100 }],
-          }),
-        ),
+          })
+        )
       );
 
       await Promise.all(mealPromises);
@@ -554,9 +533,7 @@ describe("Tracking Performance Tests", () => {
 
       expect(mealsPerSecond).toBeGreaterThan(50);
 
-      console.log(
-        `Multi-member performance: ${mealsPerSecond.toFixed(2)} meals/second`,
-      );
+      console.log(`Multi-member performance: ${mealsPerSecond.toFixed(2)} meals/second`);
 
       // Clean up additional members
       await prisma.mealLog.deleteMany({

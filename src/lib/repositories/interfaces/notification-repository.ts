@@ -58,7 +58,7 @@ export interface NotificationRepository {
    */
   listMemberNotifications(
     query: NotificationListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<NotificationDTO>>;
 
   /**
@@ -109,7 +109,7 @@ export interface NotificationRepository {
    * @returns 创建的计划通知
    */
   createScheduledNotification(
-    schedule: ScheduledNotificationDTO,
+    schedule: ScheduledNotificationDTO
   ): Promise<ScheduledNotificationDTO>;
 
   /**
@@ -119,10 +119,7 @@ export interface NotificationRepository {
    * @param limit - 返回数量限制
    * @returns 待派发计划通知列表
    */
-  listDueSchedules(
-    before: Date,
-    limit: number,
-  ): Promise<ScheduledNotificationDTO[]>;
+  listDueSchedules(before: Date, limit: number): Promise<ScheduledNotificationDTO[]>;
 
   /**
    * 更新计划任务状态
@@ -132,7 +129,7 @@ export interface NotificationRepository {
    */
   updateScheduleStatus(
     scheduleId: string,
-    status: ScheduledNotificationDTO["status"],
+    status: ScheduledNotificationDTO["status"]
   ): Promise<void>;
 
   /**
@@ -141,18 +138,14 @@ export interface NotificationRepository {
    * @param memberId - 成员ID
    * @returns 通知偏好对象，不存在时返回 null
    */
-  getNotificationPreferences(
-    memberId: string,
-  ): Promise<NotificationPreferenceDTO | null>;
+  getNotificationPreferences(memberId: string): Promise<NotificationPreferenceDTO | null>;
 
   /**
    * 更新或创建通知偏好
    *
    * @param preference - 通知偏好对象
    */
-  upsertNotificationPreferences(
-    preference: NotificationPreferenceDTO,
-  ): Promise<void>;
+  upsertNotificationPreferences(preference: NotificationPreferenceDTO): Promise<void>;
 
   /**
    * 获取通知接收者信息
@@ -160,9 +153,7 @@ export interface NotificationRepository {
    * @param memberId - 成员ID
    * @returns 通知接收者对象，不存在时返回 null
    */
-  getNotificationRecipient(
-    memberId: string,
-  ): Promise<NotificationRecipientDTO | null>;
+  getNotificationRecipient(memberId: string): Promise<NotificationRecipientDTO | null>;
 
   /**
    * 删除通知

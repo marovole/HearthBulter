@@ -135,10 +135,7 @@ export function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
-    video.currentTime = Math.max(
-      0,
-      Math.min(video.duration, video.currentTime + seconds),
-    );
+    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
   };
 
   const changePlaybackSpeed = (speed: number) => {
@@ -159,26 +156,23 @@ export function VideoPlayer({
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative bg-black rounded-lg overflow-hidden"
-    >
+    <div ref={containerRef} className="relative overflow-hidden rounded-lg bg-black">
       <video
         ref={videoRef}
         src={src}
         poster={poster}
-        className="w-full h-auto"
+        className="h-auto w-full"
         onClick={togglePlay}
       />
 
       {/* Video Overlay */}
       {!isPlaying && (
         <div
-          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 cursor-pointer"
+          className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black bg-opacity-30"
           onClick={togglePlay}
         >
-          <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
-            <Play className="h-8 w-8 text-gray-800 ml-1" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white bg-opacity-90">
+            <Play className="ml-1 h-8 w-8 text-gray-800" />
           </div>
         </div>
       )}
@@ -189,7 +183,7 @@ export function VideoPlayer({
           {/* Progress Bar */}
           <div className="mb-3">
             <Progress value={progress} className="h-1 cursor-pointer" />
-            <div className="flex justify-between text-xs text-white mt-1">
+            <div className="mt-1 flex justify-between text-xs text-white">
               <span>{formatTime(currentTime)}</span>
               <span>{duration ? formatTime(duration) : "--:--"}</span>
             </div>
@@ -213,11 +207,7 @@ export function VideoPlayer({
                 onClick={togglePlay}
                 className="text-white hover:bg-white hover:bg-opacity-20"
               >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
 
               <Button
@@ -236,11 +226,7 @@ export function VideoPlayer({
                   onClick={toggleMute}
                   className="text-white hover:bg-white hover:bg-opacity-20"
                 >
-                  {isMuted ? (
-                    <VolumeX className="h-4 w-4" />
-                  ) : (
-                    <Volume2 className="h-4 w-4" />
-                  )}
+                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                 </Button>
 
                 <input
@@ -249,10 +235,8 @@ export function VideoPlayer({
                   max="1"
                   step="0.1"
                   value={isMuted ? 0 : volume}
-                  onChange={(e) =>
-                    handleVolumeChange(parseFloat(e.target.value))
-                  }
-                  className="w-20 h-1 bg-white bg-opacity-30 rounded-lg appearance-none cursor-pointer"
+                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  className="h-1 w-20 cursor-pointer appearance-none rounded-lg bg-white bg-opacity-30"
                 />
               </div>
             </div>
@@ -270,18 +254,14 @@ export function VideoPlayer({
                 </Button>
 
                 {showSettings && (
-                  <div className="absolute bottom-8 right-0 bg-white rounded-lg shadow-lg p-2 min-w-32">
-                    <div className="text-xs font-medium text-gray-700 mb-2">
-                      播放速度
-                    </div>
+                  <div className="absolute bottom-8 right-0 min-w-32 rounded-lg bg-white p-2 shadow-lg">
+                    <div className="mb-2 text-xs font-medium text-gray-700">播放速度</div>
                     {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
                       <button
                         key={speed}
                         onClick={() => changePlaybackSpeed(speed)}
-                        className={`w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 ${
-                          playbackSpeed === speed
-                            ? "bg-blue-100 text-blue-700"
-                            : "text-gray-700"
+                        className={`w-full rounded px-2 py-1 text-left text-xs hover:bg-gray-100 ${
+                          playbackSpeed === speed ? "bg-blue-100 text-blue-700" : "text-gray-700"
                         }`}
                       >
                         {speed}x
@@ -306,7 +286,7 @@ export function VideoPlayer({
 
       {/* Title Badge */}
       {title && (
-        <div className="absolute top-4 left-4">
+        <div className="absolute left-4 top-4">
           <Badge className="bg-black bg-opacity-50 text-white">{title}</Badge>
         </div>
       )}
@@ -339,16 +319,14 @@ export function VideoTutorial({ video, onComplete }: VideoTutorialProps) {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="mx-auto w-full max-w-4xl">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl mb-2">{video.title}</CardTitle>
-            <p className="text-gray-600 text-sm">{video.description}</p>
+            <CardTitle className="mb-2 text-xl">{video.title}</CardTitle>
+            <p className="text-sm text-gray-600">{video.description}</p>
           </div>
-          {isCompleted && (
-            <Badge className="bg-green-100 text-green-800">已完成</Badge>
-          )}
+          {isCompleted && <Badge className="bg-green-100 text-green-800">已完成</Badge>}
         </div>
       </CardHeader>
       <CardContent>
@@ -364,7 +342,7 @@ export function VideoTutorial({ video, onComplete }: VideoTutorialProps) {
         {/* Download Link */}
         <div className="mt-4 flex justify-center">
           <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             下载视频教程
           </Button>
         </div>

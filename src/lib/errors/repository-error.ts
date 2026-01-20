@@ -85,7 +85,7 @@ export class RepositoryError extends Error {
   static fromSupabaseError(
     operation: string,
     error: unknown,
-    defaultCode: RepositoryErrorCode = RepositoryErrorCode.DATABASE_ERROR,
+    defaultCode: RepositoryErrorCode = RepositoryErrorCode.DATABASE_ERROR
   ): RepositoryError {
     const supabaseError = error as {
       code?: string;
@@ -96,10 +96,7 @@ export class RepositoryError extends Error {
     // 根据 Supabase 错误代码映射到 RepositoryErrorCode
     let code = defaultCode;
 
-    if (
-      supabaseError?.code === "PGRST116" ||
-      supabaseError?.code === "PGRST404"
-    ) {
+    if (supabaseError?.code === "PGRST116" || supabaseError?.code === "PGRST404") {
       // PostgREST 未找到错误
       code = RepositoryErrorCode.NOT_FOUND;
     } else if (supabaseError?.code === "23505") {
@@ -143,7 +140,7 @@ export class RepositoryErrorUtils {
   static notFound(
     operation: string,
     message: string,
-    metadata?: Record<string, unknown>,
+    metadata?: Record<string, unknown>
   ): RepositoryError {
     return new RepositoryError({
       code: RepositoryErrorCode.NOT_FOUND,
@@ -159,7 +156,7 @@ export class RepositoryErrorUtils {
   static validationError(
     operation: string,
     message: string,
-    metadata?: Record<string, unknown>,
+    metadata?: Record<string, unknown>
   ): RepositoryError {
     return new RepositoryError({
       code: RepositoryErrorCode.VALIDATION_ERROR,
@@ -176,7 +173,7 @@ export class RepositoryErrorUtils {
     operation: string,
     message: string,
     cause?: unknown,
-    metadata?: Record<string, unknown>,
+    metadata?: Record<string, unknown>
   ): RepositoryError {
     return new RepositoryError({
       code: RepositoryErrorCode.DATABASE_ERROR,

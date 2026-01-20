@@ -25,7 +25,7 @@ export interface ApiContext {
 
 export type ApiHandler<T extends Response = Response> = (
   request: NextRequest,
-  context?: ApiContext,
+  context?: ApiContext
 ) => Promise<T>;
 
 /**
@@ -45,10 +45,7 @@ export type ApiHandler<T extends Response = Response> = (
  * }, { requireAuth: false });
  * ```
  */
-export function withApiHandler(
-  handler: ApiHandler,
-  options: ApiHandlerOptions = {},
-): ApiHandler {
+export function withApiHandler(handler: ApiHandler, options: ApiHandlerOptions = {}): ApiHandler {
   const {
     requireAuth = true,
     logLevel = "error",
@@ -124,11 +121,8 @@ export function withApiHandler(
  */
 export function withApiHandlerParams<P extends Record<string, string>>(
   handler: (request: NextRequest, params: P) => Promise<Response>,
-  options: ApiHandlerOptions = {},
-): (
-  request: NextRequest,
-  context: { params: Promise<P> },
-) => Promise<Response> {
+  options: ApiHandlerOptions = {}
+): (request: NextRequest, context: { params: Promise<P> }) => Promise<Response> {
   const {
     requireAuth = true,
     logLevel = "error",
@@ -209,13 +203,9 @@ export async function parseRequestBody<T>(request: NextRequest): Promise<T> {
 /**
  * 验证必填字段
  */
-export function validateRequired(
-  data: Record<string, unknown>,
-  fields: string[],
-): void {
+export function validateRequired(data: Record<string, unknown>, fields: string[]): void {
   const missing = fields.filter(
-    (field) =>
-      data[field] === undefined || data[field] === null || data[field] === "",
+    (field) => data[field] === undefined || data[field] === null || data[field] === ""
   );
   if (missing.length > 0) {
     throw APIError.badRequest(`缺少必填字段: ${missing.join(", ")}`);
@@ -239,10 +229,7 @@ export function getPaginationParams(request: NextRequest): {
 } {
   const params = getQueryParams(request);
   const page = Math.max(1, parseInt(params.get("page") || "1", 10));
-  const limit = Math.min(
-    100,
-    Math.max(1, parseInt(params.get("limit") || "20", 10)),
-  );
+  const limit = Math.min(100, Math.max(1, parseInt(params.get("limit") || "20", 10)));
   const skip = (page - 1) * limit;
 
   return { page, limit, skip };

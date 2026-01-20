@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -28,11 +22,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
-import type {
-  DeviceConnectionInfo,
-  DeviceType,
-  PlatformType,
-} from "@/types/wearable-devices";
+import type { DeviceConnectionInfo, DeviceType, PlatformType } from "@/types/wearable-devices";
 import {
   DEVICE_TYPE_LABELS,
   PLATFORM_TYPE_LABELS,
@@ -189,29 +179,29 @@ export function DeviceConnection({
   // 获取设备图标
   const getDeviceIcon = (deviceType: DeviceType) => {
     switch (deviceType) {
-    case "SMARTWATCH":
-    case "FITNESS_BAND":
-      return <Watch className="w-5 h-5" />;
-    case "SMART_SCALE":
-      return <Scale className="w-5 h-5" />;
-    case "BLOOD_PRESSURE_MONITOR":
-      return <Heart className="w-5 h-5" />;
-    default:
-      return <Smartphone className="w-5 h-5" />;
+      case "SMARTWATCH":
+      case "FITNESS_BAND":
+        return <Watch className="h-5 w-5" />;
+      case "SMART_SCALE":
+        return <Scale className="h-5 w-5" />;
+      case "BLOOD_PRESSURE_MONITOR":
+        return <Heart className="h-5 w-5" />;
+      default:
+        return <Smartphone className="h-5 w-5" />;
     }
   };
 
   // 获取同步状态图标
   const getSyncStatusIcon = (status: string) => {
     switch (status) {
-    case "SUCCESS":
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
-    case "FAILED":
-      return <AlertCircle className="w-4 h-4 text-red-500" />;
-    case "SYNCING":
-      return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-    default:
-      return <AlertCircle className="w-4 h-4 text-gray-500" />;
+      case "SUCCESS":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "FAILED":
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case "SYNCING":
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -233,7 +223,7 @@ export function DeviceConnection({
     return (
       <Card className={className}>
         <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <Loader2 className="mr-2 h-6 w-6 animate-spin" />
           <span>加载设备列表...</span>
         </CardContent>
       </Card>
@@ -245,29 +235,25 @@ export function DeviceConnection({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Activity className="w-5 h-5 mr-2" />
+            <Activity className="mr-2 h-5 w-5" />
             设备连接
           </CardTitle>
-          <CardDescription>
-            连接您的可穿戴设备，自动同步健康数据
-          </CardDescription>
+          <CardDescription>连接您的可穿戴设备，自动同步健康数据</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 可用平台 */}
           <div className="space-y-4">
             <h3 className="text-sm font-medium">支持的平台</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Card className="border-dashed">
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Smartphone className="w-6 h-6 text-blue-600" />
+                    <div className="rounded-lg bg-blue-100 p-2">
+                      <Smartphone className="h-6 w-6 text-blue-600" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium">Apple Health</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Apple Watch, iPhone健康数据
-                      </p>
+                      <p className="text-sm text-muted-foreground">Apple Watch, iPhone健康数据</p>
                     </div>
                     <Button
                       variant="outline"
@@ -280,16 +266,14 @@ export function DeviceConnection({
                     >
                       {isConnecting === "apple-healthkit" ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           连接中
                         </>
-                      ) : devices.some(
-                        (d) => d.platform === "APPLE_HEALTHKIT",
-                      ) ? (
-                          <>已连接</>
-                        ) : (
-                          <>连接</>
-                        )}
+                      ) : devices.some((d) => d.platform === "APPLE_HEALTHKIT") ? (
+                        <>已连接</>
+                      ) : (
+                        <>连接</>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -298,14 +282,12 @@ export function DeviceConnection({
               <Card className="border-dashed">
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-4">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Activity className="w-6 h-6 text-green-600" />
+                    <div className="rounded-lg bg-green-100 p-2">
+                      <Activity className="h-6 w-6 text-green-600" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium">华为Health</h4>
-                      <p className="text-sm text-muted-foreground">
-                        华为手环、手表运动数据
-                      </p>
+                      <p className="text-sm text-muted-foreground">华为手环、手表运动数据</p>
                     </div>
                     <Button
                       variant="outline"
@@ -318,16 +300,14 @@ export function DeviceConnection({
                     >
                       {isConnecting === "huawei-health" ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           连接中
                         </>
-                      ) : devices.some(
-                        (d) => d.platform === "HUAWEI_HEALTH",
-                      ) ? (
-                          <>已连接</>
-                        ) : (
-                          <>连接</>
-                        )}
+                      ) : devices.some((d) => d.platform === "HUAWEI_HEALTH") ? (
+                        <>已连接</>
+                      ) : (
+                        <>连接</>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -341,24 +321,19 @@ export function DeviceConnection({
           <div className="space-y-4">
             <h3 className="text-sm font-medium">已连接的设备</h3>
             {devices.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
-                <WifiOff className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center">
+                <WifiOff className="mx-auto mb-4 h-12 w-12 text-gray-400" />
                 <p className="text-gray-600">暂无连接的设备</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  选择上方支持的平台开始连接
-                </p>
+                <p className="mt-2 text-sm text-gray-500">选择上方支持的平台开始连接</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {devices.map((device) => (
-                  <Card
-                    key={device.id}
-                    className={device.isActive ? "" : "opacity-60"}
-                  >
+                  <Card key={device.id} className={device.isActive ? "" : "opacity-60"}>
                     <CardContent className="pt-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-gray-100 rounded-lg">
+                          <div className="rounded-lg bg-gray-100 p-2">
                             {getDeviceIcon(device.deviceType)}
                           </div>
                           <div>
@@ -367,7 +342,7 @@ export function DeviceConnection({
                               {DEVICE_TYPE_LABELS[device.deviceType]} •{" "}
                               {PLATFORM_TYPE_LABELS[device.platform]}
                             </p>
-                            <div className="flex items-center space-x-2 mt-1">
+                            <div className="mt-1 flex items-center space-x-2">
                               {getSyncStatusIcon(device.syncStatus)}
                               <span className="text-xs">
                                 {SYNC_STATUS_LABELS[device.syncStatus]}
@@ -385,7 +360,7 @@ export function DeviceConnection({
                             onClick={() => syncDevice(device.deviceId)}
                             disabled={device.syncStatus === "SYNCING"}
                           >
-                            <CloudDownload className="w-4 h-4 mr-1" />
+                            <CloudDownload className="mr-1 h-4 w-4" />
                             同步
                           </Button>
                           <Button
@@ -393,7 +368,7 @@ export function DeviceConnection({
                             size="sm"
                             onClick={() => disconnectDevice(device.id)}
                           >
-                            <WifiOff className="w-4 h-4" />
+                            <WifiOff className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -411,7 +386,7 @@ export function DeviceConnection({
                       {/* 同步进度 */}
                       {device.syncStatus === "SYNCING" && (
                         <div className="mt-3">
-                          <div className="flex items-center justify-between text-sm mb-2">
+                          <div className="mb-2 flex items-center justify-between text-sm">
                             <span>同步中...</span>
                             <span>0%</span>
                           </div>

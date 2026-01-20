@@ -52,11 +52,11 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-gray-200 rounded w-24"></div>
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 w-24 rounded bg-gray-200"></div>
+          <div className="h-4 w-full rounded bg-gray-200"></div>
+          <div className="h-4 w-3/4 rounded bg-gray-200"></div>
         </div>
       </div>
     );
@@ -72,19 +72,15 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
   // 从体重趋势获取洞察
   if (weightTrend) {
     if (weightTrend.anomalies && weightTrend.anomalies.length > 0) {
-      const highSeverityAnomalies = weightTrend.anomalies.filter(
-        (a: any) => a.severity === "high",
-      );
+      const highSeverityAnomalies = weightTrend.anomalies.filter((a: any) => a.severity === "high");
       if (highSeverityAnomalies.length > 0) {
-        insights.push(
-          `检测到${highSeverityAnomalies.length}个体重异常波动，建议关注数据准确性`,
-        );
+        insights.push(`检测到${highSeverityAnomalies.length}个体重异常波动，建议关注数据准确性`);
       }
     }
 
     if (weightTrend.changePercent > 5) {
       insights.push(
-        `过去30天体重${weightTrend.change >= 0 ? "增加" : "减少"}了${Math.abs(weightTrend.changePercent).toFixed(1)}%，${weightTrend.change >= 0 ? "注意控制饮食" : "继续保持"}`,
+        `过去30天体重${weightTrend.change >= 0 ? "增加" : "减少"}了${Math.abs(weightTrend.changePercent).toFixed(1)}%，${weightTrend.change >= 0 ? "注意控制饮食" : "继续保持"}`
       );
     }
   }
@@ -93,23 +89,23 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
   if (healthScore) {
     if (healthScore.details.dataCompletenessRate < 50) {
       insights.push(
-        `数据完整性较低（${Math.round(healthScore.details.dataCompletenessRate)}%），建议完善健康数据记录`,
+        `数据完整性较低（${Math.round(healthScore.details.dataCompletenessRate)}%），建议完善健康数据记录`
       );
     }
 
     if (healthScore.details.activityFrequency < 15) {
       insights.push(
-        `过去30天仅记录${healthScore.details.activityFrequency}天，建议每天记录健康数据以获取更准确的洞察`,
+        `过去30天仅记录${healthScore.details.activityFrequency}天，建议每天记录健康数据以获取更准确的洞察`
       );
     }
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">健康洞察</h3>
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <h3 className="mb-4 text-lg font-semibold text-gray-900">健康洞察</h3>
 
       {insights.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="py-8 text-center text-gray-500">
           <p className="text-sm">暂无洞察提示</p>
         </div>
       ) : (
@@ -117,11 +113,11 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
           {insights.map((insight, index) => (
             <div
               key={index}
-              className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-100"
+              className="flex items-start space-x-3 rounded-lg border border-blue-100 bg-blue-50 p-3"
             >
-              <div className="flex-shrink-0 mt-0.5">
+              <div className="mt-0.5 flex-shrink-0">
                 <svg
-                  className="w-5 h-5 text-blue-600"
+                  className="h-5 w-5 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -144,8 +140,8 @@ export function InsightsPanel({ memberId }: InsightsPanelProps) {
 
       {/* 数据统计 */}
       {healthScore && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">数据统计</h4>
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <h4 className="mb-3 text-sm font-medium text-gray-700">数据统计</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <div className="text-gray-600">运动频率</div>

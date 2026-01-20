@@ -23,10 +23,7 @@ import type {
   SpendingFilterDTO,
 } from "../types/budget";
 import type { PaginatedResult, PaginationInput } from "../types/common";
-import type {
-  RecordSpendingParams,
-  RecordSpendingResult,
-} from "@/types/supabase-rpc";
+import type { RecordSpendingParams, RecordSpendingResult } from "@/types/supabase-rpc";
 
 type BudgetRow = Database["public"]["Tables"]["budgets"]["Row"];
 type BudgetInsert = Database["public"]["Tables"]["budgets"]["Insert"];
@@ -34,8 +31,7 @@ type BudgetUpdate = Database["public"]["Tables"]["budgets"]["Update"];
 type SpendingRow = Database["public"]["Tables"]["spendings"]["Row"];
 type SpendingInsert = Database["public"]["Tables"]["spendings"]["Insert"];
 type BudgetAlertRow = Database["public"]["Tables"]["budget_alerts"]["Row"];
-type BudgetAlertInsert =
-  Database["public"]["Tables"]["budget_alerts"]["Insert"];
+type BudgetAlertInsert = Database["public"]["Tables"]["budget_alerts"]["Insert"];
 
 /**
  * Supabase 预算 Repository 实现
@@ -50,9 +46,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = "[SupabaseBudgetRepository]";
 
-  constructor(
-    client: SupabaseClient<Database> = SupabaseClientManager.getInstance(),
-  ) {
+  constructor(client: SupabaseClient<Database> = SupabaseClientManager.getInstance()) {
     this.client = client;
   }
 
@@ -96,8 +90,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       .select("*")
       .eq("id", id)
       .maybeSingle();
-    if (error && error.code !== "PGRST116")
-      this.handleError("getBudgetById", error);
+    if (error && error.code !== "PGRST116") this.handleError("getBudgetById", error);
     return data ? this.mapBudgetRow(data) : null;
   }
 
@@ -107,7 +100,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
   async listBudgets(
     memberId: string,
     filter?: { status?: BudgetDTO["status"] },
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<BudgetDTO>> {
     let query = this.client
       .from("budgets")
@@ -129,9 +122,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
     };
   }
 
@@ -166,10 +157,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     };
 
     // 第二步：调用 RPC 函数
-    const { data, error } = await this.client.rpc(
-      "record_spending_tx",
-      rpcParams,
-    );
+    const { data, error } = await this.client.rpc("record_spending_tx", rpcParams);
     const rpcResult = data as RecordSpendingResult | null;
 
     if (error) {
@@ -178,8 +166,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
 
     // 第三步：检查 RPC 返回的成功标志
     if (!rpcResult?.success) {
-      const errorMessage =
-        rpcResult?.error ?? rpcResult?.message ?? "record_spending_tx failed";
+      const errorMessage = rpcResult?.error ?? rpcResult?.message ?? "record_spending_tx failed";
       throw new Error(errorMessage);
     }
 
@@ -196,17 +183,13 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     // 第五步：验证返回的 budget ID 与请求一致（防御性编程）
     if (rpcData.budget.id !== payload.budgetId) {
       console.error(
-        `[SupabaseBudgetRepository] Budget ID mismatch: requested=${payload.budgetId}, returned=${rpcData.budget.id}`,
+        `[SupabaseBudgetRepository] Budget ID mismatch: requested=${payload.budgetId}, returned=${rpcData.budget.id}`
       );
       throw new Error("返回的预算 ID 与请求不一致");
     }
 
     // 第六步：映射 RPC 返回值到 DTO
-    return this.mapRpcSpendingToDto(
-      rpcData.spending,
-      rpcData.budget.id,
-      payload.items,
-    );
+    return this.mapRpcSpendingToDto(rpcData.spending, rpcData.budget.id, payload.items);
   }
 
   /**
@@ -220,7 +203,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
   private mapRpcSpendingToDto(
     record: NonNullable<RecordSpendingResult["data"]>["spending"],
     budgetId: string,
-    fallbackItems?: SpendingCreateDTO["items"],
+    fallbackItems?: SpendingCreateDTO["items"]
   ): SpendingDTO {
     return {
       id: record.id,
@@ -230,9 +213,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       description: record.description ?? undefined,
       transactionId: record.transaction_id ?? undefined,
       platform: record.platform ?? undefined,
-      items: (record.items ?? fallbackItems) as
-        | SpendingDTO["items"]
-        | undefined,
+      items: (record.items ?? fallbackItems) as SpendingDTO["items"] | undefined,
       purchaseDate: new Date(record.purchase_date),
       createdAt: new Date(record.created_at),
     };
@@ -243,7 +224,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
    */
   async listSpendings(
     filter: SpendingFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<SpendingDTO>> {
     let query = this.client
       .from("spendings")
@@ -252,10 +233,8 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       .order("purchase_date", { ascending: false });
 
     if (filter.category) query = query.eq("category", filter.category);
-    if (filter.range?.start)
-      query = query.gte("purchase_date", filter.range.start.toISOString());
-    if (filter.range?.end)
-      query = query.lte("purchase_date", filter.range.end.toISOString());
+    if (filter.range?.start) query = query.gte("purchase_date", filter.range.start.toISOString());
+    if (filter.range?.end) query = query.lte("purchase_date", filter.range.end.toISOString());
     if (pagination?.limit) {
       const from = pagination.offset ?? 0;
       const to = from + pagination.limit - 1;
@@ -269,9 +248,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
     return {
       items,
       total: count ?? items.length,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < (count ?? 0)
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < (count ?? 0) : false,
     };
   }
 
@@ -292,13 +269,9 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       .eq("budget_id", budgetId);
     if (error) this.handleError("aggregateBudgetUsage", error);
 
-    const usedAmount = (data || []).reduce(
-      (sum, row) => sum + ((row as any).amount ?? 0),
-      0,
-    );
+    const usedAmount = (data || []).reduce((sum, row) => sum + ((row as any).amount ?? 0), 0);
     const remainingAmount = Math.max(0, budget.totalAmount - usedAmount);
-    const usagePercentage =
-      budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
+    const usagePercentage = budget.totalAmount > 0 ? (usedAmount / budget.totalAmount) * 100 : 0;
 
     return { usedAmount, remainingAmount, usagePercentage };
   }
@@ -317,9 +290,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       status: alert.status,
       created_at: alert.createdAt.toISOString(),
     };
-    const { error } = await this.client
-      .from("budget_alerts")
-      .insert(alertInsert as any);
+    const { error } = await this.client.from("budget_alerts").insert(alertInsert as any);
     if (error) this.handleError("createBudgetAlert", error);
   }
 
@@ -352,26 +323,19 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       this.client.from("spendings").select("*").eq("budget_id", budgetId),
     ]);
 
-    if (spendings.error)
-      this.handleError("getBudgetStatus:spendings", spendings.error);
+    if (spendings.error) this.handleError("getBudgetStatus:spendings", spendings.error);
 
     const totalDays = Math.ceil(
-      (budget.endDate.getTime() - budget.startDate.getTime()) /
-        (1000 * 60 * 60 * 24),
+      (budget.endDate.getTime() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
     const elapsedDays = Math.max(
       1,
-      Math.ceil(
-        (Date.now() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24),
-      ),
+      Math.ceil((Date.now() - budget.startDate.getTime()) / (1000 * 60 * 60 * 24))
     );
 
     const dailyAverage = usage.usedAmount / elapsedDays;
     const projectedSpend = dailyAverage * totalDays;
-    const categoryUsage = this.calculateCategoryUsage(
-      budget,
-      spendings.data || [],
-    );
+    const categoryUsage = this.calculateCategoryUsage(budget, spendings.data || []);
 
     return {
       budget: {
@@ -396,10 +360,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       deleted_at: new Date().toISOString(),
       status: "CANCELLED",
     };
-    const { error } = await this.client
-      .from("budgets")
-      .update(updatePayload)
-      .eq("id", id);
+    const { error } = await this.client.from("budgets").update(updatePayload).eq("id", id);
     if (error) this.handleError("softDeleteBudget", error);
   }
 
@@ -412,9 +373,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
 
     for (const category of categories) {
       const categoryBudget =
-        budget.categoryBudgets![
-          category as keyof typeof budget.categoryBudgets
-        ] ?? 0;
+        budget.categoryBudgets![category as keyof typeof budget.categoryBudgets] ?? 0;
       const categorySpent = spendings
         .filter((s) => s.category === category)
         .reduce((sum, row) => sum + (row.amount ?? 0), 0);
@@ -422,8 +381,7 @@ export class SupabaseBudgetRepository implements BudgetRepository {
         budget: categoryBudget,
         used: categorySpent,
         remaining: Math.max(0, categoryBudget - categorySpent),
-        percentage:
-          categoryBudget > 0 ? (categorySpent / categoryBudget) * 100 : 0,
+        percentage: categoryBudget > 0 ? (categorySpent / categoryBudget) * 100 : 0,
       };
     }
 
@@ -484,12 +442,9 @@ export class SupabaseBudgetRepository implements BudgetRepository {
       update.other_budget = dto.categoryBudgets.OTHER ?? null;
     }
 
-    if (dto.alertThreshold80 !== undefined)
-      update.alert_threshold_80 = dto.alertThreshold80;
-    if (dto.alertThreshold100 !== undefined)
-      update.alert_threshold_100 = dto.alertThreshold100;
-    if (dto.alertThreshold110 !== undefined)
-      update.alert_threshold_110 = dto.alertThreshold110;
+    if (dto.alertThreshold80 !== undefined) update.alert_threshold_80 = dto.alertThreshold80;
+    if (dto.alertThreshold100 !== undefined) update.alert_threshold_100 = dto.alertThreshold100;
+    if (dto.alertThreshold110 !== undefined) update.alert_threshold_110 = dto.alertThreshold110;
 
     return update;
   }

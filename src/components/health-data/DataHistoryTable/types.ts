@@ -49,9 +49,7 @@ export interface UseHealthDataTableReturn {
   filters: TableFilters;
   setCurrentPage: (page: number) => void;
   setShowFilters: (show: boolean) => void;
-  setFilters: (
-    filters: TableFilters | ((prev: TableFilters) => TableFilters),
-  ) => void;
+  setFilters: (filters: TableFilters | ((prev: TableFilters) => TableFilters)) => void;
   handleSort: (field: SortField) => void;
   handleSelectAll: (checked: boolean) => void;
   handleSelectItem: (id: string, checked: boolean) => void;

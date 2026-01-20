@@ -14,12 +14,7 @@ import {
 } from "@/lib/health-calculations";
 import type { GoalType } from "@/lib/repositories/interfaces/member-repository";
 
-export type ActivityLevel =
-  | "SEDENTARY"
-  | "LIGHT"
-  | "MODERATE"
-  | "ACTIVE"
-  | "VERY_ACTIVE";
+export type ActivityLevel = "SEDENTARY" | "LIGHT" | "MODERATE" | "ACTIVE" | "VERY_ACTIVE";
 
 export interface MemberMacroInput {
   weight: number; // kg
@@ -60,17 +55,17 @@ export class MacroCalculator {
     fatRatio: number;
   } {
     switch (goalType) {
-    case "LOSE_WEIGHT":
-      // 减重：高蛋白、中等碳水、低脂肪
-      return { carbRatio: 0.45, proteinRatio: 0.3, fatRatio: 0.25 };
-    case "GAIN_MUSCLE":
-      // 增肌：高蛋白、高碳水、中等脂肪
-      return { carbRatio: 0.4, proteinRatio: 0.35, fatRatio: 0.25 };
-    case "MAINTAIN":
-    case "IMPROVE_HEALTH":
-    default:
-      // 维持/健康：均衡比例
-      return { carbRatio: 0.5, proteinRatio: 0.2, fatRatio: 0.3 };
+      case "LOSE_WEIGHT":
+        // 减重：高蛋白、中等碳水、低脂肪
+        return { carbRatio: 0.45, proteinRatio: 0.3, fatRatio: 0.25 };
+      case "GAIN_MUSCLE":
+        // 增肌：高蛋白、高碳水、中等脂肪
+        return { carbRatio: 0.4, proteinRatio: 0.35, fatRatio: 0.25 };
+      case "MAINTAIN":
+      case "IMPROVE_HEALTH":
+      default:
+        // 维持/健康：均衡比例
+        return { carbRatio: 0.5, proteinRatio: 0.2, fatRatio: 0.3 };
     }
   }
 
@@ -82,7 +77,7 @@ export class MacroCalculator {
     height: number,
     birthDate: Date,
     gender: "MALE" | "FEMALE",
-    activityLevel: ActivityLevel,
+    activityLevel: ActivityLevel
   ): number {
     const age = calculateAge(birthDate);
     const bmr = calculateBMR(weight, height, age, gender);
@@ -98,14 +93,14 @@ export class MacroCalculator {
    */
   static calculateTargetCalories(tdee: number, goalType: GoalType): number {
     switch (goalType) {
-    case "LOSE_WEIGHT":
-      return Math.round(tdee - 400);
-    case "GAIN_MUSCLE":
-      return Math.round(tdee + 300);
-    case "MAINTAIN":
-    case "IMPROVE_HEALTH":
-    default:
-      return tdee;
+      case "LOSE_WEIGHT":
+        return Math.round(tdee - 400);
+      case "GAIN_MUSCLE":
+        return Math.round(tdee + 300);
+      case "MAINTAIN":
+      case "IMPROVE_HEALTH":
+      default:
+        return tdee;
     }
   }
 
@@ -119,20 +114,14 @@ export class MacroCalculator {
       carbRatio?: number;
       proteinRatio?: number;
       fatRatio?: number;
-    },
+    }
   ): DailyMacroTargets {
     const defaultRatios = this.getDefaultMacroRatios(goalType);
     const carbRatio = customRatios?.carbRatio ?? defaultRatios.carbRatio;
-    const proteinRatio =
-      customRatios?.proteinRatio ?? defaultRatios.proteinRatio;
+    const proteinRatio = customRatios?.proteinRatio ?? defaultRatios.proteinRatio;
     const fatRatio = customRatios?.fatRatio ?? defaultRatios.fatRatio;
 
-    const macros = calculateMacroTargets(
-      targetCalories,
-      carbRatio,
-      proteinRatio,
-      fatRatio,
-    );
+    const macros = calculateMacroTargets(targetCalories, carbRatio, proteinRatio, fatRatio);
 
     return {
       calories: targetCalories,
@@ -145,9 +134,7 @@ export class MacroCalculator {
    * 分配比例：早餐30% / 午餐35% / 晚餐25% / 加餐10%
    * 确保每餐蛋白质≥20g
    */
-  static calculateMealMacroTargets(
-    dailyTargets: DailyMacroTargets,
-  ): MealMacroTargets {
+  static calculateMealMacroTargets(dailyTargets: DailyMacroTargets): MealMacroTargets {
     const mealRatios = {
       breakfast: 0.3,
       lunch: 0.35,
@@ -225,20 +212,16 @@ export class MacroCalculator {
       input.height,
       input.birthDate,
       input.gender,
-      input.activityLevel,
+      input.activityLevel
     );
 
     const targetCalories = this.calculateTargetCalories(tdee, input.goalType);
 
-    const dailyTargets = this.calculateDailyMacroTargets(
-      targetCalories,
-      input.goalType,
-      {
-        carbRatio: input.carbRatio,
-        proteinRatio: input.proteinRatio,
-        fatRatio: input.fatRatio,
-      },
-    );
+    const dailyTargets = this.calculateDailyMacroTargets(targetCalories, input.goalType, {
+      carbRatio: input.carbRatio,
+      proteinRatio: input.proteinRatio,
+      fatRatio: input.fatRatio,
+    });
 
     const mealTargets = this.calculateMealMacroTargets(dailyTargets);
 

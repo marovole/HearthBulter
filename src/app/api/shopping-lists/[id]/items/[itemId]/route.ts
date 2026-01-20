@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; itemId: string }> },
+  { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   try {
     const { id: listId, itemId } = await params;
@@ -20,41 +20,32 @@ export async function PATCH(
     const body = await request.json();
     const purchased = body.purchased !== undefined ? body.purchased : true;
 
-    const shoppingList = await shoppingListRepository.getShoppingListById(
-      listId,
-      { includePlan: true, includeItems: true },
-    );
+    const shoppingList = await shoppingListRepository.getShoppingListById(listId, {
+      includePlan: true,
+      includeItems: true,
+    });
 
     const memberId = shoppingList?.plan?.member?.id;
     if (!shoppingList || !memberId) {
       return NextResponse.json({ error: "购物清单不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限修改该购物清单" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限修改该购物清单" }, { status: 403 });
     }
 
-    const updatedItem = await shoppingListRepository.updateShoppingListItem(
-      listId,
-      itemId,
-      { purchased },
-    );
+    const updatedItem = await shoppingListRepository.updateShoppingListItem(listId, itemId, {
+      purchased,
+    });
 
-    const refreshedList = await shoppingListRepository.getShoppingListById(
-      listId,
-      { includeItems: true },
-    );
+    const refreshedList = await shoppingListRepository.getShoppingListById(listId, {
+      includeItems: true,
+    });
 
     if (refreshedList?.items) {
       const allPurchased = refreshedList.items.every((item) => item.purchased);
@@ -75,7 +66,7 @@ export async function PATCH(
         message: "清单项更新成功",
         item: updatedItem,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("更新清单项失败:", error);

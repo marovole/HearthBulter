@@ -36,15 +36,12 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
 
   async listMealPlans(
     _filter?: MealPlanFilterDTO,
-    _pagination?: PaginationInput,
+    _pagination?: PaginationInput
   ): Promise<PaginatedResult<MealPlanDTO>> {
     throw new Error("PrismaMealPlanRepository.listMealPlans not implemented");
   }
 
-  async updateMealPlan(
-    _id: string,
-    _input: MealPlanUpdateInputDTO,
-  ): Promise<MealPlanDTO> {
+  async updateMealPlan(_id: string, _input: MealPlanUpdateInputDTO): Promise<MealPlanDTO> {
     throw new Error("PrismaMealPlanRepository.updateMealPlan not implemented");
   }
 
@@ -52,10 +49,7 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
     throw new Error("PrismaMealPlanRepository.deleteMealPlan not implemented");
   }
 
-  async createMeal(
-    _planId: string,
-    _input: MealCreateInputDTO,
-  ): Promise<MealDTO> {
+  async createMeal(_planId: string, _input: MealCreateInputDTO): Promise<MealDTO> {
     throw new Error("PrismaMealPlanRepository.createMeal not implemented");
   }
 
@@ -73,27 +67,21 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
 
   async updateMealIngredients(
     _mealId: string,
-    _ingredients: MealIngredientCreateInputDTO[],
+    _ingredients: MealIngredientCreateInputDTO[]
   ): Promise<MealDTO> {
-    throw new Error(
-      "PrismaMealPlanRepository.updateMealIngredients not implemented",
-    );
+    throw new Error("PrismaMealPlanRepository.updateMealIngredients not implemented");
   }
 
   async getActivePlanByMember(_memberId: string): Promise<MealPlanDTO | null> {
-    throw new Error(
-      "PrismaMealPlanRepository.getActivePlanByMember not implemented",
-    );
+    throw new Error("PrismaMealPlanRepository.getActivePlanByMember not implemented");
   }
 
   async getPlansByDateRange(
     _memberId: string,
     _startDate: Date,
     _endDate: Date,
-    _pagination?: PaginationInput,
+    _pagination?: PaginationInput
   ): Promise<PaginatedResult<MealPlanDTO>> {
-    throw new Error(
-      "PrismaMealPlanRepository.getPlansByDateRange not implemented",
-    );
+    throw new Error("PrismaMealPlanRepository.getPlansByDateRange not implemented");
   }
 }

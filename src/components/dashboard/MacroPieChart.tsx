@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 
 interface MacroData {
   carbs: number;
@@ -37,7 +30,7 @@ export function MacroPieChart({
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex h-64 items-center justify-center text-gray-500">
         <p>暂无营养数据</p>
       </div>
     );
@@ -128,13 +121,10 @@ export function MacroPieChart({
       {/* 详细数据 */}
       <div className="mt-4 space-y-2">
         {chartData.map((item, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between p-2 bg-gray-50 rounded"
-          >
+          <div key={index} className="flex items-center justify-between rounded bg-gray-50 p-2">
             <div className="flex items-center">
               <div
-                className="w-4 h-4 rounded mr-2"
+                className="mr-2 h-4 w-4 rounded"
                 style={{
                   backgroundColor:
                     item.name === "碳水化合物"
@@ -147,21 +137,15 @@ export function MacroPieChart({
               <span className="text-sm text-gray-700">{item.name}</span>
             </div>
             <div className="text-right">
-              <span className="text-sm font-semibold text-gray-900">
-                {item.grams.toFixed(1)}g
-              </span>
-              <span className="text-xs text-gray-500 ml-2">
-                ({item.value.toFixed(1)}%)
-              </span>
+              <span className="text-sm font-semibold text-gray-900">{item.grams.toFixed(1)}g</span>
+              <span className="ml-2 text-xs text-gray-500">({item.value.toFixed(1)}%)</span>
             </div>
           </div>
         ))}
-        <div className="mt-2 pt-2 border-t border-gray-200">
+        <div className="mt-2 border-t border-gray-200 pt-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">总热量</span>
-            <span className="font-semibold text-gray-900">
-              {totalCalories.toFixed(0)} kcal
-            </span>
+            <span className="font-semibold text-gray-900">{totalCalories.toFixed(0)} kcal</span>
           </div>
         </div>
       </div>

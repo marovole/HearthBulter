@@ -86,26 +86,18 @@ export class AIFallbackService {
   async analyzeHealthWithFallback(
     medicalData: any,
     userProfile: any,
-    mealHistory?: any[],
+    mealHistory?: any[]
   ): Promise<FallbackResult> {
     const serviceName = "health-analysis";
 
     // 检查熔断器
     if (this.isCircuitOpen(serviceName)) {
-      return this.analyzeHealthOffline(
-        medicalData,
-        userProfile,
-        FallbackReason.API_UNAVAILABLE,
-      );
+      return this.analyzeHealthOffline(medicalData, userProfile, FallbackReason.API_UNAVAILABLE);
     }
 
     try {
       // 尝试调用AI分析
-      const result = await healthAnalyzer.analyzeHealth(
-        medicalData,
-        userProfile,
-        mealHistory,
-      );
+      const result = await healthAnalyzer.analyzeHealth(medicalData, userProfile, mealHistory);
       this.recordSuccess(serviceName);
 
       return {
@@ -118,11 +110,7 @@ export class AIFallbackService {
       this.recordFailure(serviceName);
       console.error("AI健康分析失败，使用降级策略:", error);
 
-      return this.analyzeHealthOffline(
-        medicalData,
-        userProfile,
-        FallbackReason.API_ERROR,
-      );
+      return this.analyzeHealthOffline(medicalData, userProfile, FallbackReason.API_ERROR);
     }
   }
 
@@ -132,7 +120,7 @@ export class AIFallbackService {
   private async analyzeHealthOffline(
     medicalData: any,
     userProfile: any,
-    reason: FallbackReason,
+    reason: FallbackReason
   ): Promise<FallbackResult> {
     // 基于规则的简单健康评估
     const analysis = {
@@ -145,12 +133,7 @@ export class AIFallbackService {
         urgent_actions: ["建议尽快进行专业体检"],
       },
       nutritional_recommendations: this.getBasicNutritionAdvice(userProfile),
-      lifestyle_modifications: [
-        "保持规律作息",
-        "适量运动",
-        "均衡饮食",
-        "定期体检",
-      ],
+      lifestyle_modifications: ["保持规律作息", "适量运动", "均衡饮食", "定期体检"],
       follow_up_suggestions: ["AI服务暂时不可用", "请咨询专业医生获得详细分析"],
     };
 
@@ -169,29 +152,17 @@ export class AIFallbackService {
   /**
    * 执行带降级策略的对话响应
    */
-  async chatWithFallback(
-    sessionId: string,
-    message: string,
-    intent: any,
-  ): Promise<FallbackResult> {
+  async chatWithFallback(sessionId: string, message: string, intent: any): Promise<FallbackResult> {
     const serviceName = "chat-service";
 
     // 检查熔断器
     if (this.isCircuitOpen(serviceName)) {
-      return this.generateOfflineResponse(
-        message,
-        intent,
-        FallbackReason.API_UNAVAILABLE,
-      );
+      return this.generateOfflineResponse(message, intent, FallbackReason.API_UNAVAILABLE);
     }
 
     try {
       // 尝试调用AI对话
-      const response = await conversationManager.generateResponse(
-        sessionId,
-        message,
-        intent,
-      );
+      const response = await conversationManager.generateResponse(sessionId, message, intent);
       this.recordSuccess(serviceName);
 
       return {
@@ -204,11 +175,7 @@ export class AIFallbackService {
       this.recordFailure(serviceName);
       console.error("AI对话失败，使用降级策略:", error);
 
-      return this.generateOfflineResponse(
-        message,
-        intent,
-        FallbackReason.API_ERROR,
-      );
+      return this.generateOfflineResponse(message, intent, FallbackReason.API_ERROR);
     }
   }
 
@@ -218,28 +185,22 @@ export class AIFallbackService {
   private async generateOfflineResponse(
     message: string,
     intent: { intent?: string },
-    reason: FallbackReason,
+    reason: FallbackReason
   ): Promise<FallbackResult> {
     const fallbackResponses: Record<
       "question" | "advice_request" | "clarification" | "general_chat",
       string
     > = {
-      question:
-        "很抱歉，AI助手暂时不可用。对于您的问题，建议您咨询专业医生或营养师获得准确答案。",
+      question: "很抱歉，AI助手暂时不可用。对于您的问题，建议您咨询专业医生或营养师获得准确答案。",
       advice_request:
         "很抱歉，AI助手暂时无法提供个性化建议。建议您咨询专业医生或营养师，他们可以根据您的具体情况提供最适合的建议。",
-      clarification:
-        "很抱歉，AI助手暂时不可用。如果您需要澄清健康相关问题，建议直接咨询您的医生。",
+      clarification: "很抱歉，AI助手暂时不可用。如果您需要澄清健康相关问题，建议直接咨询您的医生。",
       general_chat:
         "很抱歉，AI助手暂时离线。如果您有健康问题，请咨询专业医生。紧急情况请立即就医。",
     };
 
-    const intentKey = intent.intent as
-      | keyof typeof fallbackResponses
-      | undefined;
-    const response = intentKey
-      ? fallbackResponses[intentKey]
-      : fallbackResponses.general_chat;
+    const intentKey = intent.intent as keyof typeof fallbackResponses | undefined;
+    const response = intentKey ? fallbackResponses[intentKey] : fallbackResponses.general_chat;
 
     return {
       success: true,
@@ -259,26 +220,18 @@ export class AIFallbackService {
   async optimizeRecipeWithFallback(
     recipeId: string,
     memberId: string,
-    preferences: any,
+    preferences: any
   ): Promise<FallbackResult> {
     const serviceName = "recipe-optimization";
 
     // 检查熔断器
     if (this.isCircuitOpen(serviceName)) {
-      return this.optimizeRecipeOffline(
-        recipeId,
-        preferences,
-        FallbackReason.API_UNAVAILABLE,
-      );
+      return this.optimizeRecipeOffline(recipeId, preferences, FallbackReason.API_UNAVAILABLE);
     }
 
     try {
       // 尝试调用AI优化
-      const result = await recipeOptimizer.optimizeRecipeForHealth(
-        recipeId,
-        memberId,
-        preferences,
-      );
+      const result = await recipeOptimizer.optimizeRecipeForHealth(recipeId, memberId, preferences);
       this.recordSuccess(serviceName);
 
       return {
@@ -291,11 +244,7 @@ export class AIFallbackService {
       this.recordFailure(serviceName);
       console.error("AI食谱优化失败，使用降级策略:", error);
 
-      return this.optimizeRecipeOffline(
-        recipeId,
-        preferences,
-        FallbackReason.API_ERROR,
-      );
+      return this.optimizeRecipeOffline(recipeId, preferences, FallbackReason.API_ERROR);
     }
   }
 
@@ -305,7 +254,7 @@ export class AIFallbackService {
   private async optimizeRecipeOffline(
     recipeId: string,
     preferences: any,
-    reason: FallbackReason,
+    reason: FallbackReason
   ): Promise<FallbackResult> {
     // 这里应该从数据库获取原始食谱，然后进行简单的基于规则的优化
     // 为了简化，返回一个基本的优化建议
@@ -346,10 +295,7 @@ export class AIFallbackService {
   /**
    * 基础健康评分计算
    */
-  private calculateBasicHealthScore(
-    medicalData: any,
-    userProfile: any,
-  ): number {
+  private calculateBasicHealthScore(medicalData: any, userProfile: any): number {
     let score = 70; // 基础分数
 
     // 简单的健康指标评估
@@ -380,14 +326,10 @@ export class AIFallbackService {
 
     if (medicalData.blood_tests) {
       if (medicalData.blood_tests.fasting_glucose) {
-        findings.push(
-          `空腹血糖: ${medicalData.blood_tests.fasting_glucose} mg/dL`,
-        );
+        findings.push(`空腹血糖: ${medicalData.blood_tests.fasting_glucose} mg/dL`);
       }
       if (medicalData.blood_tests.total_cholesterol) {
-        findings.push(
-          `总胆固醇: ${medicalData.blood_tests.total_cholesterol} mg/dL`,
-        );
+        findings.push(`总胆固醇: ${medicalData.blood_tests.total_cholesterol} mg/dL`);
       }
     }
 
@@ -416,7 +358,7 @@ export class AIFallbackService {
     totalFailures: number;
     servicesWithFailures: string[];
     circuitBreakerStatus: Record<string, boolean>;
-    } {
+  } {
     let totalFailures = 0;
     const servicesWithFailures: string[] = [];
     const circuitBreakerStatus: Record<string, boolean> = {};

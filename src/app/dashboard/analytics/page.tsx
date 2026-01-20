@@ -19,9 +19,7 @@ export default function AnalyticsPage() {
     if (!selectedMember) return;
 
     try {
-      const response = await fetch(
-        `/api/analytics/health-score?memberId=${selectedMember}&days=7`,
-      );
+      const response = await fetch(`/api/analytics/health-score?memberId=${selectedMember}&days=7`);
       const data = await response.json();
 
       if (data.success) {
@@ -29,7 +27,7 @@ export default function AnalyticsPage() {
         const trend = data.data;
         if (trend.length > 0) {
           const scoreResponse = await fetch(
-            `/api/analytics/health-score?memberId=${selectedMember}`,
+            `/api/analytics/health-score?memberId=${selectedMember}`
           );
           const scoreData = await scoreResponse.json();
           if (scoreData.success) {
@@ -53,7 +51,7 @@ export default function AnalyticsPage() {
 
     try {
       const response = await fetch(
-        `/api/analytics/trends?memberId=${selectedMember}&dataType=${dataType}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        `/api/analytics/trends?memberId=${selectedMember}&dataType=${dataType}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
       );
       const data = await response.json();
 
@@ -72,7 +70,7 @@ export default function AnalyticsPage() {
 
     try {
       const response = await fetch(
-        `/api/analytics/anomalies?memberId=${selectedMember}&status=PENDING&limit=5`,
+        `/api/analytics/anomalies?memberId=${selectedMember}&status=PENDING&limit=5`
       );
       const data = await response.json();
 
@@ -85,11 +83,7 @@ export default function AnalyticsPage() {
   };
 
   // 处理异常操作
-  const handleAnomalyAction = async (
-    anomalyId: string,
-    action: string,
-    resolution?: string,
-  ) => {
+  const handleAnomalyAction = async (anomalyId: string, action: string, resolution?: string) => {
     try {
       const response = await fetch("/api/analytics/anomalies", {
         method: "PATCH",
@@ -131,9 +125,9 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-purple-600"></div>
           <p className="mt-4 text-gray-600">加载中...</p>
         </div>
       </div>
@@ -144,35 +138,31 @@ export default function AnalyticsPage() {
     <div className="container mx-auto px-4 py-8">
       {/* 页面标题 */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">健康分析</h1>
+        <h1 className="mb-2 text-3xl font-bold text-gray-900">健康分析</h1>
         <p className="text-gray-600">查看您的健康数据趋势和分析报告</p>
       </div>
 
       {/* 筛选器 */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 flex gap-4">
+      <div className="mb-6 flex gap-4 rounded-lg bg-white p-4 shadow-sm">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            选择成员
-          </label>
+          <label className="mb-2 block text-sm font-medium text-gray-700">选择成员</label>
           <select
             value={selectedMember}
             onChange={(e) => setSelectedMember(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
+            className="rounded-md border border-gray-300 px-3 py-2"
           >
             <option value="">请选择...</option>
             {/* 这里应该从API加载家庭成员列表 */}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            时间范围
-          </label>
+          <label className="mb-2 block text-sm font-medium text-gray-700">时间范围</label>
           <div className="flex gap-2">
             {(["7d", "30d", "90d"] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                   timeRange === range
                     ? "bg-purple-600 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -186,7 +176,7 @@ export default function AnalyticsPage() {
       </div>
 
       {!selectedMember ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-8 text-center">
           <p className="text-blue-700">请先选择一个家庭成员查看分析数据</p>
         </div>
       ) : (
@@ -206,15 +196,13 @@ export default function AnalyticsPage() {
           {/* 异常警报 */}
           {anomalies.length > 0 && (
             <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">需要关注的异常</h2>
+              <h2 className="mb-4 text-xl font-semibold">需要关注的异常</h2>
               {anomalies.map((anomaly) => (
                 <AnomalyAlert
                   key={anomaly.id}
                   anomaly={anomaly}
                   onAcknowledge={(id) => handleAnomalyAction(id, "acknowledge")}
-                  onResolve={(id, resolution) =>
-                    handleAnomalyAction(id, "resolve", resolution)
-                  }
+                  onResolve={(id, resolution) => handleAnomalyAction(id, "resolve", resolution)}
                   onIgnore={(id) => handleAnomalyAction(id, "ignore")}
                 />
               ))}
@@ -222,9 +210,9 @@ export default function AnalyticsPage() {
           )}
 
           {/* 趋势图表 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
             {trendData && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="rounded-lg bg-white p-6 shadow-sm">
                 <TrendChart
                   data={trendData.dataPoints}
                   title="体重趋势"
@@ -237,22 +225,18 @@ export default function AnalyticsPage() {
           </div>
 
           {/* 快速操作 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">快速操作</h2>
+          <div className="rounded-lg bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-xl font-semibold">快速操作</h2>
             <div className="flex gap-4">
               <button
-                onClick={() =>
-                  (window.location.href = "/dashboard/analytics/reports")
-                }
-                className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                onClick={() => (window.location.href = "/dashboard/analytics/reports")}
+                className="rounded-lg bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700"
               >
                 查看报告历史
               </button>
               <button
-                onClick={() =>
-                  (window.location.href = "/dashboard/analytics/generate")
-                }
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                onClick={() => (window.location.href = "/dashboard/analytics/generate")}
+                className="rounded-lg bg-green-600 px-6 py-3 text-white transition-colors hover:bg-green-700"
               >
                 生成新报告
               </button>

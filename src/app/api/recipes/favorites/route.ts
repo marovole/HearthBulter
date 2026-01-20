@@ -12,28 +12,24 @@ export async function GET(request: NextRequest) {
     const memberIdParam = searchParams.get("memberId");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
-    const sortBy =
-      (searchParams.get("sortBy") as "favoritedAt" | "name") || "favoritedAt";
-    const sortOrder =
-      (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
+    const sortBy = (searchParams.get("sortBy") as "favoritedAt" | "name") || "favoritedAt";
+    const sortOrder = (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
 
     let memberId = memberIdParam;
 
     if (!memberId) {
       const session = await auth();
       if (session?.user?.id) {
-        const members = await convexClient.query<
-          Array<{ _id: Id<"familyMembers"> }>
-        >(api.members.listByClerkId, { clerkId: session.user.id });
+        const members = await convexClient.query<Array<{ _id: Id<"familyMembers"> }>>(
+          api.members.listByClerkId,
+          { clerkId: session.user.id }
+        );
         memberId = members[0]?._id ?? null;
       }
     }
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "memberId is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
     const query: GetFavoritesQuery = {
@@ -53,9 +49,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error getting favorites:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -29,9 +29,7 @@ jest.mock("recharts", () => ({
   BarChart: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="bar-chart">{children}</div>
   ),
-  Bar: ({ dataKey }: { dataKey: string }) => (
-    <div data-testid="bar">{dataKey}</div>
-  ),
+  Bar: ({ dataKey }: { dataKey: string }) => <div data-testid="bar">{dataKey}</div>,
   XAxis: () => <div data-testid="x-axis"></div>,
   YAxis: () => <div data-testid="y-axis"></div>,
   CartesianGrid: () => <div data-testid="cartesian-grid"></div>,
@@ -164,7 +162,7 @@ describe("HealthScoreCard", () => {
         // Component should render the card
         expect(screen.getByTestId("card")).toBeInTheDocument();
       },
-      { timeout: 3000 },
+      { timeout: 3000 }
     );
   });
 
@@ -178,7 +176,7 @@ describe("HealthScoreCard", () => {
       () => {
         expect(screen.getByTestId("card")).toBeInTheDocument();
       },
-      { timeout: 3000 },
+      { timeout: 3000 }
     );
   });
 
@@ -212,7 +210,7 @@ describe("HealthScoreCard", () => {
       () => {
         expect(screen.getByTestId("tabs")).toBeInTheDocument();
       },
-      { timeout: 3000 },
+      { timeout: 3000 }
     );
   });
 });

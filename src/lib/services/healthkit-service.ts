@@ -3,19 +3,9 @@
  * 提供Apple Health数据的读取和同步功能
  */
 
-import {
-  addHours,
-  startOfDay,
-  endOfDay,
-  subDays,
-  isWithinInterval,
-} from "date-fns";
+import { addHours, startOfDay, endOfDay, subDays, isWithinInterval } from "date-fns";
 import { randomUUID } from "crypto";
-import type {
-  AppleHealthData,
-  DeviceConnectionInput,
-  SyncResult,
-} from "@/types/wearable-devices";
+import type { AppleHealthData, DeviceConnectionInput, SyncResult } from "@/types/wearable-devices";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { checkDataDuplication } from "./data-deduplication";
@@ -110,7 +100,7 @@ export class HealthKitService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const stepsData: Array<Id<"healthData">> = [];
 
@@ -122,15 +112,10 @@ export class HealthKitService {
         measuredAt: dayData.date,
         source: "APPLE_HEALTHKIT" as const,
         notes: `步数: ${dayData.steps}`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -157,14 +142,11 @@ export class HealthKitService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const heartRateData: Array<Id<"healthData">> = [];
 
-    const mockHeartRateData = this.generateMockHeartRateData(
-      startDate,
-      endDate,
-    );
+    const mockHeartRateData = this.generateMockHeartRateData(startDate, endDate);
 
     for (const record of mockHeartRateData) {
       const healthInput = {
@@ -173,15 +155,10 @@ export class HealthKitService {
         measuredAt: record.timestamp,
         source: "APPLE_HEALTHKIT" as const,
         notes: `心率: ${record.value} bpm`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -209,7 +186,7 @@ export class HealthKitService {
     memberId: string,
     startDate: Date,
     endDate: Date,
-    deviceConnectionId?: Id<"deviceConnections">,
+    deviceConnectionId?: Id<"deviceConnections">
   ): Promise<Array<Id<"healthData">>> {
     const sleepData: Array<Id<"healthData">> = [];
 
@@ -221,15 +198,10 @@ export class HealthKitService {
         measuredAt: record.date,
         source: "APPLE_HEALTHKIT" as const,
         notes: `睡眠时长: ${record.duration}小时, 质量: ${record.quality}`,
-        deviceConnectionId: deviceConnectionId
-          ? String(deviceConnectionId)
-          : undefined,
+        deviceConnectionId: deviceConnectionId ? String(deviceConnectionId) : undefined,
       };
 
-      const deduplicationResult = await checkDataDuplication(
-        healthInput,
-        memberId,
-      );
+      const deduplicationResult = await checkDataDuplication(healthInput, memberId);
 
       if (deduplicationResult.shouldInsert) {
         const response = await convexClient.mutation<{
@@ -255,7 +227,7 @@ export class HealthKitService {
   async syncAllData(
     memberId: string,
     deviceConnectionId: Id<"deviceConnections">,
-    lastSyncDate?: Date,
+    lastSyncDate?: Date
   ): Promise<SyncResult> {
     const startDate = lastSyncDate || subDays(new Date(), 7);
     const endDate = new Date();
@@ -264,33 +236,21 @@ export class HealthKitService {
     let totalSynced = 0;
 
     try {
-      const stepsData = await this.syncStepsData(
-        memberId,
-        startDate,
-        endDate,
-        deviceConnectionId,
-      );
+      const stepsData = await this.syncStepsData(memberId, startDate, endDate, deviceConnectionId);
       totalSynced += stepsData.length;
 
       const heartRateData = await this.syncHeartRateData(
         memberId,
         startDate,
         endDate,
-        deviceConnectionId,
+        deviceConnectionId
       );
       totalSynced += heartRateData.length;
 
-      const sleepData = await this.syncSleepData(
-        memberId,
-        startDate,
-        endDate,
-        deviceConnectionId,
-      );
+      const sleepData = await this.syncSleepData(memberId, startDate, endDate, deviceConnectionId);
       totalSynced += sleepData.length;
     } catch (error) {
-      errors.push(
-        `HealthKit同步失败: ${error instanceof Error ? error.message : "未知错误"}`,
-      );
+      errors.push(`HealthKit同步失败: ${error instanceof Error ? error.message : "未知错误"}`);
     }
 
     return {
@@ -305,10 +265,7 @@ export class HealthKitService {
   /**
    * 生成模拟步数数据
    */
-  private generateMockStepsData(
-    startDate: Date,
-    endDate: Date,
-  ): AppleHealthData[] {
+  private generateMockStepsData(startDate: Date, endDate: Date): AppleHealthData[] {
     const data: AppleHealthData[] = [];
     const currentDate = new Date(startDate);
 
@@ -329,7 +286,7 @@ export class HealthKitService {
    */
   private generateMockHeartRateData(
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Array<{ timestamp: Date; value: number }> {
     const data: Array<{ timestamp: Date; value: number }> = [];
     const currentTimestamp = new Date(startDate);
@@ -357,7 +314,7 @@ export class HealthKitService {
    */
   private generateMockSleepData(
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Array<{ date: Date; duration: number; quality: number }> {
     const data: Array<{ date: Date; duration: number; quality: number }> = [];
     const currentDate = new Date(startDate);
@@ -444,7 +401,7 @@ type PlatformConnectionInfo = {
 
 export async function connectHealthKitDevice(
   memberId: string,
-  deviceInfo: Partial<DeviceConnectionInput>,
+  deviceInfo: Partial<DeviceConnectionInput>
 ): Promise<PlatformConnectionInfo> {
   const service = HealthKitService.getInstance();
 
@@ -463,8 +420,6 @@ export async function connectHealthKitDevice(
   };
 }
 
-export async function disconnectHealthKitDevice(
-  deviceId: string,
-): Promise<void> {
+export async function disconnectHealthKitDevice(deviceId: string): Promise<void> {
   void deviceId;
 }

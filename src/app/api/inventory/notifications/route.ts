@@ -36,16 +36,10 @@ export async function GET(request: NextRequest) {
     }
 
     // 验证用户是否有权访问该成员的通知
-    const { hasAccess } = await memberRepository.verifyMemberAccess(
-      memberId,
-      user.id,
-    );
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的通知" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的通知" }, { status: 403 });
     }
 
     const result = await notificationRepository.listMemberNotifications(
@@ -55,7 +49,7 @@ export async function GET(request: NextRequest) {
         status: undefined,
         includeRead: isRead === "true",
       },
-      { limit, offset },
+      { limit, offset }
     );
 
     return NextResponse.json({
@@ -65,10 +59,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("获取通知列表失败:", error);
-    return NextResponse.json(
-      { error: "获取通知列表失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "获取通知列表失败", details: error }, { status: 500 });
   }
 }
 
@@ -90,24 +81,15 @@ export async function POST(request: NextRequest) {
     const requiredFields = ["memberId", "type", "title", "message", "priority"];
     for (const field of requiredFields) {
       if (!body[field]) {
-        return NextResponse.json(
-          { error: `缺少必需字段: ${field}` },
-          { status: 400 },
-        );
+        return NextResponse.json({ error: `缺少必需字段: ${field}` }, { status: 400 });
       }
     }
 
     // 验证用户是否有权为该成员创建通知
-    const { hasAccess } = await memberRepository.verifyMemberAccess(
-      body.memberId,
-      user.id,
-    );
+    const { hasAccess } = await memberRepository.verifyMemberAccess(body.memberId, user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限为该成员创建通知" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限为该成员创建通知" }, { status: 403 });
     }
 
     const payload: CreateNotificationDTO = {
@@ -124,8 +106,7 @@ export async function POST(request: NextRequest) {
       batchId: body.batchId || undefined,
     };
 
-    const notification =
-      await notificationRepository.createNotification(payload);
+    const notification = await notificationRepository.createNotification(payload);
 
     return NextResponse.json({
       success: true,
@@ -134,9 +115,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("创建通知失败:", error);
-    return NextResponse.json(
-      { error: "创建通知失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "创建通知失败", details: error }, { status: 500 });
   }
 }

@@ -1,7 +1,4 @@
-import {
-  EnhancedPerformanceMonitor,
-  AlertLevel,
-} from "./performance-monitor-v2";
+import { EnhancedPerformanceMonitor, AlertLevel } from "./performance-monitor-v2";
 
 // 告警通知渠道
 export enum NotificationChannel {
@@ -98,7 +95,7 @@ export class AlertSystem {
     }
 
     const channels = this.config.channels.filter((channel) =>
-      this.shouldSendToChannel(alert.level, channel),
+      this.shouldSendToChannel(alert.level, channel)
     );
 
     for (const channel of channels) {
@@ -133,23 +130,23 @@ export class AlertSystem {
       message: string;
       source: string;
       context: Record<string, any>;
-    },
+    }
   ): Promise<NotificationResult> {
     switch (channel) {
-    case NotificationChannel.EMAIL:
-      return this.sendEmailAlert(alert);
-    case NotificationChannel.SLACK:
-      return this.sendSlackAlert(alert);
-    case NotificationChannel.DINGTALK:
-      return this.sendDingTalkAlert(alert);
-    case NotificationChannel.WEBHOOK:
-      return this.sendWebhookAlert(alert);
-    default:
-      return {
-        success: false,
-        channel,
-        error: `Unsupported notification channel: ${channel}`,
-      };
+      case NotificationChannel.EMAIL:
+        return this.sendEmailAlert(alert);
+      case NotificationChannel.SLACK:
+        return this.sendSlackAlert(alert);
+      case NotificationChannel.DINGTALK:
+        return this.sendDingTalkAlert(alert);
+      case NotificationChannel.WEBHOOK:
+        return this.sendWebhookAlert(alert);
+      default:
+        return {
+          success: false,
+          channel,
+          error: `Unsupported notification channel: ${channel}`,
+        };
     }
   }
 
@@ -379,8 +376,8 @@ ${alert.message}
 
 上下文信息:
 ${Object.entries(alert.context)
-    .map(([key, value]) => `${key}: ${JSON.stringify(value, null, 2)}`)
-    .join("\n")}
+  .map(([key, value]) => `${key}: ${JSON.stringify(value, null, 2)}`)
+  .join("\n")}
 
 ---
 此邮件由 Health Butler 系统自动发送
@@ -459,15 +456,15 @@ ${Object.entries(alert.context)
    */
   private getSlackColor(level: AlertLevel): string {
     switch (level) {
-    case AlertLevel.CRITICAL:
-      return "#dc3545"; // red
-    case AlertLevel.ERROR:
-      return "#f59e0b"; // orange
-    case AlertLevel.WARNING:
-      return "#ffc107"; // yellow
-    case AlertLevel.INFO:
-    default:
-      return "#28a745"; // green
+      case AlertLevel.CRITICAL:
+        return "#dc3545"; // red
+      case AlertLevel.ERROR:
+        return "#f59e0b"; // orange
+      case AlertLevel.WARNING:
+        return "#ffc107"; // yellow
+      case AlertLevel.INFO:
+      default:
+        return "#28a745"; // green
     }
   }
 
@@ -476,15 +473,15 @@ ${Object.entries(alert.context)
    */
   private getSlackEmoji(level: AlertLevel): string {
     switch (level) {
-    case AlertLevel.CRITICAL:
-      return "🚨";
-    case AlertLevel.ERROR:
-      return "❌";
-    case AlertLevel.WARNING:
-      return "⚠️";
-    case AlertLevel.INFO:
-    default:
-      return "ℹ️";
+      case AlertLevel.CRITICAL:
+        return "🚨";
+      case AlertLevel.ERROR:
+        return "❌";
+      case AlertLevel.WARNING:
+        return "⚠️";
+      case AlertLevel.INFO:
+      default:
+        return "ℹ️";
     }
   }
 
@@ -493,25 +490,22 @@ ${Object.entries(alert.context)
    */
   private getDingTalkColor(level: AlertLevel): string {
     switch (level) {
-    case AlertLevel.CRITICAL:
-      return "red";
-    case AlertLevel.ERROR:
-      return "orange";
-    case AlertLevel.WARNING:
-      return "yellow";
-    case AlertLevel.INFO:
-    default:
-      return "green";
+      case AlertLevel.CRITICAL:
+        return "red";
+      case AlertLevel.ERROR:
+        return "orange";
+      case AlertLevel.WARNING:
+        return "yellow";
+      case AlertLevel.INFO:
+      default:
+        return "green";
     }
   }
 
   /**
    * 检查是否应该发送到特定渠道
    */
-  private shouldSendToChannel(
-    level: AlertLevel,
-    channel: NotificationChannel,
-  ): boolean {
+  private shouldSendToChannel(level: AlertLevel, channel: NotificationChannel): boolean {
     const channelPreferences = {
       [AlertLevel.CRITICAL]: [
         NotificationChannel.EMAIL,
@@ -524,14 +518,8 @@ ${Object.entries(alert.context)
         NotificationChannel.SLACK,
         NotificationChannel.WEBHOOK,
       ],
-      [AlertLevel.WARNING]: [
-        NotificationChannel.EMAIL,
-        NotificationChannel.SLACK,
-      ],
-      [AlertLevel.INFO]: [
-        NotificationChannel.EMAIL,
-        NotificationChannel.WEBHOOK,
-      ],
+      [AlertLevel.WARNING]: [NotificationChannel.EMAIL, NotificationChannel.SLACK],
+      [AlertLevel.INFO]: [NotificationChannel.EMAIL, NotificationChannel.WEBHOOK],
     };
 
     return channelPreferences[level].includes(channel);
@@ -554,8 +542,7 @@ ${Object.entries(alert.context)
    */
   private checkCooldown(alertKey: string): boolean {
     const lastSentTime = this.lastSentTimes.get(alertKey);
-    const cooldownPeriod =
-      this.config.cooldown[alertKey] || this.config.cooldown.default || 300; // 默认5分钟
+    const cooldownPeriod = this.config.cooldown[alertKey] || this.config.cooldown.default || 300; // 默认5分钟
 
     if (!lastSentTime) {
       return true;

@@ -66,7 +66,7 @@ describe("Button Component", () => {
     render(
       <Button disabled onClick={handleClick}>
         Disabled Button
-      </Button>,
+      </Button>
     );
 
     const button = screen.getByRole("button", { name: /disabled button/i });
@@ -80,7 +80,7 @@ describe("Button Component", () => {
     render(
       <Button asChild>
         <a href="/test">Link Button</a>
-      </Button>,
+      </Button>
     );
 
     const link = screen.getByRole("link", { name: /link button/i });
@@ -99,7 +99,7 @@ describe("Button Component", () => {
     render(
       <Button data-testid="test-button" type="submit">
         Submit
-      </Button>,
+      </Button>
     );
 
     const button = screen.getByTestId("test-button");
@@ -121,13 +121,11 @@ describe("Button Component", () => {
       <Button>
         <MockIcon />
         Button with Icon
-      </Button>,
+      </Button>
     );
 
     expect(screen.getByTestId("mock-icon")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /button with icon/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /button with icon/i })).toBeInTheDocument();
   });
 
   it("should handle keyboard navigation", () => {
@@ -168,7 +166,7 @@ describe("Button Component", () => {
     render(
       <form onSubmit={handleSubmit}>
         <Button type="submit">Submit</Button>
-      </form>,
+      </form>
     );
 
     const button = screen.getByRole("button", { name: /submit/i });
@@ -182,7 +180,7 @@ describe("Button Component", () => {
       <Button>
         <span>Complex</span>
         <span>Content</span>
-      </Button>,
+      </Button>
     );
 
     expect(screen.getByText("Complex")).toBeInTheDocument();

@@ -8,10 +8,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    return NextResponse.json(
-      { error: "CLERK_WEBHOOK_SECRET 未设置" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "CLERK_WEBHOOK_SECRET 未设置" }, { status: 500 });
   }
 
   const payload = await request.text();

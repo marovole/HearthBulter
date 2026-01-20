@@ -280,7 +280,7 @@ export const REPORT_GENERATION_PROMPTS: Record<string, PromptTemplate> = {
 // Prompt模板管理函数
 export function getActivePrompt(
   category: PromptTemplate["category"],
-  name?: string,
+  name?: string
 ): PromptTemplate | null {
   const categoryPrompts = getPromptsByCategory(category);
   if (name) {
@@ -291,26 +291,23 @@ export function getActivePrompt(
 }
 
 export function getPromptsByCategory(
-  category: PromptTemplate["category"],
+  category: PromptTemplate["category"]
 ): Record<string, PromptTemplate> {
   switch (category) {
-  case "health_analysis":
-    return HEALTH_ANALYSIS_PROMPTS;
-  case "recipe_optimization":
-    return RECIPE_OPTIMIZATION_PROMPTS;
-  case "nutrition_consultation":
-    return NUTRITION_CONSULTATION_PROMPTS;
-  case "report_generation":
-    return REPORT_GENERATION_PROMPTS;
-  default:
-    return {};
+    case "health_analysis":
+      return HEALTH_ANALYSIS_PROMPTS;
+    case "recipe_optimization":
+      return RECIPE_OPTIMIZATION_PROMPTS;
+    case "nutrition_consultation":
+      return NUTRITION_CONSULTATION_PROMPTS;
+    case "report_generation":
+      return REPORT_GENERATION_PROMPTS;
+    default:
+      return {};
   }
 }
 
-export function renderPrompt(
-  template: PromptTemplate,
-  variables: Record<string, any>,
-): string {
+export function renderPrompt(template: PromptTemplate, variables: Record<string, any>): string {
   let rendered = template.template;
 
   // 替换变量
@@ -325,11 +322,9 @@ export function renderPrompt(
 // 验证Prompt参数
 export function validatePromptParameters(
   template: PromptTemplate,
-  providedParams: Record<string, any>,
+  providedParams: Record<string, any>
 ): { valid: boolean; missing: string[] } {
-  const missing = template.parameters.filter(
-    (param) => !(param in providedParams),
-  );
+  const missing = template.parameters.filter((param) => !(param in providedParams));
   return {
     valid: missing.length === 0,
     missing,

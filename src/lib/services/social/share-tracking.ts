@@ -1,12 +1,7 @@
 import { convexClient, api } from "@/lib/convex-client";
 import type { Id } from "@/../convex/_generated/dataModel";
 
-export type ShareTrackingEventType =
-  | "VIEW"
-  | "CLICK"
-  | "SHARE"
-  | "CONVERSION"
-  | "DOWNLOAD";
+export type ShareTrackingEventType = "VIEW" | "CLICK" | "SHARE" | "CONVERSION" | "DOWNLOAD";
 
 export interface ShareTrackingEvent {
   shareToken: string;
@@ -86,9 +81,7 @@ export class ShareTrackingService {
     return ShareTrackingService.instance;
   }
 
-  async trackShareEvent(
-    event: ShareTrackingEvent,
-  ): Promise<ShareTrackingRecord> {
+  async trackShareEvent(event: ShareTrackingEvent): Promise<ShareTrackingRecord> {
     const tracking = await convexClient.mutation<Record<string, unknown>>(
       api["share-tracking"].trackEvent,
       {
@@ -99,15 +92,13 @@ export class ShareTrackingService {
         ipAddress: event.ipAddress,
         referrer: event.referrer,
         metadata: event.metadata ?? undefined,
-      },
+      }
     );
 
     return this.normalizeTracking(tracking);
   }
 
-  async trackShareEvents(
-    events: ShareTrackingEvent[],
-  ): Promise<ShareTrackingRecord[]> {
+  async trackShareEvents(events: ShareTrackingEvent[]): Promise<ShareTrackingRecord[]> {
     const results: ShareTrackingRecord[] = [];
 
     for (const event of events) {
@@ -123,49 +114,46 @@ export class ShareTrackingService {
   }
 
   async getShareStatistics(shareToken: string): Promise<ShareStatistics> {
-    return await convexClient.query<ShareStatistics>(
-      api["share-tracking"].getStatistics,
-      { shareToken },
-    );
+    return await convexClient.query<ShareStatistics>(api["share-tracking"].getStatistics, {
+      shareToken,
+    });
   }
 
   async getUserShareAnalytics(
     memberId: string,
-    period: "7d" | "30d" | "90d" | "1y" = "30d",
+    period: "7d" | "30d" | "90d" | "1y" = "30d"
   ): Promise<ShareAnalytics> {
-    return await convexClient.query<ShareAnalytics>(
-      api["share-tracking"].getUserAnalytics,
-      { memberId: memberId as Id<"familyMembers">, period },
-    );
+    return await convexClient.query<ShareAnalytics>(api["share-tracking"].getUserAnalytics, {
+      memberId: memberId as Id<"familyMembers">,
+      period,
+    });
   }
 
   async getGlobalShareAnalytics(
-    period: "7d" | "30d" | "90d" | "1y" = "30d",
+    period: "7d" | "30d" | "90d" | "1y" = "30d"
   ): Promise<ShareAnalytics> {
-    return await convexClient.query<ShareAnalytics>(
-      api["share-tracking"].getGlobalAnalytics,
-      { period },
-    );
+    return await convexClient.query<ShareAnalytics>(api["share-tracking"].getGlobalAnalytics, {
+      period,
+    });
   }
 
   async trackShareConversion(
     shareToken: string,
     convertedUserId: string,
-    conversionType: string = "REGISTER",
+    conversionType: string = "REGISTER"
   ): Promise<void> {
-    const shareContent = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.social.getSharedContentByToken, { token: shareToken });
+    const shareContent = await convexClient.query<Record<string, unknown> | null>(
+      api.social.getSharedContentByToken,
+      { token: shareToken }
+    );
 
     if (!shareContent) {
       throw new Error("分享内容不存在");
     }
 
-    const member = await convexClient.query<Record<string, unknown> | null>(
-      api.members.getById,
-      { memberId: shareContent.memberId as Id<"familyMembers"> },
-    );
+    const member = await convexClient.query<Record<string, unknown> | null>(api.members.getById, {
+      memberId: shareContent.memberId as Id<"familyMembers">,
+    });
 
     await this.trackShareEvent({
       shareToken,
@@ -182,7 +170,7 @@ export class ShareTrackingService {
     await this.grantInvitationReward(
       shareContent.memberId as string,
       convertedUserId,
-      conversionType,
+      conversionType
     );
   }
 
@@ -191,7 +179,7 @@ export class ShareTrackingService {
 
     const events = await convexClient.query<Array<Record<string, unknown>>>(
       api["share-tracking"].getEventsBeforeDate,
-      { cutoffDate },
+      { cutoffDate }
     );
 
     if (events.length === 0) {
@@ -207,7 +195,7 @@ export class ShareTrackingService {
 
   async generateShareTrackingReport(
     memberId?: string,
-    period: "7d" | "30d" | "90d" | "1y" = "30d",
+    period: "7d" | "30d" | "90d" | "1y" = "30d"
   ): Promise<Record<string, unknown>> {
     const analytics = memberId
       ? await this.getUserShareAnalytics(memberId, period)
@@ -230,9 +218,7 @@ export class ShareTrackingService {
     };
   }
 
-  private normalizeTracking(
-    record: Record<string, unknown>,
-  ): ShareTrackingRecord {
+  private normalizeTracking(record: Record<string, unknown>): ShareTrackingRecord {
     return {
       id: record._id as string,
       shareToken: record.shareToken as string,
@@ -249,7 +235,7 @@ export class ShareTrackingService {
   private async grantInvitationReward(
     inviterId: string,
     _convertedUserId: string,
-    _conversionType: string,
+    _conversionType: string
   ): Promise<void> {
     console.log(`用户 ${inviterId} 触发邀请奖励逻辑`);
   }
@@ -257,9 +243,7 @@ export class ShareTrackingService {
 
 export const shareTrackingService = ShareTrackingService.getInstance();
 
-export async function trackShareEvent(
-  event: ShareTrackingEvent,
-): Promise<ShareTrackingRecord> {
+export async function trackShareEvent(event: ShareTrackingEvent): Promise<ShareTrackingRecord> {
   const service = ShareTrackingService.getInstance();
   return service.trackShareEvent(event);
 }
@@ -267,33 +251,27 @@ export async function trackShareEvent(
 export async function trackShareConversion(
   shareToken: string,
   convertedUserId: string,
-  conversionType?: string,
+  conversionType?: string
 ): Promise<void> {
   const service = ShareTrackingService.getInstance();
-  return service.trackShareConversion(
-    shareToken,
-    convertedUserId,
-    conversionType,
-  );
+  return service.trackShareConversion(shareToken, convertedUserId, conversionType);
 }
 
-export async function getShareStatistics(
-  shareToken: string,
-): Promise<ShareStatistics> {
+export async function getShareStatistics(shareToken: string): Promise<ShareStatistics> {
   const service = ShareTrackingService.getInstance();
   return service.getShareStatistics(shareToken);
 }
 
 export async function getUserShareAnalytics(
   memberId: string,
-  period?: "7d" | "30d" | "90d" | "1y",
+  period?: "7d" | "30d" | "90d" | "1y"
 ): Promise<ShareAnalytics> {
   const service = ShareTrackingService.getInstance();
   return service.getUserShareAnalytics(memberId, period);
 }
 
 export async function getGlobalShareAnalytics(
-  period?: "7d" | "30d" | "90d" | "1y",
+  period?: "7d" | "30d" | "90d" | "1y"
 ): Promise<ShareAnalytics> {
   const service = ShareTrackingService.getInstance();
   return service.getGlobalShareAnalytics(period);

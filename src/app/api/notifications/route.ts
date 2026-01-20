@@ -84,7 +84,7 @@ const NotificationFormatters = {
 
   validateNotificationContent(
     title: string,
-    content: string,
+    content: string
   ): {
     isValid: boolean;
     errors: string[];
@@ -130,21 +130,12 @@ export async function GET(request: NextRequest) {
     const includeRead = searchParams.get("includeRead") === "true";
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "Member ID is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID is required" }, { status: 400 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(memberId, session.user.id);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的通知" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的通知" }, { status: 403 });
     }
 
     // 查询通知列表
@@ -158,7 +149,7 @@ export async function GET(request: NextRequest) {
       {
         limit,
         offset,
-      },
+      }
     );
 
     // 格式化通知列表
@@ -180,12 +171,8 @@ export async function GET(request: NextRequest) {
       formattedTime: NotificationFormatters.formatTime(notification.createdAt),
       typeIcon: NotificationFormatters.getTypeIcon(notification.type),
       typeName: NotificationFormatters.getTypeName(notification.type),
-      priorityColor: NotificationFormatters.getPriorityColor(
-        notification.priority,
-      ),
-      formattedContent: NotificationFormatters.formatContent(
-        notification.content,
-      ),
+      priorityColor: NotificationFormatters.getPriorityColor(notification.priority),
+      formattedContent: NotificationFormatters.formatContent(notification.content),
     }));
 
     return NextResponse.json({
@@ -198,10 +185,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching notifications:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch notifications" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
   }
 }
 
@@ -236,21 +220,12 @@ export async function POST(request: NextRequest) {
 
     // 验证必需字段
     if (!memberId || !type) {
-      return NextResponse.json(
-        { error: "Member ID and type are required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Member ID and type are required" }, { status: 400 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(memberId, session.user.id);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限为该成员创建通知" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限为该成员创建通知" }, { status: 403 });
     }
 
     // 验证通知类型
@@ -268,30 +243,24 @@ export async function POST(request: NextRequest) {
     ];
 
     if (!validTypes.includes(type)) {
-      return NextResponse.json(
-        { error: "Invalid notification type" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid notification type" }, { status: 400 });
     }
 
     // 验证渠道
     if (channels && !Array.isArray(channels)) {
-      return NextResponse.json(
-        { error: "Channels must be an array" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Channels must be an array" }, { status: 400 });
     }
 
     // 验证通知内容
     if (title || content) {
       const validation = NotificationFormatters.validateNotificationContent(
         title || "",
-        content || "",
+        content || ""
       );
       if (!validation.isValid) {
         return NextResponse.json(
           { error: "Invalid content", details: validation.errors },
-          { status: 400 },
+          { status: 400 }
         );
       }
     }
@@ -312,8 +281,7 @@ export async function POST(request: NextRequest) {
     };
 
     // 创建通知
-    const notification =
-      await notificationRepository.createNotification(notificationPayload);
+    const notification = await notificationRepository.createNotification(notificationPayload);
 
     return NextResponse.json({
       success: true,
@@ -337,9 +305,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating notification:", error);
-    return NextResponse.json(
-      { error: "Failed to create notification" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create notification" }, { status: 500 });
   }
 }

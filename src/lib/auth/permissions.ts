@@ -29,10 +29,7 @@ export async function verifyFamilyAccess(familyId: string, userId: string) {
       return family;
     }
 
-    const isMember = await familyRepository.isUserFamilyMember(
-      familyId,
-      userId,
-    );
+    const isMember = await familyRepository.isUserFamilyMember(familyId, userId);
 
     return isMember ? family : null;
   } catch (error) {

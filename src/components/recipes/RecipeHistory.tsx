@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -54,11 +48,7 @@ interface RecipeHistoryProps {
   showFilters?: boolean;
 }
 
-export function RecipeHistory({
-  memberId,
-  limit = 50,
-  showFilters = true,
-}: RecipeHistoryProps) {
+export function RecipeHistory({ memberId, limit = 50, showFilters = true }: RecipeHistoryProps) {
   const [views, setViews] = useState<ViewRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +161,7 @@ export function RecipeHistory({
       {loading && views.length === 0 && (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             <p className="text-muted-foreground">正在加载浏览历史...</p>
           </div>
         </div>
@@ -180,7 +170,7 @@ export function RecipeHistory({
       {error && (
         <Card className="p-6">
           <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+            <p className="mb-4 text-red-600">{error}</p>
             <Button onClick={() => loadHistory(true)} variant="outline">
               重新加载
             </Button>
@@ -191,10 +181,8 @@ export function RecipeHistory({
       {!loading && !error && views.length === 0 && (
         <Card className="p-6">
           <div className="text-center">
-            <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">
-              您还没有浏览过任何食谱，开始探索吧！
-            </p>
+            <Eye className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="mb-4 text-muted-foreground">您还没有浏览过任何食谱，开始探索吧！</p>
             <Button>浏览食谱</Button>
           </div>
         </Card>
@@ -203,9 +191,7 @@ export function RecipeHistory({
       {Object.entries(groupedViews).map(([dateKey, dateViews]) => (
         <div key={dateKey} className="space-y-4">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-medium">
-              {formatDate(new Date(dateKey))}
-            </h3>
+            <h3 className="text-lg font-medium">{formatDate(new Date(dateKey))}</h3>
             <Badge variant="secondary" className="text-xs">
               {dateViews.length} 个食谱
             </Badge>
@@ -217,10 +203,8 @@ export function RecipeHistory({
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-base line-clamp-1">
-                        {view.recipe.name}
-                      </CardTitle>
-                      <CardDescription className="text-xs text-muted-foreground mt-1">
+                      <CardTitle className="line-clamp-1 text-base">{view.recipe.name}</CardTitle>
+                      <CardDescription className="mt-1 text-xs text-muted-foreground">
                         {formatDate(view.viewedAt)}{" "}
                         {new Date(view.viewedAt).toLocaleTimeString("zh-CN", {
                           hour: "2-digit",
@@ -232,23 +216,19 @@ export function RecipeHistory({
                 </CardHeader>
 
                 <CardContent className="pt-0">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                  <div className="mb-3 flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       <span>{view.recipe.totalTime}分钟</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Eye className="h-3 w-3" />
-                      <span>
-                        {view.viewDuration
-                          ? `${view.viewDuration}秒`
-                          : "未记录"}
-                      </span>
+                      <span>{view.viewDuration ? `${view.viewDuration}秒` : "未记录"}</span>
                     </div>
                   </div>
 
                   {view.source && (
-                    <Badge variant="outline" className="text-xs mb-3">
+                    <Badge variant="outline" className="mb-3 text-xs">
                       来自 {view.source}
                     </Badge>
                   )}

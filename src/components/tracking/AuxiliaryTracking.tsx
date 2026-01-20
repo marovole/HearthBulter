@@ -13,17 +13,17 @@ export function WaterTracking({ current, target, onAdd }: WaterTrackingProps) {
   const quickAmounts = [250, 500, 1000];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">💧 饮水打卡</h3>
+    <div className="rounded-lg bg-white p-6 shadow">
+      <h3 className="mb-4 text-lg font-semibold">💧 饮水打卡</h3>
 
       <div className="mb-4">
-        <div className="flex justify-between text-sm mb-2">
+        <div className="mb-2 flex justify-between text-sm">
           <span>今日饮水</span>
           <span className="font-medium">
             {current}/{target}ml
           </span>
         </div>
-        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
           <div
             className="h-full bg-blue-500 transition-all duration-500"
             style={{ width: `${percentage}%` }}
@@ -36,7 +36,7 @@ export function WaterTracking({ current, target, onAdd }: WaterTrackingProps) {
           <button
             key={amount}
             onClick={() => onAdd(amount)}
-            className="flex-1 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm font-medium"
+            className="flex-1 rounded-lg bg-blue-50 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100"
           >
             +{amount}ml
           </button>
@@ -47,11 +47,7 @@ export function WaterTracking({ current, target, onAdd }: WaterTrackingProps) {
 }
 
 interface ExerciseTrackingProps {
-  onAdd: (data: {
-    minutes: number;
-    caloriesBurned: number;
-    exerciseType: string[];
-  }) => void;
+  onAdd: (data: { minutes: number; caloriesBurned: number; exerciseType: string[] }) => void;
 }
 
 export function ExerciseTracking({ onAdd }: ExerciseTrackingProps) {
@@ -90,24 +86,24 @@ export function ExerciseTracking({ onAdd }: ExerciseTrackingProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">🏃 运动打卡</h3>
+    <div className="rounded-lg bg-white p-6 shadow">
+      <h3 className="mb-4 text-lg font-semibold">🏃 运动打卡</h3>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">运动类型</label>
+          <label className="mb-2 block text-sm font-medium">运动类型</label>
           <div className="grid grid-cols-3 gap-2">
             {exerciseTypes.map((type) => (
               <button
                 key={type.value}
                 onClick={() => setExerciseType(type.value)}
-                className={`p-3 rounded-lg border-2 transition-all ${
+                className={`rounded-lg border-2 p-3 transition-all ${
                   exerciseType === type.value
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <div className="text-2xl mb-1">{type.icon}</div>
+                <div className="mb-1 text-2xl">{type.icon}</div>
                 <div className="text-xs font-medium">{type.label}</div>
               </button>
             ))}
@@ -115,9 +111,7 @@ export function ExerciseTracking({ onAdd }: ExerciseTrackingProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">
-            运动时长：{minutes}分钟
-          </label>
+          <label className="mb-2 block text-sm font-medium">运动时长：{minutes}分钟</label>
           <input
             type="range"
             min="5"
@@ -129,7 +123,7 @@ export function ExerciseTracking({ onAdd }: ExerciseTrackingProps) {
           />
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-3 text-center">
+        <div className="rounded-lg bg-gray-50 p-3 text-center">
           <div className="text-sm text-gray-600">预计消耗</div>
           <div className="text-2xl font-bold text-orange-600">
             {estimateCalories(exerciseType, minutes)} kcal
@@ -138,7 +132,7 @@ export function ExerciseTracking({ onAdd }: ExerciseTrackingProps) {
 
         <button
           onClick={handleSubmit}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+          className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700"
         >
           完成打卡
         </button>
@@ -172,39 +166,37 @@ export function WeightTracking({ onAdd }: WeightTrackingProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">⚖️ 体重打卡</h3>
+    <div className="rounded-lg bg-white p-6 shadow">
+      <h3 className="mb-4 text-lg font-semibold">⚖️ 体重打卡</h3>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">体重 (kg)</label>
+          <label className="mb-2 block text-sm font-medium">体重 (kg)</label>
           <input
             type="number"
             step="0.1"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg"
+            className="w-full rounded-lg border px-3 py-2"
             placeholder="输入体重"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">
-            体脂率 (%) 可选
-          </label>
+          <label className="mb-2 block text-sm font-medium">体脂率 (%) 可选</label>
           <input
             type="number"
             step="0.1"
             value={bodyFat}
             onChange={(e) => setBodyFat(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg"
+            className="w-full rounded-lg border px-3 py-2"
             placeholder="输入体脂率"
           />
         </div>
 
         <button
           onClick={handleSubmit}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+          className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700"
         >
           完成打卡
         </button>
@@ -234,14 +226,12 @@ export function SleepTracking({ onAdd }: SleepTrackingProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">😴 睡眠打卡</h3>
+    <div className="rounded-lg bg-white p-6 shadow">
+      <h3 className="mb-4 text-lg font-semibold">😴 睡眠打卡</h3>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">
-            睡眠时长：{hours}小时
-          </label>
+          <label className="mb-2 block text-sm font-medium">睡眠时长：{hours}小时</label>
           <input
             type="range"
             min="1"
@@ -254,19 +244,19 @@ export function SleepTracking({ onAdd }: SleepTrackingProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">睡眠质量</label>
+          <label className="mb-2 block text-sm font-medium">睡眠质量</label>
           <div className="grid grid-cols-2 gap-2">
             {qualities.map((q) => (
               <button
                 key={q.value}
                 onClick={() => setQuality(q.value)}
-                className={`p-3 rounded-lg border-2 transition-all ${
+                className={`rounded-lg border-2 p-3 transition-all ${
                   quality === q.value
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <div className="text-2xl mb-1">{q.icon}</div>
+                <div className="mb-1 text-2xl">{q.icon}</div>
                 <div className="text-sm font-medium">{q.label}</div>
               </button>
             ))}
@@ -275,7 +265,7 @@ export function SleepTracking({ onAdd }: SleepTrackingProps) {
 
         <button
           onClick={handleSubmit}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+          className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700"
         >
           完成打卡
         </button>

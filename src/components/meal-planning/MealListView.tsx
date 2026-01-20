@@ -81,12 +81,11 @@ export function MealListView({ meals }: MealListViewProps) {
       const searchMatch =
         searchTerm === "" ||
         meal.ingredients.some((ing) =>
-          ing.food.name.toLowerCase().includes(searchTerm.toLowerCase()),
+          ing.food.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
       // 餐次类型过滤
-      const typeMatch =
-        filterMealType === "ALL" || meal.mealType === filterMealType;
+      const typeMatch = filterMealType === "ALL" || meal.mealType === filterMealType;
 
       // 收藏过滤
       const favoriteMatch = !showFavoritesOnly || meal.isFavorite;
@@ -97,20 +96,19 @@ export function MealListView({ meals }: MealListViewProps) {
       let comparison = 0;
 
       switch (sortField) {
-      case "date":
-        comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
-        break;
-      case "calories":
-        comparison = a.calories - b.calories;
-        break;
-      case "protein":
-        comparison = a.protein - b.protein;
-        break;
-      case "mealType":
-        const typeOrder = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
-        comparison =
-            typeOrder.indexOf(a.mealType) - typeOrder.indexOf(b.mealType);
-        break;
+        case "date":
+          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+          break;
+        case "calories":
+          comparison = a.calories - b.calories;
+          break;
+        case "protein":
+          comparison = a.protein - b.protein;
+          break;
+        case "mealType":
+          const typeOrder = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
+          comparison = typeOrder.indexOf(a.mealType) - typeOrder.indexOf(b.mealType);
+          break;
       }
 
       return sortOrder === "asc" ? comparison : -comparison;
@@ -129,7 +127,7 @@ export function MealListView({ meals }: MealListViewProps) {
       groups[dateKey].meals.push(meal);
       return groups;
     },
-    {} as Record<string, { date: Date; meals: Meal[] }>,
+    {} as Record<string, { date: Date; meals: Meal[] }>
   );
 
   // 处理餐食点击
@@ -178,17 +176,10 @@ export function MealListView({ meals }: MealListViewProps) {
 
   // 计算统计信息
   const totalMeals = filteredAndSortedMeals.length;
-  const totalCalories = filteredAndSortedMeals.reduce(
-    (sum, meal) => sum + meal.calories,
-    0,
-  );
+  const totalCalories = filteredAndSortedMeals.reduce((sum, meal) => sum + meal.calories, 0);
   const avgCalories = totalMeals > 0 ? totalCalories / totalMeals : 0;
-  const favoriteCount = filteredAndSortedMeals.filter(
-    (meal) => meal.isFavorite,
-  ).length;
-  const allergenCount = filteredAndSortedMeals.filter(
-    (meal) => meal.hasAllergens,
-  ).length;
+  const favoriteCount = filteredAndSortedMeals.filter((meal) => meal.isFavorite).length;
+  const allergenCount = filteredAndSortedMeals.filter((meal) => meal.hasAllergens).length;
 
   return (
     <div className="space-y-6">
@@ -203,7 +194,7 @@ export function MealListView({ meals }: MealListViewProps) {
         <CardContent className="space-y-4">
           {/* 搜索框 */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <Input
               placeholder="搜索食材..."
               value={searchTerm}
@@ -219,10 +210,8 @@ export function MealListView({ meals }: MealListViewProps) {
               <Filter className="h-4 w-4 text-gray-500" />
               <select
                 value={filterMealType}
-                onChange={(e) =>
-                  setFilterMealType(e.target.value as FilterMealType)
-                }
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setFilterMealType(e.target.value as FilterMealType)}
+                className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="ALL">全部餐次</option>
                 <option value="BREAKFAST">早餐</option>
@@ -238,7 +227,7 @@ export function MealListView({ meals }: MealListViewProps) {
               <select
                 value={sortField}
                 onChange={(e) => setSortField(e.target.value as SortField)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="date">按日期</option>
                 <option value="calories">按热量</option>
@@ -249,9 +238,7 @@ export function MealListView({ meals }: MealListViewProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-                }
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
               >
                 {sortOrder === "asc" ? (
                   <SortAsc className="h-4 w-4" />
@@ -267,9 +254,7 @@ export function MealListView({ meals }: MealListViewProps) {
               size="sm"
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
             >
-              <Heart
-                className={`h-4 w-4 mr-2 ${showFavoritesOnly ? "fill-current" : ""}`}
-              />
+              <Heart className={`mr-2 h-4 w-4 ${showFavoritesOnly ? "fill-current" : ""}`} />
               仅收藏
             </Button>
           </div>
@@ -281,13 +266,13 @@ export function MealListView({ meals }: MealListViewProps) {
             <span>平均 {avgCalories.toFixed(0)} kcal/餐</span>
             {favoriteCount > 0 && (
               <Badge variant="secondary">
-                <Heart className="h-3 w-3 mr-1" />
+                <Heart className="mr-1 h-3 w-3" />
                 {favoriteCount} 个收藏
               </Badge>
             )}
             {allergenCount > 0 && (
               <Badge variant="destructive">
-                <AlertTriangle className="h-3 w-3 mr-1" />
+                <AlertTriangle className="mr-1 h-3 w-3" />
                 {allergenCount} 个含过敏原
               </Badge>
             )}
@@ -299,10 +284,7 @@ export function MealListView({ meals }: MealListViewProps) {
       {Object.entries(groupedMeals).length > 0 ? (
         <div className="space-y-6">
           {Object.entries(groupedMeals)
-            .sort(
-              (a, b) =>
-                new Date(b[1].date).getTime() - new Date(a[1].date).getTime(),
-            )
+            .sort((a, b) => new Date(b[1].date).getTime() - new Date(a[1].date).getTime())
             .map(([dateKey, group]) => (
               <Card key={dateKey}>
                 <CardHeader>
@@ -311,19 +293,16 @@ export function MealListView({ meals }: MealListViewProps) {
                     {format(group.date, "yyyy年M月d日 EEEE", { locale: zhCN })}
                     <Badge variant="outline">{group.meals.length} 餐</Badge>
                     <Badge variant="secondary">
-                      {group.meals
-                        .reduce((sum, meal) => sum + meal.calories, 0)
-                        .toFixed(0)}{" "}
-                      kcal
+                      {group.meals.reduce((sum, meal) => sum + meal.calories, 0).toFixed(0)} kcal
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {group.meals.map((meal) => (
                       <div
                         key={meal.id}
-                        className="cursor-pointer hover:shadow-lg transition-shadow"
+                        className="cursor-pointer transition-shadow hover:shadow-lg"
                         onClick={() => handleMealClick(meal)}
                       >
                         <div className="relative">
@@ -342,14 +321,14 @@ export function MealListView({ meals }: MealListViewProps) {
                           />
 
                           {/* 状态标识 */}
-                          <div className="absolute top-2 right-2 flex gap-1">
+                          <div className="absolute right-2 top-2 flex gap-1">
                             {meal.isFavorite && (
-                              <div className="bg-white rounded-full p-1 shadow-sm">
-                                <Heart className="h-4 w-4 text-red-500 fill-current" />
+                              <div className="rounded-full bg-white p-1 shadow-sm">
+                                <Heart className="h-4 w-4 fill-current text-red-500" />
                               </div>
                             )}
                             {meal.hasAllergens && (
-                              <div className="bg-white rounded-full p-1 shadow-sm">
+                              <div className="rounded-full bg-white p-1 shadow-sm">
                                 <AlertTriangle className="h-4 w-4 text-amber-500" />
                               </div>
                             )}
@@ -364,9 +343,9 @@ export function MealListView({ meals }: MealListViewProps) {
         </div>
       ) : (
         <Card>
-          <CardContent className="text-center py-12">
-            <Utensils className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <CardContent className="py-12 text-center">
+            <Utensils className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+            <h3 className="mb-2 text-lg font-medium text-gray-900">
               {searchTerm || filterMealType !== "ALL" || showFavoritesOnly
                 ? "未找到匹配的食谱"
                 : "暂无食谱数据"}

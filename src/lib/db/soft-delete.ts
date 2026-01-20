@@ -49,10 +49,7 @@ export function supportsSoftDelete(tableName: string): boolean {
  * 添加软删除过滤条件
  * 过滤掉已删除的记录（deleted_at 不为 null）
  */
-export function addSoftDeleteFilter<T>(
-  query: any,
-  includeDeleted: boolean = false,
-): any {
+export function addSoftDeleteFilter<T>(query: any, includeDeleted: boolean = false): any {
   if (includeDeleted) {
     return query;
   }
@@ -66,7 +63,7 @@ export function addSoftDeleteFilter<T>(
 export async function softDelete(
   supabase: SupabaseClient<Database>,
   tableName: SoftDeletableTable,
-  id: string,
+  id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
@@ -94,7 +91,7 @@ export async function softDelete(
 export async function softDeleteMany(
   supabase: SupabaseClient<Database>,
   tableName: SoftDeletableTable,
-  ids: string[],
+  ids: string[]
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> {
   if (ids.length === 0) {
     return { success: true, deletedCount: 0 };
@@ -128,7 +125,7 @@ export async function softDeleteMany(
 export async function restoreSoftDeleted(
   supabase: SupabaseClient<Database>,
   tableName: SoftDeletableTable,
-  id: string,
+  id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
@@ -156,7 +153,7 @@ export async function restoreSoftDeleted(
 export async function permanentlyDeleteExpired(
   supabase: SupabaseClient<Database>,
   tableName: SoftDeletableTable,
-  retentionDays: number = 30,
+  retentionDays: number = 30
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> {
   try {
     const cutoffDate = new Date();
@@ -201,7 +198,7 @@ export async function findDeleted<T>(
     offset?: number;
     deletedAfter?: Date;
     deletedBefore?: Date;
-  } = {},
+  } = {}
 ): Promise<{ data: T[]; count: number; error?: string }> {
   try {
     let query = supabase
@@ -219,10 +216,7 @@ export async function findDeleted<T>(
 
     query = query
       .order(SOFT_DELETE_FIELD, { ascending: false })
-      .range(
-        options.offset || 0,
-        (options.offset || 0) + (options.limit || 50) - 1,
-      );
+      .range(options.offset || 0, (options.offset || 0) + (options.limit || 50) - 1);
 
     const { data, count, error } = await query;
 
@@ -253,10 +247,7 @@ export function softDeleteWhereClause(includeDeleted: boolean = false): object {
 /**
  * 合并软删除条件到现有 WHERE 条件
  */
-export function mergeSoftDeleteCondition(
-  where: object,
-  includeDeleted: boolean = false,
-): object {
+export function mergeSoftDeleteCondition(where: object, includeDeleted: boolean = false): object {
   if (includeDeleted) {
     return where;
   }

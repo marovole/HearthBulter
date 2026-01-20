@@ -52,17 +52,9 @@ const DEFAULT_SECURITY_CONFIG: SecurityHeadersConfig = {
         "https://fonts.googleapis.com",
         "https://cdn.jsdelivr.net",
       ],
-      "font-src": [
-        "'self'",
-        "https://fonts.gstatic.com",
-        "https://cdn.jsdelivr.net",
-      ],
+      "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
       "img-src": ["'self'", "data:", "https:", "blob:"],
-      "connect-src": [
-        "'self'",
-        "https://api.nal.usda.gov",
-        "https://*.upstash.io",
-      ],
+      "connect-src": ["'self'", "https://api.nal.usda.gov", "https://*.upstash.io"],
       "frame-src": ["'none'"],
       "object-src": ["'none'"],
       "base-uri": ["'self'"],
@@ -173,20 +165,14 @@ export class SecurityMiddleware {
   /**
    * 应用安全头
    */
-  applySecurityHeaders(
-    request: NextRequest,
-    response: NextResponse,
-  ): NextResponse {
+  applySecurityHeaders(request: NextRequest, response: NextResponse): NextResponse {
     const pathname = request.nextUrl.pathname;
     const isApiRoute = pathname.startsWith("/api/");
     const config = isApiRoute ? API_SECURITY_CONFIG : this.config;
 
     try {
       // Strict-Transport-Security (HSTS)
-      if (
-        config.strictTransportSecurity &&
-        process.env.NODE_ENV === "production"
-      ) {
+      if (config.strictTransportSecurity && process.env.NODE_ENV === "production") {
         const hsts = config.strictTransportSecurity;
         let hstsValue = `max-age=${hsts.maxAge}`;
 
@@ -203,9 +189,7 @@ export class SecurityMiddleware {
 
       // Content-Security-Policy
       if (config.contentSecurityPolicy) {
-        const cspValue = this.generateCSPHeader(
-          config.contentSecurityPolicy.directives,
-        );
+        const cspValue = this.generateCSPHeader(config.contentSecurityPolicy.directives);
         response.headers.set("Content-Security-Policy", cspValue);
       }
 
@@ -253,10 +237,7 @@ export class SecurityMiddleware {
 
       // Cross-Origin Resource Policy
       if (config.crossOriginResourcePolicy) {
-        response.headers.set(
-          "Cross-Origin-Resource-Policy",
-          config.crossOriginResourcePolicy,
-        );
+        response.headers.set("Cross-Origin-Resource-Policy", config.crossOriginResourcePolicy);
       }
 
       // 额外的安全头
@@ -278,7 +259,7 @@ export class SecurityMiddleware {
             key.includes("X-") ||
             key.includes("Content-Security") ||
             key.includes("Permissions") ||
-            key.includes("Cross-Origin"),
+            key.includes("Cross-Origin")
         ).length,
       });
 
@@ -337,11 +318,7 @@ export class SecurityMiddleware {
     }
 
     // 检查Origin头（对于API请求）
-    if (
-      request.nextUrl.pathname.startsWith("/api/") &&
-      origin &&
-      !this.isValidOrigin(origin)
-    ) {
+    if (request.nextUrl.pathname.startsWith("/api/") && origin && !this.isValidOrigin(origin)) {
       reasons.push("无效的Origin头");
       riskLevel = "high";
     }
@@ -355,15 +332,7 @@ export class SecurityMiddleware {
 
     // 检查请求方法
     const method = request.method;
-    const allowedMethods = [
-      "GET",
-      "POST",
-      "PUT",
-      "DELETE",
-      "PATCH",
-      "OPTIONS",
-      "HEAD",
-    ];
+    const allowedMethods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"];
     if (!allowedMethods.includes(method)) {
       reasons.push(`不支持的HTTP方法: ${method}`);
       riskLevel = "high";
@@ -414,9 +383,7 @@ export class SecurityMiddleware {
         process.env.NEXT_PUBLIC_SITE_URL?.split("/")[2],
       ].filter((value): value is string => Boolean(value));
 
-      return allowedReferers.some((allowed) =>
-        refererUrl.hostname.includes(allowed),
-      );
+      return allowedReferers.some((allowed) => refererUrl.hostname.includes(allowed));
     } catch {
       return false;
     }

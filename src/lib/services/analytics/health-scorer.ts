@@ -24,7 +24,7 @@ export interface HealthScoreResult {
 
 async function calculateNutritionScore(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<{ score: number; hasData: boolean }> {
   const target = await convexClient.query<{
     actualCalories: number;
@@ -44,10 +44,7 @@ async function calculateNutritionScore(
     return { score: 0, hasData: false };
   }
 
-  const caloriesRatio = Math.min(
-    target.actualCalories / target.targetCalories,
-    2,
-  );
+  const caloriesRatio = Math.min(target.actualCalories / target.targetCalories, 2);
   const proteinRatio = Math.min(target.actualProtein / target.targetProtein, 2);
   const carbsRatio = Math.min(target.actualCarbs / target.targetCarbs, 2);
   const fatRatio = Math.min(target.actualFat / target.targetFat, 2);
@@ -69,15 +66,14 @@ async function calculateNutritionScore(
   const carbsScore = scoreRatio(carbsRatio);
   const fatScore = scoreRatio(fatRatio);
 
-  const nutritionScore =
-    (caloriesScore + proteinScore + carbsScore + fatScore) / 4;
+  const nutritionScore = (caloriesScore + proteinScore + carbsScore + fatScore) / 4;
 
   return { score: nutritionScore, hasData: true };
 }
 
 async function calculateExerciseScore(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<{ score: number; hasData: boolean }> {
   const auxiliary = await convexClient.query<{
     exerciseMinutes: number | null;
@@ -111,7 +107,7 @@ async function calculateExerciseScore(
 
 async function calculateSleepScore(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<{ score: number; hasData: boolean }> {
   const auxiliary = await convexClient.query<{
     sleepHours: number | null;
@@ -160,7 +156,7 @@ async function calculateSleepScore(
 
 async function calculateMedicalScore(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<{ score: number; hasData: boolean }> {
   const thirtyDaysAgo = new Date(date);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -194,12 +190,7 @@ async function calculateMedicalScore(
     const systolic = latest.bloodPressureSystolic;
     const diastolic = latest.bloodPressureDiastolic;
 
-    if (
-      systolic >= 90 &&
-      systolic <= 120 &&
-      diastolic >= 60 &&
-      diastolic <= 80
-    ) {
+    if (systolic >= 90 && systolic <= 120 && diastolic >= 60 && diastolic <= 80) {
     } else if (systolic > 120 && systolic <= 130) {
       score -= 10;
     } else if (systolic > 130 || systolic < 90) {
@@ -276,7 +267,7 @@ async function calculateMedicalScore(
 
 export async function calculateHealthScore(
   memberId: string,
-  date: Date,
+  date: Date
 ): Promise<HealthScoreResult> {
   const nutritionResult = await calculateNutritionScore(memberId, date);
   const exerciseResult = await calculateExerciseScore(memberId, date);
@@ -360,7 +351,7 @@ export async function calculateHealthScore(
 export async function saveHealthScore(
   memberId: string,
   date: Date,
-  scoreResult: HealthScoreResult,
+  scoreResult: HealthScoreResult
 ) {
   await convexClient.mutation(api.analytics.upsertHealthScore, {
     memberId: memberId,
@@ -379,7 +370,7 @@ export async function saveHealthScore(
 export async function getAverageScore(
   memberId: string,
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): Promise<number> {
   const scores = await convexClient.query<
     Array<{
@@ -401,7 +392,7 @@ export async function getAverageScore(
 
 export async function getScoreTrend(
   memberId: string,
-  days: number = 30,
+  days: number = 30
 ): Promise<Array<{ date: Date; score: number }>> {
   const endDate = new Date();
   const startDate = new Date();

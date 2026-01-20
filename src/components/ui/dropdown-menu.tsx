@@ -17,32 +17,26 @@ const DropdownMenuContent = React.forwardRef<
     sideOffset={sideOffset}
     className={cn(
       "z-50 min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
-      className,
+      className
     )}
     {...props}
   />
 ));
 DropdownMenuContent.displayName = "DropdownMenuContent";
 
-const DropdownMenuItem = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    role="menuitem"
-    className={cn(
-      "flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
-      className,
-    )}
-    {...props}
-  />
-));
+const DropdownMenuItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      role="menuitem"
+      className={cn(
+        "flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+);
 DropdownMenuItem.displayName = "DropdownMenuItem";
 
-export {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-};
+export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem };

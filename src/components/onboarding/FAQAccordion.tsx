@@ -5,14 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-  ChevronDown,
-  ChevronUp,
-  Search,
-  HelpCircle,
-  Tag,
-  MessageCircle,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Search, HelpCircle, Tag, MessageCircle } from "lucide-react";
 import { useContextualHelp } from "./HelpTooltip";
 
 interface FAQItem {
@@ -69,12 +62,9 @@ export function FAQAccordion({
       searchTerm === "" ||
       item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tags.some((tag) =>
-        tag.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
+      item.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesCategory =
-      selectedCategory === "all" || item.category === selectedCategory;
+    const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
@@ -90,11 +80,11 @@ export function FAQAccordion({
   const categoryStats = getCategoryStats();
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto w-full max-w-4xl space-y-6">
       {/* Search */}
       {showSearch && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           <Input
             placeholder="搜索问题、答案或标签..."
             value={searchTerm}
@@ -131,16 +121,12 @@ export function FAQAccordion({
       <div className="space-y-4">
         {filteredItems.length === 0 ? (
           <Card>
-            <CardContent className="text-center py-12">
-              <HelpCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                没有找到相关问题
-              </h3>
-              <p className="text-gray-600 mb-4">
-                尝试使用其他关键词搜索，或联系客服获取帮助
-              </p>
+            <CardContent className="py-12 text-center">
+              <HelpCircle className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+              <h3 className="mb-2 text-lg font-medium text-gray-900">没有找到相关问题</h3>
+              <p className="mb-4 text-gray-600">尝试使用其他关键词搜索，或联系客服获取帮助</p>
               <Button onClick={() => onContactSupport?.(searchTerm)}>
-                <MessageCircle className="h-4 w-4 mr-2" />
+                <MessageCircle className="mr-2 h-4 w-4" />
                 联系客服
               </Button>
             </CardContent>
@@ -149,24 +135,20 @@ export function FAQAccordion({
           filteredItems.map((item) => (
             <Card key={item.id} className="border">
               <CardHeader
-                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                className="cursor-pointer transition-colors hover:bg-gray-50"
                 onClick={() => toggleItem(item.id)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
+                    <div className="mb-2 flex items-center space-x-2">
                       <Badge variant="outline" className="text-xs">
                         {item.category}
                       </Badge>
                       {item.helpful !== undefined && (
-                        <span className="text-xs text-gray-500">
-                          {item.helpful} 人觉得有帮助
-                        </span>
+                        <span className="text-xs text-gray-500">{item.helpful} 人觉得有帮助</span>
                       )}
                     </div>
-                    <CardTitle className="text-base leading-relaxed">
-                      {item.question}
-                    </CardTitle>
+                    <CardTitle className="text-base leading-relaxed">{item.question}</CardTitle>
                   </div>
                   <Button variant="ghost" size="sm">
                     {expandedItems.has(item.id) ? (
@@ -181,21 +163,19 @@ export function FAQAccordion({
               {expandedItems.has(item.id) && (
                 <CardContent className="pt-0">
                   <div className="prose prose-sm max-w-none">
-                    <p className="text-gray-700 leading-relaxed mb-4">
-                      {item.answer}
-                    </p>
+                    <p className="mb-4 leading-relaxed text-gray-700">{item.answer}</p>
                   </div>
 
                   {/* Tags */}
                   {item.tags.length > 0 && (
-                    <div className="flex items-center space-x-2 mb-4">
+                    <div className="mb-4 flex items-center space-x-2">
                       <Tag className="h-3 w-3 text-gray-400" />
                       <div className="flex flex-wrap gap-1">
                         {item.tags.map((tag) => (
                           <Badge
                             key={tag}
                             variant="secondary"
-                            className="text-xs cursor-pointer hover:bg-gray-200"
+                            className="cursor-pointer text-xs hover:bg-gray-200"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSearchTerm(tag);
@@ -209,10 +189,8 @@ export function FAQAccordion({
                   )}
 
                   {/* Feedback */}
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="text-sm text-gray-500">
-                      这个回答对您有帮助吗？
-                    </div>
+                  <div className="flex items-center justify-between border-t pt-4">
+                    <div className="text-sm text-gray-500">这个回答对您有帮助吗？</div>
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
@@ -222,9 +200,7 @@ export function FAQAccordion({
                           e.stopPropagation();
                           handleFeedback(item.id, true);
                         }}
-                        className={
-                          feedbackGiven.has(item.id) ? "text-green-600" : ""
-                        }
+                        className={feedbackGiven.has(item.id) ? "text-green-600" : ""}
                       >
                         👍 有帮助
                       </Button>
@@ -236,9 +212,7 @@ export function FAQAccordion({
                           e.stopPropagation();
                           handleFeedback(item.id, false);
                         }}
-                        className={
-                          feedbackGiven.has(item.id) ? "text-red-600" : ""
-                        }
+                        className={feedbackGiven.has(item.id) ? "text-red-600" : ""}
                       >
                         👎 没帮助
                       </Button>
@@ -253,16 +227,12 @@ export function FAQAccordion({
 
       {/* Contact Support */}
       {filteredItems.length > 0 && onContactSupport && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="text-center py-6">
-            <MessageCircle className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-            <h3 className="text-lg font-medium text-blue-900 mb-2">
-              没有找到答案？
-            </h3>
-            <p className="text-blue-700 mb-4">我们的客服团队随时为您提供帮助</p>
-            <Button onClick={() => onContactSupport(searchTerm)}>
-              联系客服
-            </Button>
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="py-6 text-center">
+            <MessageCircle className="mx-auto mb-3 h-8 w-8 text-blue-600" />
+            <h3 className="mb-2 text-lg font-medium text-blue-900">没有找到答案？</h3>
+            <p className="mb-4 text-blue-700">我们的客服团队随时为您提供帮助</p>
+            <Button onClick={() => onContactSupport(searchTerm)}>联系客服</Button>
           </CardContent>
         </Card>
       )}
@@ -286,7 +256,7 @@ export const defaultFAQData: FAQItem[] = [
     id: "2",
     question: "如何添加和查看健康数据？",
     answer:
-      "您可以通过\"健康数据\"页面手动录入体重、血压、血糖等指标，也可以连接智能设备自动同步。在历史数据页面，您可以查看趋势图表、统计分析，并导出数据。系统会自动验证数据合理性，异常值会收到提醒。",
+      '您可以通过"健康数据"页面手动录入体重、血压、血糖等指标，也可以连接智能设备自动同步。在历史数据页面，您可以查看趋势图表、统计分析，并导出数据。系统会自动验证数据合理性，异常值会收到提醒。',
     category: "健康数据",
     tags: ["数据录入", "设备同步", "数据分析"],
     helpful: 38,
@@ -306,7 +276,7 @@ export const defaultFAQData: FAQItem[] = [
     id: "4",
     question: "如何连接智能手环或其他设备？",
     answer:
-      "在\"设备管理\"页面点击\"添加设备\"，选择设备类型和品牌，按照指引完成蓝牙配对。配对成功后，设备数据会自动同步到您的账户。您可以在设置中调整同步频率和时间。",
+      '在"设备管理"页面点击"添加设备"，选择设备类型和品牌，按照指引完成蓝牙配对。配对成功后，设备数据会自动同步到您的账户。您可以在设置中调整同步频率和时间。',
     category: "设备连接",
     tags: ["蓝牙", "智能设备", "数据同步"],
     helpful: 29,
@@ -326,7 +296,7 @@ export const defaultFAQData: FAQItem[] = [
     id: "6",
     question: "如何邀请家人加入？",
     answer:
-      "在\"家庭管理\"页面点击\"邀请成员\"，输入家人的邮箱或手机号发送邀请。家人接受邀请后，就可以共享健康数据和食谱计划。您可以为不同成员设置不同的权限和健康目标。",
+      '在"家庭管理"页面点击"邀请成员"，输入家人的邮箱或手机号发送邀请。家人接受邀请后，就可以共享健康数据和食谱计划。您可以为不同成员设置不同的权限和健康目标。',
     category: "家庭管理",
     tags: ["邀请", "权限管理", "数据共享"],
     helpful: 33,
@@ -346,7 +316,7 @@ export const defaultFAQData: FAQItem[] = [
     id: "8",
     question: "如何取消订阅或删除账户？",
     answer:
-      "您可以在\"账户设置\"中随时取消订阅或删除账户。取消订阅后，您仍可使用到当前计费周期结束。删除账户会永久移除所有数据，此操作不可恢复，请谨慎操作。",
+      '您可以在"账户设置"中随时取消订阅或删除账户。取消订阅后，您仍可使用到当前计费周期结束。删除账户会永久移除所有数据，此操作不可恢复，请谨慎操作。',
     category: "账户管理",
     tags: ["取消订阅", "删除账户", "数据删除"],
     helpful: 22,

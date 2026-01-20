@@ -28,13 +28,8 @@ export type RpcResult<T = void> = {
  * @param context - 上下文信息（如 recipeId, memberId 等）
  * @param error - 错误对象
  */
-function logRpcError(
-  fnName: string,
-  context: string | Record<string, any>,
-  error: unknown,
-): void {
-  const contextStr =
-    typeof context === "string" ? context : JSON.stringify(context);
+function logRpcError(fnName: string, context: string | Record<string, any>, error: unknown): void {
+  const contextStr = typeof context === "string" ? context : JSON.stringify(context);
   console.error(`[RPC:${fnName}] ${contextStr} error:`, error);
 }
 
@@ -53,9 +48,7 @@ function logRpcError(
  *   console.error('Failed to update favorite count:', result.error);
  * }
  */
-export async function updateRecipeFavoriteCount(
-  recipeId: string,
-): Promise<RpcResult> {
+export async function updateRecipeFavoriteCount(recipeId: string): Promise<RpcResult> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { error } = await supabase.rpc("update_recipe_favorite_count", {
@@ -85,9 +78,7 @@ export async function updateRecipeFavoriteCount(
  *   console.error('Failed to update average rating:', result.error);
  * }
  */
-export async function updateRecipeAverageRating(
-  recipeId: string,
-): Promise<RpcResult> {
+export async function updateRecipeAverageRating(recipeId: string): Promise<RpcResult> {
   const supabase = SupabaseClientManager.getInstance();
 
   const { error } = await supabase.rpc("update_recipe_average_rating", {
@@ -157,7 +148,7 @@ export type AdviceHistoryRpcResult = {
  */
 export async function fetchAdviceHistory(
   memberId: string,
-  options: { limit?: number; offset?: number } = {},
+  options: { limit?: number; offset?: number } = {}
 ): Promise<RpcResult<AdviceHistoryRpcResult>> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -175,12 +166,7 @@ export async function fetchAdviceHistory(
   }
 
   // 检查 RPC 是否返回错误格式（内部错误）
-  if (
-    data &&
-    typeof data === "object" &&
-    "success" in data &&
-    data.success === false
-  ) {
+  if (data && typeof data === "object" && "success" in data && data.success === false) {
     logRpcError("fetch_advice_history", { memberId, limit, offset }, data);
     return { success: false, error: data };
   }
@@ -246,7 +232,7 @@ export type SocialStatsRpcResult = {
  */
 export async function calculateSocialStats(
   memberId: string,
-  options: { period?: string; platform?: string } = {},
+  options: { period?: string; platform?: string } = {}
 ): Promise<RpcResult<SocialStatsRpcResult>> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -259,21 +245,12 @@ export async function calculateSocialStats(
   });
 
   if (error) {
-    logRpcError(
-      "calculate_social_stats",
-      { memberId, period, platform },
-      error,
-    );
+    logRpcError("calculate_social_stats", { memberId, period, platform }, error);
     return { success: false, error };
   }
 
   // 检查 RPC 是否返回错误格式（内部错误）
-  if (
-    data &&
-    typeof data === "object" &&
-    "success" in data &&
-    data.success === false
-  ) {
+  if (data && typeof data === "object" && "success" in data && data.success === false) {
     logRpcError("calculate_social_stats", { memberId, period, platform }, data);
     return { success: false, error: data };
   }
@@ -341,7 +318,7 @@ export async function fetchDevicesForSync(
     platforms?: string[];
     limit?: number;
     offset?: number;
-  } = {},
+  } = {}
 ): Promise<RpcResult<DeviceSyncRpcResult>> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -355,26 +332,13 @@ export async function fetchDevicesForSync(
   });
 
   if (error) {
-    logRpcError(
-      "fetch_devices_for_sync",
-      { memberId, platforms, limit, offset },
-      error,
-    );
+    logRpcError("fetch_devices_for_sync", { memberId, platforms, limit, offset }, error);
     return { success: false, error };
   }
 
   // 检查 RPC 是否返回错误格式（内部错误）
-  if (
-    data &&
-    typeof data === "object" &&
-    "success" in data &&
-    data.success === false
-  ) {
-    logRpcError(
-      "fetch_devices_for_sync",
-      { memberId, platforms, limit, offset },
-      data,
-    );
+  if (data && typeof data === "object" && "success" in data && data.success === false) {
+    logRpcError("fetch_devices_for_sync", { memberId, platforms, limit, offset }, data);
     return { success: false, error: data };
   }
 

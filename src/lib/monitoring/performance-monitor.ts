@@ -136,11 +136,7 @@ export class PerformanceMonitor {
   /**
    * 结束监控请求
    */
-  endMonitoring(
-    requestId: string,
-    statusCode: number,
-    response: NextResponse,
-  ): void {
+  endMonitoring(requestId: string, statusCode: number, response: NextResponse): void {
     const snapshot = this.snapshots.find((s) => s.requestId === requestId);
     if (!snapshot) return;
 
@@ -160,7 +156,7 @@ export class PerformanceMonitor {
   getMetrics(): PerformanceMetrics {
     const now = Date.now();
     const recentSnapshots = this.snapshots.filter(
-      (s) => now - s.timestamp.getTime() < 5 * 60 * 1000, // 最近5分钟
+      (s) => now - s.timestamp.getTime() < 5 * 60 * 1000 // 最近5分钟
     );
 
     // 计算响应时间指标
@@ -203,7 +199,7 @@ export class PerformanceMonitor {
         }
         return acc;
       },
-      {} as Record<number, number>,
+      {} as Record<number, number>
     );
 
     const totalRequests = Object.values(statusCodes).reduce((a, b) => a + b, 0);
@@ -274,8 +270,7 @@ export class PerformanceMonitor {
 
     // 检查内存使用告警
     if (snapshot.memoryUsage) {
-      const memoryUsage =
-        (snapshot.memoryUsage.heapUsed / snapshot.memoryUsage.heapTotal) * 100;
+      const memoryUsage = (snapshot.memoryUsage.heapUsed / snapshot.memoryUsage.heapTotal) * 100;
       const threshold = this.thresholds.memory;
       let severity: PerformanceAlert["severity"] | null = null;
       let message = "";
@@ -335,9 +330,7 @@ export class PerformanceMonitor {
   /**
    * 创建告警
    */
-  private createAlert(
-    alertData: Omit<PerformanceAlert, "id" | "timestamp" | "resolved">,
-  ): void {
+  private createAlert(alertData: Omit<PerformanceAlert, "id" | "timestamp" | "resolved">): void {
     const alert: PerformanceAlert = {
       id: this.generateAlertId(),
       timestamp: new Date(),
@@ -368,15 +361,11 @@ export class PerformanceMonitor {
   private calculateErrorRate(): number {
     const now = Date.now();
     const recentSnapshots = this.snapshots.filter(
-      (s) => now - s.timestamp.getTime() < 5 * 60 * 1000, // 最近5分钟
+      (s) => now - s.timestamp.getTime() < 5 * 60 * 1000 // 最近5分钟
     );
 
-    const totalRequests = recentSnapshots.filter(
-      (s) => s.statusCode !== undefined,
-    ).length;
-    const errorRequests = recentSnapshots.filter(
-      (s) => s.statusCode && s.statusCode >= 400,
-    ).length;
+    const totalRequests = recentSnapshots.filter((s) => s.statusCode !== undefined).length;
+    const errorRequests = recentSnapshots.filter((s) => s.statusCode && s.statusCode >= 400).length;
 
     return totalRequests > 0 ? (errorRequests / totalRequests) * 100 : 0;
   }
@@ -436,11 +425,11 @@ export class PerformanceMonitor {
       responseTime: snapshot.responseTime,
       memoryUsage: snapshot.memoryUsage
         ? {
-          rss: snapshot.memoryUsage.rss,
-          heapUsed: snapshot.memoryUsage.heapUsed,
-          heapTotal: snapshot.memoryUsage.heapTotal,
-          external: snapshot.memoryUsage.external,
-        }
+            rss: snapshot.memoryUsage.rss,
+            heapUsed: snapshot.memoryUsage.heapUsed,
+            heapTotal: snapshot.memoryUsage.heapTotal,
+            external: snapshot.memoryUsage.external,
+          }
         : undefined,
     });
   }
@@ -448,9 +437,7 @@ export class PerformanceMonitor {
   /**
    * 获取日志级别
    */
-  private getLogLevel(
-    snapshot: PerformanceSnapshot,
-  ): "info" | "warn" | "error" {
+  private getLogLevel(snapshot: PerformanceSnapshot): "info" | "warn" | "error" {
     if (!snapshot.responseTime) return "info";
 
     const threshold = this.thresholds.responseTime;
@@ -593,12 +580,12 @@ export const startPerformanceMonitoring = (request: NextRequest) =>
 export const endPerformanceMonitoring = (
   requestId: string,
   statusCode: number,
-  response: NextResponse,
+  response: NextResponse
 ) => performanceMonitor.endMonitoring(requestId, statusCode, response);
 
 // 创建性能监控高阶函数
 export function withPerformanceMonitoring(
-  handler: (request: NextRequest, context?: any) => Promise<NextResponse>,
+  handler: (request: NextRequest, context?: any) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, context?: any) => {
     const requestId = startPerformanceMonitoring(request);
@@ -615,11 +602,7 @@ export function withPerformanceMonitoring(
       endPerformanceMonitoring(requestId, statusCode, response);
       return response;
     } catch (error) {
-      endPerformanceMonitoring(
-        requestId,
-        500,
-        new NextResponse("Internal Server Error"),
-      );
+      endPerformanceMonitoring(requestId, 500, new NextResponse("Internal Server Error"));
       throw error;
     }
   };

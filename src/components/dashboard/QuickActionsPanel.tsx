@@ -199,9 +199,9 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="rounded-lg bg-white p-6 shadow">
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Activity className="h-6 w-6 text-blue-600" />
           <div>
@@ -209,23 +209,21 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
             <p className="text-sm text-gray-500">常用功能快速访问</p>
           </div>
         </div>
-        <button className="text-sm text-blue-600 hover:text-blue-700">
-          查看全部
-        </button>
+        <button className="text-sm text-blue-600 hover:text-blue-700">查看全部</button>
       </div>
 
       {/* 分类选择器 */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="mb-6 flex flex-wrap gap-2">
         {categories.map((category) => {
           const Icon = category.icon;
           return (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 selectedCategory === category.id
-                  ? "bg-blue-100 text-blue-700 border-blue-300"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-200"
+                  ? "border-blue-300 bg-blue-100 text-blue-700"
+                  : "border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
               } border`}
             >
               <Icon className="h-4 w-4" />
@@ -236,42 +234,38 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       </div>
 
       {/* 快速操作网格 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {filteredActions.slice(0, 8).map((action) => {
           const Icon = action.icon;
           return (
             <button
               key={action.id}
               onClick={action.onClick}
-              className="group relative p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all"
+              className="group relative rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-md"
             >
               {action.badge && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                   {action.badge}
                 </span>
               )}
               <div
-                className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
+                className={`h-12 w-12 ${action.color} mb-3 flex items-center justify-center rounded-lg transition-transform group-hover:scale-110`}
               >
                 <Icon className="h-6 w-6 text-white" />
               </div>
-              <h4 className="font-medium text-gray-900 text-sm mb-1">
-                {action.title}
-              </h4>
-              <p className="text-xs text-gray-500 line-clamp-2">
-                {action.description}
-              </p>
+              <h4 className="mb-1 text-sm font-medium text-gray-900">{action.title}</h4>
+              <p className="line-clamp-2 text-xs text-gray-500">{action.description}</p>
             </button>
           );
         })}
       </div>
 
       {/* 最近操作和提醒 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* 最近操作 */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-            <Clock className="h-4 w-4 mr-2" />
+          <h4 className="mb-3 flex items-center text-sm font-medium text-gray-700">
+            <Clock className="mr-2 h-4 w-4" />
             最近操作
           </h4>
           <div className="space-y-2">
@@ -280,15 +274,13 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
               return (
                 <div
                   key={action.id}
-                  className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg"
+                  className="flex items-center space-x-3 rounded-lg p-2 hover:bg-gray-50"
                 >
-                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
                     <Icon className="h-4 w-4 text-gray-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {action.title}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900">{action.title}</p>
                     <p className="text-xs text-gray-500">{action.time}</p>
                   </div>
                 </div>
@@ -299,8 +291,8 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
 
         {/* 即将到来的提醒 */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-            <Bell className="h-4 w-4 mr-2" />
+          <h4 className="mb-3 flex items-center text-sm font-medium text-gray-700">
+            <Bell className="mr-2 h-4 w-4" />
             即将到来的提醒
           </h4>
           <div className="space-y-2">
@@ -309,15 +301,13 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
               return (
                 <div
                   key={reminder.id}
-                  className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg"
+                  className="flex items-center space-x-3 rounded-lg p-2 hover:bg-gray-50"
                 >
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100">
                     <Icon className="h-4 w-4 text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {reminder.title}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900">{reminder.title}</p>
                     <p className="text-xs text-gray-500">{reminder.time}</p>
                   </div>
                 </div>
@@ -328,12 +318,12 @@ export function QuickActionsPanel({ memberId }: QuickActionsPanelProps) {
       </div>
 
       {/* 健康提示 */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+      <div className="mt-6 rounded-lg bg-blue-50 p-4">
         <div className="flex items-start space-x-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+          <AlertCircle className="mt-0.5 h-5 w-5 text-blue-600" />
           <div>
             <h4 className="text-sm font-medium text-blue-900">健康小贴士</h4>
-            <p className="text-sm text-blue-700 mt-1">
+            <p className="mt-1 text-sm text-blue-700">
               定期记录健康数据有助于更好地了解身体状况。建议每天固定时间测量体重和血压，
               每餐后记录饮食情况，保持数据的连续性和准确性。
             </p>

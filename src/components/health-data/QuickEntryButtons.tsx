@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Weight,
-  Heart,
-  Activity,
-  Moon,
-  Zap,
-  Plus,
-  CheckCircle,
-} from "lucide-react";
+import { Weight, Heart, Activity, Moon, Zap, Plus, CheckCircle } from "lucide-react";
 
 interface QuickEntryButtonsProps {
   memberId: string;
@@ -29,10 +21,7 @@ interface QuickEntryItem {
   step?: number;
 }
 
-export function QuickEntryButtons({
-  memberId,
-  onDataAdded,
-}: QuickEntryButtonsProps) {
+export function QuickEntryButtons({ memberId, onDataAdded }: QuickEntryButtonsProps) {
   const [activeEntry, setActiveEntry] = useState<string | null>(null);
   const [entryValues, setEntryValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -129,31 +118,29 @@ export function QuickEntryButtons({
       // 根据不同的快速录入类型设置相应的字段
       const item = quickEntryItems.find((i) => i.id === itemId);
       switch (itemId) {
-      case "weight":
-        payload.weight = parseFloat(value);
-        break;
-      case "bloodPressure":
-        const [systolic, diastolic] = value
-          .split("/")
-          .map((v) => parseInt(v.trim()));
-        if (systolic && diastolic) {
-          payload.bloodPressureSystolic = systolic;
-          payload.bloodPressureDiastolic = diastolic;
-        } else {
-          throw new Error("血压格式不正确，请使用 120/80 格式");
-        }
-        break;
-      case "heartRate":
-        payload.heartRate = parseInt(value);
-        break;
-      case "sleep":
-        // 睡眠数据可能需要扩展数据库schema，暂时放在notes中
-        payload.notes = `睡眠时长: ${value}小时`;
-        break;
-      case "exercise":
-        // 运动数据也暂时放在notes中
-        payload.notes = `运动时长: ${value}分钟`;
-        break;
+        case "weight":
+          payload.weight = parseFloat(value);
+          break;
+        case "bloodPressure":
+          const [systolic, diastolic] = value.split("/").map((v) => parseInt(v.trim()));
+          if (systolic && diastolic) {
+            payload.bloodPressureSystolic = systolic;
+            payload.bloodPressureDiastolic = diastolic;
+          } else {
+            throw new Error("血压格式不正确，请使用 120/80 格式");
+          }
+          break;
+        case "heartRate":
+          payload.heartRate = parseInt(value);
+          break;
+        case "sleep":
+          // 睡眠数据可能需要扩展数据库schema，暂时放在notes中
+          payload.notes = `睡眠时长: ${value}小时`;
+          break;
+        case "exercise":
+          // 运动数据也暂时放在notes中
+          payload.notes = `运动时长: ${value}分钟`;
+          break;
       }
 
       const response = await fetch(`/api/members/${memberId}/health-data`, {
@@ -195,11 +182,11 @@ export function QuickEntryButtons({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">快速录入</h2>
+    <div className="rounded-lg bg-white p-6 shadow">
+      <h2 className="mb-4 text-lg font-semibold text-gray-900">快速录入</h2>
 
       {errors.length > 0 && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-3">
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3">
           <div className="text-sm text-red-800">
             {errors.map((error, index) => (
               <div key={index}>{error}</div>
@@ -208,7 +195,7 @@ export function QuickEntryButtons({
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {quickEntryItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeEntry === item.id;
@@ -220,31 +207,27 @@ export function QuickEntryButtons({
               {!isActive ? (
                 <button
                   onClick={() => handleQuickEntry(item.id)}
-                  className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors group"
+                  className="group w-full rounded-lg border-2 border-dashed border-gray-300 p-4 transition-colors hover:border-blue-400 hover:bg-blue-50"
                 >
                   <div className="flex flex-col items-center space-y-2">
                     <div
-                      className={`p-3 rounded-lg ${item.bgColor} group-hover:scale-110 transition-transform`}
+                      className={`rounded-lg p-3 ${item.bgColor} transition-transform group-hover:scale-110`}
                     >
                       <Icon className={`h-6 w-6 ${item.color}`} />
                     </div>
-                    <span className="text-sm font-medium text-gray-700">
-                      {item.name}
-                    </span>
+                    <span className="text-sm font-medium text-gray-700">{item.name}</span>
                   </div>
                 </button>
               ) : (
                 /* 输入框 */
-                <div className="w-full p-4 border-2 border-blue-400 bg-blue-50 rounded-lg">
+                <div className="w-full rounded-lg border-2 border-blue-400 bg-blue-50 p-4">
                   <div className="flex flex-col space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <div className={`p-2 rounded-lg ${item.bgColor}`}>
+                        <div className={`rounded-lg p-2 ${item.bgColor}`}>
                           <Icon className={`h-4 w-4 ${item.color}`} />
                         </div>
-                        <span className="text-sm font-medium text-gray-700">
-                          {item.name}
-                        </span>
+                        <span className="text-sm font-medium text-gray-700">{item.name}</span>
                       </div>
                       <button
                         onClick={() => setActiveEntry(null)}
@@ -258,29 +241,25 @@ export function QuickEntryButtons({
                       <input
                         type="number"
                         value={value}
-                        onChange={(e) =>
-                          handleValueChange(item.id, e.target.value)
-                        }
+                        onChange={(e) => handleValueChange(item.id, e.target.value)}
                         placeholder={item.placeholder}
                         min={item.min}
                         max={item.max}
                         step={item.step}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                         autoFocus
                       />
-                      <span className="flex items-center text-sm text-gray-500">
-                        {item.unit}
-                      </span>
+                      <span className="flex items-center text-sm text-gray-500">{item.unit}</span>
                     </div>
 
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleSubmit(item.id)}
                         disabled={loading || !value}
-                        className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                        className="flex flex-1 items-center justify-center space-x-1 rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {loading ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                         ) : (
                           <CheckCircle className="h-4 w-4" />
                         )}

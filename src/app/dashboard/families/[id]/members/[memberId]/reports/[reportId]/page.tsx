@@ -19,9 +19,7 @@ interface ReportDetailPageProps {
   }>;
 }
 
-export default function ReportDetailPage({
-  params: paramsPromise,
-}: ReportDetailPageProps) {
+export default function ReportDetailPage({ params: paramsPromise }: ReportDetailPageProps) {
   const router = useRouter();
   const [params, setParams] = useState<{
     id: string;
@@ -49,9 +47,7 @@ export default function ReportDetailPage({
     if (!params) return;
 
     try {
-      const response = await fetch(
-        `/api/families/${params.id}/members/${params.memberId}`,
-      );
+      const response = await fetch(`/api/families/${params.id}/members/${params.memberId}`);
       if (response.ok) {
         const data = await response.json();
         setMemberName(data.member?.name || "成员");
@@ -68,9 +64,7 @@ export default function ReportDetailPage({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/members/${params.memberId}/reports/${params.reportId}`,
-      );
+      const response = await fetch(`/api/members/${params.memberId}/reports/${params.reportId}`);
 
       if (!response.ok) {
         const data = await response.json();
@@ -92,12 +86,9 @@ export default function ReportDetailPage({
     }
 
     try {
-      const response = await fetch(
-        `/api/members/${params.memberId}/reports/${params.reportId}`,
-        {
-          method: "DELETE",
-        },
-      );
+      const response = await fetch(`/api/members/${params.memberId}/reports/${params.reportId}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -105,9 +96,7 @@ export default function ReportDetailPage({
       }
 
       // 导航回列表页
-      router.push(
-        `/dashboard/families/${params.id}/members/${params.memberId}/reports`,
-      );
+      router.push(`/dashboard/families/${params.id}/members/${params.memberId}/reports`);
     } catch (err) {
       alert(err instanceof Error ? err.message : "删除失败");
     }
@@ -116,7 +105,7 @@ export default function ReportDetailPage({
   const handleCompare = () => {
     if (!params) return;
     router.push(
-      `/dashboard/families/${params.id}/members/${params.memberId}/reports/${params.reportId}/compare`,
+      `/dashboard/families/${params.id}/members/${params.memberId}/reports/${params.reportId}/compare`
     );
   };
 
@@ -127,9 +116,9 @@ export default function ReportDetailPage({
 
   if (loading && !report) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
           <div className="text-gray-600">加载中...</div>
         </div>
       </div>
@@ -139,9 +128,9 @@ export default function ReportDetailPage({
   if (error || !report || !params) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
               <p className="text-red-800">{error || "报告不存在"}</p>
             </div>
           </div>
@@ -152,15 +141,12 @@ export default function ReportDetailPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* 面包屑导航 */}
           <nav className="mb-6">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Link
-                href={`/dashboard/families/${params.id}`}
-                className="hover:text-gray-900"
-              >
+              <Link href={`/dashboard/families/${params.id}`} className="hover:text-gray-900">
                 家庭
               </Link>
               <span>/</span>
@@ -186,26 +172,25 @@ export default function ReportDetailPage({
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">报告详情</h1>
             <div className="flex gap-2">
-              {report.ocrStatus === "COMPLETED" &&
-                report.indicators.length > 0 && (
+              {report.ocrStatus === "COMPLETED" && report.indicators.length > 0 && (
                 <>
                   <button
                     onClick={() => setShowCorrectionForm(!showCorrectionForm)}
-                    className="px-4 py-2 text-blue-700 bg-blue-50 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+                    className="rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-700 transition-colors hover:bg-blue-100"
                   >
                     {showCorrectionForm ? "取消修正" : "手动修正"}
                   </button>
                   <button
                     onClick={handleCompare}
-                    className="px-4 py-2 text-green-700 bg-green-50 rounded-lg font-medium hover:bg-green-100 transition-colors"
+                    className="rounded-lg bg-green-50 px-4 py-2 font-medium text-green-700 transition-colors hover:bg-green-100"
                   >
-                      历史对比
+                    历史对比
                   </button>
                 </>
               )}
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 text-red-700 bg-red-50 rounded-lg font-medium hover:bg-red-100 transition-colors"
+                className="rounded-lg bg-red-50 px-4 py-2 font-medium text-red-700 transition-colors hover:bg-red-100"
               >
                 删除
               </button>
@@ -220,10 +205,8 @@ export default function ReportDetailPage({
           {/* 手动修正表单 */}
           {showCorrectionForm && report.ocrStatus === "COMPLETED" && (
             <div className="mb-6">
-              <div className="bg-white border rounded-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  手动修正指标
-                </h2>
+              <div className="rounded-lg border bg-white p-6">
+                <h2 className="mb-4 text-xl font-bold text-gray-900">手动修正指标</h2>
                 <CorrectionForm
                   reportId={params.reportId}
                   memberId={params.memberId}

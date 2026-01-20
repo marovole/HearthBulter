@@ -30,11 +30,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
 
-    const calendar = await getCheckInCalendar(
-      memberId,
-      parseInt(year),
-      parseInt(month),
-    );
+    const calendar = await getCheckInCalendar(memberId, parseInt(year), parseInt(month));
 
     return NextResponse.json(calendar);
   } catch (error) {

@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Bell,
-  Check,
-  X,
-  Filter,
-  Settings,
-  Trash2,
-  RefreshCw,
-} from "lucide-react";
+import { Bell, Check, X, Filter, Settings, Trash2, RefreshCw } from "lucide-react";
 import { NotificationItem } from "./notification-item";
 import { NotificationFilters } from "./notification-filters";
 import { NotificationSettings } from "./notification-settings";
@@ -60,9 +52,7 @@ export function NotificationList({
   selectable = false,
   onSelectionChange,
 }: NotificationListProps) {
-  const [selectedNotifications, setSelectedNotifications] = useState<string[]>(
-    [],
-  );
+  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
 
   // 切换选择状态
   const toggleSelection = (notificationId: string) => {
@@ -77,9 +67,7 @@ export function NotificationList({
   // 全选/取消全选
   const toggleSelectAll = () => {
     const newSelection =
-      selectedNotifications.length === notifications.length
-        ? []
-        : notifications.map((n) => n.id);
+      selectedNotifications.length === notifications.length ? [] : notifications.map((n) => n.id);
 
     setSelectedNotifications(newSelection);
     onSelectionChange?.(newSelection);
@@ -87,7 +75,7 @@ export function NotificationList({
 
   if (loading && notifications.length === 0) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border p-6 ${className}`}>
+      <div className={`rounded-lg border bg-white p-6 shadow-sm ${className}`}>
         <div className="flex items-center justify-center py-12">
           <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
           <span className="ml-2 text-gray-500">加载通知中...</span>
@@ -98,14 +86,14 @@ export function NotificationList({
 
   if (error) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border p-6 ${className}`}>
+      <div className={`rounded-lg border bg-white p-6 shadow-sm ${className}`}>
         <div className="flex items-center justify-center py-12">
           <X className="h-6 w-6 text-red-400" />
           <span className="ml-2 text-red-500">{error}</span>
           {onRefresh && (
             <button
               onClick={onRefresh}
-              className="ml-4 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+              className="ml-4 rounded bg-blue-50 px-3 py-1 text-sm text-blue-600 hover:bg-blue-100"
             >
               重试
             </button>
@@ -119,10 +107,8 @@ export function NotificationList({
     <div className={`${className}`}>
       {/* 批量操作栏 */}
       {selectable && selectedNotifications.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-200">
-          <span className="text-sm text-blue-700">
-            已选择 {selectedNotifications.length} 项
-          </span>
+        <div className="flex items-center justify-between border-b border-blue-200 bg-blue-50 px-4 py-3">
+          <span className="text-sm text-blue-700">已选择 {selectedNotifications.length} 项</span>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => {
@@ -130,7 +116,7 @@ export function NotificationList({
                 setSelectedNotifications([]);
                 onSelectionChange?.([]);
               }}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
             >
               标记已读
             </button>
@@ -140,7 +126,7 @@ export function NotificationList({
                 setSelectedNotifications([]);
                 onSelectionChange?.([]);
               }}
-              className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+              className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
             >
               删除
             </button>
@@ -152,7 +138,7 @@ export function NotificationList({
       <div className="divide-y divide-gray-100">
         {notifications.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <Bell className="mx-auto mb-3 h-12 w-12 text-gray-300" />
             <p className="text-gray-500">暂无通知</p>
           </div>
         ) : (
@@ -161,9 +147,7 @@ export function NotificationList({
               key={notification.id}
               notification={notification}
               selected={selectedNotifications.includes(notification.id)}
-              onSelect={
-                selectable ? () => toggleSelection(notification.id) : undefined
-              }
+              onSelect={selectable ? () => toggleSelection(notification.id) : undefined}
               showActions={showActions}
             />
           ))
@@ -172,11 +156,11 @@ export function NotificationList({
 
       {/* 加载更多 */}
       {showLoadMore && hasMore && (
-        <div className="px-6 py-4 text-center border-t border-gray-100">
+        <div className="border-t border-gray-100 px-6 py-4 text-center">
           <button
             onClick={onLoadMore}
             disabled={loading}
-            className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md bg-blue-50 px-4 py-2 text-sm text-blue-600 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "加载中..." : "加载更多"}
           </button>
@@ -185,15 +169,15 @@ export function NotificationList({
 
       {/* 全选控制 */}
       {selectable && notifications.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3">
           <button
             onClick={toggleSelectAll}
             className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-800"
           >
             <div
-              className={`h-4 w-4 border rounded ${
+              className={`h-4 w-4 rounded border ${
                 selectedNotifications.length === notifications.length
-                  ? "bg-blue-500 border-blue-500"
+                  ? "border-blue-500 bg-blue-500"
                   : "border-gray-300"
               }`}
             >
@@ -202,15 +186,11 @@ export function NotificationList({
               )}
             </div>
             <span>
-              {selectedNotifications.length === notifications.length
-                ? "取消全选"
-                : "全选"}
+              {selectedNotifications.length === notifications.length ? "取消全选" : "全选"}
             </span>
           </button>
 
-          <span className="text-sm text-gray-500">
-            {notifications.length} 条通知
-          </span>
+          <span className="text-sm text-gray-500">{notifications.length} 条通知</span>
         </div>
       )}
     </div>

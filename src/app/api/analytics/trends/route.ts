@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (!memberId || !dataType || !startDate || !endDate) {
       return NextResponse.json(
         { error: "缺少必要参数：memberId, dataType, startDate, endDate" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -39,9 +39,7 @@ export async function GET(request: NextRequest) {
     const end = new Date(endDate);
 
     // 动态导入缓存模块以避免模块初始化问题
-    const { getMultiLayerCache } = await import(
-      "@/lib/cache/multi-layer-cache"
-    );
+    const { getMultiLayerCache } = await import("@/lib/cache/multi-layer-cache");
 
     // 使用多层缓存获取数据
     const cache = getMultiLayerCache({
@@ -60,19 +58,15 @@ export async function GET(request: NextRequest) {
       async () => {
         // Fallback: 实时分析（L1/L2 miss 时执行）
         // 动态导入容器以避免模块初始化问题
-        const { getDefaultContainer } = await import(
-          "@/lib/container/service-container"
-        );
+        const { getDefaultContainer } = await import("@/lib/container/service-container");
         const container = getDefaultContainer();
         const trendAnalyzer = container.getTrendAnalyzer();
         return await trendAnalyzer.analyzeTrend(memberId, dataType, start, end);
-      },
+      }
     );
 
     // 动态导入缓存头辅助函数
-    const { addCacheHeaders, EDGE_CACHE_PRESETS } = await import(
-      "@/lib/cache/edge-cache-helpers"
-    );
+    const { addCacheHeaders, EDGE_CACHE_PRESETS } = await import("@/lib/cache/edge-cache-helpers");
 
     // 创建响应头
     const headers = new Headers();
@@ -92,13 +86,13 @@ export async function GET(request: NextRequest) {
         _cache:
           process.env.NODE_ENV === "development"
             ? {
-              source: result.source,
-              hit: result.hit,
-              duration: result.duration,
-            }
+                source: result.source,
+                hit: result.hit,
+                duration: result.duration,
+              }
             : undefined,
       },
-      { headers },
+      { headers }
     );
   } catch (error) {
     console.error("Failed to get trend data:", error);

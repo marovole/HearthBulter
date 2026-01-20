@@ -21,7 +21,7 @@ const updateGoalSchema = z.object({
 function calculateProgress(
   startWeight: number | null,
   currentWeight: number | null,
-  targetWeight: number | null,
+  targetWeight: number | null
 ): number {
   if (!startWeight || !currentWeight || !targetWeight) return 0;
 
@@ -42,7 +42,7 @@ function calculateProgress(
 async function verifyGoalAccess(
   goalId: string,
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean; goal: any }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -61,7 +61,7 @@ async function verifyGoalAccess(
           creatorId
         )
       )
-    `,
+    `
     )
     .eq("id", goalId)
     .eq("memberId", memberId)
@@ -107,7 +107,7 @@ async function verifyGoalAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; goalId: string }> },
+  { params }: { params: Promise<{ memberId: string; goalId: string }> }
 ) {
   try {
     const { memberId, goalId } = await params;
@@ -117,11 +117,7 @@ export async function GET(
     }
 
     // 验证权限并获取目标
-    const { hasAccess, goal } = await verifyGoalAccess(
-      goalId,
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess, goal } = await verifyGoalAccess(goalId, memberId, session.user.id);
 
     if (!hasAccess || !goal) {
       return NextResponse.json({ error: "健康目标不存在" }, { status: 404 });
@@ -142,7 +138,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; goalId: string }> },
+  { params }: { params: Promise<{ memberId: string; goalId: string }> }
 ) {
   try {
     const { memberId, goalId } = await params;
@@ -158,16 +154,12 @@ export async function PATCH(
     if (!validation.success) {
       return NextResponse.json(
         { error: "输入数据无效", details: validation.error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // 验证权限
-    const { hasAccess, goal } = await verifyGoalAccess(
-      goalId,
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess, goal } = await verifyGoalAccess(goalId, memberId, session.user.id);
 
     if (!hasAccess || !goal) {
       return NextResponse.json({ error: "健康目标不存在" }, { status: 404 });
@@ -187,26 +179,19 @@ export async function PATCH(
       // 重新计算目标日期
       const startDate = new Date(goal.startDate);
       const targetDate = new Date(
-        startDate.getTime() +
-          validation.data.targetWeeks * 7 * 24 * 60 * 60 * 1000,
+        startDate.getTime() + validation.data.targetWeeks * 7 * 24 * 60 * 60 * 1000
       );
       updateData.targetDate = targetDate.toISOString();
     }
-    if (validation.data.carbRatio !== undefined)
-      updateData.carbRatio = validation.data.carbRatio;
+    if (validation.data.carbRatio !== undefined) updateData.carbRatio = validation.data.carbRatio;
     if (validation.data.proteinRatio !== undefined)
       updateData.proteinRatio = validation.data.proteinRatio;
-    if (validation.data.fatRatio !== undefined)
-      updateData.fatRatio = validation.data.fatRatio;
+    if (validation.data.fatRatio !== undefined) updateData.fatRatio = validation.data.fatRatio;
 
     // 重新计算进度
     const currentWeight = updateData.currentWeight ?? goal.currentWeight;
     const targetWeight = updateData.targetWeight ?? goal.targetWeight;
-    updateData.progress = calculateProgress(
-      goal.startWeight,
-      currentWeight,
-      targetWeight,
-    );
+    updateData.progress = calculateProgress(goal.startWeight, currentWeight, targetWeight);
 
     const supabase = SupabaseClientManager.getInstance();
     const now = new Date().toISOString();
@@ -230,7 +215,7 @@ export async function PATCH(
         message: "健康目标更新成功",
         goal: updatedGoal,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("更新健康目标失败:", error);
@@ -246,7 +231,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; goalId: string }> },
+  { params }: { params: Promise<{ memberId: string; goalId: string }> }
 ) {
   try {
     const { memberId, goalId } = await params;
@@ -256,11 +241,7 @@ export async function DELETE(
     }
 
     // 验证权限
-    const { hasAccess, goal } = await verifyGoalAccess(
-      goalId,
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess, goal } = await verifyGoalAccess(goalId, memberId, session.user.id);
 
     if (!hasAccess || !goal) {
       return NextResponse.json({ error: "健康目标不存在" }, { status: 404 });

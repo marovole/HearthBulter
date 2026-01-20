@@ -26,12 +26,11 @@ export async function GET(request: NextRequest) {
     if (!accessResult.authorized) {
       return NextResponse.json(
         { error: accessResult.reason || "无权访问此成员数据" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
-    const suggestions =
-      await inventoryAnalyzer.generatePurchaseSuggestions(memberId);
+    const suggestions = await inventoryAnalyzer.generatePurchaseSuggestions(memberId);
 
     return NextResponse.json({
       success: true,
@@ -40,9 +39,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("获取采购建议失败:", error);
-    return NextResponse.json(
-      { error: "获取采购建议失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "获取采购建议失败", details: error }, { status: 500 });
   }
 }

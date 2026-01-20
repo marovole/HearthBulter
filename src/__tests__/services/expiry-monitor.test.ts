@@ -109,18 +109,14 @@ describe("ExpiryMonitor", () => {
 
   describe("updateExpiryStatuses", () => {
     it("should update expiry statuses for all items", async () => {
-      const updatedCount =
-        await expiryMonitor.updateExpiryStatuses(testMemberId);
+      const updatedCount = await expiryMonitor.updateExpiryStatuses(testMemberId);
 
       expect(updatedCount).toBeGreaterThan(0);
 
       // 验证状态更新
-      const freshItem =
-        await inventoryTracker.getInventoryItemById(freshItemId);
-      const expiringItem =
-        await inventoryTracker.getInventoryItemById(expiringItemId);
-      const expiredItem =
-        await inventoryTracker.getInventoryItemById(expiredItemId);
+      const freshItem = await inventoryTracker.getInventoryItemById(freshItemId);
+      const expiringItem = await inventoryTracker.getInventoryItemById(expiringItemId);
+      const expiredItem = await inventoryTracker.getInventoryItemById(expiredItemId);
 
       expect(freshItem?.status).toBe(InventoryStatus.FRESH);
       expect(expiringItem?.status).toBe(InventoryStatus.EXPIRING);
@@ -130,53 +126,35 @@ describe("ExpiryMonitor", () => {
 
   describe("generateExpiryNotifications", () => {
     it("should generate notifications for expiring and expired items", async () => {
-      const notifications =
-        await expiryMonitor.generateExpiryNotifications(testMemberId);
+      const notifications = await expiryMonitor.generateExpiryNotifications(testMemberId);
 
       expect(notifications.length).toBeGreaterThan(0);
 
-      const hasExpiringNotification = notifications.some((n) =>
-        n.title.includes("即将过期"),
-      );
-      const hasExpiredNotification = notifications.some((n) =>
-        n.title.includes("已过期"),
-      );
+      const hasExpiringNotification = notifications.some((n) => n.title.includes("即将过期"));
+      const hasExpiredNotification = notifications.some((n) => n.title.includes("已过期"));
 
       expect(hasExpiringNotification).toBe(true);
       expect(hasExpiredNotification).toBe(true);
     });
 
     it("should include correct priority levels", async () => {
-      const notifications =
-        await expiryMonitor.generateExpiryNotifications(testMemberId);
+      const notifications = await expiryMonitor.generateExpiryNotifications(testMemberId);
 
-      const expiredNotifications = notifications.filter((n) =>
-        n.title.includes("已过期"),
-      );
-      const expiringNotifications = notifications.filter((n) =>
-        n.title.includes("即将过期"),
-      );
+      const expiredNotifications = notifications.filter((n) => n.title.includes("已过期"));
+      const expiringNotifications = notifications.filter((n) => n.title.includes("即将过期"));
 
       // 过期物品应该是高优先级
-      expect(expiredNotifications.every((n) => n.priority === "HIGH")).toBe(
-        true,
-      );
+      expect(expiredNotifications.every((n) => n.priority === "HIGH")).toBe(true);
       // 临期物品应该是高或中优先级
       expect(
-        expiringNotifications.every(
-          (n) => n.priority === "HIGH" || n.priority === "MEDIUM",
-        ),
+        expiringNotifications.every((n) => n.priority === "HIGH" || n.priority === "MEDIUM")
       ).toBe(true);
     });
   });
 
   describe("handleExpiredItems", () => {
     it("should create waste records for expired items", async () => {
-      await expiryMonitor.handleExpiredItems(
-        testMemberId,
-        [expiredItemId],
-        "EXPIRED",
-      );
+      await expiryMonitor.handleExpiredItems(testMemberId, [expiredItemId], "EXPIRED");
 
       // 检查是否创建了浪费记录
       const wasteRecords = await prisma.wasteLog.findMany({
@@ -192,18 +170,12 @@ describe("ExpiryMonitor", () => {
     });
 
     it("should remove expired items from inventory", async () => {
-      const itemBefore =
-        await inventoryTracker.getInventoryItemById(expiredItemId);
+      const itemBefore = await inventoryTracker.getInventoryItemById(expiredItemId);
       expect(itemBefore).toBeDefined();
 
-      await expiryMonitor.handleExpiredItems(
-        testMemberId,
-        [expiredItemId],
-        "EXPIRED",
-      );
+      await expiryMonitor.handleExpiredItems(testMemberId, [expiredItemId], "EXPIRED");
 
-      const itemAfter =
-        await inventoryTracker.getInventoryItemById(expiredItemId);
+      const itemAfter = await inventoryTracker.getInventoryItemById(expiredItemId);
       expect(itemAfter).toBeNull();
     });
   });
@@ -225,17 +197,11 @@ describe("ExpiryMonitor", () => {
       const trends = await expiryMonitor.getExpiryTrends(testMemberId, 7);
 
       // 验证趋势数据包含我们的测试物品
-      const totalItems = trends.dailyExpiry.reduce(
-        (sum, day) => sum + day.totalItems,
-        0,
-      );
+      const totalItems = trends.dailyExpiry.reduce((sum, day) => sum + day.totalItems, 0);
       expect(totalItems).toBeGreaterThan(0);
 
       // 验证过期率计算
-      const totalExpired = trends.dailyExpiry.reduce(
-        (sum, day) => sum + day.expiredItems,
-        0,
-      );
+      const totalExpired = trends.dailyExpiry.reduce((sum, day) => sum + day.expiredItems, 0);
       expect(totalExpired).toBeGreaterThan(0);
     });
   });
@@ -262,7 +228,7 @@ describe("ExpiryMonitor", () => {
       expect(analysis.recommendations.length).toBeGreaterThan(0);
 
       const hasExpiryRecommendation = analysis.recommendations.some(
-        (r) => r.type === "EXPIRY_MANAGEMENT",
+        (r) => r.type === "EXPIRY_MANAGEMENT"
       );
       expect(hasExpiryRecommendation).toBe(true);
     });

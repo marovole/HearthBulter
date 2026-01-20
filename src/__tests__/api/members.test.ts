@@ -212,12 +212,7 @@ describe("Member Management", () => {
     });
 
     it("should accept various date formats", () => {
-      const testCases = [
-        "1990-01-01",
-        "1990/01/01",
-        "2000-12-31",
-        "1985-06-15",
-      ];
+      const testCases = ["1990-01-01", "1990/01/01", "2000-12-31", "1985-06-15"];
 
       testCases.forEach((birthDate) => {
         const data = {

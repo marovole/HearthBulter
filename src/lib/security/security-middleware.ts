@@ -117,10 +117,7 @@ export class SQLInjectionDetector {
     // 移除SQL注入字符
     return str
       .replace(/['"`;\\]/g, "")
-      .replace(
-        /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi,
-        "",
-      )
+      .replace(/\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, "")
       .replace(/--|\/\*|\*\/|#/g, "")
       .trim();
   }
@@ -207,9 +204,7 @@ export class CSRFProtection {
   private static tokenExpiry = 60 * 60 * 1000; // 1小时
 
   static generateToken(sessionId: string): string {
-    const token = Buffer.from(
-      `${sessionId}:${Date.now()}:${Math.random()}`,
-    ).toString("base64");
+    const token = Buffer.from(`${sessionId}:${Date.now()}:${Math.random()}`).toString("base64");
 
     this.tokens.set(sessionId, {
       token,
@@ -249,10 +244,7 @@ export class CSRFProtection {
  * 请求频率限制
  */
 export class RateLimiter {
-  private static requests = new Map<
-    string,
-    { count: number; resetTime: number }
-  >();
+  private static requests = new Map<string, { count: number; resetTime: number }>();
   private static defaultLimit = {
     windowMs: 60 * 1000, // 1分钟
     maxRequests: 60, // 60次请求
@@ -260,7 +252,7 @@ export class RateLimiter {
 
   static checkLimit(
     identifier: string,
-    limit?: { windowMs: number; maxRequests: number },
+    limit?: { windowMs: number; maxRequests: number }
   ): { allowed: boolean; remaining: number; resetTime: number } {
     const config = limit || this.defaultLimit;
     const now = Date.now();
@@ -324,7 +316,7 @@ export class SecurityMiddleware {
 
   async checkSecurity(
     request: NextRequest,
-    options: SecurityOptions = {},
+    options: SecurityOptions = {}
   ): Promise<SecurityCheckResult> {
     const startTime = Date.now();
     const audit: SecurityAudit = {
@@ -344,10 +336,7 @@ export class SecurityMiddleware {
 
       // 1. SQL注入防护
       if (options.preventSQLInjection !== false) {
-        const sqlResult = await this.checkSQLInjection(
-          request,
-          options.customSQLPatterns,
-        );
+        const sqlResult = await this.checkSQLInjection(request, options.customSQLPatterns);
         if (sqlResult.threats.length > 0) {
           threats.push(...sqlResult.threats);
           audit.threats.push(...sqlResult.threats);
@@ -367,10 +356,7 @@ export class SecurityMiddleware {
 
       // 3. CSRF防护
       if (options.preventCSRF) {
-        const csrfResult = await this.checkCSRF(
-          request,
-          options.csrfTokenExpiry,
-        );
+        const csrfResult = await this.checkCSRF(request, options.csrfTokenExpiry);
         if (!csrfResult.valid) {
           threats.push("CSRF Token Invalid");
           audit.threats.push("CSRF Token Invalid");
@@ -379,10 +365,7 @@ export class SecurityMiddleware {
 
       // 4. 频率限制
       if (options.enableRateLimit && options.rateLimit) {
-        const rateLimitResult = await this.checkRateLimit(
-          request,
-          options.rateLimit,
-        );
+        const rateLimitResult = await this.checkRateLimit(request, options.rateLimit);
         if (!rateLimitResult.allowed) {
           threats.push("Rate Limit Exceeded");
           audit.threats.push("Rate Limit Exceeded");
@@ -392,16 +375,12 @@ export class SecurityMiddleware {
       // 计算威胁严重程度
       if (threats.length > 0) {
         audit.severity = this.calculateSeverity(threats, audit);
-        audit.blocked =
-          audit.severity === "critical" || audit.severity === "high";
+        audit.blocked = audit.severity === "critical" || audit.severity === "high";
         audit.threats = threats;
       }
 
       // 记录审计日志
-      if (
-        options.enableAudit &&
-        (audit.threats.length > 0 || audit.severity !== "low")
-      ) {
+      if (options.enableAudit && (audit.threats.length > 0 || audit.severity !== "low")) {
         await this.logSecurityAudit(audit, options.auditLevel);
       }
 
@@ -437,13 +416,10 @@ export class SecurityMiddleware {
    */
   private async checkSQLInjection(
     request: NextRequest,
-    customPatterns?: RegExp[],
+    customPatterns?: RegExp[]
   ): Promise<{ threats: string[]; sanitized?: any }> {
     const threats: string[] = [];
-    const combinedPatterns = [
-      ...SQLInjectionDetector.patterns,
-      ...(customPatterns || []),
-    ];
+    const combinedPatterns = [...SQLInjectionDetector.patterns, ...(customPatterns || [])];
 
     // 检查查询参数
     const { searchParams } = new URL(request.url);
@@ -473,9 +449,7 @@ export class SecurityMiddleware {
   /**
    * 检查XSS攻击
    */
-  private async checkXSS(
-    request: NextRequest,
-  ): Promise<{ threats: string[]; sanitized?: any }> {
+  private async checkXSS(request: NextRequest): Promise<{ threats: string[]; sanitized?: any }> {
     const threats: string[] = [];
 
     // 检查查询参数
@@ -533,10 +507,7 @@ export class SecurityMiddleware {
   /**
    * 检查CSRF令牌
    */
-  private async checkCSRF(
-    request: NextRequest,
-    tokenExpiry?: number,
-  ): Promise<{ valid: boolean }> {
+  private async checkCSRF(request: NextRequest, tokenExpiry?: number): Promise<{ valid: boolean }> {
     const sessionId = request.headers.get("x-session-id");
     const csrfToken = request.headers.get("x-csrf-token");
 
@@ -558,22 +529,22 @@ export class SecurityMiddleware {
       windowMs: number;
       maxRequests: number;
       identifier: "ip" | "userId" | "session";
-    },
+    }
   ): Promise<{ allowed: boolean }> {
     let identifier: string;
 
     switch (rateLimit.identifier) {
-    case "ip":
-      identifier = this.getClientIP(request);
-      break;
-    case "session":
-      identifier = request.headers.get("x-session-id") || "unknown";
-      break;
-    case "userId":
-      identifier = request.headers.get("x-user-id") || "unknown";
-      break;
-    default:
-      identifier = this.getClientIP(request);
+      case "ip":
+        identifier = this.getClientIP(request);
+        break;
+      case "session":
+        identifier = request.headers.get("x-session-id") || "unknown";
+        break;
+      case "userId":
+        identifier = request.headers.get("x-user-id") || "unknown";
+        break;
+      default:
+        identifier = this.getClientIP(request);
     }
 
     const result = RateLimiter.checkLimit(identifier, {
@@ -589,11 +560,7 @@ export class SecurityMiddleware {
    */
   private getClientIP(request: NextRequest): string {
     return (
-      (
-        request.headers.get("x-forwarded-for") ||
-        request.headers.get("x-real-ip") ||
-        "127.0.0.1"
-      )
+      (request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1")
         ?.split(",")[0]
         ?.trim() || "127.0.0.1"
     );
@@ -602,24 +569,15 @@ export class SecurityMiddleware {
   /**
    * 计算威胁严重程度
    */
-  private calculateSeverity(
-    threats: string[],
-    audit: SecurityAudit,
-  ): SecurityAudit["severity"] {
+  private calculateSeverity(threats: string[], audit: SecurityAudit): SecurityAudit["severity"] {
     const criticalThreats = ["SQL Injection", "SQL注入", "Rate Limit Exceeded"];
     const highThreats = ["CSRF Token Invalid", "XSS Attack", "XSS攻击"];
 
-    if (
-      threats.some((threat) =>
-        criticalThreats.some((ct) => threat.includes(ct)),
-      )
-    ) {
+    if (threats.some((threat) => criticalThreats.some((ct) => threat.includes(ct)))) {
       return "critical";
     }
 
-    if (
-      threats.some((threat) => highThreats.some((ht) => threat.includes(ht)))
-    ) {
+    if (threats.some((threat) => highThreats.some((ht) => threat.includes(ht)))) {
       return "high";
     }
 
@@ -635,7 +593,7 @@ export class SecurityMiddleware {
    */
   private async logSecurityAudit(
     audit: SecurityAudit,
-    level: "basic" | "detailed" = "basic",
+    level: "basic" | "detailed" = "basic"
   ): Promise<void> {
     if (audit.blocked) {
       logger.error("安全威胁已拦截", {
@@ -662,10 +620,8 @@ export class SecurityMiddleware {
 export const securityMiddleware = SecurityMiddleware.getInstance();
 
 // 导出便捷方法
-export const checkSecurity = (
-  request: NextRequest,
-  options?: SecurityOptions,
-) => securityMiddleware.checkSecurity(request, options);
+export const checkSecurity = (request: NextRequest, options?: SecurityOptions) =>
+  securityMiddleware.checkSecurity(request, options);
 
 // 默认安全配置
 export const defaultSecurityOptions: SecurityOptions = {
@@ -687,13 +643,10 @@ export function withSecurity(
   options: SecurityOptions = defaultSecurityOptions,
   handler: (
     request: NextRequest,
-    context: { sanitized?: any; audit?: SecurityAudit },
-  ) => Promise<NextResponse>,
+    context: { sanitized?: any; audit?: SecurityAudit }
+  ) => Promise<NextResponse>
 ) {
-  return async (
-    request: NextRequest,
-    context?: { params?: Record<string, string> },
-  ) => {
+  return async (request: NextRequest, context?: { params?: Record<string, string> }) => {
     const securityResult = await checkSecurity(request, options);
 
     if (!securityResult.safe) {

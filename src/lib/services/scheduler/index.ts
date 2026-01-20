@@ -103,14 +103,14 @@ class TaskScheduler {
         },
         {
           timezone: "Asia/Shanghai",
-        },
+        }
       );
 
       this.tasks.set(taskDef.name, scheduledTask);
       scheduledTask.start();
 
       this.logger.info(
-        `Scheduled task: ${taskDef.name} (${taskDef.cronExpression}) - ${taskDef.description}`,
+        `Scheduled task: ${taskDef.name} (${taskDef.cronExpression}) - ${taskDef.description}`
       );
     } catch (error) {
       this.logger.error(`Failed to schedule task ${taskDef.name}:`, error);

@@ -45,18 +45,14 @@ function buildContext(searchParams: URLSearchParams): {
 
   const context: RecommendationContext = {
     memberId,
-    mealType:
-      (searchParams.get("mealType") as RecommendationContext["mealType"]) ||
-      undefined,
+    mealType: (searchParams.get("mealType") as RecommendationContext["mealType"]) || undefined,
     servings: parseInteger(searchParams.get("servings")),
     maxCookTime: parseInteger(searchParams.get("maxCookTime")),
     budgetLimit: parseFloatValue(searchParams.get("budgetLimit")),
     dietaryRestrictions: parseCsv(searchParams.get("dietaryRestrictions")),
     excludedIngredients: parseCsv(searchParams.get("excludedIngredients")),
     preferredCuisines: parseCsv(searchParams.get("preferredCuisines")),
-    season:
-      (searchParams.get("season") as RecommendationContext["season"]) ||
-      undefined,
+    season: (searchParams.get("season") as RecommendationContext["season"]) || undefined,
   };
 
   return { context, limit, excludeRecipeIds };
@@ -71,7 +67,7 @@ export async function GET(request: NextRequest) {
     const container = await import("@/lib/container/service-container");
     const getDefaultContainer = container.getDefaultContainer;
     const recommendationEngine = new RecommendationEngine(
-      getDefaultContainer().getRecommendationRepository(),
+      getDefaultContainer().getRecommendationRepository()
     );
 
     const { searchParams } = request.nextUrl;
@@ -80,7 +76,7 @@ export async function GET(request: NextRequest) {
     const recommendations = await recommendationEngine.refreshRecommendations(
       context,
       excludeRecipeIds,
-      limit,
+      limit
     );
 
     const recipeIds = recommendations.map((rec) => rec.recipeId);
@@ -128,7 +124,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to refresh recommendations",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 400 },
+      { status: 400 }
     );
   }
 }

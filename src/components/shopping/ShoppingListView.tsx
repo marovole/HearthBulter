@@ -100,10 +100,7 @@ interface ShoppingListViewProps {
   planId?: string;
 }
 
-export function ShoppingListView({
-  shoppingListId,
-  planId,
-}: ShoppingListViewProps) {
+export function ShoppingListView({ shoppingListId, planId }: ShoppingListViewProps) {
   const [shoppingList, setShoppingList] = useState<ShoppingList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -127,9 +124,7 @@ export function ShoppingListView({
   const fetchShoppingList = async () => {
     try {
       setLoading(true);
-      const url = planId
-        ? `/api/shopping-lists?planId=${planId}`
-        : "/api/shopping-lists";
+      const url = planId ? `/api/shopping-lists?planId=${planId}` : "/api/shopping-lists";
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -137,9 +132,7 @@ export function ShoppingListView({
       }
 
       const data = await response.json();
-      const list = data.shoppingLists.find(
-        (l: ShoppingList) => l.id === shoppingListId,
-      );
+      const list = data.shoppingLists.find((l: ShoppingList) => l.id === shoppingListId);
 
       if (!list) {
         throw new Error("购物清单不存在");
@@ -155,16 +148,13 @@ export function ShoppingListView({
 
   const handleItemToggle = async (itemId: string, purchased: boolean) => {
     try {
-      const response = await fetch(
-        `/api/shopping-lists/${shoppingListId}/items/${itemId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ purchased }),
+      const response = await fetch(`/api/shopping-lists/${shoppingListId}/items/${itemId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ purchased }),
+      });
 
       if (!response.ok) {
         throw new Error("更新失败");
@@ -179,16 +169,13 @@ export function ShoppingListView({
 
   const handleComplete = async (actualCost?: number) => {
     try {
-      const response = await fetch(
-        `/api/shopping-lists/${shoppingListId}/complete`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ actualCost }),
+      const response = await fetch(`/api/shopping-lists/${shoppingListId}/complete`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ actualCost }),
+      });
 
       if (!response.ok) {
         throw new Error("完成采购失败");
@@ -247,7 +234,7 @@ export function ShoppingListView({
         acc[category].push(item);
         return acc;
       },
-      {} as Record<string, typeof shoppingList.items>,
+      {} as Record<string, typeof shoppingList.items>
     );
 
     const categoryOrder = [
@@ -327,7 +314,7 @@ export function ShoppingListView({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
         <p className="text-red-800">{error}</p>
       </div>
     );
@@ -335,30 +322,28 @@ export function ShoppingListView({
 
   if (!shoppingList) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p className="text-gray-600">购物清单不存在</p>
       </div>
     );
   }
 
-  const purchasedCount = shoppingList.items.filter(
-    (item) => item.purchased,
-  ).length;
+  const purchasedCount = shoppingList.items.filter((item) => item.purchased).length;
   const totalItems = shoppingList.items.length;
   const progress = totalItems > 0 ? (purchasedCount / totalItems) * 100 : 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 shopping-list-print">
+    <div className="shopping-list-print rounded-lg bg-white p-6 shadow-md">
       {/* 标题和状态 */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">购物清单</h2>
           <div className="flex items-center gap-3">
             {/* 打印和分享按钮（仅在屏幕显示） */}
-            <div className="flex gap-2 no-print">
+            <div className="no-print flex gap-2">
               <button
                 onClick={handlePrint}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
                 title="打印购物清单"
               >
                 <span>🖨️</span>
@@ -366,7 +351,7 @@ export function ShoppingListView({
               </button>
               <button
                 onClick={handleShare}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
                 title="分享购物清单"
               >
                 {copySuccess ? (
@@ -383,7 +368,7 @@ export function ShoppingListView({
               </button>
             </div>
             <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
+              className={`rounded-full px-3 py-1 text-sm font-medium ${
                 shoppingList.status === "COMPLETED"
                   ? "bg-green-100 text-green-800"
                   : shoppingList.status === "IN_PROGRESS"
@@ -402,15 +387,15 @@ export function ShoppingListView({
 
         {/* 进度条 */}
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <span className="text-sm text-gray-600">采购进度</span>
             <span className="text-sm font-medium text-gray-900">
               {purchasedCount} / {totalItems}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="h-2 w-full rounded-full bg-gray-200">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="h-2 rounded-full bg-blue-600 transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -427,20 +412,17 @@ export function ShoppingListView({
       </div>
 
       {/* 分类列表 */}
-      <CategoryList
-        items={shoppingList.items}
-        onItemToggle={handleItemToggle}
-      />
+      <CategoryList items={shoppingList.items} onItemToggle={handleItemToggle} />
 
       {/* 操作按钮 */}
       {shoppingList.status !== "COMPLETED" && (
-        <div className="mt-6 flex gap-4 no-print">
+        <div className="no-print mt-6 flex gap-4">
           <button
             onClick={() => handleComplete()}
             disabled={purchasedCount < totalItems}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`rounded-lg px-4 py-2 font-medium transition-colors ${
               purchasedCount < totalItems
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                ? "cursor-not-allowed bg-gray-300 text-gray-500"
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >

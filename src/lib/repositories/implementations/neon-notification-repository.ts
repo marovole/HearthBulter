@@ -63,9 +63,7 @@ interface ScheduledNotificationRow {
 export class NeonNotificationRepository implements NotificationRepository {
   private readonly loggerPrefix = "[NeonNotificationRepository]";
 
-  async createNotification(
-    payload: CreateNotificationDTO,
-  ): Promise<NotificationDTO> {
+  async createNotification(payload: CreateNotificationDTO): Promise<NotificationDTO> {
     const data = await neonAdapter.notification.create<NotificationRow>({
       data: {
         memberId: payload.memberId,
@@ -96,7 +94,7 @@ export class NeonNotificationRepository implements NotificationRepository {
 
   async listMemberNotifications(
     query: NotificationListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<NotificationDTO>> {
     const where: Record<string, unknown> = { memberId: query.memberId };
 
@@ -125,9 +123,7 @@ export class NeonNotificationRepository implements NotificationRepository {
     return {
       items,
       total,
-      hasMore: pagination?.limit
-        ? (pagination.offset ?? 0) + items.length < total
-        : false,
+      hasMore: pagination?.limit ? (pagination.offset ?? 0) + items.length < total : false,
     };
   }
 
@@ -197,7 +193,7 @@ export class NeonNotificationRepository implements NotificationRepository {
   }
 
   async createScheduledNotification(
-    schedule: ScheduledNotificationDTO,
+    schedule: ScheduledNotificationDTO
   ): Promise<ScheduledNotificationDTO> {
     const data = await neonAdapter.$queryRaw<ScheduledNotificationRow>(
       `INSERT INTO scheduled_notifications 
@@ -211,7 +207,7 @@ export class NeonNotificationRepository implements NotificationRepository {
         schedule.scheduledTime.toISOString(),
         schedule.status,
         schedule.retryCount ?? 0,
-      ],
+      ]
     );
 
     const row = data[0];
@@ -229,15 +225,12 @@ export class NeonNotificationRepository implements NotificationRepository {
     };
   }
 
-  async listDueSchedules(
-    before: Date,
-    limit: number,
-  ): Promise<ScheduledNotificationDTO[]> {
+  async listDueSchedules(before: Date, limit: number): Promise<ScheduledNotificationDTO[]> {
     const data = await neonAdapter.$queryRaw<ScheduledNotificationRow>(
       `SELECT * FROM scheduled_notifications 
        WHERE scheduled_time <= $1 AND status IN ('SCHEDULED', 'PROCESSING')
        ORDER BY scheduled_time ASC LIMIT $2`,
-      [before.toISOString(), limit],
+      [before.toISOString(), limit]
     );
 
     return data.map((row) => ({
@@ -253,30 +246,23 @@ export class NeonNotificationRepository implements NotificationRepository {
 
   async updateScheduleStatus(
     scheduleId: string,
-    status: ScheduledNotificationDTO["status"],
+    status: ScheduledNotificationDTO["status"]
   ): Promise<void> {
     await neonAdapter.$executeRaw(
       "UPDATE scheduled_notifications SET status = $1, updated_at = NOW() WHERE id = $2",
-      [status, scheduleId],
+      [status, scheduleId]
     );
   }
 
-  async getNotificationPreferences(
-    memberId: string,
-  ): Promise<NotificationPreferenceDTO | null> {
-    const data =
-      await neonAdapter.notificationPreference.findFirst<NotificationPreferenceRow>(
-        {
-          where: { memberId },
-        },
-      );
+  async getNotificationPreferences(memberId: string): Promise<NotificationPreferenceDTO | null> {
+    const data = await neonAdapter.notificationPreference.findFirst<NotificationPreferenceRow>({
+      where: { memberId },
+    });
 
     return data ? this.mapPreferenceRow(data) : null;
   }
 
-  async upsertNotificationPreferences(
-    preference: NotificationPreferenceDTO,
-  ): Promise<void> {
+  async upsertNotificationPreferences(preference: NotificationPreferenceDTO): Promise<void> {
     await neonAdapter.notificationPreference.upsert({
       where: { memberId: preference.memberId },
       create: {
@@ -293,9 +279,7 @@ export class NeonNotificationRepository implements NotificationRepository {
     });
   }
 
-  async getNotificationRecipient(
-    memberId: string,
-  ): Promise<NotificationRecipientDTO | null> {
+  async getNotificationRecipient(memberId: string): Promise<NotificationRecipientDTO | null> {
     const member = await neonAdapter.familyMember.findFirst<{
       id: string;
       userId: string;
@@ -310,11 +294,9 @@ export class NeonNotificationRepository implements NotificationRepository {
     });
 
     const preferences =
-      await neonAdapter.notificationPreference.findFirst<NotificationPreferenceRow>(
-        {
-          where: { memberId },
-        },
-      );
+      await neonAdapter.notificationPreference.findFirst<NotificationPreferenceRow>({
+        where: { memberId },
+      });
 
     return {
       memberId,
@@ -328,10 +310,7 @@ export class NeonNotificationRepository implements NotificationRepository {
     };
   }
 
-  async deleteNotification(
-    notificationId: string,
-    memberId: string,
-  ): Promise<void> {
+  async deleteNotification(notificationId: string, memberId: string): Promise<void> {
     const notification = await neonAdapter.notification.findFirst<{
       id: string;
       memberId: string;
@@ -367,13 +346,10 @@ export class NeonNotificationRepository implements NotificationRepository {
     };
   }
 
-  private mapPreferenceRow(
-    row: NotificationPreferenceRow,
-  ): NotificationPreferenceDTO {
+  private mapPreferenceRow(row: NotificationPreferenceRow): NotificationPreferenceDTO {
     return {
       memberId: row.memberId,
-      channelPreferences:
-        row.channelPreferences as NotificationPreferenceDTO["channelPreferences"],
+      channelPreferences: row.channelPreferences as NotificationPreferenceDTO["channelPreferences"],
       quietHours: row.quietHours as NotificationPreferenceDTO["quietHours"],
       mutedTypes: row.mutedTypes as NotificationPreferenceDTO["mutedTypes"],
       lastUpdatedAt: new Date(row.updatedAt),

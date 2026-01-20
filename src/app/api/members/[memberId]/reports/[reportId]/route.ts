@@ -13,13 +13,12 @@ import type { IndicatorType, IndicatorStatus } from "@prisma/client";
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
 
-const normalizeRecord = <T>(
-  value: T | T[] | null | undefined,
-): T | undefined => (Array.isArray(value) ? value[0] : (value ?? undefined));
+const normalizeRecord = <T>(value: T | T[] | null | undefined): T | undefined =>
+  Array.isArray(value) ? value[0] : (value ?? undefined);
 
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const supabase = SupabaseClientManager.getInstance();
 
@@ -34,7 +33,7 @@ async function verifyMemberAccess(
         id,
         creatorId
       )
-    `,
+    `
     )
     .eq("id", memberId)
     .is("deletedAt", null)
@@ -76,7 +75,7 @@ async function verifyMemberAccess(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> },
+  { params }: { params: Promise<{ memberId: string; reportId: string }> }
 ) {
   try {
     const { memberId, reportId } = await params;
@@ -132,7 +131,7 @@ export async function GET(
           indicators: indicators || [],
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("查询报告详情失败:", error);
@@ -148,7 +147,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> },
+  { params }: { params: Promise<{ memberId: string; reportId: string }> }
 ) {
   try {
     const { memberId, reportId } = await params;
@@ -192,9 +191,7 @@ export async function PATCH(
     const updateData: any = {};
 
     if (body.reportDate !== undefined) {
-      updateData.reportDate = body.reportDate
-        ? new Date(body.reportDate).toISOString()
-        : null;
+      updateData.reportDate = body.reportDate ? new Date(body.reportDate).toISOString() : null;
     }
 
     if (body.institution !== undefined) {
@@ -241,9 +238,7 @@ export async function PATCH(
               value: value !== undefined ? value : indicator.value,
               unit: unit || indicator.unit,
               referenceRange:
-                referenceRange !== undefined
-                  ? referenceRange
-                  : indicator.referenceRange,
+                referenceRange !== undefined ? referenceRange : indicator.referenceRange,
               status: (status as IndicatorStatus) || indicator.status,
               isAbnormal: status !== "NORMAL",
               isCorrected: true,
@@ -298,7 +293,7 @@ export async function PATCH(
           indicators: updatedIndicators || [],
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("修正报告失败:", error);
@@ -307,7 +302,7 @@ export async function PATCH(
         error: "服务器内部错误",
         details: error instanceof Error ? error.message : "未知错误",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -320,7 +315,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string; reportId: string }> },
+  { params }: { params: Promise<{ memberId: string; reportId: string }> }
 ) {
   try {
     const { memberId, reportId } = await params;
@@ -359,9 +354,7 @@ export async function DELETE(
 
     // 从云存储删除文件
     try {
-      const pathname = FileStorageService.extractPathnameFromUrl(
-        report.fileUrl,
-      );
+      const pathname = FileStorageService.extractPathnameFromUrl(report.fileUrl);
       if (pathname) {
         await FileStorageService.deleteFile(pathname);
       }

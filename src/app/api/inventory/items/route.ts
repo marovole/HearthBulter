@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { convexClient, api } from "@/lib/convex-client";
-import {
-  validateBody,
-  validationErrorResponse,
-} from "@/lib/validation/api-validator";
+import { validateBody, validationErrorResponse } from "@/lib/validation/api-validator";
 import { Id } from "../../../../../convex/_generated/dataModel";
 
 // Type guard for Convex ID
@@ -43,9 +40,7 @@ export async function GET(request: NextRequest) {
 
     const memberIdValue = memberId;
     const items = (await convexClient.query(api.inventory.list, {
-      memberId: isValidId(memberIdValue)
-        ? (memberIdValue as Id<"familyMembers">)
-        : memberIdValue,
+      memberId: isValidId(memberIdValue) ? (memberIdValue as Id<"familyMembers">) : memberIdValue,
       status,
       storageLocation,
       category,
@@ -61,17 +56,11 @@ export async function GET(request: NextRequest) {
       quantity: item.quantity,
       unit: item.unit,
       originalQuantity: item.originalQuantity,
-      purchaseDate: item.purchaseDate
-        ? new Date(item.purchaseDate).toISOString()
-        : null,
+      purchaseDate: item.purchaseDate ? new Date(item.purchaseDate).toISOString() : null,
       purchasePrice: item.purchasePrice,
       purchaseSource: item.purchaseSource,
-      expiryDate: item.expiryDate
-        ? new Date(item.expiryDate).toISOString()
-        : null,
-      productionDate: item.productionDate
-        ? new Date(item.productionDate).toISOString()
-        : null,
+      expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString() : null,
+      productionDate: item.productionDate ? new Date(item.productionDate).toISOString() : null,
       daysToExpiry:
         item.daysToExpiry !== null && item.daysToExpiry !== undefined
           ? item.daysToExpiry
@@ -88,15 +77,15 @@ export async function GET(request: NextRequest) {
       updatedAt: item.updatedAt ? new Date(item.updatedAt).toISOString() : null,
       food: item.food
         ? {
-          id: item.food._id || item.food.id,
-          name: item.food.name,
-          nameEn: item.food.nameEn,
-          category: item.food.category,
-          calories: item.food.calories,
-          protein: item.food.protein,
-          carbs: item.food.carbs,
-          fat: item.food.fat,
-        }
+            id: item.food._id || item.food.id,
+            name: item.food.name,
+            nameEn: item.food.nameEn,
+            category: item.food.category,
+            calories: item.food.calories,
+            protein: item.food.protein,
+            carbs: item.food.carbs,
+            fat: item.food.fat,
+          }
         : null,
       usageRecords: [],
       wasteRecords: [],
@@ -113,17 +102,11 @@ export async function GET(request: NextRequest) {
     if (error && typeof error === "object" && "data" in error) {
       const errorData = (error as { data?: any }).data;
       if (errorData?.code === "FORBIDDEN") {
-        return NextResponse.json(
-          { error: "无权访问此成员数据" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "无权访问此成员数据" }, { status: 403 });
       }
     }
 
-    return NextResponse.json(
-      { error: "获取库存列表失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "获取库存列表失败", details: error }, { status: 500 });
   }
 }
 
@@ -150,24 +133,16 @@ export async function POST(request: NextRequest) {
 
     // 在 Convex 中创建
     const result = (await convexClient.mutation(api.inventory.add, {
-      memberId: isValidId(memberIdValue)
-        ? (memberIdValue as Id<"familyMembers">)
-        : memberIdValue,
-      foodId: isValidId(foodIdValue)
-        ? (foodIdValue as Id<"foods">)
-        : foodIdValue,
+      memberId: isValidId(memberIdValue) ? (memberIdValue as Id<"familyMembers">) : memberIdValue,
+      foodId: isValidId(foodIdValue) ? (foodIdValue as Id<"foods">) : foodIdValue,
       quantity: data.quantity,
       unit: data.unit,
       storageLocation: data.storageLocation || "未分类",
-      expiryDate: data.expiryDate
-        ? new Date(data.expiryDate).getTime()
-        : undefined,
+      expiryDate: data.expiryDate ? new Date(data.expiryDate).getTime() : undefined,
       minStockThreshold: data.minStockThreshold,
       purchasePrice: data.purchasePrice,
       purchaseSource: data.purchaseSource,
-      productionDate: data.productionDate
-        ? new Date(data.productionDate).getTime()
-        : undefined,
+      productionDate: data.productionDate ? new Date(data.productionDate).getTime() : undefined,
       storageNotes: data.storageNotes,
       barcode: data.barcode,
       brand: data.brand,
@@ -187,20 +162,14 @@ export async function POST(request: NextRequest) {
       const errorData = (error as { data?: any }).data;
       const code = errorData?.code;
       if (code === "FORBIDDEN") {
-        return NextResponse.json(
-          { error: "无权访问此成员数据" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "无权访问此成员数据" }, { status: 403 });
       }
       if (code === "NOT_FOUND") {
         return NextResponse.json({ error: "食物不存在" }, { status: 404 });
       }
     }
 
-    return NextResponse.json(
-      { error: "创建库存条目失败", details: error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "创建库存条目失败", details: error }, { status: 500 });
   }
 }
 

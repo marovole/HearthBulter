@@ -1,10 +1,4 @@
-import {
-  PrismaClient,
-  Order,
-  OrderStatus,
-  MealLog,
-  FoodCategory,
-} from "@prisma/client";
+import { PrismaClient, Order, OrderStatus, MealLog, FoodCategory } from "@prisma/client";
 import type { StorageLocation } from "@/lib/repositories/types/inventory";
 import { inventoryTracker } from "./inventory-tracker";
 
@@ -120,10 +114,7 @@ export class InventorySync {
               unit: orderItem.unit,
               purchasePrice: orderItem.price,
               purchaseSource: `${order.account.platform} - 订单${order.platformOrderId}`,
-              expiryDate: this.estimateExpiryDate(
-                food.category,
-                orderItem.name,
-              ),
+              expiryDate: this.estimateExpiryDate(food.category, orderItem.name),
               storageLocation: this.getDefaultStorageLocation(food.category),
             });
             result.addedItems++;
@@ -151,10 +142,7 @@ export class InventorySync {
   /**
    * 从餐食记录同步使用量
    */
-  async syncFromMealLog(
-    mealLogId: string,
-    memberId: string,
-  ): Promise<MealSyncResult> {
+  async syncFromMealLog(mealLogId: string, memberId: string): Promise<MealSyncResult> {
     const result: MealSyncResult = {
       success: true,
       usedItems: 0,
@@ -220,7 +208,7 @@ export class InventorySync {
                 relatedId: mealLogId,
                 relatedType: "MEAL_LOG",
                 notes: `${mealLog.mealType} - ${mealLog.date.toISOString().split("T")[0]}`,
-              },
+              }
             );
             result.usedItems++;
           } else {
@@ -241,10 +229,7 @@ export class InventorySync {
   /**
    * 批量同步多个订单
    */
-  async syncMultipleOrders(
-    orderIds: string[],
-    memberId: string,
-  ): Promise<SyncResult[]> {
+  async syncMultipleOrders(orderIds: string[], memberId: string): Promise<SyncResult[]> {
     const results: SyncResult[] = [];
 
     for (const orderId of orderIds) {
@@ -333,9 +318,7 @@ export class InventorySync {
       daysToAdd = specialItems[foodName];
     }
 
-    const expiryDate = new Date(
-      now.getTime() + daysToAdd * 24 * 60 * 60 * 1000,
-    );
+    const expiryDate = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     return expiryDate;
   }
 
@@ -405,9 +388,7 @@ export class InventorySync {
 
     if (!food) {
       // 如果还是找不到，创建一个新的食物条目
-      const category = Object.values(FoodCategory).includes(
-        orderItem.category as FoodCategory,
-      )
+      const category = Object.values(FoodCategory).includes(orderItem.category as FoodCategory)
         ? (orderItem.category as FoodCategory)
         : FoodCategory.OTHER;
 
@@ -441,7 +422,7 @@ export class InventorySync {
       purchaseSource?: string;
       expiryDate?: Date;
       storageLocation?: StorageLocation;
-    }>,
+    }>
   ): Promise<SyncResult> {
     const result: SyncResult = {
       success: true,
@@ -459,10 +440,7 @@ export class InventorySync {
         // 查找或创建食物
         let food = await prisma.food.findFirst({
           where: {
-            OR: [
-              { name: item.foodName },
-              { nameEn: { contains: item.foodName } },
-            ],
+            OR: [{ name: item.foodName }, { nameEn: { contains: item.foodName } }],
           },
         });
 

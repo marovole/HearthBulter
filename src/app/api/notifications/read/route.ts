@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest) {
       if (!memberId) {
         return NextResponse.json(
           { error: "Member ID is required for marking all as read" },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -39,7 +39,7 @@ export async function PUT(request: NextRequest) {
       if (!notificationId || !memberId) {
         return NextResponse.json(
           { error: "Notification ID and Member ID are required" },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -53,9 +53,6 @@ export async function PUT(request: NextRequest) {
     }
   } catch (error) {
     console.error("Error marking notification as read:", error);
-    return NextResponse.json(
-      { error: "Failed to mark notification as read" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to mark notification as read" }, { status: 500 });
   }
 }

@@ -111,10 +111,7 @@ export class QueryCache {
   /**
    * 生成缓存键
    */
-  private generateCacheKey(
-    queryHash: string,
-    strategy?: CacheStrategy,
-  ): string {
+  private generateCacheKey(queryHash: string, strategy?: CacheStrategy): string {
     const prefix = strategy?.key || this.config.keyPrefix;
     return CacheKeyBuilder.build(prefix, queryHash);
   }
@@ -204,11 +201,7 @@ export class QueryCache {
   /**
    * 获取缓存查询结果
    */
-  async get<T>(
-    query: string,
-    params?: any[],
-    strategy?: CacheStrategy,
-  ): Promise<T | null> {
+  async get<T>(query: string, params?: any[], strategy?: CacheStrategy): Promise<T | null> {
     if (!this.config.enabled) {
       return null;
     }
@@ -230,8 +223,7 @@ export class QueryCache {
 
       if (cachedData) {
         const decompressed = await this.decompress(cachedData);
-        const result: CachedQueryResult<T> =
-          this.deserializeResult(decompressed);
+        const result: CachedQueryResult<T> = this.deserializeResult(decompressed);
 
         // 检查是否过期
         const now = Date.now();
@@ -282,12 +274,7 @@ export class QueryCache {
   /**
    * 设置查询缓存
    */
-  async set<T>(
-    query: string,
-    data: T,
-    params?: any[],
-    strategy?: CacheStrategy,
-  ): Promise<void> {
+  async set<T>(query: string, data: T, params?: any[], strategy?: CacheStrategy): Promise<void> {
     if (!this.config.enabled) {
       return;
     }
@@ -312,25 +299,14 @@ export class QueryCache {
 
       const finalData = await this.compress(this.serializeResult(cacheResult));
 
-      await CacheService.set(
-        cacheKey,
-        finalData,
-        strategy?.ttl || this.config.defaultTTL,
-      );
+      await CacheService.set(cacheKey, finalData, strategy?.ttl || this.config.defaultTTL);
 
       // 设置标签
       if (strategy?.tags && strategy.tags.length > 0) {
         for (const tag of strategy.tags) {
-          const tagKey = CacheKeyBuilder.build(
-            this.config.keyPrefix,
-            "tag",
-            tag,
-          );
+          const tagKey = CacheKeyBuilder.build(this.config.keyPrefix, "tag", tag);
           await CacheService.sadd(tagKey, [cacheKey]);
-          await CacheService.expire(
-            tagKey,
-            strategy?.ttl || this.config.defaultTTL,
-          );
+          await CacheService.expire(tagKey, strategy?.ttl || this.config.defaultTTL);
         }
       }
 
@@ -420,9 +396,7 @@ export class QueryCache {
    */
   private updateHitRate(): void {
     this.stats.hitRate =
-      this.stats.totalQueries > 0
-        ? (this.stats.hits / this.stats.totalQueries) * 100
-        : 0;
+      this.stats.totalQueries > 0 ? (this.stats.hits / this.stats.totalQueries) * 100 : 0;
   }
 
   /**
@@ -447,24 +421,16 @@ export class QueryCache {
    */
   cached<T extends any[], R>(
     strategy: CacheStrategy,
-    queryBuilder: (...args: T) => { query: string; params?: any[] },
+    queryBuilder: (...args: T) => { query: string; params?: any[] }
   ) {
-    return (
-      target: any,
-      propertyName: string,
-      descriptor: PropertyDescriptor,
-    ) => {
+    return (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
       const method = descriptor.value;
 
       descriptor.value = async (...args: T): Promise<R> => {
         const { query, params } = queryBuilder(...args);
 
         // 尝试从缓存获取
-        const cached = await QueryCache.getInstance().get<R>(
-          query,
-          params,
-          strategy,
-        );
+        const cached = await QueryCache.getInstance().get<R>(query, params, strategy);
         if (cached !== null) {
           return cached;
         }
@@ -505,24 +471,19 @@ export class QueryCache {
 export const queryCache = QueryCache.getInstance();
 
 // 导出便捷方法
-export const getCachedQuery = <T>(
-  query: string,
-  params?: any[],
-  strategy?: CacheStrategy,
-) => queryCache.get<T>(query, params, strategy);
+export const getCachedQuery = <T>(query: string, params?: any[], strategy?: CacheStrategy) =>
+  queryCache.get<T>(query, params, strategy);
 
 export const setCachedQuery = <T>(
   query: string,
   data: T,
   params?: any[],
-  strategy?: CacheStrategy,
+  strategy?: CacheStrategy
 ) => queryCache.set(query, data, params, strategy);
 
-export const deleteCachedQuery = (cacheKey: string) =>
-  queryCache.delete(cacheKey);
+export const deleteCachedQuery = (cacheKey: string) => queryCache.delete(cacheKey);
 
-export const deleteCachedQueryByTag = (tag: string) =>
-  queryCache.deleteByTag(tag);
+export const deleteCachedQueryByTag = (tag: string) => queryCache.deleteByTag(tag);
 
 // 导出装饰器
 export const Cached = queryCache.cached.bind(queryCache);

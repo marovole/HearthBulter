@@ -3,14 +3,7 @@
  * 测试API响应时间、数据库查询性能、内存使用等关键指标
  */
 
-import {
-  describe,
-  test,
-  expect,
-  beforeAll,
-  afterAll,
-  beforeEach,
-} from "@jest/globals";
+import { describe, test, expect, beforeAll, afterAll, beforeEach } from "@jest/globals";
 import { performance } from "perf_hooks";
 import { prisma } from "@/lib/db";
 import { optimizedQuery } from "@/lib/middleware/query-optimization";
@@ -79,9 +72,7 @@ describe("性能基准测试", () => {
     test("GET /api/families 响应时间应在基准范围内", async () => {
       const startTime = performance.now();
 
-      const response = await fetch(
-        "http://localhost:3000/api/families?page=1&limit=20",
-      );
+      const response = await fetch("http://localhost:3000/api/families?page=1&limit=20");
       const endTime = performance.now();
 
       const responseTime = endTime - startTime;
@@ -126,9 +117,7 @@ describe("性能基准测试", () => {
       for (const page of pages) {
         const startTime = performance.now();
 
-        const response = await fetch(
-          `http://localhost:3000/api/families?page=${page}&limit=20`,
-        );
+        const response = await fetch(`http://localhost:3000/api/families?page=${page}&limit=20`);
         const endTime = performance.now();
 
         const responseTime = endTime - startTime;
@@ -138,20 +127,15 @@ describe("性能基准测试", () => {
       }
 
       // 验证响应时间稳定性 (标准差不应超过平均值的50%)
-      const avgTime =
-        responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+      const avgTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
       const variance =
-        responseTimes.reduce(
-          (acc, time) => acc + Math.pow(time - avgTime, 2),
-          0,
-        ) / responseTimes.length;
+        responseTimes.reduce((acc, time) => acc + Math.pow(time - avgTime, 2), 0) /
+        responseTimes.length;
       const stdDev = Math.sqrt(variance);
 
       expect(stdDev).toBeLessThan(avgTime * 0.5);
 
-      console.log(
-        `分页查询平均响应时间: ${avgTime.toFixed(2)}ms, 标准差: ${stdDev.toFixed(2)}ms`,
-      );
+      console.log(`分页查询平均响应时间: ${avgTime.toFixed(2)}ms, 标准差: ${stdDev.toFixed(2)}ms`);
     });
   });
 
@@ -181,15 +165,14 @@ describe("性能基准测试", () => {
         expect(families).toBeDefined();
       }
 
-      const avgQueryTime =
-        queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length;
+      const avgQueryTime = queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length;
       const maxQueryTime = Math.max(...queryTimes);
 
       expect(avgQueryTime).toBeLessThan(BENCHMARK_CONFIG.DATABASE_QUERY.NORMAL);
       expect(maxQueryTime).toBeLessThan(BENCHMARK_CONFIG.DATABASE_QUERY.SLOW);
 
       console.log(
-        `家庭查询平均时间: ${avgQueryTime.toFixed(2)}ms, 最大时间: ${maxQueryTime.toFixed(2)}ms`,
+        `家庭查询平均时间: ${avgQueryTime.toFixed(2)}ms, 最大时间: ${maxQueryTime.toFixed(2)}ms`
       );
     });
 
@@ -220,15 +203,14 @@ describe("性能基准测试", () => {
         expect(members).toBeDefined();
       }
 
-      const avgQueryTime =
-        queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length;
+      const avgQueryTime = queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length;
       const maxQueryTime = Math.max(...queryTimes);
 
       expect(avgQueryTime).toBeLessThan(BENCHMARK_CONFIG.DATABASE_QUERY.NORMAL);
       expect(maxQueryTime).toBeLessThan(BENCHMARK_CONFIG.DATABASE_QUERY.SLOW);
 
       console.log(
-        `家庭成员查询平均时间: ${avgQueryTime.toFixed(2)}ms, 最大时间: ${maxQueryTime.toFixed(2)}ms`,
+        `家庭成员查询平均时间: ${avgQueryTime.toFixed(2)}ms, 最大时间: ${maxQueryTime.toFixed(2)}ms`
       );
     });
 
@@ -248,15 +230,14 @@ describe("性能基准测试", () => {
         expect(count).toBeGreaterThanOrEqual(0);
       }
 
-      const avgQueryTime =
-        queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length;
+      const avgQueryTime = queryTimes.reduce((a, b) => a + b, 0) / queryTimes.length;
       const maxQueryTime = Math.max(...queryTimes);
 
       expect(avgQueryTime).toBeLessThan(BENCHMARK_CONFIG.DATABASE_QUERY.FAST);
       expect(maxQueryTime).toBeLessThan(BENCHMARK_CONFIG.DATABASE_QUERY.NORMAL);
 
       console.log(
-        `计数查询平均时间: ${avgQueryTime.toFixed(2)}ms, 最大时间: ${maxQueryTime.toFixed(2)}ms`,
+        `计数查询平均时间: ${avgQueryTime.toFixed(2)}ms, 最大时间: ${maxQueryTime.toFixed(2)}ms`
       );
     });
   });
@@ -270,16 +251,13 @@ describe("性能基准测试", () => {
 
       const finalMemory = process.memoryUsage();
 
-      const memoryUsed =
-        (finalMemory.heapUsed - initialMemory.heapUsed) / 1024 / 1024; // MB
+      const memoryUsed = (finalMemory.heapUsed - initialMemory.heapUsed) / 1024 / 1024; // MB
       const heapUsedMB = finalMemory.heapUsed / 1024 / 1024; // MB
 
       expect(memoryUsed).toBeLessThan(BENCHMARK_CONFIG.MEMORY_USAGE.HIGH);
       expect(heapUsedMB).toBeLessThan(BENCHMARK_CONFIG.MEMORY_USAGE.CRITICAL);
 
-      console.log(
-        `内存使用增长: ${memoryUsed.toFixed(2)}MB, 总堆内存: ${heapUsedMB.toFixed(2)}MB`,
-      );
+      console.log(`内存使用增长: ${memoryUsed.toFixed(2)}MB, 总堆内存: ${heapUsedMB.toFixed(2)}MB`);
     });
 
     test("内存泄漏检测", async () => {
@@ -297,8 +275,7 @@ describe("性能基准测试", () => {
 
       const finalMemory = process.memoryUsage();
 
-      const memoryGrowth =
-        (finalMemory.heapUsed - initialMemory.heapUsed) / 1024 / 1024; // MB
+      const memoryGrowth = (finalMemory.heapUsed - initialMemory.heapUsed) / 1024 / 1024; // MB
 
       // 内存增长应低于阈值
       expect(memoryGrowth).toBeLessThan(BENCHMARK_CONFIG.MEMORY_USAGE.NORMAL);
@@ -337,15 +314,14 @@ describe("性能基准测试", () => {
         expect(typeof result.allowed).toBe("boolean");
       }
 
-      const avgCheckTime =
-        checkTimes.reduce((a, b) => a + b, 0) / checkTimes.length;
+      const avgCheckTime = checkTimes.reduce((a, b) => a + b, 0) / checkTimes.length;
       const maxCheckTime = Math.max(...checkTimes);
 
       expect(avgCheckTime).toBeLessThan(1); // 平均检查时间应小于1ms
       expect(maxCheckTime).toBeLessThan(5); // 最大检查时间应小于5ms
 
       console.log(
-        `频率限制检查平均时间: ${avgCheckTime.toFixed(4)}ms, 最大时间: ${maxCheckTime.toFixed(4)}ms`,
+        `频率限制检查平均时间: ${avgCheckTime.toFixed(4)}ms, 最大时间: ${maxCheckTime.toFixed(4)}ms`
       );
     });
 
@@ -409,19 +385,14 @@ describe("性能基准测试", () => {
         await new Promise((resolve) => setTimeout(resolve, 10));
 
         const response = new Response("OK", { status: 200 });
-        performanceMonitor.endMonitoring(
-          requestId,
-          200,
-          response as NextResponse,
-        );
+        performanceMonitor.endMonitoring(requestId, 200, response as NextResponse);
 
         const endTime = performance.now();
         const monitoringTime = endTime - startTime;
         monitoringTimes.push(monitoringTime);
       }
 
-      const avgMonitoringTime =
-        monitoringTimes.reduce((a, b) => a + b, 0) / monitoringTimes.length;
+      const avgMonitoringTime = monitoringTimes.reduce((a, b) => a + b, 0) / monitoringTimes.length;
 
       expect(avgMonitoringTime).toBeLessThan(5); // 平均监控开销应小于5ms
 
@@ -442,16 +413,10 @@ describe("性能基准测试", () => {
         const requestId = performanceMonitor.startMonitoring(mockRequest);
 
         // 模拟不同的响应时间
-        await new Promise((resolve) =>
-          setTimeout(resolve, 50 + Math.random() * 100),
-        );
+        await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 100));
 
         const response = new Response("OK", { status: 200 });
-        performanceMonitor.endMonitoring(
-          requestId,
-          200,
-          response as NextResponse,
-        );
+        performanceMonitor.endMonitoring(requestId, 200, response as NextResponse);
       }
 
       const metrics = performanceMonitor.getMetrics();
@@ -460,18 +425,12 @@ describe("性能基准测试", () => {
       expect(metrics.responseTime.avg).toBeGreaterThan(50);
       expect(metrics.responseTime.avg).toBeLessThan(150);
       expect(metrics.responseTime.min).toBeGreaterThan(0);
-      expect(metrics.responseTime.max).toBeGreaterThan(
-        metrics.responseTime.min,
-      );
-      expect(metrics.responseTime.p95).toBeGreaterThan(
-        metrics.responseTime.min,
-      );
-      expect(metrics.responseTime.p99).toBeGreaterThan(
-        metrics.responseTime.p95,
-      );
+      expect(metrics.responseTime.max).toBeGreaterThan(metrics.responseTime.min);
+      expect(metrics.responseTime.p95).toBeGreaterThan(metrics.responseTime.min);
+      expect(metrics.responseTime.p99).toBeGreaterThan(metrics.responseTime.p95);
 
       console.log(
-        `性能指标收集准确性: 总请求数=${metrics.responseTime.total}, 平均响应时间=${metrics.responseTime.avg.toFixed(2)}ms`,
+        `性能指标收集准确性: 总请求数=${metrics.responseTime.total}, 平均响应时间=${metrics.responseTime.avg.toFixed(2)}ms`
       );
     });
   });
@@ -481,22 +440,17 @@ describe("性能基准测试", () => {
       const concurrentRequests = 50;
       const requestTimes: number[] = [];
 
-      const promises = Array.from(
-        { length: concurrentRequests },
-        async (_, i) => {
-          const startTime = performance.now();
+      const promises = Array.from({ length: concurrentRequests }, async (_, i) => {
+        const startTime = performance.now();
 
-          const response = await fetch(
-            `http://localhost:3000/api/families?page=${i + 1}&limit=10`,
-          );
-          const endTime = performance.now();
+        const response = await fetch(`http://localhost:3000/api/families?page=${i + 1}&limit=10`);
+        const endTime = performance.now();
 
-          const requestTime = endTime - startTime;
-          requestTimes.push(requestTime);
+        const requestTime = endTime - startTime;
+        requestTimes.push(requestTime);
 
-          return { ok: response.ok, time: requestTime };
-        },
-      );
+        return { ok: response.ok, time: requestTime };
+      });
 
       const results = await Promise.all(promises);
 
@@ -505,8 +459,7 @@ describe("性能基准测试", () => {
         expect(result.ok).toBe(true);
       });
 
-      const avgTime =
-        requestTimes.reduce((a, b) => a + b, 0) / requestTimes.length;
+      const avgTime = requestTimes.reduce((a, b) => a + b, 0) / requestTimes.length;
       const maxTime = Math.max(...requestTimes);
       const minTime = Math.min(...requestTimes);
 
@@ -514,7 +467,7 @@ describe("性能基准测试", () => {
       expect(maxTime).toBeLessThan(BENCHMARK_CONFIG.RESPONSE_TIME.CRITICAL);
 
       console.log(
-        `并发${concurrentRequests}个请求: 平均=${avgTime.toFixed(2)}ms, 最大=${maxTime.toFixed(2)}ms, 最小=${minTime.toFixed(2)}ms`,
+        `并发${concurrentRequests}个请求: 平均=${avgTime.toFixed(2)}ms, 最大=${maxTime.toFixed(2)}ms, 最小=${minTime.toFixed(2)}ms`
       );
     });
   });

@@ -73,9 +73,7 @@ export const mealIngredientCreateInputSchema = z.object({
   foodId: z.string().uuid(),
   amount: z.number().positive(),
 });
-export type MealIngredientCreateInputDTO = z.infer<
-  typeof mealIngredientCreateInputSchema
->;
+export type MealIngredientCreateInputDTO = z.infer<typeof mealIngredientCreateInputSchema>;
 
 // ==================== 餐次 ====================
 

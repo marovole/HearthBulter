@@ -22,7 +22,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
       if (process.env.NODE_ENV === "development") {
         console.warn(
           "[ConvexClientProvider] NEXT_PUBLIC_CONVEX_URL is not set. " +
-            "Convex real-time features are disabled.",
+            "Convex real-time features are disabled."
         );
       }
       return null;

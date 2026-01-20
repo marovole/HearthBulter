@@ -11,7 +11,7 @@ import { analyticsService } from "@/lib/services/analytics-service";
 export const dynamic = "force-dynamic";
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const member = await prisma.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },
@@ -56,8 +56,7 @@ export async function GET(request: NextRequest) {
     // 解析查询参数
     const searchParams = request.nextUrl.searchParams;
     const memberId = searchParams.get("memberId");
-    const period =
-      (searchParams.get("period") as "daily" | "weekly" | "monthly") || "daily";
+    const period = (searchParams.get("period") as "daily" | "weekly" | "monthly") || "daily";
 
     if (!memberId) {
       return NextResponse.json({ error: "缺少成员ID参数" }, { status: 400 });
@@ -67,17 +66,11 @@ export async function GET(request: NextRequest) {
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的营养分析数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的营养分析数据" }, { status: 403 });
     }
 
     // 获取营养汇总
-    const nutritionSummary = await analyticsService.summarizeNutrition(
-      memberId,
-      period,
-    );
+    const nutritionSummary = await analyticsService.summarizeNutrition(memberId, period);
 
     // 生成实际营养数据（用于演示）
     const mockActualData = generateMockNutritionData(nutritionSummary);
@@ -99,26 +92,18 @@ function generateMockNutritionData(summary: any) {
 
   const actual = {
     carbs: summary.targetCarbs ? Math.round(summary.targetCarbs * variance) : 0,
-    protein: summary.targetProtein
-      ? Math.round(summary.targetProtein * variance)
-      : 0,
+    protein: summary.targetProtein ? Math.round(summary.targetProtein * variance) : 0,
     fat: summary.targetFat ? Math.round(summary.targetFat * variance) : 0,
-    calories: summary.targetCalories
-      ? Math.round(summary.targetCalories * variance)
-      : 0,
+    calories: summary.targetCalories ? Math.round(summary.targetCalories * variance) : 0,
   };
 
   // 计算达标率
   const adherenceRates = [];
   if (summary.targetCarbs) {
-    adherenceRates.push(
-      Math.min(100, (actual.carbs / summary.targetCarbs) * 100),
-    );
+    adherenceRates.push(Math.min(100, (actual.carbs / summary.targetCarbs) * 100));
   }
   if (summary.targetProtein) {
-    adherenceRates.push(
-      Math.min(100, (actual.protein / summary.targetProtein) * 100),
-    );
+    adherenceRates.push(Math.min(100, (actual.protein / summary.targetProtein) * 100));
   }
   if (summary.targetFat) {
     adherenceRates.push(Math.min(100, (actual.fat / summary.targetFat) * 100));

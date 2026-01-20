@@ -54,10 +54,7 @@ const DATE_RANGES = [
   { value: "90", label: "最近3个月" },
 ];
 
-export function NotificationFilters({
-  filters,
-  onFiltersChange,
-}: NotificationFiltersProps) {
+export function NotificationFilters({ filters, onFiltersChange }: NotificationFiltersProps) {
   const handleFilterChange = (key: keyof typeof filters, value: any) => {
     onFiltersChange({
       ...filters,
@@ -76,11 +73,7 @@ export function NotificationFilters({
   };
 
   const hasActiveFilters =
-    filters.type ||
-    filters.priority ||
-    filters.status ||
-    filters.dateRange ||
-    filters.search;
+    filters.type || filters.priority || filters.status || filters.dateRange || filters.search;
 
   return (
     <div className="space-y-4">
@@ -98,39 +91,31 @@ export function NotificationFilters({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5">
         {/* 搜索框 */}
         <div className="lg:col-span-2">
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            搜索通知
-          </label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">搜索通知</label>
           <input
             type="text"
             placeholder="搜索标题或内容..."
             value={filters.search}
             onChange={(e) => handleFilterChange("search", e.target.value)}
             className={cn(
-              "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
-              filters.search
-                ? "border-blue-300 bg-blue-50"
-                : "border-gray-300 bg-white",
+              "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+              filters.search ? "border-blue-300 bg-blue-50" : "border-gray-300 bg-white"
             )}
           />
         </div>
 
         {/* 通知类型 */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            通知类型
-          </label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">通知类型</label>
           <select
             value={filters.type}
             onChange={(e) => handleFilterChange("type", e.target.value)}
             className={cn(
-              "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
-              filters.type
-                ? "border-blue-300 bg-blue-50"
-                : "border-gray-300 bg-white",
+              "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+              filters.type ? "border-blue-300 bg-blue-50" : "border-gray-300 bg-white"
             )}
           >
             {NOTIFICATION_TYPES.map((type) => (
@@ -143,17 +128,13 @@ export function NotificationFilters({
 
         {/* 优先级 */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            优先级
-          </label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">优先级</label>
           <select
             value={filters.priority}
             onChange={(e) => handleFilterChange("priority", e.target.value)}
             className={cn(
-              "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
-              filters.priority
-                ? "border-blue-300 bg-blue-50"
-                : "border-gray-300 bg-white",
+              "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+              filters.priority ? "border-blue-300 bg-blue-50" : "border-gray-300 bg-white"
             )}
           >
             {NOTIFICATION_PRIORITIES.map((priority) => (
@@ -166,17 +147,13 @@ export function NotificationFilters({
 
         {/* 通知状态 */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            通知状态
-          </label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">通知状态</label>
           <select
             value={filters.status}
             onChange={(e) => handleFilterChange("status", e.target.value)}
             className={cn(
-              "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
-              filters.status
-                ? "border-blue-300 bg-blue-50"
-                : "border-gray-300 bg-white",
+              "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+              filters.status ? "border-blue-300 bg-blue-50" : "border-gray-300 bg-white"
             )}
           >
             {NOTIFICATION_STATUSES.map((status) => (
@@ -189,20 +166,16 @@ export function NotificationFilters({
       </div>
 
       {/* 第二行过滤器 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* 日期范围 */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            时间范围
-          </label>
+          <label className="mb-1 block text-xs font-medium text-gray-600">时间范围</label>
           <select
             value={filters.dateRange}
             onChange={(e) => handleFilterChange("dateRange", e.target.value)}
             className={cn(
-              "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
-              filters.dateRange
-                ? "border-blue-300 bg-blue-50"
-                : "border-gray-300 bg-white",
+              "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+              filters.dateRange ? "border-blue-300 bg-blue-50" : "border-gray-300 bg-white"
             )}
           >
             {DATE_RANGES.map((range) => (
@@ -219,10 +192,10 @@ export function NotificationFilters({
         <button
           onClick={() => handleFilterChange("priority", "URGENT")}
           className={cn(
-            "px-3 py-1 text-xs rounded-full transition-colors",
+            "rounded-full px-3 py-1 text-xs transition-colors",
             filters.priority === "URGENT"
-              ? "bg-red-100 text-red-700 border border-red-200"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200",
+              ? "border border-red-200 bg-red-100 text-red-700"
+              : "border border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           )}
         >
           紧急通知
@@ -231,10 +204,10 @@ export function NotificationFilters({
         <button
           onClick={() => handleFilterChange("type", "HEALTH_ALERT")}
           className={cn(
-            "px-3 py-1 text-xs rounded-full transition-colors",
+            "rounded-full px-3 py-1 text-xs transition-colors",
             filters.type === "HEALTH_ALERT"
-              ? "bg-red-100 text-red-700 border border-red-200"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200",
+              ? "border border-red-200 bg-red-100 text-red-700"
+              : "border border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           )}
         >
           健康异常
@@ -243,10 +216,10 @@ export function NotificationFilters({
         <button
           onClick={() => handleFilterChange("type", "GOAL_ACHIEVEMENT")}
           className={cn(
-            "px-3 py-1 text-xs rounded-full transition-colors",
+            "rounded-full px-3 py-1 text-xs transition-colors",
             filters.type === "GOAL_ACHIEVEMENT"
-              ? "bg-green-100 text-green-700 border border-green-200"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200",
+              ? "border border-green-200 bg-green-100 text-green-700"
+              : "border border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           )}
         >
           目标达成
@@ -255,10 +228,10 @@ export function NotificationFilters({
         <button
           onClick={() => handleFilterChange("status", "FAILED")}
           className={cn(
-            "px-3 py-1 text-xs rounded-full transition-colors",
+            "rounded-full px-3 py-1 text-xs transition-colors",
             filters.status === "FAILED"
-              ? "bg-red-100 text-red-700 border border-red-200"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200",
+              ? "border border-red-200 bg-red-100 text-red-700"
+              : "border border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           )}
         >
           发送失败
@@ -267,10 +240,10 @@ export function NotificationFilters({
         <button
           onClick={() => handleFilterChange("dateRange", "1")}
           className={cn(
-            "px-3 py-1 text-xs rounded-full transition-colors",
+            "rounded-full px-3 py-1 text-xs transition-colors",
             filters.dateRange === "1"
-              ? "bg-blue-100 text-blue-700 border border-blue-200"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200",
+              ? "border border-blue-200 bg-blue-100 text-blue-700"
+              : "border border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           )}
         >
           今天
@@ -279,10 +252,10 @@ export function NotificationFilters({
         <button
           onClick={() => handleFilterChange("dateRange", "7")}
           className={cn(
-            "px-3 py-1 text-xs rounded-full transition-colors",
+            "rounded-full px-3 py-1 text-xs transition-colors",
             filters.dateRange === "7"
-              ? "bg-blue-100 text-blue-700 border border-blue-200"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200",
+              ? "border border-blue-200 bg-blue-100 text-blue-700"
+              : "border border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200"
           )}
         >
           最近7天
@@ -291,40 +264,27 @@ export function NotificationFilters({
 
       {/* 过滤结果提示 */}
       {hasActiveFilters && (
-        <div className="text-xs text-gray-500 bg-blue-50 px-3 py-2 rounded">
+        <div className="rounded bg-blue-50 px-3 py-2 text-xs text-gray-500">
           <span>已应用过滤条件:</span>
-          {filters.search && (
-            <span className="ml-2">搜索: “{filters.search}”</span>
-          )}
+          {filters.search && <span className="ml-2">搜索: “{filters.search}”</span>}
           {filters.type && (
             <span className="ml-2">
-              类型:{" "}
-              {NOTIFICATION_TYPES.find((t) => t.value === filters.type)?.label}
+              类型: {NOTIFICATION_TYPES.find((t) => t.value === filters.type)?.label}
             </span>
           )}
           {filters.priority && (
             <span className="ml-2">
-              优先级:{" "}
-              {
-                NOTIFICATION_PRIORITIES.find(
-                  (p) => p.value === filters.priority,
-                )?.label
-              }
+              优先级: {NOTIFICATION_PRIORITIES.find((p) => p.value === filters.priority)?.label}
             </span>
           )}
           {filters.status && (
             <span className="ml-2">
-              状态:{" "}
-              {
-                NOTIFICATION_STATUSES.find((s) => s.value === filters.status)
-                  ?.label
-              }
+              状态: {NOTIFICATION_STATUSES.find((s) => s.value === filters.status)?.label}
             </span>
           )}
           {filters.dateRange && (
             <span className="ml-2">
-              时间:{" "}
-              {DATE_RANGES.find((d) => d.value === filters.dateRange)?.label}
+              时间: {DATE_RANGES.find((d) => d.value === filters.dateRange)?.label}
             </span>
           )}
         </div>

@@ -23,7 +23,7 @@ export class BudgetNotificationService {
     private readonly notificationRepo: NotificationRepository,
     private readonly budgetRepo: BudgetRepository,
     private readonly familyRepo: FamilyRepository,
-    private readonly notificationManager: INotificationManager,
+    private readonly notificationManager: INotificationManager
   ) {}
 
   /**
@@ -37,7 +37,7 @@ export class BudgetNotificationService {
       threshold: number;
       remainingBudget?: number;
       totalBudget: number;
-    },
+    }
   ): Promise<void> {
     try {
       const priority = this.getAlertPriority(alertData.threshold);
@@ -81,7 +81,7 @@ export class BudgetNotificationService {
       overspendAmount: number;
       totalSpent: number;
       budgetLimit: number;
-    },
+    }
   ): Promise<void> {
     try {
       // 使用注入的 notificationManager
@@ -116,7 +116,7 @@ export class BudgetNotificationService {
       tip: string;
       potentialSavings: number;
       category?: string;
-    },
+    }
   ): Promise<void> {
     try {
       // 使用注入的 notificationManager
@@ -157,7 +157,7 @@ export class BudgetNotificationService {
         amount: number;
         percentage: number;
       }>;
-    },
+    }
   ): Promise<void> {
     try {
       const isUnderBudget = summaryData.totalSpent <= summaryData.budgetLimit;
@@ -198,7 +198,7 @@ export class BudgetNotificationService {
       spent: number;
       budget: number;
       percentage: number;
-    },
+    }
   ): Promise<void> {
     try {
       // 使用注入的 notificationManager
@@ -240,7 +240,7 @@ export class BudgetNotificationService {
       budgetName: string;
       usagePercentage: number;
       threshold: number;
-    },
+    }
   ): Promise<void> {
     try {
       const familyMembers = await this.getFamilyMembers(familyId);
@@ -263,7 +263,7 @@ export class BudgetNotificationService {
           },
           actionUrl: "/family/budget",
           actionText: "查看家庭预算",
-        })),
+        }))
       );
 
       // 使用注入的 notificationManager
@@ -276,9 +276,7 @@ export class BudgetNotificationService {
   /**
    * 根据阈值获取通知优先级
    */
-  private getAlertPriority(
-    threshold: number,
-  ): "low" | "medium" | "high" | "urgent" {
+  private getAlertPriority(threshold: number): "low" | "medium" | "high" | "urgent" {
     if (threshold >= 110) return "urgent";
     if (threshold >= 100) return "high";
     if (threshold >= 80) return "medium";

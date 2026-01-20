@@ -100,18 +100,18 @@ export function AchievementGallery({
   // 获取稀有度图标
   const getRarityIcon = (rarity: AchievementRarity) => {
     switch (rarity) {
-    case "BRONZE":
-      return <Medal className="h-4 w-4" />;
-    case "SILVER":
-      return <Award className="h-4 w-4" />;
-    case "GOLD":
-      return <Trophy className="h-4 w-4" />;
-    case "PLATINUM":
-      return <Star className="h-4 w-4" />;
-    case "DIAMOND":
-      return <Star className="h-4 w-4" />;
-    default:
-      return <Medal className="h-4 w-4" />;
+      case "BRONZE":
+        return <Medal className="h-4 w-4" />;
+      case "SILVER":
+        return <Award className="h-4 w-4" />;
+      case "GOLD":
+        return <Trophy className="h-4 w-4" />;
+      case "PLATINUM":
+        return <Star className="h-4 w-4" />;
+      case "DIAMOND":
+        return <Star className="h-4 w-4" />;
+      default:
+        return <Medal className="h-4 w-4" />;
     }
   };
 
@@ -130,34 +130,34 @@ export function AchievementGallery({
   // 获取类型图标
   const getTypeIcon = (type: AchievementType) => {
     switch (type) {
-    case "CHECK_IN_STREAK":
-      return <Calendar className="h-6 w-6" />;
-    case "WEIGHT_LOSS":
-      return <TrendingUp className="h-6 w-6" />;
-    case "NUTRITION_GOAL":
-      return <Target className="h-6 w-6" />;
-    case "EXERCISE_TARGET":
-      return <TrendingUp className="h-6 w-6" />;
-    case "HEALTH_MILESTONE":
-      return <Trophy className="h-6 w-6" />;
-    case "COMMUNITY_CONTRIBUTION":
-      return <Star className="h-6 w-6" />;
-    default:
-      return <Award className="h-6 w-6" />;
+      case "CHECK_IN_STREAK":
+        return <Calendar className="h-6 w-6" />;
+      case "WEIGHT_LOSS":
+        return <TrendingUp className="h-6 w-6" />;
+      case "NUTRITION_GOAL":
+        return <Target className="h-6 w-6" />;
+      case "EXERCISE_TARGET":
+        return <TrendingUp className="h-6 w-6" />;
+      case "HEALTH_MILESTONE":
+        return <Trophy className="h-6 w-6" />;
+      case "COMMUNITY_CONTRIBUTION":
+        return <Star className="h-6 w-6" />;
+      default:
+        return <Award className="h-6 w-6" />;
     }
   };
 
   // 过滤成就
   const filteredAchievements = achievements.filter((achievement) => {
     switch (activeTab) {
-    case "unlocked":
-      return achievement.isUnlocked;
-    case "locked":
-      return !achievement.isUnlocked;
-    case "shared":
-      return achievement.isShared;
-    default:
-      return true;
+      case "unlocked":
+        return achievement.isUnlocked;
+      case "locked":
+        return !achievement.isUnlocked;
+      case "shared":
+        return achievement.isShared;
+      default:
+        return true;
     }
   });
 
@@ -171,22 +171,22 @@ export function AchievementGallery({
       groups[type].push(achievement);
       return groups;
     },
-    {} as Record<AchievementType, Achievement[]>,
+    {} as Record<AchievementType, Achievement[]>
   );
 
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 w-3/4 rounded bg-gray-200"></div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-3 rounded bg-gray-200"></div>
+                  <div className="h-3 w-2/3 rounded bg-gray-200"></div>
                 </div>
               </CardContent>
             </Card>
@@ -199,7 +199,7 @@ export function AchievementGallery({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* 统计信息 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-primary">
@@ -221,10 +221,7 @@ export function AchievementGallery({
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">
-              {achievements.reduce(
-                (sum, a) => sum + (a.isUnlocked ? a.points : 0),
-                0,
-              )}
+              {achievements.reduce((sum, a) => sum + (a.isUnlocked ? a.points : 0), 0)}
             </div>
             <div className="text-sm text-muted-foreground">总积分</div>
           </CardContent>
@@ -250,36 +247,32 @@ export function AchievementGallery({
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-6">
-          {Object.entries(groupedAchievements).map(
-            ([type, typeAchievements]) => (
-              <div key={type} className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  {getTypeIcon(type as AchievementType)}
-                  <h3 className="text-lg font-semibold">
-                    {getTypeLabel(type as AchievementType)}
-                  </h3>
-                  <Badge variant="secondary">{typeAchievements.length}</Badge>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {typeAchievements.map((achievement) => (
-                    <AchievementCard
-                      key={achievement.id}
-                      achievement={achievement}
-                      showShareButton={showShareButton}
-                      onShare={() => {
-                        onAchievementUnlock?.(achievement);
-                      }}
-                    />
-                  ))}
-                </div>
+          {Object.entries(groupedAchievements).map(([type, typeAchievements]) => (
+            <div key={type} className="space-y-4">
+              <div className="flex items-center space-x-2">
+                {getTypeIcon(type as AchievementType)}
+                <h3 className="text-lg font-semibold">{getTypeLabel(type as AchievementType)}</h3>
+                <Badge variant="secondary">{typeAchievements.length}</Badge>
               </div>
-            ),
-          )}
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {typeAchievements.map((achievement) => (
+                  <AchievementCard
+                    key={achievement.id}
+                    achievement={achievement}
+                    showShareButton={showShareButton}
+                    onShare={() => {
+                      onAchievementUnlock?.(achievement);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
 
           {filteredAchievements.length === 0 && (
-            <div className="text-center py-8">
-              <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <div className="py-8 text-center">
+              <Lock className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <p className="text-muted-foreground">
                 {activeTab === "locked"
                   ? "暂无进行中的成就"
@@ -328,15 +321,11 @@ function AchievementCard({
           <div className="text-sm font-medium">{achievement.points} 积分</div>
         </div>
 
-        <CardTitle className="text-base leading-tight">
-          {achievement.title}
-        </CardTitle>
+        <CardTitle className="text-base leading-tight">{achievement.title}</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          {achievement.description}
-        </p>
+        <p className="text-sm text-muted-foreground">{achievement.description}</p>
 
         {/* 进度条 */}
         {!achievement.isUnlocked && (
@@ -355,8 +344,7 @@ function AchievementCard({
         {/* 解锁时间 */}
         {achievement.isUnlocked && achievement.unlockedAt && (
           <div className="text-xs text-muted-foreground">
-            解锁时间:{" "}
-            {new Date(achievement.unlockedAt).toLocaleDateString("zh-CN")}
+            解锁时间: {new Date(achievement.unlockedAt).toLocaleDateString("zh-CN")}
           </div>
         )}
 
@@ -399,18 +387,18 @@ function getRarityColor(rarity: AchievementRarity) {
 
 function getRarityIcon(rarity: AchievementRarity) {
   switch (rarity) {
-  case "BRONZE":
-    return <Medal className="h-3 w-3" />;
-  case "SILVER":
-    return <Award className="h-3 w-3" />;
-  case "GOLD":
-    return <Trophy className="h-3 w-3" />;
-  case "PLATINUM":
-    return <Star className="h-3 w-3" />;
-  case "DIAMOND":
-    return <Star className="h-3 w-3" />;
-  default:
-    return <Medal className="h-3 w-3" />;
+    case "BRONZE":
+      return <Medal className="h-3 w-3" />;
+    case "SILVER":
+      return <Award className="h-3 w-3" />;
+    case "GOLD":
+      return <Trophy className="h-3 w-3" />;
+    case "PLATINUM":
+      return <Star className="h-3 w-3" />;
+    case "DIAMOND":
+      return <Star className="h-3 w-3" />;
+    default:
+      return <Medal className="h-3 w-3" />;
   }
 }
 

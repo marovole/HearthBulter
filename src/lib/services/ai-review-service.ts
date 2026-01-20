@@ -5,11 +5,7 @@
 
 export interface AIContentReview {
   content: string;
-  contentType:
-    | "health_advice"
-    | "nutrition_recommendation"
-    | "meal_plan"
-    | "general_response";
+  contentType: "health_advice" | "nutrition_recommendation" | "meal_plan" | "general_response";
   userId: string;
   sessionId?: string;
   context?: Record<string, any>;
@@ -79,13 +75,11 @@ class AIReviewService {
         name: "医疗诊断声明",
         description: "检测AI是否做出医疗诊断声明",
         keywords: ["诊断", "确诊", "疾病", "患有", "病症", "病情", "医疗结论"],
-        pattern:
-          /(?:我诊断|确诊|诊断出|患有(?:严重)?(?:疾病|病症)|医疗(?:诊断|结论))/gi,
-        condition: (content) =>
-          this.containsKeywords(content, ["诊断", "确诊", "疾病", "患有"]),
+        pattern: /(?:我诊断|确诊|诊断出|患有(?:严重)?(?:疾病|病症)|医疗(?:诊断|结论))/gi,
+        condition: (content) => this.containsKeywords(content, ["诊断", "确诊", "疾病", "患有"]),
         severity: "critical",
         type: "medical_claim",
-        recommendation: "移除所有医疗诊断声明，改为\"基于数据分析的健康建议\"",
+        recommendation: '移除所有医疗诊断声明，改为"基于数据分析的健康建议"',
         enabled: true,
       },
 
@@ -94,27 +88,14 @@ class AIReviewService {
         id: "extreme_advice",
         name: "极端健康建议",
         description: "检测过于极端或危险的健康建议",
-        keywords: [
-          "完全停止",
-          "立即停止",
-          "绝对不能",
-          "必须完全",
-          "严格禁止",
-          "永久戒除",
-        ],
+        keywords: ["完全停止", "立即停止", "绝对不能", "必须完全", "严格禁止", "永久戒除"],
         pattern:
           /(?:完全(?:停止|戒除|禁止)|立即(?:停止|戒除)|绝对(?:不能|禁止)|必须完全|严格(?:禁止|戒除)|永久(?:戒除|停止))/gi,
         condition: (content) =>
-          this.containsKeywords(content, [
-            "完全停止",
-            "立即停止",
-            "绝对不能",
-            "永久戒除",
-          ]),
+          this.containsKeywords(content, ["完全停止", "立即停止", "绝对不能", "永久戒除"]),
         severity: "high",
         type: "extreme_advice",
-        recommendation:
-          "将绝对性语言改为建议性语言，如\"建议减少\"而不是\"完全停止\"",
+        recommendation: '将绝对性语言改为建议性语言，如"建议减少"而不是"完全停止"',
         enabled: true,
       },
 
@@ -124,35 +105,18 @@ class AIReviewService {
         name: "缺乏不确定性表达",
         description: "检查是否缺少适当的不确定性表达",
         condition: (content, context) => {
-          const certaintyWords = [
-            "一定",
-            "肯定",
-            "绝对",
-            "完全",
-            "100%",
-            "确保",
-          ];
-          const uncertaintyWords = [
-            "可能",
-            "建议",
-            "考虑",
-            "或许",
-            "通常",
-            "一般",
-          ];
+          const certaintyWords = ["一定", "肯定", "绝对", "完全", "100%", "确保"];
+          const uncertaintyWords = ["可能", "建议", "考虑", "或许", "通常", "一般"];
 
           const hasCertainty = this.containsKeywords(content, certaintyWords);
-          const hasUncertainty = this.containsKeywords(
-            content,
-            uncertaintyWords,
-          );
+          const hasUncertainty = this.containsKeywords(content, uncertaintyWords);
 
           // 如果有确定性表达但缺乏不确定性表达，标记为问题
           return hasCertainty && !hasUncertainty && content.length > 100;
         },
         severity: "medium",
         type: "uncertainty",
-        recommendation: "添加不确定性表达，如\"建议考虑\"、\"可能有助于\"等",
+        recommendation: '添加不确定性表达，如"建议考虑"、"可能有助于"等',
         enabled: true,
       },
 
@@ -183,12 +147,7 @@ class AIReviewService {
         description: "检测涉及敏感健康话题的内容",
         keywords: ["癌症", "肿瘤", "艾滋病", "精神疾病", "遗传病", "绝症"],
         condition: (content) =>
-          this.containsKeywords(content, [
-            "癌症",
-            "肿瘤",
-            "艾滋病",
-            "精神疾病",
-          ]),
+          this.containsKeywords(content, ["癌症", "肿瘤", "艾滋病", "精神疾病"]),
         severity: "high",
         type: "sensitive_topic",
         recommendation: "对于敏感话题，建议用户咨询专业医生，不给出具体建议",
@@ -202,13 +161,7 @@ class AIReviewService {
         description: "检测是否有推销特定商业产品的倾向",
         keywords: ["推荐购买", "最佳选择", "顶级产品", "专业品牌", "指定产品"],
         condition: (content) => {
-          const commercialWords = [
-            "推荐购买",
-            "最佳选择",
-            "顶级产品",
-            "专业品牌",
-            "指定产品",
-          ];
+          const commercialWords = ["推荐购买", "最佳选择", "顶级产品", "专业品牌", "指定产品"];
           return this.containsKeywords(content, commercialWords);
         },
         severity: "medium",
@@ -224,16 +177,14 @@ class AIReviewService {
         description: "检查建议是否缺乏重要上下文或警告",
         condition: (content, context) => {
           // 检查是否缺少免责声明
-          const hasDisclaimer = /(?:仅供参考|不构成|请咨询|建议咨询)/.test(
-            content,
-          );
+          const hasDisclaimer = /(?:仅供参考|不构成|请咨询|建议咨询)/.test(content);
           const isHealthAdvice = context?.contentType === "health_advice";
 
           return isHealthAdvice && !hasDisclaimer && content.length > 200;
         },
         severity: "medium",
         type: "incomplete_info",
-        recommendation: "添加\"此建议仅供参考，请咨询专业医生\"等免责声明",
+        recommendation: '添加"此建议仅供参考，请咨询专业医生"等免责声明',
         enabled: true,
       },
     ];
@@ -292,8 +243,7 @@ class AIReviewService {
 
     // 根据风险等级决定是否批准
     const approved =
-      riskLevel !== "critical" &&
-      issues.filter((i) => i.severity === "critical").length === 0;
+      riskLevel !== "critical" && issues.filter((i) => i.severity === "critical").length === 0;
 
     const processingTime = Date.now() - startTime;
 
@@ -315,9 +265,7 @@ class AIReviewService {
    * 批量审核多个内容
    */
   async reviewBatch(reviews: AIContentReview[]): Promise<ReviewResult[]> {
-    const results = await Promise.all(
-      reviews.map((review) => this.reviewContent(review)),
-    );
+    const results = await Promise.all(reviews.map((review) => this.reviewContent(review)));
     return results;
   }
 
@@ -364,30 +312,30 @@ class AIReviewService {
 
     for (const issue of issues) {
       switch (issue.type) {
-      case "uncertainty":
-        // 添加不确定性表达
-        if (!/(?:可能|建议|考虑|或许)/.test(fixedContent)) {
-          fixedContent = `建议${fixedContent.toLowerCase()}`;
-        }
-        break;
+        case "uncertainty":
+          // 添加不确定性表达
+          if (!/(?:可能|建议|考虑|或许)/.test(fixedContent)) {
+            fixedContent = `建议${fixedContent.toLowerCase()}`;
+          }
+          break;
 
-      case "incomplete_info":
-        // 添加免责声明
-        if (!/(?:仅供参考|请咨询)/.test(fixedContent)) {
-          fixedContent +=
+        case "incomplete_info":
+          // 添加免责声明
+          if (!/(?:仅供参考|请咨询)/.test(fixedContent)) {
+            fixedContent +=
               "\n\n⚠️ 此建议仅供参考，不构成专业医疗诊断。如有健康问题，请咨询专业医生。";
-        }
-        break;
+          }
+          break;
 
-      case "extreme_advice":
-        // 将绝对性语言改为建议性
-        fixedContent = fixedContent
-          .replace(/完全停止/g, "建议减少")
-          .replace(/立即停止/g, "建议逐渐减少")
-          .replace(/绝对不能/g, "建议避免")
-          .replace(/必须完全/g, "建议尽量")
-          .replace(/永久戒除/g, "建议长期避免");
-        break;
+        case "extreme_advice":
+          // 将绝对性语言改为建议性
+          fixedContent = fixedContent
+            .replace(/完全停止/g, "建议减少")
+            .replace(/立即停止/g, "建议逐渐减少")
+            .replace(/绝对不能/g, "建议避免")
+            .replace(/必须完全/g, "建议尽量")
+            .replace(/永久戒除/g, "建议长期避免");
+          break;
       }
     }
 
@@ -433,9 +381,7 @@ class AIReviewService {
 export const aiReviewService = new AIReviewService();
 
 // 导出工具函数
-export async function reviewAIContent(
-  review: AIContentReview,
-): Promise<ReviewResult> {
+export async function reviewAIContent(review: AIContentReview): Promise<ReviewResult> {
   return await aiReviewService.reviewContent(review);
 }
 
@@ -443,9 +389,6 @@ export async function needsHumanReview(result: ReviewResult): Promise<boolean> {
   return aiReviewService.needsHumanReview(result);
 }
 
-export async function fixAIContent(
-  content: string,
-  issues: ReviewIssue[],
-): Promise<string> {
+export async function fixAIContent(content: string, issues: ReviewIssue[]): Promise<string> {
   return await aiReviewService.fixContent(content, issues);
 }

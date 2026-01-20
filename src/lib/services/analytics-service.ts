@@ -81,10 +81,7 @@ export class AnalyticsService {
    * @param memberId 成员ID
    * @param days 分析天数（默认30天）
    */
-  async analyzeWeightTrend(
-    memberId: string,
-    days: number = 30,
-  ): Promise<WeightTrendAnalysis> {
+  async analyzeWeightTrend(memberId: string, days: number = 30): Promise<WeightTrendAnalysis> {
     const endDate = new Date();
     const startDate = subDays(endDate, days);
     const dateRange: DateRangeFilter = { start: startDate, end: endDate };
@@ -128,8 +125,7 @@ export class AnalyticsService {
       const average = weights.reduce((a, b) => a + b, 0) / weights.length;
 
       const firstWeight = weightData[0]?.weight ?? 0;
-      const lastWeight =
-        weightData[weightData.length - 1]?.weight ?? firstWeight;
+      const lastWeight = weightData[weightData.length - 1]?.weight ?? firstWeight;
       const change = lastWeight - firstWeight;
       const changePercent = firstWeight > 0 ? (change / firstWeight) * 100 : 0;
 
@@ -156,9 +152,7 @@ export class AnalyticsService {
   /**
    * 检测体重异常
    */
-  private detectWeightAnomalies(
-    weightData: Array<{ date: Date; weight: number }>,
-  ): Array<{
+  private detectWeightAnomalies(weightData: Array<{ date: Date; weight: number }>): Array<{
     date: Date;
     weight: number;
     reason: string;
@@ -184,17 +178,13 @@ export class AnalyticsService {
 
       // 计算前几天的平均
       const window = weightData.slice(Math.max(0, i - windowSize), i);
-      const avgWeight =
-        window.reduce((sum, d) => sum + d.weight, 0) / window.length;
+      const avgWeight = window.reduce((sum, d) => sum + d.weight, 0) / window.length;
 
       // 检测异常：变化超过平均值的10%
-      const changePercent = Math.abs(
-        ((current.weight - previous.weight) / previous.weight) * 100,
-      );
+      const changePercent = Math.abs(((current.weight - previous.weight) / previous.weight) * 100);
 
       if (changePercent > 5) {
-        const severity =
-          changePercent > 10 ? "high" : changePercent > 7 ? "medium" : "low";
+        const severity = changePercent > 10 ? "high" : changePercent > 7 ? "medium" : "low";
         const reason =
           current.weight > previous.weight
             ? `体重突增 ${changePercent.toFixed(1)}%`
@@ -219,25 +209,25 @@ export class AnalyticsService {
    */
   async summarizeNutrition(
     memberId: string,
-    period: "daily" | "weekly" | "monthly" = "daily",
+    period: "daily" | "weekly" | "monthly" = "daily"
   ): Promise<NutritionSummary> {
     const now = new Date();
     let startDate: Date;
     let endDate: Date;
 
     switch (period) {
-    case "daily":
-      startDate = startOfDay(now);
-      endDate = endOfDay(now);
-      break;
-    case "weekly":
-      startDate = startOfWeek(now, { weekStartsOn: 1 });
-      endDate = endOfWeek(now, { weekStartsOn: 1 });
-      break;
-    case "monthly":
-      startDate = startOfMonth(now);
-      endDate = endOfMonth(now);
-      break;
+      case "daily":
+        startDate = startOfDay(now);
+        endDate = endOfDay(now);
+        break;
+      case "weekly":
+        startDate = startOfWeek(now, { weekStartsOn: 1 });
+        endDate = endOfWeek(now, { weekStartsOn: 1 });
+        break;
+      case "monthly":
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        break;
     }
 
     try {
@@ -303,10 +293,7 @@ export class AnalyticsService {
       // 计算达标率
       let adherenceRate = 0;
       if (targetCalories && actualCalories) {
-        const calorieAdherence = Math.min(
-          100,
-          (actualCalories / targetCalories) * 100,
-        );
+        const calorieAdherence = Math.min(100, (actualCalories / targetCalories) * 100);
         adherenceRate = calorieAdherence;
       }
 
@@ -349,35 +336,21 @@ export class AnalyticsService {
       });
 
       const currentWeight =
-        weightSeries.points[weightSeries.points.length - 1]?.value ??
-        memberProfile.weight ??
-        null;
+        weightSeries.points[weightSeries.points.length - 1]?.value ?? memberProfile.weight ?? null;
 
       const progress: GoalProgress[] = [];
 
-      const healthGoals =
-        (memberProfile as { healthGoals?: MemberHealthGoal[] }).healthGoals ??
-        [];
+      const healthGoals = (memberProfile as { healthGoals?: MemberHealthGoal[] }).healthGoals ?? [];
       for (const goal of healthGoals) {
-        if (
-          !goal.targetWeight ||
-          !goal.startWeight ||
-          goal.goalType === "IMPROVE_HEALTH"
-        ) {
+        if (!goal.targetWeight || !goal.startWeight || goal.goalType === "IMPROVE_HEALTH") {
           continue;
         }
 
-        const goalProgress = calculateProgress(
-          goal.startWeight,
-          currentWeight,
-          goal.targetWeight,
-        );
+        const goalProgress = calculateProgress(goal.startWeight, currentWeight, goal.targetWeight);
 
         // 计算预计完成时间
         const startDate: Date = new Date(goal.startDate);
-        const targetDate: Date | null = goal.targetDate
-          ? new Date(goal.targetDate)
-          : null;
+        const targetDate: Date | null = goal.targetDate ? new Date(goal.targetDate) : null;
         const now = new Date();
 
         let estimatedCompletionDate: Date | null = null;
@@ -386,17 +359,14 @@ export class AnalyticsService {
         if (currentWeight && goal.targetWeight && goal.startWeight) {
           const weightDiff = Math.abs(goal.targetWeight - currentWeight);
           const totalDiff = Math.abs(goal.targetWeight - goal.startWeight);
-          const elapsedWeeks =
-            (now.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000);
+          const elapsedWeeks = (now.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000);
 
           if (goalProgress > 0 && elapsedWeeks > 0) {
-            const weeklyRate = Math.abs(
-              (currentWeight - goal.startWeight) / elapsedWeeks,
-            );
+            const weeklyRate = Math.abs((currentWeight - goal.startWeight) / elapsedWeeks);
             if (weeklyRate > 0) {
               weeksRemaining = weightDiff / weeklyRate;
               estimatedCompletionDate = new Date(
-                now.getTime() + weeksRemaining * 7 * 24 * 60 * 60 * 1000,
+                now.getTime() + weeksRemaining * 7 * 24 * 60 * 60 * 1000
               );
             }
           }
@@ -404,9 +374,7 @@ export class AnalyticsService {
 
         // 判断是否在正轨上
         const onTrack =
-          targetDate && estimatedCompletionDate
-            ? estimatedCompletionDate <= targetDate
-            : true;
+          targetDate && estimatedCompletionDate ? estimatedCompletionDate <= targetDate : true;
 
         progress.push({
           goalId: goal.id,
@@ -461,22 +429,15 @@ export class AnalyticsService {
     const dateRange: DateRangeFilter = { start: startDate, end: endDate };
 
     try {
-      const anomalies = await this.repository.listAnomalies(
-        memberId,
-        dateRange,
-        50,
-      );
+      const anomalies = await this.repository.listAnomalies(memberId, dateRange, 50);
 
       // 按严重程度分组
-      const grouped = anomalies.reduce<Record<string, typeof anomalies>>(
-        (acc, anomaly) => {
-          const bucket = acc[anomaly.severity] ?? [];
-          bucket.push(anomaly);
-          acc[anomaly.severity] = bucket;
-          return acc;
-        },
-        {},
-      );
+      const grouped = anomalies.reduce<Record<string, typeof anomalies>>((acc, anomaly) => {
+        const bucket = acc[anomaly.severity] ?? [];
+        bucket.push(anomaly);
+        acc[anomaly.severity] = bucket;
+        return acc;
+      }, {});
 
       return {
         total: anomalies.length,
@@ -493,9 +454,7 @@ export class AnalyticsService {
 }
 
 // 导出工厂函数（用于向后兼容）
-export function createAnalyticsService(
-  repository: AnalyticsRepository,
-): AnalyticsService {
+export function createAnalyticsService(repository: AnalyticsRepository): AnalyticsService {
   return new AnalyticsService(repository);
 }
 
@@ -507,9 +466,7 @@ export function getAnalyticsServiceSingleton(): AnalyticsService {
   if (!analyticsServiceInstance) {
     // Dynamic import to avoid circular dependency
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const {
-      getDefaultContainer,
-    } = require("@/lib/container/service-container");
+    const { getDefaultContainer } = require("@/lib/container/service-container");
     analyticsServiceInstance = getDefaultContainer().getAnalyticsService();
   }
   return analyticsServiceInstance!;

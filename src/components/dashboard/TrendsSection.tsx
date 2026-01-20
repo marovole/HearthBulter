@@ -15,8 +15,8 @@ export function TrendsSection({ memberId }: TrendsSectionProps) {
   return (
     <div className="space-y-6">
       {/* 时间范围选择器 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">数据趋势</h3>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
@@ -24,7 +24,7 @@ export function TrendsSection({ memberId }: TrendsSectionProps) {
               <select
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
-                className="text-sm border border-gray-300 rounded-md px-2 py-1"
+                className="rounded-md border border-gray-300 px-2 py-1 text-sm"
               >
                 <option value={7}>7天</option>
                 <option value={30}>30天</option>
@@ -35,10 +35,8 @@ export function TrendsSection({ memberId }: TrendsSectionProps) {
               <span className="text-sm text-gray-600">营养周期：</span>
               <select
                 value={period}
-                onChange={(e) =>
-                  setPeriod(e.target.value as "daily" | "weekly" | "monthly")
-                }
-                className="text-sm border border-gray-300 rounded-md px-2 py-1"
+                onChange={(e) => setPeriod(e.target.value as "daily" | "weekly" | "monthly")}
+                className="rounded-md border border-gray-300 px-2 py-1 text-sm"
               >
                 <option value="daily">每日</option>
                 <option value="weekly">每周</option>
@@ -50,13 +48,13 @@ export function TrendsSection({ memberId }: TrendsSectionProps) {
 
         {/* 体重趋势图 */}
         <div className="mb-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">体重趋势</h4>
+          <h4 className="mb-3 text-sm font-medium text-gray-700">体重趋势</h4>
           <WeightTrendChart memberId={memberId} days={days} />
         </div>
 
         {/* 营养分析图 */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">营养分析</h4>
+          <h4 className="mb-3 text-sm font-medium text-gray-700">营养分析</h4>
           <NutritionChart memberId={memberId} period={period} />
         </div>
       </div>
@@ -82,7 +80,7 @@ function NutritionChart({
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/dashboard/nutrition-analysis?memberId=${memberId}&period=${period}`,
+        `/api/dashboard/nutrition-analysis?memberId=${memberId}&period=${period}`
       );
       if (!response.ok) {
         throw new Error("加载营养数据失败");
@@ -98,9 +96,9 @@ function NutritionChart({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <p className="mt-2 text-sm text-gray-500">加载中...</p>
         </div>
       </div>
@@ -109,7 +107,7 @@ function NutritionChart({
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex h-64 items-center justify-center text-gray-500">
         <p>暂无营养数据</p>
       </div>
     );
@@ -120,19 +118,19 @@ function NutritionChart({
       target={
         data.targetCarbs && data.targetProtein && data.targetFat
           ? {
-            carbs: data.targetCarbs,
-            protein: data.targetProtein,
-            fat: data.targetFat,
-          }
+              carbs: data.targetCarbs,
+              protein: data.targetProtein,
+              fat: data.targetFat,
+            }
           : undefined
       }
       actual={
         data.actualCarbs && data.actualProtein && data.actualFat
           ? {
-            carbs: data.actualCarbs,
-            protein: data.actualProtein,
-            fat: data.actualFat,
-          }
+              carbs: data.actualCarbs,
+              protein: data.actualProtein,
+              fat: data.actualFat,
+            }
           : undefined
       }
     />

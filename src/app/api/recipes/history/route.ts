@@ -13,10 +13,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get("days") || "30");
 
     if (!memberId) {
-      return NextResponse.json(
-        { error: "memberId is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "memberId is required" }, { status: 400 });
     }
 
     const startDate = new Date();
@@ -28,7 +25,7 @@ export async function GET(request: NextRequest) {
       {
         memberId: memberId as Id<"familyMembers">,
         startDate: startTimestamp,
-      },
+      }
     );
 
     const total = views.length;
@@ -37,10 +34,9 @@ export async function GET(request: NextRequest) {
 
     const recipeIds = pageViews.map((view) => view.recipeId as string);
     const recipes = recipeIds.length
-      ? await convexClient.query<Array<Record<string, unknown>>>(
-        api.recipes.listByIds,
-        { ids: recipeIds as Id<"recipes">[] },
-      )
+      ? await convexClient.query<Array<Record<string, unknown>>>(api.recipes.listByIds, {
+          ids: recipeIds as Id<"recipes">[],
+        })
       : [];
 
     const recipeMap = new Map(recipes.map((recipe) => [recipe._id, recipe]));
@@ -65,10 +61,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error getting recipe history:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -79,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (!memberId || !recipeId) {
       return NextResponse.json(
         { error: "Missing required parameters: memberId and recipeId" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -95,7 +88,7 @@ export async function POST(request: NextRequest) {
         memberId: memberId as Id<"familyMembers">,
         viewDuration: viewDuration ?? undefined,
         source: source ?? "direct",
-      },
+      }
     );
 
     return NextResponse.json({
@@ -104,9 +97,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error recording recipe view:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

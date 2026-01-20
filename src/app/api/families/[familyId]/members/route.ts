@@ -28,7 +28,7 @@ const createMemberSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> },
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   try {
     const session = await auth();
@@ -42,16 +42,13 @@ export async function GET(
     const family = await verifyFamilyAccess(familyId, session.user.id);
 
     if (!family) {
-      return NextResponse.json(
-        { error: "家庭不存在或无权访问" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "家庭不存在或无权访问" }, { status: 404 });
     }
 
     // 使用 FamilyRepository 获取成员列表
     const members = await familyRepository.listFamilyMembers(
       familyId,
-      false, // includeDeleted = false
+      false // includeDeleted = false
     );
 
     return NextResponse.json({ members }, { status: 200 });
@@ -69,7 +66,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string }> },
+  { params }: { params: Promise<{ familyId: string }> }
 ) {
   try {
     const session = await auth();
@@ -83,10 +80,7 @@ export async function POST(
     const family = await verifyFamilyAdmin(familyId, session.user.id);
 
     if (!family) {
-      return NextResponse.json(
-        { error: "家庭不存在或无权限创建成员" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "家庭不存在或无权限创建成员" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -96,33 +90,23 @@ export async function POST(
     if (!validation.success) {
       return NextResponse.json(
         { error: "输入数据无效", details: validation.error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    const { name, gender, birthDate, height, weight, avatar, userId, role } =
-      validation.data;
+    const { name, gender, birthDate, height, weight, avatar, userId, role } = validation.data;
 
     // 如果提供了 userId，检查是否已经存在该用户的成员
     if (userId) {
-      const isMember = await familyRepository.isUserFamilyMember(
-        familyId,
-        userId,
-      );
+      const isMember = await familyRepository.isUserFamilyMember(familyId, userId);
 
       if (isMember) {
-        return NextResponse.json(
-          { error: "该用户已经是家庭成员" },
-          { status: 400 },
-        );
+        return NextResponse.json({ error: "该用户已经是家庭成员" }, { status: 400 });
       }
     }
 
     // 计算 BMI
-    const bmi =
-      height && weight
-        ? Number((weight / Math.pow(height / 100, 2)).toFixed(1))
-        : null;
+    const bmi = height && weight ? Number((weight / Math.pow(height / 100, 2)).toFixed(1)) : null;
 
     // 计算年龄段
     const age = new Date().getFullYear() - birthDate.getFullYear();
@@ -155,7 +139,7 @@ export async function POST(
         message: "成员创建成功",
         member,
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error) {
     console.error("创建家庭成员失败:", error);

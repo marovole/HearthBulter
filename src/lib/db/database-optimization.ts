@@ -102,10 +102,7 @@ export class DatabaseOptimizer {
     const searchParams = new URLSearchParams(url.search);
 
     // 添加连接池参数
-    searchParams.set(
-      "connection_limit",
-      this.config.connectionLimit.toString(),
-    );
+    searchParams.set("connection_limit", this.config.connectionLimit.toString());
     searchParams.set("pool_timeout", this.config.idleTimeout.toString());
     searchParams.set("connect_timeout", this.config.connectTimeout.toString());
 
@@ -156,7 +153,7 @@ export class DatabaseOptimizer {
       () => {
         this.cleanupStats();
       },
-      60 * 60 * 1000,
+      60 * 60 * 1000
     ); // 每小时清理一次
 
     // 定期报告性能指标
@@ -164,7 +161,7 @@ export class DatabaseOptimizer {
       () => {
         this.reportMetrics();
       },
-      5 * 60 * 1000,
+      5 * 60 * 1000
     ); // 每5分钟报告一次
 
     // 定期检查连接健康状态
@@ -180,7 +177,7 @@ export class DatabaseOptimizer {
     const prismaClient = this.prisma as unknown as {
       $on: (
         event: "query" | "error" | "info" | "warn",
-        callback: (event: Prisma.QueryEvent | Prisma.LogEvent) => void,
+        callback: (event: Prisma.QueryEvent | Prisma.LogEvent) => void
       ) => void;
     };
 
@@ -289,7 +286,7 @@ export class DatabaseOptimizer {
         duration: event.duration,
         threshold: this.config.slowQueryThreshold,
         timestamp: event.timestamp,
-      },
+      }
     );
 
     // 这里可以添加慢查询优化建议
@@ -331,9 +328,7 @@ export class DatabaseOptimizer {
    */
   private cleanupStats(): void {
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
-    this.queryStats = this.queryStats.filter(
-      (stats) => stats.timestamp.getTime() > oneHourAgo,
-    );
+    this.queryStats = this.queryStats.filter((stats) => stats.timestamp.getTime() > oneHourAgo);
 
     logger.debug("数据库统计数据已清理", {
       type: "database",
@@ -363,7 +358,7 @@ export class DatabaseOptimizer {
           slowQueries: metrics.slowQueries,
           averageQueryTime: metrics.averageQueryTime,
           totalQueries: metrics.totalQueries,
-        },
+        }
       );
     }
   }
@@ -394,7 +389,7 @@ export class DatabaseOptimizer {
         {
           error: error instanceof Error ? error.message : "未知错误",
           timestamp: new Date().toISOString(),
-        },
+        }
       );
     }
   }
@@ -407,24 +402,22 @@ export class DatabaseOptimizer {
     const fiveMinutesAgo = now - 5 * 60 * 1000;
 
     const recentStats = this.queryStats.filter(
-      (stats) => stats.timestamp.getTime() > fiveMinutesAgo,
+      (stats) => stats.timestamp.getTime() > fiveMinutesAgo
     );
 
     const totalQueries = recentStats.length;
     const slowQueries = recentStats.filter(
-      (stats) => stats.duration > this.config.slowQueryThreshold,
+      (stats) => stats.duration > this.config.slowQueryThreshold
     ).length;
     const failedQueries = recentStats.filter((stats) => !stats.success).length;
 
     const averageQueryTime =
       totalQueries > 0
-        ? recentStats.reduce((sum, stats) => sum + stats.duration, 0) /
-          totalQueries
+        ? recentStats.reduce((sum, stats) => sum + stats.duration, 0) / totalQueries
         : 0;
 
     const cacheHits = recentStats.filter((stats) => stats.cacheHit).length;
-    const cacheHitRate =
-      totalQueries > 0 ? (cacheHits / totalQueries) * 100 : 0;
+    const cacheHitRate = totalQueries > 0 ? (cacheHits / totalQueries) * 100 : 0;
 
     const topSlowQueries = recentStats
       .filter((stats) => stats.duration > this.config.slowQueryThreshold)
@@ -448,7 +441,7 @@ export class DatabaseOptimizer {
    */
   async executeWithRetry<T>(
     operation: () => Promise<T>,
-    operationName: string = "database_operation",
+    operationName: string = "database_operation"
   ): Promise<T> {
     let lastError: Error | undefined;
 
@@ -474,7 +467,7 @@ export class DatabaseOptimizer {
               operation: operationName,
               attempts: attempt,
               error: lastError.message,
-            },
+            }
           );
 
           throw lastError;
@@ -503,7 +496,7 @@ export class DatabaseOptimizer {
     items: T[],
     operation: (item: T) => Promise<R>,
     batchSize: number = 100,
-    operationName: string = "batch_operation",
+    operationName: string = "batch_operation"
   ): Promise<R[]> {
     const results: R[] = [];
     const totalBatches = Math.ceil(items.length / batchSize);
@@ -523,11 +516,8 @@ export class DatabaseOptimizer {
       try {
         const batchResults = await Promise.all(
           batch.map((item) =>
-            this.executeWithRetry(
-              () => operation(item),
-              `${operationName}_batch_${batchNumber}`,
-            ),
-          ),
+            this.executeWithRetry(() => operation(item), `${operationName}_batch_${batchNumber}`)
+          )
         );
 
         results.push(...batchResults);

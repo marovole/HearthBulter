@@ -15,10 +15,7 @@ import type { FoodRecord } from "@/lib/repositories/interfaces/food-repository";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
@@ -100,9 +97,7 @@ function parseFoodResponse(food: FoodRecord | any) {
     id: food.id,
     name: food.name,
     nameEn: food.nameEn,
-    aliases: Array.isArray(food.aliases)
-      ? food.aliases
-      : JSON.parse(food.aliases || "[]"),
+    aliases: Array.isArray(food.aliases) ? food.aliases : JSON.parse(food.aliases || "[]"),
     calories: food.calories,
     protein: food.protein,
     carbs: food.carbs,

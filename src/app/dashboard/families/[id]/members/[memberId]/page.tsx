@@ -109,25 +109,20 @@ export default async function MemberDetailPage({
     <div className="min-h-screen bg-gray-50">
       {/* 顶部导航栏 */}
       <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between">
             <div className="flex items-center">
               <Link
                 href={`/dashboard/families/${id}`}
-                className="text-blue-600 hover:text-blue-800 mr-4"
+                className="mr-4 text-blue-600 hover:text-blue-800"
               >
                 ← 返回家庭
               </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                {member.name}
-              </h1>
+              <h1 className="text-xl font-semibold text-gray-900">{member.name}</h1>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">{session.user.name}</span>
-              <Link
-                href="/api/auth/signout"
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
+              <Link href="/api/auth/signout" className="text-sm text-gray-500 hover:text-gray-700">
                 退出登录
               </Link>
             </div>
@@ -135,47 +130,39 @@ export default async function MemberDetailPage({
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* 基本信息卡片 */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="flex justify-between items-start mb-4">
+          <div className="mb-6 rounded-lg bg-white p-6 shadow">
+            <div className="mb-4 flex items-start justify-between">
               <h2 className="text-2xl font-bold text-gray-900">基本信息</h2>
               {(isAdmin || isSelf) && (
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                <button className="text-sm font-medium text-blue-600 hover:text-blue-800">
                   编辑信息
                 </button>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               <div>
-                <label className="text-sm font-medium text-gray-500">
-                  姓名
-                </label>
+                <label className="text-sm font-medium text-gray-500">姓名</label>
                 <p className="mt-1 text-base text-gray-900">{member.name}</p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-500">
-                  性别
-                </label>
+                <label className="text-sm font-medium text-gray-500">性别</label>
                 <p className="mt-1 text-base text-gray-900">
                   {member.gender === "MALE" ? "男" : "女"}
                 </p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-500">
-                  年龄
-                </label>
+                <label className="text-sm font-medium text-gray-500">年龄</label>
                 <p className="mt-1 text-base text-gray-900">{age} 岁</p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-500">
-                  年龄组
-                </label>
+                <label className="text-sm font-medium text-gray-500">年龄组</label>
                 <p className="mt-1 text-base text-gray-900">
                   {member.ageGroup === "CHILD"
                     ? "儿童"
@@ -189,52 +176,34 @@ export default async function MemberDetailPage({
 
               {member.weight && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    体重
-                  </label>
-                  <p className="mt-1 text-base text-gray-900">
-                    {member.weight} kg
-                  </p>
+                  <label className="text-sm font-medium text-gray-500">体重</label>
+                  <p className="mt-1 text-base text-gray-900">{member.weight} kg</p>
                 </div>
               )}
 
               {member.height && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    身高
-                  </label>
-                  <p className="mt-1 text-base text-gray-900">
-                    {member.height} cm
-                  </p>
+                  <label className="text-sm font-medium text-gray-500">身高</label>
+                  <p className="mt-1 text-base text-gray-900">{member.height} cm</p>
                 </div>
               )}
 
               {member.bmi && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    BMI
-                  </label>
-                  <p className="mt-1 text-base text-gray-900">
-                    {member.bmi.toFixed(1)}
-                  </p>
+                  <label className="text-sm font-medium text-gray-500">BMI</label>
+                  <p className="mt-1 text-base text-gray-900">{member.bmi.toFixed(1)}</p>
                 </div>
               )}
 
               {member.healthGoals[0]?.tdee && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    每日能量消耗 (TDEE)
-                  </label>
-                  <p className="mt-1 text-base text-gray-900">
-                    {member.healthGoals[0].tdee} kcal
-                  </p>
+                  <label className="text-sm font-medium text-gray-500">每日能量消耗 (TDEE)</label>
+                  <p className="mt-1 text-base text-gray-900">{member.healthGoals[0].tdee} kcal</p>
                 </div>
               )}
 
               <div>
-                <label className="text-sm font-medium text-gray-500">
-                  角色
-                </label>
+                <label className="text-sm font-medium text-gray-500">角色</label>
                 <p className="mt-1 text-base text-gray-900">
                   {member.role === "ADMIN" ? "管理员" : "成员"}
                 </p>
@@ -242,10 +211,8 @@ export default async function MemberDetailPage({
             </div>
 
             {member.user && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <label className="text-sm font-medium text-gray-500">
-                  关联账户
-                </label>
+              <div className="mt-6 border-t border-gray-200 pt-6">
+                <label className="text-sm font-medium text-gray-500">关联账户</label>
                 <p className="mt-1 text-base text-gray-900">
                   {member.user.name} ({member.user.email})
                 </p>
@@ -254,13 +221,13 @@ export default async function MemberDetailPage({
           </div>
 
           {/* 健康目标卡片 */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="flex justify-between items-start mb-4">
+          <div className="mb-6 rounded-lg bg-white p-6 shadow">
+            <div className="mb-4 flex items-start justify-between">
               <h2 className="text-2xl font-bold text-gray-900">健康目标</h2>
               {(isAdmin || isSelf) && (
                 <Link
                   href={`/dashboard/families/${id}/members/${memberId}/goals/new`}
-                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm"
+                  className="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
                 >
                   + 新增目标
                 </Link>
@@ -268,15 +235,15 @@ export default async function MemberDetailPage({
             </div>
 
             {member.healthGoals.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">暂无健康目标</p>
+              <p className="py-8 text-center text-gray-500">暂无健康目标</p>
             ) : (
               <div className="space-y-4">
                 {member.healthGoals.map((goal: HealthGoal) => (
                   <div
                     key={goal.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                    className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-blue-300"
                   >
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="mb-3 flex items-start justify-between">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
                           {goal.goalType === "LOSE_WEIGHT"
@@ -288,7 +255,7 @@ export default async function MemberDetailPage({
                                 : "改善健康"}
                         </h3>
                         <span
-                          className={`inline-block mt-1 px-2 py-1 text-xs font-medium rounded ${
+                          className={`mt-1 inline-block rounded px-2 py-1 text-xs font-medium ${
                             goal.status === "ACTIVE"
                               ? "bg-green-100 text-green-800"
                               : goal.status === "COMPLETED"
@@ -309,69 +276,55 @@ export default async function MemberDetailPage({
                       </div>
                       <Link
                         href={`/dashboard/families/${id}/members/${memberId}/goals/${goal.id}`}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
                       >
                         查看详情 →
                       </Link>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+                    <div className="mb-3 grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                       {goal.startWeight && (
                         <div>
                           <span className="text-gray-500">起始体重:</span>
-                          <span className="ml-2 font-medium">
-                            {goal.startWeight} kg
-                          </span>
+                          <span className="ml-2 font-medium">{goal.startWeight} kg</span>
                         </div>
                       )}
                       {goal.currentWeight && (
                         <div>
                           <span className="text-gray-500">当前体重:</span>
-                          <span className="ml-2 font-medium">
-                            {goal.currentWeight} kg
-                          </span>
+                          <span className="ml-2 font-medium">{goal.currentWeight} kg</span>
                         </div>
                       )}
                       {goal.targetWeight && (
                         <div>
                           <span className="text-gray-500">目标体重:</span>
-                          <span className="ml-2 font-medium">
-                            {goal.targetWeight} kg
-                          </span>
+                          <span className="ml-2 font-medium">{goal.targetWeight} kg</span>
                         </div>
                       )}
                       {goal.targetWeeks && (
                         <div>
                           <span className="text-gray-500">目标周数:</span>
-                          <span className="ml-2 font-medium">
-                            {goal.targetWeeks} 周
-                          </span>
+                          <span className="ml-2 font-medium">{goal.targetWeeks} 周</span>
                         </div>
                       )}
                     </div>
 
                     {/* 进度条 */}
                     <div className="mb-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-gray-700">
-                          进度
-                        </span>
-                        <span className="text-sm font-medium text-gray-700">
-                          {goal.progress}%
-                        </span>
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">进度</span>
+                        <span className="text-sm font-medium text-gray-700">{goal.progress}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="h-2 w-full rounded-full bg-gray-200">
                         <div
-                          className="bg-green-600 h-2 rounded-full transition-all"
+                          className="h-2 rounded-full bg-green-600 transition-all"
                           style={{ width: `${goal.progress}%` }}
                         />
                       </div>
                     </div>
 
                     {goal.tdee && (
-                      <div className="text-sm text-gray-600">
-                        每日能量消耗: {goal.tdee} kcal
-                      </div>
+                      <div className="text-sm text-gray-600">每日能量消耗: {goal.tdee} kcal</div>
                     )}
                   </div>
                 ))}
@@ -380,13 +333,13 @@ export default async function MemberDetailPage({
           </div>
 
           {/* 食谱规划卡片 */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="flex justify-between items-start mb-4">
+          <div className="mb-6 rounded-lg bg-white p-6 shadow">
+            <div className="mb-4 flex items-start justify-between">
               <h2 className="text-2xl font-bold text-gray-900">食谱规划</h2>
               {(isAdmin || isSelf) && (
                 <Link
                   href={`/dashboard/families/${id}/members/${memberId}/meal-plans/new`}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
                 >
                   + 新建食谱计划
                 </Link>
@@ -396,25 +349,25 @@ export default async function MemberDetailPage({
             <div className="mb-4">
               <Link
                 href={`/dashboard/families/${id}/members/${memberId}/meal-plans`}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                className="text-sm font-medium text-blue-600 hover:text-blue-800"
               >
                 查看所有食谱计划 →
               </Link>
             </div>
 
-            <p className="text-gray-500 text-sm">
+            <p className="text-sm text-gray-500">
               根据成员的健康目标和营养需求，自动生成个性化食谱计划
             </p>
           </div>
 
           {/* 体检报告卡片 */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="flex justify-between items-start mb-4">
+          <div className="mb-6 rounded-lg bg-white p-6 shadow">
+            <div className="mb-4 flex items-start justify-between">
               <h2 className="text-2xl font-bold text-gray-900">体检报告</h2>
               {(isAdmin || isSelf) && (
                 <Link
                   href={`/dashboard/families/${id}/members/${memberId}/reports/new`}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
                 >
                   + 上传新报告
                 </Link>
@@ -423,12 +376,10 @@ export default async function MemberDetailPage({
 
             {member.medicalReports.length === 0 ? (
               <div className="mb-4">
-                <p className="text-gray-500 text-sm mb-4">
-                  还没有上传任何体检报告
-                </p>
+                <p className="mb-4 text-sm text-gray-500">还没有上传任何体检报告</p>
                 <Link
                   href={`/dashboard/families/${id}/members/${memberId}/reports`}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800"
                 >
                   查看所有报告 →
                 </Link>
@@ -437,28 +388,23 @@ export default async function MemberDetailPage({
               <>
                 {member.medicalReports[0] && (
                   <div className="mb-4">
-                    <div className="border border-gray-200 rounded-lg p-4 mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          最近一次报告
-                        </h3>
+                    <div className="mb-4 rounded-lg border border-gray-200 p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">最近一次报告</h3>
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded ${
+                          className={`rounded px-2 py-1 text-xs font-medium ${
                             member.medicalReports[0].ocrStatus === "COMPLETED"
                               ? "bg-green-100 text-green-800"
-                              : member.medicalReports[0].ocrStatus ===
-                                  "PROCESSING"
+                              : member.medicalReports[0].ocrStatus === "PROCESSING"
                                 ? "bg-blue-100 text-blue-800"
-                                : member.medicalReports[0].ocrStatus ===
-                                    "FAILED"
+                                : member.medicalReports[0].ocrStatus === "FAILED"
                                   ? "bg-red-100 text-red-800"
                                   : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           {member.medicalReports[0].ocrStatus === "COMPLETED"
                             ? "已完成"
-                            : member.medicalReports[0].ocrStatus ===
-                                "PROCESSING"
+                            : member.medicalReports[0].ocrStatus === "PROCESSING"
                               ? "处理中"
                               : member.medicalReports[0].ocrStatus === "FAILED"
                                 ? "失败"
@@ -466,14 +412,14 @@ export default async function MemberDetailPage({
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                      <div className="mb-3 grid grid-cols-2 gap-4 text-sm text-gray-600">
                         {member.medicalReports[0].reportDate && (
                           <div>
                             <span className="text-gray-500">报告日期：</span>
                             <span className="font-medium">
-                              {new Date(
-                                member.medicalReports[0].reportDate,
-                              ).toLocaleDateString("zh-CN")}
+                              {new Date(member.medicalReports[0].reportDate).toLocaleDateString(
+                                "zh-CN"
+                              )}
                             </span>
                           </div>
                         )}
@@ -489,43 +435,36 @@ export default async function MemberDetailPage({
 
                       {member.medicalReports[0].ocrStatus === "COMPLETED" &&
                         member.medicalReports[0].indicators.length > 0 && (
-                        <div className="mt-3">
-                          {member.medicalReports[0].indicators.filter(
-                            (ind: MedicalIndicator) => ind.isAbnormal,
-                          ).length > 0 ? (
-                              <div className="bg-red-50 border border-red-200 rounded p-3">
-                                <p className="text-sm font-medium text-red-900 mb-2">
+                          <div className="mt-3">
+                            {member.medicalReports[0].indicators.filter(
+                              (ind: MedicalIndicator) => ind.isAbnormal
+                            ).length > 0 ? (
+                              <div className="rounded border border-red-200 bg-red-50 p-3">
+                                <p className="mb-2 text-sm font-medium text-red-900">
                                   发现{" "}
                                   {
                                     member.medicalReports[0].indicators.filter(
-                                      (ind: MedicalIndicator) => ind.isAbnormal,
+                                      (ind: MedicalIndicator) => ind.isAbnormal
                                     ).length
                                   }{" "}
                                   项异常指标
                                 </p>
                                 <div className="space-y-1">
                                   {member.medicalReports[0].indicators
-                                    .filter(
-                                      (ind: MedicalIndicator) => ind.isAbnormal,
-                                    )
+                                    .filter((ind: MedicalIndicator) => ind.isAbnormal)
                                     .slice(0, 3)
                                     .map((indicator: MedicalIndicator) => (
-                                      <div
-                                        key={indicator.id}
-                                        className="text-sm text-red-800"
-                                      >
-                                        • {indicator.name}: {indicator.value}{" "}
-                                        {indicator.unit}
+                                      <div key={indicator.id} className="text-sm text-red-800">
+                                        • {indicator.name}: {indicator.value} {indicator.unit}
                                       </div>
                                     ))}
                                   {member.medicalReports[0].indicators.filter(
-                                    (ind: MedicalIndicator) => ind.isAbnormal,
+                                    (ind: MedicalIndicator) => ind.isAbnormal
                                   ).length > 3 && (
                                     <div className="text-xs text-red-600">
                                       还有{" "}
                                       {member.medicalReports[0].indicators.filter(
-                                        (ind: MedicalIndicator) =>
-                                          ind.isAbnormal,
+                                        (ind: MedicalIndicator) => ind.isAbnormal
                                       ).length - 3}{" "}
                                       项异常指标...
                                     </div>
@@ -533,19 +472,17 @@ export default async function MemberDetailPage({
                                 </div>
                               </div>
                             ) : (
-                              <div className="bg-green-50 border border-green-200 rounded p-3">
-                                <p className="text-sm font-medium text-green-900">
-                                  所有指标均正常
-                                </p>
+                              <div className="rounded border border-green-200 bg-green-50 p-3">
+                                <p className="text-sm font-medium text-green-900">所有指标均正常</p>
                               </div>
                             )}
-                        </div>
-                      )}
+                          </div>
+                        )}
 
                       <div className="mt-4 flex gap-2">
                         <Link
                           href={`/dashboard/families/${id}/members/${memberId}/reports/${member.medicalReports[0].id}`}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
                         >
                           查看详情 →
                         </Link>
@@ -554,7 +491,7 @@ export default async function MemberDetailPage({
 
                     <Link
                       href={`/dashboard/families/${id}/members/${memberId}/reports`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800"
                     >
                       查看所有报告 →
                     </Link>
@@ -563,19 +500,17 @@ export default async function MemberDetailPage({
               </>
             )}
 
-            <p className="text-gray-500 text-sm">
-              上传体检报告，自动识别健康指标并追踪变化趋势
-            </p>
+            <p className="text-sm text-gray-500">上传体检报告，自动识别健康指标并追踪变化趋势</p>
           </div>
 
           {/* 过敏史卡片 */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-start mb-4">
+          <div className="rounded-lg bg-white p-6 shadow">
+            <div className="mb-4 flex items-start justify-between">
               <h2 className="text-2xl font-bold text-gray-900">过敏史</h2>
               {(isAdmin || isSelf) && (
                 <Link
                   href={`/dashboard/families/${id}/members/${memberId}/allergies/new`}
-                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm"
+                  className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
                 >
                   + 添加过敏记录
                 </Link>
@@ -583,22 +518,22 @@ export default async function MemberDetailPage({
             </div>
 
             {member.allergies.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">暂无过敏记录</p>
+              <p className="py-8 text-center text-gray-500">暂无过敏记录</p>
             ) : (
               <div className="space-y-3">
                 {member.allergies.map((allergy: Allergy) => (
                   <div
                     key={allergy.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-red-300 transition-colors"
+                    className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-red-300"
                   >
-                    <div className="flex justify-between items-start">
+                    <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="mb-2 flex items-center gap-3">
                           <h3 className="text-lg font-semibold text-gray-900">
                             {allergy.allergenName}
                           </h3>
                           <span
-                            className={`px-2 py-1 text-xs font-medium rounded ${
+                            className={`rounded px-2 py-1 text-xs font-medium ${
                               allergy.severity === "LIFE_THREATENING"
                                 ? "bg-red-100 text-red-800"
                                 : allergy.severity === "SEVERE"
@@ -628,14 +563,12 @@ export default async function MemberDetailPage({
                         </div>
 
                         {allergy.description && (
-                          <p className="text-sm text-gray-600">
-                            {allergy.description}
-                          </p>
+                          <p className="text-sm text-gray-600">{allergy.description}</p>
                         )}
                       </div>
 
                       {(isAdmin || isSelf) && (
-                        <button className="ml-4 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        <button className="ml-4 text-sm font-medium text-blue-600 hover:text-blue-800">
                           编辑
                         </button>
                       )}

@@ -16,12 +16,10 @@ export async function GET(request: NextRequest) {
       api.members.listAccessibleByClerkId,
       {
         clerkId: session.user.id,
-      },
+      }
     );
 
-    const memberIds = accessibleMembers.map(
-      (member) => member._id as Id<"familyMembers">,
-    );
+    const memberIds = accessibleMembers.map((member) => member._id as Id<"familyMembers">);
 
     if (memberIds.length === 0) {
       const syncStatus = await deviceSyncService.getSyncStatus();

@@ -6,10 +6,7 @@ import type {
   RecommendationRecipeFilter,
   UserPreferenceDTO,
 } from "@/lib/repositories/types/recommendation";
-import {
-  RecipeRecommendation,
-  RecommendationContext,
-} from "./recommendation-engine";
+import { RecipeRecommendation, RecommendationContext } from "./recommendation-engine";
 
 const MEAT_KEYWORDS = [
   "肉",
@@ -34,7 +31,7 @@ export class RuleBasedRecommender {
 
   async getRecommendations(
     context: RecommendationContext,
-    limit: number = 10,
+    limit: number = 10
   ): Promise<RecipeRecommendation[]> {
     const candidates = await this.getCandidateRecipes(context, limit);
     const scoredRecipes = await this.scoreRecipes(candidates, context);
@@ -44,7 +41,7 @@ export class RuleBasedRecommender {
 
   private async getCandidateRecipes(
     context: RecommendationContext,
-    limit: number = 10,
+    limit: number = 10
   ): Promise<RecipeDetailDTO[]> {
     const filters: RecommendationRecipeFilter = {
       memberId: context.memberId,
@@ -66,11 +63,9 @@ export class RuleBasedRecommender {
 
   private async scoreRecipes(
     recipes: RecipeDetailDTO[],
-    context: RecommendationContext,
+    context: RecommendationContext
   ): Promise<RecipeRecommendation[]> {
-    const userPreference = await this.repository.getUserPreference(
-      context.memberId,
-    );
+    const userPreference = await this.repository.getUserPreference(context.memberId);
 
     return Promise.all(
       recipes.map(async (recipe) => {
@@ -83,40 +78,23 @@ export class RuleBasedRecommender {
           seasonalMatch: 0,
         };
 
-        const inventoryScore = await this.calculateInventoryScore(
-          recipe,
-          context.memberId,
-        );
+        const inventoryScore = await this.calculateInventoryScore(recipe, context.memberId);
         metadata.inventoryMatch = inventoryScore / 30;
         score += inventoryScore;
 
-        const priceScore = this.calculatePriceScore(
-          recipe,
-          context.budgetLimit,
-          userPreference,
-        );
+        const priceScore = this.calculatePriceScore(recipe, context.budgetLimit, userPreference);
         metadata.priceMatch = priceScore / 20;
         score += priceScore;
 
-        const nutritionScore = await this.calculateNutritionScore(
-          recipe,
-          context.memberId,
-        );
+        const nutritionScore = await this.calculateNutritionScore(recipe, context.memberId);
         metadata.nutritionMatch = nutritionScore / 30;
         score += nutritionScore;
 
-        const preferenceScore = this.calculatePreferenceScore(
-          recipe,
-          userPreference,
-          context,
-        );
+        const preferenceScore = this.calculatePreferenceScore(recipe, userPreference, context);
         metadata.preferenceMatch = preferenceScore / 15;
         score += preferenceScore;
 
-        const seasonalScore = this.calculateSeasonalScore(
-          recipe,
-          context.season,
-        );
+        const seasonalScore = this.calculateSeasonalScore(recipe, context.season);
         metadata.seasonalMatch = seasonalScore / 5;
         score += seasonalScore;
 
@@ -127,13 +105,13 @@ export class RuleBasedRecommender {
           explanation: "",
           metadata,
         };
-      }),
+      })
     );
   }
 
   private async calculateInventoryScore(
     recipe: RecipeDetailDTO,
-    memberId: string,
+    memberId: string
   ): Promise<number> {
     const availableIngredients = await this.getAvailableIngredients(memberId);
 
@@ -144,10 +122,10 @@ export class RuleBasedRecommender {
     }
 
     const availableSet = new Set(
-      availableIngredients.map((ingredient) => ingredient.toLowerCase()),
+      availableIngredients.map((ingredient) => ingredient.toLowerCase())
     );
     const matchCount = requiredIngredients.filter((ingredient) =>
-      availableSet.has(ingredient.toLowerCase()),
+      availableSet.has(ingredient.toLowerCase())
     ).length;
 
     const matchRatio = matchCount / requiredIngredients.length;
@@ -157,7 +135,7 @@ export class RuleBasedRecommender {
   private calculatePriceScore(
     recipe: RecipeDetailDTO,
     budgetLimit?: number,
-    userPreference?: UserPreferenceDTO | null,
+    userPreference?: UserPreferenceDTO | null
   ): number {
     if (!recipe.estimatedCost) {
       return 10;
@@ -170,8 +148,7 @@ export class RuleBasedRecommender {
       HIGH: 100,
     };
 
-    const threshold =
-      costThresholds[userCostLevel as keyof typeof costThresholds];
+    const threshold = costThresholds[userCostLevel as keyof typeof costThresholds];
 
     if (budgetLimit && recipe.estimatedCost > budgetLimit) {
       return 0;
@@ -192,7 +169,7 @@ export class RuleBasedRecommender {
 
   private async calculateNutritionScore(
     recipe: RecipeDetailDTO,
-    memberId: string,
+    memberId: string
   ): Promise<number> {
     const healthGoal = await this.repository.getActiveHealthGoal(memberId);
 
@@ -208,21 +185,21 @@ export class RuleBasedRecommender {
     const fat = recipe.fat ?? 0;
 
     switch (healthGoal.goalType) {
-    case "LOSE_WEIGHT":
-      if (calories <= 400) score += 10;
-      if (carbs <= protein * 2) score += 5;
-      break;
-    case "GAIN_MUSCLE":
-      if (protein >= 25) score += 10;
-      if (calories >= 500) score += 5;
-      break;
-    case "MAINTAIN":
-      if (calories >= 300 && calories <= 600) score += 10;
-      break;
-    case "IMPROVE_HEALTH":
-      if (calories <= 500) score += 8;
-      if (fat <= 20) score += 7;
-      break;
+      case "LOSE_WEIGHT":
+        if (calories <= 400) score += 10;
+        if (carbs <= protein * 2) score += 5;
+        break;
+      case "GAIN_MUSCLE":
+        if (protein >= 25) score += 10;
+        if (calories >= 500) score += 5;
+        break;
+      case "MAINTAIN":
+        if (calories >= 300 && calories <= 600) score += 10;
+        break;
+      case "IMPROVE_HEALTH":
+        if (calories <= 500) score += 8;
+        if (fat <= 20) score += 7;
+        break;
     }
 
     return Math.min(score, 30);
@@ -231,7 +208,7 @@ export class RuleBasedRecommender {
   private calculatePreferenceScore(
     recipe: RecipeDetailDTO,
     userPreference: UserPreferenceDTO | null,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): number {
     if (!userPreference) {
       return 7;
@@ -247,7 +224,7 @@ export class RuleBasedRecommender {
     const preferredIngredients = userPreference.preferredIngredients;
     const recipeIngredients = this.getIngredientNames(recipe);
     const matchCount = recipeIngredients.filter((ingredient) =>
-      preferredIngredients.includes(ingredient),
+      preferredIngredients.includes(ingredient)
     ).length;
 
     if (matchCount > 0) {
@@ -258,9 +235,7 @@ export class RuleBasedRecommender {
       ...userPreference.avoidedIngredients,
       ...(context.excludedIngredients ?? []),
     ]);
-    const hasAvoided = recipeIngredients.some((ingredient) =>
-      avoidedIngredients.has(ingredient),
-    );
+    const hasAvoided = recipeIngredients.some((ingredient) => avoidedIngredients.has(ingredient));
 
     if (hasAvoided) {
       score = Math.max(score - 5, 0);
@@ -273,10 +248,7 @@ export class RuleBasedRecommender {
     return Math.min(score, 15);
   }
 
-  private calculateSeasonalScore(
-    recipe: RecipeDetailDTO,
-    currentSeason?: string,
-  ): number {
+  private calculateSeasonalScore(recipe: RecipeDetailDTO, currentSeason?: string): number {
     if (!currentSeason) {
       return 2;
     }
@@ -301,24 +273,22 @@ export class RuleBasedRecommender {
 
   private matchesDietaryRestrictions(
     recipe: RecipeDetailDTO,
-    context: RecommendationContext,
+    context: RecommendationContext
   ): boolean {
-    const restrictions = (context.dietaryRestrictions ?? []).map((item) =>
-      item.toLowerCase(),
-    );
+    const restrictions = (context.dietaryRestrictions ?? []).map((item) => item.toLowerCase());
 
     if (!restrictions.length) return true;
 
     const ingredientNames = this.getIngredientNames(recipe).map((ingredient) =>
-      ingredient.toLowerCase(),
+      ingredient.toLowerCase()
     );
 
     const hasMeatIngredient = ingredientNames.some((ingredient) =>
-      MEAT_KEYWORDS.some((keyword) => ingredient.includes(keyword)),
+      MEAT_KEYWORDS.some((keyword) => ingredient.includes(keyword))
     );
 
     const isVegetarian = restrictions.some((item) =>
-      ["vegetarian", "素食", "vegan", "纯素"].includes(item),
+      ["vegetarian", "素食", "vegan", "纯素"].includes(item)
     );
 
     if (isVegetarian && hasMeatIngredient) {
@@ -358,14 +328,12 @@ export class RuleBasedRecommender {
 
   private getIngredientNames(recipe: RecipeDetailDTO): string[] {
     const detailedIngredients = recipe.ingredientsDetailed?.map(
-      (ingredient) => ingredient.food.name,
+      (ingredient) => ingredient.food.name
     );
-    const summaryIngredients = recipe.ingredients?.map(
-      (ingredient) => ingredient.name,
-    );
+    const summaryIngredients = recipe.ingredients?.map((ingredient) => ingredient.name);
 
     return (detailedIngredients ?? summaryIngredients ?? []).filter(
-      (ingredient): ingredient is string => Boolean(ingredient),
+      (ingredient): ingredient is string => Boolean(ingredient)
     );
   }
 
@@ -398,7 +366,7 @@ export class RuleBasedRecommender {
     }
 
     return Array.from(normalized.values()).filter((tag) =>
-      ["SPRING", "SUMMER", "AUTUMN", "WINTER"].includes(tag),
+      ["SPRING", "SUMMER", "AUTUMN", "WINTER"].includes(tag)
     );
   }
 }

@@ -46,11 +46,9 @@ export default function TrendChart({
   }> = data.map((point) => ({
     date: typeof point.date === "string" ? new Date(point.date) : point.date,
     value: point.value,
-    dateStr: format(
-      typeof point.date === "string" ? new Date(point.date) : point.date,
-      "MM/dd",
-      { locale: zhCN },
-    ),
+    dateStr: format(typeof point.date === "string" ? new Date(point.date) : point.date, "MM/dd", {
+      locale: zhCN,
+    }),
   }));
 
   // 如果显示预测，添加预测数据
@@ -59,11 +57,9 @@ export default function TrendChart({
       date: typeof point.date === "string" ? new Date(point.date) : point.date,
       value: null,
       predicted: point.value,
-      dateStr: format(
-        typeof point.date === "string" ? new Date(point.date) : point.date,
-        "MM/dd",
-        { locale: zhCN },
-      ),
+      dateStr: format(typeof point.date === "string" ? new Date(point.date) : point.date, "MM/dd", {
+        locale: zhCN,
+      }),
     }));
 
     // 合并数据
@@ -78,15 +74,11 @@ export default function TrendChart({
 
   return (
     <div className="w-full">
-      {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
+      {title && <h3 className="mb-4 text-lg font-semibold">{title}</h3>}
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey="dateStr"
-            stroke="#6b7280"
-            style={{ fontSize: "12px" }}
-          />
+          <XAxis dataKey="dateStr" stroke="#6b7280" style={{ fontSize: "12px" }} />
           <YAxis
             stroke="#6b7280"
             style={{ fontSize: "12px" }}

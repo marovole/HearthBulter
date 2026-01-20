@@ -16,19 +16,11 @@ export type {
   UserNotificationsResult,
 } from "./notification-manager";
 
-export type {
-  EmailConfig,
-  EmailMessage,
-  EmailSendResult,
-} from "./email-service";
+export type { EmailConfig, EmailMessage, EmailSendResult } from "./email-service";
 
 export type { SMSConfig, SMSMessage, SMSSendResult } from "./sms-service";
 
-export type {
-  WeChatConfig,
-  WeChatTemplateMessage,
-  WeChatSendResult,
-} from "./wechat-service";
+export type { WeChatConfig, WeChatTemplateMessage, WeChatSendResult } from "./wechat-service";
 
 export type { TemplateVariable, RenderedTemplate } from "./template-engine";
 
@@ -41,7 +33,7 @@ export class NotificationFactory {
   private static instance: NotificationManager;
 
   static getInstance(
-    repository: NotificationRepository = notificationRepository,
+    repository: NotificationRepository = notificationRepository
   ): NotificationManager {
     if (!this.instance) {
       this.instance = new NotificationManager(repository);
@@ -50,7 +42,7 @@ export class NotificationFactory {
   }
 
   static createManager(
-    repository: NotificationRepository = notificationRepository,
+    repository: NotificationRepository = notificationRepository
   ): NotificationManager {
     return new NotificationManager(repository);
   }

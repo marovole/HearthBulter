@@ -43,10 +43,7 @@ export class CustomApiError extends Error implements ApiError {
 /**
  * 带重试机制的fetch函数
  */
-export async function fetchWithRetry(
-  url: string,
-  options: RequestOptions = {},
-): Promise<Response> {
+export async function fetchWithRetry(url: string, options: RequestOptions = {}): Promise<Response> {
   const {
     timeout = 10000,
     retries = {
@@ -77,11 +74,10 @@ export async function fetchWithRetry(
           .json()
           .catch(() => ({}));
         throw new CustomApiError(
-          errorData.message ||
-            `HTTP ${response.status}: ${response.statusText}`,
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`,
           response.status,
           errorData.code,
-          errorData,
+          errorData
         );
       }
 
@@ -94,10 +90,7 @@ export async function fetchWithRetry(
         break;
       }
 
-      if (
-        retries.retryCondition &&
-        !retries.retryCondition(lastError as ApiError)
-      ) {
+      if (retries.retryCondition && !retries.retryCondition(lastError as ApiError)) {
         break;
       }
 
@@ -105,7 +98,7 @@ export async function fetchWithRetry(
       const delay = calculateDelay(
         attempt,
         retries.delay || 1000,
-        retries.backoff || "exponential",
+        retries.backoff || "exponential"
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
@@ -119,7 +112,7 @@ export async function fetchWithRetry(
  */
 export async function fetchWithTimeout(
   url: string,
-  options: RequestOptions = {},
+  options: RequestOptions = {}
 ): Promise<Response> {
   const { timeout = 10000, ...fetchOptions } = options;
 
@@ -148,15 +141,15 @@ export async function fetchWithTimeout(
 function calculateDelay(
   attempt: number,
   baseDelay: number,
-  backoff: "linear" | "exponential",
+  backoff: "linear" | "exponential"
 ): number {
   switch (backoff) {
-  case "linear":
-    return baseDelay * attempt;
-  case "exponential":
-    return baseDelay * Math.pow(2, attempt - 1);
-  default:
-    return baseDelay;
+    case "linear":
+      return baseDelay * attempt;
+    case "exponential":
+      return baseDelay * Math.pow(2, attempt - 1);
+    default:
+      return baseDelay;
   }
 }
 
@@ -165,7 +158,7 @@ function calculateDelay(
  */
 export async function handleApiResponse<T>(
   response: Response,
-  errorMessage: string = "API请求失败",
+  errorMessage: string = "API请求失败"
 ): Promise<T> {
   if (!response.ok) {
     let errorData: any = {};
@@ -180,7 +173,7 @@ export async function handleApiResponse<T>(
       errorData.message || errorMessage,
       response.status,
       errorData.code,
-      errorData,
+      errorData
     );
   }
 
@@ -213,10 +206,7 @@ export class DashboardApiClient {
   /**
    * 获取营养分析数据
    */
-  async getNutritionAnalysis(
-    memberId: string,
-    period: "daily" | "weekly" | "monthly" = "daily",
-  ) {
+  async getNutritionAnalysis(memberId: string, period: "daily" | "weekly" | "monthly" = "daily") {
     const url = `${this.baseUrl}/nutrition-analysis?memberId=${memberId}&period=${period}`;
     const response = await fetchWithRetry(url);
     return handleApiResponse(response);
@@ -243,10 +233,7 @@ export class DashboardApiClient {
   /**
    * 获取周报数据
    */
-  async getWeeklyReport(
-    memberId: string,
-    type: "weekly" | "monthly" = "weekly",
-  ) {
+  async getWeeklyReport(memberId: string, type: "weekly" | "monthly" = "weekly") {
     const url = `${this.baseUrl}/weekly-report?memberId=${memberId}&type=${type}`;
     const response = await fetchWithRetry(url);
     return handleApiResponse(response);
@@ -278,7 +265,7 @@ export class DashboardApiClient {
         errorData.message || "导出失败",
         response.status,
         errorData.code,
-        errorData,
+        errorData
       );
     }
 
@@ -328,7 +315,7 @@ export function useApiCall<T, Args extends any[]>(
     onSuccess?: (data: T) => void;
     onError?: (error: ApiError) => void;
     retryAttempts?: number;
-  } = {},
+  } = {}
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
@@ -353,7 +340,7 @@ export function useApiCall<T, Args extends any[]>(
         setLoading(false);
       }
     },
-    [apiFunction, options],
+    [apiFunction, options]
   );
 
   return {

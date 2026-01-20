@@ -12,7 +12,7 @@ import { subDays, format } from "date-fns";
 export const dynamic = "force-dynamic";
 async function verifyMemberAccess(
   memberId: string,
-  userId: string,
+  userId: string
 ): Promise<{ hasAccess: boolean }> {
   const member = await prisma.familyMember.findUnique({
     where: { id: memberId, deletedAt: null },
@@ -67,10 +67,7 @@ export async function GET(request: NextRequest) {
     const { hasAccess } = await verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的健康评分历史数据" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的健康评分历史数据" }, { status: 403 });
     }
 
     // 生成历史数据（模拟）
@@ -89,14 +86,13 @@ export async function GET(request: NextRequest) {
  */
 async function generateHealthScoreHistory(
   memberId: string,
-  days: number,
+  days: number
 ): Promise<Array<{ date: string; score: number }>> {
   const history: Array<{ date: string; score: number }> = [];
   const now = new Date();
 
   // 获取当前健康评分作为基准
-  const currentScore =
-    await healthScoreCalculator.calculateHealthScore(memberId);
+  const currentScore = await healthScoreCalculator.calculateHealthScore(memberId);
   const baseScore = currentScore.totalScore;
 
   // 生成过去几天的模拟数据
@@ -106,10 +102,7 @@ async function generateHealthScoreHistory(
     // 添加一些随机波动，但保持总体趋势
     const randomVariation = (Math.random() - 0.5) * 10; // -5 到 +5 的随机变化
     const trendFactor = ((days - i) / days) * 5; // 轻微的上升趋势
-    const score = Math.max(
-      0,
-      Math.min(100, baseScore + randomVariation + trendFactor),
-    );
+    const score = Math.max(0, Math.min(100, baseScore + randomVariation + trendFactor));
 
     history.push({
       date: format(date, "yyyy-MM-dd"),

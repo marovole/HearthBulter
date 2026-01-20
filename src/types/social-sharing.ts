@@ -319,10 +319,7 @@ export const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
 /**
  * 分享模板配置
  */
-export const SHARE_TEMPLATE_CONFIGS: Record<
-  ShareTemplate,
-  ImageGenerationConfig
-> = {
+export const SHARE_TEMPLATE_CONFIGS: Record<ShareTemplate, ImageGenerationConfig> = {
   [ShareTemplate.HEALTH_REPORT]: {
     template: ShareTemplate.HEALTH_REPORT,
     width: 1200,

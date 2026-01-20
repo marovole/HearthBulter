@@ -137,8 +137,7 @@ class CacheStatsService {
 
     const averageResponseTime =
       this.responseTimes.length > 0
-        ? this.responseTimes.reduce((sum, time) => sum + time, 0) /
-          this.responseTimes.length
+        ? this.responseTimes.reduce((sum, time) => sum + time, 0) / this.responseTimes.length
         : 0;
 
     return {
@@ -155,10 +154,7 @@ class CacheStatsService {
       p99ResponseTime: Math.round(p99ResponseTime * 100) / 100,
       memoryUsage: this.calculateMemoryUsage(),
       itemCount: this.keyStats.size,
-      hitToMissRatio:
-        basicStats.misses > 0
-          ? basicStats.hits / basicStats.misses
-          : basicStats.hits,
+      hitToMissRatio: basicStats.misses > 0 ? basicStats.hits / basicStats.misses : basicStats.hits,
       uptime: Math.floor((Date.now() - this.startTime.getTime()) / 1000),
       lastReset: this.startTime,
     };
@@ -167,9 +163,7 @@ class CacheStatsService {
   /**
    * 获取时间窗口统计
    */
-  getTimeWindowStats(
-    window: TimeWindowStats["window"] = "15m",
-  ): TimeWindowStats | null {
+  getTimeWindowStats(window: TimeWindowStats["window"] = "15m"): TimeWindowStats | null {
     return this.timeWindows.get(window) || null;
   }
 
@@ -201,10 +195,7 @@ class CacheStatsService {
     });
 
     // 聚合数据
-    const typeData = new Map<
-      string,
-      { times: number[]; operations: CacheOperation[] }
-    >();
+    const typeData = new Map<string, { times: number[]; operations: CacheOperation[] }>();
 
     for (const op of this.operations) {
       const key = op.cacheType;
@@ -221,12 +212,8 @@ class CacheStatsService {
       const stat = stats.get(type)!;
       const ops = data.operations;
 
-      stat.hits = ops.filter(
-        (op) => op.operation === "get" && op.success,
-      ).length;
-      stat.misses = ops.filter(
-        (op) => op.operation === "get" && !op.success,
-      ).length;
+      stat.hits = ops.filter((op) => op.operation === "get" && op.success).length;
+      stat.misses = ops.filter((op) => op.operation === "get" && !op.success).length;
       stat.sets = ops.filter((op) => op.operation === "set").length;
       stat.deletes = ops.filter((op) => op.operation === "delete").length;
 
@@ -237,14 +224,13 @@ class CacheStatsService {
       stat.averageResponseTime = Math.round(avgTime * 100) / 100;
 
       const totalGets = stat.hits + stat.misses;
-      stat.hitRate =
-        totalGets > 0 ? Math.round((stat.hits / totalGets) * 10000) / 100 : 0;
+      stat.hitRate = totalGets > 0 ? Math.round((stat.hits / totalGets) * 10000) / 100 : 0;
     }
 
     // 计算使用百分比
     const totalOps = Array.from(stats.values()).reduce(
       (sum, stat) => sum + stat.hits + stat.misses + stat.sets + stat.deletes,
-      0,
+      0
     );
 
     if (totalOps > 0) {
@@ -304,7 +290,7 @@ class CacheStatsService {
     operations: CacheOperation[];
     keyStats: CacheKeyStats[];
     startTime: Date;
-    } {
+  } {
     return {
       operations: [...this.operations],
       keyStats: Array.from(this.keyStats.values()),
@@ -326,14 +312,7 @@ class CacheStatsService {
    */
   private initializeTimeWindows(): void {
     const now = new Date();
-    const windows: TimeWindowStats["window"][] = [
-      "1m",
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "24h",
-    ];
+    const windows: TimeWindowStats["window"][] = ["1m", "5m", "15m", "1h", "6h", "24h"];
 
     for (const window of windows) {
       const minutes = this.getWindowMinutes(window);
@@ -366,40 +345,35 @@ class CacheStatsService {
       // 如果操作在这个时间窗口内
       if (operation.timestamp >= windowStart) {
         switch (operation.operation) {
-        case "get":
-          if (operation.success) {
-            windowStat.hits++;
-          } else {
-            windowStat.misses++;
-          }
-          break;
-        case "set":
-          windowStat.sets++;
-          break;
-        case "delete":
-          windowStat.deletes++;
-          break;
+          case "get":
+            if (operation.success) {
+              windowStat.hits++;
+            } else {
+              windowStat.misses++;
+            }
+            break;
+          case "set":
+            windowStat.sets++;
+            break;
+          case "delete":
+            windowStat.deletes++;
+            break;
         }
 
         // 更新平均响应时间
         const totalRequests =
-          windowStat.hits +
-          windowStat.misses +
-          windowStat.sets +
-          windowStat.deletes;
+          windowStat.hits + windowStat.misses + windowStat.sets + windowStat.deletes;
         if (totalRequests === 1) {
           windowStat.averageResponseTime = operation.responseTime;
         } else {
           windowStat.averageResponseTime =
-            (windowStat.averageResponseTime * (totalRequests - 1) +
-              operation.responseTime) /
+            (windowStat.averageResponseTime * (totalRequests - 1) + operation.responseTime) /
             totalRequests;
         }
 
         // 更新命中率
         const totalGets = windowStat.hits + windowStat.misses;
-        windowStat.hitRate =
-          totalGets > 0 ? (windowStat.hits / totalGets) * 100 : 0;
+        windowStat.hitRate = totalGets > 0 ? (windowStat.hits / totalGets) * 100 : 0;
 
         windowStat.endTime = now;
       }
@@ -429,31 +403,28 @@ class CacheStatsService {
     const keyStat = this.keyStats.get(key)!;
 
     switch (opType) {
-    case "get":
-      if (success) {
-        keyStat.hits++;
-      } else {
-        keyStat.misses++;
-      }
-      keyStat.lastAccess = operation.timestamp;
-      break;
-    case "set":
-      keyStat.sets++;
-      if (operation.ttl) keyStat.ttl = operation.ttl;
-      if (operation.size) keyStat.size = operation.size;
-      break;
-    case "delete":
-      // 可以选择删除统计或标记为已删除
-      break;
+      case "get":
+        if (success) {
+          keyStat.hits++;
+        } else {
+          keyStat.misses++;
+        }
+        keyStat.lastAccess = operation.timestamp;
+        break;
+      case "set":
+        keyStat.sets++;
+        if (operation.ttl) keyStat.ttl = operation.ttl;
+        if (operation.size) keyStat.size = operation.size;
+        break;
+      case "delete":
+        // 可以选择删除统计或标记为已删除
+        break;
     }
 
     // 更新访问频率（每分钟）
-    const ageMinutes =
-      (operation.timestamp.getTime() - keyStat.createdAt.getTime()) /
-      (1000 * 60);
+    const ageMinutes = (operation.timestamp.getTime() - keyStat.createdAt.getTime()) / (1000 * 60);
     const totalAccesses = keyStat.hits + keyStat.misses;
-    keyStat.accessFrequency =
-      ageMinutes > 0 ? totalAccesses / ageMinutes : totalAccesses;
+    keyStat.accessFrequency = ageMinutes > 0 ? totalAccesses / ageMinutes : totalAccesses;
   }
 
   /**
@@ -478,20 +449,20 @@ class CacheStatsService {
    */
   private getWindowMinutes(window: TimeWindowStats["window"]): number {
     switch (window) {
-    case "1m":
-      return 1;
-    case "5m":
-      return 5;
-    case "15m":
-      return 15;
-    case "1h":
-      return 60;
-    case "6h":
-      return 360;
-    case "24h":
-      return 1440;
-    default:
-      return 15;
+      case "1m":
+        return 1;
+      case "5m":
+        return 5;
+      case "15m":
+        return 15;
+      case "1h":
+        return 60;
+      case "6h":
+        return 360;
+      case "24h":
+        return 1440;
+      default:
+        return 15;
     }
   }
 
@@ -503,7 +474,7 @@ class CacheStatsService {
       () => {
         this.cleanupOldData();
       },
-      5 * 60 * 1000,
+      5 * 60 * 1000
     ); // 每5分钟清理一次
   }
 
@@ -529,9 +500,7 @@ class CacheStatsService {
 export const cacheStatsService = new CacheStatsService();
 
 // 导出工具函数
-export function recordCacheOperation(
-  operation: Omit<CacheOperation, "timestamp">,
-): void {
+export function recordCacheOperation(operation: Omit<CacheOperation, "timestamp">): void {
   cacheStatsService.recordOperation(operation);
 }
 
@@ -546,7 +515,7 @@ export function getCacheHitRate(): number {
 export function getCachePerformance(): Pick<
   CacheMetrics,
   "averageResponseTime" | "p95ResponseTime" | "p99ResponseTime"
-  > {
+> {
   const metrics = cacheStatsService.getMetrics();
   return {
     averageResponseTime: metrics.averageResponseTime,

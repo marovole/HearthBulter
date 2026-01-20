@@ -86,26 +86,17 @@ describe("/api/devices/sync", () => {
     });
 
     it("should sync Apple HealthKit device successfully", async () => {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
-      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(
-        mockAppleDevice,
-      );
-      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(
-        mockSyncResult,
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
+      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(mockAppleDevice);
+      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(mockSyncResult);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "apple-watch-123",
-            memberId: "member-1",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "apple-watch-123",
+          memberId: "member-1",
+        }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(200);
@@ -119,31 +110,22 @@ describe("/api/devices/sync", () => {
         expect.objectContaining({
           where: { id: "device-1" },
           data: { syncStatus: "SYNCING" },
-        }),
+        })
       );
     });
 
     it("should sync Huawei Health device successfully", async () => {
-      const { huaweiHealthService } = await import(
-        "@/lib/services/huawei-health-service"
-      );
-      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(
-        mockHuaweiDevice,
-      );
-      (huaweiHealthService.syncAllData as jest.Mock).mockResolvedValue(
-        mockSyncResult,
-      );
+      const { huaweiHealthService } = await import("@/lib/services/huawei-health-service");
+      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(mockHuaweiDevice);
+      (huaweiHealthService.syncAllData as jest.Mock).mockResolvedValue(mockSyncResult);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "huawei-band-456",
-            memberId: "member-1",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "huawei-band-456",
+          memberId: "member-1",
+        }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(200);
@@ -159,16 +141,13 @@ describe("/api/devices/sync", () => {
         platform: "INVALID_PLATFORM",
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "device-1",
-            memberId: "member-1",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "device-1",
+          memberId: "member-1",
+        }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(200);
@@ -180,80 +159,58 @@ describe("/api/devices/sync", () => {
         expect.objectContaining({
           where: { id: "device-1" },
           data: expect.objectContaining({ syncStatus: "FAILED" }),
-        }),
+        })
       );
     });
 
     it("should sync with specific data types", async () => {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
-      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(
-        mockAppleDevice,
-      );
-      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(
-        mockSyncResult,
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
+      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(mockAppleDevice);
+      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(mockSyncResult);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "apple-watch-123",
-            memberId: "member-1",
-            dataTypes: ["HEART_RATE", "STEPS"],
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "apple-watch-123",
+          memberId: "member-1",
+          dataTypes: ["HEART_RATE", "STEPS"],
+        }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(200);
       expect(healthKitService.syncAllData).toHaveBeenCalledWith(
         "member-1",
         "device-1",
-        mockAppleDevice.lastSyncAt || undefined,
+        mockAppleDevice.lastSyncAt || undefined
       );
     });
 
     it("should update sync status to SUCCESS on successful sync", async () => {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
-      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(
-        mockAppleDevice,
-      );
-      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(
-        mockSyncResult,
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
+      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(mockAppleDevice);
+      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(mockSyncResult);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "apple-watch-123",
-            memberId: "member-1",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "apple-watch-123",
+          memberId: "member-1",
+        }),
+      });
       await POST(request);
 
       expect(prisma.deviceConnection.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: "device-1" },
           data: { syncStatus: "SYNCING" },
-        }),
+        })
       );
     });
 
     it("should update sync status to FAILED on sync failure", async () => {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
-      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(
-        mockAppleDevice,
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
+      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(mockAppleDevice);
       (healthKitService.syncAllData as jest.Mock).mockResolvedValue({
         success: false,
         syncedCount: 0,
@@ -261,16 +218,13 @@ describe("/api/devices/sync", () => {
         errors: ["Sync failed: Network error"],
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "apple-watch-123",
-            memberId: "member-1",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "apple-watch-123",
+          memberId: "member-1",
+        }),
+      });
       await POST(request);
 
       expect(prisma.deviceConnection.update).toHaveBeenCalledWith(
@@ -281,7 +235,7 @@ describe("/api/devices/sync", () => {
             lastError: "Sync failed: Network error",
             retryCount: { increment: 1 },
           },
-        }),
+        })
       );
     });
   });
@@ -296,12 +250,8 @@ describe("/api/devices/sync", () => {
     });
 
     it("should sync all devices successfully", async () => {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
-      const { huaweiHealthService } = await import(
-        "@/lib/services/huawei-health-service"
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
+      const { huaweiHealthService } = await import("@/lib/services/huawei-health-service");
 
       (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue([
         mockAppleDevice,
@@ -316,13 +266,10 @@ describe("/api/devices/sync", () => {
         syncedCount: 20,
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "PUT",
-          body: JSON.stringify({ memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "PUT",
+        body: JSON.stringify({ memberId: "member-1" }),
+      });
       const response = await PUT(request);
 
       expect(response.status).toBe(200);
@@ -337,13 +284,10 @@ describe("/api/devices/sync", () => {
     it("should handle no devices to sync", async () => {
       (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue([]);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "PUT",
-          body: JSON.stringify({ memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "PUT",
+        body: JSON.stringify({ memberId: "member-1" }),
+      });
       const response = await PUT(request);
 
       expect(response.status).toBe(200);
@@ -355,12 +299,8 @@ describe("/api/devices/sync", () => {
     });
 
     it("should handle partial sync failures", async () => {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
-      const { huaweiHealthService } = await import(
-        "@/lib/services/huawei-health-service"
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
+      const { huaweiHealthService } = await import("@/lib/services/huawei-health-service");
 
       (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue([
         mockAppleDevice,
@@ -376,13 +316,10 @@ describe("/api/devices/sync", () => {
         syncedCount: 20,
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "PUT",
-          body: JSON.stringify({ memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "PUT",
+        body: JSON.stringify({ memberId: "member-1" }),
+      });
       const response = await PUT(request);
 
       expect(response.status).toBe(200);
@@ -394,38 +331,27 @@ describe("/api/devices/sync", () => {
     });
 
     it("should update sync status to SYNCING before sync", async () => {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
 
-      (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue([
-        mockAppleDevice,
-      ]);
-      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(
-        mockSyncResult,
-      );
+      (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue([mockAppleDevice]);
+      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(mockSyncResult);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "PUT",
-          body: JSON.stringify({ memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "PUT",
+        body: JSON.stringify({ memberId: "member-1" }),
+      });
       await PUT(request);
 
       expect(prisma.deviceConnection.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: "device-1" },
           data: { syncStatus: "SYNCING" },
-        }),
+        })
       );
     });
 
     it("should handle individual device sync failures gracefully", async () => {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
 
       (prisma.deviceConnection.findMany as jest.Mock).mockResolvedValue([
         mockAppleDevice,
@@ -433,22 +359,17 @@ describe("/api/devices/sync", () => {
       ]);
 
       // Mock one device failing
-      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(
-        mockSyncResult,
-      );
+      (healthKitService.syncAllData as jest.Mock).mockResolvedValue(mockSyncResult);
 
       const syncError = new Error("Sync failed");
       (prisma.deviceConnection.update as jest.Mock)
         .mockResolvedValueOnce({ ...mockAppleDevice, syncStatus: "SUCCESS" })
         .mockRejectedValueOnce(syncError);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "PUT",
-          body: JSON.stringify({ memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "PUT",
+        body: JSON.stringify({ memberId: "member-1" }),
+      });
       const response = await PUT(request);
 
       expect(response.status).toBe(200);
@@ -463,13 +384,10 @@ describe("/api/devices/sync", () => {
     it("POST: should return 401 when user is not authenticated", async () => {
       (auth as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({ deviceId: "device-1", memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({ deviceId: "device-1", memberId: "member-1" }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(401);
@@ -480,13 +398,10 @@ describe("/api/devices/sync", () => {
     it("PUT: should return 401 when user is not authenticated", async () => {
       (auth as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "PUT",
-          body: JSON.stringify({ memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "PUT",
+        body: JSON.stringify({ memberId: "member-1" }),
+      });
       const response = await PUT(request);
 
       expect(response.status).toBe(401);
@@ -498,13 +413,10 @@ describe("/api/devices/sync", () => {
       (auth as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
       (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({ deviceId: "device-1", memberId: "member-2" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({ deviceId: "device-1", memberId: "member-2" }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(403);
@@ -524,16 +436,13 @@ describe("/api/devices/sync", () => {
       });
       (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "non-existent-device",
-            memberId: "member-1",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "non-existent-device",
+          memberId: "member-1",
+        }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(404);
@@ -546,13 +455,10 @@ describe("/api/devices/sync", () => {
         id: "member-1",
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({ memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({ memberId: "member-1" }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(400);
@@ -565,13 +471,10 @@ describe("/api/devices/sync", () => {
         id: "member-1",
       });
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "PUT",
-          body: JSON.stringify({}),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "PUT",
+        body: JSON.stringify({}),
+      });
       const response = await PUT(request);
 
       expect(response.status).toBe(400);
@@ -583,21 +486,16 @@ describe("/api/devices/sync", () => {
       (prisma.familyMember.findFirst as jest.Mock).mockResolvedValue({
         id: "member-1",
       });
-      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(
-        mockAppleDevice,
-      );
+      (prisma.deviceConnection.findFirst as jest.Mock).mockResolvedValue(mockAppleDevice);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "apple-watch-123",
-            memberId: "member-1",
-            dataTypes: { invalid: "format" }, // Invalid format
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "apple-watch-123",
+          memberId: "member-1",
+          dataTypes: { invalid: "format" }, // Invalid format
+        }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(400);
@@ -613,19 +511,16 @@ describe("/api/devices/sync", () => {
 
     it("POST: should handle database errors gracefully", async () => {
       (prisma.familyMember.findFirst as jest.Mock).mockRejectedValue(
-        new Error("Database connection failed"),
+        new Error("Database connection failed")
       );
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            deviceId: "apple-watch-123",
-            memberId: "member-1",
-          }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "POST",
+        body: JSON.stringify({
+          deviceId: "apple-watch-123",
+          memberId: "member-1",
+        }),
+      });
       const response = await POST(request);
 
       expect(response.status).toBe(500);
@@ -638,16 +533,13 @@ describe("/api/devices/sync", () => {
         id: "member-1",
       });
       (prisma.deviceConnection.findMany as jest.Mock).mockRejectedValue(
-        new Error("Batch sync failed"),
+        new Error("Batch sync failed")
       );
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices/sync",
-        {
-          method: "PUT",
-          body: JSON.stringify({ memberId: "member-1" }),
-        },
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices/sync", {
+        method: "PUT",
+        body: JSON.stringify({ memberId: "member-1" }),
+      });
       const response = await PUT(request);
 
       expect(response.status).toBe(500);

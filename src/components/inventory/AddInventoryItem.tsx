@@ -22,11 +22,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Camera, Search } from "lucide-react";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
@@ -92,12 +88,7 @@ const commonUnits = [
   "片",
 ];
 
-export function AddInventoryItem({
-  isOpen,
-  onClose,
-  memberId,
-  onSuccess,
-}: AddInventoryItemProps) {
+export function AddInventoryItem({ isOpen, onClose, memberId, onSuccess }: AddInventoryItemProps) {
   const [loading, setLoading] = useState(false);
   const [foods, setFoods] = useState<Food[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -179,9 +170,7 @@ export function AddInventoryItem({
         foodId: selectedFood.id,
         quantity: parseFloat(formData.quantity),
         unit: formData.unit,
-        purchasePrice: formData.purchasePrice
-          ? parseFloat(formData.purchasePrice)
-          : undefined,
+        purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : undefined,
         purchaseSource: formData.purchaseSource || undefined,
         expiryDate: formData.expiryDate?.toISOString(),
         productionDate: formData.productionDate?.toISOString(),
@@ -227,11 +216,7 @@ export function AddInventoryItem({
 
     // 根据食物类型智能推荐存储位置
     let suggestedLocation: StorageLocation = StorageLocation.PANTRY;
-    if (
-      ["VEGETABLES", "FRUITS", "PROTEIN", "SEAFOOD", "DAIRY"].includes(
-        food.category,
-      )
-    ) {
+    if (["VEGETABLES", "FRUITS", "PROTEIN", "SEAFOOD", "DAIRY"].includes(food.category)) {
       suggestedLocation = StorageLocation.REFRIGERATOR;
     }
 
@@ -245,12 +230,12 @@ export function AddInventoryItem({
     (food) =>
       food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       food.nameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      food.category.toLowerCase().includes(searchTerm.toLowerCase()),
+      food.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>添加库存物品</DialogTitle>
         </DialogHeader>
@@ -264,7 +249,7 @@ export function AddInventoryItem({
             <CardContent className="space-y-4">
               <div className="relative">
                 <div
-                  className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                  className="flex cursor-pointer items-center space-x-2 rounded-lg border p-3 hover:bg-gray-50"
                   onClick={() => setShowFoodSearch(!showFoodSearch)}
                 >
                   {selectedFood ? (
@@ -272,9 +257,7 @@ export function AddInventoryItem({
                       <div className="font-medium">
                         {selectedFood.name}
                         {selectedFood.nameEn && (
-                          <span className="text-gray-500 ml-2">
-                            ({selectedFood.nameEn})
-                          </span>
+                          <span className="ml-2 text-gray-500">({selectedFood.nameEn})</span>
                         )}
                       </div>
                       <div className="text-sm text-gray-500">
@@ -291,8 +274,8 @@ export function AddInventoryItem({
                 </div>
 
                 {showFoodSearch && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div className="p-2 border-b">
+                  <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border bg-white shadow-lg">
+                    <div className="border-b p-2">
                       <Input
                         placeholder="搜索食物..."
                         value={searchTerm}
@@ -304,15 +287,13 @@ export function AddInventoryItem({
                       {filteredFoods.map((food) => (
                         <div
                           key={food.id}
-                          className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                          className="cursor-pointer border-b p-3 last:border-b-0 hover:bg-gray-50"
                           onClick={() => handleFoodSelect(food)}
                         >
                           <div className="font-medium">
                             {food.name}
                             {food.nameEn && (
-                              <span className="text-gray-500 ml-2">
-                                ({food.nameEn})
-                              </span>
+                              <span className="ml-2 text-gray-500">({food.nameEn})</span>
                             )}
                           </div>
                           <div className="text-sm text-gray-500">
@@ -334,7 +315,7 @@ export function AddInventoryItem({
                     /* TODO: 扫码功能 */
                   }}
                 >
-                  <Camera className="h-4 w-4 mr-2" />
+                  <Camera className="mr-2 h-4 w-4" />
                   扫码识别
                 </Button>
                 <Button
@@ -377,9 +358,7 @@ export function AddInventoryItem({
                   />
                   <Select
                     value={formData.unit}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, unit: value }))
-                    }
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, unit: value }))}
                   >
                     <SelectTrigger className="w-24">
                       <SelectValue />
@@ -434,9 +413,7 @@ export function AddInventoryItem({
                   id="brand"
                   placeholder="请输入品牌"
                   value={formData.brand}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, brand: e.target.value }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, brand: e.target.value }))}
                 />
               </div>
             </CardContent>
@@ -456,14 +433,14 @@ export function AddInventoryItem({
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !formData.productionDate && "text-muted-foreground",
+                        !formData.productionDate && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.productionDate
                         ? format(formData.productionDate, "yyyy-MM-dd", {
-                          locale: zhCN,
-                        })
+                            locale: zhCN,
+                          })
                         : "选择日期"}
                     </Button>
                   </PopoverTrigger>
@@ -491,14 +468,14 @@ export function AddInventoryItem({
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !formData.expiryDate && "text-muted-foreground",
+                        !formData.expiryDate && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.expiryDate
                         ? format(formData.expiryDate, "yyyy-MM-dd", {
-                          locale: zhCN,
-                        })
+                            locale: zhCN,
+                          })
                         : "选择日期"}
                     </Button>
                   </PopoverTrigger>
@@ -506,9 +483,7 @@ export function AddInventoryItem({
                     <Calendar
                       mode="single"
                       selected={formData.expiryDate}
-                      onSelect={(date) =>
-                        setFormData((prev) => ({ ...prev, expiryDate: date }))
-                      }
+                      onSelect={(date) => setFormData((prev) => ({ ...prev, expiryDate: date }))}
                       initialFocus
                     />
                   </PopoverContent>
@@ -538,13 +513,11 @@ export function AddInventoryItem({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(storageLocationLabels).map(
-                      ([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ),
-                    )}
+                    {Object.entries(storageLocationLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

@@ -14,25 +14,18 @@ type SupabaseTableDefinition = SupabaseDatabase["public"]["Tables"][string];
 
 // 环境变量获取函数，支持多种环境
 function getSupabaseConfig() {
-  const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     const error =
       "Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY";
     console.error("❌ Supabase 配置错误:", error);
     console.error("环境变量状态:", {
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL
-        ? "✅"
-        : "❌",
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "✅" : "❌",
       SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? "✅" : "❌",
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        ? "✅"
-        : "❌",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✅" : "❌",
     });
     // 在生产环境仍然抛出错误，但提供更多诊断信息
     throw new Error(error);
@@ -49,24 +42,20 @@ export class SupabaseClientManager {
     if (!SupabaseClientManager.instance) {
       const { supabaseUrl, supabaseKey } = getSupabaseConfig();
 
-      SupabaseClientManager.instance = createClient<SupabaseDatabase>(
-        supabaseUrl,
-        supabaseKey,
-        {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-          },
-          db: {
-            schema: "public",
-          },
-          global: {
-            headers: {
-              "x-application-name": "health-butler",
-            },
+      SupabaseClientManager.instance = createClient<SupabaseDatabase>(supabaseUrl, supabaseKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+        db: {
+          schema: "public",
+        },
+        global: {
+          headers: {
+            "x-application-name": "health-butler",
           },
         },
-      );
+      });
     }
 
     return SupabaseClientManager.instance;
@@ -135,7 +124,7 @@ function keysToSnakeCase(obj: any): any {
 function buildSelectQuery(
   include?: Record<string, any>,
   select?: Record<string, any>,
-  includeBaseFields = true,
+  includeBaseFields = true
 ): string {
   // 处理 select 优先
   if (select) {
@@ -219,11 +208,7 @@ function buildRelationFragment(key: string, value: any): string {
   }
 
   // 递归构建嵌套查询
-  const nestedQuery = buildSelectQuery(
-    nestedInclude,
-    nestedSelect,
-    includeBaseFields,
-  );
+  const nestedQuery = buildSelectQuery(nestedInclude, nestedSelect, includeBaseFields);
   return `${relation}(${nestedQuery})`;
 }
 
@@ -342,11 +327,7 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
     if (key === "NOT") {
       // NOT 需要反转条件
       // 由于 Supabase 的 not() API 较复杂，这里简化处理
-      if (
-        typeof value === "object" &&
-        value !== null &&
-        !Array.isArray(value)
-      ) {
+      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
         Object.entries(value).forEach(([notKey, notValue]) => {
           const snakeKey = toSnakeCase(notKey);
           if (notValue === null) {
@@ -354,7 +335,7 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
           } else if (typeof notValue === "object") {
             // NOT 复杂条件暂不支持
             throw new Error(
-              `Complex NOT conditions not yet supported in Supabase adapter for table ${tableName}`,
+              `Complex NOT conditions not yet supported in Supabase adapter for table ${tableName}`
             );
           } else {
             query = query.neq(snakeKey, notValue);
@@ -371,11 +352,8 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
       !Array.isArray(value) &&
       ("some" in value || "every" in value || "none" in value)
     ) {
-      const relationFilter =
-        "some" in value ? "some" : "every" in value ? "every" : "none";
-      const relationValue = (
-        value as Record<"some" | "every" | "none", unknown>
-      )[relationFilter];
+      const relationFilter = "some" in value ? "some" : "every" in value ? "every" : "none";
+      const relationValue = (value as Record<"some" | "every" | "none", unknown>)[relationFilter];
       const condition = JSON.stringify(relationValue);
       throw new Error(
         "Relation filter not yet supported in Supabase adapter:\n" +
@@ -387,7 +365,7 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
           `  1. Use Supabase inner joins in select (e.g., .select('*, ${toSnakeCase(key)}!inner(*)'))\n` +
           "  2. Implement as Postgres RPC function\n" +
           "  3. Filter in application layer after fetch\n\n" +
-          "This feature will be added in Step 3 of the migration.",
+          "This feature will be added in Step 3 of the migration."
       );
     }
 
@@ -398,15 +376,14 @@ function applyWhereClause(query: any, where: any, tableName: string): any {
       query = query.is(snakeKey, null);
     } else if (typeof value === "object" && !Array.isArray(value)) {
       // 检查是否为 JSON path 查询
-      const hasJsonPath =
-        Array.isArray((value as any).path) && (value as any).path.length > 0;
+      const hasJsonPath = Array.isArray((value as any).path) && (value as any).path.length > 0;
 
       if (hasJsonPath) {
         // 使用 JSON path 过滤器
         query = applyJsonPathFilters(
           query,
           buildJsonPathSelector(snakeKey, (value as any).path),
-          value,
+          value
         );
         return;
       }
@@ -488,9 +465,7 @@ function escapeFilterValue(value: unknown): string {
 
   for (const pattern of dangerousPatterns) {
     if (pattern.test(str)) {
-      throw new Error(
-        `Potentially malicious filter value detected: ${str.substring(0, 50)}`,
-      );
+      throw new Error(`Potentially malicious filter value detected: ${str.substring(0, 50)}`);
     }
   }
 
@@ -504,7 +479,7 @@ function escapeFilterValue(value: unknown): string {
     str.includes("%")
   ) {
     // 使用双引号包裹，内部双引号需要转义
-    return `"${str.replace(/"/g, "\\\"")}"`;
+    return `"${str.replace(/"/g, '\\"')}"`;
   }
 
   return str;
@@ -586,14 +561,10 @@ function buildFilterExpressions(where: any): string[] {
 class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
   constructor(
     private tableName: string,
-    private supabase: SupabaseClient<SupabaseDatabase>,
+    private supabase: SupabaseClient<SupabaseDatabase>
   ) {}
 
-  async findUnique(args: {
-    where: any;
-    include?: any;
-    select?: any;
-  }): Promise<T | null> {
+  async findUnique(args: { where: any; include?: any; select?: any }): Promise<T | null> {
     const selectQuery = buildSelectQuery(args.include, args.select);
     let query = this.supabase.from(this.tableName).select(selectQuery);
 
@@ -627,9 +598,7 @@ class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
     // 支持 Prisma 风格的 orderBy 数组和对象格式
     // orderBy: [{ field1: 'desc' }, { field2: 'asc' }] 或 orderBy: { field: 'desc' }
     if (args?.orderBy) {
-      const orderings = Array.isArray(args.orderBy)
-        ? args.orderBy
-        : [args.orderBy];
+      const orderings = Array.isArray(args.orderBy) ? args.orderBy : [args.orderBy];
 
       orderings.filter(Boolean).forEach((clause) => {
         const entries = Object.entries(clause);
@@ -685,17 +654,12 @@ class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
     return keysToCamelCase(data) as T;
   }
 
-  async createMany(args: {
-    data: any[];
-    skipDuplicates?: boolean;
-  }): Promise<{ count: number }> {
+  async createMany(args: { data: any[]; skipDuplicates?: boolean }): Promise<{ count: number }> {
     const snakeData = args.data.map(keysToSnakeCase);
 
-    const { error, count } = await this.supabase
-      .from(this.tableName)
-      .upsert(snakeData, {
-        ignoreDuplicates: args.skipDuplicates,
-      });
+    const { error, count } = await this.supabase.from(this.tableName).upsert(snakeData, {
+      ignoreDuplicates: args.skipDuplicates,
+    });
 
     if (error) {
       throw new Error(`Supabase createMany error: ${error.message}`);
@@ -704,19 +668,11 @@ class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
     return { count: count || snakeData.length };
   }
 
-  async update(args: {
-    where: any;
-    data: any;
-    include?: any;
-    select?: any;
-  }): Promise<T> {
+  async update(args: { where: any; data: any; include?: any; select?: any }): Promise<T> {
     const snakeData = keysToSnakeCase(args.data);
     const selectQuery = buildSelectQuery(args.include, args.select);
 
-    let query = this.supabase
-      .from(this.tableName)
-      .update(snakeData)
-      .select(selectQuery);
+    let query = this.supabase.from(this.tableName).update(snakeData).select(selectQuery);
 
     query = applyWhereClause(query, args.where, this.tableName);
 
@@ -761,7 +717,7 @@ class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
     // 验证 where 条件
     if (!args.where || Object.keys(args.where).length === 0) {
       throw new Error(
-        `Supabase upsert requires at least one unique field in where clause for table ${this.tableName}`,
+        `Supabase upsert requires at least one unique field in where clause for table ${this.tableName}`
       );
     }
 
@@ -782,7 +738,7 @@ class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
     if (Object.keys(scalarWhereFields).length === 0) {
       throw new Error(
         `Supabase upsert requires at least one scalar field in where clause for table ${this.tableName}. ` +
-          `Got: ${JSON.stringify(args.where)}`,
+          `Got: ${JSON.stringify(args.where)}`
       );
     }
 
@@ -820,17 +776,14 @@ class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
       throw new Error(
         `Supabase upsert error in table ${this.tableName}: ${error.message}. ` +
           `Conflict columns: ${conflictColumns}. ` +
-          `Where fields: ${JSON.stringify(args.where)}`,
+          `Where fields: ${JSON.stringify(args.where)}`
       );
     }
 
     return keysToCamelCase(data) as T;
   }
 
-  async updateMany(args: {
-    where: any;
-    data: any;
-  }): Promise<{ count: number }> {
+  async updateMany(args: { where: any; data: any }): Promise<{ count: number }> {
     const snakeData = keysToSnakeCase(args.data);
 
     let query = this.supabase.from(this.tableName).update(snakeData);
@@ -877,9 +830,7 @@ class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
   }
 
   async count(args?: { where?: any }): Promise<number> {
-    let query = this.supabase
-      .from(this.tableName)
-      .select("*", { count: "exact", head: true });
+    let query = this.supabase.from(this.tableName).select("*", { count: "exact", head: true });
 
     if (args?.where) {
       query = applyWhereClause(query, args.where, this.tableName);
@@ -903,9 +854,7 @@ class ModelAdapter<T = SupabaseTableDefinition["Row"]> {
     _max?: any;
   }): Promise<any> {
     // 注意：Supabase 不直接支持聚合函数，需要使用 RPC 或原生 SQL
-    throw new Error(
-      "Aggregate functions need to be implemented using Supabase RPC",
-    );
+    throw new Error("Aggregate functions need to be implemented using Supabase RPC");
   }
 
   async groupBy(args: {
@@ -997,10 +946,7 @@ export class SupabaseAdapter {
     this.familyMember = new ModelAdapter("family_members", this.supabase);
     this.healthGoal = new ModelAdapter("health_goals", this.supabase);
     this.allergy = new ModelAdapter("allergies", this.supabase);
-    this.dietaryPreference = new ModelAdapter(
-      "dietary_preferences",
-      this.supabase,
-    );
+    this.dietaryPreference = new ModelAdapter("dietary_preferences", this.supabase);
     this.healthData = new ModelAdapter("health_data", this.supabase);
     this.healthReminder = new ModelAdapter("health_reminders", this.supabase);
     this.mealPlan = new ModelAdapter("meal_plans", this.supabase);
@@ -1011,14 +957,8 @@ export class SupabaseAdapter {
     this.trackingStreak = new ModelAdapter("tracking_streaks", this.supabase);
     this.quickTemplate = new ModelAdapter("quick_templates", this.supabase);
     this.templateFood = new ModelAdapter("template_foods", this.supabase);
-    this.dailyNutritionTarget = new ModelAdapter(
-      "daily_nutrition_targets",
-      this.supabase,
-    );
-    this.auxiliaryTracking = new ModelAdapter(
-      "auxiliary_trackings",
-      this.supabase,
-    );
+    this.dailyNutritionTarget = new ModelAdapter("daily_nutrition_targets", this.supabase);
+    this.auxiliaryTracking = new ModelAdapter("auxiliary_trackings", this.supabase);
     this.healthReport = new ModelAdapter("health_reports", this.supabase);
     this.healthScore = new ModelAdapter("health_scores", this.supabase);
     this.trendData = new ModelAdapter("trend_data", this.supabase);
@@ -1026,10 +966,7 @@ export class SupabaseAdapter {
     this.aiAdvice = new ModelAdapter("ai_advices", this.supabase);
     this.aiConversation = new ModelAdapter("ai_conversations", this.supabase);
     this.budget = new ModelAdapter("budgets", this.supabase);
-    this.savingsRecommendation = new ModelAdapter(
-      "savings_recommendations",
-      this.supabase,
-    );
+    this.savingsRecommendation = new ModelAdapter("savings_recommendations", this.supabase);
     this.userPreference = new ModelAdapter("user_preferences", this.supabase);
     this.food = new ModelAdapter("foods", this.supabase);
     this.meal = new ModelAdapter("meals", this.supabase);
@@ -1043,10 +980,7 @@ export class SupabaseAdapter {
     this.recipeRating = new ModelAdapter("recipe_ratings", this.supabase);
     this.recipeFavorite = new ModelAdapter("recipe_favorites", this.supabase);
     this.recipeView = new ModelAdapter("recipe_views", this.supabase);
-    this.ingredientSubstitution = new ModelAdapter(
-      "ingredient_substitutions",
-      this.supabase,
-    );
+    this.ingredientSubstitution = new ModelAdapter("ingredient_substitutions", this.supabase);
     this.task = new ModelAdapter("tasks", this.supabase);
     this.activity = new ModelAdapter("activities", this.supabase);
     this.comment = new ModelAdapter("comments", this.supabase);
@@ -1055,27 +989,15 @@ export class SupabaseAdapter {
     this.sharedContent = new ModelAdapter("shared_contents", this.supabase);
     this.shareTracking = new ModelAdapter("share_tracking", this.supabase);
     this.achievement = new ModelAdapter("achievements", this.supabase);
-    this.leaderboardEntry = new ModelAdapter(
-      "leaderboard_entries",
-      this.supabase,
-    );
+    this.leaderboardEntry = new ModelAdapter("leaderboard_entries", this.supabase);
     this.communityPost = new ModelAdapter("community_posts", this.supabase);
-    this.communityComment = new ModelAdapter(
-      "community_comments",
-      this.supabase,
-    );
+    this.communityComment = new ModelAdapter("community_comments", this.supabase);
     this.notification = new ModelAdapter("notifications", this.supabase);
-    this.notificationPreference = new ModelAdapter(
-      "notification_preferences",
-      this.supabase,
-    );
+    this.notificationPreference = new ModelAdapter("notification_preferences", this.supabase);
     this.inventoryItem = new ModelAdapter("inventory_items", this.supabase);
     this.inventoryUsage = new ModelAdapter("inventory_usages", this.supabase);
     this.wasteLog = new ModelAdapter("waste_logs", this.supabase);
-    this.deviceConnection = new ModelAdapter(
-      "device_connections",
-      this.supabase,
-    );
+    this.deviceConnection = new ModelAdapter("device_connections", this.supabase);
     this.userConsent = new ModelAdapter("user_consents", this.supabase);
   }
 
@@ -1084,10 +1006,7 @@ export class SupabaseAdapter {
     throw new Error("Raw queries should use Supabase RPC functions");
   }
 
-  async $executeRaw(
-    query: TemplateStringsArray,
-    ...values: any[]
-  ): Promise<number> {
+  async $executeRaw(query: TemplateStringsArray, ...values: any[]): Promise<number> {
     throw new Error("Raw queries should use Supabase RPC functions");
   }
 

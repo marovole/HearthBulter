@@ -21,10 +21,7 @@ function parseSubscriptions(raw?: string | null): PushSubscriptionPayload[] {
     if (Array.isArray(parsed)) {
       return parsed.filter(
         (item): item is PushSubscriptionPayload =>
-          Boolean(item) &&
-          typeof item === "object" &&
-          "endpoint" in item &&
-          "keys" in item,
+          Boolean(item) && typeof item === "object" && "endpoint" in item && "keys" in item
       );
     }
   } catch {
@@ -49,15 +46,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });
     }
 
-    const preferences =
-      await convexClient.query<Doc<"notificationPreferences"> | null>(
-        api.notifications.getPreferences,
-        { memberId: memberId as Id<"familyMembers"> },
-      );
-
-    const subscriptions = parseSubscriptions(
-      (preferences?.pushToken as string | null) ?? null,
+    const preferences = await convexClient.query<Doc<"notificationPreferences"> | null>(
+      api.notifications.getPreferences,
+      { memberId: memberId as Id<"familyMembers"> }
     );
+
+    const subscriptions = parseSubscriptions((preferences?.pushToken as string | null) ?? null);
 
     return NextResponse.json({
       success: true,
@@ -80,26 +74,21 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const memberId = body?.memberId as string | undefined;
-    const subscription = body?.subscription as
-      | PushSubscriptionPayload
-      | undefined;
+    const subscription = body?.subscription as PushSubscriptionPayload | undefined;
 
     if (!memberId || !subscription?.endpoint) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
 
-    const preferences =
-      await convexClient.query<Doc<"notificationPreferences"> | null>(
-        api.notifications.getPreferences,
-        { memberId: memberId as Id<"familyMembers"> },
-      );
+    const preferences = await convexClient.query<Doc<"notificationPreferences"> | null>(
+      api.notifications.getPreferences,
+      { memberId: memberId as Id<"familyMembers"> }
+    );
 
     const currentSubscriptions = parseSubscriptions(
-      (preferences?.pushToken as string | null) ?? null,
+      (preferences?.pushToken as string | null) ?? null
     );
-    const exists = currentSubscriptions.some(
-      (item) => item.endpoint === subscription.endpoint,
-    );
+    const exists = currentSubscriptions.some((item) => item.endpoint === subscription.endpoint);
 
     const updatedSubscriptions = exists
       ? currentSubscriptions
@@ -139,25 +128,19 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
 
-    const preferences =
-      await convexClient.query<Doc<"notificationPreferences"> | null>(
-        api.notifications.getPreferences,
-        { memberId: memberId as Id<"familyMembers"> },
-      );
+    const preferences = await convexClient.query<Doc<"notificationPreferences"> | null>(
+      api.notifications.getPreferences,
+      { memberId: memberId as Id<"familyMembers"> }
+    );
 
     const currentSubscriptions = parseSubscriptions(
-      (preferences?.pushToken as string | null) ?? null,
+      (preferences?.pushToken as string | null) ?? null
     );
-    const updatedSubscriptions = currentSubscriptions.filter(
-      (item) => item.endpoint !== endpoint,
-    );
+    const updatedSubscriptions = currentSubscriptions.filter((item) => item.endpoint !== endpoint);
 
     await convexClient.mutation(api.notifications.upsertPushSubscriptions, {
       memberId: memberId as Id<"familyMembers">,
-      pushToken:
-        updatedSubscriptions.length > 0
-          ? JSON.stringify(updatedSubscriptions)
-          : null,
+      pushToken: updatedSubscriptions.length > 0 ? JSON.stringify(updatedSubscriptions) : null,
       pushEnabled: updatedSubscriptions.length > 0,
       lastUpdatedAt: Date.now(),
     });

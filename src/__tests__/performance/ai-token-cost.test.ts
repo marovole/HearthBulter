@@ -92,39 +92,36 @@ describe("AI Token Cost Tests", () => {
       consentedAt: new Date(),
     });
 
-    (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
-      async (params) => {
-        const mockUsage = {
-          prompt_tokens: params.messages.reduce(
-            (sum: number, msg: any) => sum + msg.content.split(" ").length,
-            0,
-          ),
-          completion_tokens: Math.floor(Math.random() * 200) + 50,
-          total_tokens: 0,
-        };
-        mockUsage.total_tokens =
-          mockUsage.prompt_tokens + mockUsage.completion_tokens;
+    (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async (params) => {
+      const mockUsage = {
+        prompt_tokens: params.messages.reduce(
+          (sum: number, msg: any) => sum + msg.content.split(" ").length,
+          0
+        ),
+        completion_tokens: Math.floor(Math.random() * 200) + 50,
+        total_tokens: 0,
+      };
+      mockUsage.total_tokens = mockUsage.prompt_tokens + mockUsage.completion_tokens;
 
-        tokenUsageLog.push({
-          model: params.model || "gpt-4",
-          promptTokens: mockUsage.prompt_tokens,
-          completionTokens: mockUsage.completion_tokens,
-          totalTokens: mockUsage.total_tokens,
-          timestamp: new Date(),
-        });
+      tokenUsageLog.push({
+        model: params.model || "gpt-4",
+        promptTokens: mockUsage.prompt_tokens,
+        completionTokens: mockUsage.completion_tokens,
+        totalTokens: mockUsage.total_tokens,
+        timestamp: new Date(),
+      });
 
-        return {
-          choices: [
-            {
-              message: {
-                content: "AI生成的响应内容，用于测试Token消耗统计。",
-              },
+      return {
+        choices: [
+          {
+            message: {
+              content: "AI生成的响应内容，用于测试Token消耗统计。",
             },
-          ],
-          usage: mockUsage,
-        };
-      },
-    );
+          },
+        ],
+        usage: mockUsage,
+      };
+    });
 
     (aiReviewService.reviewContent as jest.Mock).mockResolvedValue({
       approved: true,
@@ -212,44 +209,38 @@ describe("AI Token Cost Tests", () => {
       });
 
       // Health analysis API request
-      const healthRequest = new NextRequest(
-        "http://localhost/api/ai/analyze-health",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            healthData: {
-              cholesterol: 6.2,
-              bloodSugar: 5.5,
-              age: 35,
-              gender: "male",
-            },
-            userId: "test-user",
-          }),
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+      const healthRequest = new NextRequest("http://localhost/api/ai/analyze-health", {
+        method: "POST",
+        body: JSON.stringify({
+          healthData: {
+            cholesterol: 6.2,
+            bloodSugar: 5.5,
+            age: 35,
+            gender: "male",
+          },
+          userId: "test-user",
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
 
       // Recipe optimization API request
-      const recipeRequest = new NextRequest(
-        "http://localhost/api/ai/optimize-recipe",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            recipe: {
-              name: "测试食谱",
-              ingredients: [
-                { name: "米饭", amount: 100 },
-                { name: "鸡肉", amount: 50 },
-              ],
-            },
-            healthGoals: {
-              targetCalories: 2000,
-            },
-            userId: "test-user",
-          }),
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+      const recipeRequest = new NextRequest("http://localhost/api/ai/optimize-recipe", {
+        method: "POST",
+        body: JSON.stringify({
+          recipe: {
+            name: "测试食谱",
+            ingredients: [
+              { name: "米饭", amount: 100 },
+              { name: "鸡肉", amount: 50 },
+            ],
+          },
+          healthGoals: {
+            targetCalories: 2000,
+          },
+          userId: "test-user",
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
 
       await POST(chatRequest);
       await AnalyzeHealthPOST(healthRequest);
@@ -293,12 +284,9 @@ describe("AI Token Cost Tests", () => {
       // Verify cost calculation
       const expectedCost =
         (result.tokenUsage.promptTokens / 1000) * TOKEN_PRICING["gpt-4"].input +
-        (result.tokenUsage.completionTokens / 1000) *
-          TOKEN_PRICING["gpt-4"].output;
+        (result.tokenUsage.completionTokens / 1000) * TOKEN_PRICING["gpt-4"].output;
 
-      expect(
-        Math.abs(result.tokenUsage.estimatedCost - expectedCost),
-      ).toBeLessThan(0.01);
+      expect(Math.abs(result.tokenUsage.estimatedCost - expectedCost)).toBeLessThan(0.01);
     });
 
     it("应该根据不同模型计算成本", async () => {
@@ -306,21 +294,19 @@ describe("AI Token Cost Tests", () => {
       const costs: { [key: string]: number } = {};
 
       for (const model of models) {
-        (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
-          async (params) => {
-            const mockUsage = {
-              prompt_tokens: 100,
-              completion_tokens: 50,
-              total_tokens: 150,
-            };
+        (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async (params) => {
+          const mockUsage = {
+            prompt_tokens: 100,
+            completion_tokens: 50,
+            total_tokens: 150,
+          };
 
-            return {
-              choices: [{ message: { content: "Response" } }],
-              usage: mockUsage,
-              model: model,
-            };
-          },
-        );
+          return {
+            choices: [{ message: { content: "Response" } }],
+            usage: mockUsage,
+            model: model,
+          };
+        });
 
         const requestData = {
           message: "测试不同模型的成本",
@@ -526,12 +512,8 @@ describe("AI Token Cost Tests", () => {
       expect(suggestions.length).toBeGreaterThan(0);
 
       // Should include suggestions like:
-      expect(suggestions.some((s: any) => s.type === "model_switch")).toBe(
-        true,
-      );
-      expect(
-        suggestions.some((s: any) => s.type === "prompt_optimization"),
-      ).toBe(true);
+      expect(suggestions.some((s: any) => s.type === "model_switch")).toBe(true);
+      expect(suggestions.some((s: any) => s.type === "prompt_optimization")).toBe(true);
       expect(suggestions.some((s: any) => s.type === "caching")).toBe(true);
     });
 

@@ -10,11 +10,9 @@ export async function GET(request: NextRequest) {
     const { RecommendationEngine } = await import(
       "@/lib/services/recommendation/recommendation-engine"
     );
-    const { getDefaultContainer } = await import(
-      "@/lib/container/service-container"
-    );
+    const { getDefaultContainer } = await import("@/lib/container/service-container");
     const recommendationEngine = new RecommendationEngine(
-      getDefaultContainer().getRecommendationRepository(),
+      getDefaultContainer().getRecommendationRepository()
     );
 
     const { searchParams } = request.nextUrl;
@@ -43,14 +41,14 @@ export async function GET(request: NextRequest) {
             error: "Invalid category",
             details: `Category must be one of: ${validCategories.join(", ")}`,
           },
-          { status: 400 },
+          { status: 400 }
         );
       }
     }
 
     const recommendations = await recommendationEngine.getPopularRecipes(
       limit,
-      category || undefined,
+      category || undefined
     );
 
     if (recommendations.length === 0) {
@@ -97,7 +95,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to get popular recipes",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

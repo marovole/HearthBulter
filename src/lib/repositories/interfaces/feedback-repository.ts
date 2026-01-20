@@ -38,9 +38,7 @@ export interface FeedbackRepository {
    * @param adviceId - AI 建议 ID
    * @returns AI 建议记录，如果不存在则返回 null
    */
-  getAdviceByIdWithFeedback(
-    adviceId: string,
-  ): Promise<AIAdviceWithFeedback | null>;
+  getAdviceByIdWithFeedback(adviceId: string): Promise<AIAdviceWithFeedback | null>;
 
   /**
    * 获取 AI 对话记录（包含反馈）
@@ -49,7 +47,7 @@ export interface FeedbackRepository {
    * @returns AI 对话记录，如果不存在则返回 null
    */
   getConversationByIdWithFeedback(
-    conversationId: string,
+    conversationId: string
   ): Promise<AIConversationWithFeedback | null>;
 
   /**
@@ -68,10 +66,7 @@ export interface FeedbackRepository {
    * @param feedback - 反馈数据
    * @throws Error 如果追加失败
    */
-  appendConversationFeedback(
-    conversationId: string,
-    feedback: FeedbackData,
-  ): Promise<void>;
+  appendConversationFeedback(conversationId: string, feedback: FeedbackData): Promise<void>;
 
   /**
    * 获取反馈统计数据（调用 RPC sp_ai_feedback_stats）
@@ -84,6 +79,6 @@ export interface FeedbackRepository {
   fetchFeedbackStats(
     memberId: string,
     adviceType?: string | null,
-    daysAgo?: number,
+    daysAgo?: number
   ): Promise<FeedbackStats>;
 }

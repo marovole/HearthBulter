@@ -5,21 +5,12 @@
 
 import { describe, test, expect, beforeAll, afterAll } from "@jest/globals";
 import { NextRequest } from "next/server";
-import {
-  SQLInjectionDetector,
-  XSSDetector,
-} from "@/lib/security/security-middleware";
+import { SQLInjectionDetector, XSSDetector } from "@/lib/security/security-middleware";
 import { Permission, FamilyMemberRole, hasPermission } from "@/lib/permissions";
 import { checkSecurity } from "@/lib/middleware/security-middleware";
-import {
-  withPermissions,
-  requirePermissions,
-} from "@/lib/middleware/permission-middleware";
+import { withPermissions, requirePermissions } from "@/lib/middleware/permission-middleware";
 import { CSRFProtection } from "@/lib/security/security-middleware";
-import {
-  rateLimiter,
-  commonRateLimits,
-} from "@/lib/middleware/rate-limit-middleware";
+import { rateLimiter, commonRateLimits } from "@/lib/middleware/rate-limit-middleware";
 
 describe("安全性测试", () => {
   describe("SQL注入防护测试", () => {
@@ -68,13 +59,7 @@ describe("安全性测试", () => {
     });
 
     test("应该允许合法的安全输入", () => {
-      const safeInputs = [
-        "John Doe",
-        "user@example.com",
-        "Hello World!",
-        "12345",
-        "正常中文",
-      ];
+      const safeInputs = ["John Doe", "user@example.com", "Hello World!", "12345", "正常中文"];
 
       safeInputs.forEach((input) => {
         const result = SQLInjectionDetector.detect(input);
@@ -174,9 +159,7 @@ describe("安全性测试", () => {
       const token = CSRFProtection.generateToken(sessionId);
 
       // 测试错误令牌
-      expect(CSRFProtection.validateToken(sessionId, "invalid-token")).toBe(
-        false,
-      );
+      expect(CSRFProtection.validateToken(sessionId, "invalid-token")).toBe(false);
       expect(CSRFProtection.validateToken("other-session", token)).toBe(false);
       expect(CSRFProtection.validateToken(sessionId, "")).toBe(false);
     });
@@ -264,7 +247,7 @@ describe("安全性测试", () => {
         FamilyMemberRole.MEMBER,
         Permission.UPDATE_TASK,
         resourceOwnerId,
-        currentUserId,
+        currentUserId
       );
       expect(ownResource).toBe(false); // 不是自己的资源
 
@@ -272,7 +255,7 @@ describe("安全性测试", () => {
         FamilyMemberRole.MEMBER,
         Permission.UPDATE_TASK,
         currentUserId,
-        currentUserId,
+        currentUserId
       );
       expect(actualOwnResource).toBe(true); // 是自己的资源
 
@@ -281,7 +264,7 @@ describe("安全性测试", () => {
         FamilyMemberRole.ADMIN,
         Permission.UPDATE_TASK,
         resourceOwnerId,
-        anotherUserId,
+        anotherUserId
       );
       expect(adminAccess).toBe(true);
     });
@@ -316,9 +299,7 @@ describe("安全性测试", () => {
         const request = new NextRequest(maliciousRequest.url, {
           method: maliciousRequest.method,
           headers: maliciousRequest.headers,
-          body: maliciousRequest.body
-            ? JSON.stringify(maliciousRequest.body)
-            : undefined,
+          body: maliciousRequest.body ? JSON.stringify(maliciousRequest.body) : undefined,
         });
 
         const result = await checkSecurity(request, securityOptions);

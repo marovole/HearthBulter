@@ -19,28 +19,23 @@ import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 const DEFAULT_LIMIT = 20;
 
 export class ConvexInventoryRepository implements InventoryRepository {
-  async createInventoryItem(
-    payload: InventoryItemCreateDTO,
-  ): Promise<InventoryItemDTO> {
-    const response = await convexClient.mutation<{ data: { itemId: string } }>(
-      api.inventory.add,
-      {
-        memberId: payload.memberId as Id<"familyMembers">,
-        foodId: payload.foodId as Id<"foods">,
-        quantity: payload.quantity,
-        unit: payload.unit,
-        storageLocation: payload.storageLocation ?? "ROOM_TEMP",
-        expiryDate: payload.expiryDate?.getTime(),
-        minStockThreshold: payload.minStockThreshold,
-        purchasePrice: payload.purchasePrice,
-        purchaseSource: payload.purchaseSource,
-        productionDate: payload.productionDate?.getTime(),
-        storageNotes: payload.storageNotes,
-        barcode: payload.barcode,
-        brand: payload.brand,
-        packageInfo: payload.packageInfo,
-      },
-    );
+  async createInventoryItem(payload: InventoryItemCreateDTO): Promise<InventoryItemDTO> {
+    const response = await convexClient.mutation<{ data: { itemId: string } }>(api.inventory.add, {
+      memberId: payload.memberId as Id<"familyMembers">,
+      foodId: payload.foodId as Id<"foods">,
+      quantity: payload.quantity,
+      unit: payload.unit,
+      storageLocation: payload.storageLocation ?? "ROOM_TEMP",
+      expiryDate: payload.expiryDate?.getTime(),
+      minStockThreshold: payload.minStockThreshold,
+      purchasePrice: payload.purchasePrice,
+      purchaseSource: payload.purchaseSource,
+      productionDate: payload.productionDate?.getTime(),
+      storageNotes: payload.storageNotes,
+      barcode: payload.barcode,
+      brand: payload.brand,
+      packageInfo: payload.packageInfo,
+    });
 
     const item = await convexClient.query<any>(api.inventory.getById, {
       itemId: response.data.itemId as Id<"inventoryItems">,
@@ -55,7 +50,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
 
   async updateInventoryItem(
     id: string,
-    payload: InventoryItemUpdateDTO,
+    payload: InventoryItemUpdateDTO
   ): Promise<InventoryItemDTO> {
     await convexClient.mutation(api.inventory.update, {
       itemId: id as Id<"inventoryItems">,
@@ -84,9 +79,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
     return mapInventoryItem(item);
   }
 
-  async getInventoryItemById(
-    id: string,
-  ): Promise<InventoryItemWithRelationsDTO | null> {
+  async getInventoryItemById(id: string): Promise<InventoryItemWithRelationsDTO | null> {
     const item = await convexClient.query<any>(api.inventory.getById, {
       itemId: id as Id<"inventoryItems">,
     });
@@ -97,7 +90,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
   async listInventoryItems(
     memberId: string,
     filter?: InventoryItemFilterDTO,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<InventoryItemDTO>> {
     const items = await convexClient.query<any[]>(api.inventory.list, {
       memberId: memberId as Id<"familyMembers">,
@@ -126,17 +119,13 @@ export class ConvexInventoryRepository implements InventoryRepository {
     });
   }
 
-  async useInventoryItem(
-    payload: UseInventoryInputDTO,
-  ): Promise<InventoryItemDTO> {
+  async useInventoryItem(payload: UseInventoryInputDTO): Promise<InventoryItemDTO> {
     await convexClient.mutation(api.inventory.useItem, {
       inventoryItemId: payload.inventoryItemId as Id<"inventoryItems">,
       quantity: payload.quantity,
       reason: payload.reason,
       mealId: payload.mealId ? (payload.mealId as Id<"meals">) : undefined,
-      recipeId: payload.recipeId
-        ? (payload.recipeId as Id<"recipes">)
-        : undefined,
+      recipeId: payload.recipeId ? (payload.recipeId as Id<"recipes">) : undefined,
       notes: payload.notes,
     });
 
@@ -151,14 +140,10 @@ export class ConvexInventoryRepository implements InventoryRepository {
     return mapInventoryItem(item);
   }
 
-  async batchUseInventory(
-    payload: BatchUseInventoryInputDTO,
-  ): Promise<InventoryItemDTO[]> {
+  async batchUseInventory(payload: BatchUseInventoryInputDTO): Promise<InventoryItemDTO[]> {
     await convexClient.mutation(api.inventory.batchUse, {
       memberId: payload.memberId as Id<"familyMembers">,
-      recipeId: payload.recipeId
-        ? (payload.recipeId as Id<"recipes">)
-        : undefined,
+      recipeId: payload.recipeId ? (payload.recipeId as Id<"recipes">) : undefined,
       mealId: payload.mealId ? (payload.mealId as Id<"meals">) : undefined,
       items: payload.items.map((item) => ({
         inventoryItemId: item.inventoryItemId as Id<"inventoryItems">,
@@ -176,7 +161,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
           itemId: item.inventoryItemId as Id<"inventoryItems">,
         });
         return record ? mapInventoryItem(record) : null;
-      }),
+      })
     );
 
     return updated.filter((item): item is InventoryItemDTO => !!item);
@@ -184,7 +169,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
 
   async listInventoryUsages(
     inventoryItemId: string,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<InventoryUsageDTO>> {
     const result = await convexClient.query<{
       data: Doc<"inventoryUsages">[];
@@ -202,9 +187,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
     };
   }
 
-  async createWasteRecord(
-    payload: WasteRecordCreateDTO,
-  ): Promise<WasteRecordDTO> {
+  async createWasteRecord(payload: WasteRecordCreateDTO): Promise<WasteRecordDTO> {
     const result = await convexClient.mutation<{ data: { recordId: string } }>(
       api.inventory.createWaste,
       {
@@ -212,7 +195,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
         quantity: payload.quantity,
         reason: payload.reason,
         notes: payload.notes,
-      },
+      }
     );
 
     const wasteRecords = await convexClient.query<{
@@ -239,15 +222,13 @@ export class ConvexInventoryRepository implements InventoryRepository {
       endDate?: Date;
       reason?: WasteRecordDTO["reason"];
     },
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<WasteRecordDTO>> {
     const result = await convexClient.query<{
       data: Doc<"wasteRecords">[];
       total: number;
     }>(api.inventory.listWasteRecords, {
-      inventoryItemId: inventoryItemId
-        ? (inventoryItemId as Id<"inventoryItems">)
-        : undefined,
+      inventoryItemId: inventoryItemId ? (inventoryItemId as Id<"inventoryItems">) : undefined,
       offset: pagination?.offset,
       limit: pagination?.limit,
     });
@@ -276,10 +257,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
     });
   }
 
-  async getExpiringItems(
-    memberId: string,
-    days: number = 3,
-  ): Promise<InventoryItemDTO[]> {
+  async getExpiringItems(memberId: string, days: number = 3): Promise<InventoryItemDTO[]> {
     const items = await convexClient.query<any[]>(api.inventory.list, {
       memberId: memberId as Id<"familyMembers">,
       isExpiring: true,
@@ -303,7 +281,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
   async getInventoryValueTrend(
     memberId: string,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<Array<{ date: Date; totalValue: number; itemCount: number }>> {
     const items = await convexClient.query<any[]>(api.inventory.list, {
       memberId: memberId as Id<"familyMembers">,
@@ -311,10 +289,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
 
     const start = startDate.getTime();
     const end = endDate.getTime();
-    const buckets = new Map<
-      string,
-      { totalValue: number; itemCount: number }
-    >();
+    const buckets = new Map<string, { totalValue: number; itemCount: number }>();
 
     items.forEach((item: any) => {
       const timestamp = item.purchaseDate ?? item.createdAt ?? 0;
@@ -349,11 +324,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
 
     let updated = 0;
     for (const item of items) {
-      const status = calculateStatus(
-        item.quantity,
-        item.expiryDate,
-        item.minStockThreshold,
-      );
+      const status = calculateStatus(item.quantity, item.expiryDate, item.minStockThreshold);
       await convexClient.mutation(api.inventory.update, {
         itemId: item._id as Id<"inventoryItems">,
         quantity: item.quantity,
@@ -373,7 +344,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
 
   async batchDeleteExpiredItems(
     memberId: string,
-    expiredDaysThreshold: number = 30,
+    expiredDaysThreshold: number = 30
   ): Promise<number> {
     const items = await convexClient.query<any[]>(api.inventory.list, {
       memberId: memberId as Id<"familyMembers">,
@@ -381,7 +352,7 @@ export class ConvexInventoryRepository implements InventoryRepository {
 
     const threshold = Date.now() - expiredDaysThreshold * 24 * 60 * 60 * 1000;
     const expiredItems = items.filter(
-      (item: any) => item.expiryDate && item.expiryDate < threshold,
+      (item: any) => item.expiryDate && item.expiryDate < threshold
     );
 
     for (const item of expiredItems) {
@@ -394,19 +365,13 @@ export class ConvexInventoryRepository implements InventoryRepository {
   }
 }
 
-function calculateStatus(
-  quantity: number,
-  expiryDate?: number,
-  minStockThreshold?: number,
-) {
+function calculateStatus(quantity: number, expiryDate?: number, minStockThreshold?: number) {
   if (quantity <= 0) return "DEPLETED";
   if (minStockThreshold !== undefined && quantity <= minStockThreshold) {
     return "NORMAL";
   }
   if (expiryDate) {
-    const daysToExpiry = Math.ceil(
-      (expiryDate - Date.now()) / (1000 * 60 * 60 * 24),
-    );
+    const daysToExpiry = Math.ceil((expiryDate - Date.now()) / (1000 * 60 * 60 * 24));
     if (daysToExpiry < 0) return "EXPIRED";
     if (daysToExpiry <= 3) return "EXPIRING";
   }
@@ -428,9 +393,7 @@ function mapInventoryItem(item: any): InventoryItemDTO {
     purchasePrice: item.purchasePrice ?? undefined,
     purchaseSource: item.purchaseSource ?? undefined,
     expiryDate: item.expiryDate ? new Date(item.expiryDate) : undefined,
-    productionDate: item.productionDate
-      ? new Date(item.productionDate)
-      : undefined,
+    productionDate: item.productionDate ? new Date(item.productionDate) : undefined,
     daysToExpiry: daysToExpiry ?? undefined,
     storageLocation: item.storageLocation,
     storageNotes: item.storageNotes ?? undefined,
@@ -448,9 +411,7 @@ function mapInventoryItem(item: any): InventoryItemDTO {
   };
 }
 
-function mapInventoryItemWithRelations(
-  item: any,
-): InventoryItemWithRelationsDTO {
+function mapInventoryItemWithRelations(item: any): InventoryItemWithRelationsDTO {
   return {
     ...mapInventoryItem(item),
     usageRecords: (item.usageRecords ?? []).map(mapUsage),
@@ -484,9 +445,7 @@ function mapWasteRecord(record: Doc<"wasteRecords">): WasteRecordDTO {
   };
 }
 
-function mapFood(
-  food: Doc<"foods"> | null | undefined,
-): InventoryItemDTO["food"] {
+function mapFood(food: Doc<"foods"> | null | undefined): InventoryItemDTO["food"] {
   if (!food) {
     return {
       id: "",
@@ -514,17 +473,17 @@ function mapFood(
 
 function mapInventoryStatus(status: string): InventoryItemDTO["status"] {
   switch (status) {
-  case "OUT_OF_STOCK":
-    return "DEPLETED";
-  case "LOW_STOCK":
-    return "NORMAL";
-  case "EXPIRING":
-    return "EXPIRING";
-  case "EXPIRED":
-    return "EXPIRED";
-  case "FRESH":
-    return "FRESH";
-  default:
-    return "NORMAL";
+    case "OUT_OF_STOCK":
+      return "DEPLETED";
+    case "LOW_STOCK":
+      return "NORMAL";
+    case "EXPIRING":
+      return "EXPIRING";
+    case "EXPIRED":
+      return "EXPIRED";
+    case "FRESH":
+      return "FRESH";
+    default:
+      return "NORMAL";
   }
 }

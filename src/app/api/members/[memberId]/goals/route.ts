@@ -7,12 +7,7 @@ import { z } from "zod";
 
 // Force dynamic rendering for auth()
 export const dynamic = "force-dynamic";
-function calculateBMR(
-  weight: number,
-  height: number,
-  age: number,
-  gender: string,
-): number {
+function calculateBMR(weight: number, height: number, age: number, gender: string): number {
   if (gender === "MALE") {
     return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
   } else {
@@ -36,12 +31,7 @@ const ACTIVITY_FACTORS = {
 
 // 创建健康目标的验证 schema
 const createGoalSchema = z.object({
-  goalType: z.enum([
-    "LOSE_WEIGHT",
-    "GAIN_MUSCLE",
-    "MAINTAIN",
-    "IMPROVE_HEALTH",
-  ]),
+  goalType: z.enum(["LOSE_WEIGHT", "GAIN_MUSCLE", "MAINTAIN", "IMPROVE_HEALTH"]),
   targetWeight: z.number().min(20).max(300).optional(),
   targetWeeks: z.number().min(1).max(52).optional(),
   activityLevel: z
@@ -60,7 +50,7 @@ const createGoalSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -70,22 +60,16 @@ export async function GET(
     }
 
     // 使用 Repository 验证权限
-    const { hasAccess } = await memberRepository.verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const { hasAccess } = await memberRepository.verifyMemberAccess(memberId, session.user.id);
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的健康目标" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的健康目标" }, { status: 403 });
     }
 
     // 使用 Repository 获取健康目标列表（包含所有状态）
     const healthGoals = await memberRepository.getHealthGoals(
       memberId,
-      true, // includeInactive
+      true // includeInactive
     );
 
     return NextResponse.json({ goals: healthGoals }, { status: 200 });
@@ -103,7 +87,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> },
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
     const { memberId } = await params;
@@ -119,21 +103,18 @@ export async function POST(
     if (!validation.success) {
       return NextResponse.json(
         { error: "输入数据无效", details: validation.error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // 使用 Repository 验证权限
     const { hasAccess, member } = await memberRepository.verifyMemberAccess(
       memberId,
-      session.user.id,
+      session.user.id
     );
 
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: "无权限为该成员创建健康目标" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限为该成员创建健康目标" }, { status: 403 });
     }
 
     if (!member) {
@@ -163,10 +144,7 @@ export async function POST(
       .single();
 
     if (!memberDetails) {
-      return NextResponse.json(
-        { error: "无法获取成员详细信息" },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: "无法获取成员详细信息" }, { status: 500 });
     }
 
     // 计算年龄（业务逻辑）
@@ -177,12 +155,7 @@ export async function POST(
     // 计算 BMR 和 TDEE（业务逻辑）
     const bmr =
       memberDetails.weight && memberDetails.height
-        ? calculateBMR(
-          memberDetails.weight,
-          memberDetails.height,
-          age,
-          memberDetails.gender,
-        )
+        ? calculateBMR(memberDetails.weight, memberDetails.height, age, memberDetails.gender)
         : undefined;
 
     const activityFactor = ACTIVITY_FACTORS[activityLevel];
@@ -216,7 +189,7 @@ export async function POST(
         message: "健康目标创建成功",
         goal,
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error) {
     console.error("创建健康目标失败:", error);

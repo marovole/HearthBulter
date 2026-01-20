@@ -99,16 +99,14 @@ describe("/api/devices", () => {
             name: "Test",
             role: "USER",
           },
-        }),
+        })
       );
       mockOptimizedQuery.findMany.mockResolvedValue(mockDevices);
       mockOptimizedQuery.count.mockResolvedValue(2);
     });
 
     it("should return device list with pagination", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices?page=1&limit=10",
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices?page=1&limit=10");
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -128,14 +126,12 @@ describe("/api/devices", () => {
           skip: 0,
           take: 10,
           useCache: true,
-        }),
+        })
       );
     });
 
     it("should filter by memberId", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices?memberId=member-1",
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices?memberId=member-1");
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -143,14 +139,12 @@ describe("/api/devices", () => {
         "deviceConnection",
         expect.objectContaining({
           where: expect.objectContaining({ memberId: "member-1" }),
-        }),
+        })
       );
     });
 
     it("should filter by platform", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices?platform=APPLE_HEALTHKIT",
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices?platform=APPLE_HEALTHKIT");
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -158,14 +152,12 @@ describe("/api/devices", () => {
         "deviceConnection",
         expect.objectContaining({
           where: expect.objectContaining({ platform: "APPLE_HEALTHKIT" }),
-        }),
+        })
       );
     });
 
     it("should filter by isActive status", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/devices?isActive=true",
-      );
+      const request = new NextRequest("http://localhost:3000/api/devices?isActive=true");
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -173,7 +165,7 @@ describe("/api/devices", () => {
         "deviceConnection",
         expect.objectContaining({
           where: expect.objectContaining({ isActive: true }),
-        }),
+        })
       );
     });
 
@@ -205,19 +197,8 @@ describe("/api/devices", () => {
       platform: "APPLE_HEALTHKIT",
       accessToken: "access-token-123",
       refreshToken: "refresh-token-456",
-      permissions: [
-        "READ_STEPS",
-        "READ_HEART_RATE",
-        "READ_CALORIES",
-        "READ_SLEEP",
-      ],
-      dataTypes: [
-        "STEPS",
-        "HEART_RATE",
-        "CALORIES_BURNED",
-        "SLEEP_DURATION",
-        "SLEEP_QUALITY",
-      ],
+      permissions: ["READ_STEPS", "READ_HEART_RATE", "READ_CALORIES", "READ_SLEEP"],
+      dataTypes: ["STEPS", "HEART_RATE", "CALORIES_BURNED", "SLEEP_DURATION", "SLEEP_QUALITY"],
       syncInterval: 1800,
     };
 
@@ -240,15 +221,13 @@ describe("/api/devices", () => {
             name: "Test",
             role: "USER",
           },
-        }),
+        })
       );
       mockPrismaFamilyMember.findFirst.mockResolvedValue(
-        createMockMember({ id: "member-1", name: "张三" }) as any,
+        createMockMember({ id: "member-1", name: "张三" }) as any
       );
       mockPrismaDeviceConnection.findFirst.mockResolvedValue(null);
-      mockPrismaDeviceConnection.create.mockResolvedValue(
-        mockConnectedDevice as any,
-      );
+      mockPrismaDeviceConnection.create.mockResolvedValue(mockConnectedDevice as any);
     });
 
     it("should connect Apple HealthKit device successfully", async () => {
@@ -310,7 +289,7 @@ describe("/api/devices", () => {
           data: expect.objectContaining({
             syncStatus: "PENDING",
           }),
-        }),
+        })
       );
     });
 
@@ -327,7 +306,7 @@ describe("/api/devices", () => {
       expect(mockPrismaDeviceConnection.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ syncInterval: 1800 }),
-        }),
+        })
       );
     });
   });
@@ -356,7 +335,7 @@ describe("/api/devices", () => {
             name: "Test",
             role: "USER",
           },
-        }),
+        })
       );
       mockPrismaFamilyMember.findFirst.mockResolvedValue(null);
 
@@ -391,16 +370,16 @@ describe("/api/devices", () => {
             name: "Test",
             role: "USER",
           },
-        }),
+        })
       );
       mockPrismaFamilyMember.findFirst.mockResolvedValue(
-        createMockMember({ id: "member-1" }) as any,
+        createMockMember({ id: "member-1" }) as any
       );
     });
 
     it("POST: should return 409 when device already exists", async () => {
       mockPrismaDeviceConnection.findFirst.mockResolvedValue(
-        createMockDevice({ id: "existing-device", isActive: true }) as any,
+        createMockDevice({ id: "existing-device", isActive: true }) as any
       );
 
       const request = new NextRequest("http://localhost:3000/api/devices", {
@@ -491,14 +470,12 @@ describe("/api/devices", () => {
             name: "Test",
             role: "USER",
           },
-        }),
+        })
       );
     });
 
     it("GET: should handle database errors gracefully", async () => {
-      mockOptimizedQuery.findMany.mockRejectedValue(
-        new Error("Database connection failed"),
-      );
+      mockOptimizedQuery.findMany.mockRejectedValue(new Error("Database connection failed"));
 
       const request = new NextRequest("http://localhost:3000/api/devices");
       const response = await GET(request);
@@ -509,9 +486,7 @@ describe("/api/devices", () => {
     });
 
     it("POST: should handle database errors gracefully", async () => {
-      mockPrismaFamilyMember.findFirst.mockRejectedValue(
-        new Error("Database error"),
-      );
+      mockPrismaFamilyMember.findFirst.mockRejectedValue(new Error("Database error"));
 
       const request = new NextRequest("http://localhost:3000/api/devices", {
         method: "POST",

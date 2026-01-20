@@ -59,11 +59,9 @@ describe("AchievementSystem", () => {
 
       mockPrisma.achievement.upsert.mockResolvedValue(mockAchievement);
 
-      const result = await checkAndUnlockAchievements(
-        "member-1",
-        "CHECK_IN_STREAK",
-        { currentStreak: 3 },
-      );
+      const result = await checkAndUnlockAchievements("member-1", "CHECK_IN_STREAK", {
+        currentStreak: 3,
+      });
 
       expect(result).toHaveLength(1);
       expect(result[0].title).toBe("初学者");
@@ -84,11 +82,9 @@ describe("AchievementSystem", () => {
 
       mockPrisma.achievement.upsert.mockResolvedValue(mockAchievement);
 
-      const result = await checkAndUnlockAchievements(
-        "member-1",
-        "WEIGHT_LOSS",
-        { weightLoss: 1.5 },
-      );
+      const result = await checkAndUnlockAchievements("member-1", "WEIGHT_LOSS", {
+        weightLoss: 1.5,
+      });
 
       expect(result).toHaveLength(1);
       expect(result[0].title).toBe("减重新手");
@@ -107,11 +103,9 @@ describe("AchievementSystem", () => {
 
       mockPrisma.achievement.findMany.mockResolvedValue([existingAchievement]);
 
-      const result = await checkAndUnlockAchievements(
-        "member-1",
-        "CHECK_IN_STREAK",
-        { currentStreak: 5 },
-      );
+      const result = await checkAndUnlockAchievements("member-1", "CHECK_IN_STREAK", {
+        currentStreak: 5,
+      });
 
       expect(result).toHaveLength(0);
       expect(mockPrisma.achievement.upsert).not.toHaveBeenCalled();
@@ -123,7 +117,7 @@ describe("AchievementSystem", () => {
       await expect(
         checkAndUnlockAchievements("member-1", "CHECK_IN_STREAK", {
           currentStreak: 3,
-        }),
+        })
       ).rejects.toThrow("成员不存在");
     });
 
@@ -143,7 +137,7 @@ describe("AchievementSystem", () => {
       const result = await checkAndUnlockAchievements(
         "member-1",
         "CHECK_IN_STREAK",
-        { currentStreak: 3.5 }, // 未达到7天的目标
+        { currentStreak: 3.5 } // 未达到7天的目标
       );
 
       expect(result).toHaveLength(0); // 没有解锁新成就
@@ -181,11 +175,7 @@ describe("AchievementSystem", () => {
       expect(result[1].title).toBe("坚持者");
       expect(mockPrisma.achievement.findMany).toHaveBeenCalledWith({
         where: { memberId: "member-1" },
-        orderBy: [
-          { isUnlocked: "desc" },
-          { unlockedAt: "desc" },
-          { createdAt: "desc" },
-        ],
+        orderBy: [{ isUnlocked: "desc" }, { unlockedAt: "desc" }, { createdAt: "desc" }],
       });
     });
   });
@@ -294,11 +284,9 @@ describe("AchievementSystem", () => {
         points: 25,
       });
 
-      const result = await checkAndUnlockAchievements(
-        "member-1",
-        "CHECK_IN_STREAK",
-        { currentStreak: 7 },
-      );
+      const result = await checkAndUnlockAchievements("member-1", "CHECK_IN_STREAK", {
+        currentStreak: 7,
+      });
 
       expect(result).toHaveLength(2); // 3天和7天成就
       expect(result.map((a) => a.points)).toEqual([10, 25]);
@@ -311,11 +299,9 @@ describe("AchievementSystem", () => {
         points: 75,
       });
 
-      const result = await checkAndUnlockAchievements(
-        "member-1",
-        "WEIGHT_LOSS",
-        { weightLoss: 5.2 },
-      );
+      const result = await checkAndUnlockAchievements("member-1", "WEIGHT_LOSS", {
+        weightLoss: 5.2,
+      });
 
       expect(result).toHaveLength(2); // 1kg和5kg成就
       expect(result.map((a) => a.points)).toEqual([15, 75]);
@@ -328,11 +314,9 @@ describe("AchievementSystem", () => {
         points: 30,
       });
 
-      const result = await checkAndUnlockAchievements(
-        "member-1",
-        "NUTRITION_GOAL",
-        { consecutiveDays: 7 },
-      );
+      const result = await checkAndUnlockAchievements("member-1", "NUTRITION_GOAL", {
+        consecutiveDays: 7,
+      });
 
       expect(result).toHaveLength(1);
       expect(result[0].points).toBe(30);
@@ -345,11 +329,9 @@ describe("AchievementSystem", () => {
         points: 20,
       });
 
-      const result = await checkAndUnlockAchievements(
-        "member-1",
-        "EXERCISE_TARGET",
-        { weeklyMinutes: 180 },
-      );
+      const result = await checkAndUnlockAchievements("member-1", "EXERCISE_TARGET", {
+        weeklyMinutes: 180,
+      });
 
       expect(result).toHaveLength(2); // 150分钟和300分钟成就
       expect(result.map((a) => a.points)).toEqual([20, 60]);

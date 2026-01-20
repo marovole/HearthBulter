@@ -93,7 +93,7 @@ describe("Dashboard Performance Tests", () => {
             render(<MockHeavyComponent dataCount={200} />);
             resolve();
           }, i * 10);
-        }),
+        })
     );
 
     await Promise.all(promises);
@@ -148,10 +148,7 @@ describe("Dashboard Performance Tests", () => {
       y: number;
     }
 
-    const optimizeChartData = (
-      data: ChartPoint[],
-      maxPoints: number,
-    ): ChartPoint[] => {
+    const optimizeChartData = (data: ChartPoint[], maxPoints: number): ChartPoint[] => {
       if (data.length <= maxPoints) return data;
 
       const step = Math.ceil(data.length / maxPoints);
@@ -194,17 +191,13 @@ describe("Dashboard Performance Tests", () => {
       containerHeight: number;
     }
 
-    const VirtualList: React.FC<VirtualListProps> = ({
-      items,
-      itemHeight,
-      containerHeight,
-    }) => {
+    const VirtualList: React.FC<VirtualListProps> = ({ items, itemHeight, containerHeight }) => {
       const [scrollTop, setScrollTop] = React.useState(0);
 
       const startIndex = Math.floor(scrollTop / itemHeight);
       const endIndex = Math.min(
         startIndex + Math.ceil(containerHeight / itemHeight) + 1,
-        items.length,
+        items.length
       );
 
       const visibleItems = items.slice(startIndex, endIndex);
@@ -215,9 +208,7 @@ describe("Dashboard Performance Tests", () => {
           style={{ height: containerHeight, overflow: "auto" }}
           onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
         >
-          <div
-            style={{ height: items.length * itemHeight, position: "relative" }}
-          >
+          <div style={{ height: items.length * itemHeight, position: "relative" }}>
             {visibleItems.map((item, index) => (
               <div
                 key={item.id}
@@ -238,19 +229,14 @@ describe("Dashboard Performance Tests", () => {
 
     VirtualList.displayName = "VirtualList";
 
-    const largeItems: VirtualListItem[] = Array.from(
-      { length: 10000 },
-      (_, i) => ({
-        id: i,
-        value: `Item ${i}`,
-      }),
-    );
+    const largeItems: VirtualListItem[] = Array.from({ length: 10000 }, (_, i) => ({
+      id: i,
+      value: `Item ${i}`,
+    }));
 
     const startTime = performance.now();
 
-    render(
-      <VirtualList items={largeItems} itemHeight={40} containerHeight={400} />,
-    );
+    render(<VirtualList items={largeItems} itemHeight={40} containerHeight={400} />);
 
     const endTime = performance.now();
     const renderTime = endTime - startTime;
@@ -272,7 +258,7 @@ describe("Dashboard Performance Tests", () => {
     // Mock debounce implementation
     const debounce = <Args extends unknown[]>(
       fn: (...args: Args) => void | Promise<unknown>,
-      delay: number,
+      delay: number
     ) => {
       let timeoutId: ReturnType<typeof setTimeout>;
       return (...args: Args) => {
@@ -304,7 +290,7 @@ describe("Dashboard Performance Tests", () => {
 
     const withPerformanceMeasurement = <P extends Record<string, unknown>>(
       WrappedComponent: React.ComponentType<P>,
-      name: string,
+      name: string
     ) => {
       const ComponentWithMeasurement: React.FC<P> = (props) => {
         const startTime = performance.now();
@@ -323,14 +309,9 @@ describe("Dashboard Performance Tests", () => {
       return ComponentWithMeasurement;
     };
 
-    const TestComponent: React.FC = () => (
-      <div data-testid="test-component">Test</div>
-    );
+    const TestComponent: React.FC = () => <div data-testid="test-component">Test</div>;
     TestComponent.displayName = "TestComponent";
-    const MeasuredComponent = withPerformanceMeasurement(
-      TestComponent,
-      "TestComponent",
-    );
+    const MeasuredComponent = withPerformanceMeasurement(TestComponent, "TestComponent");
     MeasuredComponent.displayName = "MeasuredComponent";
 
     render(<MeasuredComponent />);
@@ -339,9 +320,7 @@ describe("Dashboard Performance Tests", () => {
       expect(screen.getByTestId("test-component")).toBeInTheDocument();
     });
 
-    const metric = performanceMetrics.find(
-      (m) => m.componentName === "TestComponent",
-    );
+    const metric = performanceMetrics.find((m) => m.componentName === "TestComponent");
     expect(metric).toBeDefined();
     expect(metric!.renderTime).toBeGreaterThan(0);
   });

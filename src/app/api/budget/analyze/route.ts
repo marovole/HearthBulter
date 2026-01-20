@@ -14,31 +14,18 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get("memberId");
-    const period = searchParams.get("period") as
-      | "WEEKLY"
-      | "MONTHLY"
-      | "QUARTERLY"
-      | "YEARLY";
+    const period = searchParams.get("period") as "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY";
 
     if (!memberId) {
       return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(memberId, session.user.id);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的预算分析" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的预算分析" }, { status: 403 });
     }
 
-    const analysis = await spendingAnalyzer.analyzeSpending(
-      memberId,
-      period || "MONTHLY",
-    );
+    const analysis = await spendingAnalyzer.analyzeSpending(memberId, period || "MONTHLY");
 
     return NextResponse.json(analysis);
   } catch (error) {
@@ -66,40 +53,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(memberId, session.user.id);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该成员的预算分析" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该成员的预算分析" }, { status: 403 });
     }
 
     let result;
 
     switch (analysisType) {
-    case "trends":
-      result = await spendingAnalyzer.getSpendingTrends(
-        memberId,
-        customPeriod?.months || 6,
-      );
-      break;
-    case "highCategories":
-      result = await spendingAnalyzer.getHighSpendingCategories(
-        memberId,
-        customPeriod?.limit || 5,
-      );
-      break;
-    case "perPerson":
-      result = await spendingAnalyzer.getPerPersonCost(memberId);
-      break;
-    default:
-      result = await spendingAnalyzer.analyzeSpending(
-        memberId,
-        customPeriod?.type || "MONTHLY",
-      );
+      case "trends":
+        result = await spendingAnalyzer.getSpendingTrends(memberId, customPeriod?.months || 6);
+        break;
+      case "highCategories":
+        result = await spendingAnalyzer.getHighSpendingCategories(
+          memberId,
+          customPeriod?.limit || 5
+        );
+        break;
+      case "perPerson":
+        result = await spendingAnalyzer.getPerPersonCost(memberId);
+        break;
+      default:
+        result = await spendingAnalyzer.analyzeSpending(memberId, customPeriod?.type || "MONTHLY");
     }
 
     return NextResponse.json(result);

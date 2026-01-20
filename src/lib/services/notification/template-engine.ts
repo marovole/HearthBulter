@@ -46,14 +46,12 @@ interface NotificationTemplate {
 }
 
 export class TemplateEngine {
-  private templateCache: Map<
-    string,
-    { template: NotificationTemplate; timestamp: number }
-  > = new Map();
+  private templateCache: Map<string, { template: NotificationTemplate; timestamp: number }> =
+    new Map();
 
   async renderNotification(
     type: NotificationType,
-    data?: Record<string, unknown>,
+    data?: Record<string, unknown>
   ): Promise<RenderedTemplate> {
     const template = await this.getTemplate(type);
 
@@ -72,7 +70,7 @@ export class TemplateEngine {
   async renderChannelTemplate(
     type: NotificationType,
     channel: string,
-    data?: Record<string, unknown>,
+    data?: Record<string, unknown>
   ): Promise<RenderedTemplate | null> {
     const template = await this.getTemplate(type);
 
@@ -92,12 +90,11 @@ export class TemplateEngine {
 
     const title = this.renderText(
       (channelTemplate as { title?: string }).title || template.titleTemplate,
-      data,
+      data
     );
     const content = this.renderText(
-      (channelTemplate as { content?: string }).content ||
-        template.contentTemplate,
-      data,
+      (channelTemplate as { content?: string }).content || template.contentTemplate,
+      data
     );
 
     return { title, content };
@@ -117,7 +114,7 @@ export class TemplateEngine {
   async renderLocalizedTemplate(
     type: NotificationType,
     locale: string = "zh-CN",
-    data?: Record<string, unknown>,
+    data?: Record<string, unknown>
   ): Promise<RenderedTemplate> {
     const template = await this.getTemplate(type);
 
@@ -134,8 +131,7 @@ export class TemplateEngine {
       | undefined;
 
     const titleTemplate = localizedTemplate?.title || template.titleTemplate;
-    const contentTemplate =
-      localizedTemplate?.content || template.contentTemplate;
+    const contentTemplate = localizedTemplate?.content || template.contentTemplate;
 
     const title = this.renderText(titleTemplate, data);
     const content = this.renderText(contentTemplate, data);
@@ -143,9 +139,7 @@ export class TemplateEngine {
     return { title, content };
   }
 
-  async getTemplateVariables(
-    type: NotificationType,
-  ): Promise<TemplateVariable[]> {
+  async getTemplateVariables(type: NotificationType): Promise<TemplateVariable[]> {
     const template = await this.getTemplate(type);
 
     if (!template) {
@@ -161,7 +155,7 @@ export class TemplateEngine {
 
   async validateTemplateData(
     type: NotificationType,
-    data: Record<string, unknown>,
+    data: Record<string, unknown>
   ): Promise<{ isValid: boolean; missingVariables: string[] }> {
     const variables = await this.getTemplateVariables(type);
     const missingVariables: string[] = [];
@@ -196,19 +190,13 @@ export class TemplateEngine {
       type: data.type,
       titleTemplate: data.titleTemplate,
       contentTemplate: data.contentTemplate,
-      channelTemplates: data.channelTemplates
-        ? JSON.parse(data.channelTemplates)
-        : undefined,
+      channelTemplates: data.channelTemplates ? JSON.parse(data.channelTemplates) : undefined,
       variables: data.variables ? JSON.parse(data.variables) : undefined,
       isActive: data.isActive ?? true,
       version: data.version ?? "1.0.0",
-      defaultChannels: data.defaultChannels
-        ? JSON.parse(data.defaultChannels)
-        : undefined,
+      defaultChannels: data.defaultChannels ? JSON.parse(data.defaultChannels) : undefined,
       defaultPriority: data.defaultPriority,
-      translations: data.translations
-        ? JSON.parse(data.translations)
-        : undefined,
+      translations: data.translations ? JSON.parse(data.translations) : undefined,
       description: data.description,
       category: data.category,
     });
@@ -250,7 +238,7 @@ export class TemplateEngine {
   async previewTemplate(
     type: NotificationType,
     data: Record<string, unknown>,
-    locale?: string,
+    locale?: string
   ): Promise<RenderedTemplate> {
     if (locale) {
       return await this.renderLocalizedTemplate(type, locale, data);
@@ -287,9 +275,7 @@ export class TemplateEngine {
     }));
   }
 
-  private async getTemplate(
-    type: NotificationType,
-  ): Promise<NotificationTemplate | null> {
+  private async getTemplate(type: NotificationType): Promise<NotificationTemplate | null> {
     const cacheKey = `template_${type}`;
     const cached = this.templateCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
@@ -298,7 +284,7 @@ export class TemplateEngine {
 
     const template = await convexClient.query<NotificationTemplate | null>(
       api["notification-templates"].getByType,
-      { type },
+      { type }
     );
 
     if (template) {
@@ -324,11 +310,7 @@ export class TemplateEngine {
 
     let current: unknown = obj;
     for (const key of path.split(".")) {
-      if (
-        current &&
-        typeof current === "object" &&
-        key in (current as Record<string, unknown>)
-      ) {
+      if (current && typeof current === "object" && key in (current as Record<string, unknown>)) {
         current = (current as Record<string, unknown>)[key];
       } else {
         return undefined;
@@ -369,25 +351,18 @@ export class TemplateEngine {
       type: NotificationType;
       data?: Record<string, unknown>;
       locale?: string;
-    }>,
+    }>
   ): Promise<RenderedTemplate[]> {
     const results: RenderedTemplate[] = [];
 
     for (const request of requests) {
       try {
         const result = request.locale
-          ? await this.renderLocalizedTemplate(
-            request.type,
-            request.locale,
-            request.data,
-          )
+          ? await this.renderLocalizedTemplate(request.type, request.locale, request.data)
           : await this.renderNotification(request.type, request.data);
         results.push(result);
       } catch (error) {
-        console.error(
-          `Failed to render template for type ${request.type}:`,
-          error,
-        );
+        console.error(`Failed to render template for type ${request.type}:`, error);
         results.push({
           title: "通知",
           content: "您有一条新通知",

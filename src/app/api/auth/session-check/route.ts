@@ -11,9 +11,9 @@ export async function GET() {
       authenticated: !!session,
       session: session
         ? {
-          user: session.user,
-          expires: null,
-        }
+            user: session.user,
+            expires: null,
+          }
         : null,
       timestamp: new Date().toISOString(),
     });
@@ -27,7 +27,7 @@ export async function GET() {
         error: "Session verification failed",
         timestamp: new Date().toISOString(),
       },
-      { status: 200 },
+      { status: 200 }
     );
   }
 }

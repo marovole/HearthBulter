@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { taskRepository } from "@/lib/repositories/task-repository-singleton";
-import {
-  withApiPermissions,
-  PERMISSION_CONFIGS,
-} from "@/middleware/permissions";
+import { withApiPermissions, PERMISSION_CONFIGS } from "@/middleware/permissions";
 import { hasPermission, Permission } from "@/lib/permissions";
 import { convexClient, api } from "@/lib/convex-client";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
@@ -19,7 +16,7 @@ import type { Doc, Id } from "@/../convex/_generated/dataModel";
 export const dynamic = "force-dynamic";
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string; taskId: string }> },
+  { params }: { params: Promise<{ familyId: string; taskId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -34,24 +31,18 @@ export async function PUT(
         {
           familyId: familyId as Id<"families">,
           clerkId: userId,
-        },
+        }
       );
 
       if (!member) {
-        return NextResponse.json(
-          { success: false, error: "Not a family member" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Not a family member" }, { status: 403 });
       }
 
       // 验证任务并检查权限
       const existingTask = await taskRepository.getTaskById(familyId, taskId);
 
       if (!existingTask) {
-        return NextResponse.json(
-          { success: false, error: "Task not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ success: false, error: "Task not found" }, { status: 404 });
       }
 
       // 检查更新权限
@@ -60,7 +51,7 @@ export async function PUT(
           member.role as any,
           Permission.UPDATE_TASK,
           existingTask.creatorId,
-          member._id,
+          member._id
         )
       ) {
         return NextResponse.json(
@@ -68,7 +59,7 @@ export async function PUT(
             success: false,
             error: "Insufficient permissions to update this task",
           },
-          { status: 403 },
+          { status: 403 }
         );
       }
 
@@ -109,10 +100,9 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to update task",
+          error: error instanceof Error ? error.message : "Failed to update task",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.UPDATE_TASK)(request as any, { params });
@@ -126,7 +116,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ familyId: string; taskId: string }> },
+  { params }: { params: Promise<{ familyId: string; taskId: string }> }
 ) {
   return withApiPermissions(async (req, context) => {
     try {
@@ -138,41 +128,28 @@ export async function DELETE(
         {
           familyId: familyId as Id<"families">,
           clerkId: userId,
-        },
+        }
       );
 
       if (!member) {
-        return NextResponse.json(
-          { success: false, error: "Not a family member" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Not a family member" }, { status: 403 });
       }
 
       // 验证任务并检查权限
       const task = await taskRepository.getTaskById(familyId, taskId);
 
       if (!task) {
-        return NextResponse.json(
-          { success: false, error: "Task not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ success: false, error: "Task not found" }, { status: 404 });
       }
 
       // 检查删除权限
-      if (
-        !hasPermission(
-          member.role as any,
-          Permission.DELETE_TASK,
-          task.creatorId,
-          member._id,
-        )
-      ) {
+      if (!hasPermission(member.role as any, Permission.DELETE_TASK, task.creatorId, member._id)) {
         return NextResponse.json(
           {
             success: false,
             error: "Insufficient permissions to delete this task",
           },
-          { status: 403 },
+          { status: 403 }
         );
       }
 
@@ -206,10 +183,9 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          error:
-            error instanceof Error ? error.message : "Failed to delete task",
+          error: error instanceof Error ? error.message : "Failed to delete task",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
   }, PERMISSION_CONFIGS.DELETE_TASK)(request as any, { params });

@@ -81,9 +81,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
   /**
    * 创建通知记录
    */
-  async createNotification(
-    payload: CreateNotificationDTO,
-  ): Promise<NotificationDTO> {
+  async createNotification(payload: CreateNotificationDTO): Promise<NotificationDTO> {
     try {
       const notification = await prisma.notification.create({
         data: {
@@ -128,7 +126,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
    */
   async listMemberNotifications(
     query: NotificationListQuery,
-    pagination?: PaginationInput,
+    pagination?: PaginationInput
   ): Promise<PaginatedResult<NotificationDTO>> {
     try {
       const where = buildNotificationWhere(query);
@@ -249,7 +247,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
    * Note: scheduled_notifications 表不在 Prisma schema 中,使用 raw SQL
    */
   async createScheduledNotification(
-    schedule: ScheduledNotificationDTO,
+    schedule: ScheduledNotificationDTO
   ): Promise<ScheduledNotificationDTO> {
     try {
       const payloadJson = JSON.stringify(schedule.payload);
@@ -282,10 +280,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
   /**
    * 列出到期待派发的计划通知
    */
-  async listDueSchedules(
-    before: Date,
-    limit: number,
-  ): Promise<ScheduledNotificationDTO[]> {
+  async listDueSchedules(before: Date, limit: number): Promise<ScheduledNotificationDTO[]> {
     try {
       const rows = (await prisma.$queryRaw`
         SELECT *
@@ -307,7 +302,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
    */
   async updateScheduleStatus(
     scheduleId: string,
-    status: ScheduledNotificationDTO["status"],
+    status: ScheduledNotificationDTO["status"]
   ): Promise<void> {
     try {
       await prisma.$executeRaw`
@@ -323,9 +318,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
   /**
    * 查询通知偏好
    */
-  async getNotificationPreferences(
-    memberId: string,
-  ): Promise<NotificationPreferenceDTO | null> {
+  async getNotificationPreferences(memberId: string): Promise<NotificationPreferenceDTO | null> {
     try {
       const row = await prisma.notificationPreference.findUnique({
         where: { memberId },
@@ -340,16 +333,10 @@ export class PrismaNotificationRepository implements NotificationRepository {
   /**
    * 更新或创建通知偏好
    */
-  async upsertNotificationPreferences(
-    preference: NotificationPreferenceDTO,
-  ): Promise<void> {
+  async upsertNotificationPreferences(preference: NotificationPreferenceDTO): Promise<void> {
     try {
-      const channelPreferences = JSON.stringify(
-        preference.channelPreferences ?? {},
-      );
-      const typeSettings = JSON.stringify(
-        buildTypeSettings(preference.mutedTypes),
-      );
+      const channelPreferences = JSON.stringify(preference.channelPreferences ?? {});
+      const typeSettings = JSON.stringify(buildTypeSettings(preference.mutedTypes));
       const quietHoursStart = parseQuietHourToInt(preference.quietHours?.start);
       const quietHoursEnd = parseQuietHourToInt(preference.quietHours?.end);
 
@@ -378,9 +365,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
   /**
    * 获取通知接收者信息
    */
-  async getNotificationRecipient(
-    memberId: string,
-  ): Promise<NotificationRecipientDTO | null> {
+  async getNotificationRecipient(memberId: string): Promise<NotificationRecipientDTO | null> {
     try {
       const recipient = await prisma.familyMember.findUnique({
         where: { id: memberId },
@@ -402,11 +387,8 @@ export class PrismaNotificationRepository implements NotificationRepository {
         memberId: recipient.id,
         email: recipient.user?.email ?? undefined,
         phone: recipient.notificationPreference?.phoneNumber ?? undefined,
-        wechatOpenId:
-          recipient.notificationPreference?.wechatOpenId ?? undefined,
-        pushTokens: normalizePushTokens(
-          recipient.notificationPreference?.pushToken,
-        ),
+        wechatOpenId: recipient.notificationPreference?.wechatOpenId ?? undefined,
+        pushTokens: normalizePushTokens(recipient.notificationPreference?.pushToken),
         preferences,
       };
     } catch (error) {
@@ -417,10 +399,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
   /**
    * 删除通知（软删除）
    */
-  async deleteNotification(
-    notificationId: string,
-    memberId: string,
-  ): Promise<void> {
+  async deleteNotification(notificationId: string, memberId: string): Promise<void> {
     try {
       await prisma.notification.updateMany({
         where: { id: notificationId, memberId, deletedAt: null },
@@ -448,9 +427,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
 /**
  * 构建通知查询的 WHERE 条件
  */
-function buildNotificationWhere(
-  query: NotificationListQuery,
-): Prisma.NotificationWhereInput {
+function buildNotificationWhere(query: NotificationListQuery): Prisma.NotificationWhereInput {
   const where: Prisma.NotificationWhereInput = {
     memberId: query.memberId,
     deletedAt: null,
@@ -482,12 +459,8 @@ function buildNotificationWhere(
  * 映射 Prisma Notification 到 DTO
  */
 function mapNotificationRow(row: PrismaNotification): NotificationDTO {
-  const parsedChannels = safeParseArray(
-    row.channels,
-    DEFAULT_CHANNELS,
-  ) as NotificationChannel[];
-  const channels =
-    parsedChannels.length > 0 ? parsedChannels : DEFAULT_CHANNELS;
+  const parsedChannels = safeParseArray(row.channels, DEFAULT_CHANNELS) as NotificationChannel[];
+  const channels = parsedChannels.length > 0 ? parsedChannels : DEFAULT_CHANNELS;
 
   return {
     id: row.id,
@@ -497,10 +470,7 @@ function mapNotificationRow(row: PrismaNotification): NotificationDTO {
     content: row.content,
     priority: row.priority,
     channels,
-    metadata:
-      row.metadata !== null
-        ? (row.metadata as Record<string, unknown>)
-        : undefined,
+    metadata: row.metadata !== null ? (row.metadata as Record<string, unknown>) : undefined,
     actionUrl: row.actionUrl ?? undefined,
     actionText: row.actionText ?? undefined,
     dedupKey: row.dedupKey ?? undefined,
@@ -515,28 +485,23 @@ function mapNotificationRow(row: PrismaNotification): NotificationDTO {
 /**
  * 映射 Prisma NotificationPreference 到 DTO
  */
-function mapPreferenceRow(
-  row: PrismaNotificationPreference,
-): NotificationPreferenceDTO {
+function mapPreferenceRow(row: PrismaNotificationPreference): NotificationPreferenceDTO {
   const quietHours =
     row.globalQuietHoursStart !== null && row.globalQuietHoursEnd !== null
       ? {
-        start: formatIntToHour(row.globalQuietHoursStart),
-        end: formatIntToHour(row.globalQuietHoursEnd),
-        timezone: "UTC",
-      }
+          start: formatIntToHour(row.globalQuietHoursStart),
+          end: formatIntToHour(row.globalQuietHoursEnd),
+          timezone: "UTC",
+        }
       : undefined;
 
-  const typeSettings = safeParseObject(row.typeSettings) as Record<
-    string,
-    boolean
-  >;
+  const typeSettings = safeParseObject(row.typeSettings) as Record<string, boolean>;
   const mutedTypes = extractMutedTypes(typeSettings);
 
   return {
     memberId: row.memberId,
     channelPreferences: safeParseObject(
-      row.channelPreferences,
+      row.channelPreferences
     ) as NotificationPreferenceDTO["channelPreferences"],
     quietHours,
     mutedTypes: mutedTypes.length > 0 ? mutedTypes : undefined,
@@ -547,9 +512,7 @@ function mapPreferenceRow(
 /**
  * 映射 ScheduledNotification 原始行到 DTO
  */
-function mapScheduleRow(
-  row: ScheduledNotificationRow,
-): ScheduledNotificationDTO {
+function mapScheduleRow(row: ScheduledNotificationRow): ScheduledNotificationDTO {
   return {
     id: row.id,
     notificationId: row.notification_id ?? undefined,
@@ -564,25 +527,21 @@ function mapScheduleRow(
 /**
  * 构建类型设置对象（所有类型默认启用,根据 mutedTypes 禁用）
  */
-function buildTypeSettings(
-  mutedTypes?: NotificationType[],
-): Record<NotificationType, boolean> {
+function buildTypeSettings(mutedTypes?: NotificationType[]): Record<NotificationType, boolean> {
   const mutedSet = new Set(mutedTypes ?? []);
   return ALL_NOTIFICATION_TYPES.reduce(
     (acc, type) => {
       acc[type] = !mutedSet.has(type);
       return acc;
     },
-    {} as Record<NotificationType, boolean>,
+    {} as Record<NotificationType, boolean>
   );
 }
 
 /**
  * 从类型设置中提取被禁用的类型
  */
-function extractMutedTypes(
-  settings: Record<string, boolean>,
-): NotificationType[] {
+function extractMutedTypes(settings: Record<string, boolean>): NotificationType[] {
   return Object.entries(settings)
     .filter(([, enabled]) => !enabled)
     .map(([key]) => key as NotificationType)
@@ -594,9 +553,7 @@ function extractMutedTypes(
  */
 function formatChannelsToJson(channels?: NotificationChannel[]): string {
   const normalized =
-    channels && channels.length > 0
-      ? Array.from(new Set(channels))
-      : DEFAULT_CHANNELS;
+    channels && channels.length > 0 ? Array.from(new Set(channels)) : DEFAULT_CHANNELS;
   return JSON.stringify(normalized);
 }
 
@@ -627,9 +584,7 @@ function normalizePushTokens(raw?: string | null): string[] | undefined {
   if (!raw) return undefined;
 
   const parsed = safeParseArray(raw) as string[];
-  const tokens = parsed.filter(
-    (value): value is string => typeof value === "string",
-  );
+  const tokens = parsed.filter((value): value is string => typeof value === "string");
 
   return tokens.length > 0 ? tokens : [raw];
 }

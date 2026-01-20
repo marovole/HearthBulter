@@ -35,35 +35,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = SyncRequestSchema.parse(body);
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: validatedData.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: validatedData.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该家庭成员" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该家庭成员" }, { status: 403 });
     }
 
-    const deviceConnection =
-      await convexClient.query<DeviceConnectionRecord | null>(
-        api.devices.getActiveByDeviceAndMember,
-        {
-          deviceId: validatedData.deviceId,
-          memberId: validatedData.memberId as Id<"familyMembers">,
-        },
-      );
+    const deviceConnection = await convexClient.query<DeviceConnectionRecord | null>(
+      api.devices.getActiveByDeviceAndMember,
+      {
+        deviceId: validatedData.deviceId,
+        memberId: validatedData.memberId as Id<"familyMembers">,
+      }
+    );
 
     if (!deviceConnection) {
-      return NextResponse.json(
-        { error: "设备未连接或已禁用" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "设备未连接或已禁用" }, { status: 404 });
     }
 
     await convexClient.mutation(api.devices.updateConnection, {
@@ -86,22 +76,18 @@ export async function POST(request: NextRequest) {
     const lastSyncAt = deviceConnection.lastSyncAt as number | undefined;
 
     if (platform === "APPLE_HEALTHKIT" && legacyId) {
-      const { healthKitService } = await import(
-        "@/lib/services/healthkit-service"
-      );
+      const { healthKitService } = await import("@/lib/services/healthkit-service");
       syncResult = await healthKitService.syncAllData(
         validatedData.memberId,
         deviceConnection._id as Id<"deviceConnections">,
-        lastSyncAt ? new Date(lastSyncAt) : undefined,
+        lastSyncAt ? new Date(lastSyncAt) : undefined
       );
     } else if (platform === "HUAWEI_HEALTH" && legacyId) {
-      const { huaweiHealthService } = await import(
-        "@/lib/services/huawei-health-service"
-      );
+      const { huaweiHealthService } = await import("@/lib/services/huawei-health-service");
       syncResult = await huaweiHealthService.syncAllData(
         validatedData.memberId,
         deviceConnection._id as Id<"deviceConnections">,
-        lastSyncAt ? new Date(lastSyncAt) : undefined,
+        lastSyncAt ? new Date(lastSyncAt) : undefined
       );
     } else {
       syncResult = {
@@ -149,10 +135,7 @@ export async function POST(request: NextRequest) {
     console.error("设备同步失败:", error);
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "参数错误", details: error.errors },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "参数错误", details: error.errors }, { status: 400 });
     }
 
     return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
@@ -173,19 +156,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "缺少memberId参数" }, { status: 400 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该家庭成员" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该家庭成员" }, { status: 403 });
     }
 
     const devicesResult = await convexClient.query<{
@@ -200,10 +177,7 @@ export async function PUT(request: NextRequest) {
     });
 
     const devices: DeviceConnectionRecord[] = (devicesResult.data ?? [])
-      .filter(
-        (device) =>
-          device.isAutoSync !== false && device.syncStatus !== "DISABLED",
-      )
+      .filter((device) => device.isAutoSync !== false && device.syncStatus !== "DISABLED")
       .map((device) => device as DeviceConnectionRecord);
 
     if (devices.length === 0) {
@@ -246,22 +220,18 @@ export async function PUT(request: NextRequest) {
         const lastSyncAt = device.lastSyncAt as number | undefined;
 
         if (platform === "APPLE_HEALTHKIT" && legacyId) {
-          const { healthKitService } = await import(
-            "@/lib/services/healthkit-service"
-          );
+          const { healthKitService } = await import("@/lib/services/healthkit-service");
           syncResult = await healthKitService.syncAllData(
             memberId,
             device._id,
-            lastSyncAt ? new Date(lastSyncAt) : undefined,
+            lastSyncAt ? new Date(lastSyncAt) : undefined
           );
         } else if (platform === "HUAWEI_HEALTH" && legacyId) {
-          const { huaweiHealthService } = await import(
-            "@/lib/services/huawei-health-service"
-          );
+          const { huaweiHealthService } = await import("@/lib/services/huawei-health-service");
           syncResult = await huaweiHealthService.syncAllData(
             memberId,
             device._id,
-            lastSyncAt ? new Date(lastSyncAt) : undefined,
+            lastSyncAt ? new Date(lastSyncAt) : undefined
           );
         }
 

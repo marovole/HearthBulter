@@ -87,21 +87,14 @@ function hasPermission(context: PermissionContext, action: Action): boolean {
 /**
  * Check if user belongs to family
  */
-function belongsToFamily(
-  userId: string,
-  familyId: string,
-  memberIds: string[],
-): boolean {
+function belongsToFamily(userId: string, familyId: string, memberIds: string[]): boolean {
   return memberIds.includes(userId);
 }
 
 /**
  * Check if user can access resource from different family
  */
-function canAccessCrossFamily(
-  userFamilyId: string,
-  resourceFamilyId: string,
-): boolean {
+function canAccessCrossFamily(userFamilyId: string, resourceFamilyId: string): boolean {
   return userFamilyId === resourceFamilyId;
 }
 
@@ -215,15 +208,9 @@ describe("Permission Control System", () => {
           resourceOwnerId: "member-1", // Same as userId
         };
 
-        expect(hasPermission(ownResourceContext, "healthGoal.create")).toBe(
-          false,
-        ); // Still need ADMIN
-        expect(hasPermission(ownResourceContext, "healthGoal.update")).toBe(
-          true,
-        ); // Can update own
-        expect(hasPermission(ownResourceContext, "healthGoal.delete")).toBe(
-          true,
-        ); // Can delete own
+        expect(hasPermission(ownResourceContext, "healthGoal.create")).toBe(false); // Still need ADMIN
+        expect(hasPermission(ownResourceContext, "healthGoal.update")).toBe(true); // Can update own
+        expect(hasPermission(ownResourceContext, "healthGoal.delete")).toBe(true); // Can delete own
       });
 
       it("should NOT be able to modify others health goals", () => {
@@ -232,12 +219,8 @@ describe("Permission Control System", () => {
           resourceOwnerId: "member-2", // Different from userId
         };
 
-        expect(hasPermission(othersResourceContext, "healthGoal.update")).toBe(
-          false,
-        );
-        expect(hasPermission(othersResourceContext, "healthGoal.delete")).toBe(
-          false,
-        );
+        expect(hasPermission(othersResourceContext, "healthGoal.update")).toBe(false);
+        expect(hasPermission(othersResourceContext, "healthGoal.delete")).toBe(false);
       });
     });
   });

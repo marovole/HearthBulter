@@ -12,9 +12,7 @@ interface MealPlanDetailPageProps {
   }>;
 }
 
-export default async function MealPlanDetailPage({
-  params,
-}: MealPlanDetailPageProps) {
+export default async function MealPlanDetailPage({ params }: MealPlanDetailPageProps) {
   const { id, memberId, planId } = await params;
   const session = await auth();
 
@@ -65,8 +63,7 @@ export default async function MealPlanDetailPage({
 
   // 验证权限
   const isCreator = mealPlan.member.family.creatorId === session.user.id;
-  const isAdmin =
-    mealPlan.member.family.members[0]?.role === "ADMIN" || isCreator;
+  const isAdmin = mealPlan.member.family.members[0]?.role === "ADMIN" || isCreator;
   const isSelf = mealPlan.member.userId === session.user.id;
 
   if (!isAdmin && !isSelf) {

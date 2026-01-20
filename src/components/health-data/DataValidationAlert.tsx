@@ -38,69 +38,69 @@ export function DataValidationAlert({
 }: DataValidationAlertProps) {
   const getAlertStyles = () => {
     switch (type) {
-    case "error":
-      return {
-        container: "bg-red-50 border-red-200",
-        icon: "text-red-400",
-        title: "text-red-800",
-        message: "text-red-700",
-        button: "bg-red-100 text-red-800 hover:bg-red-200",
-      };
-    case "warning":
-      return {
-        container: "bg-yellow-50 border-yellow-200",
-        icon: "text-yellow-400",
-        title: "text-yellow-800",
-        message: "text-yellow-700",
-        button: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-      };
-    case "success":
-      return {
-        container: "bg-green-50 border-green-200",
-        icon: "text-green-400",
-        title: "text-green-800",
-        message: "text-green-700",
-        button: "bg-green-100 text-green-800 hover:bg-green-200",
-      };
-    default:
-      return {
-        container: "bg-blue-50 border-blue-200",
-        icon: "text-blue-400",
-        title: "text-blue-800",
-        message: "text-blue-700",
-        button: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-      };
+      case "error":
+        return {
+          container: "bg-red-50 border-red-200",
+          icon: "text-red-400",
+          title: "text-red-800",
+          message: "text-red-700",
+          button: "bg-red-100 text-red-800 hover:bg-red-200",
+        };
+      case "warning":
+        return {
+          container: "bg-yellow-50 border-yellow-200",
+          icon: "text-yellow-400",
+          title: "text-yellow-800",
+          message: "text-yellow-700",
+          button: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+        };
+      case "success":
+        return {
+          container: "bg-green-50 border-green-200",
+          icon: "text-green-400",
+          title: "text-green-800",
+          message: "text-green-700",
+          button: "bg-green-100 text-green-800 hover:bg-green-200",
+        };
+      default:
+        return {
+          container: "bg-blue-50 border-blue-200",
+          icon: "text-blue-400",
+          title: "text-blue-800",
+          message: "text-blue-700",
+          button: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+        };
     }
   };
 
   const getIcon = () => {
     switch (type) {
-    case "error":
-      return <AlertTriangle className="h-5 w-5" />;
-    case "warning":
-      return <AlertTriangle className="h-5 w-5" />;
-    case "success":
-      return <CheckCircle className="h-5 w-5" />;
-    default:
-      return <Info className="h-5 w-5" />;
+      case "error":
+        return <AlertTriangle className="h-5 w-5" />;
+      case "warning":
+        return <AlertTriangle className="h-5 w-5" />;
+      case "success":
+        return <CheckCircle className="h-5 w-5" />;
+      default:
+        return <Info className="h-5 w-5" />;
     }
   };
 
   const getTrendIcon = () => {
     switch (trend?.direction) {
-    case "up":
-      return <TrendingUp className="h-4 w-4 text-green-600" />;
-    case "down":
-      return <TrendingDown className="h-4 w-4 text-red-600" />;
-    default:
-      return <Activity className="h-4 w-4 text-gray-600" />;
+      case "up":
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case "down":
+        return <TrendingDown className="h-4 w-4 text-red-600" />;
+      default:
+        return <Activity className="h-4 w-4 text-gray-600" />;
     }
   };
 
   const styles = getAlertStyles();
 
   return (
-    <div className={`border rounded-md p-4 ${styles.container}`}>
+    <div className={`rounded-md border p-4 ${styles.container}`}>
       <div className="flex">
         <div className="flex-shrink-0">
           <div className={styles.icon}>{getIcon()}</div>
@@ -114,13 +114,11 @@ export function DataValidationAlert({
 
             {/* 趋势信息 */}
             {trend && (
-              <div className="mt-3 flex items-center space-x-2 p-3 bg-white bg-opacity-60 rounded-lg">
+              <div className="mt-3 flex items-center space-x-2 rounded-lg bg-white bg-opacity-60 p-3">
                 {getTrendIcon()}
                 <div>
                   <span className="font-medium">{trend.value}</span>
-                  <span className="ml-2 text-gray-600">
-                    {trend.description}
-                  </span>
+                  <span className="ml-2 text-gray-600">{trend.description}</span>
                 </div>
               </div>
             )}
@@ -128,8 +126,8 @@ export function DataValidationAlert({
             {/* 建议列表 */}
             {suggestions.length > 0 && (
               <div className="mt-3">
-                <p className="font-medium mb-2">建议：</p>
-                <ul className="list-disc list-inside space-y-1">
+                <p className="mb-2 font-medium">建议：</p>
+                <ul className="list-inside list-disc space-y-1">
                   {suggestions.map((suggestion, index) => (
                     <li key={index}>{suggestion}</li>
                   ))}
@@ -143,7 +141,7 @@ export function DataValidationAlert({
             <div className="mt-4">
               <button
                 onClick={onAction}
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium ${styles.button}`}
+                className={`inline-flex items-center rounded-md px-3 py-2 text-sm font-medium ${styles.button}`}
               >
                 {actionText}
               </button>
@@ -215,14 +213,10 @@ export function BloodPressureAlert({
   onConfirm?: () => void;
 }) {
   const getBPLevel = (sys: number, dia: number) => {
-    if (sys < 120 && dia < 80)
-      return { level: "正常", type: "success" as const };
-    if (sys < 130 && dia < 80)
-      return { level: "升高", type: "warning" as const };
-    if (sys < 140 || dia < 90)
-      return { level: "高血压1期", type: "warning" as const };
-    if (sys < 180 || dia < 120)
-      return { level: "高血压2期", type: "error" as const };
+    if (sys < 120 && dia < 80) return { level: "正常", type: "success" as const };
+    if (sys < 130 && dia < 80) return { level: "升高", type: "warning" as const };
+    if (sys < 140 || dia < 90) return { level: "高血压1期", type: "warning" as const };
+    if (sys < 180 || dia < 120) return { level: "高血压2期", type: "error" as const };
     return { level: "高血压危象", type: "error" as const };
   };
 
@@ -299,11 +293,7 @@ export function DataEntrySuccessAlert({
       type="success"
       title="数据录入成功"
       message={`已成功录入 ${metrics.join("、")} 等健康数据`}
-      suggestions={[
-        "建议定期测量并记录健康数据",
-        "保持良好的生活习惯",
-        "如有异常请及时咨询医生",
-      ]}
+      suggestions={["建议定期测量并记录健康数据", "保持良好的生活习惯", "如有异常请及时咨询医生"]}
       onAction={onViewHistory}
       actionText="查看历史记录"
     />

@@ -54,14 +54,8 @@ export interface EdgeCacheOptions {
  * const cacheControl = buildCacheControlHeader({ maxAge: 60, staleWhileRevalidate: 30 });
  * // "public, s-maxage=60, stale-while-revalidate=30"
  */
-export function buildCacheControlHeader(
-  options: EdgeCacheOptions = {},
-): string {
-  const {
-    maxAge = 60,
-    staleWhileRevalidate = 30,
-    private: isPrivate = false,
-  } = options;
+export function buildCacheControlHeader(options: EdgeCacheOptions = {}): string {
+  const { maxAge = 60, staleWhileRevalidate = 30, private: isPrivate = false } = options;
 
   const directives = [isPrivate ? "private" : "public", `s-maxage=${maxAge}`];
 
@@ -106,7 +100,7 @@ export function buildVaryHeader(varyBy: string[] = []): string {
 export function buildCacheKey(
   path: string,
   userId: string,
-  params: Record<string, string | number | boolean | null | undefined> = {},
+  params: Record<string, string | number | boolean | null | undefined> = {}
 ): string {
   const cleanPath = path.replace(/^\//, "");
 
@@ -183,10 +177,7 @@ export const EDGE_CACHE_PRESETS = {
  * addCacheHeaders(headers, EDGE_CACHE_PRESETS.AI_ENDPOINT);
  * const response = new Response(JSON.stringify(data), { headers });
  */
-export function addCacheHeaders(
-  headers: Headers,
-  options: EdgeCacheOptions = {},
-): void {
+export function addCacheHeaders(headers: Headers, options: EdgeCacheOptions = {}): void {
   headers.set("Cache-Control", buildCacheControlHeader(options));
 
   if (options.varyBy && options.varyBy.length > 0) {

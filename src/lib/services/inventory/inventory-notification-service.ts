@@ -15,7 +15,7 @@ export class InventoryNotificationService {
 
   constructor(
     notificationRepository: NotificationRepository = new ConvexNotificationRepository(),
-    familyRepository: FamilyRepository = new ConvexFamilyRepository(),
+    familyRepository: FamilyRepository = new ConvexFamilyRepository()
   ) {
     this.notificationManager = new NotificationManager(notificationRepository);
     this.familyRepository = familyRepository;
@@ -31,7 +31,7 @@ export class InventoryNotificationService {
       expiryDate: string;
       daysUntilExpiry: number;
       location: string;
-    },
+    }
   ): Promise<void> {
     try {
       const priority =
@@ -42,9 +42,7 @@ export class InventoryNotificationService {
             : "MEDIUM";
 
       const channels: Array<"IN_APP" | "EMAIL" | "SMS"> =
-        itemData.daysUntilExpiry <= 1
-          ? ["IN_APP", "EMAIL", "SMS"]
-          : ["IN_APP", "EMAIL"];
+        itemData.daysUntilExpiry <= 1 ? ["IN_APP", "EMAIL", "SMS"] : ["IN_APP", "EMAIL"];
 
       let urgencyText = "";
       if (itemData.daysUntilExpiry <= 1) {
@@ -86,7 +84,7 @@ export class InventoryNotificationService {
       currentStock: number;
       minStock: number;
       unit: string;
-    },
+    }
   ): Promise<void> {
     try {
       await this.notificationManager.sendNotification({
@@ -121,13 +119,12 @@ export class InventoryNotificationService {
       unit: string;
       estimatedPrice: number;
       reason: string;
-    }>,
+    }>
   ): Promise<void> {
     try {
       const recommendationText = recommendations
         .map(
-          (rec) =>
-            `${rec.foodName}: ${rec.suggestedQuantity}${rec.unit} (约¥${rec.estimatedPrice})`,
+          (rec) => `${rec.foodName}: ${rec.suggestedQuantity}${rec.unit} (约¥${rec.estimatedPrice})`
         )
         .join("、");
 
@@ -164,7 +161,7 @@ export class InventoryNotificationService {
         estimatedValue: number;
       }>;
       period: string;
-    },
+    }
   ): Promise<void> {
     try {
       const topWastedText = reportData.topWastedItems
@@ -202,20 +199,20 @@ export class InventoryNotificationService {
       quantity: number;
       unit: string;
       newStock: number;
-    },
+    }
   ): Promise<void> {
     try {
       let operationText = "";
       switch (updateData.operation) {
-      case "added":
-        operationText = `新增了${updateData.quantity}${updateData.unit}`;
-        break;
-      case "consumed":
-        operationText = `消耗了${updateData.quantity}${updateData.unit}`;
-        break;
-      case "removed":
-        operationText = `移除了${updateData.quantity}${updateData.unit}`;
-        break;
+        case "added":
+          operationText = `新增了${updateData.quantity}${updateData.unit}`;
+          break;
+        case "consumed":
+          operationText = `消耗了${updateData.quantity}${updateData.unit}`;
+          break;
+        case "removed":
+          operationText = `移除了${updateData.quantity}${updateData.unit}`;
+          break;
       }
 
       await this.notificationManager.sendNotification({
@@ -247,30 +244,25 @@ export class InventoryNotificationService {
       title: string;
       content: string;
       priority: NotificationPriority;
-    },
+    }
   ): Promise<void> {
     try {
       const familyMembers = await this.getFamilyMembers(familyId);
 
-      const notifications: NotificationData[] = familyMembers.map(
-        (memberId) => ({
-          userId: memberId,
-          type: "FAMILY_ACTIVITY",
-          title: notificationData.title,
-          content: notificationData.content,
-          priority: this.mapPriority(notificationData.priority),
-          channels: [
-            "IN_APP",
-            "EMAIL",
-          ] as unknown as NotificationData["channels"],
-          metadata: {
-            itemType: "FAMILY_INVENTORY",
-            notificationType: notificationData.type,
-          },
-          actionUrl: "/inventory",
-          actionText: "查看家庭库存",
-        }),
-      );
+      const notifications: NotificationData[] = familyMembers.map((memberId) => ({
+        userId: memberId,
+        type: "FAMILY_ACTIVITY",
+        title: notificationData.title,
+        content: notificationData.content,
+        priority: this.mapPriority(notificationData.priority),
+        channels: ["IN_APP", "EMAIL"] as unknown as NotificationData["channels"],
+        metadata: {
+          itemType: "FAMILY_INVENTORY",
+          notificationType: notificationData.type,
+        },
+        actionUrl: "/inventory",
+        actionText: "查看家庭库存",
+      }));
 
       await this.notificationManager.sendBulkNotifications(notifications);
     } catch (error) {
@@ -278,18 +270,16 @@ export class InventoryNotificationService {
     }
   }
 
-  private mapPriority(
-    priority: NotificationPriority,
-  ): "low" | "medium" | "high" | "urgent" {
+  private mapPriority(priority: NotificationPriority): "low" | "medium" | "high" | "urgent" {
     switch (priority) {
-    case "URGENT":
-      return "urgent";
-    case "HIGH":
-      return "high";
-    case "LOW":
-      return "low";
-    default:
-      return "medium";
+      case "URGENT":
+        return "urgent";
+      case "HIGH":
+        return "high";
+      case "LOW":
+        return "low";
+      default:
+        return "medium";
     }
   }
 

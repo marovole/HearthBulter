@@ -89,10 +89,7 @@ export class InventoryNotificationService {
   private readonly inventoryRepo: InventoryRepository;
   private readonly notificationRepo: NotificationRepository;
 
-  constructor({
-    inventoryRepo,
-    notificationRepo,
-  }: InventoryNotificationServiceDeps) {
+  constructor({ inventoryRepo, notificationRepo }: InventoryNotificationServiceDeps) {
     this.inventoryRepo = inventoryRepo;
     this.notificationRepo = notificationRepo;
   }
@@ -103,20 +100,16 @@ export class InventoryNotificationService {
 
   async updateNotificationConfig(
     _memberId: string,
-    _config: Partial<NotificationConfig>,
+    _config: Partial<NotificationConfig>
   ): Promise<boolean> {
     return true;
   }
 
-  async generateExpiryNotifications(
-    _memberId: string,
-  ): Promise<InventoryNotification[]> {
+  async generateExpiryNotifications(_memberId: string): Promise<InventoryNotification[]> {
     return [];
   }
 
-  async generateLowStockNotifications(
-    memberId: string,
-  ): Promise<InventoryNotification[]> {
+  async generateLowStockNotifications(memberId: string): Promise<InventoryNotification[]> {
     const lowStockItems = await this.inventoryRepo.getLowStockItems(memberId);
 
     if (lowStockItems.length === 0) {
@@ -156,15 +149,11 @@ export class InventoryNotificationService {
     return [];
   }
 
-  async generatePurchaseSuggestionNotifications(): Promise<
-    InventoryNotification[]
-    > {
+  async generatePurchaseSuggestionNotifications(): Promise<InventoryNotification[]> {
     return [];
   }
 
-  async createNotifications(
-    notifications: Omit<InventoryNotification, "id">[],
-  ): Promise<boolean> {
+  async createNotifications(notifications: Omit<InventoryNotification, "id">[]): Promise<boolean> {
     try {
       for (const notification of notifications) {
         await this.notificationRepo.createNotification({
@@ -194,7 +183,7 @@ export class InventoryNotificationService {
       isRead?: boolean;
       limit?: number;
       offset?: number;
-    },
+    }
   ): Promise<NotificationSummary> {
     const result = await this.notificationRepo.listMemberNotifications(
       {
@@ -207,7 +196,7 @@ export class InventoryNotificationService {
       {
         limit: filters?.limit,
         offset: filters?.offset,
-      },
+      }
     );
 
     const notifications = result.items.map((notification) => ({
@@ -226,14 +215,12 @@ export class InventoryNotificationService {
 
     const unreadCount = notifications.filter((n) => !n.isRead).length;
     const highPriorityCount = notifications.filter(
-      (n) => n.priority === "HIGH" && !n.isRead,
+      (n) => n.priority === "HIGH" && !n.isRead
     ).length;
     const mediumPriorityCount = notifications.filter(
-      (n) => n.priority === "MEDIUM" && !n.isRead,
+      (n) => n.priority === "MEDIUM" && !n.isRead
     ).length;
-    const lowPriorityCount = notifications.filter(
-      (n) => n.priority === "LOW" && !n.isRead,
-    ).length;
+    const lowPriorityCount = notifications.filter((n) => n.priority === "LOW" && !n.isRead).length;
 
     return {
       memberId,
@@ -246,10 +233,7 @@ export class InventoryNotificationService {
     };
   }
 
-  async markNotificationAsRead(
-    notificationId: string,
-    memberId: string,
-  ): Promise<boolean> {
+  async markNotificationAsRead(notificationId: string, memberId: string): Promise<boolean> {
     try {
       await this.notificationRepo.markAsRead(notificationId, memberId);
       return true;
@@ -269,10 +253,7 @@ export class InventoryNotificationService {
     }
   }
 
-  async deleteNotification(
-    notificationId: string,
-    memberId: string,
-  ): Promise<boolean> {
+  async deleteNotification(notificationId: string, memberId: string): Promise<boolean> {
     try {
       await this.notificationRepo.deleteNotification(notificationId, memberId);
       return true;
@@ -287,8 +268,7 @@ export class InventoryNotificationService {
   async cleanupExpiredNotifications(): Promise<void> {}
 }
 
-let inventoryNotificationServiceInstance: InventoryNotificationService | null =
-  null;
+let inventoryNotificationServiceInstance: InventoryNotificationService | null = null;
 
 function getInventoryNotificationServiceSingleton(): InventoryNotificationService {
   if (!inventoryNotificationServiceInstance) {
@@ -301,5 +281,4 @@ function getInventoryNotificationServiceSingleton(): InventoryNotificationServic
   return inventoryNotificationServiceInstance;
 }
 
-export const inventoryNotificationService =
-  getInventoryNotificationServiceSingleton();
+export const inventoryNotificationService = getInventoryNotificationServiceSingleton();

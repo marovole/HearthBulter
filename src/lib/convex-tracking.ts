@@ -1,8 +1,5 @@
 import { convexClient, api } from "@/lib/convex-client";
-import {
-  asConvexMutationReference,
-  asConvexQueryReference,
-} from "@/lib/convex-reference";
+import { asConvexMutationReference, asConvexQueryReference } from "@/lib/convex-reference";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 export const convexTracking = {
@@ -105,7 +102,7 @@ export const convexTracking = {
       endDate?: Date;
       mealType?: string;
       limit?: number;
-    },
+    }
   ) {
     return convexClient.query(api.tracking.getMealLogHistory, {
       memberId: memberId as Id<"familyMembers">,
@@ -133,7 +130,7 @@ export const convexTracking = {
       sugar?: number;
       sodium?: number;
       notes?: string;
-    },
+    }
   ) {
     return convexClient.mutation(api.tracking.updateMealLog, {
       id: id as Id<"mealLogs">,
@@ -153,11 +150,7 @@ export const convexTracking = {
     });
   },
 
-  async findMealLogByTypeAndDate(
-    memberId: string,
-    mealType: string,
-    date: Date,
-  ) {
+  async findMealLogByTypeAndDate(memberId: string, mealType: string, date: Date) {
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
     return convexClient.query(api.tracking.findMealLogByTypeAndDate, {
@@ -306,7 +299,7 @@ export const convexTracking = {
       carbs?: number;
       fat?: number;
       score?: number;
-    },
+    }
   ) {
     return convexClient.mutation(api.tracking.updateQuickTemplate, {
       id: id as Id<"quickTemplates">,
@@ -333,16 +326,13 @@ export const convexTracking = {
     fileSize: number;
     recognitionStatus: string;
   }) {
-    return convexClient.mutation(
-      asConvexMutationReference("tracking:createFoodPhoto"),
-      {
-        mealLogId: args.mealLogId as Id<"mealLogs">,
-        fileUrl: args.fileUrl,
-        fileName: args.fileName,
-        fileSize: args.fileSize,
-        recognitionStatus: args.recognitionStatus,
-      },
-    );
+    return convexClient.mutation(asConvexMutationReference("tracking:createFoodPhoto"), {
+      mealLogId: args.mealLogId as Id<"mealLogs">,
+      fileUrl: args.fileUrl,
+      fileName: args.fileName,
+      fileSize: args.fileSize,
+      recognitionStatus: args.recognitionStatus,
+    });
   },
 
   async updateFoodPhoto(
@@ -352,24 +342,18 @@ export const convexTracking = {
       recognitionResult?: string;
       confidence?: number;
       recognitionError?: string;
-    },
+    }
   ) {
-    return convexClient.mutation(
-      asConvexMutationReference("tracking:updateFoodPhoto"),
-      {
-        id: id as Id<"foodPhotos">,
-        ...data,
-      },
-    );
+    return convexClient.mutation(asConvexMutationReference("tracking:updateFoodPhoto"), {
+      id: id as Id<"foodPhotos">,
+      ...data,
+    });
   },
 
   async getFoodPhotoById(id: string) {
-    return convexClient.query(
-      asConvexQueryReference("tracking:getFoodPhotoById"),
-      {
-        id: id as Id<"foodPhotos">,
-      },
-    );
+    return convexClient.query(asConvexQueryReference("tracking:getFoodPhotoById"), {
+      id: id as Id<"foodPhotos">,
+    });
   },
 
   async getMealLogPhotos(mealLogId: string) {
@@ -398,11 +382,7 @@ export const convexTracking = {
     });
   },
 
-  async getDailyNutritionTargetsForPeriod(
-    memberId: string,
-    startDate: Date,
-    endDate: Date,
-  ) {
+  async getDailyNutritionTargetsForPeriod(memberId: string, startDate: Date, endDate: Date) {
     return convexClient.query(api.tracking.getDailyNutritionTargetsForPeriod, {
       memberId: memberId as Id<"familyMembers">,
       startDate: startDate.getTime(),
@@ -410,11 +390,7 @@ export const convexTracking = {
     });
   },
 
-  async getPreviousWeekTargets(
-    memberId: string,
-    startDate: Date,
-    endDate: Date,
-  ) {
+  async getPreviousWeekTargets(memberId: string, startDate: Date, endDate: Date) {
     return convexClient.query(api.tracking.getPreviousWeekTargets, {
       memberId: memberId as Id<"familyMembers">,
       startDate: startDate.getTime(),

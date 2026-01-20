@@ -29,9 +29,7 @@ jest.mock("@/lib/db", () => ({
 
 // Mock JWT verification
 jest.mock("jose", () => ({
-  jwtVerify: jest
-    .fn()
-    .mockResolvedValue({ sub: "user-123", email: "test@example.com" }),
+  jwtVerify: jest.fn().mockResolvedValue({ sub: "user-123", email: "test@example.com" }),
 }));
 
 // Mock health calculator service
@@ -111,15 +109,12 @@ describe("/api/health API", () => {
       prisma.healthData.findMany.mockResolvedValue(mockHealthData);
       prisma.healthData.count.mockResolvedValue(mockTotal);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/health/data?limit=2&page=1",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/health/data?limit=2&page=1", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/health/data/route");
@@ -151,7 +146,7 @@ describe("/api/health API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {
@@ -168,7 +163,7 @@ describe("/api/health API", () => {
                 lte: new Date("2025-01-31"),
               },
             }),
-          }),
+          })
         );
       } catch (error) {
         expect(error.message).toBeDefined();
@@ -345,19 +340,16 @@ describe("/api/health API", () => {
       prisma.healthData.update.mockResolvedValue(updatedHealthData);
       healthCalculator.calculateBMI.mockReturnValue(22.9);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/health/data/health-1",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            weight: 70.3,
-          }),
+      const request = new NextRequest("http://localhost:3000/api/health/data/health-1", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          weight: 70.3,
+        }),
+      });
 
       try {
         const { PUT } = await import("@/app/api/health/data/[id]/route");
@@ -378,19 +370,16 @@ describe("/api/health API", () => {
     it("should return 404 for non-existent entry", async () => {
       prisma.healthData.findUnique.mockResolvedValue(null);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/health/data/nonexistent",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            weight: 70.3,
-          }),
+      const request = new NextRequest("http://localhost:3000/api/health/data/nonexistent", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          weight: 70.3,
+        }),
+      });
 
       try {
         const { PUT } = await import("@/app/api/health/data/[id]/route");
@@ -420,19 +409,16 @@ describe("/api/health API", () => {
 
       prisma.healthData.findUnique.mockResolvedValue(otherUsersData);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/health/data/health-1",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer valid-jwt-token",
-          },
-          body: JSON.stringify({
-            weight: 70.3,
-          }),
+      const request = new NextRequest("http://localhost:3000/api/health/data/health-1", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+        body: JSON.stringify({
+          weight: 70.3,
+        }),
+      });
 
       try {
         const { PUT } = await import("@/app/api/health/data/[id]/route");
@@ -476,11 +462,7 @@ describe("/api/health API", () => {
           caloriesBurned: 2200,
         },
         healthScore: 85,
-        recommendations: [
-          "保持良好的运动习惯",
-          "适当增加蛋白质摄入",
-          "确保充足睡眠",
-        ],
+        recommendations: ["保持良好的运动习惯", "适当增加蛋白质摄入", "确保充足睡眠"],
       };
 
       prisma.healthData.aggregate.mockResolvedValue({
@@ -492,15 +474,12 @@ describe("/api/health API", () => {
       healthCalculator.analyzeHealthTrends.mockReturnValue(mockAnalytics);
       healthCalculator.calculateHealthScore.mockReturnValue(85);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/health/analytics?period=30",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/health/analytics?period=30", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/health/analytics/route");
@@ -520,15 +499,12 @@ describe("/api/health API", () => {
     });
 
     it("should handle different time periods", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/health/analytics?period=7",
-        {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/health/analytics?period=7", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { GET } = await import("@/app/api/health/analytics/route");
@@ -558,15 +534,12 @@ describe("/api/health API", () => {
       prisma.healthData.findUnique.mockResolvedValue(existingHealthData);
       prisma.healthData.delete.mockResolvedValue(existingHealthData);
 
-      const request = new NextRequest(
-        "http://localhost:3000/api/health/data/health-1",
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: "Bearer valid-jwt-token",
-          },
+      const request = new NextRequest("http://localhost:3000/api/health/data/health-1", {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer valid-jwt-token",
         },
-      );
+      });
 
       try {
         const { DELETE } = await import("@/app/api/health/data/[id]/route");
@@ -585,9 +558,7 @@ describe("/api/health API", () => {
 
   describe("Error handling", () => {
     it("should handle database errors gracefully", async () => {
-      prisma.healthData.findMany.mockRejectedValue(
-        new Error("Database connection failed"),
-      );
+      prisma.healthData.findMany.mockRejectedValue(new Error("Database connection failed"));
 
       const request = new NextRequest("http://localhost:3000/api/health/data", {
         method: "GET",
@@ -616,7 +587,7 @@ describe("/api/health API", () => {
           headers: {
             Authorization: "Bearer valid-jwt-token",
           },
-        },
+        }
       );
 
       try {

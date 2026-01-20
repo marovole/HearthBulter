@@ -15,7 +15,7 @@ const createMealSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ planId: string }> },
+  { params }: { params: Promise<{ planId: string }> }
 ) {
   try {
     const session = await auth();
@@ -38,22 +38,18 @@ export async function POST(
       return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: plan.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: plan.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限访问" }, { status: 403 });
     }
 
-    const recipe = await convexClient.query<Record<string, unknown> | null>(
-      api.recipes.getById,
-      { recipeId: recipeId as Id<"recipes"> },
-    );
+    const recipe = await convexClient.query<Record<string, unknown> | null>(api.recipes.getById, {
+      recipeId: recipeId as Id<"recipes">,
+    });
 
     if (!recipe) {
       return NextResponse.json({ error: "食谱不存在" }, { status: 404 });
@@ -68,33 +64,29 @@ export async function POST(
       }))
       .filter((ingredient) => ingredient.foodId && ingredient.amount > 0);
 
-    const nutrition =
-      await nutritionCalculator.calculateBatch(ingredientInputs);
+    const nutrition = await nutritionCalculator.calculateBatch(ingredientInputs);
 
-    const mealId = await convexClient.mutation<Id<"meals">>(
-      api.meals.createMeal,
-      {
-        planId: planId as Id<"mealPlans">,
-        date: new Date(date).getTime(),
-        mealType,
-        calories: nutrition.totalCalories,
-        protein: nutrition.totalProtein,
-        carbs: nutrition.totalCarbs,
-        fat: nutrition.totalFat,
-        recipeId: recipeId as Id<"recipes">,
-        ingredients: ingredientInputs.map((ingredient) => ({
-          foodId: ingredient.foodId as Id<"foods">,
-          amount: ingredient.amount,
-        })),
-      },
-    );
+    const mealId = await convexClient.mutation<Id<"meals">>(api.meals.createMeal, {
+      planId: planId as Id<"mealPlans">,
+      date: new Date(date).getTime(),
+      mealType,
+      calories: nutrition.totalCalories,
+      protein: nutrition.totalProtein,
+      carbs: nutrition.totalCarbs,
+      fat: nutrition.totalFat,
+      recipeId: recipeId as Id<"recipes">,
+      ingredients: ingredientInputs.map((ingredient) => ({
+        foodId: ingredient.foodId as Id<"foods">,
+        amount: ingredient.amount,
+      })),
+    });
 
     return NextResponse.json({ meal: { id: mealId } }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "请求参数验证失败", details: error.errors },
-        { status: 400 },
+        { status: 400 }
       );
     }
 

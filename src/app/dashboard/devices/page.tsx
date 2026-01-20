@@ -18,10 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function DevicesPage() {
   return (
     <DashboardLayout>
-      <PageHeader
-        title="设备管理"
-        subtitle="连接和管理您的可穿戴设备，自动同步健康数据"
-      />
+      <PageHeader title="设备管理" subtitle="连接和管理您的可穿戴设备，自动同步健康数据" />
 
       <div className="container mx-auto py-6">
         <Tabs defaultValue="overview" className="space-y-6">

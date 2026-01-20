@@ -1,10 +1,6 @@
 import { api } from "../../convex-client";
 import { convexClient } from "../../convex-client";
-import {
-  costOptimizer,
-  OptimizationConstraints,
-  OptimizationResult,
-} from "./cost-optimizer";
+import { costOptimizer, OptimizationConstraints, OptimizationResult } from "./cost-optimizer";
 import { savingsRecommender } from "./savings-recommender";
 
 export interface EconomicModeConfig {
@@ -99,7 +95,7 @@ export class EconomicMode {
   async generateEconomicMealPlan(
     memberId: string,
     config: EconomicModeConfig,
-    days: number = 7,
+    days: number = 7
   ): Promise<EconomicMealPlan[]> {
     const mealPlans: EconomicMealPlan[] = [];
     const nutritionTargets = await this.getUserNutritionTargets(memberId);
@@ -110,7 +106,7 @@ export class EconomicMode {
         nutritionTargets,
         affordableFoods,
         config,
-        config.dailyBudgetLimit || 50,
+        config.dailyBudgetLimit || 50
       );
       mealPlans.push(dailyPlan);
     }
@@ -121,30 +117,21 @@ export class EconomicMode {
   async generateEconomicShoppingList(
     memberId: string,
     mealPlanIds: string[],
-    config: EconomicModeConfig,
+    config: EconomicModeConfig
   ): Promise<EconomicShoppingList> {
     const requiredIngredients = await this.getMealPlanIngredients(mealPlanIds);
     const optimizedIngredients = await this.optimizeIngredientSelection(
       requiredIngredients,
-      config,
+      config
     );
-    const platformOptimizations =
-      await this.optimizePlatformSelection(optimizedIngredients);
+    const platformOptimizations = await this.optimizePlatformSelection(optimizedIngredients);
 
-    const totalCost = optimizedIngredients.reduce(
-      (sum, item) => sum + item.totalPrice,
-      0,
-    );
+    const totalCost = optimizedIngredients.reduce((sum, item) => sum + item.totalPrice, 0);
     const originalCost = await this.calculateOriginalCost(requiredIngredients);
     const totalSavings = originalCost - totalCost;
-    const savingsPercentage =
-      originalCost > 0 ? (totalSavings / originalCost) * 100 : 0;
+    const savingsPercentage = originalCost > 0 ? (totalSavings / originalCost) * 100 : 0;
 
-    const budgetCompliance = await this.checkBudgetCompliance(
-      totalCost,
-      config,
-      memberId,
-    );
+    const budgetCompliance = await this.checkBudgetCompliance(totalCost, config, memberId);
 
     return {
       items: optimizedIngredients,
@@ -163,7 +150,7 @@ export class EconomicMode {
       foodId: string;
       quantity: number;
     }>,
-    config: EconomicModeConfig,
+    config: EconomicModeConfig
   ): Promise<{
     optimizedCart: Array<{
       foodId: string;
@@ -182,22 +169,19 @@ export class EconomicMode {
     let totalSavings = 0;
     const appliedStrategies = [];
 
-    const seasonalSubstitutions =
-      await this.applySeasonalSubstitutions(currentCart);
+    const seasonalSubstitutions = await this.applySeasonalSubstitutions(currentCart);
     if (seasonalSubstitutions.length > 0) {
       appliedStrategies.push("季节性食材替换");
       optimizedCart.push(...seasonalSubstitutions);
     }
 
-    const bulkOptimizations =
-      await this.applyBulkPurchaseOptimization(currentCart);
+    const bulkOptimizations = await this.applyBulkPurchaseOptimization(currentCart);
     if (bulkOptimizations.length > 0) {
       appliedStrategies.push("批量采购优化");
       optimizedCart.push(...bulkOptimizations);
     }
 
-    const platformSwitches =
-      await this.applyPlatformSwitchOptimization(currentCart);
+    const platformSwitches = await this.applyPlatformSwitchOptimization(currentCart);
     if (platformSwitches.length > 0) {
       appliedStrategies.push("平台切换建议");
       optimizedCart.push(...platformSwitches);
@@ -220,7 +204,7 @@ export class EconomicMode {
 
   async getEconomicModeReport(
     memberId: string,
-    period: "WEEKLY" | "MONTHLY" = "MONTHLY",
+    period: "WEEKLY" | "MONTHLY" = "MONTHLY"
   ): Promise<{
     summary: {
       totalSpending: number;
@@ -246,12 +230,12 @@ export class EconomicMode {
   }> {
     const periodData = this.getPeriodData(period);
 
-    const spendings: Array<{ amount: number; category: string }> =
-      await this.getPeriodSpendings(memberId, periodData.start, periodData.end);
-    const totalSpending = spendings.reduce(
-      (sum: number, s) => sum + s.amount,
-      0,
+    const spendings: Array<{ amount: number; category: string }> = await this.getPeriodSpendings(
+      memberId,
+      periodData.start,
+      periodData.end
     );
+    const totalSpending = spendings.reduce((sum: number, s) => sum + s.amount, 0);
 
     const budgetLimit = await this.getBudgetLimit(memberId, period);
 
@@ -264,11 +248,9 @@ export class EconomicMode {
     const dailySpending: Array<{ total: number }> = await this.getDailySpending(
       memberId,
       periodData.start,
-      periodData.end,
+      periodData.end
     );
-    const daysWithinBudget = dailySpending.filter(
-      (day) => day.total <= dailyBudget,
-    ).length;
+    const daysWithinBudget = dailySpending.filter((day) => day.total <= dailyBudget).length;
 
     const categoryBreakdown: Array<{
       category: string;
@@ -284,7 +266,7 @@ export class EconomicMode {
       totalSpending,
       budgetLimit,
       categoryBreakdown,
-      trendAnalysis,
+      trendAnalysis
     );
 
     return {
@@ -306,7 +288,7 @@ export class EconomicMode {
     nutritionTargets: any,
     affordableFoods: any[],
     config: EconomicModeConfig,
-    budgetLimit: number,
+    budgetLimit: number
   ): Promise<EconomicMealPlan> {
     const meals: EconomicMealPlan["meals"] = [];
     const recommendations: EconomicMealPlan["recommendations"] = [];
@@ -315,33 +297,27 @@ export class EconomicMode {
     const breakfast = await this.generateMeal(
       "BREAKFAST",
       nutritionTargets.breakfast,
-      affordableFoods.filter((f) =>
-        ["GRAINS", "DAIRY", "FRUITS"].includes(f.category),
-      ),
+      affordableFoods.filter((f) => ["GRAINS", "DAIRY", "FRUITS"].includes(f.category)),
       budgetLimit * 0.3,
-      config,
+      config
     );
     meals.push(breakfast);
 
     const lunch = await this.generateMeal(
       "LUNCH",
       nutritionTargets.lunch,
-      affordableFoods.filter((f) =>
-        ["PROTEIN", "VEGETABLES", "GRAINS"].includes(f.category),
-      ),
+      affordableFoods.filter((f) => ["PROTEIN", "VEGETABLES", "GRAINS"].includes(f.category)),
       budgetLimit * 0.4,
-      config,
+      config
     );
     meals.push(lunch);
 
     const dinner = await this.generateMeal(
       "DINNER",
       nutritionTargets.dinner,
-      affordableFoods.filter((f) =>
-        ["PROTEIN", "VEGETABLES"].includes(f.category),
-      ),
+      affordableFoods.filter((f) => ["PROTEIN", "VEGETABLES"].includes(f.category)),
       budgetLimit * 0.3,
-      config,
+      config
     );
     meals.push(dinner);
 
@@ -354,12 +330,10 @@ export class EconomicMode {
           carbs: sum.carbs + meal.nutrition.carbs,
           fat: sum.fat + meal.nutrition.fat,
         }),
-        { calories: 0, protein: 0, carbs: 0, fat: 0 },
+        { calories: 0, protein: 0, carbs: 0, fat: 0 }
       ),
       savings: meals.reduce((sum, meal) => sum + meal.savings, 0),
-      budgetUtilization:
-        (meals.reduce((sum, meal) => sum + meal.totalCost, 0) / budgetLimit) *
-        100,
+      budgetUtilization: (meals.reduce((sum, meal) => sum + meal.totalCost, 0) / budgetLimit) * 100,
     };
 
     if (dailyTotal.budgetUtilization > 90) {
@@ -381,7 +355,7 @@ export class EconomicMode {
     nutritionTargets: any,
     availableFoods: any[],
     budgetLimit: number,
-    config: EconomicModeConfig,
+    config: EconomicModeConfig
   ): Promise<any> {
     const constraints: OptimizationConstraints = {
       nutritionTargets,
@@ -393,10 +367,7 @@ export class EconomicMode {
     };
 
     const foodIds = availableFoods.map((f) => f.id);
-    const optimizationResult = await costOptimizer.optimizeShoppingList(
-      foodIds,
-      constraints,
-    );
+    const optimizationResult = await costOptimizer.optimizeShoppingList(foodIds, constraints);
 
     return {
       type: mealType,
@@ -414,16 +385,11 @@ export class EconomicMode {
     };
   }
 
-  private async getAffordableFoodPool(
-    config: EconomicModeConfig,
-  ): Promise<any[]> {
-    const priceHistories = (await convexClient.query(
-      api.budget.getAffordableFoods,
-      {
-        maxUnitPrice: 30,
-        limit: 100,
-      },
-    )) as Array<{
+  private async getAffordableFoodPool(config: EconomicModeConfig): Promise<any[]> {
+    const priceHistories = (await convexClient.query(api.budget.getAffordableFoods, {
+      maxUnitPrice: 30,
+      limit: 100,
+    })) as Array<{
       id: string;
       name: string;
       category: string;
@@ -462,9 +428,7 @@ export class EconomicMode {
     }));
 
     if (config.preferredCategories && config.preferredCategories.length > 0) {
-      foods = foods.filter((f) =>
-        config.preferredCategories!.includes(f.category),
-      );
+      foods = foods.filter((f) => config.preferredCategories!.includes(f.category));
     }
 
     if (config.excludedFoodIds && config.excludedFoodIds.length > 0) {
@@ -503,7 +467,7 @@ export class EconomicMode {
 
   private async optimizeIngredientSelection(
     ingredients: any[],
-    config: EconomicModeConfig,
+    config: EconomicModeConfig
   ): Promise<any[]> {
     return [];
   }
@@ -519,7 +483,7 @@ export class EconomicMode {
   private async checkBudgetCompliance(
     totalCost: number,
     config: EconomicModeConfig,
-    memberId: string,
+    memberId: string
   ): Promise<any> {
     return {
       withinBudget: true,
@@ -550,17 +514,17 @@ export class EconomicMode {
     let days: number;
 
     switch (period) {
-    case "WEEKLY":
-      start = now - 7 * 24 * 60 * 60 * 1000;
-      days = 7;
-      break;
-    case "MONTHLY":
-      start = new Date().setDate(1);
-      days = 30;
-      break;
-    default:
-      start = now - 30 * 24 * 60 * 60 * 1000;
-      days = 30;
+      case "WEEKLY":
+        start = now - 7 * 24 * 60 * 60 * 1000;
+        days = 7;
+        break;
+      case "MONTHLY":
+        start = new Date().setDate(1);
+        days = 30;
+        break;
+      default:
+        start = now - 30 * 24 * 60 * 60 * 1000;
+        days = 30;
     }
 
     return { start, end: now, days };
@@ -569,7 +533,7 @@ export class EconomicMode {
   private async getPeriodSpendings(
     memberId: string,
     start: number,
-    end: number,
+    end: number
   ): Promise<Array<{ amount: number; category: string }>> {
     const result = (await convexClient.query(api.budget.getSpendingsByMember, {
       memberId,
@@ -579,10 +543,7 @@ export class EconomicMode {
     return result ?? [];
   }
 
-  private async getBudgetLimit(
-    memberId: string,
-    period: string,
-  ): Promise<number> {
+  private async getBudgetLimit(memberId: string, period: string): Promise<number> {
     const budgets = (await convexClient.query(api.budget.getActiveBudgets, {
       memberId,
     })) as Array<{ status?: string; totalAmount?: number }>;
@@ -594,25 +555,15 @@ export class EconomicMode {
     return spendings.reduce((sum, s) => sum + s.amount * 1.2, 0);
   }
 
-  private async getDailySpending(
-    memberId: string,
-    start: number,
-    end: number,
-  ): Promise<any[]> {
+  private async getDailySpending(memberId: string, start: number, end: number): Promise<any[]> {
     return [];
   }
 
-  private async getCategoryBreakdown(
-    spendings: any[],
-    totalBudget: number,
-  ): Promise<any[]> {
+  private async getCategoryBreakdown(spendings: any[], totalBudget: number): Promise<any[]> {
     return [];
   }
 
-  private async analyzeSpendingTrend(
-    memberId: string,
-    period: string,
-  ): Promise<any> {
+  private async analyzeSpendingTrend(memberId: string, period: string): Promise<any> {
     return {
       direction: "STABLE" as const,
       monthlyChange: 0,
@@ -624,7 +575,7 @@ export class EconomicMode {
     totalSpending: number,
     budgetLimit: number,
     categoryBreakdown: any[],
-    trendAnalysis: any,
+    trendAnalysis: any
   ): Promise<string[]> {
     const recommendations: string[] = [];
 

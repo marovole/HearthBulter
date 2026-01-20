@@ -45,20 +45,20 @@ export function HelpTooltip({
       let left = buttonRect.left + buttonRect.width / 2 - tooltipRect.width / 2;
 
       switch (position) {
-      case "top":
-        top = buttonRect.top - tooltipRect.height - 10;
-        break;
-      case "bottom":
-        top = buttonRect.bottom + 10;
-        break;
-      case "left":
-        top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
-        left = buttonRect.left - tooltipRect.width - 10;
-        break;
-      case "right":
-        top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
-        left = buttonRect.right + 10;
-        break;
+        case "top":
+          top = buttonRect.top - tooltipRect.height - 10;
+          break;
+        case "bottom":
+          top = buttonRect.bottom + 10;
+          break;
+        case "left":
+          top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
+          left = buttonRect.left - tooltipRect.width - 10;
+          break;
+        case "right":
+          top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
+          left = buttonRect.right + 10;
+          break;
       }
 
       // Adjust if tooltip goes off screen
@@ -106,38 +106,38 @@ export function HelpTooltip({
 
   const getTypeStyles = () => {
     switch (type) {
-    case "tip":
-      return "bg-green-50 border-green-200 text-green-800";
-    case "warning":
-      return "bg-yellow-50 border-yellow-200 text-yellow-800";
-    case "tutorial":
-      return "bg-blue-50 border-blue-200 text-blue-800";
-    default:
-      return "bg-gray-50 border-gray-200 text-gray-800";
+      case "tip":
+        return "bg-green-50 border-green-200 text-green-800";
+      case "warning":
+        return "bg-yellow-50 border-yellow-200 text-yellow-800";
+      case "tutorial":
+        return "bg-blue-50 border-blue-200 text-blue-800";
+      default:
+        return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-    case "tip":
-      return <BookOpen className="h-4 w-4 text-green-600" />;
-    case "warning":
-      return <HelpCircle className="h-4 w-4 text-yellow-600" />;
-    case "tutorial":
-      return <BookOpen className="h-4 w-4 text-blue-600" />;
-    default:
-      return <HelpCircle className="h-4 w-4 text-gray-600" />;
+      case "tip":
+        return <BookOpen className="h-4 w-4 text-green-600" />;
+      case "warning":
+        return <HelpCircle className="h-4 w-4 text-yellow-600" />;
+      case "tutorial":
+        return <BookOpen className="h-4 w-4 text-blue-600" />;
+      default:
+        return <HelpCircle className="h-4 w-4 text-gray-600" />;
     }
   };
 
   const getSizeClasses = () => {
     switch (size) {
-    case "sm":
-      return "w-64 max-w-xs";
-    case "lg":
-      return "w-96 max-w-md";
-    default:
-      return "w-80 max-w-sm";
+      case "sm":
+        return "w-64 max-w-xs";
+      case "lg":
+        return "w-96 max-w-md";
+      default:
+        return "w-80 max-w-sm";
     }
   };
 
@@ -165,10 +165,10 @@ export function HelpTooltip({
           <Card className={`border-2 ${getTypeStyles()}`}>
             <CardContent className="p-4">
               {/* Header */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   {getIcon()}
-                  {title && <h4 className="font-semibold text-sm">{title}</h4>}
+                  {title && <h4 className="text-sm font-semibold">{title}</h4>}
                 </div>
                 <Button
                   variant="ghost"
@@ -181,17 +181,12 @@ export function HelpTooltip({
               </div>
 
               {/* Content */}
-              <p className="text-sm leading-relaxed mb-3">{content}</p>
+              <p className="mb-3 text-sm leading-relaxed">{content}</p>
 
               {/* Actions */}
               <div className="flex items-center justify-between">
                 {action && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={action.onClick}
-                    className="text-xs"
-                  >
+                  <Button variant="outline" size="sm" onClick={action.onClick} className="text-xs">
                     {action.label}
                   </Button>
                 )}
@@ -241,8 +236,7 @@ export function useContextualHelp(context: HelpContext) {
       },
       "view-history": {
         title: "查看历史数据",
-        content:
-          "您可以查看历史健康数据，包括趋势图表和统计分析。支持按时间范围和指标类型筛选。",
+        content: "您可以查看历史健康数据，包括趋势图表和统计分析。支持按时间范围和指标类型筛选。",
         type: "info" as const,
       },
     },

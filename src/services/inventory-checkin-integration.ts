@@ -26,11 +26,7 @@ export interface InventoryCheckInStats {
     unlockedAt: Date;
   }>;
   suggestions: Array<{
-    type:
-      | "IMPROVE_TRACKING"
-      | "REDUCE_WASTE"
-      | "BETTER_PLANNING"
-      | "EXPIRY_MANAGEMENT";
+    type: "IMPROVE_TRACKING" | "REDUCE_WASTE" | "BETTER_PLANNING" | "EXPIRY_MANAGEMENT";
     title: string;
     description: string;
     actionItems: string[];
@@ -90,7 +86,7 @@ export class InventoryCheckInIntegration {
   async processInventoryCheckIn(
     memberId: string,
     checkInType: string,
-    inventoryData: CheckInInventoryData,
+    inventoryData: CheckInInventoryData
   ): Promise<{
     success: boolean;
     processedActions: {
@@ -115,9 +111,7 @@ export class InventoryCheckInIntegration {
     };
   }
 
-  async getInventoryCheckInStats(
-    memberId: string,
-  ): Promise<InventoryCheckInStats> {
+  async getInventoryCheckInStats(memberId: string): Promise<InventoryCheckInStats> {
     const now = new Date();
     return {
       memberId,

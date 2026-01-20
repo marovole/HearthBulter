@@ -13,11 +13,7 @@ interface CacheOptions {
  * 方法缓存装饰器
  */
 export function Cached(options: CacheOptions = {}) {
-  return function (
-    target: any,
-    propertyName: string,
-    descriptor: PropertyDescriptor,
-  ) {
+  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
@@ -31,22 +27,15 @@ export function Cached(options: CacheOptions = {}) {
       if (options.generateKey) {
         cacheKey = options.generateKey(...args);
       } else {
-        const keyPrefix =
-          options.keyPrefix || `${target.constructor.name}.${propertyName}`;
+        const keyPrefix = options.keyPrefix || `${target.constructor.name}.${propertyName}`;
         const keySuffix = args
-          .map((arg) =>
-            typeof arg === "object" ? JSON.stringify(arg) : String(arg),
-          )
+          .map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg)))
           .join("|");
         cacheKey = `${keyPrefix}:${keySuffix}`;
       }
 
       // 使用 getOrSet 模式
-      return CacheService.getOrSet(
-        cacheKey,
-        () => method.apply(this, args),
-        options.ttl,
-      );
+      return CacheService.getOrSet(cacheKey, () => method.apply(this, args), options.ttl);
     };
 
     return descriptor;
@@ -101,11 +90,7 @@ export function RecipeCached(options: Omit<CacheOptions, "keyPrefix"> = {}) {
  * 缓存失效装饰器
  */
 export function CacheInvalidator(invalidateKeys: string[]) {
-  return function (
-    target: any,
-    propertyName: string,
-    descriptor: PropertyDescriptor,
-  ) {
+  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {

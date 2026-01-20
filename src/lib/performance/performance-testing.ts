@@ -210,9 +210,7 @@ export class PerformanceTestManager {
 
     if (!runner) {
       // 检查是否在历史记录中
-      const historyResult = this.testHistory.find(
-        (result) => result.id === testId,
-      );
+      const historyResult = this.testHistory.find((result) => result.id === testId);
       if (historyResult) {
         return {
           status: "completed",
@@ -239,10 +237,7 @@ export class PerformanceTestManager {
   /**
    * 生成性能基准
    */
-  generateBenchmark(
-    testResults: TestResult[],
-    name: string,
-  ): PerformanceBenchmark {
+  generateBenchmark(testResults: TestResult[], name: string): PerformanceBenchmark {
     const baseline = this.benchmarks[0]?.results[0]; // 使用第一个基准作为基线
     const environment = process.env.NODE_ENV || "development";
 
@@ -251,11 +246,11 @@ export class PerformanceTestManager {
       baseline && firstResult
         ? this.compareResults(firstResult, baseline)
         : {
-          responseTimeChange: 0,
-          throughputChange: 0,
-          errorRateChange: 0,
-          overallPerformance: "stable" as const,
-        };
+            responseTimeChange: 0,
+            throughputChange: 0,
+            errorRateChange: 0,
+            overallPerformance: "stable" as const,
+          };
 
     const benchmark: PerformanceBenchmark = {
       name,
@@ -284,30 +279,19 @@ export class PerformanceTestManager {
    */
   private compareResults(current: TestResult, baseline: TestResult) {
     const responseTimeChange =
-      ((current.summary.averageResponseTime -
-        baseline.summary.averageResponseTime) /
+      ((current.summary.averageResponseTime - baseline.summary.averageResponseTime) /
         baseline.summary.averageResponseTime) *
       100;
     const throughputChange =
-      ((current.summary.throughput - baseline.summary.throughput) /
-        baseline.summary.throughput) *
+      ((current.summary.throughput - baseline.summary.throughput) / baseline.summary.throughput) *
       100;
-    const errorRateChange =
-      current.summary.errorRate - baseline.summary.errorRate;
+    const errorRateChange = current.summary.errorRate - baseline.summary.errorRate;
 
     let overallPerformance: "improved" | "degraded" | "stable" = "stable";
 
-    if (
-      responseTimeChange < -10 &&
-      throughputChange > 5 &&
-      errorRateChange <= 0
-    ) {
+    if (responseTimeChange < -10 && throughputChange > 5 && errorRateChange <= 0) {
       overallPerformance = "improved";
-    } else if (
-      responseTimeChange > 10 ||
-      throughputChange < -5 ||
-      errorRateChange > 1
-    ) {
+    } else if (responseTimeChange > 10 || throughputChange < -5 || errorRateChange > 1) {
       overallPerformance = "degraded";
     }
 
@@ -323,9 +307,7 @@ export class PerformanceTestManager {
    * 获取测试历史
    */
   getTestHistory(limit?: number): TestResult[] {
-    const history = [...this.testHistory].sort(
-      (a, b) => b.endTime.getTime() - a.endTime.getTime(),
-    );
+    const history = [...this.testHistory].sort((a, b) => b.endTime.getTime() - a.endTime.getTime());
     return limit ? history.slice(0, limit) : history;
   }
 
@@ -333,9 +315,7 @@ export class PerformanceTestManager {
    * 获取基准列表
    */
   getBenchmarks(): PerformanceBenchmark[] {
-    return [...this.benchmarks].sort(
-      (a, b) => b.date.getTime() - a.date.getTime(),
-    );
+    return [...this.benchmarks].sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 
   /**
@@ -369,9 +349,7 @@ export class PerformanceTestManager {
     const bottlenecks: string[] = [];
 
     // 分析响应时间
-    if (
-      test.summary.averageResponseTime > test.config.thresholds.responseTime.avg
-    ) {
+    if (test.summary.averageResponseTime > test.config.thresholds.responseTime.avg) {
       bottlenecks.push("平均响应时间超过阈值");
       recommendations.push("优化数据库查询和缓存策略");
     }
@@ -433,14 +411,10 @@ export class PerformanceTestManager {
    * 清理测试历史
    */
   cleanupHistory(olderThanDays: number = 30): void {
-    const cutoffDate = new Date(
-      Date.now() - olderThanDays * 24 * 60 * 60 * 1000,
-    );
+    const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
     const beforeCount = this.testHistory.length;
 
-    this.testHistory = this.testHistory.filter(
-      (test) => test.endTime > cutoffDate,
-    );
+    this.testHistory = this.testHistory.filter((test) => test.endTime > cutoffDate);
 
     logger.info("性能测试历史已清理", {
       type: "performance_test",
@@ -533,18 +507,14 @@ class TestRunner {
 
         // 思考时间
         if (request.thinkTime) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, request.thinkTime),
-          );
+          await new Promise((resolve) => setTimeout(resolve, request.thinkTime));
         }
       }
 
       // 更新进度
       this.progress = Math.min(
         100,
-        ((Date.now() - (this.startTime?.getTime() || 0)) /
-          (this.config.duration * 1000)) *
-          100,
+        ((Date.now() - (this.startTime?.getTime() || 0)) / (this.config.duration * 1000)) * 100
       );
     }
   }
@@ -564,10 +534,7 @@ class TestRunner {
         },
       };
 
-      if (
-        request.body &&
-        (request.method === "POST" || request.method === "PUT")
-      ) {
+      if (request.body && (request.method === "POST" || request.method === "PUT")) {
         options.body = JSON.stringify(request.body);
       }
 
@@ -599,8 +566,7 @@ class TestRunner {
     const sortedTimes = [...this.responseTimes].sort((a, b) => a - b);
     const averageResponseTime =
       this.responseTimes.length > 0
-        ? this.responseTimes.reduce((sum, time) => sum + time, 0) /
-          this.responseTimes.length
+        ? this.responseTimes.reduce((sum, time) => sum + time, 0) / this.responseTimes.length
         : 0;
 
     const summary = {
@@ -663,16 +629,11 @@ class TestRunner {
   /**
    * 生成建议
    */
-  private generateRecommendations(
-    summary: TestResult["summary"],
-    passed: boolean,
-  ): string[] {
+  private generateRecommendations(summary: TestResult["summary"], passed: boolean): string[] {
     const recommendations: string[] = [];
 
     if (!passed) {
-      if (
-        summary.averageResponseTime > this.config.thresholds.responseTime.avg
-      ) {
+      if (summary.averageResponseTime > this.config.thresholds.responseTime.avg) {
         recommendations.push("优化平均响应时间，当前值超过阈值");
       }
 
@@ -706,10 +667,8 @@ class TestRunner {
 export const performanceTestManager = PerformanceTestManager.getInstance();
 
 // 导出便捷方法
-export const runPerformanceTest = (config: TestConfig) =>
-  performanceTestManager.runTest(config);
-export const getTestStatus = (testId: string) =>
-  performanceTestManager.getTestStatus(testId);
+export const runPerformanceTest = (config: TestConfig) => performanceTestManager.runTest(config);
+export const getTestStatus = (testId: string) => performanceTestManager.getTestStatus(testId);
 export const generateBenchmark = (results: TestResult[], name: string) =>
   performanceTestManager.generateBenchmark(results, name);
 

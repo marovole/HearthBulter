@@ -166,9 +166,7 @@ export interface UseAnimateOnViewReturn {
  * return <motion.div {...animationProps}>Content</motion.div>;
  * ```
  */
-export function useAnimateOnView(
-  options: UseAnimateOnViewOptions = {},
-): UseAnimateOnViewReturn {
+export function useAnimateOnView(options: UseAnimateOnViewOptions = {}): UseAnimateOnViewReturn {
   const {
     threshold = 0.15,
     rootMargin = "0px",

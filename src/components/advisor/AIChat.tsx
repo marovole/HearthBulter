@@ -9,10 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User, Lightbulb } from "lucide-react";
 import { AIThinkingIndicator } from "@/components/ui/loading-indicator";
-import {
-  FeedbackButtons,
-  FeedbackData,
-} from "@/components/ui/feedback-buttons";
+import { FeedbackButtons, FeedbackData } from "@/components/ui/feedback-buttons";
 
 interface ChatMessage {
   id: string;
@@ -24,12 +21,7 @@ interface ChatMessage {
 
 interface PresetQuestion {
   id: string;
-  category:
-    | "general"
-    | "nutrition"
-    | "health"
-    | "meal_planning"
-    | "weight_management";
+  category: "general" | "nutrition" | "health" | "meal_planning" | "weight_management";
   question: string;
   description: string;
   tags: string[];
@@ -41,11 +33,7 @@ interface AIChatProps {
   onMessageSent?: (message: ChatMessage) => void;
 }
 
-export function AIChat({
-  memberId,
-  initialMessages = [],
-  onMessageSent,
-}: AIChatProps) {
+export function AIChat({ memberId, initialMessages = [], onMessageSent }: AIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -179,20 +167,20 @@ export function AIChat({
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
+    <Card className="flex h-[600px] flex-col">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Bot className="w-5 h-5 mr-2" />
+          <Bot className="mr-2 h-5 w-5" />
           AI营养顾问
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className="flex flex-1 flex-col p-0">
         {/* 消息区域 */}
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <div className="py-8 text-center text-muted-foreground">
+              <Bot className="mx-auto mb-4 h-12 w-12 opacity-50" />
               <p>我是您的AI营养顾问</p>
               <p className="text-sm">可以询问健康、营养、饮食相关的问题</p>
             </div>
@@ -208,28 +196,26 @@ export function AIChat({
                       message.role === "user" ? "flex-row-reverse" : "flex-row"
                     }`}
                   >
-                    <Avatar className="w-8 h-8">
+                    <Avatar className="h-8 w-8">
                       <AvatarFallback>
                         {message.role === "user" ? (
-                          <User className="w-4 h-4" />
+                          <User className="h-4 w-4" />
                         ) : (
-                          <Bot className="w-4 h-4" />
+                          <Bot className="h-4 w-4" />
                         )}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
                       <div
-                        className={`mx-2 px-3 py-2 rounded-lg ${
+                        className={`mx-2 rounded-lg px-3 py-2 ${
                           message.role === "user"
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">
-                          {message.content}
-                        </p>
+                        <p className="whitespace-pre-wrap text-sm">{message.content}</p>
                         {message.intent && (
-                          <Badge variant="outline" className="text-xs mt-1">
+                          <Badge variant="outline" className="mt-1 text-xs">
                             {message.intent}
                           </Badge>
                         )}
@@ -241,7 +227,7 @@ export function AIChat({
                             onFeedback={handleFeedback}
                             size="sm"
                             variant="compact"
-                            className="opacity-60 hover:opacity-100 transition-opacity"
+                            className="opacity-60 transition-opacity hover:opacity-100"
                           />
                         </div>
                       )}
@@ -255,16 +241,16 @@ export function AIChat({
           {isLoading && (
             <div className="flex justify-start">
               <div className="flex max-w-[80%]">
-                <Avatar className="w-8 h-8">
+                <Avatar className="h-8 w-8">
                   <AvatarFallback>
-                    <Bot className="w-4 h-4" />
+                    <Bot className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="ml-2">
                   <AIThinkingIndicator
                     size="sm"
                     message="AI正在分析您的问题..."
-                    className="bg-background border rounded-lg shadow-sm"
+                    className="rounded-lg border bg-background shadow-sm"
                   />
                 </div>
               </div>
@@ -274,28 +260,24 @@ export function AIChat({
 
         {/* 预设问题 */}
         {messages.length === 0 && presetQuestions.length > 0 && (
-          <div className="p-4 border-t">
-            <div className="flex items-center mb-3">
-              <Lightbulb className="w-4 h-4 mr-2 text-yellow-500" />
+          <div className="border-t p-4">
+            <div className="mb-3 flex items-center">
+              <Lightbulb className="mr-2 h-4 w-4 text-yellow-500" />
               <span className="text-sm font-medium">常用问题</span>
             </div>
-            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+            <div className="grid max-h-32 grid-cols-1 gap-2 overflow-y-auto">
               {presetQuestions.slice(0, 4).map((question) => (
                 <Button
                   key={question.id}
                   variant="outline"
                   size="sm"
                   onClick={() => handlePresetQuestion(question)}
-                  className="justify-start text-left h-auto py-2 px-3"
+                  className="h-auto justify-start px-3 py-2 text-left"
                   disabled={isLoading}
                 >
                   <div>
-                    <div className="text-sm font-medium">
-                      {question.question}
-                    </div>
-                    <Badge
-                      className={`text-xs mt-1 ${getCategoryColor(question.category)}`}
-                    >
+                    <div className="text-sm font-medium">{question.question}</div>
+                    <Badge className={`mt-1 text-xs ${getCategoryColor(question.category)}`}>
                       {question.category === "general"
                         ? "通用"
                         : question.category === "nutrition"
@@ -314,7 +296,7 @@ export function AIChat({
         )}
 
         {/* 输入区域 */}
-        <div className="p-4 border-t">
+        <div className="border-t p-4">
           <form onSubmit={handleSubmit} className="flex space-x-2">
             <Input
               value={inputMessage}
@@ -324,7 +306,7 @@ export function AIChat({
               className="flex-1"
             />
             <Button type="submit" disabled={isLoading || !inputMessage.trim()}>
-              <Send className="w-4 h-4" />
+              <Send className="h-4 w-4" />
             </Button>
           </form>
         </div>

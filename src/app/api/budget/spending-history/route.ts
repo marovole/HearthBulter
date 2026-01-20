@@ -34,16 +34,10 @@ export async function GET(request: NextRequest) {
 
     const budget = await budgetRepository.getBudgetById(budgetId);
     if (!budget) {
-      return NextResponse.json(
-        { error: "预算不存在或已不活跃" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "预算不存在或已不活跃" }, { status: 404 });
     }
 
-    const access = await memberRepository.verifyMemberAccess(
-      budget.memberId,
-      session.user.id,
-    );
+    const access = await memberRepository.verifyMemberAccess(budget.memberId, session.user.id);
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限访问该预算" }, { status: 403 });
     }
@@ -55,16 +49,16 @@ export async function GET(request: NextRequest) {
       range:
         startDate || endDate
           ? {
-            start: startDate ? new Date(startDate) : undefined,
-            end: endDate ? new Date(endDate) : undefined,
-          }
+              start: startDate ? new Date(startDate) : undefined,
+              end: endDate ? new Date(endDate) : undefined,
+            }
           : undefined,
     };
 
     // 获取所有支出（用于统计）
     const allSpendingsResult = await budgetRepository.listSpendings(
       filter,
-      undefined, // 不使用分页，获取所有数据用于统计
+      undefined // 不使用分页，获取所有数据用于统计
     );
 
     // 获取分页数据
@@ -91,10 +85,7 @@ export async function GET(request: NextRequest) {
         stats[cat]!.amount += spending.amount;
         return stats;
       },
-      {} as Record<
-        string,
-        { count: number; amount: number; category: FoodCategory }
-      >,
+      {} as Record<string, { count: number; amount: number; category: FoodCategory }>
     );
 
     const total = paginatedResult.total ?? paginatedResult.items.length;
@@ -110,8 +101,7 @@ export async function GET(request: NextRequest) {
       statistics: {
         totalAmount,
         totalTransactions: allSpendings.length,
-        averageAmount:
-          allSpendings.length > 0 ? totalAmount / allSpendings.length : 0,
+        averageAmount: allSpendings.length > 0 ? totalAmount / allSpendings.length : 0,
         categoryBreakdown: Object.values(categoryStats),
       },
     });

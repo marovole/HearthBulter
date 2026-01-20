@@ -3,10 +3,7 @@ import { analyzeTrend, TimeSeriesPoint } from "./trend-analyzer";
 
 import { calculateHealthScore, getAverageScore } from "./health-scorer";
 import { getPendingAnomalies } from "./anomaly-detector";
-import {
-  generateSecureShareToken,
-  verifyShareToken,
-} from "@/lib/security/token-generator";
+import { generateSecureShareToken, verifyShareToken } from "@/lib/security/token-generator";
 import { logger } from "@/lib/logger";
 
 export interface ReportData {
@@ -44,7 +41,7 @@ export async function generateReportData(
   memberId: string,
   reportType: string,
   startDate?: Date,
-  endDate?: Date,
+  endDate?: Date
 ): Promise<ReportData> {
   const period = calculatePeriod(reportType as any, startDate, endDate);
 
@@ -58,48 +55,24 @@ export async function generateReportData(
   }
 
   const totalDays = Math.ceil(
-    (period.endDate.getTime() - period.startDate.getTime()) /
-      (1000 * 60 * 60 * 24),
+    (period.endDate.getTime() - period.startDate.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  const mealLogsCount = await convexClient.query<number>(
-    api.analytics.countMealLogs,
-    {
-      memberId: memberId,
-      startDate: period.startDate.getTime(),
-      endDate: period.endDate.getTime(),
-    },
-  );
+  const mealLogsCount = await convexClient.query<number>(api.analytics.countMealLogs, {
+    memberId: memberId,
+    startDate: period.startDate.getTime(),
+    endDate: period.endDate.getTime(),
+  });
 
   const dataCompleteDays = Math.min(mealLogsCount, totalDays);
 
-  const averageScore = await getAverageScore(
-    memberId,
-    period.startDate,
-    period.endDate,
-  );
+  const averageScore = await getAverageScore(memberId, period.startDate, period.endDate);
 
-  const trends = await getTrendsForReport(
-    memberId,
-    period.startDate,
-    period.endDate,
-  );
+  const trends = await getTrendsForReport(memberId, period.startDate, period.endDate);
 
-  const achievements = await generateAchievements(
-    memberId,
-    period.startDate,
-    period.endDate,
-  );
-  const concerns = await generateConcerns(
-    memberId,
-    period.startDate,
-    period.endDate,
-  );
-  const recommendations = await generateRecommendations(
-    memberId,
-    period.startDate,
-    period.endDate,
-  );
+  const achievements = await generateAchievements(memberId, period.startDate, period.endDate);
+  const concerns = await generateConcerns(memberId, period.startDate, period.endDate);
+  const recommendations = await generateRecommendations(memberId, period.startDate, period.endDate);
 
   const anomalies = await convexClient.query<
     Array<{
@@ -145,8 +118,7 @@ export function generateHTMLReport(data: ReportData): string {
     QUARTERLY: "季报",
     CUSTOM: "健康报告",
   };
-  const periodName =
-    periodLabels[data.period.type as keyof typeof periodLabels] || "报告";
+  const periodName = periodLabels[data.period.type as keyof typeof periodLabels] || "报告";
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("zh-CN", {
@@ -237,8 +209,8 @@ export function generateHTMLReport(data: ReportData): string {
       </div>
 
       ${
-  data.achievements.length > 0
-    ? `
+        data.achievements.length > 0
+          ? `
       <div class="section">
         <h2>🎉 本期成就</h2>
         <ul class="list">
@@ -246,12 +218,12 @@ export function generateHTMLReport(data: ReportData): string {
         </ul>
       </div>
       `
-    : ""
-}
+          : ""
+      }
 
       ${
-  data.concerns.length > 0
-    ? `
+        data.concerns.length > 0
+          ? `
       <div class="section">
         <h2>⚠️ 需要关注</h2>
         <ul class="list">
@@ -259,32 +231,32 @@ export function generateHTMLReport(data: ReportData): string {
         </ul>
       </div>
       `
-    : ""
-}
+          : ""
+      }
 
       ${
-  data.anomalies.length > 0
-    ? `
+        data.anomalies.length > 0
+          ? `
       <div class="section">
         <h2>🚨 异常检测</h2>
         ${data.anomalies
-    .map(
-      (a) => `
+          .map(
+            (a) => `
           <div class="anomaly">
             <div class="anomaly-title">${a.title}</div>
             <div class="anomaly-desc">${a.description}</div>
           </div>
-        `,
-    )
-    .join("")}
+        `
+          )
+          .join("")}
       </div>
       `
-    : ""
-}
+          : ""
+      }
 
       ${
-  data.recommendations.length > 0
-    ? `
+        data.recommendations.length > 0
+          ? `
       <div class="section">
         <h2>💡 改进建议</h2>
         <ul class="list">
@@ -292,8 +264,8 @@ export function generateHTMLReport(data: ReportData): string {
         </ul>
       </div>
       `
-    : ""
-}
+          : ""
+      }
     </div>
 
     <div class="footer">
@@ -310,14 +282,9 @@ export async function createReport(
   memberId: string,
   reportType: string,
   startDate?: Date,
-  endDate?: Date,
+  endDate?: Date
 ) {
-  const data = await generateReportData(
-    memberId,
-    reportType,
-    startDate,
-    endDate,
-  );
+  const data = await generateReportData(memberId, reportType, startDate, endDate);
 
   const htmlContent = generateHTMLReport(data);
 
@@ -327,8 +294,7 @@ export async function createReport(
     QUARTERLY: "季报",
     CUSTOM: "健康报告",
   };
-  const periodName =
-    periodLabels[reportType as keyof typeof periodLabels] || "报告";
+  const periodName = periodLabels[reportType as keyof typeof periodLabels] || "报告";
 
   const title = `${data.member.name}的健康${periodName} - ${data.period.startDate.toLocaleDateString()}`;
 
@@ -354,10 +320,7 @@ export async function createReport(
   return report;
 }
 
-export async function generateShareToken(
-  reportId: string,
-  expiryDays: number = 7,
-) {
+export async function generateShareToken(reportId: string, expiryDays: number = 7) {
   const report = await convexClient.query<{
     _id: string;
     memberId: string;
@@ -374,7 +337,7 @@ export async function generateShareToken(
     "health_report",
     report.memberId,
     expiryDays,
-    ["read"],
+    ["read"]
   );
 
   const expiresAt = new Date();
@@ -445,7 +408,7 @@ export async function getReportByShareToken(token: string) {
 function calculatePeriod(
   reportType: string,
   customStartDate?: Date,
-  customEndDate?: Date,
+  customEndDate?: Date
 ): { startDate: Date; endDate: Date } {
   if (reportType === "CUSTOM" && customStartDate && customEndDate) {
     return { startDate: customStartDate, endDate: customEndDate };
@@ -455,53 +418,34 @@ function calculatePeriod(
   const startDate = new Date();
 
   switch (reportType) {
-  case "WEEKLY":
-    startDate.setDate(endDate.getDate() - 7);
-    break;
-  case "MONTHLY":
-    startDate.setMonth(endDate.getMonth() - 1);
-    break;
-  case "QUARTERLY":
-    startDate.setMonth(endDate.getMonth() - 3);
-    break;
+    case "WEEKLY":
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case "MONTHLY":
+      startDate.setMonth(endDate.getMonth() - 1);
+      break;
+    case "QUARTERLY":
+      startDate.setMonth(endDate.getMonth() - 3);
+      break;
   }
 
   return { startDate, endDate };
 }
 
-async function getTrendsForReport(
-  memberId: string,
-  startDate: Date,
-  endDate: Date,
-) {
+async function getTrendsForReport(memberId: string, startDate: Date, endDate: Date) {
   const trends: any = {};
 
-  const weightTrend = await analyzeTrend(
-    memberId,
-    "WEIGHT",
-    startDate,
-    endDate,
-  );
+  const weightTrend = await analyzeTrend(memberId, "WEIGHT", startDate, endDate);
   if (weightTrend.dataPoints.length > 0) {
     trends.weight = weightTrend.dataPoints;
   }
 
-  const caloriesTrend = await analyzeTrend(
-    memberId,
-    "CALORIES",
-    startDate,
-    endDate,
-  );
+  const caloriesTrend = await analyzeTrend(memberId, "CALORIES", startDate, endDate);
   if (caloriesTrend.dataPoints.length > 0) {
     trends.calories = caloriesTrend.dataPoints;
   }
 
-  const exerciseTrend = await analyzeTrend(
-    memberId,
-    "EXERCISE",
-    startDate,
-    endDate,
-  );
+  const exerciseTrend = await analyzeTrend(memberId, "EXERCISE", startDate, endDate);
   if (exerciseTrend.dataPoints.length > 0) {
     trends.exercise = exerciseTrend.dataPoints;
   }
@@ -517,7 +461,7 @@ async function getTrendsForReport(
 async function generateAchievements(
   memberId: string,
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): Promise<string[]> {
   const achievements: string[] = [];
 
@@ -552,9 +496,7 @@ async function generateAchievements(
     includeInactive: false,
   });
 
-  const goal = goals.find(
-    (g) => g.goalType === "LOSE_WEIGHT" || g.goalType === "GAIN_MUSCLE",
-  );
+  const goal = goals.find((g) => g.goalType === "LOSE_WEIGHT" || g.goalType === "GAIN_MUSCLE");
 
   if (goal) {
     const healthData = await convexClient.query<
@@ -578,9 +520,7 @@ async function generateAchievements(
       const percentage = (progress / target) * 100;
 
       if (percentage >= 25) {
-        achievements.push(
-          `体重目标已完成${percentage.toFixed(0)}%，继续加油！`,
-        );
+        achievements.push(`体重目标已完成${percentage.toFixed(0)}%，继续加油！`);
       }
     }
   }
@@ -591,7 +531,7 @@ async function generateAchievements(
 async function generateConcerns(
   memberId: string,
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): Promise<string[]> {
   const concerns: string[] = [];
 
@@ -603,31 +543,24 @@ async function generateConcerns(
       endDate: endDate.getTime(),
       severities: ["HIGH", "CRITICAL"],
       status: "PENDING",
-    },
+    }
   );
 
   if (highSeverityAnomalies > 0) {
     concerns.push(`发现${highSeverityAnomalies}个需要关注的健康异常`);
   }
 
-  const totalDays = Math.ceil(
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  const recordedDays = await convexClient.query<number>(
-    api.analytics.groupMealLogsByDate,
-    {
-      memberId: memberId,
-      startDate: startDate.getTime(),
-      endDate: endDate.getTime(),
-    },
-  );
+  const recordedDays = await convexClient.query<number>(api.analytics.groupMealLogsByDate, {
+    memberId: memberId,
+    startDate: startDate.getTime(),
+    endDate: endDate.getTime(),
+  });
 
   const completeness = (recordedDays / totalDays) * 100;
   if (completeness < 50) {
-    concerns.push(
-      `数据记录完整度仅${completeness.toFixed(0)}%，建议提高记录频率`,
-    );
+    concerns.push(`数据记录完整度仅${completeness.toFixed(0)}%，建议提高记录频率`);
   }
 
   return concerns;
@@ -636,7 +569,7 @@ async function generateConcerns(
 async function generateRecommendations(
   memberId: string,
   startDate: Date,
-  endDate: Date,
+  endDate: Date
 ): Promise<string[]> {
   const recommendations: string[] = [];
 
@@ -657,19 +590,14 @@ async function generateRecommendations(
     });
 
     if (recentScores.length > 0) {
-      const sortedScores = recentScores
-        .sort((a, b) => b.date - a.date)
-        .slice(0, 7);
+      const sortedScores = recentScores.sort((a, b) => b.date - a.date).slice(0, 7);
 
       const avgNutrition =
-        sortedScores.reduce((sum, s) => sum + (s.nutritionScore || 0), 0) /
-        sortedScores.length;
+        sortedScores.reduce((sum, s) => sum + (s.nutritionScore || 0), 0) / sortedScores.length;
       const avgExercise =
-        sortedScores.reduce((sum, s) => sum + (s.exerciseScore || 0), 0) /
-        sortedScores.length;
+        sortedScores.reduce((sum, s) => sum + (s.exerciseScore || 0), 0) / sortedScores.length;
       const avgSleep =
-        sortedScores.reduce((sum, s) => sum + (s.sleepScore || 0), 0) /
-        sortedScores.length;
+        sortedScores.reduce((sum, s) => sum + (s.sleepScore || 0), 0) / sortedScores.length;
 
       if (avgNutrition < 70) {
         recommendations.push("建议优化饮食结构，确保三大营养素均衡摄入");

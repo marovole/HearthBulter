@@ -75,9 +75,7 @@ export async function getTrackingStreak(memberId: string) {
     ...streak,
     badges: earnedBadges,
     nextBadge,
-    daysUntilNextBadge: nextBadge
-      ? Math.max(0, nextBadge.requirement - streak.currentStreak)
-      : 0,
+    daysUntilNextBadge: nextBadge ? Math.max(0, nextBadge.requirement - streak.currentStreak) : 0,
   };
 }
 
@@ -126,7 +124,7 @@ export async function checkStreakReminder(memberId: string): Promise<boolean> {
  */
 export async function getCheckInStats(
   memberId: string,
-  period: "week" | "month" | "year" = "week",
+  period: "week" | "month" | "year" = "week"
 ) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -135,18 +133,18 @@ export async function getCheckInStats(
   let totalDays = 7;
 
   switch (period) {
-  case "week":
-    startDate.setDate(today.getDate() - 6); // 最近7天
-    totalDays = 7;
-    break;
-  case "month":
-    startDate.setDate(today.getDate() - 29); // 最近30天
-    totalDays = 30;
-    break;
-  case "year":
-    startDate.setDate(today.getDate() - 364); // 最近365天
-    totalDays = 365;
-    break;
+    case "week":
+      startDate.setDate(today.getDate() - 6); // 最近7天
+      totalDays = 7;
+      break;
+    case "month":
+      startDate.setDate(today.getDate() - 29); // 最近30天
+      totalDays = 30;
+      break;
+    case "year":
+      startDate.setDate(today.getDate() - 364); // 最近365天
+      totalDays = 365;
+      break;
   }
 
   // 获取期间的打卡记录
@@ -176,11 +174,7 @@ export async function getCheckInStats(
 /**
  * 获取打卡日历（某月的打卡情况）
  */
-export async function getCheckInCalendar(
-  memberId: string,
-  year: number,
-  month: number,
-) {
+export async function getCheckInCalendar(memberId: string, year: number, month: number) {
   // 获取月份的第一天和最后一天
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
@@ -216,9 +210,7 @@ export async function getCheckInCalendar(
   const daysInMonth = endDate.getDate();
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month - 1, day);
-    const target = targets.find(
-      (t) => t.date.getDate() === day && t.date.getMonth() === month - 1,
-    );
+    const target = targets.find((t) => t.date.getDate() === day && t.date.getMonth() === month - 1);
 
     calendar.push({
       date,
@@ -226,11 +218,11 @@ export async function getCheckInCalendar(
       isCompleted: target?.isCompleted || false,
       nutrition: target
         ? {
-          calories: target.actualCalories,
-          protein: target.actualProtein,
-          carbs: target.actualCarbs,
-          fat: target.actualFat,
-        }
+            calories: target.actualCalories,
+            protein: target.actualProtein,
+            carbs: target.actualCarbs,
+            fat: target.actualFat,
+          }
         : undefined,
     });
   }
@@ -266,9 +258,7 @@ export async function getFamilyStreakLeaderboard(familyId: string) {
       currentStreak: member.trackingStreak?.currentStreak || 0,
       longestStreak: member.trackingStreak?.longestStreak || 0,
       totalDays: member.trackingStreak?.totalDays || 0,
-      badges: member.trackingStreak
-        ? (JSON.parse(member.trackingStreak.badges) as string[])
-        : [],
+      badges: member.trackingStreak ? (JSON.parse(member.trackingStreak.badges) as string[]) : [],
     }))
     .sort((a, b) => {
       // 先按当前连续天数排序，如果相同则按总天数排序
@@ -296,10 +286,7 @@ export async function checkAndUnlockBadges(memberId: string) {
 
   // 检查每个徽章是否符合条件
   BADGES.forEach((badge) => {
-    if (
-      !currentBadges.includes(badge.id) &&
-      streak.currentStreak >= badge.requirement
-    ) {
+    if (!currentBadges.includes(badge.id) && streak.currentStreak >= badge.requirement) {
       currentBadges.push(badge.id);
       newBadges.push(badge);
     }

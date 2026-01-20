@@ -12,7 +12,7 @@ import { nutritionCalculator } from "@/lib/services/nutrition-calculator";
 export const dynamic = "force-dynamic";
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ mealId: string; ingredientId: string }> },
+  { params }: { params: Promise<{ mealId: string; ingredientId: string }> }
 ) {
   try {
     const { mealId, ingredientId } = await params;
@@ -50,13 +50,10 @@ export async function POST(
       return NextResponse.json({ error: "食谱计划不存在" }, { status: 404 });
     }
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: plan.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: plan.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
       return NextResponse.json({ error: "无权限操作" }, { status: 403 });
@@ -75,14 +72,14 @@ export async function POST(
       return NextResponse.json({ error: "食材不存在" }, { status: 404 });
     }
 
-    const originalFood = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.budget.getFoodById, { foodId: originalIngredient.foodId });
+    const originalFood = await convexClient.query<Record<string, unknown> | null>(
+      api.budget.getFoodById,
+      { foodId: originalIngredient.foodId }
+    );
 
     const newFood = await convexClient.query<Record<string, unknown> | null>(
       api.budget.getFoodById,
-      { foodId: newFoodId as Id<"foods"> },
+      { foodId: newFoodId as Id<"foods"> }
     );
 
     if (!newFood) {
@@ -95,17 +92,18 @@ export async function POST(
       amount: newAmount,
     });
 
-    const allIngredients = await convexClient.query<
-      Array<{ foodId: Id<"foods">; amount: number }>
-    >(api.meals.listMealIngredients, {
-      mealId: mealId as Id<"meals">,
-    });
+    const allIngredients = await convexClient.query<Array<{ foodId: Id<"foods">; amount: number }>>(
+      api.meals.listMealIngredients,
+      {
+        mealId: mealId as Id<"meals">,
+      }
+    );
 
     const totalNutrition = await nutritionCalculator.calculateBatch(
       allIngredients.map((ingredient) => ({
         foodId: ingredient.foodId as string,
         amount: ingredient.amount,
-      })),
+      }))
     );
 
     await convexClient.mutation(api.meals.updateMeal, {
@@ -139,7 +137,7 @@ export async function POST(
           fat: totalNutrition.totalFat,
         },
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("替换食材失败:", error);

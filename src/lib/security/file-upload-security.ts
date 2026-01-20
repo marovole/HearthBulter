@@ -35,13 +35,7 @@ interface UploadConfig {
 // 默认文件类型配置
 const DEFAULT_FILE_TYPES: Record<string, FileTypeConfig> = {
   image: {
-    mimeTypes: [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/svg+xml",
-    ],
+    mimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"],
     extensions: [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"],
     maxSize: 10 * 1024 * 1024, // 10MB
     allowed: true,
@@ -59,11 +53,7 @@ const DEFAULT_FILE_TYPES: Record<string, FileTypeConfig> = {
     allowed: true,
   },
   archive: {
-    mimeTypes: [
-      "application/zip",
-      "application/x-rar-compressed",
-      "application/x-7z-compressed",
-    ],
+    mimeTypes: ["application/zip", "application/x-rar-compressed", "application/x-7z-compressed"],
     extensions: [".zip", ".rar", ".7z"],
     maxSize: 100 * 1024 * 1024, // 100MB
     allowed: false, // 默认不允许压缩文件
@@ -164,10 +154,7 @@ export class FileUploadSecurity {
         logger.info("创建上传目录", { path: this.config.uploadPath });
       }
 
-      if (
-        this.config.quarantineEnabled &&
-        !fs.existsSync(this.config.quarantinePath)
-      ) {
+      if (this.config.quarantineEnabled && !fs.existsSync(this.config.quarantinePath)) {
         fs.mkdirSync(this.config.quarantinePath, { recursive: true });
         logger.info("创建隔离目录", { path: this.config.quarantinePath });
       }
@@ -188,9 +175,7 @@ export class FileUploadSecurity {
 
     // 1. 检查文件大小
     if (buffer.length > this.config.maxFileSize) {
-      threats.push(
-        `文件大小超限: ${buffer.length} > ${this.config.maxFileSize}`,
-      );
+      threats.push(`文件大小超限: ${buffer.length} > ${this.config.maxFileSize}`);
       safe = false;
     }
 
@@ -283,23 +268,14 @@ export class FileUploadSecurity {
 
     // 可执行文件
     if (header[0] === 0x4d && header[1] === 0x5a) return "executable";
-    if (
-      header[0] === 0x7f &&
-      header[1] === 0x45 &&
-      header[2] === 0x4c &&
-      header[3] === 0x46
-    )
+    if (header[0] === 0x7f && header[1] === 0x45 && header[2] === 0x4c && header[3] === 0x46)
       return "executable";
 
     // 文本文件
     if (this.isTextFile(buffer)) {
       // 进一步检查是否为脚本
       const content = buffer.toString("utf-8");
-      if (
-        content.includes("<?php") ||
-        content.includes("javascript:") ||
-        content.includes("<%")
-      ) {
+      if (content.includes("<?php") || content.includes("javascript:") || content.includes("<%")) {
         return "script";
       }
       return "document";
@@ -339,10 +315,7 @@ export class FileUploadSecurity {
   /**
    * 检查MIME类型一致性
    */
-  private checkMimeConsistency(
-    buffer: Buffer,
-    declaredExtension: string,
-  ): boolean {
+  private checkMimeConsistency(buffer: Buffer, declaredExtension: string): boolean {
     const fileType = this.detectFileType(buffer);
     const typeConfig = this.config.allowedTypes[fileType];
 
@@ -416,7 +389,7 @@ export class FileUploadSecurity {
   async handleUpload(
     buffer: Buffer,
     filename: string,
-    userId?: string,
+    userId?: string
   ): Promise<{
     success: boolean;
     filepath?: string;
@@ -510,14 +483,11 @@ export class FileUploadSecurity {
   private async quarantineFile(
     buffer: Buffer,
     filename: string,
-    scanResult: FileScanResult,
+    scanResult: FileScanResult
   ): Promise<void> {
     try {
       const quarantineFilename = `quarantine_${Date.now()}_${filename}`;
-      const quarantinePath = path.join(
-        this.config.quarantinePath,
-        quarantineFilename,
-      );
+      const quarantinePath = path.join(this.config.quarantinePath, quarantineFilename);
 
       await this.saveFile(buffer, quarantinePath);
 
@@ -530,10 +500,7 @@ export class FileUploadSecurity {
       };
 
       const recordPath = `${quarantinePath}.json`;
-      await this.saveFile(
-        Buffer.from(JSON.stringify(quarantineRecord, null, 2)),
-        recordPath,
-      );
+      await this.saveFile(Buffer.from(JSON.stringify(quarantineRecord, null, 2)), recordPath);
 
       logger.warn("文件已隔离", {
         type: "security",

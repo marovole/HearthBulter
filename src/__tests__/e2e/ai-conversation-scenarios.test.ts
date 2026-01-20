@@ -62,8 +62,7 @@ describe("AI Conversation E2E Tests", () => {
       choices: [
         {
           message: {
-            content:
-              "根据您的体检数据，我建议您增加蛋白质摄入，减少精制碳水化合物。",
+            content: "根据您的体检数据，我建议您增加蛋白质摄入，减少精制碳水化合物。",
           },
         },
       ],
@@ -178,8 +177,7 @@ describe("AI Conversation E2E Tests", () => {
       expect(result.success).toBe(true);
 
       // Verify that previous context was included in AI call
-      const aiCall = (openaiClient.chat.completions.create as jest.Mock).mock
-        .calls[0][0];
+      const aiCall = (openaiClient.chat.completions.create as jest.Mock).mock.calls[0][0];
       expect(aiCall.messages.length).toBeGreaterThan(2); // Previous messages + new message
     });
 
@@ -206,8 +204,7 @@ describe("AI Conversation E2E Tests", () => {
       expect(result.response).toBeDefined();
 
       // Should use preset template
-      const aiCall = (openaiClient.chat.completions.create as jest.Mock).mock
-        .calls[0][0];
+      const aiCall = (openaiClient.chat.completions.create as jest.Mock).mock.calls[0][0];
       expect(aiCall.messages[0].content).toContain("降低胆固醇");
     });
   });
@@ -239,7 +236,7 @@ describe("AI Conversation E2E Tests", () => {
 
     it("应该处理AI服务不可用的情况", async () => {
       (openaiClient.chat.completions.create as jest.Mock).mockRejectedValue(
-        new Error("AI service unavailable"),
+        new Error("AI service unavailable")
       );
 
       const requestData = {
@@ -313,24 +310,22 @@ describe("AI Conversation E2E Tests", () => {
     it("应该在合理时间内响应", async () => {
       const startTime = Date.now();
 
-      (openaiClient.chat.completions.create as jest.Mock).mockImplementation(
-        async () => {
-          // Simulate 2 second AI response time
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          return {
-            choices: [
-              {
-                message: { content: "快速响应" },
-              },
-            ],
-            usage: {
-              prompt_tokens: 50,
-              completion_tokens: 30,
-              total_tokens: 80,
+      (openaiClient.chat.completions.create as jest.Mock).mockImplementation(async () => {
+        // Simulate 2 second AI response time
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return {
+          choices: [
+            {
+              message: { content: "快速响应" },
             },
-          };
-        },
-      );
+          ],
+          usage: {
+            prompt_tokens: 50,
+            completion_tokens: 30,
+            total_tokens: 80,
+          },
+        };
+      });
 
       const requestData = {
         message: "简单问题",
@@ -375,8 +370,7 @@ describe("AI Conversation E2E Tests", () => {
       expect(result.success).toBe(true);
 
       // Verify sensitive data was filtered before sending to AI
-      const aiCall = (openaiClient.chat.completions.create as jest.Mock).mock
-        .calls[0][0];
+      const aiCall = (openaiClient.chat.completions.create as jest.Mock).mock.calls[0][0];
       expect(aiCall.messages[0].content).not.toContain("123456789012345678");
       expect(aiCall.messages[0].content).toContain("[已过滤敏感信息]");
     });
@@ -430,15 +424,13 @@ describe("AI Conversation E2E Tests", () => {
         },
       ];
 
-      (prisma.aIConversation.findMany as jest.Mock).mockResolvedValue(
-        mockHistory,
-      );
+      (prisma.aIConversation.findMany as jest.Mock).mockResolvedValue(mockHistory);
 
       const request = new NextRequest(
         `http://localhost/api/ai/chat?userId=${mockUserId}&sessionId=${mockSessionId}`,
         {
           method: "GET",
-        },
+        }
       );
 
       const response = await GET(request);

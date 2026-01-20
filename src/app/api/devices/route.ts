@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
-import {
-  withPermissions,
-  requirePermissions,
-} from "@/lib/middleware/permission-middleware";
-import {
-  withSecurity,
-  defaultSecurityOptions,
-} from "@/lib/security/security-middleware";
+import { withPermissions, requirePermissions } from "@/lib/middleware/permission-middleware";
+import { withSecurity, defaultSecurityOptions } from "@/lib/security/security-middleware";
 import { withPerformanceMonitoring } from "@/lib/monitoring/performance-monitor";
 import { Permission } from "@/lib/permissions";
 import { convexClient, api } from "@/lib/convex-client";
@@ -34,18 +28,17 @@ export const GET = withPermissions(
       }
 
       const { searchParams } = new URL(request.url);
-      const validatedQuery = GETQuerySchema.parse(
-        Object.fromEntries(searchParams),
+      const validatedQuery = GETQuerySchema.parse(Object.fromEntries(searchParams));
+
+      const accessibleMembers = await convexClient.query<Array<{ _id: string }>>(
+        api.members.listAccessibleByClerkId,
+        {
+          clerkId: session.user.id,
+        }
       );
 
-      const accessibleMembers = await convexClient.query<
-        Array<{ _id: string }>
-      >(api.members.listAccessibleByClerkId, {
-        clerkId: session.user.id,
-      });
-
       const accessibleMemberIds = accessibleMembers.map(
-        (member) => member._id as Id<"familyMembers">,
+        (member) => member._id as Id<"familyMembers">
       );
 
       if (accessibleMemberIds.length === 0) {
@@ -82,8 +75,8 @@ export const GET = withPermissions(
         limit: validatedQuery.limit,
         totalPages: Math.ceil(total / validatedQuery.limit),
       });
-    }),
-  ),
+    })
+  )
 );
 
 export async function POST(request: NextRequest) {
@@ -134,7 +127,7 @@ export async function POST(request: NextRequest) {
           "READ_DISTANCE",
           "READ_ACTIVE_MINUTES",
           "READ_EXERCISE",
-        ]),
+        ])
       ),
       dataTypes: z.array(
         z.enum([
@@ -154,34 +147,28 @@ export async function POST(request: NextRequest) {
           "RESTING_HEART_RATE",
           "FLOORS_CLIMBED",
           "STANDING_HOURS",
-        ]),
+        ])
       ),
       syncInterval: z.number().optional().default(1800),
     });
 
     const validatedData = connectionSchema.parse(body);
 
-    const access = await convexClient.query<{ hasAccess: boolean }>(
-      api.members.verifyAccess,
-      {
-        memberId: validatedData.memberId as Id<"familyMembers">,
-        clerkId: session.user.id,
-      },
-    );
+    const access = await convexClient.query<{ hasAccess: boolean }>(api.members.verifyAccess, {
+      memberId: validatedData.memberId as Id<"familyMembers">,
+      clerkId: session.user.id,
+    });
 
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "无权限访问该家庭成员" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "无权限访问该家庭成员" }, { status: 403 });
     }
 
-    const existingDevice = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.devices.getActiveByDeviceId, {
-      deviceId: validatedData.deviceId,
-    });
+    const existingDevice = await convexClient.query<Record<string, unknown> | null>(
+      api.devices.getActiveByDeviceId,
+      {
+        deviceId: validatedData.deviceId,
+      }
+    );
 
     if (existingDevice) {
       return NextResponse.json({ error: "设备已存在" }, { status: 409 });
@@ -192,57 +179,47 @@ export async function POST(request: NextRequest) {
     let syncStatus: string | undefined;
 
     if (validatedData.platform === "APPLE_HEALTHKIT") {
-      const { connectHealthKitDevice } = await import(
-        "@/lib/services/healthkit-service"
-      );
-      const deviceConnection = await connectHealthKitDevice(
-        validatedData.memberId,
-        validatedData,
-      );
+      const { connectHealthKitDevice } = await import("@/lib/services/healthkit-service");
+      const deviceConnection = await connectHealthKitDevice(validatedData.memberId, validatedData);
       legacyId = deviceConnection.id;
       lastSyncAt = deviceConnection.lastSyncAt?.getTime();
       syncStatus = deviceConnection.syncStatus;
     } else if (validatedData.platform === "HUAWEI_HEALTH") {
-      const { connectHuaweiHealthDevice } = await import(
-        "@/lib/services/huawei-health-service"
-      );
+      const { connectHuaweiHealthDevice } = await import("@/lib/services/huawei-health-service");
       const deviceConnection = await connectHuaweiHealthDevice(
         validatedData.memberId,
-        validatedData,
+        validatedData
       );
       legacyId = deviceConnection.id;
       lastSyncAt = deviceConnection.lastSyncAt?.getTime();
       syncStatus = deviceConnection.syncStatus;
     }
 
-    const connectionId = await convexClient.mutation<string>(
-      api.devices.createConnection,
-      {
-        memberId: validatedData.memberId as Id<"familyMembers">,
-        deviceId: validatedData.deviceId,
-        legacyId,
-        deviceName: validatedData.deviceName,
-        deviceType: validatedData.deviceType,
-        manufacturer: validatedData.manufacturer,
-        model: validatedData.model,
-        firmwareVersion: validatedData.firmwareVersion,
-        platform: validatedData.platform,
-        accessToken: validatedData.accessToken,
-        refreshToken: validatedData.refreshToken,
-        permissions: validatedData.permissions,
-        dataTypes: validatedData.dataTypes,
-        syncInterval: validatedData.syncInterval,
-        syncStatus: syncStatus ?? (legacyId ? "SUCCESS" : undefined),
-        lastSyncAt,
-      },
-    );
-
-    const deviceConnection = await convexClient.query<Record<
-      string,
-      unknown
-    > | null>(api.devices.getById, {
-      id: connectionId as Id<"deviceConnections">,
+    const connectionId = await convexClient.mutation<string>(api.devices.createConnection, {
+      memberId: validatedData.memberId as Id<"familyMembers">,
+      deviceId: validatedData.deviceId,
+      legacyId,
+      deviceName: validatedData.deviceName,
+      deviceType: validatedData.deviceType,
+      manufacturer: validatedData.manufacturer,
+      model: validatedData.model,
+      firmwareVersion: validatedData.firmwareVersion,
+      platform: validatedData.platform,
+      accessToken: validatedData.accessToken,
+      refreshToken: validatedData.refreshToken,
+      permissions: validatedData.permissions,
+      dataTypes: validatedData.dataTypes,
+      syncInterval: validatedData.syncInterval,
+      syncStatus: syncStatus ?? (legacyId ? "SUCCESS" : undefined),
+      lastSyncAt,
     });
+
+    const deviceConnection = await convexClient.query<Record<string, unknown> | null>(
+      api.devices.getById,
+      {
+        id: connectionId as Id<"deviceConnections">,
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -253,15 +230,12 @@ export async function POST(request: NextRequest) {
     console.error("连接设备失败:", error);
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "参数错误", details: error.errors },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "参数错误", details: error.errors }, { status: 400 });
     }
 
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "设备连接失败" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

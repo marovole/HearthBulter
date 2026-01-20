@@ -11,15 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  AlertTriangle,
-  Check,
-  X,
-  Info,
-  Leaf,
-  Heart,
-} from "lucide-react";
+import { Search, AlertTriangle, Check, X, Info, Leaf, Heart } from "lucide-react";
 import { toast } from "@/lib/toast";
 
 interface Food {
@@ -105,8 +97,7 @@ function calculateSimilarity(original: Food, substitute: Food): number {
 
   // 营养相似度 (40%)
   if (original.calories && substitute.calories) {
-    const calorieDiff =
-      Math.abs(original.calories - substitute.calories) / original.calories;
+    const calorieDiff = Math.abs(original.calories - substitute.calories) / original.calories;
     score += Math.max(0, 40 - calorieDiff * 100);
   }
 
@@ -127,10 +118,8 @@ function isSimilarCategory(cat1?: string, cat2?: string): boolean {
   const grainGroups = ["GRAIN"];
 
   return (
-    (proteinGroups.includes(cat1 || "") &&
-      proteinGroups.includes(cat2 || "")) ||
-    (vegetableGroups.includes(cat1 || "") &&
-      vegetableGroups.includes(cat2 || "")) ||
+    (proteinGroups.includes(cat1 || "") && proteinGroups.includes(cat2 || "")) ||
+    (vegetableGroups.includes(cat1 || "") && vegetableGroups.includes(cat2 || "")) ||
     (grainGroups.includes(cat1 || "") && grainGroups.includes(cat2 || ""))
   );
 }
@@ -140,15 +129,12 @@ function calculateNutritionMatch(original: Food, substitute: Food): number {
 
   const proteinMatch =
     original.protein && substitute.protein
-      ? 100 -
-        (Math.abs(original.protein - substitute.protein) / original.protein) *
-          100
+      ? 100 - (Math.abs(original.protein - substitute.protein) / original.protein) * 100
       : 50;
 
   const carbMatch =
     original.carbs && substitute.carbs
-      ? 100 -
-        (Math.abs(original.carbs - substitute.carbs) / original.carbs) * 100
+      ? 100 - (Math.abs(original.carbs - substitute.carbs) / original.carbs) * 100
       : 50;
 
   const fatMatch =
@@ -168,8 +154,7 @@ export function IngredientSubstitutes({
   const [substitutes, setSubstitutes] = useState<SubstituteOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSubstitute, setSelectedSubstitute] =
-    useState<SubstituteOption | null>(null);
+  const [selectedSubstitute, setSelectedSubstitute] = useState<SubstituteOption | null>(null);
 
   useEffect(() => {
     if (isOpen && ingredient) {
@@ -192,16 +177,12 @@ export function IngredientSubstitutes({
     }
   };
 
-  const generateMockSubstitutes = async (
-    original: MealIngredient,
-  ): Promise<SubstituteOption[]> => {
+  const generateMockSubstitutes = async (original: MealIngredient): Promise<SubstituteOption[]> => {
     // 模拟API延迟
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const baseSubstitutes =
-      SUBSTITUTION_RULES[
-        original.food.name.toUpperCase() as keyof typeof SUBSTITUTION_RULES
-      ] || [];
+      SUBSTITUTION_RULES[original.food.name.toUpperCase() as keyof typeof SUBSTITUTION_RULES] || [];
 
     const mockFoods: Food[] = baseSubstitutes.map((name, index) => ({
       id: `sub-${index}`,
@@ -214,16 +195,10 @@ export function IngredientSubstitutes({
       protein: original.food.protein
         ? original.food.protein + (Math.random() - 0.5) * 10
         : undefined,
-      carbs: original.food.carbs
-        ? original.food.carbs + (Math.random() - 0.5) * 20
-        : undefined,
-      fat: original.food.fat
-        ? original.food.fat + (Math.random() - 0.5) * 5
-        : undefined,
+      carbs: original.food.carbs ? original.food.carbs + (Math.random() - 0.5) * 20 : undefined,
+      fat: original.food.fat ? original.food.fat + (Math.random() - 0.5) * 5 : undefined,
       isOrganic: Math.random() > 0.7,
-      isCommonAllergen: ["坚果", "牛奶", "大豆"].some((allergen) =>
-        name.includes(allergen),
-      ),
+      isCommonAllergen: ["坚果", "牛奶", "大豆"].some((allergen) => name.includes(allergen)),
       tags: Math.random() > 0.5 ? ["common", "healthy"] : ["organic"],
     }));
 
@@ -238,10 +213,7 @@ export function IngredientSubstitutes({
       .sort((a, b) => b.similarity - a.similarity);
   };
 
-  const generateSubstitutionReasons = (
-    original: Food,
-    substitute: Food,
-  ): string[] => {
+  const generateSubstitutionReasons = (original: Food, substitute: Food): string[] => {
     const reasons = [];
 
     if (original.category === substitute.category) {
@@ -252,19 +224,11 @@ export function IngredientSubstitutes({
       reasons.push("有机食材，更健康");
     }
 
-    if (
-      substitute.calories &&
-      original.calories &&
-      substitute.calories < original.calories
-    ) {
+    if (substitute.calories && original.calories && substitute.calories < original.calories) {
       reasons.push("热量更低，有助于减重");
     }
 
-    if (
-      substitute.protein &&
-      original.protein &&
-      substitute.protein > original.protein
-    ) {
+    if (substitute.protein && original.protein && substitute.protein > original.protein) {
       reasons.push("蛋白质含量更高");
     }
 
@@ -280,9 +244,7 @@ export function IngredientSubstitutes({
   const filteredSubstitutes = substitutes.filter(
     (substitute) =>
       substitute.food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      substitute.food.category
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()),
+      substitute.food.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelectSubstitute = (substitute: SubstituteOption) => {
@@ -300,14 +262,12 @@ export function IngredientSubstitutes({
 
     onSubstitute(newIngredient);
     onClose();
-    toast.success(
-      `已将 ${ingredient.food.name} 替换为 ${selectedSubstitute.food.name}`,
-    );
+    toast.success(`已将 ${ingredient.food.name} 替换为 ${selectedSubstitute.food.name}`);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
@@ -317,35 +277,27 @@ export function IngredientSubstitutes({
 
         <div className="space-y-4">
           {/* 原食材信息 */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="rounded-lg bg-gray-50 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium text-gray-900">
-                  {ingredient.food.name}
-                </h3>
+                <h3 className="font-medium text-gray-900">{ingredient.food.name}</h3>
                 <p className="text-sm text-gray-600">
                   {ingredient.food.category &&
-                    CATEGORIES[
-                      ingredient.food.category as keyof typeof CATEGORIES
-                    ]}{" "}
+                    CATEGORIES[ingredient.food.category as keyof typeof CATEGORIES]}{" "}
                   • 用量: {ingredient.amount}
                   {ingredient.food.unit || "g"}
                 </p>
               </div>
               <div className="text-right text-sm text-gray-600">
-                {ingredient.food.calories && (
-                  <div>🔥 {ingredient.food.calories} kcal</div>
-                )}
-                {ingredient.food.protein && (
-                  <div>🥩 {ingredient.food.protein}g</div>
-                )}
+                {ingredient.food.calories && <div>🔥 {ingredient.food.calories} kcal</div>}
+                {ingredient.food.protein && <div>🥩 {ingredient.food.protein}g</div>}
               </div>
             </div>
           </div>
 
           {/* 搜索框 */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <Input
               placeholder="搜索替代食材..."
               value={searchTerm}
@@ -356,16 +308,16 @@ export function IngredientSubstitutes({
 
           {/* 替代选项列表 */}
           {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="py-8 text-center">
+              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
               <p className="text-gray-600">搜索替代食材中...</p>
             </div>
           ) : filteredSubstitutes.length > 0 ? (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="max-h-96 space-y-3 overflow-y-auto">
               {filteredSubstitutes.map((substitute, index) => (
                 <div
                   key={substitute.food.id}
-                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  className={`cursor-pointer rounded-lg border p-4 transition-all ${
                     selectedSubstitute?.food.id === substitute.food.id
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -374,54 +326,41 @@ export function IngredientSubstitutes({
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-medium text-gray-900">
-                          {substitute.food.name}
-                        </h4>
+                      <div className="mb-2 flex items-center gap-2">
+                        <h4 className="font-medium text-gray-900">{substitute.food.name}</h4>
                         {substitute.food.isOrganic && (
                           <Badge variant="secondary" className="text-xs">
-                            <Leaf className="h-3 w-3 mr-1" />
+                            <Leaf className="mr-1 h-3 w-3" />
                             有机
                           </Badge>
                         )}
                         {substitute.food.isCommonAllergen && (
                           <Badge variant="destructive" className="text-xs">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            <AlertTriangle className="mr-1 h-3 w-3" />
                             过敏原
                           </Badge>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                      <div className="mb-2 flex items-center gap-4 text-sm text-gray-600">
                         <span>相似度: {substitute.similarity}%</span>
                         <span>营养匹配: {substitute.nutritionMatch}%</span>
                         {substitute.food.category && (
                           <span>
-                            {
-                              CATEGORIES[
-                                substitute.food
-                                  .category as keyof typeof CATEGORIES
-                              ]
-                            }
+                            {CATEGORIES[substitute.food.category as keyof typeof CATEGORIES]}
                           </span>
                         )}
                       </div>
 
                       <div className="space-y-1">
                         {substitute.reasons.map((reason, i) => (
-                          <div
-                            key={i}
-                            className="text-xs text-green-600 flex items-center gap-1"
-                          >
+                          <div key={i} className="flex items-center gap-1 text-xs text-green-600">
                             <Check className="h-3 w-3" />
                             {reason}
                           </div>
                         ))}
                         {substitute.warnings?.map((warning, i) => (
-                          <div
-                            key={i}
-                            className="text-xs text-amber-600 flex items-center gap-1"
-                          >
+                          <div key={i} className="flex items-center gap-1 text-xs text-amber-600">
                             <AlertTriangle className="h-3 w-3" />
                             {warning}
                           </div>
@@ -431,15 +370,9 @@ export function IngredientSubstitutes({
 
                     <div className="ml-4 text-right">
                       <div className="text-sm text-gray-600">
-                        {substitute.food.calories && (
-                          <div>🔥 {substitute.food.calories} kcal</div>
-                        )}
-                        {substitute.food.protein && (
-                          <div>🥩 {substitute.food.protein}g</div>
-                        )}
-                        {substitute.food.carbs && (
-                          <div>🍚 {substitute.food.carbs}g</div>
-                        )}
+                        {substitute.food.calories && <div>🔥 {substitute.food.calories} kcal</div>}
+                        {substitute.food.protein && <div>🥩 {substitute.food.protein}g</div>}
+                        {substitute.food.carbs && <div>🍚 {substitute.food.carbs}g</div>}
                       </div>
                     </div>
                   </div>
@@ -447,8 +380,8 @@ export function IngredientSubstitutes({
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <div className="py-8 text-center">
+              <Search className="mx-auto mb-4 h-12 w-12 text-gray-300" />
               <p className="text-gray-600">
                 {searchTerm ? "未找到匹配的替代食材" : "暂无替代食材"}
               </p>
@@ -457,12 +390,11 @@ export function IngredientSubstitutes({
 
           {/* 选择提示 */}
           {selectedSubstitute && (
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="rounded-lg bg-blue-50 p-4">
               <div className="flex items-center gap-2 text-blue-800">
                 <Info className="h-4 w-4" />
                 <span className="text-sm">
-                  已选择: {selectedSubstitute.food.name} (相似度:{" "}
-                  {selectedSubstitute.similarity}%)
+                  已选择: {selectedSubstitute.food.name} (相似度: {selectedSubstitute.similarity}%)
                 </span>
               </div>
             </div>
@@ -473,10 +405,7 @@ export function IngredientSubstitutes({
           <Button variant="outline" onClick={onClose}>
             取消
           </Button>
-          <Button
-            onClick={handleConfirmSubstitute}
-            disabled={!selectedSubstitute}
-          >
+          <Button onClick={handleConfirmSubstitute} disabled={!selectedSubstitute}>
             确认替换
           </Button>
         </DialogFooter>

@@ -165,16 +165,11 @@ export class EnvSecurityManager {
 
     // 记录验证结果
     if (errors.length > 0) {
-      logger.error(
-        "环境变量验证失败",
-        new Error(errors.join("; ")),
-        undefined,
-        {
-          type: "environment",
-          errors,
-          warnings,
-        },
-      );
+      logger.error("环境变量验证失败", new Error(errors.join("; ")), undefined, {
+        type: "environment",
+        errors,
+        warnings,
+      });
 
       // 生产环境下抛出异常
       if (process.env.NODE_ENV === "production") {
@@ -196,11 +191,7 @@ export class EnvSecurityManager {
   /**
    * 验证单个环境变量
    */
-  private validateEnvVar(
-    key: string,
-    value: string | undefined,
-    rule: EnvValidationRule,
-  ): void {
+  private validateEnvVar(key: string, value: string | undefined, rule: EnvValidationRule): void {
     if (rule.required && (!value || value.trim() === "")) {
       throw new Error("必需但未设置或为空");
     }
@@ -211,33 +202,33 @@ export class EnvSecurityManager {
 
     // 类型验证
     switch (rule.type) {
-    case "url":
-      try {
-        new URL(value);
-      } catch {
-        throw new Error("无效的URL格式");
-      }
-      break;
+      case "url":
+        try {
+          new URL(value);
+        } catch {
+          throw new Error("无效的URL格式");
+        }
+        break;
 
-    case "email": {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) {
-        throw new Error("无效的邮箱格式");
+      case "email": {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          throw new Error("无效的邮箱格式");
+        }
+        break;
       }
-      break;
-    }
 
-    case "number":
-      if (isNaN(Number(value))) {
-        throw new Error("无效的数字格式");
-      }
-      break;
+      case "number":
+        if (isNaN(Number(value))) {
+          throw new Error("无效的数字格式");
+        }
+        break;
 
-    case "boolean":
-      if (!["true", "false", "1", "0"].includes(value.toLowerCase())) {
-        throw new Error("无效的布尔值格式 (应为 true/false, 1/0)");
-      }
-      break;
+      case "boolean":
+        if (!["true", "false", "1", "0"].includes(value.toLowerCase())) {
+          throw new Error("无效的布尔值格式 (应为 true/false, 1/0)");
+        }
+        break;
     }
 
     // 长度验证
@@ -258,18 +249,12 @@ export class EnvSecurityManager {
     const issues: string[] = [];
 
     // 检查 Clerk 密钥
-    if (
-      process.env.CLERK_SECRET_KEY &&
-      process.env.CLERK_SECRET_KEY.length < 20
-    ) {
+    if (process.env.CLERK_SECRET_KEY && process.env.CLERK_SECRET_KEY.length < 20) {
       issues.push("CLERK_SECRET_KEY 长度不足");
     }
 
     // 检查明文密码
-    if (
-      process.env.DATABASE_URL &&
-      process.env.DATABASE_URL.includes("password")
-    ) {
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes("password")) {
       const match = process.env.DATABASE_URL.match(/password=([^&;]+)/);
       if (match && match[1] === "password") {
         issues.push("数据库使用了默认弱密码");
@@ -277,10 +262,7 @@ export class EnvSecurityManager {
     }
 
     // 检查不安全的协议
-    if (
-      process.env.DATABASE_URL &&
-      process.env.DATABASE_URL.startsWith("http://")
-    ) {
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("http://")) {
       issues.push("数据库连接使用了不安全的HTTP协议");
     }
 
@@ -398,12 +380,10 @@ export class EnvSecurityManager {
     sensitiveVars: number;
     env: string;
     securityLevel: "low" | "medium" | "high";
-    } {
+  } {
     const totalVars = Object.keys(process.env).length;
     const validatedVars = this.validatedVars.size;
-    const sensitiveVars = SENSITIVE_KEYS.filter(
-      (key) => process.env[key],
-    ).length;
+    const sensitiveVars = SENSITIVE_KEYS.filter((key) => process.env[key]).length;
 
     // 计算安全等级
     let securityLevel: "low" | "medium" | "high" = "low";

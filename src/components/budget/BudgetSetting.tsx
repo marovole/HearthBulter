@@ -8,13 +8,7 @@ import { CalendarIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { format, addWeeks, addMonths, addQuarters } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -32,11 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +71,7 @@ const budgetFormSchema = z
     {
       message: "分类预算总和不能超过总预算",
       path: ["totalAmount"],
-    },
+    }
   );
 
 type BudgetFormData = z.infer<typeof budgetFormSchema>;
@@ -144,12 +134,7 @@ const categoryFields = [
   },
 ] as const;
 
-export function BudgetSetting({
-  memberId,
-  onSuccess,
-  onCancel,
-  initialData,
-}: BudgetSettingProps) {
+export function BudgetSetting({ memberId, onSuccess, onCancel, initialData }: BudgetSettingProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -185,7 +170,7 @@ export function BudgetSetting({
   ]);
   const categoryTotal = (categoryValues ?? []).reduce<number>(
     (sum, value) => sum + (value ?? 0),
-    0,
+    0
   );
   const remainingForOther = totalAmount - categoryTotal;
 
@@ -195,21 +180,21 @@ export function BudgetSetting({
     let endDate: Date;
 
     switch (period) {
-    case BudgetPeriod.WEEKLY:
-      endDate = addWeeks(startDate, 1);
-      break;
-    case BudgetPeriod.MONTHLY:
-      endDate = addMonths(startDate, 1);
-      break;
-    case BudgetPeriod.QUARTERLY:
-      endDate = addQuarters(startDate, 1);
-      break;
-    case BudgetPeriod.YEARLY:
-      endDate = addMonths(startDate, 12);
-      break;
-    case BudgetPeriod.CUSTOM:
-      // 保持当前日期
-      return;
+      case BudgetPeriod.WEEKLY:
+        endDate = addWeeks(startDate, 1);
+        break;
+      case BudgetPeriod.MONTHLY:
+        endDate = addMonths(startDate, 1);
+        break;
+      case BudgetPeriod.QUARTERLY:
+        endDate = addQuarters(startDate, 1);
+        break;
+      case BudgetPeriod.YEARLY:
+        endDate = addMonths(startDate, 12);
+        break;
+      case BudgetPeriod.CUSTOM:
+        // 保持当前日期
+        return;
     }
 
     form.setValue("startDate", startDate);
@@ -256,15 +241,13 @@ export function BudgetSetting({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="mx-auto w-full max-w-4xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <span className="text-2xl">💰</span>
           预算设定
         </CardTitle>
-        <CardDescription>
-          设定您的饮食预算，系统将帮您追踪支出并优化成本
-        </CardDescription>
+        <CardDescription>设定您的饮食预算，系统将帮您追踪支出并优化成本</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -276,7 +259,7 @@ export function BudgetSetting({
             )}
 
             {/* 基本信息 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="name"
@@ -313,9 +296,7 @@ export function BudgetSetting({
                         {periodOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             <div className="flex flex-col">
-                              <span className="font-medium">
-                                {option.label}
-                              </span>
+                              <span className="font-medium">{option.label}</span>
                               <span className="text-sm text-muted-foreground">
                                 {option.description}
                               </span>
@@ -331,7 +312,7 @@ export function BudgetSetting({
             </div>
 
             {/* 日期选择 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="startDate"
@@ -345,7 +326,7 @@ export function BudgetSetting({
                             variant="outline"
                             className={cn(
                               "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground",
+                              !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value ? (
@@ -363,8 +344,7 @@ export function BudgetSetting({
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) =>
-                            selectedPeriod !== BudgetPeriod.CUSTOM &&
-                            date < new Date()
+                            selectedPeriod !== BudgetPeriod.CUSTOM && date < new Date()
                           }
                           initialFocus
                         />
@@ -388,7 +368,7 @@ export function BudgetSetting({
                             variant="outline"
                             className={cn(
                               "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground",
+                              !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value ? (
@@ -407,8 +387,7 @@ export function BudgetSetting({
                           onSelect={field.onChange}
                           disabled={(date) =>
                             selectedPeriod !== BudgetPeriod.CUSTOM ||
-                            (form.getValues("startDate") &&
-                              date <= form.getValues("startDate"))
+                            (form.getValues("startDate") && date <= form.getValues("startDate"))
                           }
                           initialFocus
                         />
@@ -433,14 +412,10 @@ export function BudgetSetting({
                       step="0.01"
                       placeholder="输入总预算金额"
                       {...field}
-                      onChange={(e) =>
-                        field.onChange(parseFloat(e.target.value) || 0)
-                      }
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                     />
                   </FormControl>
-                  <FormDescription>
-                    这是您在预算周期内的总饮食支出预算
-                  </FormDescription>
+                  <FormDescription>这是您在预算周期内的总饮食支出预算</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -466,7 +441,7 @@ export function BudgetSetting({
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {categoryFields.map((field) => (
                   <FormField
                     key={field.key}
@@ -477,8 +452,8 @@ export function BudgetSetting({
                         <FormLabel className="flex items-center gap-2">
                           <span
                             className={cn(
-                              "px-2 py-1 rounded-full text-xs font-medium",
-                              field.color,
+                              "rounded-full px-2 py-1 text-xs font-medium",
+                              field.color
                             )}
                           >
                             {field.icon} {field.label}
@@ -490,11 +465,7 @@ export function BudgetSetting({
                             step="0.01"
                             placeholder="0.00"
                             {...formField}
-                            onChange={(e) =>
-                              formField.onChange(
-                                parseFloat(e.target.value) || 0,
-                              )
-                            }
+                            onChange={(e) => formField.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -505,20 +476,16 @@ export function BudgetSetting({
               </div>
 
               {/* 分类预算汇总 */}
-              <div className="bg-muted/50 rounded-lg p-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="rounded-lg bg-muted/50 p-4">
+                <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                   <div>
-                    <span className="text-muted-foreground">
-                      分类预算总计：
-                    </span>
-                    <span className="font-medium ml-1">
-                      ¥{categoryTotal.toFixed(2)}
-                    </span>
+                    <span className="text-muted-foreground">分类预算总计：</span>
+                    <span className="ml-1 font-medium">¥{categoryTotal.toFixed(2)}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">剩余可用：</span>
                     <span
-                      className={`font-medium ml-1 ${remainingForOther < 0 ? "text-red-600" : "text-green-600"}`}
+                      className={`ml-1 font-medium ${remainingForOther < 0 ? "text-red-600" : "text-green-600"}`}
                     >
                       ¥{remainingForOther.toFixed(2)}
                     </span>
@@ -526,12 +493,9 @@ export function BudgetSetting({
                   <div>
                     <span className="text-muted-foreground">使用率：</span>
                     <span
-                      className={`font-medium ml-1 ${categoryTotal > totalAmount ? "text-red-600" : ""}`}
+                      className={`ml-1 font-medium ${categoryTotal > totalAmount ? "text-red-600" : ""}`}
                     >
-                      {totalAmount > 0
-                        ? ((categoryTotal / totalAmount) * 100).toFixed(1)
-                        : 0}
-                      %
+                      {totalAmount > 0 ? ((categoryTotal / totalAmount) * 100).toFixed(1) : 0}%
                     </span>
                   </div>
                   <div>
@@ -548,7 +512,7 @@ export function BudgetSetting({
             {/* 预警设置 */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">预算预警设置</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FormField
                   control={form.control}
                   name="alertThreshold80"
@@ -556,9 +520,7 @@ export function BudgetSetting({
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">80%预警</FormLabel>
-                        <FormDescription className="text-sm">
-                          预算使用达到80%时提醒
-                        </FormDescription>
+                        <FormDescription className="text-sm">预算使用达到80%时提醒</FormDescription>
                       </div>
                       <FormControl>
                         <input
@@ -579,9 +541,7 @@ export function BudgetSetting({
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">100%预警</FormLabel>
-                        <FormDescription className="text-sm">
-                          预算用完时提醒
-                        </FormDescription>
+                        <FormDescription className="text-sm">预算用完时提醒</FormDescription>
                       </div>
                       <FormControl>
                         <input
@@ -601,12 +561,8 @@ export function BudgetSetting({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          110%超支预警
-                        </FormLabel>
-                        <FormDescription className="text-sm">
-                          预算超支10%时提醒
-                        </FormDescription>
+                        <FormLabel className="text-base">110%超支预警</FormLabel>
+                        <FormDescription className="text-sm">预算超支10%时提醒</FormDescription>
                       </div>
                       <FormControl>
                         <input

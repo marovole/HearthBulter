@@ -8,7 +8,7 @@ const createQueryBuilder = () =>
         }
         return jest.fn().mockReturnValue(createQueryBuilder());
       },
-    },
+    }
   );
 
 const createClient = () => {
@@ -18,15 +18,11 @@ const createClient = () => {
     rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
     auth: {
       signUp: jest.fn().mockResolvedValue({ data: null, error: null }),
-      signInWithPassword: jest
-        .fn()
-        .mockResolvedValue({ data: null, error: null }),
+      signInWithPassword: jest.fn().mockResolvedValue({ data: null, error: null }),
       signOut: jest.fn().mockResolvedValue({ error: null }),
       getSession: jest.fn().mockResolvedValue({ data: null, error: null }),
       refreshSession: jest.fn().mockResolvedValue({ data: null, error: null }),
-      resetPasswordForEmail: jest
-        .fn()
-        .mockResolvedValue({ data: null, error: null }),
+      resetPasswordForEmail: jest.fn().mockResolvedValue({ data: null, error: null }),
       updateUser: jest.fn().mockResolvedValue({ data: null, error: null }),
       verifyOtp: jest.fn().mockResolvedValue({ data: null, error: null }),
       onAuthStateChange: jest.fn(() => ({ data: { subscription: null } })),
