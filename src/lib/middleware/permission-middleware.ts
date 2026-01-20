@@ -248,7 +248,7 @@ export class PermissionMiddleware {
       const role = roleValue
         ? Object.values(FamilyMemberRole).includes(
             roleValue as FamilyMemberRole,
-          )
+        )
           ? (roleValue as FamilyMemberRole)
           : null
         : null;
@@ -437,33 +437,33 @@ export const withMemberPermission = (handler: PermissionHandler) =>
 
 export const withTaskPermission =
   (action: "create" | "read" | "update" | "delete") =>
-  (handler: PermissionHandler) => {
-    const permissions = {
-      create: [Permission.CREATE_TASK],
-      read: [Permission.READ_TASK],
-      update: [Permission.UPDATE_TASK],
-      delete: [Permission.DELETE_TASK],
-    };
+    (handler: PermissionHandler) => {
+      const permissions = {
+        create: [Permission.CREATE_TASK],
+        read: [Permission.READ_TASK],
+        update: [Permission.UPDATE_TASK],
+        delete: [Permission.DELETE_TASK],
+      };
 
-    return withPermissions(requirePermissions(permissions[action]!), handler);
-  };
+      return withPermissions(requirePermissions(permissions[action]!), handler);
+    };
 
 export const withOwnershipPermission =
   (permissions: Permission[], resourceOwnerId: string) =>
-  (handler: PermissionHandler) =>
-    withPermissions(
-      [
-        {
-          permissions,
-          requireOwnership: true,
-          requireFamilyMembership: true,
-          customValidator: async (context: PermissionContext) => {
-            return (
-              context.resourceOwnerId === resourceOwnerId ||
+    (handler: PermissionHandler) =>
+      withPermissions(
+        [
+          {
+            permissions,
+            requireOwnership: true,
+            requireFamilyMembership: true,
+            customValidator: async (context: PermissionContext) => {
+              return (
+                context.resourceOwnerId === resourceOwnerId ||
               context.userRole === FamilyMemberRole.ADMIN
-            );
+              );
+            },
           },
-        },
-      ],
-      handler,
-    );
+        ],
+        handler,
+      );

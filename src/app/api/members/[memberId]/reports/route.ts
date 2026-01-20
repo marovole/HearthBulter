@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Legacy Supabase code pending migration to Neon
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";

@@ -55,7 +55,7 @@ describe("CodeReviewService", () => {
 
     it("should detect console.log statements", async () => {
       const input: CodeReviewInput = {
-        content: 'console.log("debug message");',
+        content: "console.log(\"debug message\");",
         filePath: "src/debug.ts",
         fileType: "typescript",
       };
@@ -117,12 +117,12 @@ describe("CodeReviewService", () => {
     it("should review multiple files", async () => {
       const inputs: CodeReviewInput[] = [
         {
-          content: 'const goodCode = "hello";',
+          content: "const goodCode = \"hello\";",
           filePath: "src/good.ts",
           fileType: "typescript",
         },
         {
-          content: 'const badCode: any = "world";',
+          content: "const badCode: any = \"world\";",
           filePath: "src/bad.ts",
           fileType: "typescript",
         },

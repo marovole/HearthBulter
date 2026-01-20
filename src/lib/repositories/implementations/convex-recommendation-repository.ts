@@ -133,7 +133,7 @@ const buildRangeFilter = (range?: DateRangeFilter) => {
 };
 
 export class ConvexRecommendationRepository
-  implements RecommendationRepository
+implements RecommendationRepository
 {
   async getUserPreference(memberId: string): Promise<UserPreferenceDTO | null> {
     const preference = await convexClient.query<Record<string, unknown> | null>(
@@ -243,9 +243,9 @@ export class ConvexRecommendationRepository
     );
     const recipes = recipeIds.length
       ? await convexClient.query<Array<Record<string, unknown>>>(
-          api.recipes.listByIds,
-          { ids: recipeIds as Id<"recipes">[] },
-        )
+        api.recipes.listByIds,
+        { ids: recipeIds as Id<"recipes">[] },
+      )
       : [];
 
     const recipeMap = new Map(recipes.map((recipe) => [recipe._id, recipe]));

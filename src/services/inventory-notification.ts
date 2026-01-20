@@ -158,7 +158,7 @@ export class InventoryNotificationService {
 
   async generatePurchaseSuggestionNotifications(): Promise<
     InventoryNotification[]
-  > {
+    > {
     return [];
   }
 

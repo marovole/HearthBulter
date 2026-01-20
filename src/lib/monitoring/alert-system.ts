@@ -136,20 +136,20 @@ export class AlertSystem {
     },
   ): Promise<NotificationResult> {
     switch (channel) {
-      case NotificationChannel.EMAIL:
-        return this.sendEmailAlert(alert);
-      case NotificationChannel.SLACK:
-        return this.sendSlackAlert(alert);
-      case NotificationChannel.DINGTALK:
-        return this.sendDingTalkAlert(alert);
-      case NotificationChannel.WEBHOOK:
-        return this.sendWebhookAlert(alert);
-      default:
-        return {
-          success: false,
-          channel,
-          error: `Unsupported notification channel: ${channel}`,
-        };
+    case NotificationChannel.EMAIL:
+      return this.sendEmailAlert(alert);
+    case NotificationChannel.SLACK:
+      return this.sendSlackAlert(alert);
+    case NotificationChannel.DINGTALK:
+      return this.sendDingTalkAlert(alert);
+    case NotificationChannel.WEBHOOK:
+      return this.sendWebhookAlert(alert);
+    default:
+      return {
+        success: false,
+        channel,
+        error: `Unsupported notification channel: ${channel}`,
+      };
     }
   }
 
@@ -379,8 +379,8 @@ ${alert.message}
 
 上下文信息:
 ${Object.entries(alert.context)
-  .map(([key, value]) => `${key}: ${JSON.stringify(value, null, 2)}`)
-  .join("\n")}
+    .map(([key, value]) => `${key}: ${JSON.stringify(value, null, 2)}`)
+    .join("\n")}
 
 ---
 此邮件由 Health Butler 系统自动发送
@@ -459,15 +459,15 @@ ${Object.entries(alert.context)
    */
   private getSlackColor(level: AlertLevel): string {
     switch (level) {
-      case AlertLevel.CRITICAL:
-        return "#dc3545"; // red
-      case AlertLevel.ERROR:
-        return "#f59e0b"; // orange
-      case AlertLevel.WARNING:
-        return "#ffc107"; // yellow
-      case AlertLevel.INFO:
-      default:
-        return "#28a745"; // green
+    case AlertLevel.CRITICAL:
+      return "#dc3545"; // red
+    case AlertLevel.ERROR:
+      return "#f59e0b"; // orange
+    case AlertLevel.WARNING:
+      return "#ffc107"; // yellow
+    case AlertLevel.INFO:
+    default:
+      return "#28a745"; // green
     }
   }
 
@@ -476,15 +476,15 @@ ${Object.entries(alert.context)
    */
   private getSlackEmoji(level: AlertLevel): string {
     switch (level) {
-      case AlertLevel.CRITICAL:
-        return "🚨";
-      case AlertLevel.ERROR:
-        return "❌";
-      case AlertLevel.WARNING:
-        return "⚠️";
-      case AlertLevel.INFO:
-      default:
-        return "ℹ️";
+    case AlertLevel.CRITICAL:
+      return "🚨";
+    case AlertLevel.ERROR:
+      return "❌";
+    case AlertLevel.WARNING:
+      return "⚠️";
+    case AlertLevel.INFO:
+    default:
+      return "ℹ️";
     }
   }
 
@@ -493,15 +493,15 @@ ${Object.entries(alert.context)
    */
   private getDingTalkColor(level: AlertLevel): string {
     switch (level) {
-      case AlertLevel.CRITICAL:
-        return "red";
-      case AlertLevel.ERROR:
-        return "orange";
-      case AlertLevel.WARNING:
-        return "yellow";
-      case AlertLevel.INFO:
-      default:
-        return "green";
+    case AlertLevel.CRITICAL:
+      return "red";
+    case AlertLevel.ERROR:
+      return "orange";
+    case AlertLevel.WARNING:
+      return "yellow";
+    case AlertLevel.INFO:
+    default:
+      return "green";
     }
   }
 

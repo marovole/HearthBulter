@@ -256,7 +256,7 @@ export class NeonNotificationRepository implements NotificationRepository {
     status: ScheduledNotificationDTO["status"],
   ): Promise<void> {
     await neonAdapter.$executeRaw(
-      `UPDATE scheduled_notifications SET status = $1, updated_at = NOW() WHERE id = $2`,
+      "UPDATE scheduled_notifications SET status = $1, updated_at = NOW() WHERE id = $2",
       [status, scheduleId],
     );
   }

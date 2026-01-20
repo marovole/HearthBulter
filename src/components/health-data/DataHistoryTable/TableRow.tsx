@@ -40,14 +40,14 @@ export function TableRow({
           )}
           {item.bloodPressureSystolic !== null &&
             item.bloodPressureDiastolic !== null && (
-              <div className="flex items-center space-x-2">
-                <span className="text-gray-500">血压:</span>
-                <span className="font-medium">
-                  {item.bloodPressureSystolic}/{item.bloodPressureDiastolic}{" "}
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-500">血压:</span>
+              <span className="font-medium">
+                {item.bloodPressureSystolic}/{item.bloodPressureDiastolic}{" "}
                   mmHg
-                </span>
-              </div>
-            )}
+              </span>
+            </div>
+          )}
           {item.heartRate !== null && (
             <div className="flex items-center space-x-2">
               <span className="text-gray-500">心率:</span>

@@ -78,7 +78,7 @@ type InventoryItemRow = Database["public"]["Tables"]["inventory_items"]["Row"];
  * - 完善的错误处理
  */
 export class SupabaseRecommendationRepository
-  implements RecommendationRepository
+implements RecommendationRepository
 {
   private readonly client: SupabaseClient<Database>;
   private readonly loggerPrefix = "[SupabaseRecommendationRepository]";
@@ -1002,8 +1002,8 @@ export class SupabaseRecommendationRepository
                 category?: string | null;
               }
             | undefined = Array.isArray(ingredient.food)
-            ? ingredient.food[0]
-            : ingredient.food;
+              ? ingredient.food[0]
+              : ingredient.food;
           if (!ingredient.food_id && !foodValue?.id) return null;
           const foodId = foodValue?.id ?? ingredient.food_id ?? "";
           return {

@@ -126,18 +126,18 @@ export function LeaderboardView({
   // 获取排名图标
   const getRankIcon = (rank: number) => {
     switch (rank) {
-      case 1:
-        return <Crown className="h-5 w-5 text-yellow-500" />;
-      case 2:
-        return <Trophy className="h-5 w-5 text-gray-400" />;
-      case 3:
-        return <Medal className="h-5 w-5 text-orange-600" />;
-      default:
-        return (
-          <span className="text-sm font-medium text-muted-foreground">
+    case 1:
+      return <Crown className="h-5 w-5 text-yellow-500" />;
+    case 2:
+      return <Trophy className="h-5 w-5 text-gray-400" />;
+    case 3:
+      return <Medal className="h-5 w-5 text-orange-600" />;
+    default:
+      return (
+        <span className="text-sm font-medium text-muted-foreground">
             #{rank}
-          </span>
-        );
+        </span>
+      );
     }
   };
 
@@ -155,17 +155,17 @@ export function LeaderboardView({
   // 格式化分数
   const formatScore = (type: LeaderboardType, score: number) => {
     switch (type) {
-      case "HEALTH_SCORE":
-      case "NUTRITION_SCORE":
-        return `${score.toFixed(1)}分`;
-      case "CHECK_IN_STREAK":
-        return `${score}天`;
-      case "WEIGHT_LOSS":
-        return `${score.toFixed(1)}kg`;
-      case "EXERCISE_MINUTES":
-        return `${score}分钟`;
-      default:
-        return score.toString();
+    case "HEALTH_SCORE":
+    case "NUTRITION_SCORE":
+      return `${score.toFixed(1)}分`;
+    case "CHECK_IN_STREAK":
+      return `${score}天`;
+    case "WEIGHT_LOSS":
+      return `${score.toFixed(1)}kg`;
+    case "EXERCISE_MINUTES":
+      return `${score}分钟`;
+    default:
+      return score.toString();
     }
   };
 
@@ -270,10 +270,10 @@ export function LeaderboardView({
                   {getRankChangeIcon(leaderboardData.userRank.rankChange)}
                   {leaderboardData.userRank.rankChange !== undefined &&
                     leaderboardData.userRank.rankChange !== 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        {Math.abs(leaderboardData.userRank.rankChange)}
-                      </span>
-                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {Math.abs(leaderboardData.userRank.rankChange)}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -384,19 +384,19 @@ export function LeaderboardView({
 // 获取元数据显示
 function getMetadataDisplay(type: LeaderboardType, metadata: any): string {
   switch (type) {
-    case "EXERCISE_MINUTES":
-      return metadata.averageMinutes
-        ? `日均${metadata.averageMinutes}分钟`
-        : "";
-    case "NUTRITION_SCORE":
-      return metadata.averageScore
-        ? `平均${metadata.averageScore.toFixed(1)}分`
-        : "";
-    case "WEIGHT_LOSS":
-      return metadata.weightLoss
-        ? `减重${metadata.weightLoss.toFixed(1)}kg`
-        : "";
-    default:
-      return "";
+  case "EXERCISE_MINUTES":
+    return metadata.averageMinutes
+      ? `日均${metadata.averageMinutes}分钟`
+      : "";
+  case "NUTRITION_SCORE":
+    return metadata.averageScore
+      ? `平均${metadata.averageScore.toFixed(1)}分`
+      : "";
+  case "WEIGHT_LOSS":
+    return metadata.weightLoss
+      ? `减重${metadata.weightLoss.toFixed(1)}kg`
+      : "";
+  default:
+    return "";
   }
 }

@@ -271,17 +271,17 @@ export class AchievementSystem {
     reward: AchievementReward,
   ): Promise<void> {
     switch (reward.type) {
-      case "points":
-        console.log(`用户${memberId}获得${reward.value}积分`);
-        break;
-      case "vip_days":
-        console.log(`用户${memberId}获得${reward.value}天VIP`);
-        break;
-      case "title":
-        console.log(`用户${memberId}获得称号"${reward.value}"`);
-        break;
-      default:
-        console.log(`未知奖励类型: ${reward.type}`);
+    case "points":
+      console.log(`用户${memberId}获得${reward.value}积分`);
+      break;
+    case "vip_days":
+      console.log(`用户${memberId}获得${reward.value}天VIP`);
+      break;
+    case "title":
+      console.log(`用户${memberId}获得称号"${reward.value}"`);
+      break;
+    default:
+      console.log(`未知奖励类型: ${reward.type}`);
     }
   }
 

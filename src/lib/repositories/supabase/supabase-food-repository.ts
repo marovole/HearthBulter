@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Legacy Supabase code pending migration to Neon
 import type { FoodCategory } from "@/lib/types/meal";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
 import { safeParseArray } from "@/lib/utils/json-helpers";

@@ -61,20 +61,20 @@ export function ShareCard({
   // 获取内容类型图标
   const getContentIcon = (type: ShareContentType) => {
     switch (type) {
-      case "HEALTH_REPORT":
-        return <TrendingUp className="h-4 w-4" />;
-      case "GOAL_ACHIEVEMENT":
-        return <Target className="h-4 w-4" />;
-      case "MEAL_LOG":
-        return <Utensils className="h-4 w-4" />;
-      case "ACHIEVEMENT":
-        return <Trophy className="h-4 w-4" />;
-      case "CHECK_IN_STREAK":
-        return <Calendar className="h-4 w-4" />;
-      case "WEIGHT_MILESTONE":
-        return <TrendingUp className="h-4 w-4" />;
-      default:
-        return <Share2 className="h-4 w-4" />;
+    case "HEALTH_REPORT":
+      return <TrendingUp className="h-4 w-4" />;
+    case "GOAL_ACHIEVEMENT":
+      return <Target className="h-4 w-4" />;
+    case "MEAL_LOG":
+      return <Utensils className="h-4 w-4" />;
+    case "ACHIEVEMENT":
+      return <Trophy className="h-4 w-4" />;
+    case "CHECK_IN_STREAK":
+      return <Calendar className="h-4 w-4" />;
+    case "WEIGHT_MILESTONE":
+      return <TrendingUp className="h-4 w-4" />;
+    default:
+      return <Share2 className="h-4 w-4" />;
     }
   };
 

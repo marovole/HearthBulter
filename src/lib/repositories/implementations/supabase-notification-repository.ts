@@ -321,7 +321,7 @@ export class SupabaseNotificationRepository implements NotificationRepository {
     const normalizeRecord = <T>(
       value: T | T[] | null | undefined,
     ): T | undefined =>
-      Array.isArray(value) ? value[0] : (value ?? undefined);
+        Array.isArray(value) ? value[0] : (value ?? undefined);
 
     const { data, error } = await this.client
       .from("family_members")

@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Legacy Supabase code pending migration to Neon
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
@@ -272,11 +272,11 @@ export async function GET(
           firstBloodPressure &&
           lastBloodPressure
             ? {
-                systolic:
+              systolic:
                   lastBloodPressure.systolic - firstBloodPressure.systolic,
-                diastolic:
+              diastolic:
                   lastBloodPressure.diastolic - firstBloodPressure.diastolic,
-              }
+            }
             : null,
       };
     }

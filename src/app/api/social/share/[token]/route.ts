@@ -95,10 +95,10 @@ export async function GET(
         imageUrl: sharedContent.imageUrl,
         member: member
           ? {
-              id: member._id,
-              name: member.name,
-              avatar: member.avatar,
-            }
+            id: member._id,
+            name: member.name,
+            avatar: member.avatar,
+          }
           : null,
         privacyLevel: sharedContent.privacyLevel,
         allowComment: sharedContent.allowComment,
@@ -170,20 +170,20 @@ export async function POST(
 
     let actionType: string;
     switch (action) {
-      case "click":
-        actionType = "CLICK";
-        break;
-      case "share":
-        actionType = "SHARE";
-        break;
-      case "conversion":
-        actionType = "CONVERSION";
-        break;
-      default:
-        return NextResponse.json(
-          { error: "不支持的动作类型" },
-          { status: 400 },
-        );
+    case "click":
+      actionType = "CLICK";
+      break;
+    case "share":
+      actionType = "SHARE";
+      break;
+    case "conversion":
+      actionType = "CONVERSION";
+      break;
+    default:
+      return NextResponse.json(
+        { error: "不支持的动作类型" },
+        { status: 400 },
+      );
     }
 
     await convexClient.mutation(api.social.recordShareEvent, {

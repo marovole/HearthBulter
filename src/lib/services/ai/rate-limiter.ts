@@ -492,8 +492,8 @@ export class RateLimiter {
       const blockRate =
         globalStats.totalRequests > 0
           ? Math.round(
-              (globalStats.blockedRequests / globalStats.totalRequests) * 100,
-            )
+            (globalStats.blockedRequests / globalStats.totalRequests) * 100,
+          )
           : 0;
       return {
         activeRecords,
@@ -585,10 +585,10 @@ export class RateLimiter {
       blockRate:
         rangeRequests.length > 0
           ? Math.round(
-              ((rangeRequests.length - stats.allowedRequests) /
+            ((rangeRequests.length - stats.allowedRequests) /
                 rangeRequests.length) *
                 100,
-            )
+          )
           : 0,
       currentUsage,
       remainingRequests,

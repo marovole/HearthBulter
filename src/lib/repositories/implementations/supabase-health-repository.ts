@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Legacy Supabase code pending migration to Neon
 /**
  * Supabase Health Repository Implementation
  *
@@ -140,12 +140,12 @@ export class SupabaseHealthRepository implements HealthRepository {
         })),
         dietaryPreference: dietaryPreferenceResult.data
           ? {
-              dietType: dietaryPreferenceResult.data.dietType,
-              isVegetarian: dietaryPreferenceResult.data.isVegetarian ?? false,
-              isVegan: dietaryPreferenceResult.data.isVegan ?? false,
-              restrictions: dietaryPreferenceResult.data.restrictions,
-              preferences: dietaryPreferenceResult.data.preferences,
-            }
+            dietType: dietaryPreferenceResult.data.dietType,
+            isVegetarian: dietaryPreferenceResult.data.isVegetarian ?? false,
+            isVegan: dietaryPreferenceResult.data.isVegan ?? false,
+            restrictions: dietaryPreferenceResult.data.restrictions,
+            preferences: dietaryPreferenceResult.data.preferences,
+          }
           : null,
         healthData: (healthDataResult.data || []).map((h) => ({
           id: h.id,

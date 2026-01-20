@@ -55,9 +55,9 @@ export async function GET(request: NextRequest) {
       range:
         startDate || endDate
           ? {
-              start: startDate ? new Date(startDate) : undefined,
-              end: endDate ? new Date(endDate) : undefined,
-            }
+            start: startDate ? new Date(startDate) : undefined,
+            end: endDate ? new Date(endDate) : undefined,
+          }
           : undefined,
     };
 

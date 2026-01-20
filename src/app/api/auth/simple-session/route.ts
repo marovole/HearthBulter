@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
       authenticated: !!user,
       session: user
         ? {
-            user,
-            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          }
+          user,
+          expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        }
         : null,
       timestamp: new Date().toISOString(),
     });

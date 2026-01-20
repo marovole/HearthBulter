@@ -29,7 +29,7 @@ describe("SQL/PostgREST 注入防护测试", () => {
       "100%",
     ];
 
-    it.each(dangerousInputs)('应该安全处理危险输入: "%s"', (input) => {
+    it.each(dangerousInputs)("应该安全处理危险输入: \"%s\"", (input) => {
       // 验证危险输入被正确处理（转义或拒绝）
       expect(typeof input).toBe("string");
     });
@@ -53,7 +53,7 @@ describe("SQL/PostgREST 注入防护测试", () => {
       "key\tvalue",
     ];
 
-    it.each(dangerousKeys)('应该拒绝无效的键名: "%s"', (key) => {
+    it.each(dangerousKeys)("应该拒绝无效的键名: \"%s\"", (key) => {
       // 验证无效键名被拒绝
       const isValid = /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key);
       expect(isValid).toBe(false);
@@ -86,17 +86,17 @@ describe("SQL/PostgREST 注入防护测试", () => {
 
 describe("XSS 防护测试", () => {
   const xssPayloads = [
-    '<script>alert("xss")</script>',
-    '<img src=x onerror=alert("xss")>',
-    'javascript:alert("xss")',
-    '<svg onload=alert("xss")>',
-    '"><script>alert("xss")</script>',
+    "<script>alert(\"xss\")</script>",
+    "<img src=x onerror=alert(\"xss\")>",
+    "javascript:alert(\"xss\")",
+    "<svg onload=alert(\"xss\")>",
+    "\"><script>alert(\"xss\")</script>",
     "'-alert('xss')-'",
     "<iframe src=\"javascript:alert('xss')\">",
   ];
 
   describe("输入验证", () => {
-    it.each(xssPayloads)('应该转义或拒绝 XSS payload: "%s"', (payload) => {
+    it.each(xssPayloads)("应该转义或拒绝 XSS payload: \"%s\"", (payload) => {
       // 输入应该被转义或拒绝
       expect(typeof payload).toBe("string");
     });
@@ -105,7 +105,7 @@ describe("XSS 防护测试", () => {
   describe("输出编码", () => {
     it("JSON 响应应该正确编码", () => {
       const maliciousData = {
-        name: '<script>alert("xss")</script>',
+        name: "<script>alert(\"xss\")</script>",
       };
 
       const json = JSON.stringify(maliciousData);
@@ -127,7 +127,7 @@ describe("路径遍历防护测试", () => {
     "C:\\Windows\\System32",
   ];
 
-  it.each(pathTraversalPayloads)('应该拒绝路径遍历尝试: "%s"', (payload) => {
+  it.each(pathTraversalPayloads)("应该拒绝路径遍历尝试: \"%s\"", (payload) => {
     // 验证路径遍历被阻止
     const containsTraversal = payload.includes("..") || payload.includes("%2e");
     expect(
@@ -146,7 +146,7 @@ describe("命令注入防护测试", () => {
     "\n rm -rf /",
   ];
 
-  it.each(commandInjectionPayloads)('应该拒绝命令注入尝试: "%s"', (payload) => {
+  it.each(commandInjectionPayloads)("应该拒绝命令注入尝试: \"%s\"", (payload) => {
     // 验证命令注入被阻止
     expect(typeof payload).toBe("string");
   });
@@ -160,7 +160,7 @@ describe("LDAP 注入防护测试", () => {
     "*)(objectClass=*",
   ];
 
-  it.each(ldapInjectionPayloads)('应该拒绝 LDAP 注入尝试: "%s"', (payload) => {
+  it.each(ldapInjectionPayloads)("应该拒绝 LDAP 注入尝试: \"%s\"", (payload) => {
     // 验证 LDAP 注入被阻止
     expect(typeof payload).toBe("string");
   });
@@ -171,7 +171,7 @@ describe("JSON 注入防护测试", () => {
     const nestedJson = {
       data: {
         nested: {
-          value: '{"injected": true}',
+          value: "{\"injected\": true}",
         },
       },
     };
@@ -199,7 +199,7 @@ describe("原型污染防护测试", () => {
   const prototypePollutionPayloads = [
     { __proto__: { polluted: true } },
     { constructor: { prototype: { polluted: true } } },
-    JSON.parse('{"__proto__": {"polluted": true}}'),
+    JSON.parse("{\"__proto__\": {\"polluted\": true}}"),
   ];
 
   it.each(prototypePollutionPayloads)("应该防止原型污染", (_payload) => {
@@ -215,7 +215,7 @@ describe("ReDoS 防护测试", () => {
     "x]x]x]x]x]x]x]x]x]x]x]x]x]x]x]x]!",
   ];
 
-  it.each(redosPatterns)('正则表达式应该在合理时间内完成: "%s"', (input) => {
+  it.each(redosPatterns)("正则表达式应该在合理时间内完成: \"%s\"", (input) => {
     const start = Date.now();
 
     // 测试常用的验证正则
