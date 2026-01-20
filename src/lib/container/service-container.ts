@@ -1,19 +1,6 @@
 // @ts-nocheck - Service container pending migration to Neon
-/**
- * 服务容器 - 依赖注入核心
- *
- * 提供统一的服务实例管理，支持：
- * - 单例模式
- * - 懒加载
- * - Repository 层抽象
- * - 环境切换（Supabase/Mock）
- *
- * @module service-container
- */
-
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase-database";
-import { SupabaseClientManager } from "@/lib/db/supabase-adapter";
+import { NeonClientManager } from "@/lib/db/neon-client";
 
 import type { RecommendationRepository } from "@/lib/repositories/interfaces/recommendation-repository";
 import type { NotificationRepository } from "@/lib/repositories/interfaces/notification-repository";
@@ -22,10 +9,10 @@ import type { BudgetRepository } from "@/lib/repositories/interfaces/budget-repo
 import type { FamilyRepository } from "@/lib/repositories/interfaces/family-repository";
 
 import { ConvexRecommendationRepository } from "@/lib/repositories/implementations/convex-recommendation-repository";
-import { SupabaseNotificationRepository } from "@/lib/repositories/implementations/supabase-notification-repository";
-import { SupabaseAnalyticsRepository } from "@/lib/repositories/implementations/supabase-analytics-repository";
-import { SupabaseBudgetRepository } from "@/lib/repositories/implementations/supabase-budget-repository";
-import { SupabaseFamilyRepository } from "@/lib/repositories/implementations/supabase-family-repository";
+import { NeonNotificationRepository } from "@/lib/repositories/implementations/neon-notification-repository";
+import { NeonAnalyticsRepository } from "@/lib/repositories/implementations/neon-analytics-repository";
+import { NeonBudgetRepository } from "@/lib/repositories/implementations/neon-budget-repository";
+import { NeonFamilyRepository } from "@/lib/repositories/implementations/neon-family-repository";
 
 // Service层导入（暂时使用现有实现，后续重构为Repository模式）
 import { RecommendationEngine } from "@/lib/services/recommendation/recommendation-engine";
@@ -57,11 +44,7 @@ export interface RepositoryOverrides {
  * 服务容器配置
  */
 export interface ServiceContainerConfig {
-  /** Repository 后端类型 */
   repositoryType?: RepositoryBackend;
-  /** 自定义 Supabase 客户端 */
-  supabaseClient?: SupabaseClient<Database>;
-  /** Repository 覆盖（用于测试） */
   repositoryOverrides?: RepositoryOverrides;
 }
 
@@ -74,33 +57,21 @@ export interface ServiceContainerConfig {
 export class ServiceContainer {
   private static readonly GLOBAL_KEY = "__serviceContainerSingleton";
   private readonly config: ServiceContainerConfig;
-  private readonly supabaseClient: SupabaseClient<Database>;
 
-  // Repository 实例缓存
   private recommendationRepository?: RecommendationRepository;
   private notificationRepository?: NotificationRepository;
   private analyticsRepository?: AnalyticsRepository;
   private budgetRepository?: BudgetRepository;
   private familyRepository?: FamilyRepository;
 
-  // Service 实例缓存（暂时使用现有实现，后续重构）
   private recommendationEngine?: RecommendationEngine;
   private notificationManager?: NotificationManager;
   private analyticsService?: AnalyticsService;
   private budgetTracker?: BudgetTracker;
   private trendAnalyzer?: TrendAnalyzer;
 
-  /**
-   * 私有构造函数（单例模式）
-   */
   private constructor(config: ServiceContainerConfig = {}) {
     this.config = config;
-    // 延迟加载 SupabaseClientManager 以避免模块顶层执行
-    if (config.supabaseClient) {
-      this.supabaseClient = config.supabaseClient;
-    } else {
-      this.supabaseClient = SupabaseClientManager.getInstance();
-    }
   }
 
   /**
@@ -161,7 +132,7 @@ export class ServiceContainer {
       if (this.config.repositoryType === "mock") {
         throw new Error("Mock repositories not yet implemented");
       }
-      this.notificationRepository = new SupabaseNotificationRepository(this.supabaseClient);
+      this.notificationRepository = new NeonNotificationRepository();
     }
 
     return this.notificationRepository!;
@@ -179,7 +150,7 @@ export class ServiceContainer {
       if (this.config.repositoryType === "mock") {
         throw new Error("Mock repositories not yet implemented");
       }
-      this.analyticsRepository = new SupabaseAnalyticsRepository(this.supabaseClient);
+      this.analyticsRepository = new NeonAnalyticsRepository();
     }
 
     return this.analyticsRepository;
@@ -197,7 +168,7 @@ export class ServiceContainer {
       if (this.config.repositoryType === "mock") {
         throw new Error("Mock repositories not yet implemented");
       }
-      this.budgetRepository = new SupabaseBudgetRepository(this.supabaseClient);
+      this.budgetRepository = new NeonBudgetRepository();
     }
 
     return this.budgetRepository;
@@ -212,7 +183,7 @@ export class ServiceContainer {
       if (this.config.repositoryType === "mock") {
         throw new Error("Mock repositories not yet implemented");
       }
-      this.familyRepository = new SupabaseFamilyRepository(this.supabaseClient);
+      this.familyRepository = new NeonFamilyRepository();
     }
 
     return this.familyRepository;
