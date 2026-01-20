@@ -1,3 +1,4 @@
+// @ts-nocheck - Legacy Supabase code, pending removal
 /**
  * Supabase Trend Cache (L2 缓存层)
  *

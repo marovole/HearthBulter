@@ -115,9 +115,9 @@ export interface BudgetRepository {
   /**
    * 创建预算预警
    *
-   * @param alert - 预警对象
+   * @param alert - 预警对象（无需 id，由数据库生成）
    */
-  createBudgetAlert(alert: BudgetAlertDTO): Promise<void>;
+  createBudgetAlert(alert: Omit<BudgetAlertDTO, "id">): Promise<void>;
 
   /**
    * 查询活跃预警

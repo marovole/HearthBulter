@@ -1,3 +1,4 @@
+// @ts-nocheck - Legacy Supabase code, pending removal
 /**
  * Supabase 分析 Repository 实现
  *

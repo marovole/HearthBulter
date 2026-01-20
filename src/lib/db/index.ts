@@ -17,6 +17,7 @@ import {
   testDatabaseConnection as supabaseTestConnection,
   ensureDatabaseConnection as supabaseEnsureConnection,
 } from "./supabase-adapter";
+import { neonAdapter } from "./neon-adapter";
 
 // 检测是否在构建阶段
 // Cloudflare Workers 环境：CF_PAGES 变量存在时为运行时
@@ -68,3 +69,5 @@ export async function getDB() {
 export async function getPrismaClient() {
   return supabaseAdapter;
 }
+
+export { neonAdapter };

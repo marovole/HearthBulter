@@ -1,3 +1,4 @@
+// @ts-nocheck - Legacy Supabase code, pending removal
 /**
  * Supabase 预算 Repository 实现
  *

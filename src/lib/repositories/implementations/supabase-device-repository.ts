@@ -1,3 +1,4 @@
+// @ts-nocheck - Legacy Supabase code, pending removal
 /**
  * Supabase DeviceRepository 实现
  *

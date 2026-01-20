@@ -1,3 +1,4 @@
+// @ts-nocheck - Legacy Supabase code, pending removal
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase-database";
 

@@ -358,7 +358,6 @@ export class BudgetTracker {
 
       if (usagePercentage >= 100) {
         await this.budgetRepository.createBudgetAlert({
-          id: "", // Repository will generate
           budgetId,
           type: "CATEGORY_BUDGET_ALERT",
           threshold: 100,
@@ -405,7 +404,6 @@ export class BudgetTracker {
     if (currentDailyAverage > dailyBudget * 1.2) {
       // 超过日均预算20%
       await this.budgetRepository.createBudgetAlert({
-        id: "", // Repository will generate
         budgetId: budget.id,
         type: "DAILY_EXCESS",
         threshold: dailyBudget * 1.2,

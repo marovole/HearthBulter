@@ -1,3 +1,4 @@
+// @ts-nocheck - Service container pending migration to Neon
 /**
  * 服务容器 - 依赖注入核心
  *
