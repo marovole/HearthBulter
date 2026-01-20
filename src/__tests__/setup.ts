@@ -306,12 +306,31 @@ jest.mock("../../convex/_generated/api", () => ({
   ),
 }));
 
-jest.mock("@/lib/db", () => ({
-  db: {},
-  testDatabaseConnection: jest.fn().mockResolvedValue(true),
-  ensureDatabaseConnection: jest.fn().mockResolvedValue(true),
-  createDatabaseConnection: jest.fn(),
-}));
+jest.mock("@/lib/db", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { mockPrisma } = require("./mocks/supabase-adapter");
+  return {
+    prisma: mockPrisma,
+    db: mockPrisma,
+    getDB: jest.fn().mockResolvedValue(mockPrisma),
+    getPrismaClient: jest.fn().mockResolvedValue(mockPrisma),
+    testDatabaseConnection: jest.fn().mockResolvedValue(true),
+    ensureDatabaseConnection: jest.fn().mockResolvedValue(undefined),
+  };
+});
+
+jest.mock("@/lib/db/supabase-adapter", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { mockPrisma } = require("./mocks/supabase-adapter");
+  return {
+    supabaseAdapter: mockPrisma,
+    SupabaseClientManager: {
+      getInstance: jest.fn(),
+    },
+    testDatabaseConnection: jest.fn().mockResolvedValue(true),
+    ensureDatabaseConnection: jest.fn().mockResolvedValue(undefined),
+  };
+});
 
 // Mock Next.js Request and Response objects
 const MockRequest = class {
@@ -525,7 +544,23 @@ jest.mock("@/lib/services/usda-service", () => {
 });
 
 jest.mock("@/lib/repositories/notification-repository-singleton", () => {
-  const { prisma } = jest.requireActual("@/lib/db");
+  const createMockModel = (name: string) => ({
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    upsert: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+  });
+
+  const mockPrisma = {
+    user: createMockModel("user"),
+    notification: createMockModel("notification"),
+    familyMember: createMockModel("familyMember"),
+  };
 
   const toNotificationDTO = (record) => ({
     id: record.id,
@@ -550,7 +585,7 @@ jest.mock("@/lib/repositories/notification-repository-singleton", () => {
 
   const notificationRepository = {
     createNotification: jest.fn(async (payload) => {
-      const record = await prisma.notification.create({
+      const record = await mockPrisma.notification.create({
         data: {
           memberId: payload.memberId,
           type: payload.type,
@@ -576,24 +611,26 @@ jest.mock("@/lib/repositories/notification-repository-singleton", () => {
       });
     }),
     getNotificationById: jest.fn(async (id) => {
-      const record = await prisma.notification.findUnique({ where: { id } });
+      const record = await mockPrisma.notification.findUnique({
+        where: { id },
+      });
       return record ? toNotificationDTO(record) : null;
     }),
     listMemberNotifications: jest.fn(async () => {
-      const records = await prisma.notification.findMany();
+      const records = await mockPrisma.notification.findMany();
       return {
         items: records.map(toNotificationDTO),
         total: records.length,
       };
     }),
     updateStatus: jest.fn(async (id, status) => {
-      await prisma.notification.update({
+      await mockPrisma.notification.update({
         where: { id },
         data: { status },
       });
     }),
     markAsRead: jest.fn(async (notificationId) => {
-      await prisma.notification.update({
+      await mockPrisma.notification.update({
         where: { id: notificationId },
         data: { read: true, readAt: new Date() },
       });
@@ -607,7 +644,9 @@ jest.mock("@/lib/repositories/notification-repository-singleton", () => {
     getNotificationPreferences: jest.fn(async () => null),
     upsertNotificationPreferences: jest.fn(async () => {}),
     getNotificationRecipient: jest.fn(async (memberId) => {
-      const user = await prisma.user.findUnique({ where: { id: memberId } });
+      const user = await mockPrisma.user.findUnique({
+        where: { id: memberId },
+      });
       if (!user) {
         return null;
       }
@@ -629,21 +668,37 @@ jest.mock("@/lib/repositories/notification-repository-singleton", () => {
       };
     }),
     deleteNotification: jest.fn(async (notificationId, memberId) => {
-      const record = await prisma.notification.findUnique({
-        where: { id: notificationId },
-      });
+      const findManyMock = mockPrisma.notification.findMany as jest.Mock;
+      const notifications = await findManyMock();
+      const record = notifications.find((n: any) => n?.id === notificationId);
       if (!record || (record.userId && record.userId !== memberId)) {
         throw new Error("Unauthorized");
       }
-      await prisma.notification.delete({ where: { id: notificationId } });
+      await mockPrisma.notification.delete({ where: { id: notificationId } });
     }),
   };
 
   return {
     getNotificationRepository: () => notificationRepository,
     notificationRepository,
+    __mockPrisma: mockPrisma,
   };
 });
+
+// Export mockPrisma globally for tests to configure
+declare global {
+  // eslint-disable-next-line no-var, @typescript-eslint/no-explicit-any
+  var __testMockPrisma: any;
+}
+
+// Make mockPrisma available globally for test configuration
+(global as any).__testMockPrisma = {
+  user: {},
+  notification: {},
+  familyMember: {},
+  deviceConnection: {},
+  healthData: {},
+};
 
 // Mock JWT services (can be bypassed by setting USE_REAL_JOSE=true)
 if (process.env.USE_REAL_JOSE !== "true") {

@@ -1,3 +1,8 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { mockPrisma } = require("./supabase-adapter");
+
+const PrismaClient = jest.fn().mockImplementation(() => mockPrisma);
+
 const enumProxy = new Proxy(
   {},
   {
@@ -5,26 +10,8 @@ const enumProxy = new Proxy(
   },
 );
 
-const createDelegate = () =>
-  new Proxy(
-    {},
-    {
-      get: () => jest.fn().mockResolvedValue(undefined),
-    },
-  );
-
-const PrismaClient = jest.fn().mockImplementation(
-  () =>
-    new Proxy(
-      {},
-      {
-        get: () => createDelegate(),
-      },
-    ),
-);
-
 module.exports = new Proxy(
-  { PrismaClient },
+  { PrismaClient, ...mockPrisma },
   {
     get: (target, prop) => (prop in target ? target[prop] : enumProxy),
   },
